@@ -15,7 +15,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from ..utils.image import tophat_correlate
-from ..stats import significance
+from ..statistics import significance
 
 __all__ = ['BgMaps']
 
