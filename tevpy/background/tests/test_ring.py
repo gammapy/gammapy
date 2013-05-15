@@ -1,0 +1,34 @@
+import unittest
+import numpy as np
+from numpy.testing import assert_almost_equal
+from astropy.io import fits
+from act import BgMaps, RingBgMaker, outer_ring_radius
+
+
+class TestRingBgMaker(unittest.TestCase):
+    def test_construction(self):
+        r = RingBgMaker(0.3, 0.5)
+        r.info()
+
+    def test_correlate(self):
+        image = np.zeros((10, 10))
+        image[5, 5] = 1
+        r = RingBgMaker(3, 6, 1)
+        image = r.correlate(image)
+
+    def test_correlate_maps(self):
+        on = np.ones((200, 200))
+        hdu = fits.ImageHDU(on, name='on')
+        maps = BgMaps([hdu])
+        maps['exclusion'].data[100:110, 100:110] = 0
+        r = RingBgMaker(10, 13, 1)
+        r.correlate_maps(maps)
+
+
+class TestHelperFuntions(unittest.TestCase):
+    def test_compute_r_o(self):
+        actual = outer_ring_radius(1, 0, 1)
+        assert_almost_equal(actual, 1)
+
+if __name__ == '__main__':
+    unittest.main()
