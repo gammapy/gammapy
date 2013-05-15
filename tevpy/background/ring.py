@@ -5,7 +5,7 @@ Implements a simple RingBgMaker for cartesian coordinates.
 TODO: Add psi cut
 """
 import numpy as np
-from image.utils import ring_correlate
+from ..utils.image import ring_correlate
 
 __all__ = ['RingBgMaker', 'outer_ring_radius', 'area_factor', 'alpha']
 
@@ -29,13 +29,13 @@ class RingBgMaker:
 
     def info(self):
         """Print some basic parameter info."""
-        print 'RingBgMaker parameters:'
-        print 'r_i: %g pix = %g deg' % \
-            (self.r_i, self.r_i * self.pixscale)
-        print 'r_o: %g pix = %g deg' % \
-            (self.r_o, self.r_o * self.pixscale)
-        print 'pixscale: %g deg/pix' % self.pixscale
-        print
+        print('RingBgMaker parameters:')
+        print('r_i: %g pix = %g deg'.format(
+            (self.r_i, self.r_i * self.pixscale)))
+        print('r_o: %g pix = %g deg'.format(
+            (self.r_o, self.r_o * self.pixscale)))
+        print('pixscale: %g deg/pix'.format(self.pixscale))
+        print()
 
     def correlate(self, image):
         """Correlate a given image with the ring."""

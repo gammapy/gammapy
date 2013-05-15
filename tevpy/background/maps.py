@@ -14,8 +14,8 @@ Implements the BgMaps class similar to the HESS software.
 import logging
 import numpy as np
 from astropy.io import fits
-from image.utils import tophat_correlate
-import stats.significance as ss
+from ..utils.image import tophat_correlate
+from ..stats import significance
 
 __all__ = ['BgMaps']
 
