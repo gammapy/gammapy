@@ -21,8 +21,7 @@ TeV gamma-ray astronomy high-level data analysis method demo.
   introduction
   background/index
   stats/index
-
-.. automodapi:: tevpy
+  reference
 
 .. _gammalib: http://gammalib.sourceforge.net
 .. _sprint: https://cta-redmine.irap.omp.eu/projects/gammalib/wiki/HESS_sprint_%231
