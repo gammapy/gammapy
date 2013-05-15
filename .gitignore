@@ -42,3 +42,5 @@ distribute-*.tar.gz
 htmlcov
 
 tevpy/tevpy.cfg
+
+docs/_generated
