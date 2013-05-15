@@ -16,12 +16,13 @@ TeV gamma-ray astronomy high-level data analysis method demo.
    I don't plan to make this an astropy affiliated package.   
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
 
   introduction
   background/index
-  stats/index
-  reference
+  spectrum/index
+  statistics/index
+  utils/index
 
 .. _gammalib: http://gammalib.sourceforge.net
 .. _sprint: https://cta-redmine.irap.omp.eu/projects/gammalib/wiki/HESS_sprint_%231

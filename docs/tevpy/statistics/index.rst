@@ -7,8 +7,5 @@ Give test case examples.
 
 Add references.
 
-Reference/API
-=============
-
-.. automodapi:: tevpy.stats
+.. automodapi:: tevpy.statistics
     :no-inheritance-diagram:
