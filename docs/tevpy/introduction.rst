@@ -1,0 +1,6 @@
+Introduction
+============
+
+Explain what this is ...
+
+Add references to papers and links to gammalib, pyfact, CTA 1DC, ...
