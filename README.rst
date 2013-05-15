@@ -2,7 +2,7 @@
 tevpy
 =====
 
-TeV high-level data analysis method demo
+TeV high-level data analysis method demo.
 
 Notes:
 * Don't use this package!
