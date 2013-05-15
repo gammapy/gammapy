@@ -1,5 +1,9 @@
-"""Implements a simple RingBgMaker for cartesian coordinates.
-TODO: Add psi cut"""
+"""
+Ring background estimation
+
+Implements a simple RingBgMaker for cartesian coordinates.
+TODO: Add psi cut
+"""
 import numpy as np
 from image.utils import ring_correlate
 

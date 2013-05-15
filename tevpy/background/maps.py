@@ -1,7 +1,16 @@
-"""Implements the BgMaps class similar to the HESS software.
+"""
+Maps container class
+
+These maps allow implementing all background estimation methods.
+Not all maps are used for each method, unused maps are typically
+filled with zeros or ones as appropriate.
+
+Implements the BgMaps class similar to the HESS software.
 - Correlation of basic maps is done repeatedly when
   computing all derived maps.
-  Is it worth speeding things up by writing the steps explicitly?"""
+  Is it worth speeding things up by writing the steps explicitly?
+
+"""
 import logging
 import numpy as np
 from astropy.io import fits
