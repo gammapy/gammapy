@@ -34,13 +34,13 @@ from astropy.setup_helpers import (register_commands, adjust_compiler,
 from astropy.version_helpers import get_git_devstr, generate_version_py
 
 # Set affiliated package-specific settings
-PACKAGENAME = 'packagename'
-DESCRIPTION = 'Astropy affiliated package'
+PACKAGENAME = 'tevpy'
+DESCRIPTION = 'TeV high-level data analysis method demo'
 LONG_DESCRIPTION = ''
 AUTHOR = ''
 AUTHOR_EMAIL = ''
 LICENSE = 'BSD'
-URL = 'http://astropy.org'
+URL = 'https://github.com/gammapy/tevpy'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 VERSION = '0.0.dev'
