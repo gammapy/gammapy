@@ -1,10 +1,10 @@
-=====
 tevpy
 =====
 
 TeV high-level data analysis method demo.
 
-Notes:
+Notes
+-----
 
 * Don't use this package!
 * It's just a prototype implementation of TeV data analysis methods,
