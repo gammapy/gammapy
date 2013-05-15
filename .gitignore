@@ -41,3 +41,4 @@ distribute-*.tar.gz
 .project
 htmlcov
 
+tevpy/tevpy.cfg
