@@ -121,3 +121,8 @@ if not _ASTROPY_SETUP_:
             del e
 
     del os, warn, config_dir  # clean up namespace
+
+#from . import background
+#from . import spectrum
+#from . import stats
+#from . import utils

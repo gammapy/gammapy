@@ -33,6 +33,8 @@ from astropy.setup_helpers import (register_commands, adjust_compiler,
                                    get_debug_option)
 from astropy.version_helpers import get_git_devstr, generate_version_py
 
+import tevpy
+
 # Set affiliated package-specific settings
 PACKAGENAME = 'tevpy'
 DESCRIPTION = 'TeV high-level data analysis method demo'
