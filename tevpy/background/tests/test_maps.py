@@ -2,10 +2,10 @@
 import unittest
 import numpy as np
 from astropy.io import fits
-from act import bgmaps
+from ..maps import Maps
 
 
-class TestBgMaps(unittest.TestCase):
+class TestMaps(unittest.TestCase):
     dir = '/tmp/'
     filename_basic = dir + 'bgmaps_basic.fits'
     filename_derived = dir + 'bgmaps_derived.fits'
@@ -36,13 +36,13 @@ class TestBgMaps(unittest.TestCase):
         exclusion_data = np.where(dist1 < exclusion_dist, 0, 1)
         exclusion_hdu = fits.ImageHDU(exclusion_data, name='exclusion')
         # Make a BgMaps object and write it to FITS file
-        maps = bgmaps.BgMaps([on_hdu, onexposure_hdu, exclusion_hdu])
+        maps = Maps([on_hdu, onexposure_hdu, exclusion_hdu])
         maps.writeto(self.filename_basic, clobber=True)
 
     def test_make_derived_maps(self):
         """Read BgMaps containing only basic maps from file,
         add derived maps and write to another file."""
-        maps = bgmaps.BgMaps(fits.open(self.filename_basic))
+        maps = Maps(fits.open(self.filename_basic))
         maps.theta = 10
         maps.is_off_correlated = False
         maps.make_derived_maps()
@@ -52,6 +52,3 @@ class TestBgMaps(unittest.TestCase):
         """Remove the example files"""
         # @todo Implement
         pass
-
-if __name__ == '__main__':
-    unittest.main()

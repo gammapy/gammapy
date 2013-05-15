@@ -15,9 +15,9 @@ import logging
 import numpy as np
 from astropy.io import fits
 from ..utils.image import tophat_correlate
-from ..statistics import significance
+from .. import statistics
 
-__all__ = ['BgMaps']
+__all__ = ['Maps']
 
 basic_maps = ['on', 'onexposure', 'off', 'offexposure',
               'exclusion', 'exposure']
@@ -27,19 +27,19 @@ derived_maps = ['alpha', 'areafactor', 'background',
                 'simple_significance', 'flux']
 
 
-class BgMaps(fits.HDUList):
+class Maps(fits.HDUList):
     """This is a python version of the BgMaps class in the HESS software.
     It is simply a list of HDUs containing the maps, plus methods to
     compute the derived maps."""
     def __init__(self, hdus=[], file=None,
                  is_off_correlated=True, theta=None, theta_pix=0):
-        """Initialize the BgMaps object.
+        """Initialize the Maps object.
         @param hdus: HDUList of ImageHDUs containing at least one of the basic maps
         @param file: passed right on to HDUList constructor
         @param is_off_correlated: flag whether the off map is already correlated
         @param theta: correlation radius (deg)
         @param theta_pix: correlation radius (pix)"""
-        super(BgMaps, self).__init__(hdus, file)
+        super(Maps, self).__init__(hdus, file)
         # Check that there is at least one of the basic_maps present.
         # This is required so that the map geometry is defined.
         hdu_names = [hdu.name.lower() for hdu in self]
@@ -151,7 +151,7 @@ class BgMaps(fits.HDUList):
         alpha = self.get_derived('alpha')
         logging.debug('Computing LiMa significance for {0} pixels.'
                      ''.format(on.shape))
-        significance = ss.significance(on, off, alpha)
+        significance = statistics.significance(on, off, alpha)
         return self._make_hdu(significance, 'significance')
 
     def make_simple_significance(self):
@@ -160,7 +160,7 @@ class BgMaps(fits.HDUList):
         on = self.get_basic('on')
         off = self.get_basic('off')
         alpha = self.get_derived('alpha')
-        significance_simple = ss.significance(on, off, alpha)
+        significance_simple = statistics.significance(on, off, alpha)
         return self._make_hdu(significance_simple, 'significance_simple')
 
     def make_flux(self):
