@@ -39,4 +39,5 @@ distribute-*.tar.gz
 .settings
 .pydevproject
 .project
+htmlcov
 
