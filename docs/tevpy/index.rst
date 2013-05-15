@@ -1,5 +1,5 @@
 tevpy
 =====
 
-TeV high-level data analysis method demo
+TeV gamma-ray astronomy high-level data analysis method demo.
 
