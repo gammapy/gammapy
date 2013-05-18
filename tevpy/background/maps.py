@@ -122,7 +122,7 @@ class Maps(fits.HDUList):
         return self._make_hdu(alpha, 'alpha')
 
     def make_area_factor(self):
-        """Make the areafactor map."""
+        """Make the area factor map."""
         alpha = self.get_derived('alpha')
         area_factor = 1. / alpha
 

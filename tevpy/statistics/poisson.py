@@ -156,6 +156,21 @@ def excess_error(n_on, n_off, alpha):
 def significance(n_observed, mu_background, method='lima'):
     r"""Compute significance for an observed number of counts and known background.
 
+    The simple significance estimate :math:`S_{simple}` is given by 
+    
+    .. math ::
+    
+        S_{simple} = (n_{observed} - \mu_{background}) / \sqrt{\mu_{background}}
+
+    The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
+    in the limiting case of known background :math:`\mu_{background} = \alpha \times n_{off}`
+    with :math:`\alpha \to 0`.
+    The following formula for :math:`S_{lima}` was obtained with Mathematica:
+
+    .. math ::
+    
+        S_{lima} = \left[ 2 n_{observed} \log \left( \frac{n_{observed}}{\mu_{background}} \right) - n_{observed} + \mu_{background} \right] ^ {1/2}
+
 
     Parameters
     ----------
@@ -210,22 +225,6 @@ def _significance_simple(n_observed, mu_background):
 
 
 def _significance_lima(n_observed, mu_background):
-    r"""Compute significance with the Li & Ma formula (17)
-    in the limiting case of known background.
-
-    The limit is :math:`\mu_{background} = \alpha \times n_{off}` with :math:`\alpha \to 0`.
-
-    Examples
-    --------
-
-    This example illustrates how the full Li & Ma formula and this
-    limit relate:
-
-    >>> significance_lima_limit(n_on=1300, mu_background=1100)
-    5.8600870406703329
-    >>> significance_lima(n_on=1300, n_off=1100 / 1.e-8, alpha=1e-8)
-    5.8600864348078519
-    """
     term_a = sign(n_observed - mu_background) * sqrt(2)
     term_b = sqrt(n_observed * log(n_observed / mu_background) - n_observed + mu_background)
     return term_a * term_b
