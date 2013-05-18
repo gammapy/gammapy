@@ -4,4 +4,3 @@ TODO:
 - add documentation
 - integrate in astropy or tevpy
 """
-from .fit_statistics import *
