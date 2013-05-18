@@ -39,8 +39,8 @@ import tevpy
 PACKAGENAME = 'tevpy'
 DESCRIPTION = 'TeV high-level data analysis method demo'
 LONG_DESCRIPTION = ''
-AUTHOR = ''
-AUTHOR_EMAIL = ''
+AUTHOR = 'Christoph Deil'
+AUTHOR_EMAIL = 'Deil.Christoph@gmail.com'
 LICENSE = 'BSD'
 URL = 'https://github.com/gammapy/tevpy'
 
