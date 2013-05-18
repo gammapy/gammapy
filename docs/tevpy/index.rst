@@ -23,7 +23,7 @@ Code: https://github.com/gammapy/tevpy
   introduction
   background/index
   spectrum/index
-  statistics/index
+  stats/index
   utils/index
 
 .. _gammalib: http://gammalib.sourceforge.net
