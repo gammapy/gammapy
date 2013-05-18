@@ -44,28 +44,28 @@ class RingBgMaker:
     def correlate_maps(self, maps):
         """Compute off maps from on maps by correlating with the ring,
         taking the exclusion map into account.
-        maps: bgmaps.BgMaps object"""
+        maps: maps.Maps object"""
         # Note: maps['on'] returns a copy of the HDU,
         # so assigning to on would be pointless.
-        on = maps['on'].data
-        onexposure = maps['onexposure'].data
+        n_on = maps['n_on'].data
+        a_on = maps['a_on'].data
         exclusion = maps['exclusion'].data
-        maps['off'].data = self.correlate(on * exclusion)
-        maps['offexposure'].data = self.correlate(onexposure * exclusion)
+        maps['n_off'].data = self.correlate(n_on * exclusion)
+        maps['a_off'].data = self.correlate(a_on * exclusion)
         maps.is_off_correlated = True
 
 
-def outer_ring_radius(theta, inner_ring_radius, areafactor):
+def outer_ring_radius(theta, inner_ring_radius, area_factor):
     """Compute outer ring radius
     @param theta: on region radius
     @param inner_ring_radius: inner ring radius
-    @param areafactor: desired off / on area ratio
+    @param area_factor: desired off / on area ratio
 
     The determining equation is:
-    areafactor = offarea / onarea =
+    area_factor = off_area / on_area =
     (pi (r_o**2 - r_i**2)) / (pi * theta**2 )
     """
-    return np.sqrt(areafactor * theta ** 2 + inner_ring_radius ** 2)
+    return np.sqrt(area_factor * theta ** 2 + inner_ring_radius ** 2)
 
 
 def area_factor(theta, inner_ring_radius, outer_ring_radius):

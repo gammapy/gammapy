@@ -5,7 +5,6 @@ These maps allow implementing all background estimation methods.
 Not all maps are used for each method, unused maps are typically
 filled with zeros or ones as appropriate.
 
-Implements the BgMaps class similar to the HESS software.
 - Correlation of basic maps is done repeatedly when
   computing all derived maps.
   Is it worth speeding things up by writing the steps explicitly?
@@ -19,16 +18,17 @@ from .. import statistics
 
 __all__ = ['Maps']
 
-basic_maps = ['on', 'onexposure', 'off', 'offexposure',
+basic_maps = ['n_on', 'a_on', 'n_off', 'a_off',
               'exclusion', 'exposure']
 basic_map_defaults = [0, 1, 0, 1, 1, 1]
-derived_maps = ['alpha', 'areafactor', 'background',
+derived_maps = ['alpha', 'area_factor', 'background',
                 'excess', 'significance',
-                'simple_significance', 'flux']
+                'flux']
 
 
 class Maps(fits.HDUList):
-    """This is a python version of the BgMaps class in the HESS software.
+    """Maps container for basic maps and methods to compute derived maps
+
     It is simply a list of HDUs containing the maps, plus methods to
     compute the derived maps."""
     def __init__(self, hdus=[], file=None,
@@ -81,9 +81,9 @@ class Maps(fits.HDUList):
         """Gets the data of a basic map and tophat correlates if required.
         @param name: basic map name"""
         # Build a list of maps requiring correlation
-        requires_correlation = ['on', 'onexposure', 'exposure']
+        requires_correlation = ['n_on', 'a_on', 'exposure']
         if not self.is_off_correlated:
-            requires_correlation.extend(['off', 'offexposure'])
+            requires_correlation.extend(['n_off', 'a_off'])
         data = self[name].data
         if name in requires_correlation:
             # Makes a copy
@@ -114,59 +114,51 @@ class Maps(fits.HDUList):
 
     def make_alpha(self):
         """Make the alpha map."""
-        logging.debug('Making alpha map.')
-        onexposure = self.get_basic('onexposure')
-        offexposure = self.get_basic('offexposure')
-        alpha = onexposure / offexposure
+
+        a_on = self.get_basic('a_on')
+        a_off = self.get_basic('a_off')
+        alpha = a_on / a_off
+
         return self._make_hdu(alpha, 'alpha')
 
-    def make_areafactor(self):
+    def make_area_factor(self):
         """Make the areafactor map."""
-        logging.debug('Making areafactor map.')
         alpha = self.get_derived('alpha')
-        areafactor = 1 / alpha
-        return self._make_hdu(areafactor, 'areafactor')
+        area_factor = 1. / alpha
+
+        return self._make_hdu(area_factor, 'area_factor')
 
     def make_background(self):
         """Make the background map."""
-        logging.debug('Making background map.')
-        off = self.get_basic('off')
+        n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
-        background = alpha * off
+        background = statistics.background(n_off, alpha)
+
         return self._make_hdu(background, 'background')
 
     def make_excess(self):
         """Make the excess map."""
-        logging.debug('Making excess map.')
-        on = self.get_basic('on')
+        n_on = self.get_basic('n_on')
         background = self.get_derived('background')
-        excess = on - background
+        excess = n_on - background
+
         return self._make_hdu(excess, 'excess')
 
-    def make_significance(self):
+    def make_significance(self, method='lima', neglect_background_uncertainty=False):
         """Make the significance map using the Li & Ma formula."""
-        logging.debug('Making significance map.')
-        on = self.get_basic('on')
-        off = self.get_basic('off')
+        n_on = self.get_basic('n_on')
+        n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
-        logging.debug('Computing LiMa significance for {0} pixels.'
-                     ''.format(on.shape))
-        significance = statistics.significance(on, off, alpha)
-        return self._make_hdu(significance, 'significance')
 
-    def make_simple_significance(self):
-        """Make the significance map using a common simple formula."""
-        logging.debug('Making simple significance map.')
-        on = self.get_basic('on')
-        off = self.get_basic('off')
-        alpha = self.get_derived('alpha')
-        significance_simple = statistics.significance(on, off, alpha)
-        return self._make_hdu(significance_simple, 'significance_simple')
+        significance = statistics.significance_on_off(n_on, n_off, alpha, method,
+                                                      neglect_background_uncertainty)
+        return self._make_hdu(significance, 'significance')
 
     def make_flux(self):
         """Make the flux map."""
         exposure = self.get_basic('exposure')
         excess = self.get_derived('excess')
+
         flux = excess / exposure
         return self._make_hdu(flux, 'flux')
 

@@ -18,8 +18,8 @@ class TestRingBgMaker(unittest.TestCase):
         image = r.correlate(image)
 
     def test_correlate_maps(self):
-        on = np.ones((200, 200))
-        hdu = fits.ImageHDU(on, name='on')
+        n_on = np.ones((200, 200))
+        hdu = fits.ImageHDU(n_on, name='n_on')
         maps = Maps([hdu])
         maps['exclusion'].data[100:110, 100:110] = 0
         r = RingBgMaker(10, 13, 1)
