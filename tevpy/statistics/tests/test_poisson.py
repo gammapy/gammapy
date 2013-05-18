@@ -21,7 +21,7 @@ def test_docstring_examples():
     result = poisson.significance_on_off(n_on=4, n_off=9, alpha=0.5, method='lima')
     assert_almost_equal(result, -0.19744427645023557)
 
-    assert_almost_equal(poisson.significance(n_on=1300, mu_background=1100, method='lima'), 5.8600870406703329)
+    assert_almost_equal(poisson.significance(n_observed=1300, mu_background=1100, method='lima'), 5.8600870406703329)
     assert_almost_equal(poisson.significance_on_off(n_on=1300, n_off=1100 / 1.e-8, alpha=1e-8, method='lima'), 5.8600864348078519)
 
     result = poisson.significance_on_off(n_on=10, n_off=20, alpha=0.1, method='simple')
@@ -29,7 +29,7 @@ def test_docstring_examples():
     result = poisson.significance_on_off(n_on=4, n_off=9, alpha=0.5, method='simple')
     assert_almost_equal(result, -0.2)
 
-    result = poisson.significance(n_on=10, n_off=20, alpha=0.1, method='lima')
+    result = poisson.significance_on_off(n_on=10, n_off=20, alpha=0.1, method='lima')
     assert_almost_equal(result, 3.6850322025333071)
     
 '''
