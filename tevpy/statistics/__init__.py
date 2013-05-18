@@ -1,5 +1,5 @@
 """
 Statistics utility functions and classes
 """
-from .on_off import *
+from .poisson import *
 from .utils import *
