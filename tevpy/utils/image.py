@@ -59,3 +59,23 @@ def ring_correlate(data, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(data, structure, mode=mode)
+
+
+"""Compute common kernels for TS maps
+
+A kernel is a source excess images after PSF convolution.
+TODO: integrate over bins to get accurate kernels.
+"""
+
+
+'''
+class KernelCalculator(object):
+    """Compute PSF-convolved source images,
+    to be used as kernels in the TS calculation"""
+
+    def __init__(self, size=10, source='gauss', psf='gauss'):
+        self.size = size
+
+    def compute
+'''
+
