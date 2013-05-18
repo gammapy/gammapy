@@ -14,7 +14,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from ..utils.image import tophat_correlate
-from .. import statistics
+from .. import stats
 
 __all__ = ['Maps']
 
@@ -132,7 +132,7 @@ class Maps(fits.HDUList):
         """Make the background map."""
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
-        background = statistics.background(n_off, alpha)
+        background = stats.background(n_off, alpha)
 
         return self._make_hdu(background, 'background')
 
@@ -150,7 +150,7 @@ class Maps(fits.HDUList):
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
 
-        significance = statistics.significance_on_off(n_on, n_off, alpha, method,
+        significance = stats.significance_on_off(n_on, n_off, alpha, method,
                                                       neglect_background_uncertainty)
         return self._make_hdu(significance, 'significance')
 
