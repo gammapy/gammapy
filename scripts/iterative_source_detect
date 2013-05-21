@@ -11,9 +11,12 @@ This is a prototype implementation of the following algorithm:
    model, i.e. significance maps will be "residual significance" maps.
 
 TODO: tons of things, e.g.
+* Keep parameters of previously found sources free when adding a new source
+* Write more debug maps (e.g. excess)
+  and info (e.g. sources_guess positions).
 * Use TS maps with Gauss source morphology instead of tophat.
 * Add PSF convolution
-* Use astropy.modeling or Sherpa
+* Use astropy.modeling or Sherpa?
 * Make it more modular and more abstract; put in tevpy.detect
   - user should be able to plug-in their significance map computation?
   - support different source models?
@@ -24,8 +27,6 @@ TODO: tons of things, e.g.
 * Introduce parameters that allow us to vary the procedure
 * Should the IterativeSourceDetector do the I/O and pixel-world coordinate conversions
   or be astro-independent?
-* Add possibilities to write dump debug maps (e.g. residual significance maps)
-  and info (e.g. peak positions).
 * Check if Python garbage collection for iter_maps sets in OK
   or if explicit garbage collection is needed.
 * Use photutils aperture photometry for estimate_flux?
@@ -59,7 +60,7 @@ class IterativeSourceDetector(object):
     """
 
     def __init__(self, maps, scales,max_sources=10, significance_threshold=5,
-                 max_ncall=300, debug_output_folder=''):
+                 max_ncall=300, debug_output_folder='', clobber=False):
         """
         debug_output_folder: empty string for no debug output
         """
@@ -77,6 +78,7 @@ class IterativeSourceDetector(object):
         self.significance_threshold = significance_threshold
         self.max_ncall = max_ncall
         self.debug_output_folder = debug_output_folder
+        self.clobber = clobber
 
         self.sources_guess = []        
         self.sources = []
@@ -103,14 +105,14 @@ class IterativeSourceDetector(object):
                 for name in ['background']:
                     filename = '{0}/{1}.fits'.format(debug_folder, name)
                     logging.info('Writing {0}'.format(filename))
-                    fits.writeto(filename, self.iter_maps[name])
+                    fits.writeto(filename, self.iter_maps[name], clobber=self.clobber)
                 
                 # Save per iteration and scale maps
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
                         logging.info('Writing {0}'.format(filename))
-                        fits.writeto(filename, self.iter_maps[name][scale])
+                        fits.writeto(filename, self.iter_maps[name][scale], clobber=self.clobber)
                 
             self.find_peaks()
             # TODO: debug output to JSON here and for later steps
@@ -234,17 +236,31 @@ class IterativeSourceDetector(object):
 
         source = self.sources_guess[-1]
         logging.debug('Source parameters before fit: {0}'.format(source))
-        #import IPython; IPython.embed(); 1 / 0       
-        minuit = Minuit(fit_stat, pedantic=False, print_level=0, **source)
+        pars = source.copy()
+        pars['error_xpos'] = 0.01
+        pars['error_ypos'] = 0.01
+        pars['error_flux'] = 0.1 * source['flux']
+        pars['error_sigma'] = 0.1 * source['sigma']
+        SIGMA_LIMITS = (0.01, 1e6)
+        pars['limit_sigma'] = SIGMA_LIMITS
+        #import IPython; IPython.embed(); 1 / 0
+        print pars
+        minuit = Minuit(fit_stat, pedantic=False, print_level=1, **pars)
+        #minuit.print_initial_param()
         minuit.migrad(ncall=self.max_ncall)
-        # If fit doesn't converge we simply abort
-        # TODO: should we use exceptions here or return False as signal?
-        if not minuit.migrad_ok():
-            raise FitFailedError
-        
-        # Store best-fit source parameters
+
         source = minuit.values
         logging.debug('Source parameters  after fit: {0}'.format(source))
+
+        if not minuit.migrad_ok():
+            # If fit doesn't converge we simply abort
+            # TODO: should we use exceptions here or return False as signal?
+            minuit.print_fmin()
+            raise FitFailedError
+        else:
+            # Store best-fit source parameters
+            self.sources.append(source)
+        
 
     def estimate_flux(self, source):
         """Estimate flux in a circular region around the source"""
@@ -353,7 +369,8 @@ if __name__ == '__main__':
 
     # Run the iterative source detection
     detector = IterativeSourceDetector(maps=maps, scales=scales_pix,
-                                       debug_output_folder=args['debug_output_folder'])
+                                       debug_output_folder=args['debug_output_folder'],
+                                       clobber=True)
     detector.run()
 
     # Save the results
