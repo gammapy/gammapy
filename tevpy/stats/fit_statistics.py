@@ -1,10 +1,11 @@
 """
 Implementation of the Sherpa statistics with numpy
 
-All functions return arrays:
->>> stat_per_bin = stat(...)
-If you want the sum say so:
->>> total_stat = stat(...).sum()
+All functions return arrays::
+
+    >>> stat_per_bin = stat(...)
+    If you want the sum say so:
+    >>> total_stat = stat(...).sum()
 
 WARNING: I just typed this, no documentation or testing yet ... 
 
@@ -17,12 +18,9 @@ Todo
 References
 ----------
 
-http://cxc.cfa.harvard.edu/sherpa/statistics
-https://github.com/taldcroft/sherpa/blob/master/stats/__init__.py
-sherpa/include/sherpa/stats.hh contains the C++ implementations of the Sherpa stats
-
-Notes
------
+* http://cxc.cfa.harvard.edu/sherpa/statistics
+* https://github.com/taldcroft/sherpa/blob/master/stats/__init__.py
+* sherpa/include/sherpa/stats.hh contains the C++ implementations of the Sherpa stats
 
 """
 
@@ -38,7 +36,10 @@ def cash(D, M):
     D = np.asanyarray(D, dtype=np.float64)
     M = np.asanyarray(M, dtype=np.float64)
 
-    return 2 * (M - D * log(M)) 
+    stat = 2 * (M - D * log(M))
+    stat = np.where(M > 0, stat, 0)
+
+    return stat
 
 def cstat(D, M):
     """C statistic
@@ -46,7 +47,12 @@ def cstat(D, M):
     D = np.asanyarray(D, dtype=np.float64)
     M = np.asanyarray(M, dtype=np.float64)
 
-    return 2 * (M - D  + D * (log(D) - log(M)))
+    stat = 2 * (M - D  + D * (log(D) - log(M)))
+    stat = np.where(M > 0, stat, 0)
+    # TODO: handle bins where D = 0 (can't call log!)
+    # Check what Sherpa does in those cases ...
+    
+    return stat
 
 def chi2(N_S, B, S, sigma2):
     """Chi ^ 2 statistic
