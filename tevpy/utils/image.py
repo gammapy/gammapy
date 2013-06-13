@@ -1,3 +1,4 @@
+"""Image utility functions"""
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance']
