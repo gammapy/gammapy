@@ -1,6 +1,6 @@
 import numpy as np
 
-__all__ = ['tophat_correlate', 'ring_correlate']
+__all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance']
 
 def _get_structure_indices(radius):
     """
@@ -77,7 +77,7 @@ def exclusion_distance(exclusion):
     distance = np.where(exclusion, distance_outside, -distance_inside)
     return distance
 
-def lookup_pix(image, x, y):
+def _lookup_pix(image, x, y):
     """
     image = numpy array
     x, y = array_like of pixel coordinates (floats OK)
@@ -91,7 +91,7 @@ def lookup_pix(image, x, y):
     values = image[y_int, x_int]
     return values
 
-def lookup_world(image, lon, lat):
+def _lookup_world(image, lon, lat):
     """Look up values in an image
     image = astropy.io.fits.HDU
     lon, lat = world coordinates (float OK)
@@ -99,7 +99,17 @@ def lookup_world(image, lon, lat):
     from astropy.wcs import WCS
     wcs = WCS(image.header)
     x, y = wcs.wcs_world2pix(lon, lat, 0)
-    return lookup_pix(image.data, x, y)
+    return _lookup_pix(image.data, x, y)
+
+def lookup(image, x, y, world=True):
+    """Look up values in an image
+    
+    TODO: document
+    """
+    if world:
+        return _lookup_world(image, x, y)
+    else:
+        return _lookup_pix(image, x, y)
 
 """Compute common kernels for TS maps
 
