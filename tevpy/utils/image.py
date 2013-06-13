@@ -60,6 +60,46 @@ def ring_correlate(data, r_in, r_out, mode='constant'):
     structure = binary_ring(r_in, r_out)
     return convolve(data, structure, mode=mode)
 
+def exclusion_distance(exclusion):
+    """Compute distance map, i.e. the Euclidean (=Cartesian 2D)
+    distance (in pixels) to the nearest exclusion region.
+
+    We need to call distance_transform_edt twice because it only computes
+    dist for pixels outside exclusion regions, so to get the
+    distances for pixels inside we call it on the inverted mask
+    and then combine both distance images into one, using negative
+    distances (note the minus sign) for pixels inside exclusion regions.
+    """
+    from scipy.ndimage import distance_transform_edt
+    exclusion = np.asanyarray(exclusion, bool)
+    distance_outside = distance_transform_edt(exclusion)
+    distance_inside = distance_transform_edt(np.invert(exclusion))
+    distance = np.where(exclusion, distance_outside, -distance_inside)
+    return distance
+
+def lookup_pix(image, x, y):
+    """
+    image = numpy array
+    x, y = array_like of pixel coordinates (floats OK)
+    """
+    # Find the right pixel
+    x_int = np.round(x).astype(int)
+    y_int = np.round(y).astype(int)
+
+    # Return it's value
+    # Note that numpy has index order (y, x)
+    values = image[y_int, x_int]
+    return values
+
+def lookup_world(image, lon, lat):
+    """Look up values in an image
+    image = astropy.io.fits.HDU
+    lon, lat = world coordinates (float OK)
+    """
+    from astropy.wcs import WCS
+    wcs = WCS(image.header)
+    x, y = wcs.wcs_world2pix(lon, lat, 0)
+    return lookup_pix(image.data, x, y)
 
 """Compute common kernels for TS maps
 
