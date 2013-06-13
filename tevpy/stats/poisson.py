@@ -1,8 +1,8 @@
 """
-Poisson statistics computations for these two cases:
+Poisson statistics computations for these two cases.
+
 * a measured number of counts `n_on` and known background
-* a measured number of counts `n_on` in an on region and
-  a second count measurement `n_off` in an excess-free region.
+* a measured number of counts `n_on` in an on region and a second count measurement `n_off` in an excess-free region.
 
 TODO: More detailed description here.
 """
@@ -165,7 +165,7 @@ def significance(n_observed, mu_background, method='lima'):
     The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
     in the limiting case of known background :math:`\mu_{background} = \alpha \times n_{off}`
     with :math:`\alpha \to 0`.
-    The following formula for :math:`S_{lima}` was obtained with Mathematica:
+    The following formula for :math:`S_{lima}` was obtained with Mathematica::
 
     .. math ::
     
