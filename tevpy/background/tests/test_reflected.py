@@ -1,4 +1,4 @@
-from ...utils.run import RunList
+from ...obs import RunList
 from ..maps import Maps
 from ..reflected import ReflectedRegionMaker
 
