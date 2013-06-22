@@ -134,7 +134,7 @@ extensions += ['astropy.sphinx.ext.edit_on_github']
 
 # Don't import the module as "version" or it will override the
 # "version" configuration parameter
-from astroquery import version as versionmod
+from tevpy import version as versionmod
 edit_on_github_project = "gammapy/tevpy"
 if versionmod.release:
     edit_on_github_branch = "v" + versionmod.version
