@@ -1,8 +1,5 @@
 """
-Background estimation and modeling methods
-
-References:
-http://adsabs.harvard.edu/abs/2007A%26A...466.1219B
+Background estimation and modeling methods.
 """
 from .fov import *
 from .maps import *

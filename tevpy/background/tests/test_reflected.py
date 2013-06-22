@@ -1,6 +1,6 @@
 from ...utils.run import RunList
 from ..maps import Maps
-from ..reflected import ReflectedBgMaker
+from ..reflected import ReflectedRegionMaker
 
 """
 class TestReflectedBgMaker(unittest.TestCase):

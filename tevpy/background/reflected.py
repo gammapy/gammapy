@@ -3,13 +3,14 @@ Reflected region background estimation
 """
 import numpy as np
 from numpy import sin, cos, arctan2, sqrt
-from ..utils.image import exclusion_distance, lookup_world
+from ..utils.image import exclusion_distance, lookup
 
-__all__ = ['ReflectedRegionMaker']
+__all__ = ['ReflectedRegionMaker', 'ReflectedBgMaker']
 
 
 class ReflectedRegionMaker(object):
     """Finds reflected regions.
+
     TODO: At the moment only works for circular regions!
     
     TODO: should work with world or pixel coordinates internally!???
@@ -54,7 +55,7 @@ class ReflectedRegionMaker(object):
         return False
 
     def _is_exclusion_ok(self, x, y, r):
-        return lookup_world(self.exclusion_distance, x, y) > r
+        return lookup(self.exclusion_distance, x, y) > r
     
     def _is_other_regions_ok(self, x, y, r):
         other_regions = self.regions + [self.on_region]
@@ -93,3 +94,7 @@ class ReflectedRegionMaker(object):
             for region in self.regions:
                 line = fmt.format(**region)
                 fh.write(line)
+
+class ReflectedBgMaker(object):
+    """Compute background using the reflected background method"""
+    pass
