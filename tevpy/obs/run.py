@@ -1,3 +1,7 @@
+"""Run and RunList class"""
+
+__all__ = ['Run', 'RunList']
+
 class Run(object):
     """
     Run parameters container
