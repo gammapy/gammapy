@@ -1,12 +1,19 @@
 """
 TODO: add tests for different cases of theta and is_off_correlated
 """
+import pytest
 import unittest
 import numpy as np
 from astropy.io import fits
 from ..maps import Maps
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestMaps(unittest.TestCase):
     # TODO: use astropy temp file utils
     dir = '/tmp/'
