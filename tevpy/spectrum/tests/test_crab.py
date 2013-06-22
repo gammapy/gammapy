@@ -1,8 +1,16 @@
+import pytest
 import numpy as np
 from astropy.units import Unit
 from .. import crab
 
+try:
+    import scipy
+    from ... import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_eval():
     # Check diff_flux and int_flux functions
     # against dict values containing published numbers.
