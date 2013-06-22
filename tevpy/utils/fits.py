@@ -16,6 +16,7 @@ def get_hdu(location):
         hdu_name = tokens[1][:-1]  # split off ']' at the end
         return fits.open(file_name)[hdu_name]
     else:
+        file_name = location
         return fits.open(file_name)[0]
 
 def get_image_hdu():
