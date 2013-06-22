@@ -25,3 +25,6 @@ TODO
 
 .. automodapi:: tevpy.spectrum
     :no-inheritance-diagram:
+
+.. automodapi:: tevpy.spectrum.crab
+    :no-inheritance-diagram:
