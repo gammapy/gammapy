@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+"""Select a subset of runs from a given run list"""
+
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+from tevpy.obs import RunList
+
+if __name__ == '__main__':
+    pass
