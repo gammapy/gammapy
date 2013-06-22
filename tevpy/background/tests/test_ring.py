@@ -1,11 +1,19 @@
 import unittest
+import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
 from astropy.io import fits
 from ..maps import Maps
 from ..ring import RingBgMaker, outer_ring_radius
 
+try:
+    import scipy
+    from ... import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestRingBgMaker(unittest.TestCase):
     def test_construction(self):
         r = RingBgMaker(0.3, 0.5)
