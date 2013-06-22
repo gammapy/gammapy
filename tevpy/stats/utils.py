@@ -3,9 +3,6 @@ Miscellaneous utility functions
 """
 import numpy as np
 from numpy import pi, sqrt, log
-from scipy.special import erf, erfinv
-from scipy.stats import norm
-from scipy.optimize import fsolve
 
 
 __all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit']
@@ -41,6 +38,7 @@ def s_to_p(s):
     >>> s_to_p(10)
     7.6198530241604696e-24
     """
+    from scipy.stats import norm
     return norm.sf(s)
 
 
@@ -66,6 +64,7 @@ def p_to_s(p):
     >>> p_to_s(1e-10)
     6.3613409024040557
     """
+    from scipy.stats import norm
     return norm.isf(p)
 
 
@@ -74,6 +73,7 @@ def _p_to_s_direct(p, one_sided=True):
     
     Reference: RooStats User Guide Equations (6,7).
     """
+    from scipy.special import erfinv
     p = 1 - p # We want p to be the tail probability
     temp = np.where(one_sided, 2 * p - 1, p)
     return sqrt(2) * erfinv(temp)
@@ -84,6 +84,7 @@ def _s_to_p_direct(s, one_sided=True):
     
     @see: _p_to_s_direct was solved for p.
     """
+    from scipy.special import erf
     temp = erf(s / sqrt(2))
     p = np.where(one_sided, (temp + 1) / 2., temp)
     return 1 - p # We want p to be the tail probability
@@ -110,5 +111,6 @@ def s_to_p_limit(s, guess=1e-100):
     @see: p_to_s_limit docstring
     @note s^2 = u - log(u) can't be solved analytically.
     """
+    from scipy.optimize import fsolve
     f = lambda p: p_to_s_limit(p) - s if p > 0 else 1e100
     return fsolve(f, guess)
