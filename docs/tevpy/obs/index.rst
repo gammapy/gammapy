@@ -75,8 +75,9 @@ Using `findruns` is easy, you don't have to remember all the options, just type
 
 at the command line or read the usage help `here <TODO>`_
 
-TODO: Check out Noel's `goodruns`_ tool for `ATLAS <http://atlas.ch>`_ run selection
-(`docs <http://ndawe.github.io/goodruns/>`, `code <https://github.com/ndawe/goodruns>`_).
+..note:: Noel Dawe's `goodruns` tool for `ATLAS <http://atlas.ch>`_ run selection
+      (`docs <http://ndawe.github.io/goodruns/>`, `code <https://github.com/ndawe/goodruns>`_)
+      is a nice example for a run selection tool.
 
 
 .. automodapi:: tevpy.obs

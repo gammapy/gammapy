@@ -8,12 +8,19 @@ To install and use this package you need `Astropy`_.
 
 Optional dependencies (imported and used only where needed):
 
-* scipy and matplotlib
+* some of the `scipy stack <http://scipy.org>`_ packages:
+  `scipy library <http://scipy.org/scipylib/index.html>`_,
+  `matplotlib <http://matplotlib.org>`_,
+  `pandas <http://pandas.pydata.org>`_.
 * `GammaLib`_ and `ctools`_
 * `Sherpa`_
 * `ROOT`_ and `rootpy`_
 * `photutils`_
 * `Kapteyn`_
+
+.. note:: I didn't put any effort into minimizing the number of dependencies,
+   since `tevpy` is a prototype. Should it develop into a package that is actually used
+   by a few people I'll limit the optional packages to what is actually necessary.
 
 Other related packages
 ----------------------
