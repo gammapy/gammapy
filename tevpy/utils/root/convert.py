@@ -13,7 +13,6 @@ In the menu select:
 """
 import warnings
 import numpy as np
-from kapteyn.maputils import FITSimage
 
 def TH2_to_FITS_header(h, flipx=True):
     """Create FITS header assuming TH2 or SkyHist that represents an image
@@ -73,6 +72,7 @@ def TH2_to_FITS(h, flipx=True):
     >>> fits_figure = TH2_to_FITS(root_th2)
     >>> fits_figure.writetofits('my_image.fits')
     """
+    from kapteyn.maputils import FITSimage
     header = TH2_to_FITS_header(h, flipx)
     if header['CDELT1'] > 0:
         warnings.warn('CDELT1 > 0 might not be handled properly.'
