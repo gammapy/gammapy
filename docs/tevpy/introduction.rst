@@ -31,3 +31,4 @@ Other related packages
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _PyFACT: http://pyfact.readthedocs.org
 .. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
+.. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
