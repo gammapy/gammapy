@@ -1,6 +1,5 @@
 import numpy as np
 from astropy.units import Unit
-import matplotlib.pyplot as plt
 from .. import crab
 
 
@@ -27,6 +26,7 @@ def test_eval():
 
 
 def plot_spectra(what="flux"):
+    import matplotlib.pyplot as plt
     plt.clf()
     e = np.logspace(-2, 3, 100)
     for ref in crab.refs.keys():
@@ -70,7 +70,7 @@ def plot_spectra(what="flux"):
     plt.savefig(filename)
 
 if __name__ == '__main__':
-    check_eval()
+    test_eval()
     plot_spectra('flux')
     plot_spectra('int_flux')
     plot_spectra('ratio')
