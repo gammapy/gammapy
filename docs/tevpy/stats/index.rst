@@ -51,4 +51,3 @@ Reference/API
 
 .. automodapi:: tevpy.stats.utils
     :no-inheritance-diagram:
-    

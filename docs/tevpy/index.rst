@@ -45,6 +45,7 @@ browse their docs to see if it contains the methods you want.
 
   introduction
   background/index
+  obs/index
   spectrum/index
   stats/index
   utils/index
