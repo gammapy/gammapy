@@ -1,4 +1,6 @@
 """
+Sherpa: http://cxc.cfa.harvard.edu/sherpa/
+
 TODO:
 - add unit tests
 - add documentation
