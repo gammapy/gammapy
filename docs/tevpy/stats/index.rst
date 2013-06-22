@@ -2,17 +2,23 @@
 Statistics tools (`tevpy.stats`)
 ********************************
 
+.. currentmodule:: tevpy.stats
+
 Introduction
 ============
 
-`~tevpy.stats` holds statistical estimators,
+`tevpy.stats` holds statistical estimators,
 fit statistics and algorithms commonly used in gamma-ray astronomy.
 
 It is mostly concerned with the evaluation of one or several observations
 that count events in a given region and time window, i.e. with
 Poisson-distributed counts measurements.
 
-TODO: Give references to Li & Ma, Rolke and Feldman-Cousins.
+
+
+TODO: Describe references:
+[LiMa1983]_, [Cash1979]_, [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_
+
 
 Getting Started
 ===============
@@ -33,7 +39,6 @@ Note that throughout this package the parameter `alpha = a_on / a_off`
 is used and not the `area_factor = a_off / a_on`.
 
 TODO: More examples.
-
 
 Reference/API
 =============
