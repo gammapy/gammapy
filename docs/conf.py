@@ -70,6 +70,12 @@ release = tevpy.__version__
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+html_theme_options = {
+    'logotext1': 'tev',  # white,  semi-bold
+    'logotext2': 'py',  # orange, light
+    'logotext3': ':docs'   # white,  light
+    }
+
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
 #html_theme_path = []
@@ -86,6 +92,13 @@ release = tevpy.__version__
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #html_favicon = ''
+
+# First TeV gamma-ray image: the supernova remnant RX J1713 with HESS
+# http://apod.nasa.gov/apod/ap041105.html
+html_favicon = '_static/tevpy_logo_64.png'
+
+# TODO: set this image also in the title bar
+# (html_logo is not the right option)
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -117,16 +130,16 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 
 ## -- Options for the edit_on_github extension ----------------------------------------
 #
-#extensions += ['astropy.sphinx.ext.edit_on_github']
-#
-## Don't import the module as "version" or it will override the
-## "version" configuration parameter
-#from packagename import version as versionmod
-#edit_on_github_project = "astropy/reponame"
-#if versionmod.release:
-#    edit_on_github_branch = "v" + versionmod.version
-#else:
-#    edit_on_github_branch = "master"
-#
-#edit_on_github_source_root = ""
-#edit_on_github_doc_root = "docs"
+extensions += ['astropy.sphinx.ext.edit_on_github']
+
+# Don't import the module as "version" or it will override the
+# "version" configuration parameter
+from astroquery import version as versionmod
+edit_on_github_project = "gammapy/tevpy"
+if versionmod.release:
+    edit_on_github_branch = "v" + versionmod.version
+else:
+    edit_on_github_branch = "master"
+
+edit_on_github_source_root = ""
+edit_on_github_doc_root = "docs"
