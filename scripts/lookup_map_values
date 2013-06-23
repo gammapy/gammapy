@@ -1,36 +1,37 @@
 #!/usr/bin/env python
 """Look up values in a map at given positions"""
+
+# TODO: support coordinate parsing
+# TODO: support multiple input images
+# TODO: support reading lists of coordinates from FITS and CVS tables
+
+# Parse command line arguments
+
+import argparse
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('infile', type=str,
+                    help='Input FITS file name')
+parser.add_argument('x', type=float,
+                    help='x coordinate (deg)')
+parser.add_argument('y', type=float,
+                    help='y coordinate (deg)')
+parser.add_argument('--pix', action='store_true',
+                    help='Input coordinates are pixels (default is world coordinates)')
+
+args = parser.parse_args()
+args = vars(args)
+
+# Execute script
+
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-#from astropy.io import fits
 from tevpy.utils.fits import get_hdu
 from tevpy.utils.image import lookup
 
-if __name__ == '__main__':
-    # TODO: support coordinate parsing
-    # TODO: support multiple input images
-    # TODO: support reading lists of coordinates from FITS and CVS tables
+logging.debug('Reading {0}'.format(args['infile']))
+hdu = get_hdu(args['infile'])
+x, y = args['x'], args['y']
 
-    # Parse command line arguments
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('infile', type=str,
-                        help='Input FITS file name')
-    parser.add_argument('x', type=float,
-                        help='x coordinate (deg)')
-    parser.add_argument('y', type=float,
-                        help='y coordinate (deg)')
-    parser.add_argument('--pix', action='store_true',
-                        help='Input coordinates are pixels (default is world coordinates)')
-
-    args = parser.parse_args()
-    args = vars(args)
-    
-    logging.debug('Reading {0}'.format(args['infile']))
-    #hdus = fits.open(args['infile'])
-    hdu = get_hdu(args['infile'])
-    x, y = args['x'], args['y']
-
-    value = lookup(hdu, x, y)
-    print('Map value at position ({0}, {1}) is {2}'
-          ''.format(x, y, value))
+value = lookup(hdu, x, y)
+print('Map value at position ({0}, {1}) is {2}'
+      ''.format(x, y, value))

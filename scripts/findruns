@@ -5,5 +5,35 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from tevpy.obs import RunList
 
-if __name__ == '__main__':
-    pass
+# Parse command line arguments
+
+import argparse
+import sys
+parser = argparse.ArgumentParser(description=__doc__)
+subparsers = parser.add_subparsers()
+
+parser.add_argument('in', type=argparse.FileType('r'),
+                    help='Input run list file name')
+parser.add_argument('out', nargs='?', type=argparse.FileType('w'),
+                    default=sys.stdout,
+                    help='Output run list file name (default: stdout)')
+parser.add_argument('x', type=float,
+                    help='x coordinate (deg)')
+parser.add_argument('y', type=float,
+                    help='y coordinate (deg)')
+parser.add_argument('--pix', action='store_true',
+                    help='Input coordinates are pixels (default is world coordinates)')
+args = parser.parse_args()
+args = vars(args)
+
+# Execute script
+
+print args
+args['out'].write('hi\n')
+print args['in'].read()
+args['out'].close()
+#logging.debug('Reading {0}'.format(args['infile']))
+#hdus = fits.open(args['infile'])
+#hdu = get_hdu(args['infile'])
+#x, y = args['x'], args['y']
+

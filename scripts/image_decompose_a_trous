@@ -15,63 +15,34 @@ I'm also interested in these transforms:
 * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-reduce
 """
 
+# TODO: add option to copy over input file
+# TODO: add option to select input HDU name or number
+
+# Parse command line arguments
+
+import argparse
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('infile', type=str,
+                    help='Input FITS file name')
+parser.add_argument('outfile', type=str,
+                    help='Output FITS file name')
+parser.add_argument('n_levels', type=int,
+                    help='Number of levels (wavelet scales)')
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
+args = parser.parse_args()
+args = vars(args)
+
+# Execute script
+
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
+from tevpy.utils.image import atrous_hdu
 
-def atrous(image, n_levels):
-    """Compute a trous transform for a given image.
-    
-    image : 2d array
-    n_levels : integer
-    returns : list of 2d arrays
-    """
-    # https://code.google.com/p/image-funcut/
-    from imfun import atrous
-    return atrous.decompose2d(image, level=n_levels)
+logging.info('Reading {0}'.format(args['infile']))    
+hdu = fits.open(args['infile'])[0]
+atrous_hdus = atrous_hdu(hdu, n_levels=args['n_levels'])
 
-def atrous_hdu(hdu, n_levels):
-    """Compute a trous transform for a given FITS HDU
-    
-    hdu : 2d image HDU
-    n_levels : integer
-    returns : HDUList
-    """
-    image = hdu.data
-    logging.info('Computing a trous transform for {0} levels ...'.format(n_levels))
-    images = atrous(image, n_levels)
-    hdus = fits.HDUList()
-    for level, image in enumerate(images):
-        if level < len(images) - 1:
-            name = 'level_{0}'.format(level)
-        else:
-            name = 'residual'
-        scale_pix = 2 ** level
-        scale_deg = hdu.header['CDELT2'] * scale_pix
-        logging.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
-                     ''.format(name, scale_pix, scale_deg))
-        hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
-    return hdus
-
-if __name__ == '__main__':
-    # TODO: add option to copy over input file
-    # TODO: add option to select input HDU name or number
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('infile', type=str,
-                        help='Input FITS file name')
-    parser.add_argument('outfile', type=str,
-                        help='Output FITS file name')
-    parser.add_argument('n_levels', type=int,
-                        help='Number of levels (wavelet scales)')
-    parser.add_argument('--clobber', action='store_true',
-                        help='Clobber output files?')
-    args = parser.parse_args()
-    args = vars(args)
-
-    logging.info('Reading {0}'.format(args['infile']))    
-    hdu = fits.open(args['infile'])[0]
-    atrous_hdus = atrous_hdu(hdu, n_levels=args['n_levels'])
-
-    logging.info('Writing {0}'.format(args['outfile']))
-    atrous_hdus.writeto(args['outfile'], clobber=args['clobber'])
+logging.info('Writing {0}'.format(args['outfile']))
+atrous_hdus.writeto(args['outfile'], clobber=args['clobber'])
