@@ -1,7 +1,8 @@
 """Image utility functions"""
 import numpy as np
 
-__all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance']
+__all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
+           'atrous_image', 'atrous_hdu']
 
 def _get_structure_indices(radius):
     """
@@ -129,4 +130,42 @@ class KernelCalculator(object):
 
     def compute
 '''
+
+def atrous_image(image, n_levels):
+    """Compute a trous transform for a given image.
+    
+    image : 2d array
+    n_levels : integer
+    returns : list of 2d arrays
+    """
+    # https://code.google.com/p/image-funcut/
+    from imfun import atrous
+    return atrous.decompose2d(image, level=n_levels)
+
+def atrous_hdu(hdu, n_levels):
+    """Compute a trous transform for a given FITS HDU
+    
+    hdu : 2d image HDU
+    n_levels : integer
+    returns : HDUList
+    """
+    import logging
+    from astropy.io import fits
+    image = hdu.data
+    logging.info('Computing a trous transform for {0} levels ...'.format(n_levels))
+    images = atrous_image(image, n_levels)
+    hdus = fits.HDUList()
+
+    for level, image in enumerate(images):
+        if level < len(images) - 1:
+            name = 'level_{0}'.format(level)
+        else:
+            name = 'residual'
+        scale_pix = 2 ** level
+        scale_deg = hdu.header['CDELT2'] * scale_pix
+        logging.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
+                     ''.format(name, scale_pix, scale_deg))
+        hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
+
+    return hdus
 
