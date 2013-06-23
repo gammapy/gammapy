@@ -7,8 +7,8 @@ recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *
 recursive-include scripts *
+recursive-include examples *
 
 exclude *.pyc *.o 
 prune docs/_build
 prune build
-
