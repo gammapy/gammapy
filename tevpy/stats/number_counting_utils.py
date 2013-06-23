@@ -1,4 +1,6 @@
-from scipy.special import betainc
+__all__ = ['NumberCountingUtils']
+
+# TODO: If useful, rewrite as functions and with proper tests and docstrings.
 
 class NumberCountingUtils:
     """Formulas for computing tail probabilities of on/off
@@ -14,7 +16,8 @@ class NumberCountingUtils:
     def _f(self, main, aux, tau):
         """Little wrapper for incomplete beta function computation
         because the argument order is different from ROOT and
-        there are problems with certain sets of arguments.""" 
+        there are problems with certain sets of arguments."""
+        from scipy.special import betainc 
         a = main
         b = aux + 1
         x = 1. / (1. + tau)
