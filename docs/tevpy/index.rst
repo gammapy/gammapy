@@ -9,6 +9,10 @@ What is it?
 * Code: https://github.com/gammapy/tevpy
 * Docs: https://tevpy.readthedocs.org/
 
+.. image:: https://travis-ci.org/gammapy/tevpy.png
+    :target: https://travis-ci.org/gammapy/tevpy
+
+
 .. warning:: `tevpy` is at a very early stage of development and it's main purpose is to quickly prototype
    the implementation of analysis methods for a proper implementation in `GammaLib`_ and `ctools`_.
    `tevpy` also serves as an interface to other existing astro (or more generally scientific) Python packages.
