@@ -20,7 +20,7 @@ To check if `tevpy` is correctly installed, start up python or ipython, import `
 
 To check if the `tevpy` command line tools are on your `$PATH` try this::
 
-   $ lookup_map_values --help
+   $ tev-lookup-map-values --help
 
 Requirements
 ------------
