@@ -14,7 +14,7 @@ from numpy import sqrt, sin, cos, pi, arccos, abs, exp
 
 __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
            'show_peaks', 'detect_blobs_3D', 'detect_blobs', 'prune_blobs',
-           'show_blobs', 'Blob']
+           'show_blobs', 'write_region_file', 'Blob']
 
 
 def create_scale_space(image, scales, filter_='gaussian_laplace'):
@@ -91,7 +91,10 @@ def detect_peaks_3D(image):
     
  
 def show_peaks(image_3D):
-    """Show all images of different scales including the detected peaks. Useful for debugging.""" 
+    """Show all images of different scales including the detected peaks.
+    
+    Useful for debugging.
+    """ 
     import matplotlib.pyplot as plt
 
     for scale_image in image_3D:
@@ -153,7 +156,11 @@ def detect_blobs(image_3D, scales, threshold):
         
  
 def prune_blobs(blobs, overlap_threshold, q_factor):
-    """Prune blobs. If the overlap area of two blobs is to large, the one with the smaller peak value is dismissed"""
+    """Prune blobs.
+    
+    If the overlap area of two blobs is to large,
+    the one with the smaller peak value is dismissed.
+    """
     # It is still the question whether the result is unique
     # Loop over all pairwise blob combinations
     for blob_1, blob_2 in combinations(blobs, 2):
@@ -162,11 +169,13 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
         else:    
             overlap = blob_1.overlap(blob_2)
         if overlap > overlap_threshold:  # Overlap criterion, neighborhood criterion
-                if blob_1.value > blob_2.value:  # Find maximum
-                    blob_2.keep = False
-                else:
-                    blob_1.keep = False
-    return [blob for blob in blobs if blob.keep]  # That is Python programming at its best:-)
+            if blob_1.value > blob_2.value:  # Find maximum
+                blob_2.keep = False
+            else:
+                blob_1.keep = False
+
+    # That is Python programming at its best:-)
+    return [blob for blob in blobs if blob.keep]  
 
 
 def show_blobs(image, blobs):
@@ -184,6 +193,17 @@ def show_blobs(image, blobs):
 
     plt.show()
 
+def write_region_file(regionfile, blobs):
+    """Write ds9 region file from blob list"""
+    # Open region file, it will be overwritten if it already exists!
+    f = open(regionfile, 'w')
+    
+    # Write blobs to file
+    for blob in blobs:
+        fmt = "circle({0}, {1}, {2})\n"
+        region_string = fmt.format(blob.x_pos, blob.y_pos, blob.radius)
+        f.write(region_string)
+    f.close()
 
 class Blob(object):
     """An excess blob is represented by a position, radius and peak value."""  
@@ -191,8 +211,9 @@ class Blob(object):
     def __init__(self, x_pos, y_pos, radius, value):
         self.x_pos = x_pos
         self.y_pos = y_pos
-        # The algorithm is most sensitive for extensions of sqrt(2) * t, where t is the scale space parameter
-        # This has still to be verified, e.g. for a Gaussian source
+        # The algorithm is most sensitive for extensions of sqrt(2) * t,
+        # where t is the scale space parameter.
+        # This has still to be verified, e.g. for a Gaussian source.
         self.radius = 1.41 * radius 
         self.value = value
         self.keep = True
@@ -219,19 +240,20 @@ class Blob(object):
         elif d > (self.radius + blob.radius):
             area = 0
             
-        # Compute overlap area. Reference: http://mathworld.wolfram.com/Circle-CircleIntersection.html (04.04.2013)
-        else:   
-            area = (blob.radius ** 2 * arccos((d ** 2 + blob.radius ** 2 - self.radius ** 2) / (2 * d * blob.radius)) 
-                                + self.radius ** 2 * arccos((d ** 2 + self.radius ** 2 - blob.radius ** 2) / (2 * d * self.radius)) 
-                                - 0.5 * sqrt(abs((-d + self.radius + blob.radius) * (d + self.radius - blob.radius) * 
-                                                 (d - self.radius + blob.radius) * (d + self.radius + blob.radius))))
+        # Compute overlap area.
+        # Reference: http://mathworld.wolfram.com/Circle-CircleIntersection.html (04.04.2013)
+        else:
+            term_a = blob.radius ** 2 * arccos((d ** 2 + blob.radius ** 2 - self.radius ** 2) / (2 * d * blob.radius))
+            term_b = self.radius ** 2 * arccos((d ** 2 + self.radius ** 2 - blob.radius ** 2) / (2 * d * self.radius))
+            term_c = 0.5 * sqrt(abs((-d + self.radius + blob.radius) * (d + self.radius - blob.radius) * 
+                                    (d - self.radius + blob.radius) * (d + self.radius + blob.radius)))
+            area = (term_a + term_b - term_c)
+
         return max(area / self.area(), area / blob.area())
     
     
-    def q_factor(self, blob):
+    def q_factor(self, blob, sigma_PSF=0.1):
         """Compute q factor as overlap criterion"""
-        # Approx HESS PSF size
-        sigma_PSF = 0.1
         
         # Compute convolved sigma 
         sigma_A = sqrt(self.radius ** 2 + sigma_PSF ** 2)

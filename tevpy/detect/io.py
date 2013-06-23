@@ -1,11 +1,10 @@
-"""Blob detect io"""
+"""Multi-scale image I / O helper functions"""
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
 
 __all__ = ['write_scale_cube', 'read_scale_cube',
-           'write_scale_cube_fits', 'read_scale_cube_fits',
-           'write_region_file']
+           'write_scale_cube_fits', 'read_scale_cube_fits']
 
 def write_scale_cube(image_cube, scales, filename):
     """Write filtered images to numpy binary file"""
@@ -29,7 +28,8 @@ def write_scale_cube_fits(image, image_cube, scale_parameters, filename, header)
 
     # Create image HDU and append it to the list 
     for scale, scale_image in zip(scale_parameters, image_cube) :
-        hdu = fits.ImageHDU(data=scale_image, header=header, name="SCALE {0:0.2f}".format(scale))
+        hdu = fits.ImageHDU(data=scale_image, header=header,
+                            name="SCALE {0:0.2f}".format(scale))
         hdulist.append(hdu)
     
     # Append scales in a table HDU
@@ -62,14 +62,3 @@ def read_scale_cube_fits(filename):
     
     return scale_space, scales
 
-def write_region_file(regionfile, blobs):
-    """Write ds9 region file from blob list"""
-    # Open region file, it will be overwritten if it already exists!
-    f = open(regionfile, 'w')
-    
-    # Write blobs to file
-    for blob in blobs:
-        region_string = "circle({0}, {1}, {2})\n".format(blob.x_pos, blob.y_pos, blob.radius)
-        f.write(region_string)
-    f.close()
-    logging.info("Wrote region file {0}".format(regionfile))
