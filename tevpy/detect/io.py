@@ -1,8 +1,11 @@
-""""Blob detect io"""
+"""Blob detect io"""
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
 
+__all__ = ['write_scale_cube', 'read_scale_cube',
+           'write_scale_cube_fits', 'read_scale_cube_fits',
+           'write_region_file']
 
 def write_scale_cube(image_cube, scales, filename):
     """Write filtered images to numpy binary file"""
@@ -70,12 +73,3 @@ def write_region_file(regionfile, blobs):
         f.write(region_string)
     f.close()
     logging.info("Wrote region file {0}".format(regionfile))
-        
-
-###Conversion functions###
-
-def write_fits_table():
-    """Write source catalog to fits table"""
-    from astropy.table import Table, Column
-    catalog = Table()
-    

@@ -14,7 +14,9 @@ from numpy import sqrt, sin, cos, pi, arccos, abs, exp
 from scipy.ndimage import gaussian_filter, gaussian_laplace, maximum_filter
 from scipy.ndimage.morphology import binary_erosion
 
-__all__ = ['create_scale_space']
+__all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
+           'show_peaks', 'detect_blobs_3D', 'detect_blobs', 'prune_blobs',
+           'show_blobs', 'Blob']
 
 
 def create_scale_space(image, scales, filter_='gaussian_laplace'):
@@ -178,11 +180,6 @@ def show_blobs(image, blobs):
     plt.show()
 
 
-
-
-
-
-
 class Blob(object):
     """An excess blob is represented by a position, radius and peak value."""  
     def __init__(self, x_pos, y_pos, radius, value):
@@ -255,5 +252,6 @@ class Blob(object):
 
     def __str__(self):
         """Is called by the print statement"""
-        return 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'.format(self.x_pos, self.y_pos, self.radius, self.value)
+        fmt = 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'
+        return fmt.format(self.x_pos, self.y_pos, self.radius, self.value)
 

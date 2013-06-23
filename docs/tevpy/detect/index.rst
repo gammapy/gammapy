@@ -25,5 +25,11 @@ TODO: describe the `iterative_source_detect` tool.
 TODO: describe the `image_decompose_a_trous` tool.
 
 
-.. automodapi:: tevpy.detect
+Reference/API
+=============
+
+.. automodapi:: tevpy.detect.blob
+    :no-inheritance-diagram:
+
+.. automodapi:: tevpy.detect.io
     :no-inheritance-diagram:

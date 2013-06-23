@@ -1,4 +1,3 @@
 """Source detection methods"""
-from .io import *
-from .blob import *
-
+from . import io
+from . import blob
