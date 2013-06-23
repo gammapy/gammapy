@@ -1,3 +1,3 @@
 """Source detection methods"""
-from . import io
 from . import blob
+from . import utils
