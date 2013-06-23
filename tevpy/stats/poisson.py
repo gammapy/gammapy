@@ -15,6 +15,7 @@ __all__ = ['background', 'background_error',
            'sensitivity', 'sensitivity_on_off',
            ]
 
+
 def background(n_off, alpha):
     r"""Estimate background in the on-region from an off-region observation.
 
@@ -153,13 +154,14 @@ def excess_error(n_on, n_off, alpha):
     variance = n_on + (alpha ** 2) * n_off
     return sqrt(variance)
 
+
 def significance(n_observed, mu_background, method='lima'):
     r"""Compute significance for an observed number of counts and known background.
 
-    The simple significance estimate :math:`S_{simple}` is given by 
-    
+    The simple significance estimate :math:`S_{simple}` is given by
+
     .. math ::
-    
+
         S_{simple} = (n_{observed} - \mu_{background}) / \sqrt{\mu_{background}}
 
     The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
@@ -168,7 +170,7 @@ def significance(n_observed, mu_background, method='lima'):
     The following formula for :math:`S_{lima}` was obtained with Mathematica::
 
     .. math ::
-    
+
         S_{lima} = \left[ 2 n_{observed} \log \left( \frac{n_{observed}}{\mu_{background}} \right) - n_{observed} + \mu_{background} \right] ^ {1/2}
 
 
@@ -235,7 +237,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
     r"""Compute significance of an on-off observation.
 
     See the `method` option and the descriptions in the
-    docstrings of the functions listed under `See Also`.  
+    docstrings of the functions listed under `See Also`.
 
     Parameters
     ----------
@@ -276,13 +278,13 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
 
     if method == 'simple':
         if neglect_background_uncertainty:
-            mu_background = background(n_off, alpha)    
+            mu_background = background(n_off, alpha)
             return _significance_simple(n_on, mu_background)
         else:
             return _significance_simple_on_off(n_on, n_off, alpha)
     elif method == 'lima':
         if neglect_background_uncertainty:
-            mu_background = background(n_off, alpha)    
+            mu_background = background(n_off, alpha)
             return _significance_lima(n_on, mu_background)
         else:
             return _significance_lima_on_off(n_on, n_off, alpha)
@@ -342,7 +344,7 @@ def _significance_lima_on_off(n_on, n_off, alpha):
 
 
 def sensitivity(mu_background, significance, quantity='excess', method='lima'):
-    r"""Compute sensitivity 
+    r"""Compute sensitivity
 
     Parameters
     ----------
@@ -442,6 +444,7 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
     else:
         raise ValueError('Invalid quantity: {0}'.format(quantity))
 
+
 def _sensitivity_simple_on_off(n_off, alpha, significance):
     """Implements an analytical formula that can be easily obtained
     by solving the simple significance formula for n_on"""
@@ -477,9 +480,7 @@ def _sensitivity_lima_on_off(n_off, alpha, significance):
     guess = _sensitivity_simple_on_off(n_off, alpha, significance) + background(n_off, alpha)
     data = enumerate(zip(guess.flat, n_off.flat, alpha.flat, significance.flat))
     for ii, guess_, n_off_, alpha_, significance_ in data:
-        #guess = 1e-3
+        # guess = 1e-3
         n_on.flat[ii] = fsolve(f, guess_, args=(n_off_, alpha_, significance_))
 
     return n_on
-
-

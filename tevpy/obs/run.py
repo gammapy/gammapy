@@ -2,6 +2,7 @@
 
 __all__ = ['Run', 'RunList']
 
+
 class Run(object):
     """
     Run parameters container
@@ -26,5 +27,3 @@ class RunList(list):
     Run list container
     """
     pass
-
-

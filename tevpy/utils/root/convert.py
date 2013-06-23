@@ -14,11 +14,12 @@ In the menu select:
 import warnings
 import numpy as np
 
+
 def TH2_to_FITS_header(h, flipx=True):
     """Create FITS header assuming TH2 or SkyHist that represents an image
     in Galactic CAR projection with reference point at GLAT = 0,
     as is the case for HESS SkyHists.
-    
+
     Formulae and variable names taken from Plotters::SkyHistToFITS()
     in $HESSROOT/plotters/src/FITSUtils.C
     """
@@ -44,7 +45,8 @@ def TH2_to_FITS_header(h, flipx=True):
     header['CUNIT1'], header['CUNIT2'] = 'deg', 'deg'
     header['CDELT1'], header['CDELT2'] = cdelt1, cdelt2
     return header
- 
+
+
 def TH2_to_FITS_data(h, flipx=True):
     """Convert TH2 bin values into a numpy array"""
     # @note: Numpy array index order is (y, x), whereas ROOT TH2 has (x, y)
@@ -57,15 +59,16 @@ def TH2_to_FITS_data(h, flipx=True):
         for iy in range(ny):
             array[iy, ix] = h.GetBinContent(ix, iy)
     if flipx:
-        array = array[:,::-1]
+        array = array[:, ::-1]
     return array
+
 
 def TH2_to_FITS(h, flipx=True):
     """Convert ROOT TH2 to kapteyn.maputils.FITSimage,
     which can easily be exported to a FITS file.
-    
+
     h : Input 2D ROOT histogram
-    
+
     Usage example:
     >>> from TH2_to_FITS import TH2_to_FITS
     >>> root_th2 = ROOT.TH2F()

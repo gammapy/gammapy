@@ -3,18 +3,21 @@ import numpy as np
 from ..test_statistic_map import compute_ts_image
 from ..test_statistic_map import TSMapCalculator as TSMC
 
+
 def make_test_images(shape=(100, 200)):
     np.random.seed(0)
     background = 10. * np.ones(shape)
     excess = 1
     images = dict()
     images['background'] = background + excess
-    images['counts'] = np.random.poisson(images['background']) 
+    images['counts'] = np.random.poisson(images['background'])
     return images
+
 
 def make_test_kernel(shape=(11, 11)):
     kernel = np.ones(shape=shape)
     return kernel
+
 
 def _test_simple():
     """A simple test case"""
@@ -32,6 +35,7 @@ def _test_simple():
         hdu_list.append(hdu)
     hdu_list.writeto('images.fits', clobber=True)
 
+
 def _test_optimizers():
     """Compare speed for a few different optimizers"""
     optimizers = ['migrad', 'fmin']
@@ -39,14 +43,14 @@ def _test_optimizers():
 
     images = make_test_images(shape=(30, 50))
     kernel = make_test_kernel(shape=(5, 5))
-    
+
     for optimizer in optimizers:
         for start_value in start_values:
             tsmc = TSMC(images, kernel,
                         optmizier=optimizer,
                         start_value=start_value)
             tsmc.run()
-            tsmc.report()        
+            tsmc.report()
 
 
 def _test_speed():

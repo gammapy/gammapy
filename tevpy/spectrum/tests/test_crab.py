@@ -10,6 +10,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_eval():
     # Check diff_flux and int_flux functions
@@ -29,7 +30,7 @@ def test_eval():
         I_err = (I - I_ref) / I_ref
         g_err = g - g_ref
         # TODO: add asserts
-        #print(('%15s ' + '%13.5g' * 6) %
+        # print(('%15s ' + '%13.5g' * 6) %
         #      (ref, f, I, g, f_err, I_err, g_err))
 
 

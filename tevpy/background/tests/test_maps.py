@@ -13,6 +13,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestMaps(unittest.TestCase):
     # TODO: use astropy temp file utils
