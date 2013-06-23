@@ -17,19 +17,19 @@ __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
            'show_blobs', 'write_region_file', 'Blob']
 
 
-def create_scale_space(image, scales, filter_='gaussian_laplace'):
+def create_scale_space(image, scales, kernel='gaussian_laplace'):
     """Creates Scale Space for a given image and stores it in 3D array"""
     from scipy.ndimage import gaussian_filter, gaussian_laplace
     
     # Filter option
-    if filter_ == 'gaussian':
+    if kernel == 'gaussian':
         scale_filter = gaussian_filter
         N = '1' 
-    elif filter_ == 'gaussian_laplace':
+    elif kernel == 'gaussian_laplace':
         scale_filter = gaussian_laplace
         N = '-scale**2'  # Normalization for linear scale space, see Wikipedia link above
     else:
-        raise ValueError('Invalid filter option')
+        raise ValueError('Invalid kernel option')
     
     # Set up scale space dimensions
     width, height = image.shape
