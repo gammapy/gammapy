@@ -95,7 +95,7 @@ html_theme_options = {
 
 # First TeV gamma-ray image: the supernova remnant RX J1713 with HESS
 # http://apod.nasa.gov/apod/ap041105.html
-html_favicon = '_static/tevpy_logo_64.png'
+html_favicon = '_static/tevpy_logo.ico'
 
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)
