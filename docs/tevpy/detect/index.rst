@@ -31,5 +31,5 @@ Reference/API
 .. automodapi:: tevpy.detect.blob
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.io
+.. automodapi:: tevpy.detect.utils
     :no-inheritance-diagram:
