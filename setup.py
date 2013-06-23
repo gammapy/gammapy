@@ -37,7 +37,7 @@ import tevpy
 
 # Set affiliated package-specific settings
 PACKAGENAME = 'tevpy'
-DESCRIPTION = 'TeV high-level data analysis method demo'
+DESCRIPTION = 'TeV gamma-ray astronomy high-level data analysis Python package'
 LONG_DESCRIPTION = ''
 AUTHOR = 'Christoph Deil'
 AUTHOR_EMAIL = 'Deil.Christoph@gmail.com'
@@ -45,7 +45,7 @@ LICENSE = 'BSD'
 URL = 'https://github.com/gammapy/tevpy'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '0.0.dev'
+VERSION = '0.1'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
