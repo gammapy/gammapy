@@ -5,14 +5,12 @@ http://www.cs.utah.edu/~jfishbau/advimproc/project1/ (04.04.2013)
 Theory behind: http://en.wikipedia.org/wiki/Blob_detection (04.04.2013)
 I modified the peak detection by using a maximum filter.
 """
-import logging
-logging.basicConfig(level=logging.INFO)
 from itertools import combinations
 import numpy as np
 from numpy import sqrt, sin, cos, pi, arccos, abs, exp
 
-from scipy.ndimage import gaussian_filter, gaussian_laplace, maximum_filter
-from scipy.ndimage.morphology import binary_erosion
+#from scipy.ndimage import gaussian_filter, gaussian_laplace, maximum_filter
+#from scipy.ndimage.morphology import binary_erosion
 
 __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
            'show_peaks', 'detect_blobs_3D', 'detect_blobs', 'prune_blobs',
@@ -21,6 +19,8 @@ __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
 
 def create_scale_space(image, scales, filter_='gaussian_laplace'):
     """Creates Scale Space for a given image and stores it in 3D array"""
+    from scipy.ndimage import gaussian_filter, gaussian_laplace
+    
     # Filter option
     if filter_ == 'gaussian':
         scale_filter = gaussian_filter
@@ -29,7 +29,7 @@ def create_scale_space(image, scales, filter_='gaussian_laplace'):
         scale_filter = gaussian_laplace
         N = '-scale**2'  # Normalization for linear scale space, see Wikipedia link above
     else:
-        logging.error('Invalid filter option')
+        raise ValueError('Invalid filter option')
     
     # Set up scale space dimensions
     width, height = image.shape
@@ -37,7 +37,6 @@ def create_scale_space(image, scales, filter_='gaussian_laplace'):
     
     # Compute scale space
     for scale in scales:
-        logging.info("Computing scale {0}:".format(scale))
         image_scaled = eval(N) * np.array(scale_filter(image, scale, mode='constant'), ndmin=3)
         scale_space = np.append(scale_space, image_scaled, axis=0)
     return scale_space        
@@ -45,6 +44,9 @@ def create_scale_space(image, scales, filter_='gaussian_laplace'):
 
 def detect_peaks(image):
     """Detect peaks in an image  using a maximum filter"""
+    from scipy.ndimage import maximum_filter
+    from scipy.ndimage.morphology import binary_erosion
+    
     # Set up 3x3 footprint for maximum filter, can also be a different neighborhood if necessary
     footprint = np.ones((3, 3))
 
@@ -66,6 +68,9 @@ def detect_peaks(image):
 
 def detect_peaks_3D(image):
     """Same functionality as detect_peaks, but works on image cubes. """
+    from scipy.ndimage import maximum_filter
+    from scipy.ndimage.morphology import binary_erosion
+
     # Set up 3x3 footprint for maximum filter
     footprint = np.ones((3, 3, 3))
 
@@ -119,7 +124,7 @@ def detect_blobs_3D(image, threshold):
     for x, y, scale in zip(x_list, y_list, scale_list):
         val = image_3D[scale][y][x]
         blobs.append(Blob(x, y, scale, val))
-    logging.info('Found {0} blobs.'.format(len(blobs)))    
+
     return blobs
     
  
@@ -174,14 +179,15 @@ def show_blobs(image, blobs):
     # plt.colorbar()
        
     for blob in blobs:
-        logging.info('Found blob: {0}'.format(blob))
         x, y = blob.image() 
         plt.plot(x, y, color='y')
+
     plt.show()
 
 
 class Blob(object):
     """An excess blob is represented by a position, radius and peak value."""  
+
     def __init__(self, x_pos, y_pos, radius, value):
         self.x_pos = x_pos
         self.y_pos = y_pos
@@ -254,4 +260,3 @@ class Blob(object):
         """Is called by the print statement"""
         fmt = 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'
         return fmt.format(self.x_pos, self.y_pos, self.radius, self.value)
-
