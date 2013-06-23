@@ -8,6 +8,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_s_to_p():
     p = utils.s_to_p(5)

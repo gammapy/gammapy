@@ -1,4 +1,4 @@
-"""Compute some statistics directly using these methods: 
+"""Compute some statistics directly using these methods:
 sherpa.stats.Stat.calc_stat(self, data, model, staterror=None, syserror=None, weight=None)
 sherpa.stats.Stat.calc_staterror(self, data)
 
@@ -39,5 +39,4 @@ for stat_name, stat_class in stats:
     except ValueError:
         stat_error = -999
     print('%20s %20.10f' % (stat_name, stat_error))
-    #stat_object.calc_staterror(data=2, model=12, staterror=2)
-
+    # stat_object.calc_staterror(data=2, model=12, staterror=2)

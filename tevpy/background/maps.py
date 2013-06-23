@@ -61,7 +61,7 @@ class Maps(fits.HDUList):
         # Add missing basic_maps with default value and
         # same shape and type as existing reference basic map
         logging.debug('Adding missing basic maps: {0}'
-                     ''.format(nonexisting_basic_maps))
+                      ''.format(nonexisting_basic_maps))
         for name in nonexisting_basic_maps:
             value = basic_map_defaults[basic_maps.index(name)]
             data = np.ones_like(self.ref_hdu.data) * value
@@ -101,7 +101,7 @@ class Maps(fits.HDUList):
         try:
             data = self[name].data
             logging.debug('Returning already existing derived map {0}'
-                         ''.format(name))
+                          ''.format(name))
             return data
         except KeyError:
             return eval('self.make_{0}().data'.format(name))
@@ -151,7 +151,7 @@ class Maps(fits.HDUList):
         alpha = self.get_derived('alpha')
 
         significance = stats.significance_on_off(n_on, n_off, alpha, method,
-                                                      neglect_background_uncertainty)
+                                                 neglect_background_uncertainty)
         return self._make_hdu(significance, 'significance')
 
     def make_flux(self):

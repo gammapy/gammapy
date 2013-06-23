@@ -10,7 +10,7 @@ __all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit']
 
 def s_to_p(s):
     """Convert significance to one-sided tail probability.
-    
+
     Parameters
     ----------
     s : array_like
@@ -44,7 +44,7 @@ def s_to_p(s):
 
 def p_to_s(p):
     """Convert one-sided tail probability to significance.
-    
+
     Parameters
     ----------
     p : array_like
@@ -70,24 +70,24 @@ def p_to_s(p):
 
 def _p_to_s_direct(p, one_sided=True):
     """Direct implementation of p_to_s for checking.
-    
+
     Reference: RooStats User Guide Equations (6,7).
     """
     from scipy.special import erfinv
-    p = 1 - p # We want p to be the tail probability
+    p = 1 - p  # We want p to be the tail probability
     temp = np.where(one_sided, 2 * p - 1, p)
     return sqrt(2) * erfinv(temp)
 
 
 def _s_to_p_direct(s, one_sided=True):
     """Direct implementation of s_to_p for checking.
-    
+
     @see: _p_to_s_direct was solved for p.
     """
     from scipy.special import erf
     temp = erf(s / sqrt(2))
     p = np.where(one_sided, (temp + 1) / 2., temp)
-    return 1 - p # We want p to be the tail probability
+    return 1 - p  # We want p to be the tail probability
 
 
 def p_to_s_limit(p):
@@ -97,7 +97,7 @@ def p_to_s_limit(p):
     Reference: Equation (4) of
     http://adsabs.harvard.edu/abs/2007physics...2156C
     They say it is better than 1% for s > 1.6.
-    
+
     Asymptotically: s ~ sqrt(-log(p))
     """
     u = -2 * log(p * sqrt(2 * pi))

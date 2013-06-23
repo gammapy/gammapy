@@ -1,6 +1,7 @@
 """ROOT utility functions"""
 import numpy as np
 
+
 def fill_acceptance(psi, acceptance, psi_max=2):
     """Fill acceptance image.
     psi = np.array of offset values

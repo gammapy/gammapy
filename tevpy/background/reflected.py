@@ -12,7 +12,7 @@ class ReflectedRegionMaker(object):
     """Finds reflected regions.
 
     TODO: At the moment only works for circular regions!
-    
+
     TODO: should work with world or pixel coordinates internally!???
     """
 
@@ -23,17 +23,15 @@ class ReflectedRegionMaker(object):
         self.regions = None
         self.angle_increment = angle_increment
 
-        
         # For a "distance to exclusion region" map.
         # This will allow a fast check if a given position
         # is a valid off region position simply by looking
         # up the distance of the corresponding pixel in this map.
         header = exclusion.header
-        CDELT = exclusion.header['CDELT2'] 
+        CDELT = exclusion.header['CDELT2']
         distance = CDELT * exclusion_distance(exclusion.data)
         from astropy.io.fits import ImageHDU
         self.exclusion_distance = ImageHDU(distance, header)
-        
 
     def compute(self, x_on, y_on, r_on):
         self.regions = []
@@ -47,7 +45,6 @@ class ReflectedRegionMaker(object):
                 region = dict(x=x, y=y, r=r_on)
                 self.regions.append(region)
 
-
     def _is_position_ok(self, x, y, r):
         if self._is_exclusion_ok(x, y, r):
             if self._is_other_regions_ok(x, y, r):
@@ -56,7 +53,7 @@ class ReflectedRegionMaker(object):
 
     def _is_exclusion_ok(self, x, y, r):
         return lookup(self.exclusion_distance, x, y) > r
-    
+
     def _is_other_regions_ok(self, x, y, r):
         other_regions = self.regions + [self.on_region]
         for region in other_regions:
@@ -67,7 +64,7 @@ class ReflectedRegionMaker(object):
             if distance < min_distance:
                 return False
         return True
-    
+
     def _compute_offset(self, x, y):
         x2 = (x - self.fov['x']) ** 2
         y2 = (y - self.fov['y']) ** 2
@@ -83,7 +80,7 @@ class ReflectedRegionMaker(object):
     def _compute_xy(self, offset, angle):
         """Compute x, y position for a given position angle"""
         dx = offset * sin(angle)
-        dy = offset * cos(angle) 
+        dy = offset * cos(angle)
         x = self.fov['x'] + dx
         y = self.fov['y'] + dy
         return x, y
@@ -94,6 +91,7 @@ class ReflectedRegionMaker(object):
             for region in self.regions:
                 line = fmt.format(**region)
                 fh.write(line)
+
 
 class ReflectedBgMaker(object):
     """Compute background using the reflected background method"""

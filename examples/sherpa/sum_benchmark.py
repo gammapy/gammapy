@@ -11,7 +11,7 @@ but they are not readily available in stdlib C / C++ or numpy
 (there's an open feature request for numpy though: https://github.com/numpy/numpy/issues/2448)
 
 The simplest solution is to use 128 bit precision for the accumulator in numpy:
-In [7]: np.sum([1e10, -1e10, 1e-6] * int(1e6))    
+In [7]: np.sum([1e10, -1e10, 1e-6] * int(1e6))
 Out[7]: 1.9073477254638671
 In [8]: np.sum([1e10, -1e10, 1e-6] * int(1e6), dtype='float128')
 Out[8]: 1.0002404448965787888
@@ -33,11 +33,13 @@ from timeit import Timer
 dtypes = ['f32', 'f64', 'f128']
 sizes = [int(1e6), int(1e9)]
 
+
 def setup(size, dtype):
     return """
 import numpy as np
 data = np.zeros({size}, dtype='{dtype}')
 """[1:-1].format(**locals())
+
 
 def statement(dtype):
     return """data.sum(dtype='{dtype}')""".format(**locals())
@@ -56,7 +58,7 @@ for data_dtype in dtypes:
 On my 2.6 GHz Intel Core I7 Macbook the speed doesn't depend on data or accumulator dtype at all.
 This is weird, because it's a 64 bit machine, so 128 bit addition should be slower.
 Also for such a simple computation as sum the limiting factor should be memory loading speed,
-so 128 bit data should be slower to process than 64 bit data? 
+so 128 bit data should be slower to process than 64 bit data?
 
 In [53]: run sum_benchmark.py
        f32        f32    1000000    0.82793
