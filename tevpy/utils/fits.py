@@ -3,12 +3,13 @@ from astropy.io import fits
 
 __all__ = ['get_hdu', 'get_image_hdu', 'get_table_hdu']
 
+
 def get_hdu(location):
     """Get one HDU for a given location
-    
-    location should be either a `file_name` or a file 
+
+    location should be either a `file_name` or a file
     and HDU name in the format `file_name[hdu_name]`.
-    """ 
+    """
     # TODO: Test all cases and give good exceptions / error messages
     if '[' in location:
         tokens = location.split('[')
@@ -19,9 +20,11 @@ def get_hdu(location):
         file_name = location
         return fits.open(file_name)[0]
 
+
 def get_image_hdu():
     """Get the first image HDU"""
     raise NotImplementedError
+
 
 def get_table_hdu():
     """Get the first table HDU"""

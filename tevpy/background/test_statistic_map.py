@@ -33,25 +33,28 @@ from .. import stats
 
 __all__ = ['compute_ts_image', 'TSMapCalculator']
 
+
 def fit_amplitude(counts, background, kernel, start_value):
     out = dict()
+
     def stat(amplitude):
         return stats.cash(counts, background + amplitude * kernel)
-    
+
     from iminuit import Minuit
     minuit = Minuit(stat, pedantic=False, print_level=0,
                     amplitude=start_value)
     minuit.migrad()
-    #import IPython; IPython.embed(); 1/0
+    # import IPython; IPython.embed(); 1/0
     out['amplitude'] = minuit.values['amplitude']
     out['ncalls'] = minuit.ncalls
     return out
 
+
 def compute_ts(images, kernel):
     # For the kernel we have to make a copy, otherwise
     # we modify the kernel in-place and will get incorrect
-    # results for the next pixel 
-    normalized_kernel = kernel /  kernel.sum()
+    # results for the next pixel
+    normalized_kernel = kernel / kernel.sum()
     counts = images['counts']
     background = images['background']
     C0 = stats.cash(counts, background)
@@ -62,6 +65,7 @@ def compute_ts(images, kernel):
     out['ts'] = - 2 * (C1 - C0)
     return out
 
+
 def process_image_full(images, kernel, out, process_image_part):
     """
     images : dict with values as numpy arrays
@@ -69,7 +73,7 @@ def process_image_full(images, kernel, out, process_image_part):
              kernel shape must be odd-valued
     out : dict of numpy arrays to fill
     process_image_part : function to process a part of the images
-    
+
     TODO: Add different options to treat the edges!
     """
     n0, n1 = out.values()[0].shape
@@ -91,13 +95,13 @@ def process_image_full(images, kernel, out, process_image_part):
                 i1_lo = min(k1, i1)
                 i0_up = min(k0, n0 - i0 - 1)
                 i1_up = min(k1, n1 - i1 - 1)
-                part = image[i0 - i0_lo : i0 + i0_up,
-                             i1 - i1_lo : i1 + i1_up]
+                part = image[i0 - i0_lo: i0 + i0_up,
+                             i1 - i1_lo: i1 + i1_up]
                 image_parts[name] = part
             # Cut out relevant part of the kernel array
             # This only applies when close to the edge
-            kernel_part = kernel[k0 - i0_lo : k0 + i0_up,
-                                 k1 - i1_lo : k1 + i1_up]
+            kernel_part = kernel[k0 - i0_lo: k0 + i0_up,
+                                 k1 - i1_lo: k1 + i1_up]
 
             out_part = process_image_part(image_parts, kernel_part)
 
@@ -106,6 +110,7 @@ def process_image_full(images, kernel, out, process_image_part):
 
     return out
 
+
 def compute_ts_image(images, kernel):
     out = dict()
     out['ts'] = np.zeros_like(images['counts'], dtype='float64')
@@ -113,10 +118,9 @@ def compute_ts_image(images, kernel):
     return process_image_full(images, kernel, out, compute_ts)
 
 
-
 class TSMapCalculator(object):
     """TS Map calculator class."""
-    
+
     def __init__(self, images, kernel, optimizer='migrad', guess_method='estimate'):
         self.images = images
 
@@ -136,7 +140,7 @@ class TSMapCalculator(object):
         out['ncalls'] = np.zeros_like(self.out_shape, dtype='uint16')
 
         """
-        # TODO: finish implementation 
+        # TODO: finish implementation
         method =  ts_method()
         process_image_full(images, kernel, out, compute_ts)
         self.out = out
@@ -147,7 +151,7 @@ class TSMapCalculator(object):
         n0, n1 = self.out_shape
         kernel = self.kernel
         k0, k1 = kernel.shape[0] / 2, kernel.shape[1] / 2
-    
+
         # Loop over all pixels
         for i0 in range(0, n0):
             for i1 in range(0, n1):
@@ -159,13 +163,13 @@ class TSMapCalculator(object):
                     i1_lo = min(k1, i1)
                     i0_up = min(k0, n0 - i0 - 1)
                     i1_up = min(k1, n1 - i1 - 1)
-                    part = image[i0 - i0_lo : i0 + i0_up,
-                                 i1 - i1_lo : i1 + i1_up]
+                    part = image[i0 - i0_lo: i0 + i0_up,
+                                 i1 - i1_lo: i1 + i1_up]
                     image_parts[name] = part
                 # Cut out relevant part of the kernel array
                 # This only applies when close to the edge
-                kernel_part = kernel[k0 - i0_lo : k0 + i0_up,
-                                     k1 - i1_lo : k1 + i1_up]
+                kernel_part = kernel[k0 - i0_lo: k0 + i0_up,
+                                     k1 - i1_lo: k1 + i1_up]
 
                 self._process_one_pixel(image_parts, kernel_part)
 

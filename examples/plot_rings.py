@@ -33,8 +33,8 @@ fig = plt.figure(1, (10, 10))
 title = ('Areafactor = {0} and Pixel Size {1}'
          ''.format(areafactor, pixscale))
 grid = ImageGrid(fig, 111,
-                nrows_ncols=(len(thetas), len(r_is)),
-                axes_pad=0.1,
+                 nrows_ncols=(len(thetas), len(r_is)),
+                 axes_pad=0.1,
                  )
 for i_theta, theta in enumerate(thetas):
     for i_r_i, r_i in enumerate(r_is):

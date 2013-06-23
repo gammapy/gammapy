@@ -6,8 +6,8 @@ from sherpa.ui import *
 
 # Set a few parameters
 numbins = 2
-data_value = np.arange(numbins) #10
-model_value = 5 # np.arange(numbins) #11
+data_value = np.arange(numbins)  # 10
+model_value = 5  # np.arange(numbins) #11
 staterror_value = 10
 
 # @note: We have a DataSpace1DInt data space here,

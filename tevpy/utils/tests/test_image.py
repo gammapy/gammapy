@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.testing import assert_equal
-from .. import image 
+from .. import image
+
 
 def test_binary_disk():
     actual = image.binary_disk(1)
@@ -8,6 +9,7 @@ def test_binary_disk():
                         [True, True, True],
                         [False, True, False]])
     assert_equal(actual, desired)
+
 
 def test_binary_ring():
     actual = image.binary_ring(1, 2)

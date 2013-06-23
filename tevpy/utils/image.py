@@ -4,6 +4,7 @@ import numpy as np
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
            'atrous_image', 'atrous_hdu']
 
+
 def _get_structure_indices(radius):
     """
     Get arrays of indices for a symmetric structure,
@@ -62,6 +63,7 @@ def ring_correlate(data, r_in, r_out, mode='constant'):
     structure = binary_ring(r_in, r_out)
     return convolve(data, structure, mode=mode)
 
+
 def exclusion_distance(exclusion):
     """Compute distance map, i.e. the Euclidean (=Cartesian 2D)
     distance (in pixels) to the nearest exclusion region.
@@ -79,6 +81,7 @@ def exclusion_distance(exclusion):
     distance = np.where(exclusion, distance_outside, -distance_inside)
     return distance
 
+
 def _lookup_pix(image, x, y):
     """
     image = numpy array
@@ -93,6 +96,7 @@ def _lookup_pix(image, x, y):
     values = image[y_int, x_int]
     return values
 
+
 def _lookup_world(image, lon, lat):
     """Look up values in an image
     image = astropy.io.fits.HDU
@@ -103,9 +107,10 @@ def _lookup_world(image, lon, lat):
     x, y = wcs.wcs_world2pix(lon, lat, 0)
     return _lookup_pix(image.data, x, y)
 
+
 def lookup(image, x, y, world=True):
     """Look up values in an image
-    
+
     TODO: document
     """
     if world:
@@ -131,9 +136,10 @@ class KernelCalculator(object):
     def compute
 '''
 
+
 def atrous_image(image, n_levels):
     """Compute a trous transform for a given image.
-    
+
     image : 2d array
     n_levels : integer
     returns : list of 2d arrays
@@ -142,9 +148,10 @@ def atrous_image(image, n_levels):
     from imfun import atrous
     return atrous.decompose2d(image, level=n_levels)
 
+
 def atrous_hdu(hdu, n_levels):
     """Compute a trous transform for a given FITS HDU
-    
+
     hdu : 2d image HDU
     n_levels : integer
     returns : HDUList
@@ -168,4 +175,3 @@ def atrous_hdu(hdu, n_levels):
         hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
 
     return hdus
-
