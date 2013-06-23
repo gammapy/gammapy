@@ -9,3 +9,10 @@ file.
 Sherpa uses the Kahan sum for these computation (see eg http://en.wikipedia.org/wiki/Kahan_summation_algorithm )
 
 https://github.com/numpy/numpy/issues/2448
+
+Sherpa: http://cxc.cfa.harvard.edu/sherpa/
+
+TODO:
+- add unit tests
+- add documentation
+- integrate in astropy or tevpy
