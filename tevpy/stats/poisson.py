@@ -215,6 +215,8 @@ def significance(n_observed, mu_background, method='lima'):
         return _significance_simple(n_observed, mu_background)
     elif method == 'lima':
         return _significance_lima(n_observed, mu_background)
+    elif method == 'direct':
+        return _significance_direct(n_observed, mu_background)
     else:
         raise Exception('Invalid method: %s' % method)
 
@@ -230,6 +232,26 @@ def _significance_lima(n_observed, mu_background):
     term_a = sign(n_observed - mu_background) * sqrt(2)
     term_b = sqrt(n_observed * log(n_observed / mu_background) - n_observed + mu_background)
     return term_a * term_b
+
+
+def _significance_direct(n_observed, mu_background):
+    """Compute significance directly via Poisson probability
+    
+    Use this method for small n_observed < 10.
+    In this case the Li & Ma formula isn't correct any more.
+    
+    TODO: add large unit test coverage (where is it numerically precise enough)?
+    TODO: check coverage with MC simulation
+    """
+    from scipy.stats import norm, poisson
+
+    # Compute tail probability to see n_on or more counts
+    probability = poisson.sf(n_observed, mu_background)
+
+    # Convert probability to a significance
+    significance = norm.isf(probability)
+
+    return significance
 
 
 def significance_on_off(n_on, n_off, alpha, method='lima',
@@ -248,7 +270,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
     alpha : array_like
         On / off region exposure ratio for background events
     method : str
-        Select method: 'lima' or 'simple'
+        Select method: 'lima' or 'simple' or 'direct'
 
     Returns
     -------
@@ -288,6 +310,12 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
             return _significance_lima(n_on, mu_background)
         else:
             return _significance_lima_on_off(n_on, n_off, alpha)
+    elif method == 'direct':
+        if neglect_background_uncertainty:
+            mu_background = background(n_off, alpha)
+            return _significance_direct(n_on, mu_background)
+        else:
+            return _significance_direct_on_off(n_on, n_off, alpha)        
     else:
         raise Exception('Invalid method: %s' % method)
 
@@ -341,6 +369,33 @@ def _significance_lima_on_off(n_on, n_off, alpha):
     sign = np.where(e > 0, 1, -1)
 
     return sign * sqrt(abs(2 * (l + m)))
+
+
+def _significance_direct_on_off(n_on, n_off, alpha):
+    """Compute significance directly via Poisson probability
+    
+    Use this method for small n_on < 10.
+    In this case the Li & Ma formula isn't correct any more.
+    
+    TODO: add reference
+    TODO: add large unit test coverage (where is it numerically precise enough)?
+    TODO: check coverage with MC simulation
+    TODO: implement in Cython and vectorize n_on (accept numpy  array n_on as input)
+    """
+    from math import factorial as fac
+    from scipy.stats import norm
+
+    # Compute tail probability to see n_on or more counts
+    probability = 1
+    for n in range(0, n_on):
+        term_1 = alpha ** n / (1 + alpha) ** (n_off + n + 1)
+        term_2 = fac(n_off + n) / (fac(n) * fac(n_off))
+        probability -= term_1 * term_2
+
+    # Convert probability to a significance
+    significance = norm.isf(probability)
+
+    return significance
 
 
 def sensitivity(mu_background, significance, quantity='excess', method='lima'):
