@@ -175,3 +175,41 @@ def atrous_hdu(hdu, n_levels):
         hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
 
     return hdus
+
+def coordinates(image, world=True, lon_sym=True, radians=False):
+    """
+    Get coordinate images for a given image.
+
+    TODO: clean up (numpy docstring, add "use_" to kwargs)
+
+    image: astropy.io.fits.ImageHDU
+    world: use world coordinates or pixel coordinates?
+    lon_sym: use longitude range (-180, 180) or (0, 360)
+
+    Returns tuple (lon, lat) of maps as numpy arrays with values
+    containing the position of the given pixel.
+
+    This function is useful if you want to compute
+    an image with values that are a function of position.
+
+    >>> l, b = coordinates(image)
+    >>> dist = sqrt( (l-42)**2 + (b-43)**2)
+    """
+    # Create arrays of pixel coordinates
+    y, x = np.indices(image.data.shape, dtype='int32') + 1
+
+    if not world:
+        return x, y
+
+    from astropy.wcs import WCS
+    wcs = WCS(image.header)
+    lon, lat = wcs.wcs_pix2world(x, y, 1)
+    
+    if lon_sym:
+        lon = np.where(lon > 180, lon - 360, lon)
+    
+    if radians:
+        lon = np.radians(lon)
+        lat = np.radians(lat)
+
+    return lon, lat
