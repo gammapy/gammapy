@@ -42,6 +42,8 @@ distribute-*.tar.gz
 htmlcov
 MANIFEST
 
+*.ipynb_checkpoints
+
 tevpy/tevpy.cfg
 
 docs/_generated
