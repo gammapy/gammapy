@@ -16,6 +16,6 @@ def test_measure():
     image = generate_example_image()
     labels = np.zeros_like(image, dtype=int)
     labels[10:20, 20:30] = 1
-    results = measure.measure(image, labels)
+    results = measure.measure_labeled_regions(image, labels)
 
     # TODO: check output!

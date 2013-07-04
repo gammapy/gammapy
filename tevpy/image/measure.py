@@ -2,7 +2,7 @@
 """Measure source properties"""
 import numpy as np
 
-__all__ = ['measure']
+__all__ = ['measure_labeled_regions']
 
 def _split_xys(pos):
     """Useful converter for scipy.ndimage"""
@@ -33,11 +33,11 @@ def get_area(labels):
     return area
 
 
-def measure(data, labels, tag='IMAGE',
-            measure_positions=True, measure_values=True,
-            fits_offset=True, bbox_offset=True):
+def measure_labeled_regions(data, labels, tag='IMAGE',
+                            measure_positions=True, measure_values=True,
+                            fits_offset=True, bbox_offset=True):
     """Measure source properties in image, where the sources
-    are defined by segments."""
+    are defined by a label image."""
     import scipy.ndimage as nd
     from astropy.table import Table, Column
     # Measure all segments

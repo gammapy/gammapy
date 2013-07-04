@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 from numpy.testing import assert_equal
-from .. import image
+from .. import utils
 
 
 def test_binary_disk():
-    actual = image.binary_disk(1)
+    actual = utils.binary_disk(1)
     desired = np.array([[False, True, False],
                         [True, True, True],
                         [False, True, False]])
@@ -13,7 +13,7 @@ def test_binary_disk():
 
 
 def test_binary_ring():
-    actual = image.binary_ring(1, 2)
+    actual = utils.binary_ring(1, 2)
     desired = np.array([[False, False, True, False, False],
                         [False, True, True, True, False],
                         [True, True, False, True, True],
