@@ -3,7 +3,7 @@ Reflected region background estimation
 """
 import numpy as np
 from numpy import sin, cos, arctan2, sqrt
-from ..utils.image import exclusion_distance, lookup
+from ..image.utils import exclusion_distance, lookup
 
 __all__ = ['ReflectedRegionMaker', 'ReflectedBgMaker']
 

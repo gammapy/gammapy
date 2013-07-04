@@ -26,7 +26,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from tevpy.utils.fits import get_hdu
-from tevpy.utils.image import lookup
+from tevpy.image.utils import lookup
 
 logging.debug('Reading {0}'.format(args['infile']))
 hdu = get_hdu(args['infile'])

@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 import numpy as np
 from astropy.io import fits
 from tevpy import stats
-from tevpy.utils.image import tophat_correlate
+from tevpy.image.utils import tophat_correlate
 
 class FitFailedError:
     pass

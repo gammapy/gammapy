@@ -13,7 +13,7 @@ filled with zeros or ones as appropriate.
 import logging
 import numpy as np
 from astropy.io import fits
-from ..utils.image import tophat_correlate
+from ..image.utils import tophat_correlate
 from .. import stats
 
 __all__ = ['Maps']
