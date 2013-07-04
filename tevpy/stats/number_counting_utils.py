@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+
 __all__ = ['NumberCountingUtils']
 
 # TODO: If useful, rewrite as functions and with proper tests and docstrings.
