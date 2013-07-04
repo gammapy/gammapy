@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility function TH2_to_FITS to export ROOT TH2 data to FITS files.
 
 Run this file, then look at the FITS file:
