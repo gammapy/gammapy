@@ -2,3 +2,4 @@
 """Image processing and analysis tools"""
 from .measure import *
 from .profile import *
+from .utils import *
