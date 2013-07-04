@@ -32,6 +32,7 @@ If you think it might be useful, go to :ref:`install`.
 
   background/index
   obs/index
+  image/index
   spectrum/index
   detect/index
   stats/index
