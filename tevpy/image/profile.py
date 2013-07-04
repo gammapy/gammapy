@@ -4,24 +4,37 @@ import numpy as np
 
 __all__ = ['compute_binning', 'FluxProfile']
 
-def compute_binning(data, n_bins, method='constant', eps=1e-10):
+def compute_binning(data, n_bins, method='equal width', eps=1e-10):
+    """Computes 1D array of bin edges.
+
+    Note that bin_edges has n_bins bins, i.e. length n_bins + 1.
+
+    Parameters
+    ----------
+    data : array_like
+        Data to be binned (any dimension)
+    n_bins : int
+        Number of bins
+    method : str
+        One of: 'equal width', 'equal entries'
+    eps : float
+        added to range so that the max data point is inside the
+        last bin. If eps=0 it falls on the right edge of the last
+        data point and thus would be not cointained.
+
+    Returns
+    -------
+    bin_edges : 1D ndarray
+        Array of bin edges.
     """
-    Computes x_edges array that bins the data.
-    Note that x_edges has n_bins bins, i.e. length n_bins + 1.
-    
-    method : 'same width' or 'same pix'
-    eps : added to range so that the max data point is inside the
-          last bin. If eps=0 it falls on the right edge of the last
-          data point and thus would be not cointained.
-    """
-    if method == 'same width':
-        x_edges = np.linspace(np.nanmin(data), np.nanmax(data) + eps, n_bins + 1)
-    elif method == 'same pix':
+    if method == 'equal width':
+        bin_edges = np.linspace(np.nanmin(data), np.nanmax(data) + eps, n_bins + 1)
+    elif method == 'equal entries':
         raise NotImplementedError
         # sort and sub-sample; test many cases
     else:
         raise ValueError('Invalid option: method = {0}'.format(method))
-    return x_edges
+    return bin_edges
 
 
 class FluxProfile(object):
