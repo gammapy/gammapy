@@ -5,7 +5,6 @@ from .. import crab
 
 try:
     import scipy
-    from ... import scipy
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
