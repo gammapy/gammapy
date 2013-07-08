@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from time import time
 import numpy as np
 from ..test_statistic import compute_ts_image
