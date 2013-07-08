@@ -1,8 +1,11 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Blob detection tool for source detection
 
 This generic blob detection algorithm is based on:
 http://www.cs.utah.edu/~jfishbau/advimproc/project1/ (04.04.2013)
+
 Theory behind: http://en.wikipedia.org/wiki/Blob_detection (04.04.2013)
+
 I modified the peak detection by using a maximum filter.
 """
 from itertools import combinations

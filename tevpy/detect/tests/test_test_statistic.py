@@ -1,7 +1,7 @@
 from time import time
 import numpy as np
-from ..test_statistic_map import compute_ts_image
-from ..test_statistic_map import TSMapCalculator as TSMC
+from ..test_statistic import compute_ts_image
+from ..test_statistic import TSMapCalculator as TSMC
 
 
 def make_test_images(shape=(100, 200)):
