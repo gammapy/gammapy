@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 import unittest
 import pytest
 import numpy as np
@@ -8,7 +9,6 @@ from ..ring import RingBgMaker, outer_ring_radius
 
 try:
     import scipy
-    from ... import scipy
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
