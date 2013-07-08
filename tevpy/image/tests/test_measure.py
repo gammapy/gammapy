@@ -1,6 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
+import pytest
 from .. import measure
+
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 def generate_example_image():
     """
@@ -12,6 +20,7 @@ def generate_example_image():
 
     return image
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_measure():
     image = generate_example_image()
     labels = np.zeros_like(image, dtype=int)
