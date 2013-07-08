@@ -7,6 +7,8 @@ __all__ = ['compute_binning', 'FluxProfile']
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):
     """Computes 1D array of bin edges.
 
+    The range of the bin_edges is always [min(data), max(data)]
+
     Note that bin_edges has n_bins bins, i.e. length n_bins + 1.
 
     Parameters
@@ -27,13 +29,18 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
     bin_edges : 1D ndarray
         Array of bin edges.
     """
+    data = np.asanyarray(data)
+    
     if method == 'equal width':
-        bin_edges = np.linspace(np.nanmin(data), np.nanmax(data) + eps, n_bins + 1)
+        bin_edges = np.linspace(np.nanmin(data), np.nanmax(data), n_bins + 1)
     elif method == 'equal entries':
-        raise NotImplementedError
-        # sort and sub-sample; test many cases
+        # We use np.percentile to achieve equal number of entries per bin
+        # It takes a list of quantiles in the range [0, 100] as input 
+        quantiles = list(np.linspace(0, 100, n_bins + 1))
+        bin_edges = np.percentile(data, quantiles)
     else:
         raise ValueError('Invalid option: method = {0}'.format(method))
+    bin_edges[-1] += eps
     return bin_edges
 
 
@@ -55,7 +62,6 @@ class FluxProfile(object):
         using the fast and flexible pandas groupby and apply functions.
 
         TODO: take mask into account everywhere
-        TODO: decide on under- and overflow handling in x range
         TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?
         """
         import pandas as pd
@@ -123,10 +129,11 @@ class FluxProfile(object):
 
         # Compute number of entries in each profile bin
         p['n_entries'] = g['x'].aggregate(len)
-        p['counts_sum'] = g['counts'].sum()
-        #p['counts_sum'] = np.histogram(d['label'], weights=d['counts'], bins=p.index)[0]
-        p['counts_mean'] = p['counts_sum'] / p['n_entries']
-        p['flux'] = 42
+        for name in ['counts', 'background', 'exposure']:
+            p['{0}'.format(name)] = g[name].sum()
+            #p['{0}_mean'.format(name)] = p['{0}_sum'.format(name)] / p['n_entries']
+        p['excess'] = p['counts'] - p['background'] 
+        p['flux'] = p['excess'] / p['exposure']
 
     def plot(self, which='n_entries', xlabel='Distance (deg)', ylabel=None):
         import matplotlib.pyplot as plt
