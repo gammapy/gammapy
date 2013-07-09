@@ -3,7 +3,7 @@
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
-           'atrous_image', 'atrous_hdu']
+           'atrous_image', 'atrous_hdu', 'process_image_pixels']
 
 
 def _get_structure_indices(radius):
@@ -214,3 +214,90 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
         lat = np.radians(lat)
 
     return lon, lat
+
+
+def process_image_pixels(images, kernel, out, pixel_function):
+    """Process images for a given kernel and per-pixel function.
+    
+    This is a helper function for the following common task:
+    For a given set of same-shaped images and a smaller-shaped kernel,
+    process each image pixel by moving the kernel at that position,
+    cut out kernel-shaped parts from the images and call a function
+    to compute output values for that position.
+
+    This function loops over image pixels and takes care of bounding
+    box computations, including image boundary handling.
+
+    Parameters
+    ----------
+    images : dict of arrays
+        Images needed to compute out
+
+    kernel : array (shape must be odd-valued)
+        kernel shape must be odd-valued
+
+    out : dict of numpy arrays to fill
+        These arrays must have been pre-created by the caller
+
+    pixel_function : function to process a part of the images
+
+    Examples
+    --------
+
+    As an example, here is how to implement convolution as a special
+    case of process_image_pixels with one input and output image::
+    
+        def convolve(image, kernel):
+            '''Convolve image with kernel'''
+            from tevpy.image.utils import process_image_pixels
+            images = dict(image=np.asanyarray(image))
+            kernel = np.asanyarray(kernel)
+            out = dict(image=np.empty_like(image))
+            def convolve_function(images, kernel):
+                value = np.sum(images['image'] * kernel)
+                return dict(image=value)
+            process_image_pixels(images, kernel, out, convolve_function)
+            return out['image']
+
+    * TODO: add different options to treat the edges
+    * TODO: implement multiprocessing version
+    """
+    n0, n1 = out.values()[0].shape
+
+    # Check kernel shape
+    k0, k1 = kernel.shape
+    if (k0 % 2 == 0) or (k1 % 2 == 0):
+        raise ValueError('Kernel shape must have odd dimensions')
+    k0, k1 = k0 / 2, k1 / 2
+
+    # Loop over all pixels
+    for i0 in range(0, n0):
+        for i1 in range(0, n1):
+            # Compute low and high extension
+            # (# pixels, not counting central pixel) 
+            i0_lo = min(k0, i0)
+            i1_lo = min(k1, i1)
+            i0_hi = min(k0, n0 - i0 - 1)
+            i1_hi = min(k1, n1 - i1 - 1)
+            
+            # Cut out relevant parts of the image arrays
+            # This creates views, i.e. is fast and memory efficient
+            image_parts = dict()
+            for name, image in images.items():
+                # hi + 1 because with Python slicing the hi edge is not included
+                part = image[i0 - i0_lo: i0 + i0_hi + 1,
+                             i1 - i1_lo: i1 + i1_hi + 1]
+                image_parts[name] = part
+
+            # Cut out relevant part of the kernel array
+            # This only applies when close to the edge
+            # hi + 1 because with Python slicing the hi edge is not included
+            kernel_part = kernel[k0 - i0_lo: k0 + i0_hi + 1,
+                                 k1 - i1_lo: k1 + i1_hi + 1]
+
+            # Call pixel_function for this one part
+            out_part = pixel_function(image_parts, kernel_part)
+
+            # Store output
+            for name, image in out.items():
+                out[name][i0, i1] = out_part[name]
