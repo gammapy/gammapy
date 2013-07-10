@@ -30,8 +30,9 @@ TODO:
 """
 import numpy as np
 from .. import stats
+from ..image.utils import process_image_pixels
 
-__all__ = ['compute_ts_image', 'TSMapCalculator']
+__all__ = ['ts_image', 'TSMapCalculator']
 
 
 def fit_amplitude(counts, background, kernel, start_value):
@@ -50,72 +51,39 @@ def fit_amplitude(counts, background, kernel, start_value):
     return out
 
 
-def compute_ts(images, kernel):
-    # For the kernel we have to make a copy, otherwise
-    # we modify the kernel in-place and will get incorrect
-    # results for the next pixel
-    normalized_kernel = kernel / kernel.sum()
-    counts = images['counts']
-    background = images['background']
+def ts_center(images, kernel):
+    """TODO
+
+    The shapes of the images and the kernel must match.
+
+    """
+    counts = np.asanyarray(images['counts'])
+    background = np.asanyarray(images['background'])
+    kernel = kernel / kernel.sum()
+    
+    assert counts.shape == kernel.shape
+    assert background.shape == kernel.shape
+
     C0 = stats.cash(counts, background)
-    out = fit_amplitude(counts, background, normalized_kernel)
-    C1 = stats.cash(counts, background + out['amplitude'] * normalized_kernel)
+    out = fit_amplitude(counts, background, kernel)
+    C1 = stats.cash(counts, background + out['amplitude'] * kernel)
     # Cash is a negative log likelihood statistic,
     # thus the minus in the TS formula here
     out['ts'] = - 2 * (C1 - C0)
     return out
 
 
-def process_image_full(images, kernel, out, process_image_part):
+def ts_image(images, kernel, extra_info=False):
+    """TODO
     """
-    images : dict with values as numpy arrays
-    kernel : PSF-convolved source model
-             kernel shape must be odd-valued
-    out : dict of numpy arrays to fill
-    process_image_part : function to process a part of the images
-
-    TODO: Add different options to treat the edges!
-    """
-    n0, n1 = out.values()[0].shape
-
-    # Check kernel shape
-    k0, k1 = kernel.shape
-    if (k0 % 2 == 0) or (k1 % 2 == 0):
-        raise ValueError('Kernel shape must have odd dimensions')
-    k0, k1 = k0 / 2, k1 / 2
-
-    # Loop over all pixels
-    for i0 in range(0, n0):
-        for i1 in range(0, n1):
-            image_parts = dict()
-            # Cut out relevant parts of the image arrays
-            # This creates views, i.e. is fast and memory efficient
-            for name, image in images.items():
-                i0_lo = min(k0, i0)
-                i1_lo = min(k1, i1)
-                i0_up = min(k0, n0 - i0 - 1)
-                i1_up = min(k1, n1 - i1 - 1)
-                part = image[i0 - i0_lo: i0 + i0_up,
-                             i1 - i1_lo: i1 + i1_up]
-                image_parts[name] = part
-            # Cut out relevant part of the kernel array
-            # This only applies when close to the edge
-            kernel_part = kernel[k0 - i0_lo: k0 + i0_up,
-                                 k1 - i1_lo: k1 + i1_up]
-
-            out_part = process_image_part(image_parts, kernel_part)
-
-            for name, image in out.items():
-                out[name][i0, i1] = out_part[name]
-
-    return out
-
-
-def compute_ts_image(images, kernel):
     out = dict()
     out['ts'] = np.zeros_like(images['counts'], dtype='float64')
     out['ncalls'] = np.zeros_like(images['counts'], dtype='uint16')
-    return process_image_full(images, kernel, out, compute_ts)
+    process_image_pixels(images, kernel, out, ts_center)
+    if extra_info:
+        return out
+    else:
+        return out['ts']
 
 
 class TSMapCalculator(object):
@@ -145,33 +113,6 @@ class TSMapCalculator(object):
         process_image_full(images, kernel, out, compute_ts)
         self.out = out
         """
-
-    def _process_all_pixels(self):
-        """Process all pixels"""
-        n0, n1 = self.out_shape
-        kernel = self.kernel
-        k0, k1 = kernel.shape[0] / 2, kernel.shape[1] / 2
-
-        # Loop over all pixels
-        for i0 in range(0, n0):
-            for i1 in range(0, n1):
-                image_parts = dict()
-                # Cut out relevant parts of the image arrays
-                # This creates views, i.e. is fast and memory efficient
-                for name, image in self.images.items():
-                    i0_lo = min(k0, i0)
-                    i1_lo = min(k1, i1)
-                    i0_up = min(k0, n0 - i0 - 1)
-                    i1_up = min(k1, n1 - i1 - 1)
-                    part = image[i0 - i0_lo: i0 + i0_up,
-                                 i1 - i1_lo: i1 + i1_up]
-                    image_parts[name] = part
-                # Cut out relevant part of the kernel array
-                # This only applies when close to the edge
-                kernel_part = kernel[k0 - i0_lo: k0 + i0_up,
-                                     k1 - i1_lo: k1 + i1_up]
-
-                self._process_one_pixel(image_parts, kernel_part)
 
     def _process_one_pixel(self):
         """Process one pixel"""

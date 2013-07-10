@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from time import time
 import numpy as np
-from ..test_statistic import compute_ts_image
+from ..test_statistic import ts_image
 from ..test_statistic import TSMapCalculator as TSMC
 
 
@@ -24,7 +24,7 @@ def _test_simple():
     """A simple test case"""
     images = make_test_images(shape=(50, 70))
     kernel = make_test_kernel(shape=(11, 11))
-    ts_results = compute_ts_image(images, kernel)
+    ts_results = ts_image(images, kernel)
     images['ts'] = ts_results['ts']
     images['ncalls'] = ts_results['ncalls']
     print('mean ncalls: {0}'.format(images['ncalls'].mean()))
@@ -62,7 +62,7 @@ def _test_speed():
             images = make_test_images(shape=(image_size, image_size))
             kernel = make_test_kernel(shape=(kernel_size, kernel_size))
             t = time()
-            ts = compute_ts_image(images, kernel)
+            ts = ts_image(images, kernel)
             t = time() - t
             # Compute speed = 1e3 image pixels per second (kpps)
             kpix = 1e-3 * images.values()[0].size
