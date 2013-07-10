@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Example and test datasets.
 
 Example how to load a dataset from file:

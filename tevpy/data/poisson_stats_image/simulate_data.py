@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate test data (see README.md) with Sherpa"""
 
 import numpy as np
