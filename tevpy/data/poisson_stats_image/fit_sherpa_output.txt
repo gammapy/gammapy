@@ -1,0 +1,43 @@
+$ python fit_sherpa.py 
+Dataset               = 1
+Method                = levmar
+Statistic             = cstat
+Initial fit statistic = 46668.8
+Final fit statistic   = 46061.9 at function evaluation 38
+Data points           = 40000
+Degrees of freedom    = 39995
+Probability [Q-value] = 2.68307e-93
+Reduced statistic     = 1.15169
+Change in statistic   = 606.905
+   source.fwhm    13.4555     
+   source.xpos    99.3065     
+   source.ypos    99.9734     
+   source.ampl    986.474     
+   background.c0   0.997473    
+Dataset               = 1
+Confidence Method     = covariance
+Iterative Fit Method  = None
+Fitting Method        = levmar
+Statistic             = cstat
+covariance 1-sigma (68.2689%) bounds:
+   Param            Best-Fit  Lower Bound  Upper Bound
+   -----            --------  -----------  -----------
+   source.fwhm       13.4555    -0.419254     0.419254
+   source.xpos       99.3065    -0.281104     0.281104
+   source.ypos       99.9734    -0.268053     0.268053
+   source.ampl       986.474     -43.8434      43.8434
+   background.c0     0.997473  -0.00497959   0.00497959
+sigma: 4.85304060434 +- 0.15121383648
+corr_norm_sigma: 0.433396554087
+Dataset               = 1
+Method                = levmar
+Statistic             = cstat
+Initial fit statistic = 47412.9
+Final fit statistic   = 47388.6 at function evaluation 18
+Data points           = 40000
+Degrees of freedom    = 39999
+Probability [Q-value] = 1.02045e-134
+Reduced statistic     = 1.18475
+Change in statistic   = 24.22
+   background.c0   1.02215     
+TS: 2653.55288
