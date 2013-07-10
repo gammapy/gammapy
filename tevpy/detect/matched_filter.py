@@ -1,34 +1,74 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Matched filter source detection methods"""
 import numpy as np
+from ..image.utils import process_image_pixels
+from ..stats import p_to_s
 
-__all__ = ['p_value']
+__all__ = ['probability_center', 'probability_image' 
+           'significance_center', 'significance_image']
 
-def p_value(weights, counts, background):
-    """Compute matched-filter p-value.
+def probability_center(images, kernel):
+    """Compute matched-filter p-value at the kernel center.
+
+    The shapes of the images and the kernel must match.
 
     Reference: Appendix B.1.2 from Stewart (2009)
         http://adsabs.harvard.edu/abs/2009A%26A...495..989S
 
-    weights: array-like
-        Matched filter weights image
-    counts: array-like
-        Counts image
-    background : array-like
-        Background image
+    images : dict of arrays
+        Keys: 'counts', 'background'
+    kernel : array-like
+        Kernel array
+        
+    Returns:
+    probability : float
+        Probability that counts is not a background fluctuation
     """
     from scipy.special import gammaincc as Q
-    weights = np.asanyarray(weights)
-    counts = np.asanyarray(counts)
-    background = np.asanyarray(background)
+
+    C = np.asanyarray(images['counts'])
+    B = np.asanyarray(images['background'])
+    w = np.asanyarray(kernel)
     
-    U = np.sum(weights * counts)
-    B_prime = np.sum(weights * background)
-    w_equiv = np.sum(weights * weights * background) / B_prime
+    assert C.shape == w.shape
+    assert B.shape == w.shape
+
+    # Normalize kernel
+    w = w / w.sum()
+    
+    U = np.sum(w * C)
+    B_prime = np.sum(w * B)
+    w_equiv = np.sum(w * w * B) / B_prime
     P = Q(B_prime / w_equiv, U / w_equiv)
     return P
 
-def significance(weights, counts, background):
-    from ..stats import p_to_s
-    p = p_value(weights, counts, background)
-    return p_to_s(p)
+
+def significance_center(images, kernel):
+    """TODO: document
+    """
+    probability = probability_center(images, kernel)
+    return p_to_s(probability)
+
+
+def probability_image(images, kernel):
+    """Compute matched-filter p-value image.
+    
+    images : dict of arrays
+        Keys: 'counts', 'background'
+        
+    kernel : array-like
+    
+    Returns:
+    probability : array
+    """
+    out = np.zeros_like(images['counts'], dtype='float64')
+    process_image_pixels(images, kernel, out, probability_center)
+    return out
+
+
+def significance_image(images, kernel):
+    """TODO: document
+    """
+    probability = probability_image(images, kernel)
+    significance = p_to_s(probability)
+    return significance
