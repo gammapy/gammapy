@@ -215,7 +215,6 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
 
     return lon, lat
 
-
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
     
@@ -236,7 +235,7 @@ def process_image_pixels(images, kernel, out, pixel_function):
     kernel : array (shape must be odd-valued)
         kernel shape must be odd-valued
 
-    out : dict of numpy arrays to fill
+    out : single array or dict of arrays
         These arrays must have been pre-created by the caller
 
     pixel_function : function to process a part of the images
@@ -262,7 +261,10 @@ def process_image_pixels(images, kernel, out, pixel_function):
     * TODO: add different options to treat the edges
     * TODO: implement multiprocessing version
     """
-    n0, n1 = out.values()[0].shape
+    if isinstance(out, dict):
+        n0, n1 = out.values()[0].shape
+    else:
+        n0, n1 = out.shape
 
     # Check kernel shape
     k0, k1 = kernel.shape
@@ -298,6 +300,9 @@ def process_image_pixels(images, kernel, out, pixel_function):
             # Call pixel_function for this one part
             out_part = pixel_function(image_parts, kernel_part)
 
-            # Store output
-            for name, image in out.items():
-                out[name][i0, i1] = out_part[name]
+            if isinstance(out_part, dict):
+                # Store output
+                for name, image in out.items():
+                    out[name][i0, i1] = out_part[name]
+            else:
+                out[i0, i1] = out_part
