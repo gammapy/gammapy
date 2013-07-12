@@ -29,7 +29,8 @@ If you think it might be useful, go to :ref:`install`.
   install
   introduction
   tools
-
+ 
+  data/index
   background/index
   obs/index
   image/index
