@@ -79,10 +79,10 @@ def sex(image,
     TODO: return filenames or dict with results?
     """
     if catalog_name == None:
-        catalog_name = tempfile.mktemp()
+        catalog_name = tempfile.mktemp() + '.fits'
     
     if checkimage_name == None:
-        checkimage_name = tempfile.mktemp()
+        checkimage_name = tempfile.mktemp() + '.fits'
 
     if config_name == None:
         config_name = get_pkg_data_filename('sex.cfg')
@@ -94,7 +94,7 @@ def sex(image,
     logging.info('INPUT  image: {0}'.format(image))
     logging.info('INPUT  image2: {0}'.format(image2))
     logging.info('INPUT  config_name: {0}'.format(config_name))
-    logging.info('INPUT  paramters_name: {0}'.format(parameters_name))
+    logging.info('INPUT  parameters_name: {0}'.format(parameters_name))
     logging.info('OUTPUT catalog_name: {0}'.format(catalog_name))
     logging.info('OUTPUT checkimage_name: {0}'.format(checkimage_name))
 
@@ -107,6 +107,7 @@ def sex(image,
            '-detect_minarea', str(detect_minarea),
            '-deblend_mincont', str(deblend_mincont)
            ]
+    logging.info('Executing the following command now:\n\n{0}\n'.format(' '.join(cmd)))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     
