@@ -18,14 +18,12 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy.table import Table
 
-SEX_DEFAULT_CONFIG = get_pkg_data_filename('sex.cfg')
-SEX_DEFAULT_PARAM = get_pkg_data_filename('sex.param')
 
 def sex(image,
         image2='',
         catalog_name=None,
-        config_name=SEX_DEFAULT_CONFIG,
-        parameters_name=SEX_DEFAULT_PARAM,
+        config_name=None,
+        parameters_name=None,
         checkimage_name=None,
         detect_thresh=5,
         detect_minarea=1,
@@ -85,6 +83,12 @@ def sex(image,
     
     if checkimage_name == None:
         checkimage_name = tempfile.mktemp()
+
+    if config_name == None:
+        config_name = get_pkg_data_filename('sex.cfg')
+        
+    if parameters_name == None:
+        parameters_name = get_pkg_data_filename('sex.param')
     
     logging.info('Running SExtractor')
     logging.info('INPUT  image: {0}'.format(image))

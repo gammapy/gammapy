@@ -14,7 +14,7 @@ except OSError:
 @pytest.mark.skipif('not HAS_SEX')
 def test_sex():
     """Run SExtractor an example image and check number of detected sources"""
-    filename = get_pkg_data_filename('../../data/poisson_stats_image/counts.fits.gz')
+    filename = get_pkg_data_filename('../../data/counts.fits.gz')
     catalog, checkimage = sex(filename)
     assert len(catalog) == 42
     assert checkimage.data.max() == 42

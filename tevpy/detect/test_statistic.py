@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Functions to compute TS maps
 
 This is in the exploratory phase, we are trying to get a fast tool for a large map.
@@ -113,12 +114,3 @@ class TSMapCalculator(object):
         process_image_full(images, kernel, out, compute_ts)
         self.out = out
         """
-
-    def _process_one_pixel(self):
-        """Process one pixel"""
-        # TODO: finish implementation
-        """
-                for name, image in self.out.items():
-                    self.out[name][i0, i1] = out_part[name]
-        """
-        return out
