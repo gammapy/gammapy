@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
+from __future__ import division
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
@@ -270,7 +271,7 @@ def process_image_pixels(images, kernel, out, pixel_function):
     k0, k1 = kernel.shape
     if (k0 % 2 == 0) or (k1 % 2 == 0):
         raise ValueError('Kernel shape must have odd dimensions')
-    k0, k1 = k0 / 2, k1 / 2
+    k0, k1 = (k0 - 1) / 2, (k1 - 1) / 2
 
     # Loop over all pixels
     for i0 in range(0, n0):
