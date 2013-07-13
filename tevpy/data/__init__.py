@@ -50,7 +50,7 @@ def download_datasets(names='all'):
         # if not download to cache
 
 
-def poisson_stats_image(extra_info=False):
+def poisson_stats_image(extra_info=False, return_filenames=False):
     """Poisson statistics counts image of a Gaussian source on flat background.
 
     Parameters
@@ -58,6 +58,13 @@ def poisson_stats_image(extra_info=False):
     extra_info : bool
         If true, a dict of images is returned.
     
+    return_filenames : bool
+        If true, return filenames instead of images
+
+    Returns
+    -------
+    numpy array or dict of arrays or filenames, depending on the options
+
     See poissson_stats_image/README.md for further info.
     TODO: add better description (extract from README?)
     """
@@ -65,11 +72,19 @@ def poisson_stats_image(extra_info=False):
         out = dict()
         for name in ['counts', 'model', 'source', 'background']:
             filename = 'poisson_stats_image/{0}.fits.gz'.format(name)
-            data = fits.getdata(get_pkg_data_filename(filename))
-            out[name] = data
+            filename = get_pkg_data_filename(filename)
+            if return_filenames:
+                out[name] = filename
+            else:
+                data = fits.getdata(filename)
+                out[name] = data
     else:
         filename = 'poisson_stats_image/counts.fits.gz'
-        out = fits.getdata(get_pkg_data_filename(filename))
+        filename = get_pkg_data_filename(filename)
+        if return_filenames:
+            out = filename
+        else:
+            out = fits.getdata(filename)
 
     return out
 
