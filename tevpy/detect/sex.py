@@ -79,10 +79,10 @@ def sex(image,
     TODO: return filenames or dict with results?
     """
     if catalog_name == None:
-        catalog_name = tempfile.mktemp() + '.fits'
+        catalog_name = tempfile.mktemp('.fits')
     
     if checkimage_name == None:
-        checkimage_name = tempfile.mktemp() + '.fits'
+        checkimage_name = tempfile.mktemp('.fits')
 
     if config_name == None:
         config_name = get_pkg_data_filename('sex.cfg')
