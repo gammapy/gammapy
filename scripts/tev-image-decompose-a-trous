@@ -20,7 +20,7 @@ I'm also interested in these transforms:
 
 # Parse command line arguments
 
-import argparse
+from astropy.utils.compat import argparse
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('infile', type=str,
                     help='Input FITS file name')

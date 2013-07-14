@@ -346,7 +346,7 @@ class IterativeSourceDetector(object):
 if __name__ == '__main__':
 
     # Parse command line arguments
-    import argparse
+    from astropy.utils.compat import argparse
     parser = argparse.ArgumentParser(description='A prototype iterative source detection tool')
     parser.add_argument('scales', type=float, nargs='*', default=[0.1, 0.2, 0.4],
                         help='List of spatial scales (deg) to search for sources'
