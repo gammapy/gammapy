@@ -4,7 +4,7 @@ import numpy as np
 from ..image.utils import process_image_pixels
 from ..stats import p_to_s
 
-__all__ = ['probability_center', 'probability_image' 
+__all__ = ['probability_center', 'probability_image',
            'significance_center', 'significance_image']
 
 def probability_center(images, kernel):
