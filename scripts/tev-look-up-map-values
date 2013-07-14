@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Look up values in a map at given positions"""
 
 # TODO: support coordinate parsing
@@ -16,7 +17,8 @@ parser.add_argument('x', type=float,
 parser.add_argument('y', type=float,
                     help='y coordinate (deg)')
 parser.add_argument('--pix', action='store_true',
-                    help='Input coordinates are pixels (default is world coordinates)')
+                    help='Input coordinates are pixels '
+                    '(default is world coordinates)')
 
 args = parser.parse_args()
 args = vars(args)

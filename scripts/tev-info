@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Print various info on tevpy to the console"""
+
+# Parse command line arguments
+
+from astropy.utils.compat import argparse
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--version', action='store_true',
+                    help='Print tevpy version number')
+parser.add_argument('--tools', action='store_true',
+                    help='Print available command line tools')
+args = parser.parse_args()
+args = vars(args)
+
+# Execute script
+
+import sys
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+
+if len(sys.argv) <= 1:
+    parser.print_help()
+    sys.exit(1)
+
+if args['version']:
+    from tevpy import version
+    print('\n*** tevpy version info ***\n')
+    print('version: {0}'.format(version.version))
+    print('release: {0}'.format(version.release))
+    print('githash: {0}'.format(version.githash))
+    print('')
+
+if args['tools']:
+    print('\n*** tevpy tools ***\n')
+    # We assume all tools are installed in the same folder as this script
+    # and their names start with "tev-".
+    import os
+    from glob import glob
+    DIR = os.path.dirname(__file__)
+    os.chdir(DIR)
+    tools = glob('tev-*')
+    for tool in tools:
+        # Extract first line from docstring as description
+        description = 'no description available'
+        lines = open(tool).readlines()
+        for line in lines:
+            if line.startswith('"""'):
+                description = line.strip()[3:]
+                if description.endswith('"""'):
+                    description = description[:-3]
+                break
+        print('{0:30s} : {1}'.format(tool, description))
+
+    print('')

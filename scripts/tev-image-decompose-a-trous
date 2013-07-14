@@ -1,14 +1,15 @@
 #!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Apply the a trous wavelet transform on a 2D image.
 
-This book contains an overview of methods: 
+This book contains an overview of methods:
 http://www.amazon.de/dp/3540330240
 
 Specifically I'd like to have an a trous transform.
 Here's a few references that look useful:
 * https://code.google.com/p/image-funcut/
 
-I'm also interested in these transforms: 
+I'm also interested in these transforms:
 * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-expand
 * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-gaussian
 * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-laplacian
@@ -40,7 +41,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
 from tevpy.image.utils import atrous_hdu
 
-logging.info('Reading {0}'.format(args['infile']))    
+logging.info('Reading {0}'.format(args['infile']))
 hdu = fits.open(args['infile'])[0]
 atrous_hdus = atrous_hdu(hdu, n_levels=args['n_levels'])
 
