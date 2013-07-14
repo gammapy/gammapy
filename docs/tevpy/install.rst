@@ -36,7 +36,7 @@ Optional dependencies (imported and used only where needed):
 * `scikit-image`_ for image processing
 * `GammaLib`_ and `ctools`_ 
 * `Sherpa`_ compatibility helper functions
-* `ROOT`_ and `rootpy` compatibility helper functions
+* `ROOT`_ and `rootpy`_ conversion helper functions
 * `photutils`_ for image photometry
 * `Kapteyn`_ for reprojecting images
 * `aplpy`_ for plotting astro images
