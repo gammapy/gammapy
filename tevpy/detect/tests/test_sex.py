@@ -2,7 +2,7 @@
 import subprocess
 import tempfile
 import pytest
-from astropy.utils.data import get_pkg_data_filename
+#from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from ...data import poisson_stats_image
 from ..sex import sex

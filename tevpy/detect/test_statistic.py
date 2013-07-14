@@ -19,13 +19,17 @@ TODO:
 - implement down-sampling for large kernels or generally for speed
 - implement possibility to only compute part of the TS image
 - understand negative amplitudes!???
-- speed profiling
+- speed profiling::
+
   - expect speed constant with image size
   - expect speed inversely proportional to number of pixels in the kernel
   - expect speedup proportional to number of cores
-- accuracy profiling:
+
+- accuracy profiling::
+
   - want accuracy of TS = 0.1 for all regimes; no need to waste cycles on higher accuracy
   - don't care about accuracy for TS < 1
+
 - check distribution against expected chi2(ndf) distribution
 - HGPS survey sensitiviy calculation (maybe needs cluster computing?)
 """
