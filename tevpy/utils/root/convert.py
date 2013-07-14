@@ -15,6 +15,31 @@ In the menu select:
 import warnings
 import numpy as np
 
+__all__ = ['hist_to_table',
+           'TH2_to_FITS_header', 'TH2_to_FITS_data', 'TH2_to_FITS']
+
+
+def hist_to_table(hist):
+    """Convert 1D ROOT histogram into astropy Table"""
+    from rootpy import asrootpy
+    from astropy.utils.compat.odict import OrderedDict
+    from astropy.table import Table
+
+    hist = asrootpy(hist)
+    
+    data = OrderedDict()
+    data['x'] = list(hist.x())
+    data['x_err'] = list(hist.xerravg())
+    data['x_err_lo'] = list(hist.xerrl())
+    data['x_err_hi'] = list(hist.xerrh())
+    data['y'] = list(hist.y())
+    data['y_err'] = list(hist.yerravg())
+    data['y_err_lo'] = list(hist.yerrl())
+    data['y_err_hi'] = list(hist.yerrh())
+
+    table = Table(data)
+    return table
+
 
 def TH2_to_FITS_header(h, flipx=True):
     """Create FITS header assuming TH2 or SkyHist that represents an image
