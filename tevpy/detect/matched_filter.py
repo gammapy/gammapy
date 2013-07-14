@@ -15,12 +15,15 @@ def probability_center(images, kernel):
     Reference: Appendix B.1.2 from Stewart (2009)
         http://adsabs.harvard.edu/abs/2009A%26A...495..989S
 
+    Parameters
+    ----------
     images : dict of arrays
         Keys: 'counts', 'background'
     kernel : array-like
         Kernel array
         
-    Returns:
+    Returns
+    -------
     probability : float
         Probability that counts is not a background fluctuation
     """
@@ -44,7 +47,9 @@ def probability_center(images, kernel):
 
 
 def significance_center(images, kernel):
-    """TODO: document
+    """Compute matched-filter significance at the kernel center.
+    
+    See `probability_center` docstring.
     """
     probability = probability_center(images, kernel)
     return p_to_s(probability)
@@ -53,12 +58,15 @@ def significance_center(images, kernel):
 def probability_image(images, kernel):
     """Compute matched-filter p-value image.
     
+    Parameters
+    ----------
     images : dict of arrays
         Keys: 'counts', 'background'
         
     kernel : array-like
     
-    Returns:
+    Returns
+    -------
     probability : array
     """
     out = np.zeros_like(images['counts'], dtype='float64')
@@ -67,7 +75,9 @@ def probability_image(images, kernel):
 
 
 def significance_image(images, kernel):
-    """TODO: document
+    """Compute matched-filter significance image.
+    
+    See `probability_image` docstring.
     """
     probability = probability_image(images, kernel)
     significance = p_to_s(probability)
