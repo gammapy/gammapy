@@ -31,5 +31,15 @@ Reference/API
 .. automodapi:: tevpy.detect.blob
     :no-inheritance-diagram:
 
+.. automodapi:: tevpy.detect.matched_filter
+    :no-inheritance-diagram:
+
+.. automodapi:: tevpy.detect.sex
+    :no-inheritance-diagram:
+
+.. automodapi:: tevpy.detect.test_statistic
+    :no-inheritance-diagram:
+
 .. automodapi:: tevpy.detect.utils
     :no-inheritance-diagram:
+    
