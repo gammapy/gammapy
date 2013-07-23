@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import logging
 import numpy as np
-from scipy.signal import fftconvolve
-from scipy.ndimage import label
 
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -87,12 +85,13 @@ class CWT(object):
         self.header = None
         self.wcs = None
 
-    def set_data(self, image, back):
-        # TODO: check that image and bkg are consistent 
+    def set_data(self, image, background):
+        """Set input images"""
+        # TODO: check that image and background are consistent 
         self.image = image - 0.0         
         self.nx, self.ny = self.image.shape
         self.filter = np.zeros((self.nx, self.ny)) 
-        self.bkg = back - 0.0  # hack because of some bug with old version of fft in numpy
+        self.background = background - 0.0  # hack because of some bug with old version of fft in numpy
         self.model = np.zeros((self.nx, self.ny)) 
         self.approx = np.zeros((self.nx, self.ny))
  
@@ -102,20 +101,24 @@ class CWT(object):
        
     
     def set_file(self, filename):
+        """Set input images from FITS file"""
         # TODO: check the existence of extensions
         # Open fits files
         hdulist = fits.open(filename)
+        # TODO: don't hardcode extension numbers and names here ... pass on from tev-cwt
         self.set_data(hdulist[0].data, hdulist['NormOffMap'].data)
         self.header = hdulist[0].header
         self.wcs = WCS(self.header)
 
     def do_transform(self):
         """Do the transform itself"""
-        tot_bkg = self.model + self.bkg + self.approx
-        excess = self.image - tot_bkg
+        # TODO: after unit tests are added switch to astropy fftconvolve here.
+        from scipy.signal import fftconvolve
+        total_background = self.model + self.background + self.approx
+        excess = self.image - total_background
         for key, kern in self.kernbase.iteritems():  # works for python < 3
             self.transform[key] = fftconvolve(excess, kern, mode='same')
-            self.error[key] = np.sqrt(fftconvolve(tot_bkg, kern ** 2, mode='same'))
+            self.error[key] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
             
         self.approx = fftconvolve(self.image - self.model - self.bkg,
                                   self.kern_approx, mode='same')
@@ -127,6 +130,7 @@ class CWT(object):
         Imposing a minimum significance on a connex region of significant pixels
         (i.e. source detection)
         """ 
+        from scipy.ndimage import label
         # TODO: check that transform has been performed
         sig = self.transform / self.error
         for key in self.scales.keys():
@@ -146,12 +150,14 @@ class CWT(object):
             self.support[key] = self.support[key] > 0.
             
     def inverse_transform(self):
+        """Do the inverse transform (reconstruct the image)"""
         res = np.sum(self.support * self.transform, 0)
         self.filter += res * (res > 0)
         self.model = self.filter 
         return res
 
     def iterative_filter_peak(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):
+        """Run iterative filter peak algorithm"""
         var_ratio = 0.0
         for iiter in range(niter):
             self.do_transform()
@@ -171,10 +177,12 @@ class CWT(object):
         return res
 
     def max_scale_image(self):
+        """Compute the maximum scale image"""
         maximum = np.argmax(self.transform, 0)
         return self.scale_array[maximum] * (self.support.sum(0) > 0)
 
     def save_filter(self, filename, clobber=False):
+        """Save filter to file"""
         hdu = fits.PrimaryHDU(self.filter, self.header)
         hdu.writeto(filename, clobber=clobber)
         fits.append(filename, self.approx, self.header)
