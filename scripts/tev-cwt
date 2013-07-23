@@ -1,34 +1,40 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Compute filtered image using Continuous Wavelet Transform (CWT)
+"""
 import argparse
 import os.path
 import sys
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from tevpy.detect.cwt import CWT
 
-if __name__=='__main__':
-    parser = argparse.ArgumentParser(description='Compute filtered HESS image using Continuous Wavelet Transform (CWT)')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument('infile', action="store", help='Input file name')
     parser.add_argument('outfile', action="store", help='Output file name')
+
     # Wavelet scales to be used
-    parser.add_argument('--nscale', help='Number of scales to be used.', default=6,type=int)
-    parser.add_argument('--minscale', help='Minimum scale to use.', default=6.0,type=float)
-    parser.add_argument('--step', help='Geometric step between to successive Gaussian.', default=1.3,type=float)
+    parser.add_argument('--min_scale', help='Minimum scale to use.', default=6.0, type=float)
+    parser.add_argument('--nscales', help='Number of scales to be used.', default=6, type=int)
+    parser.add_argument('--scale_step', help='Geometric step between to successive Gaussian.', default=1.3, type=float)
+
     # Detection thresholds
-    parser.add_argument('--thresh', help='Significance threshold for pixel detection.', default=3.0,type=float)
-    parser.add_argument('--detect', help='Significance threshold for source detection.', default=5.0,type=float)
-    parser.add_argument('--niter', help='Maximum number of iteration to be performed.', default =5,type=int)
-    parser.add_argument('--convergence', help='Convergence parameter.', default =1e-5,type=float)
+    parser.add_argument('--thresh', help='Significance threshold for pixel detection.', default=3.0, type=float)
+    parser.add_argument('--detect', help='Significance threshold for source detection.', default=5.0, type=float)
+    parser.add_argument('--niter', help='Maximum number of iteration to be performed.', default=5, type=int)
+    parser.add_argument('--convergence', help='Convergence parameter.', default=1e-5, type=float)
 
     parser.add_argument('--clobber', action='store_true', help='Clobber output file.', default=False)
 
-    results=parser.parse_args()
+    args = parser.parse_args()
 
-    if  os.path.isfile(results.outfile) and not results.clobber:
-        print "output file exists and clobber is False"
+    if  os.path.isfile(args.outfile) and not args.clobber:
+        logging.error("Output file exists and clobber is False")
         sys.exit()
 
-    cwt = CWT(results.nscale,results.step,results.minscale)
-    cwt.setfile(results.infile)
-    rec = cwt.IterativeFilterPeak(results.thresh,results.detect,results.niter, results.convergence)
-    cwt.save_filter(results.outfile,results.clobber)
+    cwt = CWT(args.min_scale, args.nscales, args.scale_step)
+    cwt.setfile(args.infile)
+    rec = cwt.IterativeFilterPeak(args.thresh, args.detect, args.niter, args.convergence)
+    cwt.save_filter(args.outfile, args.clobber)
