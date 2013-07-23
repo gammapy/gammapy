@@ -27,6 +27,9 @@ Reference/API
 .. automodapi:: tevpy.detect.blob
     :no-inheritance-diagram:
 
+.. automodapi:: tevpy.detect.cwt
+    :no-inheritance-diagram:
+
 .. automodapi:: tevpy.detect.matched_filter
     :no-inheritance-diagram:
 

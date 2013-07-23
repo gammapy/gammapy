@@ -9,10 +9,11 @@ from astropy.wcs import WCS
 
 __all__ = ['CWT']
 
-def gauss_kern(radius):
-    """Normalized 2D gauss kernel array"""
-    sizex = int(8 * radius)
-    sizey = int(8 * radius)
+def gauss_kernel(radius, n_sigmas=8):
+    """Normalized 2D gauss kernel array.
+    """
+    sizex = int(n_sigmas * radius)
+    sizey = int(n_sigmas * radius)
     radius = float(radius)
     xc = 0.5 * sizex
     yc = 0.5 * sizey
@@ -24,10 +25,11 @@ def gauss_kern(radius):
     g = np.exp(-0.5 * (x ** 2 + y ** 2))
     return g / (2 * np.pi * radius ** 2)  # g.sum()
 
-def DOG_kern(radius, scale_step):
-    """Difference of 2 Gaussians (i.e. Mexican hat) kernel array"""
-    sizex = int(8 * scale_step * radius)
-    sizey = int(8 * scale_step * radius)
+def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
+    """Difference of 2 Gaussians (i.e. Mexican hat) kernel array
+    """
+    sizex = int(n_sigmas * scale_step * radius)
+    sizey = int(n_sigmas * scale_step * radius)
     radius = float(radius)
     xc = 0.5 * sizex
     yc = 0.5 * sizey
@@ -48,6 +50,7 @@ class CWT(object):
     """Continuous wavelet transform.
     
     TODO: describe algorithm
+    
     TODO: give references
     
     Initialization of wavelet family.
@@ -67,12 +70,15 @@ class CWT(object):
         self.nscale = nscales
         self.scale_step = scale_step
         for ns in np.arange(0, nscales):
-            self.scales[ns] = (scale_step ** (ns)) * min_scale
-            self.kernbase[ns] = DOG_kern((scale_step ** (ns)) * min_scale, scale_step)
+            scale = min_scale * scale_step ** ns
+            self.scales[ns] = scale
+            self.kernbase[ns] = difference_of_gauss_kernel(scale, scale_step)
 
+        # TODO: do we need self.scales and self.scale_array?
         self.scale_array = (scale_step ** (np.arange(0, nscales))) * min_scale
  
-        self.kern_approx = gauss_kern((scale_step ** nscales) * min_scale)
+        max_scale = min_scale * scale_step ** nscales
+        self.kern_approx = gauss_kernel(max_scale)
  
 #        self.transform = dict()
 #        self.error = dict()
@@ -81,7 +87,7 @@ class CWT(object):
         self.header = None
         self.wcs = None
 
-    def setdata(self, image, back):
+    def set_data(self, image, back):
         # TODO: check that image and bkg are consistent 
         self.image = image - 0.0         
         self.nx, self.ny = self.image.shape
@@ -95,15 +101,15 @@ class CWT(object):
         self.support = np.zeros((self.nscale, self.nx, self.ny))
        
     
-    def setfile(self, filename):
+    def set_file(self, filename):
         # TODO: check the existence of extensions
         # Open fits files
         hdulist = fits.open(filename)
-        self.setdata(hdulist[0].data, hdulist['NormOffMap'].data)
+        self.set_data(hdulist[0].data, hdulist['NormOffMap'].data)
         self.header = hdulist[0].header
         self.wcs = WCS(self.header)
 
-    def doTransform(self):
+    def do_transform(self):
         """Do the transform itself"""
         tot_bkg = self.model + self.bkg + self.approx
         excess = self.image - tot_bkg
@@ -115,7 +121,7 @@ class CWT(object):
                                   self.kern_approx, mode='same')
         self.approx_bkg = fftconvolve(self.bkg, self.kern_approx, mode='same')
                  
-    def ComputeSupportPeak(self, nsigma=2.0, nsigmap=4.0, remove_isolated=True):
+    def compute_support_peak(self, nsigma=2.0, nsigmap=4.0, remove_isolated=True):
         """Compute the multiresolution support with hard sigma clipping.
          
         Imposing a minimum significance on a connex region of significant pixels
@@ -139,18 +145,18 @@ class CWT(object):
             self.support[key] += tmp
             self.support[key] = self.support[key] > 0.
             
-    def InverseTransform(self):
+    def inverse_transform(self):
         res = np.sum(self.support * self.transform, 0)
         self.filter += res * (res > 0)
         self.model = self.filter 
         return res
 
-    def IterativeFilterPeak(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):
+    def iterative_filter_peak(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):
         var_ratio = 0.0
         for iiter in range(niter):
-            self.doTransform()
-            self.ComputeSupportPeak(nsigma, nsigmap)
-            res = self.InverseTransform()
+            self.do_transform()
+            self.compute_support_peak(nsigma, nsigmap)
+            res = self.inverse_transform()
             residual = self.image - (self.model + self.approx)
             tmp_var = residual.var()
             if iiter > 0:
@@ -168,7 +174,7 @@ class CWT(object):
         maximum = np.argmax(self.transform, 0)
         return self.scale_array[maximum] * (self.support.sum(0) > 0)
 
-    def save_filter(self, filename="res.fits", clobber=True):
+    def save_filter(self, filename, clobber=False):
         hdu = fits.PrimaryHDU(self.filter, self.header)
         hdu.writeto(filename, clobber=clobber)
         fits.append(filename, self.approx, self.header)

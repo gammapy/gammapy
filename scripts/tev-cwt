@@ -2,39 +2,49 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Compute filtered image using Continuous Wavelet Transform (CWT)
 """
-import argparse
 import os.path
 import sys
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+
+# Parse command line arguments
+
+from astropy.utils.compat import argparse
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('infile', action="store",
+                    help='Input FITS file name')
+parser.add_argument('outfile', action="store",
+                    help='Output FITS file name')
+parser.add_argument('--clobber', action='store_true', default=False,
+                    help='Clobber output file?')
+# Wavelet scales to be used
+parser.add_argument('--min_scale', default=6.0, type=float,
+                    help='Minimum wavelet scale')
+parser.add_argument('--nscales', default=6, type=int,
+                    help='Number of wavelet scales')
+parser.add_argument('--scale_step', default=1.3, type=float,
+                    help='Geometric step between wavelet scales')
+# Detection thresholds
+parser.add_argument('--thresh', default=3.0, type=float,
+                    help='Significance threshold for pixel detection')
+parser.add_argument('--detect', default=5.0, type=float,
+                    help='Significance threshold for source detection')
+parser.add_argument('--niter', default=5, type=int,
+                    help='Maximum number of iterations')
+parser.add_argument('--convergence', default=1e-5, type=float,
+                    help='Convergence parameter')
+
+args = parser.parse_args()
+
+if  os.path.isfile(args.outfile) and not args.clobber:
+    logging.error("Output file exists and clobber is False")
+    sys.exit()
+
+# Execute script
+
 from tevpy.detect.cwt import CWT
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-
-    parser.add_argument('infile', action="store", help='Input file name')
-    parser.add_argument('outfile', action="store", help='Output file name')
-
-    # Wavelet scales to be used
-    parser.add_argument('--min_scale', help='Minimum scale to use.', default=6.0, type=float)
-    parser.add_argument('--nscales', help='Number of scales to be used.', default=6, type=int)
-    parser.add_argument('--scale_step', help='Geometric step between to successive Gaussian.', default=1.3, type=float)
-
-    # Detection thresholds
-    parser.add_argument('--thresh', help='Significance threshold for pixel detection.', default=3.0, type=float)
-    parser.add_argument('--detect', help='Significance threshold for source detection.', default=5.0, type=float)
-    parser.add_argument('--niter', help='Maximum number of iteration to be performed.', default=5, type=int)
-    parser.add_argument('--convergence', help='Convergence parameter.', default=1e-5, type=float)
-
-    parser.add_argument('--clobber', action='store_true', help='Clobber output file.', default=False)
-
-    args = parser.parse_args()
-
-    if  os.path.isfile(args.outfile) and not args.clobber:
-        logging.error("Output file exists and clobber is False")
-        sys.exit()
-
-    cwt = CWT(args.min_scale, args.nscales, args.scale_step)
-    cwt.setfile(args.infile)
-    rec = cwt.IterativeFilterPeak(args.thresh, args.detect, args.niter, args.convergence)
-    cwt.save_filter(args.outfile, args.clobber)
+cwt = CWT(args.min_scale, args.nscales, args.scale_step)
+cwt.set_file(args.infile)
+cwt.iterative_filter_peak(args.thresh, args.detect, args.niter, args.convergence)
+cwt.save_filter(args.outfile, args.clobber)
