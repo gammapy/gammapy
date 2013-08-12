@@ -2,7 +2,7 @@
 """FITS utility functions"""
 from astropy.io import fits
 
-__all__ = ['get_hdu', 'get_image_hdu', 'get_table_hdu']
+__all__ = ['get_hdu', 'get_image_hdu', 'get_table_hdu', 'fits_table_to_pandas']
 
 
 def get_hdu(location):
@@ -30,3 +30,22 @@ def get_image_hdu():
 def get_table_hdu():
     """Get the first table HDU"""
     raise NotImplementedError
+
+def fits_table_to_pandas(filename, index_columns):
+    """Convert a FITS table HDU to a pandas DataFrame"""
+    # TODO: really make this work for an astropy Table (not a TableHDU or filename).
+    from pandas import DataFrame
+    data = fits.getdata(filename)
+
+    # Convert byte order to native ... this is required by pandas
+    # See https://github.com/astropy/astropy/issues/1156
+    # and http://pandas.pydata.org/pandas-docs/dev/faq.html#byte-ordering-issues
+    data = data.byteswap().newbyteorder()
+    table = DataFrame(data)
+
+    # Strip whitespace for string columns that will become indices
+    for index_column in index_columns:
+        table[index_column].map(str.strip)    
+    table = table.set_index(index_columns)
+
+    return table
