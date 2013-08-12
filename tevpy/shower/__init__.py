@@ -2,4 +2,5 @@
 """
 Air shower image I/O and analysis.
 """
-from .core import *
+from .image import *
+from .hillas import *
