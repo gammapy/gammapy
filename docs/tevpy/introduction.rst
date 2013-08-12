@@ -62,12 +62,18 @@ A full list of available command line tools can be found in `tools`.
 Other related packages
 ----------------------
 
-TODO: Add short descriptions:
+There are several other great open source packages for
+TeV data analysis (alphabetical order):
 
-* `act-analysis`_
-* `PyFACT`_
-* `gamma-speed`_
+* `act-analysis`_ --- a similar package as ``tevpy`` by Karl Kosack
+* `gammafits`_ --- an SED modeling and fitting package by Victor Zabalza
+* `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
+* `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
+* `PyFACT`_ --- a similar package as ``tevpy`` by Martin Raue
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _PyFACT: http://pyfact.readthedocs.org
+.. _gammafits: https://github.com/zblz/gammafits
+.. _GammaLib: http://gammalib.sourceforge.net
+.. _ctools: http://cta.irap.omp.eu/ctools/
 .. _gamma-speed: https://github.com/gammapy/gamma-speed
