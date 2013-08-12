@@ -41,6 +41,7 @@ If you think it might be useful, go to :ref:`install`.
   stats/index
   utils/index
   shower/index
+  irf/index
   references
 
 Contact
