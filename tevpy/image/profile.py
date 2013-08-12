@@ -152,4 +152,3 @@ class FluxProfile(object):
     def save(self, filename):
         """Save all profiles to a FITS file"""
         pass
-        

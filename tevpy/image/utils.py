@@ -216,6 +216,24 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
 
     return lon, lat
 
+
+def separation(image, center, world=True, radians=False):
+    """Compute distance image from a given center
+    
+    """
+    x_center, y_center = center
+    x, y = coordinates(image, world=world, radians=radians)
+    
+    if world:
+        from ..utils.coordinates import separation as sky_dist
+        d = sky_dist(x, y, x_center, y_center)
+        if radians:
+            d = np.radians(d)
+    else:
+        d = np.sqrt((x - x_center) ** 2 + (y - y_center) ** 2)
+
+    return d
+
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
     
@@ -261,6 +279,9 @@ def process_image_pixels(images, kernel, out, pixel_function):
 
     * TODO: add different options to treat the edges
     * TODO: implement multiprocessing version
+    * TODO: this function is similar to view_as_windows in scikit-image:
+            http://scikit-image.org/docs/dev/api/skimage.util.html#view-as-windows
+            Is this function needed or can everything be done with view_as_windows?  
     """
     if isinstance(out, dict):
         n0, n1 = out.values()[0].shape
@@ -307,3 +328,28 @@ def process_image_pixels(images, kernel, out, pixel_function):
                     out[name][i0, i1] = out_part[name]
             else:
                 out[i0, i1] = out_part
+
+def image_groupby(images, labels):
+    """Group pixel by labels.
+    
+    Similar to scipy.ndimage.labeled_comprehension, only that here multiple inputs
+    and outputs are supported.
+    https://github.com/scipy/scipy/blob/master/scipy/ndimage/measurements.py#L270
+    """
+    for image in images:
+        assert image.shape == labels.shape
+    
+    # Store data in 1D data frame (i.e. as pixel lists)
+    # TODO: should we use array.flat or array.ravel() here?
+    # It's not clear to me what the difference is and which is more efficient here.
+    data = dict()
+    data['labels'] = labels.flat
+    for name, values in images.items():
+        data[name] = values.flat
+
+    # Group pixels by labels
+    groups = data.groupby('labels')
+
+    return groups
+    #out = groups.aggregate(function)
+    #return out
