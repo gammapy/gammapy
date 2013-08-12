@@ -15,6 +15,14 @@ Some are included with `tevpy`, some are downloaded from the web via
 
 TODO: Give summary table of available datasets here.
 
+
+
+.. toctree::
+   :maxdepth: 1
+
+   formats
+
+
 Getting Started
 ===============
 
