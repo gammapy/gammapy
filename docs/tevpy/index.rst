@@ -40,6 +40,7 @@ If you think it might be useful, go to :ref:`install`.
   detect/index
   stats/index
   utils/index
+  shower/index
   references
 
 Contact
