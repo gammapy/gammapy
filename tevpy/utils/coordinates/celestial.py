@@ -20,8 +20,10 @@ __all__ = ['gal2equ', 'equ2gal', 'separation']
 
 def gal2equ(ll, bb):
     """Converts Galactic to Equatorial J2000 coordinates (deg).
+
     RA output is in range 0 to 360 deg.
-    Only accurate to ~ 3 digits."""
+    Only accurate to ~ 3 digits.
+    """
     ll, bb = map(radians, (ll, bb))
     ra_gp = radians(192.85948)
     de_gp = radians(27.12825)
@@ -38,8 +40,10 @@ def gal2equ(ll, bb):
 
 def equ2gal(ra, dec):
     """Converts Equatorial J2000 to Galactic coordinates (deg).
+
     RA output is in range 0 to 360 deg.
-    Only accurate to ~ 3 digits."""
+    Only accurate to ~ 3 digits.
+    """
     ra, dec = map(radians, (ra, dec))
     ra_gp = radians(192.85948)
     de_gp = radians(27.12825)
@@ -55,10 +59,13 @@ def equ2gal(ra, dec):
     return degrees(ll), degrees(bb)
 
 
-def separation(ra1, dec1, ra2, dec2):
-    """Angular separation in degrees between two sky coordinates"""
-    ra1, dec1, ra2, dec2 = map(radians, (ra1, dec1, ra2, dec2))
-    mu = (cos(dec1) * cos(ra1) * cos(dec2) * cos(ra2)
-          + cos(dec1) * sin(ra1) * cos(dec2) * sin(ra2) +
-          sin(dec1) * sin(dec2))
+def separation(lon1, lat1, lon2, lat2):
+    """Angular separation in degrees between two sky coordinates
+    
+    Input and output in degrees.
+    """
+    lon1, lat1, lon2, lat2 = map(radians, (lon1, lat1, lon2, lat2))
+    mu = (cos(lat1) * cos(lon1) * cos(lat2) * cos(lon2)
+          + cos(lat1) * sin(lon1) * cos(lat2) * sin(lon2) +
+          sin(lat1) * sin(lat2))
     return degrees(arccos(mu))
