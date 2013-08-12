@@ -42,6 +42,7 @@ If you think it might be useful, go to :ref:`install`.
   utils/index
   shower/index
   irf/index
+  astro/index
   references
 
 Contact
