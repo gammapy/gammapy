@@ -109,3 +109,49 @@ def TH2_to_FITS(h, flipx=True):
                       'a reversed x-axis, i.e. xlow > xhi')
     data = TH2_to_FITS_data(h, flipx)
     return FITSimage(externaldata=data, externalheader=header)
+
+
+def tree_to_table(tree):
+    """Convert a ROOT TTree to an astropy Table.
+    
+    Parameters
+    ----------
+    
+    Returns
+    -------
+    table : astropy.table.Table
+        
+    """
+    from rootpy import asrootpy
+    tree = asrootpy(tree)
+    array = tree.to_array()
+
+    
+    from rootpy.io import open
+    from rootpy.root2array import tree_to_recarray
+    print('Reading %s' % infile)
+    file = open(infile)
+    tree_name = 'TableAllMu_WithoutNan' # 'ParTree_Postselect'
+    print('Getting %s' % tree_name)
+    tree = file.get(tree_name, ignore_unsupported=True)
+    print('Converting tree to recarray')
+    array = tree_to_recarray(tree)
+    print('Converting recarray to atpy.Table')
+    table = recarray_to_table(array)
+
+    print('Removing empty columns:')
+    empty_columns = []
+    for col in table.columns:
+        #if table['col'].min() == table['col'].max()
+        if (table['col'] == 0).all():
+            empty_columns.append(col)
+    print(empty_columns)
+    table.remove_columns(empty_columns)
+    
+    for name in array.dtype.names:
+        # FITS can't save these types.
+        data = array[name]
+        if data.dtype == np.dtype('uint64'):
+            data = data.copy().astype('int64')
+        table.add_column(name, data)
+    return table
