@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
+from __future__ import division
 import numpy as np
 
 __all__ = ['compute_binning', 'FluxProfile']

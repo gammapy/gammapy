@@ -8,6 +8,7 @@ Theory behind: http://en.wikipedia.org/wiki/Blob_detection (04.04.2013)
 
 I modified the peak detection by using a maximum filter.
 """
+from __future__ import division
 from itertools import combinations
 import numpy as np
 from numpy import sqrt, sin, cos, pi, arccos, abs, exp

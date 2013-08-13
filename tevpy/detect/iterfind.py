@@ -31,6 +31,7 @@ TODO: tons of things, e.g.
 * Use photutils aperture photometry for estimate_flux?
 * Introduce FLUX_SCALE = 1e-10 parameter to avoid roundoff error problems?
 """
+from __future__ import division
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 import numpy as np

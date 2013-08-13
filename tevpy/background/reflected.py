@@ -2,6 +2,7 @@
 """
 Reflected region background estimation
 """
+from __future__ import division
 import numpy as np
 from numpy import sin, cos, arctan2, sqrt
 from ..image.utils import exclusion_distance, lookup

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from numpy.testing import assert_almost_equal
-import pytest
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from .. import poisson_stats_image

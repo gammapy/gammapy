@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Measure source properties"""
+from __future__ import division
 import numpy as np
 
 __all__ = ['measure_labeled_regions']

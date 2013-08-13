@@ -2,3 +2,4 @@
 """
 Field-of-view (FOV) background estimation
 """
+from __future__ import division
