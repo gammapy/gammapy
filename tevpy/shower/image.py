@@ -7,6 +7,11 @@ class ShowerImage(object):
     """Air shower image.
     
     TODO: implement.
+    - neighbor list iterator
+    - I/O
+    - unit test
+    - plotting
+    - Gauss model fit
     """
     def __init__(self, x, y, s):
         self.x = x
