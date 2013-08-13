@@ -2,6 +2,6 @@
 """
 Astrophysical source and population models
 """
-from .psr import *
+from .pulsar import *
 from .pwn import *
 from .snr import *
