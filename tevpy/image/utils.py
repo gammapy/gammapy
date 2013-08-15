@@ -8,9 +8,8 @@ __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
 
 
 def _get_structure_indices(radius):
-    """
-    Get arrays of indices for a symmetric structure,
-    i.e. with an odd number of pixels and 0 at the center
+    """Get arrays of indices for a symmetric structure,
+    i.e. with an odd number of pixels and 0 at the center.
     """
     radius = int(radius)
     y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
@@ -18,14 +17,24 @@ def _get_structure_indices(radius):
 
 
 def binary_disk(radius):
-    """
-    Generate a binary disk.
+    """Generate a binary disk mask.
+    
     Value 1 inside and 0 outside.
 
     Useful as a structure element for morphological transformations.
 
     Note that the returned structure always has an odd number
     of pixels so that shifts during correlation are avoided.
+
+    Parameters
+    ----------
+    radius : float
+        Disk radius in pixels
+    
+    Returns
+    -------
+    structure : array
+        Structure element (bool array)
     """
     x, y = _get_structure_indices(radius)
     structure = x ** 2 + y ** 2 <= radius ** 2
@@ -33,14 +42,27 @@ def binary_disk(radius):
 
 
 def binary_ring(r_in, r_out):
-    """
-    Generate a binary ring.
+    """Generate a binary ring mask.
+    
     Value 1 inside and 0 outside.
 
     Useful as a structure element for morphological transformations.
 
     Note that the returned structure always has an odd number
     of pixels so that shifts during correlation are avoided.
+
+    Parameters
+    ----------
+    r_in : float
+        Ring inner radius in pixels
+
+    r_out : float
+        Ring outer radius in pixels
+    
+    Returns
+    -------
+    structure : array
+        Structure element (bool array)
     """
     x, y = _get_structure_indices(r_out)
     mask1 = r_in ** 2 <= x ** 2 + y ** 2
@@ -48,22 +70,28 @@ def binary_ring(r_in, r_out):
     return mask1 & mask2
 
 
-def tophat_correlate(data, radius, mode='constant'):
-    """
-    Correlate with disk of given radius
+def tophat_correlate(image, radius, mode='constant'):
+    """Correlate image with binary disk kernel.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import convolve
     structure = binary_disk(radius)
-    return convolve(data, structure, mode=mode)
+    return convolve(image, structure, mode=mode)
 
 
-def ring_correlate(data, r_in, r_out, mode='constant'):
-    """
-    Correlate with ring of given radii
+def ring_correlate(image, r_in, r_out, mode='constant'):
+    """Correlate image with binary ring kernel.
     """
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
-    return convolve(data, structure, mode=mode)
+    return convolve(image, structure, mode=mode)
 
 
 def exclusion_distance(exclusion):
@@ -142,9 +170,18 @@ class KernelCalculator(object):
 def atrous_image(image, n_levels):
     """Compute a trous transform for a given image.
 
-    image : 2d array
+    Parameters
+    ----------
+    image : 2D array
+        Input image
+    
     n_levels : integer
-    returns : list of 2d arrays
+        Number of wavelet scales.
+    
+    Returns
+    -------
+    images : list of 2D arrays
+        Wavelet transformed images.
     """
     # https://code.google.com/p/image-funcut/
     from imfun import atrous
@@ -152,11 +189,20 @@ def atrous_image(image, n_levels):
 
 
 def atrous_hdu(hdu, n_levels):
-    """Compute a trous transform for a given FITS HDU
+    """Compute a trous transform for a given FITS HDU.
 
-    hdu : 2d image HDU
+    Parameters
+    ----------
+    hdu : 2D image HDU
+        Input image
+
     n_levels : integer
-    returns : HDUList
+        Number of wavelet scales.
+
+    Returns
+    -------
+    images : HDUList
+        Wavelet transformed images.
     """
     import logging
     from astropy.io import fits
@@ -179,21 +225,27 @@ def atrous_hdu(hdu, n_levels):
     return hdus
 
 def coordinates(image, world=True, lon_sym=True, radians=False):
-    """
-    Get coordinate images for a given image.
-
-    TODO: clean up (numpy docstring, add "use_" to kwargs)
-
-    image: astropy.io.fits.ImageHDU
-    world: use world coordinates or pixel coordinates?
-    lon_sym: use longitude range (-180, 180) or (0, 360)
-
-    Returns tuple (lon, lat) of maps as numpy arrays with values
-    containing the position of the given pixel.
+    """Get coordinate images for a given image.
 
     This function is useful if you want to compute
     an image with values that are a function of position.
 
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+    world : bool
+        Use world coordinates (or pixel coordinates)?
+    lon_sym : bool
+        Use symmetric longitude range `(-180, 180)` (or `(0, 360)`)?
+
+    Returns
+    -------
+    (lon, lat) : tuple of arrays
+        Images as numpy arrays with values
+        containing the position of the given pixel.
+
+    Examples
+    --------
     >>> l, b = coordinates(image)
     >>> dist = sqrt( (l-42)**2 + (b-43)**2)
     """
@@ -218,8 +270,15 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
 
 
 def separation(image, center, world=True, radians=False):
-    """Compute distance image from a given center
+    """Compute distance image from a given center point.
     
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     x_center, y_center = center
     x, y = coordinates(image, world=world, radians=radians)
