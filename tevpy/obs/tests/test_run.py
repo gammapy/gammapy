@@ -3,7 +3,7 @@ from .. import run
 
 
 def test_Run():
-    run.Run()
+    run.Run(GLON=42, GLAT=43)
 
 
 def test_RunList():
