@@ -1,5 +1,8 @@
-============
+************
 Data Formats
+************
+
+Introduction
 ============
 
 Here we describe various data file formats that are useful for the exchange
@@ -14,3 +17,15 @@ we simply invent
 
 TODO: for every data format there should be an example in the datasets.
 
+
+.. toctree::
+   :maxdepth: 1
+
+   events
+   maps
+   cubes
+   spectra
+   
+   psf
+   run_lists
+   source_models

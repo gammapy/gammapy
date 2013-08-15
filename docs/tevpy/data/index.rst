@@ -20,7 +20,7 @@ TODO: Give summary table of available datasets here.
 .. toctree::
    :maxdepth: 1
 
-   formats
+   formats/index
 
 
 Getting Started
