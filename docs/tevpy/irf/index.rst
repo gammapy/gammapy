@@ -1,13 +1,13 @@
 **************************************************************
-Instrument response function (IRF) functionality (`tevpy.irf`)
+Instrument response function (IRF) functionality (`gammapy.irf`)
 **************************************************************
 
-.. currentmodule:: tevpy.irf
+.. currentmodule:: gammapy.irf
 
 Introduction
 ============
 
-`tevpy.irf` contains functions and classes to access and model
+`gammapy.irf` contains functions and classes to access and model
 instrument response functions (IRFs).
 
 TODO: document
@@ -20,5 +20,5 @@ TODO: document
 Reference/API
 =============
 
-.. automodapi:: tevpy.irf
+.. automodapi:: gammapy.irf
     :no-inheritance-diagram:

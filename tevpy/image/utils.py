@@ -326,7 +326,7 @@ def process_image_pixels(images, kernel, out, pixel_function):
     
         def convolve(image, kernel):
             '''Convolve image with kernel'''
-            from tevpy.image.utils import process_image_pixels
+            from gammapy.image.utils import process_image_pixels
             images = dict(image=np.asanyarray(image))
             kernel = np.asanyarray(kernel)
             out = dict(image=np.empty_like(image))

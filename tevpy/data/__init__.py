@@ -3,17 +3,17 @@
 
 Example how to load a dataset from file:
 
-    >>> from tevpy import data
+    >>> from gammapy import data
     >>> image = data.poisson_stats_image()
 
 To get a summary table of available datasets::
 
-    >>> from tevpy import data
+    >>> from gammapy import data
     >>> data.list_datasets()
 
 To download all datasets into a local cache::
 
-    >>> from tevpy import data
+    >>> from gammapy import data
     >>> data.download_datasets()
 """
 from astropy.utils.data import get_pkg_data_filename

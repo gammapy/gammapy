@@ -1,7 +1,7 @@
 References
 ==========
 
-This is the bibliography containing the literature references for the implemented methods referenced from the ``tevpy`` docs.
+This is the bibliography containing the literature references for the implemented methods referenced from the ``gammapy`` docs.
 
 The best reference to TeV data analysis is Chapter 7 of Mathieu de Naurois's habilitation thesis.
 

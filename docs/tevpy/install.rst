@@ -3,22 +3,22 @@
 Installation
 ============
 
-To install the latest `tevpy` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
+To install the latest `gammapy` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
 
-   pip install tevpy
+   pip install gammapy
 
-To install the latest developer version of `tevpy`, use::
+To install the latest developer version of `gammapy`, use::
 
-   git clone https://github.com/gammapy/tevpy.git
+   git clone https://github.com/gammapy/gammapy.git
    cd astropy
    python setup.py install
 
-To check if `tevpy` is correctly installed, start up python or ipython, import `tevpy` and run the unit tests::
+To check if `gammapy` is correctly installed, start up python or ipython, import `gammapy` and run the unit tests::
 
-   >>> import tevpy
-   >>> tevpy.test()
+   >>> import gammapy
+   >>> gammapy.test()
 
-To check if the `tevpy` command line tools are on your `$PATH` try this::
+To check if the `gammapy` command line tools are on your `$PATH` try this::
 
    $ tev-lookup-map-values --help
 
@@ -43,7 +43,7 @@ Optional dependencies (imported and used only where needed):
 * `imfun`_ for a trous wavelet decomposition
 
 .. note:: I didn't put any effort into minimizing the number of dependencies,
-   since `tevpy` is a prototype. Should it develop into a package that is actually used
+   since `gammapy` is a prototype. Should it develop into a package that is actually used
    by a few people I'll limit the optional packages to what is actually necessary.
 
 .. _scikit-image: http://scikit-image.org

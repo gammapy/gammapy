@@ -1,17 +1,17 @@
 ***********************
-Datasets (`tevpy.data`)
+Datasets (`gammapy.data`)
 ***********************
 
-.. currentmodule:: tevpy.data
+.. currentmodule:: gammapy.data
 
 Introduction
 ============
 
-`tevpy.data` holds a few datasets used in the examples and tests. 
-Some are included with `tevpy`, some are downloaded from the web via
+`gammapy.data` holds a few datasets used in the examples and tests. 
+Some are included with `gammapy`, some are downloaded from the web via
 
-   >>> import tevpy.data
-   >>> tevpy.data.download_datasets()
+   >>> import gammapy.data
+   >>> gammapy.data.download_datasets()
 
 TODO: Give summary table of available datasets here.
 
@@ -31,5 +31,5 @@ TODO: give an example.
 Reference/API
 =============
 
-.. automodapi:: tevpy.data
+.. automodapi:: gammapy.data
     :no-inheritance-diagram:

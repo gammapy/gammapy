@@ -28,7 +28,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
-from tevpy.background import Maps
+from gammapy.background import Maps
 
 logging.info('Reading {0}'.format(args['infile']))
 hdus = fits.open(args['infile'])

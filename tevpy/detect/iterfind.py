@@ -18,7 +18,7 @@ TODO: tons of things, e.g.
       and info (e.g. sources_guess positions).
     * Add PSF convolution
 * Use TS maps with Gauss source morphology instead of tophat.
-* Make it more modular and more abstract; put in tevpy.detect
+* Make it more modular and more abstract; put in gammapy.detect
   - user should be able to plug-in their significance map computation?
   - support different source models?
   - Separate Iterator, SignificanceMapCalculator, Guesser, Fitter ...

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Run tevpy unit tests"""
+"""Run gammapy unit tests"""
 
 # Parse command line arguments
 
@@ -16,5 +16,5 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
-import tevpy
-tevpy.test(args['package'], verbose=True)
+import gammapy
+gammapy.test(args['package'], verbose=True)

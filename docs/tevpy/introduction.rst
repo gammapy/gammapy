@@ -6,28 +6,28 @@ Introduction
 Show me some code!
 ------------------
 
-`tevpy` gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
+`gammapy` gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
 
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
-`tevpy.stats` knows::
+`gammapy.stats` knows::
 
-   >>> from tevpy.stats import significance
+   >>> from gammapy.stats import significance
    >>> significance(n_observed=10, mu_background=4.2, method='lima')
    2.3979181291475453
 
 What's the differential gamma-ray flux and spectral index of the Crab nebula at 3 TeV
 according to [Meyer2010]_?
-`tevpy.spec` knows::
+`gammapy.spec` knows::
 
-   >>> from tevpy.spec import crab
+   >>> from gammapy.spec import crab
    >>> energy = 3
    >>> crab.diff_flux(energy, ref='meyer')
    1.8993523278650278e-12
    >>> crab.spectral_index(energy, ref='meyer')
    2.6763224503600429
 
-All functionality is in subpackages (e.g. `tevpy.stats` or `tevpy.spec`) ...
+All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spec`) ...
 browse their docs (see list below) to see if it contains the methods you want.
 
 But I don't know how to code in Python!
@@ -35,7 +35,7 @@ But I don't know how to code in Python!
 
 Hmm ... OK.
 
-Some of the `tevpy` functionality can be called from command line tools.
+Some of the `gammapy` functionality can be called from command line tools.
 
 But, to be honest, if you're an astronomer, you should learn to code in Python.
 Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_  
@@ -65,11 +65,11 @@ Other related packages
 There are several other great open source packages for
 TeV data analysis (alphabetical order):
 
-* `act-analysis`_ --- a similar package as ``tevpy`` by Karl Kosack
+* `act-analysis`_ --- a similar package as ``gammapy`` by Karl Kosack
 * `gammafits`_ --- an SED modeling and fitting package by Victor Zabalza
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
 * `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
-* `PyFACT`_ --- a similar package as ``tevpy`` by Martin Raue
+* `PyFACT`_ --- a similar package as ``gammapy`` by Martin Raue
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _PyFACT: http://pyfact.readthedocs.org

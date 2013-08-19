@@ -1,18 +1,18 @@
 ********************************************************
-Background estimation and modeling  (`tevpy.background`)
+Background estimation and modeling  (`gammapy.background`)
 ********************************************************
 
-.. currentmodule:: tevpy.background
+.. currentmodule:: gammapy.background
 
 Introduction
 ============
 
-`tevpy.background` contains methods to estimate and model background.
+`gammapy.background` contains methods to estimate and model background.
 
 At the moment it also contains a lot of image-processing related functionality
 that maybe should be split into a separate `image` package.
 
-The main data structure is the `~tevpy.background.maps.Maps` container ... TODO
+The main data structure is the `~gammapy.background.maps.Maps` container ... TODO
 
 Most of the methods implemented are described in [Berge2007]_.
 Section 7.3 "Background subtraction"
@@ -25,6 +25,6 @@ Getting Started
 
 TODO
 
-.. automodapi:: tevpy.background
+.. automodapi:: gammapy.background
     :no-inheritance-diagram:
 

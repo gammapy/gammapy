@@ -1,13 +1,13 @@
 ***************************************
-Source detection tools (`tevpy.detect`)
+Source detection tools (`gammapy.detect`)
 ***************************************
 
-.. currentmodule:: tevpy.detect
+.. currentmodule:: gammapy.detect
 
 Introduction
 ============
 
-`tevpy.detect` holds source detection methods that turn event lists or images or cubes
+`gammapy.detect` holds source detection methods that turn event lists or images or cubes
 into source catalogs. 
 
 * TODO: Describe references: [Stewart2009]_
@@ -24,21 +24,21 @@ Getting Started
 Reference/API
 =============
 
-.. automodapi:: tevpy.detect.blob
+.. automodapi:: gammapy.detect.blob
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.cwt
+.. automodapi:: gammapy.detect.cwt
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.matched_filter
+.. automodapi:: gammapy.detect.matched_filter
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.sex
+.. automodapi:: gammapy.detect.sex
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.test_statistic
+.. automodapi:: gammapy.detect.test_statistic
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.detect.utils
+.. automodapi:: gammapy.detect.utils
     :no-inheritance-diagram:
     

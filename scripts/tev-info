@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Print various info on tevpy to the console"""
+"""Print various info on gammapy to the console"""
 
 # Parse command line arguments
 
 from astropy.utils.compat import argparse
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--version', action='store_true',
-                    help='Print tevpy version number')
+                    help='Print gammapy version number')
 parser.add_argument('--tools', action='store_true',
                     help='Print available command line tools')
 args = parser.parse_args()
@@ -24,15 +24,15 @@ if len(sys.argv) <= 1:
     sys.exit(1)
 
 if args['version']:
-    from tevpy import version
-    print('\n*** tevpy version info ***\n')
+    from gammapy import version
+    print('\n*** gammapy version info ***\n')
     print('version: {0}'.format(version.version))
     print('release: {0}'.format(version.release))
     print('githash: {0}'.format(version.githash))
     print('')
 
 if args['tools']:
-    print('\n*** tevpy tools ***\n')
+    print('\n*** gammapy tools ***\n')
     # We assume all tools are installed in the same folder as this script
     # and their names start with "tev-".
     import os

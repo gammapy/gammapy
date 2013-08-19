@@ -1,13 +1,13 @@
 **************************************
-Observation bookkeeping  (`tevpy.obs`)
+Observation bookkeeping  (`gammapy.obs`)
 **************************************
 
-.. currentmodule:: tevpy.obs
+.. currentmodule:: gammapy.obs
 
 Introduction
 ============
 
-`tevpy.obs` contains methods to do the bookkeeping for processing multiple observations.
+`gammapy.obs` contains methods to do the bookkeeping for processing multiple observations.
 
 In TeV astronomy an observation (a.k.a. a run) means pointing the telescopes at some
 position on the sky (fixed in celestial coordinates, not in horizon coordinates)
@@ -60,5 +60,5 @@ at the command line or read the usage help `here <TODO>`_
       is a nice example for a run selection tool.
 
 
-.. automodapi:: tevpy.obs
+.. automodapi:: gammapy.obs
     :no-inheritance-diagram:
