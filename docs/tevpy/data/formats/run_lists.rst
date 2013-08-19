@@ -31,7 +31,7 @@ Usually it has many more columns with information about each run::
    Run,Telescope_Pattern,Date,Duration,GLON,GLAT,Target,Zenith
    1234,24,2013-03-22 14:32,1832,83.7,-5.2,Crab Nebula,32
 
-Special column names that the `tevpy` analysis tools understand:
+Special column names that the `gammapy` analysis tools understand:
 
 * `Run` --- Run number (int)
 * `Telescope_Pattern` --- Binary pattern describing which telescopes participated in the run

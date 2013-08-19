@@ -39,7 +39,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
-from tevpy.image.utils import atrous_hdu
+from gammapy.image.utils import atrous_hdu
 
 logging.info('Reading {0}'.format(args['infile']))
 hdu = fits.open(args['infile'])[0]

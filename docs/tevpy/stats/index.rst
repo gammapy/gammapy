@@ -1,13 +1,13 @@
 ********************************
-Statistics tools (`tevpy.stats`)
+Statistics tools (`gammapy.stats`)
 ********************************
 
-.. currentmodule:: tevpy.stats
+.. currentmodule:: gammapy.stats
 
 Introduction
 ============
 
-`tevpy.stats` holds statistical estimators,
+`gammapy.stats` holds statistical estimators,
 fit statistics and algorithms commonly used in gamma-ray astronomy.
 
 It is mostly concerned with the evaluation of one or several observations
@@ -31,7 +31,7 @@ and that is :math:`a_{off}/a_{on}=10` times larger than the on-region.
 Here's how you compute the statistical significance of your detection 
 with the Li \& Ma formula:
 
-   >>> from tevpy.stats import significance_on_off
+   >>> from gammapy.stats import significance_on_off
    >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
    2.2421704424844875
 
@@ -43,11 +43,11 @@ TODO: More examples.
 Reference/API
 =============
 
-.. automodapi:: tevpy.stats.poisson
+.. automodapi:: gammapy.stats.poisson
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.stats.fit_statistics
+.. automodapi:: gammapy.stats.fit_statistics
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.stats.utils
+.. automodapi:: gammapy.stats.utils
     :no-inheritance-diagram:

@@ -1,27 +1,27 @@
 *********************************************
-Utility functions and classes (`tevpy.utils`)
+Utility functions and classes (`gammapy.utils`)
 *********************************************
 
 Introduction
 ============
 
-`tevpy.utils` is a collection of utility functions that are used in many places
+`gammapy.utils` is a collection of utility functions that are used in many places
 or don't fit in one of the other packages.
 
 Reference/API
 =============
 
-.. automodapi:: tevpy.utils.coordinates
+.. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.utils.const
+.. automodapi:: gammapy.utils.const
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.utils.fits
+.. automodapi:: gammapy.utils.fits
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.utils.region
+.. automodapi:: gammapy.utils.region
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.utils.root
+.. automodapi:: gammapy.utils.root
     :no-inheritance-diagram:

@@ -34,7 +34,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
-from tevpy.background import ReflectedRegionMaker
+from gammapy.background import ReflectedRegionMaker
 
 logging.info('Reading {0}'.format(args['exclusion']))
 exclusion = fits.open(args['exclusion'])[0]

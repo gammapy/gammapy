@@ -1,22 +1,22 @@
-`tevpy`
+`gammapy`
 =======
 
 What is it?
 -----------
 
-`tevpy` is an open source (BSD licensed) TeV gamma-ray astronomy high-level data analysis Python package.
+`gammapy` is an open source (BSD licensed) TeV gamma-ray astronomy high-level data analysis Python package.
 
 It contains some analysis methods,
 but it's main purpose is to be the glue between the many
 existing data formats and other tools.
 
-* Code / Bug reports / Feature requests / Development: https://github.com/gammapy/tevpy
-* Docs: https://tevpy.readthedocs.org/
+* Code / Bug reports / Feature requests / Development: https://github.com/gammapy/gammapy
+* Docs: https://gammapy.readthedocs.org/
 * Mailing list: http://groups.google.com/group/gammapy
 * License: BSD-3-Clause
 
 
-Using `tevpy`
+Using `gammapy`
 -------------
 
 Start by reading the :ref:`introduction`.
@@ -50,5 +50,5 @@ Contact
 
 Found a bug or missing feature?
 
-Make an issue or pull request on `GitHub <https://github.com/gammapy/tevpy>`_. 
+Make an issue or pull request on `GitHub <https://github.com/gammapy/gammapy>`_. 
 

@@ -1,13 +1,13 @@
 ***************************************************
-Spectrum estimation and modeling (`tevpy.spectrum`)
+Spectrum estimation and modeling (`gammapy.spectrum`)
 ***************************************************
 
-.. currentmodule:: tevpy.spectrum
+.. currentmodule:: gammapy.spectrum
 
 Introduction
 ============
 
-`tevpy.spectrum` holds functions and classes to fit spectral models and compute flux points.
+`gammapy.spectrum` holds functions and classes to fit spectral models and compute flux points.
 
 Explain spectrum estimation basics.
 
@@ -23,8 +23,8 @@ Getting Started
 TODO
 
 
-.. automodapi:: tevpy.spectrum
+.. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
 
-.. automodapi:: tevpy.spectrum.crab
+.. automodapi:: gammapy.spectrum.crab
     :no-inheritance-diagram:

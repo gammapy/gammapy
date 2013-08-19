@@ -33,16 +33,16 @@ from astropy.setup_helpers import (register_commands, adjust_compiler,
                                    get_debug_option)
 from astropy.version_helpers import get_git_devstr, generate_version_py
 
-import tevpy
+import gammapy
 
 # Set affiliated package-specific settings
-PACKAGENAME = 'tevpy'
+PACKAGENAME = 'gammapy'
 DESCRIPTION = 'TeV gamma-ray astronomy high-level data analysis Python package'
 LONG_DESCRIPTION = ''
 AUTHOR = 'Christoph Deil'
 AUTHOR_EMAIL = 'Deil.Christoph@gmail.com'
 LICENSE = 'BSD'
-URL = 'https://github.com/gammapy/tevpy'
+URL = 'https://github.com/gammapy/gammapy'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 VERSION = '0.1'
