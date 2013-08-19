@@ -3,3 +3,4 @@
 Spectrum estimation and modeling methods.
 """
 from . import crab
+from . import cosmic_rays
