@@ -28,7 +28,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
-from tevpy.utils.fits import get_hdu
+from gammapy.utils.fits import get_hdu
 
 logging.info('Reading {0}'.format(args['infile']))
 hdu = get_hdu(args['infile'])
@@ -36,14 +36,14 @@ hdu = get_hdu(args['infile'])
 out_hdus = fits.HDUList()
 
 if args['make_coordinate_maps']:
-    from tevpy.utils.image import coordinates
+    from gammapy.utils.image import coordinates
     logging.info('Computing LON and LAT maps')
     lon, lat = coordinates(hdu)
     out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))
     out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 
 if args['make_distance_map']:
-    from tevpy.utils.image import exclusion_distance
+    from gammapy.utils.image import exclusion_distance
     logging.info('Computing DIST map')
     dist = exclusion_distance(hdu.data)
     out_hdus.append(fits.ImageHDU(dist, hdu.header, 'DIST'))

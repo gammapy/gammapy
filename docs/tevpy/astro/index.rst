@@ -1,13 +1,13 @@
 **********************************************************
-Astrophysical source and population models (`tevpy.astro`)
+Astrophysical source and population models (`gammapy.astro`)
 **********************************************************
 
-.. currentmodule:: tevpy.astro
+.. currentmodule:: gammapy.astro
 
 Introduction
 ============
 
-`tevpy.astro` implements some common astrophysical source and population models.
+`gammapy.astro` implements some common astrophysical source and population models.
 
 TODO: describe
 
@@ -19,5 +19,5 @@ TODO: describe
 Reference/API
 =============
 
-.. automodapi:: tevpy.astro
+.. automodapi:: gammapy.astro
     :no-inheritance-diagram:

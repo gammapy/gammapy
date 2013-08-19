@@ -2,7 +2,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """An iterative multi-scale source detection method.
 """
-from tevpy.detect.iterfind import run_detection
+from gammapy.detect.iterfind import run_detection
 
 def parse_args():
     # Parse command line arguments

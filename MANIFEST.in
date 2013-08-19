@@ -1,7 +1,7 @@
 include README.rst
 
 include distribute_setup.py
-recursive-include tevpy *.pyx *.c
+recursive-include gammapy *.pyx *.c
 
 recursive-include docs *
 recursive-include licenses *

@@ -44,7 +44,7 @@ if  os.path.isfile(args.outfile) and not args.clobber:
 
 # Execute script
 
-from tevpy.detect.cwt import CWT
+from gammapy.detect.cwt import CWT
 
 cwt = CWT(args.min_scale, args.nscales, args.scale_step)
 cwt.set_file(args.infile)

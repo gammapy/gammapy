@@ -1,13 +1,13 @@
 **************************************************
-Air shower image I/O and analysis (`tevpy.shower`)
+Air shower image I/O and analysis (`gammapy.shower`)
 **************************************************
 
-.. currentmodule:: tevpy.shower
+.. currentmodule:: gammapy.shower
 
 Introduction
 ============
 
-`tevpy.shower` contains air shower image I/O and analysis methods.
+`gammapy.shower` contains air shower image I/O and analysis methods.
 
 TODO: document
 
@@ -19,5 +19,5 @@ TODO: document
 Reference/API
 =============
 
-.. automodapi:: tevpy.shower
+.. automodapi:: gammapy.shower
     :no-inheritance-diagram:

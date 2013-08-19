@@ -4,7 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
-from tevpy.background import ring
+from gammapy.background import ring
 
 
 def add_inner_title(ax, title, loc, size=None, **kwargs):

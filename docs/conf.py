@@ -46,19 +46,19 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = u'tevpy'
-author = u'The tevpy Developers'
+project = u'gammapy'
+author = u'The gammapy Developers'
 copyright = u'2012, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import tevpy
+import gammapy
 # The short X.Y version.
-version = tevpy.__version__.split('-', 1)[0]
+version = gammapy.__version__.split('-', 1)[0]
 # The full version, including alpha/beta/rc tags.
-release = tevpy.__version__
+release = gammapy.__version__
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -95,7 +95,7 @@ html_theme_options = {
 
 # First TeV gamma-ray image: the supernova remnant RX J1713 with HESS
 # http://apod.nasa.gov/apod/ap041105.html
-html_favicon = '_static/tevpy_logo.ico'
+html_favicon = '_static/gammapy_logo.ico'
 
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)
@@ -134,8 +134,8 @@ extensions += ['astropy.sphinx.ext.edit_on_github']
 
 # Don't import the module as "version" or it will override the
 # "version" configuration parameter
-from tevpy import version as versionmod
-edit_on_github_project = "gammapy/tevpy"
+from gammapy import version as versionmod
+edit_on_github_project = "gammapy/gammapy"
 if versionmod.release:
     edit_on_github_branch = "v" + versionmod.version
 else:

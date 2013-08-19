@@ -44,6 +44,6 @@ MANIFEST
 
 *.ipynb_checkpoints
 
-tevpy/tevpy.cfg
+gammapy/gammapy.cfg
 
 docs/_generated

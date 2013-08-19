@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""tevpy --- TeV gamma-ray astronomy high-level data analysis Python package
+"""gammapy --- TeV gamma-ray astronomy high-level data analysis Python package
 
-* Code: https://github.com/gammapy/tevpy
-* Docs: https://tevpy.readthedocs.org/
+* Code: https://github.com/gammapy/gammapy
+* Docs: https://gammapy.readthedocs.org/
 
 TODO: List sub-packages with one-line description here.
 """

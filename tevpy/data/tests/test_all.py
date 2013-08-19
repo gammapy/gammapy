@@ -6,7 +6,7 @@ from .. import poisson_stats_image
 
 
 def test_poisson_stats_image():
-    """Get the data file via the tevpy.data.poisson_stats_image function"""
+    """Get the data file via the gammapy.data.poisson_stats_image function"""
     data = poisson_stats_image()
     assert data.sum() == 40896
 

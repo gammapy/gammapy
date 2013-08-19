@@ -4,7 +4,7 @@
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-from tevpy.obs import RunList
+from gammapy.obs import RunList
 
 # Parse command line arguments
 

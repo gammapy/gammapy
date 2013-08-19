@@ -5,9 +5,9 @@ from ..pwn import PWN
 
 def plot_hoppe(pwn):
     import matplotlib.pyplot as plt
-    from tevpy.spectrum.models import PowerLaw
-    from tevpy.spectrum.inverse_compton import InverseCompton
-    from tevpy.spectrum.synchrotron import Synchrotron
+    from gammapy.spectrum.models import PowerLaw
+    from gammapy.spectrum.inverse_compton import InverseCompton
+    from gammapy.spectrum.synchrotron import Synchrotron
     plt.subplot(311)
     injection_spectrum = PowerLaw()
     pwn = PWN(T=1e3, B=10, E_c=1000, injection_type='constant')
