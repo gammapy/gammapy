@@ -4,7 +4,7 @@
 What is it?
 -----------
 
-`gammapy` is an open source (BSD licensed) TeV gamma-ray astronomy high-level data analysis Python package.
+`gammapy` is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
 
 It contains some analysis methods,
 but it's main purpose is to be the glue between the many

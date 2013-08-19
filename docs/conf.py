@@ -71,7 +71,7 @@ release = gammapy.__version__
 # global configuration are listed below, commented out.
 
 html_theme_options = {
-    'logotext1': 'tev',  # white,  semi-bold
+    'logotext1': 'gamma',  # white,  semi-bold
     'logotext2': 'py',  # orange, light
     'logotext3': ':docs'   # white,  light
     }
@@ -93,8 +93,7 @@ html_theme_options = {
 # pixels large.
 #html_favicon = ''
 
-# First TeV gamma-ray image: the supernova remnant RX J1713 with HESS
-# http://apod.nasa.gov/apod/ap041105.html
+# https://github.com/gammapy/gammapy-website/tree/master/logos
 html_favicon = '_static/gammapy_logo.ico'
 
 # TODO: set this image also in the title bar

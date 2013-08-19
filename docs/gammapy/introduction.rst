@@ -62,8 +62,7 @@ A full list of available command line tools can be found in `tools`.
 Other related packages
 ----------------------
 
-There are several other great open source packages for
-TeV data analysis (alphabetical order):
+There are several other great open source packages for gamma-ray data analysis (alphabetical order):
 
 * `act-analysis`_ --- a similar package as ``gammapy`` by Karl Kosack
 * `gammafits`_ --- an SED modeling and fitting package by Victor Zabalza

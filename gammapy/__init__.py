@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""gammapy --- TeV gamma-ray astronomy high-level data analysis Python package
+"""gammapy --- Gamma-ray astronomy high-level data analysis Python package
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: https://gammapy.readthedocs.org/
