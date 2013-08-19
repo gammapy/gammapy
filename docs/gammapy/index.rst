@@ -1,5 +1,5 @@
 `gammapy`
-=======
+=========
 
 What is it?
 -----------
@@ -17,7 +17,7 @@ existing data formats and other tools.
 
 
 Using `gammapy`
--------------
+---------------
 
 Start by reading the :ref:`introduction`.
 
