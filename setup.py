@@ -37,7 +37,7 @@ import gammapy
 
 # Set affiliated package-specific settings
 PACKAGENAME = 'gammapy'
-DESCRIPTION = 'TeV gamma-ray astronomy high-level data analysis Python package'
+DESCRIPTION = 'Gamma-ray astronomy high-level data analysis Python package'
 LONG_DESCRIPTION = ''
 AUTHOR = 'Christoph Deil'
 AUTHOR_EMAIL = 'Deil.Christoph@gmail.com'

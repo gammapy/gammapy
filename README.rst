@@ -1,7 +1,7 @@
 gammapy
-=====
+=======
 
-TeV gamma-ray astronomy high-level data analysis Python package
+Gamma-ray astronomy high-level data analysis Python package
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: https://gammapy.readthedocs.org/

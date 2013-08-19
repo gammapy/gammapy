@@ -20,7 +20,7 @@ To check if `gammapy` is correctly installed, start up python or ipython, import
 
 To check if the `gammapy` command line tools are on your `$PATH` try this::
 
-   $ tev-lookup-map-values --help
+   $ gp-lookup-map-values --help
 
 Requirements
 ------------

@@ -106,7 +106,7 @@ class CWT(object):
         # TODO: check the existence of extensions
         # Open fits files
         hdulist = fits.open(filename)
-        # TODO: don't hardcode extension numbers and names here ... pass on from tev-cwt
+        # TODO: don't hardcode extension numbers and names here ... pass on from gp-cwt
         self.set_data(hdulist[0].data, hdulist['NormOffMap'].data)
         self.header = hdulist[0].header
         self.wcs = WCS(self.header)

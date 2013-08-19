@@ -34,12 +34,12 @@ if args['version']:
 if args['tools']:
     print('\n*** gammapy tools ***\n')
     # We assume all tools are installed in the same folder as this script
-    # and their names start with "tev-".
+    # and their names start with "gp-".
     import os
     from glob import glob
     DIR = os.path.dirname(__file__)
     os.chdir(DIR)
-    tools = glob('tev-*')
+    tools = glob('gp-*')
     for tool in tools:
         # Extract first line from docstring as description
         description = 'no description available'

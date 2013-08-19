@@ -43,7 +43,7 @@ Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_
 For example, if you have a counts and background model image and would like to compute
 a significance image with a correlation radius of 0.1 deg::
 
-   $ tev-make-derived-maps --in counts.fits background.fits \
+   $ gp-make-derived-maps --in counts.fits background.fits \
                            --meaning counts background
                            --out significance.fits
                            --correlation_radius 0.1
@@ -53,7 +53,7 @@ Say you have an image that contains the
 and want to look up the map value at the Crab position 
 (name lookup is done with `SIMBAD <http://simbad.u-strasbg.fr/simbad/>`_)::
 
-   $ tev-lookup-map-values crab_image.fits --object "Crab"
+   $ gp-lookup-map-values crab_image.fits --object "Crab"
 
 You can call `tool --help` for any tool.
 
