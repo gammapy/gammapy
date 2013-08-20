@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to work with ds9 regions"""
 
-__all__ = ['make_ds9_region']
+__all__ = ['make_ds9_region', 'Circle']
 
 
 class Circle(object):
