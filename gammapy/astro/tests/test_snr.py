@@ -12,4 +12,4 @@ def test_SNR():
 def test_SNR_Truelove():
     snr = SNR_Truelove()
     assert_approx_equal(snr.L(1e3), 1.0768456645602824e+33)
-    assert_approx_equal(snr.r_out(1e3), 42)
+    assert_approx_equal(snr.r_out(1e3), 5.1176622483603662)
