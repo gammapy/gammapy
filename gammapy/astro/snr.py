@@ -21,6 +21,7 @@ DEFAULT_E_SN = 1e51
 DEFAULT_THETA = 0.1
 DEFAULT_M = M_SUN
 
+
 class SNR(object):
     """Supernova remnant (SNR) evolution models.
 
@@ -69,7 +70,7 @@ class SNR(object):
 
         # proportional constant for the free expansion phase
         term1 = (self.E_SN / self.E_SN_ref) ** (1. / 2)
-        term2 = (self.m / self.m_ref) ** (-1. / 2) 
+        term2 = (self.m / self.m_ref) ** (-1. / 2)
         A = 0.01 * term1 * term2
         # The proportional constant for the sedov phase is choosen such,
         # that the function is continuous at tf.
@@ -94,12 +95,14 @@ class SNR(object):
         return self.r_out(t) * (1 - 0.0914)
 
     def r_free_expansion(self, t):
-        """Reverse shock radius (pc) at age t (yr)
-        during free expansion phase"""
+        """
+        Shock radius (pc) at age t (yr) during free expansion phase.
+        """
         return 1.12 * self.r_c * (t / self.t_c) ** (2. / 3)
 
     def r_reverse(self, t):
-        """Reverse shock radius (pc) at age t (yr)
+        """
+        Reverse shock radius (pc) at age t (yr).
 
         Reference: Gelfand & Slane 2009, Appendix A.
         """
@@ -107,7 +110,7 @@ class SNR(object):
         t = YEAR_TO_SEC * t
         # Time when reverse shock reaches the "core"
         t_core = 0.25 * self.t_c
-        
+
         term1 = (t - t_core) / (self.t_c)
         term2 = (1.49 - 0.16 * term1 - 0.46 * log(t / t_core))
         R_1 = self.r_free_expansion(t) / 1.19
@@ -142,7 +145,7 @@ class SNR(object):
     def _t_start(self):
         term1 = 200 * (self.E_SN / self.E_SN_ref) ** (-1. / 2)
         term2 = (self.m / self.m_ref) ** (5. / 6)
-        term3 = (self.rho_ISM / self.rho_ISM_ref) ** (-1. / 3)         
+        term3 = (self.rho_ISM / self.rho_ISM_ref) ** (-1. / 3)
         return term1 * term2 * term3
 
     def _t_end(self):
@@ -158,12 +161,11 @@ class SNR_Truelove(SNR):
     """
 
     def r_out(self, t):
-        """Outer shell radius (pc) at age t (yr).
-        """
+        """Outer shell radius (pc) at age t (yr)."""
         t = YEAR_TO_SEC * t
         # Sedov Taylor Phase
         t_ST = 0.52 * self.t_c
-        R_FE = self.r_reverse_free_expansion(t_ST)
+        R_FE = self.r_free_expansion(t_ST)
         term1 = R_FE ** (5. / 2)
         term2 = (2.026 * (self.E_SN / self.rho_ISM)) ** (1. / 2)
         R_ST = (term1 + term2 * (t - t_ST)) ** (2. / 5)

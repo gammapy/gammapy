@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Blob detection tool for source detection
+"""
+Blob detection tool for source detection
 
 This generic blob detection algorithm is based on:
 http://www.cs.utah.edu/~jfishbau/advimproc/project1/ (04.04.2013)

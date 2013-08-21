@@ -19,6 +19,8 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy.table import Table
 
+__all__ = ['sex']
+
 
 def sex(image,
         image2='',
@@ -31,7 +33,7 @@ def sex(image,
         deblend_mincont=1,
         ):
     """Run SExtractor to detect sources in an image.
-    
+
     Parameters
     ----------
     image : str
@@ -39,58 +41,58 @@ def sex(image,
 
     image2 : str
         Measurement image filename (same as image if '')
-    
+
     catalog_name : str
         Output catalog filename
-    
+
     config_name : str
         Config filename
-    
+
     parameters_name : str
         Name of the file describing the catalog output parameters
-    
+
     checkimage_name : str
         Filename for the check-image (TODO: none for '')
-    
+
     detect_thresh : float
         Detection threshold
-    
+
     detect_minarea : int
         Minimum number of pixels above threshold
-    
+
     deblend_mincont : float in range 0 to 1
         Minimum contrast parameter for deblending
         0 = each peak is a single source
         1 = no deblending, one source per segment
-    
+
     Returns
     -------
     catalog : astropy.table.Table
         Catalog of detected objects
-    
+
     checkimage : astropy.io.fits.hdu.image.PrimaryHDU
         Segmented image
-    
+
     Examples
     --------
     TODO
-    
+
     TODO: look what other Python sextractor wrappers do:
     TODO: where to run the command and put the output files?
     TODO: return filenames or dict with results?
     """
     if catalog_name == None:
         catalog_name = tempfile.mktemp('.fits')
-    
+
     if checkimage_name == None:
         checkimage_name = tempfile.mktemp('.fits')
 
     if config_name == None:
         config_name = get_pkg_data_filename('sex.cfg')
-        
+
     if parameters_name == None:
         parameters_name = get_pkg_data_filename('sex.param')
-    
+
     logging.info('Running SExtractor')
     logging.info('INPUT  image: {0}'.format(image))
     logging.info('INPUT  image2: {0}'.format(image2))
@@ -111,7 +113,7 @@ def sex(image,
     logging.info('Executing the following command now:\n\n{0}\n'.format(' '.join(cmd)))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
-    
+
     # Read output files
     catalog = Table.read(catalog_name)
     checkimage = fits.open(checkimage_name)[0]

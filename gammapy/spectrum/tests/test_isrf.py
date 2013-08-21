@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import unittest
+import pytest
 from ..isrf import Schlickeiser, Galprop
 
 
-@unittest.skip('TODO')
-class TestSchlickeiser(unittest.TestCase):
+@pytest.skip('TODO')
+class TestSchlickeiser:
 
     def test_omega_g_over_b(self):
         """ Check that CMB has the energy density it is
@@ -21,10 +21,8 @@ class TestSchlickeiser(unittest.TestCase):
         self.assertAlmostEqual(actual / 189946, 1, places=5)
 
 
-class TestGalprop(unittest.TestCase):
+class TestGalprop:
 
     def test_call(self):
         Galprop()
 
-if __name__ == "__main__":
-    unittest.main()
