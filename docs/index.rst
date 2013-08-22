@@ -1,13 +1,54 @@
-Documentation
-=============
+`gammapy`
+=========
 
-This is an affiliated package for the AstroPy package. The documentation for
-this package is here:
+What is it?
+-----------
+
+`gammapy` is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
+
+It contains some analysis methods,
+but it's main purpose is to be the glue between the many
+existing data formats and other tools.
+
+* Code / Bug reports / Feature requests / Development: https://github.com/gammapy/gammapy
+* Docs: https://gammapy.readthedocs.org/
+* Mailing list: http://groups.google.com/group/gammapy
+* License: BSD-3-Clause
+
+
+Using `gammapy`
+---------------
+
+Start by reading the :ref:`introduction`.
+
+Then have a look at the available :ref:`tools` and the various sub-package docs.
+
+If you think it might be useful, go to :ref:`install`.
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
 
-  gammapy/index.rst
+  install
+  introduction
+  tools
+ 
+  data/index
+  background/index
+  obs/index
+  image/index
+  spectrum/index
+  detect/index
+  stats/index
+  utils/index
+  shower/index
+  irf/index
+  astro/index
+  references
 
-.. note:: Do not edit this page - instead, place all documentation for the
-          affiliated package inside ``packagename/``
+Contact
+-------
+
+Found a bug or missing feature?
+
+Make an issue or pull request on `GitHub <https://github.com/gammapy/gammapy>`_. 
+
