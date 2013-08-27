@@ -13,6 +13,7 @@ existing data formats and other tools.
 * Code / Bug reports / Feature requests / Development: https://github.com/gammapy/gammapy
 * Docs: https://gammapy.readthedocs.org/
 * Mailing list: http://groups.google.com/group/gammapy
+* Ohloh: https://www.ohloh.net/p/gammapy
 * License: BSD-3-Clause
 
 
