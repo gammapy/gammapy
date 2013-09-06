@@ -3,6 +3,8 @@
 Installation
 ============
 
+`gammapy` works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.3 or later).
+
 To install the latest `gammapy` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
 
    pip install gammapy
