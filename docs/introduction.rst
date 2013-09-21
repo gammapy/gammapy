@@ -62,13 +62,14 @@ A full list of available command line tools can be found in `tools`.
 Other related packages
 ----------------------
 
-There are several other great open source packages for gamma-ray data analysis (alphabetical order):
+There are several other great open source packages for gamma-ray data analysis:
 
 * `act-analysis`_ --- a similar package as ``gammapy`` by Karl Kosack
 * `gammafits`_ --- an SED modeling and fitting package by Victor Zabalza
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
 * `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
 * `PyFACT`_ --- a similar package as ``gammapy`` by Martin Raue
+* `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _PyFACT: http://pyfact.readthedocs.org
@@ -76,3 +77,4 @@ There are several other great open source packages for gamma-ray data analysis (
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools/
 .. _gamma-speed: https://github.com/gammapy/gamma-speed
+.. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
