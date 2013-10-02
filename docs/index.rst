@@ -15,7 +15,8 @@ existing data formats and other tools.
 * Mailing list: http://groups.google.com/group/gammapy
 * Ohloh: https://www.ohloh.net/p/gammapy
 * License: BSD-3-Clause
-* Python: works with 2.6, 2.7 and 3.3+ (see tests on https://travis-ci.org/gammapy/gammapy/)
+* Operating system: Linux, Mac (Windows untested, no particular reason why it wouldn't work)
+* Python: works with 2.6, 2.7, 3.2 and 3.3  (see tests on https://travis-ci.org/gammapy/gammapy/)
 
 
 Using `gammapy`
