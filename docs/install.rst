@@ -27,11 +27,12 @@ To check if the `gammapy` command line tools are on your `$PATH` try this::
 Requirements
 ------------
 
-To install and use this package you need `Astropy`_.  
+To install and use this package you need `Astropy`_ version 0.3 or later.
 
 Optional dependencies (imported and used only where needed):
 
 * some of the `scipy stack <http://scipy.org>`_ packages:
+
   * `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods
   * `matplotlib <http://matplotlib.org>`_ for plotting
   * `pandas <http://pandas.pydata.org>`_ CVS read / write; DataFrame
