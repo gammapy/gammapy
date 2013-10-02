@@ -23,7 +23,7 @@ def test_binary_ring():
 
 def test_process_image_pixels():
     """Check the example how to implement convolution given in the docstring"""
-    from astropy.nddata import convolve as astropy_convolve
+    from astropy.convolution import convolve as astropy_convolve
     
     def convolve(image, kernel):
         '''Convolve image with kernel'''

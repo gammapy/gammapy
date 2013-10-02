@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+import numpy as np
 from numpy.testing import assert_almost_equal
 import pytest
-from astropy.nddata import make_kernel
+from astropy.convolution import Gaussian2DKernel
 from .. import matched_filter
 
 try:
@@ -13,14 +14,16 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_center():
+    
     # Test dataset parameters
-    kernel_shape = (11, 11)
+    x_size, y_size = (11, 11)
     total_excess = 100
     total_background = 1000
+    ones = np.ones((x_size, y_size))
 
-    kernel = make_kernel(kernel_shape, kernelwidth=3, kerneltype='gaussian')
-    excess = total_excess * make_kernel(kernel_shape, kernelwidth=kernel_shape[0], kerneltype='boxcar')
-    background = total_background * make_kernel(kernel_shape, kernelwidth=kernel_shape[0], kerneltype='boxcar')
+    kernel = Gaussian2DKernel(width=3, x_size=x_size, y_size=y_size).array
+    excess = total_excess * ones / ones.sum()
+    background = total_background * ones / ones.sum()
     counts = excess + background
     images = dict(counts=counts, background=background)
     
@@ -36,15 +39,16 @@ def test_center():
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_image():
     # Test dataset parameters
-    kernel_shape = (11, 11)
+    x_size, y_size = (11, 11)
     image_shape = (31, 31)
     total_excess = 100
     total_background = 1000
+    ones = np.ones((x_size, y_size))
     
     # Create test dataset
-    kernel = make_kernel(kernel_shape, kernelwidth=3, kerneltype='gaussian')
-    excess = total_excess * make_kernel(image_shape, kernelwidth=3, kerneltype='gaussian')
-    background = total_background * make_kernel(image_shape, kernelwidth=image_shape[0], kerneltype='boxcar')
+    kernel = Gaussian2DKernel(width=3, x_size=x_size, y_size=y_size).array
+    excess = total_excess * kernel
+    background = total_background * ones / ones.sum()
     counts = excess + background
     #np.random.seed(0)
     #counts = np.random.poisson(counts)
@@ -52,8 +56,8 @@ def test_image():
 
     probability = matched_filter.probability_image(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(probability.max(), 0.4840923814509871)
+    assert_almost_equal(probability.max(), 0.16047699425893236)
 
     significance = matched_filter.significance_image(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(significance.max(), 7.249351301729793)
+    assert_almost_equal(significance.max(), 3.1325069098248197)
