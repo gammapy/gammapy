@@ -141,7 +141,16 @@ def _lookup_world(image, lon, lat):
 def lookup(image, x, y, world=True):
     """Look up values in an image
 
-    TODO: document
+    Parameters
+    ----------
+    image : array-like if world=False, astropy.io.fits.ImageHDU if world=True
+        Array or image to look up the value
+    x : array-like
+        Array of X lookup positions
+    y : array-like
+        Array of Y lookup positions
+    world : bool
+        Are (x, y) WCS coordinates?
     """
     if world:
         return _lookup_world(image, x, y)
