@@ -3,7 +3,7 @@
 from os.path import join
 from astropy.io import fits
 
-class Schlickeiser:
+class Schlickeiser(object):
     """ISRF model for the solar neighborhood.
 
     Reference: Book by Schlickeiser "Cosmic Ray Astrophysics", Section 2.3
@@ -32,28 +32,35 @@ class Schlickeiser:
         W = self.component_infos[component]['W']
         return T, W
 
-    def __call__(self, e, component='Total'):
+    def __call__(self, energy, component='Total'):
         """Evaluate model.
 
-        @param e: photon energy (eV)
-        @param component: radiation field component.
-        One of 'Optical', 'Infrared', 'CMB', 'Total'
-        @return: Photon number density of a given component (cm^-3 eV^-1)"""
+        Parameters
+        ----------
+        energy : float or array
+            Photon energy (eV)
+        component : {'Optical', 'Infrared', 'CMB', 'Total'}
+            Radiation field component
+        
+        Returns
+        -------
+        Photon number density of a given component (cm^-3 eV^-1)
+        """
         if component == 'Total':
             total = 0
             for component in self.components:
-                total += self._density(e, component)
+                total += self._density(energy, component)
             return total
         elif component in self.components:
-            return self._density(e, component)
+            return self._density(energy, component)
         else:
             raise IndexError('Component {0} not available.'
                              ''.format(component))
 
-    def _density(self):
+    def _density(self, energy, component):
         raise NotImplementedError
 
-class Galprop:
+class Galprop(object):
     """A cylindrically symmetric model for the distribution
     of the optical and infrared ISRF in the Milky Way.
 
@@ -82,30 +89,37 @@ class Galprop:
             header['CRPIX{0}'.format(axis)] = 1
         self.lookup = FITSimage(externaldata=data, externalheader=header)
 
-    def _density(self, e, R, z, component):
+    def _density(self, energy, R, z, component):
         """This method is wrapped by __call__. See description there."""
         if component == 'CMB':
-            return Schlickeiser()(e, 'CMB')
-        # @todo: implement lookup
+            return Schlickeiser()(energy, 'CMB')
         return NotImplementedError
 
-    def __call__(self, e, R, z, component='Total'):
+    def __call__(self, energy, R, z, component='Total'):
         """Evaluate model.
 
-        Parameters:
-        e: photon energy (eV)
-        R: Galactic radius (kpc)
-        z: Galactic height (kpc)
-        component = radiation field component
-        ('Optical', 'Infrared', 'CMB' or 'Total')
-        @return: Photon number density of a given component (cm^-3 eV^-1)"""
+        Parameters
+        ----------
+        energy : float or array
+            Photon energy (eV)
+        R : float
+            Galactic radius (kpc)
+        z : float
+            Galactic height (kpc)
+        component : {'Optical', 'Infrared', 'CMB', 'Total'}
+            Radiation field component
+        
+        Returns
+        -------
+        Photon number density of a given component (cm^-3 eV^-1)
+        """
         if component == 'Total':
             total = 0
             for component in self.components:
-                total += self._density(e, R, z, component)
+                total += self._density(energy, R, z, component)
             return total
         elif component in self.components:
-            return self._density(e, R, z, component)
+            return self._density(energy, R, z, component)
         else:
             raise IndexError('Component {0} not available.'
                              ''.format(component))
