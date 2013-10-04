@@ -11,7 +11,7 @@ You could also use Kapteyn instead:
 * wcs.Transformation(wcs.galactic, wcs.equatorial)
 * maputils.dist_on_sphere
 """
-
+from __future__ import print_function, division
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 

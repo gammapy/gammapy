@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['effective_area']

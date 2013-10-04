@@ -11,6 +11,7 @@ A Model can be either a TableModel, which is represented
 as arrays of energies and fluxes. Or a AnalyticModel, which
 is represented by an analytic function flux(energy).
 """
+from __future__ import print_function, division
 import numpy as np
 from numpy import pi, exp, log, log10
 from astropy import constants as const

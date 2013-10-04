@@ -1,4 +1,5 @@
 """Helper functions to work with distributions."""
+from __future__ import print_function, division
 
 __all__ = ['normalize', 'density', 'draw']
 

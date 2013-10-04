@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import unittest
+from __future__ import print_function, division
 """
+import unittest
 from astropy.utils.compat.odict import OrderedDict
 from spec.fluxpoints import FluxPoints
 

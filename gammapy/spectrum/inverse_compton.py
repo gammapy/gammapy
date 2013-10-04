@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import print_function, division
 import numpy as np
 from numpy import log, sqrt, pi, log10
 from astropy import constants as const

@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Matched filter source detection methods"""
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 from ..image.utils import process_image_pixels
 from ..stats import p_to_s

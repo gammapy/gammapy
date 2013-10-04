@@ -11,7 +11,7 @@ filled with zeros or ones as appropriate.
   Is it worth speeding things up by writing the steps explicitly?
 
 """
-from __future__ import division
+from __future__ import print_function, division
 import logging
 import numpy as np
 from astropy.io import fits

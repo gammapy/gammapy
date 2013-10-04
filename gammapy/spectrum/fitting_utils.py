@@ -3,6 +3,7 @@
 
 TODO: Unusable at the moment. Refactor into classes and clean up.
 """
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['cov2corr', 'generate_MC_data', 'plot_chi2', 'plot_fit', 'plot_model',

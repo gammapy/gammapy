@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Run and RunList class"""
-from __future__ import division
+from __future__ import print_function, division
 
 __all__ = ['Run', 'RunList']
 

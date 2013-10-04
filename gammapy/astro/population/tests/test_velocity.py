@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_approx_equal
 from ....utils.distributions import normalize

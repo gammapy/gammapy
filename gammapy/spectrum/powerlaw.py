@@ -3,6 +3,7 @@
 
 Convert differential and integral fluxes with error propagation.
 """
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['diff_flux', 'e_pivot', 'df_over_f', 'f', 'I',

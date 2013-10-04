@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """""Make a few example plots to see if PWN model works."""
+from __future__ import print_function, division
 import numpy as np
 from ..pwn import PWN
 

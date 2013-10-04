@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to work with ds9 regions"""
+from __future__ import print_function, division
+
 
 __all__ = ['make_ds9_region', 'Circle']
 

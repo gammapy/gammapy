@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions"""
+from __future__ import print_function, division
 from numpy import (cos, sin, arcsin, sqrt,
                    tan, arctan, arctan2,
                    radians, degrees, pi)

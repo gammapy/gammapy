@@ -24,7 +24,7 @@ References
 * sherpa/include/sherpa/stats.hh contains the C++ implementations of the Sherpa stats
 
 """
-
+from __future__ import print_function, division
 import numpy as np
 from numpy import log, sqrt
 

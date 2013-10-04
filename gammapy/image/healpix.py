@@ -3,7 +3,7 @@
 This is a thin wrapper convenience functions around
 `healpy` (http://code.google.com/p/healpy/) functionality.
 """
-from __future__ import division
+from __future__ import print_function, division
 from .utils import coordinates
 
 

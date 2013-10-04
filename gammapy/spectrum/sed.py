@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interface to the Fermi and HESS catalogs.
 """
+from __future__ import print_function, division
 import logging
 import numpy as np
 from astropy.units import Unit

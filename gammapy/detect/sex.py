@@ -11,7 +11,7 @@ Other SExtractor Python wrappers (not BSD licensed!):
 
 
 """
-from __future__ import division
+from __future__ import print_function, division
 import logging
 import subprocess
 import tempfile

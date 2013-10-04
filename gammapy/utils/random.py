@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['sample_sphere', 'sample_powerlaw']

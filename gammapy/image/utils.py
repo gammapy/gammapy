@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',

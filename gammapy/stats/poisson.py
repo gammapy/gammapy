@@ -7,6 +7,7 @@ Poisson statistics computations for these two cases.
 
 TODO: More detailed description here.
 """
+from __future__ import print_function, division
 import numpy as np
 from numpy import sign, log, sqrt
 

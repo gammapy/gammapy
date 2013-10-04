@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models"""
-from __future__ import division
+from __future__ import print_function, division
 import logging
 import numpy as np
 from astropy.units import Unit

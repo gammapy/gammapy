@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar velocity distribution models"""
+from __future__ import print_function, division
 from numpy import exp, sqrt, pi
 
 __all__ = ['H05', 'F06B', 'F06P',

@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions.
 """
+from __future__ import print_function, division
 import numpy as np
 from numpy.random import random_integers, uniform, normal
 from numpy import exp, sqrt, pi, log, abs, cos, sin

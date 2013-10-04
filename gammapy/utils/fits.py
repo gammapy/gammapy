@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FITS utility functions"""
+from __future__ import print_function, division
 from astropy.io import fits
 
 __all__ = ['get_hdu', 'get_image_hdu', 'get_table_hdu', 'fits_table_to_pandas']

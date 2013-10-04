@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
+from __future__ import print_function, division
 from ..models import PowerLaw, PLExpCutoff
 from ..sed import SED, add_spec
 

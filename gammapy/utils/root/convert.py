@@ -12,6 +12,7 @@ In the menu select:
 @todo: Only use pyfits, not kapteyn.
 @todo: Expand this into a small command line tool.
 """
+from __future__ import print_function, division
 import warnings
 import numpy as np
 

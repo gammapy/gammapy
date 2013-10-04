@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """On-off bin stats computations"""
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['Stats', 'SpectrumStats', 'make_stats', 'combine_stats']

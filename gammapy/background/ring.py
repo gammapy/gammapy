@@ -5,7 +5,7 @@ Ring background estimation
 Implements a simple RingBgMaker for cartesian coordinates.
 TODO: Add psi cut
 """
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 from ..image.utils import ring_correlate
 

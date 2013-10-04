@@ -5,6 +5,7 @@ To load the chi2asym fit statistic in your sherpa session:
 import sherpa_chi2asym
 sherpa_chi2asym.load_chi2asym_stat()
 """
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func', 'load_chi2asym_stat']

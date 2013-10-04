@@ -14,6 +14,7 @@ Unless noted otherwise:
 diff_flux @ 1 TeV in units cm^-2 s^-1 TeV^-1
 int_flux > 1 TeV in units cm^-2 s^-1
 """
+from __future__ import print_function, division
 import numpy as np
 from astropy.units import Unit
 

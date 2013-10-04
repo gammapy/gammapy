@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Thin wrapper and some additions to the astropy const and units packages."""
+from __future__ import print_function, division
 import numpy as np
 from astropy.units import Unit
-from astropy import constants as const
 
 __all__ = ['conversion_factor', 'd_sun_to_galactic_center',
            'sigma_to_fwhm', 'fwhm_to_sigma'
@@ -29,6 +29,7 @@ fwhm_to_sigma = 1 / sigma_to_fwhm
 #__all__ += ['c', 'h', 'h_eV', 'hbar', 'k_B', 'k_B_eV', 'm_H', 'm_e', 'm_e_eV',
 #            'm_sun', 'sigma_T']
 
+# from astropy import constants as const
 c = 29979245800.0 # const.c.cgs.value
 h = 6.62606896e-27 # const.h.cgs.value
 h_eV = 4.13566722264e-15 # const.h.to('eV s').value

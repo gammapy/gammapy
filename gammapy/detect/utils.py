@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Multi-scale image I / O helper functions"""
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)

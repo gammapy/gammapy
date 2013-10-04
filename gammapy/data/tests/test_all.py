@@ -1,4 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import print_function, division
 from numpy.testing import assert_almost_equal
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits

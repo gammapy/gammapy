@@ -34,7 +34,7 @@ TODO:
 - check distribution against expected chi2(ndf) distribution
 - HGPS survey sensitiviy calculation (maybe needs cluster computing?)
 """
-from __future__ import division
+from __future__ import print_function, division
 import numpy as np
 from .. import stats
 from ..image.utils import process_image_pixels

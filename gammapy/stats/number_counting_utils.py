@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import print_function, division
 
 __all__ = ['NumberCountingUtils']
 
 # TODO: If useful, rewrite as functions and with proper tests and docstrings.
 
 
-class NumberCountingUtils:
+class NumberCountingUtils(object):
     """Formulas for computing tail probabilities of on/off
     observations in RooStats::NumberCountingUtils in ROOT.
 

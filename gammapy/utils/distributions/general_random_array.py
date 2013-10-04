@@ -1,4 +1,5 @@
 """Implementation of the GeneralRandomArray class"""
+from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['GeneralRandomArray']

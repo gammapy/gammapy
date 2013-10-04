@@ -6,6 +6,7 @@ Gaisser (2011)
 http://adsabs.harvard.edu/abs/2011arXiv1111.6675G
 See Equation 21 and Table 1. 
 """
+from __future__ import print_function, division
 
 __all__ = []
 

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic interstellar radiation field (ISRF) models"""
+from __future__ import print_function, division
 from os.path import join
 from astropy.io import fits
 

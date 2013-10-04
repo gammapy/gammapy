@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import pytest
+from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_almost_equal
 from .. import powerlaw as pl
