@@ -5,7 +5,8 @@ from numpy import (cos, sin, arcsin, sqrt,
                    tan, arctan, arctan2,
                    radians, degrees, pi)
 from astropy.constants import R_sun
-from astropy.units import pc, kpc, cm, km, second, year
+#from astropy.units import pc, kpc, cm, km, second, year
+from astropy.units import Unit
 
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
            'radius_to_angle', 'angle_to_radius', 'spherical_velocity', 'motion_since_birth']
@@ -30,22 +31,22 @@ def galactic(x, y, z):
 
 def luminosity_to_flux(luminosity, distance):
     """Distance is assumed to be in kpc"""
-    return luminosity / (4 * pi * (kpc.to(cm) * distance) ** 2)
+    return luminosity / (4 * pi * (Unit('kpc').to(Unit('cm')) * distance) ** 2)
 
 
 def flux_to_luminosity(flux, distance):
     """Distance is assumed to be in kpc"""
-    return flux * (4 * pi * (kpc.to(cm) * distance) ** 2)
+    return flux * (4 * pi * (Unit('kpc').to(Unit('cm')) * distance) ** 2)
 
 
 def radius_to_angle(radius, distance):
     """Radius (pc), distance(kpc), angle(deg)"""
-    return degrees(arctan(kpc.to(pc) * radius / distance))
+    return degrees(arctan(Unit('kpc').to(Unit('pc')) * radius / distance))
 
 
 def angle_to_radius(angle, distance):
     """Radius (pc), distance(kpc), angle(deg)"""
-    return tan(radians(angle)) * kpc.to(pc) * distance
+    return tan(radians(angle)) * Unit('kpc').to(Unit('pc')) * distance
 
 
 def spherical_velocity(x, y, z, vx, vy, vz):
@@ -53,10 +54,10 @@ def spherical_velocity(x, y, z, vx, vy, vz):
     d = sqrt(x ** 2 + y ** 2 + z ** 2)
     r = sqrt(x ** 2 + y ** 2)
     
-    v_lon = degrees(1. / (kpc.to(km) * r) * (-y * vx + x * vy)) * year.to(second) * 1e6
-    v_lat = (degrees(vz / (sqrt(1 - (z / d) ** 2) * kpc.to(km) * d ) - 
+    v_lon = degrees(1. / (Unit('kpc').to(Unit('km')) * r) * (-y * vx + x * vy)) * Unit('year').to(Unit('second')) * 1e6
+    v_lat = (degrees(vz / (sqrt(1 - (z / d) ** 2) * Unit('kpc').to(Unit('km')) * d ) - 
               sqrt(vx ** 2 + vy ** 2 + vz ** 2) * z / 
-              (kpc.to(km) * (sqrt(1 - (z / d) ** 2) * d ** 2))) * year.to(second) * 1e6)
+              (Unit('kpc').to(Unit('km')) * (sqrt(1 - (z / d) ** 2) * d ** 2))) * Unit('year').to(Unit('second')) * 1e6)
     return v_lon, v_lat
 
 
@@ -68,11 +69,11 @@ def motion_since_birth(x, y, z, v, age, theta, phi):
     vy = v * sin(phi) * sin(theta)
     vz = v * cos(theta)
 
-    age = year.to(second) * age
+    age = Unit('year').to(Unit('second')) * age
 
     # Compute new positions
-    x = x + kpc.to(km) * vx * age
-    y = y + kpc.to(km) * vy * age
-    z = z + kpc.to(km) * vz * age
+    x = x + Unit('kpc').to(Unit('km')) * vx * age
+    y = y + Unit('kpc').to(Unit('km')) * vy * age
+    z = z + Unit('kpc').to(Unit('km')) * vz * age
 
     return x, y, z, vx, vy, vz

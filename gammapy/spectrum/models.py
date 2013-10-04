@@ -15,15 +15,15 @@ from __future__ import print_function, division
 import numpy as np
 from numpy import pi, exp, log, log10
 from astropy import constants as const
-from astropy import units as u
+from astropy.units import Unit
 
 __all__ = ['AnalyticModel', 'BlackBody', 'BrokenPowerLaw', 'CompositeModel',
            'LogParabola', 'Model', 'PLExpCutoff', 'PowerLaw', 'TableModel']
 
 # Define some constatns
-MeV_to_GeV = u.MeV.to(u.GeV)
-MeV_to_erg = u.MeV.to(u.erg)
-erg_to_eV = u.erg.to(u.eV)
+MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
+MeV_to_erg = Unit('MeV').to(Unit('erg'))
+erg_to_eV = Unit('erg').to(Unit('eV'))
 c = const.c.cgs.value
 hbar = const.hbar.cgs.value
 k_B = const.k_B.cgs.value
