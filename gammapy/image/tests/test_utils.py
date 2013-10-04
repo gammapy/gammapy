@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import assert_equal, assert_allclose
 from .. import utils
 
 
@@ -43,4 +43,4 @@ def test_process_image_pixels():
     kernel = np.random.random((3, 5))
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
-    assert_almost_equal(actual, desired)
+    assert_allclose(actual, desired)

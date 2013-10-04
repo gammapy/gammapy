@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from .. import poisson_stats_image
@@ -23,4 +23,4 @@ def test_poisson_stats_extra_info():
     images = poisson_stats_image(extra_info=True)
     refs = dict(counts=40896, model=41000, source=1000, background=40000)
     for name, expected in refs.items():
-        assert_almost_equal(images[name].sum(), expected) 
+        assert_allclose(images[name].sum(), expected) 

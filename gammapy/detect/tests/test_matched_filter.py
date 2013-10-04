@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_allclose
 import pytest
 from astropy.convolution import Gaussian2DKernel
 from .. import matched_filter
@@ -30,11 +30,11 @@ def test_center():
     
     probability = matched_filter.probability_center(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(probability, 0.0043809799783148338)
+    assert_allclose(probability, 0.0043809799783148338)
 
     significance = matched_filter.significance_center(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(significance, 2.6212048333735858)
+    assert_allclose(significance, 2.6212048333735858)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -57,8 +57,8 @@ def test_image():
 
     probability = matched_filter.probability_image(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(probability.max(), 0.48409238192500076)
+    assert_allclose(probability.max(), 0.48409238192500076)
 
     significance = matched_filter.significance_image(images, kernel)
     # TODO: try to get a verified result
-    assert_almost_equal(significance.max(), 7.2493488182450569)
+    assert_allclose(significance.max(), 7.2493488182450569)

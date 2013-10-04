@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_allclose
 from ..celestial import gal2equ, equ2gal, separation
 
 
@@ -11,7 +11,7 @@ def test_coordinate_conversion_scalar():
     http://heasarc.gsfc.nasa.gov/cgi-bin/Tools/convcoord/convcoord.pl"""
     actual = gal2equ(0, 0)
     expected = (266.404996, -28.936172)
-    assert_almost_equal(actual, expected, decimal=3)
+    assert_allclose(actual, expected, atol=3)
 
 
 def test_coordinate_conversion_array():
@@ -22,11 +22,11 @@ def test_coordinate_conversion_array():
                         [gal2equ, equ2gal]]:
         a, b = forth(x, y)
         X, Y = back(a, b)
-        assert_almost_equal((X, Y), (x, y))
+        assert_allclose((X, Y), (x, y), atol=1e-10)
 
 
 def test_separation():
-    assert_almost_equal(separation(0, 0, 180, 0), 180)
-    assert_almost_equal(separation(270, 0, 180, 0), 90)
-    assert_almost_equal(separation(0, 0, 0, 90), 90)
-    assert_almost_equal(separation(0, 89, 180, 89), 2)
+    assert_allclose(separation(0, 0, 180, 0), 180)
+    assert_allclose(separation(270, 0, 180, 0), 90)
+    assert_allclose(separation(0, 0, 0, 90), 90)
+    assert_allclose(separation(0, 89, 180, 89), 2)

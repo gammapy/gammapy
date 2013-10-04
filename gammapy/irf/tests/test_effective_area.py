@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from numpy.testing import assert_approx_equal
+from numpy.testing import assert_allclose
 from ..effective_area import effective_area
 
 
 def test_effective_area():
     energy = 0.1
     area = effective_area(energy, 'HESS')
-    assert_approx_equal(area, 16546957.901469307)
+    assert_allclose(area, 16546957.901469307)
     
 
 def plot_effective_area():

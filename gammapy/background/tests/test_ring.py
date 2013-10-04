@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import unittest
 import pytest
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_allclose
 from astropy.io import fits
 from ..maps import Maps
 from ..ring import RingBgMaker, outer_ring_radius
@@ -39,7 +39,7 @@ class TestRingBgMaker(unittest.TestCase):
 class TestHelperFuntions(unittest.TestCase):
     def test_compute_r_o(self):
         actual = outer_ring_radius(1, 0, 1)
-        assert_almost_equal(actual, 1)
+        assert_allclose(actual, 1)
 
 if __name__ == '__main__':
     unittest.main()

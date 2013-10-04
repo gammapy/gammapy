@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_allclose
 from .. import powerlaw as pl
 
 # TODO
@@ -23,7 +23,7 @@ def _test_powerlaw():
 def test_one():
     """Test one case"""
     I = pl.I(f=1, g=2)
-    assert_almost_equal(I, 1)
+    assert_allclose(I, 1)
 
 
 def _test_closure(g_error_mag=0):
@@ -49,8 +49,8 @@ def _test_closure(g_error_mag=0):
 
     f_val2, f_err2 = pl.f_with_err(I_val, I_err, g_val, g_err)
     try:
-        assert_almost_equal(f_val, f_val2)
-        assert_almost_equal(f_err, f_err2)
+        assert_allclose(f_val, f_val2)
+        assert_allclose(f_err, f_err2)
     except AssertionError as err:
         print(err)
         m = 3

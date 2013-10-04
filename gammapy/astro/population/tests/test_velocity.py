@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_approx_equal
+from numpy.testing import assert_allclose
 from ....utils.distributions import normalize
 from ..velocity import H05, F06B, F06P
 
 def test_call():
     # TODO: Verify numbers against Papers or Axel's thesis.
-    assert_approx_equal(H05(1), 4.287452755806417e-08)
+    assert_allclose(H05(1), 4.287452755806417e-08)
 
 
 def plot_distributions(self):
