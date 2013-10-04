@@ -1,0 +1,127 @@
+import numpy as np
+
+__all__ = ['GeneralRandom']
+
+class GeneralRandom(object):
+    """Fast random number generation with an arbitrary pdf
+    of a continuous variable x.
+    Linear interpolation is applied between points pdf(x)
+    at which the pdf is specified.
+
+    I started with the recipy 576556, removed some unnecessary stuff
+    and added some useful stuff.
+    Recipe 576556: Generating random numbers with arbitrary distribution
+    http://code.activestate.com/recipes/576556/
+
+    Note: This class can only handle 1D distributions.
+
+    Note: Should it be required the cdf could be deleted
+    after computing to inversecdf to free memory since it is
+    not required for random number generation."""
+
+    def __init__(self, pdf, min_range, max_range,
+                ninversecdf=None, ran_res=1e3):
+        """Initialize the lookup table
+
+        Inputs:
+        x: random number values
+        pdf: probability density profile at that point
+        ninversecdf: number of reverse lookup values
+
+        Lookup is computed and stored in:
+        cdf: cumulative pdf
+        inversecdf: the inverse lookup table
+        delta_inversecdf: difference of inversecdf"""
+        self.ran_res = ran_res  # Resolution of the PDF
+        x = np.linspace(min_range, max_range, ran_res)
+        # This is a good default for the number of reverse
+        # lookups to not loose much information in the pdf
+        if ninversecdf == None:
+            ninversecdf = 5 * x.size
+
+        self.nx = x.size
+        self.x = x
+        self.pdf = pdf(x)
+
+        # old solution has problems with first bin:
+        # self.pdf = pdf/float(pdf.sum()) #normalize it
+        # self.cdf = self.pdf.cumsum()
+
+        self.cdf = np.empty(self.nx, dtype=float)
+        self.cdf[0] = 0
+        for i in range(1, self.nx):
+            self.cdf[i] = self.cdf[i - 1] + (self.pdf[i] + self.pdf[i - 1]) * (self.x[i] - self.x[i - 1]) / 2
+
+        self.pdf = self.pdf / self.cdf.max()  # normalize pdf
+        self.cdf = self.cdf / self.cdf.max()  # normalize cdf
+
+        self.ninversecdf = ninversecdf
+        y = np.arange(ninversecdf) / float(ninversecdf)
+        # delta = 1.0/ninversecdf
+        self.inversecdf = np.empty(ninversecdf)
+        self.inversecdf[0] = self.x[0]
+        cdf_idx = 0
+        for n in xrange(1, self.ninversecdf):
+            while self.cdf[cdf_idx] < y[n] and cdf_idx < ninversecdf:
+                cdf_idx += 1
+            self.inversecdf[n] = self.x[cdf_idx - 1] + \
+                (self.x[cdf_idx] - self.x[cdf_idx - 1]) * \
+                (y[n] - self.cdf[cdf_idx - 1]) / \
+                (self.cdf[cdf_idx] - self.cdf[cdf_idx - 1])
+            if cdf_idx >= ninversecdf:
+                break
+        self.delta_inversecdf = \
+            np.concatenate((np.diff(self.inversecdf), [0]))
+
+    def draw(self, N=1000):
+        """Returns an array of random numbers with the requested distribution.
+
+        N: array length
+
+        The random numbers x are generated using the lookups
+        inversecdf and delta_inversecdf."""
+        # Generate uniform random float index in range [0, ninversecdf-1]
+        idx_f = np.random.uniform(size=N, high=self.ninversecdf - 1)
+        # Round down to next integer
+        idx = np.array(idx_f, 'i')
+        # Use the inversecdf lookup to get the corresponding x
+        # and the delta_inversecdf lookup for linear interpolation
+        x = self.inversecdf[idx] + (idx_f - idx) * self.delta_inversecdf[idx]
+        return x
+
+    def info(self):
+        """Print the internal state"""
+        print '%15s:' % 'x', self.x
+        print '%15s:' % 'pdf', self.pdf
+        print '%15s:' % 'cdf', self.cdf
+        print '%15s:' % 'ninversecdf', self.ninversecdf
+        print '%15s:' % 'inversecdf', self.inversecdf
+        print '%15s:' % 'delta_inversecdf', self.delta_inversecdf
+
+    def make_plots(self, N=1e5):
+        """Plot the pdf, cdf and inversecdf
+        and a random distribution of sample size N.
+
+        Useful for illustrating the interpolation and debugging."""
+        import matplotlib.pyplot as plt
+        # Plot the cdf
+        plt.figure()
+        plt.plot(self.x, self.cdf)
+        plt.title('cdf(x)')
+
+        # Plot the inverse cdf
+        plt.figure()
+        y = np.arange(self.ninversecdf) / float(self.ninversecdf)
+        plt.plot(y, self.inversecdf)
+        plt.title('inversecdf(y)')
+
+        # Plot the pdf and a random sample distribution
+        plt.figure()
+        x = self.draw(N)
+
+        # Use the same binning as self.x
+        binedges = self.x
+        plt.hist(x, bins=binedges, normed=True)
+        #    x1 = 0.5*(edges[0:-1] + edges[1:])
+        #    plot(x1, p1/p1.sum(),label='hist of random draws')
+        plt.plot(self.x, self.pdf, label='pdf')
