@@ -4,7 +4,7 @@ from __future__ import division
 import numpy as np
 from numpy import log
 from astropy.units import Unit
-from ..utils.coordinates import flux_to_luminosity
+from ...utils.coordinates import flux_to_luminosity
 from astropy import constants as const
 
 __all__ = ['SNR', 'SNR_Truelove']
