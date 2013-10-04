@@ -26,5 +26,42 @@ TODO
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
 
+.. automodapi:: gammapy.spectrum.cosmic_rays
+    :no-inheritance-diagram:
+
 .. automodapi:: gammapy.spectrum.crab
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.diffuse
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.fitter
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.fitting_utils
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.inverse_compton
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.isrf
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.models
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.pion
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.powerlaw
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.sed
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.sherpa_chi2asym
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.utils
+    :no-inheritance-diagram:
+    
