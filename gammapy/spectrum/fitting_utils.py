@@ -63,8 +63,9 @@ def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0):
 
     if verbose > 0:
         for i in range(npoints):
-            print '%2d' + ' %10g' * 7 % \
-                (i, x[i], y[i], ydn[i], yup[i], yobs_dn[i], yobs_up[i], yobs[i])
+            fmt = '%2d' + ' %10g' * 7
+            vals = i, x[i], y[i], ydn[i], yup[i], yobs_dn[i], yobs_up[i], yobs[i]
+            print(fmt.format(vals))
     data = x, yobs, ydn, yup
     return data
 

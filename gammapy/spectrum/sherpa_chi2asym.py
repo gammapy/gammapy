@@ -46,7 +46,7 @@ def check_chi2():
 
     chi = ((data - model) / error)  # Chi per bin
     chi2 = chi ** 2  # Chi^2 per bin
-    print 'chi2 re-computed:', chi2.sum()
+    print('chi2 re-computed: {0}'.format(chi2.sum()))
 
 
 def load_chi2asym_stat():

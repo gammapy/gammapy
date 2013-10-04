@@ -92,12 +92,12 @@ class GeneralRandom(object):
 
     def info(self):
         """Print the internal state"""
-        print '%15s:' % 'x', self.x
-        print '%15s:' % 'pdf', self.pdf
-        print '%15s:' % 'cdf', self.cdf
-        print '%15s:' % 'ninversecdf', self.ninversecdf
-        print '%15s:' % 'inversecdf', self.inversecdf
-        print '%15s:' % 'delta_inversecdf', self.delta_inversecdf
+        print('%15s:' % 'x', self.x)
+        print('%15s:' % 'pdf', self.pdf)
+        print('%15s:' % 'cdf', self.cdf)
+        print('%15s:' % 'ninversecdf', self.ninversecdf)
+        print('%15s:' % 'inversecdf', self.inversecdf)
+        print('%15s:' % 'delta_inversecdf', self.delta_inversecdf)
 
     def make_plots(self, N=1e5):
         """Plot the pdf, cdf and inversecdf

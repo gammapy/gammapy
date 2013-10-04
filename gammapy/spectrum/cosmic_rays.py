@@ -8,5 +8,22 @@ See Equation 21 and Table 1.
 """
 from __future__ import print_function, division
 
-__all__ = []
+__all__ = ['cosmic_ray_flux']
 
+# TODO
+def cosmic_ray_flux(energy, particle='proton'):
+    """Cosmic ray flux as measured at Earth.
+    
+    Parameters
+    ----------
+    energy : array-like
+        Cosmic ray particle energy in TeV
+    particle : {'proton', 'electron'}
+        Particle type
+    
+    Returns
+    -------
+    flux : array
+        Cosmic ray flux in unit TODO.
+    """
+    raise NotImplementedError
