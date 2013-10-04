@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 
+__all__ = ['EnergyAxis', 'log_mean_energy']
+
 class EnergyAxis(object):
     """Log(E) axis"""
     def __init__(self, e):

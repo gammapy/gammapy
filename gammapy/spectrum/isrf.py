@@ -3,6 +3,8 @@
 from os.path import join
 from astropy.io import fits
 
+__all__ = ['Galprop', 'Schlickeiser']
+
 class Schlickeiser(object):
     """ISRF model for the solar neighborhood.
 

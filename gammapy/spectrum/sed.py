@@ -5,12 +5,14 @@ import logging
 import numpy as np
 from astropy.units import Unit
 
+__all__ = ['SEDComponent', 'SED']
+
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
 MeV_to_erg = Unit('MeV').to(Unit('erg'))
 
-
-class SEDComponent:
-    """Uniform interface to SED components for the SED class"""
+class SEDComponent(object):
+    """Uniform interface to SED components for the SED class
+    """
     def __init__(self, name='', model=None, points=None):
         """
         @param name: str

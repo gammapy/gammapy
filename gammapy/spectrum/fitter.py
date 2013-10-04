@@ -1,14 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
 
+__all__ = ['Fitter']
 
-class Fitter:
+class Fitter(object):
     """Chi^2 fitter for spectral models and flux points.
     - can use asymmetric Gaussian errors
     - allows free and fixed parameters
     - can find pivot energy
 
-    @todo Change model from function to class!"""
+    TODO Change model from function to class!
+    """
 
     def __init__(self, data, model, sym=False):
         """@param symm: if true, symmetrized errors (arithmetic mean) are used,

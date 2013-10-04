@@ -4,22 +4,21 @@ from astropy.io import fits
 from .utils import EnergyAxis
 from . import powerlaw as pl
 
+__all__ = ['GalacticDiffuse']
 
-class GalacticDiffuse:
+class GalacticDiffuse(object):
     """Lookup from FITS cube representing diffuse emission.
-    Interpolates linearly in log(e), no interpolation in GLON, GLAT"""
+    Interpolates linearly in log(e), no interpolation in GLON, GLAT.
+    
+    http://fermi.gsfc.nasa.gov/ssc/data/access/lat/BackgroundModels.html
+    http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
+    """
     def __init__(self, filename=None, interp_kind='linear'):
         # TODO: use astropy!
         from kapteyn.wcs import Projection
         from atpy import Table
-        if filename != None:
-            self.filename = filename
-        else:
-            self.filename = ('/Users/deil/bin/fermi/ScienceTools-v9r23p1'
-                             '-fssc-20110726/external/diffuseModels/'
-                             'gal_2yearp7v6_v0.fits')
+        self.filename = filename
         self.interp_kind = interp_kind
-        print filename
         self.data = fits.getdata(self.filename)
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for GLON, GLAT and do ENERGY ourselves
@@ -43,16 +42,11 @@ class GalacticDiffuse:
         # return g_from_points(*(self.lookup(glon, glat, e)[:-1]))
 
     def lookup(self, glon, glat, e):
-        # print glon, glat, e
         x, y = self.proj.topixel((glon, glat, 0))[:-1]
         z1, z2, e1, e2 = self.e_axis(e)
         f1, f2 = self.data[z1, y, x], self.data[z2, y, x]
-        # print x, y, z1, z2, e1, e2, f1, f2
         return [e1, e2, f1, f2, e]
 
     def set_position(self, glon, glat):
         x, y = self.proj.topixel((glon, glat, 0))[:-1]
         self.log_f = np.log10(self.data[:, y, x])
-
-if __name__ == '__main__':
-    print GalacticDiffuse()(100, 30, 50)

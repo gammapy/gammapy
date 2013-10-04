@@ -3,8 +3,10 @@
 
 TODO: Unusable at the moment. Refactor into classes and clean up.
 """
-
 import numpy as np
+
+__all__ = ['cov2corr', 'generate_MC_data', 'plot_chi2', 'plot_fit', 'plot_model',
+           'plot_points']
 
 def set_off_diagonal_to_zero(matrix):
     """Sets the off-diagonal elements of a matrix

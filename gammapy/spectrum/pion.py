@@ -3,6 +3,8 @@ import numpy as np
 from astropy.units import Unit
 from .models import TableModel
 
+__all__ = ['Pion']
+
 mbarn_to_cm2 = Unit('mbarn').to(Unit('cm^2'))
 
 class Pion(object):

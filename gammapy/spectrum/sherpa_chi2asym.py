@@ -7,6 +7,8 @@ sherpa_chi2asym.load_chi2asym_stat()
 """
 import numpy as np
 
+__all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func', 'load_chi2asym_stat']
+
 def chi2asym_stat_func(data, model, staterror=None,
                        syserror=None, weight=None):
     """Define asymmetric Chi2 errors, as currently done in the

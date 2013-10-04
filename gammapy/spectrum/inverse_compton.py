@@ -4,6 +4,8 @@ from numpy import log, sqrt, pi, log10
 from astropy import constants as const
 from .models import BlackBody, TableModel
 
+__all__ = ['InverseCompton']
+
 # Define some constants
 c = const.c.cgs.value
 h_eV = const.h.to('eV s').value
