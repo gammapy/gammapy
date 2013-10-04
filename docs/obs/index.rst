@@ -59,6 +59,8 @@ at the command line or read the usage help `here <TODO>`_
       (`docs <http://ndawe.github.io/goodruns/>`_, `code <https://github.com/ndawe/goodruns>`_)
       is a nice example for a run selection tool.
 
+Reference/API
+=============
 
 .. automodapi:: gammapy.obs
     :no-inheritance-diagram:

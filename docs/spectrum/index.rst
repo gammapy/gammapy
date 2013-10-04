@@ -22,6 +22,8 @@ Getting Started
 
 TODO
 
+Reference/API
+=============
 
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
