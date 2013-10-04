@@ -2,12 +2,12 @@
 """
 Spectrum estimation and modeling methods.
 """
-from . import cosmic_rays
+from . import cosmic_ray
 from . import crab
 from . import diffuse
 from . import fitter
 from . import fitting_utils
-from . import fluxpoints
+from . import flux_point
 from . import inverse_compton
 from . import isrf
 from . import models
