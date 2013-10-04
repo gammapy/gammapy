@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Create an illustration of rings used for background estimation
 """
 import numpy as np
