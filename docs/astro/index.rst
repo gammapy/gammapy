@@ -8,16 +8,19 @@ Introduction
 ============
 
 `gammapy.astro` implements some common astrophysical source and population models.
+It is split into sub-packages, importing `astropy.astro` is useless, instead do::
 
-TODO: describe
+   from gammapy.astro import source
+   from gammapy.astro import population
 
-Getting Started
-===============
+.. toctree::
+  :maxdepth: 1
 
-TODO: describe
+  source/index
+  population/index
 
-Reference/API
-=============
 
-.. automodapi:: gammapy.astro
-    :no-inheritance-diagram:
+Example
+=======
+
+TODO: Galactic gamma-ray source population model (catalog distributions, flux image, significance images)
