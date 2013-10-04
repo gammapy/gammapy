@@ -7,11 +7,7 @@ from spec.fitter import Fitter
 def fit_crab_with_pl():
     """Fit a constant to some test data"""
     data = FluxPoints.from_ascii('input/crab_hess_spec.txt')
-    print data
     model = PowerLaw()
-    print model
     fitter = Fitter(data, model)
-    print fitter
     fitter.fit()
-    print fitter
 '''

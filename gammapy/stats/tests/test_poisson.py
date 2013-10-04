@@ -59,7 +59,7 @@ class TestSignificance(unittest.TestCase):
                         s = significance_func(on, off, alpha)
                         excess = sensitivity_func(off, alpha, s)
                         on_reco = excess + alpha * off
-                        #print on, off, alpha, s, excess, on_reco
+                        #print(on, off, alpha, s, excess, on_reco)
                         # TODO
                         #assert_almost_equal(on, on_reco, decimal=3)
 '''

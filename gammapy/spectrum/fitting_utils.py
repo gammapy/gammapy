@@ -68,7 +68,7 @@ def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0):
     return data
 
 
-def plot_points(data, xpower=0, verbose=0):
+def plot_points(data, xpower=0):
     """Make a nice plot
     """
     import matplotlib.pylab as plt
@@ -76,11 +76,6 @@ def plot_points(data, xpower=0, verbose=0):
     y = data[1] * x ** xpower
     ydn = data[2] * x ** xpower
     yup = data[3] * x ** xpower
-    if verbose > 0:
-        print 'x:    ', x
-        print 'y:    ', y
-        print 'ydn:  ', ydn
-        print 'yup:  ', yup
     plt.errorbar(x, y, [ydn, yup], fmt='o', color='k')
 
 
@@ -103,10 +98,8 @@ def plot_fit(f, c, fit_result, xlimits, ylimits,
     x = 10 ** logx
     popt = fit_result[0]
     pcov = fit_result[1]
-    print pcov
     if disregard_correlation:
         pcov = set_off_diagonal_to_zero(pcov)
-    print pcov
     y = f(popt, c, x)
     # Use uncertainties to compute an error band
     p_wu = uncertainties.correlated_values(popt, pcov)
@@ -150,8 +143,7 @@ def plot_model(model, xlim, npoints=100):
 def plot_chi2(model, data, fit_result=None, limits=None,
               disregard_correlation=False,
               npoints=(100, 100), stddev_max=3, fmt='%d',
-              linewidth=2,
-              verbose=0):
+              linewidth=2):
     """Plot chi**2 contours and linear fit approxiation
 
     Note that chi**2 is related to likelihood in the following way:
@@ -191,11 +183,6 @@ def plot_chi2(model, data, fit_result=None, limits=None,
     # Set the most likely point to chi**2 = 0
     x2 -= x2.min()
 
-    if verbose > 0:
-        print 'p1:   ', p1.min(), p1.max()
-        print 'p2:   ', p2.min(), p2.max()
-        print 'x2:   ', x2.min(), x2.max()
-        print 'x2lin:', x2lin.min(), x2lin.max()
     # Use sqrt scale
     # x2 = np.sqrt(x2)
     # x2lin = np.sqrt(x2lin)
@@ -205,14 +192,11 @@ def plot_chi2(model, data, fit_result=None, limits=None,
                           vmax=stddev_max ** 2, cmap='gray')
     plt.colorbar()
     # Add marker at the minimum
-    print fit_result[0][0]
-    print fit_result[0][1]
     plt.plot(fit_result[0][0], fit_result[0][1],
             marker='*', markersize=12, color='r')
 
     # Add contour of real likelihood
     contour_levels = np.arange(1, stddev_max + 1) ** 2
-    print 'contour_levels:', contour_levels
     x2_cont = plt.contour(P1, P2, x2, contour_levels,
                          colors='r', linewidths=linewidth)
     plt.clabel(x2_cont, inline=1, fontsize=10,

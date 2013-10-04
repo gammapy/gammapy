@@ -14,10 +14,10 @@ def _test_powerlaw():
     I_unc, I_unc_err = pl.I_with_err(e1, e2, e, f, f_err, g, g_err)
     f_unc, f_unc_err = pl.f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
 
-    print 'f (real):', f, f_err
-    print 'g (real):', g, g_err
-    print 'I (unc ):', I_unc, I_unc_err
-    print 'f (unc ):', f_unc, f_unc_err
+    print('f (real):', f, f_err)
+    print('g (real):', g, g_err)
+    print('I (unc ):', I_unc, I_unc_err)
+    print('f (unc ):', f_unc, f_unc_err)
 
 
 def test_one():
@@ -51,17 +51,17 @@ def _test_closure(g_error_mag=0):
     try:
         assert_almost_equal(f_val, f_val2)
         assert_almost_equal(f_err, f_err2)
-    except AssertionError as e:
-        print e
+    except AssertionError as err:
+        print(err)
         m = 3
-        print 'f_val:', f_val[:m]
-        print 'f_err:', f_err[:m]
-        print 'g_val:', g_val[:m]
-        print 'g_err:', g_err[:m]
-        print 'I_val:', I_val[:m]
-        print 'I_err:', I_err[:m]
-        print 'f_val2:', f_val2[:m]
-        print 'f_err2:', f_err2[:m]
+        print('f_val:', f_val[:m])
+        print('f_err:', f_err[:m])
+        print('g_val:', g_val[:m])
+        print('g_err:', g_err[:m])
+        print('I_val:', I_val[:m])
+        print('I_err:', I_err[:m])
+        print('f_val2:', f_val2[:m])
+        print('f_err2:', f_err2[:m])
 
 
 def test_e_pivot():
@@ -72,7 +72,7 @@ def test_e_pivot():
     f0 = 5.35510540e-11
     d_gamma = 0.0318377
     cov = 6.56889442e-14
-    print pl.e_pivot(e0, f0, d_gamma, cov)
+    print(pl.e_pivot(e0, f0, d_gamma, cov))
 
 
 def test_compatibility():
@@ -87,9 +87,9 @@ def test_compatibility():
     f = flux density (cm^-2 s^-1 MeV^-1)
     g = "gamma" = spectral index
     """
-    print '=' * 60
-    print "test_compute_spectral_compatibility()"
-    print '=' * 60
+    print('=' * 60)
+    print('test_compute_spectral_compatibility()')
+    print('=' * 60)
 
     # Fermi power-law parameters
     e_fermi = 1296.2734

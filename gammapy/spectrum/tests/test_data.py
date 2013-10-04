@@ -22,5 +22,4 @@ class TestFluxPoints(unittest.TestCase):
         self.assertEqual(points.y[13], 1.945e-13)
         self.assertEqual(points.eyl[13], 2.724e-14)
         self.assertEqual(points.eyh[13], 2.512e-14)
-        #print points.row(13)
 """

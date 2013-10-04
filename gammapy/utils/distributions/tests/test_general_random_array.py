@@ -31,17 +31,12 @@ def plot_1d():
     r = GeneralRandomArray(p)
     nsamples = 1000
     samples = r.draw(nsamples)
-    print samples.min(), samples.max()
 
     # Overplot expected and observed counts
     # Also draw sqrt(nentries) error bars for the observed counts
     counts_exp = nsamples * p / p.sum()
     counts_obs = np.histogram(samples, bins=nbins)[0]
     counts_obs_err = np.sqrt(counts_obs)
-    print i
-    print counts_exp
-    print counts_obs
-    print counts_obs_err
 
     plt.errorbar(i, counts_obs, counts_obs_err, fmt='bo', label='observed counts')
     plt.plot(counts_exp, 'ro', label='expected counts')
@@ -58,11 +53,8 @@ def plot_simple_2d():
     pdf.shape = 2, 3
     r = GeneralRandomArray(pdf)
     indices = r.draw(1000)
-    print indices.dtype, indices.shape
-    print indices
     plt.figure()
     counts = np.histogramdd(indices, bins=(pdf.shape))[0]
-    print counts
     plt.imshow(counts, interpolation='nearest')
     plt.colorbar()
     # plt.show()
@@ -82,7 +74,6 @@ def plot_2d_example():
     y, x = np.indices(shape)
     sigma = 10.
     brightness_map = 1 + 3. * np.exp(-((x - 50) ** 2 + (y - 50) ** 2) / (2 * sigma ** 2))
-    print brightness_map.dtype
     # Generate random positions from this distribution
     r = GeneralRandomArray(brightness_map)
     photon_list = r.draw(1e5)
@@ -101,6 +92,7 @@ def plot_2d_example():
     # plt.show()
 
 
+# TODO
 def _test_speed():
     """ Time the creation of many random numbers from large arrays. """
     # TODO: Test how long it takes to
@@ -108,4 +100,3 @@ def _test_speed():
     # - unravel the indices
     # - bin the events
     t = timeit.Timer('r.draw(1e6)', 'p=ones(1e2); r=GeneralRandomArray(p)')
-    print t

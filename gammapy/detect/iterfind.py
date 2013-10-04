@@ -246,7 +246,6 @@ class IterativeSourceDetector(object):
         SIGMA_LIMITS = (0.01, 1e6)
         pars['limit_sigma'] = SIGMA_LIMITS
         # import IPython; IPython.embed(); 1 / 0
-        print pars
         minuit = Minuit(fit_stat, pedantic=False, print_level=1, **pars)
         # minuit.print_initial_param()
         minuit.migrad(ncall=self.max_ncall)
