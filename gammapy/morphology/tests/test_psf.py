@@ -7,7 +7,6 @@ from ..psf import HESS
 
 
 class TestHESS(unittest.TestCase):
-    @unittest.skip('TODO')
     def test_dpdtheta2(self):
         """Check that the amplitudes and sigmas were converted correctly in
         HESS.to_MultiGauss2D() by comparing the dpdtheta2 distribution.
@@ -39,7 +38,6 @@ class TestHESS(unittest.TestCase):
             val_m = m.dpdtheta2(theta ** 2)
             assert_almost_equal(val_hess, val_m, decimal=4)
 
-    @unittest.skip('TODO')
     def test_GC(self):
         """Compare the containment radii computed with the HESS software
         with those found by using MultiGauss2D.

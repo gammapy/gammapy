@@ -12,8 +12,6 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
-
-@unittest.skip
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestGauss2D(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
@@ -57,6 +55,7 @@ class TestGauss2D(unittest.TestCase):
         assert_equal(g.sigma, 5)
 
 
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestMultiGauss2D(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
