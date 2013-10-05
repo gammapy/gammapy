@@ -28,4 +28,7 @@ Reference/API
 
 .. automodapi:: gammapy.utils.random
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.utils.distributions
+    :no-inheritance-diagram:
     
