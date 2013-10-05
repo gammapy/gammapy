@@ -316,6 +316,9 @@ def cube_to_image(cube, slicepos=None):
     del header['NAXIS3']
     del header['CRVAL3']
     del header['CDELT3']
+    del header['CTYPE3']
+    del header['CRPIX3']
+    del header['CUNIT3']
     if slicepos:
         data = cube.data[slicepos]
     else:
