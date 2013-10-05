@@ -1,12 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
+import pytest
 from numpy import pi
 from numpy.testing import assert_equal, assert_almost_equal
 from ..gauss import Gauss2D, MultiGauss2D
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 @unittest.skip
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestGauss2D(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""

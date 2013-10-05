@@ -1,12 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
+import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
 from .. import gauss
 from .. import theta
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestThetaCalculator(unittest.TestCase):
     """We use a Gaussian, because it has known analytical
     solutions for theta and containment."""
