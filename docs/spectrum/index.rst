@@ -28,7 +28,7 @@ Reference/API
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.spectrum.cosmic_rays
+.. automodapi:: gammapy.spectrum.cosmic_ray
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.spectrum.crab
