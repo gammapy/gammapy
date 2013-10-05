@@ -39,6 +39,7 @@ If you think it might be useful, go to :ref:`install`.
   obs/index
   image/index
   spectrum/index
+  morphology/index
   detect/index
   stats/index
   utils/index
