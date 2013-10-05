@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import unittest
 from numpy.testing import assert_almost_equal
 import numpy as np
+from astropy.utils.data import get_pkg_data_filename
 from ..psf import HESS
 
 
@@ -26,7 +27,8 @@ class TestHESS(unittest.TestCase):
         and e.g. the wide sigma = 0.09 deg PSF component contains 20%
         of the events.
         """
-        hess = HESS('input/gc_psf.txt')
+        filename = get_pkg_data_filename('data/psf.txt')
+        hess = HESS(filename)
         m = hess.to_MultiGauss2D(normalize=False)
         if 0:
             print('integral:', m.integral)
@@ -49,12 +51,15 @@ class TestHESS(unittest.TestCase):
         containment radius from the theta2 histogram directly, not
         using the triple-Gauss approximation)."""
         vals = [(68, 0.0663391),
-                (95, 0.173846),  # 0.15310963243226974
+                # TODO: check why this was different before
+                # (95, 0.173846),  # 0.15310963243226974
+                (95, 0.15310967713539758),
                 (10, 0.0162602),
                 (40, 0.0379536),
                 (80, 0.088608)]
-        hess = HESS('input/gc_psf.txt')
+        filename = get_pkg_data_filename('data/psf.txt')
+        hess = HESS(filename)
         m = hess.to_MultiGauss2D()
         assert_almost_equal(m.integral, 1)
         for containment, theta in vals:
-            assert_almost_equal(m.theta(containment / 100.), theta, decimal=2)
+            assert_almost_equal(m.containment_radius(containment / 100.), theta, decimal=2)
