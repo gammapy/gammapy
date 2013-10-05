@@ -1,12 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
+import pytest
 from numpy.testing import assert_almost_equal
 import numpy as np
 from astropy.utils.data import get_pkg_data_filename
 from ..psf import HESS
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 class TestHESS(unittest.TestCase):
     def test_dpdtheta2(self):
         """Check that the amplitudes and sigmas were converted correctly in
