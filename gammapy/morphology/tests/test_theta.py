@@ -1,0 +1,84 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import print_function, division
+import unittest
+import numpy as np
+from numpy.testing import assert_almost_equal
+from .. import gauss
+from .. import theta
+
+
+class TestThetaCalculator(unittest.TestCase):
+    """We use a Gaussian, because it has known analytical
+    solutions for theta and containment."""
+    def setUp(self):
+        # Single Gauss
+        self.g = gauss.Gauss2D(sigma=1)
+        self.g_tc = theta.ThetaCalculator(self.g.dpdtheta2, theta_max=5, n_bins=1e6)
+        self.g_tcs = theta.ThetaCalculatorScipy(self.g.dpdtheta2, theta_max=5)
+        # Multi Gauss
+        self.m = gauss.MultiGauss2D(sigmas=[1, 2])
+        self.m_tc = theta.ThetaCalculator(self.m.dpdtheta2, theta_max=5, n_bins=1e6)
+        self.m_tcs = theta.ThetaCalculatorScipy(self.m.dpdtheta2, theta_max=5)
+        # self.tc2 = mt.ThetaCalculator2D.from_source(self.g, theta_max=5, d)
+
+    def test_containment_Gauss2D(self):
+        for tc in [self.g_tc, self.g_tcs]:
+            for theta in np.linspace(0, 3, 4):
+                actual = tc.containment_fraction(theta)
+                desired = self.g.containment_fraction(theta)
+                assert_almost_equal(actual, desired, decimal=4)
+
+    def test_containment_MultiGauss2D(self):
+        for tc in [self.m_tc, self.m_tcs]:
+            for theta in np.linspace(0, 3, 4):
+                actual = tc.containment_fraction(theta)
+                desired = self.m.containment_fraction(theta)
+                assert_almost_equal(actual, desired, decimal=4)
+
+    def test_theta_Gauss2D(self):
+        for tc in [self.g_tc, self.g_tcs]:
+            for containment in np.arange(0, 1, 0.1):
+                actual = tc.containment_radius(containment)
+                desired = self.g.containment_radius(containment)
+                assert_almost_equal(actual, desired, decimal=4)
+
+    def test_theta_MultiGauss2D(self):
+        for tc in [self.m_tc, self.m_tcs]:
+            for containment in np.arange(0, 1, 0.1):
+                actual = tc.containment_radius(containment)
+                desired = self.m.containment_radius(containment)
+                assert_almost_equal(actual, desired, decimal=4)
+
+# FIXME: This test is slow and fails with an IndexError.
+def _test_ModelThetaCalculator():
+    """Check that Gaussian widths add in quadrature
+    i.e. sigma_psf = 3, sigma_source = 4 ===> sigma_model = 5"""
+    from morphology.gauss import Gauss2D
+    source, psf = Gauss2D(3), Gauss2D(4)
+    # Correct analytical reference
+    ana = Gauss2D(5)
+    ana_angle = ana.containment_radius(0.5)
+    ana_containment = ana.containment(ana_angle)
+    # Numerical method
+    fov, binsz = 20, 0.2
+    num = theta.ModelThetaCalculator(source, psf, fov, binsz)
+    num_angle = num.containment_radius(0.5)
+    num_containment = num.containment(num_angle)
+    # Compare results
+    par_names = ['angle', 'containment']
+    par_refs = [ana_angle, ana_containment]
+    par_checks = [num_angle, num_containment]
+    compare_results(par_names, par_refs, par_checks)
+
+
+def compare_results(names, refs, checks):
+    print('%10s %10s %10s %10s'
+          ''.format('name ref check rel_diff'.split()))
+    for name, ref, check in zip(names, refs, checks):
+        abs_diff = check - ref
+        rel_diff = 100 * abs_diff / ref
+        print('%10s %10.3g %10.3g %10.3f'
+              ''.format(name, ref, check, rel_diff))
+
+if __name__ == '__main__':
+    unittest.main()
