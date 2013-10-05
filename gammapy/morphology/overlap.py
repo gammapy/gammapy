@@ -15,7 +15,8 @@ from astropy import wcs
 __all__ = ['read_model_components']
 
 def write_test_cfg_file(spacing=2.):
-    """Write test fit.cfg file with 7 sources on a hexagonal grid. Please specify sigma, excess in fit.cfg and spacing of the sources."""
+    """Write test fit.cfg file with 7 sources on a hexagonal grid.
+    Please specify sigma, excess in fit.cfg and spacing of the sources."""
     cfg = configobj.ConfigObj('fit.cfg')
        
     # Hexgonal test grid
@@ -40,7 +41,8 @@ def write_test_region_file(component_table):
         glat_pos = component_table['GLAT'][row]
         sigma = component_table['Sigma'][row]
         r_containment = sqrt(2 * log(1 / (1 - 0.8))) * sigma
-        reg_string = 'galactic;circle({0},{1},{2}) # color={{green}} width=2 text={{{3}}}'.format(glon_pos, glat_pos, r_containment, component)
+        reg_string = ('galactic;circle({0},{1},{2}) # color={{green}} width=2 text={{{3}}}'
+                      ''.format(glon_pos, glat_pos, r_containment, component))
         reg_file.write(reg_string + '\n')
     reg_file.close()
 
@@ -98,7 +100,8 @@ def write_test_model_components(component_table):
     
            
 def read_model_components(cfg_file):
-    """Read model components from model_components/*.fits and return a list of 2D component images with containment masks"""
+    """Read model components from ``model_components/*.fits`` and return
+    a list of 2D component images with containment masks"""
     cfg = configobj.ConfigObj(cfg_file)
     column_names = ('Name', 'Type', 'GLON', 'GLAT', 'Sigma', 'Norm')
     column_types = ('S25', 'S25', np.float32, np.float32, np.float32, np.float32)
@@ -125,7 +128,7 @@ def read_model_components(cfg_file):
 
 
 def compute_containment_radius(component_table, frac=0.8):
-    """Compute contaiment radius from sigma"""
+    """Compute containment radius from sigma"""
     r_containment_list = []
     for sigma in component_table['sigma']:
         r_containment = sqrt(2 * log(1 / (1 - frac))) * sigma  # Has to be tested!
@@ -172,7 +175,9 @@ def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
     
     
 def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
-    """Compute mask for the containment radius. Works only for a symmetrical gaussian."""
+    """Compute mask for the containment radius.
+    
+    Works only for a symmetrical gaussian."""
     # Setup wcs coordinate transformation
     hdulist = fits.open('../counts.fits')
     w = wcs.WCS(hdulist[0].header)
@@ -186,7 +191,10 @@ def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
 
 
 def compute_circular_masks(x_max, y_max, shape):
-    """Compute a 3D array of circular masks with increasing radius at position x_max, y_max of given shape."""
+    """Compute a 3D array of circular masks
+    
+    with increasing radius at position x_max, y_max of given shape.
+    """
     # Not used 
     width, height = shape
     r_max = min(width, height) / 2.
@@ -199,7 +207,9 @@ def compute_circular_masks(x_max, y_max, shape):
         
 
 def containment_fraction(A, frac):
-    """Compute containment fraction and return the corresponding mask. Does not interpolate."""
+    """Compute containment fraction and return the corresponding mask.
+    
+    Does not interpolate."""
     # Not used
     y_max, x_max = np.unravel_index(np.argmax(A), A.shape)
     A_norm = A / np.nansum(A)
@@ -210,7 +220,10 @@ def containment_fraction(A, frac):
     
 
 def contamination(B, excess_all, mask_A):
-    """Compute contamination between A and B. I.e.fraction of B in a given containment region around A. """
+    """Compute contamination between A and B.
+    
+    I.e.fraction of B in a given containment region around A.
+    """
     # mask = np.ones_like(A) #test hack
     logging.debug('Excess of B in region A: {0}'.format(np.nansum((B * mask_A))))
     logging.debug('Total excess in region A: {0}'.format(np.nansum((excess_all * mask_A))))

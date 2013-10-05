@@ -12,22 +12,27 @@ __all__ = ['ModelThetaCalculator', 'ThetaCalculator',
            'ThetaCalculator2D', 'ThetaCalculatorScipy']
 
 class ThetaCalculator(object):
-    """Provides methods containment_fraction(theta) and containment_radius(containment_fraction)
+    """Provides methods ``containment_fraction(theta)`` and ``containment_radius(containment_fraction)``
     given some 1D distribution (not necessarily normalized)
 
     Notes
-    - If you have to compute theta or containment many times for
-      the same dist, this is much faster than ThetaCalculatorScipy.
-    - If you want only one value it could actually be slower,
-      especially the containment calculation.
+    If you have to compute theta or containment many times for
+    the same dist, this is much faster than ThetaCalculatorScipy.
+    If you want only one value it could actually be slower,
+    especially the containment calculation.
+
+    Parameters
+    ----------
+    dist : callable
+        Distribution function dp / dtheta2 (theta2)
+    theta_max : float
+        Integration range will be 0 .. theta_max ^ 2
+    nbins : int
+        Integration step size
+    normalize : bool
+        Normalize discretized distribution to 1?
     """
     def __init__(self, dist, theta_max, n_bins, normalize=False):
-        """
-        @param dist: distribution function dp / dtheta2 (theta2)
-        @param theta_max: integration range will be 0 .. theta_max ^ 2
-        @param nbins: integration step size
-        @param normalize: normalize discretized distribution to 1
-        """
         theta2 = np.linspace(0, theta_max ** 2, n_bins)
         dtheta2 = theta2[1] - theta2[0]
         p = (dist(theta2) * dtheta2).cumsum()
@@ -50,20 +55,25 @@ class ThetaCalculator(object):
 
 class ThetaCalculatorScipy(object):
     """Same functionality as NumericalThetaCalculator, but uses
-    scipy.integrate.quad and scipy.optimize.fsolve instead.
+    ``scipy.integrate.quad`` and ``scipy.optimize.fsolve`` instead.
 
     Notes:
-    - It is more precise than ThetaCalculator and doesn't
-      require you to think about which theta binning and range
-      gives your desired precision.
-    - If you have to compute many thetas this can be quite slow
-      because it is a root finding with nested integration."""
+    It is more precise than ThetaCalculator and doesn't
+    require you to think about which theta binning and range
+    gives your desired precision.
+    If you have to compute many thetas this can be quite slow
+    because it is a root finding with nested integration.
+
+    Parameters
+    ----------
+    dist : callable
+        Probability distribution (probability per theta ^ 2)
+    theta_max : float
+        Integration range will be 0 .. theta_max ^ 2
+    normalize : bool
+        Normalize discretized distribution to 1?
+    """
     def __init__(self, dist, theta_max, normalize=False):
-        """
-        @param dist: probability distribution (probability per theta ^ 2)
-        @param theta_max: integration range will be 0 .. theta_max ^ 2
-        @param normalize: normalize discretized distribution to 1
-        """
         self.dist = dist
         self.theta_max = theta_max
         if normalize:
@@ -94,6 +104,9 @@ class ThetaCalculator2D(ThetaCalculatorScipy):
     model images, where analytical distributions or
     1D distributions are not available.
 
+    @note: The theta and containment is calculated relative
+    to the origin (x, y) = (0, 0).
+
     @note: We do simple bin summing. In principle we could
     do integration over bins by using scipy.integrate.dblquad
     in combination with e.g. scipy.interpolate.interp2d,
@@ -102,16 +115,17 @@ class ThetaCalculator2D(ThetaCalculatorScipy):
     @todo: I just realized that probably the best thing to
     do is to bin (x,y) -> theta2, make a spline interpolation
     and then call ThetaCalculatorScipy!
+
+    Parameters
+    ----------
+    dist : 2-dimensional array
+        Probability distribution (per dx * dy)
+    x : 2-dimensional array
+        Pixel `x` coordinate array. Must match shape of `dist`.
+    x : 2-dimensional array
+        Pixel `x` coordinate array. Must match share of `dist`.
     """
     def __init__(self, dist, x, y):
-        """
-        @param dist: probability distribution (per dx * dy)
-        @param x, y: pixel coordinate arrays
-        All three must be matching 2D images.
-
-        @note: The theta and containment is calculated relative
-        to the origin (x, y) = (0, 0).
-        """
         self.dist = dist / dist.sum()
         self.theta2 = x ** 2 + y ** 2
         self.theta_max = np.sqrt(self.theta2.max())
@@ -127,17 +141,17 @@ class ModelThetaCalculator(ThetaCalculator):
 
     Uses 2D images for the computation.
     Slow but simple, so useful to check more complicated methods.
+
+    Source and PSF must be callable and return
+    dP/dtheta (@todo: or dP/dtheta^2?)
+
+    fov = field of view (deg)
+    binsz = bin size (deg)
+
+    The source is supposed to be contained in the FOV
+    even after PSF convolution.
     """
     def __init__(self, source, psf, fov, binsz, call2d=False):
-        """Source and PSF must be callable and return
-        dP/dtheta (@todo: or dP/dtheta^2?)
-
-        fov = field of view (deg)
-        binsz = bin size (deg)
-
-        The source is supposed to be contained in the FOV
-        even after PSF convolution.
-        """
         from scipy.ndimage import convolve
         # Compute source and psf 2D images
         y, x = np.mgrid[-fov:fov:binsz, -fov:fov:binsz]
