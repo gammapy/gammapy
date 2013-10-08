@@ -41,7 +41,7 @@ class GaussPSF(Gauss2D):
         return {'psf1': d}
 
 
-class Sherpa:
+class Sherpa(object):
     """Multi-Gauss PSF as represented in the Sherpa software.
 
     Note that Sherpa uses the following function

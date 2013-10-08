@@ -12,7 +12,7 @@ from ..image.utils import ring_correlate
 __all__ = ['RingBgMaker', 'outer_ring_radius', 'area_factor', 'alpha']
 
 
-class RingBgMaker:
+class RingBgMaker(object):
     """Ring background method for cartesian coordinates.
     Step 1: apply exclusion mask
     Step 2: ring-correlate

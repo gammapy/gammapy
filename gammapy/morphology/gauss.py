@@ -7,7 +7,7 @@ from numpy import pi, exp, sqrt, log
 __all__ = ['Gauss2D', 'MultiGauss2D']
 
 
-class Gauss2D:
+class Gauss2D(object):
     """2D symmetric Gaussian PDF"""
     def __init__(self, sigma=1):
         self.sigma = np.asarray(sigma, 'f')
@@ -53,7 +53,7 @@ class Gauss2D:
         return self
 
 
-class MultiGauss2D:
+class MultiGauss2D(object):
     """Sum of multiple 2D Gaussians.
     @note This sum is no longer a PDF, it is not normalized to 1.
     @note The "norm" of each component represents the 2D integral,
