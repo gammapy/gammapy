@@ -12,10 +12,11 @@ You could also use Kapteyn instead:
 * maputils.dist_on_sphere
 """
 from __future__ import print_function, division
+import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['gal2equ', 'equ2gal', 'separation']
+__all__ = ['gal2equ', 'equ2gal', 'separation', 'minimum_separation']
 
 
 def gal2equ(ll, bb):
@@ -69,3 +70,26 @@ def separation(lon1, lat1, lon2, lat2):
           + cos(lat1) * sin(lon1) * cos(lat2) * sin(lon2) +
           sin(lat1) * sin(lat2))
     return degrees(arccos(mu))
+
+def minimum_separation(lon1, lat1, lon2, lat2):
+    """Compute minimum distance of each (lon1, lat1) to any (lon2, lat2).
+
+    Parameters
+    ----------
+    lon1, lat1 : array-like
+        Primary coordinates of interest in deg
+    lon2, lat2 : array-like
+        Counterpart coordinate array in deg
+
+    Returns
+    -------
+    theta_min : array
+        Minimum distance in deg
+    """
+    theta_min = np.empty_like(lon1)
+
+    for i1 in range(lon1.size):
+        thetas = separation(lon1[i1], lat1[i1], lon2, lat2)
+        theta_min[i1] = thetas.min()
+
+    return theta_min
