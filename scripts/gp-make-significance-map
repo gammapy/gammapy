@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Make Li & Ma significance map for a given correlation radius.
+
+TODO: describe
+"""
+
+# Parse command line arguments
+
+from astropy.utils.compat import argparse
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('infile', type=str,
+                    help='Input FITS file name')
+parser.add_argument('outfile', type=str,
+                    help='Output FITS file name')
+parser.add_argument('theta', type=float,
+                    help='On-region correlation radius (deg)')
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
+
+args = parser.parse_args()
+args = vars(args)
+
+# Execute script
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+from astropy.io import fits
+from gammapy.image import tophat_correlate
+from gammapy.stats import significance_on_off
+
+logging.info('Reading {0}'.format(args['infile']))
+hdus = fits.open(args['infile'])
+n_on = hdus['On'].data
+n_off = hdus['Off'].data
+a_on = hdus['OnExposure'].data
+a_off = hdus['OffExposure'].data
+
+logging.info('Correlating n_on and a_on map')
+theta = args['theta'] / hdus['On'].header['CDELT2']
+n_on = tophat_correlate(n_on, theta)
+a_on = tophat_correlate(a_on, theta)
+
+logging.info('Computing significance map')
+alpha = a_on / a_off
+significance = significance_on_off(n_on, n_off, alpha)
+
+logging.info('Writing {0}'.format(args['outfile']))
+fits.writeto(args['outfile'], data=significance, header=hdus['On'].header, clobber=True)
