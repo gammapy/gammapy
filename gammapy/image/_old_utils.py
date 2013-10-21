@@ -319,7 +319,7 @@ def cube_to_image(cube, slicepos=None):
     del header['CTYPE3']
     del header['CRPIX3']
     del header['CUNIT3']
-    if slicepos:
+    if slicepos == None:
         data = cube.data[slicepos]
     else:
         data = cube.data.sum(0)
@@ -356,38 +356,49 @@ def axis_coordinates(fitsimage, return_world=True):
     return pos
 
 
-def coordinates(image, world=True, glon_sym=True, radians=False):
-    """
-    Get coordinate maps for a given image.
-
-    image: kapteyn.maputils.FITSimage
-    world: use world coordinates or pixel coordinates?
-    glon_sym: use GLON range (-180, 180) or (0, 360)
-
-    Returns tuple (glon, glat) of maps as numpy arrays with values
-    containing the position of the given pixel.
+def coordinates(image, world=True, lon_sym=True, radians=False):
+    """Get coordinate images for a given image.
 
     This function is useful if you want to compute
     an image with values that are a function of position.
 
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+    world : bool
+        Use world coordinates (or pixel coordinates)?
+    lon_sym : bool
+        Use symmetric longitude range `(-180, 180)` (or `(0, 360)`)?
+
+    Returns
+    -------
+    (lon, lat) : tuple of arrays
+        Images as numpy arrays with values
+        containing the position of the given pixel.
+
+    Examples
+    --------
     >>> l, b = coordinates(image)
     >>> dist = sqrt( (l-42)**2 + (b-43)**2)
     """
     # Create arrays of pixel coordinates
-    y, x = np.indices(image.imshape, dtype='int32') + 1
+    y, x = np.indices(image.data.shape, dtype='int32') + 1
+
     if not world:
         return x, y
 
-    l, b = _to_world(image, x, y)
-
-    if glon_sym:
-        l = np.where(l > 180, l - 360, l)
-
+    from astropy.wcs import WCS
+    wcs = WCS(image.header)
+    lon, lat = wcs.wcs_pix2world(x, y, 1)
+    
+    if lon_sym:
+        lon = np.where(lon > 180, lon - 360, lon)
+    
     if radians:
-        l = np.radians(l)
-        b = np.radians(b)
+        lon = np.radians(lon)
+        lat = np.radians(lat)
 
-    return l, b
+    return lon, lat
 
 
 def coordinates_outside(image, x_pix, y_pix, boxsize, glon_sym=True):
