@@ -16,7 +16,7 @@ import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['gal2equ', 'equ2gal', 'separation', 'minimum_separation']
+__all__ = ['gal2equ', 'equ2gal', 'separation', 'minimum_separation', 'pair_correlation']
 
 
 def gal2equ(ll, bb):
@@ -60,7 +60,7 @@ def equ2gal(ra, dec):
     return degrees(ll), degrees(bb)
 
 
-def separation(lon1, lat1, lon2, lat2):
+def separation(lon1, lat1, lon2, lat2, unit):
     """Angular separation in degrees between two sky coordinates
     
     Input and output in degrees.
@@ -93,3 +93,33 @@ def minimum_separation(lon1, lat1, lon2, lat2):
         theta_min[i1] = thetas.min()
 
     return theta_min
+
+
+def pair_correlation(lon, lat, theta_bins):
+    """Compute pair correlation function for points on the sphere.
+    
+    Parameters
+    ----------
+    lon : array-like
+        Array of longitude coordinates (deg)
+    lat : array-like
+        Array of latitude coordinates (deg)
+    theta_bins : array-like
+        Array defining the `theta` binning (deg)
+        `theta` is the angular offset between positions.
+    Returns
+    -------
+    counts : array
+        Array of point separations per `theta` bin.
+    """
+    # TODO: Implement speedups:
+    # - use radians
+    # - avoid processing each pair twice (distance a to b and b to a)
+    counts = np.zeros(shape=len(theta_bins)-1, dtype=int)
+    # If there are many points this should have acceptable performance
+    # because the inner loop is in np.histogram, not in Python
+    for ii in range(len(lon)):
+        theta = separation(lon[ii], lat[ii], lon, lat)
+        hist = np.histogram(theta, theta_bins)[0]
+        counts += hist
+    return counts
