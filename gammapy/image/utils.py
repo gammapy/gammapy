@@ -4,7 +4,7 @@ from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
-           'atrous_image', 'atrous_hdu', 'process_image_pixels']
+           'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube']
 
 
 def _get_structure_indices(radius):
@@ -421,3 +421,33 @@ def image_groupby(images, labels):
     return groups
     #out = groups.aggregate(function)
     #return out
+
+def images_to_cube(hdu_list):
+    """Convert a list of image HDUs into one cube.
+    
+    Parameters
+    ----------
+    hdu_list : astropy.io.fits.HDUList
+        List of 2-dimensional image HDUs
+
+    Returns
+    -------
+    cube : astropy.io.fits.ImageHDU
+        3-dimensional cube HDU
+    """
+    from astropy.io import fits
+    shape = list(hdu_list[0].data.shape)
+    shape.insert(0, len(hdu_list))
+    data = np.empty(shape=shape, dtype=hdu_list[0].data.dtype)
+    for ii, hdu in enumerate(hdu_list):
+        data[ii] = hdu.data
+    header = hdu_list[0].header
+    header['NAXIS'] = 3
+    header['NAXIS3'] = len(hdu_list)
+    #header['CRVAL3']
+    #header['CDELT3']
+    #header['CTYPE3']
+    #header['CRPIX3']
+    #header['CUNIT3']
+    return fits.ImageHDU(data=data, header=header)
+
