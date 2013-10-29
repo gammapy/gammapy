@@ -18,9 +18,10 @@ To download all datasets into a local cache::
 """
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
+from astropy.table import Table
 
 included_datasets = ['poisson_stats_image',
-                     ]
+                     'tev_spectrum']
 
 remote_datasets = ['fermi_galactic_center'
                    ]
@@ -95,3 +96,15 @@ def fermi_galactic_center():
     TODO: download from Dropbox
     """
     raise NotImplementedError
+
+def tev_spectrum(source_name):
+    """Get published TeV flux point measurements.
+    
+    source_name : str
+        Source name
+    """
+    filename = 'tev_spectra/crab_hess_spec.txt'
+    filename = get_pkg_data_filename(filename)
+    table = Table.read(filename, format='ascii')
+    # TODO: set column names
+    return table
