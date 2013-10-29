@@ -60,7 +60,7 @@ def equ2gal(ra, dec):
     return degrees(ll), degrees(bb)
 
 
-def separation(lon1, lat1, lon2, lat2, unit):
+def separation(lon1, lat1, lon2, lat2):
     """Angular separation in degrees between two sky coordinates
     
     Input and output in degrees.
@@ -123,3 +123,23 @@ def pair_correlation(lon, lat, theta_bins):
         hist = np.histogram(theta, theta_bins)[0]
         counts += hist
     return counts
+
+def sky_to_sky(lon, lat, in_system, out_system):
+    """Convert between sky coordinates.
+    
+    lon : array-like
+        Longitude coordinate array
+    lat : array-like
+        Latitude coordinate array
+    in_system : {'galactic', 'icrs'}
+        Input coordinate system
+    out_system : {'galactic', 'icrs'}
+        Output coordinate system
+    """    
+    from astropy.coordinates import ICRS, Galactic
+    systems = dict(galactic=Galactic, icrs=ICRS)
+    lon = np.asarray(lon)
+    lat = np.asarray(lat)
+
+    coords = systems[in_system](lon, lat, units='deg')
+    return coords.transform_to(systems[out_system]).degrees
