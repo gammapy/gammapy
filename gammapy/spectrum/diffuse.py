@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.io import fits
+from astropy.table import Table
 from .utils import EnergyAxis
 from . import powerlaw as pl
 
@@ -15,9 +16,7 @@ class GalacticDiffuse(object):
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
     def __init__(self, filename=None, interp_kind='linear'):
-        # TODO: use astropy!
         from kapteyn.wcs import Projection
-        from atpy import Table
         self.filename = filename
         self.interp_kind = interp_kind
         self.data = fits.getdata(self.filename)
