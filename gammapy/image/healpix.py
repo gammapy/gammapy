@@ -10,7 +10,7 @@ from __future__ import print_function, division
 from .utils import coordinates
 
 
-def healpix_to_image(healpix_data, reference_image):
+def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     """Convert image in HEALPIX format to a normal FITS projection image (e.g. CAR or AIT).
 
     Parameters
@@ -37,14 +37,27 @@ def healpix_to_image(healpix_data, reference_image):
     """
     import healpy as hp
     lon, lat = coordinates(reference_image, lon_sym=False, radians=True)
+    
+    # If the reference image uses a different celestial coordinate system from
+    # the HEALPIX image we need to transform the coordinates
+    ref_coord_system = reference_image.header['COORDSYS']
+    if ref_coord_system != hpx_coord_system:
+        from ..utils.coordinates import sky_to_sky
+        lon, lat = sky_to_sky(lon, lat, ref_coord_system, hpx_coord_system)
+    
     data = hp.get_interp_val(healpix_data, lon, lat)
     return data
 
 
-def other_to_healpix(other_image, healpix_data):
-    """Convert image in some other format (e.g. CAR or AIT) to HPX
+def image_to_healpix(image, healpix_pars):
+    """Convert image in a normal FITS projection (e.g. CAR or AIT) to HEALPIX format. 
 
-    @param other_image: kapteyn.maputils.FITSimage containing the other image
-    @param healpix_data: numpy.ndarray containing the HEALPIX data"""
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+        The input image
+    healpix_pars : TODO
+        TODO: what HEALPIX parameters do we need?
+    """
     raise NotImplementedError
     # Can we use Kapteyn or Healpy to get e.g. bilinear interpolation?
