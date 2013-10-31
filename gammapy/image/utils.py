@@ -233,7 +233,7 @@ def atrous_hdu(hdu, n_levels):
 
     return hdus
 
-def coordinates(image, world=True, lon_sym=True, radians=False):
+def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     """Get coordinate images for a given image.
 
     This function is useful if you want to compute
@@ -246,7 +246,6 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
         Use world coordinates (or pixel coordinates)?
     lon_sym : bool
         Use symmetric longitude range `(-180, 180)` (or `(0, 360)`)?
-
     Returns
     -------
     (lon, lat) : tuple of arrays
@@ -451,3 +450,48 @@ def images_to_cube(hdu_list):
     #header['CUNIT3']
     return fits.ImageHDU(data=data, header=header)
 
+
+def bin_events_in_cube(events, cube, energies):
+    """Bin events in LON-LAT-Energy cube.
+    
+    Parameters
+    ----------
+    events : `astropy.table.Table`
+        Event list table
+    cube : `astropy.io.fits.ImageHDU`
+        A cube defining the spatial bins.
+    energies : `astropy.table.Table`
+        Table defining the energy bins.
+    
+    Returns
+    -------
+    count_cube : `astropy.io.fits.ImageHDU`
+        
+    """
+    from astropy.wcs import WCS
+    from astropy.io import fits
+
+    if cube.header['SYSTEM'] == 'GALACTIC':
+        lon = events['GLON']
+        lat = events['GLAT']
+    else:
+        lon = events['RA']
+        lat = events['DEC']
+    
+    wcs = WCS(cube)
+    # We're not interested in the energy axis, so we give a dummy value of 1
+    xx, yy = wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
+    # Find the nearest integer pixel
+    xx = np.round(xx).astype(int)
+    yy = np.round(yy).astype(int)
+
+    event_energies = events['Energy']
+    zz = np.searchsorted(event_energies, energies)
+
+    # Make a new empty count cube and fill events
+    bins = cube.data.shape
+    data = np.histogramdd([xx, yy, zz], bins)
+    hdu = fits.ImageHDU(data, cube.header)
+    return hdu
+    
+    
