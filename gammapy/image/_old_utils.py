@@ -689,29 +689,6 @@ def binary_ring(r_in, r_out):
     return mask1 & mask2
 
 
-def threshold(data, threshold=5):
-    """ Set all pixels below threshold to 0 """
-    logging.info('threshold: {0}'.format(threshold))
-
-    # NaNs are set to 1 by thresholding, which is not
-    # what we want for detection, so we replace them with 0 here.
-    data = np.nan_to_num(data)
-
-    data = scipy.stats.threshold(data, threshold, None, 0)
-    # Note that scipy.stats.threshold doesn't binarize,
-    # it only sets values below the threshold to 0,
-    # which is not what we want here.
-    return data.astype(np.bool).astype(np.uint8)
-
-
-def dilate(data, radius):
-    """ Dilate with disk of given radius """
-    logging.info('radius: {0}'.format(radius))
-    structure = binary_disk(radius)
-    data = scipy.ndimage.binary_dilation(data, structure)
-    return data.astype(np.uint8)
-
-
 def opening(data, radius):
     """ Dilate with disk of given radius """
     logging.info('radius: {0}'.format(radius))
@@ -862,26 +839,10 @@ def aperphot(img, x, y, aper, sky, sky_type='median', verbose=False):
               (x, y, tot_counts, n_counts, bkg, flux, std_bkg) * np.sqrt(n_counts))
     return flux, std_bkg * np.sqrt(n_counts)
 
-#------------------------------------------------------------
-# Helper functions for working with ImageHDU / FITSimage
-#------------------------------------------------------------
-
-
-def pyfits_to_kapteyn(hdu):
-    """ Convert astropy.io.fits.ImageHDU to kapteyn.maputils.FITSimage """
-    return FITSimage(externalheader=hdu.header,
-                     externaldata=hdu.data)
-
-
-def kapteyn_to_pyfits(fitsimage):
-    """ Convert kapteyn.maputils.FITSimage to astropy.io.fits.ImageHDU """
-    return fits.ImageHDU(header=fitsimage.hdr,
-                           data=fitsimage.dat)
-
 
 def pyfits_find_index(hdulist, key, value):
-    """
-    Find a FITS extension by header key/value.
+    """Find a FITS extension by header key/value.
+
     Returns -1 if none found
     f: astropy.io.fits.HDUList
     """
@@ -891,28 +852,6 @@ def pyfits_find_index(hdulist, key, value):
             logging.debug(i, hdu, key, value.lower(), value_found.lower())
             return i
     return -1
-
-
-"""Helper functions and examples of how to use the healpy
-module (http://code.google.com/p/healpy/) to work with HEALPIX images."""
-
-
-def healpix_to_other(healpix_data, other_image):
-    """Convert image in HPX format to some other format (e.g. CAR or AIT).
-    @param healpix_data: numpy.ndarray containing the HEALPIX data
-    @param other_image: kapteyn.maputils.FITSimage containing the other image"""
-    from healpy import get_interp_val
-    glon, glat = coordinates(other_image, glon_sym=False, radians=True)
-    data = get_interp_val(healpix_data, glon, glat)
-    other_image.dat = data
-
-
-def other_to_healpix(other_image, healpix_data):
-    """Convert image in some other format (e.g. CAR or AIT) to HPX
-    @param other_image: kapteyn.maputils.FITSimage containing the other image
-    @param healpix_data: numpy.ndarray containing the HEALPIX data"""
-    raise NotImplementedError
-    # Can we use Kapteyn or Healpy to get e.g. bilinear interpolation?
 
 
 def find_max(image):

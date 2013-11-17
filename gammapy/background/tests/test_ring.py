@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from ..maps import Maps
-from ..ring import RingBgMaker, outer_ring_radius
+from ..ring import RingBgMaker, ring_r_out
 
 try:
     import scipy
@@ -38,7 +38,7 @@ class TestRingBgMaker(unittest.TestCase):
 
 class TestHelperFuntions(unittest.TestCase):
     def test_compute_r_o(self):
-        actual = outer_ring_radius(1, 0, 1)
+        actual = ring_r_out(1, 0, 1)
         assert_allclose(actual, 1)
 
 if __name__ == '__main__':

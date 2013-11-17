@@ -4,7 +4,8 @@ from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
-           'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube']
+           'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube',
+           'threshold', 'dilate']
 
 
 def _get_structure_indices(radius):
@@ -493,5 +494,41 @@ def bin_events_in_cube(events, cube, energies):
     data = np.histogramdd([xx, yy, zz], bins)
     hdu = fits.ImageHDU(data, cube.header)
     return hdu
+
+def threshold(array, threshold=5):
+    """ Set all pixels below threshold to zero.
     
+    Parameters
+    ----------
+    array : array-like
+        Input array
+    threshold : float
+        Minimum threshold
+    """
+    # TODO: np.clip is simpler, no?
+    from scipy import stats
+    # NaNs are set to 1 by thresholding, which is not
+    # what we want for detection, so we replace them with 0 here.
+    data = np.nan_to_num(array)
+
+    data = stats.threshold(data, threshold, None, 0)
+    # Note that scipy.stats.threshold doesn't binarize,
+    # it only sets values below the threshold to 0,
+    # which is not what we want here.
+    return data.astype(np.bool).astype(np.uint8)
+
+
+def dilate(array, radius):
+    """ Dilate with disk of given radius.
     
+    Parameters
+    ----------
+    array : array-like
+        Input array
+    radius : float
+        Dilation radius (pix)    
+    """
+    from scipy import ndimage
+    structure = binary_disk(radius)
+    data = ndimage.binary_dilation(array, structure)
+    return data.astype(np.uint8)

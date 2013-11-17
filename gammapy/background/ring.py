@@ -1,52 +1,62 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Ring background estimation
-
-Implements a simple RingBgMaker for cartesian coordinates.
-TODO: Add psi cut
-"""
+"""Ring background estimation."""
 from __future__ import print_function, division
 import numpy as np
 from ..image.utils import ring_correlate
 
-__all__ = ['RingBgMaker', 'outer_ring_radius', 'area_factor', 'alpha']
+__all__ = ['ring_correlate_off_maps', 'RingBgMaker',
+           'ring_r_out', 'ring_area_factor', 'ring_alpha']
 
 
 class RingBgMaker(object):
     """Ring background method for cartesian coordinates.
+
     Step 1: apply exclusion mask
     Step 2: ring-correlate
     Step 3: apply psi cut
-    @todo psi cut"""
-    def __init__(self, r_i, r_o, pixscale=0.01):
-        """Initialize the RingBgMaker.
-        @param r_i: inner ring radius (deg)
-        @param r_o: outer ring radius (deg)
-        @param pixscale: degrees per pixel"""
+
+    TODO: add method to apply the psi cut
+
+    Parameters
+    ----------
+    r_in : float
+        Inner ring radius (deg)
+    r_out : float
+        Outer ring radius (deg)
+    pixscale : float
+        degrees per pixel
+    """
+    def __init__(self, r_in, r_out, pixscale=0.01):
         self.pixscale = float(pixscale)
         # Note: internally all computations are in pixels,
         # so convert deg to pix here:
-        self.r_i = r_i / self.pixscale
-        self.r_o = r_o / self.pixscale
+        self.r_in = r_in / self.pixscale
+        self.r_out = r_out / self.pixscale
 
     def info(self):
         """Print some basic parameter info."""
         print('RingBgMaker parameters:')
-        print('r_i: %g pix = %g deg'.format(
-            (self.r_i, self.r_i * self.pixscale)))
-        print('r_o: %g pix = %g deg'.format(
-            (self.r_o, self.r_o * self.pixscale)))
+        print('r_in: %g pix = %g deg'.format(
+            (self.r_in, self.r_in * self.pixscale)))
+        print('r_out: %g pix = %g deg'.format(
+            (self.r_out, self.r_out * self.pixscale)))
         print('pixscale: %g deg/pix'.format(self.pixscale))
         print()
 
     def correlate(self, image):
-        """Correlate a given image with the ring."""
-        return ring_correlate(image, self.r_i, self.r_o)
+        """Ring-correlate a given image."""
+        return ring_correlate(image, self.r_in, self.r_out)
 
     def correlate_maps(self, maps):
-        """Compute off maps from on maps by correlating with the ring,
-        taking the exclusion map into account.
-        maps: maps.Maps object"""
+        """Compute off maps as ring-correlated versions of the on maps.
+        
+        The exclusion map is taken into account.
+
+        Parameters
+        ----------
+        maps : gammapy.background.maps.Maps
+            Input maps (is modified in-place)
+        """
         # Note: maps['on'] returns a copy of the HDU,
         # so assigning to on would be pointless.
         n_on = maps['n_on'].data
@@ -57,30 +67,73 @@ class RingBgMaker(object):
         maps.is_off_correlated = True
 
 
-def outer_ring_radius(theta, inner_ring_radius, area_factor):
-    """Compute outer ring radius
-    @param theta: on region radius
-    @param inner_ring_radius: inner ring radius
-    @param area_factor: desired off / on area ratio
-
-    The determining equation is:
-    area_factor = off_area / on_area =
-    (pi (r_o**2 - r_i**2)) / (pi * theta**2 )
+def ring_correlate_off_maps(maps, r_in, r_out):
+    """Ring-correlate the basic off maps.
+    
+    Parameters
+    ----------
+    maps : gammapy.background.maps.Maps
+        Maps container
+    r_in : float
+        Inner ring radius (deg)
+    r_out : float
+        Outer ring radius (deg)
     """
-    return np.sqrt(area_factor * theta ** 2 + inner_ring_radius ** 2)
+    pixscale = maps['n_on'].header['CDELT2']
+    ring_bg_maker = RingBgMaker(r_in, r_out, pixscale)
+    return ring_bg_maker.correlate_maps(maps)
 
 
-def area_factor(theta, inner_ring_radius, outer_ring_radius):
-    """Compute areafactor.
-    @param theta: on region radius
-    @param r_i: inner ring radius
-    @param r_0: outer ring radius"""
-    return (outer_ring_radius ** 2 - inner_ring_radius ** 2) / theta ** 2
+def ring_r_out(theta, r_in, area_factor):
+    """Compute ring outer radius.
+    
+    The determining equation is:
+        area_factor =
+        off_area / on_area =
+        (pi (r_out**2 - r_in**2)) / (pi * theta**2 )
+    
+    Parameters
+    ----------
+    theta : float
+        On region radius
+    r_in : float
+        Inner ring radius
+    area_factor : float
+        Desired off / on area ratio
+
+    Returns
+    -------
+    r_out : float
+        Outer ring radius
+    """
+    return np.sqrt(area_factor * theta ** 2 + r_in ** 2)
 
 
-def alpha(theta, inner_ring_radius, outer_ring_radius):
-    """Compute alpha, the inverse area factor.
-    @param theta: on region radius
-    @param r_i: inner ring radius
-    @param r_0: outer ring radius"""
-    return 1. / area_factor(theta, inner_ring_radius, outer_ring_radius)
+def ring_area_factor(theta, r_in, r_out):
+    """Compute ring area factor.
+    
+    Parameters
+    ----------
+    theta : float
+        On region radius
+    r_in : float
+        Inner ring radius
+    r_out : float
+        Outer ring radius
+    """
+    return (r_out ** 2 - r_in ** 2) / theta ** 2
+
+
+def ring_alpha(theta, r_in, r_out):
+    """Compute ring alpha, the inverse area factor.
+    
+    Parameters
+    ----------
+    theta : float
+        On region radius
+    r_in : float
+        Inner ring radius
+    r_out : float
+        Outer ring radius
+    """
+    return 1. / ring_area_factor(theta, r_in, r_out)
