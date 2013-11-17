@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
+from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
 from .. import matched_filter
 

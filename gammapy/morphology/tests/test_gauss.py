@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
-import pytest
+from astropy.tests.helper import pytest
 from numpy import pi
 from numpy.testing import assert_equal, assert_almost_equal
 from ..gauss import Gauss2D, MultiGauss2D

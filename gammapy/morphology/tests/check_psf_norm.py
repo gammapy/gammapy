@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 
+
 def _test_psf_norm():
     from ROOT import TF1
     

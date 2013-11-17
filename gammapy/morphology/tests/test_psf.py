@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
-import pytest
+from astropy.tests.helper import pytest
 from numpy.testing import assert_almost_equal
 import numpy as np
 from astropy.utils.data import get_pkg_data_filename

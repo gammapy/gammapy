@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import pytest
+from astropy.tests.helper import pytest
 import numpy as np
 from astropy.units import Unit
 from .. import crab

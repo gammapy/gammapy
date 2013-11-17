@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import subprocess
 import tempfile
-import pytest
+from astropy.tests.helper import pytest
 from astropy.io import fits
 from ...data import poisson_stats_image
 from ..sex import sex

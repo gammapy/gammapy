@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import pytest
+from astropy.tests.helper import pytest
 from numpy.testing import assert_allclose
 from .. import utils
 
