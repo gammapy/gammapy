@@ -1,16 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Maps container class
-
-These maps allow implementing all background estimation methods.
-Not all maps are used for each method, unused maps are typically
-filled with zeros or ones as appropriate.
-
-- Correlation of basic maps is done repeatedly when
-  computing all derived maps.
-  Is it worth speeding things up by writing the steps explicitly?
-
-"""
 from __future__ import print_function, division
 import logging
 import numpy as np
@@ -18,41 +6,69 @@ from astropy.io import fits
 from ..image.utils import tophat_correlate
 from .. import stats
 
-__all__ = ['Maps']
+__all__ = ['Maps', 'BASIC_MAP_NAMES', 'DERIVED_MAP_NAMES']
 
-basic_maps = ['n_on', 'a_on', 'n_off', 'a_off',
-              'exclusion', 'exposure']
+BASIC_MAP_NAMES = ['n_on', 'a_on', 'n_off', 'a_off',
+                   'exclusion', 'exposure']
+
 basic_map_defaults = [0, 1, 0, 1, 1, 1]
-derived_maps = ['alpha', 'area_factor', 'background',
-                'excess', 'significance',
-                'flux']
+
+DERIVED_MAP_NAMES = ['alpha', 'area_factor', 'background',
+                     'excess', 'significance', 'flux']
 
 
 class Maps(fits.HDUList):
-    """Maps container for basic maps and methods to compute derived maps
+    """Maps container for basic maps and methods to compute derived maps.
 
     It is simply a list of HDUs containing the maps, plus methods to
-    compute the derived maps."""
-    def __init__(self, hdus=[], file=None,
+    compute the derived maps.
+
+    These maps allow implementing all background estimation methods.
+    Not all maps are used for each method, unused maps are typically
+    filled with zeros or ones as appropriate.
+    
+    TODO: Correlation of basic maps is done repeatedly when
+          computing all derived maps.
+          Is it worth speeding things up by writing the steps explicitly?
+
+
+    Parameters
+    ----------
+    hdus : HDUList of ImageHDUs
+        Must contain at least one of the basic maps
+    file : str
+        Passed right on to HDUList constructor
+    rename_hdus : dict
+        Dictionary of HDUs to rename, e.g. rename_hdus=dict(n_on=3, exclusion=2).
+    is_off_correlated : bool
+        Flag whether the off map is already correlated
+    theta : float
+        Correlation radius (deg)
+    theta_pix : float
+        Correlation radius (pix)
+    """
+    def __init__(self, hdus=[], file=None, rename_hdus=None,
                  is_off_correlated=True, theta=None, theta_pix=0):
-        """Initialize the Maps object.
-        @param hdus: HDUList of ImageHDUs containing at least one of the basic maps
-        @param file: passed right on to HDUList constructor
-        @param is_off_correlated: flag whether the off map is already correlated
-        @param theta: correlation radius (deg)
-        @param theta_pix: correlation radius (pix)"""
         super(Maps, self).__init__(hdus, file)
+
+        #import IPython; IPython.embed()
+        #if rename_hdus is not None:
+        #    for name, number in rename_hdus.items():
+        #        self[number].name = name
+
+        hdu_names = [hdu.name.lower() for hdu in self]
+        print(hdu_names)
+        
         # Check that there is at least one of the basic_maps present.
         # This is required so that the map geometry is defined.
-        hdu_names = [hdu.name.lower() for hdu in self]
-        existing_basic_maps = [name for name in basic_maps
+        existing_basic_maps = [name for name in BASIC_MAP_NAMES
                                if name in hdu_names]
-        nonexisting_basic_maps = [name for name in basic_maps
+        nonexisting_basic_maps = [name for name in BASIC_MAP_NAMES
                                   if name not in hdu_names]
         if not existing_basic_maps:
             logging.error('hdu_names =', hdu_names)
-            logging.error('basic_maps = ', basic_maps)
-            raise IndexError('hdus must contain at least one of the basic_maps')
+            logging.error('BASIC_MAP_NAMES = ', BASIC_MAP_NAMES)
+            raise IndexError('hdus must contain at least one of the BASIC_MAP_NAMES')
         # Declare any one of the existing basic maps the reference map.
         # This HDU will be used as the template when adding other hdus.
         self.ref_hdu = self[existing_basic_maps[0]]
@@ -60,18 +76,18 @@ class Maps(fits.HDUList):
         # add an empty one because this is required by the FITS standard
         if not isinstance(self[0], fits.PrimaryHDU):
             self.insert(0, fits.PrimaryHDU())
-        # Add missing basic_maps with default value and
+        # Add missing BASIC_MAP_NAMES with default value and
         # same shape and type as existing reference basic map
         logging.debug('Adding missing basic maps: {0}'
                       ''.format(nonexisting_basic_maps))
         for name in nonexisting_basic_maps:
-            value = basic_map_defaults[basic_maps.index(name)]
+            value = basic_map_defaults[BASIC_MAP_NAMES.index(name)]
             data = np.ones_like(self.ref_hdu.data) * value
             header = self.ref_hdu.header
             hdu = fits.ImageHDU(data, header, name)
             self.append(hdu)
         self.is_off_correlated = is_off_correlated
-        logging.info('is_off_correlated: {0}'.format(self.is_off_correlated))
+        logging.debug('is_off_correlated: {0}'.format(self.is_off_correlated))
         # Set the correlation radius in pix
         if theta and 'CDELT2' in self.ref_hdu.header:
             self.theta = theta / self.ref_hdu.header['CDELT2']
@@ -81,7 +97,10 @@ class Maps(fits.HDUList):
 
     def get_basic(self, name):
         """Gets the data of a basic map and tophat correlates if required.
-        @param name: basic map name"""
+        
+        name : str
+            Basic map name
+        """
         # Build a list of maps requiring correlation
         requires_correlation = ['n_on', 'a_on', 'exposure']
         if not self.is_off_correlated:
@@ -99,7 +118,12 @@ class Maps(fits.HDUList):
 
     def get_derived(self, name):
         """Gets the data if it exists or makes it if not.
-        @param name: derived map name"""
+        
+        Parameters
+        ----------
+        name : str
+            Derived map name
+        """
         try:
             data = self[name].data
             logging.debug('Returning already existing derived map {0}'
@@ -110,8 +134,14 @@ class Maps(fits.HDUList):
 
     def _make_hdu(self, data, name):
         """Helper function to make a FITSimage.
-        @param data: numpy array
-        @param name: FITS extension name"""
+        
+        Parameters
+        ----------
+        data : array-like
+            Image data
+        name : str
+            FITS extension name
+        """
         return fits.ImageHDU(data, self.ref_hdu.header, name)
 
     def make_alpha(self):
@@ -167,7 +197,7 @@ class Maps(fits.HDUList):
     def make_derived_maps(self):
         """Make all the derived maps."""
         logging.debug('Making derived maps.')
-        for name in derived_maps:
+        for name in DERIVED_MAP_NAMES:
             # Compute the derived map
             hdu = eval('self.make_{0}()'.format(name))
             # Put it in the HDUList, removing an older version
@@ -186,7 +216,7 @@ class Maps(fits.HDUList):
         @note All maps are tophat-correlated, even e.g. the off map
         if it had been ring-correlated before already."""
         logging.debug('Making correlated basic maps.')
-        for name in basic_maps:
+        for name in BASIC_MAP_NAMES:
             # Compute the derived map
             data = eval('self["{0}"].data'.format(name))
             data_corr = tophat_correlate(data, self.theta)
