@@ -14,11 +14,49 @@ It is mostly concerned with the evaluation of one or several observations
 that count events in a given region and time window, i.e. with
 Poisson-distributed counts measurements.
 
+For on-off methods we will use the following variable names
+following the notation in [Cousins2007]_:
 
+=============== ====================================================
+Variable        Definition
+=============== ====================================================
+`n_on`          Total observed counts in the on region
+`n_off`         Total observed counts in the off region
+`mu_on`         Total expected counts in the on region
+`mu_off`        Total expected counts in the off region
+`mu_signal`     Signal expected counts in the on region
+`mu_background` Background expected counts in the on region
+`a_on`          Relative background efficiency in the on region
+`a_off`         Relative background efficiency in the off region
+`alpha`         Background efficiency ratio `a_on` / `a_off`
+=============== ====================================================
 
-TODO: Describe references:
-[LiMa1983]_, [Cash1979]_, [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_
+The following formulae show how an on-off measurement :math:`(n_{on}, n_{off})`
+is related to the quantities in the above table:
 
+.. math::
+
+    n_{on} ~ Pois(\mu_{on}) with \mu_{on} = \mu_s + \mu_b
+
+    n_{off} ~ Pois(\mu_{off}) with \mu_{off} = \mu_b / \alpha with \alpha = \a_{on} / \a_{off}
+
+The maximum likelihood estimate of a signal excess is
+
+.. math::
+   n_{excess} = n_{on} - \alpha n_{off}.
+
+When the background is known and there is only an "on" region (sometimes also called "source region"),
+we use the variable names `n_observed`, `mu_observed`, `mu_signal` and `mu_background`.
+
+=============== ====================================================
+Variable        Definition
+=============== ====================================================
+`n_observed`    Observed counts
+`mu_observed`   Expected counts (signal + background)
+=============== ====================================================
+
+Here's some references describing the available methods:
+[LiMa1983]_, [Cash1979]_, [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
 
 Getting Started
 ===============
@@ -35,8 +73,6 @@ with the Li \& Ma formula:
    >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
    2.2421704424844875
 
-Note that throughout this package the parameter `alpha = a_on / a_off`
-is used and not the `area_factor = a_off / a_on`.
 
 TODO: More examples.
 
