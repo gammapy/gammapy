@@ -47,3 +47,10 @@ MANIFEST
 gammapy/gammapy.cfg
 
 docs/_generated
+docs/api
+
+# Data files and images are usually generated
+*.png
+*.fits
+*.root
+
