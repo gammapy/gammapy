@@ -7,27 +7,28 @@ from sherpa.models import ArithmeticModel, Parameter
 
 class normdisk2d(ArithmeticModel):
 
-    def __init__(self, name='disk2d'):
+    def __init__(self, name='normdisk2d'):
         self.xpos = Parameter(name, 'xpos', 0)
         self.ypos = Parameter(name, 'ypos', 0)
-        self.ampl = Parameter(name, 'ampl', 1)
+        self.ampl = Parameter(name, 'ampl', 1) # misnomer ... this is really the integral
         self.r0 = Parameter(name, 'r0', 1, 0)
         ArithmeticModel.__init__(self, name, (self.xpos, self.ypos, self.ampl, self.r0))
  
     def calc(self, p, x, y, *args, **kwargs):
         xpos, ypos, ampl, r0 = p
         r2 = (x - xpos) ** 2 + (y - ypos) ** 2 
-        non_normalized = np.select([r2 <= r0 ** 2], [ampl])
-        integral = np.pi * r0 ** 2
-        return ampl * integral * non_normalized
+        area = np.pi * r0 ** 2
+        # Note that the ampl parameter is supposed to be the integral
+        value = np.select([r2 <= r0 ** 2], [ampl / area])
+        return value
  
 
 class normshell2d(ArithmeticModel):
 
-    def __init__(self, name='shell2d'):
+    def __init__(self, name='normshell2d'):
         self.xpos = Parameter(name, 'xpos', 0)
         self.ypos = Parameter(name, 'ypos', 0)
-        self.ampl = Parameter(name, 'ampl', 1)
+        self.ampl = Parameter(name, 'ampl', 1) # misnomer ... this is really the integral
         self.r0 = Parameter(name, 'r0', 1, 0)
         self.width = Parameter(name, 'width', 0.1, 0)
         ArithmeticModel.__init__(self, name, (self.xpos, self.ypos, self.ampl, self.r0, self.width))
@@ -51,7 +52,7 @@ class normshell2d(ArithmeticModel):
         # Computed with Mathematica:
         integral = 2 * np.pi / 3 * (r_out ** 3 - r_0 ** 3)
         # integral = 1
-        return ampl * integral * non_normalized
+        return ampl * non_normalized / integral
 
  
 sau.add_model(normdisk2d)
