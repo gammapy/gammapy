@@ -5,7 +5,9 @@ import numpy as np
 
 __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
            'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube',
-           'threshold', 'dilate']
+           'threshold', 'dilate',
+           'bin_events_in_image', 'bin_events_in_cube'
+           ]
 
 
 def _get_structure_indices(radius):
