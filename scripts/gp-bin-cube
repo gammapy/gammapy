@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Cube bins into a LON-LAT-Energy cube"""
+"""Bin events into a LON-LAT-Energy cube"""
 
 # Parse command line arguments
 
@@ -8,10 +8,12 @@ from astropy.utils.compat import argparse
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('event_file', type=str,
                     help='Input FITS event file name')
-parser.add_argument('cube_file', type=str,
-                    help='Input FITS cube file name')
+parser.add_argument('reference_file', type=str,
+                    help='Input FITS reference cube file name')
 parser.add_argument('out_file', type=str,
                     help='Output FITS counts cube file name')
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
 args = parser.parse_args()
 args = vars(args)
 
@@ -19,13 +21,12 @@ args = vars(args)
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-from gammapy.image.utils import bin_events_in_cube
-
 from astropy.io import fits
 from astropy.table import Table
+from gammapy.image.utils import bin_events_in_cube
 
 events = Table.read(args['event_file'])
-cube = fits.open(args['cube_file'])
+reference_cube = fits.open(args['reference_file'])
 energies = Table.read(args['cube_file'], 'ENERGIES')
-count_cube = bin_events_in_cube(events, cube)
-count_cube.writeto(args['out_file'])
+out_cube = bin_events_in_cube(events, reference_cube)
+out_cube.writeto(args['out_file'])
