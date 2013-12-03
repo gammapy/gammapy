@@ -497,11 +497,13 @@ double GWcsCAR::omega(const GSkyPixel& pix) const
 }
     """
     from astropy.units import Unit
+    from astropy.io import fits
     # Area of one pixel at the equator
-    cdelt = image.proj.cdelt
-    equator_area = abs(cdelt[0] * cdelt[1])
+    cdelt0 = image.header['CDELT1']
+    cdelt1 = image.header['CDELT2']
+    equator_area = abs(cdelt0 * cdelt1)
     if not deg:
-        equator_area = equator_area / Unit('deg**2').to(Unit('sr'))
+        equator_area = equator_area / Unit('deg2').to(Unit('sr'))
 
     # Compute image with fraction of pixel area at equator
     glat = coordinates(image)[1]
