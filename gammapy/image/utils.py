@@ -452,7 +452,47 @@ def images_to_cube(hdu_list):
     return fits.ImageHDU(data=data, header=header)
 
 
-def bin_events_in_cube(events, cube, energies):
+def bin_events_in_image(events, reference_image):
+    """Bin events into an image
+    
+    Parameters
+    ----------
+    events : `astropy.table.Table`
+        Event list table
+    reference_image : `astropy.io.fits.ImageHDU`
+        An image defining the spatial bins.
+    
+    Returns
+    -------
+    count_image : `astropy.io.fits.ImageHDU`
+        Count image
+    """
+    from astropy.wcs import WCS
+    from astropy.io import fits
+
+    if 'GLON' in reference_image.header['CTYPE1']:
+        lon = events['GLON']
+        lat = events['GLAT']
+    else:
+        lon = events['RA']
+        lat = events['DEC']
+
+    # Get pixel coordinates    
+    wcs = WCS(reference_image.header)
+    xx, yy = wcs.wcs_world2pix(lon, lat, 0)
+
+    # Histogram pixel coordinats with appropriate binning.
+    # This was checked against the `ctskymap` ctool
+    # http://cta.irap.omp.eu/ctools/
+    shape = reference_image.data.shape
+    bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
+    data = np.histogramdd([yy, xx], bins)[0]
+
+    hdu = fits.ImageHDU(data, reference_image.header)
+    return hdu
+
+
+def bin_events_in_cube(events, reference_cube, energies):
     """Bin events in LON-LAT-Energy cube.
     
     Parameters
@@ -467,33 +507,36 @@ def bin_events_in_cube(events, cube, energies):
     Returns
     -------
     count_cube : `astropy.io.fits.ImageHDU`
-        
+        Count cube
     """
     from astropy.wcs import WCS
     from astropy.io import fits
 
-    if cube.header['SYSTEM'] == 'GALACTIC':
+    if 'GLON' in reference_cube.header['CTYPE1']:
         lon = events['GLON']
         lat = events['GLAT']
     else:
         lon = events['RA']
         lat = events['DEC']
-    
-    wcs = WCS(cube)
+
+    # Get pixel coordinates    
+    wcs = WCS(reference_cube.header)
     # We're not interested in the energy axis, so we give a dummy value of 1
     xx, yy = wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
-    # Find the nearest integer pixel
-    xx = np.round(xx).astype(int)
-    yy = np.round(yy).astype(int)
 
     event_energies = events['Energy']
     zz = np.searchsorted(event_energies, energies)
 
-    # Make a new empty count cube and fill events
-    bins = cube.data.shape
-    data = np.histogramdd([xx, yy, zz], bins)
-    hdu = fits.ImageHDU(data, cube.header)
+    # Histogram pixel coordinats with appropriate binning.
+    # This was checked against the `ctskymap` ctool
+    # http://cta.irap.omp.eu/ctools/
+    shape = reference_cube.data.shape
+    bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
+    data = np.histogramdd([zz, yy, xx], bins)[0]
+
+    hdu = fits.ImageHDU(data, reference_cube.header)
     return hdu
+
 
 def threshold(array, threshold=5):
     """ Set all pixels below threshold to zero.
