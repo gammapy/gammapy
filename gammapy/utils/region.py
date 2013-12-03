@@ -50,7 +50,7 @@ def make_ds9_region(source, theta, attrs, SCALE=3):
     SCALE=Gaussian scale factor
     """
     x, y = source['GLON'], source['GLAT']
-    if source['Type'] == 'Gaussian':
+    if source['Type'] == 'Gaussian' or 'NormGaussian':
         radius = SCALE * float(source['Sigma'])
         pars = [x, y, radius]
         return _region_string('circle', pars, attrs)
