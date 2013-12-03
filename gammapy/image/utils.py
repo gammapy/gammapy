@@ -455,7 +455,7 @@ def images_to_cube(hdu_list):
 
 
 def bin_events_in_image(events, reference_image):
-    """Bin events into an image
+    """Bin events into an image.
     
     Parameters
     ----------
