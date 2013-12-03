@@ -320,9 +320,9 @@ def cube_to_image(cube, slicepos=None):
     del header['CRPIX3']
     del header['CUNIT3']
     if slicepos == None:
-        data = cube.data[slicepos]
+        data = cube.data.sum()
     else:
-        data = cube.data.sum(0)
+        data = cube.data[slicepos]
     return fits.ImageHDU(data, header)
 
 
