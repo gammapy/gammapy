@@ -7,7 +7,7 @@ __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
            'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube',
            'threshold', 'dilate',
            'bin_events_in_image', 'bin_events_in_cube'
-           ]
+           'solid_angle']
 
 
 def _get_structure_indices(radius):
@@ -577,3 +577,38 @@ def dilate(array, radius):
     structure = binary_disk(radius)
     data = ndimage.binary_dilation(array, structure)
     return data.astype(np.uint8)
+
+
+def solid_angle(image, deg=True):
+    """Compute the solid angle of each pixel.
+
+    This will only give correct results for CAR maps!
+
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+        Input image
+    deg : bool
+        Use deg^2 if True, otherwise steradian.
+
+    Returns
+    -------
+    area_image : `astropy.io.fits.ImageHDU`
+        New `ImageHDU`, with header from input image and
+        per-pixel solid angle as values.
+    """
+    from astropy.units import Unit
+    from astropy.io import fits
+
+    # Area of one pixel at the equator
+    cdelt0 = image.header['CDELT1']
+    cdelt1 = image.header['CDELT2']
+    equator_area = abs(cdelt0 * cdelt1)
+    if not deg:
+        equator_area = equator_area / Unit('deg2').to(Unit('sr'))
+
+    # Compute image with fraction of pixel area at equator
+    glat = coordinates(image)[1]
+    area_fraction = np.cos(np.radians(glat))
+
+    return equator_area * area_fraction
