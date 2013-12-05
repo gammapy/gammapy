@@ -46,6 +46,7 @@ If you think it might be useful, go to :ref:`install`.
   shower/index
   irf/index
   astro/index
+  catalog/index
   references
 
 Contact
