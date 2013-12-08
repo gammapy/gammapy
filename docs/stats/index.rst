@@ -38,7 +38,7 @@ is related to the quantities in the above table:
 
     n_{on} ~ Pois(\mu_{on}) with \mu_{on} = \mu_s + \mu_b
 
-    n_{off} ~ Pois(\mu_{off}) with \mu_{off} = \mu_b / \alpha with \alpha = \a_{on} / \a_{off}
+    n_{off} ~ Pois(\mu_{off}) with \mu_{off} = \mu_b / \alpha with \alpha = a_{on} / a_{off}
 
 The maximum likelihood estimate of a signal excess is
 

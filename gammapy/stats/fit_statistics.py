@@ -42,7 +42,7 @@ N_OBSERVED_MIN = 1e-25
 
 
 def cash(n_observed, mu_observed):
-    """Cash statistic, for Poisson data.
+    r"""Cash statistic, for Poisson data.
     
     The Cash statistic is defined as: 
 
@@ -82,18 +82,18 @@ def cash(n_observed, mu_observed):
 
 
 def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
-    """C statistic, for Poisson data.
+    r"""C statistic, for Poisson data.
 
     The C statistic is defined as 
 
     .. math::
-        C = 2 \left[ mu_{observed} - n_{observed} + n_{observed} * 
-        (\log(n_{observed}) - log(\mu_{observed}) \right] 
+        C = 2 \left[ mu_{observed} - n_{observed} + n_{observed} *  
+            (\log(n_{observed}) - log(\mu_{observed}) \right]
 
     and :math:`C = 0` where :math:`\mu_{observed} <= 0`.
-    
+
     TODO: explain how ``n_observed_min`` is handled (as in Sherpa). 
-    
+
     Parameters
     ----------
     n_observed : array-like
@@ -102,12 +102,12 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
         Expected counts
     mu_observed_min : array-like
         Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min. 
-    
+
     Returns
     -------
     stat : ndarray
         Statistic per bin
-    
+
     References
     ----------
     * `Sherpa stats page section on the C statistic
@@ -131,7 +131,7 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
 
 
 def wstat():
-    """W statistic, for Poisson data with Poisson background.
+    r"""W statistic, for Poisson data with Poisson background.
     
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
@@ -139,7 +139,7 @@ def wstat():
 
 
 def lstat():
-    """L statistic, for Poisson data with Poisson background (Bayesian).
+    r"""L statistic, for Poisson data with Poisson background (Bayesian).
     
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
@@ -147,7 +147,7 @@ def lstat():
 
 
 def pgstat():
-    """PG statistic, for Poisson data with Gaussian background.
+    r"""PG statistic, for Poisson data with Gaussian background.
     
     
     
@@ -157,11 +157,11 @@ def pgstat():
 
 
 def chi2(N_S, B, S, sigma2):
-    """Chi-square statistic with user-specified variance.
+    r"""Chi-square statistic with user-specified variance.
 
      .. math::
 
-         \chi^2 = \\frac{(N_S - B - S) ^ 2}{\\sigma ^ 2}
+         \chi^2 = \frac{(N_S - B - S) ^ 2}{\sigma ^ 2}
 
     Parameters
     ----------
@@ -194,7 +194,7 @@ def chi2(N_S, B, S, sigma2):
 
 
 def chi2constvar(N_S, N_B, A_S, A_B):
-    """Chi-square statistic with constant variance.
+    r"""Chi-square statistic with constant variance.
     """
     N_S = np.asanyarray(N_S, dtype=np.float64)
     N_B = np.asanyarray(N_B, dtype=np.float64)
@@ -211,7 +211,7 @@ def chi2constvar(N_S, N_B, A_S, A_B):
 
 
 def chi2datavar(N_S, N_B, A_S, A_B):
-    """Chi-square statistic with data variance.
+    r"""Chi-square statistic with data variance.
     """
     N_S = np.asanyarray(N_S, dtype=np.float64)
     N_B = np.asanyarray(N_B, dtype=np.float64)
@@ -227,7 +227,7 @@ def chi2datavar(N_S, N_B, A_S, A_B):
 
 
 def chi2gehrels(N_S, N_B, A_S, A_B):
-    """Chi-square statistic with Gehrel's variance.
+    r"""Chi-square statistic with Gehrel's variance.
     """
     N_S = np.asanyarray(N_S, dtype=np.float64)
     N_B = np.asanyarray(N_B, dtype=np.float64)
@@ -244,7 +244,7 @@ def chi2gehrels(N_S, N_B, A_S, A_B):
     return stat
 
 def chi2modvar(S, B, A_S, A_B):
-    """Chi-square statistic with model variance.
+    r"""Chi-square statistic with model variance.
     """
     S = np.asanyarray(S, dtype=np.float64)
     B = np.asanyarray(B, dtype=np.float64)
@@ -257,7 +257,7 @@ def chi2modvar(S, B, A_S, A_B):
 
 
 def chi2xspecvar(N_S, N_B, A_S, A_B):
-    """Chi-square statistic with XSPEC variance.
+    r"""Chi-square statistic with XSPEC variance.
     """
     N_S = np.asanyarray(N_S, dtype=np.float64)
     N_B = np.asanyarray(N_B, dtype=np.float64)
