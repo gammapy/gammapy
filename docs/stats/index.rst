@@ -36,14 +36,14 @@ is related to the quantities in the above table:
 
 .. math::
 
-    n_{on} ~ Pois(\mu_{on}) with \mu_{on} = \mu_s + \mu_b
+    n_{on} \sim Pois(\mu_{on})\text{ with }\mu_{on} = \mu_s + \mu_b
 
-    n_{off} ~ Pois(\mu_{off}) with \mu_{off} = \mu_b / \alpha with \alpha = a_{on} / a_{off}
+    n_{off} \sim Pois(\mu_{off})\text{ with }\mu_{off} = \mu_b / \alpha\text{ with }\alpha = a_{on} / a_{off}
 
 The maximum likelihood estimate of a signal excess is
 
 .. math::
-   n_{excess} = n_{on} - \alpha n_{off}.
+   n_{excess} = n_{on} - \alpha\ n_{off}.
 
 When the background is known and there is only an "on" region (sometimes also called "source region"),
 we use the variable names `n_observed`, `mu_observed`, `mu_signal` and `mu_background`.
@@ -80,6 +80,9 @@ Reference/API
 =============
 
 .. automodapi:: gammapy.stats.poisson
+    :no-inheritance-diagram:
+
+.. automodapi:: gammapy.stats.data
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.stats.fit_statistics

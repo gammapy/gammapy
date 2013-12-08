@@ -237,7 +237,7 @@ def _significance_lima(n_observed, mu_background):
 
 
 def _significance_direct(n_observed, mu_background):
-    """Compute significance directly via Poisson probability
+    """Compute significance directly via Poisson probability.
     
     Use this method for small n_observed < 10.
     In this case the Li & Ma formula isn't correct any more.
@@ -374,7 +374,7 @@ def _significance_lima_on_off(n_on, n_off, alpha):
 
 
 def _significance_direct_on_off(n_on, n_off, alpha):
-    """Compute significance directly via Poisson probability
+    """Compute significance directly via Poisson probability.
     
     Use this method for small n_on < 10.
     In this case the Li & Ma formula isn't correct any more.
@@ -401,7 +401,7 @@ def _significance_direct_on_off(n_on, n_off, alpha):
 
 
 def sensitivity(mu_background, significance, quantity='excess', method='lima'):
-    r"""Compute sensitivity
+    r"""Compute sensitivity.
 
     Parameters
     ----------
@@ -504,7 +504,8 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
 
 def _sensitivity_simple_on_off(n_off, alpha, significance):
     """Implements an analytical formula that can be easily obtained
-    by solving the simple significance formula for n_on"""
+    by solving the simple significance formula for n_on.
+    """
     significance2 = significance ** 2
     determinant = significance2 + 4 * n_off * alpha * (1 + alpha)
     temp = significance2 + 2 * n_off * alpha

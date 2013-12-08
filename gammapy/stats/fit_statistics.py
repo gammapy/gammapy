@@ -87,7 +87,7 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     The C statistic is defined as 
 
     .. math::
-        C = 2 \left[ mu_{observed} - n_{observed} + n_{observed} *  
+        C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}  
             (\log(n_{observed}) - log(\mu_{observed}) \right]
 
     and :math:`C = 0` where :math:`\mu_{observed} <= 0`.
