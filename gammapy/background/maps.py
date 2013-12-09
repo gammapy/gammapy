@@ -98,8 +98,15 @@ class Maps(fits.HDUList):
     def get_basic(self, name):
         """Gets the data of a basic map and tophat correlates if required.
         
+        Parameters
+        ----------
         name : str
-            Basic map name
+            Map name
+        
+        Returns
+        -------
+        image : `numpy.array`
+            Map data
         """
         # Build a list of maps requiring correlation
         requires_correlation = ['n_on', 'a_on', 'exposure']
@@ -122,7 +129,12 @@ class Maps(fits.HDUList):
         Parameters
         ----------
         name : str
-            Derived map name
+            Map name
+
+        Returns
+        -------
+        image : `numpy.array`
+            Map data
         """
         try:
             data = self[name].data
@@ -133,7 +145,7 @@ class Maps(fits.HDUList):
             return eval('self.make_{0}().data'.format(name))
 
     def _make_hdu(self, data, name):
-        """Helper function to make a FITSimage.
+        """Helper function to make an image HDU.
         
         Parameters
         ----------
@@ -141,43 +153,52 @@ class Maps(fits.HDUList):
             Image data
         name : str
             FITS extension name
+
+        Returns
+        -------
+        hdu : `astropy.io.fits.ImageHDU`
+            Map HDU
         """
         return fits.ImageHDU(data, self.ref_hdu.header, name)
 
-    def make_alpha(self):
-        """Make the alpha map."""
-
+    @property
+    def alpha(self):
+        """Alpha map HDU."""
         a_on = self.get_basic('a_on')
         a_off = self.get_basic('a_off')
         alpha = a_on / a_off
 
         return self._make_hdu(alpha, 'alpha')
 
-    def make_area_factor(self):
-        """Make the area factor map."""
+    @property
+    def area_factor(self):
+        """Area factor map HDU."""
         alpha = self.get_derived('alpha')
         area_factor = 1. / alpha
 
         return self._make_hdu(area_factor, 'area_factor')
 
-    def make_background(self):
-        """Make the background map."""
+    @property
+    def background(self):
+        """Background map HDU."""
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
         background = stats.background(n_off, alpha)
 
         return self._make_hdu(background, 'background')
 
+    @property
     def make_excess(self):
-        """Make the excess map."""
+        """Excess map HDU."""
         n_on = self.get_basic('n_on')
         background = self.get_derived('background')
         excess = n_on - background
 
         return self._make_hdu(excess, 'excess')
 
-    def make_significance(self, method='lima', neglect_background_uncertainty=False):
-        """Make the significance map using the Li & Ma formula."""
+    @property
+    def significance(self, method='lima', neglect_background_uncertainty=False):
+        """Significance map HDU."""
         n_on = self.get_basic('n_on')
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
@@ -186,8 +207,9 @@ class Maps(fits.HDUList):
                                                  neglect_background_uncertainty)
         return self._make_hdu(significance, 'significance')
 
-    def make_flux(self):
-        """Make the flux map."""
+    @property
+    def flux(self):
+        """Flux map HDU."""
         exposure = self.get_basic('exposure')
         excess = self.get_derived('excess')
 
@@ -212,9 +234,11 @@ class Maps(fits.HDUList):
 
     def make_correlated_basic_maps(self):
         """Make correlated versions of all the basic maps.
+
         @note This is mainly useful for debugging.
         @note All maps are tophat-correlated, even e.g. the off map
-        if it had been ring-correlated before already."""
+        if it had been ring-correlated before already.
+        """
         logging.debug('Making correlated basic maps.')
         for name in BASIC_MAP_NAMES:
             # Compute the derived map
