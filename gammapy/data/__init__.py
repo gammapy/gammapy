@@ -105,6 +105,7 @@ def tev_spectrum(source_name):
     """
     filename = 'tev_spectra/crab_hess_spec.txt'
     filename = get_pkg_data_filename(filename)
-    table = Table.read(filename, format='ascii')
-    # TODO: set column names
+    table = Table.read(filename, format='ascii',
+                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
     return table
