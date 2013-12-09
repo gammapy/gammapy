@@ -1,8 +1,7 @@
 # http://adsabs.harvard.edu/abs/2008PhRvL.101z1104A
 # http://www.mpi-hd.mpg.de/hfm/HESS/pages/publications/auxiliary/auxinfo_electrons.html
 # E(GeV)   E^3*dN/dE    lower error  upper error
-#	 (GeV^2m^-2
-#	 s^-1sr^-1)
+#          (GeV^2m^-2 s^-1sr^-1)
 714.713   148.62    5.33	     5.33
 929.98    132.95    5.71	     4.56
 1213.76   107.79    4.79	     4.79

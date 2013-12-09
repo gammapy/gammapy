@@ -1,9 +1,7 @@
 # http://adsabs.harvard.edu/abs/2008PhRvL.101z1104A
 # http://www.mpi-hd.mpg.de/hfm/HESS/pages/publications/auxiliary/auxinfo_electrons.html
-#E(GeV)   upper value    lower value
-#	 (GeV^2m^-2     (GeV^2m^-2
-#	 s^-1sr^-1)	s^-1sr^-1)
-#----------------------------------------------------
+# E(GeV)   upper value    lower value
+#	      (GeV^2m^-2s^-1sr^-1)
 714.713	   190.91    124.99
 929.98     151.12	  98.45
 1210.08	   119.84	  77.31
