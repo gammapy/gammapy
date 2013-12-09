@@ -88,5 +88,8 @@ Reference/API
 .. automodapi:: gammapy.stats.fit_statistics
     :no-inheritance-diagram:
 
+.. automodapi:: gammapy.stats.fitting
+    :no-inheritance-diagram:
+
 .. automodapi:: gammapy.stats.utils
     :no-inheritance-diagram:
