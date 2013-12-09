@@ -1,15 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-import pytest
+from astropy.tests.helper import pytest
 
+HAS_ROOT = False
+
+'''
 try:
     import ROOT
     from ... import root
     HAS_ROOT = True
-except ImportError:
+except:
     HAS_ROOT = False
-
+'''
 
 def make_test_TH2():
     """Generate an example TH2 we use to test TH2_to_FITS(),
