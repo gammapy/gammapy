@@ -2,7 +2,7 @@
 # Data downloaded from: http://lpsc.in2p3.fr/cosmic-rays-db/
 # Energy in GeV and fluxes in m^-2 s^-1 sr^-1 GeV^-1
 #   ELECTRON+POSITRON  Fermi-LAT(2008/06-2009/06)
-#   <E>  Elo  Eup   y   ystat_lo  ystat_up  ysyst_lo  ysyst_up  yerrtot_lo  yerrtot_up
+E  Elo  Eup   y   ystat_lo  ystat_up  ysyst_lo  ysyst_up  yerrtot_lo  yerrtot_up
 7.045000e+00 2.450000e-01 2.550000e-01 5.460000e-01 7.500000e-02 7.500000e-02 3.900000e-02 7.900000e-02 8.453402e-02 1.089312e-01
 7.545000e+00 2.450000e-01 2.550000e-01 4.430000e-01 2.500000e-02 2.500000e-02 3.000000e-02 6.300000e-02 3.905125e-02 6.777905e-02
 8.094000e+00 2.940000e-01 3.060000e-01 3.410000e-01 1.300000e-02 1.300000e-02 2.300000e-02 4.600000e-02 2.641969e-02 4.780167e-02
