@@ -17,11 +17,13 @@ To download all datasets into a local cache::
     >>> data.download_datasets()
 """
 from astropy.utils.data import get_pkg_data_filename
+from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 
 included_datasets = ['poisson_stats_image',
-                     'tev_spectrum']
+                     'tev_spectrum',
+                     'electron_spectrum']
 
 remote_datasets = ['fermi_galactic_center'
                    ]
@@ -99,13 +101,85 @@ def fermi_galactic_center():
 
 def tev_spectrum(source_name):
     """Get published TeV flux point measurements.
-    
+
+    TODO: give references to publications and describe the returned table.
+
+    Parameters
+    ----------
     source_name : str
         Source name
+
+    Returns
+    -------
+    spectrum : `astropy.table.Table`
+        Energy spectrum as a table (one flux point per row).
     """
-    filename = 'tev_spectra/crab_hess_spec.txt'
+    if source_name == 'crab':
+        filename = 'tev_spectra/crab_hess_spec.txt'
+    else:
+        raise ValueError('Data not available for source: {0}'.format(source_name))
+
     filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
     return table
+
+
+def _read_electron_spectrum_hess(filename):
+    filename = get_pkg_data_filename(filename)
+    table = Table.read(filename, format='ascii',
+                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
+    
+    # The ascii files store fluxes as (E ** 3) * dN / dE.
+    # Here we change this to dN / dE.
+    for colname in table.colnames:
+        if 'flux' in colname:
+            table[colname] = table[colname] / table['energy'] ** 3
+            table[colname] = Quantity(table[colname], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+            
+    table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
+
+    return table
+
+
+def _read_electron_spectrum_fermi(filename):
+    filename = get_pkg_data_filename(filename)
+    t = Table.read(filename, format='ascii')
+
+    table = Table()
+    table['energy'] = Quantity(t['E'], 'GeV').to('TeV')
+    table['flux'] = Quantity(t['y'], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+    flux_err = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
+    table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+
+    return table
+
+
+def electron_spectrum(reference):
+    """Get published electron spectrum.
+    
+    TODO: give references to publications and describe the returned table.
+    
+    Parameters
+    ----------
+    reference : {'HESS', 'HESS low energy', 'Fermi'}
+        Which publication.
+    
+    Returns
+    -------
+    spectrum : `astropy.table.Table`
+        Energy spectrum as a table (one flux point per row).    
+    """
+    if reference == 'HESS':
+        filename = 'tev_spectra/electron_spectrum_hess.txt'
+        return _read_electron_spectrum_hess(filename)
+    elif reference == 'HESS low energy':
+        filename = 'tev_spectra/electron_spectrum_hess_low_energy.txt'
+        return _read_electron_spectrum_hess(filename)
+    elif reference == 'Fermi':
+        filename = 'tev_spectra/electron_spectrum_fermi.txt'
+        return _read_electron_spectrum_fermi(filename)
+    else:
+        raise ValueError('Data not available for reference: {0}'.format(reference))
