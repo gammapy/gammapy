@@ -1,11 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""This package contains submodules to compute
-synchrotron, inverse Compton and pion decay spectra.
-
-@see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#LogParabola
-
-In this top-level module you find classes to
-represent spectra numerically and analytically.
+"""Common spectral models used in gamma-ray astronomy.
 
 A Model can be either a TableModel, which is represented
 as arrays of energies and fluxes. Or a AnalyticModel, which
@@ -31,7 +25,8 @@ k_B_eV = const.k_B.to('eV/K').value
 
 
 class Model(object):
-    """Abstract base class for all spectra"""
+    """Abstract base class for all spectra."""
+
     def __call__(self, e, power=0):
         """Make spectrum have value 0 outside range emin < e < emax"""
         mask = (e == e)
@@ -100,7 +95,7 @@ class Model(object):
 
 
 class CompositeModel(Model):
-    """Model that is the binary composition of two other spectra"""
+    """Model that is the binary composition of two other spectra."""
     def __init__(self, spec1, spec2, op):
         self.spec1 = spec1
         self.spec2 = spec2
@@ -119,7 +114,8 @@ class TableModel(Model):
     """A spectrum represented by numeric arrays of x and y values.
 
     Internally all calculations are done on log10(x) and log10(y)
-    for numerical stability and accuracy."""
+    for numerical stability and accuracy.
+    """
     def __init__(self, e, y, emin=None, emax=None):
         from scipy.interpolate import interp1d
         self.emin = emin if emin else e.min()
@@ -151,7 +147,8 @@ class TableModel(Model):
 
 
 class AnalyticModel(Model):
-    """A spectrum represented by an analytic function"""
+    """Spectrum represented by an analytic function."""
+
     def __str__(self):
         s = '%s\n' % self.__class__.__name__
         for par in self.pars:
@@ -178,6 +175,8 @@ class AnalyticModel(Model):
 
 
 class PowerLaw(AnalyticModel):
+    """Power law model."""
+
     def __init__(self, Flux_Density, Spectral_Index,
                  Pivot_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, Pivot_Energy]
@@ -221,6 +220,8 @@ class PowerLaw(AnalyticModel):
 
 
 class PLExpCutoff(AnalyticModel):
+    """Power law model with exponential cutoff."""
+    
     def __init__(self, Flux_Density, Spectral_Index,
                  Cutoff, Pivot_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, Cutoff, Pivot_Energy]
@@ -243,6 +244,8 @@ class PLExpCutoff(AnalyticModel):
 
 
 class LogParabola(AnalyticModel):
+    """Log parabola model."""
+    
     def __init__(self, Flux_Density, Spectral_Index,
                  beta, Pivot_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, beta, Pivot_Energy]
@@ -266,6 +269,8 @@ class LogParabola(AnalyticModel):
 
 
 class BrokenPowerLaw(AnalyticModel):
+    """Broken power-law model."""
+    
     def __init__(self, Flux_Density, Spectral_Index, Spectral_Index2,
                  Break_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, Spectral_Index2,
@@ -308,23 +313,39 @@ def I(e1, e2, e0, f0, g, ec = numpy.nan):
 
 
 class BlackBody(AnalyticModel):
-    """The energy density can be specified independently
-    of the temperature, this is sometimes called a "gray body spectrum"""
-    def __init__(self, T=2.7, W=None, emin=None, emax=None):
-        """Photon number density (cm^-3 eV^-1)
+    """Black-body model.
+    
+    The energy density can be specified independently of the temperature.
+    This is sometimes called a "gray body" spectrum.
 
-        T: temperature (K)
-        W: energy density (eV cm^-3)"""
+    Photon number density (cm^-3 eV^-1)
+
+    Parameters
+    ----------
+    T : float
+        Temperature (K)
+    W : float
+        Energy density (eV cm^-3)
+    """
+    def __init__(self, T=2.7, W=None, emin=None, emax=None):
         self.emin = emin
         self.emax = emax
         self.T = T
         self.W = W if W else self._omega_b(T)
 
     def _omega_b(self, T):
+        """Blackbody energy density.
+        
+        Parameters
+        ----------
+        T : array-like
+            Temperature (K).
+            
+        Returns
+        -------
+        omega : `numpy.array`
+            Blackbody energy density (eV cm^-3).
         """
-        Returns: blackbody energy density (eV cm^-3)
-
-        T: temperature (K)"""
         return (erg_to_eV *
                 (pi ** 2 * (k_B * T) ** 4) /
                 (15 * (hbar * c) ** 3))
@@ -334,7 +355,13 @@ class BlackBody(AnalyticModel):
         return self.W / self._omega_b(self.T)
 
     def _y(self, E):
-        """ E in eV """
+        """Evaluate model.
+        
+        Parameters
+        ----------
+        E : array-like
+            Energy (eV)
+        """
         # Convert (k_B * T) to eV
         return ((15 * self.W / (np.pi ** 4 * (k_B_eV * self.T) ** 4) *
                 E ** 2 / (exp(E / (k_B_eV * self.T)) - 1)))
