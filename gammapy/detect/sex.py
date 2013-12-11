@@ -59,10 +59,10 @@ def sex(image,
 
     Returns
     -------
-    catalog : `~astropy.table.Table`
+    catalog : `astropy.table.Table`
         Catalog of detected objects
 
-    checkimage : `~astropy.io.fits.hdu.image.PrimaryHDU`
+    checkimage : `astropy.io.fits.hdu.image.PrimaryHDU`
         Segmented image
 
     Examples

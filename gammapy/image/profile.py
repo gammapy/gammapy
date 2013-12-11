@@ -46,25 +46,25 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
 
 
 class FluxProfile(object):
-    """Compute flux profiles"""
+    """Flux profile.
+    
+    x : Defines which pixel goes in which bin in combination with x_edges
+    x_edges : Defines binning in x (could be GLON, GLAT, DIST, ...)
+    
+    mask : possibility to mask pixels (i.e. ignore in computations)
+
+    Note: over- and underflow is ignored and not stored in the profile
+    
+    Note: this is implemented by creating bin labels and storing the
+    input 2D data in 1D pandas.DataFrame tables.
+    The 1D profile is also stored as a pandas.DataFrame and computed
+    using the fast and flexible pandas groupby and apply functions.
+
+    TODO: take mask into account everywhere
+    TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?    
+    """
     
     def __init__(self, x_edges, x, counts, background, exposure, mask=None):
-        """
-        x : Defines which pixel goes in which bin in combination with x_edges
-        x_edges : Defines binning in x (could be GLON, GLAT, DIST, ...)
-        
-        mask : possibility to mask pixels (i.e. ignore in computations)
-
-        Note: over- and underflow is ignored and not stored in the profile
-        
-        Note: this is implemented by creating bin labels and storing the
-        input 2D data in 1D pandas.DataFrame tables.
-        The 1D profile is also stored as a pandas.DataFrame and computed
-        using the fast and flexible pandas groupby and apply functions.
-
-        TODO: take mask into account everywhere
-        TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?
-        """
         import pandas as pd
         # Make sure input is numpy arrays
         x_edges = np.asanyarray(x_edges)
@@ -107,8 +107,7 @@ class FluxProfile(object):
         self.x_edges = x_edges
         
     def compute(self, method='sum_first'):
-        """
-        Compute the flux profile.
+        """Compute the flux profile.
         
         method : 'sum_first' or 'divide_first'
         
@@ -137,6 +136,7 @@ class FluxProfile(object):
         p['flux'] = p['excess'] / p['exposure']
 
     def plot(self, which='n_entries', xlabel='Distance (deg)', ylabel=None):
+        """Plot flux profile."""
         import matplotlib.pyplot as plt
         if ylabel == None:
             ylabel = which
@@ -151,5 +151,5 @@ class FluxProfile(object):
         #plt.ylim(-10, 20)
         
     def save(self, filename):
-        """Save all profiles to a FITS file"""
-        pass
+        """Save all profiles to a FITS file."""
+        raise NotImplementedError

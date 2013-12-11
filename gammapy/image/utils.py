@@ -11,8 +11,9 @@ __all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
 
 
 def _get_structure_indices(radius):
-    """Get arrays of indices for a symmetric structure,
-    i.e. with an odd number of pixels and 0 at the center.
+    """Get arrays of indices for a symmetric structure.
+    
+    Always generate an odd number of pixels and 0 at the center.
     """
     radius = int(radius)
     y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
@@ -36,7 +37,7 @@ def binary_disk(radius):
     
     Returns
     -------
-    structure : array
+    structure : `numpy.array`
         Structure element (bool array)
     """
     x, y = _get_structure_indices(radius)
@@ -64,7 +65,7 @@ def binary_ring(r_in, r_out):
     
     Returns
     -------
-    structure : array
+    structure : `numpy.array`
         Structure element (bool array)
     """
     x, y = _get_structure_indices(r_out)
@@ -116,7 +117,8 @@ def exclusion_distance(exclusion):
 
 
 def _lookup_pix(image, x, y):
-    """
+    """Look up values in an image for given pixel coordinates.
+    
     image = numpy array
     x, y = array_like of pixel coordinates (floats OK)
     """
@@ -131,7 +133,8 @@ def _lookup_pix(image, x, y):
 
 
 def _lookup_world(image, lon, lat):
-    """Look up values in an image
+    """Look up values in an image for given world coordinates.
+    
     image = astropy.io.fits.HDU
     lon, lat = world coordinates (float OK)
     """
@@ -142,7 +145,7 @@ def _lookup_world(image, lon, lat):
 
 
 def lookup(image, x, y, world=True):
-    """Look up values in an image
+    """Look up values in an image.
 
     Parameters
     ----------
@@ -186,7 +189,6 @@ def atrous_image(image, n_levels):
     ----------
     image : 2D array
         Input image
-    
     n_levels : integer
         Number of wavelet scales.
     
@@ -207,7 +209,6 @@ def atrous_hdu(hdu, n_levels):
     ----------
     hdu : 2D image HDU
         Input image
-
     n_levels : integer
         Number of wavelet scales.
 
@@ -320,13 +321,10 @@ def process_image_pixels(images, kernel, out, pixel_function):
     ----------
     images : dict of arrays
         Images needed to compute out
-
     kernel : array (shape must be odd-valued)
         kernel shape must be odd-valued
-
     out : single array or dict of arrays
         These arrays must have been pre-created by the caller
-
     pixel_function : function to process a part of the images
 
     Examples
@@ -402,9 +400,8 @@ def process_image_pixels(images, kernel, out, pixel_function):
 def image_groupby(images, labels):
     """Group pixel by labels.
     
-    Similar to scipy.ndimage.labeled_comprehension, only that here multiple inputs
+    Similar to `scipy.ndimage.labeled_comprehension`, only that here multiple inputs
     and outputs are supported.
-    https://github.com/scipy/scipy/blob/master/scipy/ndimage/measurements.py#L270
     """
     for image in images:
         assert image.shape == labels.shape
@@ -429,12 +426,12 @@ def images_to_cube(hdu_list):
     
     Parameters
     ----------
-    hdu_list : astropy.io.fits.HDUList
+    hdu_list : `astropy.io.fits.HDUList`
         List of 2-dimensional image HDUs
 
     Returns
     -------
-    cube : astropy.io.fits.ImageHDU
+    cube : `astropy.io.fits.ImageHDU`
         3-dimensional cube HDU
     """
     from astropy.io import fits

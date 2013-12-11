@@ -6,14 +6,14 @@ import numpy as np
 __all__ = ['measure_labeled_regions']
 
 def _split_xys(pos):
-    """Useful converter for scipy.ndimage"""
+    """Helper function to work with `scipy.ndimage`."""
     x = np.array(pos)[:, 1]
     y = np.array(pos)[:, 0]
     return x, y
 
 
 def _split_slices(slices):
-    """Useful converter for scipy.ndimage"""
+    """Helper function to work with `scipy.ndimage`."""
     # scipy.ndimage.find_objects returns a list of
     # tuples of slices, which is not what we want.
     # The following list comprehensions extract
@@ -26,7 +26,7 @@ def _split_slices(slices):
 
 
 def get_area(labels):
-    """Measure the area in pix of each segment"""
+    """Measure the area in pix of each segment."""
     nsegments = labels.max()
     area = np.zeros(nsegments)
     for i in range(nsegments):
@@ -37,8 +37,18 @@ def get_area(labels):
 def measure_labeled_regions(data, labels, tag='IMAGE',
                             measure_positions=True, measure_values=True,
                             fits_offset=True, bbox_offset=True):
-    """Measure source properties in image, where the sources
-    are defined by a label image."""
+    """Measure source properties in image.
+    
+    Sources are defined by a label image.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
+    """
     import scipy.ndimage as nd
     from astropy.table import Table, Column
     # Measure all segments

@@ -58,6 +58,10 @@ def image_to_healpix(image, healpix_pars):
         The input image
     healpix_pars : TODO
         TODO: what HEALPIX parameters do we need?
+    Returns
+    -------
+    healpix_data : `numpy.array`
+        HEALPIX array data
     """
     raise NotImplementedError
     # Can we use Kapteyn or Healpy to get e.g. bilinear interpolation?
