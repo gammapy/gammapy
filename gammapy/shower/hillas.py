@@ -9,6 +9,10 @@ __all__ = ['hillas_parameters']
 def hillas_parameters(x, y, s):
     """Compute Hillas parameters for a given shower image.
     
+    Reference: Appendix of the Whipple Crab paper Weekes et al. (1998) 
+    http://adsabs.harvard.edu/abs/1989ApJ...342..379W
+    (corrected for some obvious typos) 
+
     Parameters
     ----------
     x : array-like
@@ -20,12 +24,8 @@ def hillas_parameters(x, y, s):
         
     Returns
     -------
-    Dictionary of Hillas parameters
-        
-    The formulae implemented here are taken from the Appendix of
-    the Whipple Crab paper Weekes et al. (1998) 
-    http://adsabs.harvard.edu/abs/1989ApJ...342..379W
-    (corrected for some obvious typos) 
+    hillas_parameters : dict
+        Dictionary of Hillas parameters
     """
     x = np.asanyarray(x, dtype=np.float64)
     y = np.asanyarray(y, dtype=np.float64)

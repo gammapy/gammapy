@@ -20,6 +20,5 @@ class ShowerImage(object):
         self.s = s
     
     def hillas_parameters(self):
-        """Compute Hillas parameters.
-        """
+        """Compute Hillas parameters."""
         return hillas_parameters(self.x, self.y, self.s)
