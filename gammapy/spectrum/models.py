@@ -338,7 +338,7 @@ class BlackBody(AnalyticModel):
         
         Parameters
         ----------
-        T : array-like
+        T : array_like
             Temperature (K).
             
         Returns
@@ -359,7 +359,7 @@ class BlackBody(AnalyticModel):
         
         Parameters
         ----------
-        E : array-like
+        E : array_like
             Energy (eV)
         """
         # Convert (k_B * T) to eV

@@ -43,11 +43,11 @@ class PoissonLikelihoodFitter(Fitter):
 
         Parameters
         ----------
-        x : array-like
+        x : array_like
             x-coordinate
-        y : array-like
+        y : array_like
             Observed number of counts at ``x``
-        dx : array-like
+        dx : array_like
             x-bin width
         fit_statistic : {'cash', 'cstat'}
             Fit statistic

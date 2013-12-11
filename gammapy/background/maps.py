@@ -149,7 +149,7 @@ class Maps(fits.HDUList):
         
         Parameters
         ----------
-        data : array-like
+        data : array_like
             Image data
         name : str
             FITS extension name

@@ -9,7 +9,7 @@ def effective_area(energy, instrument='HESS'):
 
     Parameters
     ----------
-    energy : array-like
+    energy : array_like
         Energy in TeV
     instruments : {'HESS', 'HESS2', 'CTA'}
         Name of the instrument

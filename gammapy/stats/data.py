@@ -11,13 +11,13 @@ class Stats(object):
     
     Parameters
     ----------
-    n_on : array-like
+    n_on : array_like
         Observed number of counts in the on region
-    n_off : array-like
+    n_off : array_like
         Observed number of counts in the off region
-    a_on : array-like
+    a_on : array_like
         Relative background exposure of the on region
-    a_off : array-like
+    a_off : array_like
         Relative background exposure in the off region
     """
     # TODO: use numpy arrays and properties

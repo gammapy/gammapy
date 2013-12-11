@@ -53,9 +53,9 @@ def cash(n_observed, mu_observed):
     
     Parameters
     ----------
-    n_observed : array-like
+    n_observed : array_like
         Observed counts
-    mu_observed : array-like
+    mu_observed : array_like
         Expected counts
     
     Returns
@@ -96,11 +96,11 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
 
     Parameters
     ----------
-    n_observed : array-like
+    n_observed : array_like
         Observed counts
-    mu_observed : array-like
+    mu_observed : array_like
         Expected counts
-    mu_observed_min : array-like
+    mu_observed_min : array_like
         Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min. 
 
     Returns
@@ -165,13 +165,13 @@ def chi2(N_S, B, S, sigma2):
 
     Parameters
     ----------
-    N_S : array-like
+    N_S : array_like
         Number of observed counts
-    B : array-like
+    B : array_like
         Model background
-    S : array-like
+    S : array_like
         Model signal
-    sigma2 : array-like
+    sigma2 : array_like
         Variance
     
     Returns

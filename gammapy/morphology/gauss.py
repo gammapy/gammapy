@@ -132,7 +132,7 @@ class MultiGauss2D(object):
         
         Parameters
         ----------
-        theta : array-like
+        theta : array_like
             Containment angle
         """
         theta = np.asarray(theta, 'f')

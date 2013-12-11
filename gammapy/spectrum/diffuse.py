@@ -48,11 +48,11 @@ class GalacticDiffuse(object):
 
         Parameters
         ----------
-        glon : array-like
+        glon : array_like
             Galactic longitude (deg)
-        glat : array-like
+        glat : array_like
             Galactic latitude (deg)
-        energy : array-like
+        energy : array_like
             Energy (MeV)
 
         Returns
@@ -73,11 +73,11 @@ class GalacticDiffuse(object):
         
         Parameters
         ----------
-        glon : array-like
+        glon : array_like
             Galactic longitude (deg)
-        glat : array-like
+        glat : array_like
             Galactic latitude (deg)
-        energy : array-like
+        energy : array_like
             Energy (MeV)
         
         Returns

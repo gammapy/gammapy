@@ -149,11 +149,11 @@ def lookup(image, x, y, world=True):
 
     Parameters
     ----------
-    image : array-like if world=False, astropy.io.fits.ImageHDU if world=True
+    image : array_like if world=False, astropy.io.fits.ImageHDU if world=True
         Array or image to look up the value
-    x : array-like
+    x : array_like
         Array of X lookup positions
-    y : array-like
+    y : array_like
         Array of Y lookup positions
     world : bool
         Are (x, y) WCS coordinates?
@@ -542,7 +542,7 @@ def threshold(array, threshold=5):
     
     Parameters
     ----------
-    array : array-like
+    array : array_like
         Input array
     threshold : float
         Minimum threshold
@@ -565,7 +565,7 @@ def dilate(array, radius):
     
     Parameters
     ----------
-    array : array-like
+    array : array_like
         Input array
     radius : float
         Dilation radius (pix)    

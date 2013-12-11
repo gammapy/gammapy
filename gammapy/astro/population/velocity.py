@@ -20,14 +20,14 @@ def H05(v, sigma=265):
 
     Parameters
     ----------
-    v : array-like
+    v : array_like
         Velocity (km s^-1)
-    sigma : array-like
+    sigma : array_like
         Velocity parameter (km s^-1)
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in velocity `v`
     """
     term1 = sqrt(2 / pi) * v ** 2 / sigma ** 3
@@ -45,16 +45,16 @@ def F06B(v, sigma1=160, sigma2=780, w=0.9):
 
     Parameters
     ----------
-    v : array-like
+    v : array_like
         Velocity (km s^-1)
-    sigma1, sigma2 : array-like
+    sigma1, sigma2 : array_like
         Velocity parameter (km s^-1)
-    w : array-like
+    w : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in velocity `v`
     """
     term1 = sqrt(2 / pi) * v ** 2 * (w / sigma1 ** 3)
@@ -71,14 +71,14 @@ def F06P(v, v0=560):
     
     Parameters
     ----------
-    v : array-like
+    v : array_like
         Velocity (km s^-1)
-    v0 : array-like
+    v0 : array_like
         Velocity parameter (km s^-1)
     
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in velocity `v`
     """
     return 4. / (pi * v0 * (1 + (v / v0) ** 2) ** 2)

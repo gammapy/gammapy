@@ -15,11 +15,11 @@ def hillas_parameters(x, y, s):
 
     Parameters
     ----------
-    x : array-like
+    x : array_like
         Pixel x-coordinate
-    y : array-like
+    y : array_like
         Pixel y-coordinate
-    s : array-like
+    s : array_like
         Pixel value
         
     Returns

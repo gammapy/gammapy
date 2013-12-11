@@ -76,9 +76,9 @@ def minimum_separation(lon1, lat1, lon2, lat2):
 
     Parameters
     ----------
-    lon1, lat1 : array-like
+    lon1, lat1 : array_like
         Primary coordinates of interest in deg
-    lon2, lat2 : array-like
+    lon2, lat2 : array_like
         Counterpart coordinate array in deg
 
     Returns
@@ -100,11 +100,11 @@ def pair_correlation(lon, lat, theta_bins):
     
     Parameters
     ----------
-    lon : array-like
+    lon : array_like
         Array of longitude coordinates (deg)
-    lat : array-like
+    lat : array_like
         Array of latitude coordinates (deg)
-    theta_bins : array-like
+    theta_bins : array_like
         Array defining the `theta` binning (deg)
         `theta` is the angular offset between positions.
     Returns
@@ -127,9 +127,9 @@ def pair_correlation(lon, lat, theta_bins):
 def sky_to_sky(lon, lat, in_system, out_system):
     """Convert between sky coordinates.
     
-    lon : array-like
+    lon : array_like
         Longitude coordinate array
-    lat : array-like
+    lat : array_like
         Latitude coordinate array
     in_system : {'galactic', 'icrs'}
         Input coordinate system

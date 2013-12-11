@@ -20,7 +20,7 @@ def probability_center(images, kernel):
     ----------
     images : dict of arrays
         Keys: 'counts', 'background'
-    kernel : array-like
+    kernel : array_like
         Kernel array
         
     Returns
@@ -64,7 +64,7 @@ def probability_image(images, kernel):
     images : dict of arrays
         Keys: 'counts', 'background'
         
-    kernel : array-like
+    kernel : array_like
     
     Returns
     -------

@@ -27,14 +27,14 @@ def P90(r, R0=4.5):
     
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    R0 : array-like
+    R0 : array_like
         See formula
     
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     return r * R0 ** -2 * exp(-r / R0)
@@ -50,14 +50,14 @@ def CB98(r, a=2, b=3.53):
     
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    a, b : array-like
+    a, b : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     term1 = r * (r / R_SUN_GALACTIC) ** a
@@ -78,14 +78,14 @@ def YK04(r, a=1.64, b=4.01, R1=0.55):
     
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    a, b, R1 : array-like
+    a, b, R1 : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     term1 = r * ((r + R1) / (R_SUN_GALACTIC + R1)) ** a
@@ -105,14 +105,14 @@ def YK04B(r, a=4, b=6.8):
 
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    a, b : array-like
+    a, b : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     return (r / R_SUN_GALACTIC) ** a * exp(-b * (r / R_SUN_GALACTIC))
@@ -128,14 +128,14 @@ def F06(r, R0=7.04, sigma=1.83):
     
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    R0, sigma : array-like
+    R0, sigma : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     term1 = 1. / sqrt(2 * pi * sigma)
@@ -154,14 +154,14 @@ def L06(r, a=1.9, b=5.0):
     
     Parameters
     ----------
-    r : array-like
+    r : array_like
         Galactic radius (kpc)
-    a, b : array-like
+    a, b : array_like
         See formula
 
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in radius `r`
     """
     term1 = r * (r / R_SUN_GALACTIC) ** a
@@ -180,11 +180,11 @@ def exponential(z, z0=0.05):
 
     Parameters
     ----------
-    z : array-like
+    z : array_like
         Galactic z-coordinate (kpc)
     Returns
     -------
-    density : array-like
+    density : array_like
         Density in height `z`    
     """
     return exp(-abs(z) / z0)
@@ -201,16 +201,16 @@ class LogSpiral(object):
         
         Parameters
         ----------
-        theta : array-like
+        theta : array_like
             Angle (deg)
-        radius : array-like
+        radius : array_like
             Radius (kpc)
         spiralarm_index : int
             Spiral arm index
         
         Returns
         -------
-        x, y : array-like
+        x, y : array_like
             Position (x, y)
         """
         if (theta == None) and not (radius == None):
@@ -230,14 +230,14 @@ class LogSpiral(object):
         
         Parameters
         ----------
-        theta : array-like
+        theta : array_like
             Angle (deg)
         spiralarm_index : int
             Spiral arm index
         
         Returns
         -------
-        radius : array-like
+        radius : array_like
             Radius (kpc)
         """
         k = self.k[spiralarm_index]
@@ -252,14 +252,14 @@ class LogSpiral(object):
 
         Parameters
         ----------
-        radius : array-like
+        radius : array_like
             Radius (kpc)
         spiralarm_index : int
             Spiral arm index
         
         Returns
         -------
-        theta : array-like
+        theta : array_like
             Angle (deg)
         """
         k = self.k[spiralarm_index]
