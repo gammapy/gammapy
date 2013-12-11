@@ -38,28 +38,20 @@ def sex(image,
     ----------
     image : str
         Detection image filename
-
     image2 : str
         Measurement image filename (same as image if '')
-
     catalog_name : str
         Output catalog filename
-
     config_name : str
         Config filename
-
     parameters_name : str
         Name of the file describing the catalog output parameters
-
     checkimage_name : str
         Filename for the check-image (TODO: none for '')
-
     detect_thresh : float
         Detection threshold
-
     detect_minarea : int
         Minimum number of pixels above threshold
-
     deblend_mincont : float in range 0 to 1
         Minimum contrast parameter for deblending
         0 = each peak is a single source
@@ -67,10 +59,10 @@ def sex(image,
 
     Returns
     -------
-    catalog : astropy.table.Table
+    catalog : `~astropy.table.Table`
         Catalog of detected objects
 
-    checkimage : astropy.io.fits.hdu.image.PrimaryHDU
+    checkimage : `~astropy.io.fits.hdu.image.PrimaryHDU`
         Segmented image
 
     Examples

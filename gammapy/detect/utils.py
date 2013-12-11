@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Multi-scale image I / O helper functions"""
+"""Multi-scale image I / O helper functions."""
 from __future__ import print_function, division
 import numpy as np
 import logging
@@ -10,20 +10,20 @@ __all__ = ['write_scale_cube', 'read_scale_cube',
 
 
 def write_scale_cube(image_cube, scales, filename):
-    """Write filtered images to numpy binary file"""
+    """Write filtered images to numpy binary file."""
     np.save(filename, image_cube)
     np.save(filename + "_scales", scales)
 
 
 def read_scale_cube(filename):
-    """Load filtered images from numpy binary file"""
+    """Load filtered images from numpy binary file."""
     image_cube = np.load(filename)
     scales = np.save(filename + "_scales")
     return scales, image_cube
 
 
 def write_scale_cube_fits(image, image_cube, scale_parameters, filename, header):
-    """Write scale space to fits image cube"""
+    """Write scale space to fits image cube."""
     from astropy.io import fits
 
     # Original image as primary HDU
@@ -49,7 +49,7 @@ def write_scale_cube_fits(image, image_cube, scale_parameters, filename, header)
 
 
 def read_scale_cube_fits(filename):
-    """Read scale space from fits file image cube"""
+    """Read scale space from fits file image cube."""
     from astropy.io import fits
 
     hdulist = fits.open(filename)

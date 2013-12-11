@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Blob detection tool for source detection
+"""Blob detection tool for source detection.
 
 This generic blob detection algorithm is based on:
-http://www.cs.utah.edu/~jfishbau/advimproc/project1/ (04.04.2013)
+http://www.cs.utah.edu/~jfishbau/advimproc/project1/
 
-Theory behind: http://en.wikipedia.org/wiki/Blob_detection (04.04.2013)
+Theory: http://en.wikipedia.org/wiki/Blob_detection
 
-I modified the peak detection by using a maximum filter.
+The peak detection was modified to use a maximum filter.
 """
 from __future__ import print_function, division
 from itertools import combinations
@@ -23,7 +22,8 @@ __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
 
 
 def create_scale_space(image, scales, kernel='gaussian_laplace'):
-    """Creates Scale Space for a given image and stores it in 3D array"""
+    """Creates Scale Space for a given image and stores it in 3D array.
+    """
     from scipy.ndimage import gaussian_filter, gaussian_laplace
 
     # Filter option
@@ -48,7 +48,8 @@ def create_scale_space(image, scales, kernel='gaussian_laplace'):
 
 
 def detect_peaks(image):
-    """Detect peaks in an image  using a maximum filter"""
+    """Detect peaks in an image  using a maximum filter.
+    """
     from scipy.ndimage import maximum_filter
     from scipy.ndimage.morphology import binary_erosion
 
@@ -72,7 +73,8 @@ def detect_peaks(image):
 
 
 def detect_peaks_3D(image):
-    """Same functionality as detect_peaks, but works on image cubes. """
+    """Same functionality as detect_peaks, but works on image cubes.
+    """
     from scipy.ndimage import maximum_filter
     from scipy.ndimage.morphology import binary_erosion
 
@@ -114,7 +116,8 @@ def show_peaks(image_3D):
 
 
 def detect_blobs_3D(image, threshold):
-    """Find maxima in image cubes"""
+    """Find maxima in image cubes.
+    """
     # Replace nan values by 0
     image = np.nan_to_num(image)
 
@@ -137,7 +140,8 @@ def detect_blobs_3D(image, threshold):
 
 
 def detect_blobs(image_3D, scales, threshold):
-    """Detect blobs of different sizes"""
+    """Detect blobs of different sizes.
+    """
     # Set up empty blob list
     blobs = []
 
@@ -184,7 +188,8 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
 
 
 def show_blobs(image, blobs):
-    """Show input image with overlaid blobs"""
+    """Show input image with overlaid blobs.
+    """
     import matplotlib.pyplot as plt
 
     plt.imshow(image, origin='lower')
@@ -200,7 +205,8 @@ def show_blobs(image, blobs):
 
 
 def write_region_file(regionfile, blobs):
-    """Write ds9 region file from blob list"""
+    """Write ds9 region file from blob list.
+    """
     # Open region file, it will be overwritten if it already exists!
     f = open(regionfile, 'w')
 
@@ -213,7 +219,8 @@ def write_region_file(regionfile, blobs):
 
 
 class Blob(object):
-    """An excess blob is represented by a position, radius and peak value."""
+    """An excess blob is represented by a position, radius and peak value.
+    """
 
     def __init__(self, x_pos, y_pos, radius, value):
         self.x_pos = x_pos
@@ -226,11 +233,14 @@ class Blob(object):
         self.keep = True
 
     def area(self):
-        """Compute blob area"""
+        """Blob area."""
         return pi * self.radius ** 2
 
     def overlap(self, blob):
-        """Compute overlap between two blobs. Defined by the overlap area."""
+        """Overlap between two blobs.
+        
+        Defined by the overlap area.
+        """
         # For now it is just the overlap area of two containment circles
         # It could be replaced by the Q or C factor, which also defines
         # a certain neighborhood.
@@ -257,7 +267,11 @@ class Blob(object):
         return max(area / self.area(), area / blob.area())
 
     def q_factor(self, blob, sigma_PSF=0.1):
-        """Compute q factor as overlap criterion"""
+        """Compute q factor as overlap criterion.
+        
+        .. math::
+            TODO
+        """
 
         # Compute convolved sigma
         sigma_A = sqrt(self.radius ** 2 + sigma_PSF ** 2)
@@ -274,13 +288,12 @@ class Blob(object):
         return N * exp(-0.5 * x_AB2 / sigma_AB2)
 
     def image(self):
-        """Return image of the blob"""
+        """Return image of the blob."""
         phi = np.linspace(0, 2 * pi, 360)
         x = self.radius * cos(phi) + self.x_pos
         y = self.radius * sin(phi) + self.y_pos
         return x, y
 
     def __str__(self):
-        """Is called by the print statement"""
         fmt = 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'
         return fmt.format(self.x_pos, self.y_pos, self.radius, self.value)

@@ -43,6 +43,10 @@ __all__ = ['ts_image', 'TSMapCalculator']
 
 
 def fit_amplitude(counts, background, kernel, start_value):
+    """Fit amplitude.
+    
+    TODO: document.
+    """
     out = dict()
 
     def stat(amplitude):
@@ -59,10 +63,11 @@ def fit_amplitude(counts, background, kernel, start_value):
 
 
 def ts_center(images, kernel):
-    """TODO
+    """Compute TS for one position.
 
     The shapes of the images and the kernel must match.
 
+    TODO: document
     """
     counts = np.asanyarray(images['counts'])
     background = np.asanyarray(images['background'])
@@ -81,7 +86,9 @@ def ts_center(images, kernel):
 
 
 def ts_image(images, kernel, extra_info=False):
-    """TODO
+    """Compute TS image.
+    
+    TODO: document
     """
     out = dict()
     out['ts'] = np.zeros_like(images['counts'], dtype='float64')

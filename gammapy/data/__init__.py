@@ -34,8 +34,9 @@ __all__ = ['list_datasets',
            'download_datasets',
            ] + datasets
 
+
 def list_datasets():
-    """List available datasets"""
+    """List available datasets."""
     for name in datasets:
         docstring = eval('{0}.__doc__'.format(name))
         summary = docstring.split('\n')[0]
@@ -56,6 +57,9 @@ def download_datasets(names='all'):
 def poisson_stats_image(extra_info=False, return_filenames=False):
     """Poisson statistics counts image of a Gaussian source on flat background.
 
+    See poissson_stats_image/README.md for further info.
+    TODO: add better description (extract from README?)
+
     Parameters
     ----------
     extra_info : bool
@@ -66,10 +70,8 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
 
     Returns
     -------
-    numpy array or dict of arrays or filenames, depending on the options
-
-    See poissson_stats_image/README.md for further info.
-    TODO: add better description (extract from README?)
+    data : numpy array or dict of arrays or filenames
+        Depending on the `extra_info` and `return_filenames` options.
     """
     if extra_info:
         out = dict()
@@ -91,6 +93,7 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
 
     return out
 
+
 def fermi_galactic_center():
     """Fermi high-energy counts image of the Galactic center region.
     
@@ -98,6 +101,7 @@ def fermi_galactic_center():
     TODO: download from Dropbox
     """
     raise NotImplementedError
+
 
 def tev_spectrum(source_name):
     """Get published TeV flux point measurements.

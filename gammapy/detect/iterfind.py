@@ -45,7 +45,7 @@ class FitFailedError(object):
     pass
 
 def gauss2d(x, y, xpos, ypos, sigma, flux):
-    """2D Gaussian source model"""
+    """2D Gaussian source model."""
     x = np.asanyarray(x, dtype=np.float64)
     y = np.asanyarray(y, dtype=np.float64)
     theta2 = (x - xpos) ** 2 + (y - ypos) ** 2
@@ -57,15 +57,18 @@ def gauss2d(x, y, xpos, ypos, sigma, flux):
 
 
 class IterativeSourceDetector(object):
-    """TODO: document me
+    """An iterative source detection algorithm.
+    
+    TODO: document
+
+    Parameters
+    ----------
+    debug_output_folder : str
+        Use empty string for no debug output.
     """
 
     def __init__(self, maps, scales, max_sources=10, significance_threshold=5,
                  max_ncall=300, debug_output_folder='', clobber=False):
-        """
-        debug_output_folder: empty string for no debug output
-        """
-        
         self.maps = maps
         # Note: FITS convention is to start counting pixels at 1
         y, x = np.indices(maps['counts'].shape, dtype=np.int32) + 1
@@ -89,6 +92,7 @@ class IterativeSourceDetector(object):
         # self.peaks = np.zeros_like(self.scales)
 
     def run(self):
+        """Run source detection."""
         logging.debug('Running source detection')
 
         for _ in range(self.max_sources):
@@ -134,6 +138,7 @@ class IterativeSourceDetector(object):
                 break
 
     def compute_iter_maps(self):
+        """Compute maps for this iteration."""
         logging.debug('Computing maps for this iteration.')
         self.iter_maps = dict()
         
@@ -149,6 +154,7 @@ class IterativeSourceDetector(object):
             self.iter_maps['significance'][scale] = significance
 
     def model_excess(self, sources):
+        """Compute model excess image."""
         # logging.debug('Computing model excess')
         x, y = self.maps['x'], self.maps['y']
         flux = np.zeros_like(x, dtype=np.float64)
@@ -162,6 +168,7 @@ class IterativeSourceDetector(object):
         return excess
 
     def find_peaks(self):
+        """Find peaks in residual significance image."""
         logging.debug('Finding peaks.')
         self.peaks = []
         for scale in self.scales:
@@ -182,7 +189,7 @@ class IterativeSourceDetector(object):
                           ''.format(**peak))
     
     def stop_iteration(self):
-        """Criteria to stop the iteration process"""
+        """Criteria to stop the iteration process."""
         max_significance = max([_['val'] for _ in self.peaks])
         if max_significance < self.significance_threshold:
             logging.debug('Max peak significance of {0:7.2f} is smaller than detection threshold {1:7.2f}'
@@ -218,7 +225,7 @@ class IterativeSourceDetector(object):
         self.sources_guess.append(source)
 
     def fit_source_parameters(self):
-        """Fit source parameters using the guess as start values
+        """Fit source parameters using the guess as start values.
 
         For this prototype we simply roll our own using iminuit,
         this should probably be changed to astropy or Sherpa.
@@ -264,7 +271,7 @@ class IterativeSourceDetector(object):
         
 
     def estimate_flux(self, source, method='sum_and_divide'):
-        """Estimate flux in a circular region around the source
+        """Estimate flux in a circular region around the source.
 
         Note: It's not clear which is the better flux estimate:
         If method == 'sum_and_divide':
@@ -308,10 +315,12 @@ class IterativeSourceDetector(object):
         return flux
 
     def save_fits(self, filename):
+        """Save source catalog to FITS file."""
         logging.info('Writing source detections in FITS format to {0}'.format(filename))
         # TODO
 
     def save_regions(self, filename, selection='fit'):
+        """Save ds9 region file."""
         logging.info('Writing source detections in ds9 region format to {0}'.format(filename))
         if selection == 'fit':
             sources = self.sources
@@ -334,6 +343,7 @@ class IterativeSourceDetector(object):
                 outfile.write(text)
 
     def save_json(self, filename):
+        """Save source catalog to JSON file."""
         logging.info('Writing source detections in JSON format to {0}'.format(filename))
         import json
         data = dict(sources=self.sources, sources_guess=self.sources_guess)
@@ -346,6 +356,7 @@ class IterativeSourceDetector(object):
 
 
 def run_detection(args):
+    """Run iterative source detection."""
     # Load data
     maps = dict()
     for mapname in ['counts', 'background', 'exposure']:

@@ -25,7 +25,7 @@ def gauss_kernel(radius, n_sigmas=8):
     return g / (2 * np.pi * radius ** 2)  # g.sum()
 
 def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
-    """Difference of 2 Gaussians (i.e. Mexican hat) kernel array
+    """Difference of 2 Gaussians (i.e. Mexican hat) kernel array.
     """
     sizex = int(n_sigmas * scale_step * radius)
     sizey = int(n_sigmas * scale_step * radius)
@@ -87,7 +87,7 @@ class CWT(object):
         self.wcs = None
 
     def set_data(self, image, background):
-        """Set input images"""
+        """Set input images."""
         # TODO: check that image and background are consistent 
         self.image = image - 0.0         
         self.nx, self.ny = self.image.shape
@@ -112,7 +112,7 @@ class CWT(object):
         self.wcs = WCS(self.header)
 
     def do_transform(self):
-        """Do the transform itself"""
+        """Do the transform itself."""
         # TODO: after unit tests are added switch to astropy fftconvolve here.
         from scipy.signal import fftconvolve
         total_background = self.model + self.background + self.approx
@@ -151,14 +151,14 @@ class CWT(object):
             self.support[key] = self.support[key] > 0.
             
     def inverse_transform(self):
-        """Do the inverse transform (reconstruct the image)"""
+        """Do the inverse transform (reconstruct the image)."""
         res = np.sum(self.support * self.transform, 0)
         self.filter += res * (res > 0)
         self.model = self.filter 
         return res
 
     def iterative_filter_peak(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):
-        """Run iterative filter peak algorithm"""
+        """Run iterative filter peak algorithm."""
         var_ratio = 0.0
         for iiter in range(niter):
             self.do_transform()
@@ -178,12 +178,12 @@ class CWT(object):
         return res
 
     def max_scale_image(self):
-        """Compute the maximum scale image"""
+        """Compute the maximum scale image."""
         maximum = np.argmax(self.transform, 0)
         return self.scale_array[maximum] * (self.support.sum(0) > 0)
 
     def save_filter(self, filename, clobber=False):
-        """Save filter to file"""
+        """Save filter to file."""
         hdu = fits.PrimaryHDU(self.filter, self.header)
         hdu.writeto(filename, clobber=clobber)
         fits.append(filename, self.approx, self.header)
