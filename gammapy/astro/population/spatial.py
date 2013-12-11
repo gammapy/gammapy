@@ -18,57 +18,200 @@ z_range = 0.5  # kpc
 
 
 def P90(r, R0=4.5):
-    """Radial Birth Distribution of NS proposed by Paczynski 1990."""
+    r"""Radial Birth Distribution of neutron stars - Paczynski 1990.
+
+    .. math ::
+        f(r)  = r R_{0} ^ (-2) \exp(-r / R_{0})
+    
+    Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P
+    
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    R0 : array-like
+        See formula
+    
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
     return r * R0 ** -2 * exp(-r / R0)
 
 
 def CB98(r, a=2, b=3.53):
-    """Current Distribution of SNR proposed by
-    Case and Battacharya 1998."""
-    return r * (r / R_SUN_GALACTIC) ** a * exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+    r"""Distribution of supernova remnants - Case and Battacharya 1998.
+    
+    .. math ::
+        f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_{sun})
+    
+    Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C
+    
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    a, b : array-like
+        See formula
+
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
+    term1 = r * (r / R_SUN_GALACTIC) ** a
+    term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+    return term1 * term2
 
 
 def YK04(r, a=1.64, b=4.01, R1=0.55):
-    """Evolved Distribution of Pulsars proposed by Yusifov
-    and Kucuk 2004. Used by Faucher-Guigere and Kaspi.
-    Density at r=0 is nonzero."""
-    return r * ((r + R1) / (R_SUN_GALACTIC + R1)) ** a * exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + R1))
+    r"""Evolved pulsar distribution - Yusifov and Kucuk 2004.
+    
+    .. math ::
+        f(r) = TODO
+    
+    Used by Faucher-Guigere and Kaspi.
+    Density at `r = 0` is nonzero.
+
+    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
+    
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    a, b, R1 : array-like
+        See formula
+
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
+    term1 = r * ((r + R1) / (R_SUN_GALACTIC + R1)) ** a
+    term2 = exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + R1))
+    return term1 * term2
 
 
 def YK04B(r, a=4, b=6.8):
-    """Birth distribution of Pulsars, proposed by Yusifov & Kucuk 2006.
-    Derived empirically from OB-stars distribution."""
+    r"""Birth pulsar distribution - Yusifov & Kucuk 2004.
+    
+    .. math ::
+        f(r) = (r / r_{sun}) ^ a \exp(-b (r / r_{sun}))
+    
+    Derived empirically from OB-stars distribution.
+
+    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
+
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    a, b : array-like
+        See formula
+
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
     return (r / R_SUN_GALACTIC) ** a * exp(-b * (r / R_SUN_GALACTIC))
 
 
-def F06(r, R0=7.04, StDev=1.83):
-    """Displaced Gaussian (Probability function), proposed by
-    as a birth distribution.
-    @see Faucher-Giguere & Kaspi 2006 Appendix B"""
-    return 1. / sqrt(2 * pi * StDev) * exp(-(r - R0) ** 2 / (2 * StDev ** 2))
+def F06(r, R0=7.04, sigma=1.83):
+    r"""Displaced Gaussian distribution - Faucher-Giguere & Kaspi 2006.
+    
+    .. math ::
+        f(r) = 1 / \sqrt(2 \pi \sigma) \exp(-\frac{(r - R_0)^2}{2 \sigma ^ 2})
+
+    Proposed as a pulsar birth distribution in Appendix B.
+    
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    R0, sigma : array-like
+        See formula
+
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
+    term1 = 1. / sqrt(2 * pi * sigma)
+    term2 = exp(-(r - R0) ** 2 / (2 * sigma ** 2))
+    return term1 * term2 
 
 
 def L06(r, a=1.9, b=5.0):
-    """Evolved Distribution (Surface Density) proposed by Lorimer 2006
-    using the NE2001 Model. Similar to Kucuk, but core density is zero."""
-    return r * (r / R_SUN_GALACTIC) ** a * exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+    r"""Evolved pulsar distribution - Lorimer 2006.
+    
+    .. math ::
+        f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_sun)
+
+    Surface density using the NE2001 Model.
+    Similar to Kucuk, but core density is zero.
+    
+    Parameters
+    ----------
+    r : array-like
+        Galactic radius (kpc)
+    a, b : array-like
+        See formula
+
+    Returns
+    -------
+    density : array-like
+        Density in radius `r`
+    """
+    term1 = r * (r / R_SUN_GALACTIC) ** a
+    term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+    return term1 * term2
 
 
 def exponential(z, z0=0.05):
-    """Exponential distribution.
+    r"""Exponential distribution.
+
+    .. math ::
+        f(z) = \exp(-|z| / z_0)
+
     Usually used for height distribution above the Galactic plane,
-    with 0.05 kpc as a commonly used birth height distribution."""
+    with 0.05 kpc as a commonly used birth height distribution.
+
+    Parameters
+    ----------
+    z : array-like
+        Galactic z-coordinate (kpc)
+    Returns
+    -------
+    density : array-like
+        Density in height `z`    
+    """
     return exp(-abs(z) / z0)
 
 
 class LogSpiral(object):
-    """Logarithmic spiral
+    r"""Logarithmic spiral.
+    
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral
     """
 
     def xy_position(self, theta=None, radius=None, spiralarm_index=0):
-        """Compute (x, y) position for a given angle `theta` (in deg) or `radius` (in kpc)
-        and spiral arm index.
+        """Compute (x, y) position for a given angle or radius.
+        
+        Parameters
+        ----------
+        theta : array-like
+            Angle (deg)
+        radius : array-like
+            Radius (kpc)
+        spiralarm_index : int
+            Spiral arm index
+        
+        Returns
+        -------
+        x, y : array-like
+            Position (x, y)
         """
         if (theta == None) and not (radius == None):
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
@@ -83,9 +226,19 @@ class LogSpiral(object):
         return x, y        
 
     def radius(self, theta, spiralarm_index):
-        """
-        theta in deg
-        radius in kpc
+        """Radius for a given angle.
+        
+        Parameters
+        ----------
+        theta : array-like
+            Angle (deg)
+        spiralarm_index : int
+            Spiral arm index
+        
+        Returns
+        -------
+        radius : array-like
+            Radius (kpc)
         """
         k = self.k[spiralarm_index]
         r_0 = self.r_0[spiralarm_index]
@@ -95,9 +248,19 @@ class LogSpiral(object):
         return radius
 
     def theta(self, radius, spiralarm_index):
-        """
-        radius in kpc
-        theta in deg
+        """Angle for a given radius.
+
+        Parameters
+        ----------
+        radius : array-like
+            Radius (kpc)
+        spiralarm_index : int
+            Spiral arm index
+        
+        Returns
+        -------
+        theta : array-like
+            Angle (deg)
         """
         k = self.k[spiralarm_index]
         r_0 = self.r_0[spiralarm_index]
@@ -108,7 +271,7 @@ class LogSpiral(object):
 
 
 class FaucherSpiral(LogSpiral):
-    """Milky way spiral arm model from Faucher et al. (2006)
+    r"""Milky way spiral arm model from Faucher et al. (2006).
     
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
@@ -143,7 +306,7 @@ class FaucherSpiral(LogSpiral):
 
 
 class ValleeSpiral(LogSpiral):
-    """Milky way spiral arm model from Vallee (2008)
+    r"""Milky way spiral arm model from Vallee (2008).
     
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """

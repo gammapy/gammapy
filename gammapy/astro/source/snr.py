@@ -60,7 +60,7 @@ class SNR(object):
         self.t_c = E_SN ** (-1. / 2) * m ** (5. / 6) * self.rho_ISM ** (-1. / 3)
 
     def r_out(self, t):
-        """Outer shell radius (pc) at age t (yr)"""
+        """Outer shell radius (pc) at age t (yr)."""
         # Timescale which determines the end of the free expansion (where r ~ t)
         # and the start of the sedov phase (where r ~ t^2/5)
         term1 = (self.E_SN / self.E_SN_ref) ** (-1. / 2)
@@ -79,7 +79,7 @@ class SNR(object):
         return np.where(t < tf, r1, r2)
 
     def r_out_1(self, t):
-        """Outer shell radius (pc) at age t (yr)"""
+        """Outer shell radius (pc) at age t (yr)."""
         # t in seconds
         t = YEAR_TO_SEC * t
         # Sedov Taylor Phase
@@ -91,18 +91,16 @@ class SNR(object):
         return CM_TO_PC * np.select([t < t_ST, t >= t_ST], [R_FE, R_ST])
 
     def r_in(self, t):
-        """Inner shell radius (pc) at age t (yr)"""
+        """Inner shell radius (pc) at age t (yr)."""
         return self.r_out(t) * (1 - 0.0914)
 
     def r_free_expansion(self, t):
-        """
-        Shock radius (pc) at age t (yr) during free expansion phase.
+        """Shock radius (pc) at age t (yr) during free expansion phase.
         """
         return 1.12 * self.r_c * (t / self.t_c) ** (2. / 3)
 
     def r_reverse(self, t):
-        """
-        Reverse shock radius (pc) at age t (yr).
+        """Reverse shock radius (pc) at age t (yr).
 
         Reference: Gelfand & Slane 2009, Appendix A.
         """

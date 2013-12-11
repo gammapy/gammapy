@@ -17,7 +17,7 @@ B_CONST = 3.2e19 # TODO: document
 class Pulsar(object):
     """Observed pulsar with known period and period derivative.
 
-    TODO: add reference
+    Reference: TODO
 
     Parameters
     ----------
@@ -56,7 +56,7 @@ class Pulsar(object):
 class ModelPulsar(Pulsar):
     """Model pulsar with known parameters and magnetic dipole spin-down.
 
-    TODO: add reference
+    Reference: TODO
 
     Parameters
     ----------
