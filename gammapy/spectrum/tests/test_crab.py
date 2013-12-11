@@ -18,9 +18,9 @@ def test_eval():
     # against dict values containing published numbers.
     e, e1, e2 = 1, 1, 1e3
     for ref, values in crab.refs.items():
-        f = crab.diff_flux(e, ref)
-        I = crab.int_flux(e1, e2, ref)
-        g = crab.spectral_index(e, ref)
+        f = crab.crab_flux(e, ref)
+        I = crab.crab_integral_flux(e1, e2, ref)
+        g = crab.crab_spectral_index(e, ref)
         f_ref = values['diff_flux']
         if ref == 'hess_ecpl':
             f_ref *= np.exp(-e / values['cutoff'])
@@ -41,16 +41,16 @@ def plot_spectra(what="flux"):
     e = np.logspace(-2, 3, 100)
     for ref in crab.refs.keys():
         if what == 'flux':
-            y = Unit('TeV').to('erg') * e ** 2 * crab.diff_flux(e, ref)
+            y = Unit('TeV').to('erg') * e ** 2 * crab.crab_flux(e, ref)
         elif what == 'int_flux':
             # @todo there are integration problems!
             e2 = 1e4 * np.ones_like(e)
-            y = crab.int_flux(e, e2, ref=ref)
+            y = crab.crab_integral_flux(e, e2, ref=ref)
         if what == 'ratio':
-            y = (crab.diff_flux(e, ref) /
-                 crab.diff_flux(e, 'meyer'))
+            y = (crab.crab_flux(e, ref) /
+                 crab.crab_flux(e, 'meyer'))
         elif what == 'index':
-            y = crab.spectral_index(e, ref)
+            y = crab.crab_spectral_index(e, ref)
         plt.plot(e, y, label=ref)
 
     plt.xlabel('Energy (TeV)')
