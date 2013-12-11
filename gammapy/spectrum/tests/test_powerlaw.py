@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from .. import powerlaw as pl
+from .. import powerlaw
 
 # TODO
 def _test_powerlaw():
@@ -11,8 +11,8 @@ def _test_powerlaw():
     f, f_err = 1, 0.1
     g, g_err = 2, 0.1
 
-    I_unc, I_unc_err = pl.I_with_err(e1, e2, e, f, f_err, g, g_err)
-    f_unc, f_unc_err = pl.f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
+    I_unc, I_unc_err = powerlaw.I_with_err(e1, e2, e, f, f_err, g, g_err)
+    f_unc, f_unc_err = powerlaw.f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
 
     print('f (real):', f, f_err)
     print('g (real):', g, g_err)
@@ -22,7 +22,7 @@ def _test_powerlaw():
 
 def test_one():
     """Test one case"""
-    I = pl.I(f=1, g=2)
+    I = powerlaw.power_law_integral_flux(f=1, g=2)
     assert_allclose(I, 1)
 
 
@@ -43,11 +43,11 @@ def _test_closure(g_error_mag=0):
     g_err = g_val * np.random.normal(1, 0.1, npoints)
     # g = unumpy.uarray((g_val, g_err))
 
-    I_val, I_err = pl.I_with_err(f_val, f_err, g_val, g_err)
+    I_val, I_err = powerlaw.I_with_err(f_val, f_err, g_val, g_err)
     # I_val = unumpy.nominal_values(f)
     # I_err = unumpy.std_devs(f)
 
-    f_val2, f_err2 = pl.f_with_err(I_val, I_err, g_val, g_err)
+    f_val2, f_err2 = powerlaw.f_with_err(I_val, I_err, g_val, g_err)
     try:
         assert_allclose(f_val, f_val2)
         assert_allclose(f_err, f_err2)
@@ -65,14 +65,15 @@ def _test_closure(g_error_mag=0):
 
 
 def test_e_pivot():
-    """Hard-coded example from fit example in
-    survey/spectra.
+    """Hard-coded example from fit example in survey/spectra.
     """
     e0 = 1
     f0 = 5.35510540e-11
     d_gamma = 0.0318377
     cov = 6.56889442e-14
-    print(pl.e_pivot(e0, f0, d_gamma, cov))
+    
+    e_pivot = powerlaw.power_law_pivot_energy(e0, f0, d_gamma, cov)
+    assert_allclose(e_pivot, 3.3540034240210987)
 
 
 def test_compatibility():
@@ -87,10 +88,6 @@ def test_compatibility():
     f = flux density (cm^-2 s^-1 MeV^-1)
     g = "gamma" = spectral index
     """
-    print('=' * 60)
-    print('test_compute_spectral_compatibility()')
-    print('=' * 60)
-
     # Fermi power-law parameters
     e_fermi = 1296.2734
     f_fermi = 3.791907E-12
@@ -108,7 +105,7 @@ def test_compatibility():
     par_hess = (e_hess, f_hess, f_err_hess, g_hess, g_err_hess)
 
     g_match, sigma_low, sigma_high, sigma_comb = \
-        pl.compatibility(par_fermi, par_hess)
+        powerlaw.compatibility(par_fermi, par_hess)
 
 
 def test_SED_error(I=1., e1=1, e2=10):
@@ -133,7 +130,7 @@ def test_SED_error(I=1., e1=1, e2=10):
     e2f = e ** 2 * f  # @note: e ** 2 = e1 * e2 here.
     print('%10s %10s %10s' % ('Index', 'SED', 'Flux'))
     for Index in np.arange(1.5, 3.5, 0.5):
-        f_correct = pl.f(I, Index, e, e1, e2)
+        f_correct = powerlaw.power_law_flux(I, Index, e, e1, e2)
         e2f_correct = e ** 2 * f_correct
         # We compute ratios, which corresponds to differences
         # on a log scale
