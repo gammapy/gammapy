@@ -5,7 +5,7 @@ from astropy.io import fits
 __all__ = ['FermiPSF']
 
 class FermiPSF(object):
-    """Fermi PSF I/O and computations (gtpsf format)
+    """Fermi PSF I/O and computations (gtpsf format).
     
     
     TODO: linear interpolation in theta and energy?
@@ -78,11 +78,12 @@ class FermiPSF(object):
         return psf
     
     def info(self):
-        """Print into about energy and theta binning"""
+        """Print into about energy and theta binning."""
         r68 = self.containment_radius(energy=10, fraction=0.68)
         print('68% containment radius at 10 GeV: {0}'.format(r68))
 
     def plot_theta(self, filename):
+        """Plot PSF vs theta."""
         import matplotlib.pyplot as plt
         plt.figure(figsize=(6, 4))
         for energy in [1e4, 1e5, 1e6]:
@@ -102,11 +103,14 @@ class FermiPSF(object):
         plt.savefig(filename)
     
     def plot_containment(self, filename):
+        """Plot containment versus energy."""
+        raise NotImplementedError
         import matplotlib.pyplot as plt
         plt.clf()
         plt.savefig(filename)
 
     def plot_exposure(self, filename):
+        """Plot exposure versus energy."""
         import matplotlib.pyplot as plt
         plt.figure(figsize=(4, 3))
         plt.plot(self.energy, self.exposure, color='black', lw=3)

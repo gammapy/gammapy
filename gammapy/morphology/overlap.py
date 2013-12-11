@@ -16,7 +16,9 @@ __all__ = ['read_model_components']
 
 def write_test_cfg_file(spacing=2.):
     """Write test fit.cfg file with 7 sources on a hexagonal grid.
-    Please specify sigma, excess in fit.cfg and spacing of the sources."""
+    
+    Please specify sigma, excess in fit.cfg and spacing of the sources.
+    """
     cfg = configobj.ConfigObj('fit.cfg')
        
     # Hexgonal test grid
@@ -34,7 +36,8 @@ def write_test_cfg_file(spacing=2.):
 
 
 def write_test_region_file(component_table):
-    """Write ds9 region file with source names and R80 containment radii"""
+    """Write ds9 region file with source names and R80 containment radii.
+    """
     reg_file = open('fit.reg', 'w')
     for row, component in enumerate(component_table['Name']):
         glon_pos = component_table['GLON'][row]
@@ -48,12 +51,14 @@ def write_test_region_file(component_table):
 
 
 def write_region_file(q_table, c_table, component_table):
-    """Write region file to display Q and C factors in ds9"""
+    """Write region file to display Q and C factors in ds9.
+    """
     pass  # Would be nice but actually not necessary
       
 
 def write_test_model_components(component_table):
-    """Write test model components fits"""
+    """Write test model components fits.
+    """
     if not os.path.exists('model_components'):
         os.mkdir('model_components')
     
@@ -101,7 +106,8 @@ def write_test_model_components(component_table):
            
 def read_model_components(cfg_file):
     """Read model components from ``model_components/*.fits`` and return
-    a list of 2D component images with containment masks"""
+    a list of 2D component images with containment masks.
+    """
     cfg = configobj.ConfigObj(cfg_file)
     column_names = ('Name', 'Type', 'GLON', 'GLAT', 'Sigma', 'Norm')
     column_types = ('S25', 'S25', np.float32, np.float32, np.float32, np.float32)
@@ -128,7 +134,8 @@ def read_model_components(cfg_file):
 
 
 def compute_containment_radius(component_table, frac=0.8):
-    """Compute containment radius from sigma"""
+    """Compute containment radius from sigma.
+    """
     r_containment_list = []
     for sigma in component_table['sigma']:
         r_containment = sqrt(2 * log(1 / (1 - frac))) * sigma  # Has to be tested!
@@ -138,7 +145,8 @@ def compute_containment_radius(component_table, frac=0.8):
     
 
 def read_region_file(component_table):
-    """Read region file to get the containment radii"""
+    """Read region file to get the containment radii.
+    """
     import pyregion
     region_list = pyregion.open('fit.reg')
     r_containment_list = []
@@ -149,7 +157,8 @@ def read_region_file(component_table):
      
 
 def read_fits_files(component_table):
-    """Read model component fits files"""
+    """Read model component FITS files.
+    """
     image_data = []
     for component in component_table['Name']:
         component_fits = component.replace(' ', '_').replace('-', 'm').replace('+', 'p') + '.fits'
@@ -159,7 +168,8 @@ def read_fits_files(component_table):
 
 
 def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
-    """Get mask from pre-computed containment radius"""
+    """Get mask from pre-computed containment radius.
+    """
     hdulist = fits.open('../counts.fits')
     w = wcs.WCS(hdulist[0].header)
     y, x = np.indices(shape)
@@ -177,7 +187,8 @@ def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
 def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
     """Compute mask for the containment radius.
     
-    Works only for a symmetrical gaussian."""
+    Works only for a symmetric Gaussian.
+    """
     # Setup wcs coordinate transformation
     hdulist = fits.open('../counts.fits')
     w = wcs.WCS(hdulist[0].header)
@@ -191,7 +202,7 @@ def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
 
 
 def compute_circular_masks(x_max, y_max, shape):
-    """Compute a 3D array of circular masks
+    """Compute a 3D array of circular masks.
     
     with increasing radius at position x_max, y_max of given shape.
     """
@@ -209,7 +220,8 @@ def compute_circular_masks(x_max, y_max, shape):
 def containment_fraction(A, frac):
     """Compute containment fraction and return the corresponding mask.
     
-    Does not interpolate."""
+    Does not interpolate.
+    """
     # Not used
     y_max, x_max = np.unravel_index(np.argmax(A), A.shape)
     A_norm = A / np.nansum(A)
@@ -222,7 +234,7 @@ def containment_fraction(A, frac):
 def contamination(B, excess_all, mask_A):
     """Compute contamination between A and B.
     
-    I.e.fraction of B in a given containment region around A.
+    I.e. fraction of B in a given containment region around A.
     """
     # mask = np.ones_like(A) #test hack
     logging.debug('Excess of B in region A: {0}'.format(np.nansum((B * mask_A))))
@@ -231,7 +243,8 @@ def contamination(B, excess_all, mask_A):
     
 
 def Q_factor(A, B):
-    """Compute the "overlap" between the images A and B"""
+    """Compute the "overlap" between the images A and B.
+    """
     A_norm = np.nansum(A ** 2) ** 0.5
     B_norm = np.nansum(B ** 2) ** 0.5
     values = (A / A_norm) * (B / B_norm)
@@ -239,7 +252,8 @@ def Q_factor(A, B):
 
 
 def Q_factor_analytical(sigma_A, sigma_B, x_A, y_A, x_B, y_B, sigma_PSF=0.0):
-    """Compute overlap Q factor analytically by means of the given model parameters"""
+    """Compute overlap Q factor analytically by means of the given model parameters.
+    """
     # Compute convolved sigma 
     sigma_A = sqrt(sigma_A ** 2 + sigma_PSF ** 2)
     sigma_B = sqrt(sigma_B ** 2 + sigma_PSF ** 2) 
@@ -256,7 +270,8 @@ def Q_factor_analytical(sigma_A, sigma_B, x_A, y_A, x_B, y_B, sigma_PSF=0.0):
 
 
 def gaussian_product_integral(parameters_A, parameters_B):
-    """Computes the analytical result of \int A \cdot B d^2x integrated from -inf to inf"""
+    """Computes the analytical result of \int A \cdot B d^2x integrated from -inf to inf.
+    """
     x_A, y_A, sigma_A, N_A = parameters_A
     x_B, y_B, sigma_B, N_B = parameters_B
     
@@ -272,7 +287,8 @@ def gaussian_product_integral(parameters_A, parameters_B):
     
     
 def compute_Q_matrix(components_A, components_B):
-    """Compute matrix of pairwise Q_factors weighted with N and sigma"""
+    """Compute matrix of pairwise Q_factors weighted with N and sigma.
+    """
     Q_AB_matrix = np.empty((len(components_A), len(components_B)))
     for i, A in enumerate(components_A): 
         for j, B in enumerate(components_B):
@@ -281,7 +297,8 @@ def compute_Q_matrix(components_A, components_B):
 
 
 def compute_Q_from_components(components_A, components_B):
-    """Compute Q factor for sources A and B with several components"""
+    """Compute Q factor for sources A and B with several components.
+    """
     Q_AB_matrix = compute_Q_matrix(components_A, components_B)
     Q_AA_matrix = compute_Q_matrix(components_A, components_A)
     Q_BB_matrix = compute_Q_matrix(components_B, components_B)
@@ -310,15 +327,10 @@ def apply_PSF(components):
         components_PSF_applied.append([x, y, sigma_3, N_3])
     return components_PSF_applied
     
-    
-def read_PSF_parameters():
-    """"""
-    # Helper function for apply_PSF
-    pass    
-
 
 def compute_Q_analytical(component_table):
-    """Compute Q factors analytical"""
+    """Compute Q factors analytically.
+    """
     q_table = Table()
     q_table.add_column(Column(data=component_table['Name'], name='Q_AB'))
     
@@ -349,7 +361,8 @@ def compute_Q_analytical(component_table):
     
 
 def compute_Q(component_table):
-    """Compute Q factors"""
+    """Compute Q factors.
+    """
     q_table = Table()
     q_table.add_column(Column(data=component_table['Name'], name='Q_AB'))
     
@@ -372,7 +385,8 @@ def compute_Q(component_table):
     
     
 def compute_contamination(component_table, store_mask=False):
-    """Compute contamination"""
+    """Compute contamination.
+    """
     q_table = Table()
     q_table.add_column(Column(data=component_table['Name'], name='Contamination'), 0)
     
@@ -411,7 +425,8 @@ def compute_contamination(component_table, store_mask=False):
 
 
 def write_json_fit(q_table, filename):
-    """Write Q and C factors in fit.json file"""
+    """Write Q and C factors in fit.json file.
+    """
     data = json.load(open(filename))
     
     # Check if key "overlap" is already there
@@ -430,12 +445,13 @@ def write_json_fit(q_table, filename):
                       sort_keys=True, indent=4)    
 
 
-def write_json(q_table):
-    """Write Q and C factors in overlap.json file"""
-    if not os.path.exists('overlap.json'):
+def write_json(q_table, filename='overlap.json'):
+    """Write Q and C factors in overlap.json file.
+    """
+    if not os.path.exists(filename):
         data = dict()
     else:
-        data = json.load(open('overlap.json'))
+        data = json.load(open(filename))
         
     # Write table to json file
     overlap, columns_names = q_table.colnames[0], q_table.colnames[1:]
@@ -445,11 +461,12 @@ def write_json(q_table):
         for row in range(len(q_table[overlap])):
             data[overlap][source_1][q_table[overlap][row]] = q_table[source_1][row] 
     
-    json.dump(data, open('overlap.json', 'w'),
+    json.dump(data, open(filename, 'w'),
                       sort_keys=True, indent=4)    
 
 def write_pretty_table(table, filename, column_width=25):
-    """Format and write pretty table to ascii file"""
+    """Format and write pretty table to ascii file.
+    """
     formats = {}
    
     # Format header
@@ -469,7 +486,8 @@ def write_pretty_table(table, filename, column_width=25):
     
 
 def compare_Q_contamination(component_table):   
-    """Compare the values of the Q factor and contamination"""
+    """Compare the values of the Q factor and contamination.
+    """
     # Q Factors
     q_table = compute_Q(component_table)
     write_pretty_table(q_table, 'q_factors.txt')
@@ -487,7 +505,8 @@ def compare_Q_contamination(component_table):
     
 
 def compare_real_and_model_excess(component_table):
-    """Compare real and model excess by calculating the ratio"""
+    """Compare real and model excess by calculating the ratio.
+    """
     # Read fits files
     roi = fits.getdata('../roi.fits')
     counts = fits.getdata('../counts.fits')
@@ -504,7 +523,8 @@ def compare_real_and_model_excess(component_table):
     
 
 def overlap_plot(profile_A, profile_B, w, y_slice):
-    """Make nice overlap plots"""
+    """Make nice overlap plots.
+    """
     import matplotlib.pyplot as plt
     plt.figure()
     plt.subplots_adjust(hspace=0.001)
@@ -532,7 +552,8 @@ def overlap_plot(profile_A, profile_B, w, y_slice):
     
 
 def make_example_plots(component_table):
-    """Make some example plots from a fake.cfg"""
+    """Make some example plots from a `fake.cfg`.
+    """
     import matplotlib.pyplot as plt
     hdulist = fits.open('../exposure.fits')
 

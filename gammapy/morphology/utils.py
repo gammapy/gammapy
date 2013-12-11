@@ -7,12 +7,12 @@ __all__ = ['read_ascii', 'read_json', 'write_all', 'write_ascii', 'write_json']
 
 
 def _name(ii):
-    """Use this to make the model name for source number ii"""
+    """Use this to make the model name for source number `ii`."""
     return 'gauss2d.source_%02d' % ii
 
 
 def _set(name, par, val):
-    """Set a source parameter"""
+    """Set a source parameter."""
     import sherpa.astro.ui as sau
     sau.set_par('{name}.{par}'.format(**locals()), val)
     # try:
@@ -22,12 +22,12 @@ def _set(name, par, val):
 
 
 def _model(source_names):
-    """Build additive model string for Gaussian sources"""
+    """Build additive model string for Gaussian sources."""
     return ' + '.join(['gauss2d.' + name for name in source_names])
 
 
 def read_json(source, setter):
-    """Read from JSON"""
+    """Read from JSON file."""
     if isinstance(source, dict):
         # Assume source is a dict with correct format
         d = source
@@ -43,7 +43,7 @@ def read_json(source, setter):
 
 
 def read_ascii(filename, setter):
-    """Read from ASCII"""
+    """Read from ASCII file."""
     lines = open(filename).readlines()
     tokens = [line.split() for line in lines]
     names = set([token[0] for token in tokens])
@@ -57,7 +57,7 @@ def read_ascii(filename, setter):
 
 
 def write_json(pars, filename):
-    """Write to JSON"""
+    """Write to JSON file."""
     d = {}
 
     for par in pars:
@@ -77,7 +77,7 @@ def write_ascii(pars, filename):
 
 
 def write_all(filename='results.json'):
-    """Dump source, fit results and conf results to a JSON file
+    """Dump source, fit results and conf results to a JSON file.
 
     http://www.astropython.org/snippet/2010/7/Save-sherpa-fit-and-conf-results-to-a-JSON-file
     """

@@ -13,6 +13,7 @@ def effective_area(energy, instrument='HESS'):
         Energy in TeV
     instruments : {'HESS', 'HESS2', 'CTA'}
         Name of the instrument
+
     Returns
     -------
     Effective area in cm^2

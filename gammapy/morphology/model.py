@@ -11,7 +11,7 @@ import json
 __all__ = ['GaussCatalog', 'make_test_model', 'read_json']
 
 class GaussCatalog(dict):
-    """Multi-Gauss catalog utils"""
+    """Multi-Gauss catalog utils."""
 
     def __init__(self, source):
         if isinstance(source, dict):
@@ -31,7 +31,8 @@ class GaussCatalog(dict):
 
 
 def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30):
-    """Create a model of several Gaussian sources"""
+    """Create a model of several Gaussian sources.
+    """
     from numpy.random import random
     from sherpa.astro.ui import set_source
     from morphology.utils import _set, _name

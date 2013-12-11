@@ -13,7 +13,7 @@ __all__ = ['ModelThetaCalculator', 'ThetaCalculator',
 
 class ThetaCalculator(object):
     """Provides methods ``containment_fraction(theta)`` and ``containment_radius(containment_fraction)``
-    given some 1D distribution (not necessarily normalized)
+    given some 1D distribution (not necessarily normalized).
 
     Notes
     If you have to compute theta or containment many times for

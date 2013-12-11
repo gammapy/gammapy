@@ -12,8 +12,10 @@ __all__ = ['delta2d', 'gauss2d', 'shell2d', 'sphere2d',
            'morph_types', 'morph_pars']
 
 def _normalized(image, ampl):
-    """ Normalize image such that image.sum() == ampl.
-    If for the input image.sum() == 0, then do nothing """
+    """Normalize image such that image.sum() == ampl.
+
+    If for the input image.sum() == 0, then do nothing.
+    """
     sum = image.sum()
     if sum == 0:
         return image
@@ -22,7 +24,7 @@ def _normalized(image, ampl):
 
 
 def delta2d(pars, x, y):
-    """Point source"""
+    """Point source."""
     xpos, ypos, ampl = pars
 
     # FIXME: This implementation of a delta function is quite inelegant.
@@ -35,7 +37,7 @@ def delta2d(pars, x, y):
 
 
 def gauss2d(pars, x, y):
-    """Asymmetric Gaussian"""
+    """Asymmetric Gaussian."""
     xpos, ypos, ampl, sigma, epsilon, theta = pars
 
     # FIXME: hack to avoid division by 0
@@ -52,7 +54,9 @@ def gauss2d(pars, x, y):
 
 def shell2d(pars, x, y):
     """Homogeneous radiating shell.
-    Can be used as a toy shell-type SNR model."""
+
+    Can be used as a toy shell-type SNR model.
+    """
     xpos, ypos, ampl, r_out, r_in = pars
 
     r = sqrt((x - xpos) ** 2 + (y - ypos) ** 2)
@@ -78,7 +82,9 @@ def shell2d(pars, x, y):
 
 def sphere2d(pars, x, y):
     """Homogeneous radiating sphere.
-    Can be used as a toy PWN model."""
+
+    Can be used as a toy PWN model.
+    """
     xpos, ypos, ampl, r_out = pars
 
     r = sqrt((x - xpos) ** 2 + (y - ypos) ** 2)
