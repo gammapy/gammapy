@@ -16,7 +16,8 @@ import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['gal2equ', 'equ2gal', 'separation', 'minimum_separation', 'pair_correlation']
+__all__ = ['gal2equ', 'equ2gal', 'separation', 'sky_to_sky', 
+           'minimum_separation', 'pair_correlation']
 
 
 def gal2equ(ll, bb):
