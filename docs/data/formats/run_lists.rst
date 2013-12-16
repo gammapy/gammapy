@@ -41,4 +41,10 @@ Special column names that the `gammapy` analysis tools understand:
 XML format
 ----------
 
-TODO: describe the XML format currently used by the ctools.
+GammaLib / ctools uses an "observation definition" XML format described
+`here <http://gammalib.sourceforge.net/user_manual/modules/obs.html#describing-observations-using-xml>`_.
+
+GTIs
+----
+
+TODO: describe where GTIs are used.
