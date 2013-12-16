@@ -27,5 +27,6 @@ TODO: for every data format there should be an example in the datasets.
    spectra
    
    psf
-   run_lists
+   observation_lists
    source_models
+   target_lists
