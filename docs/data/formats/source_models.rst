@@ -1,13 +1,29 @@
 Source models
 =============
 
-TODO: describe (link to) the XML format currently used by Fermi and ctools.
+TODO: Explain why there are different formats and give converter functions / tools. 
 
-TODO: give a tool to convert between 
+XML file format
+---------------
 
-TBD: do we want a second, simpler format based on config files?
+GammaLib / ctools uses an "model definition" XML format described
+`here <http://gammalib.sourceforge.net/user_manual/modules/model.html#overview>`_
+
+The Fermi `gtlike` tool uses the same format (the implemented models are a bit different) described
+`here <http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>`_
+
+The same format is used by `ctlike` and `gtlike` to report the model fit results,
+which has the serious draw-back that useful information like the fit covariance matrix, asymmetric errors
+or numbers like the fit statistic or predicted number of counts are not output
+in a machine-readable format. 
+
+Configuration format
+--------------------
+
+TODO: document
 
 
-TBD: what fit result formats do we want to support?
-The model XML format is not flexible enough to store e.g. a covariance matrix or TS values or ....
-at the moment I use a simple JSON format for this ... we could describe a simple JSON schema. 
+JSON format
+-----------
+
+TODO: document via a JSON schema.
