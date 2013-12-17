@@ -9,6 +9,8 @@ https://github.com/healpy/healpy/issues/129
 from __future__ import print_function, division
 from .utils import coordinates
 
+__all__ = ['healpix_to_image', 'image_to_healpix']
+
 
 def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     """Convert image in HEALPIX format to a normal FITS projection image (e.g. CAR or AIT).
