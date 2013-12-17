@@ -1,113 +1,172 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Equatorial to / from Galactic coordinate conversion and sky separation.
-
-This is a temporal solution until astropy supports array coordinate computations.
-
-You could also use Kapteyn instead:
-
-* from kapteyn import wcs, maputils
-* wcs.Transformation(wcs.equatorial, wcs.galactic)
-* wcs.Transformation(wcs.galactic, wcs.equatorial)
-* maputils.dist_on_sphere
+"""Celestial coordinate utility functions.
 """
 from __future__ import print_function, division
 import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['gal2equ', 'equ2gal', 'separation', 'sky_to_sky', 
-           'minimum_separation', 'pair_correlation']
+__all__ = ['galactic_to_radec', 'radec_to_galactic', 'sky_to_sky',
+           'separation', 'minimum_separation', 'pair_correlation']
 
 
-def gal2equ(ll, bb):
-    """Converts Galactic to Equatorial J2000 coordinates (deg).
+def galactic_to_radec(glon, glat, unit='deg'):
+    """Convert Galactic to Equatorial J2000 coordinates.
 
-    RA output is in range 0 to 360 deg.
     Only accurate to ~ 3 digits.
+
+    This is a standalone implementation that only uses `numpy`.
+    Use it where you don't want to depend on a real celestial coordinate
+    package like `astropy.coordinates` or `kapteyn.celestial`.
+
+    Parameters
+    ----------
+    glon, glat : array_like
+        Galactic coordinates
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
+
+    Returns
+    -------
+    ra, dec : array_like
+        Equatorial coordinates.
     """
-    ll, bb = map(radians, (ll, bb))
+    if unit == 'deg':
+        glon, glat = radians(glon), radians(glat)
+
     ra_gp = radians(192.85948)
     de_gp = radians(27.12825)
     lcp = radians(122.932)
-    sin_d = sin(de_gp) * sin(bb) + cos(de_gp) * cos(bb) * cos(lcp - ll)
-    ramragp = (arctan2(cos(bb) * sin(lcp - ll),
-                       cos(de_gp) * sin(bb) - sin(de_gp) *
-                       cos(bb) * cos(lcp - ll)))
-    dec = arcsin(sin_d)
+
+    term1 = cos(glat) * sin(lcp - glon)
+    term2 = cos(de_gp) * sin(glat) - sin(de_gp) * cos(glat) * cos(lcp - glon)
+    ramragp = arctan2(term1, term2)
     ra = (ramragp + ra_gp + 2 * pi) % (2 * pi)
-    ra = ra % 360
-    return degrees(ra), degrees(dec)
+
+    sin_d = sin(de_gp) * sin(glat) + cos(de_gp) * cos(glat) * cos(lcp - glon)
+    dec = arcsin(sin_d)
+
+    if unit == 'deg':
+        ra, dec = degrees(ra), degrees(dec)    
+
+    return ra, dec
 
 
-def equ2gal(ra, dec):
-    """Converts Equatorial J2000 to Galactic coordinates (deg).
+def radec_to_galactic(ra, dec, unit='deg'):
+    """Convert Equatorial J2000 to Galactic coordinates.
 
-    RA output is in range 0 to 360 deg.
     Only accurate to ~ 3 digits.
+
+    This is a standalone implementation that only uses `numpy`.
+    Use it where you don't want to depend on a real celestial coordinate
+    package like `astropy.coordinates` or `kapteyn.celestial`.
+
+    Parameters
+    ----------
+    ra, dec : array_like
+        Equatorial coordinates.
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
+
+    Returns
+    -------
+    glon, glat : array_like
+        Galactic coordinates
     """
-    ra, dec = map(radians, (ra, dec))
+    if unit == 'deg':
+        ra, dec = radians(ra), radians(dec)
+
     ra_gp = radians(192.85948)
     de_gp = radians(27.12825)
     lcp = radians(122.932)
-    sin_b = (sin(de_gp) * sin(dec) + cos(de_gp) *
-            cos(dec) * cos(ra - ra_gp))
-    lcpml = arctan2(cos(dec) * sin(ra - ra_gp),
-                 cos(de_gp) * sin(dec) - sin(de_gp) *
-                 cos(dec) * cos(ra - ra_gp))
-    bb = arcsin(sin_b)
-    ll = (lcp - lcpml + 2 * pi) % (2 * pi)
-    ll = ll % 360
-    return degrees(ll), degrees(bb)
+
+    term1 = cos(dec) * sin(ra - ra_gp)
+    term2 = cos(de_gp) * sin(dec) - sin(de_gp) * cos(dec) * cos(ra - ra_gp)
+    lcpml = arctan2(term1, term2)
+    glon = (lcp - lcpml + 2 * pi) % (2 * pi)
+
+    sin_b = sin(de_gp) * sin(dec) + cos(de_gp) * cos(dec) * cos(ra - ra_gp)
+    glat = arcsin(sin_b)
+
+    if unit == 'deg':
+        glon, glat = degrees(glon), degrees(glat)
+
+    return glon, glat
 
 
-def separation(lon1, lat1, lon2, lat2):
-    """Angular separation in degrees between two sky coordinates
+def separation(lon1, lat1, lon2, lat2, unit='deg'):
+    """Angular separation between points on the sphere.
     
-    Input and output in degrees.
-    """
-    lon1, lat1, lon2, lat2 = map(radians, (lon1, lat1, lon2, lat2))
-    mu = (cos(lat1) * cos(lon1) * cos(lat2) * cos(lon2)
-          + cos(lat1) * sin(lon1) * cos(lat2) * sin(lon2) +
-          sin(lat1) * sin(lat2))
-    return degrees(arccos(mu))
+    Parameters
+    ----------
+    lon1, lat1, lon2, lat2 : array_like
+        Coordinates of the two points
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
 
-def minimum_separation(lon1, lat1, lon2, lat2):
+    Returns
+    -------
+    separation : array_like
+        Angular separation
+    """
+    if unit == 'deg':
+        lon1, lat1, lon2, lat2 = map(radians, (lon1, lat1, lon2, lat2))
+
+    term1 = cos(lat1) * cos(lon1) * cos(lat2) * cos(lon2)
+    term2 = cos(lat1) * sin(lon1) * cos(lat2) * sin(lon2)
+    term3 = sin(lat1) * sin(lat2)
+    mu = term1 + term2 + term3
+    separation = arccos(mu)
+    
+    if unit == 'deg':
+        separation = degrees(separation)
+
+    return separation
+
+
+def minimum_separation(lon1, lat1, lon2, lat2, unit='deg'):
     """Compute minimum distance of each (lon1, lat1) to any (lon2, lat2).
 
     Parameters
     ----------
     lon1, lat1 : array_like
-        Primary coordinates of interest in deg
+        Primary coordinates of interest
     lon2, lat2 : array_like
-        Counterpart coordinate array in deg
+        Counterpart coordinate array
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
 
     Returns
     -------
     theta_min : array
-        Minimum distance in deg
+        Minimum distance
     """
-    theta_min = np.empty_like(lon1)
+    lon1 = np.asanyarray(lon1)
+    lat1 = np.asanyarray(lat1)
+    
+    theta_min = np.empty_like(lon1, dtype=np.float64)
 
     for i1 in range(lon1.size):
-        thetas = separation(lon1[i1], lat1[i1], lon2, lat2)
+        thetas = separation(lon1[i1], lat1[i1],
+                            lon2, lat2, unit=unit)
         theta_min[i1] = thetas.min()
 
     return theta_min
 
 
-def pair_correlation(lon, lat, theta_bins):
+def pair_correlation(lon, lat, theta_bins, unit='deg'):
     """Compute pair correlation function for points on the sphere.
     
     Parameters
     ----------
-    lon : array_like
-        Array of longitude coordinates (deg)
-    lat : array_like
-        Array of latitude coordinates (deg)
+    lon, lat : array_like
+        Coordinate arrays
     theta_bins : array_like
-        Array defining the `theta` binning (deg)
+        Array defining the `theta` binning.
         `theta` is the angular offset between positions.
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
+
     Returns
     -------
     counts : array
@@ -116,31 +175,42 @@ def pair_correlation(lon, lat, theta_bins):
     # TODO: Implement speedups:
     # - use radians
     # - avoid processing each pair twice (distance a to b and b to a)
-    counts = np.zeros(shape=len(theta_bins)-1, dtype=int)
+    counts = np.zeros(shape=len(theta_bins) - 1, dtype=int)
     # If there are many points this should have acceptable performance
     # because the inner loop is in np.histogram, not in Python
     for ii in range(len(lon)):
-        theta = separation(lon[ii], lat[ii], lon, lat)
+        theta = separation(lon[ii], lat[ii], lon, lat, unit=unit)
         hist = np.histogram(theta, theta_bins)[0]
         counts += hist
+
     return counts
 
-def sky_to_sky(lon, lat, in_system, out_system):
+
+def sky_to_sky(lon, lat, in_system, out_system, unit='deg'):
     """Convert between sky coordinates.
-    
-    lon : array_like
-        Longitude coordinate array
-    lat : array_like
-        Latitude coordinate array
-    in_system : {'galactic', 'icrs'}
-        Input coordinate system
-    out_system : {'galactic', 'icrs'}
-        Output coordinate system
+
+    Parameters
+    ----------
+    lon, lat : array_like
+        Coordinate arrays
+    in_system, out_system : {'galactic', 'icrs'}
+        Input / output coordinate system
+    unit : {'deg', 'rad'}
+        Units of input and output coordinates
+
+    Returns
+    -------
     """    
     from astropy.coordinates import ICRS, Galactic
     systems = dict(galactic=Galactic, icrs=ICRS)
-    lon = np.asarray(lon)
-    lat = np.asarray(lat)
 
-    coords = systems[in_system](lon, lat, units='deg')
-    return coords.transform_to(systems[out_system]).degrees
+    lon = np.asanyarray(lon)
+    lat = np.asanyarray(lat)
+
+    in_coords = systems[in_system](lon, lat, unit=(unit, unit))
+    out_coords = in_coords.transform_to(systems[out_system])
+    
+    if unit == 'deg':
+        return out_coords.lonangle.deg, out_coords.latangle.deg
+    else:
+        return out_coords.lonangle.rad, out_coords.latangle.rad
