@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Make derived maps for a given set of basic maps
+"""Make derived maps for a given set of basic maps.
 
 TODO: describe
 """
