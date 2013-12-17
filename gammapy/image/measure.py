@@ -123,20 +123,22 @@ def aperphot(img, x, y, aper, sky, sky_type='median', verbose=False):
     Performs the aperture photometry of a given x,y point in an image.
     Note: Doesn't handle subpixel integration.
 
-    img: numpy 2D array of the image to perform the photometry on.
+    Parameters
+    ----------
+    img : numpy 2D array of the image to perform the photometry on.
         y_dimension, x_dimension = img.shape
         # Note: x is the second axis as opposed to the first in IDL!
-    x: x coordinate of the position to perform the photometry on.
-        # Note: the first pixel as a coordinate 0, not 1!
-    y: y coordinate of the position to perform the photometry on.
-    aper: aperture size in pixel.
-    sky: 2-element list/tuple/array providing the inner and outer radii
+    x, y : array_like
+        Aperture center pixel coordinates
+    aper : aperture size in pixel.
+    sky : 2-element list/tuple/array providing the inner and outer radii
         to calculate the sky from.
-    sky_type ('median'): if 'median' will use a median for the sky level
+    sky_type : if 'median' will use a median for the sky level
         determination within the sky annulus, otherwise will use a mean.
-    verbose (False): If true, will print some information.
 
-    >>> flux, err_flux = aperphot(img, 32.2, 35.6, 5., [10.,15.], sky_type='median')
+    Examples
+    --------
+    >>> flux, flux_err = aperphot(img, 32.2, 35.6, 5., [10.,15.], sky_type='median')
     """
     dimy, dimx = img.shape
     indy, indx = np.mgrid[0:dimy, 0:dimx]

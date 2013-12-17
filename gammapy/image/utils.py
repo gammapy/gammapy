@@ -652,32 +652,43 @@ def cutout_box(x, y, radius, nx, ny, format='string'):
         return box_coords, box_string
 
 
-def bbox(mask, margin, binsz):
+def bbox(mask, margin):
     """Determine the bounding box of a mask.
+    
+    This should give the same result as the ``bbox`` attribute of
+    `skimage.measure.regionprops <http://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops>`_:
+
+    >>> from skimage.measure import regionprops
+    >>> regionprops(mask).bbox    
     
     Parameters
     ----------
-    TODO
+    mask : array_like
+        Input mask
+    margin : float
+        Margin to add to bounding box
     
     Returns
     -------
-    TODO
+    xmin, xmax, ymin, ymax : int
+        Bounding box parameters
     """
     from scipy.ndimage.measurements import find_objects
     box = find_objects(mask.astype(int))[0]
     ny, nx = mask.shape
-    xmin = max(0, int(box[1].start - margin / binsz)) + 1
-    xmax = min(nx - 1, int(box[1].stop + margin / binsz)) + 1
-    ymin = max(0, int(box[0].start - margin / binsz)) + 1
-    ymax = min(ny - 1, int(box[0].stop + margin / binsz)) + 1
-    box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
-    box = xmin, xmax, ymin, ymax
-    return box, box_string
+    xmin = max(0, int(box[1].start - margin)) + 1
+    xmax = min(nx - 1, int(box[1].stop + margin)) + 1
+    ymin = max(0, int(box[0].start - margin)) + 1
+    ymax = min(ny - 1, int(box[0].stop + margin)) + 1
+    # box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
+    bbox = xmin, xmax, ymin, ymax
+    return bbox #, box_string
 
 
 def cube_to_image(cube, slicepos=None):
     """ Make an image out of a cube.
     Both in- and output should by fits.HDUs"""
+    from astropy.io.fits import ImageHDU
     header = cube.header.copy()
     header['NAXIS'] = 2
     del header['NAXIS3']
@@ -690,7 +701,7 @@ def cube_to_image(cube, slicepos=None):
         data = cube.data.sum()
     else:
         data = cube.data[slicepos]
-    return fits.ImageHDU(data, header)
+    return ImageHDU(data, header)
 
 
 def cube_to_spec(cube):
