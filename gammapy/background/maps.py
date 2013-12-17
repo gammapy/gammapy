@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import logging
 import numpy as np
 from astropy.io import fits
-from ..image.utils import tophat_correlate
+from ..image import disk_correlate
 from .. import stats
 
 __all__ = ['Maps', 'BASIC_MAP_NAMES', 'DERIVED_MAP_NAMES']
@@ -116,7 +116,7 @@ class Maps(fits.HDUList):
         if name in requires_correlation:
             # Makes a copy
             logging.debug('Correlating and returning map: {0}'.format(name))
-            return tophat_correlate(data, self.theta)
+            return disk_correlate(data, self.theta)
         else:
             # Doesn't make a copy, which is ok since
             # we only read from this array
@@ -243,7 +243,7 @@ class Maps(fits.HDUList):
         for name in BASIC_MAP_NAMES:
             # Compute the derived map
             data = eval('self["{0}"].data'.format(name))
-            data_corr = tophat_correlate(data, self.theta)
+            data_corr = disk_correlate(data, self.theta)
             name = '{0}_corr'.format(name)
             hdu = self._make_hdu(data_corr, name)
             # Put it in the HDUList, removing an older version

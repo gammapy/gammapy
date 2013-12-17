@@ -5,7 +5,7 @@ Reflected region background estimation
 from __future__ import print_function, division
 import numpy as np
 from numpy import sin, cos, arctan2, sqrt
-from ..image.utils import exclusion_distance, lookup
+from ..image import exclusion_distance, lookup
 
 __all__ = ['ReflectedRegionMaker', 'ReflectedBgMaker']
 

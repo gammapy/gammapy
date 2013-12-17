@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 import numpy as np
 from astropy.io import fits
 from .. import stats
-from ..image.utils import tophat_correlate
+from ..image.utils import disk_correlate
 
 __all__ = ['IterativeSourceDetector', 'run_detection']
 
@@ -148,8 +148,8 @@ class IterativeSourceDetector(object):
 
         self.iter_maps['significance'] = dict()
         for scale in self.scales:
-            counts = tophat_correlate(self.maps['counts'], scale)
-            background = tophat_correlate(self.iter_maps['background'], scale)
+            counts = disk_correlate(self.maps['counts'], scale)
+            background = disk_correlate(self.iter_maps['background'], scale)
             significance = stats.significance(counts, background)
             self.iter_maps['significance'][scale] = significance
 
