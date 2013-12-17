@@ -1,5 +1,5 @@
-Run lists
-=========
+Observation lists
+=================
 
 Run lists specify a list of observation runs to be processed by a given tool.
 
@@ -42,9 +42,4 @@ XML format
 ----------
 
 GammaLib / ctools uses an "observation definition" XML format described
-`here <http://gammalib.sourceforge.net/user_manual/modules/obs.html#describing-observations-using-xml>`_.
-
-GTIs
-----
-
-TODO: describe where GTIs are used.
+`here <http://gammalib.sourceforge.net/user_manual/modules/obs.html#describing-observations-using-xml>`__.
