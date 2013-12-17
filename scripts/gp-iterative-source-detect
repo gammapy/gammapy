@@ -8,7 +8,8 @@ TODO: explain.
 # Parse command line arguments
 
 from astropy.utils.compat import argparse
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('scales', type=float, nargs='*', default=[0.1, 0.2, 0.4],
                     help='List of spatial scales (deg) to search for sources'
                     '[default=%(default)s]')

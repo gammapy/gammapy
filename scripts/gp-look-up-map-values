@@ -9,7 +9,8 @@
 # Parse command line arguments
 
 from astropy.utils.compat import argparse
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('infile', type=str,
                     help='Input FITS file name')
 parser.add_argument('x', type=float,

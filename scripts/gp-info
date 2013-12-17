@@ -8,7 +8,8 @@ TODO: explain.
 # Parse command line arguments
 
 from astropy.utils.compat import argparse
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('--version', action='store_true',
                     help='Print gammapy version number')
 parser.add_argument('--tools', action='store_true',

@@ -13,7 +13,8 @@ from gammapy.obs import RunList
 
 import sys
 from astropy.utils.compat import argparse
-parser = argparse.ArgumentParser(description=__doc__)
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 subparsers = parser.add_subparsers()
 
 parser.add_argument('in', type=argparse.FileType('r'),
