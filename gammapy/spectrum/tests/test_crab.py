@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 from astropy.tests.helper import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.units import Unit
 from .. import crab
 
@@ -14,44 +15,40 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_eval():
-    # Check diff_flux and int_flux functions
-    # against dict values containing published numbers.
-    e, e1, e2 = 1, 1, 1e3
-    for ref, values in crab.refs.items():
-        f = crab.crab_flux(e, ref)
-        I = crab.crab_integral_flux(e1, e2, ref)
-        g = crab.crab_spectral_index(e, ref)
-        f_ref = values['diff_flux']
-        if ref == 'hess_ecpl':
-            f_ref *= np.exp(-e / values['cutoff'])
-
-        I_ref = values['int_flux']
-        g_ref = values['index']
-        f_err = (f - f_ref) / f_ref
-        I_err = (I - I_ref) / I_ref
-        g_err = g - g_ref
-        # TODO: add asserts
-        # print(('%15s ' + '%13.5g' * 6) %
-        #      (ref, f, I, g, f_err, I_err, g_err))
+    e, e1, e2 = 2, 1, 1e3
+    
+    # This is just a test that the functions run
+    # These results are not verified
+    vals = dict()
+    vals['meyer'] = [5.57243750e-12, 2.07445434e-11, 2.63159544e+00]
+    vals['hegra'] = [4.60349681e-12, 1.74688947e-11, 2.62000000e+00]
+    vals['hess_pl'] = [5.57327158e-12, 2.11653715e-11, 2.63000000e+00]
+    vals['hess_ecpl'] = [6.23714253e-12, 2.26797344e-11, 2.52993006e+00]
+    
+    for reference in crab.REFERENCES:
+        f = crab.crab_flux(e, reference)
+        I = crab.crab_integral_flux(e1, e2, reference)
+        g = crab.crab_spectral_index(e, reference)
+        assert_allclose([f, I, g], vals[reference])
 
 
 def plot_spectra(what="flux"):
     import matplotlib.pyplot as plt
     plt.clf()
     e = np.logspace(-2, 3, 100)
-    for ref in crab.refs.keys():
+    for reference in crab.REFERENCES:
         if what == 'flux':
-            y = Unit('TeV').to('erg') * e ** 2 * crab.crab_flux(e, ref)
+            y = Unit('TeV').to('erg') * e ** 2 * crab.crab_flux(e, reference)
         elif what == 'int_flux':
             # @todo there are integration problems!
             e2 = 1e4 * np.ones_like(e)
-            y = crab.crab_integral_flux(e, e2, ref=ref)
+            y = crab.crab_integral_flux(e, e2, reference=reference)
         if what == 'ratio':
-            y = (crab.crab_flux(e, ref) /
+            y = (crab.crab_flux(e, reference) /
                  crab.crab_flux(e, 'meyer'))
         elif what == 'index':
-            y = crab.crab_spectral_index(e, ref)
-        plt.plot(e, y, label=ref)
+            y = crab.crab_spectral_index(e, reference)
+        plt.plot(e, y, label=reference)
 
     plt.xlabel('Energy (TeV)')
     if what == 'int_flux':
@@ -78,10 +75,3 @@ def plot_spectra(what="flux"):
     plt.grid(which='both')
     plt.legend(loc='best')
     plt.savefig(filename)
-
-if __name__ == '__main__':
-    test_eval()
-    plot_spectra('flux')
-    plot_spectra('int_flux')
-    plot_spectra('ratio')
-    plot_spectra('index')
