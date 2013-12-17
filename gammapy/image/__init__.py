@@ -4,4 +4,3 @@ from .healpix import *
 from .measure import *
 from .profile import *
 from .utils import *
-from . import _old_utils
