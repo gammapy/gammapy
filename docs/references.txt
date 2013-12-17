@@ -1,0 +1,12 @@
+.. _scikit-image: http://scikit-image.org
+.. _GammaLib: http://gammalib.sourceforge.net
+.. _ctools: http://cta.irap.omp.eu/ctools
+.. _Astropy: http://astropy.org
+.. _photutils: http://photutils.readthedocs.org
+.. _ROOT: http://root.cern.ch/
+.. _rootpy: http://rootpy.org
+.. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
+.. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
+.. _CIAO: http://cxc.cfa.harvard.edu/ciao/
+.. _imfun: http://code.google.com/p/image-funcut/
+.. _aplpy: http://aplpy.github.io

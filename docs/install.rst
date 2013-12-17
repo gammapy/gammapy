@@ -1,3 +1,5 @@
+.. include:: references.txt
+
 .. _install:
 
 Installation
@@ -55,35 +57,32 @@ from the `CIAO`_ Chandra satellite X-ray data analysis package.
 
 Building Sherpa and all the required libraries from source is very difficult.
 You should install the binary version of CIAO as described
-`here <http://cxc.cfa.harvard.edu/ciao/>`__,
+`here <http://cxc.cfa.harvard.edu/ciao/download>`__,
 make sure you include Sherpa and exclude the Chandra CALDB.
 But then the Sherpa Python and numpy will not work with the existing
 Python, numpy, astropy, gammapy, ... on your system.
+
 You have to re-install Astropy, gammapy and any other Python packages
 that you want to use in the same script as Sherpa into the CIAO Python.
+Sometimes this just works, but sometimes you'll run into compilation errors
+when e.g. the C extensions in ``astropy.wcs`` or ``astropy.io.fits`` are compiled.
 
-Here's a useful trick that you can try if you get error messages
-trying to install Astropy or gammapy::
+Here's a few tricks that might help you make it work.
+
+* Execute the  
+  `ciao-python-fix <http://cxc.cfa.harvard.edu/ciao/threads/ciao_install/index.html#ciao_python_fix>`__
+  script after installing CIAO::
+
+   cd $CIAO_DIR
+   bash bin/ciao-python-fix
+
+* Set ``LDFLAGS`` and use ``ciaorun`` before installing a Python package with C extensions::
 
    export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib" 
    ciaorun python setup.py install
 
-And if for some reason ``import astropy`` or ``import gammapy`` picks up
-the system Python version even though you have installed them into the
-Sherpa Python, try this:: 
+* Add these folders to your ``PATH`` and ``PYTHONPATH`` so that the right command line tools or
+  Python packages are picked up instead of the ones in other system folders::
 
-   export PYTHONPATH=$PYTHONPATH:$CIAO_DIR/ots/lib/python2.7/site-packages/
-
-.. _scikit-image: http://scikit-image.org
-.. _GammaLib: http://gammalib.sourceforge.net
-.. _ctools: http://cta.irap.omp.eu/ctools
-.. _Astropy: http://astropy.org
-.. _photutils: http://photutils.readthedocs.org
-.. _ROOT: http://root.cern.ch/
-.. _rootpy: http://rootpy.org
-.. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
-.. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
-.. _CIAO: http://cxc.cfa.harvard.edu/ciao/
-.. _imfun: http://code.google.com/p/image-funcut/
-.. _aplpy: http://aplpy.github.io
-
+   export PATH=$CIAO_DIR/ots/bin:$PATH
+   export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
