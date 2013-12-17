@@ -3,11 +3,19 @@
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['tophat_correlate', 'ring_correlate', 'lookup', 'exclusion_distance',
-           'atrous_image', 'atrous_hdu', 'process_image_pixels', 'images_to_cube',
-           'threshold', 'dilate',
-           'bin_events_in_image', 'bin_events_in_cube',
-           'solid_angle']
+__all__ = ['atrous_hdu', 'atrous_image', 'bbox',
+           'bin_events_in_cube', 'bin_events_in_image',
+           'binary_dilation_circle', 'binary_disk',
+           'binary_opening_circle', 'binary_ring',
+           'contains', 'coordinates',
+           'cube_to_image', 'cube_to_spec',
+           'cutout_box', 'exclusion_distance',
+           'image_groupby', 'images_to_cube',
+           'make_empty_image', 'make_header',
+           'process_image_pixels', 'ring_correlate',
+           'separation', 'solid_angle', 'threshold',
+           'disk_correlate'
+           ]
 
 
 def _get_structure_indices(radius):
@@ -74,7 +82,7 @@ def binary_ring(r_in, r_out):
     return mask1 & mask2
 
 
-def tophat_correlate(image, radius, mode='constant'):
+def disk_correlate(image, radius, mode='constant'):
     """Correlate image with binary disk kernel.
     
     Parameters
@@ -114,72 +122,6 @@ def exclusion_distance(exclusion):
     distance_inside = distance_transform_edt(np.invert(exclusion))
     distance = np.where(exclusion, distance_outside, -distance_inside)
     return distance
-
-
-def _lookup_pix(image, x, y):
-    """Look up values in an image for given pixel coordinates.
-    
-    image = numpy array
-    x, y = array_like of pixel coordinates (floats OK)
-    """
-    # Find the right pixel
-    x_int = np.round(x).astype(int)
-    y_int = np.round(y).astype(int)
-
-    # Return it's value
-    # Note that numpy has index order (y, x)
-    values = image[y_int, x_int]
-    return values
-
-
-def _lookup_world(image, lon, lat):
-    """Look up values in an image for given world coordinates.
-    
-    image = astropy.io.fits.HDU
-    lon, lat = world coordinates (float OK)
-    """
-    from astropy.wcs import WCS
-    wcs = WCS(image.header)
-    x, y = wcs.wcs_world2pix(lon, lat, 0)
-    return _lookup_pix(image.data, x, y)
-
-
-def lookup(image, x, y, world=True):
-    """Look up values in an image.
-
-    Parameters
-    ----------
-    image : array_like if world=False, astropy.io.fits.ImageHDU if world=True
-        Array or image to look up the value
-    x : array_like
-        Array of X lookup positions
-    y : array_like
-        Array of Y lookup positions
-    world : bool
-        Are (x, y) WCS coordinates?
-    """
-    if world:
-        return _lookup_world(image, x, y)
-    else:
-        return _lookup_pix(image, x, y)
-
-"""Compute common kernels for TS maps
-
-A kernel is a source excess images after PSF convolution.
-TODO: integrate over bins to get accurate kernels.
-"""
-
-
-'''
-class KernelCalculator(object):
-    """Compute PSF-convolved source images,
-    to be used as kernels in the TS calculation"""
-
-    def __init__(self, size=10, source='gauss', psf='gauss'):
-        self.size = size
-
-    def compute
-'''
 
 
 def atrous_image(image, n_levels):
@@ -418,8 +360,8 @@ def image_groupby(images, labels):
     groups = data.groupby('labels')
 
     return groups
-    #out = groups.aggregate(function)
-    #return out
+    # out = groups.aggregate(function)
+    # return out
 
 def images_to_cube(hdu_list):
     """Convert a list of image HDUs into one cube.
@@ -443,11 +385,11 @@ def images_to_cube(hdu_list):
     header = hdu_list[0].header
     header['NAXIS'] = 3
     header['NAXIS3'] = len(hdu_list)
-    #header['CRVAL3']
-    #header['CDELT3']
-    #header['CTYPE3']
-    #header['CRPIX3']
-    #header['CUNIT3']
+    # header['CRVAL3']
+    # header['CDELT3']
+    # header['CTYPE3']
+    # header['CRPIX3']
+    # header['CUNIT3']
     return fits.ImageHDU(data=data, header=header)
 
 
@@ -560,20 +502,33 @@ def threshold(array, threshold=5):
     return data.astype(np.bool).astype(np.uint8)
 
 
-def dilate(array, radius):
-    """ Dilate with disk of given radius.
+def binary_dilation_circle(input, radius):
+    """Dilate with disk of given radius.
     
     Parameters
     ----------
-    array : array_like
+    input : array_like
         Input array
     radius : float
         Dilation radius (pix)    
     """
-    from scipy import ndimage
+    from scipy.ndimage import binary_dilation
     structure = binary_disk(radius)
-    data = ndimage.binary_dilation(array, structure)
-    return data.astype(np.uint8)
+    return binary_dilation(input, structure)
+
+
+def binary_opening_circle(input, radius):
+    """Binary opening with circle as structuring element.
+    
+    `~scipy.ndimage.binary_opening`
+    
+    See Also
+    --------
+    hi
+    """
+    from scipy.ndimage import binary_opening
+    structure = binary_disk(radius)
+    return binary_opening(input, structure)
 
 
 def solid_angle(image, deg=True):
@@ -609,3 +564,153 @@ def solid_angle(image, deg=True):
     area_fraction = np.cos(np.radians(glat))
 
     return equator_area * area_fraction
+
+
+def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
+           proj='CAR', coordsys='GAL',
+           xrefpix=None, yrefpix=None, txt=False):
+    """
+    Generate a new FITS header dictionary.
+    Uses the same parameter names as the Fermi tool gtbin.
+
+    If no reference pixel position is given it is assumed ot be
+    at the center of the image.
+    """
+    nxpix = int(nxpix)
+    nypix = int(nypix)
+    if not xrefpix:
+        xrefpix = (nxpix + 1) / 2.
+    if not yrefpix:
+        yrefpix = (nypix + 1) / 2.
+
+    if coordsys == 'CEL':
+        ctype1, ctype2 = 'RA---', 'DEC--'
+    elif coordsys == 'GAL':
+        ctype1, ctype2 = 'GLON-', 'GLAT-'
+    else:
+        raise Exception('Unsupported coordsys: %s' % proj)
+
+    header = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
+          'CTYPE1': ctype1 + proj,
+          'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1':-binsz,
+          'CTYPE2': ctype2 + proj,
+          'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
+              }
+
+    if txt:
+        header = """
+SIMPLE  = T
+BITPIX  = -64
+NAXIS   = 2
+NAXIS1  = {NAXIS1}
+NAXIS2  = 1800
+CTYPE1  = ''
+CTYPE2  = 'GLAT-AIT'
+CRVAL1  =    0.0
+CRVAL2  =    0.0
+CRPIX1  = 1800.5
+CRPIX2  =  900.5
+CDELT1  =   -0.1
+CDELT2  =    0.1
+EQUINOX = 2000.0
+END""".format(header)
+
+    return header
+
+
+def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
+                proj='CAR', coordsys='GAL',
+                xrefpix=None, yrefpix=None, dtype='float32'):
+    """
+    Generate a maputils.FITSimage object.
+    Uses the same parameter names as the Fermi tool gtbin.
+
+    If no reference pixel position is given it is assumed ot be
+    at the center of the image.
+    """
+    header = make_header(nxpix, nypix, binsz, xref, yref,
+                         proj, coordsys, xrefpix, yrefpix)
+    # Note that FITS and NumPy axis order are reversed
+    shape = (header['NAXIS2'], header['NAXIS1'])
+    data = np.zeros(shape, dtype=dtype)
+    return FITSimage(externalheader=header, externaldata=data)
+
+
+def cutout_box(x, y, radius, nx, ny, format='string'):
+    x, y, radius = int(x), int(y), int(radius)
+    xmin = max(x - radius, 0)
+    xmax = min(x + radius, nx)
+    ymin = max(y - radius, 0)
+    ymax = min(y + radius, ny)
+    box_coords = (xmin, xmax, ymin, ymax)
+    box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
+    if format == 'coords':
+        return box_coords
+    elif format == 'string':
+        return box_string
+    elif format == 'both':
+        return box_coords, box_string
+
+
+def bbox(mask, margin, binsz):
+    """Determine the bounding box of a mask.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
+    """
+    from scipy.ndimage.measurements import find_objects
+    box = find_objects(mask.astype(int))[0]
+    ny, nx = mask.shape
+    xmin = max(0, int(box[1].start - margin / binsz)) + 1
+    xmax = min(nx - 1, int(box[1].stop + margin / binsz)) + 1
+    ymin = max(0, int(box[0].start - margin / binsz)) + 1
+    ymax = min(ny - 1, int(box[0].stop + margin / binsz)) + 1
+    box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
+    box = xmin, xmax, ymin, ymax
+    return box, box_string
+
+
+def cube_to_image(cube, slicepos=None):
+    """ Make an image out of a cube.
+    Both in- and output should by fits.HDUs"""
+    header = cube.header.copy()
+    header['NAXIS'] = 2
+    del header['NAXIS3']
+    del header['CRVAL3']
+    del header['CDELT3']
+    del header['CTYPE3']
+    del header['CRPIX3']
+    del header['CUNIT3']
+    if slicepos == None:
+        data = cube.data.sum()
+    else:
+        data = cube.data[slicepos]
+    return fits.ImageHDU(data, header)
+
+
+def cube_to_spec(cube):
+    """ Integrate spatial dimensions of a FITS cube to give a spectrum """
+    from astropy.units import Unit
+    value = cube.dat
+    A = solid_angle(cube) * Unit('deg**2').to(Unit('sr'))
+    # Note that this is the correct way to get an average flux:
+
+    spec = (value * A).sum(-1).sum(-1)
+    return spec
+
+
+def contains(image, x, y, world=True):
+    """
+    Check if given pixel or world positions are in an image.
+    """
+    x, y = _prepare_arrays(image, x, y, world)
+
+    nx, ny = image.proj.naxis
+    return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
+
+
