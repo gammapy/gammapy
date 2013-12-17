@@ -48,11 +48,6 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
 class FluxProfile(object):
     """Flux profile.
     
-    x : Defines which pixel goes in which bin in combination with x_edges
-    x_edges : Defines binning in x (could be GLON, GLAT, DIST, ...)
-    
-    mask : possibility to mask pixels (i.e. ignore in computations)
-
     Note: over- and underflow is ignored and not stored in the profile
     
     Note: this is implemented by creating bin labels and storing the
@@ -62,27 +57,42 @@ class FluxProfile(object):
 
     TODO: take mask into account everywhere
     TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?    
+
+    Parameters
+    ----------
+    x_image : array_like
+        Label image (2-dimensional)
+    x_edges : array_like
+        Defines binning in `x` (could be GLON, GLAT, DIST, ...)
+    counts, background, exposure : array_like
+        Input images (2-dimensional)
+    mask : 
+        possibility to mask pixels (i.e. ignore in computations)
     """
     
-    def __init__(self, x_edges, x, counts, background, exposure, mask=None):
+    def __init__(self, x_image, x_edges, counts, background, exposure, mask=None):
         import pandas as pd
-        # Make sure input is numpy arrays
+        # Make sure inputs are numpy arrays
         x_edges = np.asanyarray(x_edges)
-        x = np.asanyarray(x)
+        x_image = np.asanyarray(x_image)
         counts = np.asanyarray(counts)
         background = np.asanyarray(background)
         exposure = np.asanyarray(exposure)
-        mask = np.asanyarray(mask)
+        if mask:
+            mask = np.asanyarray(mask)
+        
+        assert (x_image.shape == counts.shape == background.shape ==
+                exposure.shape == mask.shape)
         
         # Remember the shape of the 2D input arrays
-        self.shape = x.shape
+        self.shape = x_image.shape
 
         # Store all input data as 1D vectors in a pandas.DataFrame
-        d = pd.DataFrame(index=np.arange(x.size))
-        d['x'] = x.flat
+        d = pd.DataFrame(index=np.arange(x_image.size))
+        d['x'] = x_image.flat
         # By default np.digitize uses 0 as the underflow bin.
         # Here we ignore under- and overflow, thus the -1
-        d['label'] = np.digitize(x.flat, x_edges) - 1
+        d['label'] = np.digitize(d['x'], x_edges) - 1
         d['counts'] = counts.flat
         d['background'] = background.flat
         d['exposure'] = exposure.flat
@@ -108,9 +118,7 @@ class FluxProfile(object):
         
     def compute(self, method='sum_first'):
         """Compute the flux profile.
-        
-        method : 'sum_first' or 'divide_first'
-        
+                
         Note: the current implementation is very inefficienct in speed and memory.
         There are various fast implementations, but none is flexible enough to
         allow combining many input quantities (counts, background, exposure) in a
@@ -120,6 +128,12 @@ class FluxProfile(object):
 
         pandas DataFrame groupby followed by apply is flexible enough, I think:
         http://pandas.pydata.org/pandas-docs/dev/groupby.html
+
+        Parameters
+        ----------
+        method : {'sum_first', 'divide_first'}
+            Method to use flux points.
+        
         """
         # Shortcuts to access class info needed in this method
         d = self.data
@@ -136,7 +150,12 @@ class FluxProfile(object):
         p['flux'] = p['excess'] / p['exposure']
 
     def plot(self, which='n_entries', xlabel='Distance (deg)', ylabel=None):
-        """Plot flux profile."""
+        """Plot flux profile.
+        
+        Parameters
+        ----------
+        TODO
+        """
         import matplotlib.pyplot as plt
         if ylabel == None:
             ylabel = which
@@ -151,5 +170,9 @@ class FluxProfile(object):
         #plt.ylim(-10, 20)
         
     def save(self, filename):
-        """Save all profiles to a FITS file."""
+        """Save all profiles to a FITS file.
+        
+        Parameters
+        ----------
+        """
         raise NotImplementedError
