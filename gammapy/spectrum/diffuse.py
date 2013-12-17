@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
 from .utils import EnergyAxis
-from . import powerlaw as pl
+from . import powerlaw
 
 __all__ = ['GalacticDiffuse', 'diffuse_gamma_ray_flux']
 
@@ -85,7 +85,7 @@ class GalacticDiffuse(object):
         spectral_index : array
         """
         spectrum = lambda energy_: self.flux(glon, glat, energy_)
-        spectral_index = pl.g_from_f(energy, spectrum)
+        spectral_index = powerlaw.g_from_f(energy, spectrum)
         # return g_from_points(*(self.lookup(glon, glat, e)[:-1]))
         return spectral_index
 

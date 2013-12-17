@@ -7,7 +7,10 @@ from .models import PowerLaw
 __all__ = ['FluxPointCalculator']
 
 class FluxPointCalculator(object):
-    """Compute differential flux points for given integral flux points."""
+    """Compute differential flux points for given integral flux points.
+    
+    TODO: I think it would be better to change this into functions.
+    """
     def __init__(self, model=None,
                  xmethod="LogCenter",
                  ymethod='ExcessEqualsExpected'):

@@ -1,23 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Implement asymmetric chi^2 fit statistic in Sherpa
+"""Implement asymmetric chi-square fit statistic in Sherpa.
 
-To load the chi2asym fit statistic in your sherpa session:
-import sherpa_chi2asym
-sherpa_chi2asym.load_chi2asym_stat()
+To load the ``chi2asym`` fit statistic in your sherpa session:
+
+>>> import sherpa_chi2asym
+>>> sherpa_chi2asym.load_chi2asym_stat()
 """
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func', 'load_chi2asym_stat']
+__all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func',
+           'load_chi2asym_stat']
 
 def chi2asym_stat_func(data, model, staterror=None,
                        syserror=None, weight=None):
-    """Define asymmetric Chi2 errors, as currently done in the
-    HESS spectral code.
+    """Define asymmetric chi-square errors.
+
+    TODO: reference ROOT TGraphAsymErrors and add test against ROOT result.
 
     To make it fit into the Sherpa scheme we do this hack:
-    staterror = statistical down error
-    syserror = statistical up error
+    * staterror = statistical down error
+    * syserror = statistical up error
     """
     # The error is attached to the data point, so if model > data,
     # we have to use the up error, represented by syserror

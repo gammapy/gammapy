@@ -28,7 +28,6 @@ def power_law_eval(energy, norm, gamma, energy_ref):
         Energy at which to compute the differential flux
     gamma : array_like
         Power law spectral index
-    
     """
     return norm * (energy / energy_ref) ** (-gamma)
 

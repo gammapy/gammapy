@@ -2,17 +2,17 @@
 """
 Spectrum estimation and modeling methods.
 """
-from . import cosmic_ray
+from .cosmic_ray import *
 from . import crab
 from . import diffuse
-from . import fitter
+from .fitter import *
 from . import fitting_utils
-from . import flux_point
-from . import inverse_compton
-from . import isrf
+from .flux_point import *
+from .inverse_compton import *
+from .isrf import *
 from . import models
-from . import pion
+from .pion import *
 from . import powerlaw
-from . import sed
+from .sed import *
 from . import sherpa_chi2asym
-from . import utils
+from .utils import *
