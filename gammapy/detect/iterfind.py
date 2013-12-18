@@ -3,7 +3,7 @@
 
 This is a prototype implementation of the following algorithm:
 1. Input is: count, background and exposure map and list of scales
-2. Compute significance maps on multiple scales (tophat correlate)
+2. Compute significance maps on multiple scales (disk-correlate)
 3. Largest peak on any scale gives a seed position / extension (the scale)
 4. Fit a 2D Gauss-model source using the seed parameters
 5. Add the source to a list of detected sources and the background model
@@ -17,7 +17,7 @@ TODO: tons of things, e.g.
     * Write more debug maps (e.g. excess)
       and info (e.g. sources_guess positions).
     * Add PSF convolution
-* Use TS maps with Gauss source morphology instead of tophat.
+* Use TS maps with Gauss source morphology instead of disk.
 * Make it more modular and more abstract; put in gammapy.detect
   - user should be able to plug-in their significance map computation?
   - support different source models?
@@ -215,7 +215,7 @@ class IterativeSourceDetector(object):
 
         source = dict()
         source['xpos'], source['ypos'] = peak['xpos'], peak['ypos']
-        # TODO: introduce rough scale factor tophat -> gauss here
+        # TODO: introduce rough scale factor disk -> gauss here
         SIGMA_SCALE_FACTOR = 1
         source['sigma'] = SIGMA_SCALE_FACTOR * peak['scale']
         logging.debug('xpos: {xpos}'.format(**source))

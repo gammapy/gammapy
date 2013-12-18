@@ -96,7 +96,7 @@ class Maps(fits.HDUList):
         logging.debug('theta: {0}'.format(self.theta))
 
     def get_basic(self, name):
-        """Gets the data of a basic map and tophat correlates if required.
+        """Gets the data of a basic map and disk-correlates if required.
         
         Parameters
         ----------
@@ -236,7 +236,7 @@ class Maps(fits.HDUList):
         """Make correlated versions of all the basic maps.
 
         @note This is mainly useful for debugging.
-        @note All maps are tophat-correlated, even e.g. the off map
+        @note All maps are disk-correlated, even e.g. the off map
         if it had been ring-correlated before already.
         """
         logging.debug('Making correlated basic maps.')

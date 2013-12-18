@@ -9,12 +9,11 @@ __all__ = ['atrous_hdu', 'atrous_image', 'bbox',
            'binary_opening_circle', 'binary_ring',
            'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
-           'cutout_box', 'exclusion_distance',
+           'cutout_box', 'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'process_image_pixels', 'ring_correlate',
+           'paste_cutout_into_image', 'process_image_pixels', 'ring_correlate',
            'separation', 'solid_angle', 'threshold',
-           'disk_correlate'
            ]
 
 
@@ -569,13 +568,24 @@ def solid_angle(image, deg=True):
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
            proj='CAR', coordsys='GAL',
            xrefpix=None, yrefpix=None, txt=False):
-    """
-    Generate a new FITS header dictionary.
+    """Generate a FITS header from scratch.
+
     Uses the same parameter names as the Fermi tool gtbin.
 
     If no reference pixel position is given it is assumed ot be
     at the center of the image.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    header : `astropy.io.fits.Header`
+        Header
     """
+    from astropy.io import fits
+    
     nxpix = int(nxpix)
     nypix = int(nypix)
     if not xrefpix:
@@ -615,25 +625,39 @@ CDELT2  =    0.1
 EQUINOX = 2000.0
 END""".format(header)
 
-    return header
+
+    return fits.Header(header)
 
 
 def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                 proj='CAR', coordsys='GAL',
                 xrefpix=None, yrefpix=None, dtype='float32'):
-    """
-    Generate a maputils.FITSimage object.
+    """Make an empty (i.e. values 0) image.
+    
     Uses the same parameter names as the Fermi tool gtbin.
 
     If no reference pixel position is given it is assumed ot be
     at the center of the image.
+
+    Parameters
+    ----------
+    TODO
+
+    Returns
+    -------
+    image : `astropy.io.fits.ImageHDU`
+        Empty image
     """
+    from astropy.io import fits
+
     header = make_header(nxpix, nypix, binsz, xref, yref,
                          proj, coordsys, xrefpix, yrefpix)
+
     # Note that FITS and NumPy axis order are reversed
     shape = (header['NAXIS2'], header['NAXIS1'])
     data = np.zeros(shape, dtype=dtype)
-    return FITSimage(externalheader=header, externaldata=data)
+
+    return fits.ImageHDU(data, header)
 
 
 def cutout_box(x, y, radius, nx, ny, format='string'):
@@ -682,7 +706,7 @@ def bbox(mask, margin):
     ymax = min(ny - 1, int(box[0].stop + margin)) + 1
     # box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
     bbox = xmin, xmax, ymin, ymax
-    return bbox #, box_string
+    return bbox  # , box_string
 
 
 def cube_to_image(cube, slicepos=None):
@@ -725,3 +749,33 @@ def contains(image, x, y, world=True):
     return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
 
+def paste_cutout_into_image(total, cutout, method='sum'):
+    """Paste cutout into a total image.
+    
+    Parameters
+    ----------
+    total, cutout : `astropy.io.fits.ImageHDU`
+        Total and cutout image.
+    method : {'sum', 'replace'}
+        Sum or replace total values with cutout values.
+
+    Returns
+    -------
+    total : `astropy.io.fits.ImageHDU`
+        A reference to the total input HDU that was modified in-place.
+    """
+    from astropy.wcs import WCS
+
+    # find offset
+    lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, 0)
+    x, y = WCS(total.header).wcs_world2pix(lon, lat, 0)
+    x, y = int(np.round(x)), int(np.round(y))
+    dy, dx = cutout.shape
+    #import IPython; IPython.embed(); 1/0
+
+    if method == 'sum':
+        total.data[y : y + dy, x : x + dx] += cutout.data
+    elif method == 'replace':
+        total.data[y : y + dy, x : x + dx] = cutout.data
+    else:
+        raise ValueError('Invalid method: {0}'.format(method))

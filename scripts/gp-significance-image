@@ -26,7 +26,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from astropy.io import fits
-from gammapy.image import tophat_correlate
+from gammapy.image import disk_correlate
 from gammapy.stats import significance_on_off
 
 logging.info('Reading {0}'.format(args['infile']))
@@ -38,8 +38,8 @@ a_off = hdus['OffExposure'].data
 
 logging.info('Correlating n_on and a_on map')
 theta = args['theta'] / hdus['On'].header['CDELT2']
-n_on = tophat_correlate(n_on, theta)
-a_on = tophat_correlate(a_on, theta)
+n_on = disk_correlate(n_on, theta)
+a_on = disk_correlate(a_on, theta)
 
 logging.info('Computing significance map')
 alpha = a_on / a_off
