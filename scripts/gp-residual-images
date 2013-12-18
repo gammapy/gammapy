@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Compute source model residual images.
+
+The input `data_file` must contain the following HDU extensions:
+
+* 'On' -- Counts image
+* 'Background' -- Background image
+"""
+
+# Parse command line arguments
+
+from astropy.utils.compat import argparse
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('model_file', type=str,
+                    help='Input excess model FITS file name')
+parser.add_argument('data_file', type=str,
+                    help='Input data FITS file name')
+parser.add_argument('out_file', type=str,
+                    help='Output FITS file name')
+parser.add_argument('--thetas', type=str, default='0.1',
+                    help='On-region correlation radii (deg, comma-separated)')
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
+args = parser.parse_args()
+args = vars(args)
+
+thetas = [float(theta) for theta in args['thetas'].split(',')]
+
+# Execute script
+
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+import numpy as np
+from astropy.io import fits
+from gammapy.image import disk_correlate
+from gammapy.stats import significance
+
+logging.info('Reading {0}'.format(args['data_file']))
+hdus = fits.open(args['data_file'])
+header = hdus[0].header
+counts = hdus['On'].data.astype(np.float64)
+background = hdus['Background'].data.astype(np.float64)
+
+logging.info('Reading {0}'.format(args['model_file']))
+model = fits.getdata(args['model_file'])
+
+background_plus_model = background + model
+
+out_hdu_list = fits.HDUList() 
+
+for theta in thetas:
+    logging.info('Processing theta = {0} deg'.format(theta))
+    
+    theta_pix = theta / header['CDELT2']
+    counts_corr = disk_correlate(counts, theta_pix)
+    background_plus_model_corr = disk_correlate(background_plus_model, theta_pix)
+
+    #excess_corr = counts_corr - background_plus_model_corr
+    significance_corr = significance(counts_corr, background_plus_model_corr)
+
+    name = 'RESIDUAL_SIGNIFICANCE_{0}'.format(theta)
+    logging.info('Appending HDU extension: {0}'.format(name))
+    hdu = fits.ImageHDU(significance_corr, header, name)
+    out_hdu_list.append(hdu)
+
+logging.info('Writing {0}'.format(args['out_file']))
+out_hdu_list.writeto(args['out_file'], clobber=args['clobber'])
+    
+
+"""
+        # Model significance
+        # significance gives NaNs with values of almost 0
+        # this is a little trick to get rid of those
+        eps = 1e-5 * background_corr
+        data = significance(bm_corr + eps, background_corr)
+        filename = join(theta, 'model_significance.fits')
+        logging.info('Writing %s' % filename)
+        fits.writeto(filename, data.astype('float32'),
+                       header, clobber=True)
+"""
