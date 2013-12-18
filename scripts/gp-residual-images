@@ -67,16 +67,3 @@ for theta in thetas:
 
 logging.info('Writing {0}'.format(args['out_file']))
 out_hdu_list.writeto(args['out_file'], clobber=args['clobber'])
-    
-
-"""
-        # Model significance
-        # significance gives NaNs with values of almost 0
-        # this is a little trick to get rid of those
-        eps = 1e-5 * background_corr
-        data = significance(bm_corr + eps, background_corr)
-        filename = join(theta, 'model_significance.fits')
-        logging.info('Writing %s' % filename)
-        fits.writeto(filename, data.astype('float32'),
-                       header, clobber=True)
-"""
