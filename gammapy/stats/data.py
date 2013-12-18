@@ -197,26 +197,25 @@ def compute_total_stats(counts, exposure, background=None,
     t['n_pix_map'] = mask.size
     t['n_pix_mask'] = mask.sum()
     t['n_pix_fraction'] = t['n_pix_mask'] / float(t['n_pix_map'])
-    t['counts'] = counts[mask].sum()
-    t['background'] = background[mask].sum()
+    t['counts'] = counts[mask].sum(dtype=np.float64)
+    t['background'] = background[mask].sum(dtype=np.float64)
     # Note that we use mean exposure (not sum) here!!!
-    t['exposure'] = exposure[mask].mean()
-    t['solid_angle'] = solid_angle[mask].sum()
+    t['exposure'] = exposure[mask].mean(dtype=np.float64)
+    t['solid_angle'] = solid_angle[mask].sum(dtype=np.float64)
     
     excess = counts - background
     t['excess'] = t['counts'] - t['background']
-    t['excess_2'] = excess[mask].sum()
+    t['excess_2'] = excess[mask].sum(dtype=np.float64)
 
     flux = excess / exposure
     t['flux'] = (t['excess']) / t['exposure']
     t['flux_2'] = t['excess_2'] / t['exposure']
-    t['flux_3'] = flux[mask].sum()
+    t['flux_3'] = flux[mask].sum(dtype=np.float64)
     
     surface_brightness = flux / solid_angle
     t['surface_brightness'] = t['flux'] / t['solid_angle']
     t['surface_brightness_2'] = t['flux_2'] / t['solid_angle']
     # Note that we use mean exposure (not sum) here!!!
-    t['surface_brightness_3'] = surface_brightness[mask].mean()
+    t['surface_brightness_3'] = surface_brightness[mask].mean(dtype=np.float64)
 
     return t
- 
