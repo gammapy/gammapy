@@ -3,7 +3,8 @@
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['Stats', 'make_stats', 'combine_stats']
+__all__ = ['Stats', 'make_stats', 'combine_stats',
+           'compute_total_stats']
 
 
 class Stats(object):
@@ -128,3 +129,88 @@ def combine_stats(stats_1, stats_2, weight_method="none"):
     a_off = weight_1 * stats_1.a_off + weight_2 * stats_2.a_off
 
     return Stats(n_on, n_off, a_on, a_off)
+
+
+def compute_total_stats(counts, exposure, background=None,
+                        solid_angle=None, mask=None):
+    r"""Compute total stats for arrays of per-bin stats.
+
+    The `result` dictionary contains a `flux` entry computed as
+    
+    .. math:: \textt{flux} = \sum\textt{excess} / \sum\textt{exposure}
+    
+    as well as a `flux3` entry computed as
+    
+    .. math:: \textt{flux} = \sum \left( \textt{excess} / \textt{exposure} \right)
+
+    The output ``flux`` units are the inverse of the input ``exposure`` units, e.g.
+    
+    * ``exposure`` in cm^2 s -> ``flux`` in cm^-2 s^-1
+    * ``exposure`` in cm^2 s TeV -> ``flux`` in cm^-2 s^-1 TeV-1
+    
+    The output ``surface_brightness`` units in addition depend on the ``solid_angle`` units, e.g.
+    
+    * ``exposure`` in cm^2 s and ``solid_angle`` in deg^2 -> ``surface_brightness`` in cm^-2 s^-1 deg^-2
+    
+    TODOs:
+
+    * integrate this with the `Stats` class.
+    * add statistical errors on excess, flux, surface brightness
+    
+    Parameters
+    ----------
+    counts, exposure : array_like
+        Input arrays
+    background, solid_angle, mask : array_like
+        Optional input arrays
+    
+    Returns
+    -------
+    result : dict
+        Dictionary of total stats (for now, see the code for which entries it has).
+    
+    See also
+    --------
+    gammapy.image.profile.FluxProfile.compute
+    """
+    counts = np.asanyarray(counts)
+    exposure = np.asanyarray(exposure)
+
+    if solid_angle:
+        background = np.asanyarray(background)
+    else:
+        background = np.zeros_like(counts)
+
+    if solid_angle:
+        solid_angle = np.asanyarray(solid_angle)
+    else:
+        solid_angle = np.ones_like(counts)
+
+    if mask:
+        mask = np.asanyarray(mask)
+    else:
+        mask = np.ones_like(counts)
+
+    t = dict()
+    t['n_entries'] = mask.sum()
+    t['counts'] = counts[mask].sum()
+    t['background'] = counts[mask].sum()
+    t['exposure'] = exposure[mask].sum()
+    t['solid_angle'] = solid_angle[mask].sum()
+    
+    excess = counts - background
+    t['excess'] = t['counts'] - t['background']
+    t['excess_2'] = excess[mask].sum()
+
+    flux = excess / exposure
+    t['flux'] = (t['counts'] - t['background']) / t['exposure']
+    t['flux_2'] = t['excess'] / t['exposure']
+    t['flux_3'] = flux[mask].sum()
+    
+    surface_brightness = flux / solid_angle
+    t['surface_brightness'] = t['flux'] / t['solid_angle']
+    t['surface_brightness_2'] = t['flux_2'] / t['solid_angle']
+    t['surface_brightness_3'] = surface_brightness[mask].sum()
+
+    return t
+ 

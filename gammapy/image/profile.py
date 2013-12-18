@@ -57,6 +57,7 @@ class FluxProfile(object):
 
     TODO: take mask into account everywhere
     TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?    
+    TODO: add `solid_angle` to input arrays.
 
     Parameters
     ----------
@@ -116,9 +117,11 @@ class FluxProfile(object):
         # so we store it separately
         self.x_edges = x_edges
         
-    def compute(self, method='sum_first'):
+    def compute(self):
         """Compute the flux profile.
-                
+        
+        TODO: call `gammapy.stats.compute_total_stats` instead.
+        
         Note: the current implementation is very inefficienct in speed and memory.
         There are various fast implementations, but none is flexible enough to
         allow combining many input quantities (counts, background, exposure) in a
@@ -129,11 +132,14 @@ class FluxProfile(object):
         pandas DataFrame groupby followed by apply is flexible enough, I think:
         http://pandas.pydata.org/pandas-docs/dev/groupby.html
 
-        Parameters
-        ----------
-        method : {'sum_first', 'divide_first'}
-            Method to use flux points.
-        
+        Returns
+        -------
+        results : dict
+            Dictionary of profile measurements, also stored in `self.profile`.
+
+        See also
+        --------
+        gammapy.stats.data.compute_total_stats
         """
         # Shortcuts to access class info needed in this method
         d = self.data
@@ -148,6 +154,8 @@ class FluxProfile(object):
             #p['{0}_mean'.format(name)] = p['{0}_sum'.format(name)] / p['n_entries']
         p['excess'] = p['counts'] - p['background'] 
         p['flux'] = p['excess'] / p['exposure']
+
+        return p
 
     def plot(self, which='n_entries', xlabel='Distance (deg)', ylabel=None):
         """Plot flux profile.
