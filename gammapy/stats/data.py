@@ -135,13 +135,15 @@ def compute_total_stats(counts, exposure, background=None,
                         solid_angle=None, mask=None):
     r"""Compute total stats for arrays of per-bin stats.
 
-    The `result` dictionary contains a `flux` entry computed as
+    The ``result`` dictionary contains a ``flux`` entry computed as
     
-    .. math:: \textt{flux} = \sum\textt{excess} / \sum\textt{exposure}
+    .. math:: F = N / E = \sum{N_i} / \sum{E_i}
     
-    as well as a `flux3` entry computed as
+    as well as a ``flux3`` entry computed as
     
-    .. math:: \textt{flux} = \sum \left( \textt{excess} / \textt{exposure} \right)
+    .. math:: F = \sum{F_i} = \sum{\left(N_i / E_i\right)}
+
+    where ``F`` is flux, ``N`` is excess and ``E`` is exposure.
 
     The output ``flux`` units are the inverse of the input ``exposure`` units, e.g.
     
