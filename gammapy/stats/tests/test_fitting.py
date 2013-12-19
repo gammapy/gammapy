@@ -23,4 +23,4 @@ def test_PoissonLikelihoodFitter():
 
     fitter = PoissonLikelihoodFitter()
     model = fitter(model, x, y, dx)
-    assert_allclose(model.parameters, [ 995.29239606,1.99019548, 3.00869128])
+    assert_allclose(model.parameters, [995.29239606, 1.99019548, 3.00869128], rtol=1e-3)
