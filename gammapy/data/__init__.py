@@ -23,6 +23,7 @@ from astropy.table import Table
 
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
+                     'diffuse_gamma_spectrum',
                      'electron_spectrum']
 
 remote_datasets = ['fermi_galactic_center'
@@ -130,33 +131,44 @@ def tev_spectrum(source_name):
     return table
 
 
-def _read_electron_spectrum_hess(filename):
+def diffuse_gamma_spectrum(reference):
+    """Get published diffuse gamma-ray spectrum.
+    
+    TODO: give references to publications and describe the returned table.
+    
+    Parameters
+    ----------
+    reference : {'Fermi', 'Fermi2'}
+        Which publication.
+    
+    Returns
+    -------
+    spectrum : `astropy.table.Table`
+        Energy spectrum as a table (one flux point per row).    
+    """
+    if reference == 'Fermi':
+        filename = 'tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'
+    elif reference == 'Fermi2':
+        filename = 'tev_spectra/diffuse_isotropic_gamma_spectrum_fermi2.txt'
+    else:
+        raise ValueError('Data not available for reference: {0}'.format(reference))
+
+    return _read_diffuse_gamma_spectrum_fermi(filename)
+
+
+def _read_diffuse_gamma_spectrum_fermi(filename):
     filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
-                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+                       names = ['energy', 'flux', 'flux_hi', 'flux_lo'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
-    
-    # The ascii files store fluxes as (E ** 3) * dN / dE.
-    # Here we change this to dN / dE.
+
+    table['energy'] = Quantity(table['energy'], 'MeV').to('TeV')
+
     for colname in table.colnames:
         if 'flux' in colname:
-            table[colname] = table[colname] / table['energy'] ** 3
-            table[colname] = Quantity(table[colname], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
-            
-    table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
-
-    return table
-
-
-def _read_electron_spectrum_fermi(filename):
-    filename = get_pkg_data_filename(filename)
-    t = Table.read(filename, format='ascii')
-
-    table = Table()
-    table['energy'] = Quantity(t['E'], 'GeV').to('TeV')
-    table['flux'] = Quantity(t['y'], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
-    flux_err = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
-    table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+            energy = Quantity(table['energy'], 'TeV')
+            energy2_flux = Quantity(table[colname], 'MeV cm^-2 s^-1 sr^-1')
+            table[colname] = (energy2_flux / energy ** 2).to('m^-2 s^-1 TeV^-1 sr^-1')
 
     return table
 
@@ -187,3 +199,35 @@ def electron_spectrum(reference):
         return _read_electron_spectrum_fermi(filename)
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
+
+
+def _read_electron_spectrum_hess(filename):
+    filename = get_pkg_data_filename(filename)
+    table = Table.read(filename, format='ascii',
+                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+    table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
+    
+    table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
+
+    # The ascii files store fluxes as (E ** 3) * dN / dE.
+    # Here we change this to dN / dE.
+    for colname in table.colnames:
+        if 'flux' in colname:
+            energy = Quantity(table['energy'], 'TeV')
+            energy3_flux = Quantity(table[colname], 'GeV^2 m^-2 s^-1 sr^-1')
+            table[colname] = (energy3_flux / energy ** 3).to('m^-2 s^-1 TeV^-1 sr^-1')
+
+    return table
+
+
+def _read_electron_spectrum_fermi(filename):
+    filename = get_pkg_data_filename(filename)
+    t = Table.read(filename, format='ascii')
+
+    table = Table()
+    table['energy'] = Quantity(t['E'], 'GeV').to('TeV')
+    table['flux'] = Quantity(t['y'], 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+    flux_err = 0.5 * (t['yerrtot_lo'] + t['yerrtot_up'])
+    table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
+
+    return table
