@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fit and plot Crab nebula spectrum."""
 import matplotlib.pyplot as plt
 from astropy.modeling.models import PowerLaw1D

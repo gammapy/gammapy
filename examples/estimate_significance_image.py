@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Estimate a Poisson significance image for a given counts image.
 
 Here's a high-level description ... see the code for details:
