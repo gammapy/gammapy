@@ -23,7 +23,8 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
         A reference image to project to.  Must have a 'COORDSYS' keyword of
         either 'galactic' or 'icrs'
     hpx_coord_system : 'galactic' or 'icrs'
-        The target coordinate system.  Should match reference_image.header['COORDSYS']
+        The target coordinate system.  Should be derived from the HEALPIX
+        COORDSYS keyword if it is a FITS file
 
     Returns
     -------
@@ -36,8 +37,9 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     >>> from astropy.io import fits
     >>> from gammapy.image.healpix import healpix_to_image
     >>> healpix_data = hp.read_map('healpix.fits')
+    >>> healpix_system = fits.getheader('healpix.fits')['COORDSYS']
     >>> reference_image = fits.open('reference_image.fits')[0]
-    >>> reprojected_data = healpix_to_image(healpix_data, reference_image, 'galactic')
+    >>> reprojected_data = healpix_to_image(healpix_data, reference_image, healpix_system)
     >>> fits.writeto('new_image.fits', reprojected_data, reference_image.header)
     """
     import healpy as hp
