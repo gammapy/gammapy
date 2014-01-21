@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
 from __future__ import print_function, division
 
