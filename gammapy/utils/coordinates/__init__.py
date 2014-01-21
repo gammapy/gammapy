@@ -2,3 +2,4 @@
 """
 from .celestial import *
 from .other import *
+from .spherical import *
