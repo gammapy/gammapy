@@ -585,33 +585,59 @@ def binary_opening_circle(input, radius):
     return binary_opening(input, structure)
 
 
-def solid_angle(image):
+def solid_angle(image, method='1'):
     """Compute the solid angle of each pixel.
 
-    This will only give correct results for CAR maps!
+    Estimates solid angles of pixels using the Girard equation for excess area
+    Reference: http://mathworld.wolfram.com/SphericalPolygon.html
+    See GWcs::solidangle in GammaLib
 
     Parameters
     ----------
     image : `astropy.io.fits.ImageHDU`
         Input image
+    method : {'1', '2'}
+        Method to compute the solid angle
 
     Returns
     -------
-    area_image : `astropy.units.Quantity`
-        Solid angle image (matching the input image) in steradians.
+    area_image : `numpy.array`
+        Per-pixel solid angle image in steradians
     """
-    # Area of one pixel at the equator
-    cdelt0 = image.header['CDELT1']
-    cdelt1 = image.header['CDELT2']
-    equator_area = Quantity(abs(cdelt0 * cdelt1), 'sr')
+    from astropy.wcs import WCS
+    from ..utils.coordinates import pixel_solid_angle
 
-    # Compute image with fraction of pixel area at equator
-    glat = coordinates(image)[1]
-    area_fraction = np.cos(np.radians(glat))
+    # Compute pixel corner coordinates
+    shape = np.array(image.data.shape) + np.array([1, 1])
+    y_pix, x_pix = np.indices(shape, dtype=np.float64)    
+    wcs = WCS(image.header)
+    lon, lat = wcs.wcs_pix2world(x_pix, y_pix, 0)
 
-    result = area_fraction * equator_area
+    corners = []
+    corners.append(dict(lon=lon[:-1], lat=lat[:-1])) # Case: x-, y-
+    corners.append(dict(lon=lon[1:],  lat=lat[:-1])) # Case: x+, y-
+    corners.append(dict(lon=lon[1:],  lat=lat[1:]))  # Case: x+, y+
+    corners.append(dict(lon=lon[:-1], lat=lat[1:]))  # Case: x-, y+
 
-    return result
+    """
+    TODO: this should be more efficient because spherical_to_cartesian
+          is called on fewer points.
+    if method == 'vector':
+        from astropy.coordinates import spherical_to_cartesian
+        x, y , z = spherical_to_cartesian(1, lon, lat)
+        corners.append(dict(lon=lon[:-1], lat=lat[:-1])) # Case: x-, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[:-1])) # Case: x+, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[1:]))  # Case: x+, y+
+        corners.append(dict(lon=lon[:-1], lat=lat[1:]))  # Case: x-, y+
+        
+    elif method == 'triangle':
+        corners.append(dict(lon=lon[:-1], lat=lat[:-1])) # Case: x-, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[:-1])) # Case: x+, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[1:]))  # Case: x+, y+
+        corners.append(dict(lon=lon[:-1], lat=lat[1:]))  # Case: x-, y+
+    """
+
+    return pixel_solid_angle(corners, method=method)
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
