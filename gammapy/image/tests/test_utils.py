@@ -24,7 +24,6 @@ def test_binary_ring():
     assert_equal(actual, desired)
 
 
-
 class TestImageCoordinates(object):
 
     def setup_class(self):
@@ -97,3 +96,12 @@ def test_process_image_pixels():
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
     assert_allclose(actual, desired)
+
+
+def test_solid_angle():
+    from astropy.units import Quantity
+    nxpix, nypix, binsz = 50, 10, 0.1
+    image = utils.make_empty_image(nxpix=nxpix, nypix=nypix, binsz=binsz)
+    actual = utils.solid_angle(image, method='2').sum()
+    expected = Quantity(nxpix * nypix * binsz ** 2, 'deg^2').to('sr').value
+    assert_allclose(actual, expected, rtol=1e-4)

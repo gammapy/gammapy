@@ -22,3 +22,13 @@ def test_minimum_separation():
 
 def test_pair_correlation():
     pass
+
+
+def test_pixel_solid_angle():
+    corners = []
+    corners.append(dict(lon=0, lat=0))
+    corners.append(dict(lon=1, lat=0))
+    corners.append(dict(lon=1, lat=1))
+    corners.append(dict(lon=0, lat=1))
+    solid_angle = spherical.pixel_solid_angle(corners, method='2')
+    assert_allclose(solid_angle, 0.8617784049059853)
