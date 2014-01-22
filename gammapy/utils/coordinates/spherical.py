@@ -100,14 +100,14 @@ def pair_correlation(lon, lat, theta_bins, unit='deg'):
     return counts
 
 
-def pixel_solid_angle(corners, method='vector'):
+def pixel_solid_angle(corners, method='1'):
     """Pixel solid angle on the sphere.
 
     Parameters
     ----------
     corners : list
-        List of dict with `lon` and `lat` keys and array-like values.
-     method : {'1', '2'}
+            List of dict with `lon` and `lat` keys and array-like values.
+    method : {'1', '2'}
         Method to compute the solid angle
 
     Returns
@@ -117,7 +117,7 @@ def pixel_solid_angle(corners, method='vector'):
         
     See also
     --------
-    `image.utils.solid_angle`
+    image.utils.solid_angle
     """
     if method == '1':
         return _pixel_solid_angle_1(corners)
@@ -179,6 +179,9 @@ def _pixel_solid_angle_2(corners):
     a34 = dist(3, 4)
     a13 = dist(1, 3)
     a24 = dist(2, 4)
+    #for i in range(4):
+    #    print(corners[i]['lon'][0, 0], corners[i]['lat'][0, 0])
+    #print(a12.shape, a12[0, 0])
     
     # Compute sines and cosines of the corner distance angles
     sin_a12 = np.sin(a12)
