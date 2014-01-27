@@ -7,7 +7,8 @@ __all__ = ['coordinate_iau_format',
            'dec_iau_format']
 
 
-def coordinate_iau_format(coordinate, ra_digits, dec_digits=None):
+def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
+                          prefix=''):
     """Coordinate format as an IAU source designation.
 
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
@@ -21,11 +22,14 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None):
     dec_digits : int (>=2) or None
         Number of digits for the declination part
         Default is `dec_digits` = None, meaning `dec_digits` = `ra_digits` - 1
+    prefix : str
+        Prefix to put before the coordinate string, e.g. "SDSS J".
     
     Returns
     -------
-    strrepr : str
-        IAU format string representation of the coordinate
+    strrepr : str or list of strings
+        IAU format string representation of the coordinate.
+        If this input coordinate is an array, the output is a list of strings.
     
     Examples
     --------
@@ -42,19 +46,28 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None):
     >>> print(designation)
     QSO B004848-4242.8
 
-    Example: Crab pulsar position (positive declination)
+    Crab pulsar position (positive declination)
 
     >>> coordinate = ICRS('05h34m31.93830s +22d00m52.1758s')
     >>> designation = 'HESS J' + coordinate_iau_format(coordinate, ra_digits=4)
     >>> print(designation)
     HESS J0534+220
     
-    Example: PKS 2155-304 AGN position (negative declination)
+    PKS 2155-304 AGN position (negative declination)
 
     >>> coordinate = ICRS('21h58m52.06511s -30d13m32.1182s')
     >>> designation = '2FGL J' + coordinate_iau_format(coordinate, ra_digits=5)
     >>> print(designation)
     2FGL J2158.8-3013
+
+    Coordinate array inputs result in list of string output.
+
+    >>> coordinates = coord.ICRS(ra=[10.68458, 83.82208],
+    ...                         dec=[41.26917, -5.39111],
+    ...                         unit=('deg', 'deg'))
+    >>> designations = coordinate_iau_format(coordinates, ra_digits=5, prefix='HESS J')
+    >>> print(designations)
+    ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
     if dec_digits == None:
         dec_digits = max(2, ra_digits - 1) 
@@ -62,7 +75,12 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None):
     ra_str = ra_iau_format(coordinate.ra, ra_digits)
     dec_str = dec_iau_format(coordinate.dec, dec_digits)
 
-    return ra_str + dec_str
+    if coordinate.isscalar:
+        out = prefix + ra_str + dec_str
+    else:
+        out = [prefix + r + d for (r, d) in zip(ra_str, dec_str)]
+
+    return out
 
 
 def ra_iau_format(ra, digits):
@@ -96,11 +114,20 @@ def ra_iau_format(ra, digits):
     if (not isinstance(digits, int)) and (digits >= 2): 
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
     
+    if ra.isscalar:
+        out = _ra_iau_format_scalar(ra, digits)
+    else:
+        out = [_ra_iau_format_scalar(_, digits) for _ in ra]
+
+    return out
+
+
+def _ra_iau_format_scalar(ra, digits):
+    """Format a single Right Ascension."""
     # Note that Python string formatting always rounds the last digit,
     # but the IAU spec requires to truncate instead.
     # That's why integers with the correct digits are computed and formatted
     # instead of formatting floats directly
-
     ra_h = int(ra.hms[0])
     ra_m = int(ra.hms[1])
     ra_s = ra.hms[2]
@@ -155,12 +182,21 @@ def dec_iau_format(dec, digits):
     """
     if not isinstance(digits, int) and digits >= 2: 
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
-    
+
+    if dec.isscalar:
+        out = _dec_iau_format_scalar(dec, digits)
+    else:
+        out = [_dec_iau_format_scalar(_, digits) for _ in dec]
+
+    return out
+
+
+def _dec_iau_format_scalar(dec, digits):
+    """Format a single declination."""
     # Note that Python string formatting always rounds the last digit,
     # but the IAU spec requires to truncate instead.
     # That's why integers with the correct digits are computed and formatted
     # instead of formatting floats directly
-
     dec_sign = '+' if dec.deg >= 0 else '-'
     dec_d = int(abs(dec.dms[0]))
     dec_m = int(abs(dec.dms[1]))

@@ -32,6 +32,13 @@ def test_make_source_designation():
     strrep = coordinate_iau_format(fk4, ra_digits=4, dec_digits=2)
     assert strrep == '0048-42'
 
+    # Check that array coordinate input works
+    coordinates = coord.ICRS(ra=[10.68458, 83.82208],
+                             dec=[41.26917, -5.39111],
+                             unit=('deg', 'deg'))
+    strreps = coordinate_iau_format(coordinates, ra_digits=5, prefix='HESS J')
+    assert strreps == ['HESS J0042.7+4116', 'HESS J0535.2-0523']
+
 
 def test_ra_iau_format():
     # Test various number of digits (output not verified)
