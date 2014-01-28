@@ -232,3 +232,37 @@ def lookup_max(image, GLON, GLAT, theta):
         except ValueError:
             pass
     return val
+
+
+def compute_image_moments(self, image):
+    """
+    Compute moments of an image.
+
+    NaN values are ignored.
+
+    Parameters
+    ----------
+    image : array
+        Input image array.
+
+    Returns
+    -------
+    image moments : list
+        List of image moments:
+        [x_cms, y_cms, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
+        All value are given in pixel coordinates.
+    """
+    A = image[np.isfinite(image)].sum()
+    y, x = np.indices(image.shape) + 1
+
+    # Center of mass
+    x_cms = (x * image)[np.isfinite(image)].sum() / A
+    y_cms = (y * image)[np.isfinite(image)].sum() / A
+
+    # Second moments
+    x_var = ((x - x_cms) ** 2 * image)[np.isfinite(image)].sum() / A
+    y_var = ((y - y_cms) ** 2 * image)[np.isfinite(image)].sum() / A
+    x_sigma = np.sqrt(x_var)
+    y_sigma = np.sqrt(y_var)
+    return x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
+
