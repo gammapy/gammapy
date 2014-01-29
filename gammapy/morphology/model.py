@@ -1,25 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility funtions for reading / writing
-model parameters to JSON files.
+"""Utility funtions for reading / writing model parameters to JSON files.
 
-At the moment you can have any number of Gaussians
+At the moment you can have any number of Gaussians.
 """
 from __future__ import print_function, division
 import logging
 logging.basicConfig(format='%(levelname)s:  %(message)s', level=logging.DEBUG)
-
 import numpy as np
 from astropy.io import fits
+from ..utils.const import fwhm_to_sigma
 
-from ...utils.const import fwhm_to_sigma
 
-
-__all__ = ['GaussCatalog', 'make_test_model', 'read_json', 'MorphModelImageCreator']
+__all__ = ['GaussCatalog', 'make_test_model', 'read_json',
+           'MorphModelImageCreator']
 
 
 class MorphModelImageCreator(object):
-    """
-    Class to create model images from a HGPS pipeline source config file.
+    """Create model images from a HGPS pipeline source config file.
 
     Uses astropy to evaluate the source model, with oversampling or integrating
     over pixels.
@@ -41,14 +38,16 @@ class MorphModelImageCreator(object):
     flux_factor : float (default 1E-12)
         Flux conversion factor.
 
-    Example
-    -------
+    Examples
+    --------
     Here is an example how to use `ModelImageCreator`:
 
-        >>> model_image_creator = MorphModelImageCreator('input_sherpa.cfg',
-            '../exposure.fits', psf_file='psf.json')
-        >>> model_image_creator.evaluate_model(mode='center')
-        >>> model_image_creator.save('model_image.fits')
+    >>> from gammapy.morphology import MorphModelImageCreator
+    >>> model_image_creator = MorphModelImageCreator('input_sherpa.cfg',
+    ...                                              '../exposure.fits',
+    ...                                              psf_file='psf.json')
+    >>> model_image_creator.evaluate_model(mode='center')
+    >>> model_image_creator.save('model_image.fits')
     """
     def __init__(self, cfg_file, exposure, psf_file=None, apply_psf=True,
                  background=None, flux_factor=1E-12, compute_excess=True):
@@ -67,8 +66,7 @@ class MorphModelImageCreator(object):
                 self.background = np.ones_like(self.exposure)
 
     def _setup_model(self):
-        """
-        Setup a list of source models from an input_sherpa.cfg config file.
+        """Setup a list of source models from an ``input_sherpa.cfg`` config file.
         """
         self.source_models = []
 
@@ -91,9 +89,7 @@ class MorphModelImageCreator(object):
             self.source_models.append(source_model)
 
     def evaluate_model(self, **kwargs):
-        """
-        Evaluate model by oversampling or taking the value at the center
-        of the pixel.
+        """Evaluate model by oversampling or taking the value at the center of the pixel.
         """
         self._setup_model()
         self.model_image = np.zeros_like(self.exposure, dtype=np.float64)
@@ -116,8 +112,7 @@ class MorphModelImageCreator(object):
         self.model_image *= self._flux_factor
 
     def _create_psf(self, **kwargs):
-        """
-        Setup psf model using astropy.convolution
+        """Set up psf model using `astropy.convolution`.
         """
         # Read psf info
         import json
@@ -141,9 +136,7 @@ class MorphModelImageCreator(object):
         return psf
 
     def save(self, filename, **kwargs):
-        """
-        Save model image to file.
-        """
+        """Save model image to file."""
         hdu_list = []
         prim_hdu = fits.PrimaryHDU(self.model_image, header=self.header)
         hdu_list.append(prim_hdu)
@@ -162,8 +155,7 @@ class MorphModelImageCreator(object):
             fits_hdu_list.writeto('counts_' + filename, **kwargs)
 
     def fake_counts(self, N, **kwargs):
-        """
-        Fake measurement data by adding Poisson noise to the model image.
+        """Fake measurement data by adding Poisson noise to the model image.
 
         Parameters
         ----------
