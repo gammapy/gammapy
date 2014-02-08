@@ -2,15 +2,24 @@
 from __future__ import print_function, division
 import unittest
 from astropy.tests.helper import pytest
-from numpy import pi
+import numpy as np
+from numpy.testing.utils import assert_allclose
 from numpy.testing import assert_equal, assert_almost_equal
-from ..gauss import Gauss2D, MultiGauss2D
+
+from ..gauss import Gauss2D, MultiGauss2D, gaussian_sum_moments
 
 try:
     import scipy
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
+
+try:
+    import uncertainties
+    HAS_UNCERTAIN = True
+except ImportError:
+    HAS_UNCERTAIN = False
+
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestGauss2D(unittest.TestCase):
@@ -25,7 +34,7 @@ class TestGauss2D(unittest.TestCase):
         # http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         for g in self.gs:
             actual = g(0, 0)
-            desired = 1 / (2 * pi * g.sigma ** 2)
+            desired = 1 / (2 * np.pi * g.sigma ** 2)
             assert_almost_equal(actual, desired)
             # Check that distribution integrates to 1
             xy_max = 5 * g.sigma  # integration range
@@ -111,3 +120,44 @@ class TestMultiGauss2D(unittest.TestCase):
         m.convolve_me(4, 6)
         assert_equal(m.sigmas, [5])
         assert_almost_equal(m.integral, 5 * 6)
+
+
+@pytest.mark.skipif('not HAS_UNCERTAIN')
+def test_gaussian_sum_moments():
+    """
+    Check analytical against numerical solution
+    """
+    from ...image.measure import compute_image_moments
+    from astropy.modeling.models import Gaussian2D
+    from astropy.convolution.utils import discretize_model
+
+    # We define three components with different flux, position and size
+    F_1, F_2, F_3 = 100, 200, 300
+    sigma_1, sigma_2, sigma_3 = 15, 10, 5
+    x_1, x_2, x_3 = 100, 120, 70
+    y_1, y_2, y_3 = 100, 90, 120
+
+    # Convert into non normalized amplitude for astropy model
+    def A(F, sigma):
+        return F * 1 / (2 * np.pi * sigma ** 2)
+
+    # Define and evaluate models
+    f_1 = Gaussian2D(A(F_1, sigma_1), x_1, y_1, sigma_1, sigma_1)
+    f_2 = Gaussian2D(A(F_2, sigma_2), x_2, y_2, sigma_2, sigma_2)
+    f_3 = Gaussian2D(A(F_3, sigma_3), x_3, y_3, sigma_3, sigma_3)
+
+    F_1_image = discretize_model(f_1, (0, 200), (0, 200))
+    F_2_image = discretize_model(f_2, (0, 200), (0, 200))
+    F_3_image = discretize_model(f_3, (0, 200), (0, 200))
+
+    moments_num = compute_image_moments(F_1_image + F_2_image + F_3_image)
+
+    # Compute analytical values
+    cov_matrix = np.zeros((12, 12))
+    F = [F_1, F_2, F_3]
+    sigma = [sigma_1, sigma_2, sigma_3]
+    x = [x_1, x_2, x_3]
+    y = [y_1, y_2, y_3]
+
+    moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
+    assert_allclose(moments_ana, moments_num, 1E-6)
