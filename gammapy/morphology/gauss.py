@@ -4,12 +4,12 @@ from copy import deepcopy
 import numpy as np
 from numpy import pi, exp, sqrt, log
 
-__all__ = ['Gauss2D', 'MultiGauss2D']
+__all__ = ['Gauss2D', 'MultiGauss2D', 'gaussian_sum_moments']
 
 
 class Gauss2D(object):
     """2D symmetric Gaussian PDF.
-    
+
     Parameters
     ----------
     sigma : float
@@ -24,7 +24,7 @@ class Gauss2D(object):
 
     def __call__(self, x, y):
         """dp / (dx dy) at position (x, y).
-        
+
         Reference: http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         """
         x, y = np.asarray(x, 'f'), np.asarray(y, 'f')
@@ -129,7 +129,7 @@ class MultiGauss2D(object):
 
     def containment_fraction(self, theta):
         """Containment fraction.
-        
+
         Parameters
         ----------
         theta : array_like
@@ -143,7 +143,7 @@ class MultiGauss2D(object):
 
     def containment_radius(self, containment_fraction):
         """Containment angle.
-        
+
         Parameters
         ----------
         fraction : float
@@ -171,7 +171,7 @@ class MultiGauss2D(object):
 
     def match_sigma(self, containment_fraction):
         """Compute equivalent Gauss width.
-        
+
         Find the sigma of a single-Gaussian distribution that
         approximates this one, such that theta matches for a given
         containment."""
@@ -181,7 +181,7 @@ class MultiGauss2D(object):
 
     def convolve(self, sigma, norm=1):
         """Convolve with another Gauss.
-        
+
         Compute new norms and sigmas of all the components such that
         the new distribution represents the convolved old distribution
         by a Gaussian of width sigma and then multiplied by norm.
@@ -200,3 +200,132 @@ class MultiGauss2D(object):
             self.components[ii].convolve_me(sigma)
             self.norms[ii] *= norm
         return self
+
+
+def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
+    """
+    Compute 0th, 1st and 2nd moment of a sum of Gaussian components
+    with uncertainties.
+
+    The moments are computed analytically, the formulae are documented below.
+    Makes use of the `uncertainties` package to propagate the errors.
+
+    Parameters
+    ----------
+    F : array
+        Integral norms of the Gaussian components.
+    sigmas : array
+        Widths of the Gaussian components.
+    x : array
+        x positions of the Gaussian components.
+    y : array
+        y positions of the Gaussian components.
+    cov_matrix : array
+        Covariance matrix of the parameters. The columns have to follow the order:
+        [sigma_1, x_1, y_1, F_1, sigma_2, x_2, y_2, F_2, ..., sigma_N, x_N, y_N, F_N]
+    shift : float (default = 0.5)
+        Depending on where the image values are given, the grid has to be
+        shifted. If the values are given at the center of the pixel
+        shift = 0.5.
+
+    Returns
+    -------
+    values : list
+        List of moments:
+        [F_sum, x_sum, y_sum, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
+        All value are given in pixel coordinates.
+    uncertainties : list
+        List of moment uncertainties.
+
+    Examples
+    --------
+
+        >>> import numpy as np
+        >>> from gammapy.morphology.gauss import gaussian_sum_moments
+        >>> cov_matrix = np.zeros(()
+        >>> F = [100, 200, 300]
+        >>> sigma = [15, 10, 5]
+        >>> x = [100, 120, 70]
+        >>> y = [100, 90, 120]
+        >>> moments, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
+
+    Notes
+    -----
+
+    The 0th moment (Total Flux) is given by:
+
+        .. math::
+
+            F_{\\Sigma} = \\int_{-\\infty}^{\\infty}f_{\\Sigma}(x, y)dx dy =
+            \\sum_i^N F_i
+
+    The 1st moments (Position) are given by:
+
+        .. math::
+
+            x_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}x
+            f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N x_iF_i
+
+            y_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}y
+            f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N y_iF_i
+
+    The 2nd moments (Extension) are given by:
+
+        .. math::
+
+            \\sigma_{\\Sigma_x}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
+            \\cdot (\\sigma_i^2 + x_i^2) - x_{\\Sigma}^2
+
+            \\sigma_{\\Sigma_y}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
+            \\cdot (\\sigma_i^2 + y_i^2) - y_{\\Sigma}^2
+
+    """
+    import uncertainties
+
+    # Check input arrays
+    if not len(F) == len(sigma) and not len(F) == len(x) and not len(F) == len(x):
+        raise Exception("Input arrays have to have the same size")
+
+    # Order parameter values
+    values = []
+    for i in range(len(F)):
+        values += [sigma[i], x[i], y[i], F[i]]
+
+    # Set up parameters with uncertainties
+    parameter_list = uncertainties.correlated_values(values, cov_matrix)
+
+    # Reorder parameters by splitting into 4-tuples
+    parameters = zip(*[iter(parameter_list)] * 4)
+
+    # TODO: Document the formulae in the docstring
+    def zero_moment(parameters):
+        """0th moment of the sum of Gaussian components."""
+        F_sum = 0
+        for component in parameters:
+            F_sum += component[3]
+        return F_sum
+
+    def first_moment(parameters, F_sum, shift):
+        """1st moment of the sum of Gaussian components."""
+        x_sum, y_sum = 0, 0
+        for component in parameters:
+            x_sum += (component[1] + shift) * component[3]
+            y_sum += (component[2] + shift) * component[3]
+        return x_sum / F_sum, y_sum / F_sum
+
+    def second_moment(parameters, F_sum, x_sum, y_sum, shift):
+        """2nd moment of the sum of Gaussian components."""
+        var_x_sum, var_y_sum = 0, 0
+        for p in parameters:
+            var_x_sum += ((p[1] + shift) ** 2 + p[0] ** 2) * p[3]
+            var_y_sum += ((p[2] + shift) ** 2 + p[0] ** 2) * p[3]
+        return var_x_sum / F_sum - x_sum ** 2, var_y_sum / F_sum - y_sum ** 2
+
+    # Compute moments
+    F_sum = zero_moment(parameters)
+    x_sum, y_sum = first_moment(parameters, F_sum, shift)
+    var_x_sum, var_y_sum = second_moment(parameters, F_sum, x_sum, y_sum, shift)
+
+    # Return # values and uncertainties separately
+    values = [F_sum, x_sum, y_sum, var_x_sum ** 0.5, var_y_sum ** 0.5, (var_x_sum * var_y_sum) ** 0.25]
+    return [_.n for _ in values], [float(_.s) for _ in values]
