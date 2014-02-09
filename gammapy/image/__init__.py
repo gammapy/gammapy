@@ -4,3 +4,4 @@ from .healpix import *
 from .measure import *
 from .profile import *
 from .utils import *
+from .plotting import *
