@@ -203,9 +203,7 @@ class MultiGauss2D(object):
 
 
 def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
-    """
-    Compute 0th, 1st and 2nd moment of a sum of Gaussian components
-    with uncertainties.
+    """Compute image moments with uncertainties for sum of Gaussians.
 
     The moments are computed analytically, the formulae are documented below.
     Makes use of the `uncertainties` package to propagate the errors.
@@ -230,60 +228,60 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     Returns
     -------
-    values : list
-        List of moments:
+    nominal_values : list
+        List of image moment nominal values:
         [F_sum, x_sum, y_sum, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
         All value are given in pixel coordinates.
-    uncertainties : list
-        List of moment uncertainties.
+    std_devs : list
+        List of image moment standard deviations.
 
     Examples
     --------
 
-        >>> import numpy as np
-        >>> from gammapy.morphology.gauss import gaussian_sum_moments
-        >>> cov_matrix = np.zeros(()
-        >>> F = [100, 200, 300]
-        >>> sigma = [15, 10, 5]
-        >>> x = [100, 120, 70]
-        >>> y = [100, 90, 120]
-        >>> moments, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
+    A simple example for an image consisting of three Gaussians
+    with zero covariance matrix:
+    
+    >>> import numpy as np
+    >>> from gammapy.morphology.gauss import gaussian_sum_moments
+    >>> cov_matrix = np.zeros()
+    >>> F = [100, 200, 300]
+    >>> sigma = [15, 10, 5]
+    >>> x = [100, 120, 70]
+    >>> y = [100, 90, 120]
+    >>> nominal_values, std_devs = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
 
     Notes
     -----
 
-    The 0th moment (Total Flux) is given by:
+    The 0th moment (total flux) is given by:
 
-        .. math::
+    .. math::
+        F_{\\Sigma} = \\int_{-\\infty}^{\\infty}f_{\\Sigma}(x, y)dx dy =
+        \\sum_i^N F_i
 
-            F_{\\Sigma} = \\int_{-\\infty}^{\\infty}f_{\\Sigma}(x, y)dx dy =
-            \\sum_i^N F_i
+    The 1st moments (position) are given by:
 
-    The 1st moments (Position) are given by:
+    .. math::
+        x_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}x
+        f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N x_iF_i
 
-        .. math::
+        y_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}y
+        f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N y_iF_i
 
-            x_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}x
-            f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N x_iF_i
+    The 2nd moments (extension) are given by:
 
-            y_{\\Sigma} = \\frac{1}{F_{\\Sigma}} \\int_{-\\infty}^{\\infty}y
-            f_{\\Sigma}(x, y)dx dy = \\frac{1}{F_{\\Sigma}}\\sum_i^N y_iF_i
+    .. math::
+        \\sigma_{\\Sigma_x}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
+        \\cdot (\\sigma_i^2 + x_i^2) - x_{\\Sigma}^2
 
-    The 2nd moments (Extension) are given by:
-
-        .. math::
-
-            \\sigma_{\\Sigma_x}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
-            \\cdot (\\sigma_i^2 + x_i^2) - x_{\\Sigma}^2
-
-            \\sigma_{\\Sigma_y}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
-            \\cdot (\\sigma_i^2 + y_i^2) - y_{\\Sigma}^2
+        \\sigma_{\\Sigma_y}^2 = \\frac{1}{F_{\\Sigma}} \\sum_i^N F_i
+        \\cdot (\\sigma_i^2 + y_i^2) - y_{\\Sigma}^2
 
     """
     import uncertainties
 
     # Check input arrays
-    if not len(F) == len(sigma) and not len(F) == len(x) and not len(F) == len(x):
+    if len(F) != len(sigma) or len(F) != len(x) or len(F) != len(x):
         raise Exception("Input arrays have to have the same size")
 
     # Order parameter values
@@ -297,7 +295,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     # Reorder parameters by splitting into 4-tuples
     parameters = zip(*[iter(parameter_list)] * 4)
 
-    # TODO: Document the formulae in the docstring
     def zero_moment(parameters):
         """0th moment of the sum of Gaussian components."""
         F_sum = 0
@@ -326,6 +323,9 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     x_sum, y_sum = first_moment(parameters, F_sum, shift)
     var_x_sum, var_y_sum = second_moment(parameters, F_sum, x_sum, y_sum, shift)
 
-    # Return # values and uncertainties separately
+    # Return values and stddevs separately
     values = [F_sum, x_sum, y_sum, var_x_sum ** 0.5, var_y_sum ** 0.5, (var_x_sum * var_y_sum) ** 0.25]
-    return [_.n for _ in values], [float(_.s) for _ in values]
+    nominal_values = [_.nominal_value for _ in values]
+    std_devs = [float(_.std_dev) for _ in values] 
+
+    return nominal_values, std_devs

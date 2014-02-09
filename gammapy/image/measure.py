@@ -235,8 +235,7 @@ def lookup_max(image, GLON, GLAT, theta):
 
 
 def compute_image_moments(image, shift=0.5):
-    """
-    Compute 0th, 1st and 2nd moments of an image.
+    """Compute 0th, 1st and 2nd moments of an image.
 
     NaN values are ignored in the computation.
 
@@ -268,25 +267,34 @@ def compute_image_moments(image, shift=0.5):
     y_var = ((y - y_cms) ** 2 * image)[np.isfinite(image)].sum() / A
     x_sigma = np.sqrt(x_var)
     y_sigma = np.sqrt(y_var)
+
     return A, x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
 
 
-def compute_containment_radius(x_pos, y_pos, image, frac=0.8, shift=0.5):
-    """
-    Compute containment radius for a given image and containment
-    fraction using brentq.
+def compute_containment_radius(x_pos, y_pos, image, containment_fraction,
+                               shift=0.5, normalize_image=True):
+    """Compute containment radius.
+
+    Uses `scipy.optimize.brentq`.
 
     Parameters
     ----------
-    x_pos : int
+    x_pos : float
         x position of the source in pixel coordinates.
-    y_pos : int
+    y_pos : float
         y position of the source in pixel coordinates.
-    model_image : array
-        Model image of the source
-    frac : float
-        Containment fraction 0 < frac < 1.
-        Default = 0.8
+    image : array
+        Intensity image
+    containment_fraction : float
+        Containment fraction
+    normalize_image : bool
+        Set `normalize_image=False` if it already is normalized
+        and you want the speed.
+
+    Returns
+    -------
+    containment_radius : float
+        Containment radius (pix)
     """
     from scipy.optimize import brentq
 
@@ -294,19 +302,19 @@ def compute_containment_radius(x_pos, y_pos, image, frac=0.8, shift=0.5):
     y, x = np.indices(image.shape) + shift
     rr = (x - x_pos) ** 2 + (y - y_pos) ** 2
 
-    # Normalize image
-    norm_image = image / image[np.isfinite(image)].sum()
+    if normalize_image:
+        image = image / image[np.isfinite(image)].sum()
 
     def func(r):
-        """Function to find roots of"""
-        return compute_containment_fraction(r, rr, norm_image) - frac
+        return compute_containment_fraction(r, rr, image) - containment_fraction
 
-    return brentq(func, a=0, b=np.sqrt(rr.max()))
+    containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
+    
+    return containment_radius
 
 
 def compute_containment_fraction(r, rr, image):
-    """
-    Compute containment fraction for a given model image of a source.
+    """Compute containment fraction.
 
     Parameters
     ----------
@@ -316,8 +324,17 @@ def compute_containment_fraction(r, rr, image):
         Squared radius array.
     image : array
         The image has to be normalized! I.e. image.sum() = 1.
+
+
+    Returns
+    -------
+    containment_fraction : float
+        Containment fraction
     """
     # Set up indices and containment mask
     containment_mask = rr < r ** 2
     mask = np.logical_and(np.isfinite(image), containment_mask)
-    return image[mask].sum()
+
+    containment_fraction = image[mask].sum()
+
+    return containment_fraction

@@ -16,9 +16,9 @@ except ImportError:
 
 try:
     import uncertainties
-    HAS_UNCERTAIN = True
+    HAS_UNCERTAINTIES = True
 except ImportError:
-    HAS_UNCERTAIN = False
+    HAS_UNCERTAINTIES = False
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -122,7 +122,7 @@ class TestMultiGauss2D(unittest.TestCase):
         assert_almost_equal(m.integral, 5 * 6)
 
 
-@pytest.mark.skipif('not HAS_UNCERTAIN')
+@pytest.mark.skipif('not HAS_UNCERTAINTIES')
 def test_gaussian_sum_moments():
     """
     Check analytical against numerical solution
@@ -137,7 +137,7 @@ def test_gaussian_sum_moments():
     x_1, x_2, x_3 = 100, 120, 70
     y_1, y_2, y_3 = 100, 90, 120
 
-    # Convert into non normalized amplitude for astropy model
+    # Convert into non-normalized amplitude for astropy model
     def A(F, sigma):
         return F * 1 / (2 * np.pi * sigma ** 2)
 
@@ -160,4 +160,5 @@ def test_gaussian_sum_moments():
     y = [y_1, y_2, y_3]
 
     moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
-    assert_allclose(moments_ana, moments_num, 1E-6)
+    assert_allclose(moments_ana, moments_num, 1e-6)
+    assert_allclose(uncertainties, 0)
