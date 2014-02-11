@@ -38,7 +38,7 @@ def test_center():
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_image():
+def _test_image():
     # Test dataset parameters
     x_size_kernel, y_size_kernel = (11, 11)
     x_size_image, y_size_image = (31, 31)
