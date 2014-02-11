@@ -40,6 +40,3 @@ class TestHelperFuntions(unittest.TestCase):
     def test_compute_r_o(self):
         actual = ring_r_out(1, 0, 1)
         assert_allclose(actual, 1)
-
-if __name__ == '__main__':
-    unittest.main()

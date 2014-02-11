@@ -2,10 +2,11 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
 from .. import powerlaw
 
-# TODO
-def _test_powerlaw():
+@pytest.mark.xfail
+def test_powerlaw():
     e = 1
     e1, e2 = 0.2, 1e42
     f, f_err = 1, 0.1
@@ -26,7 +27,7 @@ def test_one():
     assert_allclose(I, 1)
 
 
-def _test_closure(g_error_mag=0):
+def test_closure(g_error_mag=0):
     """This test passes for g_error_mag == 0,
     but fails for g_error_mag != 0, because
     I and g have correlated errors, but we

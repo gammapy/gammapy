@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import numpy as np
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
 from .. import poisson
 
 
@@ -36,30 +38,18 @@ def test_docstring_examples():
     assert_allclose(poisson.significance_on_off(n_on=1300, n_off=1100 / 1.e-8, alpha=1e-8, method='lima'), 5.8600864348078519)
 
 
-'''
-class TestSignificance(unittest.TestCase):
-    def test_LiMa(self):
-        """ Test the HESS against the fast LiMa function """
-        # TODO: generate a CSV reference results file
-        #ons = np.arange(0.1, 10, 0.3)
-        #offs = np.arange(0.1, 10, 0.3)
-        #alphas = np.array([1e-3, 1e-2, 0.1, 1, 10])
-    def _test_sensitivity(self):
-        """ Test if the sensitivity function is the
-        inverse of the significance function """
-        ons = np.arange(0.1, 10, 0.3)
-        offs = np.arange(0.1, 10, 0.3)
-        alphas = np.array([1e-3, 1e-2, 0.1, 1, 10])
-        for on in ons:
-            for off in offs:
-                for alpha in alphas:
-                    for significance_func, sensitivity_func \
-                		in zip([poisson.significance, poisson.significance_simple],
-						[poisson.sensitivity_lima, poisson.sensitivity_simple]):
-                        s = significance_func(on, off, alpha)
-                        excess = sensitivity_func(off, alpha, s)
-                        on_reco = excess + alpha * off
-                        #print(on, off, alpha, s, excess, on_reco)
-                        # TODO
-                        #assert_allclose(on, on_reco, decimal=3)
-'''
+@pytest.mark.xfail
+def test_sensitivity():
+    """Test if the sensitivity function is the inverse of the significance function."""
+    n_ons = np.arange(0.1, 10, 0.3)
+    n_offs = np.arange(0.1, 10, 0.3)
+    alphas = np.array([1e-3, 1e-2, 0.1, 1, 10])
+    for n_on in n_ons:
+        for n_off in n_offs:
+            for alpha in alphas:
+                for method in ['simple', 'lima']:
+                    significance = poisson.significance_on_off(n_on, n_off, alpha, method=method)
+                    excess = poisson.sensitivity_on_off(n_off, alpha, significance, method=method)
+                    n_on2 = excess + alpha * n_off
+                    #print(n_on, n_off, alpha, significance, excess, n_on2)
+                    assert_allclose(n_on, n_on2, decimal=3)

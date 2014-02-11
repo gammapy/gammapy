@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 from time import time
 import numpy as np
+from astropy.tests.helper import pytest
 from ..test_statistic import ts_image
 from ..test_statistic import TSMapCalculator as TSMC
 
@@ -21,7 +22,8 @@ def make_test_kernel(shape=(11, 11)):
     return kernel
 
 
-def _test_simple():
+@pytest.mark.xfail
+def test_simple():
     """A simple test case"""
     images = make_test_images(shape=(50, 70))
     kernel = make_test_kernel(shape=(11, 11))
@@ -38,7 +40,8 @@ def _test_simple():
     hdu_list.writeto('images.fits', clobber=True)
 
 
-def _test_optimizers():
+@pytest.mark.xfail
+def test_optimizers():
     """Compare speed for a few different optimizers"""
     optimizers = ['migrad', 'fmin']
     start_values = ['last', 'estimate']
@@ -55,7 +58,8 @@ def _test_optimizers():
             tsmc.report()
 
 
-def _test_speed():
+@pytest.mark.xfail
+def test_speed():
     image_sizes = [100, 200]
     kernel_sizes = [1, 11, 21]
     for image_size in image_sizes:

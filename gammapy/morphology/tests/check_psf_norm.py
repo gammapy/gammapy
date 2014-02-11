@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+from astropy.tests.helper import pytest
 
-
-def _test_psf_norm():
+@pytest.mark.xfail
+def test_psf_norm():
     from ROOT import TF1
     
     # Triple exponential 1D pdf in x = theta ^ 2

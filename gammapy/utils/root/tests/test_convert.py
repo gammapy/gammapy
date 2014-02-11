@@ -33,8 +33,9 @@ def make_test_TH2():
     return h
 
 
+@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_ROOT')
-def _test_TH2_to_FITS():
+def test_TH2_to_FITS():
     h = make_test_TH2()
     h.Print('base')
     f = root.TH2_to_FITS(h)

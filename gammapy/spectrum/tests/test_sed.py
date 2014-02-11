@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+from astropy.tests.helper import pytest
 from ..models import PowerLaw, PLExpCutoff
 from ..sed import SED, add_spec
 
-
-# TODO
-def _test_add_spec():
+@pytest.mark.xfail
+def test_add_spec():
     # Create empty frame
     sed = SED()
     # Add one spectrum
@@ -20,8 +20,8 @@ def _test_add_spec():
     sed.fig.show()
 
 
-# TODO
-def _test_1():
+@pytest.mark.xfail
+def test_1():
     """ Plot a test butterfly with hardcoded parameters """
 
     # Create empty plot frame
@@ -61,8 +61,8 @@ def _test_1():
     sed.save('../_temp/test_1.pdf')
 
 
-# TODO
-def _test_2():
+@pytest.mark.xfail
+def test_2():
     """ Plot the Crab nebula as given in the HESS and Fermi catalogs """
 
     # Catalog input files and plot output file
@@ -86,8 +86,9 @@ def _test_2():
     # Save plot in file
     sed.save('../_temp/test_2.pdf')
 
-# TODO
-def _test_42():
+
+@pytest.mark.xfail
+def test_42():
     """Examples plotted in the 2FGL paper (index starting at 0):
     Figure Index Name                ASSOC1               ASSOC2
     6  -> source name not given in draft

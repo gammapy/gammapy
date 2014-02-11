@@ -91,13 +91,3 @@ def plot_2d_example():
         plt.imshow(map, interpolation='nearest')
         plt.colorbar()
     # plt.show()
-
-
-# TODO
-def _test_speed():
-    """ Time the creation of many random numbers from large arrays. """
-    # TODO: Test how long it takes to
-    # - draw random indices
-    # - unravel the indices
-    # - bin the events
-    t = timeit.Timer('r.draw(1e6)', 'p=ones(1e2); r=GeneralRandomArray(p)')
