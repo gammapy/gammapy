@@ -43,6 +43,9 @@ Reference/API
 .. automodapi:: gammapy.spectrum.fitting_utils
     :no-inheritance-diagram:
 
+.. automodapi:: gammapy.spectrum.flux_point
+    :no-inheritance-diagram:
+
 .. automodapi:: gammapy.spectrum.inverse_compton
     :no-inheritance-diagram:
 
