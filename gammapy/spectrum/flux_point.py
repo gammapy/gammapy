@@ -4,7 +4,20 @@ import numpy as np
 from numpy import sqrt
 from .models import PowerLaw
 
-__all__ = ['FluxPointCalculator']
+__all__ = ['FluxPoints', 'FluxPointCalculator']
+
+
+class FluxPoints(object):
+    """List of flux points.
+    
+    TODO: Implement. Document.
+    """
+    def from_dict(self, data):
+        pass
+    
+    def from_ascii(self, data):
+        pass
+
 
 class FluxPointCalculator(object):
     """Compute differential flux points for given integral flux points.
