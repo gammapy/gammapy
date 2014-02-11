@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+from astropy.tests.helper import pytest
 from .. import utils
 
 
@@ -22,6 +23,8 @@ def test_binary_ring():
                         [False, False, True, False, False]])
     assert_equal(actual, desired)
 
+
+@pytest.mark.xfail
 def test_process_image_pixels():
     """Check the example how to implement convolution given in the docstring"""
     from astropy.convolution import convolve as astropy_convolve
