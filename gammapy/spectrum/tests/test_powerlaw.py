@@ -5,6 +5,13 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from .. import powerlaw
 
+try:
+    import uncertainties
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    HAS_UNCERTAINTIES = False
+
+
 @pytest.mark.xfail
 def test_powerlaw():
     e = 1
@@ -27,6 +34,7 @@ def test_one():
     assert_allclose(I, 1)
 
 
+@pytest.mark.skipif('not HAS_UNCERTAINTIES')
 def test_closure(g_error_mag=0):
     """This test passes for g_error_mag == 0,
     but fails for g_error_mag != 0, because
