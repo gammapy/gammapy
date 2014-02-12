@@ -501,9 +501,13 @@ def np_to_rmf(rm, erange, ebounds, minprob,
 
 def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
     """Create Gaussian energy dispersion matrix.
+
+    TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
     
     TODO: give formula: Gaussian in log(e_reco)
+
     TODO: add option to add poisson noise
+
     TODO: extend to have a vector of bias and resolution for various true energies.
     
     Parameters
@@ -514,6 +518,7 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
         RMS width of Gaussian energy dispersion.
     
     Returns
+    -------
     pdf_matrix : array
         PDF matrix
     """

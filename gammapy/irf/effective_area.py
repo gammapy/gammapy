@@ -13,6 +13,9 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
     TODO: give formula
 
+    Parametrizations of the effective areas of Cherenkov telescopes
+    taken from Appendix B of http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
+
     Parameters
     ----------
     energy : array_like
@@ -24,10 +27,6 @@ def abramowski_effective_area(energy, instrument='HESS'):
     -------
     effective_area : array
         Effective area in cm^2
-        
-    Parametrizations of the effective areas of Cherenkov
-    telescopes taken from Appendix B of
-    http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A
     """
     # Put the parameters g in a dictionary.
     # Units: g1 (cm^2), g2 (), g3 (MeV)
