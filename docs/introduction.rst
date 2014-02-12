@@ -70,6 +70,7 @@ There are several other great open source packages for gamma-ray data analysis:
 * `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
 * `PyFACT`_ --- a similar package as ``gammapy`` by Martin Raue
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
+* `photon_simulator`_ --- Python code to simulate X-ray observations
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _PyFACT: http://pyfact.readthedocs.org
@@ -78,3 +79,4 @@ There are several other great open source packages for gamma-ray data analysis:
 .. _ctools: http://cta.irap.omp.eu/ctools/
 .. _gamma-speed: https://github.com/gammapy/gamma-speed
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
+.. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
