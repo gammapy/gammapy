@@ -37,3 +37,14 @@ The best reference to TeV data analysis is Chapter 7 of Mathieu de Naurois's hab
 
 .. [Stewart2009] `Stewart (2009) <http://adsabs.harvard.edu/abs/2009A%26A...495..989S>`_,
    "Maximum-likelihood detection of sources among Poissonian noise"
+
+Software references:
+
+.. [Raue2012] `Raue (2012) <http://adsabs.harvard.edu/abs/2012AIPC.1505..789R>`_,
+   "PyFACT: Python and FITS analysis for Cherenkov telescopes"
+
+.. [Robitaille2013] `Robitaille et al. (2013) <http://adsabs.harvard.edu/abs/2013A%26A...558A..33A>`_
+   "Astropy: A community Python package for astronomy"
+
+.. [Knoedlseder2012] `Knödlseder et at. (2012) <http://adsabs.harvard.edu/abs/2012ASPC..461...65K>`_
+   "GammaLib: A New Framework for the Analysis of Astronomical Gamma-Ray Data"
