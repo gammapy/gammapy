@@ -4,7 +4,7 @@ import datetime
 import numpy as np
 from astropy.io import fits
 
-__all__ = ['EnergyAxis', 'log_mean_energy', 'np_to_pha']
+__all__ = ['EnergyAxis', 'np_to_pha']
 
 class EnergyAxis(object):
     """Log(E) axis"""
@@ -26,14 +26,6 @@ class EnergyAxis(object):
         e2 = self.e[z2]
         # print e1, '<=', e, '<', e2
         return z1, z2, e1, e2
-
-
-def log_mean_energy(e1, e2):
-    """Compute log arithmetic mean energy"""
-    log_e1, log_e2 = np.log(e1), np.log(e2)
-    log_e = 0.5 * (log_e1 + log_e2)
-    e = np.exp(log_e)
-    return e
 
 
 def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=None, quality=None, syserr=None,
