@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import subprocess
-import tempfile
+from tempfile import NamedTemporaryFile
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from ...data import poisson_stats_image
@@ -24,7 +24,7 @@ def test_sex():
     # filename = get_pkg_data_filename('../../data/poisson_stats_image/counts.fits.gz')
     # Instead we make a non-zipped copy of the file:
     data = poisson_stats_image()
-    filename = tempfile.mktemp('.fits')
+    filename = NamedTemporaryFile(suffix='.fits').name
     fits.writeto(filename, data=data)
     catalog, checkimage = sex(filename)
     assert len(catalog) == 35
