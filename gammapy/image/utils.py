@@ -11,7 +11,7 @@ __all__ = ['atrous_hdu', 'atrous_image', 'bbox',
            'cube_to_image', 'cube_to_spec',
            'cutout_box', 'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
-           'make_empty_image', 'make_header',
+           'make_empty_image', 'make_header', 'image_to_hdu',
            'paste_cutout_into_image', 'process_image_pixels', 'ring_correlate',
            'separation', 'solid_angle', 'threshold',
            ]
@@ -779,3 +779,56 @@ def paste_cutout_into_image(total, cutout, method='sum'):
         total.data[y : y + dy, x : x + dx] = cutout.data
     else:
         raise ValueError('Invalid method: {0}'.format(method))
+
+
+def image_to_hdu(image, rarange, decrange, primary=False,
+                 telescope='DUMMY', object='DUMMY', author='DUMMY') :
+    """Converts a 2d numpy array into a FITS primary HDU (image).
+
+    Parameters
+    ----------
+    map : 2d array
+        Skymap.
+    rarange : array/tupel
+        Tupel/Array with two entries giving the RA range of the map i.e. (ramin, ramax).
+    decrange : array/tupel
+        Tupel/Array with two entries giving the DEC range of the map i.e (decmin, decmax).
+
+    Returns
+    -------
+    hdu : pyfits.PrimaryHDU
+        FITS primary HDU containing the skymap.
+    """
+    from astropy.io import fits
+    decnbins, ranbins = map.shape
+
+    decstep = (decrange[1] - decrange[0]) / float(decnbins)
+    rastep = (rarange[1] - rarange[0]) / float(ranbins)
+
+    hdu = None
+    if primary :
+        hdu = fits.PrimaryHDU(image)
+    else :
+        hdu = fits.ImageHDU(image)
+    hdr = hdu.header
+
+    # Image definition
+    hdr['CTYPE1'] = 'RA---CAR'
+    hdr['CTYPE2'] = 'DEC--CAR'
+    hdr['CUNIT1'] = 'deg'
+    hdr['CUNIT2'] = 'deg'
+    hdr['CRVAL1'] = rarange[0]
+    hdr['CRVAL2'] = 0. # Must be zero for the lines to be rectilinear according to Calabretta (2002)
+    hdr['CRPIX1'] = .5
+    hdr['CRPIX2'] = - decrange[0] / decstep + .5 # Pixel outside of the image at DEC = 0.
+    hdr['CDELT1'] = rastep
+    hdr['CDELT2'] = decstep
+    hdr['RADESYS'] = 'FK5'
+    hdr['BUNIT'] = 'count'
+
+    # Extra data
+    hdr['TELESCOP'] = telescope
+    hdr['OBJECT'] = object
+    hdr['AUTHOR'] = author
+
+    return hdu
