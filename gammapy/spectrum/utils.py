@@ -7,12 +7,27 @@ from astropy.io import fits
 __all__ = ['EnergyAxis', 'np_to_pha']
 
 class EnergyAxis(object):
-    """Log(E) axis"""
+    """Log energy axis.
+    
+    Parameters
+    ----------
+    TODO
+    """
     def __init__(self, e):
         self.e = e
         self.log_e = np.log10(e)
 
     def __call__(self, e):
+        """TODO: document.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
+        """
         try:
             z1 = np.where(e >= self.e)[0][-1]
         except ValueError:
@@ -24,13 +39,13 @@ class EnergyAxis(object):
         z2 = z1 + 1
         e1 = self.e[z1]
         e2 = self.e[z2]
-        # print e1, '<=', e, '<', e2
+
         return z1, z2, e1, e2
 
 
 def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
-              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter_='NONE') :
+              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE') :
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters
@@ -55,6 +70,11 @@ def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=Non
         Fractional systematic error for the channel (optional)
     obj_ra/obj_dec : float
         Object RA/DEC J2000 [deg]
+
+    Returns
+    -------
+    pha : `astropy.io.fits.BinTableHDU`
+        PHA FITS HDU
 
     Notes
     -----
@@ -94,7 +114,7 @@ def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=Non
     header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'
     header['TELESCOP'] = telescope, 'Telescope (mission) name'
     header['INSTRUME'] = instrument, 'Instrument name'
-    header['FILTER'] = filter_, 'Instrument filter in use'
+    header['FILTER'] = filter, 'Instrument filter in use'
     header['EXPOSURE'] = exposure, 'Exposure time'
 
     header['BACKFILE'] = 'none', 'Background FITS file'
@@ -151,7 +171,7 @@ def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=Non
     header['DATE'] = datetime.datetime.today().strftime('%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
     header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
 
-    if dbase :
+    if dbase is not None:
         header['TIMESYS'] = 'MJD', 'The time system is MJD'
         header['TIMEUNIT'] = 's', 'unit for TSTARTI/F and TSTOPI/F, TIMEZERO'
         header['MJDREF'] = dbase.mjd, 'MJD for reference time'
