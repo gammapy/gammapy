@@ -48,6 +48,7 @@ If you think it might be useful, go to :ref:`install`.
   astro/index
   catalog/index
   references
+  credit
 
 Contact
 -------
