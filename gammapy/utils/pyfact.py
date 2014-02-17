@@ -38,6 +38,12 @@ __all__ = ['ChisquareFitter',
            'oversample_sky_map',
            'plot_skymaps',
            'skycircle_from_str',
+           'plot_th1',
+           'fit_th1',
+           'root_1dhist_to_array',
+           'root_2dhist_to_array',
+           'root_axis_to_array',
+           'root_th1_to_fitstable'
            ]
 
 
@@ -1565,7 +1571,7 @@ def create_spectrum(input_file_names,
                     write_output_files=False,
                     do_graphical_output=True,
                     loglevel='INFO'):
-    """
+    """Creates spectra from VHE event lists in FITS format.
     
     TODO: describe
     
@@ -1982,3 +1988,100 @@ def create_spectrum(input_file_names,
         ax.set_yscale('log')
 
     plt.show()
+
+
+def root_axis_to_array(ax) :
+    a = np.zeros(ax.GetNbins() + 1)
+    for i in range(ax.GetNbins()) :
+        a[i] = ax.GetBinLowEdge(i + 1)
+    a[-1] = ax.GetBinUpEdge(ax.GetNbins())
+    return a
+
+
+def root_1dhist_to_array(hist) :
+    nbins = hist.GetXaxis().GetNbins()
+    a, e = np.zeros(nbins), np.zeros(nbins)
+    for i in range(nbins) :
+        a[i] = hist.GetBinContent(i + 1)
+        e[i] = hist.GetBinError(i + 1)
+    return (a, e)
+
+
+def root_2dhist_to_array(hist2d) :
+    nbinsx = hist2d.GetXaxis().GetNbins()
+    nbinsy = hist2d.GetYaxis().GetNbins()
+    a = np.zeros([nbinsx, nbinsy])
+    e = np.zeros([nbinsx, nbinsy])
+    for x in range(nbinsx) :
+        for y in range(nbinsy) :
+            a[x, y] = hist2d.GetBinContent(x + 1, y + 1)
+            e[x, y] = hist2d.GetBinError(x + 1, y + 1)            
+    return (a, e)
+
+
+def root_th1_to_fitstable(hist, xunit='', yunit='') :
+    d, e = root_1dhist_to_array(hist)
+    ax = root_axis_to_array(hist.GetXaxis())
+    hdu = fits.new_table(
+        [fits.Column(name='BIN_LO',
+                       format='1E',
+                       array=ax[:-1],
+                       unit=xunit),
+         fits.Column(name='BIN_HI',
+                       format='1E',
+                       array=ax[1:],
+                       unit=xunit),
+         fits.Column(name='VAL',
+                       format='1E',
+                       array=d,
+                       unit=yunit),
+         fits.Column(name='ERR',
+                       format='1E',
+                       array=e,
+                       unit=yunit)
+         ]
+        )
+    header = hdu.header
+    header['ROOTTI'] = hist.GetTitle(), 'ROOT hist. title'
+    header['ROOTXTI'] = hist.GetXaxis().GetTitle(), 'ROOT X-axis title'
+    header['ROOTYTI'] = hist.GetYaxis().GetTitle(), 'ROOT Y-axis title'
+    header['ROOTUN'] = hist.GetBinContent(0), 'ROOT n underflow'
+    header['ROOTOV'] = hist.GetBinContent(hist.GetXaxis().GetNbins() + 1), 'ROOT n overflow'
+    return hdu
+
+
+def plot_th1(hist, logy=False) :
+    import matplotlib.pyplot as plt
+    d, e = root_1dhist_to_array(hist)
+    ax = root_axis_to_array(hist.GetXaxis())
+    if logy :
+        plt.semilogy((ax[:-1] + ax[1:]) / 2., d)        
+    else :
+        plt.plot((ax[:-1] + ax[1:]) / 2., d)
+    plt.xlabel(hist.GetXaxis().GetTitle(), fontsize='small')
+    plt.ylabel(hist.GetYaxis().GetTitle(), fontsize='small')
+    plt.title(hist.GetTitle(), fontsize='small')
+    fontsize='small'
+    ax = plt.gca()
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label1.set_fontsize(fontsize)
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label1.set_fontsize(fontsize)    
+    return
+
+
+def fit_th1(fitter, p0, hist, errscale=None, range_=None, xaxlog=True) :
+    y, yerr = root_1dhist_to_array(hist)
+    if errscale :
+        yerr = errscale * y
+    ax = root_axis_to_array(hist.GetXaxis())
+    x = ((ax[:-1] + ax[1:]) / 2.)
+    if xaxlog :
+        x = 10 ** x
+    if range_ is not None :
+        m = (x >= range_[0]) * (x <= range_[1])
+        x = x[m]
+        y = y[m]
+        yerr = yerr[m]
+    fitter.fit_data(p0, x, y, yerr)
+    return (fitter, x, y, yerr)
