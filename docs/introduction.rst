@@ -62,19 +62,25 @@ A full list of available command line tools can be found in `tools`.
 Other related packages
 ----------------------
 
-There are several other great open source packages for gamma-ray data analysis:
+Make sure to also check out the following packages that contain very useful functionality for gamma-ray astronomy:
 
-* `act-analysis`_ --- a similar package as ``gammapy`` by Karl Kosack
-* `gammafits`_ --- an SED modeling and fitting package by Victor Zabalza
+* `Sherpa`_ --- X-ray modeling and fitting package
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
-* `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
-* `PyFACT`_ --- a similar package as ``gammapy`` by Martin Raue
-* `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
+* `gammafit`_ --- an SED modeling and fitting package by Victor Zabalza
 
-.. _act-analysis: https://bitbucket.org/kosack/act-analysis
-.. _PyFACT: http://pyfact.readthedocs.org
-.. _gammafits: https://github.com/zblz/gammafits
+.. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools/
-.. _gamma-speed: https://github.com/gammapy/gamma-speed
+.. _gammafit: https://github.com/zblz/gammafit
+
+Some other projects:
+
+* `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
+* `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
+* `photon_simulator`_ --- Python code to simulate X-ray observations
+* `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
+
+.. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
+.. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
+.. _gamma-speed: https://github.com/gammapy/gamma-speed

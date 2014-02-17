@@ -33,6 +33,7 @@ If you think it might be useful, go to :ref:`install`.
   install
   introduction
   tools
+  tutorials/index
  
   data/index
   background/index
@@ -48,6 +49,7 @@ If you think it might be useful, go to :ref:`install`.
   astro/index
   catalog/index
   references
+  credit
 
 Contact
 -------

@@ -7,30 +7,23 @@ TODO: explain.
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('scales', type=float, nargs='*', default=[0.1, 0.2, 0.4],
-                    help='List of spatial scales (deg) to search for sources'
-                    '[default=%(default)s]')
+                    help='List of spatial scales (deg) to search for sources')
 parser.add_argument('--counts', type=str, default='counts.fits',
-                    help='Counts FITS file name '
-                    '[default=%(default)s]')
+                    help='Counts FITS file name')
 parser.add_argument('--background', type=str, default='background.fits',
-                    help='Background FITS file name '
-                    '[default=%(default)s]')
+                    help='Background FITS file name')
 parser.add_argument('--exposure', type=str, default='exposure.fits',
-                    help='Exposure FITS file name '
-                    '[default=%(default)s]')
+                    help='Exposure FITS file name')
 parser.add_argument('--output_fits', type=str, default='detections.fits',
-                    help='Output catalog of detections (FITS table format) '
-                    '[default=%(default)s]')
+                    help='Output catalog of detections (FITS table format)')
 parser.add_argument('--output_regions', type=str, default='detections.reg',
-                    help='Output catalog of detections (ds9 region file format) '
-                    '[default=%(default)s]')
+                    help='Output catalog of detections (ds9 region file format)')
 parser.add_argument('--debug_output_folder', type=str, default='',
-                    help='Debug output folder name (empty string for no output) '
-                    '[default=%(default)s]')
+                    help='Debug output folder name (empty string for no output)')
 args = parser.parse_args()
 args = vars(args)
 

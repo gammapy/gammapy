@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""ROOT utility functions"""
+"""ROOT utility functions.
+"""
 from __future__ import print_function, division
 import numpy as np
 
+__all__ = ['fill_acceptance', 'measure_hist']
 
 def fill_acceptance(offset_image, acceptance_curve, offset_max=2):
     """Fill acceptance image.
@@ -44,7 +46,8 @@ def measure_hist(hist, position='max'):
     
     Returns
     -------
-    dict with keys 'binx', 'biny', 'x', 'y', 'value'
+    properties : dict
+        Measurements in a dictionary with keys 'binx', 'biny', 'x', 'y', 'value'.
     """
     import ROOT
     # Find binx, biny

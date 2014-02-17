@@ -3,8 +3,47 @@
 
 TODO: describe what is done.
 """
+
+# Parse command line arguments
+
+from gammapy.utils.scripts import argparse, GammapyFormatter
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=GammapyFormatter)
+parser.add_argument('--counts', type=str, default='counts.fits',
+                    help='Counts FITS file name')
+parser.add_argument('--exposure', type=str, default='exposure.fits',
+                    help='Exposure FITS file name')
+parser.add_argument('--background', type=str, default='background.fits',
+                    help='Background FITS file name')
+parser.add_argument('--psf', type=str, default='psf.json',
+                    help='PSF JSON file name')
+parser.add_argument('--sources', type=str, default=None,
+                    help='Background sources JSON file name')
+parser.add_argument('--significance_image', type=str, default='significance.fits',
+                    help='Output significance image FITS file name')
+parser.add_argument('--filter', type=str, default=None,
+                    help='Select region where you want to compute significance'
+                    ' (ds9 reg format)')
+parser.add_argument('--sigma', type=float, default=0.1,
+                    help='Width of the Gaussian test source (pix). '
+                    'Values much smaller than 0.1 cause numerical trouble. '
+                    'This parameter corresponds in spirit to the theta parameter '
+                    'for Li & Ma significance maps, i.e. the tophat correlation radius.')
+parser.add_argument('--roi_containment', type=float, default=95,
+                    help='Fraction of PSF-convolved test source that should be contained '
+                    'in the ROI in %%. Making this fraction small will make the '
+                    'ROI small and the significance computation fast, but also inaccurate.')
+parser.add_argument('--stepsize', type=int, default=1,
+                    help='E.g. stepsize = 3 computes significance only for every third pixel. '
+                    'This can be useful to get a quick look at a significance map without '
+                    'bothering fimgbin on the input images. By default significance is '
+                    'computed for all pixels')
+parser.add_argument('-c', '--clobber',
+                    action='store_true', default=False,
+                    help='Overwrite output files?')
+args = parser.parse_args()
+
 import logging
-from optparse import OptionParser
 from os.path import isfile
 from time import time
 import numpy as np
@@ -14,56 +53,8 @@ from const import sigma_to_fwhm
 import morphology.utils
 import morphology.psf
 
-# ---------------------------------------------------------
-# Parse command line arguments
-# ---------------------------------------------------------
-parser = OptionParser()
-parser.add_option("--counts", type=str, default='counts.fits',
-                  help="Counts FITS file name "
-                  "[default=%default]")
-parser.add_option("--exposure", type=str, default='exposure.fits',
-                  help="Exposure FITS file name "
-                  "[default=%default]")
-parser.add_option("--background", type=str, default='background.fits',
-                  help="Background FITS file name "
-                  "[default=%default]")
-parser.add_option("--psf", type=str, default='psf.json',
-                  help="PSF JSON file name "
-                  "[default=%default]")
-parser.add_option("--sources", type=str, default=None,
-                  help="Background sources JSON file name "
-                  "[default=%default]")
-parser.add_option("--significance_image", type=str, default='significance.fits',
-                  help="Output significance image FITS file name"
-                  "[default=%default]")
-parser.add_option("--filter", type=str, default=None,
-                  help="Select region where you want to compute significance"
-                  " (ds9 reg format)"
-                  "[default=%default]")
-parser.add_option("--sigma", type=float, default=0.1,
-                  help="Width of the Gaussian test source (pix). "
-                  "Values much smaller than 0.1 cause numerical trouble. "
-                  "This parameter corresponds in spirit to the theta parameter "
-                  "for Li & Ma significance maps, i.e. the tophat correlation radius."
-                  "[default=%default]")
-parser.add_option("--roi_containment", type=float, default=95,
-                  help="Fraction of PSF-convolved test source that should be contained "
-                  "in the ROI in %. Making this fraction small will make the "
-                  "ROI small and the significance computation fast, but also inaccurate."
-                  "[default=%default]")
-parser.add_option("--stepsize", type=int, default=1,
-                  help="E.g. stepsize = 3 computes significance only for every third pixel. "
-                  "This can be useful to get a quick look at a significance map without "
-                  "bothering fimgbin on the input images. By default significance is "
-                  "computed for all pixels "
-                  "[default=%default]")
-parser.add_option("-c", "--clobber",
-                  action="store_true", default=False,
-                  help="Overwrite or do not overwrite "
-                  "existing output files [default=%default]")
-(options, args) = parser.parse_args()
 
-logger = logging.getLogger("sherpa")
+logger = logging.getLogger('sherpa')
 logger.setLevel(logging.WARN)
 logging.basicConfig(level=logging.INFO)
 
@@ -72,34 +63,34 @@ logging.basicConfig(level=logging.INFO)
 # time computing the significance image but not being able to save it
 # ---------------------------------------------------------
 
-if (options.clobber == False and isfile(options.significance_image)):
-    logging.error('Output file exists: {0}'.format(options.significance_image))
+if (args.clobber == False and isfile(args.significance_image)):
+    logging.error('Output file exists: {0}'.format(args.significance_image))
     from sys import exit
     exit(-1)
 
 # ---------------------------------------------------------
 # Load images, PSF and sources
 # ---------------------------------------------------------
-logging.info('Reading counts: {0}'.format(options.counts))
-load_data(options.counts)
+logging.info('Reading counts: {0}'.format(args.counts))
+load_data(args.counts)
 
-logging.info('Reading exposure: {0}'.format(options.exposure))
-load_table_model("exposure", options.exposure)
+logging.info('Reading exposure: {0}'.format(args.exposure))
+load_table_model('exposure', args.exposure)
 
-logging.info('Reading background: {0}'.format(options.background))
-load_table_model("background", options.background)
+logging.info('Reading background: {0}'.format(args.background))
+load_table_model('background', args.background)
 
-logging.info('Reading PSF: {0}'.format(options.psf))
-morphology.psf.Sherpa(options.psf).set()
+logging.info('Reading PSF: {0}'.format(args.psf))
+morphology.psf.Sherpa(args.psf).set()
 
 # ---------------------------------------------------------
 # Set up the full model and freeze everything but the
 # norm of the test_source
 # ---------------------------------------------------------
 
-if options.sources:
-    logging.info('Reading sources: {0}'.format(options.sources))
-    morphology.utils.read_json(options.sources, set_source)
+if args.sources:
+    logging.info('Reading sources: {0}'.format(args.sources))
+    morphology.utils.read_json(args.sources, set_source)
     # Add a Gaussian test_source to the other background sources
     set_source('gauss2d.test_source + ' + get_source().name)
 else:
@@ -108,7 +99,7 @@ else:
 
 set_full_model('background + exposure * psf(' + get_source().name + ')')
 [par.freeze() for par in get_model().pars]
-test_source.fwhm = sigma_to_fwhm * options.sigma
+test_source.fwhm = sigma_to_fwhm * args.sigma
 #test_source.ampl.min = 0
 thaw(test_source.ampl)
 
@@ -119,7 +110,7 @@ set_coord('physical') # @todo Check is positions are correct
 set_stat('cash') # Do a likelihood fit
 set_method('levmar') # Use the fastest optimizer
 set_method_opt('maxfev', int(1e2)) # Limit should never be reached
-set_method_opt("verbose", 0) # Don't babble
+set_method_opt('verbose', 0) # Don't babble
 
 # ---------------------------------------------------------
 # Compute ROI such that a certain fraction of the PSF-
@@ -130,7 +121,7 @@ set_method_opt("verbose", 0) # Don't babble
 psf_width = max(psf1.fwhm.val, psf2.fwhm.val, psf3.fwhm.val)
 roi_sigma = np.sqrt(psf_width ** 2 + test_source.fwhm.val ** 2)
 roi_psf = morphology.psf.GaussianPSF(roi_sigma)
-roi_size = roi_psf.containment_angle(options.roi_containment / 100.)
+roi_size = roi_psf.containment_angle(args.roi_containment / 100.)
 logging.info('psf_width = {0}, roi_sigma = {1}, roi_size = {2}'
              ''.format(psf_width, roi_sigma, roi_size))
 
@@ -142,9 +133,9 @@ logging.info('psf_width = {0}, roi_sigma = {1}, roi_size = {2}'
 copy_data(1, 'significance')
 get_data('significance').y = np.zeros_like(get_data('significance').y)
 
-if options.filter:
-    logging.info('Reading filter: {0}'.format(options.filter))
-    notice2d_id('significance', options.filter)
+if args.filter:
+    logging.info('Reading filter: {0}'.format(args.filter))
+    notice2d_id('significance', args.filter)
     mask = get_data('significance').mask
 else:
     logging.info('No filter. Computing significance for whole image.')
@@ -156,17 +147,17 @@ else:
 
 ny, nx = get_data().shape
 counter = 0
-npix = mask.sum() / options.stepsize ** 2
+npix = mask.sum() / args.stepsize ** 2
 last_ampl = 1
 start = time()
-for x in range(0, nx, options.stepsize):
-    for y in range(0, ny, options.stepsize):
+for x in range(0, nx, args.stepsize):
+    for y in range(0, ny, args.stepsize):
         bin = x + y * nx
         #bin = y + x * ny    
         if mask[bin] == True:
             # Set up the test_source and ROI
             notice2d_id(1) # This clears previous selections
-            notice2d_id(1, "circle(%s, %s, %s)" % (x, y, roi_size))
+            notice2d_id(1, 'circle(%s, %s, %s)' % (x, y, roi_size))
             test_source.xpos= x
             test_source.ypos= y
             freeze(test_source.xpos, test_source.ypos)
@@ -213,6 +204,6 @@ for x in range(0, nx, options.stepsize):
 # ---------------------------------------------------------
 # Save the TS map to file
 # ---------------------------------------------------------
-logging.info('Writing significance_image: {0}'.format(options.significance_image))
-save_data('significance', options.significance_image, clobber=options.clobber)
+logging.info('Writing significance_image: {0}'.format(args.significance_image))
+save_data('significance', args.significance_image, clobber=args.clobber)
 

@@ -8,9 +8,9 @@
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('infile', type=str,
                     help='Input FITS file name')
 parser.add_argument('x', type=float,
@@ -18,8 +18,7 @@ parser.add_argument('x', type=float,
 parser.add_argument('y', type=float,
                     help='y coordinate (deg)')
 parser.add_argument('--pix', action='store_true',
-                    help='Input coordinates are pixels '
-                    '(default is world coordinates)')
+                    help='Input coordinates are in pixels? (world coordinates if false)')
 
 args = parser.parse_args()
 args = vars(args)

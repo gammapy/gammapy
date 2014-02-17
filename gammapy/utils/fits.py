@@ -32,6 +32,7 @@ def get_table_hdu():
     """Get the first table HDU"""
     raise NotImplementedError
 
+
 def fits_table_to_pandas(filename, index_columns):
     """Convert a FITS table HDU to a pandas DataFrame"""
     # TODO: really make this work for an astropy Table (not a TableHDU or filename).

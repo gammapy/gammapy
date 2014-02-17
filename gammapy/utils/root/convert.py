@@ -1,30 +1,31 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility function TH2_to_FITS to export ROOT TH2 data to FITS files.
-
-Run this file, then look at the FITS file:
-$ ftlist TH2_to_FITS.fits H
-$ ftlist TH2_to_FITS.fits K
-$ ds9 TH2_to_FITS.fits
-In the menu select:
-> Analysis > Coordinate Grid
-> WCS > Galactic & Degrees
-
-@todo: Only use pyfits, not kapteyn.
-@todo: Expand this into a small command line tool.
+"""Utility functions to convert ROOT data to numpy / FITS data.
 """
 from __future__ import print_function, division
 import warnings
 import numpy as np
+from astropy.utils.compat.odict import OrderedDict
+from astropy.io import fits
+from astropy.table import Table
 
 __all__ = ['hist_to_table',
            'TH2_to_FITS_header', 'TH2_to_FITS_data', 'TH2_to_FITS']
 
 
 def hist_to_table(hist):
-    """Convert 1D ROOT histogram into astropy Table"""
+    """Convert 1D ROOT histogram into astropy Table.
+    
+    Parameters
+    ----------
+    hist : ROOT.TH1
+        ROOT histogram.
+    
+    Returns
+    -------
+    table : astropy.table.Table
+        Histogram data in astropy table format.
+    """
     from rootpy import asrootpy
-    from astropy.utils.compat.odict import OrderedDict
-    from astropy.table import Table
 
     hist = asrootpy(hist)
     
@@ -42,26 +43,41 @@ def hist_to_table(hist):
     return table
 
 
-def TH2_to_FITS_header(h, flipx=True):
-    """Create FITS header assuming TH2 or SkyHist that represents an image
+def TH2_to_FITS_header(hist, flipx=True):
+    """Create FITS header for a given ROOT histogram.
+    
+    Assuming TH2 or SkyHist that represents an image
     in Galactic CAR projection with reference point at GLAT = 0,
     as is the case for HESS SkyHists.
 
     Formulae and variable names taken from Plotters::SkyHistToFITS()
     in $HESSROOT/plotters/src/FITSUtils.C
+    
+    Parameters
+    ----------
+    hist : ROOT.TH2
+        ROOT histogram
+    flipx : bool
+        Flip x-axis?
+    
+    Returns
+    -------
+    header : astropy.io.fits.Header
+        FITS header
     """
     # Compute FITS projection header parameters
-    nx, ny = h.GetNbinsX(), h.GetNbinsY()
+    nx, ny = hist.GetNbinsX(), hist.GetNbinsY()
     centerbinx = int((nx + 1) / 2)
     centerbiny = int((ny + 1) / 2)
-    crval1 = h.GetXaxis().GetBinCenter(centerbinx)
+    crval1 = hist.GetXaxis().GetBinCenter(centerbinx)
     crval2 = 0
-    cdelt1 = (h.GetXaxis().GetXmax() - h.GetXaxis().GetXmin()) / nx
-    cdelt2 = (h.GetYaxis().GetXmax() - h.GetYaxis().GetXmin()) / ny
+    cdelt1 = (hist.GetXaxis().GetXmax() - hist.GetXaxis().GetXmin()) / nx
+    cdelt2 = (hist.GetYaxis().GetXmax() - hist.GetYaxis().GetXmin()) / ny
     crpix1 = centerbinx
-    crpix2 = centerbiny - h.GetYaxis().GetBinCenter(centerbiny) / cdelt2
+    crpix2 = centerbiny - hist.GetYaxis().GetBinCenter(centerbiny) / cdelt2
     if flipx:
         cdelt1 *= -1
+
     # Fill dictionary with FITS header keywords
     header = dict()
     header['NAXIS'] = 2
@@ -71,76 +87,96 @@ def TH2_to_FITS_header(h, flipx=True):
     header['CRPIX1'], header['CRPIX2'] = crpix1, crpix2
     header['CUNIT1'], header['CUNIT2'] = 'deg', 'deg'
     header['CDELT1'], header['CDELT2'] = cdelt1, cdelt2
+
     return header
 
 
-def TH2_to_FITS_data(h, flipx=True):
-    """Convert TH2 bin values into a numpy array"""
+def TH2_to_FITS_data(hist, flipx=True):
+    """Convert TH2 bin values into a numpy array.
+    
+    Parameters
+    ----------
+    hist : ROOT.TH2
+        ROOT histogram
+
+    Returns
+    -------
+    data : numpy.array
+        Histogram data as a numpy array
+    """
     # @note: Numpy array index order is (y, x), whereas ROOT TH2 has (x, y)
-    nx, ny = h.GetNbinsX(), h.GetNbinsY()
+    nx, ny = hist.GetNbinsX(), hist.GetNbinsY()
     # @todo This doesn't work properly:
-    # dtype = type(h.GetBinContent(0))
+    # dtype = type(hist.GetBinContent(0))
     dtype = 'float32'
     array = np.empty((ny, nx), dtype=dtype)
     for ix in range(nx):
         for iy in range(ny):
-            array[iy, ix] = h.GetBinContent(ix, iy)
+            array[iy, ix] = hist.GetBinContent(ix, iy)
     if flipx:
         array = array[:, ::-1]
+
     return array
 
 
-def TH2_to_FITS(h, flipx=True):
-    """Convert ROOT TH2 to kapteyn.maputils.FITSimage,
-    which can easily be exported to a FITS file.
+def TH2_to_FITS(hist, flipx=True):
+    """Convert ROOT 2D histogram to FITS format.
 
-    h : Input 2D ROOT histogram
+    Parameters
+    ----------
+    hist : `ROOT.TH2`
+        2-dim ROOT histogram
 
-    Usage example:
+    Returns
+    -------
+    hdu : `astropy.io.fits.ImageHDU`
+        Histogram in FITS format.
+
+    Examples
+    --------
     >>> from TH2_to_FITS import TH2_to_FITS
-    >>> root_th2 = ROOT.TH2F()
-    >>> fits_figure = TH2_to_FITS(root_th2)
-    >>> fits_figure.writetofits('my_image.fits')
+    >>> root_hist = ROOT.TH2F()
+    >>> fits_hdu = TH2_to_FITS(root_hist)
+    >>> fits_hdu.writetofits('my_image.fits')
     """
-    from kapteyn.maputils import FITSimage
-    header = TH2_to_FITS_header(h, flipx)
+    header = TH2_to_FITS_header(hist, flipx)
     if header['CDELT1'] > 0:
         warnings.warn('CDELT1 > 0 might not be handled properly.'
                       'A TH2 representing an astro image should have '
                       'a reversed x-axis, i.e. xlow > xhi')
-    data = TH2_to_FITS_data(h, flipx)
-    return FITSimage(externaldata=data, externalheader=header)
+    data = TH2_to_FITS_data(hist, flipx)
+    hdu = fits.ImageHDU(data=data, header=header)
+    return hdu
 
 
-def tree_to_table(tree):
+def tree_to_table(tree, tree_name):
     """Convert a ROOT TTree to an astropy Table.
     
     Parameters
     ----------
-    
+    tree : ROOT.TTree
+        ROOT TTree
+
     Returns
     -------
     table : astropy.table.Table
-        
+        ROOT tree data as an astropy table.
     """
     from rootpy import asrootpy
+    from rootpy.io import open
+    from rootpy.root2array import tree_to_recarray
+
     tree = asrootpy(tree)
     array = tree.to_array()
 
     
-    from rootpy.io import open
-    from rootpy.root2array import tree_to_recarray
-    print('Reading %s' % infile)
     file = open(infile)
     tree_name = 'TableAllMu_WithoutNan' # 'ParTree_Postselect'
-    print('Getting %s' % tree_name)
     tree = file.get(tree_name, ignore_unsupported=True)
-    print('Converting tree to recarray')
     array = tree_to_recarray(tree)
-    print('Converting recarray to atpy.Table')
     table = recarray_to_table(array)
 
-    print('Removing empty columns:')
+    # Remove empty columns
     empty_columns = []
     for col in table.columns:
         #if table['col'].min() == table['col'].max()

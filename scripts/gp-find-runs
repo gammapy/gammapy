@@ -5,16 +5,12 @@
 TODO: explain.
 """
 
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-from gammapy.obs import RunList
-
 # Parse command line arguments
 
 import sys
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 subparsers = parser.add_subparsers()
 
 parser.add_argument('in', type=argparse.FileType('r'),
@@ -33,6 +29,10 @@ args = parser.parse_args()
 args = vars(args)
 
 # Execute script
+
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+from gammapy.obs import RunList
 
 print args
 args['out'].write('hi\n')

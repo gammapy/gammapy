@@ -7,9 +7,9 @@ TODO: explain a bit.
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('run_list', type=str,
                     help='Input run list file name')
 parser.add_argument('exclusion_list', type=str,

@@ -7,9 +7,9 @@ TODO: explain a bit.
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('--x_on', type=float,
                     help='On-region X position (deg)')
 parser.add_argument('--y_on', type=float,

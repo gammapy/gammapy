@@ -10,9 +10,9 @@ The input `data_file` must contain the following HDU extensions:
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('model_file', type=str,
                     help='Input excess model FITS file name')
 parser.add_argument('data_file', type=str,

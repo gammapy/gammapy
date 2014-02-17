@@ -5,6 +5,19 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from .. import powerlaw
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+try:
+    import uncertainties
+    HAS_UNCERTAINTIES = True
+except ImportError:
+    HAS_UNCERTAINTIES = False
+
+
 @pytest.mark.xfail
 def test_powerlaw():
     e = 1
@@ -27,6 +40,7 @@ def test_one():
     assert_allclose(I, 1)
 
 
+@pytest.mark.skipif('not HAS_UNCERTAINTIES')
 def test_closure(g_error_mag=0):
     """This test passes for g_error_mag == 0,
     but fails for g_error_mag != 0, because
@@ -109,6 +123,7 @@ def test_compatibility():
         powerlaw.compatibility(par_fermi, par_hess)
 
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_SED_error(I=1., e1=1, e2=10):
     """Compute the error one makes by using the simple formulas:
     e = sqrt(e1 * e2)
@@ -125,8 +140,8 @@ def test_SED_error(I=1., e1=1, e2=10):
     2.5    0.85    1.28
     3.0    0.81    1.75
     """
-    from ..utils import log_mean_energy
-    e = log_mean_energy(e1, e2)
+    from scipy.stats import gmean
+    e = gmean([e1, e2])
     f = I / (e2 - e1)
     e2f = e ** 2 * f  # @note: e ** 2 = e1 * e2 here.
     print('%10s %10s %10s' % ('Index', 'SED', 'Flux'))
