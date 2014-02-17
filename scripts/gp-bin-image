@@ -4,9 +4,9 @@
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('event_file', type=str,
                     help='Input FITS event file name')
 parser.add_argument('reference_file', type=str,

@@ -4,16 +4,12 @@
 
 TODO: add example and explain output.
 """
-import os.path
-import sys
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('infile', action="store",
                     help='Input FITS file name')
 parser.add_argument('outfile', action="store",
@@ -38,6 +34,11 @@ parser.add_argument('--convergence', default=1e-5, type=float,
                     help='Convergence parameter')
 
 args = parser.parse_args()
+
+import os.path
+import sys
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
 if  os.path.isfile(args.outfile) and not args.clobber:
     logging.error("Output file exists and clobber is False")

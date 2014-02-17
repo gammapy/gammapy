@@ -8,35 +8,27 @@ TODO: document
 
 # Parse command line arguments
 
-from astropy.utils.compat import argparse
+from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawTextHelpFormatter)
+                                 formatter_class=GammapyFormatter)
 parser.add_argument('arf', type=str,
                     help='Input ARF file.')
 parser.add_argument('-t', '--exposure_time', type=float, default=.5,
-                    help='Exposure time in hours '
-                    '[default=%default]')
+                    help='Exposure time in hours')
 parser.add_argument('-f', '--flux', type=float, default=.1,
-                    help='Flux in units of Crab '
-                    '[default=%default]')
+                    help='Flux in units of Crab')
 parser.add_argument('-r', '--rmf_file', type=str, default=None,
-                    help='Response matrix file (RMF), optional '
-                    '[default=%default]')
+                    help='Response matrix file (RMF), optional')
 parser.add_argument('-e', '--extra_file', type=str, default=None,
-                    help='Extra file with auxiliary information e.g. bg-rate, psf, etc. '
-                    '[default=%default]')
+                    help='Extra file with auxiliary information e.g. bg-rate, psf, etc.')
 parser.add_argument('-o', '--output_filename_base', type=str, default=None,
-                    help='Output filename base. If set, output files will be written '
-                    '[default=%default]')
+                    help='Output filename base. If set, output files will be written')
 parser.add_argument('--write_pha', action='store_true', default=False,
-                    help='Write photon PHA file.'
-                    '[default=%default]')
+                    help='Write photon PHA file')
 parser.add_argument('--no_graphical_output', action='store_false', default=True,
-                    help='Switch off graphical output.'
-                    '[default=%default]')
+                    help='Switch off graphical output')
 parser.add_argument('-l', '--loglevel', type=str, default='INFO',
-                    help='Amount of logging e.g. DEBUG, INFO, WARNING, ERROR.'
-                    '[default=%default]')
+                    help='Amount of logging e.g. DEBUG, INFO, WARNING, ERROR.')
 
 args = parser.parse_args()
 args = vars(args)
