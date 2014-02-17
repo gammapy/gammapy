@@ -19,7 +19,7 @@ from astropy.io import fits
 from astropy.table import Table, Column
 from astropy.time import Time, TimeDelta
 from ..stats import significance_on_off
-from ..irf import arf_to_np, np_to_arf
+from ..irf import arf_to_np, np_to_arf, np_to_rmf, rmf_to_np
 from ..irf import EnergyDispersion
 from ..spectrum.utils import np_to_pha
 from ..version import version
@@ -43,7 +43,8 @@ __all__ = ['ChisquareFitter',
            'root_1dhist_to_array',
            'root_2dhist_to_array',
            'root_axis_to_array',
-           'root_th1_to_fitstable'
+           'root_th1_to_fitstable',
+           'cta_irf_root_to_fits',
            ]
 
 
@@ -2061,7 +2062,7 @@ def plot_th1(hist, logy=False) :
     plt.xlabel(hist.GetXaxis().GetTitle(), fontsize='small')
     plt.ylabel(hist.GetYaxis().GetTitle(), fontsize='small')
     plt.title(hist.GetTitle(), fontsize='small')
-    fontsize='small'
+    fontsize = 'small'
     ax = plt.gca()
     for tick in ax.xaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
@@ -2085,3 +2086,226 @@ def fit_th1(fitter, p0, hist, errscale=None, range_=None, xaxlog=True) :
         yerr = yerr[m]
     fitter.fit_data(p0, x, y, yerr)
     return (fitter, x, y, yerr)
+
+
+def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
+    """Convert CTA IRF data from ROOT to FITS format.
+    
+    This script converts a CTA response stored in a root file into a set of FITS
+    files, namely ARF, RMF, and one auxiliary file, which stores all information
+    from the response file in simple fits tables.
+    
+    Parameters
+    ----------
+    irf_root_file_name : str
+        TODO
+    write_output : bool
+        Write output?
+
+    Returns
+    -------
+    TODO: at the moment returns nothing ... files should be written by caller!
+    """
+    from ROOT import TFile
+    from scipy.interpolate import UnivariateSpline
+    from scipy.special import erf
+    import matplotlib.pyplot as plt
+    
+    #---------------------------------------------------------------------------
+    # Open CTA response file in root format
+    
+    irf_file_name_base = irf_root_file_name.rsplit('.', 1)[0].rsplit('/', 1)[1]
+    
+    logging.info('Reading IRF data from file {0}'.format(irf_root_file_name))
+    irf_root_file = TFile(irf_root_file_name)
+    logging.info('File content (f.ls()) :')
+    irf_root_file.ls()
+    
+    #---------------------------------------------------------------------------
+    # Write ARF & MRF
+    
+    #----------------------------------------------
+    # Read RM
+    h = irf_root_file.Get('MigMatrix')
+    rm_erange_log, rm_ebounds_log = None, None
+    if h != None :
+        # Transpose and normalize RM
+        rm = np.transpose(root_2dhist_to_array(h)[0])
+        n = np.transpose(np.sum(rm, axis=1) * np.ones(rm.shape[::-1]))
+        rm[rm > 0.] /= n[rm > 0.]
+        # Read bin enery ranges
+        rm_erange_log = root_axis_to_array(h.GetYaxis())
+        rm_ebounds_log = root_axis_to_array(h.GetXaxis())
+    else :
+        logging.info('ROOT file does not contain MigMatrix.')
+        logging.info('Will produce RMF from ERes histogram.')
+    
+        # Read energy resolution
+        h = irf_root_file.Get('ERes')
+        d = root_1dhist_to_array(h)[0]
+        ax = root_axis_to_array(h.GetXaxis())
+    
+        # Resample to higher resolution in energy
+        nbins = int((ax[-1] - ax[0]) * 20)  # 20 bins per decade
+        rm_erange_log = np.linspace(ax[0], ax[-1], nbins + 1)
+        rm_ebounds_log = rm_erange_log
+    
+        sigma = UnivariateSpline((ax[:-1] + ax[1:]) / 2., d, s=0, k=1)
+    
+        logerange = rm_erange_log
+        logemingrid = logerange[:-1] * np.ones([nbins, nbins])
+        logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
+        logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
+    
+        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
+    
+        rm = gauss_int([1., 10. ** logecentergrid, sigma(logecentergrid).reshape(logecentergrid.shape) * 10. ** logecentergrid ], 10. ** logemingrid, 10. ** logemaxgrid)
+        # rm = gauss_int([1., 10. ** logecentergrid, .5], 10. ** logemingrid, 10. ** logemaxgrid)
+    
+    # Create RM hdulist
+    hdulist = np_to_rmf(rm,
+                        (10. ** rm_erange_log).round(decimals=6),
+                        (10. ** rm_ebounds_log).round(decimals=6),
+                        1E-5,
+                        telescope='CTASIM')
+    
+    # Write RM to file
+    if write_output:
+        hdulist.writeto(irf_file_name_base + '.rmf.fits')
+    
+    #----------------------------------------------
+    # Read EA
+    h = irf_root_file.Get('EffectiveAreaEtrue')  # ARF should be in true energy
+    if h == None :
+        logging.info('ROOT file does not contain EffectiveAreaEtrue (EA vs E_true)')
+        logging.info('Will use EffectiveArea (EA vs E_reco) for ARF')
+        h = irf_root_file.Get('EffectiveArea')
+    ea = root_1dhist_to_array(h)[0]
+    # Read EA bin energy ranges
+    ea_erange_log = root_axis_to_array(h.GetXaxis())
+    # Re-sample EA to match RM
+    resample_ea_to_mrf = True
+    # resample_ea_to_mrf = False
+    if resample_ea_to_mrf:
+            logging.info('Resampling effective area in log10(EA) vs log10(E) to match RM.')
+            logea = np.log10(ea)
+            logea[np.isnan(logea) + np.isinf(logea)] = 0.
+            ea_spl = UnivariateSpline((ea_erange_log[1:] + ea_erange_log[:-1]) / 2., logea, s=0, k=1)
+            e = (rm_erange_log[1:] + rm_erange_log[:-1]) / 2.
+            ea = 10. ** ea_spl(e)
+            ea[ea < 1.] = 0.
+            ea_erange_log = rm_erange_log
+    
+    tbhdu = np_to_arf(ea,
+                      (10. ** ea_erange_log).round(decimals=6),
+                      telescope='CTASIM')
+    # Write AR to file
+    if write_output:
+        tbhdu.writeto(irf_file_name_base + '.arf.fits')
+    
+    #----------------------------------------------
+    # Fit some distributions
+    
+    # Broken power law fit function, normalized at break energy
+    bpl = lambda p, x : np.where(x < p[0], p[1] * (x / p[0]) ** -p[2], p[1] * (x / p[0]) ** -p[3])
+    fitter = ChisquareFitter(bpl)
+    
+    h = irf_root_file.Get('BGRatePerSqDeg')
+    fit_th1(fitter, [3.2, 1E-5, 2., 1.], h, errscale=.2, range_=(.1, 100))
+    fitter.print_results()
+    bgrate_p1 = fitter.results[0]
+    fitx = np.linspace(-2., 2., 100.)
+    
+    h = irf_root_file.Get('AngRes')
+    fit_th1(fitter, [1., .6, .5, .2], h, errscale=.1)
+    fitter.print_results()
+    angres68_p1 = fitter.results[0]
+    
+    #----------------------------------------------
+    # Read extra information from response file
+    
+    aux_tab = []
+    plt.figure(figsize=(10, 8))
+    
+    h = irf_root_file.Get('BGRate')
+    plt.subplot(331)
+    plot_th1(h, logy=1)
+    tbhdu = root_th1_to_fitstable(h, yunit='Hz', xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'BGRATE', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('BGRatePerSqDeg')
+    plt.subplot(332)
+    plot_th1(h, logy=1)
+    plt.plot(fitx, bpl(bgrate_p1, 10. ** fitx))
+    plt.plot(fitx, bpl([9., 5E-4, 1.44, .49], 10. ** fitx))
+    tbhdu = root_th1_to_fitstable(h, yunit='Hz/deg^2', xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'BGRATED', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('EffectiveArea')
+    plt.subplot(333)
+    plot_th1(h, logy=1)
+    tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'EA', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('EffectiveArea80')
+    if h != None :
+        plt.subplot(334)
+        plot_th1(h, logy=True)
+        tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
+        tbhdu.header.update('EXTNAME ', 'EA80', 'Name of this binary table extension')
+        aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('EffectiveAreaEtrue')
+    if h != None :
+        plt.subplot(335)
+        plot_th1(h, logy=True)
+        tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
+        tbhdu.header.update('EXTNAME ', 'EAETRUE', 'Name of this binary table extension')
+        aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('AngRes')
+    plt.subplot(336)
+    plot_th1(h, logy=True)
+    plt.plot(fitx, bpl(angres68_p1, 10. ** fitx))
+    plt.plot(fitx, bpl([1.1, 5.5E-2, .42, .19], 10. ** fitx))
+    tbhdu = root_th1_to_fitstable(h, yunit='deg', xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'ANGRES68', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('AngRes80')
+    plt.subplot(337)
+    plot_th1(h, logy=True)
+    tbhdu = root_th1_to_fitstable(h, yunit='deg', xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'ANGRES80', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    h = irf_root_file.Get('ERes')
+    plt.subplot(339)
+    plot_th1(h)
+    tbhdu = root_th1_to_fitstable(h, xunit='log(1/TeV)')
+    tbhdu.header.update('EXTNAME ', 'ERES', 'Name of this binary table extension')
+    aux_tab.append(tbhdu)
+    
+    plt.subplot(338)
+    # plt.set_cmap(plt.get_cmap('Purples'))
+    plt.set_cmap(plt.get_cmap('jet'))
+    # plt.imshow(np.log10(rm), origin='lower', extent=(rm_ebounds_log[0], rm_ebounds_log[-1], rm_erange_log[0], rm_erange_log[-1]))
+    plt.imshow(rm, origin='lower', extent=(rm_ebounds_log[0], rm_ebounds_log[-1], rm_erange_log[0], rm_erange_log[-1]))
+    plt.colorbar()
+    # plt.clim(-2., 1.)
+    
+    plt.subplots_adjust(left=.08, bottom=.08, right=.97, top=.95, wspace=.3, hspace=.35)
+    
+    # Create primary HDU and HDU list to be stored in the output file
+    hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList([hdu] + aux_tab)
+    
+    # Write extra response data to file
+    if write_output:
+        hdulist.writeto(irf_file_name_base + '.extra.fits')
+    
+    # Close CTA IRF root file
+    irf_root_file.Close()
