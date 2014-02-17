@@ -242,6 +242,26 @@ class EnergyDispersion(object):
             return self._interpolate2d_func(x, y)
 
 
+    def apply(self, data):
+        """Apply energy dispersion.
+        
+        Computes the matrix product of `data`
+        (which typically is model flux or counts in true energy bins)
+        with the energy dispersion matrix.
+        
+        Parameters
+        ----------
+        data : array_like
+            1-dim data array.
+        
+        Returns
+        -------
+        convolved_data : array
+            1-dim data array after multiplication with the energy dispersion matrix
+        """
+        return np.dot(data, self._pdf_matrix)
+
+
     def plot(self, type='matrix', energy=None):
         """Create energy dispersion plot.
         
