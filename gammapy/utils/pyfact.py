@@ -984,7 +984,7 @@ def create_sky_map(input_file_name,
             # Open fits file
             hdulist = fits.open(file_name)
             # Access header of second extension
-            hdr = hdulist['EVENTS'].header
+            header = hdulist['EVENTS'].header
             # Access data of first extension
             tbdata = hdulist['EVENTS'].data
             # Calculate some useful quantities and add them to the table
@@ -996,7 +996,7 @@ def create_sky_map(input_file_name,
             # coldefs_new = fits.ColDefs([camdist_col, detx_col, dety_col])
             newtable = fits.new_table(hdulist[1].columns + coldefs_new)
             # New table data
-            return hdulist, hdr, newtable.data
+            return hdulist, header, newtable.data
 
         hdulist, ex1hdr, tbdata = get_evl(file_name)
 
@@ -1539,26 +1539,26 @@ def image_to_hdu(image, rarange, decrange, primary=False,
         hdu = fits.PrimaryHDU(image)
     else :
         hdu = fits.ImageHDU(image)
-    hdr = hdu.header
+    header = hdu.header
 
     # Image definition
-    hdr['CTYPE1'] = 'RA---CAR'
-    hdr['CTYPE2'] = 'DEC--CAR'
-    hdr['CUNIT1'] = 'deg'
-    hdr['CUNIT2'] = 'deg'
-    hdr['CRVAL1'] = rarange[0]
-    hdr['CRVAL2'] = 0.  # Must be zero for the lines to be rectilinear according to Calabretta (2002)
-    hdr['CRPIX1'] = .5
-    hdr['CRPIX2'] = -decrange[0] / decstep + .5  # Pixel outside of the image at DEC = 0.
-    hdr['CDELT1'] = rastep
-    hdr['CDELT2'] = decstep
-    hdr['RADESYS'] = 'FK5'
-    hdr['BUNIT'] = 'count'
+    header['CTYPE1'] = 'RA---CAR'
+    header['CTYPE2'] = 'DEC--CAR'
+    header['CUNIT1'] = 'deg'
+    header['CUNIT2'] = 'deg'
+    header['CRVAL1'] = rarange[0]
+    header['CRVAL2'] = 0.  # Must be zero for the lines to be rectilinear according to Calabretta (2002)
+    header['CRPIX1'] = .5
+    header['CRPIX2'] = -decrange[0] / decstep + .5  # Pixel outside of the image at DEC = 0.
+    header['CDELT1'] = rastep
+    header['CDELT2'] = decstep
+    header['RADESYS'] = 'FK5'
+    header['BUNIT'] = 'count'
 
     # Extra data
-    hdr['TELESCOP'] = telescope
-    hdr['OBJECT'] = object
-    hdr['AUTHOR'] = author
+    header['TELESCOP'] = telescope
+    header['OBJECT'] = object
+    header['AUTHOR'] = author
 
     return hdu
 

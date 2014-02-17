@@ -1,0 +1,64 @@
+   $ xspec
+  
+  		XSPEC version: 12.7.0
+  	Build Date/Time: Tue Jun  7 23:17:42 2011
+  
+  XSPEC12>cpd /xw
+  XSPEC12>data CTA1DC-HESS-run_00023523_eventlist_signal.pha.fits \
+  CTA1DC-HESS-run_00023526_eventlist_signal.pha.fits
+  
+  2 spectra  in use
+   
+  Spectral Data File: CTA1DC-HESS-run_00023523_eventlist_signal.pha.fits  Spectrum 1
+  Net count rate (cts/s) for Spectrum:1  1.174e-01 +/- 9.183e-03 (88.8 % total)
+   Assigned to Data Group 1 and Plot Group 1
+    Noticed Channels:  1-33
+    Telescope: unknown Instrument: unknown  Channel Type: PHA
+    Exposure Time: 1582 sec
+   Using fit statistic: chi
+   Using Background File                CTA1DC-HESS-run_00023523_eventlist_bg.pha.fits
+    Background Exposure Time: 1582 sec
+   Using Response (RMF) File            run023523_dummy_s0.1.rmf.fits for Source 1
+   Using Auxiliary Response (ARF) File  CTA1DC-HESS-run023523_std_arf.fits.gz
+  
+  ...
+  
+  XSPEC12>plot data
+  XSPEC12>model powerlaw
+  
+  Input parameter value, delta, min, bot, top, and max values for ...
+                1       0.01(      0.01)         -3         -2          9         10
+  1:powerlaw:PhoIndex>2.7
+                1       0.01(      0.01)          0          0      1e+24      1e+24
+  2:powerlaw:norm>1E-8
+  
+  ========================================================================
+  Model powerlaw<1> Source No.: 1   Active/On
+  Model Model Component  Parameter  Unit     Value
+   par  comp
+     1    1   powerlaw   PhoIndex            2.70000      +/-  0.0          
+     2    1   powerlaw   norm                1.00000E-08  +/-  0.0          
+  ________________________________________________________________________
+  
+  
+   Chi-Squared =         336.01 using 67 PHA bins.
+   Reduced chi-squared =         5.1694 for     65 degrees of freedom 
+   Null hypothesis probability =   3.604967e-38
+   Current data and model not fit yet.
+  XSPEC12>fit
+  
+  ...
+  
+  ========================================================================
+  Model powerlaw<1> Source No.: 1   Active/On
+  Model Model Component  Parameter  Unit     Value
+   par  comp
+     1    1   powerlaw   PhoIndex            2.58471      +/-  9.17193E-02  
+     2    1   powerlaw   norm                3.49673E-07  +/-  2.17838E-08  
+  ________________________________________________________________________
+  
+  
+   Chi-Squared =          76.55 using 67 PHA bins.
+   Reduced chi-squared =          1.178 for     65 degrees of freedom 
+   Null hypothesis probability =   1.548459e-01
+  XSPEC12>plot data delchi
