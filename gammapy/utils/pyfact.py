@@ -19,7 +19,7 @@ from astropy.io import fits
 from astropy.table import Table, Column
 from astropy.time import Time, TimeDelta
 from ..stats import significance_on_off
-from ..irf import arf_to_np, np_to_arf, np_to_rmf, rmf_to_np
+from ..irf import arf_to_np, np_to_arf, np_to_rmf
 from ..irf import EnergyDispersion
 from ..spectrum.utils import np_to_pha
 from ..version import version
