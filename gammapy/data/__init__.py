@@ -24,9 +24,10 @@ from astropy.table import Table
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
                      'diffuse_gamma_spectrum',
-                     'electron_spectrum']
+                     'electron_spectrum',
+                     'fermi_galactic_center']
 
-remote_datasets = ['fermi_galactic_center'
+remote_datasets = [
                    ]
 
 datasets = included_datasets + remote_datasets
@@ -65,7 +66,6 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
     ----------
     extra_info : bool
         If true, a dict of images is returned.
-    
     return_filenames : bool
         If true, return filenames instead of images
 
@@ -98,10 +98,18 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
 def fermi_galactic_center():
     """Fermi high-energy counts image of the Galactic center region.
     
-    TODO: document energy band, region, ... add script to produce the image 
-    TODO: download from Dropbox
+    TODO: document energy band, region, content of the files. 
+    
+    Returns
+    -------
+    filenames : dict
+        Dictionary with filenames for keys 'psf', 'counts'
     """
-    raise NotImplementedError
+    filenames = dict()
+    filenames['psf'] = get_pkg_data_filename('fermi/psf.fits')
+    filenames['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
+
+    return filenames
 
 
 def tev_spectrum(source_name):
