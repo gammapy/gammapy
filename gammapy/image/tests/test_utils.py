@@ -24,6 +24,56 @@ def test_binary_ring():
     assert_equal(actual, desired)
 
 
+
+class TestImageCoordinates(object):
+
+    def setup_class(self):
+        self.image = utils.make_empty_image(nxpix=3, nypix=2,
+                                            binsz=10, proj='CAR')
+        self.image.data = np.arange(3 * 2).reshape(self.image.data.shape)
+
+    def test_coordinates(self):
+        lon, lat = utils.coordinates(self.image)
+        x, y = utils.coordinates(self.image)
+        lon_sym = utils.coordinates(self.image, lon_sym=True)[0]
+        # TODO: assert
+
+    def test_separation(self):
+        separation = utils.separation(self.image, (1, 0))
+        separation = utils.separation(self.image, (0, 90))
+        # TODO: assert
+
+    @pytest.mark.xfail
+    def test_contains(self):
+        # world coordinates
+        assert utils.contains(self.image, 0, 0) == True
+        assert utils.contains(self.image, 14.9, -9.9) == True
+        assert utils.contains(self.image, 20, 0) ==  False
+        assert utils.contains(self.image, 0, -15) == False
+
+        # pixel coordinates
+        assert utils.contains(self.image, 0.6, 0.6, world=False) == True
+        assert utils.contains(self.image, 3.4, 2.4, world=False) == True
+        assert utils.contains(self.image, 0.4, 0, world=False) == False
+        assert utils.contains(self.image, 0, 2.6, world=False) == False
+
+        # one-dimensional arrays
+        x, y = np.arange(4), np.arange(4)
+        inside = utils.contains(self.image, x, y, world=False)
+        assert_equal(inside, np.array([False, True, True, False]))
+
+        # two-dimensional arrays
+        x = y = np.zeros((3, 2))
+        inside = utils.contains(self.image, x, y)
+        assert_equal(inside, np.ones((3, 2), dtype=bool))
+
+
+    def test_image_area(self):
+        actual = utils.solid_angle(self.image)
+        expected = 99.61946869
+        assert_allclose(actual, expected)
+
+
 @pytest.mark.xfail
 def test_process_image_pixels():
     """Check the example how to implement convolution given in the docstring"""

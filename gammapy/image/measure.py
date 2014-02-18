@@ -1,41 +1,66 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Measure source properties"""
+"""Measure image properties.
+"""
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['aperphot', 'find_max',
-           'lookup', 'lookup_max',
-           'measure_labeled_regions'
+__all__ = ['BoundingBox',
+           'aperphot',
+           'find_max',
+           'lookup',
+           'lookup_max',
+           'measure_bounding_box',
+           'measure_containment_fraction',
+           'measure_containment_radius',
+           'measure_image_moments',
+           'measure_labeled_regions',
            ]
 
 
-def _split_xys(pos):
-    """Helper function to work with `scipy.ndimage`."""
-    x = np.array(pos)[:, 1]
-    y = np.array(pos)[:, 0]
-    return x, y
+class BoundingBox(object):
+    """Rectangular bounding box.
+    
+    Parameters
+    ----------
+    TODO
+    """
+    def __init__(self, xmin, xmax, ymin, ymax):
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
 
 
-def _split_slices(slices):
-    """Helper function to work with `scipy.ndimage`."""
-    # scipy.ndimage.find_objects returns a list of
-    # tuples of slices, which is not what we want.
-    # The following list comprehensions extract
-    # the format we need.
-    xmin = np.asarray([t[1].start for t in slices])
-    xmax = np.asarray([t[1].stop for t in slices])
-    ymin = np.asarray([t[0].start for t in slices])
-    ymax = np.asarray([t[0].stop for t in slices])
-    return xmin, xmax, ymin, ymax
+    @staticmethod
+    def for_circle(x, y, radius, nx, ny):
+        """Compute bounding box for a circle.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
+        """
+        x, y, radius = int(x), int(y), int(radius)
+        xmin = max(x - radius, 0)
+        xmax = min(x + radius, nx)
+        ymin = max(y - radius, 0)
+        ymax = min(y + radius, ny)
+        bbox = BoundingBox(xmin, xmax, ymin, ymax)
 
+        return bbox
 
-def _measure_area(labels):
-    """Measure the area in pix of each segment."""
-    nsegments = labels.max()
-    area = np.zeros(nsegments)
-    for i in range(nsegments):
-        area[i] = (labels == i + 1).sum()
-    return area
+        
+    def to_ftcopy_string(self):
+        """Create bounding box string in ftcopy format.
+        
+        Examples
+        --------
+        TODO
+        """ 
+        return '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**self)
 
 
 def measure_labeled_regions(data, labels, tag='IMAGE',
@@ -157,7 +182,7 @@ def aperphot(img, x, y, aper, sky, sky_type='median', verbose=False):
         std_bkg = img[ind_bkg].std()
     flux = tot_counts - n_counts * bkg
     if verbose:
-        print('%8.2f %8.2f %10.2f %10.2f %10.2f %10.2f %10.2f' %
+        print('%8.2f %8.2f %10.2f %10.2f %10.2f %10.2f %10.2f' % 
               (x, y, tot_counts, n_counts, bkg, flux, std_bkg) * np.sqrt(n_counts))
     return flux, std_bkg * np.sqrt(n_counts)
 
@@ -224,8 +249,8 @@ def lookup_max(image, GLON, GLAT, theta):
 
     val = np.nan * np.ones(n_pos, dtype='float32')
     for ii in range(n_pos):
-        mask = ((GLON[ii] - ll) ** 2 +
-                (GLAT[ii] - bb) ** 2 <=
+        mask = ((GLON[ii] - ll) ** 2 + 
+                (GLAT[ii] - bb) ** 2 <= 
                 theta[ii] ** 2)
         try:
             val[ii] = image.dat[mask].max()
@@ -234,7 +259,7 @@ def lookup_max(image, GLON, GLAT, theta):
     return val
 
 
-def compute_image_moments(image, shift=0.5):
+def measure_image_moments(image, shift=0.5):
     """Compute 0th, 1st and 2nd moments of an image.
 
     NaN values are ignored in the computation.
@@ -271,9 +296,9 @@ def compute_image_moments(image, shift=0.5):
     return A, x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
 
 
-def compute_containment_radius(x_pos, y_pos, image, containment_fraction,
+def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
                                shift=0.5, normalize_image=True):
-    """Compute containment radius.
+    """Measure containment radius.
 
     Uses `scipy.optimize.brentq`.
 
@@ -306,15 +331,15 @@ def compute_containment_radius(x_pos, y_pos, image, containment_fraction,
         image = image / image[np.isfinite(image)].sum()
 
     def func(r):
-        return compute_containment_fraction(r, rr, image) - containment_fraction
+        return measure_containment_fraction(r, rr, image) - containment_fraction
 
     containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
     
     return containment_radius
 
 
-def compute_containment_fraction(r, rr, image):
-    """Compute containment fraction.
+def measure_containment_fraction(r, rr, image):
+    """Measure containment fraction.
 
     Parameters
     ----------
@@ -338,3 +363,66 @@ def compute_containment_fraction(r, rr, image):
     containment_fraction = image[mask].sum()
 
     return containment_fraction
+
+
+def measure_bounding_box(mask, margin):
+    """Determine the bounding box of a mask.
+    
+    This should give the same result as the ``bbox`` attribute of
+    `skimage.measure.regionprops <http://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops>`_:
+
+    >>> from skimage.measure import regionprops
+    >>> regionprops(mask).bbox    
+    
+    Parameters
+    ----------
+    mask : array_like
+        Input mask
+    margin : float
+        Margin to add to bounding box
+    
+    Returns
+    -------
+    bounding_box : BoundingBox
+        Bounding box
+    """
+    from scipy.ndimage.measurements import find_objects
+
+    box = find_objects(mask.astype(int))[0]
+    ny, nx = mask.shape
+    xmin = max(0, int(box[1].start - margin)) + 1
+    xmax = min(nx - 1, int(box[1].stop + margin)) + 1
+    ymin = max(0, int(box[0].start - margin)) + 1
+    ymax = min(ny - 1, int(box[0].stop + margin)) + 1
+    bbox = BoundingBox(xmin, xmax, ymin, ymax)
+
+    return bbox
+
+
+def _split_xys(pos):
+    """Helper function to work with `scipy.ndimage`."""
+    x = np.array(pos)[:, 1]
+    y = np.array(pos)[:, 0]
+    return x, y
+
+
+def _split_slices(slices):
+    """Helper function to work with `scipy.ndimage`."""
+    # scipy.ndimage.find_objects returns a list of
+    # tuples of slices, which is not what we want.
+    # The following list comprehensions extract
+    # the format we need.
+    xmin = np.asarray([t[1].start for t in slices])
+    xmax = np.asarray([t[1].stop for t in slices])
+    ymin = np.asarray([t[0].start for t in slices])
+    ymax = np.asarray([t[0].stop for t in slices])
+    return xmin, xmax, ymin, ymax
+
+
+def _measure_area(labels):
+    """Measure the area in pix of each segment."""
+    nsegments = labels.max()
+    area = np.zeros(nsegments)
+    for i in range(nsegments):
+        area[i] = (labels == i + 1).sum()
+    return area

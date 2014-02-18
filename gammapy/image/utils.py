@@ -1,15 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
 from __future__ import print_function, division
+import logging
 import numpy as np
+from astropy.units import Quantity
+from astropy.io import fits
+from astropy.wcs import WCS
 
-__all__ = ['atrous_hdu', 'atrous_image', 'bbox',
+
+__all__ = ['atrous_hdu', 'atrous_image',
            'bin_events_in_cube', 'bin_events_in_image',
            'binary_dilation_circle', 'binary_disk',
            'binary_opening_circle', 'binary_ring',
            'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
-           'cutout_box', 'disk_correlate', 'exclusion_distance',
+           'cut_out',
+           'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels', 'ring_correlate',
@@ -21,6 +27,14 @@ def _get_structure_indices(radius):
     """Get arrays of indices for a symmetric structure.
     
     Always generate an odd number of pixels and 0 at the center.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     radius = int(radius)
     y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
@@ -99,6 +113,14 @@ def disk_correlate(image, radius, mode='constant'):
 
 def ring_correlate(image, r_in, r_out, mode='constant'):
     """Correlate image with binary ring kernel.
+
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
@@ -106,7 +128,9 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
 
 def exclusion_distance(exclusion):
-    """Compute distance map, i.e. the Euclidean (=Cartesian 2D)
+    """Distance to nearest exclusion region.
+    
+    Compute distance map, i.e. the Euclidean (=Cartesian 2D)
     distance (in pixels) to the nearest exclusion region.
 
     We need to call distance_transform_edt twice because it only computes
@@ -114,6 +138,14 @@ def exclusion_distance(exclusion):
     distances for pixels inside we call it on the inverted mask
     and then combine both distance images into one, using negative
     distances (note the minus sign) for pixels inside exclusion regions.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import distance_transform_edt
     exclusion = np.asanyarray(exclusion, bool)
@@ -158,8 +190,6 @@ def atrous_hdu(hdu, n_levels):
     images : HDUList
         Wavelet transformed images.
     """
-    import logging
-    from astropy.io import fits
     image = hdu.data
     logging.info('Computing a trous transform for {0} levels ...'.format(n_levels))
     images = atrous_image(image, n_levels)
@@ -178,6 +208,7 @@ def atrous_hdu(hdu, n_levels):
 
     return hdus
 
+
 def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     """Get coordinate images for a given image.
 
@@ -186,11 +217,13 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
+        Input image
     world : bool
         Use world coordinates (or pixel coordinates)?
     lon_sym : bool
         Use symmetric longitude range `(-180, 180)` (or `(0, 360)`)?
+
     Returns
     -------
     (lon, lat) : tuple of arrays
@@ -208,7 +241,6 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     if not world:
         return x, y
 
-    from astropy.wcs import WCS
     wcs = WCS(image.header)
     lon, lat = wcs.wcs_pix2world(x, y, 1)
     
@@ -227,11 +259,17 @@ def separation(image, center, world=True, radians=False):
     
     Parameters
     ----------
-    TODO
+    image : `~astropy.io.fits.ImageHDU`
+        Input image
+    center : (x, y) tuple
+        Center position
+    world : bool
+        Use world coordinates (or pixel coordinates)?
     
     Returns
     -------
-    TODO
+    separation : array
+        Image of pixel separation to `center`.
     """
     x_center, y_center = center
     x, y = coordinates(image, world=world, radians=radians)
@@ -245,6 +283,7 @@ def separation(image, center, world=True, radians=False):
         d = np.sqrt((x - x_center) ** 2 + (y - y_center) ** 2)
 
     return d
+
 
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
@@ -343,6 +382,14 @@ def image_groupby(images, labels):
     
     Similar to `scipy.ndimage.labeled_comprehension`, only that here multiple inputs
     and outputs are supported.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     for image in images:
         assert image.shape == labels.shape
@@ -362,6 +409,7 @@ def image_groupby(images, labels):
     # out = groups.aggregate(function)
     # return out
 
+
 def images_to_cube(hdu_list):
     """Convert a list of image HDUs into one cube.
     
@@ -375,7 +423,6 @@ def images_to_cube(hdu_list):
     cube : `astropy.io.fits.ImageHDU`
         3-dimensional cube HDU
     """
-    from astropy.io import fits
     shape = list(hdu_list[0].data.shape)
     shape.insert(0, len(hdu_list))
     data = np.empty(shape=shape, dtype=hdu_list[0].data.dtype)
@@ -407,9 +454,6 @@ def bin_events_in_image(events, reference_image):
     count_image : `astropy.io.fits.ImageHDU`
         Count image
     """
-    from astropy.wcs import WCS
-    from astropy.io import fits
-
     if 'GLON' in reference_image.header['CTYPE1']:
         lon = events['GLON']
         lat = events['GLAT']
@@ -421,7 +465,7 @@ def bin_events_in_image(events, reference_image):
     wcs = WCS(reference_image.header)
     xx, yy = wcs.wcs_world2pix(lon, lat, 0)
 
-    # Histogram pixel coordinats with appropriate binning.
+    # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
     shape = reference_image.data.shape
@@ -449,9 +493,6 @@ def bin_events_in_cube(events, reference_cube, energies):
     count_cube : `astropy.io.fits.ImageHDU`
         Count cube
     """
-    from astropy.wcs import WCS
-    from astropy.io import fits
-
     if 'GLON' in reference_cube.header['CTYPE1']:
         lon = events['GLON']
         lat = events['GLAT']
@@ -479,7 +520,7 @@ def bin_events_in_cube(events, reference_cube, energies):
 
 
 def threshold(array, threshold=5):
-    """ Set all pixels below threshold to zero.
+    """Set all pixels below threshold to zero.
     
     Parameters
     ----------
@@ -487,6 +528,10 @@ def threshold(array, threshold=5):
         Input array
     threshold : float
         Minimum threshold
+    
+    Returns
+    -------
+    TODO
     """
     # TODO: np.clip is simpler, no?
     from scipy import stats
@@ -509,7 +554,11 @@ def binary_dilation_circle(input, radius):
     input : array_like
         Input array
     radius : float
-        Dilation radius (pix)    
+        Dilation radius (pix)
+    
+    Returns
+    -------
+    TODO    
     """
     from scipy.ndimage import binary_dilation
     structure = binary_disk(radius)
@@ -519,18 +568,24 @@ def binary_dilation_circle(input, radius):
 def binary_opening_circle(input, radius):
     """Binary opening with circle as structuring element.
     
-    `~scipy.ndimage.binary_opening`
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     
     See Also
     --------
-    hi
+    TODO: `~scipy.ndimage.binary_opening`
     """
     from scipy.ndimage import binary_opening
     structure = binary_disk(radius)
     return binary_opening(input, structure)
 
 
-def solid_angle(image, deg=True):
+def solid_angle(image):
     """Compute the solid angle of each pixel.
 
     This will only give correct results for CAR maps!
@@ -539,35 +594,29 @@ def solid_angle(image, deg=True):
     ----------
     image : `astropy.io.fits.ImageHDU`
         Input image
-    deg : bool
-        Use deg^2 if True, otherwise steradian.
 
     Returns
     -------
-    area_image : `astropy.io.fits.ImageHDU`
-        New `ImageHDU`, with header from input image and
-        per-pixel solid angle as values.
+    area_image : `astropy.units.Quantity`
+        Solid angle image (matching the input image) in steradians.
     """
-    from astropy.units import Unit
-    from astropy.io import fits
-
     # Area of one pixel at the equator
     cdelt0 = image.header['CDELT1']
     cdelt1 = image.header['CDELT2']
-    equator_area = abs(cdelt0 * cdelt1)
-    if not deg:
-        equator_area = equator_area / Unit('deg2').to(Unit('sr'))
+    equator_area = Quantity(abs(cdelt0 * cdelt1), 'sr')
 
     # Compute image with fraction of pixel area at equator
     glat = coordinates(image)[1]
     area_fraction = np.cos(np.radians(glat))
 
-    return equator_area * area_fraction
+    result = area_fraction * equator_area
+
+    return result
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
-           proj='CAR', coordsys='GAL',
-           xrefpix=None, yrefpix=None, txt=False):
+                proj='CAR', coordsys='GAL',
+                xrefpix=None, yrefpix=None):
     """Generate a FITS header from scratch.
 
     Uses the same parameter names as the Fermi tool gtbin.
@@ -584,8 +633,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     header : `astropy.io.fits.Header`
         Header
     """
-    from astropy.io import fits
-    
     nxpix = int(nxpix)
     nypix = int(nypix)
     if not xrefpix:
@@ -600,38 +647,22 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     else:
         raise Exception('Unsupported coordsys: %s' % proj)
 
-    header = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
-          'CTYPE1': ctype1 + proj,
-          'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1':-binsz,
-          'CTYPE2': ctype2 + proj,
-          'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
-              }
+    pars = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
+            'CTYPE1': ctype1 + proj,
+            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1':-binsz,
+            'CTYPE2': ctype2 + proj,
+            'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
+            }
 
-    if txt:
-        header = """
-SIMPLE  = T
-BITPIX  = -64
-NAXIS   = 2
-NAXIS1  = {NAXIS1}
-NAXIS2  = 1800
-CTYPE1  = ''
-CTYPE2  = 'GLAT-AIT'
-CRVAL1  =    0.0
-CRVAL2  =    0.0
-CRPIX1  = 1800.5
-CRPIX2  =  900.5
-CDELT1  =   -0.1
-CDELT2  =    0.1
-EQUINOX = 2000.0
-END""".format(header)
+    header = fits.Header()
+    header.update(pars)
 
-
-    return fits.Header(header)
+    return header
 
 
 def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
-                proj='CAR', coordsys='GAL',
-                xrefpix=None, yrefpix=None, dtype='float32'):
+                     proj='CAR', coordsys='GAL',
+                     xrefpix=None, yrefpix=None, dtype='float32'):
     """Make an empty (i.e. values 0) image.
     
     Uses the same parameter names as the Fermi tool gtbin.
@@ -648,8 +679,6 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     image : `astropy.io.fits.ImageHDU`
         Empty image
     """
-    from astropy.io import fits
-
     header = make_header(nxpix, nypix, binsz, xref, yref,
                          proj, coordsys, xrefpix, yrefpix)
 
@@ -660,58 +689,54 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     return fits.ImageHDU(data, header)
 
 
-def cutout_box(x, y, radius, nx, ny, format='string'):
-    x, y, radius = int(x), int(y), int(radius)
-    xmin = max(x - radius, 0)
-    xmax = min(x + radius, nx)
-    ymin = max(y - radius, 0)
-    ymax = min(y + radius, ny)
-    box_coords = (xmin, xmax, ymin, ymax)
-    box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
-    if format == 'coords':
-        return box_coords
-    elif format == 'string':
-        return box_string
-    elif format == 'both':
-        return box_coords, box_string
+def cut_out(image, center, fov=[2, 2]):
+    """Cut out a part of an image.
 
-
-def bbox(mask, margin):
-    """Determine the bounding box of a mask.
-    
-    This should give the same result as the ``bbox`` attribute of
-    `skimage.measure.regionprops <http://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops>`_:
-
-    >>> from skimage.measure import regionprops
-    >>> regionprops(mask).bbox    
-    
     Parameters
     ----------
-    mask : array_like
-        Input mask
-    margin : float
-        Margin to add to bounding box
+    image : `~maputils.FITSimage`
+        Input image.
+    center : [glon, glat]
+        Cutout center position.
+    fov : [glon_fov, glat_fov]
+        Cutout field of view dimensions
     
     Returns
     -------
-    xmin, xmax, ymin, ymax : int
-        Bounding box parameters
+    TODO
     """
-    from scipy.ndimage.measurements import find_objects
-    box = find_objects(mask.astype(int))[0]
-    ny, nx = mask.shape
-    xmin = max(0, int(box[1].start - margin)) + 1
-    xmax = min(nx - 1, int(box[1].stop + margin)) + 1
-    ymin = max(0, int(box[0].start - margin)) + 1
-    ymax = min(ny - 1, int(box[0].stop + margin)) + 1
-    # box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
-    bbox = xmin, xmax, ymin, ymax
-    return bbox  # , box_string
+    raise NotImplementedError
+    
+    # Unpack center and fov
+    glon, glat = center
+    glon_fov, glat_fov = fov
+
+    # Calculate image limits
+    glon_lim = [glon - glon_fov, glon + glon_fov]
+    glat_lim = [glat - glat_fov, glat + glat_fov]
+
+    # Cut out the requested part
+    xlim = image.proj.topixel((glon_lim, [0, 0]))[0]
+    xlim = [xlim[1], xlim[0]]  # longitude axis runs backwards
+    ylim = image.proj.topixel(([0, 0], glat_lim))[1]
+    image.set_limits(pxlim=xlim, pylim=ylim)
 
 
 def cube_to_image(cube, slicepos=None):
-    """ Make an image out of a cube.
-    Both in- and output should by fits.HDUs"""
+    """Slice or project 3-dim cube into a 2-dim image.
+    
+    Parameters
+    ----------
+    cube : `~astropy.io.fits.ImageHDU`
+        3-dim FITS cube
+    slicepos : int or None
+        Slice position (None means to sum along the spectral axis)
+    
+    Returns
+    -------
+    image : `~astropy.io.fits.ImageHDU`
+        2-dim FITS image
+    """
     from astropy.io.fits import ImageHDU
     header = cube.header.copy()
     header['NAXIS'] = 2
@@ -728,11 +753,27 @@ def cube_to_image(cube, slicepos=None):
     return ImageHDU(data, header)
 
 
-def cube_to_spec(cube):
-    """ Integrate spatial dimensions of a FITS cube to give a spectrum """
-    from astropy.units import Unit
+def cube_to_spec(cube, mask, weighting='none'):
+    """Integrate spatial dimensions of a FITS cube to give a spectrum.
+ 
+    TODO: give formulas.
+ 
+    Parameters
+    ----------
+    cube : `~astropy.io.fits.ImageHDU`
+        3-dim FITS cube
+    mask : numpy.array
+        2-dim mask array.
+    weighting : {'none', 'solid_angle'}
+        Weighting factor to use.
+    
+    Returns
+    -------
+    spectrum : numpy.array
+        Summed spectrum of pixels in the mask.
+    """
     value = cube.dat
-    A = solid_angle(cube) * Unit('deg**2').to(Unit('sr'))
+    A = solid_angle(cube)
     # Note that this is the correct way to get an average flux:
 
     spec = (value * A).sum(-1).sum(-1)
@@ -740,12 +781,25 @@ def cube_to_spec(cube):
 
 
 def contains(image, x, y, world=True):
+    """Check if given pixel or world positions are in an image.
+    
+    Parameters
+    ----------
+    image : `~astropy.io.fits.ImageHDU`
+        2-dim FITS image
+    
+    Returns
+    -------
+    containment : array
+        Bool array
     """
-    Check if given pixel or world positions are in an image.
-    """
-    x, y = _prepare_arrays(image, x, y, world)
+    header = image.header
+    
+    if world:
+        wcs = WCS(header)
+        x, y = wcs.wcs_world2pix(x, y, 0)
 
-    nx, ny = image.proj.naxis
+    nx, ny = header['NAXIS2'], header['NAXIS1']
     return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
 
@@ -764,14 +818,12 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     total : `astropy.io.fits.ImageHDU`
         A reference to the total input HDU that was modified in-place.
     """
-    from astropy.wcs import WCS
-
     # find offset
     lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, 0)
     x, y = WCS(total.header).wcs_world2pix(lon, lat, 0)
     x, y = int(np.round(x)), int(np.round(y))
     dy, dx = cutout.shape
-    #import IPython; IPython.embed(); 1/0
+    # import IPython; IPython.embed(); 1/0
 
     if method == 'sum':
         total.data[y : y + dy, x : x + dx] += cutout.data

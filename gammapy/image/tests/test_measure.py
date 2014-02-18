@@ -29,3 +29,18 @@ def test_measure():
     results = measure.measure_labeled_regions(image, labels)
 
     # TODO: check output!
+
+
+class _TestImageCoordinates(object):
+
+    def setUp(self):
+        self.image = utils.make_empty_image(nxpix=3, nypix=2,
+                                            binsz=10, proj='CAR')
+        self.image.dat = np.arange(3 * 2).reshape(self.image.dat.shape)
+
+
+    def test_lookup(self):
+        self.assertEqual(utils.lookup(self.image, 1, 1, world=False), 0)
+        assert_equal(utils.lookup(self.image, 5, 1, world=False), np.nan)
+        self.assertEqual(utils.lookup(self.image, 3, 2, world=False), 5)
+        assert_equal(utils.lookup(self.image, [1, 5], [1, 1], world=False), [0, np.nan])

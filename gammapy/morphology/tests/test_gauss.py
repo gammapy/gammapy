@@ -124,10 +124,9 @@ class TestMultiGauss2D(unittest.TestCase):
 
 @pytest.mark.skipif('not HAS_UNCERTAINTIES')
 def test_gaussian_sum_moments():
+    """Check analytical against numerical solution.
     """
-    Check analytical against numerical solution
-    """
-    from ...image.measure import compute_image_moments
+    from ...image.measure import measure_image_moments
     from astropy.modeling.models import Gaussian2D
     from astropy.convolution.utils import discretize_model
 
@@ -150,7 +149,7 @@ def test_gaussian_sum_moments():
     F_2_image = discretize_model(f_2, (0, 200), (0, 200))
     F_3_image = discretize_model(f_3, (0, 200), (0, 200))
 
-    moments_num = compute_image_moments(F_1_image + F_2_image + F_3_image)
+    moments_num = measure_image_moments(F_1_image + F_2_image + F_3_image)
 
     # Compute analytical values
     cov_matrix = np.zeros((12, 12))
