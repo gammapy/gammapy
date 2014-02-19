@@ -142,7 +142,7 @@ class Maps(fits.HDUList):
                           ''.format(name))
             return data
         except KeyError:
-            return eval('self.make_{0}().data'.format(name))
+            return eval('self.{0}.data'.format(name))
 
     def _make_hdu(self, data, name):
         """Helper function to make an image HDU.

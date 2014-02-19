@@ -10,11 +10,11 @@ Here's a high-level description ... see the code for details:
 """
 import numpy as np
 from astropy.io import fits
-from gammapy.image import threshold, dilate
+from gammapy.data import fermi_galactic_center
+from gammapy.image import threshold, binary_dilation_circle
 from gammapy.background import Maps, ring_correlate_off_maps
 
-input_file = 'fermi_counts_gc.fits'
-print('Reading file: {0}'.format(input_file))
+input_file = fermi_galactic_center()['counts']
 hdu_list = fits.open(input_file)
 binsz = hdu_list[-1].header['CDELT2']
 maps = Maps(hdu_list, theta=0.3)
@@ -22,10 +22,10 @@ maps = Maps(hdu_list, theta=0.3)
 for iteration in range(3):
     print('Iteration: {0}'.format(iteration))
     ring_correlate_off_maps(maps, r_in=0.5, r_out=0.8)
-    significance = maps.make_significance().data
+    significance = maps.significance.data
     #exclusion = threshold(significance, threshold=5)
     exclusion = np.where(significance > 4, 0, 1).astype(int)
-    exclusion = dilate(exclusion, radius=0.4 * binsz)
+    exclusion = binary_dilation_circle(exclusion, radius=0.4 * binsz)
     maps['exclusion'].data = exclusion
 
 maps.make_derived_maps()
