@@ -2,8 +2,9 @@
 """
 Poisson statistics computations for these two cases.
 
-* a measured number of counts `n_on` and known background
-* a measured number of counts `n_on` in an on region and a second count measurement `n_off` in an excess-free region.
+* a measured number of counts ``n_on`` and known background
+* a measured number of counts ``n_on`` in an on region
+  and a second count measurement ``n_off`` in an excess-free region.
 
 TODO: More detailed description here.
 """
@@ -260,8 +261,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
                         neglect_background_uncertainty=False):
     r"""Compute significance of an on-off observation.
 
-    See the `method` option and the descriptions in the
-    docstrings of the functions listed under `See Also`.
+    TODO: describe available methods.
 
     Parameters
     ----------
@@ -271,12 +271,12 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
         Observed number of counts in the off region
     alpha : array_like
         On / off region exposure ratio for background events
-    method : str
-        Select method: 'lima' or 'simple' or 'direct'
+    method : {'lima', 'simple', 'direct'}
+        Select method
 
     Returns
     -------
-    significance : ndarray
+    significance : array
         Significance according to the method chosen.
 
     References
@@ -286,7 +286,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
 
     See Also
     --------
-    significance_simple, significance_lima, significance_lima_limit
+    significance, sensitivity_on_off
 
     Examples
     --------
@@ -379,10 +379,10 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     Use this method for small n_on < 10.
     In this case the Li & Ma formula isn't correct any more.
     
-    TODO: add reference
-    TODO: add large unit test coverage (where is it numerically precise enough)?
-    TODO: check coverage with MC simulation
-    TODO: implement in Cython and vectorize n_on (accept numpy  array n_on as input)
+    * TODO: add reference
+    * TODO: add large unit test coverage (where is it numerically precise enough)?
+    * TODO: check coverage with MC simulation
+    * TODO: implement in Cython and vectorize n_on (accept numpy  array n_on as input)
     """
     from math import factorial as fac
     from scipy.stats import norm
@@ -409,10 +409,10 @@ def sensitivity(mu_background, significance, quantity='excess', method='lima'):
         Observed number of counts
     mu_background : array_like
         Known background level
-    quantity : str
-        Select output sensitivity quantity: 'excess' or 'n_on'
-    method : str
-        Select method: 'lima' or 'simple'
+    quantity : {'excess', 'n_on'}
+        Select output quantity
+    method : {'lima', 'simple'}
+        Select method
 
     Returns
     -------
@@ -460,27 +460,25 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
         On / off region exposure ratio for background events
     significance : array_like
         Desired significance level
-    quantity : str
-        Select output sensitivity quantity: 'excess' or 'n_on'
-    method : str
-        Select method: 'lima' or 'simple'
+    quantity : {'excess', 'n_on'}
+        Which output sensitivity quantity?
+    method : {'lima', 'simple'}
+        Which method?
 
     Returns
     -------
-    sensitivity : ndarray
+    sensitivity : `numpy.ndarray`
         Sensitivity according to the method chosen.
 
     See Also
     --------
-    sensitivity_simple, sensitivity_lima, sensitivity_lima_limit
+    sensitivity, significance_on_off
 
     Examples
     --------
-    >>> sensitivity(n_off=20, alpha=0.1, significance=5, method='lima')
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
     TODO
-    >>> sensitivity(n_off=20, alpha=0.1, significance=5, method='simple')
-    TODO
-    >>> sensitivity_simple_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
+    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
     2.5048971
     """
     n_off = np.asanyarray(n_off, dtype=np.float64)
