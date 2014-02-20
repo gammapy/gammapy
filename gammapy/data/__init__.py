@@ -72,7 +72,7 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
     Returns
     -------
     data : numpy array or dict of arrays or filenames
-        Depending on the `extra_info` and `return_filenames` options.
+        Depending on the ``extra_info`` and ``return_filenames`` options.
     """
     if extra_info:
         out = dict()
@@ -124,7 +124,7 @@ def tev_spectrum(source_name):
 
     Returns
     -------
-    spectrum : `astropy.table.Table`
+    spectrum : `~astropy.table.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == 'crab':
@@ -151,7 +151,7 @@ def diffuse_gamma_spectrum(reference):
     
     Returns
     -------
-    spectrum : `astropy.table.Table`
+    spectrum : `~astropy.table.table.Table`
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'Fermi':
@@ -193,7 +193,7 @@ def electron_spectrum(reference):
     
     Returns
     -------
-    spectrum : `astropy.table.Table`
+    spectrum : `~astropy.table.table.Table`
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'HESS':
