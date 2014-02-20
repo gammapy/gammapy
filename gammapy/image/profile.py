@@ -127,7 +127,7 @@ class FluxProfile(object):
         allow combining many input quantities (counts, background, exposure) in a
         flexlible way:
         - `numpy.histogram`
-        - `scipy.ndimage.labeled_comprehension` and special cases
+        - `scipy.ndimage.measurements.labeled_comprehension` and special cases
 
         pandas DataFrame groupby followed by apply is flexible enough, I think:
 
