@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
 from __future__ import print_function, division
+from astropy.coordinates import ICRS
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
@@ -15,13 +16,13 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     
     Parameters
     ----------
-    coordinate : `astropy.coordinate.ICRS`
+    coordinate : `~astropy.coordinates.coordsystems.SphericalCoordinatesBase`
         Source coordinate
     ra_digits : int (>=2)
         Number of digits for the Right Ascension part
     dec_digits : int (>=2) or None
         Number of digits for the declination part
-        Default is `dec_digits` = None, meaning `dec_digits` = `ra_digits` - 1
+        Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1
     prefix : str
         Prefix to put before the coordinate string, e.g. "SDSS J".
     
@@ -69,6 +70,9 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     >>> print(designations)
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
+    # Convert coordinate to ICRS system if it isn't already
+    coordinate = ICRS(coordinate)
+    
     if dec_digits == None:
         dec_digits = max(2, ra_digits - 1) 
     
@@ -101,7 +105,7 @@ def ra_iau_format(ra, digits):
 
     Parameters
     ----------
-    ra : `astropy.coordinate.Longitude`
+    ra : `~astropy.coordinates.angles.Longitude`
         Right ascension
     digits : int (>=2)
         Number of digits
@@ -170,7 +174,7 @@ def dec_iau_format(dec, digits):
 
     Parameters
     ----------
-    dec : `astropy.coordinate.Latitude`
+    dec : `~astropy.coordinates.angles.Latitude`
         Declination
     digits : int (>=2)
         Number of digits
