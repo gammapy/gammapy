@@ -22,7 +22,7 @@ def hist_to_table(hist):
     
     Returns
     -------
-    table : astropy.table.Table
+    table : `~astropy.table.table.Table`
         Histogram data in astropy table format.
     """
     from rootpy import asrootpy
@@ -50,8 +50,8 @@ def TH2_to_FITS_header(hist, flipx=True):
     in Galactic CAR projection with reference point at GLAT = 0,
     as is the case for HESS SkyHists.
 
-    Formulae and variable names taken from Plotters::SkyHistToFITS()
-    in $HESSROOT/plotters/src/FITSUtils.C
+    Formulae and variable names taken from ``Plotters::SkyHistToFITS()``
+    in ``$HESSROOT/plotters/src/FITSUtils.C``
     
     Parameters
     ----------
@@ -62,7 +62,7 @@ def TH2_to_FITS_header(hist, flipx=True):
     
     Returns
     -------
-    header : astropy.io.fits.Header
+    header : `~astropy.io.fits.Header`
         FITS header
     """
     # Compute FITS projection header parameters
@@ -101,8 +101,8 @@ def TH2_to_FITS_data(hist, flipx=True):
 
     Returns
     -------
-    data : numpy.array
-        Histogram data as a numpy array
+    data : array
+        Histogram data
     """
     # @note: Numpy array index order is (y, x), whereas ROOT TH2 has (x, y)
     nx, ny = hist.GetNbinsX(), hist.GetNbinsY()
@@ -124,12 +124,12 @@ def TH2_to_FITS(hist, flipx=True):
 
     Parameters
     ----------
-    hist : `ROOT.TH2`
+    hist : ROOT.TH2
         2-dim ROOT histogram
 
     Returns
     -------
-    hdu : `astropy.io.fits.ImageHDU`
+    hdu : `~astropy.io.fits.ImageHDU`
         Histogram in FITS format.
 
     Examples
@@ -159,7 +159,7 @@ def tree_to_table(tree, tree_name):
 
     Returns
     -------
-    table : astropy.table.Table
+    table : `~astropy.table.table.Table`
         ROOT tree data as an astropy table.
     """
     from rootpy import asrootpy
