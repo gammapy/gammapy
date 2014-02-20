@@ -217,12 +217,12 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     Parameters
     ----------
-    image : `~astropy.io.fits.ImageHDU`
+    image : `astropy.io.fits.ImageHDU`
         Input image
     world : bool
         Use world coordinates (or pixel coordinates)?
     lon_sym : bool
-        Use symmetric longitude range `(-180, 180)` (or `(0, 360)`)?
+        Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
 
     Returns
     -------
@@ -269,7 +269,7 @@ def separation(image, center, world=True, radians=False):
     Returns
     -------
     separation : array
-        Image of pixel separation to `center`.
+        Image of pixel separation to ``center``.
     """
     x_center, y_center = center
     x, y = coordinates(image, world=world, radians=radians)
@@ -380,12 +380,12 @@ def process_image_pixels(images, kernel, out, pixel_function):
 def image_groupby(images, labels):
     """Group pixel by labels.
     
-    Similar to `scipy.ndimage.labeled_comprehension`, only that here multiple inputs
-    and outputs are supported.
+    This function is similar to `scipy.ndimage.measurements.labeled_comprehension`,
+    but more general because it supports multiple input and output images.
     
     Parameters
     ----------
-    TODO
+    TODO    
     
     Returns
     -------
@@ -444,7 +444,7 @@ def bin_events_in_image(events, reference_image):
     
     Parameters
     ----------
-    events : `astropy.table.Table`
+    events : `astropy.table.table.Table`
         Event list table
     reference_image : `astropy.io.fits.ImageHDU`
         An image defining the spatial bins.
@@ -481,11 +481,11 @@ def bin_events_in_cube(events, reference_cube, energies):
     
     Parameters
     ----------
-    events : `astropy.table.Table`
+    events : `astropy.table.table.Table`
         Event list table
     cube : `astropy.io.fits.ImageHDU`
         A cube defining the spatial bins.
-    energies : `astropy.table.Table`
+    energies : `astropy.table.table.Table`
         Table defining the energy bins.
     
     Returns
@@ -568,6 +568,9 @@ def binary_dilation_circle(input, radius):
 def binary_opening_circle(input, radius):
     """Binary opening with circle as structuring element.
     
+    This calls `scipy.ndimage.morphology.binary_opening` with a `binary_disk`
+    as structuring element.
+    
     Parameters
     ----------
     TODO
@@ -575,10 +578,6 @@ def binary_opening_circle(input, radius):
     Returns
     -------
     TODO
-    
-    See Also
-    --------
-    TODO: `~scipy.ndimage.binary_opening`
     """
     from scipy.ndimage import binary_opening
     structure = binary_disk(radius)
@@ -592,12 +591,12 @@ def solid_angle(image):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         Input image
 
     Returns
     -------
-    area_image : `astropy.units.Quantity`
+    area_image : `~astropy.units.quantity.Quantity`
         Solid angle image (matching the input image) in steradians.
     """
     # Area of one pixel at the equator
@@ -694,10 +693,10 @@ def cut_out(image, center, fov=[2, 2]):
 
     Parameters
     ----------
-    image : `~maputils.FITSimage`
-        Input image.
+    image : `astropy.io.fits.ImageHDU`
+        Input image
     center : [glon, glat]
-        Cutout center position.
+        Cutout center position
     fov : [glon_fov, glat_fov]
         Cutout field of view dimensions
     

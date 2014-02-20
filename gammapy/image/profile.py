@@ -51,23 +51,23 @@ class FluxProfile(object):
     Note: over- and underflow is ignored and not stored in the profile
     
     Note: this is implemented by creating bin labels and storing the
-    input 2D data in 1D pandas.DataFrame tables.
-    The 1D profile is also stored as a pandas.DataFrame and computed
+    input 2D data in 1D `pandas.DataFrame` tables.
+    The 1D profile is also stored as a `pandas.DataFrame` and computed
     using the fast and flexible pandas groupby and apply functions.
 
-    TODO: take mask into account everywhere
-    TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?    
-    TODO: add `solid_angle` to input arrays.
+    * TODO: take mask into account everywhere
+    * TODO: separate FluxProfile.profile into a separate ProfileStack or HistogramStack class?    
+    * TODO: add ``solid_angle`` to input arrays.
 
     Parameters
     ----------
     x_image : array_like
         Label image (2-dimensional)
     x_edges : array_like
-        Defines binning in `x` (could be GLON, GLAT, DIST, ...)
+        Defines binning in ``x`` (could be GLON, GLAT, DIST, ...)
     counts, background, exposure : array_like
         Input images (2-dimensional)
-    mask : 
+    mask : array_like
         possibility to mask pixels (i.e. ignore in computations)
     """
     
@@ -120,22 +120,23 @@ class FluxProfile(object):
     def compute(self):
         """Compute the flux profile.
         
-        TODO: call `gammapy.stats.compute_total_stats` instead.
+        TODO: call `gammapy.stats.data.compute_total_stats` instead.
         
         Note: the current implementation is very inefficienct in speed and memory.
         There are various fast implementations, but none is flexible enough to
         allow combining many input quantities (counts, background, exposure) in a
         flexlible way:
-        - numpy.histogram
-        - scipy.ndimage.labeled_comprehension and special cases
+        - `numpy.histogram`
+        - `scipy.ndimage.labeled_comprehension` and special cases
 
         pandas DataFrame groupby followed by apply is flexible enough, I think:
+
         http://pandas.pydata.org/pandas-docs/dev/groupby.html
 
         Returns
         -------
         results : dict
-            Dictionary of profile measurements, also stored in `self.profile`.
+            Dictionary of profile measurements, also stored in ``self.profile``.
 
         See also
         --------
