@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
 from __future__ import print_function, division
-from astropy.coordinates import ICRS
+from astropy.coordinates import ICRS, Galactic
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
@@ -71,7 +71,8 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
     # Convert coordinate to ICRS system if it isn't already
-    coordinate = ICRS(coordinate)
+    if isinstance(coordinate, Galactic):
+        coordinate = ICRS(coordinate)
     
     if dec_digits == None:
         dec_digits = max(2, ra_digits - 1) 
