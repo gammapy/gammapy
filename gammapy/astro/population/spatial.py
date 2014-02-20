@@ -35,7 +35,7 @@ def P90(r, R0=4.5):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     return r * R0 ** -2 * exp(-r / R0)
 
@@ -58,7 +58,7 @@ def CB98(r, a=2, b=3.53):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     term1 = r * (r / R_SUN_GALACTIC) ** a
     term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
@@ -72,7 +72,7 @@ def YK04(r, a=1.64, b=4.01, R1=0.55):
         f(r) = TODO
     
     Used by Faucher-Guigere and Kaspi.
-    Density at `r = 0` is nonzero.
+    Density at ``r = 0`` is nonzero.
 
     Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
     
@@ -86,7 +86,7 @@ def YK04(r, a=1.64, b=4.01, R1=0.55):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     term1 = r * ((r + R1) / (R_SUN_GALACTIC + R1)) ** a
     term2 = exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + R1))
@@ -113,7 +113,7 @@ def YK04B(r, a=4, b=6.8):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     return (r / R_SUN_GALACTIC) ** a * exp(-b * (r / R_SUN_GALACTIC))
 
@@ -136,7 +136,7 @@ def F06(r, R0=7.04, sigma=1.83):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     term1 = 1. / sqrt(2 * pi * sigma)
     term2 = exp(-(r - R0) ** 2 / (2 * sigma ** 2))
@@ -162,7 +162,7 @@ def L06(r, a=1.9, b=5.0):
     Returns
     -------
     density : array_like
-        Density in radius `r`
+        Density in radius ``r``
     """
     term1 = r * (r / R_SUN_GALACTIC) ** a
     term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
@@ -185,7 +185,7 @@ def exponential(z, z0=0.05):
     Returns
     -------
     density : array_like
-        Density in height `z`    
+        Density in height ``z``    
     """
     return exp(-abs(z) / z0)
 

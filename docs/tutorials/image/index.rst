@@ -1,5 +1,5 @@
-Skymaps with `gp-pfmap` and Sherpa
-==================================
+Skymaps with ``gp-pfmap`` and Sherpa
+====================================
 
 The script ``gp-pfmap`` is used to create binned skymaps from FITS event lists.
 It calculates background maps using the ring and the template background method
@@ -7,8 +7,8 @@ It calculates background maps using the ring and the template background method
 and produces signal, background, excess, and significance maps.
 These maps can be written to fits files and then viewed and analyzed with standard fits tools, e.g., fv, ds9, or sherpa.
 
-Running `gp-pfmap`
-------------------
+Running ``gp-pfmap``
+--------------------
 
 Using ``gp-pfmap`` is straight forward.
 To create skymaps from a file ``data.fits`` using the object position from the header of the file

@@ -121,9 +121,9 @@ class ThetaCalculator2D(ThetaCalculatorScipy):
     dist : 2-dimensional array
         Probability distribution (per dx * dy)
     x : 2-dimensional array
-        Pixel `x` coordinate array. Must match shape of `dist`.
+        Pixel ``x`` coordinate array. Must match shape of ``dist``.
     x : 2-dimensional array
-        Pixel `x` coordinate array. Must match share of `dist`.
+        Pixel ``x`` coordinate array. Must match share of ``dist``.
     """
     def __init__(self, dist, x, y):
         self.dist = dist / dist.sum()

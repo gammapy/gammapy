@@ -5,10 +5,13 @@ from astropy.io import fits
 __all__ = ['FermiPSF']
 
 class FermiPSF(object):
-    """Fermi PSF I/O and computations (gtpsf format).
-    
+    """Fermi PSF I/O and computations (``gtpsf`` format).
     
     TODO: linear interpolation in theta and energy?
+    
+    Parameters
+    ----------
+    TODO
     """
     
     def __init__(self, hdu_list):
@@ -20,7 +23,16 @@ class FermiPSF(object):
     
     @staticmethod
     def read(filename):
-        """Read FITS format PSF file (`gtpsf` output)."""
+        """Read FITS format PSF file (``gtpsf`` output).
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
+        """
         hdu_list = fits.open(filename)
         return FermiPSF(hdu_list)
 

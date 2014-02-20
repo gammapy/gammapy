@@ -20,7 +20,7 @@ def power_law_eval(energy, norm, gamma, energy_ref):
     
     .. math:: f(energy) = N (E / E_0) ^ - \Gamma
     
-    with norm `N`, energy `E`, reference energy `E0` and spectral index :math:`\Gamma`.
+    with norm ``N``, energy ``E``, reference energy ``E0`` and spectral index :math:`\Gamma`.
         
     Parameters
     ----------
@@ -73,7 +73,7 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     Parameters
     ----------
     I : array_like
-        Integral flux in `energy_min`, `energy_max` band
+        Integral flux in ``energy_min``, ``energy_max`` band
     alpha : array_like
         Power law spectral index
     energy : array_like
@@ -86,7 +86,7 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     Returns
     -------
     flux : `numpy.array`
-        Differential flux at `energy`.
+        Differential flux at ``energy``.
     """
     return I / _conversion_factor(g, e, e1, e2)
 
@@ -97,7 +97,7 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     Parameters
     ----------
     f : array_like
-        Differential flux at `energy`
+        Differential flux at ``energy``
     alpha : array_like
         Power law spectral index
     energy : array_like
@@ -110,7 +110,7 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     Returns
     -------
     flux : `numpy.array`
-        Integral flux in `energy_min`, `energy_max` band
+        Integral flux in ``energy_min``, ``energy_max`` band
     """
     return f * _conversion_factor(g, e, e1, e2)
 

@@ -15,10 +15,6 @@ def galactic_to_radec(glon, glat, unit='deg'):
 
     Only accurate to ~ 3 digits.
 
-    This is a standalone implementation that only uses `numpy`.
-    Use it where you don't want to depend on a real celestial coordinate
-    package like `astropy.coordinates` or `kapteyn.celestial`.
-
     Parameters
     ----------
     glon, glat : array_like
@@ -30,6 +26,11 @@ def galactic_to_radec(glon, glat, unit='deg'):
     -------
     ra, dec : array_like
         Equatorial coordinates.
+    Notes
+    -----
+    This is a standalone implementation that only uses ``numpy``.
+    Use it where you don't want to depend on a real celestial coordinate
+    package like ``astropy.coordinates`` or ``kapteyn.celestial``.
     """
     if unit == 'deg':
         glon, glat = radians(glon), radians(glat)
@@ -57,10 +58,6 @@ def radec_to_galactic(ra, dec, unit='deg'):
 
     Only accurate to ~ 3 digits.
 
-    This is a standalone implementation that only uses `numpy`.
-    Use it where you don't want to depend on a real celestial coordinate
-    package like `astropy.coordinates` or `kapteyn.celestial`.
-
     Parameters
     ----------
     ra, dec : array_like
@@ -72,6 +69,12 @@ def radec_to_galactic(ra, dec, unit='deg'):
     -------
     glon, glat : array_like
         Galactic coordinates
+
+    Notes
+    -----
+    This is a standalone implementation that only uses ``numpy``.
+    Use it where you don't want to depend on a real celestial coordinate
+    package like ``astropy.coordinates`` or ``kapteyn.celestial``.
     """
     if unit == 'deg':
         ra, dec = radians(ra), radians(dec)
@@ -162,15 +165,15 @@ def pair_correlation(lon, lat, theta_bins, unit='deg'):
     lon, lat : array_like
         Coordinate arrays
     theta_bins : array_like
-        Array defining the `theta` binning.
-        `theta` is the angular offset between positions.
+        Array defining the ``theta`` binning.
+        ``theta`` is the angular offset between positions.
     unit : {'deg', 'rad'}
         Units of input and output coordinates
 
     Returns
     -------
     counts : array
-        Array of point separations per `theta` bin.
+        Array of point separations per ``theta`` bin.
     """
     # TODO: Implement speedups:
     # - use radians

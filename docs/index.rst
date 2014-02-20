@@ -1,10 +1,10 @@
-`gammapy`
-=========
+gammapy
+=======
 
 What is it?
 -----------
 
-`gammapy` is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
+**gammapy** is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
 
 It contains some analysis methods,
 but it's main purpose is to be the glue between the many
@@ -18,14 +18,11 @@ existing data formats and other tools.
 * Python: works with 2.6, 2.7 and 3.3+ (see tests on https://travis-ci.org/gammapy/gammapy/)
 
 
-Using `gammapy`
----------------
+Using gammapy
+-------------
 
-Start by reading the :ref:`introduction`.
-
-Then have a look at the available :ref:`tools` and the various sub-package docs.
-
-If you think it might be useful, go to :ref:`install`.
+General documentation
++++++++++++++++++++++
 
 .. toctree::
   :maxdepth: 1
@@ -34,22 +31,28 @@ If you think it might be useful, go to :ref:`install`.
   introduction
   tools
   tutorials/index
- 
-  data/index
-  background/index
-  obs/index
-  image/index
-  spectrum/index
-  morphology/index
-  detect/index
-  stats/index
-  utils/index
-  shower/index
-  irf/index
-  astro/index
-  catalog/index
   references
   credit
+
+Sub-packages
+++++++++++++
+
+.. toctree::
+  :maxdepth: 1
+ 
+  astro/index
+  background/index
+  catalog/index
+  data/index
+  detect/index
+  image/index
+  irf/index
+  morphology/index
+  obs/index
+  shower/index
+  spectrum/index
+  stats/index
+  utils/index
 
 Contact
 -------

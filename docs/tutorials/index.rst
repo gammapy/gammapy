@@ -2,7 +2,7 @@
 Tutorials
 *********
 
-The tutorials show some real-world usage examples of the `gammapy` Python package and / or command line tools.
+The tutorials show some real-world usage examples of the ``gammapy`` Python package and / or command line tools.
 
 .. toctree::
    :maxdepth: 1

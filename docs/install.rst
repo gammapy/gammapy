@@ -5,24 +5,24 @@
 Installation
 ============
 
-`gammapy` works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.3 or later).
+``gammapy`` works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.3 or later).
 
-To install the latest `gammapy` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
+To install the latest ``gammapy`` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
 
    pip install gammapy
 
-To install the latest developer version of `gammapy`, use::
+To install the latest developer version of ``gammapy``, use::
 
    git clone https://github.com/gammapy/gammapy.git
-   cd astropy
+   cd gammapy
    python setup.py install
 
-To check if `gammapy` is correctly installed, start up python or ipython, import `gammapy` and run the unit tests::
+To check if ``gammapy`` is correctly installed, start up python or ipython, import ``gammapy`` and run the unit tests::
 
    >>> import gammapy
    >>> gammapy.test()
 
-To check if the `gammapy` command line tools are on your `$PATH` try this::
+To check if the ``gammapy`` command line tools are on your ``$PATH`` try this::
 
    $ gp-info --tools
 
@@ -44,9 +44,10 @@ Optional dependencies (imported and used only where needed):
 * `Kapteyn`_ for reprojecting images
 * `aplpy`_ for plotting astro images
 * `imfun`_ for a trous wavelet decomposition
+* `uncertainties`_ for Gaussian error propagation
 
 .. note:: I didn't put any effort into minimizing the number of dependencies,
-   since `gammapy` is a prototype. Should it develop into a package that is actually used
+   since ``gammapy`` is a prototype. Should it develop into a package that is actually used
    by a few people I'll limit the optional packages to what is actually necessary.
 
 Sherpa

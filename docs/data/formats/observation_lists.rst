@@ -5,8 +5,8 @@ Run lists specify a list of observation runs to be processed by a given tool.
 
 In the end the tool will usually generate input and output data filenames from
 the information in the run list. These filenames can either be given directly
-or there can be naming conventions, e.g. the event list for run `42` could be stored
-at `$TEV_DATA/RUN_000042/Events.fits`.
+or there can be naming conventions, e.g. the event list for run ``42`` could be stored
+at ``$TEV_DATA/RUN_000042/Events.fits``.
 
 
 CVS format
@@ -20,7 +20,7 @@ This has the advantage that everyone can work with whatever tool they like. Here
 * `csvkit <https://csvkit.readthedocs.org/en/latest/>`_
 * Your own script using e.g the `Python standard library CSV module <http://docs.python.org/2/library/csv.html>`_ or `pandas <http://pandas.pydata.org>`_
 
-A run list must have at least a column called `Run`::
+A run list must have at least a column called ``Run``::
  
    Run
    42
@@ -31,12 +31,12 @@ Usually it has many more columns with information about each run::
    Run,Telescope_Pattern,Date,Duration,GLON,GLAT,Target,Zenith
    1234,24,2013-03-22 14:32,1832,83.7,-5.2,Crab Nebula,32
 
-Special column names that the `gammapy` analysis tools understand:
+Special column names that the ``gammapy`` analysis tools understand:
 
-* `Run` --- Run number (int)
-* `Telescope_Pattern` --- Binary pattern describing which telescopes participated in the run
-* `Date` --- Date of observation
-* `RA`, `DEC` or `GLON`, `GLAT` -- Pointing position in Equatorial (ICRS) or Galactic coordinates
+* ``Run`` --- Run number (int)
+* ``Telescope_Pattern`` --- Binary pattern describing which telescopes participated in the run
+* ``Date`` --- Date of observation
+* ``RA``, ``DEC`` or ``GLON``, ``GLAT`` -- Pointing position in Equatorial (ICRS) or Galactic coordinates
 
 XML format
 ----------

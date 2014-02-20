@@ -13,7 +13,18 @@ __all__ = ['GalacticDiffuse', 'diffuse_gamma_ray_flux']
 
 class GalacticDiffuse(object):
     """Lookup diffuse emission flux from FITS cube as used e.g. by Fermi or GALPROP.
+    
+    Parameters
+    ----------
+    filename : str
+        Filename of the diffuse model file
+    interpolation : str
+        Type of interpolation method in log(E).
 
+        Passed to `scipy.interpolate.interp1d`
+
+    Notes
+    -----
     The lookup is done via interpolation in log(energy),
     no interpolation is done in position coordinates.
     
@@ -23,14 +34,6 @@ class GalacticDiffuse(object):
     
     E.g. the 2-year diffuse model that was used in the 2FGL catalog production is at
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
-    
-    Parameters
-    ----------
-    filename : str
-        Filename of the diffuse model file
-    interpolation : str
-        Type of interpolation method in log(E).
-        Passed to `scipy.interpolate.interp1d`
     """
     def __init__(self, filename=None, interpolation='linear'):
         self.filename = filename
@@ -111,12 +114,14 @@ class GalacticDiffuse(object):
         y = np.round(y).astype(int)
         return x, y
 
+
 def _power_law(E, N, k):
     E = Quantity(E, 'TeV')
     E0 = Quantity(1, 'TeV')
     N = Quantity(N, 'm^-2 s^-1 TeV^-1 sr^-1')
     flux = N * (E / E0) ** (-k)
     return flux
+
 
 def diffuse_gamma_ray_flux(energy, component='isotropic'):
     """Diffuse gamma ray flux.
@@ -128,15 +133,15 @@ def diffuse_gamma_ray_flux(energy, component='isotropic'):
     
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    energy : `~astropy.units.quantity.Quantity`
         Gamma-ray energy
     component : {'isotropic', 'bubble', 'galactic_fermi2', 'galactic_fermi4'}
         Diffuse model component
     
     Returns
     -------
-    flux : `~astropy.units.Quantity`
-        Gamma-ray flux in unit `m^-2 s^-1 TeV^-1 sr^-1`
+    flux : `~astropy.units.quantity.Quantity`
+        Gamma-ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
     #flux = Quantity(1, 'm^-2 s^-1 TeV^-1 sr^-1')
     if component == 'isotropic':

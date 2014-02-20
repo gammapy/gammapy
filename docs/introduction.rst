@@ -6,11 +6,12 @@ Introduction
 Show me some code!
 ------------------
 
-`gammapy` gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
+``gammapy`` gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
 
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
-`gammapy.stats` knows::
+
+Call the `~gammapy.stats.poisson.significance` function::
 
    >>> from gammapy.stats import significance
    >>> significance(n_observed=10, mu_background=4.2, method='lima')
@@ -18,24 +19,25 @@ according to [LiMa1983]_?
 
 What's the differential gamma-ray flux and spectral index of the Crab nebula at 3 TeV
 according to [Meyer2010]_?
-`gammapy.spec` knows::
 
-   >>> from gammapy.spec import crab
+Call the `~gammapy.spectrum.crab.crab_flux` and `~gammapy.spectrum.crab.crab_spectral_index` functions::
+
+   >>> from gammapy.spectrum import crab_flux, crab_spectral_index
    >>> energy = 3
-   >>> crab.diff_flux(energy, ref='meyer')
+   >>> crab_flux(energy, ref='meyer')
    1.8993523278650278e-12
-   >>> crab.spectral_index(energy, ref='meyer')
+   >>> crab_spectral_index(energy, ref='meyer')
    2.6763224503600429
 
-All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spec`) ...
-browse their docs (see list below) to see if it contains the methods you want.
+All functionality is in subpackages (e.g. ``gammapy.stats`` or ``gammapy.spec``) ...
+browse their docs to see if it contains the methods you want.
 
 But I don't know how to code in Python!
 ---------------------------------------
 
 Hmm ... OK.
 
-Some of the `gammapy` functionality can be called from command line tools.
+Some of the ``gammapy`` functionality can be called from command line tools.
 
 But, to be honest, if you're an astronomer, you should learn to code in Python.
 Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_  
@@ -55,9 +57,9 @@ and want to look up the map value at the Crab position
 
    $ gp-lookup-map-values crab_image.fits --object "Crab"
 
-You can call `tool --help` for any tool.
+You can call ``gp-tool-name --help`` for any tool.
 
-A full list of available command line tools can be found in `tools`.
+A full list of available command line tools can be found in ``tools``.
 
 Other related packages
 ----------------------

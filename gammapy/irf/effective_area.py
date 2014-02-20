@@ -63,7 +63,7 @@ def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
 
     Returns
     -------
-    arf : `fits.io.fits.BinTableHDU`
+    arf : `~astropy.io.fits.BinTableHDU`
         ARF in FITS table HDU format
 
     Notes

@@ -313,7 +313,7 @@ def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
     containment_fraction : float
         Containment fraction
     normalize_image : bool
-        Set `normalize_image=False` if it already is normalized
+        Set ``normalize_image=False`` if it already is normalized
         and you want the speed.
 
     Returns

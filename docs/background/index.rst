@@ -9,10 +9,8 @@ Introduction
 
 `gammapy.background` contains methods to estimate and model background.
 
-At the moment it also contains a lot of image-processing related functionality
-that maybe should be split into a separate `image` package.
-
-The main data structure is the `~gammapy.background.maps.Maps` container ... TODO
+The central data structure is the `~gammapy.background.maps.Maps` container.
+TODO: describe
 
 Most of the methods implemented are described in [Berge2007]_.
 Section 7.3 "Background subtraction"

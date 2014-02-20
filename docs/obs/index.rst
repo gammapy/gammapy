@@ -25,7 +25,7 @@ TODO: reference run list format
 findruns
 --------
 
-The `findruns` command line tool can be used to select a subset of runs from a given run list.
+The ``findruns`` command line tool can be used to select a subset of runs from a given run list.
 
 Examples:
 
@@ -49,13 +49,13 @@ Examples:
    $ findruns --run_min 42 --run_max 100 \
      --in all_runs.lis --out run_042_to_100.lis
    
-Using `findruns` is easy, you don't have to remember all the options, just type::
+Using ``findruns`` is easy, you don't have to remember all the options, just type::
 
    $ findruns --help
 
 at the command line or read the usage help `here <TODO>`_
 
-.. note:: Noel Dawe's `goodruns` tool for `ATLAS <http://atlas.ch>`_ run selection
+.. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`_ run selection
       (`docs <http://ndawe.github.io/goodruns/>`_, `code <https://github.com/ndawe/goodruns>`_)
       is a nice example for a run selection tool.
 

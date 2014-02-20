@@ -66,7 +66,7 @@ class Sherpa(object):
         return json.dumps(self.pars, sort_keys=True, indent=4)
 
     def center_psf(self):
-        """Set `xpos` and `ypos` of the PSF to the dataspace center."""
+        """Set ``xpos`` and ``ypos`` of the PSF to the dataspace center."""
         import sherpa.astro.ui as sau
         try:
             ny, nx = sau.get_data().shape
