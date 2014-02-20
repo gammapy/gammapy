@@ -1,8 +1,8 @@
-Spectra with `gp-pfspec` and Sherpa
-===================================
+Spectra with ``gp-pfspec`` and Sherpa
+=====================================
 
-Running `gp-pfspec`
--------------------
+Running ``gp-pfspec``
+---------------------
 
 The script ``gp-pfspec`` produces PHA spectrum files from FITS event lists, which can be analyzed with tools like XSPEC.
 The instrument response is taken from ARF (effective area) and RMF (energy distribution matrix) files

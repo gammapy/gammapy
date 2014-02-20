@@ -1,15 +1,16 @@
-*****************************************
-Source detection tools (`gammapy.detect`)
-*****************************************
+*******************************************
+Source detection tools (``gammapy.detect``)
+*******************************************
 
 .. currentmodule:: gammapy.detect
 
 Introduction
 ============
 
-`gammapy.detect` holds source detection methods that turn event lists or images or cubes
+``gammapy.detect`` holds source detection methods that turn event lists or images or cubes
 into source catalogs. 
 
+* TODO: import all functionality into top-level ``gammapy.detect`` namespace!
 * TODO: Describe references: [Stewart2009]_
 
 
@@ -17,8 +18,8 @@ Getting Started
 ===============
 
 * TODO: general intro
-* TODO: describe the `iterative_source_detect` tool.
-* TODO: describe the `image_decompose_a_trous` tool.
+* TODO: describe the ``gp-iterative-source-detect`` tool.
+* TODO: describe the ``gp-image-decompose-a-trous`` tool.
 
 
 Reference/API

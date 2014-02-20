@@ -9,7 +9,7 @@ This is a short summary of who contributed what to gammapy.
 
 * Christoph Deil (MPIK Heidelberg) started gammapy in 2013 and is maintaining it.
 * Contributions by Axel Donath (MPIK Heidelberg):
-    - Some code committed by Christoph Deil (e.g. functionality in `gammapy.image.utils`)
+    - Some code committed by Christoph Deil (e.g. functionality in `gammapy.image`)
       are actually code written by Axel for his bachelor and master's thesis. 
     - Various image analysis and simulation functionality.
 * Contributions by Ellis Owen (MPIK Heidelberg):

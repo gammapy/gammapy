@@ -8,13 +8,12 @@ Introduction
 ============
 
 `gammapy.data` holds a few datasets used in the examples and tests. 
-Some are included with `gammapy`, some are downloaded from the web via
+Some are included with ``gammapy``, some are downloaded from the web via
 
    >>> import gammapy.data
    >>> gammapy.data.download_datasets()
 
 TODO: Give summary table of available datasets here.
-
 
 
 .. toctree::

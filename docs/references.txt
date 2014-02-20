@@ -1,3 +1,4 @@
+.. _uncertainties: http://pythonhosted.org/uncertainties/
 .. _scikit-image: http://scikit-image.org
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools

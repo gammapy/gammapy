@@ -1,14 +1,16 @@
-************************************************************
-Astrophysical source and population models (`gammapy.astro`)
-************************************************************
+**************************************************************
+Astrophysical source and population models (``gammapy.astro``)
+**************************************************************
 
 .. currentmodule:: gammapy.astro
 
 Introduction
 ============
 
-`gammapy.astro` implements some common astrophysical source and population models.
-It is split into sub-packages, importing `astropy.astro` is useless, instead do::
+Common astrophysical source and population models are implemented in
+`gammapy.astro.source` and `gammapy.astro.population`.
+
+The ``gammapy.astro`` namespace is empty ... use these import statements::
 
    from gammapy.astro import source
    from gammapy.astro import population

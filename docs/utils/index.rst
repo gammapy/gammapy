@@ -1,12 +1,24 @@
-***********************************************
-Utility functions and classes (`gammapy.utils`)
-***********************************************
+*************************************************
+Utility functions and classes (``gammapy.utils``)
+*************************************************
 
 Introduction
 ============
 
-`gammapy.utils` is a collection of utility functions that are used in many places
+``gammapy.utils`` is a collection of utility functions that are used in many places
 or don't fit in one of the other packages.
+
+Since the various sub-modules of ``gammapy.utils`` are mostly unrelated,
+they are not imported into the top-level namespace.
+Here are some examples of how to import functionality from the ``gammapy.utils``
+sub-modules::
+
+   from gammapy.utils.random import sample_sphere
+   sample_sphere(size=10)
+
+   from gammapy.utils import random
+   random.sample_sphere(size=10)   
+
 
 Reference/API
 =============
