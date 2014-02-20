@@ -63,7 +63,7 @@ def crab_flux(energy=1, reference=DEFAULT_REFERENCE):
     Returns
     -------
     flux : array
-        Differential flux (cm^-2 s^-1 TeV^-1) at `energy`
+        Differential flux (cm^-2 s^-1 TeV^-1) at ``energy``
     """
     if reference == 'hegra':
         f = hegra['diff_flux']
@@ -106,7 +106,7 @@ def crab_integral_flux(energy_min=1, energy_max=1e4, reference=DEFAULT_REFERENCE
     Returns
     -------
     flux : array
-        Integral flux (cm^-2 s^-1) in energy band `energy_min` to `energy_max`
+        Integral flux (cm^-2 s^-1) in energy band ``energy_min`` to ``energy_max``
     """
     from scipy.integrate import quad
     # @todo How does one usually handle 0-dim and 1-dim
@@ -137,7 +137,7 @@ def crab_spectral_index(energy=1, reference=DEFAULT_REFERENCE):
     Returns
     -------
     spectral_index : array
-        Spectral index at `energy`
+        Spectral index at ``energy``
     """
     # Compute spectral index as slope in log -- log
     # as a finite difference
