@@ -206,7 +206,8 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     """Compute image moments with uncertainties for sum of Gaussians.
 
     The moments are computed analytically, the formulae are documented below.
-    Makes use of the `uncertainties` package to propagate the errors.
+
+    Calls `uncertainties.correlated_values` to propagate the errors.
 
     Parameters
     ----------
@@ -231,7 +232,8 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     nominal_values : list
         List of image moment nominal values:
         [F_sum, x_sum, y_sum, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
-        All value are given in pixel coordinates.
+
+        All values are given in pixel coordinates.
     std_devs : list
         List of image moment standard deviations.
 

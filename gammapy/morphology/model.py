@@ -40,7 +40,7 @@ class MorphModelImageCreator(object):
 
     Examples
     --------
-    Here is an example how to use `ModelImageCreator`:
+    Here is an example how to use `MorphModelImageCreator`:
 
     >>> from gammapy.morphology import MorphModelImageCreator
     >>> model_image_creator = MorphModelImageCreator('input_sherpa.cfg',
