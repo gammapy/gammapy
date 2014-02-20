@@ -28,7 +28,7 @@ def H05(v, sigma=265):
     Returns
     -------
     density : array_like
-        Density in velocity `v`
+        Density in velocity ``v``
     """
     term1 = sqrt(2 / pi) * v ** 2 / sigma ** 3
     term2 = exp(-v ** 2 / (2 * sigma ** 2))
@@ -55,7 +55,7 @@ def F06B(v, sigma1=160, sigma2=780, w=0.9):
     Returns
     -------
     density : array_like
-        Density in velocity `v`
+        Density in velocity ``v``
     """
     term1 = sqrt(2 / pi) * v ** 2 * (w / sigma1 ** 3)
     term2 = exp(-v ** 2 / (2 * sigma1 ** 2))
@@ -79,7 +79,7 @@ def F06P(v, v0=560):
     Returns
     -------
     density : array_like
-        Density in velocity `v`
+        Density in velocity ``v``
     """
     return 4. / (pi * v0 * (1 + (v / v0) ** 2) ** 2)
 
