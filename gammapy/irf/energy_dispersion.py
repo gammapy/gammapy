@@ -9,16 +9,6 @@ __all__ = ['EnergyDispersion', 'np_to_rmf', 'gauss_energy_dispersion_matrix']
 class EnergyDispersion(object):
     """Energy dispersion matrix.
 
-    .. note::
-        We use a dense matrix (`numpy.ndarray`) for the energy dispersion matrix.
-        An alternative would be to store a sparse matrix (`scipy.sparse.csc_matrix`).
-        It's not clear which would be more efficient for typical gamma-ray
-        energy dispersion matrices.
-
-    The most common file format for energy dispersion matrices is the
-    RMF (Redistribution Matrix File) format from X-ray astronomy:
-    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
-
     Parameters
     ----------
     pdf_matrix : array_like
@@ -28,6 +18,18 @@ class EnergyDispersion(object):
         1-dim true energy binning array (TeV)
     energy_reco_bounds : array_like
         1-dim reco energy binning array (TeV)
+
+    Notes
+    -----
+    
+    We use a dense matrix (`numpy.ndarray`) for the energy dispersion matrix.
+    An alternative would be to store a sparse matrix (`scipy.sparse.csc_matrix`).
+    It's not clear which would be more efficient for typical gamma-ray
+    energy dispersion matrices.
+
+    The most common file format for energy dispersion matrices is the
+    RMF (Redistribution Matrix File) format from X-ray astronomy:
+    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
     """
     
     DEFAULT_PDF_THRESHOLD = 1e-6
@@ -154,8 +156,8 @@ class EnergyDispersion(object):
         
         Parameters
         ----------
-        hdu_list : `astropy.io.fits.HDUList`
-            HDU list with `MATRIX` and `EBOUNDS` extensions.
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with ``MATRIX`` and ``EBOUNDS`` extensions.
         """
         data = hdu_list['MATRIX'].data
         header = hdu_list['MATRIX'].header
@@ -209,7 +211,9 @@ class EnergyDispersion(object):
         """Compute energy dispersion.
         
         Available evalutation methods:
-        - step: 
+
+        * ``"step"`` -- TODO
+        * ``"interpolate2d"`` -- TODO 
         
         Parameters
         ----------
@@ -245,7 +249,7 @@ class EnergyDispersion(object):
     def apply(self, data):
         """Apply energy dispersion.
         
-        Computes the matrix product of `data`
+        Computes the matrix product of ``data``
         (which typically is model flux or counts in true energy bins)
         with the energy dispersion matrix.
         
@@ -345,7 +349,8 @@ def np_to_rmf(rm, erange, ebounds, minprob,
 
     Returns
     -------
-    hdulist : FITS hdulist
+    hdulist : `~astropy.io.fits.HDUList`
+        RMF in HDUList format.
 
     Notes
     -----
