@@ -13,8 +13,6 @@ from itertools import combinations
 import numpy as np
 from numpy import sqrt, sin, cos, pi, arccos, abs, exp
 
-# from scipy.ndimage import gaussian_filter, gaussian_laplace, maximum_filter
-# from scipy.ndimage.morphology import binary_erosion
 
 __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
            'show_peaks', 'detect_blobs_3D', 'detect_blobs', 'prune_blobs',
@@ -23,6 +21,14 @@ __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
 
 def create_scale_space(image, scales, kernel='gaussian_laplace'):
     """Creates Scale Space for a given image and stores it in 3D array.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import gaussian_filter, gaussian_laplace
 
@@ -49,6 +55,14 @@ def create_scale_space(image, scales, kernel='gaussian_laplace'):
 
 def detect_peaks(image):
     """Detect peaks in an image  using a maximum filter.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import maximum_filter
     from scipy.ndimage.morphology import binary_erosion
@@ -74,6 +88,14 @@ def detect_peaks(image):
 
 def detect_peaks_3D(image):
     """Same functionality as detect_peaks, but works on image cubes.
+    
+    Parameters
+    ----------
+    TODO
+    
+    Returns
+    -------
+    TODO
     """
     from scipy.ndimage import maximum_filter
     from scipy.ndimage.morphology import binary_erosion
@@ -101,6 +123,10 @@ def show_peaks(image_3D):
     """Show all images of different scales including the detected peaks.
 
     Useful for debugging.
+    
+    Parameters
+    ----------
+    TODO
     """
     import matplotlib.pyplot as plt
 
@@ -117,6 +143,10 @@ def show_peaks(image_3D):
 
 def detect_blobs_3D(image, threshold):
     """Find maxima in image cubes.
+    
+    Parameters
+    ----------
+    TODO
     """
     # Replace nan values by 0
     image = np.nan_to_num(image)
@@ -141,6 +171,10 @@ def detect_blobs_3D(image, threshold):
 
 def detect_blobs(image_3D, scales, threshold):
     """Detect blobs of different sizes.
+    
+    Parameters
+    ----------
+    TODO
     """
     # Set up empty blob list
     blobs = []
@@ -169,6 +203,10 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
 
     If the overlap area of two blobs is to large,
     the one with the smaller peak value is dismissed.
+    
+    Parameters
+    ----------
+    TODO
     """
     # It is still the question whether the result is unique
     # Loop over all pairwise blob combinations
@@ -189,6 +227,10 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
 
 def show_blobs(image, blobs):
     """Show input image with overlaid blobs.
+    
+    Parameters
+    ----------
+    TODO
     """
     import matplotlib.pyplot as plt
 
@@ -206,6 +248,10 @@ def show_blobs(image, blobs):
 
 def write_region_file(regionfile, blobs):
     """Write ds9 region file from blob list.
+    
+    Parameters
+    ----------
+    TODO
     """
     # Open region file, it will be overwritten if it already exists!
     f = open(regionfile, 'w')
@@ -220,6 +266,17 @@ def write_region_file(regionfile, blobs):
 
 class Blob(object):
     """An excess blob is represented by a position, radius and peak value.
+    
+    Parameters
+    ----------
+    x_pos : array_like
+        X position
+    y_pos : array_like
+        Y position
+    radius : array_like
+        Radius
+    value : array_like
+        Value (TODO: excess or flux or amplitude?)
     """
 
     def __init__(self, x_pos, y_pos, radius, value):
@@ -232,14 +289,25 @@ class Blob(object):
         self.value = value
         self.keep = True
 
+
+    # TODO: make it a property
     def area(self):
         """Blob area."""
         return pi * self.radius ** 2
+
 
     def overlap(self, blob):
         """Overlap between two blobs.
         
         Defined by the overlap area.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
         """
         # For now it is just the overlap area of two containment circles
         # It could be replaced by the Q or C factor, which also defines
@@ -266,11 +334,20 @@ class Blob(object):
 
         return max(area / self.area(), area / blob.area())
 
+
     def q_factor(self, blob, sigma_PSF=0.1):
         """Compute q factor as overlap criterion.
         
         .. math::
             TODO
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
         """
 
         # Compute convolved sigma
@@ -287,12 +364,14 @@ class Blob(object):
         N = 2. * sigma_A * sigma_B / sigma_AB2
         return N * exp(-0.5 * x_AB2 / sigma_AB2)
 
+
     def image(self):
         """Return image of the blob."""
         phi = np.linspace(0, 2 * pi, 360)
         x = self.radius * cos(phi) + self.x_pos
         y = self.radius * sin(phi) + self.y_pos
         return x, y
+
 
     def __str__(self):
         fmt = 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'

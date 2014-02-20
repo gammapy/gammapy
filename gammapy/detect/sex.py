@@ -53,24 +53,25 @@ def sex(image,
     detect_minarea : int
         Minimum number of pixels above threshold
     deblend_mincont : float in range 0 to 1
-        Minimum contrast parameter for deblending
-        0 = each peak is a single source
-        1 = no deblending, one source per segment
+        Minimum contrast parameter for deblending.
+        
+        * 0 = each peak is a single source
+        * 1 = no deblending, one source per segment
 
     Returns
     -------
-    catalog : `astropy.table.Table`
+    catalog : `~astropy.table.table.Table`
         Catalog of detected objects
 
-    checkimage : `astropy.io.fits.hdu.image.PrimaryHDU`
+    checkimage : `~astropy.io.fits.PrimaryHDU`
         Segmented image
 
     Examples
     --------
-    TODO
-
     TODO: look what other Python sextractor wrappers do:
+
     TODO: where to run the command and put the output files?
+
     TODO: return filenames or dict with results?
     """
     if catalog_name == None:
