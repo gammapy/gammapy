@@ -152,7 +152,7 @@ class EnergyDispersion(object):
 
     @staticmethod
     def from_hdu_list(hdu_list):
-        """Create EnergyDistribution object from `HDUList`.
+        """Create EnergyDistribution object from `~astropy.io.fits.HDUList`.
         
         Parameters
         ----------

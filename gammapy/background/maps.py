@@ -34,7 +34,7 @@ class Maps(fits.HDUList):
 
     Parameters
     ----------
-    hdus : HDUList of ImageHDUs
+    hdus : `~astropy.io.fits.HDUList` containing `~astropy.io.fits.ImageHDU` objects
         Must contain at least one of the basic maps
     file : str
         Passed right on to HDUList constructor

@@ -42,6 +42,7 @@ intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.org/en/latest/
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
+# intersphinx_mapping['pyephem'] = ('http://rhodesmill.org/pyephem/', None)
 
 
 # List of patterns, relative to source directory, that match files and
@@ -153,4 +154,5 @@ else:
 edit_on_github_source_root = ""
 edit_on_github_doc_root = "docs"
 
-nitpicky = True
+
+#nitpicky = True
