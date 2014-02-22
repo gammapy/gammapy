@@ -18,7 +18,7 @@ def test_coordinate_conversion_scalar():
 def test_coordinate_conversion_array():
     """Make a grid of positions and make a closure test"""
     # Note: points near the pole or RA boundary don't work!
-    x, y = np.mgrid[1:360:10, -89:90:1]
+    y, x = np.mgrid[-89:90:1, 1:360:10]
     for back, forth in [[celestial.radec_to_galactic, celestial.galactic_to_radec],
                         [celestial.galactic_to_radec, celestial.radec_to_galactic]]:
         a, b = forth(x, y)
