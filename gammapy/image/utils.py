@@ -6,7 +6,8 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-
+from skimage.measure import block_reduce
+    
 
 __all__ = ['atrous_hdu', 'atrous_image',
            'bin_events_in_cube', 'bin_events_in_image',
@@ -18,8 +19,8 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'paste_cutout_into_image', 'process_image_pixels', 'ring_correlate',
-           'separation', 'solid_angle', 'threshold',
+           'paste_cutout_into_image', 'process_image_pixels', 'rebin_cubeHDU', 
+           'ring_correlate', 'separation', 'solid_angle', 'threshold',
            ]
 
 
@@ -830,3 +831,46 @@ def paste_cutout_into_image(total, cutout, method='sum'):
         total.data[y : y + dy, x : x + dx] = cutout.data
     else:
         raise ValueError('Invalid method: {0}'.format(method))
+
+def rebin_cubeHDU(image_HDU, factor, func=np.sum):
+    """Merges pixels together to reduce the resolution of the image.
+    
+    Sums contribution of merged pixels. Factor must be an integer.
+    
+    Parameters
+    ----------
+    image_HDU : astropy.io.fits.ImageHDU
+        Original Image HDU, unscaled
+        
+    factor : int
+        Factor by which to reduce the binning resolution.
+        Must be a positive integer.
+        
+    func : np.function
+        function = {sum, mean, ...}
+        Way in which pixels should be merged on rebinning. Default is sum.
+        
+    Returns
+    -------
+    image_HDU : astropy.io.fits.ImageHDU
+        Rebinned Image HDU
+    """
+     
+    header = image_HDU.header
+    data = np.nan_to_num(image_HDU.data)
+    cdelt1 = header['CDELT1']
+    cdelt2 = header['CDELT2']
+    #Define new header values for new resolution
+    header['CDELT1'] = cdelt1*factor
+    header['CDELT2'] = cdelt2*factor
+    header['CRPIX1'] = header['CRPIX1']/factor 
+    header['CRPIX2'] = header['CRPIX2']/factor
+    header['NAXIS1'] = header['NAXIS1']/factor 
+    header['NAXIS2'] = header['NAXIS2']/factor
+    
+    block_size=(factor, factor)
+    image_max1 = block_reduce(data, block_size, func)
+
+    #Put rebinned data into a fitsHDU
+    rebinned_image = fits.ImageHDU(data=image_max1, header=header)    
+    return rebinned_image 
