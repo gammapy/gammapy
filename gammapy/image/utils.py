@@ -832,7 +832,7 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
-def rebin_cubeHDU(image_HDU, factor, func=np.sum):
+def rebin_cubeHDU(image_HDU, factor, func=np.sum, cube=False):
     """Merges pixels together to reduce the resolution of the image.
     
     Sums contribution of merged pixels. Factor must be an integer.
@@ -868,7 +868,11 @@ def rebin_cubeHDU(image_HDU, factor, func=np.sum):
     header['NAXIS1'] = header['NAXIS1']/factor 
     header['NAXIS2'] = header['NAXIS2']/factor
     
-    block_size=(factor, factor)
+    if cube==True:
+        block_size=(factor, factor, 1)
+    else:
+        block_size=(factor, factor)
+        
     image_max1 = block_reduce(data, block_size, func)
 
     #Put rebinned data into a fitsHDU
