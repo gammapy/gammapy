@@ -273,11 +273,15 @@ class IterativeSourceDetector(object):
     def estimate_flux(self, source, method='sum_and_divide'):
         """Estimate flux in a circular region around the source.
 
-        Note: It's not clear which is the better flux estimate:
-        If method == 'sum_and_divide':
-            flux = (counts.sum() - background.sum()) / exposure.mean()
-        else:
-            flux = ((counts - background) / exposure).sum()
+        Note: It's not clear which is the better flux estimate.
+
+        * ``method == 'sum_and_divide'``::
+
+              flux = (counts.sum() - background.sum()) / exposure.mean()
+
+        * ``method = 'divide_and_sum'``::
+
+              flux = ((counts - background) / exposure).sum()
         """
         logging.debug('Estimating flux')
         SOURCE_RADIUS_FACTOR = 2
