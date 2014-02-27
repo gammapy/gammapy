@@ -18,7 +18,7 @@ import numpy as np
 from astropy.units import Unit
 
 __all__ = ['crab_flux', 'crab_integral_flux', 'crab_spectral_index',
-           'DEFAULT_REFERENCE', 'REFERENCES'
+           'CRAB_DEFAULT_REFERENCE', 'CRAB_REFERENCES'
            ]
 
 # HESS publication: 2006A&A...457..899A
@@ -43,11 +43,11 @@ meyer = {'diff_flux': 3.3457e-11,
          'index': 2.5362,
          'int_flux': 2.0744e-11}
 
-REFERENCES = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl']
+CRAB_REFERENCES = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl']
 
-DEFAULT_REFERENCE = 'meyer'
+CRAB_DEFAULT_REFERENCE = 'meyer'
 
-def crab_flux(energy=1, reference=DEFAULT_REFERENCE):
+def crab_flux(energy=1, reference=CRAB_DEFAULT_REFERENCE):
     """Differential Crab flux.
 
     See the `gammapy.spectrum.crab` module docstring for a description
@@ -90,7 +90,7 @@ def crab_flux(energy=1, reference=DEFAULT_REFERENCE):
         raise ValueError('Unknown reference: %s' % reference)
 
 
-def crab_integral_flux(energy_min=1, energy_max=1e4, reference=DEFAULT_REFERENCE):
+def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFERENCE):
     """Integral Crab flux.
     
     See the `gammapy.spectrum.crab` module docstring for a description
@@ -121,7 +121,7 @@ def crab_integral_flux(energy_min=1, energy_max=1e4, reference=DEFAULT_REFERENCE
     return I
 
 
-def crab_spectral_index(energy=1, reference=DEFAULT_REFERENCE):
+def crab_spectral_index(energy=1, reference=CRAB_DEFAULT_REFERENCE):
     """Spectral index (positive number) at a given energy.
     
     See the `gammapy.spectrum.crab` module docstring for a description
