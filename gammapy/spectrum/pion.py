@@ -18,8 +18,6 @@ class PionDecaySpectrum(object):
     Kelner et al. (2006)
     http://adsabs.harvard.edu/abs/2006PhRvD..74c4018K
 
-    `gammafit.onezone.ProtonOZM`
-
     Parameters
     ----------
     proton_spectrum : array_like
@@ -29,6 +27,7 @@ class PionDecaySpectrum(object):
 
     See also
     --------
+    gammapy.spectrum.InverseComptonSpectrum, gammafit.onezone.ProtonOZM
     """
     m_pi = 1.22e9  # pion mass (eV)
     m_p = 1e12  # proton mass (eV)
