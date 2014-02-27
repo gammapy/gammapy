@@ -6,7 +6,6 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-from skimage.measure import block_reduce
     
 
 __all__ = ['atrous_hdu', 'atrous_image',
@@ -19,7 +18,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'paste_cutout_into_image', 'process_image_pixels', 'rebin_cubeHDU', 
+           'paste_cutout_into_image', 'process_image_pixels', 'rebin_cube_hdu', 
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
            ]
 
@@ -832,7 +831,7 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
-def rebin_cubeHDU(image_HDU, factor, func=np.sum, cube=False):
+def rebin_cube_hdu(image_hdu, factor, func=np.sum, cube=False):
     """Merges pixels together to reduce the resolution of the image.
     
     Sums contribution of merged pixels. Factor must be an integer.
@@ -855,18 +854,19 @@ def rebin_cubeHDU(image_HDU, factor, func=np.sum, cube=False):
     image_HDU : astropy.io.fits.ImageHDU
         Rebinned Image HDU
     """
-     
-    header = image_HDU.header
-    data = np.nan_to_num(image_HDU.data)
+    from skimage.measure import block_reduce
+    
+    header = image_hdu.header
+    data = np.nan_to_num(image_hdu.data)
     cdelt1 = header['CDELT1']
     cdelt2 = header['CDELT2']
     #Define new header values for new resolution
-    header['CDELT1'] = cdelt1*factor
-    header['CDELT2'] = cdelt2*factor
-    header['CRPIX1'] = header['CRPIX1']/factor 
-    header['CRPIX2'] = header['CRPIX2']/factor
-    header['NAXIS1'] = header['NAXIS1']/factor 
-    header['NAXIS2'] = header['NAXIS2']/factor
+    header['CDELT1'] = cdelt1 * factor
+    header['CDELT2'] = cdelt2 * factor
+    header['CRPIX1'] = header['CRPIX1'] / factor 
+    header['CRPIX2'] = header['CRPIX2'] / factor
+    header['NAXIS1'] = header['NAXIS1'] / factor 
+    header['NAXIS2'] = header['NAXIS2'] / factor
     
     if cube==True:
         block_size=(factor, factor, 1)

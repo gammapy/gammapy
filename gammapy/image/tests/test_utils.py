@@ -97,3 +97,45 @@ def test_process_image_pixels():
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
     assert_allclose(actual, desired)
+
+import pytest
+
+try:
+    import skimage
+    HAS_SKIMAGE = True
+except ImportError:
+    HAS_SKIMAGE = False
+    
+@pytest.mark.skipif('not HAS_SKIMAGE')
+def test_rebin_cube_hdu():
+    from skimage.measure import block_reduce
+    from ..utils import rebin_cube_hdu
+    from astropy.io import fits
+    
+    #Create a test HDU
+    header_keys = dict(CDELT1=0, CDELT2=0, CRPIX1=0, CRPIX2=0, NAXIS1=0, NAXIS2=0)
+    header = fits.Header.fromkeys(header_keys) 
+    header['CDELT1'] = 2
+    header['CDELT2'] = 2
+    header['CRPIX1'] = 10 
+    header['CRPIX2'] = 10
+    header['NAXIS1'] = 20 
+    header['NAXIS2'] = 20
+    
+    #Create test data
+    image_data = np.ones([20, 20])
+    
+    #Assemble test ImageHDU object
+    image = fits.ImageHDU(data=image_data, header=header)
+    #Test sum operation
+    rebinned_image1 = rebin_cube_hdu(image, 2, func=np.sum)
+    actual_check1 = np.array(rebinned_image1.data).sum() - image_data.sum()
+    desired_check1 = 0
+    assert_allclose(actual_check1, desired_check1)
+    
+    #Test mean operation
+    rebinned_image2 = rebin_cube_hdu(image, 2, func=np.mean)
+    actual_check2 = np.array(rebinned_image2.data).mean() - image_data.mean()
+    desired_check2 = 0
+    assert_allclose(actual_check2, desired_check2)
+    
