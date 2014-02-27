@@ -34,8 +34,8 @@ To install and use this package you need `Astropy`_ version 0.3 or later.
 Optional dependencies (imported and used only where needed):
 
 * `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods
-* `matplotlib <http://matplotlib.org>`_ for plotting
-* `pandas <http://pandas.pydata.org>`_ CVS read / write; DataFrame
+* `matplotlib`_ for plotting
+* `pandas`_ CVS read / write; DataFrame
 * `scikit-image`_ for image processing
 * `GammaLib`_ and `ctools`_ 
 * `Sherpa`_ for modeling / fitting
