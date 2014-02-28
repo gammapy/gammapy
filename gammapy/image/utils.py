@@ -6,19 +6,19 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-    
+
 
 __all__ = ['atrous_hdu', 'atrous_image',
            'bin_events_in_cube', 'bin_events_in_image',
            'binary_dilation_circle', 'binary_disk',
            'binary_opening_circle', 'binary_ring',
-           'contains', 'coordinates',
+           'calc_footprint', 'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
            'cut_out',
            'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'paste_cutout_into_image', 'process_image_pixels', 'rebin_cube_hdu', 
+           'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu', 
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
            ]
 
@@ -831,50 +831,67 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
-def rebin_cube_hdu(image_hdu, factor, func=np.sum, cube=False):
+def block_reduce_hdu(input_hdu, factors, func=np.sum):
     """Merges pixels together to reduce the resolution of the image.
     
     Sums contribution of merged pixels. Factor must be an integer.
     
     Parameters
     ----------
-    image_HDU : astropy.io.fits.ImageHDU
+    image_hdu : `astropy.io.fits.ImageHDU`
         Original Image HDU, unscaled
         
     factor : int
-        Factor by which to reduce the binning resolution.
-        Must be a positive integer.
+        Array containing down-sampling integer factor along each axis.
         
-    func : np.function
-        function = {sum, mean, ...}
-        Way in which pixels should be merged on rebinning. Default is sum.
+    func : function
+        Function object which is used to calculate the return value for each local block. This function must implement an axis parameter such as numpy.sum or numpy.mean.
         
     Returns
     -------
-    image_HDU : astropy.io.fits.ImageHDU
+    image_hdu : `astropy.io.fits.ImageHDU`
         Rebinned Image HDU
     """
     from skimage.measure import block_reduce
     
-    header = image_hdu.header
-    data = np.nan_to_num(image_hdu.data)
+    header = input_hdu.header.copy()
+    data = np.nan_to_num(input_hdu.data)
     cdelt1 = header['CDELT1']
     cdelt2 = header['CDELT2']
-    #Define new header values for new resolution
-    header['CDELT1'] = cdelt1 * factor
-    header['CDELT2'] = cdelt2 * factor
-    header['CRPIX1'] = header['CRPIX1'] / factor 
-    header['CRPIX2'] = header['CRPIX2'] / factor
-    header['NAXIS1'] = header['NAXIS1'] / factor 
-    header['NAXIS2'] = header['NAXIS2'] / factor
-    
-    if cube==True:
-        block_size=(factor, factor, 1)
-    else:
-        block_size=(factor, factor)
-        
-    image_max1 = block_reduce(data, block_size, func)
 
-    #Put rebinned data into a fitsHDU
-    rebinned_image = fits.ImageHDU(data=image_max1, header=header)    
-    return rebinned_image 
+    # Define new header values for new resolution
+    header['CDELT1'] = cdelt1 * factors[0]
+    header['CDELT2'] = cdelt2 * factors[1]
+    header['CRPIX1'] = header['CRPIX1'] / factors[0] 
+    header['CRPIX2'] = header['CRPIX2'] / factors[1]
+    header['NAXIS1'] = header['NAXIS1'] / factors[0]
+    header['NAXIS2'] = header['NAXIS2'] / factors[1]
+    
+    if len(input_hdu.data.shape) == 3:
+        block_size = (factors[0], factors[1], 1)           
+        
+    elif len(input_hdu.data.shape) == 2:
+        block_size = (factors[0], factors[1])
+    
+    data_reduced = block_reduce(data, block_size, func)
+    
+    # Put rebinned data into a fitsHDU
+    rebinned_image = fits.ImageHDU(data=data_reduced, header=header)    
+    return rebinned_image
+
+def calc_footprint(header):
+    """Compute WCS corner positions.
+
+    See https://github.com/astropy/astropy/issues/915
+    """
+    wcs = WCS(header)
+    corners = np.zeros(shape=(4, 2), dtype=np.float64)
+    corners[0, 0] = 1
+    corners[0, 1] = 1
+    corners[1, 0] = 1
+    corners[1, 1] = header['NAXIS2']
+    corners[2, 0] = header['NAXIS1']
+    corners[2, 1] = header['NAXIS2']
+    corners[3, 0] = header['NAXIS1']
+    corners[3, 1] = 1
+    return wcs.wcs_pix2world(corners, 1)
