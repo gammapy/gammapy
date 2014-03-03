@@ -5,11 +5,9 @@ from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['BoundingBox',
-           'aperphot',
            'find_max',
            'lookup',
            'lookup_max',
-           'measure_bounding_box',
            'measure_containment_fraction',
            'measure_containment_radius',
            'measure_image_moments',
@@ -140,51 +138,6 @@ def find_max(image):
     GLON, GLAT = proj.wcs_pix2world(x, y, 0)
     val = data[int(y), int(x)]
     return GLON, GLAT, val
-
-
-def aperphot(img, x, y, aper, sky, sky_type='median', verbose=False):
-    """Perform circular aperture photometry on a set of images.
-
-    Performs the aperture photometry of a given x,y point in an image.
-    Note: Doesn't handle subpixel integration.
-
-    Parameters
-    ----------
-    img : numpy 2D array of the image to perform the photometry on.
-        y_dimension, x_dimension = img.shape
-        # Note: x is the second axis as opposed to the first in IDL!
-    x, y : array_like
-        Aperture center pixel coordinates
-    aper : aperture size in pixel.
-    sky : 2-element list/tuple/array providing the inner and outer radii
-        to calculate the sky from.
-    sky_type : if 'median' will use a median for the sky level
-        determination within the sky annulus, otherwise will use a mean.
-
-    Examples
-    --------
-    >>> flux, flux_err = aperphot(img, 32.2, 35.6, 5., [10.,15.], sky_type='median')
-    """
-    dimy, dimx = img.shape
-    indy, indx = np.mgrid[0:dimy, 0:dimx]
-    r = np.sqrt((indy - y) ** 2 + (indx - x) ** 2)
-    ind_aper = r < aper
-    n_counts = ind_aper.sum()
-    tot_counts = img[ind_aper].sum()
-    ind_bkg = (sky[0] < r) * (r < sky[1])
-    n_bkg = ind_bkg.sum()
-    if sky_type.lower() == 'median':
-        bkg = np.median(img[ind_bkg])
-        std_bkg = img[ind_bkg].std()
-    else:
-        tot_bkg = img[ind_bkg].sum()
-        bkg = tot_bkg / n_bkg
-        std_bkg = img[ind_bkg].std()
-    flux = tot_counts - n_counts * bkg
-    if verbose:
-        print('%8.2f %8.2f %10.2f %10.2f %10.2f %10.2f %10.2f' % 
-              (x, y, tot_counts, n_counts, bkg, flux, std_bkg) * np.sqrt(n_counts))
-    return flux, std_bkg * np.sqrt(n_counts)
 
 
 def _lookup_pix(image, x, y):
@@ -363,40 +316,6 @@ def measure_containment_fraction(r, rr, image):
     containment_fraction = image[mask].sum()
 
     return containment_fraction
-
-
-def measure_bounding_box(mask, margin):
-    """Determine the bounding box of a mask.
-    
-    This should give the same result as the ``bbox`` attribute of
-    `skimage.measure.regionprops <http://scikit-image.org/docs/dev/api/skimage.measure.html#regionprops>`_:
-
-    >>> from skimage.measure import regionprops
-    >>> regionprops(mask).bbox    
-    
-    Parameters
-    ----------
-    mask : array_like
-        Input mask
-    margin : float
-        Margin to add to bounding box
-    
-    Returns
-    -------
-    bounding_box : BoundingBox
-        Bounding box
-    """
-    from scipy.ndimage.measurements import find_objects
-
-    box = find_objects(mask.astype(int))[0]
-    ny, nx = mask.shape
-    xmin = max(0, int(box[1].start - margin)) + 1
-    xmax = min(nx - 1, int(box[1].stop + margin)) + 1
-    ymin = max(0, int(box[0].start - margin)) + 1
-    ymax = min(ny - 1, int(box[0].stop + margin)) + 1
-    bbox = BoundingBox(xmin, xmax, ymin, ymax)
-
-    return bbox
 
 
 def _split_xys(pos):
