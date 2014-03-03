@@ -14,6 +14,7 @@ from ..utils.const import fwhm_to_sigma
 __all__ = ['GaussCatalog', 'make_test_model', 'read_json',
            'MorphModelImageCreator']
 
+__doctest_skip__ = ['MorphModelImageCreator']
 
 class MorphModelImageCreator(object):
     """Create model images from a HGPS pipeline source config file.
@@ -43,8 +44,8 @@ class MorphModelImageCreator(object):
     Here is an example how to use `MorphModelImageCreator`:
 
     >>> from gammapy.morphology import MorphModelImageCreator
-    >>> model_image_creator = MorphModelImageCreator('input_sherpa.cfg',
-    ...                                              '../exposure.fits',
+    >>> model_image_creator = MorphModelImageCreator(cfg_file='input_sherpa.cfg',
+    ...                                              exposure='exposure.fits',
     ...                                              psf_file='psf.json')
     >>> model_image_creator.evaluate_model(mode='center')
     >>> model_image_creator.save('model_image.fits')
@@ -181,6 +182,7 @@ class GaussCatalog(dict):
     """Multi-Gauss catalog utils."""
 
     def __init__(self, source):
+        import json
         if isinstance(source, dict):
             # Assume source is a dict with correct format
             self.pars = source
