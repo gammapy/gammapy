@@ -6,6 +6,8 @@ from numpy import pi, exp, sqrt, log
 
 __all__ = ['Gauss2D', 'MultiGauss2D', 'gaussian_sum_moments']
 
+__doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
+
 
 class Gauss2D(object):
     """2D symmetric Gaussian PDF.
