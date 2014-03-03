@@ -7,22 +7,29 @@ Installation
 
 ``gammapy`` works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.2 or later).
 
-To install the latest ``gammapy`` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer::
+To install the latest ``gammapy`` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer:
 
-   pip install gammapy
+.. code-block:: bash
 
-To install the latest developer version of ``gammapy``, use::
+   $ pip install gammapy
 
-   git clone https://github.com/gammapy/gammapy.git
-   cd gammapy
-   python setup.py install
+To install the latest developer version of ``gammapy``, use
 
-To check if ``gammapy`` is correctly installed, start up python or ipython, import ``gammapy`` and run the unit tests::
+.. code-block:: bash
 
-   >>> import gammapy
-   >>> gammapy.test()
+   $ git clone https://github.com/gammapy/gammapy.git
+   $ cd gammapy
+   $ python setup.py install --user
 
-To check if the ``gammapy`` command line tools are on your ``$PATH`` try this::
+To check if ``gammapy`` is correctly installed, start up python or ipython, import ``gammapy`` and run the unit tests:
+
+.. code-block:: bash
+
+   $ python -c 'import gammapy; gammapy.test()'
+
+To check if the ``gammapy`` command line tools are on your ``$PATH`` try this:
+
+.. code-block:: bash
 
    $ gp-info --tools
 
@@ -72,18 +79,24 @@ Here's a few tricks that might help you make it work.
 
 * Execute the  
   `ciao-python-fix <http://cxc.cfa.harvard.edu/ciao/threads/ciao_install/index.html#ciao_python_fix>`__
-  script after installing CIAO::
+  script after installing CIAO:
 
-   cd $CIAO_DIR
-   bash bin/ciao-python-fix
+.. code-block:: bash
 
-* Set ``LDFLAGS`` and use ``ciaorun`` before installing a Python package with C extensions::
+   $ cd $CIAO_DIR
+   $ bash bin/ciao-python-fix
 
-   export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib" 
-   ciaorun python setup.py install
+* Set ``LDFLAGS`` and use ``ciaorun`` before installing a Python package with C extensions:
+
+.. code-block:: bash
+
+   $ export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib" 
+   $ ciaorun python setup.py install
 
 * Add these folders to your ``PATH`` and ``PYTHONPATH`` so that the right command line tools or
-  Python packages are picked up instead of the ones in other system folders::
+  Python packages are picked up instead of the ones in other system folders:
 
-   export PATH=$CIAO_DIR/ots/bin:$PATH
-   export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
+.. code-block:: bash
+
+   $ export PATH=$CIAO_DIR/ots/bin:$PATH
+   $ export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
