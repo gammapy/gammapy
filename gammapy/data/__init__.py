@@ -101,20 +101,26 @@ class FermiGalacticCenter(object):
     TODO: document energy band, region, content of the files. 
     TODO: document
     """
-    def __init__(self):
-        self.filenames = dict()
-        self.filenames['psf'] = get_pkg_data_filename('fermi/psf.fits')
-        self.filenames['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')    
 
-    @property
-    def counts(self):
+    @staticmethod
+    def filenames():
+        """Dictionary of available file names."""
+        result = dict()
+        result['psf'] = get_pkg_data_filename('fermi/psf.fits')
+        result['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
+        return result    
+
+    @staticmethod
+    def counts():
         """Counts image as `astropy.io.fits.ImageHDU`."""
-        return fits.open(self.filenames['counts'])[1]
-    
-    @property
-    def psf(self):
+        filename = FermiGalacticCenter.filenames()['counts']
+        return fits.open(filename)[1]
+
+    @staticmethod
+    def psf():
         """PSF as `astropy.io.fits.HDUList`."""
-        return fits.open(self.filenames['psf'])
+        filename = FermiGalacticCenter.filenames()['psf']
+        return fits.open(filename)
 
 
 def tev_spectrum(source_name):

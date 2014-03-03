@@ -27,16 +27,13 @@ def test_poisson_stats_extra_info():
 
 
 def test_FermiGalacticCenter():
-    fermi = FermiGalacticCenter()
-
-    filenames = fermi.filenames
+    filenames = FermiGalacticCenter.filenames()
     assert isinstance(filenames, dict)
 
-    psf = fermi.psf
+    psf = FermiGalacticCenter.psf()
     assert psf['PSF'].data.shape == (20,)
     assert psf['THETA'].data.shape == (300,)
     
-    counts = fermi.counts
+    counts = FermiGalacticCenter.counts()
     assert counts.data.shape == (201, 401)
     assert counts.data.sum() == 24803
-
