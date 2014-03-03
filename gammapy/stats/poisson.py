@@ -18,6 +18,8 @@ __all__ = ['background', 'background_error',
            'sensitivity', 'sensitivity_on_off',
            ]
 
+__doctest_skip__ = ['*']
+
 
 def background(n_off, alpha):
     r"""Estimate background in the on-region from an off-region observation.
@@ -146,7 +148,7 @@ def excess_error(n_on, n_off, alpha):
     Examples
     --------
     >>> excess_error(n_on=10, n_off=20, alpha=0.1)
-    3.1937439
+    3.1937438845342623...
     >>> excess_error(n_on=4, n_off=9, alpha=0.5)
     2.5
     """
@@ -203,13 +205,13 @@ def significance(n_observed, mu_background, method='lima'):
     Examples
     --------
     >>> significance(n_observed=11, mu_background=9, method='lima')
-    TODO
+    0.64401498442763649
     >>> significance(n_observed=11, mu_background=9, method='simple')
-    TODO
+    0.66666666666666663
     >>> significance(n_observed=7, mu_background=9, method='lima')
-    TODO
+    -0.69397262486881672
     >>> significance(n_observed=7, mu_background=9, method='simple')
-    TODO
+    -0.66666666666666663
     """
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
     mu_background = np.asanyarray(mu_background, dtype=np.float64)
@@ -290,11 +292,12 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
 
     Examples
     --------
-    >>> significance(n_on=10, n_off=20, alpha=0.1, 'lima')
-    3.6850322025333071
-    >>> significance(n_on=10, n_off=20, alpha=0.1, 'simple')
-    2.5048971
-    >>> significance(n_on=10, n_off=20, alpha=0.1, 'lima_limit')
+    >>> significance_on_off(n_on=10, n_off=20, alpha=0.1, method='lima')
+    3.6850322319420274
+    >>> significance_on_off(n_on=10, n_off=20, alpha=0.1, method='simple')
+    2.5048971643405982
+    >>> significance_on_off(n_on=10, n_off=20, alpha=0.1, method='direct')
+    3.5281644971409953
     """
     n_on = np.asanyarray(n_on, dtype=np.float64)
     n_off = np.asanyarray(n_off, dtype=np.float64)
@@ -342,11 +345,6 @@ def _significance_simple_on_off(n_on, n_off, alpha):
     but it does have the advantage of being analytically invertible,
     i.e. there is an analytical formula for sensitivity,
     which is often used in practice.
-
-    Examples
-    --------
-    >>> significance_simple(n_on=10, n_off=20, alpha=0.1)
-    2.5048971
     """
     excess_ = excess(n_on, n_off, alpha)
     excess_error_ = excess_error(n_on, n_off, alpha)
@@ -355,15 +353,7 @@ def _significance_simple_on_off(n_on, n_off, alpha):
 
 
 def _significance_lima_on_off(n_on, n_off, alpha):
-    r"""Compute significance with the Li & Ma formula (17).
-
-    Examples
-    --------
-    >>> significance_lima(n_on=10, n_off=20, alpha=0.1)
-    3.6850322025333071
-    >>> significance_lima(n_on=98, n_off=1000, alpha=0.1)
-    3.6850322025333071
-    """
+    r"""Compute significance with the Li & Ma formula (17)."""
     temp = (alpha + 1) / (n_on + n_off)
     l = n_on * log(n_on * temp / alpha)
     m = n_off * log(n_off * temp)
@@ -425,9 +415,9 @@ def sensitivity(mu_background, significance, quantity='excess', method='lima'):
 
     Examples
     --------
-    >>> sensitivity(n_off=20, alpha=0.1, significance=5, method='lima')
+    >>> # sensitivity(mu_background=0.2, significance=5, method='lima')
     TODO
-    >>> sensitivity(n_off=20, alpha=0.1, significance=5, method='simple')
+    >>> # sensitivity(mu_background=0.2, significance=5, method='simple')
     TODO
     """
     mu_background = np.asanyarray(mu_background, dtype=np.float64)
@@ -476,9 +466,9 @@ def sensitivity_on_off(n_off, alpha, significance, quantity='excess', method='li
 
     Examples
     --------
-    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
+    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='lima')
     TODO
-    >>> sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
+    >>> # sensitivity_on_off(n_off=20, alpha=0.1, significance=5, method='simple')
     2.5048971
     """
     n_off = np.asanyarray(n_off, dtype=np.float64)
