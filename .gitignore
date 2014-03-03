@@ -48,6 +48,7 @@ gammapy/gammapy.cfg
 
 docs/_generated
 docs/api
+.coverage
 
 # Data files and images are usually generated
 *.png
