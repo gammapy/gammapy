@@ -34,12 +34,22 @@ from astropy.sphinx.conf import *
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.1'
 
+# We don't have references to `h5py` in gammapy ...
+# removing it so it the intersphinx mappting file isn't downloaded.
+del intersphinx_mapping['h5py']
+
+# We currently want to link to the latest development version of the astropy docs,
+# so we override the `intersphinx_mapping` entry pointing to the stable docs version
+# that is listed in `astropy/sphinx/conf.py`.
+intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
+
 # Extend astropy intersphinx_mapping with packages we use in gammapy
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
 intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.org/en/latest/', None)
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
+intersphinx_mapping['gammafit'] = ('http://gammafit.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
 # intersphinx_mapping['pyephem'] = ('http://rhodesmill.org/pyephem/', None)

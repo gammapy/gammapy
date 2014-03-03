@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 *****************************************************
 Spectrum estimation and modeling (`gammapy.spectrum`)
 *****************************************************
@@ -8,6 +10,9 @@ Introduction
 ============
 
 `gammapy.spectrum` holds functions and classes to fit spectral models and compute flux points.
+
+Physical SED models (e.g. `gammafit.onezone.ElectronOZM` and `gammafit.onezone.ProtonOZM`)
+and MCMC fitting is available in the `gammafit`_ package.
 
 Explain spectrum estimation basics.
 
@@ -28,45 +33,15 @@ Reference/API
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.spectrum.cosmic_ray
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.crab
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.diffuse
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.fitter
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.spectrum.fitting_utils
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.flux_point
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.inverse_compton
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.isrf
     :no-inheritance-diagram:
 
 .. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.spectrum.pion
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.spectrum.powerlaw
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.spectrum.sed
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.spectrum.sherpa_chi2asym
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.utils
     :no-inheritance-diagram:
     
