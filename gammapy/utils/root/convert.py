@@ -11,6 +11,8 @@ from astropy.table import Table
 __all__ = ['hist_to_table',
            'TH2_to_FITS_header', 'TH2_to_FITS_data', 'TH2_to_FITS']
 
+__doctest_skip__ = ['TH2_to_FITS']
+
 
 def hist_to_table(hist):
     """Convert 1D ROOT histogram into astropy Table.
@@ -134,7 +136,8 @@ def TH2_to_FITS(hist, flipx=True):
 
     Examples
     --------
-    >>> from TH2_to_FITS import TH2_to_FITS
+    >>> import ROOT
+    >>> from gammapy.utils.root import TH2_to_FITS
     >>> root_hist = ROOT.TH2F()
     >>> fits_hdu = TH2_to_FITS(root_hist)
     >>> fits_hdu.writetofits('my_image.fits')
