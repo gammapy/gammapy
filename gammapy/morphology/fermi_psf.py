@@ -5,13 +5,14 @@ from astropy.io import fits
 __all__ = ['FermiPSF']
 
 class FermiPSF(object):
-    """Fermi PSF I/O and computations (``gtpsf`` format).
+    """Fermi PSF (``gtpsf`` format).
     
-    TODO: linear interpolation in theta and energy?
+    The Fermi LAT ``gtpsf`` tool computes the PSF
     
     Parameters
     ----------
-    TODO
+    hdu_list : `~astropy.io.fits.HDUList`
+        HDU list with `THETA` and `PSF` extensions.
     """
     
     def __init__(self, hdu_list):
@@ -27,11 +28,13 @@ class FermiPSF(object):
         
         Parameters
         ----------
-        TODO
+        filename : str
+            File name
         
         Returns
         -------
-        TODO
+        psf : `FermiPSF`
+            PSF
         """
         hdu_list = fits.open(filename)
         return FermiPSF(hdu_list)
@@ -78,6 +81,14 @@ class FermiPSF(object):
         fraction = fraction_per_bin[0:theta_max].sum()
         return fraction
 
+    def eval(self, energy, theta):
+        """Evaluate PSF at a given energy and theta.
+        """
+        raise NotImplementedError
+
+    def average_psf(self, energy_band, spectral_index):
+        raise NotImplementedError
+
     def _energy_index(self, energy):
         return np.searchsorted(self.energy, energy)
 
@@ -94,11 +105,11 @@ class FermiPSF(object):
         r68 = self.containment_radius(energy=10, fraction=0.68)
         print('68% containment radius at 10 GeV: {0}'.format(r68))
 
-    def plot_theta(self, filename):
+    def plot_psf_vs_theta(self, filename, energies=[1e4, 1e5, 1e6]):
         """Plot PSF vs theta."""
         import matplotlib.pyplot as plt
         plt.figure(figsize=(6, 4))
-        for energy in [1e4, 1e5, 1e6]:
+        for energy in energies:
             energy_index = self._energy_index(energy)
             psf = self.psf_data[energy_index, :]
             label = '{0} GeV'.format(1e-3 * energy)
@@ -114,14 +125,14 @@ class FermiPSF(object):
         plt.tight_layout()
         plt.savefig(filename)
     
-    def plot_containment(self, filename):
+    def plot_containment_vs_energy(self, filename):
         """Plot containment versus energy."""
         raise NotImplementedError
         import matplotlib.pyplot as plt
         plt.clf()
         plt.savefig(filename)
 
-    def plot_exposure(self, filename):
+    def plot_exposure_vs_energy(self, filename):
         """Plot exposure versus energy."""
         import matplotlib.pyplot as plt
         plt.figure(figsize=(4, 3))
