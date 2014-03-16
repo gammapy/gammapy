@@ -18,12 +18,13 @@ from __future__ import print_function, division
 import json
 import numpy as np
 from numpy import log, exp
+from astropy.convolution import Gaussian2DKernel
 from .utils import read_json
 from .gauss import Gauss2D, MultiGauss2D
+from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
 
-sigma_to_fwhm = 2.3548200450309493
+__all__ = ['GaussPSF', 'HESS', 'Sherpa', 'multi_gauss_psf_kernel']
 
-__all__ = ['GaussPSF', 'HESS', 'Sherpa']
 
 class GaussPSF(Gauss2D):
     """Extension of Gauss2D PDF by PSF-specific functionality."""
@@ -250,3 +251,44 @@ class HESS(object):
         m.convolve_me(sigma)
         theta = m.containment_radius(containment_fraction)
         return theta
+
+
+def multi_gauss_psf_kernel(psf_parameters, **kwargs):
+    """Create multi-Gauss PSF kernel.
+
+    The Gaussian PSF components are specified via the
+    amplitude at the center and the FWHM.
+    See the example for the exact format. 
+
+    Parameters
+    ----------
+    psf_parameters : dict
+        PSF parameters
+
+    Returns
+    -------
+    psf_kernel : `astropy.convolution.Kernel`
+        PSF kernel
+
+    Examples
+    --------
+    >>> psf_pars = dict()
+    >>> psf_pars['psf1'] = dict(ampl=1, fwhm=2.5)
+    >>> psf_pars['psf2'] = dict(ampl=0.06, fwhm=11.14)
+    >>> psf_pars['psf3'] = dict(ampl=0.47, fwhm=5.16)
+    >>> psf_kernel = multi_gauss_psf_kernel(psf_pars, x_size=51)
+    """
+    psf = None
+    for ii in range(1, 4):
+        # Convert sigma and amplitude
+        pars = psf_parameters['psf{0}'.format(ii)]
+        sigma = fwhm_to_sigma * pars['fwhm']
+        ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
+        if psf == None:
+            psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
+        else:
+            psf += float(ampl) * Gaussian2DKernel(sigma, **kwargs)
+
+    psf.normalize()
+
+    return psf
