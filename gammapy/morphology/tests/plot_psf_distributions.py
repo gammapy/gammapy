@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from ..gauss import Gauss2D, MultiGauss2D
-from ..psf import HESS
+from ..gauss import Gauss2DPDF, MultiGauss2D
+from ..psf import HESSMultiGaussPSF
 
 
 def make_theta(theta_max=5, n_bins=100):
@@ -14,7 +14,7 @@ def make_theta(theta_max=5, n_bins=100):
 def plot_theta_distributions():
     import matplotlib.pyplot as plt
     theta, theta2 = make_theta()
-    g = Gauss2D(sigma=1)
+    g = Gauss2DPDF(sigma=1)
     m = MultiGauss2D(sigmas=[1, 3], norms=[0.5, 0.5])
     plt.figure(figsize=(15, 8))
     for ylog in [0, 1]:
@@ -45,7 +45,7 @@ def plot_theta_distributions():
 
 def plot_convolution():
     import matplotlib.pyplot as plt
-    g = Gauss2D(sigma=1)
+    g = Gauss2DPDF(sigma=1)
     sigma = np.linspace(0, 5, 100)
     r80 = g.convolve(sigma).theta(0.68)
     plt.figure()
@@ -57,8 +57,8 @@ def plot_convolution():
 
 def plot_HESS_PSF_convolution(containment=0.8):
     import matplotlib.pyplot as plt
-    m = HESS('input/gc_psf.txt').to_MultiGauss2D(normalize=True)
-    m_approx = Gauss2D(m.match_sigma(containment))
+    m = HESSMultiGaussPSF('input/gc_psf.txt').to_MultiGauss2D(normalize=True)
+    m_approx = Gauss2DPDF(m.match_sigma(containment))
     print('HESS PSF approx sigma = {0}'.format(m_approx.sigma))
     # 0.047 for containment 0.8
     # 0.055 for containment 0.9
@@ -75,6 +75,7 @@ def plot_HESS_PSF_convolution(containment=0.8):
     plt.xlabel('sigma')
     plt.ylabel('r%s' % (100 * containment))
     plt.savefig('output/plot_HESS_PSF_convolution.pdf')
+
 
 if __name__ == '__main__':
     # plot_theta_distributions()

@@ -20,13 +20,17 @@ import numpy as np
 from numpy import log, exp
 from astropy.convolution import Gaussian2DKernel
 from .utils import read_json
-from .gauss import Gauss2D, MultiGauss2D
+from .gauss import Gauss2DPDF, MultiGauss2D
 from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
 
-__all__ = ['GaussPSF', 'HESS', 'Sherpa', 'multi_gauss_psf_kernel']
+__all__ = ['GaussPSF',
+           'HESSMultiGaussPSF',
+           'SherpaMultiGaussPSF',
+           'multi_gauss_psf_kernel'
+           ]
 
 
-class GaussPSF(Gauss2D):
+class GaussPSF(Gauss2DPDF):
     """Extension of Gauss2D PDF by PSF-specific functionality."""
 
     def to_hess(self):
@@ -41,13 +45,14 @@ class GaussPSF(Gauss2D):
         return {'psf1': d}
 
 
-class Sherpa(object):
+class SherpaMultiGaussPSF(object):
     """Multi-Gauss PSF as represented in the Sherpa software.
 
     Note that Sherpa uses the following function
     f(x,y) = f(r) = A exp[-f(r/F)^2]
     f = 2.7725887 = 4log2 relates the full-width
-    at half-maximum F to the Gaussian sigma."""
+    at half-maximum F to the Gaussian sigma
+    """
     def __init__(self, source):
         if isinstance(source, dict):
             # Assume source is a dict with correct format
@@ -121,7 +126,7 @@ class Sherpa(object):
         return fraction
 
 
-class HESS(object):
+class HESSMultiGaussPSF(object):
     """Multi-Gauss PSF as represented in the HESS software.
 
     The 2D Gaussian is represented as a 1D exponential

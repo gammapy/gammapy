@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose
 from numpy.testing import assert_equal, assert_almost_equal
 
-from ..gauss import Gauss2D, MultiGauss2D, gaussian_sum_moments
+from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 try:
     import scipy
@@ -22,11 +22,11 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-class TestGauss2D(unittest.TestCase):
+class TestGauss2DPDF(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
     def setUp(self):
-        self.gs = [Gauss2D(0.1), Gauss2D(1), Gauss2D(1)]
+        self.gs = [Gauss2DPDF(0.1), Gauss2DPDF(1), Gauss2DPDF(1)]
 
     def test_call(self):
         from scipy.integrate import dblquad
@@ -60,7 +60,7 @@ class TestGauss2D(unittest.TestCase):
             assert_almost_equal(g.containment_radius(0.95), g.sigma * 2.4477467332775422)
 
     def test_convolve(self):
-        g = Gauss2D(sigma=3).convolve(sigma=4)
+        g = Gauss2DPDF(sigma=3).convolve(sigma=4)
         assert_equal(g.sigma, 5)
 
 
@@ -90,7 +90,7 @@ class TestMultiGauss2D(unittest.TestCase):
         assert_equal(m.integral, 1)
 
     def test_containment(self):
-        g, g2 = Gauss2D(sigma=1), Gauss2D(sigma=2)
+        g, g2 = Gauss2DPDF(sigma=1), Gauss2DPDF(sigma=2)
         m = MultiGauss2D(sigmas=[1])
         m2 = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         for theta in [0, 0.1, 1, 5]:
