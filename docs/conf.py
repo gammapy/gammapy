@@ -35,7 +35,7 @@ from astropy.sphinx.conf import *
 #needs_sphinx = '1.1'
 
 # We don't have references to `h5py` in gammapy ...
-# removing it so it the intersphinx mappting file isn't downloaded.
+# removing it so it the intersphinx mapping file isn't downloaded.
 del intersphinx_mapping['h5py']
 
 # We currently want to link to the latest development version of the astropy docs,
@@ -67,9 +67,9 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = u'gammapy'
-author = u'The gammapy Developers'
-copyright = u'2012, ' + author
+project = u'Gammapy'
+author = u'The Gammapy Developers'
+copyright = u'2014, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

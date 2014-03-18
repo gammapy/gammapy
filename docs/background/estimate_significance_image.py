@@ -11,7 +11,7 @@ Here's a high-level description ... see the code for details:
 __doctest_skip__ = ['*']
 import numpy as np
 from astropy.io import fits
-from gammapy.data import FermiGalacticCenter
+from gammapy.datasets import FermiGalacticCenter
 from gammapy.image import threshold, binary_dilation_circle
 from gammapy.background import Maps, ring_correlate_off_maps
 

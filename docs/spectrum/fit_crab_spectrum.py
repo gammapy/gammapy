@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 from astropy.modeling.models import PowerLaw1D
 from astropy.modeling.fitting import NonLinearLSQFitter
-from gammapy.data import tev_spectrum
+from gammapy.datasets import tev_spectrum
 
 data = tev_spectrum('crab')
 energy, flux, flux_err  = data['energy'], data['flux'], data['flux_err']

@@ -233,7 +233,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     Examples
     --------
     >>> import numpy as np
-    >>> from gammapy.data import FermiGalacticCenter
+    >>> from gammapy.datasets import FermiGalacticCenter
     >>> lon, lat = coordinates(FermiGalacticCenter.counts())
     >>> dist = np.sqrt(lon ** 2 + lat ** 2)
     """

@@ -4,11 +4,11 @@ from astropy.utils.data import get_pkg_data_filename
 from ..fermi_psf import FermiPSF
 
 def test_FermiPSF():
-    filename = get_pkg_data_filename('../../data/fermi/psf.fits')
+    filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
     psf = FermiPSF.read(filename)
 
 def interactive_test():
-    filename = get_pkg_data_filename('../../data/fermi/psf.fits')
+    filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
     psf = FermiPSF.read(filename)
     #psf.plot_containment('fermi_psf_containment.pdf')
     #psf.plot_exposure('fermi_psf_exposure.pdf')

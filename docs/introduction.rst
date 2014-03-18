@@ -6,7 +6,7 @@ Introduction
 Show me some code!
 ------------------
 
-gammapy gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
+Gammapy gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
 
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
@@ -37,7 +37,7 @@ But I don't know how to code in Python!
 
 Hmm ... OK.
 
-Some of the ``gammapy`` functionality can be called from command line tools.
+Some of the Gammapy functionality can be called from command line tools.
 
 But, to be honest, if you're an astronomer, you should learn to code in Python.
 Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_  
@@ -80,9 +80,7 @@ Some other projects:
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
 * `photon_simulator`_ --- Python code to simulate X-ray observations
-* `gamma-speed`_ --- benchmarking of TeV data analysis tools by Andrei Ignat
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
 .. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
-.. _gamma-speed: https://github.com/gammapy/gamma-speed
