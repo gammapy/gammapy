@@ -5,15 +5,16 @@
 Installation
 ============
 
-``gammapy`` works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.2 or later).
+Gammapy works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.2 or later).
 
-To install the latest ``gammapy`` stable version the easiest way is using the `pip <http://www.pip-installer.org/>`_ installer:
+To install the latest Gammapy stable version the easiest way is using the
+`pip <http://www.pip-installer.org/>`_ installer:
 
 .. code-block:: bash
 
    $ pip install gammapy
 
-To install the latest developer version of ``gammapy``, use
+To install the latest developer version of Gammapy, use
 
 .. code-block:: bash
 
@@ -21,13 +22,14 @@ To install the latest developer version of ``gammapy``, use
    $ cd gammapy
    $ python setup.py install --user
 
-To check if ``gammapy`` is correctly installed, start up python or ipython, import ``gammapy`` and run the unit tests:
+To check if Gammapy is correctly installed, start up python or ipython,
+import Gammapy and run the unit tests:
 
 .. code-block:: bash
 
    $ python -c 'import gammapy; gammapy.test()'
 
-To check if the ``gammapy`` command line tools are on your ``$PATH`` try this:
+To check if the Gammapy command line tools are on your ``$PATH`` try this:
 
 .. code-block:: bash
 
@@ -53,24 +55,23 @@ Optional dependencies (imported and used only where needed):
 * `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for Gaussian error propagation
 
-.. note:: I didn't put any effort into minimizing the number of dependencies,
-   since ``gammapy`` is a prototype. Should it develop into a package that is actually used
-   by a few people I'll limit the optional packages to what is actually necessary.
+.. note:: I didn't put any effort into minimizing the number of dependencies ...
+   I'll limit the number of optional packages if people complain about installation woes.
 
 Sherpa
 ------
 
-Some parts of gammapy use the `Sherpa`_ Python modeling / fitting package
+Some parts of Gammapy use the `Sherpa`_ Python modeling / fitting package
 from the `CIAO`_ Chandra satellite X-ray data analysis package. 
 
 Building Sherpa and all the required libraries from source is very difficult.
 You should install the binary version of CIAO as described
 `here <http://cxc.cfa.harvard.edu/ciao/download>`__,
 make sure you include Sherpa and exclude the Chandra CALDB.
-But then the Sherpa Python and numpy will not work with the existing
-Python, numpy, astropy, gammapy, ... on your system.
+But then the Sherpa Python and Numpy will not work with the existing
+Python, Numpy, Astropy, Gammapy, ... on your system.
 
-You have to re-install Astropy, gammapy and any other Python packages
+You have to re-install Astropy, Gammapy and any other Python packages
 that you want to use in the same script as Sherpa into the CIAO Python.
 Sometimes this just works, but sometimes you'll run into compilation errors
 when e.g. the C extensions in ``astropy.wcs`` or ``astropy.io.fits`` are compiled.
