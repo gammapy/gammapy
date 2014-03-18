@@ -192,8 +192,8 @@ def fits_to_png(infile, outfile, draw, dpi=100):
     dpi : int
         Resolution
 
-    Example
-    -------
+    Examples
+    --------
     >>> def draw(figure):
     ...     x, y, width, height = 42, 0, 3, 2
     ...     figure.recenter(x, y, width, height)
