@@ -43,7 +43,7 @@ Sub-packages
   astro/index
   background/index
   catalog/index
-  data/index
+  datasets/index
   detect/index
   image/index
   irf/index

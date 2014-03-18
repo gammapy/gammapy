@@ -4,7 +4,7 @@
 import numpy as np
 from astropy.units import Quantity
 import matplotlib.pyplot as plt
-from gammapy.data import electron_spectrum, diffuse_gamma_spectrum
+from gammapy.datasets import electron_spectrum, diffuse_gamma_spectrum
 from gammapy.spectrum.cosmic_ray import cosmic_ray_flux
 from gammapy.spectrum.diffuse import diffuse_gamma_ray_flux
 

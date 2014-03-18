@@ -6,4 +6,4 @@ def get_package_data():
              'fermi/*',
              'tev_spectra/*'
              ]
-    return {'gammapy.data': files}
+    return {'gammapy.datasets': files}

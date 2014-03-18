@@ -1,17 +1,17 @@
-*************************
-Datasets (`gammapy.data`)
-*************************
+*****************************
+Datasets (`gammapy.datasets`)
+*****************************
 
-.. currentmodule:: gammapy.data
+.. currentmodule:: gammapy.datasets
 
 Introduction
 ============
 
-`gammapy.data` holds a few datasets used in the examples and tests. 
-Some are included with ``gammapy``, some are downloaded from the web via
+`gammapy.datasets` holds a few datasets used in the examples and tests. 
+Some are included with Gammapy, some are downloaded from the web via
 
-   >>> import gammapy.data
-   >>> gammapy.data.download_datasets()
+   >>> from gammapy.datasets import download_datasets
+   >>> download_datasets()
 
 TODO: Give summary table of available datasets here.
 
@@ -30,5 +30,5 @@ TODO: give an example.
 Reference/API
 =============
 
-.. automodapi:: gammapy.data
+.. automodapi:: gammapy.datasets
     :no-inheritance-diagram:

@@ -3,7 +3,7 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.data import poisson_stats_image
+from gammapy.datasets import poisson_stats_image
 from gammapy.image import disk_correlate
 from gammapy.stats import significance
 from gammapy.image import colormap_hess, colormap_milagro

@@ -3,18 +3,18 @@
 
 Example how to load a dataset from file::
 
-    from gammapy import data
-    image = data.poisson_stats_image()
+    from gammapy import datasets
+    image = datasets.poisson_stats_image()
 
 To get a summary table of available datasets::
 
-    from gammapy import data
-    data.list_datasets()
+    from gammapy import datasets
+    datasets.list_datasets()
 
 To download all datasets into a local cache::
 
-    from gammapy import data
-    data.download_datasets()
+    from gammapy import datasets
+    datasets.download_datasets()
 """
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
