@@ -1,13 +1,13 @@
 """Plot a Galactic plane survey image in two panels."""
 from aplpy import FITSFigure
-from gammapy.data import fermi_galactic_center
+from gammapy.data import FermiGalacticCenter
 from gammapy.image import GalacticPlaneSurveyPanelPlot
 
 
 class GPSFermiPlot(GalacticPlaneSurveyPanelPlot):    
 
     def main(self):
-        filename = fermi_galactic_center()['counts']
+        filename = FermiGalacticCenter.filenames()['counts']
         self.fits_figure = FITSFigure(filename, figure=self.figure, subplot=self.box)
         self.fits_figure.show_colorscale(vmin=1, vmax=10)
         

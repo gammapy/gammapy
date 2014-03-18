@@ -246,7 +246,7 @@ class GalacticPlaneSurveyPanelPlot(object):
 
     * `panel_parameters` -- dict of panel parameters
     * `figure` --- Main matplotlib figure (cantains all panels)
-    * `fits_figure` --- List of panel figures (usually `aplpy.FITSFigure`s)
+    * `fits_figure` --- Current `aplpy.FITSFigure`
 
     Parameters
     ----------
