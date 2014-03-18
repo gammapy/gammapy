@@ -19,7 +19,7 @@ class TestThetaCalculator(unittest.TestCase):
     solutions for theta and containment."""
     def setUp(self):
         # Single Gauss
-        self.g = gauss.Gauss2D(sigma=1)
+        self.g = gauss.Gauss2DPDF(sigma=1)
         self.g_tc = theta.ThetaCalculator(self.g.dpdtheta2, theta_max=5, n_bins=1e6)
         self.g_tcs = theta.ThetaCalculatorScipy(self.g.dpdtheta2, theta_max=5)
         # Multi Gauss
@@ -60,10 +60,9 @@ class TestThetaCalculator(unittest.TestCase):
 def _test_ModelThetaCalculator():
     """Check that Gaussian widths add in quadrature
     i.e. sigma_psf = 3, sigma_source = 4 ===> sigma_model = 5"""
-    from morphology.gauss import Gauss2D
-    source, psf = Gauss2D(3), Gauss2D(4)
+    source, psf = gauss.Gauss2DPDF(3), gauss.Gauss2DPDF(4)
     # Correct analytical reference
-    ana = Gauss2D(5)
+    ana = gauss.Gauss2DPDF(5)
     ana_angle = ana.containment_radius(0.5)
     ana_containment = ana.containment(ana_angle)
     # Numerical method

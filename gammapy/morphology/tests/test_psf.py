@@ -5,7 +5,7 @@ from astropy.tests.helper import pytest
 from numpy.testing import assert_almost_equal, assert_allclose
 import numpy as np
 from astropy.utils.data import get_pkg_data_filename
-from ..psf import HESS, multi_gauss_psf_kernel
+from ..psf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 try:
     import scipy
@@ -35,7 +35,7 @@ class TestHESS(unittest.TestCase):
         of the events.
         """
         filename = get_pkg_data_filename('data/psf.txt')
-        hess = HESS(filename)
+        hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D(normalize=False)
         if 0:
             print('integral:', m.integral)
@@ -65,7 +65,7 @@ class TestHESS(unittest.TestCase):
                 (40, 0.0379536),
                 (80, 0.088608)]
         filename = get_pkg_data_filename('data/psf.txt')
-        hess = HESS(filename)
+        hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D()
         assert_almost_equal(m.integral, 1)
         for containment, theta in vals:
