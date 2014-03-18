@@ -6,6 +6,8 @@ from numpy import pi, exp, sqrt, log
 
 __all__ = ['Gauss2D', 'MultiGauss2D', 'gaussian_sum_moments']
 
+__doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
+
 
 class Gauss2D(object):
     """2D symmetric Gaussian PDF.
@@ -245,7 +247,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     
     >>> import numpy as np
     >>> from gammapy.morphology.gauss import gaussian_sum_moments
-    >>> cov_matrix = np.zeros()
+    >>> cov_matrix = np.zeros((12, 12))
     >>> F = [100, 200, 300]
     >>> sigma = [15, 10, 5]
     >>> x = [100, 120, 70]

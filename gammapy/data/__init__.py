@@ -1,20 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Example and test datasets.
 
-Example how to load a dataset from file:
+Example how to load a dataset from file::
 
-    >>> from gammapy import data
-    >>> image = data.poisson_stats_image()
+    from gammapy import data
+    image = data.poisson_stats_image()
 
 To get a summary table of available datasets::
 
-    >>> from gammapy import data
-    >>> data.list_datasets()
+    from gammapy import data
+    data.list_datasets()
 
 To download all datasets into a local cache::
 
-    >>> from gammapy import data
-    >>> data.download_datasets()
+    from gammapy import data
+    data.download_datasets()
 """
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
@@ -25,7 +25,7 @@ included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
                      'diffuse_gamma_spectrum',
                      'electron_spectrum',
-                     'fermi_galactic_center']
+                     'FermiGalacticCenter']
 
 remote_datasets = [
                    ]
@@ -95,21 +95,32 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
     return out
 
 
-def fermi_galactic_center():
-    """Fermi high-energy counts image of the Galactic center region.
+class FermiGalacticCenter(object):
+    """Fermi high-energy data for the Galactic center region.
     
     TODO: document energy band, region, content of the files. 
-    
-    Returns
-    -------
-    filenames : dict
-        Dictionary with filenames for keys 'psf', 'counts'
+    TODO: document
     """
-    filenames = dict()
-    filenames['psf'] = get_pkg_data_filename('fermi/psf.fits')
-    filenames['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
 
-    return filenames
+    @staticmethod
+    def filenames():
+        """Dictionary of available file names."""
+        result = dict()
+        result['psf'] = get_pkg_data_filename('fermi/psf.fits')
+        result['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
+        return result    
+
+    @staticmethod
+    def counts():
+        """Counts image as `astropy.io.fits.ImageHDU`."""
+        filename = FermiGalacticCenter.filenames()['counts']
+        return fits.open(filename)[1]
+
+    @staticmethod
+    def psf():
+        """PSF as `astropy.io.fits.HDUList`."""
+        filename = FermiGalacticCenter.filenames()['psf']
+        return fits.open(filename)
 
 
 def tev_spectrum(source_name):

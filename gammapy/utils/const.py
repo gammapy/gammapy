@@ -10,8 +10,11 @@ __all__ = ['conversion_factor', 'd_sun_to_galactic_center',
 
 def conversion_factor(old, new):
     """Conversion factor from old to new units specified as strings.
-    Example:
-    >>> year_to_sec = cf('year', 'sec')
+    
+    Examples
+    --------
+    >>> conversion_factor('year', 'second')
+    31557600.0
     """
     return Unit(old).to(Unit(new))
 

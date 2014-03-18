@@ -6,7 +6,7 @@ Introduction
 Show me some code!
 ------------------
 
-``gammapy`` gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
+gammapy gives you easy access to some frequently used methods in TeV gamma-ray astronomy from Python.
 
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
@@ -24,12 +24,12 @@ Call the `~gammapy.spectrum.crab.crab_flux` and `~gammapy.spectrum.crab.crab_spe
 
    >>> from gammapy.spectrum import crab_flux, crab_spectral_index
    >>> energy = 3
-   >>> crab_flux(energy, ref='meyer')
+   >>> crab_flux(energy, reference='meyer')
    1.8993523278650278e-12
-   >>> crab_spectral_index(energy, ref='meyer')
+   >>> crab_spectral_index(energy, reference='meyer')
    2.6763224503600429
 
-All functionality is in subpackages (e.g. ``gammapy.stats`` or ``gammapy.spec``) ...
+All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spectrum`) ...
 browse their docs to see if it contains the methods you want.
 
 But I don't know how to code in Python!

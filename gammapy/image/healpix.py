@@ -11,6 +11,7 @@ from .utils import coordinates
 
 __all__ = ['healpix_to_image', 'image_to_healpix']
 
+__doctest_skip__ = ['healpix_to_image']
 
 def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     """Convert image in HEALPIX format to a normal FITS projection image (e.g. CAR or AIT).

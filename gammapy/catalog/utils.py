@@ -63,9 +63,9 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
 
     Coordinate array inputs result in list of string output.
 
-    >>> coordinates = coord.ICRS(ra=[10.68458, 83.82208],
-    ...                         dec=[41.26917, -5.39111],
-    ...                         unit=('deg', 'deg'))
+    >>> coordinates = ICRS(ra=[10.68458, 83.82208],
+    ...                    dec=[41.26917, -5.39111],
+    ...                    unit=('deg', 'deg'))
     >>> designations = coordinate_iau_format(coordinates, ra_digits=5, prefix='HESS J')
     >>> print(designations)
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']

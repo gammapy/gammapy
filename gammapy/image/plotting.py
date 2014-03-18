@@ -5,6 +5,8 @@ from __future__ import print_function, division
 
 __all__ = ['colormap_hess', 'colormap_milagro']
 
+__doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
+
 
 def colormap_hess(vmin, vmax, vtransition, width=0.1):
     """Colormap often used in H.E.S.S. collaboration publications.

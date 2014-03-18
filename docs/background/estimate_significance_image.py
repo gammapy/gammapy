@@ -8,16 +8,16 @@ Here's a high-level description ... see the code for details:
 * An iterative scheme is used to define an exclusion mask of
   pixels that shouldn't be used for background estimation.
 """
+__doctest_skip__ = ['*']
 import numpy as np
 from astropy.io import fits
-from gammapy.data import fermi_galactic_center
+from gammapy.data import FermiGalacticCenter
 from gammapy.image import threshold, binary_dilation_circle
 from gammapy.background import Maps, ring_correlate_off_maps
 
-input_file = fermi_galactic_center()['counts']
-hdu_list = fits.open(input_file)
-binsz = hdu_list[-1].header['CDELT2']
-maps = Maps(hdu_list, theta=0.3)
+counts = FermiGalacticCenter.counts()
+binsz = counts.header['CDELT2']
+maps = Maps([counts], theta=0.3)
 
 for iteration in range(3):
     print('Iteration: {0}'.format(iteration))
@@ -26,7 +26,7 @@ for iteration in range(3):
     #exclusion = threshold(significance, threshold=5)
     exclusion = np.where(significance > 4, 0, 1).astype(int)
     exclusion = binary_dilation_circle(exclusion, radius=0.4 * binsz)
-    maps['exclusion'].data = exclusion
+    maps['exclusion'].data = exclusion.astype(np.uint8)
 
 maps.make_derived_maps()
 output_file = 'fermi_all_gc.fits'
