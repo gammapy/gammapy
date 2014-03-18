@@ -31,7 +31,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 import sherpa.astro.ui
 from gammapy.morphology.utils import read_json, write_all
-from morphology.psf import Sherpa
+from gammapy.morphology.psf import Sherpa
 
 # ---------------------------------------------------------
 # Load images, PSF and sources
