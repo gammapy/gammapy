@@ -8,38 +8,84 @@ from astropy.utils.compat.odict import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 
-__all__ = ['hist_to_table',
+__all__ = ['hist1d_to_table', 'graph1d_to_table',
            'TH2_to_FITS_header', 'TH2_to_FITS_data', 'TH2_to_FITS']
 
 __doctest_skip__ = ['TH2_to_FITS']
 
 
-def hist_to_table(hist):
-    """Convert 1D ROOT histogram into astropy Table.
+def hist1d_to_table(hist):
+    """Convert 1D ROOT histogram into astropy table.
     
     Parameters
     ----------
     hist : ROOT.TH1
-        ROOT histogram.
+        ROOT histogram
     
     Returns
     -------
-    table : `~astropy.table.table.Table`
-        Histogram data in astropy table format.
+    table : `~astropy.table.Table`
+        Astropy table
     """
-    from rootpy import asrootpy
+    bins = range(1, hist.GetNbinsX() + 1)
 
-    hist = asrootpy(hist)
-    
     data = OrderedDict()
-    data['x'] = list(hist.x())
-    data['x_err'] = list(hist.xerravg())
-    data['x_err_lo'] = list(hist.xerrl())
-    data['x_err_hi'] = list(hist.xerrh())
-    data['y'] = list(hist.y())
-    data['y_err'] = list(hist.yerravg())
-    data['y_err_lo'] = list(hist.yerrl())
-    data['y_err_hi'] = list(hist.yerrh())
+
+    names = [('x', 'GetBinCenter'),
+             ('x_bin_lo', 'GetBinLowEdge'),
+             ('x_bin_width', 'GetBinWidth'),
+             ('y', 'GetBinContent'),
+             ('y_err', 'GetBinError'),
+             ('y_err_lo', 'GetBinErrorLow'),
+             ('y_err_hi', 'GetBinErrorUp'),
+            ]
+
+    for column, method in names:
+        try:
+            getter = getattr(hist, method)
+            data[column] = [getter(i) for i in bins]
+        except IndexError:
+            pass
+
+    table = Table(data)
+    table['x_bin_hi'] = table['x_bin_lo'] + table['x_bin_width']
+
+    return table
+
+
+def graph1d_to_table(graph):
+    """Convert ROOT TGraph to an astropy Table.
+
+    Parameters
+    ----------
+    graph : ROOT.TGraph
+        ROOT graph
+    
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Astropy table
+    """
+    bins = range(0, graph.GetN())
+
+    data = OrderedDict()
+
+    names = [('x', 'GetX'),
+             ('x_err', 'GetEX'),
+             ('x_err_lo', 'GetEXlow'),
+             ('x_err_hi', 'GetEXhigh'),
+             ('y', 'GetY'),
+             ('y_err', 'GetEY'),
+             ('y_err_lo', 'GetEYlow'),
+             ('y_err_hi', 'GetEYhigh'),
+             ]
+
+    for column, method in names:
+        try:
+            buffer_ = getattr(graph, method)()
+            data[column] = [buffer_[i] for i in bins]
+        except IndexError:
+            pass
 
     table = Table(data)
     return table
