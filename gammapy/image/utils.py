@@ -597,7 +597,7 @@ def solid_angle(image):
     Returns
     -------
     area_image : `~astropy.units.quantity.Quantity`
-        Solid angle image (matching the input image) in steradians.
+        Solid angle image (matching the input imafrom astropy.wcs import WCSge) in steradians.
     """
     # Area of one pixel at the equator
     cdelt0 = image.header['CDELT1']
@@ -887,11 +887,11 @@ def calc_footprint(header):
     wcs = WCS(header)
     corners = np.zeros(shape=(4, 2), dtype=np.float64)
     corners[0, 0] = 1
-    corners[0, 1] = 1
-    corners[1, 0] = 1
+    corners[0, 1] = header['NAXIS2']
+    corners[1, 0] = header['NAXIS1']
     corners[1, 1] = header['NAXIS2']
     corners[2, 0] = header['NAXIS1']
-    corners[2, 1] = header['NAXIS2']
-    corners[3, 0] = header['NAXIS1']
+    corners[2, 1] = 1
+    corners[3, 0] = 1
     corners[3, 1] = 1
     return wcs.wcs_pix2world(corners, 1)
