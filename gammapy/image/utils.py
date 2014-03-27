@@ -597,7 +597,7 @@ def solid_angle(image):
     Returns
     -------
     area_image : `~astropy.units.quantity.Quantity`
-        Solid angle image (matching the input imafrom astropy.wcs import WCSge) in steradians.
+        Solid angle image (matching the input image) in steradians.
     """
     # Area of one pixel at the equator
     cdelt0 = image.header['CDELT1']
@@ -855,43 +855,57 @@ def block_reduce_hdu(input_hdu, factors, func=np.sum):
     from skimage.measure import block_reduce
     
     header = input_hdu.header.copy()
-    data = np.nan_to_num(input_hdu.data)
-    cdelt1 = header['CDELT1']
-    cdelt2 = header['CDELT2']
-
+    data = input_hdu.data
     # Define new header values for new resolution
-    header['CDELT1'] = cdelt1 * factors[0]
-    header['CDELT2'] = cdelt2 * factors[1]
+    header['CDELT1'] = header['CDELT1'] * factors[0]
+    header['CDELT2'] = header['CDELT2'] * factors[1]
     header['CRPIX1'] = header['CRPIX1'] / factors[0] 
     header['CRPIX2'] = header['CRPIX2'] / factors[1]
     header['NAXIS1'] = header['NAXIS1'] / factors[0]
     header['NAXIS2'] = header['NAXIS2'] / factors[1]
-    
     if len(input_hdu.data.shape) == 3:
-        block_size = (factors[0], factors[1], 1)           
-        
+        block_size = (1, factors[1], factors[0])           
     elif len(input_hdu.data.shape) == 2:
-        block_size = (factors[0], factors[1])
-    
+        block_size = (factors[1], factors[0])
     data_reduced = block_reduce(data, block_size, func)
-    
     # Put rebinned data into a fitsHDU
     rebinned_image = fits.ImageHDU(data=data_reduced, header=header)    
     return rebinned_image
+
 
 def calc_footprint(header):
     """Compute WCS corner positions.
 
     See https://github.com/astropy/astropy/issues/915
+    
+    Parameters
+    ----------
+    header : `astropy.io.fits.Header`
+        FITS header
+    
+    Returns
+    -------
+    footprint : dict
+        Image footprint
+    
+    Examples
+    --------
+    >>> from gammapy.image import calc_footprint
+    >>> from gammapy.datasets import FermiGalacticCenter
+    >>> header = FermiGalacticCenter.counts().header
+    >>> print(calc_footprint(header))
+    TODO
     """
     wcs = WCS(header)
-    corners = np.zeros(shape=(4, 2), dtype=np.float64)
-    corners[0, 0] = 1
-    corners[0, 1] = header['NAXIS2']
-    corners[1, 0] = header['NAXIS1']
-    corners[1, 1] = header['NAXIS2']
-    corners[2, 0] = header['NAXIS1']
-    corners[2, 1] = 1
-    corners[3, 0] = 1
-    corners[3, 1] = 1
-    return wcs.wcs_pix2world(corners, 1)
+    def compute_pos(x, y):
+        return wcs.wcs_pix2world(x, y, 1)
+    
+    corners = dict()
+
+    corners['TOP_LEFT'] = compute_pos(0.5, header['NAXIS2'] + 0.5)
+    corners['TOP_RIGHT'] = compute_pos(header['NAXIS1'] + 0.5, header['NAXIS2'] + 0.5)
+    corners['LOWER_LEFT'] = compute_pos(header['NAXIS1'] + 0.5, 0.5)
+    corners['LOWER_RIGHT'] = compute_pos(0.5, 0.5)
+
+    return corners
+    

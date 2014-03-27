@@ -107,12 +107,13 @@ def test_process_image_pixels():
     assert_allclose(actual, desired)
     
 @pytest.mark.skipif('not HAS_SKIMAGE')
-class test_block_reduce_hdu():    
+class TestBlockReduceHDU():    
 
-    @pytest.mark.parametrize(('projection'), list(['AIT', 'CAR']))
-    def setup_class(self, projection):
+    def setup_class(self):
+        # Arbitrarily choose CAR projection as independent from tests
+        projection = 'CAR'
         # Create test image
-        self.image = utils.make_empty_image(5, 4, proj=projection)
+        self.image = utils.make_empty_image(12, 8, proj=projection)
         self.image.data = np.ones(self.image.data.shape)
         self.footprint = utils.calc_footprint(self.image.header)
         # Create test cube
@@ -120,48 +121,46 @@ class test_block_reduce_hdu():
         self.cube_images = []
         for index in self.indices:
             layer = np.ones(self.image.data.shape)
-            self.cube_images.append(layer)
-        self.image.data = self.cube_images
-    
+            self.cube_images.append(fits.ImageHDU(data=layer, header=self.image.header))
+        self.cube = utils.images_to_cube(self.cube_images)
+        self.cube.data = np.ones(self.cube.data.shape)
+        
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_image(self, operation):
-        image_1 = utils.block_reduce_hdu(self.image, (2, 2), func=operation)
-        footprint_1 = utils.calc_footprint(image_1.header)
+        image_1 = utils.block_reduce_hdu(self.image, (2, 4), func=operation)
         if operation == np.sum:
-            ref1 = [[4, 4, 2], [4, 4, 2]]
+            ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
         if operation == np.mean:
-            ref1 = [[1, 1, 0.5], [1, 1, 0.5]]
+            ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
         assert_allclose(image_1.data, ref1)
-        assert_allclose(self.footprint, footprint_1)
-    
+
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_cube(self, operation):
         for index in self.indices:
-            layer = self.image.data[index]
-            layer_hdu = fits.ImageHDU(data=layer, header=self.image.header)
-            image_1 = utils.block_reduce_hdu(layer_hdu, (2, 2), func=operation)
-            footprint_1 = utils.calc_footprint(image_1.header)
+            image = utils.cube_to_image(self.cube, index)
+            layer = self.cube.data[index]
+            layer_hdu = fits.ImageHDU(data=layer, header=image.header)
+            image_1 = utils.block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
-                ref1 = [[4, 4, 2], [4, 4, 2]]
+                ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
             if operation == np.mean:
-                ref1 = [[1, 1, 0.5], [1, 1, 0.5]]
+                ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
             assert_allclose(image_1.data, ref1)
-            assert_allclose(self.footprint, footprint_1)
-            
+
 @pytest.mark.parametrize(('projection'), list(['AIT', 'CAR']))            
 def test_calc_footprint(projection):    
-    image = utils.make_empty_image(50, 80, proj=projection)
+    image = utils.make_empty_image(2, 10, proj=projection)
     image.data = np.ones(image.data.shape)
     footprint = utils.calc_footprint(image.header)
     if projection == 'CAR':
-        # Check values determined from separately generated fits file (using gammapy.image.coordinates)
-        assert_allclose(footprint[0], [ 2.45, 3.95])
-        assert_allclose(footprint[1], [ 357.55, 3.95])
-        assert_allclose(footprint[2], [ 357.55, -3.95])
-        assert_allclose(footprint[3], [ 2.45, -3.95])  
+        # Check values determined from separately generated fits file (using ds9)
+        assert_allclose(footprint['TOP_LEFT'], [ 0.1, 0.5])
+        assert_allclose(footprint['TOP_RIGHT'], [ 359.9, 0.5])
+        assert_allclose(footprint['LOWER_LEFT'], [ 359.9, -0.5])
+        assert_allclose(footprint['LOWER_RIGHT'], [ 0.1, -0.5])
     if projection == 'AIT':
-        # Check values determined from separately generated fits file (using gammapy.image.coordinates)
-        assert_allclose(footprint[0], [ 2.45442318, 3.95055627])
-        assert_allclose(footprint[1], [ 357.54557682, 3.95055627])
-        assert_allclose(footprint[2], [ 357.54557682, -3.95055627])
-        assert_allclose(footprint[3], [ 2.45442318, -3.95055627])  
+        # Check values determined from separately generated fits file (using ds9 and gammapy.image.coordinates)
+        assert_allclose(footprint['TOP_LEFT'], [0.10000286,  0.50000154])
+        assert_allclose(footprint['TOP_RIGHT'], [359.89999714,    0.50000154])
+        assert_allclose(footprint['LOWER_LEFT'], [359.89999714,   -0.50000154])
+        assert_allclose(footprint['LOWER_RIGHT'], [0.10000286, -0.50000154])  
