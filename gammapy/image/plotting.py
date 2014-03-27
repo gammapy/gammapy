@@ -287,7 +287,8 @@ class GalacticPlaneSurveyPanelPlot(object):
             self.fits_figure.colorbar.set_font(size='small')
             self.fits_figure.colorbar._colorbar.set_label(colorbar_label)
 
-    def top(self):
+    @staticmethod
+    def top(fits_figure):
         """TODO: needed?
         """
         pass
@@ -323,38 +324,37 @@ class GalacticPlaneSurveyPanelPlot(object):
 
         # Execute user-defined plotting ...
         # This must set self.fits_figure
-        self.main()
+        fits_figure = self.main(self.figure, self.box)
 
-        fits_figure = self.fits_figure
+        #fits_figure = self.fits_figure
         # fits_figure.set_auto_refresh(False)
         fits_figure.recenter(center[0], center[1], width=pp['width'], height=pp['height'])
-        _format_fits_figure(fits_figure)
 
         if panel == 0:
-            self.bottom()
+            self.bottom(fits_figure)
         if panel == (pp['npanels'] - 1):
-            self.top()
+            self.top(fits_figure)
 
         # fits_figure.refresh()
         # self.figure.canvas.draw()
 
-
-def _format_fits_figure(fits_figure, theme=None):
-    """TODO: describe
-
-    Parameters
-    ----------
-    TODO
-    """
-    if theme is not None:
-        fits_figure.set_theme('publication')
-    fits_figure.axis_labels.hide()
-    fits_figure.ticks.set_xspacing(5)
-    fits_figure.ticks.set_yspacing(1)
-    fits_figure.tick_labels.set_xformat('dd')
-    fits_figure.tick_labels.set_yformat('dd')
-    fits_figure.tick_labels.set_style('colons')
-    # fits_figure.tick_labels.set_font(size='small')
+    @staticmethod
+    def format_fits_figure(fits_figure, theme=None):
+        """TODO: describe
+    
+        Parameters
+        ----------
+        TODO
+        """
+        if theme is not None:
+            fits_figure.set_theme('publication')
+        fits_figure.axis_labels.hide()
+        fits_figure.ticks.set_xspacing(5)
+        fits_figure.ticks.set_yspacing(1)
+        fits_figure.tick_labels.set_xformat('dd')
+        fits_figure.tick_labels.set_yformat('dd')
+        fits_figure.tick_labels.set_style('colons')
+        # fits_figure.tick_labels.set_font(size='small')
 
 
 def _panel_parameters(npanels, center, fov,
