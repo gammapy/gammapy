@@ -18,7 +18,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu', 
+           'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
            ]
 
@@ -833,22 +833,23 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
-def block_reduce_hdu(input_hdu, factors, func=np.sum):
-    """Merges pixels together to reduce the resolution of the image.
+def block_reduce_hdu(input_hdu, block_size, func, cval=0):
+    """Provides block reduce functionality for image HDUs.
     
-    Sums contribution of merged pixels. Factor must be an integer.
+    See http://scikit-image.org/docs/dev/api/skimage.measure.html#skimage.measure.block_reduce
     
     Parameters
-    ----------
+    ----------   
     image_hdu : `astropy.io.fits.ImageHDU`
-        Original Image HDU, unscaled
-        
-    factor : int
+        Original image HDU, unscaled
+    block_size : array_like
         Array containing down-sampling integer factor along each axis.
-        
-    func : function
-        Function object which is used to calculate the return value for each local block. This function must implement an axis parameter such as numpy.sum or numpy.mean.
-        
+    func : callable
+        Function object which is used to calculate the return value for each local block. 
+        This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
+    cval : float (optional)
+        Constant padding value if image is not perfectly divisible by the block size. Default 0.
+            
     Returns
     -------
     image_hdu : `astropy.io.fits.ImageHDU`
@@ -859,24 +860,25 @@ def block_reduce_hdu(input_hdu, factors, func=np.sum):
     header = input_hdu.header.copy()
     data = input_hdu.data
     # Define new header values for new resolution
-    header['CDELT1'] = header['CDELT1'] * factors[0]
-    header['CDELT2'] = header['CDELT2'] * factors[1]
-    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) // factors[0]) + 0.5 
-    header['CRPIX2'] = ((header['CRPIX2'] - 0.5) // factors[1]) + 0.5
+    header['CDELT1'] = header['CDELT1'] * block_size[0]
+    header['CDELT2'] = header['CDELT2'] * block_size[1]
+    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) / block_size[0]) + 0.5 
+    header['CRPIX2'] = ((header['CRPIX2'] - 0.5) / block_size[1]) + 0.5
     if len(input_hdu.data.shape) == 3:
-        block_size = (1, factors[1], factors[0])           
+        block_size = (1, block_size[1], block_size[0])           
     elif len(input_hdu.data.shape) == 2:
-        block_size = (factors[1], factors[0])
-    data_reduced = block_reduce(data, block_size, func)
+        block_size = (block_size[1], block_size[0])
+    data_reduced = block_reduce(data, block_size, func, cval)
     # Put rebinned data into a fitsHDU
     rebinned_image = fits.ImageHDU(data=data_reduced, header=header)    
     return rebinned_image
 
 
 def calc_footprint(header):
-    """Compute WCS corner positions.
-
-    See https://github.com/astropy/astropy/issues/915
+    """Compute WCS true corner positions, at the outer corners of the corner pixels.
+    
+    Uses lower left pixel corner as the reference and finds other corner positions using
+    information from the FITS header.
     
     Parameters
     ----------
@@ -894,9 +896,10 @@ def calc_footprint(header):
     >>> from gammapy.datasets import FermiGalacticCenter
     >>> header = FermiGalacticCenter.counts().header
     >>> print(calc_footprint(header))
-    {'LOWER_RIGHT': [array(20.1), array(-10.100000000000001)], 
+    {'LOWER_RIGHT': [array(340.0), array(-10.100000000000001)], 
     'TOP_RIGHT': [array(340.0), array(10.0)], 
-    'LOWER_LEFT': [array(340.0), array(-10.100000000000001)], 
+    'CENTER': [array(0.1), array(-0.1)], 
+    'LOWER_LEFT': [array(20.1), array(-10.100000000000001)], 
     'TOP_LEFT': [array(20.1), array(10.0)]}
     """
     wcs = WCS(header)
@@ -907,7 +910,8 @@ def calc_footprint(header):
 
     corners['TOP_LEFT'] = compute_pos(0.5, header['NAXIS2'] + 0.5)
     corners['TOP_RIGHT'] = compute_pos(header['NAXIS1'] + 0.5, header['NAXIS2'] + 0.5)
-    corners['LOWER_LEFT'] = compute_pos(header['NAXIS1'] + 0.5, 0.5)
-    corners['LOWER_RIGHT'] = compute_pos(0.5, 0.5)
+    corners['LOWER_RIGHT'] = compute_pos(header['NAXIS1'] + 0.5, 0.5)
+    corners['LOWER_LEFT'] = compute_pos(0.5, 0.5)
+    corners['CENTER'] = compute_pos(0.5 * header['NAXIS1'], 0.5 * header['NAXIS2'])
 
     return corners

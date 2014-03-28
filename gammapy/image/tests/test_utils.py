@@ -56,7 +56,7 @@ class TestImageCoordinates(object):
         # world coordinates
         assert utils.contains(self.image, 0, 0) == True
         assert utils.contains(self.image, 14.9, -9.9) == True
-        assert utils.contains(self.image, 20, 0) ==  False
+        assert utils.contains(self.image, 20, 0) == False
         assert utils.contains(self.image, 0, -15) == False
 
         # pixel coordinates
@@ -138,7 +138,7 @@ class TestBlockReduceHDU():
     def test_cube(self, operation):
         for index in self.indices:
             image = utils.cube_to_image(self.cube, index)
-            layer = self.cube.data[index]
+            layer = self.cube.data[index]   
             layer_hdu = fits.ImageHDU(data=layer, header=image.header)
             image_1 = utils.block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
@@ -146,21 +146,22 @@ class TestBlockReduceHDU():
             if operation == np.mean:
                 ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
             assert_allclose(image_1.data, ref1)
-
-@pytest.mark.parametrize(('projection'), list(['AIT', 'CAR']))            
-def test_calc_footprint(projection):    
-    image = utils.make_empty_image(2, 10, proj=projection)
+            
+def test_calc_footprint():    
+    image = utils.make_empty_image(2, 10, proj='CAR')
     image.data = np.ones(image.data.shape)
     footprint = utils.calc_footprint(image.header)
-    if projection == 'CAR':
-        # Check values determined from separately generated fits file (using ds9)
-        assert_allclose(footprint['TOP_LEFT'], [ 0.1, 0.5])
-        assert_allclose(footprint['TOP_RIGHT'], [ 359.9, 0.5])
-        assert_allclose(footprint['LOWER_LEFT'], [ 359.9, -0.5])
-        assert_allclose(footprint['LOWER_RIGHT'], [ 0.1, -0.5])
-    if projection == 'AIT':
-        # Check values determined from separately generated fits file (using ds9 and gammapy.image.coordinates)
-        assert_allclose(footprint['TOP_LEFT'], [0.10000286, 0.50000154])
-        assert_allclose(footprint['TOP_RIGHT'], [359.89999714, 0.50000154])
-        assert_allclose(footprint['LOWER_LEFT'], [359.89999714, -0.50000154])
-        assert_allclose(footprint['LOWER_RIGHT'], [0.10000286, -0.50000154])  
+    # Check values determined from separately generated fits file (using ds9)
+    assert_allclose(footprint['TOP_LEFT'], [ 0.1, 0.5])
+    assert_allclose(footprint['TOP_RIGHT'], [ 359.9, 0.5])
+    assert_allclose(footprint['LOWER_RIGHT'], [ 359.9, -0.5])
+    assert_allclose(footprint['LOWER_LEFT'], [ 0.1, -0.5])
+            
+def test_ref_pixel():    
+    image = utils.make_empty_image(101, 101, proj='CAR')
+    image.data = np.ones(image.data.shape)
+    footprint = utils.calc_footprint(image.header)  
+    image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
+    footprint_1 = utils.calc_footprint(image_1.header)
+    assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
+    
