@@ -894,7 +894,10 @@ def calc_footprint(header):
     >>> from gammapy.datasets import FermiGalacticCenter
     >>> header = FermiGalacticCenter.counts().header
     >>> print(calc_footprint(header))
-    TODO
+    {'LOWER_RIGHT': [array(20.1), array(-10.100000000000001)], 
+    'TOP_RIGHT': [array(340.0), array(10.0)], 
+    'LOWER_LEFT': [array(340.0), array(-10.100000000000001)], 
+    'TOP_LEFT': [array(20.1), array(10.0)]}
     """
     wcs = WCS(header)
     def compute_pos(x, y):
@@ -908,4 +911,3 @@ def calc_footprint(header):
     corners['LOWER_RIGHT'] = compute_pos(0.5, 0.5)
 
     return corners
-    

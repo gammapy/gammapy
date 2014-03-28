@@ -160,7 +160,7 @@ def test_calc_footprint(projection):
         assert_allclose(footprint['LOWER_RIGHT'], [ 0.1, -0.5])
     if projection == 'AIT':
         # Check values determined from separately generated fits file (using ds9 and gammapy.image.coordinates)
-        assert_allclose(footprint['TOP_LEFT'], [0.10000286,  0.50000154])
-        assert_allclose(footprint['TOP_RIGHT'], [359.89999714,    0.50000154])
-        assert_allclose(footprint['LOWER_LEFT'], [359.89999714,   -0.50000154])
+        assert_allclose(footprint['TOP_LEFT'], [0.10000286, 0.50000154])
+        assert_allclose(footprint['TOP_RIGHT'], [359.89999714, 0.50000154])
+        assert_allclose(footprint['LOWER_LEFT'], [359.89999714, -0.50000154])
         assert_allclose(footprint['LOWER_RIGHT'], [0.10000286, -0.50000154])  
