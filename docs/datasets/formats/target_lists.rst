@@ -1,7 +1,7 @@
 Target lists
 ============
 
-There are some ``gammapy`` tools that run analyses in batch mode,
+There are some Gammapy tools that run analyses in batch mode,
 and to simplify this we define a simple CSV "target list" format here.
 
 A typical application is that there are many (potential) target positions to analyse,
@@ -24,7 +24,7 @@ Usually it has many more columns with information about each target::
    Number,Name,RA,DEC
    42,Crab,83.633212,22.014460
 
-Special column names that the ``gammapy`` batch processing tools understand:
+Special column names that the Gammapy batch processing tools understand:
 
 * ``Number`` --- Target number
 * ``Name`` --- Target name

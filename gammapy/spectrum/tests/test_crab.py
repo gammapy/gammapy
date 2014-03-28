@@ -25,7 +25,7 @@ def test_eval():
     vals['hess_pl'] = [5.57327158e-12, 2.11653715e-11, 2.63000000e+00]
     vals['hess_ecpl'] = [6.23714253e-12, 2.26797344e-11, 2.52993006e+00]
     
-    for reference in crab.REFERENCES:
+    for reference in crab.CRAB_REFERENCES:
         f = crab.crab_flux(e, reference)
         I = crab.crab_integral_flux(e1, e2, reference)
         g = crab.crab_spectral_index(e, reference)
@@ -36,7 +36,7 @@ def plot_spectra(what="flux"):
     import matplotlib.pyplot as plt
     plt.clf()
     e = np.logspace(-2, 3, 100)
-    for reference in crab.REFERENCES:
+    for reference in crab.CRAB_REFERENCES:
         if what == 'flux':
             y = Unit('TeV').to('erg') * e ** 2 * crab.crab_flux(e, reference)
         elif what == 'int_flux':

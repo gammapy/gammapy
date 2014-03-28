@@ -5,7 +5,7 @@ from numpy import log, sqrt, pi, log10
 from astropy import constants as const
 from .models import BlackBody, TableModel
 
-__all__ = ['InverseCompton']
+__all__ = ['InverseComptonSpectrum']
 
 # Define some constants
 c = const.c.cgs.value
@@ -17,18 +17,24 @@ m_e_eV = (const.m_e * const.c ** 2).to('eV').value
 sigma_T = 6.652458558e-25 # Thomson cross section
 
 
-class InverseCompton(object):
-    """Inverse comption (IC) SED calculator.
+class InverseComptonSpectrum(object):
+    """Inverse Compton (IC) emission spectrum.
     
-    Input: arbitrary photon and electron distribution
-    Output: IC spectrum
+    Parameters
+    ----------
+    seed_ph_spec : callable
+        Seed photon spectrum (CMB by default)
+    
+    See also
+    --------
+    gammapy.spectrum.PionDecaySpectrum, gammafit.onezone.ElectronOZM
     """
 
     def __init__(self, seed_ph_spec=BlackBody(T=2.7)):
         self.seed_ph_spec = seed_ph_spec
 
     def _Gamma_e(self, gamma, E_ini):
-        """Gamma_e as defined in Blumenthal and Gould 1970"""
+        """Gamma_e as defined in Blumenthal and Gould 1970."""
         return 4 * gamma * E_ini / m_e_eV
 
     def _f(self, q, Gamma_e):
@@ -37,11 +43,22 @@ class InverseCompton(object):
                 0.5 * (1 - q) * (Gamma_e * q) ** 2 / (1 + Gamma_e * q))
 
     def _q(self, E_fin, gamma, Gamma_e):
-        """q as defined in Blumenthal and Gould 1970 """
+        """q as defined in Blumenthal and Gould 1970."""
         return E_fin / (Gamma_e * (gamma * m_e_eV - E_fin))
 
     def loss_rate_per_energy(self, E_fin, E_ini, gamma, n_e):
-        """Total compton spectrum as defined in Blumenthal and Gould 1970"""
+        """Total Compton spectrum.
+        
+        As defined in Blumenthal and Gould 1970.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
+        """
         sigma_T = 6.652458558e-25 # Thomson cross section
         n_ph = self.seed_ph_spec(E_ini)
 
@@ -52,6 +69,7 @@ class InverseCompton(object):
                self._Gamma_e(gamma, E_ini)))
 
     def _get_seed_ph_e(self, n_bins):
+        """TODO: document"""
         E_ini_min = 1e-10
         E_ini_max = 1e3
         # Energy range of the initial photon distribution
@@ -59,8 +77,17 @@ class InverseCompton(object):
         return E_ini
 
     def __call__(self, E_fin, n_e):
-        """
+        """Compute IC spectrum.
+        
         Perfoms integration over n_ph and n_e.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
         """
         # Gamma integration range
         gamma_max = 1e13
@@ -89,8 +116,17 @@ class InverseCompton(object):
         return TableModel(E_fin, L_fin)
 
     def analytical(self, E_fin, index=1.5, T=2.7):
-        """
-        Analytical solution for a powerlaw electron and blackbody photon spectrum. Taken from Blumenthal and Gould 1970.
+        """Analytical solution for a powerlaw electron and blackbody photon spectrum.
+        
+        Taken from Blumenthal and Gould 1970.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
         """
         # P denotes the spectral index of the electron distribution
         # The values of F ar given in the paper

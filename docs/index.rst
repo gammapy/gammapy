@@ -1,10 +1,10 @@
-gammapy
+Gammapy
 =======
 
 What is it?
 -----------
 
-**gammapy** is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
+**Gammapy** is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
 
 It contains some analysis methods,
 but it's main purpose is to be the glue between the many
@@ -18,7 +18,7 @@ existing data formats and other tools.
 * Python: works with 2.6, 2.7 and 3.2 or later (see tests on https://travis-ci.org/gammapy/gammapy/)
 
 
-Using gammapy
+Using Gammapy
 -------------
 
 General documentation
@@ -43,7 +43,7 @@ Sub-packages
   astro/index
   background/index
   catalog/index
-  data/index
+  datasets/index
   detect/index
   image/index
   irf/index

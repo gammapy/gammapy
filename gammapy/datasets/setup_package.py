@@ -3,5 +3,7 @@
 def get_package_data():
     files = ['README.rst',
              'poisson_stats_image/*',
-             'fermi/*']
-    return {'gammapy.data': files}
+             'fermi/*',
+             'tev_spectra/*'
+             ]
+    return {'gammapy.datasets': files}

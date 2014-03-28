@@ -4,5 +4,4 @@
 * ROOT: http://root.cern.ch
 * rootpy: http://rootpy.org
 """
-from .utils import *
 from .convert import *

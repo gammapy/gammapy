@@ -2,10 +2,10 @@
 from __future__ import print_function, division
 import unittest
 from astropy.tests.helper import pytest
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_allclose
 import numpy as np
 from astropy.utils.data import get_pkg_data_filename
-from ..psf import HESS
+from ..psf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 try:
     import scipy
@@ -35,7 +35,7 @@ class TestHESS(unittest.TestCase):
         of the events.
         """
         filename = get_pkg_data_filename('data/psf.txt')
-        hess = HESS(filename)
+        hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D(normalize=False)
         if 0:
             print('integral:', m.integral)
@@ -65,8 +65,19 @@ class TestHESS(unittest.TestCase):
                 (40, 0.0379536),
                 (80, 0.088608)]
         filename = get_pkg_data_filename('data/psf.txt')
-        hess = HESS(filename)
+        hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D()
         assert_almost_equal(m.integral, 1)
         for containment, theta in vals:
             assert_almost_equal(m.containment_radius(containment / 100.), theta, decimal=2)
+
+
+def test_multi_gauss_psf_kernel():
+
+    psf_data = {u'psf1': {u'ampl': 1, u'fwhm': 2.5496814916215014},
+     u'psf2': {u'ampl': 0.062025099992752075, u'fwhm': 11.149272133127273},
+     u'psf3': {u'ampl': 0.47460201382637024, u'fwhm': 5.164014607542117}}
+    psf_kernel = multi_gauss_psf_kernel(psf_data, x_size=51)
+
+    assert_allclose(psf_kernel.array[25, 25], 0.05047558713797154)
+    assert_allclose(psf_kernel.array[23, 29], 0.003259483464443567)

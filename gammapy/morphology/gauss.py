@@ -4,10 +4,15 @@ from copy import deepcopy
 import numpy as np
 from numpy import pi, exp, sqrt, log
 
-__all__ = ['Gauss2D', 'MultiGauss2D', 'gaussian_sum_moments']
+__all__ = ['Gauss2DPDF',
+           'MultiGauss2D',
+           'gaussian_sum_moments'
+           ]
+
+__doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
 
 
-class Gauss2D(object):
+class Gauss2DPDF(object):
     """2D symmetric Gaussian PDF.
 
     Parameters
@@ -74,7 +79,7 @@ class MultiGauss2D(object):
     def __init__(self, sigmas, norms=None):
         # If no norms are given, you have a PDF.
         sigmas = np.asarray(sigmas, 'f')
-        self.components = [Gauss2D(sigma) for sigma in sigmas]
+        self.components = [Gauss2DPDF(sigma) for sigma in sigmas]
         if norms is None:
             self.norms = np.ones(len(self.components))
         else:
@@ -176,7 +181,7 @@ class MultiGauss2D(object):
         approximates this one, such that theta matches for a given
         containment."""
         theta1 = self.containment_radius(containment_fraction)
-        theta2 = Gauss2D(sigma=1).containment_radius(containment_fraction)
+        theta2 = Gauss2DPDF(sigma=1).containment_radius(containment_fraction)
         return theta1 / theta2
 
     def convolve(self, sigma, norm=1):
@@ -245,7 +250,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     
     >>> import numpy as np
     >>> from gammapy.morphology.gauss import gaussian_sum_moments
-    >>> cov_matrix = np.zeros()
+    >>> cov_matrix = np.zeros((12, 12))
     >>> F = [100, 200, 300]
     >>> sigma = [15, 10, 5]
     >>> x = [100, 120, 70]

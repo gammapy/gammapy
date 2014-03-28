@@ -3,8 +3,8 @@
 Spectrum estimation and modeling methods.
 """
 from .cosmic_ray import *
-from . import crab
-from . import diffuse
+from .crab import *
+from .diffuse import *
 from .fitter import *
 from . import fitting_utils
 from .flux_point import *

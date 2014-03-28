@@ -9,6 +9,8 @@ from numpy import pi, sqrt, log
 
 __all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit']
 
+__doctest_skip__ = ['*']
+
 
 def s_to_p(s):
     """Convert significance to one-sided tail probability.

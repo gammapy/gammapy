@@ -232,8 +232,10 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     Examples
     --------
-    >>> l, b = coordinates(image)
-    >>> dist = sqrt( (l-42)**2 + (b-43)**2)
+    >>> import numpy as np
+    >>> from gammapy.datasets import FermiGalacticCenter
+    >>> lon, lat = coordinates(FermiGalacticCenter.counts())
+    >>> dist = np.sqrt(lon ** 2 + lat ** 2)
     """
     # Create arrays of pixel coordinates
     y, x = np.indices(image.data.shape, dtype='int32') + 1

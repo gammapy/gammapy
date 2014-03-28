@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Compute results with Sherpa"""
 from __future__ import print_function, division
+# __doctest_skip__
+__doctest_skip__ = ['*']
 import numpy as np
 import sherpa.astro.ui as sau
 
