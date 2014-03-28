@@ -859,10 +859,8 @@ def block_reduce_hdu(input_hdu, factors, func=np.sum):
     # Define new header values for new resolution
     header['CDELT1'] = header['CDELT1'] * factors[0]
     header['CDELT2'] = header['CDELT2'] * factors[1]
-    header['CRPIX1'] = header['CRPIX1'] / factors[0] 
-    header['CRPIX2'] = header['CRPIX2'] / factors[1]
-    header['NAXIS1'] = header['NAXIS1'] / factors[0]
-    header['NAXIS2'] = header['NAXIS2'] / factors[1]
+    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) // factors[0]) + 0.5 
+    header['CRPIX2'] = ((header['CRPIX2'] - 0.5) // factors[1]) + 0.5
     if len(input_hdu.data.shape) == 3:
         block_size = (1, factors[1], factors[0])           
     elif len(input_hdu.data.shape) == 2:
