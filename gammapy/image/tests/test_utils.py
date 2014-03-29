@@ -156,7 +156,8 @@ def test_calc_footprint():
     assert_allclose(footprint['TOP_RIGHT'], [ 359.9, 0.5])
     assert_allclose(footprint['LOWER_RIGHT'], [ 359.9, -0.5])
     assert_allclose(footprint['LOWER_LEFT'], [ 0.1, -0.5])
-            
+
+@pytest.mark.skipif('not HAS_SKIMAGE')
 def test_ref_pixel():    
     image = utils.make_empty_image(101, 101, proj='CAR')
     image.data = np.ones(image.data.shape)
@@ -164,4 +165,3 @@ def test_ref_pixel():
     image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
     footprint_1 = utils.calc_footprint(image_1.header)
     assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
-    
