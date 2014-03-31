@@ -25,7 +25,9 @@ included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
                      'diffuse_gamma_spectrum',
                      'electron_spectrum',
-                     'FermiGalacticCenter']
+                     'FermiGalacticCenter',
+                     'fetch_fermi_catalog',
+                     ]
 
 remote_datasets = [
                    ]
@@ -250,3 +252,75 @@ def _read_electron_spectrum_fermi(filename):
     table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
 
     return table
+
+def fetch_fermi_catalog(catalog, extension=None):
+    """Get Fermi catalog data.
+    
+    Returns an astropy Table or hdu list of tables with one source per row.
+    
+    The Fermi catalogs contain the following relevant Catalog HDUs:
+    
+    * 2FGL Catalog : LAT 2-year Point Source Catalog
+        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
+        * `ExtendedSources` Extended Source Catalog Table.
+    * 1FGL Catalog : LAT 1-year Point Source Catalog
+        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
+    * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
+        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
+        * `ExtendedSources` Extended Source Catalog Table.
+    * 2PC Catalog : LAT Second Catalog of Gamma-ray Pulsars
+        * `PULSAR_CATALOG` Pulsar Catalog Table.
+        * `SPECTRAL` Table of Pulsar Spectra Parameters.
+        * `OFF_PEAK` Table for further Spectral and Flux data for the Catalog.
+    
+    Parameters
+    ----------
+    catalog : {'2FGL', '1FGL', '1FHL', '2PC'}
+       Specifies which catalog to display.
+    extension : str
+        Specifies which Catalog HDU to provide as a table (optional).
+        See list of Catalog HDUs above.
+    
+    Returns
+    -------
+    hdu_list (Default) : `astropy.fits.HDUList`
+        Catalog as a list of fits hdu lists (for access to full catalog dataset).
+    catalog_table : `astropy.table.table.Table`
+        Catalog as an astropy Table for a selected hdu extension.
+    
+    Examples
+    --------
+    >>> from gammapy.datasets import fetch_fermi_catalog
+    >>> fetch_fermi_catalog('2FGL')
+        [<astropy.io.fits.hdu.image.PrimaryHDU at 0x3330790>,
+         <astropy.io.fits.hdu.table.BinTableHDU at 0x338b990>,
+         <astropy.io.fits.hdu.table.BinTableHDU at 0x3396450>,
+         <astropy.io.fits.hdu.table.BinTableHDU at 0x339af10>,
+         <astropy.io.fits.hdu.table.BinTableHDU at 0x339ff10>]
+         
+    >>> from gammapy.datasets import fetch_fermi_catalog
+    >>> fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')
+        <Table rows=1873 names= ... >
+    """
+    
+    from astropy.utils import data
+    from astropy.io import fits
+    from astropy.table import Table
+    
+    if catalog == '2FGL':
+        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/2yr_catalog/gll_psc_v08.fit'
+    if catalog == '1FGL':
+        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/1yr_catalog/gll_psc_v03.fit'
+    if catalog == '1FHL':
+        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/1FHL/gll_psch_v07.fit'
+    if catalog == '2PC':
+        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/2PC_catalog_v03.fits'
+                
+    filename = data.download_file(url, cache=True)
+    hdu_list = fits.open(filename)
+    
+    if extension != None:
+        catalog_table = Table(hdu_list[extension].data)
+        return catalog_table
+    else:
+        return hdu_list
