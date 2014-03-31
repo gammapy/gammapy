@@ -20,6 +20,7 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils import data
 
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
@@ -147,7 +148,7 @@ def tev_spectrum(source_name):
 
     filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
-                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+                       names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
     return table
 
@@ -180,7 +181,7 @@ def diffuse_gamma_spectrum(reference):
 def _read_diffuse_gamma_spectrum_fermi(filename):
     filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
-                       names = ['energy', 'flux', 'flux_hi', 'flux_lo'])
+                       names=['energy', 'flux', 'flux_hi', 'flux_lo'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
 
     table['energy'] = Quantity(table['energy'], 'MeV').to('TeV')
@@ -225,7 +226,7 @@ def electron_spectrum(reference):
 def _read_electron_spectrum_hess(filename):
     filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
-                       names = ['energy', 'flux', 'flux_lo', 'flux_hi'])
+                       names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
     
     table['energy'] = Quantity(table['energy'], 'GeV').to('TeV')
@@ -253,12 +254,14 @@ def _read_electron_spectrum_fermi(filename):
 
     return table
 
+FERMI_CATALOGS = '2FGL 1FGL 1FHL 2PC'.split()
+
 def fetch_fermi_catalog(catalog, extension=None):
     """Get Fermi catalog data.
     
-    Returns an astropy Table or hdu list of tables with one source per row.
-    
-    The Fermi catalogs contain the following relevant Catalog HDUs:
+    Source: `http://fermi.gsfc.nasa.gov/ssc/data/access/lat/`.
+
+    The Fermi catalogs contain the following relevant catalog HDUs:
     
     * 2FGL Catalog : LAT 2-year Point Source Catalog
         * `LAT_Point_Source_Catalog` Point Source Catalog Table.
@@ -278,20 +281,20 @@ def fetch_fermi_catalog(catalog, extension=None):
     catalog : {'2FGL', '1FGL', '1FHL', '2PC'}
        Specifies which catalog to display.
     extension : str
-        Specifies which Catalog HDU to provide as a table (optional).
-        See list of Catalog HDUs above.
+        Specifies which catalog HDU to provide as a table (optional).
+        See list of catalog HDUs above.
     
     Returns
     -------
-    hdu_list (Default) : `astropy.fits.HDUList`
-        Catalog as a list of fits hdu lists (for access to full catalog dataset).
-    catalog_table : `astropy.table.table.Table`
-        Catalog as an astropy Table for a selected hdu extension.
+    hdu_list (Default) : `~astropy.io.fits.HDUList`
+        Catalog FITS HDU list (for access to full catalog dataset).
+    catalog_table : `~astropy.table.Table`
+        Catalog table for a selected hdu extension.
     
     Examples
     --------
     >>> from gammapy.datasets import fetch_fermi_catalog
-    >>> fetch_fermi_catalog('2FGL')
+    >>> fetch_fermi_catalog('2FGL')  # doctest: +REMOTE_DATA
         [<astropy.io.fits.hdu.image.PrimaryHDU at 0x3330790>,
          <astropy.io.fits.hdu.table.BinTableHDU at 0x338b990>,
          <astropy.io.fits.hdu.table.BinTableHDU at 0x3396450>,
@@ -299,23 +302,24 @@ def fetch_fermi_catalog(catalog, extension=None):
          <astropy.io.fits.hdu.table.BinTableHDU at 0x339ff10>]
          
     >>> from gammapy.datasets import fetch_fermi_catalog
-    >>> fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')
+    >>> fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')  # doctest: +REMOTE_DATA
         <Table rows=1873 names= ... >
     """
-    
-    from astropy.utils import data
-    from astropy.io import fits
-    from astropy.table import Table
+    BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
     
     if catalog == '2FGL':
-        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/2yr_catalog/gll_psc_v08.fit'
-    if catalog == '1FGL':
-        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/1yr_catalog/gll_psc_v03.fit'
-    if catalog == '1FHL':
-        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/1FHL/gll_psch_v07.fit'
-    if catalog == '2PC':
-        url = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/2nd_PSR_catalog/2PC_catalog_v03.fits'
-                
+        url = BASE_URL + '2yr_catalog/gll_psc_v08.fit'
+    elif catalog == '1FGL':
+        url = BASE_URL + '/1yr_catalog/gll_psc_v03.fit'
+    elif catalog == '1FHL':
+        url = BASE_URL + '/1FHL/gll_psch_v07.fit'
+    elif catalog == '2PC':
+        url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
+    else:
+        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss += 'Available: {0}'.format(', '.join(FERMI_CATALOGS))
+        raise ValueError(ss)
+
     filename = data.download_file(url, cache=True)
     hdu_list = fits.open(filename)
     
