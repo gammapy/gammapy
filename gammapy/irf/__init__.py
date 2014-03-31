@@ -2,4 +2,6 @@
 """Instrument response function (IRF) functionality.
 """
 from .effective_area import *
+from .psf_core import *
+from .psf_fermi import *
 from .energy_dispersion import *

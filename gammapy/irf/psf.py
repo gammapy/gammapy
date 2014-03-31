@@ -19,9 +19,9 @@ import json
 import numpy as np
 from numpy import log, exp
 from astropy.convolution import Gaussian2DKernel
-from .utils import read_json
-from .gauss import Gauss2DPDF, MultiGauss2D
 from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
+from ..morphology import read_json
+from ..morphology import Gauss2DPDF, MultiGauss2D
 
 __all__ = ['GaussPSF',
            'HESSMultiGaussPSF',

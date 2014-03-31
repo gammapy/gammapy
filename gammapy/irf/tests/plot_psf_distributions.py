@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from ..gauss import Gauss2DPDF, MultiGauss2D
+from ...morphology import Gauss2DPDF, MultiGauss2D
 from ..psf import HESSMultiGaussPSF
 
 
