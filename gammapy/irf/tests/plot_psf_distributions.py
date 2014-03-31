@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import numpy as np
 from ...morphology import Gauss2DPDF, MultiGauss2D
-from ..psf import HESSMultiGaussPSF
+from .. import HESSMultiGaussPSF
 
 
 def make_theta(theta_max=5, n_bins=100):
