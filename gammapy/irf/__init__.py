@@ -3,5 +3,5 @@
 """
 from .effective_area import *
 from .psf_core import *
-from .psf_fermi import *
+from .psf_table import *
 from .energy_dispersion import *

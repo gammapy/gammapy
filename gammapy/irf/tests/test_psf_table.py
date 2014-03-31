@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity, Unit
 from astropy.utils.data import get_pkg_data_filename
-from ..psf_fermi import TablePSF, EnergyDependentTablePSF, make_table_psf
+from ..psf_table import TablePSF, EnergyDependentTablePSF, make_table_psf
 
 
 def test_TablePSF():
