@@ -3,8 +3,9 @@ from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
+from astropy.tests.helper import remote_data
 from .. import poisson_stats_image, FermiGalacticCenter
-
+from .. import fetch_fermi_catalog
 
 def test_poisson_stats_image():
     """Get the data file via the gammapy.data.poisson_stats_image function"""
@@ -37,3 +38,12 @@ def test_FermiGalacticCenter():
     counts = FermiGalacticCenter.counts()
     assert counts.data.shape == (201, 401)
     assert counts.data.sum() == 24803
+
+
+@remote_data
+def test_fetch_fermi_catalog():
+    n_hdu = len(fetch_fermi_catalog('2FGL'))
+    assert(n_hdu, 5)
+    
+    n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
+    assert(n_sources, 1873)
