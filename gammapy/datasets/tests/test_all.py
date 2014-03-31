@@ -5,6 +5,7 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy.tests.helper import remote_data
 from .. import poisson_stats_image, FermiGalacticCenter
+from .. import fetch_fermi_catalog
 
 def test_poisson_stats_image():
     """Get the data file via the gammapy.data.poisson_stats_image function"""
@@ -41,9 +42,8 @@ def test_FermiGalacticCenter():
 
 @remote_data
 def test_fetch_fermi_catalog():
-    from gammapy.datasets import fetch_fermi_catalog
-    length = len(fetch_fermi_catalog('2FGL'))
-    assert(length, 5)
+    n_hdu = len(fetch_fermi_catalog('2FGL'))
+    assert(n_hdu, 5)
     
-    val = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
-    assert(val, 1873)
+    n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
+    assert(n_sources, 1873)

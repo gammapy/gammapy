@@ -259,7 +259,7 @@ FERMI_CATALOGS = '2FGL 1FGL 1FHL 2PC'.split()
 def fetch_fermi_catalog(catalog, extension=None):
     """Get Fermi catalog data.
     
-    Source: `http://fermi.gsfc.nasa.gov/ssc/data/access/lat/`.
+    Reference: http://fermi.gsfc.nasa.gov/ssc/data/access/lat/.
 
     The Fermi catalogs contain the following relevant catalog HDUs:
     
