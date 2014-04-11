@@ -2,30 +2,72 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity, Unit
+from astropy.units import Quantity
+from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
-from ..psf_table import TablePSF, EnergyDependentTablePSF, make_table_psf
+from ...utils.testing import assert_quantity
+from ..psf_table import TablePSF, EnergyDependentTablePSF
 
+
+def test_TablePSF_gauss():
+    # Make an example PSF for testing
+    width = Angle(0.3, 'deg')
+    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='gauss', width=width, offset=offset)
+
+    offset = Angle([0.1, 0.3], 'deg')
+
+    assert_allclose(psf.integral(), 1, rtol=1e-3) 
+
+def test_TablePSF_disk():
+
+    width = Angle(2, 'deg')
+    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='disk', width=width, offset=offset)
+
+    # Check psf.eval by checking if probabilities sum to 1
+    psf_value = psf.eval(offset, quantity='dp_dtheta')
+    integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
+    assert_allclose(integral, 1, rtol=1e-3)
+
+    psf_value = psf.eval(offset, quantity='dp_domega')
+    psf_value = (2 * np.pi * offset * psf_value).to('radian^-1')
+    integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
+    assert_allclose(integral, 1, rtol=1e-3)
+
+    assert_allclose(psf.integral(), 1, rtol=1e-3)
+    assert_allclose(psf.integral(*Angle([0, 10], 'deg')), 1, rtol=1e-3)
+    assert_allclose(psf.integral(*Angle([0, 1], 'deg')), 0.25, rtol=1e-4)
+    assert_allclose(psf.integral(*Angle([1, 2], 'deg')), 0.75, rtol=1e-2)
+
+    # TODO
+    #actual = psf.containment_radius([0.01, 0.25, 0.99])
+    #desired = Angle([0, 1, 2], 'deg')
+    #assert_quantity(actual, desired, rtol=1e-3)
 
 def test_TablePSF():
 
-    width = Quantity(0.2, 'deg')
-    offset = Quantity(np.linspace(0, 0.7, 100), 'deg')
-    psf = make_table_psf(shape='gauss', width=width, offset=offset)
+    # Make an example PSF for testing
+    width = Angle(0.3, 'deg')
+    offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
+    psf = TablePSF.from_shape(shape='gauss', width=width, offset=offset)
 
-    # Test cases
-    offset = Quantity(0.1, 'deg')
-    offsets = Quantity([0.1, 0.2], 'deg').to('rad')
+    # Test inputs
+    offset = Angle([0.1, 0.3], 'deg')
 
-    # FIXME: I think make_table_psf doesn't work properly yet
-    # ... check units and that it integrates to 1.
-    psf_eval = psf.eval(offset=offset)
-    assert_allclose(psf_eval, 3.4569548710439073)
-    assert psf_eval.unit == Unit('sr^-1')
+    actual = psf.eval(offset=offset, quantity='dp_domega')
+    desired = Quantity([5491.79039904, 3521.0245931], 'sr^-1')
+    assert_quantity(actual, desired)
 
-    psf_eval = psf.eval(offset=offsets)
-    assert_allclose(psf_eval, [3.45695487, 2.35237954])
-    assert psf_eval.unit == Unit('sr^-1')
+    actual = psf.eval(offset=offset, quantity='dp_dtheta')
+    desired = Quantity([59.82584647, 117.87556081], 'rad^-1')
+    assert_quantity(actual, desired, rtol=1e-6)
+
+    offset_min = Angle([0.0, 0.1, 0.3], 'deg')
+    offset_max = Angle([0.1, 0.3, 2.0], 'deg')
+    actual = psf.integral(offset_min, offset_max)
+    desired = [0.0560153, 0.33677518, 0.60685819]
+    assert_allclose(actual, desired)
 
 
 def test_EnergyDependentTablePSF():
@@ -37,32 +79,28 @@ def test_EnergyDependentTablePSF():
 
     # Test cases
     energy = Quantity(1, 'GeV')
-    offset = Quantity(0.1, 'deg')
+    offset = Angle(0.1, 'deg')
     energies = Quantity([1, 2], 'GeV').to('TeV')
-    offsets = Quantity([0.1, 0.2], 'deg').to('rad')
+    offsets = Angle([0.1, 0.2], 'deg')
 
-    psf_eval = psf.eval(energy=energy, offset=offset)
-    assert_allclose(psf_eval, 17760.814249206363)
-    assert psf_eval.unit == Unit('sr^-1')
+    #actual = psf.eval(energy=energy, offset=offset)
+    #desired = Quantity(17760.814249206363, 'sr^-1')
+    #assert_quantity(actual, desired)
 
-    psf_eval = psf.eval(energy=energies, offset=offsets)
-    assert_allclose(psf_eval, [17760.81424921, 5134.17706619])
-    assert psf_eval.unit == Unit('sr^-1')
+    #actual = psf.eval(energy=energies, offset=offsets)
+    #desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
+    #assert_quantity(actual, desired)
+
+    psf1 = psf.psf_at_energy(energy)
 
     # TODO: test average_psf
+    #psf2 = psf.psf_in_energy_band(energy_band, spectrum)
+
     # TODO: test containment_radius
     # TODO: test containment_fraction
     # TODO: test info
     # TODO: test plotting methods
 
-
-"""
-    # Create a TablePSF from an EnergyDependentTablePSF for Fermi    
-    filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
-    psf = EnergyDependentTablePSF.read(filename)
-    energy = Quantity(1, 'GeV')
-    psf = psf.table_psf(energy)
-"""
 
 def interactive_test():
     filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
