@@ -5,6 +5,5 @@ from astropy.tests.helper import pytest
 from ..inverse_compton import InverseComptonSpectrum
 
 # TODO: implement
-@pytest.mark.xfail
 def test_InverseComptonSpectrum():
     spectrum = InverseComptonSpectrum()
