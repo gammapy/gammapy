@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+import astropy
 from astropy.modeling.models import Gaussian1D
 from ..fitting import PoissonLikelihoodFitter
 
@@ -13,6 +14,9 @@ except ImportError:
     HAS_SCIPY = False
 
 
+# Astropy API change: https://github.com/astropy/astropy/pull/2264
+ASTROPY_VERSION = (astropy.version.major, astropy.version.minor)
+@pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_PoissonLikelihoodFitter():
     model = Gaussian1D(amplitude=1000, mean=2, stddev=3)
