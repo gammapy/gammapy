@@ -33,6 +33,7 @@ General documentation
   introduction
   tools
   tutorials/index
+  dataformats/index
   references
   credit
 
