@@ -10,12 +10,14 @@ It contains some analysis methods,
 but it's main purpose is to be the glue between the many
 existing data formats and other tools.
 
-* Code / Bug reports / Feature requests / Development: https://github.com/gammapy/gammapy
-* Docs: https://gammapy.readthedocs.org/
-* Mailing list: http://groups.google.com/group/gammapy
-* Ohloh: https://www.ohloh.net/p/gammapy
+* Read the `documentation <https://gammapy.readthedocs.org/>`__.
+* Ask questions on our `mailing list <http://groups.google.com/group/gammapy>`__.
+* Request features, report bugs or contribute on `our GitHub page <https://github.com/gammapy/gammapy>`__.
+
+* `Project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
+* `Continuous integration on travis-ci <https://travis-ci.org/gammapy/gammapy/>`__
 * License: BSD-3-Clause
-* Python: works with 2.6, 2.7 and 3.2 or later (see tests on https://travis-ci.org/gammapy/gammapy/)
+* Python: works with 2.6, 2.7 and 3.2 or later
 
 
 Using Gammapy
@@ -53,11 +55,3 @@ Sub-packages
   spectrum/index
   stats/index
   utils/index
-
-Contact
--------
-
-Found a bug or missing feature?
-
-Make an issue or pull request on `GitHub <https://github.com/gammapy/gammapy>`_. 
-

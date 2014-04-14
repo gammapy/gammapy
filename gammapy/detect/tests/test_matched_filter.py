@@ -22,7 +22,7 @@ def test_center():
     total_background = 1000
     ones = np.ones((x_size, y_size))
 
-    kernel = Gaussian2DKernel(width=3, x_size=x_size, y_size=y_size).array
+    kernel = Gaussian2DKernel(3, x_size=x_size, y_size=y_size).array
     excess = total_excess * ones / ones.sum()
     background = total_background * ones / ones.sum()
     counts = excess + background
@@ -48,8 +48,8 @@ def test_image():
     ones = np.ones((x_size_image, y_size_image))
     
     # Create test dataset
-    kernel = Gaussian2DKernel(width=3, x_size=x_size_kernel, y_size=y_size_kernel).array
-    excess = total_excess * Gaussian2DKernel(width=3, x_size=x_size_image, y_size=y_size_image).array
+    kernel = Gaussian2DKernel(3, x_size=x_size_kernel, y_size=y_size_kernel).array
+    excess = total_excess * Gaussian2DKernel(3, x_size=x_size_image, y_size=y_size_image).array
     background = total_background * ones / ones.sum()
     counts = excess + background
     #np.random.seed(0)

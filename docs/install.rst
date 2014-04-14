@@ -5,6 +5,9 @@
 Installation
 ============
 
+.. warning:: At the moment Gammapy only works with the development version of Astropy!
+    See `GitHub issue #104 <https://github.com/gammapy/gammapy/issues/104>`__.
+
 Gammapy works with Python 2 and Python 3 (specifically 2.6, 2.7 and 3.2 or later).
 
 To install the latest Gammapy stable version the easiest way is using the

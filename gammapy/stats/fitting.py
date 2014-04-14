@@ -67,7 +67,7 @@ class PoissonLikelihoodFitter(Fitter):
         self._validate_constraints(model)
 
         model_copy = model.copy()
-        x0, _ = model_copy._model_to_fit_params()
+        x0, _ = self._model_to_fit_params(model_copy)
         result = minimize(self.errorfunc, x0=x0,
                           args=(model_copy, x, y, dx, fit_statistic))
         self._fitter_to_model_params(model_copy, result.x)
