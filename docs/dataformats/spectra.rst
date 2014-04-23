@@ -1,3 +1,5 @@
+.. _dataformats_spectra:
+
 Spectra
 =======
 

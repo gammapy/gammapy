@@ -1,3 +1,5 @@
+.. _dataformats_target_lists:
+
 Target lists
 ============
 
