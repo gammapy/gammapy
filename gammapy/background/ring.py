@@ -36,10 +36,10 @@ class RingBgMaker(object):
     def info(self):
         """Print some basic parameter info."""
         print('RingBgMaker parameters:')
-        print('r_in: {0} pix = {1} deg'.format(
-            (self.r_in, self.r_in * self.pixscale)))
-        print('r_out: {0} pix = {1} deg'.format(
-            (self.r_out, self.r_out * self.pixscale)))
+        fmt = 'r_in: {0} pix = {1} deg'
+        print(fmt.format(self.r_in, self.r_in * self.pixscale))
+        fmt = 'r_out: {0} pix = {1} deg'
+        print(fmt.format(self.r_out, self.r_out * self.pixscale))
         print('pixscale: {0} deg/pix'.format(self.pixscale))
         print()
 
