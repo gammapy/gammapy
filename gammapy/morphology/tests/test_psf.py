@@ -74,9 +74,9 @@ class TestHESS(unittest.TestCase):
 
 def test_multi_gauss_psf_kernel():
 
-    psf_data = {u'psf1': {u'ampl': 1, u'fwhm': 2.5496814916215014},
-     u'psf2': {u'ampl': 0.062025099992752075, u'fwhm': 11.149272133127273},
-     u'psf3': {u'ampl': 0.47460201382637024, u'fwhm': 5.164014607542117}}
+    psf_data = {'psf1': {'ampl': 1, 'fwhm': 2.5496814916215014},
+     'psf2': {'ampl': 0.062025099992752075, 'fwhm': 11.149272133127273},
+     'psf3': {'ampl': 0.47460201382637024, 'fwhm': 5.164014607542117}}
     psf_kernel = multi_gauss_psf_kernel(psf_data, x_size=51)
 
     assert_allclose(psf_kernel.array[25, 25], 0.05047558713797154)

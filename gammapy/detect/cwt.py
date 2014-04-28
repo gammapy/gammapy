@@ -117,7 +117,7 @@ class CWT(object):
         from scipy.signal import fftconvolve
         total_background = self.model + self.background + self.approx
         excess = self.image - total_background
-        for key, kern in self.kernbase.iteritems():  # works for python < 3
+        for key, kern in self.kernbase.items():
             self.transform[key] = fftconvolve(excess, kern, mode='same')
             self.error[key] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
             

@@ -77,23 +77,23 @@ class Fitter(object):
             npoints = len(self.chi)
             npar = len(self.popt)
             ndof = npoints - npar
-            s = 'sym_fit: %s\n' % self.sym
-            s += 'npar: %s\n' % npar
-            s += 'npoints: %s\n' % npoints
-            s += 'ndof: %s\n' % ndof
-            s += 'chi2: %s\n' % self.chi2()
-            s += 'chi2/ndof: %s\n' % (self.chi2() / ndof)
-            s += 'popt:\n%s\n' % self.popt
-            s += 'pcov:\n%s\n' % self.pcov
+            s = 'sym_fit: {0}\n'.format(self.sym)
+            s += 'npar: {0}\n'.format(npar)
+            s += 'npoints: {0}\n'.format(npoints)
+            s += 'ndof: {0}\n'.format(ndof)
+            s += 'chi2: {0}\n'.format(self.chi2())
+            s += 'chi2/ndof: {0}\n'.format(self.chi2() / ndof)
+            s += 'popt:\n{0}\n'.format(self.popt)
+            s += 'pcov:\n{0}\n'.format(self.pcov)
             for i in range(len(self.popt)):
-                s += ('Parameter %d: %15g +/- %15g\n'
-                      % (i, self.popt[i], np.sqrt(self.pcov[i, i])))
-            s += 'status: %s\n' % self.status
-            s += 'nfev: %s\n' % self.infodict['nfev']
-            s += 'chi:\n%s\n' % self.chi
+                fmt = 'Parameter {0}: {1:15g} +/- {2:15g}\n'
+                s += (fmt.format(i, self.popt[i], np.sqrt(self.pcov[i, i])))
+            s += 'status: {0}\n'.format(self.status)
+            s += 'nfev: {0}\n'.format(self.infodict['nfev'])
+            s += 'chi:\n{0}\n'.format(self.chi)
 
-            # s += 'infodict:\n%s\n' % self.infodict
-            # s += 'mesg:    \n%s' % self.mesg
+            # s += 'infodict:\n{0}\n'.format(self.infodict)
+            # s += 'mesg:    \n{0}'.format(self.mesg)
         except AttributeError:
             s = 'Not fitted.'
         return s

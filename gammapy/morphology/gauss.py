@@ -300,7 +300,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     parameter_list = uncertainties.correlated_values(values, cov_matrix)
 
     # Reorder parameters by splitting into 4-tuples
-    parameters = zip(*[iter(parameter_list)] * 4)
+    parameters = list(zip(*[iter(parameter_list)] * 4))
 
     def zero_moment(parameters):
         """0th moment of the sum of Gaussian components."""

@@ -646,7 +646,7 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     elif coordsys == 'GAL':
         ctype1, ctype2 = 'GLON-', 'GLAT-'
     else:
-        raise Exception('Unsupported coordsys: %s' % proj)
+        raise Exception('Unsupported coordsys: {0}'.format(proj))
 
     pars = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
             'CTYPE1': ctype1 + proj,

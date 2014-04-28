@@ -150,14 +150,14 @@ class AnalyticModel(Model):
     """Spectrum represented by an analytic function."""
 
     def __str__(self):
-        s = '%s\n' % self.__class__.__name__
+        s = '{0}\n'.format(self.__class__.__name__)
         for par in self.pars:
             if par.vary:
-                err = '+/- %.3e' % par.stderr
+                err = '+/- {0:.3e}'.format(par.stderr)
             else:
                 err = ' (fixed)'
-            s += ('%20s = %.3e %s\n' %
-                  (par.name, par.value, err))
+            fmt = '{0:20s} = {1:.3e} {2}\n'
+            s += (fmt.format(par.name, par.value, err))
         return s
 
     def error(self, E):

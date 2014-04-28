@@ -223,7 +223,7 @@ def significance(n_observed, mu_background, method='lima'):
     elif method == 'direct':
         return _significance_direct(n_observed, mu_background)
     else:
-        raise Exception('Invalid method: %s' % method)
+        raise ValueError('Invalid method: {0}'.format(method))
 
 
 def _significance_simple(n_observed, mu_background):
@@ -322,7 +322,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
         else:
             return _significance_direct_on_off(n_on, n_off, alpha)        
     else:
-        raise Exception('Invalid method: %s' % method)
+        raise ValueError('Invalid method: {0}'.format(method))
 
 
 def _significance_simple_on_off(n_on, n_off, alpha):
@@ -428,7 +428,7 @@ def sensitivity(mu_background, significance, quantity='excess', method='lima'):
     elif method == 'lima':
         return _sensitivity_lima(mu_background, significance)
     else:
-        raise Exception('Invalid method: %s' % method)
+        raise ValueError('Invalid method: {0}'.format(method))
 
 
 def _sensitivity_simple(mu_background, significance):

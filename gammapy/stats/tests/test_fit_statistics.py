@@ -6,8 +6,8 @@ from .. import fit_statistics
 
 
 def print_info(label, data):
-    print('*** %s ***' % label)
-    print('Sum: %g' % data.sum())
+    print('*** {0} ***'.format(label))
+    print('Sum: {0:g}'.format(data.sum()))
     print(data)
 
 

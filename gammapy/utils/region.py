@@ -25,7 +25,7 @@ class Circle(object):
             for key, val in attrs.items():
                 if isinstance(val, str):  # and ' ' in val:
                     val = '{{%s}}' % val
-                string += ' %s=%s' % (key, val)
+                string += ' {0}={1}'.format(key, val)
         string += '\n'
         return string.format(**locals())
 
@@ -131,6 +131,6 @@ def _region_string(shape, pars, attrs, system='galactic'):
         for key, val in attrs.items():
             if isinstance(val, str):  # and ' ' in val:
                 val = '{{%s}}' % val
-            string += ' %s=%s' % (key, val)
+            string += ' {0}={1}'.format(key, val)
     string += '\n'
     return string.format(**locals())

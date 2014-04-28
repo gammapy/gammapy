@@ -87,7 +87,7 @@ def crab_flux(energy=1, reference=CRAB_DEFAULT_REFERENCE):
         flux = 10 ** log_flux
         return Unit('erg').to('TeV') * flux / energy ** 2
     else:
-        raise ValueError('Unknown reference: %s' % reference)
+        raise ValueError('Unknown reference: {0}'.format(reference))
 
 
 def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFERENCE):

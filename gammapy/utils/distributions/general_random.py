@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
+from astropy.extern.six.moves import range
 
 __all__ = ['GeneralRandom']
 
@@ -62,7 +63,7 @@ class GeneralRandom(object):
         self.inversecdf = np.empty(ninversecdf)
         self.inversecdf[0] = self.x[0]
         cdf_idx = 0
-        for n in xrange(1, self.ninversecdf):
+        for n in range(1, self.ninversecdf):
             while self.cdf[cdf_idx] < y[n] and cdf_idx < ninversecdf:
                 cdf_idx += 1
             self.inversecdf[n] = self.x[cdf_idx - 1] + \
@@ -89,15 +90,6 @@ class GeneralRandom(object):
         # and the delta_inversecdf lookup for linear interpolation
         x = self.inversecdf[idx] + (idx_f - idx) * self.delta_inversecdf[idx]
         return x
-
-    def info(self):
-        """Print the internal state"""
-        print('%15s:' % 'x', self.x)
-        print('%15s:' % 'pdf', self.pdf)
-        print('%15s:' % 'cdf', self.cdf)
-        print('%15s:' % 'ninversecdf', self.ninversecdf)
-        print('%15s:' % 'inversecdf', self.inversecdf)
-        print('%15s:' % 'delta_inversecdf', self.delta_inversecdf)
 
     def make_plots(self, N=1e5):
         """Plot the pdf, cdf and inversecdf
