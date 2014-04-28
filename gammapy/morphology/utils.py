@@ -8,7 +8,7 @@ __all__ = ['read_ascii', 'read_json', 'write_all', 'write_ascii', 'write_json']
 
 def _name(ii):
     """Use this to make the model name for source number `ii`."""
-    return 'gauss2d.source_%02d' % ii
+    return 'gauss2d.source_{0:02d}'.format(ii)
 
 
 def _set(name, par, val):
@@ -73,7 +73,7 @@ def write_ascii(pars, filename):
     """Write to ASCII"""
     fh = open(filename, 'w')
     for par in pars:
-        fh.write('%s %s %s\n' % (par.modelname, par.name, par.val))
+        fh.write('{0} {1} {2}\n'.format(par.modelname, par.name, par.val))
 
 
 def write_all(filename='results.json'):

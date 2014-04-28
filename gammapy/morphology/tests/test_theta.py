@@ -74,17 +74,5 @@ def _test_ModelThetaCalculator():
     par_names = ['angle', 'containment']
     par_refs = [ana_angle, ana_containment]
     par_checks = [num_angle, num_containment]
-    compare_results(par_names, par_refs, par_checks)
-
-
-def compare_results(names, refs, checks):
-    print('%10s %10s %10s %10s'
-          ''.format('name ref check rel_diff'.split()))
-    for name, ref, check in zip(names, refs, checks):
-        abs_diff = check - ref
-        rel_diff = 100 * abs_diff / ref
-        print('%10s %10.3g %10.3g %10.3f'
-              ''.format(name, ref, check, rel_diff))
-
-if __name__ == '__main__':
-    unittest.main()
+    
+    # TODO: add asserts

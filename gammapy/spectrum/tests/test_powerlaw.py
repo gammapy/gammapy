@@ -144,7 +144,6 @@ def test_SED_error(I=1., e1=1, e2=10):
     e = gmean([e1, e2])
     f = I / (e2 - e1)
     e2f = e ** 2 * f  # @note: e ** 2 = e1 * e2 here.
-    print('%10s %10s %10s' % ('Index', 'SED', 'Flux'))
     for Index in np.arange(1.5, 3.5, 0.5):
         f_correct = powerlaw.power_law_flux(I, Index, e, e1, e2)
         e2f_correct = e ** 2 * f_correct
@@ -152,4 +151,4 @@ def test_SED_error(I=1., e1=1, e2=10):
         # on a log scale
         SED = e2f / e2f_correct
         Flux = f / f_correct
-        print('%10.1f %10.2f %10.2f' % (Index, SED, Flux))
+        # TODO: assert results

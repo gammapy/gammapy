@@ -182,8 +182,8 @@ class HESSMultiGaussPSF(object):
         theta2 = np.asarray(theta2, 'f')
         total = np.zeros_like(theta2)
         for ii in range(1, self.n_gauss() + 1):
-            A = self.pars['A_%d' % ii]
-            sigma = self.pars['sigma_%d' % ii]
+            A = self.pars['A_{0}'.format(ii)]
+            sigma = self.pars['sigma_{0}'.format(ii)]
             total += A * exp(-theta2 / (2 * sigma ** 2))
         return self.pars['scale'] * total
 
@@ -210,11 +210,11 @@ class HESSMultiGaussPSF(object):
         # scale = self.pars['scale']
         for ii in range(1, self.n_gauss() + 1):
             d = {}
-            A = self.pars['A_%d' % ii]
-            sigma = self.pars['sigma_%d' % ii]
+            A = self.pars['A_{0}'.format(ii)]
+            sigma = self.pars['sigma_{0}'.format(ii)]
             d['ampl'] = A
             d['fwhm'] = sigma_to_fwhm * sigma / binsz
-            name = 'psf%d' % ii
+            name = 'psf{0}'.format(ii)
             pars[name] = d
         return pars
 
@@ -228,7 +228,7 @@ class HESSMultiGaussPSF(object):
         elif fmt == 'ascii':
             fh = open(filename, 'w')
             for name, value in self.pars.items():
-                fh.write('%s %s\n' % (name, value))
+                fh.write('{0} {1}\n'.format(name, value))
             fh.close()
 
     def to_MultiGauss2D(self, normalize=True):
@@ -239,7 +239,8 @@ class HESSMultiGaussPSF(object):
         represents the amplitude at 0."""
         sigmas, norms = [], []
         for ii in range(1, self.n_gauss() + 1):
-            A, sigma = self.pars['A_%d' % ii], self.pars['sigma_%d' % ii]
+            A = self.pars['A_{0}'.format(ii)]
+            sigma = self.pars['sigma_{0}'.format(ii)]
             norm = self.pars['scale'] * 2 * A * sigma ** 2
             sigmas.append(sigma)
             norms.append(norm)

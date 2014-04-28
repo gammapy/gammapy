@@ -34,7 +34,7 @@ class SEDComponent(object):
     def plot_model(self):
         import matplotlib.pyplot as plt
         if self.model is None:
-            logging.warning('%s: No model available.' % self.name)
+            logging.warning('{0}: No model available.'.format(self.name))
             return
         x, y = self.model.points(power=2)
         plt.plot(x * MeV_to_GeV, y * MeV_to_erg, label=self.name)
@@ -42,7 +42,7 @@ class SEDComponent(object):
     def plot_points(self, color='black', markerfacecolor='black'):
         import matplotlib.pyplot as plt
         if self.points is None:
-            logging.warning('%s: No points available.' % self.name)
+            logging.warning('{0}: No points available.'.format(self.name))
             return
         # @note We plot each point individually because anyway
         # upper limits have to be plotted differently which I
@@ -104,13 +104,13 @@ class SED(list):
         plt.ylabel(r'E$^2$ dF/DE (erg cm$^{-2}$ s$^{-1}$)')
         plt.xlabel('Energy (GeV)')
         plt.loglog()
-        logging.info('Plotting %s components in SED' % len(self))
+        logging.info('Plotting {0} components in SED'.format(len(self)))
         for component in self:
             component.plot()
         plt.xlim(xlim)
         plt.ylim(ylim)
         plt.legend()
-        logging.info('Writing %s' % filename)
+        logging.info('Writing {0}'.format(filename))
         plt.savefig(filename)
 
     def add_component(self, catalog_format, catalog_name,

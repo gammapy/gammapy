@@ -1299,7 +1299,7 @@ def create_sky_map(input_file_name,
             }
         outfile_base_name = unique_base_file_name(outfile_base_name, outfile_data.keys())
 
-        for ext, data in outfile_data.iteritems() :
+        for ext, data in outfile_data.items() :
             image_to_primaryhdu(data, rarange, decrange, author='PyFACT pfmap',
                                  object_=object_, telescope=telescope).writeto(outfile_base_name + ext)
 
@@ -1318,7 +1318,7 @@ def create_sky_map(input_file_name,
                 }
             outfile_base_name = unique_base_file_name(outfile_base_name, outfile_data.keys())
 
-            for ext, data in outfile_data.iteritems() :
+            for ext, data in outfile_data.items() :
                 image_to_primaryhdu(data, rarange, decrange, author='PyFACT pfmap',
                                      object_=object_, telescope=telescope).writeto(outfile_base_name + ext)
 

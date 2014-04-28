@@ -70,5 +70,5 @@ def test_TH2_to_FITS():
     from pprint import pprint
     pprint(f.header2classic())
     filename = 'TH2_to_FITS.fits'
-    print('Writing %s' % filename)
+    print('Writing {0}'.format(filename))
     f.writetofits(filename, clobber=True)

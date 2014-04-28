@@ -36,10 +36,10 @@ class FluxPointCalculator(object):
             model = PowerLaw()
         self.model = model
         if not xmethod in self.xmethods:
-            raise('Unknown xmethod: %s' % xmethod)
+            raise ValueError('Unknown xmethod: {0}'.format(xmethod))
         self.xmethod = xmethod
         if not ymethod in self.ymethods:
-            raise('Unknown ymethod: %s' % ymethod)
+            raise ValueError('Unknown ymethod: {0}'.format(ymethod))
         self.ymethod = ymethod
 
     def calc_xy(self, yint, xmin, xmax):
