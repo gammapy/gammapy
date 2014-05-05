@@ -5,6 +5,7 @@ from __future__ import print_function, division
 import numpy as np
 
 __all__ = ['BoundingBox',
+           'bbox',
            'find_max',
            'lookup',
            'lookup_max',
@@ -59,6 +60,23 @@ class BoundingBox(object):
         TODO
         """ 
         return '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**self)
+
+
+def bbox(mask, margin, binsz):
+    """Determine the bounding box of a mask.
+    
+    TODO: this is an old utility function ... put it into the BoundingBox class.
+    """
+    from scipy.ndimage.measurements import find_objects
+    box = find_objects(mask.astype(int))[0]
+    ny, nx = mask.shape
+    xmin = max(0, int(box[1].start - margin / binsz)) + 1
+    xmax = min(nx - 1, int(box[1].stop + margin / binsz)) + 1
+    ymin = max(0, int(box[0].start - margin / binsz)) + 1
+    ymax = min(ny - 1, int(box[0].stop + margin / binsz)) + 1
+    box_string = '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**locals())
+    box = xmin, xmax, ymin, ymax
+    return box, box_string
 
 
 def measure_labeled_regions(data, labels, tag='IMAGE',

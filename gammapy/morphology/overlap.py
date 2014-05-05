@@ -111,7 +111,7 @@ def read_model_components(cfg_file):
     cfg = configobj.ConfigObj(cfg_file)
     column_names = ('Name', 'Type', 'GLON', 'GLAT', 'Sigma', 'Norm')
     column_types = ('S25', 'S25', np.float32, np.float32, np.float32, np.float32)
-    component_table = Table(names=column_names, dtypes=column_types)
+    component_table = Table(names=column_names, dtype=column_types)
     
     # Build data table
     for component in cfg.keys():
