@@ -97,7 +97,8 @@ install:
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "Cython==0.19.1"; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "pytest==2.5.1"; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "pytest-xdist==1.10"; fi
-    - if [[ $ASTROPY_VERSION == stable ]]; then $PIP_WHEEL_COMMAND "astropy"; fi
+    - if [[ $ASTROPY_VERSION == stable && $USE_HUBS == true ]]; then $PIP_WHEEL_STRICT_NUMPY --find-links=$WHEELHOUSE_SPOKE --upgrade --force-reinstall astropy; fi
+    - if [[ $ASTROPY_VERSION == stable && $USE_HUBS == false ]]; then $PIP_WHEEL_COMMAND "astropy"; fi
     - if [[ $ASTROPY_VERSION == development ]]; then pip -q install git+http://github.com/astropy/astropy.git#egg=astropy --use-mirrors; fi
 
     # OPTIONAL DEPENDENCIES
