@@ -8,6 +8,9 @@ python:
     # This is just for "egg_info".  All other builds are explicitly given in the matrix
 env:
     global:
+        - WHEELHOUSE_HUB=http://physics.mnstate.edu/craig/wheelhouse
+        - PIP_WHEEL_STRICT_NUMPY="pip install --use-wheel --no-index"
+        - USE_HUBS=false
         - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel --use-mirrors"
     matrix:
         - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
@@ -47,10 +50,10 @@ matrix:
         # Try alternate numpy versions
         # These don't work with Astropy wheels:
         # https://travis-ci.org/gammapy/gammapy/jobs/22939829#L719
-        #- python: 3.2
-        #  env: NUMPY_VERSION=1.6.2 ASTROPY_VERSION=stable SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
-        #- python: 2.7
-        #  env: NUMPY_VERSION=1.5.1 ASTROPY_VERSION=stable SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
+        - python: 3.2
+          env: USE_HUBS=true NUMPY_VERSION=1.6.2 ASTROPY_VERSION=stable SETUP_CMD='test' OPTIONAL_DEPS=false
+        - python: 2.7
+          env: USE_HUBS=true NUMPY_VERSION=1.5.1 ASTROPY_VERSION=stable SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
 
         # Now try Astropy development version
         - python: 2.7
@@ -85,11 +88,12 @@ before_install:
 
 
 install:
-
+    - export WHEELHOUSE_SPOKE=$WHEELHOUSE_HUB/numpy-$NUMPY_VERSION
     # CORE DEPENDENCIES
     # These command run pip first trying a wheel, and then falling back on
     # source build
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND --upgrade "numpy==$NUMPY_VERSION"; fi
+    - if [[ $SETUP_CMD != egg_info && $USE_HUBS == true ]]; then $PIP_WHEEL_STRICT_NUMPY --find-links=$WHEELHOUSE_SPOKE --upgrade --force-reinstall numpy==$NUMPY_VERSION; fi
+    - if [[ $SETUP_CMD != egg_info && $USE_HUBS == false ]]; then $PIP_WHEEL_COMMAND --upgrade "numpy==$NUMPY_VERSION"; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "Cython==0.19.1"; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "pytest==2.5.1"; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_WHEEL_COMMAND "pytest-xdist==1.10"; fi
