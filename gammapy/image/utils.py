@@ -748,7 +748,7 @@ def cube_to_image(cube, slicepos=None):
     del header['CRPIX3']
     del header['CUNIT3']
     if slicepos == None:
-        data = cube.data.sum()
+        data = cube.data.sum(0).astype(cube.data.dtype)
     else:
         data = cube.data[slicepos]
     return ImageHDU(data, header)
