@@ -212,8 +212,19 @@ def sky_to_sky(lon, lat, in_system, out_system, unit='deg'):
 
     in_coords = systems[in_system](lon, lat, unit=(unit, unit))
     out_coords = in_coords.transform_to(systems[out_system])
+
+    # TODO: remove the Astropy 0.3 version when
+    # compatibility for that version by Gammapy is dropped
+    try:
+        # This uses the Astropy 0.4+ API
+        lonangle = out_coords.data.lon
+        latangle = out_coords.data.lat
+    except:
+        # This uses the Astropy 0.3- API
+        lonangle = out_coords.lonangle
+        latangle = out_coords.latangle
     
     if unit == 'deg':
-        return out_coords.lonangle.deg, out_coords.latangle.deg
+        return lonangle.deg, latangle.deg
     else:
-        return out_coords.lonangle.rad, out_coords.latangle.rad
+        return lonangle.rad, latangle.rad

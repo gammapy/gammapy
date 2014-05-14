@@ -18,7 +18,7 @@ def test_make_source_designation():
     # Check the example from Section 3.2.1 of the IAU spec: 
     # http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
     icrs = coord.ICRS('00h51m09.38s -42d26m33.8s')
-    fk4 = coord.FK4(icrs)
+    fk4 = icrs.transform_to(coord.FK4)
 
     strrep = coordinate_iau_format(icrs, ra_digits=6)
     assert strrep == '005109-4226.5'
