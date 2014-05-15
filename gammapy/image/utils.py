@@ -16,7 +16,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'cube_to_image', 'cube_to_spec',
            'cut_out',
            'disk_correlate', 'exclusion_distance',
-           'image_groupby', 'images_to_cube', 'make_uniform_image', 
+           'image_groupby', 'images_to_cube', 
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
@@ -661,19 +661,25 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     return header
 
 
-def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
+def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
                      proj='CAR', coordsys='GAL',
                      xrefpix=None, yrefpix=None, dtype='float32'):
     """Make an empty (i.e. values 0) image.
     
-    Uses the same parameter names as the Fermi tool gtbin.
+    Uses the same parameter names as the Fermi tool gtbin
+    (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
 
-    If no reference pixel position is given it is assumed ot be
+    If no reference pixel position is given it is assumed to be
     at the center of the image.
 
     Parameters
     ----------
-    TODO
+    dtype : str
+        Data type, default is float32
+    fill : int, str
+        0 (default) fills image with zeros
+        1 fills image with ones
+        'checkerboard' fills image with ones and zeros in a checkerboard pattern
 
     Returns
     -------
@@ -685,38 +691,16 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     # Note that FITS and NumPy axis order are reversed
     shape = (header['NAXIS2'], header['NAXIS1'])
-    data = np.zeros(shape, dtype=dtype)
-
+    if fill == 0:
+        data = np.zeros(shape, dtype=dtype)
+    elif fill == 1:
+        data = np.ones(shape, dtype=dtype)
+    elif fill == 'checkerboard':
+        A = np.zeros(shape, dtype=dtype)
+        A[1::2,::2] = 1
+        A[::2,1::2] = 1
+        data = A
     return fits.ImageHDU(data, header)
-
-def make_uniform_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
-                     proj='CAR', coordsys='GAL',
-                     xrefpix=None, yrefpix=None, dtype='float32'):
-    """Make an uniform image with all values 1.
-    
-    Uses the same parameter names as the Fermi tool gtbin.
-
-    If no reference pixel position is given it is assumed ot be
-    at the center of the image.
-
-    Parameters
-    ----------
-    TODO
-
-    Returns
-    -------
-    image : `astropy.io.fits.ImageHDU`
-        Empty image
-    """
-    header = make_header(nxpix, nypix, binsz, xref, yref,
-                         proj, coordsys, xrefpix, yrefpix)
-
-    # Note that FITS and NumPy axis order are reversed
-    shape = (header['NAXIS2'], header['NAXIS1'])
-    data = np.ones(shape, dtype=dtype)
-
-    return fits.ImageHDU(data, header)
-
 
 def cut_out(image, center, fov=[2, 2]):
     """Cut out a part of an image.

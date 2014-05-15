@@ -167,7 +167,7 @@ def test_ref_pixel():
     assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
     
 def test_cube_to_image():
-    layer = utils.make_uniform_image()
+    layer = utils.make_empty_image(fill=1)
     hdu_list = [layer, layer, layer, layer]
     cube = utils.images_to_cube(hdu_list)
     case1 = utils.cube_to_image(cube)
