@@ -690,8 +690,8 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
     shape = (header['NAXIS2'], header['NAXIS1'])
     if fill == 'checkerboard':
         A = np.zeros(shape, dtype=dtype)
-        A[1::2,::2] = 1
-        A[::2,1::2] = 1
+        A[1::2, ::2] = 1
+        A[::2, 1::2] = 1
         data = A
     else:
         data = fill * np.ones(shape, dtype=dtype)
