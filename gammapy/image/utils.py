@@ -676,11 +676,8 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
     ----------
     dtype : str
         Data type, default is float32
-    fill : int, str
-        0 (default) fills image with zeros
-        1 fills image with ones
-        'checkerboard' fills image with ones and zeros in a checkerboard pattern
-
+    fill : float or 'checkerboard'
+        Creates checkerboard image or uniform image of any float
     Returns
     -------
     image : `astropy.io.fits.ImageHDU`
@@ -691,15 +688,13 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
 
     # Note that FITS and NumPy axis order are reversed
     shape = (header['NAXIS2'], header['NAXIS1'])
-    if fill == 0:
-        data = np.zeros(shape, dtype=dtype)
-    elif fill == 1:
-        data = np.ones(shape, dtype=dtype)
-    elif fill == 'checkerboard':
+    if fill == 'checkerboard':
         A = np.zeros(shape, dtype=dtype)
         A[1::2,::2] = 1
         A[::2,1::2] = 1
         data = A
+    else:
+        data = fill * np.ones(shape, dtype=dtype)
     return fits.ImageHDU(data, header)
 
 def cut_out(image, center, fov=[2, 2]):
