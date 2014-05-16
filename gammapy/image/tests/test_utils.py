@@ -165,3 +165,13 @@ def test_ref_pixel():
     image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
     footprint_1 = utils.calc_footprint(image_1.header)
     assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
+    
+def test_cube_to_image():
+    layer = utils.make_empty_image(fill=1)
+    hdu_list = [layer, layer, layer, layer]
+    cube = utils.images_to_cube(hdu_list)
+    case1 = utils.cube_to_image(cube)
+    case2 = utils.cube_to_image(cube, slicepos=1)
+    # Check that layers are summed if no layer is specified (case1), or only a specified layer is extracted (case2)
+    assert_allclose(case1.data, 4 * layer.data)
+    assert_allclose(case2.data, layer.data)

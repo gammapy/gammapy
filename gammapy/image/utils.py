@@ -16,7 +16,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'cube_to_image', 'cube_to_spec',
            'cut_out',
            'disk_correlate', 'exclusion_distance',
-           'image_groupby', 'images_to_cube',
+           'image_groupby', 'images_to_cube', 
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
@@ -661,20 +661,23 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     return header
 
 
-def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
+def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
                      proj='CAR', coordsys='GAL',
                      xrefpix=None, yrefpix=None, dtype='float32'):
     """Make an empty (i.e. values 0) image.
     
-    Uses the same parameter names as the Fermi tool gtbin.
+    Uses the same parameter names as the Fermi tool gtbin
+    (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
 
-    If no reference pixel position is given it is assumed ot be
+    If no reference pixel position is given it is assumed to be
     at the center of the image.
 
     Parameters
     ----------
-    TODO
-
+    dtype : str
+        Data type, default is float32
+    fill : float or 'checkerboard'
+        Creates checkerboard image or uniform image of any float
     Returns
     -------
     image : `astropy.io.fits.ImageHDU`
@@ -685,10 +688,14 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     # Note that FITS and NumPy axis order are reversed
     shape = (header['NAXIS2'], header['NAXIS1'])
-    data = np.zeros(shape, dtype=dtype)
-
+    if fill == 'checkerboard':
+        A = np.zeros(shape, dtype=dtype)
+        A[1::2, ::2] = 1
+        A[::2, 1::2] = 1
+        data = A
+    else:
+        data = fill * np.ones(shape, dtype=dtype)
     return fits.ImageHDU(data, header)
-
 
 def cut_out(image, center, fov=[2, 2]):
     """Cut out a part of an image.
@@ -748,7 +755,7 @@ def cube_to_image(cube, slicepos=None):
     del header['CRPIX3']
     del header['CUNIT3']
     if slicepos == None:
-        data = cube.data.sum()
+        data = cube.data.sum(0)
     else:
         data = cube.data[slicepos]
     return ImageHDU(data, header)
