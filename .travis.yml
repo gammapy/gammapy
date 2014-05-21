@@ -5,10 +5,11 @@ python:
     - 2.7
     - 3.2
     - 3.3
+    - 3.4
     # This is just for "egg_info".  All other builds are explicitly given in the matrix
 env:
     global:
-        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel --use-mirrors"
+        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel"
     matrix:
         - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
 
@@ -17,7 +18,7 @@ matrix:
 
         # Do a coverage test in Python 2
         - python: 2.7
-          env: NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable SETUP_CMD='test --coverage' OPTIONAL_DEPS=true
+          env: NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development SETUP_CMD='test --coverage' OPTIONAL_DEPS=true
 
         # Check for sphinx doc build warnings - we do this first because it
         # runs for a long time
@@ -36,6 +37,8 @@ matrix:
         - python: 3.2
           env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
         - python: 3.3
+          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+        - python: 3.4
           env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
 
         # Now try do scipy on 2.7 and an appropriate 3.x build (with latest numpy)
@@ -99,6 +102,10 @@ install:
     # OPTIONAL DEPENDENCIES
     - if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "scipy==0.13.1"; fi
     - if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "h5py==2.1.3"; fi
+
+    # Not installing scikit-image for now because of this issue (should be fixed in skimage 0.10):
+    # https://travis-ci.org/gammapy/gammapy/jobs/25701223
+    #- if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "scikit-image==0.9.3"; fi
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that
