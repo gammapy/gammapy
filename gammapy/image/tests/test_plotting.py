@@ -46,3 +46,10 @@ def test_colormap_milagro():
             (15, (1.0, 1.0, 1.0)),
            ]
     _check_cmap_rgb_vals(vals, cmap, vmin, vmax)
+
+
+@pytest.mark.skipif('not HAS_MATPLOTLIB')
+def test_GalacticPlaneSurveyPanelPlot():
+
+    plot = plotting.GalacticPlaneSurveyPanelPlot(npanels=3)
+    assert_allclose(plot.panel_parameters['npanels'], 3)

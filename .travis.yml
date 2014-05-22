@@ -113,6 +113,7 @@ install:
     # currently 2.7, so that's fine
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_COMMAND "Sphinx==1.2.1"; fi
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_COMMAND "matplotlib==1.3.0"; fi
+    - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install aplpy --use-mirrors; fi
 
     # COVERAGE DEPENDENCIES
     - if [[ $SETUP_CMD == 'test --coverage' ]]; then $PIP_WHEEL_COMMAND "pytest-cov" ; fi
