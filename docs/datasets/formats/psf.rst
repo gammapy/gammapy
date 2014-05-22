@@ -1,3 +1,0 @@
-Point spread function
-=====================
-

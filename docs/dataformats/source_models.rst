@@ -1,3 +1,5 @@
+.. _dataformats_source_models:
+
 Source models
 =============
 

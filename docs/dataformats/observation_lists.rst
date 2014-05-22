@@ -1,3 +1,5 @@
+.. _dataformats_observation_lists:
+
 Observation lists
 =================
 
