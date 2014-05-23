@@ -35,6 +35,7 @@ Using `gammapy.image`
    :maxdepth: 1
 
    plotting
+   bounding_box
 
 
 Reference/API
