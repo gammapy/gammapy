@@ -14,7 +14,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'binary_opening_circle', 'binary_ring',
            'calc_footprint', 'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
-           'cut_out',
+           'crop_image',
            'disk_correlate', 'exclusion_distance',
            'image_groupby', 'images_to_cube', 
            'make_empty_image', 'make_header',
@@ -697,37 +697,32 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
         data = fill * np.ones(shape, dtype=dtype)
     return fits.ImageHDU(data, header)
 
-def cut_out(image, center, fov=[2, 2]):
-    """Cut out a part of an image.
+
+def crop_image(image, bounding_box):
+    """Crop an image (cut out a rectangular part).
 
     Parameters
     ----------
     image : `astropy.io.fits.ImageHDU`
-        Input image
-    center : [glon, glat]
-        Cutout center position
-    fov : [glon_fov, glat_fov]
-        Cutout field of view dimensions
+        Image
+    bounding_box : `~gammapy.image.BoundingBox`
+        Bounding box
     
     Returns
     -------
-    TODO
+    new_image : `astropy.io.fits.ImageHDU`
+        Cropped image
+
+    See Also
+    --------
+    paste_cutout_into_image
     """
-    raise NotImplementedError
-    
-    # Unpack center and fov
-    glon, glat = center
-    glon_fov, glat_fov = fov
+    data = image.data[bounding_box.slice]
+    header = image.header.copy()
 
-    # Calculate image limits
-    glon_lim = [glon - glon_fov, glon + glon_fov]
-    glat_lim = [glat - glat_fov, glat + glat_fov]
+    # TODO: fix header keywords and test against ftcopy
 
-    # Cut out the requested part
-    xlim = image.proj.topixel((glon_lim, [0, 0]))[0]
-    xlim = [xlim[1], xlim[0]]  # longitude axis runs backwards
-    ylim = image.proj.topixel(([0, 0], glat_lim))[1]
-    image.set_limits(pxlim=xlim, pylim=ylim)
+    return fits.ImageHDU(data=data, header=header)
 
 
 def cube_to_image(cube, slicepos=None):
@@ -825,13 +820,16 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     -------
     total : `astropy.io.fits.ImageHDU`
         A reference to the total input HDU that was modified in-place.
+
+    See Also
+    --------
+    crop_image
     """
     # find offset
     lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, 0)
     x, y = WCS(total.header).wcs_world2pix(lon, lat, 0)
     x, y = int(np.round(x)), int(np.round(y))
     dy, dx = cutout.shape
-    # import IPython; IPython.embed(); 1/0
 
     if method == 'sum':
         total.data[y : y + dy, x : x + dx] += cutout.data
@@ -839,6 +837,8 @@ def paste_cutout_into_image(total, cutout, method='sum'):
         total.data[y : y + dy, x : x + dx] = cutout.data
     else:
         raise ValueError('Invalid method: {0}'.format(method))
+
+    return total
 
 def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     """Provides block reduce functionality for image HDUs.

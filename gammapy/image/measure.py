@@ -19,47 +19,142 @@ __all__ = ['BoundingBox',
 class BoundingBox(object):
     """Rectangular bounding box.
     
+    TODO: Link to bounding box docs.
+    
     Parameters
     ----------
-    TODO
+    x_start, y_start : float
+        Start pixel coordinates (0-based indexing, inclusive)
+    x_stop, y_stop : float
+        Stop pixel coordinates (0-based indexing, exclusive)
     """
-    def __init__(self, xmin, xmax, ymin, ymax):
-        self.xmin = xmin
-        self.xmax = xmax
-        self.ymin = ymin
-        self.ymax = ymax
+    def __init__(self, x_start, y_start, x_stop, y_stop):
+        self.x_start = x_start
+        self.y_start = y_start
+        self.x_stop = x_stop
+        self.y_stop = y_stop
 
 
     @staticmethod
-    def for_circle(x, y, radius, nx, ny):
+    def for_circle(x, y, radius):
         """Compute bounding box for a circle.
         
         Parameters
         ----------
-        TODO
+        x, y : float
+            Circle center position
+        radius : float
+            Circle radius (pix)
         
         Returns
         -------
-        TODO
+        bounding_box : BoundingBox
+            Bounding box
         """
         x, y, radius = int(x), int(y), int(radius)
-        xmin = max(x - radius, 0)
-        xmax = min(x + radius, nx)
-        ymin = max(y - radius, 0)
-        ymax = min(y + radius, ny)
-        bbox = BoundingBox(xmin, xmax, ymin, ymax)
+        x_start = x - radius
+        y_start = y - radius
+        x_stop = x + radius
+        y_stop = y + radius
+        return BoundingBox(x_start, y_start, x_stop, y_stop)
 
-        return bbox
 
+    def __str__(self):     
+        ss = 'x = ({x_start}, {x_stop}), '.format(**self)
+        ss += 'y = ({y_start}, {y_stop}) '.format(**self)
+        return ss
+
+    def intersection(self, other):
+        """Compute intersection of two bounding boxes.
         
-    def to_ftcopy_string(self):
-        """Create bounding box string in ftcopy format.
+        Parameters
+        ----------
+        other : `BoundingBox`
+            Other bounding box.
+        
+        Returns
+        -------
+        intersection : `BoundingBox`
+            New intersection bounding box
+        
+        Examples
+        --------
+        >>> b1 = BoundingBox(1, 5, 10, 11)
+        >>> b2 = BoundingBox(2, 4, 13, 9)
+        >>> b1.intersection(b2)
+        TODO
+        """
+        x_start = max(self.x_start, other.x_start)
+        x_stop = min(self.x_stop, other.x_stop)
+        y_start = max(self.y_start, other.y_start)
+        y_stop = min(self.x_stop, other.x_stop)
+        return BoundingBox(x_start, y_start, x_stop, y_stop)
+
+
+    def overlaps(self, other):
+        """Does this bounding box overlap the other bounding box?
+        
+        Parameters
+        ----------
+        other : `BoundingBox`
+            Other bounding box
+        
+        Returns
+        -------
+        overlaps : bool
+            True of there is overlap
         
         Examples
         --------
         TODO
-        """ 
-        return '[{xmin}:{xmax},{ymin}:{ymax}]'.format(**self)
+        """
+        return self.intersection(other).is_empty
+
+
+    def __eq__(self, other):
+        return self.slice == other.slice
+
+
+    @property
+    def ftcopy_string(self):
+        """Bounding box in ftcopy string format.
+        
+        Examples
+        --------
+        >>> from gammapy.image import BoundingBox
+        >>> bounding_box = BoundingBox(7, 9, 43, 44)
+        >>> bounding_box.ftcopy_string
+        TODO 
+        """
+        return '[{x_start}:{x_stop},{y_start}:{y_stop}]'.format(**self)
+
+
+    @property
+    def slice(self):
+        """Bounding box in slice format.
+        
+        Examples
+        --------
+        >>> from gammapy.image import BoundingBox
+        >>> bounding_box = BoundingBox(7, 9, 43, 44)
+        >>> bounding_box.slice
+        TODO
+        """
+        return (self.y_slice, self.x_slice)
+
+    @property
+    def x_slice(self):
+        return slice(self.x_start, self.x_stop)
+
+    @property
+    def y_slice(self):
+        return slice(self.y_start, self.y_stop)
+
+    @property
+    def is_empty(self):
+        x_is_empty = (self.x_start >= self.x_stop)
+        y_is_empty = (self.y_start >= self.y_stop)
+        return x_is_empty or y_is_empty
 
 
 def bbox(mask, margin, binsz):
