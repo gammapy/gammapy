@@ -2,13 +2,20 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
 from ...utils.testing import assert_quantity
 from ..psf_table import TablePSF, EnergyDependentTablePSF
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF_gauss():
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
@@ -19,6 +26,8 @@ def test_TablePSF_gauss():
 
     assert_allclose(psf.integral(), 1, rtol=1e-3) 
 
+
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF_disk():
 
     width = Angle(2, 'deg')
@@ -45,6 +54,7 @@ def test_TablePSF_disk():
     #desired = Angle([0, 1, 2], 'deg')
     #assert_quantity(actual, desired, rtol=1e-3)
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF():
 
     # Make an example PSF for testing
@@ -70,6 +80,7 @@ def test_TablePSF():
     assert_allclose(actual, desired)
 
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_EnergyDependentTablePSF():
 
     # TODO: test __init__
