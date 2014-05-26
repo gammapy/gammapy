@@ -5,7 +5,7 @@ from astropy.tests.helper import pytest
 from numpy.testing import assert_almost_equal, assert_allclose
 import numpy as np
 from astropy.utils.data import get_pkg_data_filename
-from ..psf import HESSMultiGaussPSF, multi_gauss_psf_kernel
+from ..psf_core import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 try:
     import scipy

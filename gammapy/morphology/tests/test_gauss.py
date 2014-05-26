@@ -56,11 +56,11 @@ class TestGauss2DPDF(unittest.TestCase):
 
     def test_theta(self):
         for g in self.gs:
-            assert_almost_equal(g.containment_radius(0.68), g.sigma * 1.5095921854516636)
-            assert_almost_equal(g.containment_radius(0.95), g.sigma * 2.4477467332775422)
+            assert_almost_equal(g.containment_radius(0.68) / g.sigma, 1.5095921854516636)
+            assert_almost_equal(g.containment_radius(0.95) / g.sigma, 2.4477468306808161)
 
-    def test_convolve(self):
-        g = Gauss2DPDF(sigma=3).convolve(sigma=4)
+    def test_gauss_convolve(self):
+        g = Gauss2DPDF(sigma=3).gauss_convolve(sigma=4)
         assert_equal(g.sigma, 5)
 
 
@@ -107,19 +107,15 @@ class TestMultiGauss2D(unittest.TestCase):
             t = m.containment_radius(c)
             assert_almost_equal(t, theta, decimal=5)
 
-    def test_convolve(self):
+    def test_gauss_convolve(self):
         # Convolution must add sigmas in square
         m = MultiGauss2D(sigmas=[3], norms=[5])
-        m2 = m.convolve(4, 6)
+        m2 = m.gauss_convolve(4, 6)
         assert_equal(m2.sigmas, [5])
         assert_almost_equal(m2.integral, 5 * 6)
         # Check that convolve did not change the original
         assert_equal(m.sigmas, [3])
         assert_equal(m.norms, [5])
-        # Now check that convolve_me changes in place
-        m.convolve_me(4, 6)
-        assert_equal(m.sigmas, [5])
-        assert_almost_equal(m.integral, 5 * 6)
 
 
 @pytest.mark.skipif('not HAS_UNCERTAINTIES')

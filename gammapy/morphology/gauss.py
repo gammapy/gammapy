@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from copy import deepcopy
 import numpy as np
-from numpy import pi, exp, sqrt, log
 
 __all__ = ['Gauss2DPDF',
            'MultiGauss2D',
@@ -15,78 +13,111 @@ __doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
 class Gauss2DPDF(object):
     """2D symmetric Gaussian PDF.
 
+    Reference: http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
+
     Parameters
     ----------
     sigma : float
-        Width.
+        Gaussian width.
     """
     def __init__(self, sigma=1):
-        self.sigma = np.asarray(sigma, 'f')
+        self.sigma = np.asarray(sigma, np.float64)
 
     @property
-    def sigma2(self):
+    def _sigma2(self):
         return self.sigma * self.sigma
 
-    def __call__(self, x, y):
+    @property
+    def amplitude(self):
+        """PDF amplitude at the center."""
+        return self.__call(0, 0)
+
+    def __call__(self, x, y=0):
         """dp / (dx dy) at position (x, y).
 
-        Reference: http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Bivariate_case
         """
-        x, y = np.asarray(x, 'f'), np.asarray(y, 'f')
+        x = np.asarray(x, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+
         theta2 = x * x + y * y
-        return (1 / (2 * pi * self.sigma2) * 
-                exp(-0.5 * theta2 / self.sigma2))
+        amplitude = 1 / (2 * np.pi * self._sigma2)
+        exponent = -0.5 * theta2 / self._sigma2
+        return amplitude * np.exp(exponent)
 
     def dpdtheta2(self, theta2):
         """dp / dtheta2 at position theta2 = theta ^ 2.
         """
-        theta2 = np.asarray(theta2, 'f')
-        return (1 / (2 * self.sigma2) * 
-                exp(-0.5 * theta2 / self.sigma2))
+        theta2 = np.asarray(theta2, dtype=np.float64)
+
+        amplitude = 1 / (2 * self._sigma2)
+        exponent = -0.5 * theta2 / self._sigma2
+        return amplitude * np.exp(exponent)
 
     def containment_fraction(self, theta):
-        """Containment fraction for a given containment angle.
+        """Containment fraction.
+        
+        Parameters
+        ----------
+        theta : array_like
+            Offset
         """
-        theta = np.asarray(theta, 'f')
-        return 1 - exp(-0.5 * theta ** 2 / self.sigma2)
+        theta = np.asarray(theta, dtype=np.float64)
+
+        return 1 - np.exp(-0.5 * theta ** 2 / self._sigma2)
 
     def containment_radius(self, containment_fraction):
         """Containment angle for a given containment fraction.
         """
-        containment_fraction = np.asarray(containment_fraction, 'f')
-        return self.sigma * sqrt(-2 * log(1 - containment_fraction))
+        containment_fraction = np.asarray(containment_fraction, dtype=np.float64)
 
-    def convolve(self, sigma):
-        """Convolve with another Gaussian PDF of width sigma.
-        """
-        return deepcopy(self).convolve_me(sigma)
+        return self.sigma * np.sqrt(-2 * np.log(1 - containment_fraction))
 
-    def convolve_me(self, sigma):
-        """Convolve this object, i.e. change its sigma.
+    def gauss_convolve(self, sigma):
+        """Convolve with another Gaussian 2D PDF.
+        
+        Parameters
+        ----------
+        TODO
+        
+        Returns
+        -------
+        TODO
         """
-        sigma = np.asarray(sigma, 'f')
-        self.sigma = sqrt(self.sigma2 + sigma ** 2)
-        return self
+        sigma = np.asarray(sigma, dtype=np.float64)
+
+        new_sigma = np.sqrt(self._sigma2 + sigma ** 2)
+        return Gauss2DPDF(new_sigma)
 
 
 class MultiGauss2D(object):
     """Sum of multiple 2D Gaussians.
 
-    @note This sum is no longer a PDF, it is not normalized to 1.
-    @note The "norm" of each component represents the 2D integral,
-    not the amplitude at the origin.
+    Parameters
+    ----------
+    TODO
+
+    Notes
+    -----
+    * This sum is no longer a PDF, it is not normalized to 1.
+    * The "norm" of each component represents the 2D integral,
+      not the amplitude at the origin.
     """
     def __init__(self, sigmas, norms=None):
         # If no norms are given, you have a PDF.
-        sigmas = np.asarray(sigmas, 'f')
+        sigmas = np.asarray(sigmas, dtype=np.float64)
+
         self.components = [Gauss2DPDF(sigma) for sigma in sigmas]
         if norms is None:
             self.norms = np.ones(len(self.components))
         else:
-            self.norms = np.asarray(norms, 'f')
+            self.norms = np.asarray(norms, dtype=np.float64)
 
-    def __call__(self, x, y):
-        x, y = np.asarray(x, 'f'), np.asarray(y, 'f')
+    def __call__(self, x, y=0):
+        """TODO
+        """
+        x = np.asarray(x, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+
         total = np.zeros_like(x)
         for norm, component in zip(self.norms, self.components):
             total += norm * component(x, y)
@@ -102,7 +133,6 @@ class MultiGauss2D(object):
 
     @property
     def integral(self):
-        # self.norms.sum()
         return np.nansum(self.norms)
 
     @property
@@ -115,20 +145,27 @@ class MultiGauss2D(object):
 
     @property
     def eff_sigma(self):
-        """Effective sigma if we naively were to replace the
-        MultiGauss2D with one Gauss2D."""
-        sigma2s = np.array([component.sigma2 for component in self.components])
+        """Effective sigma for single-Gauss approximation.
+        
+        TODO: give formula.
+        """
+        sigma2s = np.array([component._sigma2 for component
+                            in self.components])
         return np.sqrt(np.sum(self.norms * sigma2s))
 
     def dpdtheta2(self, theta2):
+        """TODO: document
+        """
         # Actually this is only a PDF if sum(norms) == 1
-        theta2 = np.asarray(theta2, 'f')
+        theta2 = np.asarray(theta2, dtype=np.float64)
+
         total = np.zeros_like(theta2)
         for norm, component in zip(self.norms, self.components):
             total += norm * component.dpdtheta2(theta2)
         return total
 
     def normalize(self):
+        """TODO: document"""
         self.norms /= self.integral
         return self
 
@@ -140,10 +177,12 @@ class MultiGauss2D(object):
         theta : array_like
             Containment angle
         """
-        theta = np.asarray(theta, 'f')
+        theta = np.asarray(theta, dtype=np.float64)
+
         total = np.zeros_like(theta)
         for norm, component in zip(self.norms, self.components):
             total += norm * component.containment_fraction(theta)
+
         return total
 
     def containment_radius(self, containment_fraction):
@@ -166,7 +205,7 @@ class MultiGauss2D(object):
             # positive if theta too large
             return self.containment_fraction(theta) - containment_fraction
         # @todo: if it is an array we have to loop by hand!
-        # containment = np.asarray(containment, 'f')
+        # containment = np.asarray(containment, dtype=np.float64)
         # Inital guess for theta
         theta_max = self.eff_sigma
         # Expand until we really find a theta_max
@@ -184,7 +223,7 @@ class MultiGauss2D(object):
         theta2 = Gauss2DPDF(sigma=1).containment_radius(containment_fraction)
         return theta1 / theta2
 
-    def convolve(self, sigma, norm=1):
+    def gauss_convolve(self, sigma, norm=1):
         """Convolve with another Gauss.
 
         Compute new norms and sigmas of all the components such that
@@ -193,18 +232,29 @@ class MultiGauss2D(object):
 
         This MultiGauss2D is unchanged, a new one is created and returned.
         This is useful if you need to e.g. compute theta for one PSF
-        and many sigmas."""
-        return deepcopy(self).convolve_me(sigma, norm)
-
-    def convolve_me(self, sigma, norm=1):
-        """Convolve this object, i.e. change its sigmas and norms.
+        and many sigmas.
+        
+        Parameters
+        ----------
+        sigma : array_like
+            TODO
+        norm : TODO
+            TODO
+        
+        Returns
+        -------
+        new_multi_gauss_2d : MultiGauss2D
+            New  
         """
-        sigma = np.asarray(sigma, 'f')
-        norm = np.asarray(norm, 'f')
+        sigma = np.asarray(sigma, dtype=np.float64)
+        norm = np.asarray(norm, dtype=np.float64)
+
+        sigmas, norms = [], []
         for ii in range(self.n_components):
-            self.components[ii].convolve_me(sigma)
-            self.norms[ii] *= norm
-        return self
+            sigmas.append(self.components[ii].gauss_convolve(sigma).sigma)
+            norms.append(self.norms[ii] * norm)
+
+        return MultiGauss2D(sigmas, norms)
 
 
 def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):

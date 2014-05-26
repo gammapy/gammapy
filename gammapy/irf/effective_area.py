@@ -18,14 +18,14 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
     Parameters
     ----------
-    energy : array_like
-        Energy in TeV
-    instruments : {'HESS', 'HESS2', 'CTA'}
-        Name of the instrument
+    energy : `~astropy.units.Quantity`
+        Energy
+    instrument : {'HESS', 'HESS2', 'CTA'}
+        Instrument name
 
     Returns
     -------
-    effective_area : array
+    effective_area : `~astropy.units.Quantity`
         Effective area in cm^2
     """
     # Put the parameters g in a dictionary.
@@ -36,18 +36,21 @@ def abramowski_effective_area(energy, instrument='HESS'):
             'HESS2': [2.05e9, 0.0891, 1e5],
             'CTA': [1.71e11, 0.0891, 1e5]}
 
-    energy = Quantity(energy, 'TeV').to('MeV').value
+    if not isinstance(energy, Quantity):
+        raise ValueError("energy must be a Quantity object.")
+
+    energy = energy.to('MeV').value
 
     if not instrument in pars.keys():
         ss = 'Unknown instrument: {0}\n'.format(instrument)
         ss += 'Valid instruments: HESS, HESS2, CTA'
         raise ValueError(ss)
-   
+
     g1 = pars[instrument][0]
     g2 = pars[instrument][1]
     g3 = -pars[instrument][2]
     value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-    return value
+    return Quantity(value, 'cm^2')
 
 
 def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
