@@ -66,17 +66,17 @@ def test_TablePSF():
     offset = Angle([0.1, 0.3], 'deg')
 
     actual = psf.eval(offset=offset, quantity='dp_domega')
-    desired = Quantity([5491.79039904, 3521.0245931], 'sr^-1')
+    desired = Quantity([5491.52067694, 3521.07804604], 'sr^-1')
     assert_quantity(actual, desired)
 
     actual = psf.eval(offset=offset, quantity='dp_dtheta')
-    desired = Quantity([59.82584647, 117.87556081], 'rad^-1')
+    desired = Quantity([60.22039017, 115.83738017], 'rad^-1')
     assert_quantity(actual, desired, rtol=1e-6)
 
     offset_min = Angle([0.0, 0.1, 0.3], 'deg')
     offset_max = Angle([0.1, 0.3, 2.0], 'deg')
     actual = psf.integral(offset_min, offset_max)
-    desired = [0.0560153, 0.33677518, 0.60685819]
+    desired = [0.05403975, 0.33942469, 0.60653066]
     assert_allclose(actual, desired)
 
 
@@ -102,7 +102,7 @@ def test_EnergyDependentTablePSF():
     #desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
     #assert_quantity(actual, desired)
 
-    psf1 = psf.psf_at_energy(energy)
+    psf1 = psf.table_psf_at_energy(energy)
 
     # TODO: test average_psf
     #psf2 = psf.psf_in_energy_band(energy_band, spectrum)

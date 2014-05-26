@@ -13,6 +13,27 @@ __all__ = ['TablePSF',
            ]
 
 
+def _quantity_stats_str(x, label=''):
+    """Make a string summarising Quantities `x`.
+    """
+    ss = ''
+    if label:
+        ss += '{0:15s}: '.format(label)
+
+    min = x.min()
+    max = x.max()
+    size = x.size
+
+    fmt = 'size = {size:5d}, min = {min}, max = {max}\n'
+    ss += fmt.format(**locals())
+
+    return ss
+
+# Default PSF spline keyword arguments
+# TODO: test and document
+DEFAULT_PSF_SPLINE_KWARGS = dict(k=1, s=0)
+
+
 class TablePSF(object):
     r"""Radially-symmetric table PSF.
 
@@ -24,7 +45,7 @@ class TablePSF(object):
 
     Parameters
     ----------
-    offset : `~astropy.coordinates.Angle`
+    offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
         Offset angle array
     dp_domega : `~astropy.units.Quantity`
         PSF value array
@@ -48,10 +69,10 @@ class TablePSF(object):
     * TODO: ``__call__`` doesn't show up in the html API docs, but it should:
       https://github.com/astropy/astropy/pull/2135
     """
-    def __init__(self, offset, dp_domega, spline_args=dict(k=1)):
+    def __init__(self, offset, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        if not isinstance(offset, Quantity):
+            raise ValueError("offset must be a Quantity object.")
         if not isinstance(dp_domega, Quantity):
             raise ValueError("dp_domega must be a Quantity object.")
 
@@ -62,9 +83,9 @@ class TablePSF(object):
         self._offset = offset.to('radian')
         self._dp_domega = dp_domega.to('sr^-1')
         self._dp_dtheta = (2 * np.pi * self._offset * self._dp_domega).to('radian^-1')
-        self._spline_args = spline_args
+        self._spline_kwargs = spline_kwargs
 
-        self._compute_splines(spline_args)
+        self._compute_splines(spline_kwargs)
 
     @staticmethod
     def from_shape(shape, width, offset):
@@ -76,9 +97,9 @@ class TablePSF(object):
         ----------
         shape : {'disk', 'gauss'}
             PSF shape.
-        width : `~astropy.unit.Angle`
+        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             PSF width angle (radius for disk, sigma for Gauss).
-        offset : `~astropy.units.Angle`
+        offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset angle
         
         Returns
@@ -94,10 +115,10 @@ class TablePSF(object):
         >>> make_table_psf(shape='gauss', width=Angle(0.2, 'degree'),
         ...                offset=Angle(np.linspace(0, 0.7, 100), 'degree'))
         """
-        if not isinstance(width, Angle):
-            raise ValueError("width must be an Angle object.")
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        if not isinstance(width, Quantity):
+            raise ValueError("width must be an Angle or Quantity object.")
+        if not isinstance(offset, Quantity):
+            raise ValueError("offset must be an Angle or Quantity object.")
 
         if shape == 'disk':
             amplitude = 1 / (np.pi * width.radian ** 2)
@@ -112,10 +133,7 @@ class TablePSF(object):
 
     def info(self):
         """Print basic info."""
-        x = self._offset.degree
-        ss = ('offset: min = {0} deg, max = {1} deg, n_points = {2}\n'
-              .format(x.min(), x.max(), len(x)))
-
+        ss = _quantity_stats_str(self._offset.degree, 'offset')
         ss += 'integral = {0}\n'.format(self.integral())
 
         for containment in [50, 68, 80, 95]:
@@ -159,7 +177,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        pixel_size : `~astropy.coordinates.Angle`
+        pixel_size : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Kernel pixel size
         discretize_model_kwargs : dict
             Keyword arguments passed to
@@ -176,8 +194,8 @@ class TablePSF(object):
           `astropy.convolution.Model2DKernel` could be used to construct
           the kernel.
         """
-        if not isinstance(pixel_size, Angle):
-            raise ValueError("pixel_size must be an Angle object.")
+        if not isinstance(pixel_size, Quantity):
+            raise ValueError("pixel_size must be an Angle or Quantity object.")
 
         if offset_max == None:
             offset_max = self._offset.max()
@@ -188,7 +206,7 @@ class TablePSF(object):
             return self.eval(offset)
 
         npix = int(offset_max.radian / pixel_size.radian)
-        pix_range = (-npix, npix)
+        pix_range = (-npix, npix + 1)
 
         # FIXME: Using `discretize_model` is currently very cumbersome due to these issue:
         # https://github.com/astropy/astropy/issues/2274
@@ -206,6 +224,7 @@ class TablePSF(object):
         array = discretize_oversample_2D(_model,
                                          x_range=pix_range, y_range=pix_range,
                                          **discretize_model_kwargs)
+                
         return array
 
 
@@ -224,7 +243,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        offset : `~astropy.units.Angle`
+        offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset angle
         quantity : {'dp_domega', 'dp_dtheta'}
             Which PSF quantity?
@@ -234,8 +253,8 @@ class TablePSF(object):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        if not isinstance(offset, Quantity):
+            raise ValueError("offset must be an Angle or Quantity object.")
 
         shape = offset.shape
         x = np.array(offset.radian).flat
@@ -256,7 +275,7 @@ class TablePSF(object):
         
         Parameters
         ----------
-        offset_min, offset_max : `~astropy.coordinates.Angle`
+        offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset angle range
         
         Returns
@@ -267,14 +286,14 @@ class TablePSF(object):
         if offset_min == None:
             offset_min = self._offset[0]
         else:
-            if not isinstance(offset_min, Angle):
-                raise ValueError("offset_min must be an Angle object.")
+            if not isinstance(offset_min, Quantity):
+                raise ValueError("offset_min must be an Angle or Quantity object.")
         
         if offset_max == None:
             offset_max = self._offset[-1]
         else:
-            if not isinstance(offset_max, Angle):
-                raise ValueError("offset_max must be an Angle object.")
+            if not isinstance(offset_max, Quantity):
+                raise ValueError("offset_max must be an Angle or Quantity object.")
 
         offset_min = self._offset_clip(offset_min)
         offset_max = self._offset_clip(offset_max)
@@ -283,6 +302,7 @@ class TablePSF(object):
         cdf_max = self._cdf_spline(offset_max)
 
         return cdf_max - cdf_min
+
 
     def containment_radius(self, fraction):
         """Containment radius.
@@ -315,7 +335,7 @@ class TablePSF(object):
         offset = np.clip(self._offset.radian, EPS, None)
         offset = Quantity(offset, 'radian')
         self._dp_domega = self._dp_dtheta / (2 * np.pi * offset)
-        self._compute_splines(self._spline_args)
+        self._compute_splines(self._spline_kwargs)
 
     def broaden(self, factor, normalize=True):
         r"""Broaden PSF by scaling the offset array.
@@ -339,7 +359,7 @@ class TablePSF(object):
         # We define broadening such that self._dp_domega remains the same
         # so we only have to re-compute self._dp_dtheta and the slines here.
         self._dp_dtheta = (2 * np.pi * self._offset * self._dp_domega).to('radian^-1')
-        self._compute_splines(self._spline_args)
+        self._compute_splines(self._spline_kwargs)
 
         if normalize:
             self.normalize()
@@ -360,7 +380,7 @@ class TablePSF(object):
         plt.xlabel('Offset ({0})'.format(x.unit))
         plt.ylabel('PSF ({0})'.format(y.unit))
 
-    def _compute_splines(self, spline_args={}):
+    def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
         
         * `_dp_domega_spline` is used to evaluate the 2D PSF.
@@ -373,10 +393,10 @@ class TablePSF(object):
         
         # Compute spline and normalize.
         x, y = self._offset.value, self._dp_domega.value
-        self._dp_domega_spline = UnivariateSpline(x, y, **spline_args)
+        self._dp_domega_spline = UnivariateSpline(x, y, **spline_kwargs)
 
         x, y = self._offset.value, self._dp_dtheta.value 
-        self._dp_dtheta_spline = UnivariateSpline(x, y, **spline_args)
+        self._dp_dtheta_spline = UnivariateSpline(x, y, **spline_kwargs)
 
         # We use the terminology for scipy.stats distributions
         # http://docs.scipy.org/doc/scipy/reference/tutorial/stats.html#common-methods
@@ -389,7 +409,7 @@ class TablePSF(object):
         # http://mail.scipy.org/pipermail/scipy-user/2010-May/025237.html
         x = self._offset.value
         y = self._cdf_spline(x)
-        self._ppf_spline = UnivariateSpline(y, x, **spline_args)
+        self._ppf_spline = UnivariateSpline(y, x, **spline_kwargs)
         
     def _offset_clip(self, offset):
         """Clip to offset support range, because spline extrapolation is unstable.""" 
@@ -407,7 +427,7 @@ class EnergyDependentTablePSF(object):
     ----------
     energy : `~astropy.units.Quantity`
         Energy (1-dim)
-    offset : `~astropy.coordinates.Angle`
+    offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
         Offset angle (1-dim)
     exposure : `~astropy.units.Quantity`
         Exposure (1-dim)
@@ -417,8 +437,8 @@ class EnergyDependentTablePSF(object):
     def __init__(self, energy, offset, exposure, psf_value):
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        if not isinstance(offset, Quantity):
+            raise ValueError("offset must be an Angle or Quantity object.")
         if not isinstance(exposure, Quantity):
             raise ValueError("exposure must be a Quantity object.")
         if not isinstance(psf_value, Quantity):
@@ -448,7 +468,7 @@ class EnergyDependentTablePSF(object):
             PSF object.
         """
         offset = Angle(hdu_list['THETA'].data['Theta'], 'degree')
-        energy = Quantity(hdu_list['PSF'].data['Energy'], 'GeV')
+        energy = Quantity(hdu_list['PSF'].data['Energy'], 'MeV')
         exposure = Quantity(hdu_list['PSF'].data['Exposure'], 'cm^2 s')
         psf_value = Quantity(hdu_list['PSF'].data['PSF'], 'sr^-1')
 
@@ -497,8 +517,8 @@ class EnergyDependentTablePSF(object):
         """
         self.to_fits().writeto(*args, **kwargs)
 
-    def psf_at_energy(self, energy, **kwargs):
-        """PSF at a given energy.
+    def table_psf_at_energy(self, energy, **kwargs):
+        """TablePSF at a given energy.
         
         Extra `kwargs` are passed to the `~gammapy.irf.TablePSF` constructor.
         
@@ -515,57 +535,89 @@ class EnergyDependentTablePSF(object):
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
 
-        psf_value = self._psf(energy)
+        energy_index = self._energy_index(energy)
+        return self._get_1d_table_psf(energy_index, **kwargs)
 
-        return TablePSF(self.offset, psf_value, **kwargs)
 
-
-    def psf_in_energy_band(self, energy_band, spectrum=None,
-                           spectral_index=2):
+    def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.
+        
+        Expected counts in sub energy bands given the given exposure
+        and spectrum are used as weights.
         
         Parameters
         ----------
-        spectrum : callable
-            Spectrum (callable with energy as parameter)
         energy_band : `~astropy.units.Quantity`
             Energy band
+        spectral_index : float
+            Power law spectral index (used if spectrum=None).
+        spectrum : callable
+            Spectrum (callable with energy as parameter).
+
+        Returns
+        -------
+        psf : `TablePSF`
+            Table PSF
         """
-        energy_indices = self._energy_indices(energy_band)
-        energies = self.energy[energy_indices]
-        weights = spectrum(energies)
-        psfs = []
-        for energy, weight in zip(energies, weights):
-            psf = self.table_psf(energy)
+        if spectrum == None:
+            def spectrum(energy):
+                return (energy / energy_band[0]) **  (-spectral_index)
+
+        # TODO: warn if `energy_band` is outside available data.
+        energy_idx_min, energy_idx_max = self._energy_index(energy_band)
+        
+        # TODO: extract this into a utility function `npred_weighted_mean()`
+        
+        # Compute weights for energy bins
+        weights = np.zeros_like(self.energy.value, dtype=np.float64)
+        for idx in range(energy_idx_min, energy_idx_max - 1):
+            energy_min = self.energy[idx]
+            energy_max = self.energy[idx + 1]
+            exposure = self.exposure[idx]
+
+            flux = spectrum(energy_min)
+            weights[idx] = (exposure * flux * (energy_max - energy_min)).value
+
+        # Normalize weights to sum to 1
+        weights = weights / weights.sum()
+
+        # Compute weighted PSF value array
+        total_psf_value = np.zeros_like(self._get_1d_psf_values(0), dtype=np.float64)
+        for idx in range(energy_idx_min, energy_idx_max - 1):
+            psf_value = self._get_1d_psf_values(idx)
+            total_psf_value += weights[idx] * psf_value
+
+        # TODO: add version that returns `total_psf_value` without
+        # making a `TablePSF`.
+        return TablePSF(self.offset, total_psf_value, **kwargs)
 
     def containment_radius(self, energy, fraction):
         """Containment radius.
         
         Parameters
         ----------
-        energy : float
-            Energy (GeV)
+        energy : `~astropy.units.Quantity`
+            Energy
         fraction : float
             Containment fraction in %
         
         Returns
         -------
-        radius : float
+        radius : `~astropy.units.Quantity`
             Containment radius in deg
         """
-        # psf = self._psf(energy)
-        # radius = 
-        # return radius
-        pass
+        # TODO: useless at the moment ... support array inputs or remove!
+        psf = self.table_psf_at_energy(energy)
+        return psf.containment_radius(fraction)
 
-    def containment_fraction(self, energy, offset):
+    def integral(self, energy, offset_min, offset_max):
         """Containment fraction.
         
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        offset : `~astropy.units.Quantity`
+        offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset
         
         Returns
@@ -573,17 +625,27 @@ class EnergyDependentTablePSF(object):
         fraction : array_like
             Containment fraction (in range 0 .. 1)
         """
-        psf = self._psf(energy)
-        offset_max = self._offset_index(offset)
-        t = np.radians(self.theta)
-        fraction_per_bin = 2 * np.pi * t[:-1] * psf[:-1] * np.diff(t) 
-        fraction = fraction_per_bin[0:offset_max].sum()
-        return fraction
+        # TODO: useless at the moment ... support array inputs or remove!
+        psf = self.table_psf_at_energy(energy)
+        return psf.integral(offset_min, offset_max)
 
     def info(self):
         """Print basic info."""
-        r68 = self.containment_radius(energy=10, fraction=0.68)
-        ss = '68% containment radius at 10 GeV: {0}'.format(r68)
+        # Summarise data members
+        ss = _quantity_stats_str(self.offset.to('degree'), 'offset')
+        ss += _quantity_stats_str(self.energy, 'energy')
+        ss += _quantity_stats_str(self.exposure, 'exposure')
+
+        #ss += 'integral = {0}\n'.format(self.integral())
+
+
+        # Print some example containment radii
+        fractions = [0.68, 0.95]
+        energies = Quantity([10, 100], 'GeV')
+        for energy in energies:
+            for fraction in fractions:
+                radius = self.containment_radius(energy=energy, fraction=fraction)
+                ss += '{0}% containment radius at {1}: {2}\n'.format(100 * fraction, energy, radius)
         return ss
 
     def plot_psf_vs_theta(self, filename=None, energies=[1e4, 1e5, 1e6]):
@@ -641,28 +703,42 @@ class EnergyDependentTablePSF(object):
     def _energy_index(self, energy):
         """Find energy array index.
         """
+        # TODO: test with array input
         return np.searchsorted(self.energy, energy)
 
-    def _offset_index(self, offset):
-        """Find offset array index.
+    def _get_1d_psf_values(self, energy_index):
+        """Get 1-dim PSF value array.
+        
+        Parameters
+        ----------
+        energy_index : int
+            Energy index
+        
+        Returns
+        -------
+        psf_values : `~astropy.units.Quantity`
+            PSF value array
         """
-        return np.searchsorted(self.offset, offset)
+        psf_values = self.psf_value[energy_index, :].flatten().copy()
+        return psf_values
 
-    def _psf(self, energy):
-        """PSF values.
-        TODO: describe better
+    def _get_1d_table_psf(self, energy_index, **kwargs):
+        """Get 1-dim TablePSF (cached).
+        
+        Parameters
+        ----------
+        energy_index : int
+            Energy index
+        
+        Returns
+        -------
+        table_psf : `TablePSF`
+            Table PSF
         """
-        energy_index = self._energy_index(energy)
-        psf = self.psf_value[energy_index, :]
-        return psf
+        # TODO: support array_like `energy_index` here?
+        if self._table_psf_cache[energy_index] == None:
+            psf_value = self._get_1d_psf_values(energy_index)
+            table_psf = TablePSF(self.offset, psf_value, **kwargs)
+            self._table_psf_cache[energy_index] = table_psf 
 
-    def _get_1d_psf(self, energy):
-        """TODO.
-        """
-        energy_index = self._energy_index(energy)
-
-        for idx in energy_index:
-            if self._1d_psf_cache[idx] == None:
-                self._1d_psf_cache[idx] = self.make_psf_at_energy(energy[idx])
-
-        return self._1d_psf_cache[energy_index] 
+        return self._table_psf_cache[energy_index] 

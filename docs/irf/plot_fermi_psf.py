@@ -14,7 +14,7 @@ fermi_psf = EnergyDependentTablePSF.read(filename)
 energies = Quantity([1], 'GeV')
 for energy in energies:
     print('0')
-    psf = fermi_psf.psf_at_energy(energy=energy)
+    psf = fermi_psf.table_psf_at_energy(energy=energy)
     print('1')
     psf.normalize()
     print('2')
