@@ -8,6 +8,8 @@ from astropy.constants import R_sun
 #from astropy.units import pc, kpc, cm, km, second, year
 from astropy.units import Unit
 
+R_SUN = R_sun.to('kpc').value
+
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
            'radius_to_angle', 'angle_to_radius', 'spherical_velocity', 'motion_since_birth']
 
@@ -23,8 +25,8 @@ def cartesian(r, theta, dx=0, dy=0):
 def galactic(x, y, z):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
     for given position in cartesian coordinates (kpc)"""
-    d = sqrt(x ** 2 + (y - R_sun) ** 2 + z ** 2)
-    lon = degrees(arctan2(x, R_sun - y))
+    d = sqrt(x ** 2 + (y - R_SUN) ** 2 + z ** 2)
+    lon = degrees(arctan2(x, R_SUN - y))
     lat = degrees(arcsin(z / d))
     return lon, lat, d
 
