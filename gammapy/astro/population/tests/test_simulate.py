@@ -3,6 +3,12 @@ from __future__ import print_function, division
 from astropy.tests.helper import pytest
 from .. import simulate
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 @pytest.fixture
 def example_table():
@@ -46,6 +52,7 @@ def test_add_par_psr(example_table):
     assert has_columns(table, ['P0'])
 
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_add_par_pwn(example_table):
     # To compute PWN parameters we need PSR and SNR parameters first
     table = simulate.add_par_snr(example_table)
@@ -55,6 +62,7 @@ def test_add_par_pwn(example_table):
     assert has_columns(table, ['r_out_PWN'])
 
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_add_par_obs(example_table):
     table = simulate.add_par_snr(example_table)
     table = simulate.add_par_psr(table)
