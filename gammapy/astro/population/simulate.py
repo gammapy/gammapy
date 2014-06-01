@@ -166,7 +166,7 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
     # Later we might want to simulate certain fractions of object classes
     # index = random_integers(0, 0, nsources)
     index = 2 * np.ones(nsources, dtype=np.int)
-    morph_type = np.array(morph_types.keys())[index]
+    morph_type = np.array(list(morph_types.keys()))[index]
 
     table = Table()
     table['x_birth'] = Column(x, unit='kpc')
