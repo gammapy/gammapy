@@ -1,55 +1,54 @@
 #!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
 Simulate a catalog of Galactic sources.
 
 Several spatial and velocity distributions are available
-and each source has associated PSR, PWN und SRN parameters.
+and each source has associated PSR, PWN und SNR parameters.
 """
-import cmdl
-from utils.table import store_options
-import catalogs.mc as sim
-import distributions.spatial as spatial 
-import distributions.velocity as velocity 
 
-# ------------------------------------------------------------
-# Parse command line options
-# ------------------------------------------------------------
-option_list = [cmdl.nsources]
-option_list += [
-cmdl.make_option("--max_age",
-        type="float", default=1e6,
-        help="Simulation time interval [default=%default]"),
-cmdl.make_option("--n_ISM",
-        type="float", default=1,
-        help="Environment density [default=%default]"),
-cmdl.make_option("--E_SN",
-        type="float", default=1e51,
-        help="SNR kinetic energy [default=%default]"),
+# Parse command line arguments
 
-]
-option_list += [cmdl.clobber, cmdl.verbose]
-argument_list = ['catalog']
-options = cmdl.parse(option_list, argument_list)
+from gammapy.utils.scripts import argparse, GammapyFormatter
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=GammapyFormatter)
+parser.add_argument('outfile', type=str,
+                    help='Output filename')
+parser.add_argument('nsources', type=int,
+                    help='Number of sources to simulate')
+parser.add_argument('--max_age', type=float, default=1e6,
+                    help='Simulation time interval')
+parser.add_argument('--n_ISM', type=float, default=1,
+                    help='Interstellar medium density')
+parser.add_argument('--E_SN', type=float, default=1e51,
+                    help='SNR kinetic energy')
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
+args = parser.parse_args()
+print(args)
+#args = vars(args)
 
-# ------------------------------------------------------------
-# Execute the program
-# ------------------------------------------------------------
+# Execute script
+
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+from gammapy.astro.population import simulate
+from gammapy.astro.population import spatial, velocity 
 
 # TODO: Make rad_dis and vel_dis string options
 
 # Draw random positions and velocities 
-catalog = sim.make_cat_gal(options.nsources,
-                           rad_dis=spatial.YK04, 
-                           vel_dis=velocity.H05, 
-                           max_age=options.max_age,
-                           n_ISM=options.n_ISM)
+table = simulate.make_cat_gal(args.nsources,
+                              rad_dis=spatial.YK04, 
+                              vel_dis=velocity.H05, 
+                              max_age=args.max_age,
+                              n_ISM=args.n_ISM)
 
 # Add intrinsic and observable source properties
-catalog = sim.add_par_snr(catalog, E_SN=options.E_SN)
-catalog = sim.add_par_psr(catalog)
-catalog = sim.add_par_pwn(catalog)
-catalog = sim.add_par_obs(catalog)
+table = simulate.add_par_snr(table, E_SN=args.E_SN)
+table = simulate.add_par_psr(table)
+table = simulate.add_par_pwn(table)
+table = simulate.add_par_obs(table)
 
-# Write to file
-store_options(catalog, options)
-catalog.write(options.catalog, overwrite=options.clobber)
+# TODO: store_options(table, options)
+table.write(args.outfile, overwrite=args.clobber)

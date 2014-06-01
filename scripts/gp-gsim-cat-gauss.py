@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
 Simulate a catalog of Gaussian sources.
 Useful for testing the catalog pipeline.
