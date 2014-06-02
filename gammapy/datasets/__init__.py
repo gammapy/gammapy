@@ -328,3 +328,24 @@ def fetch_fermi_catalog(catalog, extension=None):
         return catalog_table
     else:
         return hdu_list
+
+
+def get_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
+    """Get Fermi diffuse background model.
+
+    Parameters
+    ----------
+    filename : str
+        Diffuse model file name
+
+    Returns
+    -------
+    filename : str
+        Full local path name
+    """
+    BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/'
+
+    url = BASE_URL + filename
+    filename = data.download_file(url, cache=True)
+
+    return filename
