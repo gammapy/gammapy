@@ -67,6 +67,7 @@ def test_add_par_obs(example_table):
     table = simulate.add_par_snr(example_table)
     table = simulate.add_par_psr(table)
     table = simulate.add_par_pwn(table)
+    table = simulate.add_observed_parameters(table)
     table = simulate.add_par_obs(table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['ext_in_SNR'])
@@ -75,5 +76,5 @@ def test_add_par_obs(example_table):
 def test_add_observed_parameters(example_table):
     table = simulate.add_cylindrical_coordinates(example_table)
     assert len(table) == len(example_table)
-    assert has_columns(table, ['distance'])
+    assert has_columns(table, ['r', 'phi'])
 

@@ -11,8 +11,8 @@ from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw
 from ...morphology.shapes import morph_types
 from ..source import SNR, PWN, ModelPulsar
-from .spatial import exponential, FaucherSpiral, r_range, z_range
-from .velocity import v_range
+from .spatial import exponential, FaucherSpiral, r_range, z_range, radial_distributions
+from .velocity import v_range, velocity_distributions
 
 
 __all__ = ['make_cat_cube',
@@ -22,7 +22,7 @@ __all__ = ['make_cat_cube',
            'add_par_pwn',
            'add_par_obs',
            'add_cylindrical_coordinates',
-           'add_observed_paramters'
+           'add_observed_parameters',
            ]
 
 def make_cat_cube(nsources=100, dimension=3, dmax=10,
@@ -60,8 +60,7 @@ def make_cat_cube(nsources=100, dimension=3, dmax=10,
 '''
 def make_cat_gauss_random(nsources=100, glon_sigma=30, glat_sigma=1,
                           extension_mean=0, extension_sigma=0.3,
-                          flux_index=1, flux_min=10, flux_max=1000,
-                          **kwargs):
+                          flux_index=1, flux_min=10, flux_max=1000):
     """Generate a catalog of Gaussian sources with random parameters.
 
     Default GLON, GLAT, EXTENSION, FLUX distributions
@@ -110,8 +109,7 @@ def make_cat_gauss_grid(nside=3, sigma_min=0.05, flux_min=1e-11):
 '''
 
 def make_cat_gal(nsources, rad_dis, vel_dis,
-                 max_age, spiralarms=True, n_ISM=1,
-                 **kwargs):
+                 max_age, spiralarms=True, n_ISM=1):
     """Make catalog of Galactic sources.
 
     Choose a radial distribution, a velocity distribution, the number
@@ -122,6 +120,12 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
     max_age and nsources effectively correspond to s SN rate:
     SN_rate = nsources / max_age
     """
+    if isinstance(rad_dis, str):
+        rad_dis = radial_distributions[rad_dis]
+
+    if isinstance(vel_dis, str):
+        vel_dis = velocity_distributions[vel_dis]
+    
     # Draw r and z values from the given distribution
     r = draw(0, r_range, nsources, rad_dis)
     z = draw(-z_range, z_range, nsources, exponential)
@@ -150,17 +154,13 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
     # Set environment interstellar density
     n_ISM = n_ISM * np.ones(nsources)
 
-    # Compute galactic coordinate and distance to observer
-    glon, glat, distance = astrometry.galactic(x, y, z)
-
-    # Compute Equatorial position
-    RA, DEC = astrometry.sky_to_sky(glon, glat, 'galactic', 'icrs')
 
     # Compute new position
-    x, y, z, vx, vy, vz = astrometry.motion_since_birth(x, y, z, v, age, theta, phi)
-
+    # TODO: uncomment this for the moment ... it changes `x` from parsec
+    # to km which it shouldn't.
+    #x, y, z, vx, vy, vz = astrometry.motion_since_birth(x, y, z, v, age, theta, phi)
     # Compute projected velocity
-    v_glon, v_glat = astrometry.spherical_velocity(x, y, z, vx, vy, vz)
+    #v_glon, v_glat = astrometry.spherical_velocity(x, y, z, vx, vy, vz)
 
     # For now we only simulate shell-type SNRs.
     # Later we might want to simulate certain fractions of object classes
@@ -172,22 +172,15 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
     table['x_birth'] = Column(x, unit='kpc')
     table['y_birth'] = Column(y, unit='kpc')
     table['z_birth'] = Column(z, unit='kpc')
-    table['glon_birth'] = Column(glon, unit='deg')
-    table['glat_birth'] = Column(glat, unit='deg')
     table['x'] = Column(x, unit='kpc')
     table['y'] = Column(y, unit='kpc')
     table['z'] = Column(z, unit='kpc')
-    table['GLON'] = Column(glon, unit='deg')
-    table['GLAT'] = Column(glat, unit='deg')
-    table['RA'] = Column(RA, unit='deg')
-    table['DEC'] = Column(DEC, unit='deg')
-    table['distance'] = Column(distance, unit='kpc')
     table['age'] = Column(age, unit='years')
     table['n_ISM'] = Column(n_ISM, unit='cm^-3')
     table['spiralarm'] = spiralarm
     table['morph_type'] = morph_type
-    table['v_glon'] = Column(v_glon, unit='1e-6 deg yr^-1')
-    table['v_glat'] = Column(v_glat, unit='1e-6 deg yr^-1')
+    #table['v_glon'] = Column(v_glon, unit='deg Myr^-1')
+    #table['v_glat'] = Column(v_glat, unit='deg Myr^-1')
     table['v_abs'] = Column(v, unit='km s^-1')
 
     return table
@@ -354,29 +347,32 @@ def add_observed_parameters(table, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     x = table['x']
     y = table['y']
     z = table['z']
-    extension = table['extension']
-    luminosity = table['luminosity']
 
-    # Subtract P.o.O. (Position of Observer)
-    x = x - obs_pos[0]
-    y = y - obs_pos[1]
-    z = z - obs_pos[2]
+    glon, glat, distance = astrometry.galactic(x, y, z)
+    #import IPython; IPython.embed()
 
-    # Compute observable parameters
-    # Note that the formula for angular extension is only an approximation
-    # TODO: add correct angular extension as extra column
-    distance = sqrt(x ** 2 + y ** 2 + z ** 2)
-    glon = degrees(arctan2(y, x))
-    glat = degrees(arcsin(z / distance))
-    flux = luminosity / (4 * pi * distance ** 2)
-    angular_extension = degrees(arctan(extension / distance))
+    ra, dec = astrometry.sky_to_sky(glon.data, glat.data, 'galactic', 'icrs')
 
     # Add columns to table
     table['distance'] = Column(distance, unit='pc', description='Distance observer to source center')
-    table['glon'] = Column(glon, unit='deg', description='Galactic longitude')
-    table['glat'] = Column(glat, unit='deg', description='Galactic latitude')
-    table['flux'] = Column(flux, unit='', description='Source flux')
-    table['angular_extension'] = Column(angular_extension, unit='deg',
-                                        description='Source angular radius (i.e. half-diameter)')
+    table['GLON'] = Column(glon, unit='deg', description='Galactic longitude')
+    table['GLAT'] = Column(glat, unit='deg', description='Galactic latitude')
+    table['RA'] = Column(ra, unit='deg')
+    table['DEC'] = Column(dec, unit='deg')
+
+    try:
+        luminosity = table['luminosity']
+        flux = astrometry.luminosity_to_flux(luminosity, distance)
+        table['flux'] = Column(flux, unit='', description='Source flux')
+    except KeyError:
+        pass
+
+    try:
+        extension = table['extension']
+        angular_extension = degrees(arctan(extension / distance))
+        table['angular_extension'] = Column(angular_extension, unit='deg',
+                                            description='Source angular radius (i.e. half-diameter)')
+    except KeyError:
+        pass
 
     return table

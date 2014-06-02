@@ -7,6 +7,27 @@ Several spatial and velocity distributions are available
 and each source has associated PSR, PWN und SNR parameters.
 """
 
+from gammapy.astro import population
+
+def _make_list(distributions):
+	ss = ""
+	for name in distributions.keys():
+		description = distributions[name].__doc__.splitlines()[0] 
+		ss += "{0:10s} : {1}\n".format(name, description)
+	return ss
+
+radial_distributions_list = _make_list(population.radial_distributions)
+velocity_distributions_list = _make_list(population.velocity_distributions)
+
+__doc__ += """
+Available radial distributions:
+{radial_distributions_list}
+
+Available velocity distributions:
+{velocity_distributions_list}
+
+""".format(**locals())
+
 # Parse command line arguments
 
 from gammapy.utils.scripts import argparse, GammapyFormatter
@@ -14,18 +35,23 @@ parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=GammapyFormatter)
 parser.add_argument('outfile', type=str,
                     help='Output filename')
-parser.add_argument('nsources', type=int,
+parser.add_argument('nsources', type=float,
                     help='Number of sources to simulate')
 parser.add_argument('--max_age', type=float, default=1e6,
-                    help='Simulation time interval')
+                    help='Simulation time interval (yr)')
 parser.add_argument('--n_ISM', type=float, default=1,
-                    help='Interstellar medium density')
+                    help='Interstellar medium density (cm^-3)')
 parser.add_argument('--E_SN', type=float, default=1e51,
-                    help='SNR kinetic energy')
+                    help='SNR kinetic energy (erg)')
+parser.add_argument('--radial_distribution', type=str, default='YK04',
+                    help='Galactic radial source distribution')
+parser.add_argument('--velocity_distribution', type=str, default='H05',
+                    help='Source velocity distribution')
+parser.add_argument('--spiralarms', action='store_true',
+                    help='Put a spiral arm pattern')
 parser.add_argument('--clobber', action='store_true',
                     help='Clobber output files?')
 args = parser.parse_args()
-print(args)
 #args = vars(args)
 
 # Execute script
@@ -33,21 +59,22 @@ print(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from gammapy.astro.population import simulate
-from gammapy.astro.population import spatial, velocity 
 
 # TODO: Make rad_dis and vel_dis string options
 
 # Draw random positions and velocities 
-table = simulate.make_cat_gal(args.nsources,
-                              rad_dis=spatial.YK04, 
-                              vel_dis=velocity.H05, 
+table = simulate.make_cat_gal(int(args.nsources),
+                              rad_dis=args.radial_distribution, 
+                              vel_dis=args.velocity_distribution, 
                               max_age=args.max_age,
-                              n_ISM=args.n_ISM)
+                              n_ISM=args.n_ISM,
+                              spiralarms=args.spiralarms)
 
 # Add intrinsic and observable source properties
 table = simulate.add_par_snr(table, E_SN=args.E_SN)
 table = simulate.add_par_psr(table)
 table = simulate.add_par_pwn(table)
+table = simulate.add_observed_parameters(table)
 table = simulate.add_par_obs(table)
 
 # TODO: store_options(table, options)

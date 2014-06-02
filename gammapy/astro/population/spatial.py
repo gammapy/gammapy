@@ -1,14 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic radial source distribution probability density functions.
+
+Attributes
+----------
+radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
+    Dictionary of available spatial distributions.
+
+    Useful for automatic processing.
 """
 from __future__ import print_function, division
 import numpy as np
 from numpy.random import random_integers, uniform, normal
 from numpy import exp, sqrt, pi, log, abs, cos, sin
+from astropy.utils.compat.odict import OrderedDict
 
 __all__ = ['CB98', 'F06', 'L06', 'P90', 'YK04', 'YK04B',
            'LogSpiral', 'FaucherSpiral', 'ValleeSpiral',
-           'r_range', 'z_range']
+           'r_range', 'z_range',
+           'radial_distributions',
+           ]
 
 R_SUN_GALACTIC = 8  # kpc
 
@@ -330,7 +340,17 @@ class ValleeSpiral(LogSpiral):
         x_1, y_1 = self.xy_position(radius=2.1, spiralarm_index=2)
         self.bar = dict(x=np.array([x_0, x_1]), y=np.array([y_0, y_1]))
 
-# Dictionary of available distributions.
-# Useful for automatic processing.
-distributions = {'P90': P90, 'CB98': CB98, 'YK04': YK04,
-                 'YK04B': YK04B, 'F06': F06, 'L06': L06}
+# TODO: this is not picked up in the HTML docs ... don't know why.
+# http://sphinx-doc.org/latest/ext/example_numpy.html
+# For now I add it in the module-level docstring in an `Attributes` section.
+radial_distributions = OrderedDict()
+"""Dictionary of available spatial distributions.
+
+Useful for automatic processing.
+"""
+radial_distributions['P90'] = P90
+radial_distributions['CB98'] = CB98
+radial_distributions['YK04'] = YK04
+radial_distributions['YK04B'] = YK04B
+radial_distributions['F06'] = F06
+radial_distributions['L06'] = L06

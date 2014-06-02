@@ -2,5 +2,6 @@
 """
 Astrophysical population models
 """
+from .simulate import *
 from .spatial import *
 from .velocity import *
