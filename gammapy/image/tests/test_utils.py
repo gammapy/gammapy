@@ -6,6 +6,7 @@ from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
 from .. import utils
+from .. import measure
 
 try:
     import skimage
@@ -180,14 +181,22 @@ def test_cube_to_image():
 
 
 def test_wcs_histogram2d():
-    # GLON pixel edges: (-3, -1, +1, +3)
-    # GLAT pixel edges: (-2, +0, +2)
-    header = utils.make_header(nxpix=3, nypix=2, binsz=2, xref=0, yref=0, proj='CAR')
-    
-    lon     = [0, 5, 2,  1, 2]
-    lat     = [1, 0, 0, -1, 0]
-    weights = [1, 2, 3,  4, 5]
-    desired = [[0, 4], [3 + 5, 1], [0, 0]]
-    actual = utils.wcs_histogram2d(header, lon, lat, weights).data
 
-    np.testing.assert_equal(actual, desired)
+    # A simple test case that can by checked by hand:
+    header = utils.make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
+    # GLON pixel edges: (+10, 0, -10)
+    # GLAT pixel edges: (-5, +5)
+
+    EPS = 0.1
+    data = [
+            ( 5,  5,  1),       # in image[0, 0]
+            ( 0,  0 + EPS,  2), # in image[1, 0]
+            ( 5, -5 + EPS,  3), # in image[0, 0]
+            ( 5,  5 + EPS, 99), # outside image
+            (10 + EPS, 0, 99),  # outside image
+            ]
+    lon, lat, weights = np.array(data).T
+    image = utils.wcs_histogram2d(header, lon, lat, weights)
+
+    assert measure.lookup(image, 0, 0, world=False) == 1 + 3
+    assert measure.lookup(image, 1, 0, world=False) == 2

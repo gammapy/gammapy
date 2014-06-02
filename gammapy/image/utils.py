@@ -473,7 +473,7 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
-    shape = header['NAXIS1'], header['NAXIS2']
+    shape = header['NAXIS2'], header['NAXIS1']
     bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
     data = np.histogramdd([yy, xx], bins, weights=weights)[0]
 

@@ -298,7 +298,7 @@ def lookup(image, x, y, world=True):
     if world:
         return _lookup_world(image, x, y)
     else:
-        return _lookup_pix(image, x, y)
+        return _lookup_pix(image.data, x, y)
 
 
 def lookup_max(image, GLON, GLAT, theta):
@@ -319,7 +319,7 @@ def lookup_max(image, GLON, GLAT, theta):
                 (GLAT[ii] - bb) ** 2 <= 
                 theta[ii] ** 2)
         try:
-            val[ii] = image.dat[mask].max()
+            val[ii] = image.data[mask].max()
         except ValueError:
             pass
     return val
