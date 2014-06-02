@@ -20,6 +20,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
+           'wcs_histogram2d',
            ]
 
 
@@ -441,19 +442,57 @@ def images_to_cube(hdu_list):
     return fits.ImageHDU(data=data, header=header)
 
 
+def wcs_histogram2d(header, lon, lat, weights=None):
+    """Histogram in world coordinates.
+    
+    Parameters
+    ----------
+    header : `~astropy.io.fits.Header`
+        FITS Header
+    lon, lat : array_like
+        World coordinates
+    weights : array_like, optional
+        Weights
+    
+    Returns
+    -------
+    histogram : `~astropy.io.fits.ImageHDU`
+        Histogram
+    
+    See also
+    --------
+    numpy.histogramdd
+    """
+    if weights == None:
+        weights = np.ones_like(lon)
+
+    # Get pixel coordinates    
+    wcs = WCS(header)
+    xx, yy = wcs.wcs_world2pix(lon, lat, 0)
+
+    # Histogram pixel coordinates with appropriate binning.
+    # This was checked against the `ctskymap` ctool
+    # http://cta.irap.omp.eu/ctools/
+    shape = header['NAXIS1'], header['NAXIS2']
+    bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
+    data = np.histogramdd([yy, xx], bins, weights=weights)[0]
+
+    return fits.ImageHDU(data, header)
+
+
 def bin_events_in_image(events, reference_image):
     """Bin events into an image.
     
     Parameters
     ----------
-    events : `astropy.table.table.Table`
+    events : `~astropy.table.Table`
         Event list table
-    reference_image : `astropy.io.fits.ImageHDU`
+    reference_image : `~astropy.io.fits.ImageHDU`
         An image defining the spatial bins.
     
     Returns
     -------
-    count_image : `astropy.io.fits.ImageHDU`
+    count_image : `~astropy.io.fits.ImageHDU`
         Count image
     """
     if 'GLON' in reference_image.header['CTYPE1']:
@@ -463,19 +502,7 @@ def bin_events_in_image(events, reference_image):
         lon = events['RA']
         lat = events['DEC']
 
-    # Get pixel coordinates    
-    wcs = WCS(reference_image.header)
-    xx, yy = wcs.wcs_world2pix(lon, lat, 0)
-
-    # Histogram pixel coordinates with appropriate binning.
-    # This was checked against the `ctskymap` ctool
-    # http://cta.irap.omp.eu/ctools/
-    shape = reference_image.data.shape
-    bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
-    data = np.histogramdd([yy, xx], bins)[0]
-
-    hdu = fits.ImageHDU(data, reference_image.header)
-    return hdu
+    return wcs_histogram2d(reference_image.header, lon, lat)
 
 
 def bin_events_in_cube(events, reference_cube, energies):
@@ -483,18 +510,20 @@ def bin_events_in_cube(events, reference_cube, energies):
     
     Parameters
     ----------
-    events : `astropy.table.table.Table`
+    events : `~astropy.table.Table`
         Event list table
-    cube : `astropy.io.fits.ImageHDU`
+    cube : `~astropy.io.fits.ImageHDU`
         A cube defining the spatial bins.
-    energies : `astropy.table.table.Table`
+    energies : `~astropy.table.Table`
         Table defining the energy bins.
     
     Returns
     -------
-    count_cube : `astropy.io.fits.ImageHDU`
+    count_cube : `~astropy.io.fits.ImageHDU`
         Count cube
     """
+    # TODO: this duplicates code from `bin_events_in_image`
+    
     if 'GLON' in reference_cube.header['CTYPE1']:
         lon = events['GLON']
         lat = events['GLAT']
@@ -510,7 +539,7 @@ def bin_events_in_cube(events, reference_cube, energies):
     event_energies = events['Energy']
     zz = np.searchsorted(event_energies, energies)
 
-    # Histogram pixel coordinats with appropriate binning.
+    # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
     shape = reference_cube.data.shape

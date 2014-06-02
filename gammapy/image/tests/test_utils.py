@@ -157,6 +157,7 @@ def test_calc_footprint():
     assert_allclose(footprint['LOWER_RIGHT'], [ 359.9, -0.5])
     assert_allclose(footprint['LOWER_LEFT'], [ 0.1, -0.5])
 
+
 @pytest.mark.skipif('not HAS_SKIMAGE')
 def test_ref_pixel():    
     image = utils.make_empty_image(101, 101, proj='CAR')
@@ -165,7 +166,8 @@ def test_ref_pixel():
     image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
     footprint_1 = utils.calc_footprint(image_1.header)
     assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
-    
+
+
 def test_cube_to_image():
     layer = utils.make_empty_image(fill=1)
     hdu_list = [layer, layer, layer, layer]
@@ -175,3 +177,17 @@ def test_cube_to_image():
     # Check that layers are summed if no layer is specified (case1), or only a specified layer is extracted (case2)
     assert_allclose(case1.data, 4 * layer.data)
     assert_allclose(case2.data, layer.data)
+
+
+def test_wcs_histogram2d():
+    # GLON pixel edges: (-3, -1, +1, +3)
+    # GLAT pixel edges: (-2, +0, +2)
+    header = utils.make_header(nxpix=3, nypix=2, binsz=2, xref=0, yref=0, proj='CAR')
+    
+    lon     = [0, 5, 2,  1, 2]
+    lat     = [1, 0, 0, -1, 0]
+    weights = [1, 2, 3,  4, 5]
+    desired = [[0, 4], [3 + 5, 1], [0, 0]]
+    actual = utils.wcs_histogram2d(header, lon, lat, weights).data
+
+    np.testing.assert_equal(actual, desired)
