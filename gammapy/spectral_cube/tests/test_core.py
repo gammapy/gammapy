@@ -11,6 +11,6 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SPECTRAL_CUBE')
-def test_SpectralCube():
+def test_GammaSpectralCube():
     #spectral_cube = GammaSpectralCube()
     pass
