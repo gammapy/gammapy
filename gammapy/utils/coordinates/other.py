@@ -4,11 +4,10 @@ from __future__ import print_function, division
 from numpy import (cos, sin, arcsin, sqrt,
                    tan, arctan, arctan2,
                    radians, degrees, pi)
-from astropy.constants import R_sun
-#from astropy.units import pc, kpc, cm, km, second, year
+from ...utils.const import d_sun_to_galactic_center
 from astropy.units import Unit
 
-R_SUN = R_sun.to('kpc').value
+
 
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
            'radius_to_angle', 'angle_to_radius', 'spherical_velocity', 'motion_since_birth']
@@ -22,11 +21,12 @@ def cartesian(r, theta, dx=0, dy=0):
     return x, y
 
 
-def galactic(x, y, z):
+def galactic(x, y, z, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
     for given position in cartesian coordinates (kpc)"""
-    d = sqrt(x ** 2 + (y - R_SUN) ** 2 + z ** 2)
-    lon = degrees(arctan2(x, R_SUN - y))
+    D_SUN_GALACTIC_CENTER = d_sun_to_galactic_center.to('kpc').value
+    d = sqrt(x ** 2 + (y - D_SUN_GALACTIC_CENTER) ** 2 + z ** 2)
+    lon = degrees(arctan2(x, D_SUN_GALACTIC_CENTER - y))
     lat = degrees(arcsin(z / d))
     return lon, lat, d
 

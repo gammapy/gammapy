@@ -2,7 +2,7 @@
 """Thin wrapper and some additions to the astropy const and units packages."""
 from __future__ import print_function, division
 import numpy as np
-from astropy.units import Unit
+from astropy.units import Unit, Quantity
 
 __all__ = ['conversion_factor', 'd_sun_to_galactic_center',
            'sigma_to_fwhm', 'fwhm_to_sigma'
@@ -19,7 +19,7 @@ def conversion_factor(old, new):
     return Unit(old).to(Unit(new))
 
 """ Astronomical constants """
-d_sun_to_galactic_center = 8.5  # Distance Sun to Galactic center (kpc)
+d_sun_to_galactic_center = Quantity(8.5, 'kpc')  # Distance Sun to Galactic center (kpc)
 
 """ Additional constants """
 sigma_to_fwhm = np.sqrt(8 * np.log(2))  # ~ 2.35

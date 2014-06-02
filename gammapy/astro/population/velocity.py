@@ -2,9 +2,12 @@
 """Pulsar velocity distribution models"""
 from __future__ import print_function, division
 from numpy import exp, sqrt, pi
+from astropy.utils.compat.odict import OrderedDict
 
 __all__ = ['H05', 'F06B', 'F06P',
-           'distributions', 'v_range']
+           'v_range',
+           'velocity_distributions',
+           ]
 
 # Simulation range used for random number drawing
 v_range = 4000  # km/s
@@ -83,6 +86,12 @@ def F06P(v, v0=560):
     """
     return 4. / (pi * v0 * (1 + (v / v0) ** 2) ** 2)
 
-# Dictionary of available distributions.
-# Useful for automatic processing.
-distributions = {'H05': H05, 'F06B': F06B, 'F06P': F06P}
+velocity_distributions = OrderedDict()
+"""Dictionary of available distributions.
+
+Useful for automatic processing.
+"""
+velocity_distributions['H05'] = H05
+velocity_distributions['F06B'] = F06B
+velocity_distributions['F06P'] = F06P
+
