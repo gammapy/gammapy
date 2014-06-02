@@ -49,4 +49,7 @@ Reference/API
 
 .. automodapi:: gammapy.utils.scripts
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.utils.testing
+    :no-inheritance-diagram:
     
