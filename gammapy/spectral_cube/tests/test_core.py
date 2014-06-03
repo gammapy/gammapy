@@ -13,7 +13,14 @@ except ImportError:
 @pytest.mark.skipif('not HAS_SPECTRAL_CUBE')
 '''
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 @remote_data
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_GammaSpectralCube():
     filename = get_fermi_diffuse_background_model()
     spectral_cube = GammaSpectralCube(filename)
