@@ -2,22 +2,90 @@
 from __future__ import print_function, division
 import datetime
 import numpy as np
+from astropy.units import Quantity
 from astropy.io import fits
 
-__all__ = ['EnergyAxis', 'np_to_pha']
+__all__ = ['LogEnergyAxis',
+           'energy_bounds_equal_log_spacing',
+           'np_to_pha',
+           ]
 
-class EnergyAxis(object):
-    """Log energy axis.
+
+def energy_bounds_equal_log_spacing(energy_band, bins=10):
+    """Make energy bounds array with equal-log spacing.
     
     Parameters
     ----------
-    TODO
+    energy_band : `~astropy.units.Quantity`
+        Tuple ``(energy_min, energy_max)``
+    bins : int
+        Number of bins
+    
+    Returns
+    -------
+    energy_bounds : ~astropy.units.Quantity`
+        Energy bounds array (1-dim with lenght ``bins + 1``.
     """
-    def __init__(self, e):
-        self.e = e
-        self.log_e = np.log10(e)
+    x_min, x_max = np.log(energy_band.value)
+    x = np.logspace(x_min, x_max, bins + 1)
+    energy_bounds = Quantity(10 ** x, energy_band.unit)
 
-    def __call__(self, e):
+    return energy_bounds
+
+
+class LogEnergyAxis(object):
+    """Log10 energy axis.
+    
+    Defines a transformation between:
+    * ``energy = 10 ** x``
+    * ``x = log10(energy)``
+    * ``pix`` in the range [0, ..., len(x)] via linear interpolation of the ``x`` array,
+      e.g. ``pix=0`` corresponds to ``x[0]``
+      and ``pix=0.3`` is ``0.5 * (0.3 * x[0] + 0.7 * x[1])``
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Energy array
+    """
+    def __init__(self, energy):
+        
+        self.energy = energy
+        self.x = np.log10(energy.value)
+        self.pix = np.arange(len(self.x))
+
+    def world2pix(self, energy):
+        """TODO: document.
+        """
+        # Convert `energy` to `x = log10(energy)`
+        x = np.log10(energy.value)
+
+        # Interpolate in `x`
+        pix = np.interp(x, self.x, self.pix)
+
+        return pix
+
+    def pix2world(self, pix):
+        """TODO: document.
+        """
+        # Interpolate in `x = log10(energy)`
+        x = np.interp(pix, self.pix, self.x)
+
+        # Convert `x` to `energy`
+        energy = Quantity(10 ** x, self.energy.unit)
+
+        return energy
+
+    def closest_point(self, energy):
+        """TODO: document
+        """
+        x = np.log10(energy.value)
+        # TODO: I'm not sure which is faster / better here?
+        index = np.argmin(np.abs(self.x - x))
+        # np.searchsorted(self.x, x)
+        return index
+
+    def bin_edges(self, energy):
         """TODO: document.
         
         Parameters
@@ -29,18 +97,18 @@ class EnergyAxis(object):
         TODO
         """
         try:
-            z1 = np.where(e >= self.e)[0][-1]
+            pix = np.where(energy >= self.energy)[0][-1]
         except ValueError:
             # Loop over es by hand
-            z1 = np.empty_like(e, dtype=int)
-            for ii in range(e.size):
+            pix1 = np.empty_like(energy, dtype=int)
+            for ii in range(energy.size):
                 # print ii, e[ii], np.where(e[ii] >= self.e)
-                z1[ii] = np.where(e[ii] >= self.e)[0][-1]
-        z2 = z1 + 1
-        e1 = self.e[z1]
-        e2 = self.e[z2]
+                pix1[ii] = np.where(energy[ii] >= self.energy)[0][-1]
+        pix2 = pix1 + 1
+        energy1 = self.energy[pix1]
+        energy2 = self.energy[pix2]
 
-        return z1, z2, e1, e2
+        return pix1, pix2, energy1, energy2
 
 
 def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=None, quality=None, syserr=None,
