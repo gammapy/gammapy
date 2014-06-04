@@ -21,6 +21,7 @@ from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import data
+from ..spectral_cube import GammaSpectralCube
 
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
@@ -111,7 +112,9 @@ class FermiGalacticCenter(object):
         result = dict()
         result['psf'] = get_pkg_data_filename('fermi/psf.fits')
         result['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
-        return result    
+        result['diffuse_model'] = get_pkg_data_filename('fermi/gll_iem_v02_cutout.fits')
+
+        return result
 
     @staticmethod
     def counts():
@@ -124,6 +127,18 @@ class FermiGalacticCenter(object):
         """PSF as `astropy.io.fits.HDUList`."""
         filename = FermiGalacticCenter.filenames()['psf']
         return fits.open(filename)
+
+    @staticmethod
+    def diffuse_model():
+        """Diffuse model spectral cube.
+
+        Returns
+        -------
+        spectral_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+            Diffuse model spectral cube
+        """
+        filename = FermiGalacticCenter.filenames()['diffuse_model']
+        return GammaSpectralCube.read(filename)
 
 
 def tev_spectrum(source_name):
