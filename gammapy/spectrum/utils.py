@@ -37,11 +37,17 @@ class LogEnergyAxis(object):
     """Log10 energy axis.
     
     Defines a transformation between:
+
     * ``energy = 10 ** x``
     * ``x = log10(energy)``
     * ``pix`` in the range [0, ..., len(x)] via linear interpolation of the ``x`` array,
       e.g. ``pix=0`` corresponds to ``x[0]``
       and ``pix=0.3`` is ``0.5 * (0.3 * x[0] + 0.7 * x[1])``
+
+    .. note::
+        The `specutils.Spectrum1DLookupWCS <http://specutils.readthedocs.org/en/latest/api/specutils.wcs.specwcs.Spectrum1DLookupWCS.html>`__
+        class is similar (only that it doesn't include the ``log`` transformation and the API is different.
+        Also see this Astropy feature request: https://github.com/astropy/astropy/issues/2362
 
     Parameters
     ----------

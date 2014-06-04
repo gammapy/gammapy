@@ -63,7 +63,7 @@ class GammaSpectralCube(object):
         # Initialise the interpolator
         # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
         from scipy.interpolate import RegularGridInterpolator
-        points = map(np.arange, data.shape)
+        points = list(map(np.arange, data.shape))
         self._interpolate = RegularGridInterpolator(points, data, fill_value=None)
 
     @staticmethod
@@ -81,12 +81,13 @@ class GammaSpectralCube(object):
             Spectral cube
         """
         data = fits.getdata(filename)
-        data = Quantity(data, 'cm^-2 s^-1 MeV^-1 sr^-1')
+        data = Quantity(data, '1 / (cm2 MeV s sr)')
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header)
         energy = Table.read(filename, 'ENERGIES')['Energy']
+        energy = Quantity(energy, 'MeV')
 
         return GammaSpectralCube(data, wcs, energy)
 
@@ -105,13 +106,14 @@ class GammaSpectralCube(object):
         Returns
         -------
         flux : `~astropy.units.Quantity`
-            Differential flux (cm^-2 s^-1 MeV^-1 sr^-1)
+            Differential flux (1 / (cm2 MeV s sr))
         """
         pix_coord = self.world2pix(lon, lat, energy)
         values = self._interpolate(pix_coord)
-        values.reshape((len(energy), len(lat), len(lon)))
+        #values.reshape((len(energy), len(lat), len(lon)))
+        values.reshape((energy.size, lat.size, lon.size))
 
-        return Quantity(values, 'cm^-2 s^-1 MeV^-1 sr^-1')
+        return Quantity(values, '1 / (cm2 MeV s sr)')
 
     def spectral_index(self, lon, lat, energy, dz=1e-3):
         """Power law spectral index.
@@ -173,6 +175,7 @@ class GammaSpectralCube(object):
         #flux = self.flux(lon, lat, energy_bins)
         x, y = np.indices(self.data.shape[1:])
         z = self.energy_axis.world2pix(energy_bins)
+        import IPython; IPython.embed(); 1 / 0
         pix_coords = np.dstack((z.flat, y.flat, x.flat))
         flux = self._interpolate(pix_coords)
         flux1 = flux[:-1, :, :]
@@ -196,14 +199,18 @@ class GammaSpectralCube(object):
         """
         lon = lon.to('deg').value
         lat = lat.to('deg').value
-        energy = energy.to(self.energy.unit).value
 
         # We're not interested in the energy axis, so we give a dummy value of 1
         x, y = self.wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
 
+        #energy = energy.to(self.energy.unit).value
         z = self.energy_axis.world2pix(energy)
 
-        return np.dstack(z.flat, y.flat, x.flat) 
+        x = np.array(x).flat
+        y = np.array(y).flat
+        z = np.array(z).flat
+        
+        return np.dstack([z, y, x]) 
 
     def pix2idx(self, x, y, z):
         """TODO: is this the right way to do it?
