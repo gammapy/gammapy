@@ -57,7 +57,7 @@ def test_LogEnergyAxis():
     assert_quantity(energy_axis.energy, energy)
 
     energy = Quantity(gmean([1, 10]), 'TeV')
-    pix = energy_axis.world2pix(energy)
+    pix = energy_axis.world2pix(energy.to('MeV'))
     assert_allclose(pix, 0.5)
     
     world = energy_axis.pix2world(pix)

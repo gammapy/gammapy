@@ -24,11 +24,11 @@ def energy_bounds_equal_log_spacing(energy_band, bins=10):
     Returns
     -------
     energy_bounds : ~astropy.units.Quantity`
-        Energy bounds array (1-dim with lenght ``bins + 1``.
+        Energy bounds array (1-dim with length ``bins + 1``).
     """
-    x_min, x_max = np.log(energy_band.value)
-    x = np.logspace(x_min, x_max, bins + 1)
-    energy_bounds = Quantity(10 ** x, energy_band.unit)
+    x_min, x_max = np.log10(energy_band.value)
+    energy_bounds = np.logspace(x_min, x_max, bins + 1)
+    energy_bounds = Quantity(energy_bounds, energy_band.unit)
 
     return energy_bounds
 
@@ -64,7 +64,7 @@ class LogEnergyAxis(object):
         """TODO: document.
         """
         # Convert `energy` to `x = log10(energy)`
-        x = np.log10(energy.value)
+        x = np.log10(energy.to(self.energy.unit).value)
 
         # Interpolate in `x`
         pix = np.interp(x, self.x, self.pix)
