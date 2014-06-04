@@ -3,13 +3,16 @@
 """
 import numpy as np
 from astropy.units import Quantity
-from gammapy.datasets import get_fermi_diffuse_background_model
+from gammapy.datasets import FermiGalacticCenter
 from gammapy.spectral_cube import GammaSpectralCube
 
-filename = get_fermi_diffuse_background_model()
-cube = GammaSpectralCube.read(filename)
+cube = FermiGalacticCenter.diffuse_model()
 print(cube)
 
-energy_band = Quantity([10, 30], 'GeV')
-image = cube.integral_flux_image(energy_band)
-print(image.sum())
+energy_band = Quantity([10, 50], 'GeV')
+image = cube.integral_flux_image(energy_band, energy_bins=100)
+image.writeto('fermi_diffuse_integral_flux_image.fits', clobber=True)
+
+# Some checks
+surface_brightness = Quantity(image.data.mean(), 'cm^-2 s^-1 sr^-1')
+print('Mean surface brightness in image: {0}'.format(surface_brightness))

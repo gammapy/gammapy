@@ -33,6 +33,14 @@ class GammaSpectralCube(object):
 
     For now we re-implement what we need here.
 
+    The order of the spectral cube axes can be very confusing ... this should help:
+    * The ``data`` array axis order is ``(energy, lat, lon)``.
+    * The ``wcs`` object axis order is ``(lon, lat, energy)``.
+    * Methods use the ``wcs`` order of ``(lon, lat, energy)``,
+      but internally when accessing the data often the reverse order is used.
+      We use ``(xx, yy, zz)`` as pixel coordinates for ``(lon, lat, energy)``,
+      as that matches the common definition of ``x`` and ``y`` in image viewers.  
+
     Parameters
     ----------
     data : array_like
@@ -60,11 +68,19 @@ class GammaSpectralCube(object):
         self.energy = energy
         self.energy_axis = LogEnergyAxis(energy)
 
-        # Initialise the interpolator
-        # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
-        from scipy.interpolate import RegularGridInterpolator
-        points = list(map(np.arange, data.shape))
-        self._interpolate = RegularGridInterpolator(points, data, fill_value=None)
+        self._interpolate_cache = None
+    
+    @property
+    def _interpolate(self):
+        if self._interpolate_cache == None:
+            # Initialise the interpolator
+            # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
+            from scipy.interpolate import RegularGridInterpolator
+            points = list(map(np.arange, self.data.shape))
+            self._interpolate_cache = RegularGridInterpolator(points, self.data.value,
+                                                              fill_value=None, bounds_error=False)
+
+        return self._interpolate_cache
 
     @staticmethod
     def read(filename):
@@ -91,6 +107,51 @@ class GammaSpectralCube(object):
 
         return GammaSpectralCube(data, wcs, energy)
 
+    def world2pix(self, lon, lat, energy, combine=False):
+        """Convert world to pixel coordinates.
+
+        Parameters
+        ----------
+        lon, lat, energy
+
+        Returns
+        -------
+        x, y, z or array with (x, y, z) as columns
+        """
+        lon = lon.to('deg').value
+        lat = lat.to('deg').value
+        x, y, _ = self.wcs.wcs_world2pix(lon, lat, 0, 0)
+
+        z = self.energy_axis.world2pix(energy)
+
+        if combine == True:
+            x = np.array(x).flat
+            y = np.array(y).flat
+            z = np.array(z).flat        
+            return np.column_stack([z, y, x]) 
+        else:
+            return x, y, z
+
+    def pix2world(self, x, y, z):
+        """Convert world to pixel coordinates.
+        
+        Parameters
+        ----------
+        x, y, z
+        
+        Returns
+        -------
+        lon, lat, energy
+        """
+        lon, lat, _ = self.wcs.wcs_pix2world(x, y, 0, 0)
+        energy = self.energy_axis.pix2world(z) 
+
+        lon = Quantity(lon, 'deg')
+        lat = Quantity(lat, 'deg')
+        energy = Quantity(energy, self.energy.unit)
+
+        return lon, lat, energy
+
     def flux(self, lon, lat, energy):
         """Differential flux (linear interpolation).
 
@@ -108,10 +169,12 @@ class GammaSpectralCube(object):
         flux : `~astropy.units.Quantity`
             Differential flux (1 / (cm2 MeV s sr))
         """
-        pix_coord = self.world2pix(lon, lat, energy)
+        # Determine output shape by creating some array via broadcasting
+        shape = (lon * lat * energy).shape
+        
+        pix_coord = self.world2pix(lon, lat, energy, combine=True)
         values = self._interpolate(pix_coord)
-        #values.reshape((len(energy), len(lat), len(lon)))
-        values.reshape((energy.size, lat.size, lon.size))
+        values.reshape(shape)
 
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
@@ -135,8 +198,9 @@ class GammaSpectralCube(object):
         spectral_index : `~astropy.units.Quantity`
             Spectral index
         """
+        raise NotImplementedError
         # Compute flux at `z = log(energy)`
-        pix_coord = self.world2pix(lon, lat, energy)
+        pix_coord = self.world2pix(lon, lat, energy, combine=True)
         flux1 = self._interpolate(pix_coord)
 
         # Compute flux at `z + dz`
@@ -161,71 +225,48 @@ class GammaSpectralCube(object):
 
         Parameters
         ----------
-        energy_band : `astropy.units.Quantity`
+        energy_band : `~astropy.units.Quantity`
             Tuple ``(energy_min, energy_max)``
-        energy_bins : int or `astropy.units.Quantity`
+        energy_bins : int or `~astropy.units.Quantity`
             Energy bin definition.
+
+        Returns
+        -------
+        image : `~astropy.io.fits.ImageHDU`
+            Integral flux image (1 / (m^2 s))
         """
         if isinstance(energy_bins, int):
             energy_bins = energy_bounds_equal_log_spacing(energy_band, energy_bins)
 
         energy1 = energy_bins[:-1]
         energy2 = energy_bins[1:]
-        #lon, lat = self.coordinates()
-        #flux = self.flux(lon, lat, energy_bins)
-        x, y = np.indices(self.data.shape[1:])
-        z = self.energy_axis.world2pix(energy_bins)
-        import IPython; IPython.embed(); 1 / 0
-        pix_coords = np.dstack((z.flat, y.flat, x.flat))
+
+        # Compute differential flux at energy bin edges of all pixels
+        xx = np.arange(self.data.shape[2])
+        yy = np.arange(self.data.shape[1])
+        zz = self.energy_axis.world2pix(energy_bins)
+
+        xx, yy, zz = np.meshgrid(zz, yy, xx, indexing='ij')
+        shape = xx.shape
+
+        pix_coords = np.column_stack([xx.flat, yy.flat, zz.flat])
         flux = self._interpolate(pix_coords)
+        flux = flux.reshape(shape)
+
+        # Compute integral flux using power-law approximation in each bin
         flux1 = flux[:-1, :, :]
         flux2 = flux[1:, :, :]
-
+        energy1 = energy1[:, np.newaxis, np.newaxis].value
+        energy2 = energy2[:, np.newaxis, np.newaxis].value
         integral_flux = powerlaw.I_from_points(energy1, energy2, flux1, flux2)
-        integral_flux = np.sum(integral_flux, axis=0)
-
-        return integral_flux
-
-    def world2pix(self, lon, lat, energy):
-        """Convert world to pixel coordinates.
         
-        Parameters
-        ----------
-        TODO
-        
-        Returns
-        -------
-        TODO
-        """
-        lon = lon.to('deg').value
-        lat = lat.to('deg').value
+        integral_flux = integral_flux.sum(axis=0)
 
-        # We're not interested in the energy axis, so we give a dummy value of 1
-        x, y = self.wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
+        # TODO: check units ... set correctly if not OK.
+        header = self.wcs.sub(['longitude', 'latitude']).to_header() 
+        hdu = fits.ImageHDU(data=integral_flux, header=header, name='integral_flux')
 
-        #energy = energy.to(self.energy.unit).value
-        z = self.energy_axis.world2pix(energy)
-
-        x = np.array(x).flat
-        y = np.array(y).flat
-        z = np.array(z).flat
-        
-        return np.dstack([z, y, x]) 
-
-    def pix2idx(self, x, y, z):
-        """TODO: is this the right way to do it?
-        """
-        x = np.round(x).astype(int)
-        y = np.round(y).astype(int)
-        z = np.round(z).astype(int)
-        #z = np.searchsorted(self.energy.value, energy)
-
-        return np.dstack(y.flat, y.flat, x.flat) 
-
-# ******** The following methods are copied from the `spectral-cube` package *************
-    @property
-    def spatial_coordinate_map(self):
-        return self.world[0, :, :][1:]
+        return hdu
 
     def __repr__(self):
         # Copied from `spectral-cube` package
@@ -238,32 +279,3 @@ class GammaSpectralCube(object):
         s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
         s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2], self.wcs.wcs.cunit[2])
         return s
-
-
-
-'''
-Old methods ... can probably all be deleted
-
-
-    def lookup(self, lon, lat, energy):
-        """TODO: Unused ... document or remove.
-        """
-        x, y = self._get_xy(lon, lat)
-        z1, z2, energy1, energy2 = self.e_axis(energy)
-        f1, f2 = self.data[z1, y, x], self.data[z2, y, x]
-        return [energy1, energy2, f1, f2, energy]
-
-    def _set_position(self, lon, lat):
-        """Pre-compute log-flux vector for a given position."""
-        x, y = self._get_xy(lon, lat)
-        self.log_f = np.log10(self.data[:, y, x])
-
-    def _get_xy(self, lon, lat):
-        """Find pixel coordinates for a given position."""
-        # We're not interested in the energy axis, so we give a dummy value of 1
-        x, y = self.wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
-        # Find the nearest integer pixel
-        x = np.round(x).astype(int)
-        y = np.round(y).astype(int)
-        return x, y
-'''
