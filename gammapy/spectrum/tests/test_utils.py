@@ -1,12 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from tempfile import NamedTemporaryFile
+from astropy.units import Quantity
 from astropy.tests.helper import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
-from ..utils import np_to_pha
+from ...utils.testing import assert_quantity
+from ..utils import np_to_pha, LogEnergyAxis
+
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 class TestPHA(object):
 
@@ -32,8 +41,24 @@ class TestPHA(object):
         self.PHA_SUM = np.sum(counts)
     
         pha.writeto(self.PHA_FILENAME)    
-    
-        
+
     def test_pha(self):
         pha = Table.read(self.PHA_FILENAME)
         assert_allclose(pha['COUNTS'].sum(), 69.5)
+
+
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_LogEnergyAxis():
+    from scipy.stats import gmean
+    energy = Quantity([1, 10, 100], 'TeV')
+    energy_axis = LogEnergyAxis(energy)
+
+    assert_allclose(energy_axis.x, [0, 1, 2])
+    assert_quantity(energy_axis.energy, energy)
+
+    energy = Quantity(gmean([1, 10]), 'TeV')
+    pix = energy_axis.world2pix(energy.to('MeV'))
+    assert_allclose(pix, 0.5)
+    
+    world = energy_axis.pix2world(pix)
+    assert_quantity(world, energy)

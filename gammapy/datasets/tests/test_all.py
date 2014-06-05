@@ -2,10 +2,13 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
+from astropy.units import Quantity
 from astropy.io import fits
 from astropy.tests.helper import remote_data
 from .. import poisson_stats_image, FermiGalacticCenter
 from .. import fetch_fermi_catalog
+from ...utils.testing import assert_quantity
+
 
 def test_poisson_stats_image():
     """Get the data file via the gammapy.data.poisson_stats_image function"""
@@ -27,17 +30,26 @@ def test_poisson_stats_extra_info():
         assert_allclose(images[name].sum(), expected)
 
 
-def test_FermiGalacticCenter():
-    filenames = FermiGalacticCenter.filenames()
-    assert isinstance(filenames, dict)
-
-    psf = FermiGalacticCenter.psf()
-    assert psf['PSF'].data.shape == (20,)
-    assert psf['THETA'].data.shape == (300,)
+class TestFermiGalacticCenter():
     
-    counts = FermiGalacticCenter.counts()
-    assert counts.data.shape == (201, 401)
-    assert counts.data.sum() == 24803
+    def test_filenames(self):
+        filenames = FermiGalacticCenter.filenames()
+        assert isinstance(filenames, dict)
+
+    def test_psf(self):
+        psf = FermiGalacticCenter.psf()
+        assert psf['PSF'].data.shape == (20,)
+        assert psf['THETA'].data.shape == (300,)
+
+    def test_counts(self):
+        counts = FermiGalacticCenter.counts()
+        assert counts.data.shape == (201, 401)
+        assert counts.data.sum() == 24803
+
+    def test_diffuse_model(self):
+        diffuse_model = FermiGalacticCenter.diffuse_model()
+        assert diffuse_model.data.shape == (30, 21, 61)
+        assert_quantity(diffuse_model.energy[0], Quantity(50, 'MeV'))
 
 
 @remote_data

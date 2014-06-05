@@ -15,7 +15,9 @@ Files
 -----
 
 * ``fermi_counts.fits.gz`` -- Galactic center counts image
-* ``psf.fits`` -- Galactic center PSF 
+* ``psf.fits`` -- Galactic center PSF
+* ``gll_iem_v02_cutout.fits`` -- Galactic center diffuse model cube
+
 
 Details
 -------
@@ -29,3 +31,9 @@ Fermi LAT data server query parameters:
 * Search radius (degrees) 30
 
 Commands:
+
+I produced the `gll_iem_v02_cutout.fits` file using these commands::
+
+   $ wget http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gll_iem_v02.fit
+   $ ftcopy 'gll_iem_v02.fit[330:390,170:190,*]' gll_iem_v02_cutout.fits
+   $ fchecksum gll_iem_v02_cutout.fits update+ datasum+

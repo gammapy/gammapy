@@ -53,6 +53,7 @@ Sub-packages
   morphology/index
   obs/index
   shower/index
+  spectral_cube/index
   spectrum/index
   stats/index
   utils/index
