@@ -59,7 +59,6 @@ class TestGammaSpectralCube(object):
         pix2 = self.spectral_cube.world2pix(*world)
         assert_allclose(pix2, pix)
 
-
     @pytest.mark.xfail
     def test_flux_scalar(self):
         # Corner pixel with index [0, 0, 0]
@@ -80,13 +79,14 @@ class TestGammaSpectralCube(object):
         # and remember that numpy starts counting at 0 whereas FITS start at 1
         s = self.spectral_cube.data
         expected = s[9, 10:12, 29:31].mean()
-        
+
         # TODO: why are these currently inconsistent by a few % !?
         # actual   =  9.67254380e-07
         # expected = 10.13733026e-07
         assert_quantity(actual, expected)
 
     def test_flux_array(self):
+        print('HAS_SCIPY = {0}'.format(HAS_SCIPY))
         pix = [2, 2], [3, 3], [4, 4]
         world = self.spectral_cube.pix2world(*pix)
         actual = self.spectral_cube.flux(*world)
