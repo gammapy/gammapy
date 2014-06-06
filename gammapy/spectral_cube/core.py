@@ -34,6 +34,7 @@ class GammaSpectralCube(object):
     For now we re-implement what we need here.
 
     The order of the spectral cube axes can be very confusing ... this should help:
+
     * The ``data`` array axis order is ``(energy, lat, lon)``.
     * The ``wcs`` object axis order is ``(lon, lat, energy)``.
     * Methods use the ``wcs`` order of ``(lon, lat, energy)``,
