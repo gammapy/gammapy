@@ -8,7 +8,7 @@ from __future__ import print_function, division
 import numpy as np
 from numpy import sqrt, exp, sin, cos
 
-from astropy.modeling import Fittable2DModel, Parameter
+from astropy.modeling import Fittable2DModel, Parameter, ModelDefinitionError
 from astropy.modeling.models import Gaussian2D 
 
 __all__ = ['delta2d', 'gauss2d', 'shell2d', 'sphere2d',
@@ -25,15 +25,21 @@ class Shell2D(Fittable2DModel):
     Parameters
     ----------
     amplitude : float
-        Peak value of the shell function
+        Value of the integral of the shell function.
     x_0 : float
         x position center of the shell
     y_0 : float
         y position center of the shell
-    R_in : float
+    r_in : float
         Inner radius of the shell
-    R_out : float
+    width : float
+        Width of the shell
+    r_out : float (optional)
         Outer radius of the shell
+    normed : bool (True)
+        If set the amplitude parameter  corresponds to the integral of the
+        function. If not set the 'amplitude' parameter corresponds to the
+        peak value of the function (value at :math:`r = r_{in}`).
 
     See Also
     --------
@@ -41,45 +47,84 @@ class Shell2D(Fittable2DModel):
 
     Notes
     -----
-    Model formula:
+    Model formula with integral normalization:
 
     .. math::
 
-        f(r) = A \\cdot \\left \\{
+        f(r) = A \\frac{3}{2 \\pi (r_{out}^3 - r_{in}^3)} \\cdot \\left \\{
                 \\begin{array}{ll}
-                    \\sqrt{R_{out}^2 - r^2} - \\sqrt{R_{in}^2 - r^2} & : r < R_{in} \\\\
-                    \\sqrt{R_{out}^2 - r^2} & :  R_{in} \\leq r \\leq R_{out} \\\\
-                    0 & : r > R_{out}
+                    \\sqrt{r_{out}^2 - r^2} - \\sqrt{r_{in}^2 - r^2} & : r < r_{in} \\\\
+                    \\sqrt{r_{out}^2 - r^2} & :  r_{in} \\leq r \\leq r_{out} \\\\
+                    0 & : r > r_{out}
                 \\end{array}
             \\right.
+
+    Model formula with peak normalization:
+
+    .. math::
+
+        f(r) = A \\frac{1}{\\sqrt{r_{out}^2 - r_{in}^2}} \\cdot \\left \\{
+                \\begin{array}{ll}
+                    \\sqrt{r_{out}^2 - r^2} - \\sqrt{r_{in}^2 - r^2} & : r < r_{in} \\\\
+                    \\sqrt{r_{out}^2 - r^2} & :  r_{in} \\leq r \\leq r_{out} \\\\
+                    0 & : r > r_{out}
+                \\end{array}
+            \\right.
+
+    With :math:`r_{out} = r_{in} + \\mathrm{width}`.
     """
 
     amplitude = Parameter()
     x_0 = Parameter()
     y_0 = Parameter()
-    R_in = Parameter()
-    R_out = Parameter()
+    r_in = Parameter()
+    width = Parameter()
 
-    def __init__(self, amplitude, x_0, y_0, R_in, R_out, **constraints):
+    def __init__(self, amplitude, x_0, y_0, r_in, width=None, r_out=None, normed=True, **constraints):
+        if r_out is not None:
+            width = r_out - r_in
+        if r_out is None and width is None:
+            raise ModelDefinitionError("Either specify width or r_out.")
+
+        if not normed:
+            self.eval = self.eval_peak_norm
         super(Shell2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                     y_0=y_0, R_in=R_in, R_out=R_out, **constraints)
+                                     y_0=y_0, r_in=r_in, width=width, **constraints)
 
     @staticmethod
-    def eval(x, y, amplitude, x_0, y_0, R_in, R_out):
-        """Two dimensional Shell model function"""
+    def eval(x, y, amplitude, x_0, y_0, r_in, width):
+        """Two dimensional Shell model function normed to integral"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
-        RR_in = R_in ** 2
-        RR_out = R_out ** 2
+        rr_in = r_in ** 2
+        rr_out = (r_in + width) ** 2
 
         # Because np.select evaluates on the whole rr array
         # we have to catch the invalid value warnings
         np.seterr(invalid='ignore')
 
         # Note: for r > r_out 'np.select' fills automatically zeros!
-        values = np.select([rr <= RR_in, rr <= RR_out],
-                       [sqrt(RR_out - rr) - sqrt(RR_in - rr),
-                        sqrt(RR_out - rr)])
-        return amplitude * values
+        values = np.select([rr <= rr_in, rr <= rr_out],
+                       [sqrt(rr_out - rr) - sqrt(rr_in - rr),
+                        sqrt(rr_out - rr)])
+        return amplitude * values / (2 * np.pi / 3 *
+                                     (rr_out * (r_in + width) - rr_in * r_in))
+
+    @staticmethod
+    def eval_peak_norm(x, y, amplitude, x_0, y_0, r_in, width):
+        """Two dimensional Shell model function normed to peak value"""
+        rr = (x - x_0) ** 2 + (y - y_0) ** 2
+        rr_in = r_in ** 2
+        rr_out = (r_in + width) ** 2
+
+        # Because np.select evaluates on the whole rr array
+        # we have to catch the invalid value warnings
+        np.seterr(invalid='ignore')
+
+        # Note: for r > r_out 'np.select' fills automatically zeros!
+        values = np.select([rr <= rr_in, rr <= rr_out],
+                       [sqrt(rr_out - rr) - sqrt(rr_in - rr),
+                        sqrt(rr_out - rr)])
+        return amplitude * values / np.sqrt(rr_out - rr_in)
 
 
 class Sphere2D(Fittable2DModel):
@@ -91,13 +136,18 @@ class Sphere2D(Fittable2DModel):
     Parameters
     ----------
     amplitude : float
-        Peak value of the sphere function
+        Value of the integral of the sphere function
     x_0 : float
         x position center of the sphere
     y_0 : float
         y position center of the sphere
-    R_0 : float
-        Inner radius of the sphere
+    r_0 : float
+        Radius of the sphere
+    normed : bool (True)
+        If set the amplitude parameter corresponds to the integral of the
+        function. If not set the 'amplitude' parameter corresponds to the
+        peak value of the function (value at :math:`r = 0`).
+
 
     See Also
     --------
@@ -105,14 +155,25 @@ class Sphere2D(Fittable2DModel):
 
     Notes
     -----
-    Model formula:
+    Model formula with integral normalization:
 
     .. math::
 
-        f(r) = A \\cdot \\left \\{
+        f(r) = A \\frac{3}{4 \\pi r_0^3} \\cdot \\left \\{
                 \\begin{array}{ll}
-                    \\sqrt{R_0^2 - r^2} & :  r \\leq R_0 \\\\
-                    0 & : r > R_0
+                    \\sqrt{r_0^2 - r^2} & :  r \\leq r_0 \\\\
+                    0 & : r > r_0
+                \\end{array}
+            \\right.
+
+    Model formula with peak normalization:
+
+    .. math::
+
+        f(r) = A \\frac{1}{r_0} \\cdot \\left \\{
+                \\begin{array}{ll}
+                    \\sqrt{r_0^2 - r^2} & :  r \\leq r_0 \\\\
+                    0 & : r > r_0
                 \\end{array}
             \\right.
     """
@@ -120,24 +181,39 @@ class Sphere2D(Fittable2DModel):
     amplitude = Parameter()
     x_0 = Parameter()
     y_0 = Parameter()
-    R_0 = Parameter()
+    r_0 = Parameter()
 
-    def __init__(self, amplitude, x_0, y_0, R_0, **constraints):
+    def __init__(self, amplitude, x_0, y_0, r_0, normed=True, **constraints):
+        if not normed:
+            self.eval = self.eval_peak_norm
         super(Sphere2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                     y_0=y_0, R_0=R_0, **constraints)
+                                     y_0=y_0, r_0=r_0, **constraints)
 
     @staticmethod
-    def eval(x, y, amplitude, x_0, y_0, R_0):
-        """Two dimensional Sphere model function"""
+    def eval(x, y, amplitude, x_0, y_0, r_0):
+        """Two dimensional Sphere model function normed to integral"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
-        RR_0 = R_0 ** 2
+        rr_0 = r_0 ** 2
 
         # Because np.select evaluates on the whole rr array
         # we have to catch the invalid value warnings
         np.seterr(invalid='ignore')
 
-        values = np.select([rr <= RR_0, rr > RR_0], [2 * sqrt(RR_0 - rr), 0])
-        return amplitude * values
+        values = np.select([rr <= rr_0, rr > rr_0], [2 * sqrt(rr_0 - rr), 0])
+        return amplitude * values / (4 / 3. * np.pi * rr_0 * r_0)
+
+    @staticmethod
+    def eval_peak_norm(x, y, amplitude, x_0, y_0, r_0):
+        """Two dimensional Sphere model function normed to peak value"""
+        rr = (x - x_0) ** 2 + (y - y_0) ** 2
+        rr_0 = r_0 ** 2
+
+        # Because np.select evaluates on the whole rr array
+        # we have to catch the invalid value warnings
+        np.seterr(invalid='ignore')
+
+        values = np.select([rr <= rr_0, rr > rr_0], [sqrt(rr_0 - rr), 0])
+        return amplitude * values / r_0
 
 
 class Delta2D(Fittable2DModel):
@@ -149,11 +225,11 @@ class Delta2D(Fittable2DModel):
     Parameters
     ----------
     amplitude : float
-        Peak value of the sphere function
+        Peak value of the point source
     x_0 : float
-        x position center of the sphere
+        x position center of the point source
     y_0 : float
-        y position center of the sphere
+        y position center of the point source
 
     See Also
     --------

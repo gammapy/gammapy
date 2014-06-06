@@ -23,13 +23,13 @@ modes = ['center', 'linear_interp', 'oversample']
 models_2D = {
 
     Sphere2D: {
-        'parameters': [1, 0, 0, 10],
+        'parameters': [1, 0, 0, 10, False],
         'x_values': [0, 10, 5],
         'y_values': [0, 10, 0],
-        'z_values': [20, 0, 20 * np.sqrt(0.75)],
+        'z_values': [1, 0, np.sqrt(75) / 10],
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
-        'integral': 4. / 3 * np.pi * 10 ** 3,
+        'integral': 4. / 3 * np.pi * 10 ** 3 / (2 * 10),
     },
 
     Delta2D: {
@@ -43,13 +43,13 @@ models_2D = {
     },
 
     Shell2D: {
-        'parameters': [1, 0, 0, 9, 10],
+        'parameters': [1, 0, 0, 9, 1, 10, False],
         'x_values': [0],
-        'y_values': [0],
+        'y_values': [9],
         'z_values': [1],
         'x_lim': [-11, 11],
         'y_lim': [-11, 11],
-        'integral': 2 * np.pi / 3 * (10 ** 3 - 9 ** 3),
+        'integral': 2 * np.pi / 3 * (10 ** 3 - 9 ** 3) / np.sqrt(10 ** 2 - 9 ** 2),
     }
 }
 
@@ -128,7 +128,13 @@ class TestMorphologyModels(object):
         fitter = fitting.NonLinearLSQFitter()
         new_model = fitter(model, xv, yv, data)
         fitparams, _ = fitter._model_to_fit_params(new_model)
-        utils.assert_allclose(fitparams, parameters, atol=self.fit_error)
+
+        # Only check parameters that were free in the fit
+        params = [getattr(new_model, name) for name in new_model.param_names]
+        fixed = [par.fixed for par in params]
+        fitted_parameters = [val for (val, fixed) in zip(parameters, fixed)
+                             if not fixed]
+        utils.assert_allclose(fitparams, fitted_parameters, atol=self.fit_error)
 
     @pytest.mark.parametrize(('model_class', 'mode'), list(itertools.product(models_2D.keys(), modes)))
     def test_pixel_sum_2D(self, model_class, mode):
