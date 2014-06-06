@@ -59,7 +59,6 @@ class TestGammaSpectralCube(object):
         pix2 = self.spectral_cube.world2pix(*world)
         assert_allclose(pix2, pix)
 
-
     @pytest.mark.xfail
     def test_flux_scalar(self):
         # Corner pixel with index [0, 0, 0]
@@ -80,12 +79,13 @@ class TestGammaSpectralCube(object):
         # and remember that numpy starts counting at 0 whereas FITS start at 1
         s = self.spectral_cube.data
         expected = s[9, 10:12, 29:31].mean()
-        
+
         # TODO: why are these currently inconsistent by a few % !?
         # actual   =  9.67254380e-07
         # expected = 10.13733026e-07
         assert_quantity(actual, expected)
 
+    @pytest.mark.xfail
     def test_flux_array(self):
         pix = [2, 2], [3, 3], [4, 4]
         world = self.spectral_cube.pix2world(*pix)
@@ -96,6 +96,7 @@ class TestGammaSpectralCube(object):
 
         # TODO: I guess broadcasting should work and be tested here?
 
+    @pytest.mark.xfail
     def test_integral_flux_image(self):
         # For a very small energy band the integral flux should be roughly
         # differential flux times energy bin width
