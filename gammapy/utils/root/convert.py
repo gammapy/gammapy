@@ -44,7 +44,8 @@ def hist1d_to_table(hist):
         try:
             getter = getattr(hist, method)
             data[column] = [getter(i) for i in bins]
-        except IndexError:
+        # Note: `GetBinErrorLow` is not available in old ROOT versions!?
+        except AttributeError:
             pass
 
     table = Table(data)
