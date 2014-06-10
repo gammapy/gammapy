@@ -85,7 +85,7 @@ def test_EnergyDependentTablePSF():
 
     # TODO: test __init__
 
-    filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
+    filename = get_pkg_data_filename('../../datasets/data/fermi/psf.fits')
     psf = EnergyDependentTablePSF.read(filename)
 
     # Test cases

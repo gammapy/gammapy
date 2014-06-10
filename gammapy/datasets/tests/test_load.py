@@ -18,7 +18,7 @@ def test_poisson_stats_image():
 
 def test_poisson_stats_image_direct():
     """Get the data file directly via get_pkg_data_filename"""
-    filename = get_pkg_data_filename('../poisson_stats_image/counts.fits.gz')
+    filename = get_pkg_data_filename('../data/poisson_stats_image/counts.fits.gz')
     data = fits.getdata(filename)
     assert data.sum() == 40896
 
