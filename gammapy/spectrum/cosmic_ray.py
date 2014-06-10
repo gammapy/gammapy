@@ -43,14 +43,14 @@ def cosmic_ray_flux(energy, particle='proton'):
     
     Parameters
     ----------
-    energy : `~astropy.units.quantity.Quantity`
+    energy : `~astropy.units.Quantity`
         Particle energy
     particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}
         Particle type
     
     Returns
     -------
-    flux : `~astropy.units.quantity.Quantity`
+    flux : `~astropy.units.Quantity`
         Cosmic ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
     pars = dict()

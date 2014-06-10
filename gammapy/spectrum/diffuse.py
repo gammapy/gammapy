@@ -23,14 +23,14 @@ def diffuse_gamma_ray_flux(energy, component='isotropic'):
     
     Parameters
     ----------
-    energy : `~astropy.units.quantity.Quantity`
+    energy : `~astropy.units.Quantity`
         Gamma-ray energy
     component : {'isotropic', 'bubble', 'galactic_fermi2', 'galactic_fermi4'}
         Diffuse model component
     
     Returns
     -------
-    flux : `~astropy.units.quantity.Quantity`
+    flux : `~astropy.units.Quantity`
         Gamma-ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
     #flux = Quantity(1, 'm^-2 s^-1 TeV^-1 sr^-1')

@@ -627,7 +627,7 @@ def solid_angle(image):
 
     Returns
     -------
-    area_image : `~astropy.units.quantity.Quantity`
+    area_image : `~astropy.units.Quantity`
         Solid angle image (matching the input image) in steradians.
     """
     # Area of one pixel at the equator

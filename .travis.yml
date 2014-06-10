@@ -6,11 +6,11 @@ python:
     - 3.3
     - 3.4
     # This is just for "egg_info".  All other builds are explicitly given in the matrix
-env:
-    global:
-        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel"
-    #matrix:
-    #    - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
+#env:
+#    #global:
+#    #    - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel"
+#    #matrix:
+#    #    - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
 
 matrix:
     include:
@@ -22,7 +22,7 @@ matrix:
         # Check for sphinx doc build warnings - we do this first because it
         # runs for a long time
         - python: 2.7
-          env: SETUP_CMD='build_sphinx -w -n' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true
+          env: SETUP_CMD='build_sphinx -w' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true
           # OPTIONAL_DEPS needed because the plot_directive in sphinx needs them
 
         # Try all python versions with the latest numpy
