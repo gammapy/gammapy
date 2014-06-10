@@ -119,11 +119,10 @@ class TestBlockReduceHDU():
         # Create test image
         self.image = utils.make_empty_image(12, 8, proj=projection)
         self.image.data = np.ones(self.image.data.shape)
-        self.footprint = utils.calc_footprint(self.image.header)
         # Create test cube
         self.indices = np.arange(4)
         self.cube_images = []
-        for index in self.indices:
+        for _ in self.indices:
             layer = np.ones(self.image.data.shape)
             self.cube_images.append(fits.ImageHDU(data=layer, header=self.image.header))
         self.cube = utils.images_to_cube(self.cube_images)
@@ -150,26 +149,15 @@ class TestBlockReduceHDU():
             if operation == np.mean:
                 ref1 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]
             assert_allclose(image_1.data, ref1)
-            
-def test_calc_footprint():    
-    image = utils.make_empty_image(2, 10, proj='CAR')
-    image.data = np.ones(image.data.shape)
-    footprint = utils.calc_footprint(image.header)
-    # Check values determined from separately generated fits file (using ds9)
-    assert_allclose(footprint['TOP_LEFT'], [ 0.1, 0.5])
-    assert_allclose(footprint['TOP_RIGHT'], [ 359.9, 0.5])
-    assert_allclose(footprint['LOWER_RIGHT'], [ 359.9, -0.5])
-    assert_allclose(footprint['LOWER_LEFT'], [ 0.1, -0.5])
 
 
 @pytest.mark.skipif('not HAS_SKIMAGE')
 def test_ref_pixel():    
     image = utils.make_empty_image(101, 101, proj='CAR')
-    image.data = np.ones(image.data.shape)
-    footprint = utils.calc_footprint(image.header)  
+    footprint = WCS(image.header).calc_footprint(center=False)
     image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
-    footprint_1 = utils.calc_footprint(image_1.header)
-    assert_allclose(footprint['LOWER_LEFT'], footprint_1['LOWER_LEFT'])
+    footprint_1 = WCS(image_1.header).calc_footprint(center=False)
+    assert_allclose(footprint[0], footprint_1[0]) # Lower left corner shouldn't change
 
 
 def test_cube_to_image():
