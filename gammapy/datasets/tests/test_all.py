@@ -5,9 +5,9 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.tests.helper import remote_data
+from ...utils.testing import assert_quantity
 from .. import poisson_stats_image, FermiGalacticCenter
 from .. import fetch_fermi_catalog
-from ...utils.testing import assert_quantity
 
 
 def test_poisson_stats_image():
