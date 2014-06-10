@@ -209,7 +209,7 @@ def tree_to_table(tree, tree_name):
 
     Returns
     -------
-    table : `~astropy.table.table.Table`
+    table : `~astropy.table.Table`
         ROOT tree data as an astropy table.
     """
     from rootpy import asrootpy

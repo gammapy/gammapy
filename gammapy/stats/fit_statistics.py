@@ -34,9 +34,9 @@ from __future__ import print_function, division
 import numpy as np
 from numpy import log, sqrt
 
-__all__ = ('cash', 'cstat', 'wstat', 'lstat', 'pgstat', 
+__all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat', 
            'chi2', 'chi2constvar', 'chi2datavar',
-           'chi2gehrels', 'chi2modvar', 'chi2xspecvar')
+           'chi2gehrels', 'chi2modvar', 'chi2xspecvar']
 
 N_OBSERVED_MIN = 1e-25
 

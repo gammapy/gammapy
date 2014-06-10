@@ -14,7 +14,7 @@ __all__ = ['TablePSF',
 
 
 def _quantity_stats_str(x, label=''):
-    """Make a string summarising Quantities `x`.
+    """Make a string summarising Quantities ``x``.
     """
     ss = ''
     if label:
@@ -147,7 +147,7 @@ class TablePSF(object):
     def __call__(self, lon, lat):
         """Evaluate PSF at a 2D position.
         
-        The PSF is centered on `(0, 0)`.
+        The PSF is centered on ``(0, 0)``.
         
         Parameters
         ----------
@@ -189,7 +189,7 @@ class TablePSF(object):
         
         Notes
         -----
-        * In the future, `astropy.modeling.Parametric2DModel` and
+        * In the future, `astropy.modeling.Fittable2DModel` and
           `astropy.convolution.Model2DKernel` could be used to construct
           the kernel.
         """
@@ -210,9 +210,9 @@ class TablePSF(object):
         # FIXME: Using `discretize_model` is currently very cumbersome due to these issue:
         # https://github.com/astropy/astropy/issues/2274
         # https://github.com/astropy/astropy/issues/1763#issuecomment-39552900
-        #from astropy.modeling import Parametric2DModel
+        #from astropy.modeling import Fittable2DModel
         #
-        #class TempModel(Parametric2DModel):
+        #class TempModel(Fittable2DModel):
         #    @staticmethod
         #    def eval(x, y):
         #        return 42 temp_model_function(x, y)
@@ -366,7 +366,7 @@ class TablePSF(object):
     def plot_psf_vs_theta(self, quantity='dp_domega'):
         """Plot PSF vs offset.
         
-        TODO: describe PSF `quantity` argument in a central place and link to it from here.
+        TODO: describe PSF ``quantity`` argument in a central place and link to it from here.
         """
         import matplotlib.pyplot as plt
 
@@ -459,7 +459,7 @@ class EnergyDependentTablePSF(object):
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with `THETA` and `PSF` extensions.
+            HDU list with ``THETA`` and ``PSF`` extensions.
 
         Returns
         -------
@@ -519,7 +519,7 @@ class EnergyDependentTablePSF(object):
     def table_psf_at_energy(self, energy, **kwargs):
         """TablePSF at a given energy.
         
-        Extra `kwargs` are passed to the `~gammapy.irf.TablePSF` constructor.
+        Extra ``kwargs`` are passed to the `~gammapy.irf.TablePSF` constructor.
         
         Parameters
         ----------

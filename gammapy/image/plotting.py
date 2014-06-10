@@ -177,7 +177,7 @@ def colormap_milagro(vmin, vmax, vtransition, width=0.0001, huestart=0.6):
 def fits_to_png(infile, outfile, draw, dpi=100):
     """Plot FITS image in PNG format.
 
-    For the default `dpi=100` a 1:1 copy of the pixels in the FITS image
+    For the default ``dpi=100`` a 1:1 copy of the pixels in the FITS image
     and the PNG image is achieved, i.e. they have exactly the same size.
 
     Parameters
@@ -187,8 +187,8 @@ def fits_to_png(infile, outfile, draw, dpi=100):
     outfile : str
         Output PNG file name
     draw : callable
-        Callback function `draw(figure)`
-        where `figure` is an `~aplpy.FITSFigure`.
+        Callback function ``draw(figure)``
+        where ``figure`` is an `~aplpy.FITSFigure`.
     dpi : int
         Resolution
 
@@ -244,9 +244,9 @@ class GalacticPlaneSurveyPanelPlot(object):
 
     Attributes:
 
-    * `panel_parameters` -- dict of panel parameters
-    * `figure` --- Main matplotlib figure (cantains all panels)
-    * `fits_figure` --- Current `aplpy.FITSFigure`
+    * ``panel_parameters`` -- dict of panel parameters
+    * ``figure`` --- Main matplotlib figure (cantains all panels)
+    * ``fits_figure`` --- Current `aplpy.FITSFigure`
 
     Parameters
     ----------

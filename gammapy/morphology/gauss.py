@@ -262,7 +262,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     The moments are computed analytically, the formulae are documented below.
 
-    Calls `uncertainties.correlated_values` to propagate the errors.
+    Calls ``uncertainties.correlated_values`` to propagate the errors.
 
     Parameters
     ----------
