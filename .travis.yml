@@ -9,8 +9,8 @@ python:
 env:
     global:
         - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel"
-    matrix:
-        - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
+    #matrix:
+    #    - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
 
 matrix:
     include:
