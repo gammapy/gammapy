@@ -54,6 +54,10 @@ models_2D = {
 }
 
 
+# TODO: TestMorphologyModels is taken from astropy.modeling.tests.test_models
+# with a few methods removed. Once the parent class in astropy is reusable this
+# should be removed.
+
 class TestMorphologyModels(object):
     """
     Test class for all parametric models.

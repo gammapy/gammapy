@@ -8,8 +8,13 @@ from __future__ import print_function, division
 import numpy as np
 from numpy import sqrt, exp, sin, cos
 
-from astropy.modeling import Fittable2DModel, Parameter, ModelDefinitionError
-from astropy.modeling.models import Gaussian2D 
+try:
+    from astropy.modeling import Fittable2DModel
+except ImportError:
+    from astropy.modeling import Parametric2DModel as Fittable2DModel
+
+from astropy.modeling import Parameter, ModelDefinitionError
+from astropy.modeling.models import Gaussian2D
 
 __all__ = ['delta2d', 'gauss2d', 'shell2d', 'sphere2d',
            'morph_types', 'morph_pars', 'Shell2D', 'Sphere2D',
@@ -43,7 +48,7 @@ class Shell2D(Fittable2DModel):
 
     See Also
     --------
-    Sphere2D, Delta2D, Gaussian2D
+    Sphere2D, Delta2D, `~astropy.modeling.functional_models.Gaussian2D`
 
     Notes
     -----
@@ -74,11 +79,11 @@ class Shell2D(Fittable2DModel):
     With :math:`r_{out} = r_{in} + \\mathrm{width}`.
     """
 
-    amplitude = Parameter()
-    x_0 = Parameter()
-    y_0 = Parameter()
-    r_in = Parameter()
-    width = Parameter()
+    amplitude = Parameter('amplitude')
+    x_0 = Parameter('x_0')
+    y_0 = Parameter('y_0')
+    r_in = Parameter('r_in')
+    width = Parameter('width')
 
     def __init__(self, amplitude, x_0, y_0, r_in, width=None, r_out=None, normed=True, **constraints):
         if r_out is not None:
@@ -106,6 +111,7 @@ class Shell2D(Fittable2DModel):
         values = np.select([rr <= rr_in, rr <= rr_out],
                        [sqrt(rr_out - rr) - sqrt(rr_in - rr),
                         sqrt(rr_out - rr)])
+        np.seterr(invalid='warn')
         return amplitude * values / (2 * np.pi / 3 *
                                      (rr_out * (r_in + width) - rr_in * r_in))
 
@@ -124,6 +130,7 @@ class Shell2D(Fittable2DModel):
         values = np.select([rr <= rr_in, rr <= rr_out],
                        [sqrt(rr_out - rr) - sqrt(rr_in - rr),
                         sqrt(rr_out - rr)])
+        np.seterr(invalid='warn')
         return amplitude * values / np.sqrt(rr_out - rr_in)
 
 
@@ -151,7 +158,7 @@ class Sphere2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Delta2D, Gaussian2D
+    Shell2D, Delta2D, `~astropy.modeling.functional_models.Gaussian2D`
 
     Notes
     -----
@@ -178,10 +185,10 @@ class Sphere2D(Fittable2DModel):
             \\right.
     """
 
-    amplitude = Parameter()
-    x_0 = Parameter()
-    y_0 = Parameter()
-    r_0 = Parameter()
+    amplitude = Parameter('amplitude')
+    x_0 = Parameter('x_0')
+    y_0 = Parameter('y_0')
+    r_0 = Parameter('r_0')
 
     def __init__(self, amplitude, x_0, y_0, r_0, normed=True, **constraints):
         if not normed:
@@ -200,6 +207,7 @@ class Sphere2D(Fittable2DModel):
         np.seterr(invalid='ignore')
 
         values = np.select([rr <= rr_0, rr > rr_0], [2 * sqrt(rr_0 - rr), 0])
+        np.seterr(invalid='warn')
         return amplitude * values / (4 / 3. * np.pi * rr_0 * r_0)
 
     @staticmethod
@@ -213,6 +221,7 @@ class Sphere2D(Fittable2DModel):
         np.seterr(invalid='ignore')
 
         values = np.select([rr <= rr_0, rr > rr_0], [sqrt(rr_0 - rr), 0])
+        np.seterr(invalid='warn')
         return amplitude * values / r_0
 
 
@@ -233,7 +242,7 @@ class Delta2D(Fittable2DModel):
 
     See Also
     --------
-    Shell2D, Sphere2D, Gaussian2D
+    Shell2D, Sphere2D, `~astropy.modeling.functional_models.Gaussian2D`
 
     Notes
     -----
@@ -252,9 +261,9 @@ class Delta2D(Fittable2DModel):
     information is lost.
     """
 
-    amplitude = Parameter()
-    x_0 = Parameter()
-    y_0 = Parameter()
+    amplitude = Parameter('amplitude')
+    x_0 = Parameter('x_0')
+    y_0 = Parameter('y_0')
 
     def __init__(self, amplitude, x_0, y_0, **constraints):
         super(Delta2D, self).__init__(amplitude=amplitude, x_0=x_0,
