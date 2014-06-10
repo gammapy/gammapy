@@ -12,7 +12,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'bin_events_in_cube', 'bin_events_in_image',
            'binary_dilation_circle', 'binary_disk',
            'binary_opening_circle', 'binary_ring',
-           'calc_footprint', 'contains', 'coordinates',
+           'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
            'crop_image',
            'disk_correlate', 'exclusion_distance',
@@ -908,46 +908,3 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     # Put rebinned data into a fitsHDU
     rebinned_image = fits.ImageHDU(data=data_reduced, header=header)    
     return rebinned_image
-
-
-def calc_footprint(header):
-    """Compute WCS true corner positions, at the outer corners of the corner pixels.
-    
-    Uses lower left pixel corner as the reference and finds other corner positions using
-    information from the FITS header.
-    
-    Parameters
-    ----------
-    header : `astropy.io.fits.Header`
-        FITS header
-    
-    Returns
-    -------
-    footprint : dict
-        Image footprint
-    
-    Examples
-    --------
-    >>> from gammapy.image import calc_footprint
-    >>> from gammapy.datasets import FermiGalacticCenter
-    >>> header = FermiGalacticCenter.counts().header
-    >>> print(calc_footprint(header))
-    {'LOWER_RIGHT': [array(340.0), array(-10.100000000000001)], 
-    'TOP_RIGHT': [array(340.0), array(10.0)], 
-    'CENTER': [array(0.1), array(-0.1)], 
-    'LOWER_LEFT': [array(20.1), array(-10.100000000000001)], 
-    'TOP_LEFT': [array(20.1), array(10.0)]}
-    """
-    wcs = WCS(header)
-    def compute_pos(x, y):
-        return wcs.wcs_pix2world(x, y, 1)
-    
-    corners = dict()
-
-    corners['TOP_LEFT'] = compute_pos(0.5, header['NAXIS2'] + 0.5)
-    corners['TOP_RIGHT'] = compute_pos(header['NAXIS1'] + 0.5, header['NAXIS2'] + 0.5)
-    corners['LOWER_RIGHT'] = compute_pos(header['NAXIS1'] + 0.5, 0.5)
-    corners['LOWER_LEFT'] = compute_pos(0.5, 0.5)
-    corners['CENTER'] = compute_pos(0.5 * header['NAXIS1'], 0.5 * header['NAXIS2'])
-
-    return corners
