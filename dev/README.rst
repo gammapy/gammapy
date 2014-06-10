@@ -18,3 +18,15 @@ Here's some notes for us to remember how to do some things:
   `here <https://readthedocs.org/builds/gammapy/>`__ (wait a few minutes)
   and if needed manually start a new build by going
   `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
+
+* To skip a unit test depending on Astropy version number do this:
+
+.. code-block:: python
+
+   import astropy
+   from astropy.tests.helper import pytest
+
+   ASTROPY_VERSION = (astropy.version.major, astropy.version.minor)
+   @pytest.mark.xfail(ASTROPY_VERSION < (0, 4), reason="Astropy API change")
+   def test_something():
+      ...
