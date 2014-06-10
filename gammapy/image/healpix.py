@@ -7,11 +7,13 @@ Really these utility functions belong in `healpy` ... I've made a feature reques
 https://github.com/healpy/healpy/issues/129
 """
 from __future__ import print_function, division
+from astropy.coordinates import SkyCoord
 from .utils import coordinates
 
 __all__ = ['healpix_to_image', 'image_to_healpix']
 
 __doctest_skip__ = ['healpix_to_image']
+
 
 def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     """Convert image in HEALPIX format to a normal FITS projection image (e.g. CAR or AIT).
@@ -50,8 +52,9 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     # the HEALPIX image we need to transform the coordinates
     ref_coord_system = reference_image.header['COORDSYS']
     if ref_coord_system != hpx_coord_system:
-        from ..utils.coordinates import sky_to_sky
-        lon, lat = sky_to_sky(lon, lat, ref_coord_system, hpx_coord_system)
+        coordinate = SkyCoord(lon, lat, frame=ref_coord_system)
+        coordinate = coordinate.transform_to(hpx_coord_system)
+        lon, lat = coordinate.data.lon, coordinate.data.lat
     
     data = hp.get_interp_val(healpix_data, lon, lat)
     return data

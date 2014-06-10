@@ -6,14 +6,13 @@ import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['galactic_to_radec', 'radec_to_galactic', 'sky_to_sky',
-           'separation', 'minimum_separation', 'pair_correlation']
+__all__ = ['galactic_to_radec', 'radec_to_galactic',
+           'separation', 'minimum_separation', 'pair_correlation'
+           ]
 
 
 def galactic_to_radec(glon, glat, unit='deg'):
     """Convert Galactic to Equatorial J2000 coordinates.
-
-    Only accurate to ~ 3 digits.
 
     Parameters
     ----------
@@ -26,11 +25,12 @@ def galactic_to_radec(glon, glat, unit='deg'):
     -------
     ra, dec : array_like
         Equatorial coordinates.
+
     Notes
     -----
-    This is a standalone implementation that only uses ``numpy``.
-    Use it where you don't want to depend on a real celestial coordinate
-    package like ``astropy.coordinates`` or ``kapteyn.celestial``.
+    This is a standalone implementation that only uses ``numpy`` for testing.
+    Use `astropy.coordinates.SkyCoord` instead. 
+    Only accurate to ~ 3 digits.
     """
     if unit == 'deg':
         glon, glat = radians(glon), radians(glat)
@@ -56,8 +56,6 @@ def galactic_to_radec(glon, glat, unit='deg'):
 def radec_to_galactic(ra, dec, unit='deg'):
     """Convert Equatorial J2000 to Galactic coordinates.
 
-    Only accurate to ~ 3 digits.
-
     Parameters
     ----------
     ra, dec : array_like
@@ -72,9 +70,9 @@ def radec_to_galactic(ra, dec, unit='deg'):
 
     Notes
     -----
-    This is a standalone implementation that only uses ``numpy``.
-    Use it where you don't want to depend on a real celestial coordinate
-    package like ``astropy.coordinates`` or ``kapteyn.celestial``.
+    This is a standalone implementation that only uses ``numpy`` for testing.
+    Use `astropy.coordinates.SkyCoord` instead. 
+    Only accurate to ~ 3 digits.
     """
     if unit == 'deg':
         ra, dec = radians(ra), radians(dec)
@@ -187,44 +185,3 @@ def pair_correlation(lon, lat, theta_bins, unit='deg'):
         counts += hist
 
     return counts
-
-
-def sky_to_sky(lon, lat, in_system, out_system, unit='deg'):
-    """Convert between sky coordinates.
-
-    Parameters
-    ----------
-    lon, lat : array_like
-        Coordinate arrays
-    in_system, out_system : {'galactic', 'icrs'}
-        Input / output coordinate system
-    unit : {'deg', 'rad'}
-        Units of input and output coordinates
-
-    Returns
-    -------
-    """    
-    from astropy.coordinates import ICRS, Galactic
-    systems = dict(galactic=Galactic, icrs=ICRS)
-
-    lon = np.asanyarray(lon)
-    lat = np.asanyarray(lat)
-
-    in_coords = systems[in_system](lon, lat, unit=(unit, unit))
-    out_coords = in_coords.transform_to(systems[out_system])
-
-    # TODO: remove the Astropy 0.3 version when
-    # compatibility for that version by Gammapy is dropped
-    try:
-        # This uses the Astropy 0.4+ API
-        lonangle = out_coords.data.lon
-        latangle = out_coords.data.lat
-    except:
-        # This uses the Astropy 0.3- API
-        lonangle = out_coords.lonangle
-        latangle = out_coords.latangle
-    
-    if unit == 'deg':
-        return lonangle.deg, latangle.deg
-    else:
-        return lonangle.rad, latangle.rad
