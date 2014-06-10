@@ -6,6 +6,7 @@ from .. import plotting
 
 try:
     import matplotlib
+    matplotlib.use('Agg')
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
