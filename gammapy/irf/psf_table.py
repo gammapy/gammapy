@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.coordinates import Angle, ICRS
+from astropy.coordinates import Angle, SkyCoord
 #from astropy.convolution import discretize_model
 from astropy.convolution.utils import discretize_oversample_2D
 from ..morphology import Gauss2DPDF
@@ -159,9 +159,8 @@ class TablePSF(object):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        # TODO: It should not be necessary to use ICRS coordinates here.
-        center = ICRS(0, 0, unit=('radian', 'radian'))
-        point = ICRS(lon, lat)
+        center = SkyCoord(0, 0, unit='radian')
+        point = SkyCoord(lon, lat)
         offset = center.separation(point)
         return self.eval(offset)
 

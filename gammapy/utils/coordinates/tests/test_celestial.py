@@ -33,12 +33,6 @@ def test_separation():
     assert_allclose(celestial.separation(0, 89, 180, 89), 2)
 
 
-def test_sky_to_sky():
-    actual = celestial.sky_to_sky(0, 0, 'galactic', 'icrs')
-    expected = (266.404996, -28.936172)
-    assert_allclose(actual, expected, atol=1e-4)
-
-
 def test_minimum_separation():
     lon1 = [0, 1, 1]
     lat1 = [0, 0, 1]

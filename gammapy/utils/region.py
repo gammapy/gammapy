@@ -41,23 +41,22 @@ class SkyCircle(object):
     
     Parameters
     ----------
-    center : `~astropy.coordinates.coordsystems.SphericalCoordinatesBase`
+    center : `~astropy.coordinates.SkyCoord`
         Circle center coordinate
-    radius : `~astropy.coordinates.angles.Angle`
+    radius : `~astropy.coordinates.Angle`
         Circle radius
     """
     
     def __init__(self, center, radius):
-        from astropy.coordinates import ICRS, Angle
-        self.center = ICRS(center)
-        self.radius = Angle(radius)
+        self.center = center
+        self.radius = radius
 
     def contains(self, coordinate):
         """Checks if the coordinate lies inside the circle.
 
         Parameters
         ----------
-        coordinate : `~astropy.coordinates.coordsystems.SphericalCoordinatesBase`
+        coordinate : `~astropy.coordinates.SkyCoord`
             Coordinate to check for containment.
 
         Returns
@@ -72,7 +71,7 @@ class SkyCircle(object):
 
         Parameters
         ----------
-        other : `~SkyCircle`
+        other : `SkyCircle`
             Other region.
         """
         return self.center.separation(other.center) <= self.radius + other.radius

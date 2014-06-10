@@ -6,6 +6,7 @@ import numpy as np
 from numpy import sqrt, degrees, pi, arctan, arctan2, arcsin, exp
 from numpy.random import uniform, normal
 from astropy.table import Table, Column
+from astropy.coordinates import SkyCoord
 from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw
@@ -351,7 +352,8 @@ def add_observed_parameters(table, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     glon, glat, distance = astrometry.galactic(x, y, z)
     #import IPython; IPython.embed()
 
-    ra, dec = astrometry.sky_to_sky(glon.data, glat.data, 'galactic', 'icrs')
+    coordinate = SkyCoord(glon.data, glat.data, unit='deg', frame='galactic').transform_to('icrs')
+    ra, dec = coordinate.ra.deg, coordinate.dec.deg
 
     # Add columns to table
     table['distance'] = Column(distance, unit='pc', description='Distance observer to source center')

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
 from __future__ import print_function, division
-from astropy.coordinates import ICRS, Galactic
+from astropy.coordinates import SkyCoord
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
@@ -16,7 +16,7 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     
     Parameters
     ----------
-    coordinate : `~astropy.coordinates.coordsystems.SphericalCoordinatesBase`
+    coordinate : `~astropy.coordinates.SkyCoord`
         Source coordinate
     ra_digits : int (>=2)
         Number of digits for the Right Ascension part
@@ -34,45 +34,45 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     
     Examples
     --------
-    >>> from astropy.coordinates import ICRS, FK4
+    >>> from astropy.coordinates import SkyCoord
     >>> from gammapy.catalog import coordinate_iau_format
     
     Example position from IAU specification
 
-    >>> coordinate = ICRS('00h51m09.38s -42d26m33.8s')
+    >>> coordinate = SkyCoord('00h51m09.38s -42d26m33.8s', frame='icrs')
     >>> designation = 'QSO J' + coordinate_iau_format(coordinate, ra_digits=6)
     >>> print(designation)
     QSO J005109-4226.5
-    >>> designation = 'QSO B' + coordinate_iau_format(FK4(coordinate), ra_digits=6)
+    >>> coordinate = coordinate.transform_to('fk4')
+    >>> designation = 'QSO B' + coordinate_iau_format(coordinate, ra_digits=6)
     >>> print(designation)
     QSO B004848-4242.8
 
     Crab pulsar position (positive declination)
 
-    >>> coordinate = ICRS('05h34m31.93830s +22d00m52.1758s')
+    >>> coordinate = SkyCoord('05h34m31.93830s +22d00m52.1758s', frame='icrs')
     >>> designation = 'HESS J' + coordinate_iau_format(coordinate, ra_digits=4)
     >>> print(designation)
     HESS J0534+220
     
     PKS 2155-304 AGN position (negative declination)
 
-    >>> coordinate = ICRS('21h58m52.06511s -30d13m32.1182s')
+    >>> coordinate = SkyCoord('21h58m52.06511s -30d13m32.1182s', frame='icrs')
     >>> designation = '2FGL J' + coordinate_iau_format(coordinate, ra_digits=5)
     >>> print(designation)
     2FGL J2158.8-3013
 
     Coordinate array inputs result in list of string output.
 
-    >>> coordinates = ICRS(ra=[10.68458, 83.82208],
-    ...                    dec=[41.26917, -5.39111],
-    ...                    unit=('deg', 'deg'))
+    >>> coordinates = SkyCoord(ra=[10.68458, 83.82208],
+    ...                        dec=[41.26917, -5.39111],
+    ...                        unit=('deg', 'deg'), frame='icrs')
     >>> designations = coordinate_iau_format(coordinates, ra_digits=5, prefix='HESS J')
     >>> print(designations)
     ['HESS J0042.7+4116', 'HESS J0535.2-0523']
     """
-    # Convert coordinate to ICRS system if it isn't already
-    if isinstance(coordinate, Galactic):
-        coordinate = ICRS(coordinate)
+    if coordinate.frame.name == 'galactic':
+        coordinate = coordinate.transform_to('icrs')
     
     if dec_digits == None:
         dec_digits = max(2, ra_digits - 1) 
@@ -106,7 +106,7 @@ def ra_iau_format(ra, digits):
 
     Parameters
     ----------
-    ra : `~astropy.coordinates.angles.Longitude`
+    ra : `~astropy.coordinates.Longitude`
         Right ascension
     digits : int (>=2)
         Number of digits
@@ -175,7 +175,7 @@ def dec_iau_format(dec, digits):
 
     Parameters
     ----------
-    dec : `~astropy.coordinates.angles.Latitude`
+    dec : `~astropy.coordinates.Latitude`
         Declination
     digits : int (>=2)
         Number of digits
