@@ -11,7 +11,7 @@ class FluxDistribution(object):
     
     Parameters
     ----------
-    table : `~astropy.table.table.Table`
+    table : `~astropy.table.Table`
         Input catalog. Must contain the following columns:
 
         * Source flux column called 'S'

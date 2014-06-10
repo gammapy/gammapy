@@ -27,7 +27,7 @@ class InverseComptonSpectrum(object):
     
     See also
     --------
-    gammapy.spectrum.PionDecaySpectrum, gammafit.onezone.ElectronOZM
+    gammapy.spectrum.PionDecaySpectrum, gammafit.ElectronOZM
     """
 
     def __init__(self, seed_ph_spec=BlackBody(T=2.7)):

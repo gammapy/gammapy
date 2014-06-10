@@ -11,7 +11,7 @@ Gammapy gives you easy access to some frequently used methods in TeV gamma-ray a
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
 
-Call the `~gammapy.stats.poisson.significance` function::
+Call the `~gammapy.stats.significance` function::
 
    >>> from gammapy.stats import significance
    >>> significance(n_observed=10, mu_background=4.2, method='lima')
@@ -20,7 +20,7 @@ Call the `~gammapy.stats.poisson.significance` function::
 What's the differential gamma-ray flux and spectral index of the Crab nebula at 3 TeV
 according to [Meyer2010]_?
 
-Call the `~gammapy.spectrum.crab.crab_flux` and `~gammapy.spectrum.crab.crab_spectral_index` functions::
+Call the `~gammapy.spectrum.crab_flux` and `~gammapy.spectrum.crab_spectral_index` functions::
 
    >>> from gammapy.spectrum import crab_flux, crab_spectral_index
    >>> energy = 3

@@ -158,9 +158,9 @@ class GammaSpectralCube(object):
 
         Parameters
         ----------
-        lon : `~astropy.units.Quantity` or `~astropy.units.Angle`
+        lon : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
             Longitude
-        lat : `~astropy.units.Quantity` or `~astropy.units.Angle`
+        lat : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
             Energy
@@ -182,14 +182,14 @@ class GammaSpectralCube(object):
     def spectral_index(self, lon, lat, energy, dz=1e-3):
         """Power law spectral index.
         
-        A forward finite difference method with step `dz` is used along
-        the `z = log10(energy)` axis.
+        A forward finite difference method with step ``dz`` is used along
+        the ``z = log10(energy)`` axis.
 
         Parameters
         ----------
-        lon : `~astropy.units.Quantity` or `~astropy.units.Angle`
+        lon : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
             Longitude
-        lat : `~astropy.units.Quantity` or `~astropy.units.Angle`
+        lat : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
             Energy

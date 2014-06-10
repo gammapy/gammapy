@@ -60,7 +60,7 @@ def sex(image,
 
     Returns
     -------
-    catalog : `~astropy.table.table.Table`
+    catalog : `~astropy.table.Table`
         Catalog of detected objects
 
     checkimage : `~astropy.io.fits.PrimaryHDU`

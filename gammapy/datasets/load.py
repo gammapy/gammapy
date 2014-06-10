@@ -153,7 +153,7 @@ def tev_spectrum(source_name):
 
     Returns
     -------
-    spectrum : `~astropy.table.table.Table`
+    spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == 'crab':
@@ -180,7 +180,7 @@ def diffuse_gamma_spectrum(reference):
     
     Returns
     -------
-    spectrum : `~astropy.table.table.Table`
+    spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'Fermi':
@@ -222,7 +222,7 @@ def electron_spectrum(reference):
     
     Returns
     -------
-    spectrum : `~astropy.table.table.Table`
+    spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'HESS':
@@ -279,17 +279,17 @@ def fetch_fermi_catalog(catalog, extension=None):
     The Fermi catalogs contain the following relevant catalog HDUs:
     
     * 2FGL Catalog : LAT 2-year Point Source Catalog
-        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
-        * `ExtendedSources` Extended Source Catalog Table.
+        * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
+        * ``ExtendedSources`` Extended Source Catalog Table.
     * 1FGL Catalog : LAT 1-year Point Source Catalog
-        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
+        * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
     * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
-        * `LAT_Point_Source_Catalog` Point Source Catalog Table.
-        * `ExtendedSources` Extended Source Catalog Table.
+        * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
+        * ``ExtendedSources`` Extended Source Catalog Table.
     * 2PC Catalog : LAT Second Catalog of Gamma-ray Pulsars
-        * `PULSAR_CATALOG` Pulsar Catalog Table.
-        * `SPECTRAL` Table of Pulsar Spectra Parameters.
-        * `OFF_PEAK` Table for further Spectral and Flux data for the Catalog.
+        * ``PULSAR_CATALOG`` Pulsar Catalog Table.
+        * ``SPECTRAL`` Table of Pulsar Spectra Parameters.
+        * ``OFF_PEAK`` Table for further Spectral and Flux data for the Catalog.
     
     Parameters
     ----------

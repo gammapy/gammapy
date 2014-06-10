@@ -27,7 +27,7 @@ class PionDecaySpectrum(object):
 
     See also
     --------
-    gammapy.spectrum.InverseComptonSpectrum, gammafit.onezone.ProtonOZM
+    gammapy.spectrum.InverseComptonSpectrum, gammafit.ProtonOZM
     """
     m_pi = 1.22e9  # pion mass (eV)
     m_p = 1e12  # proton mass (eV)

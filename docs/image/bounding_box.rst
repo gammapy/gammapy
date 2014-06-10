@@ -122,8 +122,9 @@ Before inventing our own, let's look at what kinds of representations others hav
   As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`. 
 
 * `photutils` has this `coordinate convention <http://photutils.readthedocs.org/en/latest/photutils/index.html#coordinate-convention-in-photutils>`__.
-  Looking at the `photutils.aperture.aperture_photometry` implementation, it looks like they don't have an official ``bbox`` representation,
+  Looking at the `photutils.aperture_photometry` implementation, it looks like they don't have an official ``bbox`` representation,
   but simply compute ``(x_min, x_max, y_min, y_max)`` where needed and then use ``data[y_min:y_max, x_min:x_max]`` views.
+  TODO: update once this is in: https://github.com/astropy/astropy/issues/2607 
 
 * `findobj <http://findobj.readthedocs.org/>`__ doesn't use bounding boxes in the public API.
   Internally they use an ``_ImgCutout`` class and use it in their ``_findobjs`` function.

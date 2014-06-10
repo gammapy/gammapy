@@ -5,6 +5,7 @@ import numpy as np
 
 __all__ = ['compute_binning', 'FluxProfile']
 
+
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):
     """Computes 1D array of bin edges.
 
@@ -120,7 +121,7 @@ class FluxProfile(object):
     def compute(self):
         """Compute the flux profile.
         
-        TODO: call `gammapy.stats.data.compute_total_stats` instead.
+        TODO: call `gammapy.stats.compute_total_stats` instead.
         
         Note: the current implementation is very inefficienct in speed and memory.
         There are various fast implementations, but none is flexible enough to
@@ -140,7 +141,7 @@ class FluxProfile(object):
 
         See also
         --------
-        gammapy.stats.data.compute_total_stats
+        gammapy.stats.compute_total_stats
         """
         # Shortcuts to access class info needed in this method
         d = self.data

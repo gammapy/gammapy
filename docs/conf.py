@@ -27,6 +27,7 @@
 
 # Load all of the global Astropy configuration
 from astropy.sphinx.conf import *
+from astropy.extern import six
 
 
 # -- General configuration ----------------------------------------------------
@@ -165,4 +166,18 @@ edit_on_github_source_root = ""
 edit_on_github_doc_root = "docs"
 
 
-#nitpicky = True
+# Enable nitpicky mode - which ensures that all references in the docs
+# resolve.
+
+nitpicky = True
+nitpick_ignore = []
+
+for line in open('nitpick-exceptions'):
+    if line.strip() == "" or line.startswith("#"):
+        continue
+    dtype, target = line.split(None, 1)
+    target = target.strip()
+    nitpick_ignore.append((dtype, six.u(target)))
+
+if six.PY2:
+    nitpick_ignore.extend([('py:obj', six.u('bases'))])

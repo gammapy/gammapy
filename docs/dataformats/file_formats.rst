@@ -298,7 +298,7 @@ use of such schemas
 With Gammapy
 ++++++++++++
 
-TODO: Implement `gp_verify` tool that can check the most common gamma-ray
+TODO: Implement ``gp_verify`` tool that can check the most common gamma-ray
 data formats (e.g. event lists, ...).
 
 Useful links

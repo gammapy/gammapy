@@ -9,7 +9,7 @@ Spectral cube (`gammapy.spectral_cube`)
 Introduction
 ============
 
-`gammapy.spectral_cube` defines the `~gammapy.spectral_cube.SpectralCube` class,
+`gammapy.spectral_cube` defines the `~gammapy.spectral_cube.GammaSpectralCube` class,
 which represents a 3-dimensional array with longitude, latitude and spectral axes.
 
 TODO: explain why this package for radio spectral cubes doesn't quite work

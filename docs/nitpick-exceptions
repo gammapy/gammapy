@@ -1,0 +1,18 @@
+# TODO: this can probably be removed as soon as this is merged
+# https://github.com/aplpy/aplpy/pull/189
+py:obj aplpy.FITSFigure
+
+# This is needed for `astropy.io.fits.HDUList` sub-classes
+# TODO: resolve correctly
+py:class astropy.io.fits.hdu.hdulist.HDUList
+
+# For some reason links for astropy.io.fits don't work 
+# TODO: resolve correctly
+#py:obj astropy.io.fits.BinTableHDU
+#py:obj astropy.io.fits.ImageHDU
+
+# This is needed for modern-style classes (sub-classes of the Python `object`)
+py:class object
+
+# This is needed for Python `list` sub-classes
+py:class list
