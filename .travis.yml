@@ -3,7 +3,6 @@ language: python
 python:
     - 2.6
     - 2.7
-    - 3.2
     - 3.3
     - 3.4
     # This is just for "egg_info".  All other builds are explicitly given in the matrix
@@ -34,8 +33,8 @@ matrix:
         # There is a bug in pytest-xdist that prevents it from working
         # on Python 3.x.  See:
         # https://bitbucket.org/hpk42/pytest/issue/301/internal-error-during-test-collecting
-        - python: 3.2
-          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+        #- python: 3.2
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
         - python: 3.3
           env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
         - python: 3.4
@@ -44,8 +43,8 @@ matrix:
         # Now try do scipy on 2.7 and an appropriate 3.x build (with latest numpy)
         - python: 2.7
           env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true LC_CTYPE=C.ascii
-        - python: 3.2
-          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true LC_CTYPE=C.ascii
+        #- python: 3.2
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true LC_CTYPE=C.ascii
 
         # Try alternate numpy versions
         # These don't work with Astropy wheels:
@@ -58,8 +57,8 @@ matrix:
         # Now try Astropy development version
         - python: 2.7
           env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true LC_CTYPE=C.ascii
-        - python: 3.2
-          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true LC_CTYPE=C.ascii
+        #- python: 3.2
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true LC_CTYPE=C.ascii
 
 before_install:
 
@@ -101,7 +100,7 @@ install:
 
     # OPTIONAL DEPENDENCIES
     - if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "scipy==0.13.1"; fi
-    - if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "h5py==2.1.3"; fi
+    #- if $OPTIONAL_DEPS; then $PIP_WHEEL_COMMAND "h5py==2.1.3"; fi
 
     # Not installing scikit-image for now because of this issue (should be fixed in skimage 0.10):
     # https://travis-ci.org/gammapy/gammapy/jobs/25701223
