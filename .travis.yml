@@ -10,7 +10,7 @@ env:
     global:
         - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel"
     matrix:
-        - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+        - SETUP_CMD='egg_info' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
 
 matrix:
     include:
@@ -22,37 +22,37 @@ matrix:
         # Check for sphinx doc build warnings - we do this first because it
         # runs for a long time
         - python: 2.7
-          env: SETUP_CMD='build_sphinx -w -n' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true
+          env: SETUP_CMD='build_sphinx -w -n' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true
           # OPTIONAL_DEPS needed because the plot_directive in sphinx needs them
 
         # Try all python versions with the latest numpy
         - python: 2.6
-          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
         - python: 2.7
-          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
         # There is a bug in pytest-xdist that prevents it from working
         # on Python 3.x.  See:
         # https://bitbucket.org/hpk42/pytest/issue/301/internal-error-during-test-collecting
         #- python: 3.2
-        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
-        - python: 3.3
-          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
+        #- python: 3.3
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
         - python: 3.4
-          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=false
+          env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=false
 
         # Now try do scipy on 2.7 and an appropriate 3.x build (with latest numpy)
         - python: 2.7
-          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true LC_CTYPE=C.ascii
+          env: SETUP_CMD='test --parallel=8' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true LC_CTYPE=C.ascii
         #- python: 3.2
-        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=stable OPTIONAL_DEPS=true LC_CTYPE=C.ascii
+        #  env: SETUP_CMD='test' NUMPY_VERSION=1.8.0 ASTROPY_VERSION=development OPTIONAL_DEPS=true LC_CTYPE=C.ascii
 
         # Try alternate numpy versions
         # These don't work with Astropy wheels:
         # https://travis-ci.org/gammapy/gammapy/jobs/22939829#L719
         #- python: 3.2
-        #  env: NUMPY_VERSION=1.6.2 ASTROPY_VERSION=stable SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
+        #  env: NUMPY_VERSION=1.6.2 ASTROPY_VERSION=development SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
         #- python: 2.7
-        #  env: NUMPY_VERSION=1.5.1 ASTROPY_VERSION=stable SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
+        #  env: NUMPY_VERSION=1.5.1 ASTROPY_VERSION=development SETUP_CMD='test --parallel=8' OPTIONAL_DEPS=false
 
         # Now try Astropy development version
         - python: 2.7
