@@ -81,7 +81,7 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
     if extra_info:
         out = dict()
         for name in ['counts', 'model', 'source', 'background']:
-            filename = 'poisson_stats_image/{0}.fits.gz'.format(name)
+            filename = 'data/poisson_stats_image/{0}.fits.gz'.format(name)
             filename = get_pkg_data_filename(filename)
             if return_filenames:
                 out[name] = filename
@@ -89,7 +89,7 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
                 data = fits.getdata(filename)
                 out[name] = data
     else:
-        filename = 'poisson_stats_image/counts.fits.gz'
+        filename = 'data/poisson_stats_image/counts.fits.gz'
         filename = get_pkg_data_filename(filename)
         if return_filenames:
             out = filename
@@ -110,9 +110,9 @@ class FermiGalacticCenter(object):
     def filenames():
         """Dictionary of available file names."""
         result = dict()
-        result['psf'] = get_pkg_data_filename('fermi/psf.fits')
-        result['counts'] = get_pkg_data_filename('fermi/fermi_counts.fits.gz')
-        result['diffuse_model'] = get_pkg_data_filename('fermi/gll_iem_v02_cutout.fits')
+        result['psf'] = get_pkg_data_filename('data/fermi/psf.fits')
+        result['counts'] = get_pkg_data_filename('data/fermi/fermi_counts.fits.gz')
+        result['diffuse_model'] = get_pkg_data_filename('data/fermi/gll_iem_v02_cutout.fits')
 
         return result
 
@@ -184,9 +184,9 @@ def diffuse_gamma_spectrum(reference):
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'Fermi':
-        filename = 'tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'
+        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'
     elif reference == 'Fermi2':
-        filename = 'tev_spectra/diffuse_isotropic_gamma_spectrum_fermi2.txt'
+        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi2.txt'
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
 
@@ -226,13 +226,13 @@ def electron_spectrum(reference):
         Energy spectrum as a table (one flux point per row).    
     """
     if reference == 'HESS':
-        filename = 'tev_spectra/electron_spectrum_hess.txt'
+        filename = 'data/tev_spectra/electron_spectrum_hess.txt'
         return _read_electron_spectrum_hess(filename)
     elif reference == 'HESS low energy':
-        filename = 'tev_spectra/electron_spectrum_hess_low_energy.txt'
+        filename = 'data/tev_spectra/electron_spectrum_hess_low_energy.txt'
         return _read_electron_spectrum_hess(filename)
     elif reference == 'Fermi':
-        filename = 'tev_spectra/electron_spectrum_fermi.txt'
+        filename = 'data/tev_spectra/electron_spectrum_fermi.txt'
         return _read_electron_spectrum_fermi(filename)
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
