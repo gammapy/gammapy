@@ -5,9 +5,9 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.tests.helper import remote_data
+from ...utils.testing import assert_quantity
 from .. import poisson_stats_image, FermiGalacticCenter
 from .. import fetch_fermi_catalog
-from ...utils.testing import assert_quantity
 
 
 def test_poisson_stats_image():
@@ -18,7 +18,7 @@ def test_poisson_stats_image():
 
 def test_poisson_stats_image_direct():
     """Get the data file directly via get_pkg_data_filename"""
-    filename = get_pkg_data_filename('../poisson_stats_image/counts.fits.gz')
+    filename = get_pkg_data_filename('../data/poisson_stats_image/counts.fits.gz')
     data = fits.getdata(filename)
     assert data.sum() == 40896
 
