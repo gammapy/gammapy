@@ -79,17 +79,5 @@ TODO: More examples.
 Reference/API
 =============
 
-.. automodapi:: gammapy.stats.poisson
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.stats.data
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.stats.fit_statistics
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.stats.fitting
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.stats.utils
+.. automodapi:: gammapy.stats
     :no-inheritance-diagram:
