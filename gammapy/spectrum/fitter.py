@@ -4,6 +4,7 @@ import numpy as np
 
 __all__ = ['Fitter']
 
+
 class Fitter(object):
     """Chi^2 fitter for spectral models and flux points.
     - can use asymmetric Gaussian errors

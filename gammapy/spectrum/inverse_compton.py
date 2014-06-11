@@ -14,17 +14,17 @@ hbar = const.hbar.cgs.value
 k_B = const.k_B.cgs.value
 k_B_eV = const.k_B.to('eV/K').value
 m_e_eV = (const.m_e * const.c ** 2).to('eV').value
-sigma_T = 6.652458558e-25 # Thomson cross section
+sigma_T = 6.652458558e-25  # Thomson cross section
 
 
 class InverseComptonSpectrum(object):
     """Inverse Compton (IC) emission spectrum.
-    
+
     Parameters
     ----------
     seed_ph_spec : callable
         Seed photon spectrum (CMB by default)
-    
+
     See also
     --------
     gammapy.spectrum.PionDecaySpectrum, gammafit.ElectronOZM
@@ -48,18 +48,18 @@ class InverseComptonSpectrum(object):
 
     def loss_rate_per_energy(self, E_fin, E_ini, gamma, n_e):
         """Total Compton spectrum.
-        
+
         As defined in Blumenthal and Gould 1970.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
         """
-        sigma_T = 6.652458558e-25 # Thomson cross section
+        sigma_T = 6.652458558e-25  # Thomson cross section
         n_ph = self.seed_ph_spec(E_ini)
 
         return (3. / 4 * sigma_T * c * n_ph /
@@ -78,13 +78,13 @@ class InverseComptonSpectrum(object):
 
     def __call__(self, E_fin, n_e):
         """Compute IC spectrum.
-        
+
         Perfoms integration over n_ph and n_e.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
@@ -117,13 +117,13 @@ class InverseComptonSpectrum(object):
 
     def analytical(self, E_fin, index=1.5, T=2.7):
         """Analytical solution for a powerlaw electron and blackbody photon spectrum.
-        
+
         Taken from Blumenthal and Gould 1970.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO

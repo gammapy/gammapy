@@ -132,7 +132,7 @@ class HESSMultiGaussPSF(object):
     The 2D Gaussian is represented as a 1D exponential
     probability density function per offset angle squared:
     dp / dtheta**2 = [0]*(exp(-x/(2*[1]*[1]))+[2]*exp(-x/(2*[3]*[3]))
-    
+
     @param source: either a dict of a filename
 
     The following two parameters control numerical
@@ -264,7 +264,7 @@ def multi_gauss_psf_kernel(psf_parameters, **kwargs):
 
     The Gaussian PSF components are specified via the
     amplitude at the center and the FWHM.
-    See the example for the exact format. 
+    See the example for the exact format.
 
     Parameters
     ----------

@@ -11,6 +11,7 @@ __all__ = ['SEDComponent', 'SED']
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
 MeV_to_erg = Unit('MeV').to(Unit('erg'))
 
+
 class SEDComponent(object):
     """Uniform interface to SED components for the SED class
     """

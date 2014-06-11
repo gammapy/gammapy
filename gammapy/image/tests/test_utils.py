@@ -33,7 +33,6 @@ def test_binary_ring():
     assert_equal(actual, desired)
 
 
-
 class TestImageCoordinates(object):
 
     def setup_class(self):
@@ -90,16 +89,18 @@ class TestImageCoordinates(object):
 def test_process_image_pixels():
     """Check the example how to implement convolution given in the docstring"""
     from astropy.convolution import convolve as astropy_convolve
-    
+
     def convolve(image, kernel):
         '''Convolve image with kernel'''
         from ..utils import process_image_pixels
         images = dict(image=np.asanyarray(image))
         kernel = np.asanyarray(kernel)
         out = dict(image=np.empty_like(image))
+
         def convolve_function(images, kernel):
             value = np.sum(images['image'] * kernel)
             return dict(image=value)
+
         process_image_pixels(images, kernel, out, convolve_function)
         return out['image']
 
@@ -109,9 +110,10 @@ def test_process_image_pixels():
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
     assert_allclose(actual, desired)
-    
+
+
 @pytest.mark.skipif('not HAS_SKIMAGE')
-class TestBlockReduceHDU():    
+class TestBlockReduceHDU():
 
     def setup_class(self):
         # Arbitrarily choose CAR projection as independent from tests
@@ -127,7 +129,7 @@ class TestBlockReduceHDU():
             self.cube_images.append(fits.ImageHDU(data=layer, header=self.image.header))
         self.cube = utils.images_to_cube(self.cube_images)
         self.cube.data = np.ones(self.cube.data.shape)
-        
+
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_image(self, operation):
         image_1 = utils.block_reduce_hdu(self.image, (2, 4), func=operation)
@@ -141,7 +143,7 @@ class TestBlockReduceHDU():
     def test_cube(self, operation):
         for index in self.indices:
             image = utils.cube_to_image(self.cube, index)
-            layer = self.cube.data[index]   
+            layer = self.cube.data[index]
             layer_hdu = fits.ImageHDU(data=layer, header=image.header)
             image_1 = utils.block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
@@ -152,12 +154,13 @@ class TestBlockReduceHDU():
 
 
 @pytest.mark.skipif('not HAS_SKIMAGE')
-def test_ref_pixel():    
+def test_ref_pixel():
     image = utils.make_empty_image(101, 101, proj='CAR')
     footprint = WCS(image.header).calc_footprint(center=False)
     image_1 = utils.block_reduce_hdu(image, (10, 10), func=np.sum)
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
-    assert_allclose(footprint[0], footprint_1[0]) # Lower left corner shouldn't change
+    # Lower left corner shouldn't change
+    assert_allclose(footprint[0], footprint_1[0])
 
 
 def test_cube_to_image():
@@ -166,7 +169,8 @@ def test_cube_to_image():
     cube = utils.images_to_cube(hdu_list)
     case1 = utils.cube_to_image(cube)
     case2 = utils.cube_to_image(cube, slicepos=1)
-    # Check that layers are summed if no layer is specified (case1), or only a specified layer is extracted (case2)
+    # Check that layers are summed if no layer is specified (case1),
+    # or only a specified layer is extracted (case2)
     assert_allclose(case1.data, 4 * layer.data)
     assert_allclose(case2.data, layer.data)
 
@@ -180,11 +184,11 @@ def test_wcs_histogram2d():
 
     EPS = 0.1
     data = [
-            ( 5,  5,  1),       # in image[0, 0]
-            ( 0,  0 + EPS,  2), # in image[1, 0]
-            ( 5, -5 + EPS,  3), # in image[0, 0]
-            ( 5,  5 + EPS, 99), # outside image
-            (10 + EPS, 0, 99),  # outside image
+            ( 5,  5,  1),        # in image[0, 0]
+            ( 0,  0 + EPS,  2),  # in image[1, 0]
+            ( 5, -5 + EPS,  3),  # in image[0, 0]
+            ( 5,  5 + EPS, 99),  # outside image
+            (10 + EPS, 0, 99),   # outside image
             ]
     lon, lat, weights = np.array(data).T
     image = utils.wcs_histogram2d(header, lon, lat, weights)

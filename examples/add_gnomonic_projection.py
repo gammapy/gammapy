@@ -3,7 +3,7 @@
 TODO: clean up this old script.
 
 A script to check if CameraX/YEvent are the gnomonic projection of Alt/Az.
- 
+
 This script adds four columns to the .csv result file of the partial_ttree_to_csv.C script :
 GnomAlt & GnomAz that are the reverse gnomonic projection of CameraX/YEvent (the center of
 the projective plane is set to the pointing position) and NomX & NomY that are the gnomonic
@@ -16,20 +16,21 @@ import sys
 import logging
 import numpy as np
 
+
 def tan_world_to_pix(lon, lat, lon_center, lat_center):
     """Hand-coded TAN (a.k.a. tangential or Gnomonic) projection.
-    
+
     TODO: test against these implementations:
     - http://docs.astropy.org/en/latest/_generated/astropy.modeling.projections.Sky2Pix_TAN.html
     - http://www.astro.rug.nl/software/kapteyn/allsky.html#fig-5-gnomonic-projection-tan
-    
+
     Parameters
     ----------
     lon, lat : floats or array-like
         Event coordinates
     lon_center, lat_center: floats or array-like
         System center coordinates
-    
+
     Returns
     -------
     x, y : arrays
@@ -42,7 +43,7 @@ def tan_world_to_pix(lon, lat, lon_center, lat_center):
 
     A = np.cos(delta) * np.cos(alpha - alpha_center)
     F = 1. / (np.sin(delta_center) * np.sin(delta) + A * np.cos(delta_center))
-  
+
     x = F * (np.cos(delta_center) * np.sin(delta) - A * np.sin(delta_center))
     y = F * np.cos(delta) * np.sin(alpha - alpha_center)
 
@@ -67,7 +68,7 @@ def add_tan_pix_coordinates(in_file_name, out_file_name):
     line = ' '.join(names)
     line = line.replace(' ', '')
     outfile.write(line)
-    
+
     for ii in np.arange(0, len(alts) - 1, 1):
         noms = tan_world_to_pix(az[ii], alt[ii], azs[ii], alts[ii])
         values = infile.readline().split()
@@ -76,7 +77,7 @@ def add_tan_pix_coordinates(in_file_name, out_file_name):
         line = line.replace(' ', '')
 
         outfile.write(line)
-         
+
     infile.close()
     outfile.close()
 
@@ -103,22 +104,22 @@ def add_tan_world_coordinates(csv_file, outfile):
     outfile.write(line)
 
     for ii in np.arange(0, len(alts) - 1, 1):
-        header = {'NAXIS'  :  2,
-          'NAXIS1' :  100, 'NAXIS2': 100,
-          'CTYPE1' : 'RA---TAN',
-          'CRVAL1' :  azs[ii], 'CRPIX1' : 0, 'CUNIT1' : 'deg',
-          'CDELT1' :  np.degrees(1), 'CTYPE2' : 'DEC--TAN',
-          'CRVAL2' :  alts[ii], 'CRPIX2' : 0,
-          'CUNIT2' : 'deg', 'CDELT2' : np.degrees(1),
-         }
+        header = {'NAXIS':  2,
+                  'NAXIS1':  100, 'NAXIS2': 100,
+                  'CTYPE1': 'RA---TAN',
+                  'CRVAL1':  azs[ii], 'CRPIX1': 0, 'CUNIT1': 'deg',
+                  'CDELT1':  np.degrees(1), 'CTYPE2': 'DEC--TAN',
+                  'CRVAL2':  alts[ii], 'CRPIX2': 0,
+                  'CUNIT2': 'deg', 'CDELT2': np.degrees(1),
+                  }
         projection = Projection(header)
         gnoms = projection.toworld((camY[ii], camX[ii]))
-        
+
         values = infile.readline().split()
         values.append(',%s,%s\n' % (str(gnoms[0]), str(gnoms[1])))
         line = ' '.join(values)
         line = line.replace(' ', '')
-        
+
         outfile.write(line)
 
     infile.close()

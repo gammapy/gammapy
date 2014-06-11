@@ -4,12 +4,14 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ..isrf import Schlickeiser, Galprop
 
+
 @pytest.mark.xfail
 def test_Schlickeiser_omega_g_over_b():
     """ Check that CMB has the energy density it is
     supposed to have according to its temperature """
     actual = Schlickeiser()._omega_g_over_b('CMB')
     assert_allclose(actual, 1, places=2)
+
 
 @pytest.mark.xfail
 def test_Schlickeiser_call():

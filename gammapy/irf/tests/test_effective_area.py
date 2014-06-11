@@ -8,7 +8,7 @@ from ..effective_area import abramowski_effective_area
 def test_abramowski_effective_area():
     energy = Quantity(100, 'GeV')
     area_ref = Quantity(1.65469579e+07, 'cm^2')
-    
+
     area = abramowski_effective_area(energy, 'HESS')
     assert_allclose(area, area_ref)
     assert area.unit == area_ref.unit

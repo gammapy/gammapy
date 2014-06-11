@@ -7,7 +7,7 @@ References
 Results were tested against results from the
 `Sherpa <http://cxc.harvard.edu/sherpa/>`_ and
 `XSpec <https://heasarc.gsfc.nasa.gov/xanadu/xspec/>`_
-X-ray analysis packages.  
+X-ray analysis packages.
 
 Each function contains references for the implemented formulae,
 to get an overview have a look at the
@@ -34,35 +34,36 @@ from __future__ import print_function, division
 import numpy as np
 from numpy import log, sqrt
 
-__all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat', 
+__all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat',
            'chi2', 'chi2constvar', 'chi2datavar',
-           'chi2gehrels', 'chi2modvar', 'chi2xspecvar']
+           'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
+           ]
 
 N_OBSERVED_MIN = 1e-25
 
 
 def cash(n_observed, mu_observed):
     r"""Cash statistic, for Poisson data.
-    
+
     The Cash statistic is defined as: 
 
     .. math::
         C = 2 \left[ n_{observed} - n_{observed} \log \mu_{observed} \right]
 
     and :math:`C = 0` where :math:`\mu <= 0`.
-    
+
     Parameters
     ----------
     n_observed : array_like
         Observed counts
     mu_observed : array_like
         Expected counts
-    
+
     Returns
     -------
     stat : ndarray
         Statistic per bin
-    
+
     References
     ----------
     * `Sherpa statistics page section on the Cash statistic
@@ -87,12 +88,12 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     The C statistic is defined as 
 
     .. math::
-        C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}  
+        C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}
             (\log(n_{observed}) - log(\mu_{observed}) \right]
 
     and :math:`C = 0` where :math:`\mu_{observed} <= 0`.
 
-    TODO: explain how ``n_observed_min`` is handled (as in Sherpa). 
+    TODO: explain how ``n_observed_min`` is handled (as in Sherpa).
 
     Parameters
     ----------
@@ -101,7 +102,7 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     mu_observed : array_like
         Expected counts
     mu_observed_min : array_like
-        Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min. 
+        Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min.
 
     Returns
     -------
@@ -126,13 +127,13 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     term1 = log(n_observed) - log(mu_observed)
     stat = 2 * (mu_observed - n_observed + n_observed * term1)
     stat = np.where(mu_observed > 0, stat, 0)
-    
+
     return stat
 
 
 def wstat():
     r"""W statistic, for Poisson data with Poisson background.
-    
+
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
     pass
@@ -140,7 +141,7 @@ def wstat():
 
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
-    
+
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
     pass
@@ -148,9 +149,7 @@ def lstat():
 
 def pgstat():
     r"""PG statistic, for Poisson data with Gaussian background.
-    
-    
-    
+
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
     """
     pass
@@ -173,12 +172,12 @@ def chi2(N_S, B, S, sigma2):
         Model signal
     sigma2 : array_like
         Variance
-    
+
     Returns
     -------
     stat : ndarray
         Statistic per bin
-    
+
     References
     ----------
     * Sherpa stats page (http://cxc.cfa.harvard.edu/sherpa/statistics/#chisq)
@@ -220,7 +219,7 @@ def chi2datavar(N_S, N_B, A_S, A_B):
 
     alpha2 = (A_S / A_B) ** 2
     sigma2 = N_S + alpha2 * N_B
-    
+
     stat = chi2(N_S, A_B, A_S, sigma2)
 
     return stat
@@ -242,6 +241,7 @@ def chi2gehrels(N_S, N_B, A_S, A_B):
     stat = chi2(N_S, A_B, A_S, sigma2)
 
     return stat
+
 
 def chi2modvar(S, B, A_S, A_B):
     r"""Chi-square statistic with model variance.

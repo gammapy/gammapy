@@ -68,7 +68,8 @@ class Model(object):
 
     def _log_integral(self, emin=None, emax=None, power=0):
         """Integrate over x = log(e) instead of e for numerical precision and speed.
-        Try to remember your high-school calculus and transform the integral."""
+        Try to remember your high-school calculus and transform the integral.
+        """
         from scipy.integrate import quad
         f = (lambda x: self(x, power) * x)
         return quad(f, log(emin), log(emax))
@@ -221,7 +222,7 @@ class PowerLaw(AnalyticModel):
 
 class PLExpCutoff(AnalyticModel):
     """Power law model with exponential cutoff."""
-    
+
     def __init__(self, Flux_Density, Spectral_Index,
                  Cutoff, Pivot_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, Cutoff, Pivot_Energy]
@@ -245,7 +246,7 @@ class PLExpCutoff(AnalyticModel):
 
 class LogParabola(AnalyticModel):
     """Log parabola model."""
-    
+
     def __init__(self, Flux_Density, Spectral_Index,
                  beta, Pivot_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, beta, Pivot_Energy]
@@ -270,7 +271,7 @@ class LogParabola(AnalyticModel):
 
 class BrokenPowerLaw(AnalyticModel):
     """Broken power-law model."""
-    
+
     def __init__(self, Flux_Density, Spectral_Index, Spectral_Index2,
                  Break_Energy, emin=None, emax=None):
         self.pars = [Flux_Density, Spectral_Index, Spectral_Index2,
@@ -314,7 +315,7 @@ def I(e1, e2, e0, f0, g, ec = numpy.nan):
 
 class BlackBody(AnalyticModel):
     """Black-body model.
-    
+
     The energy density can be specified independently of the temperature.
     This is sometimes called a "gray body" spectrum.
 
@@ -335,12 +336,12 @@ class BlackBody(AnalyticModel):
 
     def _omega_b(self, T):
         """Blackbody energy density.
-        
+
         Parameters
         ----------
         T : array_like
             Temperature (K).
-            
+
         Returns
         -------
         omega : `numpy.array`
@@ -356,7 +357,7 @@ class BlackBody(AnalyticModel):
 
     def _y(self, E):
         """Evaluate model.
-        
+
         Parameters
         ----------
         E : array_like

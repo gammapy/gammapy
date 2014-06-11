@@ -28,7 +28,7 @@ class GammaSpectralCube(object):
     Note that there is a very nice ``SpectralCube`` implementation here:
     http://spectral-cube.readthedocs.org/en/latest/index.html
 
-    Here is some discussion if / how it could be used: 
+    Here is some discussion if / how it could be used:
     https://github.com/radio-astro-tools/spectral-cube/issues/110
 
     For now we re-implement what we need here.
@@ -40,7 +40,7 @@ class GammaSpectralCube(object):
     * Methods use the ``wcs`` order of ``(lon, lat, energy)``,
       but internally when accessing the data often the reverse order is used.
       We use ``(xx, yy, zz)`` as pixel coordinates for ``(lon, lat, energy)``,
-      as that matches the common definition of ``x`` and ``y`` in image viewers.  
+      as that matches the common definition of ``x`` and ``y`` in image viewers.
 
     Parameters
     ----------
@@ -64,13 +64,13 @@ class GammaSpectralCube(object):
         # TODO: check validity of inputs
         self.data = data
         self.wcs = wcs
-        
+
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
         self.energy_axis = LogEnergyAxis(energy)
 
         self._interpolate_cache = None
-    
+
     @property
     def _interpolate(self):
         if self._interpolate_cache == None:
@@ -128,24 +128,24 @@ class GammaSpectralCube(object):
         if combine == True:
             x = np.array(x).flat
             y = np.array(y).flat
-            z = np.array(z).flat        
-            return np.column_stack([z, y, x]) 
+            z = np.array(z).flat
+            return np.column_stack([z, y, x])
         else:
             return x, y, z
 
     def pix2world(self, x, y, z):
         """Convert world to pixel coordinates.
-        
+
         Parameters
         ----------
         x, y, z
-        
+
         Returns
         -------
         lon, lat, energy
         """
         lon, lat, _ = self.wcs.wcs_pix2world(x, y, 0, 0)
-        energy = self.energy_axis.pix2world(z) 
+        energy = self.energy_axis.pix2world(z)
 
         lon = Quantity(lon, 'deg')
         lat = Quantity(lat, 'deg')
@@ -172,7 +172,7 @@ class GammaSpectralCube(object):
         """
         # Determine output shape by creating some array via broadcasting
         shape = (lon * lat * energy).shape
-        
+
         pix_coord = self.world2pix(lon, lat, energy, combine=True)
         values = self._interpolate(pix_coord)
         values.reshape(shape)
@@ -181,7 +181,7 @@ class GammaSpectralCube(object):
 
     def spectral_index(self, lon, lat, energy, dz=1e-3):
         """Power law spectral index.
-        
+
         A forward finite difference method with step ``dz`` is used along
         the ``z = log10(energy)`` axis.
 
@@ -260,11 +260,11 @@ class GammaSpectralCube(object):
         energy1 = energy1[:, np.newaxis, np.newaxis].value
         energy2 = energy2[:, np.newaxis, np.newaxis].value
         integral_flux = powerlaw.I_from_points(energy1, energy2, flux1, flux2)
-        
+
         integral_flux = integral_flux.sum(axis=0)
 
         # TODO: check units ... set correctly if not OK.
-        header = self.wcs.sub(['longitude', 'latitude']).to_header() 
+        header = self.wcs.sub(['longitude', 'latitude']).to_header()
         hdu = fits.ImageHDU(data=integral_flux, header=header, name='integral_flux')
 
         return hdu

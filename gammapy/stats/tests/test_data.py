@@ -12,6 +12,7 @@ def test_Stats():
     assert_allclose(stats.background, a_on / a_off * n_off)
     assert_allclose(stats.excess, n_on - a_on / a_off * n_off)
 
+
 def test_make_stats():
     pass
 

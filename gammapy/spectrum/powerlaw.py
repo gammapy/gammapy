@@ -17,11 +17,11 @@ g_DEFAULT = 2
 
 def power_law_eval(energy, norm, gamma, energy_ref):
     r"""Differential flux at a given energy.
-    
+
     .. math:: f(energy) = N (E / E_0) ^ - \Gamma
-    
+
     with norm ``N``, energy ``E``, reference energy ``E0`` and spectral index :math:`\Gamma`.
-        
+
     Parameters
     ----------
     energy : array_like
@@ -39,7 +39,7 @@ def power_law_pivot_energy(energy_ref, f0, d_gamma, cov):
 
     Reference: http://arxiv.org/pdf/0910.4881
     """
-    pivot_energy =  energy_ref * np.exp(cov / (f0 * d_gamma ** 2))
+    pivot_energy = energy_ref * np.exp(cov / (f0 * d_gamma ** 2))
     return pivot_energy
 
 
@@ -69,7 +69,7 @@ def _conversion_factor(g, e, e1, e2):
 
 def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     """Compute differential flux for a given integral flux.
-    
+
     Parameters
     ----------
     I : array_like
@@ -82,7 +82,7 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
         Energy band minimum
     e_max : array_like
         Energy band maximum
-    
+
     Returns
     -------
     flux : `numpy.array`
@@ -93,7 +93,7 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
 
 def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     """Compute integral flux for a given differential flux.
-    
+
     Parameters
     ----------
     f : array_like
@@ -106,7 +106,7 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
         Energy band minimum
     e_max : array_like
         Energy band maximum
-    
+
     Returns
     -------
     flux : `numpy.array`

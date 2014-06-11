@@ -5,6 +5,7 @@ from ..flux_point import FluxPoints
 from ..models import PowerLaw
 from ..fitter import Fitter
 
+
 @pytest.mark.xfail
 def fit_crab_with_pl():
     """Fit a constant to some test data"""

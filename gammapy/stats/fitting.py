@@ -14,14 +14,14 @@ class PoissonLikelihoodFitter(Fitter):
 
     def errorfunc(self, fitparams, *args):
         """The Cash Poisson likelihood fit statistic.
-        
+
         Parameters
         ----------
         fitparams : `numpy.array`
             Array of fit parameters
         args : (model, x, y, dx, stat)
             Tuple with auxiliary 
-        
+
         Returns
         -------
         stat : float
@@ -31,10 +31,10 @@ class PoissonLikelihoodFitter(Fitter):
         self._fitter_to_model_params(model, fitparams)
         y_model = dx * model(x)
         return stat(y, y_model).sum()
-    
+
     def __call__(self, model, x, y, dx=None, fit_statistic='cash'):
         """Execute the likelihood minimization.
-        
+
         The available fit statistics are:
         * 'cash' = `~gammapy.stats.cash`
         * 'cstat' = `~gammapy.stats.cstat`
@@ -56,12 +56,12 @@ class PoissonLikelihoodFitter(Fitter):
 
         if dx == None:
             dx = np.ones_like(x)
-        
+
         try:
             fit_statistic = self.FIT_STATISTICS[fit_statistic]
         except KeyError:
             raise ValueError('Invalid fit statistic: {0}'.format(fit_statistic))
-            
+
         if not model.fittable:
             raise ValueError("Model must be a subclass of ParametricModel")
         self._validate_constraints(model)

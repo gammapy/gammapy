@@ -12,6 +12,7 @@ __all__ = ['H05', 'F06B', 'F06P',
 # Simulation range used for random number drawing
 v_range = 4000  # km/s
 
+
 def H05(v, sigma=265):
     r"""Maxwellian pulsar velocity distribution.
 
@@ -68,17 +69,17 @@ def F06B(v, sigma1=160, sigma2=780, w=0.9):
 
 def F06P(v, v0=560):
     """Distribution by Lyne 1982 and adopted by Paczynski and Faucher.
-    
+
     .. math ::
         f(v) = 4 / (\pi v_{0} (1 + (v / v_{0}) ^ 2) ^ 2)
-    
+
     Parameters
     ----------
     v : array_like
         Velocity (km s^-1)
     v0 : array_like
         Velocity parameter (km s^-1)
-    
+
     Returns
     -------
     density : array_like
@@ -94,4 +95,3 @@ Useful for automatic processing.
 velocity_distributions['H05'] = H05
 velocity_distributions['F06B'] = F06B
 velocity_distributions['F06P'] = F06P
-

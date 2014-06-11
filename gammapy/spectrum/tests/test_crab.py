@@ -16,7 +16,7 @@ except ImportError:
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_eval():
     e, e1, e2 = 2, 1, 1e3
-    
+
     # This is just a test that the functions run
     # These results are not verified
     vals = dict()
@@ -24,7 +24,7 @@ def test_eval():
     vals['hegra'] = [4.60349681e-12, 1.74688947e-11, 2.62000000e+00]
     vals['hess_pl'] = [5.57327158e-12, 2.11653715e-11, 2.63000000e+00]
     vals['hess_ecpl'] = [6.23714253e-12, 2.26797344e-11, 2.52993006e+00]
-    
+
     for reference in crab.CRAB_REFERENCES:
         f = crab.crab_flux(e, reference)
         I = crab.crab_integral_flux(e1, e2, reference)

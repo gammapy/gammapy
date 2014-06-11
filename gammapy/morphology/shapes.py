@@ -11,6 +11,7 @@ from numpy import sqrt, exp, sin, cos
 __all__ = ['delta2d', 'gauss2d', 'shell2d', 'sphere2d',
            'morph_types', 'morph_pars']
 
+
 def _normalized(image, ampl):
     """Normalize image such that image.sum() == ampl.
 
@@ -104,5 +105,5 @@ morph_types = {'delta2d': delta2d,
                'sphere2d': sphere2d}
 
 # Union of all morphology parameters
-morph_pars = set(delta2d_par + gauss2d_par + 
+morph_pars = set(delta2d_par + gauss2d_par +
                  shell2d_par + sphere2d_par)

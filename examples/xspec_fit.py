@@ -3,4 +3,3 @@
 
 Run `xspec_fake.py` first to generate the example input file.
 """
-

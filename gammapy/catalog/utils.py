@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
 from __future__ import print_function, division
-from astropy.coordinates import SkyCoord
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
@@ -13,7 +12,7 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     """Coordinate format as an IAU source designation.
 
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
-    
+
     Parameters
     ----------
     coordinate : `~astropy.coordinates.SkyCoord`
@@ -25,18 +24,18 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
         Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1
     prefix : str
         Prefix to put before the coordinate string, e.g. "SDSS J".
-    
+
     Returns
     -------
     strrepr : str or list of strings
         IAU format string representation of the coordinate.
         If this input coordinate is an array, the output is a list of strings.
-    
+
     Examples
     --------
     >>> from astropy.coordinates import SkyCoord
     >>> from gammapy.catalog import coordinate_iau_format
-    
+
     Example position from IAU specification
 
     >>> coordinate = SkyCoord('00h51m09.38s -42d26m33.8s', frame='icrs')
@@ -54,7 +53,7 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     >>> designation = 'HESS J' + coordinate_iau_format(coordinate, ra_digits=4)
     >>> print(designation)
     HESS J0534+220
-    
+
     PKS 2155-304 AGN position (negative declination)
 
     >>> coordinate = SkyCoord('21h58m52.06511s -30d13m32.1182s', frame='icrs')
@@ -73,10 +72,10 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     """
     if coordinate.frame.name == 'galactic':
         coordinate = coordinate.transform_to('icrs')
-    
+
     if dec_digits == None:
-        dec_digits = max(2, ra_digits - 1) 
-    
+        dec_digits = max(2, ra_digits - 1)
+
     ra_str = ra_iau_format(coordinate.ra, ra_digits)
     dec_str = dec_iau_format(coordinate.dec, dec_digits)
 
@@ -90,7 +89,7 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
 
 def ra_iau_format(ra, digits):
     """Right Ascension part of an IAU source designation.
-    
+
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
 
     ====== ========
@@ -110,15 +109,15 @@ def ra_iau_format(ra, digits):
         Right ascension
     digits : int (>=2)
         Number of digits
-    
+
     Returns
     -------
     strrepr : str
         IAU format string representation of the angle
     """
-    if (not isinstance(digits, int)) and (digits >= 2): 
+    if (not isinstance(digits, int)) and (digits >= 2):
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
-    
+
     if ra.isscalar:
         out = _ra_iau_format_scalar(ra, digits)
     else:
@@ -159,7 +158,7 @@ def _ra_iau_format_scalar(ra, digits):
 
 def dec_iau_format(dec, digits):
     """Declination part of an IAU source designation.
-    
+
     Reference: http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
 
     ====== =========
@@ -179,13 +178,13 @@ def dec_iau_format(dec, digits):
         Declination
     digits : int (>=2)
         Number of digits
-    
+
     Returns
     -------
     strrepr : str
         IAU format string representation of the angle
     """
-    if not isinstance(digits, int) and digits >= 2: 
+    if not isinstance(digits, int) and digits >= 2:
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
 
     if dec.isscalar:

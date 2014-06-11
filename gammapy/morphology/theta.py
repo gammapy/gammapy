@@ -11,6 +11,7 @@ import numpy as np
 __all__ = ['ModelThetaCalculator', 'ThetaCalculator',
            'ThetaCalculator2D', 'ThetaCalculatorScipy']
 
+
 class ThetaCalculator(object):
     """Provides methods ``containment_fraction(theta)`` and ``containment_radius(containment_fraction)``
     given some 1D distribution (not necessarily normalized).

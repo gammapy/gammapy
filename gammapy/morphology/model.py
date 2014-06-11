@@ -16,6 +16,7 @@ __all__ = ['GaussCatalog', 'make_test_model', 'read_json',
 
 __doctest_skip__ = ['MorphModelImageCreator']
 
+
 class MorphModelImageCreator(object):
     """Create model images from a HGPS pipeline source config file.
 

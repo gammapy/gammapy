@@ -22,7 +22,7 @@ def probability_center(images, kernel):
         Keys: 'counts', 'background'
     kernel : array_like
         Kernel array
-        
+
     Returns
     -------
     probability : float
@@ -33,13 +33,13 @@ def probability_center(images, kernel):
     C = np.asanyarray(images['counts'])
     B = np.asanyarray(images['background'])
     w = np.asanyarray(kernel)
-    
+
     assert C.shape == w.shape
     assert B.shape == w.shape
 
     # Normalize kernel
     w = w / w.sum()
-    
+
     U = np.sum(w * C)
     B_prime = np.sum(w * B)
     w_equiv = np.sum(w * w * B) / B_prime
@@ -49,7 +49,7 @@ def probability_center(images, kernel):
 
 def significance_center(images, kernel):
     """Compute matched-filter significance at the kernel center.
-    
+
     See `probability_center` docstring.
     """
     probability = probability_center(images, kernel)
@@ -58,14 +58,14 @@ def significance_center(images, kernel):
 
 def probability_image(images, kernel):
     """Compute matched-filter p-value image.
-    
+
     Parameters
     ----------
     images : dict of arrays
         Keys: 'counts', 'background'
-        
+
     kernel : array_like
-    
+
     Returns
     -------
     probability : array
@@ -77,7 +77,7 @@ def probability_image(images, kernel):
 
 def significance_image(images, kernel):
     """Compute matched-filter significance image.
-    
+
     See `probability_image` docstring.
     """
     probability = probability_image(images, kernel)

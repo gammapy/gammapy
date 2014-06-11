@@ -4,6 +4,7 @@ from __future__ import print_function, division
 import numpy as np
 from ..pwn import PWN
 
+
 def plot_hoppe(pwn):
     import matplotlib.pyplot as plt
     from gammapy.spectrum.models import PowerLaw
@@ -57,6 +58,7 @@ def plot_electron_evolution():
     plt.ylim(1e-5, 1e5)
     plt.legend()
     plt.show()
+
 
 def main():
     plot_hoppe()

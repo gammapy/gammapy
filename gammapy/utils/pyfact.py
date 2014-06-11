@@ -48,7 +48,7 @@ __all__ = ['ChisquareFitter',
            ]
 
 
-class ChisquareFitter :
+class ChisquareFitter(object):
     """
     Convenience class to perform Chi^2 fits.
 
@@ -75,12 +75,11 @@ class ChisquareFitter :
         Fit function.
     """
 
-    def __init__(self, fitfunc) :
+    def __init__(self, fitfunc):
         self.fitfunc = fitfunc
         self.results = None
 
-
-    def fit_data(self, p0, x, y, y_err) :
+    def fit_data(self, p0, x, y, y_err):
         """
         Perform actual fit.
 
@@ -96,7 +95,7 @@ class ChisquareFitter :
         from scipy.special import gammainc
 
         self.results = leastsq(self.chi_func, p0, args=(x, y, y_err), full_output=True)
-        if self.results[4] :
+        if self.results[4]:
             self.chi_arr = self.chi_func(self.results[0], x, y, y_err)
             self.chi2 = np.sum(np.power(self.chi_arr, 2.))
             self.dof = len(x) - len(p0)
@@ -108,31 +107,31 @@ class ChisquareFitter :
         """Returns Chi"""
         return (self.fitfunc(p, x) - y) / err  # Distance to the target function
 
-    def print_results(self) :
+    def print_results(self):
         """Prints out results to the command line using the logging module."""
-        if self.results == None :
+        if self.results == None:
             logging.warning('No fit results to report since no fit has been performed yet')
             return
-        if self.results[4] < 5 :
+        if self.results[4] < 5:
             logging.info('Fit was successful!')
-        else :
+        else:
             logging.warning('Fitting failed!')
             logging.warning('Message: {0}'.format(self.results[3]))
         logging.info('Chi^2  : {0:f}'.format(self.chi2))
         logging.info('d.o.f. : {0:d}'.format(self.dof))
         logging.info('Prob.  : {0:.4e}'.format(self.prob))
-        for i, v in enumerate(self.results[0]) :
-            if self.results[1] != None :
+        for i, v in enumerate(self.results[0]):
+            if self.results[1] != None:
                 logging.info('P{0}     : {1:.4e} +/- {2:.4e}'.format(i, v,
                                                                      np.sqrt(self.results[1][i][i])))
-            else :
+            else:
                 logging.info('P{0}     : {1:.4e}'.format(i, v))
 
 
 class SkyCircle:
     """A circle on the sky."""
-    
-    def __init__(self, c, r) :
+
+    def __init__(self, c, r):
         """
         A circle on the sky.
 
@@ -145,7 +144,7 @@ class SkyCircle:
         """
         self.c, self.r = c, r
 
-    def contains(self, c) :
+    def contains(self, c):
         """
         Checks if the coordinate lies inside the circle.
 
@@ -160,7 +159,7 @@ class SkyCircle:
         """
         return self.c.dist(c) <= self.r
 
-    def intersects(self, sc) :
+    def intersects(self, sc):
         """
         Checks if two sky circles overlap.
 
@@ -173,12 +172,13 @@ class SkyCircle:
 
 class SkyCoord:
     """Sky coordinate in RA and Dec. All units should be degree."""
-    
-    def __init__(self, ra, dec) :
+
+    def __init__(self, ra, dec):
         """
         Sky coordinate in RA and Dec. All units should be degree.
-        
-        In the current implementation it should also work with arrays, though one has to be careful in dist.
+
+        In the current implementation it should also work with arrays,
+        though one has to be careful in dist.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class SkyCoord:
         """
         self.ra, self.dec = ra, dec
 
-    def dist(self, c) :
+    def dist(self, c):
         """
         Return the distance of the coordinates in degree following the haversine formula,
         see e.g. http://en.wikipedia.org/wiki/Great-circle_distance.
@@ -212,7 +212,7 @@ class SkyCoord:
                                           * np.sin((self.ra - c.ra) / 360. * np.pi) ** 2.)) / np.pi * 180.
 
 
-def circle_circle_intersection_array(R, r, d) :
+def circle_circle_intersection_array(R, r, d):
     """Calculate overlap area between two circles on the sphere.
 
     Works _only_ with numpy arrays of equal length.
@@ -239,19 +239,19 @@ def circle_circle_intersection_array(R, r, d) :
 
     result = np.zeros(len(R))
     mask1 = R >= d + r
-    if mask1.any() :
+    if mask1.any():
         result[mask1] = np.pi * r[mask1] ** 2.
     mask2 = r >= d + R
-    if mask2.any() :
+    if mask2.any():
         result[mask2] = np.pi * R[mask2] ** 2.
     mask = (R + r > d) * np.invert(mask1) * np.invert(mask2)
-    if mask.any() :
+    if mask.any():
         r, R, d = r[mask], R[mask], d[mask]
         result[mask] = (r ** 2.) * np.arccos(X(R, r, d)) + (R ** 2.) * np.arccos(Y(R, r, d)) - .5 * np.sqrt(Z(R, r, d));
     return result
 
 
-def circle_circle_intersection_float(R, r, d) :
+def circle_circle_intersection_float(R, r, d):
     """Calculate overlap area between two circles on the sphere.
 
     Works _only_ with floats.
@@ -276,13 +276,13 @@ def circle_circle_intersection_float(R, r, d) :
     Y = lambda R, r, d: (d * d + R * R - r * r) / (2. * d * R)
     Z = lambda R, r, d: (-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R)
 
-    if R >= d + r :
+    if R >= d + r:
         return np.pi * r ** 2.
-    elif r >= d + R :
+    elif r >= d + R:
         return np.pi * R ** 2.
-    elif R + r > d :
+    elif R + r > d:
         return (r ** 2.) * np.arccos(X(R, r, d)) + (R ** 2.) * np.arccos(Y(R, r, d)) - .5 * np.sqrt(Z(R, r, d))
-    else :
+    else:
         return 0.
 
 
@@ -296,13 +296,13 @@ def sim_evlist(flux=.1,
                do_graphical_output=True,
                loglevel='INFO'):
     """Simulate IACT eventlist using an ARF file.
-    
+
     TODO: describe.
-    
+
     Paramters
     ---------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -314,7 +314,7 @@ def sim_evlist(flux=.1,
 
     logging.info('Exposure: {0} h'.format(obstime))
     obstime *= 3600.  # observation time in seconds
-    
+
     obj_ra, obj_dec = 0., .5
     pnt_ra, pnt_dec = 0., 0.
     t_min = 24600.
@@ -329,7 +329,7 @@ def sim_evlist(flux=.1,
 
     # DEBUG
     # ea /= irf_data[:,4]
-    
+
     if rmf:
         logging.info('RMF: {0}'.format(rmf))
         edisp = EnergyDispersion.read(rmf)
@@ -345,7 +345,7 @@ def sim_evlist(flux=.1,
     else:
         logging.info('Assuming energy independent 80% cut efficiency for ARF file.')
         ea /= .80
-        
+
     #---------------------------------------------------------------------------
     # Signal
 
@@ -356,13 +356,13 @@ def sim_evlist(flux=.1,
     logging.debug('ea_loge_step_mean = {0}'.format(ea_loge_step_mean))
 
     # Resample effective area to increase precision
-    if ea_loge_step_mean > .1 :
+    if ea_loge_step_mean > .1:
         elog10step = .05
         logging.info('Resampling effective area in log10(EA) vs log10(E) (elog10step = {0})'.format(elog10step))
         ea_spl = UnivariateSpline(e_cen, np.log10(ea), s=0, k=1)
         e_cen = 10. ** np.arange(np.log10(e_cen[0]), np.log10(e_cen[-1]), step=elog10step)
         ea = 10. ** ea_spl(e_cen)
-    
+
     # DEBUG plot
     # plt.loglog(e_cen_s, ea_s, )
     # plt.loglog(e_cen, ea, '+')
@@ -379,10 +379,10 @@ def sim_evlist(flux=.1,
         log_e_steps = np.log10(ea_erange)
 
     # Calculate event numbers for the RMF bins
-    def get_int_rate(emin, emax) :
-        if emin < e_cen[0] or emax > e_cen[-1] :
+    def get_int_rate(emin, emax):
+        if emin < e_cen[0] or emax > e_cen[-1]:
             return 0.
-        else :
+        else:
             return f_test.integral(emin, emax)
     int_rate = np.array([get_int_rate(10. ** el, 10. ** eh) for (el, eh) in zip(log_e_steps[:-1], log_e_steps[1:])])
     # Sanity
@@ -391,7 +391,7 @@ def sim_evlist(flux=.1,
     # DEBUG
     # int_rate_s = int_rate
 
-    if rmf :
+    if rmf:
         logging.debug('Photon rate before RM = {0}'.format(np.sum(int_rate)))
         # Apply energy distribution matrix
         int_rate = edisp.apply(int_rate)
@@ -418,7 +418,7 @@ def sim_evlist(flux=.1,
 
     # Filter out low and high values to avoid spline problems at the edges
     istart = np.sum(int_rate == 0.) - 1
-    if istart < 0 :
+    if istart < 0:
         istart = 0
     istop = np.sum(int_rate / int_all > 1. - 1e-4)  # This value dictates the dynamic range at the high energy end
 
@@ -457,8 +457,7 @@ def sim_evlist(flux=.1,
 
     # Generate energy event list
     evlist_e = ev_gen_f(np.random.rand(n_events))
-    
-    
+
     # Sanity
     logging.debug('Number of photons with E = NaN : {0}'.format(np.sum(np.isnan(evlist_e))))
     evlist_e[np.isnan(evlist_e)] = 0.
@@ -475,15 +474,15 @@ def sim_evlist(flux=.1,
     # Broken power law fit function, normalized at break energy
     bpl = lambda p, x : np.where(x < p[0], p[1] * (x / p[0]) ** -p[2], p[1] * (x / p[0]) ** -p[3])
     evlist_psf = None
-    if extra :
+    if extra:
         d = extraf['ANGRES68'].data
         g = UnivariateSpline((d.field('BIN_LO') + d.field('BIN_HI')) / 2., d.field('VAL'), s=0, k=1)
         evlist_psf = g(evlist_e)
-    else :
+    else:
         psf_p1 = [1.1, 5.5E-2, .42, .19]  # Fit from SubarrayE_IFAE_50hours_20101102
         evlist_psf = bpl(psf_p1, 10. ** evlist_e)
         logging.warning('Using dummy PSF extracted from SubarrayE_IFAE_50hours_20101102')
-    
+
     evlist_dec = obj_dec + np.random.randn(n_events) * evlist_psf
     evlist_ra = obj_ra + np.random.randn(n_events) * evlist_psf / objcosdec
 
@@ -495,12 +494,12 @@ def sim_evlist(flux=.1,
     # plt.figure(1)
 
     p_rate_area, log_e_cen = None, None
-    if extra :
+    if extra:
         d = extraf['BGRATED'].data
         p_rate_area = d.field('VAL')
         log_e_cen = (d.field('BIN_LO') + d.field('BIN_HI')) / 2
         # g = scipy.interpolate.UnivariateSpline((d.field('BIN_LO') + d.field('BIN_HI')) / 2., d.field('VAL'), s=0, k=1)
-    else :        
+    else:
         logging.warning('Using dummy background rate extracted from SubarrayE_IFAE_50hours_20101102')
         bgrate_p1 = [9., 5.E-4, 1.44, .49]  # Fit from SubarrayE_IFAE_50hours_20101102
         log_e_cen = np.linspace(-1.5, 2., 35.)
@@ -521,7 +520,7 @@ def sim_evlist(flux=.1,
 
     r_steps = np.linspace(0.001, 4., 150)
     int_cam_acc = np.zeros(150)
-    for i, r in enumerate(r_steps) :
+    for i, r in enumerate(r_steps):
         int_cam_acc[i] = quad(lambda x: cam_acc(cam_acc_par, x) * x * 2. * np.pi, 0., r)[0]
 
     n_events_bg = int(p_rate_total * obstime * int_cam_acc[-1])
@@ -556,7 +555,7 @@ def sim_evlist(flux=.1,
 
     #---------------------------------------------------------------------------
     # Plots & debug
-    
+
     plt.figure(3)
 
     objra, objdec = 0., 0.
@@ -598,10 +597,10 @@ def sim_evlist(flux=.1,
 
     #---------------------------------------------------------------------------
     # Output to file
-    
+
     if output_filename_base:
         logging.info('Writing eventlist to file {0}.eventlist.fits'.format(output_filename_base))
-        
+
         newtable = np_to_evt(evlist_t, evlist_bg_t,
                              evlist_ra, evlist_bg_ra,
                              evlist_dec, evlist_bg_dec,
@@ -612,8 +611,8 @@ def sim_evlist(flux=.1,
                              dstart=dstart, dstop=dstop, dbase=dbase)
         # Write eventlist to file
         newtable.write('{0}.eventlist.fits'.format(output_filename_base))
-        
-        if write_pha :
+
+        if write_pha:
             logging.info('Writing PHA to file {0}.pha.fits'.format(output_filename_base))
             # Prepare data
             dat, t = np.histogram(10. ** evlist_e, bins=edisp.energy_bounds('true'))
@@ -627,7 +626,7 @@ def sim_evlist(flux=.1,
                               dstart=dstart, dstop=dstop, dbase=dbase, creator='pfsim',
                               telescope='CTASIM')
             tbhdu.header.update('ANCRFILE', os.path.basename(arf), 'Ancillary response file (ARF)')
-            if rmf :
+            if rmf:
                 tbhdu.header.update('RESPFILE', os.path.basename(rmf), 'Redistribution matrix file (RMF)')
 
             # Write PHA to file
@@ -650,13 +649,13 @@ def np_to_evt(evlist_time, evlist_bg_time,
               obj_name='DUMMY', creator='DUMMY',
               telescope='DUMMY', instrument='DUMMY', filter='NONE'):
     """Create EVT FITS table extension from numpy arrays.
-    
+
     TODO: document.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -676,7 +675,7 @@ def np_to_evt(evlist_time, evlist_bg_time,
 
 
     header = table.meta
-    
+
     header['RA_OBJ'] = obj_ra, 'Target position RA [deg]'
     header['DEC_OBJ'] = obj_dec, 'Target position dec [deg]'
     header['RA_PNT'] = pnt_ra, 'Observation position RA [deg]'
@@ -709,6 +708,7 @@ def np_to_evt(evlist_time, evlist_bg_time,
 
     return table
 
+
 def skycircle_from_str(cstr) :
     """Creates SkyCircle from circle region string."""
     x, y, r = eval(cstr.upper().replace('CIRCLE', ''))
@@ -733,7 +733,7 @@ def get_cam_acc(camdist, rmax=4., nbins=None, exreg=None, fit=False, fitfunc=Non
     fit : bool, optional
         Fit acceptance histogram (default=False).
     """
-    if not nbins :
+    if not nbins:
         nbins = int(rmax / .1)
     # Create camera distance histogram
     n, bins = np.histogram(camdist, bins=nbins, range=[0., rmax])
@@ -744,39 +744,39 @@ def get_cam_acc(camdist, rmax=4., nbins=None, exreg=None, fit=False, fitfunc=Non
     r_a = (bins[1:] ** 2. - bins[:-1] ** 2.) * np.pi
     # Deal with exclusion regions
     ex_a = None
-    if exreg :
+    if exreg:
         ex_a = np.zeros(len(r))
         t = np.ones(len(r))
-        for reg in exreg :
+        for reg in exreg:
             ex_a += (circle_circle_intersection_array(bins[1:], t * reg[0], t * reg[1])
                      - circle_circle_intersection_array(bins[:-1], t * reg[0], t * reg[1]))
         ex_a /= r_a
     # Fit the data
     fitter = None
-    if fit :
+    if fit:
         # fitfunc = lambda p, x: p[0] * x ** p[1] * (1. + (x / p[2]) ** p[3]) ** ((p[1] + p[4]) / p[3])
-        if not fitfunc :
+        if not fitfunc:
             fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2])
             # fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2]) + p[4] / (np.exp(p[5] * (x - p[6])) + 1.)            
-        if not p0 :
+        if not p0:
             p0 = [n[0] / r_a[0], 1.5, 3., -5.]  # Initial guess for the parameters
             # p0 = [.5 * n[0] / r_a[0], 1.5, 3., -5., .5 * n[0] / r_a[0], 100., .5] # Initial guess for the parameters            
         fitter = ChisquareFitter(fitfunc)
         m = (n > 0.) * (nerr > 0.) * (r_a != 0.) * ((1. - ex_a) != 0.)
-        if np.sum(m) <= len(p0) :
+        if np.sum(m) <= len(p0):
             logging.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
-        else :
+        else:
             # ok, this _should_ be improved !!!
             x, y, yerr = r[m], n[m] / r_a[m] / (1. - ex_a[m]) , nerr[m] / r_a[m] / (1. - ex_a[m])
             m = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr) * (yerr != 0.)
-            if np.sum(m) <= len(p0) :
+            if np.sum(m) <= len(p0):
                 logging.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
-            else :
+            else:
                 fitter.fit_data(p0, x[m], y[m], yerr[m])
     return (n, bins, nerr, r, r_a, ex_a, fitter)
 
 
-def get_sky_mask_circle(r, bin_size) :
+def get_sky_mask_circle(r, bin_size):
     """
     Returns a 2d numpy histogram with (2. * r / bin_size) bins per axis
     where a circle of radius has bins filled 1.s, all other bins are 0.
@@ -830,7 +830,7 @@ def get_sky_mask_ring(rmin, rmax, bin_size) :
     return sky_mask
 
 
-def get_exclusion_region_map(map, rarange, decrange, exreg) :
+def get_exclusion_region_map(map, rarange, decrange, exreg):
     """
     Creates a map (2d numpy histogram) with all bins inside of exclusion regions set to 0. (others 1.).
 
@@ -848,18 +848,18 @@ def get_exclusion_region_map(map, rarange, decrange, exreg) :
     sky_mask = np.ones((xnbins, ynbins))
     for x, xval in enumerate(np.linspace(decrange[0] + xstep / 2., decrange[1] - xstep / 2., xnbins)) :
         for y, yval in enumerate(np.linspace(rarange[0] + ystep / 2., rarange[1] - ystep / 2., ynbins)) :
-            for reg in exreg :
-                if reg.contains(SkyCoord(yval, xval)) :
+            for reg in exreg:
+                if reg.contains(SkyCoord(yval, xval)):
                     sky_mask[x, y] = 0.
     return sky_mask
 
 
-def oversample_sky_map(sky, mask, exmap=None) :
+def oversample_sky_map(sky, mask, exmap=None):
     """Oversamples a 2d numpy histogram with a given mask.
 
     Parameters
     ----------
-    sky : 2d array 
+    sky : 2d array
     mask : 2d array
     exmap : 2d array
     """
@@ -877,7 +877,7 @@ def oversample_sky_map(sky, mask, exmap=None) :
     sky_alpha = np.ones((sky_nx, sky_ny))
 
     sky_base = np.ones((sky_nx, sky_ny))
-    if exmap != None :
+    if exmap != None:
         sky *= exmap
         sky_base *= exmap
 
@@ -899,13 +899,13 @@ def create_sky_map(input_file_name,
                    do_graphical_output=True,
                    loglevel='INFO'):
     """Create sky map.
-    
+
     TODO: describe
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -922,15 +922,15 @@ def create_sky_map(input_file_name,
 
     # Intialize some variables
     skycenra, skycendec, pntra, pntdec = None, None, None, None
-    if skymap_center :
+    if skymap_center:
         skycenra, skycendec = eval(skymap_center)
         logging.info('Skymap center: RA {0}, Dec {1}'.format(skycenra, skycendec))
 
     ring_bg_r_min, ring_bg_r_max = .3, .7
-    if ring_bg_radii :
+    if ring_bg_radii:
         ring_bg_r_min, ring_bg_r_max = eval(ring_bg_radii)
 
-    if r_overs > ring_bg_r_min :
+    if r_overs > ring_bg_r_min:
         logging.warning('Oversampling radius is larger than the inner radius chosen for the ring BG: {0} > {1}'.format(r_overs, ring_bg_r_min))
 
     logging.info('Skymap size         : {0} deg'.format(skymap_size))
@@ -955,11 +955,11 @@ def create_sky_map(input_file_name,
     def get_filelist(input_file_name) :
         # Check if we are dealing with a single file or a bankfile
         # and create/read in the file list accordingly
-        try :
+        try:
             f = fits.open(input_file_name)
             f.close()
             file_list = [input_file_name]
-        except :
+        except:
             # We are dealing with a bankfile
             logging.info('Reading files from bankfile {0}'.format(input_file_name))
             file_list = np.loadtxt(input_file_name, dtype='S', usecols=[0])
@@ -970,18 +970,19 @@ def create_sky_map(input_file_name,
     tpl_file_list = None
 
     # Read in template files
-    if template_background :
+    if template_background:
         tpl_file_list = get_filelist(template_background)
-        if len(file_list) != len(tpl_file_list) :
-            logging.warning('Different number of signal and template background files. Switching off template background analysis.')
+        if len(file_list) != len(tpl_file_list):
+            logging.warning('Different number of signal and template background files. '
+                            'Switching off template background analysis.')
             template_background = None
 
     # Main loop over input files
-    for i, file_name in enumerate(file_list) :
+    for i, file_name in enumerate(file_list):
 
         logging.info('Processing file {0}'.format(file_name))
 
-        def get_evl(file_name) :
+        def get_evl(file_name):
             # Open fits file
             hdulist = fits.open(file_name)
             # Access header of second extension
@@ -1003,7 +1004,7 @@ def create_sky_map(input_file_name,
 
         # Read in eventlist for template background
         tpl_hdulist, tpl_tbdata = None, None
-        if template_background :
+        if template_background:
             tpl_hdulist, tpl_hdr, tpl_tbdata = get_evl(tpl_file_list[i])
 
         #---------------------------------------------------------------------------
@@ -1012,30 +1013,30 @@ def create_sky_map(input_file_name,
         objra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
         if firstloop :
             # If skymap center is not set, set it to the object position of the first run
-            if skycenra == None or skycendec == None :
+            if skycenra == None or skycendec == None:
                 skycenra, skycendec = objra, objdec
                 logging.debug('Setting skymap center to skycenra, skycendec = {0}, {1}'.format(skycenra, skycendec))
-            if 'TELESCOP' in ex1hdr :
+            if 'TELESCOP' in ex1hdr:
                 telescope = ex1hdr['TELESCOP']
                 logging.debug('Setting TELESCOP to {0}'.format(telescope))
-            if 'OBJECT' in ex1hdr :
+            if 'OBJECT' in ex1hdr:
                 object_ = ex1hdr['OBJECT']
                 logging.debug('Setting OBJECT to {0}'.format(object_))
 
         mgit, tpl_mgit = np.ones(len(tbdata), dtype=np.bool), None
-        if template_background :
+        if template_background:
             tpl_mgit = np.ones(len(tpl_tbdata), dtype=np.bool)
-        try :
+        try:
             # Note: according to the eventlist format document v1.0.0 Section 10
             # "The times are expressed in the same units as in the EVENTS
             # table (seconds since mission start in terresterial time)."
-            for gti in hdulist['GTI'].data :
+            for gti in hdulist['GTI'].data:
                 mgit *= (tbdata.field('TIME') >= gti[0]) * (tbdata.field('TIME') <= gti[1])
-                if template_background :
+                if template_background:
                     tpl_mgit *= (tpl_tbdata.field('TIME') >= gti[0]) * (tpl_tbdata.field('TIME') <= gti[1])
-        except :
+        except:
             logging.warning('File does not contain a GTI extension')
-        
+
         #---------------------------------------------------------------------------
         #  Handle exclusion region
 
@@ -1055,13 +1056,13 @@ def create_sky_map(input_file_name,
         logging.info('RUN Exposure        : {0:.2f} [s]'.format(exposure_run))
         logging.info('RUN Pointing pos.   : RA {0:.4f} [deg], Dec {1:.4f} [deg]'.format(pntra, pntdec))
         logging.info('RUN Obj. cam. dist. : {0:.4f} [deg]'.format(obj_cam_dist))
-        
+
         # Cut out source region for acceptance fitting
         exmask = None
-        for sc in sky_ex_reg :
-            if exmask :
+        for sc in sky_ex_reg:
+            if exmask:
                 exmask *= sc.c.dist(SkyCoord(tbdata.field('RA'), tbdata.field('DEC'))) < sc.r
-            else :
+            else:
                 exmask = sc.c.dist(SkyCoord(tbdata.field('RA'), tbdata.field('DEC'))) < sc.r
         exmask = np.invert(exmask)
 
@@ -1070,19 +1071,19 @@ def create_sky_map(input_file_name,
             logging.warning('Less then 10 events found in file {0} after exclusion region cuts'.format(file_name))
 
         hadtbdata = None
-        if template_background :
+        if template_background:
             exmask = None
-            for sc in sky_ex_reg :
-                if exmask :
+            for sc in sky_ex_reg:
+                if exmask:
                     exmask *= sc.c.dist(SkyCoord(tpl_tbdata.field('RA'), tpl_tbdata.field('DEC'))) < sc.r
-                else :
+                else:
                     exmask = sc.c.dist(SkyCoord(tpl_tbdata.field('RA'), tpl_tbdata.field('DEC'))) < sc.r
             exmask = np.invert(exmask)
             hadtbdata = tpl_tbdata[exmask * tpl_mgit]
 
         #---------------------------------------------------------------------------
         # Calculate camera acceptance
-        
+
         n, bins, nerr, r, r_a, ex_a, fitter = get_cam_acc(
             photbdata.field('XCAMDIST'),
             exreg=[(sc.r, sc.c.dist(SkyCoord(pntra, pntdec))) for sc in sky_ex_reg],
@@ -1098,7 +1099,7 @@ def create_sky_map(input_file_name,
             plt.show()
 
         had_acc, had_n, had_fit = None, None, None
-        if template_background :
+        if template_background:
             had_acc = get_cam_acc(
                 hadtbdata.field('XCAMDIST'),
                 exreg=[(sc.r, sc.c.dist(SkyCoord(pntra, pntdec))) for sc in sky_ex_reg],
@@ -1109,17 +1110,17 @@ def create_sky_map(input_file_name,
 
         # !!! All photons including the exclusion regions
         photbdata = tbdata[mgit]
-        if template_background :
+        if template_background:
             hadtbdata = tpl_tbdata[tpl_mgit]
-        if len(photbdata) < 10 :
+        if len(photbdata) < 10:
             logging.warning('Less then 10 events found in file {0} after GTI cut.'.format(file_name))
 
         tpl_acc_cor_use_interp = True
         tpl_acc_f, tpl_acc = None, None
-        if template_background :
-            if tpl_acc_cor_use_interp :
+        if template_background:
+            if tpl_acc_cor_use_interp:
                 tpl_acc_f = UnivariateSpline(r, n.astype(float) / had_n.astype(float), s=0, k=1)
-            else :
+            else:
                 tpl_acc_f = lambda r: fitter.fitfunc(p1, r) / had_fit.fitfunc(had_fit.results[0], r)
             tpl_acc = tpl_acc_f(hadtbdata.field('XCAMDIST'))
             m = hadtbdata.field('XCAMDIST') > r[-1]
@@ -1131,7 +1132,7 @@ def create_sky_map(input_file_name,
         # Skymap - definitions/calculation
 
         # Object position in the sky
-        if firstloop :
+        if firstloop:
             # skycenra, objdec, skymap_size = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ'], 6.
             # if skycenra == None or objdec == None :
             #    skycenra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
@@ -1152,7 +1153,7 @@ def create_sky_map(input_file_name,
                              bins=[skymap_nbins, skymap_nbins],
                              range=[[sky_dec_min, sky_dec_max], [sky_ra_min, sky_ra_max]])
 
-        if firstloop :
+        if firstloop:
             # Just used to have the x-min/max, y-min/max saved
             H, xedges, yedges = sky
             # NOTE: The zero point of the histogram 2d is at the lower left corner while
@@ -1168,7 +1169,7 @@ def create_sky_map(input_file_name,
                                                          (sky_ra_min, sky_ra_max),
                                                          (sky_dec_min, sky_dec_max),
                                                          sky_ex_reg)
-        else :
+        else:
             sky_hist += sky[0]
 
         # Calculate camera acceptance
@@ -1180,7 +1181,7 @@ def create_sky_map(input_file_name,
         acc = fitter.fitfunc(p1, rr) / fitter.fitfunc(p1, .01)
         m = rr > 4.
         acc[m] = fitter.fitfunc(p1, 4.) / fitter.fitfunc(p1, .01)
-        if not fov_acceptance :
+        if not fov_acceptance:
             logging.debug('Do _not_ apply FoV acceptance correction')
             acc = acc * 0. + 1.
 
@@ -1189,21 +1190,21 @@ def create_sky_map(input_file_name,
         # plt.colorbar()
         # plt.title('acc_bg_overs')
         # plt.show()
-        
-        if firstloop :
+
+        if firstloop:
             acc_hist = acc * exposure_run  # acc[0] before
-        else :
+        else:
             acc_hist += acc * exposure_run  # acc[0] before
 
-        if template_background :
+        if template_background:
             # Create hadron event like map for template background
             tpl_had = np.histogram2d(x=hadtbdata.field('DEC     '), y=hadtbdata.field('RA      '),
                                      bins=[skymap_nbins, skymap_nbins],
                                      # weights=1./accept,
                                      range=[[sky_dec_min, sky_dec_max], [sky_ra_min, sky_ra_max]])
-            if firstloop :
+            if firstloop:
                 tpl_had_hist = tpl_had[0]
-            else :
+            else:
                 tpl_had_hist += tpl_had[0]
 
             # Create acceptance map for template background
@@ -1211,14 +1212,14 @@ def create_sky_map(input_file_name,
                                      bins=[skymap_nbins, skymap_nbins],
                                      weights=tpl_acc,
                                      range=[[sky_dec_min, sky_dec_max], [sky_ra_min, sky_ra_max]])
-            if firstloop :
+            if firstloop:
                 tpl_acc_hist = tpl_acc[0]
-            else :
+            else:
                 tpl_acc_hist += tpl_acc[0]
 
         # Close fits file
         hdulist.close()
-        if tpl_hdulist :
+        if tpl_hdulist:
             tpl_hdulist.close()
 
         # Clean up memory
@@ -1263,14 +1264,14 @@ def create_sky_map(input_file_name,
 
     tpl_had_overs, tpl_sig_overs, tpl_exc_overs, tpl_alpha_overs = None, None, None, None
 
-    if template_background :
+    if template_background:
 
         logging.info('Calculating oversampled template background map ..')
         tpl_had_overs, tpl_had_overs_alpha = oversample_sky_map(tpl_had_hist, sc)
 
         logging.info('Calculating oversampled template acceptance map ..')
         tpl_acc_overs, tpl_acc_overs_alpha = oversample_sky_map(tpl_acc_hist, sc)
-        
+
         tpl_exc_overs = sky_overs - tpl_acc_overs
         tpl_alpha_overs = tpl_acc_overs / tpl_had_overs
         tpl_sig_overs = significance_on_off(sky_overs, tpl_had_overs, tpl_alpha_overs)
@@ -1278,7 +1279,7 @@ def create_sky_map(input_file_name,
     #---------------------------------------------------------------------------
     # Write results to file
 
-    if write_output :
+    if write_output:
 
         logging.info('Writing result to file ..')
 
@@ -1299,11 +1300,11 @@ def create_sky_map(input_file_name,
             }
         outfile_base_name = unique_base_file_name(outfile_base_name, outfile_data.keys())
 
-        for ext, data in outfile_data.items() :
+        for ext, data in outfile_data.items():
             image_to_primaryhdu(data, rarange, decrange, author='PyFACT pfmap',
                                  object_=object_, telescope=telescope).writeto(outfile_base_name + ext)
 
-        if template_background :
+        if template_background:
             outfile_base_name = 'skymap_template'
             outfile_data = {
                 '_bg.fits': tpl_had_hist,
@@ -1318,7 +1319,7 @@ def create_sky_map(input_file_name,
                 }
             outfile_base_name = unique_base_file_name(outfile_base_name, outfile_data.keys())
 
-            for ext, data in outfile_data.items() :
+            for ext, data in outfile_data.items():
                 image_to_primaryhdu(data, rarange, decrange, author='PyFACT pfmap',
                                      object_=object_, telescope=telescope).writeto(outfile_base_name + ext)
 
@@ -1333,7 +1334,7 @@ def create_sky_map(input_file_name,
     except:
         has_matplotlib = False
 
-    if has_matplotlib and do_graphical_output :
+    if has_matplotlib and do_graphical_output:
 
         logging.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
 
@@ -1341,7 +1342,7 @@ def create_sky_map(input_file_name,
                      sky_ra_min, sky_ra_max, sky_dec_min, sky_dec_max, objcosdec, r_overs, extent,
                      skycenra, skycendec, ring_bg_r_min, ring_bg_r_max, sign_hist_r_max=2.)
 
-        if template_background :
+        if template_background:
             plot_skymaps(sky_overs, tpl_exc_overs, tpl_sig_overs, tpl_had_overs, tpl_alpha_overs,
                          'Template BG overs.',
                          sky_ra_min, sky_ra_max, sky_dec_min, sky_dec_max, objcosdec, r_overs, extent,
@@ -1355,13 +1356,13 @@ def plot_skymaps(event_map, excess_map, sign_map, bg_map, alpha_map, titlestr,
                  r_overs, extent, skycenra, skycendec,
                  ring_bg_r_min=None, ring_bg_r_max=None, sign_hist_r_max=2.) :
     """Plot sky map function (using matplotlib only).
-    
+
     TODO: document
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     fig : `matplotlib.figure.Figure`
@@ -1370,7 +1371,7 @@ def plot_skymaps(event_map, excess_map, sign_map, bg_map, alpha_map, titlestr,
     import matplotlib.pyplot as plt
     from matplotlib.patches import Circle
 
-    def set_title_and_axlabel(label) :
+    def set_title_and_axlabel(label):
         plt.xlabel('RA (deg)')
         plt.ylabel('Dec (deg)')
         plt.title(label, fontsize='medium')
@@ -1386,32 +1387,32 @@ def plot_skymaps(event_map, excess_map, sign_map, bg_map, alpha_map, titlestr,
     plt.figure(figsize=(13, 7))
     plt.subplots_adjust(wspace=.4, left=.07, right=.96, hspace=.25, top=.93)
 
-    ax = plt.subplot(231) 
-    plt.imshow(event_map[::-1], extent=extent, interpolation='nearest')    
+    ax = plt.subplot(231)
+    plt.imshow(event_map[::-1], extent=extent, interpolation='nearest')
     cb = plt.colorbar()
     cb.set_label('Events')
     set_title_and_axlabel('Events')
     ax.add_patch(cir_overs)
 
-    ax = plt.subplot(232) 
+    ax = plt.subplot(232)
     plt.imshow(excess_map[::-1], extent=extent, interpolation='nearest')
     cb = plt.colorbar()
     cb.set_label('Excess events')
     set_title_and_axlabel(titlestr + ' - Excess')
 
-    ax = plt.subplot(233) 
+    ax = plt.subplot(233)
     plt.imshow(sign_map[::-1], extent=extent, interpolation='nearest')
     cb = plt.colorbar()
     cb.set_label('Significance')
     set_title_and_axlabel(titlestr + '- Significance')
 
-    ax = plt.subplot(234) 
+    ax = plt.subplot(234)
     plt.imshow(bg_map[::-1], extent=extent, interpolation='nearest')
     cb = plt.colorbar()
     cb.set_label('Background events')
     set_title_and_axlabel(titlestr + ' - Background')
 
-    if ring_bg_r_min and ring_bg_r_max :
+    if ring_bg_r_min and ring_bg_r_max:
         plt_r_ra = sky_ra_min + .03 * (sky_ra_max - sky_ra_min) + ring_bg_r_max / objcosdec
         plt_r_dec = sky_dec_min + .03 * (sky_dec_max - sky_dec_min) + ring_bg_r_max / objcosdec
 
@@ -1427,7 +1428,7 @@ def plot_skymaps(event_map, excess_map, sign_map, bg_map, alpha_map, titlestr,
                     fill=True, edgecolor='1.', facecolor='1.', alpha=.6)
     ax.add_patch(circle)
 
-    ax = plt.subplot(235) 
+    ax = plt.subplot(235)
     plt.imshow(alpha_map[::-1], extent=extent, interpolation='nearest')
     cb = plt.colorbar()
     cb.set_label('Alpha')
@@ -1449,7 +1450,7 @@ def plot_skymaps(event_map, excess_map, sign_map, bg_map, alpha_map, titlestr,
     plt.legend(loc='upper left', prop={'size': 'small'})
 
 
-def unique_base_file_name(name, extension=None) :
+def unique_base_file_name(name, extension=None):
     """
     Checks if a given file already exists. If yes, creates a new unique filename.
 
@@ -1467,26 +1468,26 @@ def unique_base_file_name(name, extension=None) :
     """
     import os
     import datetime
-    def filename_exists(name, extension) :
+    def filename_exists(name, extension):
         exists = False
-        if extension :
-            try :
+        if extension:
+            try:
                 len(extension)
-                for ext in extension :
-                    if os.path.exists(name + ext) :
+                for ext in extension:
+                    if os.path.exists(name + ext):
                         exists = True
                         break
-            except :
-                if os.path.exists(name + extension) :
+            except:
+                if os.path.exists(name + extension):
                     exists = True
-                else :
-                    if os.path.exists(name) :
+                else:
+                    if os.path.exists(name):
                         exists = True
         return exists
 
-    if filename_exists(name, extension) :
+    if filename_exists(name, extension):
         name += datetime.datetime.now().strftime('_%Y%m%d-%H%M%S')
-        if filename_exists(name, extension) :
+        if filename_exists(name, extension):
             import random
             name += '_' + str(int(random.random() * 10000))
     return name
@@ -1536,9 +1537,9 @@ def image_to_hdu(image, rarange, decrange, primary=False,
     rastep = (rarange[1] - rarange[0]) / float(ranbins)
 
     hdu = None
-    if primary :
+    if primary:
         hdu = fits.PrimaryHDU(image)
-    else :
+    else:
         hdu = fits.ImageHDU(image)
     header = hdu.header
 
@@ -1573,13 +1574,13 @@ def create_spectrum(input_file_names,
                     do_graphical_output=True,
                     loglevel='INFO'):
     """Creates spectra from VHE event lists in FITS format.
-    
+
     TODO: describe
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -1595,15 +1596,15 @@ def create_spectrum(input_file_names,
 
     # Intialize some variables
     objra, objdec, pntra, pntdec = None, None, None, None
-    if analysis_position :
+    if analysis_position:
         objra, objdec = eval(analysis_position)
         logging.info('Analysis position: RA {0}, Dec {1}'.format(objra, objdec))
-    else :
+    else:
         logging.info('No analysis position given => will use object position from first file')
 
     logging.info('Analysis radius: {0} deg'.format(analysis_radius))
 
-    if write_output_files :
+    if write_output_files:
         logging.info('The output files can be found in {0}'.format(os.getcwd()))
 
     theta2_hist_max, theta2_hist_nbins = .5 ** 2., 50
@@ -1632,14 +1633,14 @@ def create_spectrum(input_file_names,
             instrument = edisp_header['INSTRUME']
         if 'TELESCOP' in edisp_header:
             telescope = edisp_header['TELESCOP']
-        
+
     spec_on_hist, spec_off_hist, spec_off_cor_hist = np.zeros(spec_nbins), np.zeros(spec_nbins), np.zeros(spec_nbins)
     spec_hist_ebounds = np.linspace(spec_emin, spec_emax, spec_nbins + 1)
 
     dstart, dstop = None, None
 
     exposure = 0.  # [s]
-    
+
     # Read in input file, can be individual fits or bankfile
     logging.info('Opening input file(s) ..')
 
@@ -1648,27 +1649,26 @@ def create_spectrum(input_file_names,
 
     # Check if we are dealing with a single file or a bankfile
     # and create/read in the file list accordingly
-    try :
+    try:
         f = fits.open(input_file_names[0])
         f.close()
         file_list = [input_file_names]
-    except :
+    except:
         logging.info('Reading files from batchfile {0}'.format(input_file_names[0]))
         file_list = np.loadtxt(input_file_names[0], dtype='S')
-        if len(file_list.shape) == 1 :
+        if len(file_list.shape) == 1:
             file_list = np.array([file_list])
 
     # Sanity checks on input file(s)
-    if len(file_list) < 1 :
+    if len(file_list) < 1:
         raise RuntimeError('No entries in bankfile')
-    if len(file_list[0]) != 3 :
+    if len(file_list[0]) != 3:
         raise RuntimeError('Bankfile must have three columns (data/arf/rmf)')
 
     # Shortcuts for commonly used functions
     cci_f, cci_a = circle_circle_intersection_float, circle_circle_intersection_array
 
-    for files in file_list :
-        
+    for files in file_list:
         dataf, arf, rmf = datadir + files[0], datadir + files[1], datadir + files[2]
         logging.info('==== Processing file {0}'.format(dataf))
 
@@ -1693,7 +1693,7 @@ def create_spectrum(input_file_names,
         #---------------------------------------------------------------------------
         # Calculate some useful quantities and add them to the table
 
-        if firstloop :
+        if firstloop:
             # If skymap center is not set, set it to the target position of the first run
             if objra == None or objdec == None :
                 objra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
@@ -1703,7 +1703,7 @@ def create_spectrum(input_file_names,
         obj_cam_dist = SkyCoord(objra, objdec).dist(SkyCoord(pntra, pntdec))
 
         # If no exclusion regions are given, use the object position from the first run
-        if sky_ex_reg == None :
+        if sky_ex_reg == None:
             sky_ex_reg = [SkyCircle(SkyCoord(objra, objdec), rexdeg)]
 
         exposure_run = ex1hdr['LIVETIME']
@@ -1717,7 +1717,7 @@ def create_spectrum(input_file_names,
 
         run_dstart = datetime.datetime(*[int(x) for x in (ex1hdr['DATE_OBS'].split('-') + ex1hdr['TIME_OBS'].split(':'))])
         run_dstop = datetime.datetime(*[int(x) for x in (ex1hdr['DATE_END'].split('-') + ex1hdr['TIME_END'].split(':'))])
-        if firstloop :
+        if firstloop:
             dstart = run_dstart
         dstop = run_dstop
 
@@ -1743,13 +1743,13 @@ def create_spectrum(input_file_names,
         # newtable.columns.info()
 
         mgit = np.ones(len(tbdata), dtype=np.bool)
-        try :
+        try:
             # Note: according to the eventlist format document v1.0.0 Section 10
             # "The times are expressed in the same units as in the EVENTS
             # table (seconds since mission start in terresterial time)."
             for gti in hdulist['GTI'].data :
                 mgit *= (tbdata.field('TIME') >= gti[0]) * (tbdata.field('TIME') <= gti[1])
-        except :
+        except:
             logging.warning('File does not contain a GTI extension')
 
         # New table data
@@ -1767,9 +1767,9 @@ def create_spectrum(input_file_names,
 
         spec_on_run_hist = np.histogram(np.log10(on_run.field('ENERGY')), bins=spec_nbins, range=(spec_emin, spec_emax))[0]
         spec_on_hist += spec_on_run_hist
-        
+
         non_run, noff_run = len(on_run), len(off_run)
-        
+
         alpha_run = analysis_radius ** 2. / ((obj_cam_dist + analysis_radius) ** 2.
                                            - (obj_cam_dist - analysis_radius) ** 2.
                                            - cci_f(obj_cam_dist + analysis_radius, rexdeg, obj_cam_dist) / np.pi
@@ -1784,7 +1784,7 @@ def create_spectrum(input_file_names,
         # plt.plot(ebins[:-1], spec_off_cor_hist, label='OFF cor.')
         # plt.legend()
         # plt.show()
-        
+
         def print_stats(non, noff, alpha, pre='') :
             logging.info(pre + 'N_ON = {0}, N_OFF = {1}, ALPHA = {2:.4f}'.format(non, noff, alpha))
             logging.info(pre + 'EXCESS = {0:.2f}, SIGN = {1:.2f}'.format(non - alpha * noff, significance_on_off(non, noff, alpha)))
@@ -1812,7 +1812,7 @@ def create_spectrum(input_file_names,
                     np.ones(theta2_hist_nbins + 1) * rexdeg,
                     np.ones(theta2_hist_nbins + 1) * obj_cam_dist) / np.pi
             )
-        
+
         theta2_off_hist_alpha = (
             (theta2_off_run_hist_edges[1:] - theta2_off_run_hist_edges[:-1])
             / (4. * obj_cam_dist * (h_edges_r[1:] - h_edges_r[:-1])
@@ -1829,18 +1829,18 @@ def create_spectrum(input_file_names,
         f.close()
 
         # If average ARF is not matched to RMF use first ARF as template
-        if firstloop and arf_m_erange is None :
+        if firstloop and arf_m_erange is None:
             arf_m_erange = ea_erange
 
-        if (len(ea_erange) is not len(arf_m_erange)) or (np.sum(np.fabs(ea_erange - arf_m_erange)) > 1E-5) :
+        if (len(ea_erange) is not len(arf_m_erange)) or (np.sum(np.fabs(ea_erange - arf_m_erange)) > 1E-5):
             logging.debug('Average ARF - ARF binning does not match RMF for file: {0}'.format(arf))
             logging.debug('Average ARF - Resampling ARF to match RMF EBOUNDS binning')
             from scipy.interpolate import UnivariateSpline
             ea_spl = UnivariateSpline(np.log10(ea_erange[:-1] * ea_erange[1:]) / 2. , np.log10(ea), s=0, k=1)
             ea = 10. ** ea_spl((np.log10(arf_m_erange[:-1] * arf_m_erange[1:]) / 2.))
-        if firstloop :
+        if firstloop:
             arf_m = ea * exposure_run
-        else :
+        else:
             arf_m += ea * exposure_run
 
         # # DEBUG plot
@@ -1849,7 +1849,7 @@ def create_spectrum(input_file_names,
         # plt.show()
 
         # Write run wise data to PHA
-        if write_output_files :
+        if write_output_files:
 
             # Create base file name for run wise output files
             run_out_basename = os.path.basename(dataf[:dataf.find('.fits')])
@@ -1858,7 +1858,7 @@ def create_spectrum(input_file_names,
             logging.info('RUN Reading RMF from : {0}'.format(rmf))
             edisp = EnergyDispersion.read(rmf)
             ebounds = edisp.energy_bounds('reco')
-            
+
             # Bin data to match EBOUNDS from RMF
             spec_on_run_hist = np.histogram(on_run.field('ENERGY'), bins=ebounds)[0]
             spec_off_run_hist = np.histogram(off_run.field('ENERGY'), bins=ebounds)[0]
@@ -1894,7 +1894,7 @@ def create_spectrum(input_file_names,
             header['HDUCLAS2'] = 'TOTAL', 'Extension contains source + bkgd'
             logging.info('RUN Writing background PHA file to {0}'.format(run_out_basename + '_bg.pha.fits'))
             hdu.writeto(run_out_basename + '_bg.pha.fits')
-            
+
             # Excess PHA
             hdu = np_to_pha(channel=chan, counts=dat, stat_err=dat_err, exposure=exposure_run, quality=quality,
                             obj_ra=objra, obj_dec=objdec,
@@ -1914,7 +1914,7 @@ def create_spectrum(input_file_names,
 
     arf_m /= exposure
 
-    if write_output_files :
+    if write_output_files:
         # Prepare data
         dat = spec_on_hist - spec_off_cor_hist  # ON - alpha x OFF = Excess
         dat_err = np.sqrt(spec_on_hist + spec_off_hist * (spec_off_cor_hist / spec_off_hist) ** 2.)
@@ -1925,7 +1925,7 @@ def create_spectrum(input_file_names,
         # plt.errorbar(spec_hist_ebounds[:-1], dat, yerr=dat_err)
         # plt.title('Total')
         # plt.show()
-        
+
         # Data to PHA
         hdu = np_to_pha(channel=chan, counts=dat, stat_err=dat_err, exposure=exposure, quality=quality,
                         obj_ra=objra, obj_dec=objdec,
@@ -1948,12 +1948,12 @@ def create_spectrum(input_file_names,
     except:
         has_matplotlib = False
 
-    if has_matplotlib and do_graphical_output :
+    if has_matplotlib and do_graphical_output:
 
         import matplotlib
         logging.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
 
-        def set_title_and_axlabel(label) :
+        def set_title_and_axlabel(label):
             plt.xlabel('RA (deg)')
             plt.ylabel('Dec (deg)')
             plt.title(label, fontsize='medium')
@@ -1991,36 +1991,36 @@ def create_spectrum(input_file_names,
     plt.show()
 
 
-def root_axis_to_array(ax) :
+def root_axis_to_array(ax):
     a = np.zeros(ax.GetNbins() + 1)
-    for i in range(ax.GetNbins()) :
+    for i in range(ax.GetNbins()):
         a[i] = ax.GetBinLowEdge(i + 1)
     a[-1] = ax.GetBinUpEdge(ax.GetNbins())
     return a
 
 
-def root_1dhist_to_array(hist) :
+def root_1dhist_to_array(hist):
     nbins = hist.GetXaxis().GetNbins()
     a, e = np.zeros(nbins), np.zeros(nbins)
-    for i in range(nbins) :
+    for i in range(nbins):
         a[i] = hist.GetBinContent(i + 1)
         e[i] = hist.GetBinError(i + 1)
     return (a, e)
 
 
-def root_2dhist_to_array(hist2d) :
+def root_2dhist_to_array(hist2d):
     nbinsx = hist2d.GetXaxis().GetNbins()
     nbinsy = hist2d.GetYaxis().GetNbins()
     a = np.zeros([nbinsx, nbinsy])
     e = np.zeros([nbinsx, nbinsy])
-    for x in range(nbinsx) :
-        for y in range(nbinsy) :
+    for x in range(nbinsx):
+        for y in range(nbinsy):
             a[x, y] = hist2d.GetBinContent(x + 1, y + 1)
-            e[x, y] = hist2d.GetBinError(x + 1, y + 1)            
+            e[x, y] = hist2d.GetBinError(x + 1, y + 1)
     return (a, e)
 
 
-def root_th1_to_fitstable(hist, xunit='', yunit='') :
+def root_th1_to_fitstable(hist, xunit='', yunit=''):
     d, e = root_1dhist_to_array(hist)
     ax = root_axis_to_array(hist.GetXaxis())
     hdu = fits.new_table(
@@ -2051,13 +2051,13 @@ def root_th1_to_fitstable(hist, xunit='', yunit='') :
     return hdu
 
 
-def plot_th1(hist, logy=False) :
+def plot_th1(hist, logy=False):
     import matplotlib.pyplot as plt
     d, e = root_1dhist_to_array(hist)
     ax = root_axis_to_array(hist.GetXaxis())
-    if logy :
-        plt.semilogy((ax[:-1] + ax[1:]) / 2., d)        
-    else :
+    if logy:
+        plt.semilogy((ax[:-1] + ax[1:]) / 2., d)
+    else:
         plt.plot((ax[:-1] + ax[1:]) / 2., d)
     plt.xlabel(hist.GetXaxis().GetTitle(), fontsize='small')
     plt.ylabel(hist.GetYaxis().GetTitle(), fontsize='small')
@@ -2067,19 +2067,19 @@ def plot_th1(hist, logy=False) :
     for tick in ax.xaxis.get_major_ticks():
         tick.label1.set_fontsize(fontsize)
     for tick in ax.yaxis.get_major_ticks():
-        tick.label1.set_fontsize(fontsize)    
+        tick.label1.set_fontsize(fontsize)
     return
 
 
-def fit_th1(fitter, p0, hist, errscale=None, range_=None, xaxlog=True) :
+def fit_th1(fitter, p0, hist, errscale=None, range_=None, xaxlog=True):
     y, yerr = root_1dhist_to_array(hist)
-    if errscale :
+    if errscale:
         yerr = errscale * y
     ax = root_axis_to_array(hist.GetXaxis())
     x = ((ax[:-1] + ax[1:]) / 2.)
-    if xaxlog :
+    if xaxlog:
         x = 10 ** x
-    if range_ is not None :
+    if range_ is not None:
         m = (x >= range_[0]) * (x <= range_[1])
         x = x[m]
         y = y[m]
@@ -2090,11 +2090,11 @@ def fit_th1(fitter, p0, hist, errscale=None, range_=None, xaxlog=True) :
 
 def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     """Convert CTA IRF data from ROOT to FITS format.
-    
+
     This script converts a CTA response stored in a root file into a set of FITS
     files, namely ARF, RMF, and one auxiliary file, which stores all information
     from the response file in simple fits tables.
-    
+
     Parameters
     ----------
     irf_root_file_name : str
@@ -2110,25 +2110,25 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     from scipy.interpolate import UnivariateSpline
     from scipy.special import erf
     import matplotlib.pyplot as plt
-    
+
     #---------------------------------------------------------------------------
     # Open CTA response file in root format
-    
+
     irf_file_name_base = irf_root_file_name.rsplit('.', 1)[0].rsplit('/', 1)[1]
-    
+
     logging.info('Reading IRF data from file {0}'.format(irf_root_file_name))
     irf_root_file = TFile(irf_root_file_name)
     logging.info('File content (f.ls()) :')
     irf_root_file.ls()
-    
+
     #---------------------------------------------------------------------------
     # Write ARF & MRF
-    
+
     #----------------------------------------------
     # Read RM
     h = irf_root_file.Get('MigMatrix')
     rm_erange_log, rm_ebounds_log = None, None
-    if h != None :
+    if h != None:
         # Transpose and normalize RM
         rm = np.transpose(root_2dhist_to_array(h)[0])
         n = np.transpose(np.sum(rm, axis=1) * np.ones(rm.shape[::-1]))
@@ -2136,47 +2136,47 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
         # Read bin enery ranges
         rm_erange_log = root_axis_to_array(h.GetYaxis())
         rm_ebounds_log = root_axis_to_array(h.GetXaxis())
-    else :
+    else:
         logging.info('ROOT file does not contain MigMatrix.')
         logging.info('Will produce RMF from ERes histogram.')
-    
+
         # Read energy resolution
         h = irf_root_file.Get('ERes')
         d = root_1dhist_to_array(h)[0]
         ax = root_axis_to_array(h.GetXaxis())
-    
+
         # Resample to higher resolution in energy
         nbins = int((ax[-1] - ax[0]) * 20)  # 20 bins per decade
         rm_erange_log = np.linspace(ax[0], ax[-1], nbins + 1)
         rm_ebounds_log = rm_erange_log
-    
+
         sigma = UnivariateSpline((ax[:-1] + ax[1:]) / 2., d, s=0, k=1)
-    
+
         logerange = rm_erange_log
         logemingrid = logerange[:-1] * np.ones([nbins, nbins])
         logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
         logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
-    
+
         gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-    
+
         rm = gauss_int([1., 10. ** logecentergrid, sigma(logecentergrid).reshape(logecentergrid.shape) * 10. ** logecentergrid ], 10. ** logemingrid, 10. ** logemaxgrid)
         # rm = gauss_int([1., 10. ** logecentergrid, .5], 10. ** logemingrid, 10. ** logemaxgrid)
-    
+
     # Create RM hdulist
     hdulist = np_to_rmf(rm,
                         (10. ** rm_erange_log).round(decimals=6),
                         (10. ** rm_ebounds_log).round(decimals=6),
                         1E-5,
                         telescope='CTASIM')
-    
+
     # Write RM to file
     if write_output:
         hdulist.writeto(irf_file_name_base + '.rmf.fits')
-    
+
     #----------------------------------------------
     # Read EA
     h = irf_root_file.Get('EffectiveAreaEtrue')  # ARF should be in true energy
-    if h == None :
+    if h == None:
         logging.info('ROOT file does not contain EffectiveAreaEtrue (EA vs E_true)')
         logging.info('Will use EffectiveArea (EA vs E_reco) for ARF')
         h = irf_root_file.Get('EffectiveArea')
@@ -2195,45 +2195,45 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
             ea = 10. ** ea_spl(e)
             ea[ea < 1.] = 0.
             ea_erange_log = rm_erange_log
-    
+
     tbhdu = np_to_arf(ea,
                       (10. ** ea_erange_log).round(decimals=6),
                       telescope='CTASIM')
     # Write AR to file
     if write_output:
         tbhdu.writeto(irf_file_name_base + '.arf.fits')
-    
+
     #----------------------------------------------
     # Fit some distributions
-    
+
     # Broken power law fit function, normalized at break energy
     bpl = lambda p, x : np.where(x < p[0], p[1] * (x / p[0]) ** -p[2], p[1] * (x / p[0]) ** -p[3])
     fitter = ChisquareFitter(bpl)
-    
+
     h = irf_root_file.Get('BGRatePerSqDeg')
     fit_th1(fitter, [3.2, 1E-5, 2., 1.], h, errscale=.2, range_=(.1, 100))
     fitter.print_results()
     bgrate_p1 = fitter.results[0]
     fitx = np.linspace(-2., 2., 100.)
-    
+
     h = irf_root_file.Get('AngRes')
     fit_th1(fitter, [1., .6, .5, .2], h, errscale=.1)
     fitter.print_results()
     angres68_p1 = fitter.results[0]
-    
+
     #----------------------------------------------
     # Read extra information from response file
-    
+
     aux_tab = []
     plt.figure(figsize=(10, 8))
-    
+
     h = irf_root_file.Get('BGRate')
     plt.subplot(331)
     plot_th1(h, logy=1)
     tbhdu = root_th1_to_fitstable(h, yunit='Hz', xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'BGRATE', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('BGRatePerSqDeg')
     plt.subplot(332)
     plot_th1(h, logy=1)
@@ -2242,30 +2242,30 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     tbhdu = root_th1_to_fitstable(h, yunit='Hz/deg^2', xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'BGRATED', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('EffectiveArea')
     plt.subplot(333)
     plot_th1(h, logy=1)
     tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'EA', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('EffectiveArea80')
-    if h != None :
+    if h != None:
         plt.subplot(334)
         plot_th1(h, logy=True)
         tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
         tbhdu.header.update('EXTNAME ', 'EA80', 'Name of this binary table extension')
         aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('EffectiveAreaEtrue')
-    if h != None :
+    if h != None:
         plt.subplot(335)
         plot_th1(h, logy=True)
         tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
         tbhdu.header.update('EXTNAME ', 'EAETRUE', 'Name of this binary table extension')
         aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('AngRes')
     plt.subplot(336)
     plot_th1(h, logy=True)
@@ -2274,21 +2274,21 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     tbhdu = root_th1_to_fitstable(h, yunit='deg', xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'ANGRES68', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('AngRes80')
     plt.subplot(337)
     plot_th1(h, logy=True)
     tbhdu = root_th1_to_fitstable(h, yunit='deg', xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'ANGRES80', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     h = irf_root_file.Get('ERes')
     plt.subplot(339)
     plot_th1(h)
     tbhdu = root_th1_to_fitstable(h, xunit='log(1/TeV)')
     tbhdu.header.update('EXTNAME ', 'ERES', 'Name of this binary table extension')
     aux_tab.append(tbhdu)
-    
+
     plt.subplot(338)
     # plt.set_cmap(plt.get_cmap('Purples'))
     plt.set_cmap(plt.get_cmap('jet'))
@@ -2296,16 +2296,16 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     plt.imshow(rm, origin='lower', extent=(rm_ebounds_log[0], rm_ebounds_log[-1], rm_erange_log[0], rm_erange_log[-1]))
     plt.colorbar()
     # plt.clim(-2., 1.)
-    
+
     plt.subplots_adjust(left=.08, bottom=.08, right=.97, top=.95, wspace=.3, hspace=.35)
-    
+
     # Create primary HDU and HDU list to be stored in the output file
     hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList([hdu] + aux_tab)
-    
+
     # Write extra response data to file
     if write_output:
         hdulist.writeto(irf_file_name_base + '.extra.fits')
-    
+
     # Close CTA IRF root file
     irf_root_file.Close()

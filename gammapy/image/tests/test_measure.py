@@ -21,6 +21,7 @@ def generate_example_image():
 
     return image
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_measure():
     image = generate_example_image()
@@ -37,7 +38,6 @@ class _TestImageCoordinates(object):
         self.image = utils.make_empty_image(nxpix=3, nypix=2,
                                             binsz=10, proj='CAR')
         self.image.dat = np.arange(3 * 2).reshape(self.image.dat.shape)
-
 
     def test_lookup(self):
         self.assertEqual(utils.lookup(self.image, 1, 1, world=False), 0)

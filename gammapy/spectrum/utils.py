@@ -13,14 +13,14 @@ __all__ = ['LogEnergyAxis',
 
 def energy_bounds_equal_log_spacing(energy_band, bins=10):
     """Make energy bounds array with equal-log spacing.
-    
+
     Parameters
     ----------
     energy_band : `~astropy.units.Quantity`
         Tuple ``(energy_min, energy_max)``
     bins : int
         Number of bins
-    
+
     Returns
     -------
     energy_bounds : ~astropy.units.Quantity`
@@ -35,7 +35,7 @@ def energy_bounds_equal_log_spacing(energy_band, bins=10):
 
 class LogEnergyAxis(object):
     """Log10 energy axis.
-    
+
     Defines a transformation between:
 
     * ``energy = 10 ** x``
@@ -55,7 +55,7 @@ class LogEnergyAxis(object):
         Energy array
     """
     def __init__(self, energy):
-        
+
         self.energy = energy
         self.x = np.log10(energy.value)
         self.pix = np.arange(len(self.x))
@@ -93,11 +93,11 @@ class LogEnergyAxis(object):
 
     def bin_edges(self, energy):
         """TODO: document.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
@@ -117,9 +117,10 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=None, quality=None, syserr=None,
+def np_to_pha(channel, counts, exposure, dstart, dstop,
+              dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
-              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE') :
+              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE'):
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters
@@ -166,18 +167,18 @@ def np_to_pha(channel, counts, exposure, dstart, dstop, dbase=None, stat_err=Non
                           unit='count')
             ]
 
-    if stat_err is not None :
+    if stat_err is not None:
         cols.append(fits.Column(name='STAT_ERR',
                                   format='1E',
                                   array=stat_err,
                                   unit='count'))
-    
-    if syserr is not None :
+
+    if syserr is not None:
         cols.append(fits.Column(name='SYS_ERR',
                                   format='E',
                                   array=syserr))
 
-    if quality is not None :
+    if quality is not None:
         cols.append(fits.Column(name='QUALITY',
                                   format='I',
                                   array=quality))

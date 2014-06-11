@@ -8,7 +8,7 @@ __all__ = ['sample_sphere', 'sample_powerlaw']
 
 def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
     """Sample random points on the sphere.
-    
+
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
 
     Parameters
@@ -46,7 +46,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
 
     # Sample random latitude
     v = np.random.random(size)
-    z_range = np.sin(np.array(lat_range)) 
+    z_range = np.sin(np.array(lat_range))
     z = z_range[0] + (z_range[1] - z_range[0]) * v
     # This is not the formula given in the reference, but it is equivalent.
     lat = np.arcsin(z)
@@ -66,31 +66,28 @@ def sample_powerlaw(x_min, x_max, gamma, size):
     f(x) = x ** (-gamma) in the range x_min to x_max
 
     Reference: http://mathworld.wolfram.com/RandomNumber.html
-    
+
     Parameters
     ----------
     x_min : float
         x range minimum
-
     x_max : float
         x range maximum
-
     gamma : float
         Power law index
-    
     size : int
         Number of samples to generate
-    
+
     Returns
     -------
     x : array
         Array of samples from the distribution
     """
     size = int(size)
-    
+
     u = np.random.random(size)
     exp = 1. - gamma
     base = x_min ** exp + u * (x_max ** exp - x_min ** exp)
     x = base ** (1 / exp)
-        
+
     return x

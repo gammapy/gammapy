@@ -54,7 +54,7 @@ def sex(image,
         Minimum number of pixels above threshold
     deblend_mincont : float in range 0 to 1
         Minimum contrast parameter for deblending.
-        
+
         * 0 = each peak is a single source
         * 1 = no deblending, one source per segment
 

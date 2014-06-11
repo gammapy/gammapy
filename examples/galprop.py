@@ -21,7 +21,6 @@ from astropy.io import fits
 from kapteyn.maputils import FITSimage
 import atpy
 import image.utils as iu
-from call import call
 from spec.powerlaw import f_from_points, I_from_points, g_from_points
 
 # Component lists. An OrderedDict would be nicer.
@@ -92,13 +91,14 @@ def prepare(galprop_dir, tag='orig', clobber=True):
         # Store the changes
         hdu.data, hdu.header = data, header
 
-    def id():
+    def map_id():
         _ = galprop_dir.split('/')
         dirname = _[-1] if _[-1] else _[-2]
         return '_'.join(dirname.split('_')[1:3])
+
     # Copy and fix all the components
     infiles = [join(galprop_dir, component + '_mapcube_' +
-                    id() + '.gz') for component in components]
+                    map_id() + '.gz') for component in components]
     outfiles = [filename(tag, ii) for ii in range(len(components))]
     for ii in [1, 2, 3]:  # Total component doesn't exist yet
         logging.info('Fixing {0}'.format(components[ii]))
@@ -131,11 +131,14 @@ def reproject_to(ref_file, in_tag='orig', out_tag='repro',
                                           interpol_dict=interpol_dict)
         logging.info('Writing {0}'.format(out_file))
         out_image.writetofits(out_file, clobber=clobber)
+
+        # TODO: do this with `astropy.io.fits` instead of calling `fappend`!
         logging.info('Copying energy extension')
         cmd = ['fappend',
                '{0}[ENERGIES]'.format(in_file),
                '{0}'.format(out_file)]
-        call(cmd)
+        #call(cmd)
+        raise NotImplementedError
 
 
 def make_mask_and_area(ref_file, clobber=True):
@@ -334,15 +337,16 @@ class Galprop:
         self.plot_profile('GLON')
         self.plot_profile('GLAT')
 
+
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    
+
     ################################
     # Directory and file names
     ################################
     base_dir = '/nfs/d22/hfm/hillert/data-files/galprop'
     run = 'results_54_0353000q_zdguc6ruot1bue7f'
-    galprop_dir =  join(base_dir, run)
+    galprop_dir = join(base_dir, run)
     results_dir = join(galprop_dir, 'results')
     ref_file = join(base_dir, 'hess_exclusion_0.3_part.fits')
 
@@ -354,18 +358,18 @@ def main():
     ################################
     # Prepare data
     ################################
-    
-    galprop.prepare(galprop_dir)    
+
+    galprop.prepare(galprop_dir)
     galprop.reproject_to(ref_file)
     galprop.make_mask_and_area(ref_file)
 
     ################################
     # Compute results and make plots
     ################################
-    
+
     g = galprop.Galprop(clobber=True)
     g.do_all()
-    
+
     #g.calc_spec()
     #g.calc_spec_index()
     #g.plot_spec()
@@ -375,7 +379,8 @@ def main():
     #g.make_diff_flux_image()
     #g.calc_profiles()
     #g.plot_profile('GLAT')
-    #g.plot_profile('GLON') 
-    
+    #g.plot_profile('GLON')
+
+
 if __name__ == '__main__':
     main()

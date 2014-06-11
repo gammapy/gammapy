@@ -4,9 +4,10 @@ from .hillas import hillas_parameters
 
 __all__ = ['ShowerImage']
 
+
 class ShowerImage(object):
     """Air shower image.
-    
+
     TODO: implement.
     - neighbor list iterator
     - I/O
@@ -18,7 +19,7 @@ class ShowerImage(object):
         self.x = x
         self.y = y
         self.s = s
-    
+
     def hillas_parameters(self):
         """Compute Hillas parameters."""
         return hillas_parameters(self.x, self.y, self.s)

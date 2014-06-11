@@ -26,7 +26,7 @@ class Maps(fits.HDUList):
     These maps allow implementing all background estimation methods.
     Not all maps are used for each method, unused maps are typically
     filled with zeros or ones as appropriate.
-    
+
     TODO: Correlation of basic maps is done repeatedly when
           computing all derived maps.
           Is it worth speeding things up by writing the steps explicitly?
@@ -58,7 +58,7 @@ class Maps(fits.HDUList):
 
         hdu_names = [hdu.name.lower() for hdu in self]
         print(hdu_names)
-        
+
         # Check that there is at least one of the basic_maps present.
         # This is required so that the map geometry is defined.
         existing_basic_maps = [name for name in BASIC_MAP_NAMES
@@ -97,12 +97,12 @@ class Maps(fits.HDUList):
 
     def get_basic(self, name):
         """Gets the data of a basic map and disk-correlates if required.
-        
+
         Parameters
         ----------
         name : str
             Map name
-        
+
         Returns
         -------
         image : `numpy.array`
@@ -125,7 +125,7 @@ class Maps(fits.HDUList):
 
     def get_derived(self, name):
         """Gets the data if it exists or makes it if not.
-        
+
         Parameters
         ----------
         name : str
@@ -146,7 +146,7 @@ class Maps(fits.HDUList):
 
     def _make_hdu(self, data, name):
         """Helper function to make an image HDU.
-        
+
         Parameters
         ----------
         data : array_like

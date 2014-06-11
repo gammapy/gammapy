@@ -15,19 +15,19 @@ def _power_law(E, N, k):
 
 def diffuse_gamma_ray_flux(energy, component='isotropic'):
     """Diffuse gamma ray flux.
-    
+
     TODO: describe available spectra.
 
     References:
     * 'isotropic':  http://adsabs.harvard.edu/abs/2010PhRvL.104j1101A
-    
+
     Parameters
     ----------
     energy : `~astropy.units.Quantity`
         Gamma-ray energy
     component : {'isotropic', 'bubble', 'galactic_fermi2', 'galactic_fermi4'}
         Diffuse model component
-    
+
     Returns
     -------
     flux : `~astropy.units.Quantity`

@@ -16,6 +16,6 @@ def assert_quantity(actual, desired, *args, **kwargs):
         raise ValueError("actual must be a Quantity object.")
     if not isinstance(desired, Quantity):
         raise ValueError("actual must be a Quantity object.")
-    
+
     assert actual.unit == desired.unit
     assert_allclose(actual, desired, *args, **kwargs)

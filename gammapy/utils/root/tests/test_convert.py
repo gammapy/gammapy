@@ -38,7 +38,7 @@ def test_hist1d_to_table():
 
     table = root.hist1d_to_table(hist)
     assert_allclose(table['x'], [-7.5, -2.5,  2.5,  7.5])
-    assert_allclose(table['y'], [ 0.,  0.,  1.,  0.])
+    assert_allclose(table['y'], [0., 0., 1., 0.])
 
 
 @pytest.mark.skipif('not HAS_ROOT')
@@ -46,7 +46,6 @@ def make_test_TH2():
     """Generate an example TH2 we use to test TH2_to_FITS(),
     corresponding approximately to the HESS survey region."""
     name, title = 'test_image', 'My Test Image'
-    nbinsx, xlow, xup = 1400, -80, 60
     nbinsx, xlow, xup = 1400, 60, -80
     nbinsy, ylow, yup = 100, -5, 5
     h = ROOT.TH2F(name, title, nbinsx, xlow, xup, nbinsy, ylow, yup)

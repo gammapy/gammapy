@@ -32,16 +32,16 @@ def P90(r, R0=4.5):
 
     .. math ::
         f(r)  = r R_{0} ^ (-2) \exp(-r / R_{0})
-    
+
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P
-    
+
     Parameters
     ----------
     r : array_like
         Galactic radius (kpc)
     R0 : array_like
         See formula
-    
+
     Returns
     -------
     density : array_like
@@ -52,12 +52,12 @@ def P90(r, R0=4.5):
 
 def CB98(r, a=2, b=3.53):
     r"""Distribution of supernova remnants - Case and Battacharya 1998.
-    
+
     .. math ::
         f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_{sun})
-    
+
     Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C
-    
+
     Parameters
     ----------
     r : array_like
@@ -77,15 +77,15 @@ def CB98(r, a=2, b=3.53):
 
 def YK04(r, a=1.64, b=4.01, R1=0.55):
     r"""Evolved pulsar distribution - Yusifov and Kucuk 2004.
-    
+
     .. math ::
         f(r) = TODO
-    
+
     Used by Faucher-Guigere and Kaspi.
     Density at ``r = 0`` is nonzero.
 
     Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
-    
+
     Parameters
     ----------
     r : array_like
@@ -105,10 +105,10 @@ def YK04(r, a=1.64, b=4.01, R1=0.55):
 
 def YK04B(r, a=4, b=6.8):
     r"""Birth pulsar distribution - Yusifov & Kucuk 2004.
-    
+
     .. math ::
         f(r) = (r / r_{sun}) ^ a \exp(-b (r / r_{sun}))
-    
+
     Derived empirically from OB-stars distribution.
 
     Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
@@ -130,12 +130,12 @@ def YK04B(r, a=4, b=6.8):
 
 def F06(r, R0=7.04, sigma=1.83):
     r"""Displaced Gaussian distribution - Faucher-Giguere & Kaspi 2006.
-    
+
     .. math ::
         f(r) = 1 / \sqrt(2 \pi \sigma) \exp(-\frac{(r - R_0)^2}{2 \sigma ^ 2})
 
     Proposed as a pulsar birth distribution in Appendix B.
-    
+
     Parameters
     ----------
     r : array_like
@@ -150,18 +150,18 @@ def F06(r, R0=7.04, sigma=1.83):
     """
     term1 = 1. / sqrt(2 * pi * sigma)
     term2 = exp(-(r - R0) ** 2 / (2 * sigma ** 2))
-    return term1 * term2 
+    return term1 * term2
 
 
 def L06(r, a=1.9, b=5.0):
     r"""Evolved pulsar distribution - Lorimer 2006.
-    
+
     .. math ::
         f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_sun)
 
     Surface density using the NE2001 Model.
     Similar to Kucuk, but core density is zero.
-    
+
     Parameters
     ----------
     r : array_like
@@ -195,20 +195,20 @@ def exponential(z, z0=0.05):
     Returns
     -------
     density : array_like
-        Density in height ``z``    
+        Density in height ``z``
     """
     return exp(-abs(z) / z0)
 
 
 class LogSpiral(object):
     r"""Logarithmic spiral.
-    
+
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral
     """
 
     def xy_position(self, theta=None, radius=None, spiralarm_index=0):
         """Compute (x, y) position for a given angle or radius.
-        
+
         Parameters
         ----------
         theta : array_like
@@ -217,7 +217,7 @@ class LogSpiral(object):
             Radius (kpc)
         spiralarm_index : int
             Spiral arm index
-        
+
         Returns
         -------
         x, y : array_like
@@ -229,22 +229,22 @@ class LogSpiral(object):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
             ValueError('Specify only one of: theta, radius')
-        
+
         theta = np.radians(theta)
         x = radius * cos(theta)
         y = radius * sin(theta)
-        return x, y        
+        return x, y
 
     def radius(self, theta, spiralarm_index):
         """Radius for a given angle.
-        
+
         Parameters
         ----------
         theta : array_like
             Angle (deg)
         spiralarm_index : int
             Spiral arm index
-        
+
         Returns
         -------
         radius : array_like
@@ -266,7 +266,7 @@ class LogSpiral(object):
             Radius (kpc)
         spiralarm_index : int
             Spiral arm index
-        
+
         Returns
         -------
         theta : array_like
@@ -282,7 +282,7 @@ class LogSpiral(object):
 
 class FaucherSpiral(LogSpiral):
     r"""Milky way spiral arm model from Faucher et al. (2006).
-    
+
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
     # Parameters
@@ -317,7 +317,7 @@ class FaucherSpiral(LogSpiral):
 
 class ValleeSpiral(LogSpiral):
     r"""Milky way spiral arm model from Vallee (2008).
-    
+
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
     # Model parameters
@@ -326,8 +326,7 @@ class ValleeSpiral(LogSpiral):
     r_sun = 7.6  # distance sun to Galactic center in kpc
     r_0 = 2.1  # spiral inner radius in kpc
     theta_0 = -20  # Norma spiral arm start angle
-    
-    
+
     spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
     def __init__(self):

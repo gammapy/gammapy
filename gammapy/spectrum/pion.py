@@ -8,6 +8,7 @@ __all__ = ['PionDecaySpectrum']
 
 mbarn_to_cm2 = Unit('mbarn').to(Unit('cm^2'))
 
+
 class PionDecaySpectrum(object):
     """Pion decay gamma-ray SED calculator.
 
@@ -42,12 +43,12 @@ class PionDecaySpectrum(object):
 
     def sigma(self, e_proton):
         """Inelastic part of the total p-p interaction cross section.
-        
+
         Parameters
         ----------
         e_proton : array_like
             Proton energy (TeV)
-        
+
         Returns
         -------
         cross_section : array
@@ -65,7 +66,7 @@ class PionDecaySpectrum(object):
         ----------
         energies : array_like
             Gamma energies (eV)
-        
+
         Returns
         -------
         spectrum : TODO
@@ -84,12 +85,12 @@ class PionDecaySpectrum(object):
 
     def emissivity(self, e_gamma, e_proton):
         """Emissivity for protons at one energy.
-        
+
         Parameters
         ----------
         e_gamma, e_proton : array_like
             Gamma-ray and proton energy (TeV)
-        
+
         Returns
         -------
         TODO
@@ -118,11 +119,11 @@ class PionDecaySpectrum(object):
 
     def total_emissivity(self, e_gamma):
         """Emissivity for protons at all energies.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO

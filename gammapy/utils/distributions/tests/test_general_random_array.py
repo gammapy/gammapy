@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-import timeit
 import numpy as np
 from ..general_random_array import GeneralRandomArray
 

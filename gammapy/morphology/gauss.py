@@ -55,7 +55,7 @@ class Gauss2DPDF(object):
 
     def containment_fraction(self, theta):
         """Containment fraction.
-        
+
         Parameters
         ----------
         theta : array_like
@@ -74,11 +74,11 @@ class Gauss2DPDF(object):
 
     def gauss_convolve(self, sigma):
         """Convolve with another Gaussian 2D PDF.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
@@ -146,7 +146,7 @@ class MultiGauss2D(object):
     @property
     def eff_sigma(self):
         """Effective sigma for single-Gauss approximation.
-        
+
         TODO: give formula.
         """
         sigma2s = np.array([component._sigma2 for component
@@ -233,18 +233,18 @@ class MultiGauss2D(object):
         This MultiGauss2D is unchanged, a new one is created and returned.
         This is useful if you need to e.g. compute theta for one PSF
         and many sigmas.
-        
+
         Parameters
         ----------
         sigma : array_like
             TODO
         norm : TODO
             TODO
-        
+
         Returns
         -------
         new_multi_gauss_2d : MultiGauss2D
-            New  
+            New  MultiGauss2D
         """
         sigma = np.asarray(sigma, dtype=np.float64)
         norm = np.asarray(norm, dtype=np.float64)
@@ -297,7 +297,7 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
 
     A simple example for an image consisting of three Gaussians
     with zero covariance matrix:
-    
+
     >>> import numpy as np
     >>> from gammapy.morphology.gauss import gaussian_sum_moments
     >>> cov_matrix = np.zeros((12, 12))
