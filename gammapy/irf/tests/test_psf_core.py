@@ -13,6 +13,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestHESS(unittest.TestCase):
     def test_dpdtheta2(self):
@@ -69,7 +70,8 @@ class TestHESS(unittest.TestCase):
         m = hess.to_MultiGauss2D()
         assert_almost_equal(m.integral, 1)
         for containment, theta in vals:
-            assert_almost_equal(m.containment_radius(containment / 100.), theta, decimal=2)
+            actual = m.containment_radius(containment / 100.)
+            assert_almost_equal(actual, theta, decimal=2)
 
 
 def test_multi_gauss_psf_kernel():

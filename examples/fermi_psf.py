@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Compute Fermi PSF image for a given energy band.
 """
-import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.io import fits

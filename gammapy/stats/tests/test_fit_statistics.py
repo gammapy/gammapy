@@ -30,6 +30,7 @@ def test_chi2_stats():
     N_B = A_S
     print_info('chi2datavar', fit_statistics.chi2datavar(N_S, N_B, A_S, A_B))
 
+
 def test_inputs_unchanged():
     """Check that input arrays are not modified."""
     # TODO

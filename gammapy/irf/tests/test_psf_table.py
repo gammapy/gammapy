@@ -15,6 +15,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF_gauss():
     # Make an example PSF for testing
@@ -24,7 +25,7 @@ def test_TablePSF_gauss():
 
     offset = Angle([0.1, 0.3], 'deg')
 
-    assert_allclose(psf.integral(), 1, rtol=1e-3) 
+    assert_allclose(psf.integral(), 1, rtol=1e-3)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -53,6 +54,7 @@ def test_TablePSF_disk():
     #actual = psf.containment_radius([0.01, 0.25, 0.99])
     #desired = Angle([0, 1, 2], 'deg')
     #assert_quantity(actual, desired, rtol=1e-3)
+
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF():

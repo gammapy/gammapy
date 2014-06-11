@@ -38,7 +38,7 @@ class Circle(object):
 
 class SkyCircle(object):
     """A circle on the sky.
-    
+
     Parameters
     ----------
     center : `~astropy.coordinates.SkyCoord`
@@ -46,7 +46,7 @@ class SkyCircle(object):
     radius : `~astropy.coordinates.Angle`
         Circle radius
     """
-    
+
     def __init__(self, center, radius):
         self.center = center
         self.radius = radius
@@ -83,7 +83,7 @@ def make_ds9_region(source, attrs, scale=3):
     * circle x y radius
     * ellipse x y radius radius angle
     * annulus x y inner outer
-    
+
     Parameters
     ----------
     source : dict
@@ -92,12 +92,12 @@ def make_ds9_region(source, attrs, scale=3):
         Dictionary of attributes
     scale : float
         Gaussian scale factor
-    
+
     Returns
     -------
     region_string : str
         DS9 region string
-    
+
     Examples
     --------
     TODO

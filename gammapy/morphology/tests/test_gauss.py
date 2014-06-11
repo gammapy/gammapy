@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
-from astropy.tests.helper import pytest
 import numpy as np
 from numpy.testing.utils import assert_allclose
 from numpy.testing import assert_equal, assert_almost_equal
-
+from astropy.tests.helper import pytest
+from astropy.modeling.models import Gaussian2D
+from astropy.convolution.utils import discretize_model
+from ...image.measure import measure_image_moments
 from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 try:
@@ -39,7 +41,7 @@ class TestGauss2DPDF(unittest.TestCase):
             # Check that distribution integrates to 1
             xy_max = 5 * g.sigma  # integration range
             integral = dblquad(g, -xy_max, xy_max,
-                               lambda _:-xy_max, lambda _: xy_max)[0]
+                               lambda _: -xy_max, lambda _: xy_max)[0]
             assert_almost_equal(integral, 1, decimal=5)
 
     def test_dpdtheta2(self):
@@ -73,7 +75,7 @@ class TestMultiGauss2D(unittest.TestCase):
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
         xy_max = 5 * m.max_sigma  # integration range
         integral = dblquad(m, -xy_max, xy_max,
-                           lambda _:-xy_max, lambda _: xy_max)[0]
+                           lambda _: -xy_max, lambda _: xy_max)[0]
         assert_almost_equal(integral, 7, decimal=5)
 
     def test_dpdtheta2(self):
@@ -122,9 +124,6 @@ class TestMultiGauss2D(unittest.TestCase):
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """
-    from ...image.measure import measure_image_moments
-    from astropy.modeling.models import Gaussian2D
-    from astropy.convolution.utils import discretize_model
 
     # We define three components with different flux, position and size
     F_1, F_2, F_3 = 100, 200, 300

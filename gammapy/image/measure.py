@@ -18,9 +18,9 @@ __all__ = ['BoundingBox',
 
 class BoundingBox(object):
     """Rectangular bounding box.
-    
+
     TODO: Link to bounding box docs.
-    
+
     Parameters
     ----------
     x_start, y_start : float
@@ -34,18 +34,17 @@ class BoundingBox(object):
         self.x_stop = x_stop
         self.y_stop = y_stop
 
-
     @staticmethod
     def for_circle(x, y, radius):
         """Compute bounding box for a circle.
-        
+
         Parameters
         ----------
         x, y : float
             Circle center position
         radius : float
             Circle radius (pix)
-        
+
         Returns
         -------
         bounding_box : BoundingBox
@@ -58,25 +57,24 @@ class BoundingBox(object):
         y_stop = y + radius
         return BoundingBox(x_start, y_start, x_stop, y_stop)
 
-
-    def __str__(self):     
+    def __str__(self):
         ss = 'x = ({x_start}, {x_stop}), '.format(**self)
         ss += 'y = ({y_start}, {y_stop}) '.format(**self)
         return ss
 
     def intersection(self, other):
         """Compute intersection of two bounding boxes.
-        
+
         Parameters
         ----------
         other : `BoundingBox`
             Other bounding box.
-        
+
         Returns
         -------
         intersection : `BoundingBox`
             New intersection bounding box
-        
+
         Examples
         --------
         >>> b1 = BoundingBox(1, 5, 10, 11)
@@ -90,49 +88,45 @@ class BoundingBox(object):
         y_stop = min(self.x_stop, other.x_stop)
         return BoundingBox(x_start, y_start, x_stop, y_stop)
 
-
     def overlaps(self, other):
         """Does this bounding box overlap the other bounding box?
-        
+
         Parameters
         ----------
         other : `BoundingBox`
             Other bounding box
-        
+
         Returns
         -------
         overlaps : bool
             True of there is overlap
-        
+
         Examples
         --------
         TODO
         """
         return self.intersection(other).is_empty
 
-
     def __eq__(self, other):
         return self.slice == other.slice
-
 
     @property
     def ftcopy_string(self):
         """Bounding box in ftcopy string format.
-        
+
         Examples
         --------
         >>> from gammapy.image import BoundingBox
         >>> bounding_box = BoundingBox(7, 9, 43, 44)
         >>> bounding_box.ftcopy_string
-        TODO 
+        TODO
         """
         return '[{x_start}:{x_stop},{y_start}:{y_stop}]'.format(**self)
-
 
     @property
     def slice(self):
         """Bounding box in slice format.
-        
+
         Examples
         --------
         >>> from gammapy.image import BoundingBox
@@ -159,7 +153,7 @@ class BoundingBox(object):
 
 def bbox(mask, margin, binsz):
     """Determine the bounding box of a mask.
-    
+
     TODO: this is an old utility function ... put it into the BoundingBox class.
     """
     from scipy.ndimage.measurements import find_objects
@@ -178,13 +172,13 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
                             measure_positions=True, measure_values=True,
                             fits_offset=True, bbox_offset=True):
     """Measure source properties in image.
-    
+
     Sources are defined by a label image.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -231,16 +225,16 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
 
 def find_max(image):
     """Find position of maximum in an image.
-    
+
     Parameters
     ----------
     image : `astropy.io.fits.ImageHDU`
         Input image
-    
+
     Returns
     -------
     lon, lat, value : float
-        Maximum value and its position 
+        Maximum value and its position
     """
     from scipy.ndimage import maximum_position
     from astropy.wcs import WCS
@@ -255,7 +249,7 @@ def find_max(image):
 
 def _lookup_pix(image, x, y):
     """Look up values in an image for given pixel coordinates.
-    
+
     image = numpy array
     x, y = array_like of pixel coordinates (floats OK)
     """
@@ -271,7 +265,7 @@ def _lookup_pix(image, x, y):
 
 def _lookup_world(image, lon, lat):
     """Look up values in an image for given world coordinates.
-    
+
     image = astropy.io.fits.HDU
     lon, lat = world coordinates (float OK)
     """
@@ -315,8 +309,8 @@ def lookup_max(image, GLON, GLAT, theta):
 
     val = np.nan * np.ones(n_pos, dtype='float32')
     for ii in range(n_pos):
-        mask = ((GLON[ii] - ll) ** 2 + 
-                (GLAT[ii] - bb) ** 2 <= 
+        mask = ((GLON[ii] - ll) ** 2 +
+                (GLAT[ii] - bb) ** 2 <=
                 theta[ii] ** 2)
         try:
             val[ii] = image.data[mask].max()
@@ -400,7 +394,7 @@ def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
         return measure_containment_fraction(r, rr, image) - containment_fraction
 
     containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
-    
+
     return containment_radius
 
 

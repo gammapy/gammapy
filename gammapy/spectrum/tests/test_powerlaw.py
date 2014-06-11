@@ -86,7 +86,7 @@ def test_e_pivot():
     f0 = 5.35510540e-11
     d_gamma = 0.0318377
     cov = 6.56889442e-14
-    
+
     e_pivot = powerlaw.power_law_pivot_energy(e0, f0, d_gamma, cov)
     assert_allclose(e_pivot, 3.3540034240210987)
 

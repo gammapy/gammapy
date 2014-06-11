@@ -16,12 +16,12 @@ __doctest_skip__ = ['TH2_to_FITS']
 
 def hist1d_to_table(hist):
     """Convert 1D ROOT histogram into astropy table.
-    
+
     Parameters
     ----------
     hist : ROOT.TH1
         ROOT histogram
-    
+
     Returns
     -------
     table : `~astropy.table.Table`
@@ -61,7 +61,7 @@ def graph1d_to_table(graph):
     ----------
     graph : ROOT.TGraph
         ROOT graph
-    
+
     Returns
     -------
     table : `~astropy.table.Table`
@@ -94,21 +94,21 @@ def graph1d_to_table(graph):
 
 def TH2_to_FITS_header(hist, flipx=True):
     """Create FITS header for a given ROOT histogram.
-    
+
     Assuming TH2 or SkyHist that represents an image
     in Galactic CAR projection with reference point at GLAT = 0,
     as is the case for HESS SkyHists.
 
     Formulae and variable names taken from ``Plotters::SkyHistToFITS()``
     in ``$HESSROOT/plotters/src/FITSUtils.C``
-    
+
     Parameters
     ----------
     hist : ROOT.TH2
         ROOT histogram
     flipx : bool
         Flip x-axis?
-    
+
     Returns
     -------
     header : `~astropy.io.fits.Header`
@@ -142,7 +142,7 @@ def TH2_to_FITS_header(hist, flipx=True):
 
 def TH2_to_FITS_data(hist, flipx=True):
     """Convert TH2 bin values into a numpy array.
-    
+
     Parameters
     ----------
     hist : ROOT.TH2
@@ -201,7 +201,7 @@ def TH2_to_FITS(hist, flipx=True):
 
 def tree_to_table(tree, tree_name):
     """Convert a ROOT TTree to an astropy Table.
-    
+
     Parameters
     ----------
     tree : ROOT.TTree
@@ -219,9 +219,8 @@ def tree_to_table(tree, tree_name):
     tree = asrootpy(tree)
     array = tree.to_array()
 
-    
     file = open(infile)
-    tree_name = 'TableAllMu_WithoutNan' # 'ParTree_Postselect'
+    tree_name = 'TableAllMu_WithoutNan'  # 'ParTree_Postselect'
     tree = file.get(tree_name, ignore_unsupported=True)
     array = tree_to_recarray(tree)
     table = recarray_to_table(array)
@@ -234,7 +233,7 @@ def tree_to_table(tree, tree_name):
             empty_columns.append(col)
     print(empty_columns)
     table.remove_columns(empty_columns)
-    
+
     for name in array.dtype.names:
         # FITS can't save these types.
         data = array[name]

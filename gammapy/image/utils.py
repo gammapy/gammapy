@@ -16,9 +16,10 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'cube_to_image', 'cube_to_spec',
            'crop_image',
            'disk_correlate', 'exclusion_distance',
-           'image_groupby', 'images_to_cube', 
+           'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
-           'paste_cutout_into_image', 'process_image_pixels', 'block_reduce_hdu',
+           'paste_cutout_into_image', 'process_image_pixels',
+           'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
            'wcs_histogram2d',
            ]
@@ -26,13 +27,13 @@ __all__ = ['atrous_hdu', 'atrous_image',
 
 def _get_structure_indices(radius):
     """Get arrays of indices for a symmetric structure.
-    
+
     Always generate an odd number of pixels and 0 at the center.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -44,7 +45,7 @@ def _get_structure_indices(radius):
 
 def binary_disk(radius):
     """Generate a binary disk mask.
-    
+
     Value 1 inside and 0 outside.
 
     Useful as a structure element for morphological transformations.
@@ -56,7 +57,7 @@ def binary_disk(radius):
     ----------
     radius : float
         Disk radius in pixels
-    
+
     Returns
     -------
     structure : `numpy.array`
@@ -69,7 +70,7 @@ def binary_disk(radius):
 
 def binary_ring(r_in, r_out):
     """Generate a binary ring mask.
-    
+
     Value 1 inside and 0 outside.
 
     Useful as a structure element for morphological transformations.
@@ -84,7 +85,7 @@ def binary_ring(r_in, r_out):
 
     r_out : float
         Ring outer radius in pixels
-    
+
     Returns
     -------
     structure : `numpy.array`
@@ -98,11 +99,11 @@ def binary_ring(r_in, r_out):
 
 def disk_correlate(image, radius, mode='constant'):
     """Correlate image with binary disk kernel.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -118,7 +119,7 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -130,7 +131,7 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
 def exclusion_distance(exclusion):
     """Distance to nearest exclusion region.
-    
+
     Compute distance map, i.e. the Euclidean (=Cartesian 2D)
     distance (in pixels) to the nearest exclusion region.
 
@@ -139,11 +140,11 @@ def exclusion_distance(exclusion):
     distances for pixels inside we call it on the inverted mask
     and then combine both distance images into one, using negative
     distances (note the minus sign) for pixels inside exclusion regions.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -165,7 +166,7 @@ def atrous_image(image, n_levels):
         Input image
     n_levels : integer
         Number of wavelet scales.
-    
+
     Returns
     -------
     images : list of 2D arrays
@@ -246,10 +247,10 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     wcs = WCS(image.header)
     lon, lat = wcs.wcs_pix2world(x, y, 1)
-    
+
     if lon_sym:
         lon = np.where(lon > 180, lon - 360, lon)
-    
+
     if radians:
         lon = np.radians(lon)
         lat = np.radians(lat)
@@ -259,7 +260,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
 def separation(image, center, world=True, radians=False):
     """Compute distance image from a given center point.
-    
+
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU`
@@ -268,7 +269,7 @@ def separation(image, center, world=True, radians=False):
         Center position
     world : bool
         Use world coordinates (or pixel coordinates)?
-    
+
     Returns
     -------
     separation : array
@@ -276,7 +277,7 @@ def separation(image, center, world=True, radians=False):
     """
     x_center, y_center = center
     x, y = coordinates(image, world=world, radians=radians)
-    
+
     if world:
         from ..utils.coordinates import separation as sky_dist
         d = sky_dist(x, y, x_center, y_center)
@@ -290,7 +291,7 @@ def separation(image, center, world=True, radians=False):
 
 def process_image_pixels(images, kernel, out, pixel_function):
     """Process images for a given kernel and per-pixel function.
-    
+
     This is a helper function for the following common task:
     For a given set of same-shaped images and a smaller-shaped kernel,
     process each image pixel by moving the kernel at that position,
@@ -315,7 +316,7 @@ def process_image_pixels(images, kernel, out, pixel_function):
 
     As an example, here is how to implement convolution as a special
     case of process_image_pixels with one input and output image::
-    
+
         def convolve(image, kernel):
             '''Convolve image with kernel'''
             from gammapy.image.utils import process_image_pixels
@@ -332,7 +333,7 @@ def process_image_pixels(images, kernel, out, pixel_function):
     * TODO: implement multiprocessing version
     * TODO: this function is similar to view_as_windows in scikit-image:
             http://scikit-image.org/docs/dev/api/skimage.util.html#view-as-windows
-            Is this function needed or can everything be done with view_as_windows?  
+            Is this function needed or can everything be done with view_as_windows?
     """
     if isinstance(out, dict):
         n0, n1 = out.values()[0].shape
@@ -349,12 +350,12 @@ def process_image_pixels(images, kernel, out, pixel_function):
     for i0 in range(0, n0):
         for i1 in range(0, n1):
             # Compute low and high extension
-            # (# pixels, not counting central pixel) 
+            # (# pixels, not counting central pixel)
             i0_lo = min(k0, i0)
             i1_lo = min(k1, i1)
             i0_hi = min(k0, n0 - i0 - 1)
             i1_hi = min(k1, n1 - i1 - 1)
-            
+
             # Cut out relevant parts of the image arrays
             # This creates views, i.e. is fast and memory efficient
             image_parts = dict()
@@ -380,23 +381,24 @@ def process_image_pixels(images, kernel, out, pixel_function):
             else:
                 out[i0, i1] = out_part
 
+
 def image_groupby(images, labels):
     """Group pixel by labels.
-    
+
     This function is similar to `scipy.ndimage.measurements.labeled_comprehension`,
     but more general because it supports multiple input and output images.
-    
+
     Parameters
     ----------
-    TODO    
-    
+    TODO
+
     Returns
     -------
     TODO
     """
     for image in images:
         assert image.shape == labels.shape
-    
+
     # Store data in 1D data frame (i.e. as pixel lists)
     # TODO: should we use array.flat or array.ravel() here?
     # It's not clear to me what the difference is and which is more efficient here.
@@ -415,7 +417,7 @@ def image_groupby(images, labels):
 
 def images_to_cube(hdu_list):
     """Convert a list of image HDUs into one cube.
-    
+
     Parameters
     ----------
     hdu_list : `astropy.io.fits.HDUList`
@@ -444,7 +446,7 @@ def images_to_cube(hdu_list):
 
 def wcs_histogram2d(header, lon, lat, weights=None):
     """Histogram in world coordinates.
-    
+
     Parameters
     ----------
     header : `~astropy.io.fits.Header`
@@ -453,12 +455,12 @@ def wcs_histogram2d(header, lon, lat, weights=None):
         World coordinates
     weights : array_like, optional
         Weights
-    
+
     Returns
     -------
     histogram : `~astropy.io.fits.ImageHDU`
         Histogram
-    
+
     See also
     --------
     numpy.histogramdd
@@ -466,7 +468,7 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     if weights == None:
         weights = np.ones_like(lon)
 
-    # Get pixel coordinates    
+    # Get pixel coordinates
     wcs = WCS(header)
     xx, yy = wcs.wcs_world2pix(lon, lat, 0)
 
@@ -482,14 +484,14 @@ def wcs_histogram2d(header, lon, lat, weights=None):
 
 def bin_events_in_image(events, reference_image):
     """Bin events into an image.
-    
+
     Parameters
     ----------
     events : `~astropy.table.Table`
         Event list table
     reference_image : `~astropy.io.fits.ImageHDU`
         An image defining the spatial bins.
-    
+
     Returns
     -------
     count_image : `~astropy.io.fits.ImageHDU`
@@ -507,7 +509,7 @@ def bin_events_in_image(events, reference_image):
 
 def bin_events_in_cube(events, reference_cube, energies):
     """Bin events in LON-LAT-Energy cube.
-    
+
     Parameters
     ----------
     events : `~astropy.table.Table`
@@ -516,14 +518,14 @@ def bin_events_in_cube(events, reference_cube, energies):
         A cube defining the spatial bins.
     energies : `~astropy.table.Table`
         Table defining the energy bins.
-    
+
     Returns
     -------
     count_cube : `~astropy.io.fits.ImageHDU`
         Count cube
     """
     # TODO: this duplicates code from `bin_events_in_image`
-    
+
     if 'GLON' in reference_cube.header['CTYPE1']:
         lon = events['GLON']
         lat = events['GLAT']
@@ -531,7 +533,7 @@ def bin_events_in_cube(events, reference_cube, energies):
         lon = events['RA']
         lat = events['DEC']
 
-    # Get pixel coordinates    
+    # Get pixel coordinates
     wcs = WCS(reference_cube.header)
     # We're not interested in the energy axis, so we give a dummy value of 1
     xx, yy = wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
@@ -552,14 +554,14 @@ def bin_events_in_cube(events, reference_cube, energies):
 
 def threshold(array, threshold=5):
     """Set all pixels below threshold to zero.
-    
+
     Parameters
     ----------
     array : array_like
         Input array
     threshold : float
         Minimum threshold
-    
+
     Returns
     -------
     TODO
@@ -579,17 +581,17 @@ def threshold(array, threshold=5):
 
 def binary_dilation_circle(input, radius):
     """Dilate with disk of given radius.
-    
+
     Parameters
     ----------
     input : array_like
         Input array
     radius : float
         Dilation radius (pix)
-    
+
     Returns
     -------
-    TODO    
+    TODO
     """
     from scipy.ndimage import binary_dilation
     structure = binary_disk(radius)
@@ -598,14 +600,14 @@ def binary_dilation_circle(input, radius):
 
 def binary_opening_circle(input, radius):
     """Binary opening with circle as structuring element.
-    
+
     This calls `scipy.ndimage.morphology.binary_opening` with a `binary_disk`
     as structuring element.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -653,11 +655,11 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     If no reference pixel position is given it is assumed ot be
     at the center of the image.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     header : `astropy.io.fits.Header`
@@ -679,7 +681,7 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     pars = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
             'CTYPE1': ctype1 + proj,
-            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1':-binsz,
+            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1': -binsz,
             'CTYPE2': ctype2 + proj,
             'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
             }
@@ -694,7 +696,7 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
                      proj='CAR', coordsys='GAL',
                      xrefpix=None, yrefpix=None, dtype='float32'):
     """Make an empty (i.e. values 0) image.
-    
+
     Uses the same parameter names as the Fermi tool gtbin
     (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
 
@@ -736,7 +738,7 @@ def crop_image(image, bounding_box):
         Image
     bounding_box : `~gammapy.image.BoundingBox`
         Bounding box
-    
+
     Returns
     -------
     new_image : `astropy.io.fits.ImageHDU`
@@ -756,14 +758,14 @@ def crop_image(image, bounding_box):
 
 def cube_to_image(cube, slicepos=None):
     """Slice or project 3-dim cube into a 2-dim image.
-    
+
     Parameters
     ----------
     cube : `~astropy.io.fits.ImageHDU`
         3-dim FITS cube
     slicepos : int or None
         Slice position (None means to sum along the spectral axis)
-    
+
     Returns
     -------
     image : `~astropy.io.fits.ImageHDU`
@@ -787,9 +789,9 @@ def cube_to_image(cube, slicepos=None):
 
 def cube_to_spec(cube, mask, weighting='none'):
     """Integrate spatial dimensions of a FITS cube to give a spectrum.
- 
+
     TODO: give formulas.
- 
+
     Parameters
     ----------
     cube : `~astropy.io.fits.ImageHDU`
@@ -798,7 +800,7 @@ def cube_to_spec(cube, mask, weighting='none'):
         2-dim mask array.
     weighting : {'none', 'solid_angle'}
         Weighting factor to use.
-    
+
     Returns
     -------
     spectrum : numpy.array
@@ -814,19 +816,19 @@ def cube_to_spec(cube, mask, weighting='none'):
 
 def contains(image, x, y, world=True):
     """Check if given pixel or world positions are in an image.
-    
+
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU`
         2-dim FITS image
-    
+
     Returns
     -------
     containment : array
         Bool array
     """
     header = image.header
-    
+
     if world:
         wcs = WCS(header)
         x, y = wcs.wcs_world2pix(x, y, 0)
@@ -837,7 +839,7 @@ def contains(image, x, y, world=True):
 
 def paste_cutout_into_image(total, cutout, method='sum'):
     """Paste cutout into a total image.
-    
+
     Parameters
     ----------
     total, cutout : `astropy.io.fits.ImageHDU`
@@ -861,21 +863,22 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     dy, dx = cutout.shape
 
     if method == 'sum':
-        total.data[y : y + dy, x : x + dx] += cutout.data
+        total.data[y: y + dy, x: x + dx] += cutout.data
     elif method == 'replace':
-        total.data[y : y + dy, x : x + dx] = cutout.data
+        total.data[y: y + dy, x: x + dx] = cutout.data
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
     return total
 
+
 def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     """Provides block reduce functionality for image HDUs.
-    
+
     See http://scikit-image.org/docs/dev/api/skimage.measure.html#skimage.measure.block_reduce
-    
+
     Parameters
-    ----------   
+    ----------
     image_hdu : `astropy.io.fits.ImageHDU`
         Original image HDU, unscaled
     block_size : array_like
@@ -885,26 +888,26 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
         This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
     cval : float (optional)
         Constant padding value if image is not perfectly divisible by the block size. Default 0.
-            
+
     Returns
     -------
     image_hdu : `astropy.io.fits.ImageHDU`
         Rebinned Image HDU
     """
     from skimage.measure import block_reduce
-    
+
     header = input_hdu.header.copy()
     data = input_hdu.data
     # Define new header values for new resolution
     header['CDELT1'] = header['CDELT1'] * block_size[0]
     header['CDELT2'] = header['CDELT2'] * block_size[1]
-    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) / block_size[0]) + 0.5 
+    header['CRPIX1'] = ((header['CRPIX1'] - 0.5) / block_size[0]) + 0.5
     header['CRPIX2'] = ((header['CRPIX2'] - 0.5) / block_size[1]) + 0.5
     if len(input_hdu.data.shape) == 3:
-        block_size = (1, block_size[1], block_size[0])           
+        block_size = (1, block_size[1], block_size[0])
     elif len(input_hdu.data.shape) == 2:
         block_size = (block_size[1], block_size[0])
     data_reduced = block_reduce(data, block_size, func, cval)
     # Put rebinned data into a fitsHDU
-    rebinned_image = fits.ImageHDU(data=data_reduced, header=header)    
+    rebinned_image = fits.ImageHDU(data=data_reduced, header=header)
     return rebinned_image

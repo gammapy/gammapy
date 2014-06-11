@@ -40,7 +40,7 @@ class TablePSF(object):
     This PSF represents a :math:`PSF(\theta)=dP / d\Omega(\theta)`
     spline interpolation curve for a given set of offset :math:`\theta`
     and :math:`PSF` points.
-    
+
     Uses `scipy.interpolate.UnivariateSpline`.
 
     Parameters
@@ -90,9 +90,9 @@ class TablePSF(object):
     @staticmethod
     def from_shape(shape, width, offset):
         """Make TablePSF objects with commonly used shapes.
-        
+
         This function is mostly useful for examples and testing. 
-        
+
         Parameters
         ----------
         shape : {'disk', 'gauss'}
@@ -101,12 +101,12 @@ class TablePSF(object):
             PSF width angle (radius for disk, sigma for Gauss).
         offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset angle
-        
+
         Returns
         -------
         psf : `TablePSF`
             Table PSF
-    
+
         Examples
         --------
         >>> import numpy as np
@@ -126,9 +126,9 @@ class TablePSF(object):
         elif shape == 'gauss':
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
             psf_value = gauss2d_pdf(offset.radian)
-        
+
         psf_value = Quantity(psf_value, 'sr^-1')
-    
+
         return TablePSF(offset, psf_value)
 
     def info(self):
@@ -146,9 +146,9 @@ class TablePSF(object):
     # TODO: remove because it's not flexible enough?
     def __call__(self, lon, lat):
         """Evaluate PSF at a 2D position.
-        
+
         The PSF is centered on ``(0, 0)``.
-        
+
         Parameters
         ----------
         lon, lat : `~astropy.coordinates.Angle`
@@ -170,7 +170,7 @@ class TablePSF(object):
 
         The kernel image is evaluated on a cartesian
         grid with ``pixel_size`` spacing, not on the sphere.
-        
+
         Calls `astropy.convolution.discretize_model`,
         allowing for accurate discretization.
 
@@ -186,7 +186,7 @@ class TablePSF(object):
         -------
         kernel : `numpy.array`
             Kernel 2D image
-        
+
         Notes
         -----
         * In the future, `astropy.modeling.Fittable2DModel` and
@@ -218,26 +218,24 @@ class TablePSF(object):
         #        return 42 temp_model_function(x, y)
         #
         #temp_model = TempModel()
-        
+
         #import IPython; IPython.embed()
         array = discretize_oversample_2D(_model,
                                          x_range=pix_range, y_range=pix_range,
                                          **discretize_model_kwargs)
-                
         return array
-
 
     def eval(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
 
         The following PSF quantities are available:
-        
+
         * 'dp_domega': PDF per 2-dim solid angle :math:`\Omega` in sr^-1
-        
+
             .. math:: \frac{dP}{d\Omega}
-        
+
         * 'dp_dtheta': PDF per 1-dim offset :math:`\theta` in radian^-1
-        
+
             .. math:: \frac{dP}{d\theta} = 2 \pi \theta \frac{dP}{d\Omega}
 
         Parameters
@@ -271,12 +269,12 @@ class TablePSF(object):
 
     def integral(self, offset_min=None, offset_max=None):
         """Compute PSF integral, aka containment fraction.
-        
+
         Parameters
         ----------
         offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset angle range
-        
+
         Returns
         -------
         integral : float
@@ -287,7 +285,7 @@ class TablePSF(object):
         else:
             if not isinstance(offset_min, Quantity):
                 raise ValueError("offset_min must be an Angle or Quantity object.")
-        
+
         if offset_max == None:
             offset_max = self._offset[-1]
         else:
@@ -302,15 +300,14 @@ class TablePSF(object):
 
         return cdf_max - cdf_min
 
-
     def containment_radius(self, fraction):
         """Containment radius.
-        
+
         Parameters
         ----------
         fraction : array_like
             Containment fraction (range 0 .. 1)
-        
+
         Returns
         -------
         radius : `~astropy.coordinates.Angle`
@@ -321,14 +318,14 @@ class TablePSF(object):
 
     def normalize(self):
         """Normalize PSF to unit integral.
-        
+
         Computes the total PSF integral via the :math:`dP / d\theta` spline
         and then divides the :math:`dP / d\theta` array.
         """
         integral = self.integral()
-        
+
         self._dp_dtheta /= integral
-        
+
         # Don't divide by 0
         EPS = 1e-6
         offset = np.clip(self._offset.radian, EPS, None)
@@ -338,15 +335,15 @@ class TablePSF(object):
 
     def broaden(self, factor, normalize=True):
         r"""Broaden PSF by scaling the offset array.
-        
+
         For a broadening factor :math:`f` and the offset
         array :math:`\theta`, the offset array scaled
         in the following way:
-        
+
         .. math::
             \theta_{new} = f \times \theta_{old}
             \frac{dP}{d\theta}(\theta_{new}) = \frac{dP}{d\theta}(\theta_{old})
-        
+
         Parameters
         ----------
         factor : float
@@ -365,7 +362,7 @@ class TablePSF(object):
 
     def plot_psf_vs_theta(self, quantity='dp_domega'):
         """Plot PSF vs offset.
-        
+
         TODO: describe PSF ``quantity`` argument in a central place and link to it from here.
         """
         import matplotlib.pyplot as plt
@@ -381,7 +378,7 @@ class TablePSF(object):
 
     def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
-        
+
         * `_dp_domega_spline` is used to evaluate the 2D PSF.
         * `_dp_dtheta_spline` is not really needed for most applications,
           but is available via `eval`.
@@ -389,7 +386,7 @@ class TablePSF(object):
         * `_ppf_spline` is used to compute containment radii.
         """
         from scipy.interpolate import UnivariateSpline
-        
+
         # Compute spline and normalize.
         x, y = self._offset.value, self._dp_domega.value
         self._dp_domega_spline = UnivariateSpline(x, y, **spline_kwargs)
@@ -409,7 +406,7 @@ class TablePSF(object):
         x = self._offset.value
         y = self._cdf_spline(x)
         self._ppf_spline = UnivariateSpline(y, x, **spline_kwargs)
-        
+
     def _offset_clip(self, offset):
         """Clip to offset support range, because spline extrapolation is unstable.""" 
         offset = Angle(offset, 'radian').radian
@@ -419,9 +416,9 @@ class TablePSF(object):
 
 class EnergyDependentTablePSF(object):
     """Energy-dependent radially-symmetric table PSF (``gtpsf`` format).
-    
+
     TODO: add references and explanations.
-    
+
     Parameters
     ----------
     energy : `~astropy.units.Quantity`
@@ -450,7 +447,6 @@ class EnergyDependentTablePSF(object):
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
-
 
     @staticmethod
     def from_fits(hdu_list):
@@ -495,12 +491,12 @@ class EnergyDependentTablePSF(object):
     @staticmethod
     def read(filename):
         """Read FITS format PSF file (``gtpsf`` output).
-        
+
         Parameters
         ----------
         filename : str
             File name
-        
+
         Returns
         -------
         psf : `EnergyDependentTablePSF`
@@ -518,9 +514,9 @@ class EnergyDependentTablePSF(object):
 
     def table_psf_at_energy(self, energy, **kwargs):
         """TablePSF at a given energy.
-        
+
         Extra ``kwargs`` are passed to the `~gammapy.irf.TablePSF` constructor.
-        
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
@@ -540,10 +536,10 @@ class EnergyDependentTablePSF(object):
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.
-        
+
         Expected counts in sub energy bands given the given exposure
         and spectrum are used as weights.
-        
+
         Parameters
         ----------
         energy_band : `~astropy.units.Quantity`
@@ -560,13 +556,13 @@ class EnergyDependentTablePSF(object):
         """
         if spectrum == None:
             def spectrum(energy):
-                return (energy / energy_band[0]) **  (-spectral_index)
+                return (energy / energy_band[0]) ** (-spectral_index)
 
         # TODO: warn if `energy_band` is outside available data.
         energy_idx_min, energy_idx_max = self._energy_index(energy_band)
-        
+
         # TODO: extract this into a utility function `npred_weighted_mean()`
-        
+
         # Compute weights for energy bins
         weights = np.zeros_like(self.energy.value, dtype=np.float64)
         for idx in range(energy_idx_min, energy_idx_max - 1):
@@ -592,14 +588,14 @@ class EnergyDependentTablePSF(object):
 
     def containment_radius(self, energy, fraction):
         """Containment radius.
-        
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
         fraction : float
             Containment fraction in %
-        
+
         Returns
         -------
         radius : `~astropy.units.Quantity`
@@ -611,14 +607,14 @@ class EnergyDependentTablePSF(object):
 
     def integral(self, energy, offset_min, offset_max):
         """Containment fraction.
-        
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
         offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
             Offset
-        
+
         Returns
         -------
         fraction : array_like
@@ -637,7 +633,6 @@ class EnergyDependentTablePSF(object):
 
         #ss += 'integral = {0}\n'.format(self.integral())
 
-
         # Print some example containment radii
         fractions = [0.68, 0.95]
         energies = Quantity([10, 100], 'GeV')
@@ -649,7 +644,7 @@ class EnergyDependentTablePSF(object):
 
     def plot_psf_vs_theta(self, filename=None, energies=[1e4, 1e5, 1e6]):
         """Plot PSF vs theta.
-        
+
         Parameters
         ----------
         TODO
@@ -674,13 +669,13 @@ class EnergyDependentTablePSF(object):
 
         if filename != None:
             plt.savefig(filename)
-    
+
     def plot_containment_vs_energy(self, filename=None):
         """Plot containment versus energy."""
         raise NotImplementedError
         import matplotlib.pyplot as plt
         plt.clf()
-        
+
         if filename != None:
             plt.savefig(filename)
 
@@ -695,7 +690,7 @@ class EnergyDependentTablePSF(object):
         plt.xlim(1e4 / 1.3, 1.3 * 1e6)
         plt.ylim(0, 1.5e11)
         plt.tight_layout()
-        
+
         if filename != None:
             plt.savefig(filename)
 
@@ -707,12 +702,12 @@ class EnergyDependentTablePSF(object):
 
     def _get_1d_psf_values(self, energy_index):
         """Get 1-dim PSF value array.
-        
+
         Parameters
         ----------
         energy_index : int
             Energy index
-        
+
         Returns
         -------
         psf_values : `~astropy.units.Quantity`
@@ -723,12 +718,12 @@ class EnergyDependentTablePSF(object):
 
     def _get_1d_table_psf(self, energy_index, **kwargs):
         """Get 1-dim TablePSF (cached).
-        
+
         Parameters
         ----------
         energy_index : int
             Energy index
-        
+
         Returns
         -------
         table_psf : `TablePSF`
@@ -738,6 +733,6 @@ class EnergyDependentTablePSF(object):
         if self._table_psf_cache[energy_index] == None:
             psf_value = self._get_1d_psf_values(energy_index)
             table_psf = TablePSF(self.offset, psf_value, **kwargs)
-            self._table_psf_cache[energy_index] = table_psf 
+            self._table_psf_cache[energy_index] = table_psf
 
-        return self._table_psf_cache[energy_index] 
+        return self._table_psf_cache[energy_index]

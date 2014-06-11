@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
@@ -62,17 +61,17 @@ class TestGammaSpectralCube(object):
     @pytest.mark.xfail
     def test_flux_scalar(self):
         # Corner pixel with index [0, 0, 0]
-        lon = Quantity(344.75, 'deg') # pixel 0
-        lat = Quantity(-5.25, 'deg') # pixel 0
-        energy = Quantity(50, 'MeV') # slice 0
+        lon = Quantity(344.75, 'deg')  # pixel 0
+        lat = Quantity(-5.25, 'deg')  # pixel 0
+        energy = Quantity(50, 'MeV')  # slice 0
         actual = self.spectral_cube.flux(lon, lat, energy)
         expected = self.spectral_cube.data[0, 0, 0]
         assert_quantity(actual, expected)
 
         # Galactic center position
-        lon = Quantity(0, 'deg') # beween pixel 11 and 12 in ds9 viewer
-        lat = Quantity(0, 'deg') # beween pixel 30 and 31 in ds9 viewer 
-        energy = Quantity(528.9657943133443, 'MeV') # slice 10 in ds9 viewer
+        lon = Quantity(0, 'deg')  # beween pixel 11 and 12 in ds9 viewer
+        lat = Quantity(0, 'deg')  # beween pixel 30 and 31 in ds9 viewer
+        energy = Quantity(528.9657943133443, 'MeV')  # slice 10 in ds9 viewer
         actual = self.spectral_cube.flux(lon, lat, energy)
         # Compute expected value by interpolating 4 neighbors
         # Use data axis order: energy, lat, lon

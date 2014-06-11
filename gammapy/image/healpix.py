@@ -33,7 +33,7 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     -------
     reprojected_data : `numpy.ndarray`
         HEALPIX image resampled onto the reference image
-    
+
     Examples
     --------
     >>> import healpy as hp
@@ -47,7 +47,7 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     """
     import healpy as hp
     lon, lat = coordinates(reference_image, lon_sym=False, radians=True)
-    
+
     # If the reference image uses a different celestial coordinate system from
     # the HEALPIX image we need to transform the coordinates
     ref_coord_system = reference_image.header['COORDSYS']
@@ -55,13 +55,13 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
         coordinate = SkyCoord(lon, lat, frame=ref_coord_system)
         coordinate = coordinate.transform_to(hpx_coord_system)
         lon, lat = coordinate.data.lon, coordinate.data.lat
-    
+
     data = hp.get_interp_val(healpix_data, lon, lat)
     return data
 
 
 def image_to_healpix(image, healpix_pars):
-    """Convert image in a normal FITS projection (e.g. CAR or AIT) to HEALPIX format. 
+    """Convert image in a normal FITS projection (e.g. CAR or AIT) to HEALPIX format.
 
     Parameters
     ----------

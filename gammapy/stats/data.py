@@ -9,7 +9,7 @@ __all__ = ['Stats', 'make_stats', 'combine_stats',
 
 class Stats(object):
     """Container for an on-off observation.
-    
+
     Parameters
     ----------
     n_on : array_like
@@ -33,7 +33,7 @@ class Stats(object):
     @property
     def alpha(self):
         r"""Background exposure ratio.
-        
+
         .. math:: \alpha = a_{on} / a_{off}
         """
         return self.a_on / self.a_off
@@ -41,7 +41,7 @@ class Stats(object):
     @property
     def background(self):
         r"""Background estimate.
-        
+
         .. math:: \mu_{background} = \alpha\ n_{off}
         """
         return self.alpha * self.n_off
@@ -49,7 +49,7 @@ class Stats(object):
     @property
     def excess(self):
         r"""Excess.
-        
+
         .. math:: n_{excess} = n_{on} - \mu_{background}
         """
         return self.n_on - self.background
@@ -92,7 +92,7 @@ def make_stats(signal, background, area_factor, weight_method="background",
 
 def combine_stats(stats_1, stats_2, weight_method="none"):
     """Combine using some weight method for the exposure.
-    
+
     Parameters
     ----------
     stats_1 : `Stats`
@@ -136,41 +136,41 @@ def compute_total_stats(counts, exposure, background=None,
     r"""Compute total stats for arrays of per-bin stats.
 
     The ``result`` dictionary contains a ``flux`` entry computed as
-    
+
     .. math:: F = N / E = \sum{N_i} / \sum{E_i}
-    
+
     as well as a ``flux3`` entry computed as
-    
+
     .. math:: F = \sum{F_i} = \sum{\left(N_i / E_i\right)}
 
     where ``F`` is flux, ``N`` is excess and ``E`` is exposure.
 
     The output ``flux`` units are the inverse of the input ``exposure`` units, e.g.
-    
+
     * ``exposure`` in cm^2 s -> ``flux`` in cm^-2 s^-1
     * ``exposure`` in cm^2 s TeV -> ``flux`` in cm^-2 s^-1 TeV-1
-    
+
     The output ``surface_brightness`` units in addition depend on the ``solid_angle`` units, e.g.
-    
+
     * ``exposure`` in cm^2 s and ``solid_angle`` in deg^2 -> ``surface_brightness`` in cm^-2 s^-1 deg^-2
-    
+
     TODOs:
 
     * integrate this with the `Stats` class.
     * add statistical errors on excess, flux, surface brightness
-    
+
     Parameters
     ----------
     counts, exposure : array_like
         Input arrays
     background, solid_angle, mask : array_like
         Optional input arrays
-    
+
     Returns
     -------
     result : dict
         Dictionary of total stats (for now, see the code for which entries it has).
-    
+
     See also
     --------
     gammapy.image.profile.FluxProfile.compute
@@ -202,7 +202,7 @@ def compute_total_stats(counts, exposure, background=None,
     # Note that we use mean exposure (not sum) here!!!
     t['exposure'] = exposure[mask].mean(dtype=np.float64)
     t['solid_angle'] = solid_angle[mask].sum(dtype=np.float64)
-    
+
     excess = counts - background
     t['excess'] = t['counts'] - t['background']
     t['excess_2'] = excess[mask].sum(dtype=np.float64)
@@ -211,7 +211,7 @@ def compute_total_stats(counts, exposure, background=None,
     t['flux'] = (t['excess']) / t['exposure']
     t['flux_2'] = t['excess_2'] / t['exposure']
     t['flux_3'] = flux[mask].sum(dtype=np.float64)
-    
+
     surface_brightness = flux / solid_angle
     t['surface_brightness'] = t['flux'] / t['solid_angle']
     t['surface_brightness_2'] = t['flux_2'] / t['solid_angle']

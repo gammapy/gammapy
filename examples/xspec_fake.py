@@ -53,7 +53,7 @@ def plot_rmf():
     print(edisp)
     plt.figure(figsize=(5, 5))
     edisp.plot()
-    
+
     filename = 'xspec_test_rmf.png'
     logging.info('Writing {0}'.format(filename))
     plt.savefig(filename, dpi=200)

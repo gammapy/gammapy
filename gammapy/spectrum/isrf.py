@@ -6,6 +6,7 @@ from astropy.io import fits
 
 __all__ = ['Galprop', 'Schlickeiser']
 
+
 class Schlickeiser(object):
     """ISRF model for the solar neighborhood.
 
@@ -44,7 +45,7 @@ class Schlickeiser(object):
             Photon energy (eV)
         component : {'Optical', 'Infrared', 'CMB', 'Total'}
             Radiation field component
-        
+
         Returns
         -------
         Photon number density of a given component (cm^-3 eV^-1)
@@ -62,6 +63,7 @@ class Schlickeiser(object):
 
     def _density(self, energy, component):
         raise NotImplementedError
+
 
 class Galprop(object):
     """A cylindrically symmetric model for the distribution
@@ -111,7 +113,7 @@ class Galprop(object):
             Galactic height (kpc)
         component : {'Optical', 'Infrared', 'CMB', 'Total'}
             Radiation field component
-        
+
         Returns
         -------
         Photon number density of a given component (cm^-3 eV^-1)

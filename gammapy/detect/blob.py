@@ -21,11 +21,11 @@ __all__ = ['create_scale_space', 'detect_peaks', 'detect_peaks_3D',
 
 def create_scale_space(image, scales, kernel='gaussian_laplace'):
     """Creates Scale Space for a given image and stores it in 3D array.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -55,11 +55,11 @@ def create_scale_space(image, scales, kernel='gaussian_laplace'):
 
 def detect_peaks(image):
     """Detect peaks in an image  using a maximum filter.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -88,11 +88,11 @@ def detect_peaks(image):
 
 def detect_peaks_3D(image):
     """Same functionality as detect_peaks, but works on image cubes.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -123,7 +123,7 @@ def show_peaks(image_3D):
     """Show all images of different scales including the detected peaks.
 
     Useful for debugging.
-    
+
     Parameters
     ----------
     TODO
@@ -143,7 +143,7 @@ def show_peaks(image_3D):
 
 def detect_blobs_3D(image, threshold):
     """Find maxima in image cubes.
-    
+
     Parameters
     ----------
     TODO
@@ -171,7 +171,7 @@ def detect_blobs_3D(image, threshold):
 
 def detect_blobs(image_3D, scales, threshold):
     """Detect blobs of different sizes.
-    
+
     Parameters
     ----------
     TODO
@@ -203,7 +203,7 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
 
     If the overlap area of two blobs is to large,
     the one with the smaller peak value is dismissed.
-    
+
     Parameters
     ----------
     TODO
@@ -227,7 +227,7 @@ def prune_blobs(blobs, overlap_threshold, q_factor):
 
 def show_blobs(image, blobs):
     """Show input image with overlaid blobs.
-    
+
     Parameters
     ----------
     TODO
@@ -248,7 +248,7 @@ def show_blobs(image, blobs):
 
 def write_region_file(regionfile, blobs):
     """Write ds9 region file from blob list.
-    
+
     Parameters
     ----------
     TODO
@@ -266,7 +266,7 @@ def write_region_file(regionfile, blobs):
 
 class Blob(object):
     """An excess blob is represented by a position, radius and peak value.
-    
+
     Parameters
     ----------
     x_pos : array_like
@@ -289,22 +289,20 @@ class Blob(object):
         self.value = value
         self.keep = True
 
-
     # TODO: make it a property
     def area(self):
         """Blob area."""
         return pi * self.radius ** 2
 
-
     def overlap(self, blob):
         """Overlap between two blobs.
-        
+
         Defined by the overlap area.
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
@@ -334,17 +332,16 @@ class Blob(object):
 
         return max(area / self.area(), area / blob.area())
 
-
     def q_factor(self, blob, sigma_PSF=0.1):
         """Compute q factor as overlap criterion.
-        
+
         .. math::
             TODO
-        
+
         Parameters
         ----------
         TODO
-        
+
         Returns
         -------
         TODO
@@ -364,14 +361,12 @@ class Blob(object):
         N = 2. * sigma_A * sigma_B / sigma_AB2
         return N * exp(-0.5 * x_AB2 / sigma_AB2)
 
-
     def image(self):
         """Return image of the blob."""
         phi = np.linspace(0, 2 * pi, 360)
         x = self.radius * cos(phi) + self.x_pos
         y = self.radius * sin(phi) + self.y_pos
         return x, y
-
 
     def __str__(self):
         fmt = 'x_pos: {0}, y_pos: {1}, radius: {2:02.2f}, peak value: {3:02.2f}'

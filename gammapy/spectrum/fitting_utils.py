@@ -6,8 +6,14 @@ TODO: Unusable at the moment. Refactor into classes and clean up.
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['cov2corr', 'generate_MC_data', 'plot_chi2', 'plot_fit', 'plot_model',
-           'plot_points']
+__all__ = ['cov2corr',
+           'generate_MC_data',
+           'plot_chi2',
+           'plot_fit',
+           'plot_model',
+           'plot_points',
+           ]
+
 
 def set_off_diagonal_to_zero(matrix):
     """Sets the off-diagonal elements of a matrix
@@ -87,7 +93,7 @@ def plot_fit(f, c, fit_result, xlimits, ylimits,
              fill_band=True,
              npoints=100):
     """Plot the error butterfly.
-    
+
     Errors are propagated using the uncertainties module.
     If disregard_correlation == True, the off-diagonal elements of the
     covariance matrix are set to 0 before propagating the errors.

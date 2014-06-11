@@ -4,6 +4,7 @@ from astropy.extern.six.moves import range
 
 __all__ = ['GeneralRandom']
 
+
 class GeneralRandom(object):
     """Fast random number generation with an arbitrary pdf
     of a continuous variable x.

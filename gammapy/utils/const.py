@@ -8,9 +8,10 @@ __all__ = ['conversion_factor', 'd_sun_to_galactic_center',
            'sigma_to_fwhm', 'fwhm_to_sigma'
            ]
 
+
 def conversion_factor(old, new):
     """Conversion factor from old to new units specified as strings.
-    
+
     Examples
     --------
     >>> conversion_factor('year', 'second')
@@ -33,15 +34,15 @@ fwhm_to_sigma = 1 / sigma_to_fwhm
 #            'm_sun', 'sigma_T']
 
 # from astropy import constants as const
-c = 29979245800.0 # const.c.cgs.value
-h = 6.62606896e-27 # const.h.cgs.value
-h_eV = 4.13566722264e-15 # const.h.to('eV s').value
-hbar = 1.054571628e-27 # const.hbar.cgs.value
-k_B = 1.3806504e-16 # const.k_B.cgs.value
-k_B_eV = 8.61734255962e-05 # const.k_B.to('eV/K').value
-m_H = 1.660538782e-24 # const.m_p.cgs.value
-m_e = 9.10938215e-28 # const.m_e.cgs.value
-m_e_eV = 510998.895983 # (const.m_e * const.c ** 2).to('eV').value
-m_sun = 1.9891e+33 # const.M_sun.cgs.value
+c = 29979245800.0  # const.c.cgs.value
+h = 6.62606896e-27  # const.h.cgs.value
+h_eV = 4.13566722264e-15  # const.h.to('eV s').value
+hbar = 1.054571628e-27  # const.hbar.cgs.value
+k_B = 1.3806504e-16  # const.k_B.cgs.value
+k_B_eV = 8.61734255962e-05  # const.k_B.to('eV/K').value
+m_H = 1.660538782e-24  # const.m_p.cgs.value
+m_e = 9.10938215e-28  # const.m_e.cgs.value
+m_e_eV = 510998.895983  # (const.m_e * const.c ** 2).to('eV').value
+m_sun = 1.9891e+33  # const.M_sun.cgs.value
 
-sigma_T = 6.652458558e-25 # Thomson cross section
+sigma_T = 6.652458558e-25  # Thomson cross section

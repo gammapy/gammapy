@@ -9,6 +9,7 @@ try:
 except ImportError:
     HAS_HEALPY = False
 
+
 @pytest.mark.skipif('not HAS_HEALPY')
 def test_healpix_to_image():
     # TODO: implement me

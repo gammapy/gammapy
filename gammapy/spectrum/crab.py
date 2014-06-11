@@ -47,12 +47,13 @@ CRAB_REFERENCES = ['meyer', 'hegra', 'hess_pl', 'hess_ecpl']
 
 CRAB_DEFAULT_REFERENCE = 'meyer'
 
+
 def crab_flux(energy=1, reference=CRAB_DEFAULT_REFERENCE):
     """Differential Crab flux.
 
     See the ``gammapy.spectrum.crab`` module docstring for a description
     of the available reference spectra.
-    
+
     Parameters
     ----------
     energy : array_like
@@ -92,10 +93,10 @@ def crab_flux(energy=1, reference=CRAB_DEFAULT_REFERENCE):
 
 def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFERENCE):
     """Integral Crab flux.
-    
+
     See the ``gammapy.spectrum.crab`` module docstring for a description
     of the available reference spectra.
-    
+
     Parameters
     ----------
     energy_min, energy_max : array_like
@@ -123,10 +124,10 @@ def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFE
 
 def crab_spectral_index(energy=1, reference=CRAB_DEFAULT_REFERENCE):
     """Spectral index (positive number) at a given energy.
-    
+
     See the ``gammapy.spectrum.crab`` module docstring for a description
     of the available reference spectra.
-    
+
     Parameters
     ----------
     energy : array_like

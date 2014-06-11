@@ -31,7 +31,7 @@ def test_poisson_stats_extra_info():
 
 
 class TestFermiGalacticCenter():
-    
+
     def test_filenames(self):
         filenames = FermiGalacticCenter.filenames()
         assert isinstance(filenames, dict)
@@ -56,6 +56,6 @@ class TestFermiGalacticCenter():
 def test_fetch_fermi_catalog():
     n_hdu = len(fetch_fermi_catalog('2FGL'))
     assert(n_hdu, 5)
-    
+
     n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
     assert(n_sources, 1873)

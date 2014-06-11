@@ -55,7 +55,7 @@ def spherical_velocity(x, y, z, vx, vy, vz):
     """Computes the projected angular velocity in spherical coordinates."""
     d = sqrt(x ** 2 + y ** 2 + z ** 2)
     r = sqrt(x ** 2 + y ** 2)
-    
+
     v_lon = degrees(1. / (Unit('kpc').to(Unit('km')) * r) * (-y * vx + x * vy)) * Unit('year').to(Unit('second')) * 1e6
     v_lat = (degrees(vz / (sqrt(1 - (z / d) ** 2) * Unit('kpc').to(Unit('km')) * d ) - 
               sqrt(vx ** 2 + vy ** 2 + vz ** 2) * z / 

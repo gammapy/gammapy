@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Compute integral flux in an energy band for the Fermi diffuse model.
 """
-import numpy as np
 from astropy.units import Quantity
 from gammapy.datasets import FermiGalacticCenter
-from gammapy.spectral_cube import GammaSpectralCube
 
 cube = FermiGalacticCenter.diffuse_model()
 print(cube)

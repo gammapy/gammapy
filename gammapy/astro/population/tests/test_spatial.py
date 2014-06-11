@@ -5,24 +5,26 @@ from numpy.testing import assert_allclose
 from ....utils.distributions import normalize, density
 from ..spatial import radial_distributions
 
+
 def test_call():
     # TODO: Verify numbers against Papers or Axel's thesis.
     assert_allclose(radial_distributions['P90'](1), 0.03954258779836089)
+
 
 def plot_spatial():
     import matplotlib.pyplot as plt
     max_radius = 20  # kpc
     r = np.linspace(0, max_radius, 100)
-    plt.plot(r, normalize(density(radial_distributions['P90']), 0, max_radius)(r), color='b',
-            linestyle='-', label='Paczynski 1990')
-    plt.plot(r, normalize(density(radial_distributions['CB98']), 0, max_radius)(r), color='r',
-            linestyle='--', label='Case&Battacharya 1998')
-    plt.plot(r, normalize(density(radial_distributions['YK04']), 0, max_radius)(r), color='g',
-            linestyle='-.', label='Yusifov&Kucuk 2004')
-    plt.plot(r, normalize(density(radial_distributions['F06']), 0, max_radius)(r), color='m',
-            linestyle='-', label='Faucher&Kaspi 2006')
-    plt.plot(r, normalize(density(radial_distributions['L06']), 0, max_radius)(r), color='k',
-            linestyle=':', label='Lorimer 2006')
+    plt.plot(r, normalize(density(radial_distributions['P90']), 0, max_radius)(r),
+             color='b', linestyle='-', label='Paczynski 1990')
+    plt.plot(r, normalize(density(radial_distributions['CB98']), 0, max_radius)(r),
+             color='r', linestyle='--', label='Case&Battacharya 1998')
+    plt.plot(r, normalize(density(radial_distributions['YK04']), 0, max_radius)(r),
+             color='g', linestyle='-.', label='Yusifov&Kucuk 2004')
+    plt.plot(r, normalize(density(radial_distributions['F06']), 0, max_radius)(r),
+             color='m', linestyle='-', label='Faucher&Kaspi 2006')
+    plt.plot(r, normalize(density(radial_distributions['L06']), 0, max_radius)(r),
+             color='k', linestyle=':', label='Lorimer 2006')
     plt.xlim(0, max_radius)
     plt.ylim(0, 0.28)
     plt.xlabel('Galactocentric Distance [kpc]')

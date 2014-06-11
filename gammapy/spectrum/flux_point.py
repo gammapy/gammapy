@@ -9,19 +9,19 @@ __all__ = ['FluxPoints', 'FluxPointCalculator']
 
 class FluxPoints(object):
     """List of flux points.
-    
+
     TODO: Implement. Document.
     """
     def from_dict(self, data):
         pass
-    
+
     def from_ascii(self, data):
         pass
 
 
 class FluxPointCalculator(object):
     """Compute differential flux points for given integral flux points.
-    
+
     TODO: I think it would be better to change this into functions.
     """
     def __init__(self, model=None,

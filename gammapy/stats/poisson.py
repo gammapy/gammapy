@@ -241,10 +241,10 @@ def _significance_lima(n_observed, mu_background):
 
 def _significance_direct(n_observed, mu_background):
     """Compute significance directly via Poisson probability.
-    
+
     Use this method for small n_observed < 10.
     In this case the Li & Ma formula isn't correct any more.
-    
+
     TODO: add large unit test coverage (where is it numerically precise enough)?
     TODO: check coverage with MC simulation
     """
@@ -320,7 +320,7 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
             mu_background = background(n_off, alpha)
             return _significance_direct(n_on, mu_background)
         else:
-            return _significance_direct_on_off(n_on, n_off, alpha)        
+            return _significance_direct_on_off(n_on, n_off, alpha)
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
@@ -365,10 +365,10 @@ def _significance_lima_on_off(n_on, n_off, alpha):
 
 def _significance_direct_on_off(n_on, n_off, alpha):
     """Compute significance directly via Poisson probability.
-    
+
     Use this method for small n_on < 10.
     In this case the Li & Ma formula isn't correct any more.
-    
+
     * TODO: add reference
     * TODO: add large unit test coverage (where is it numerically precise enough)?
     * TODO: check coverage with MC simulation

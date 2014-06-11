@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from ....utils.distributions import normalize
 from ..velocity import H05, F06B, F06P
 
+
 def test_call():
     # TODO: Verify numbers against Papers or Axel's thesis.
     assert_allclose(H05(1), 4.287452755806417e-08)

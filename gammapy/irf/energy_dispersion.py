@@ -21,7 +21,6 @@ class EnergyDispersion(object):
 
     Notes
     -----
-    
     We use a dense matrix (`numpy.ndarray`) for the energy dispersion matrix.
     An alternative would be to store a sparse matrix (`scipy.sparse.csc_matrix`).
     It's not clear which would be more efficient for typical gamma-ray
@@ -31,7 +30,6 @@ class EnergyDispersion(object):
     RMF (Redistribution Matrix File) format from X-ray astronomy:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
     """
-    
     DEFAULT_PDF_THRESHOLD = 1e-6
 
     def __init__(self, pdf_matrix, energy_true_bounds, energy_reco_bounds=None,
@@ -46,12 +44,10 @@ class EnergyDispersion(object):
         self._pdf_threshold = pdf_threshold
         self._interpolate2d_func = None
 
-
     @property
     def pdf_threshold(self):
         """PDF matrix zero-suppression threshold."""
         return self._pdf_threshold
-
 
     @pdf_threshold.setter
     def pdf_threshold(self, value):
@@ -66,15 +62,14 @@ class EnergyDispersion(object):
         m = self._pdf_matrix
         m[m < value] = 0
 
-
     def energy_bounds(self, axis='true'):
         """Energy bounds array.
-        
+
         Parameters
         ----------
         axis : {'true', 'reco'}
             Which axis?
-            
+
         Returns
         -------
         energy_bounds : array
@@ -89,15 +84,14 @@ class EnergyDispersion(object):
             ss += 'Valid options: true, reco'
             raise ValueError(ss)
 
-
     def energy_range(self, axis='true'):
         """Energy axis range.
-        
+
         Parameters
         ----------
         axis : {'true', 'reco'}
             Which axis?
-            
+
         Returns
         -------
         (emin, emax) : tuple of float
@@ -105,7 +99,6 @@ class EnergyDispersion(object):
         """
         ebounds = self.energy_bounds(axis)
         return ebounds[0], ebounds[-1]
-
 
     def __str__(self):
         ss = 'Energy dispersion information:\n'
@@ -116,18 +109,17 @@ class EnergyDispersion(object):
         ss += 'Reco energy range: {0}\n'.format(self.energy_range('reco'))
         return ss
 
-
     @staticmethod
     def read(filename, format='RMF'):
         """Read from file.
-        
+
         Parameters
         ----------
         filename : str
             File name
         format : {'RMF'}
             File format
-        
+
         Returns
         -------
         energy_dispersion : `EnergyDispersion`
@@ -140,20 +132,17 @@ class EnergyDispersion(object):
             ss += 'Available formats: RMF'
             raise ValueError(ss)
 
-
     @staticmethod
     def _read_rmf(filename):
         """Create EnergyDistribution object from RMF data.
         """
-        from astropy.io import fits
         hdu_list = fits.open(filename)
         return EnergyDispersion.from_hdu_list(hdu_list)
-
 
     @staticmethod
     def from_hdu_list(hdu_list):
         """Create EnergyDistribution object from `~astropy.io.fits.HDUList`.
-        
+
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
@@ -163,24 +152,23 @@ class EnergyDispersion(object):
         header = hdu_list['MATRIX'].header
 
         energy_true_bounds = np.hstack([data['ENERG_LO'], data['ENERG_HI'][-1]])
-    
+
         pdf_matrix = np.zeros([len(data), header['DETCHANS']], dtype=np.float64)
-    
+
         for i, l in enumerate(data):
             if l.field('N_GRP'):
                 m_start = 0
-                for k in range(l.field('N_GRP')) :
+                for k in range(l.field('N_GRP')):
                     pdf_matrix[i, l.field('F_CHAN')[k] : l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
 
         pdf_threshold = header['LO_THRES']
-    
+
         # The reco energy bounds are stored in the 'EBOUNDS' table HDU
         ebounds = hdu_list['EBOUNDS'].data
         energy_reco_bounds = np.hstack([ebounds['E_MIN'], ebounds['E_MAX'][-1]])
 
         return EnergyDispersion(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
-
 
     def write(self, filename, format='RMF'):
         """Write to file.
@@ -201,20 +189,18 @@ class EnergyDispersion(object):
             ss += 'Available formats: RMF'
             raise ValueError(ss)
 
-
     def _write_rmf(self, filename):
         """Write to file in RMF format."""
         pass
-        
 
     def __call__(self, energy_true, energy_reco, method='step'):
         """Compute energy dispersion.
-        
+
         Available evalutation methods:
 
         * ``"step"`` -- TODO
         * ``"interpolate2d"`` -- TODO 
-        
+
         Parameters
         ----------
         energy_true : array_like
@@ -223,20 +209,20 @@ class EnergyDispersion(object):
             Reconstructed energy
         method : {'interpolate2d'}
             Evaluation method
-        
+
         Returns
         -------
         pdf : array
             Probability density dP / dlog10E_reco
         """
         x = np.log10(energy_true)
-        y = np.log10(energy_reco) 
+        y = np.log10(energy_reco)
         if method == 'interpolate2d':
             self._interpolate2d(x, y)
         else:
             ss = 'Invalid method: {0}\n'.format(method)
             ss += 'Available methods: matrix, bias'
-            raise ValueError(ss)            
+            raise ValueError(ss)
 
     def _interpolate2d(self, x, y):
         if self._interpolate2d_func == None:
@@ -245,19 +231,18 @@ class EnergyDispersion(object):
         else:
             return self._interpolate2d_func(x, y)
 
-
     def apply(self, data):
         """Apply energy dispersion.
-        
+
         Computes the matrix product of ``data``
         (which typically is model flux or counts in true energy bins)
         with the energy dispersion matrix.
-        
+
         Parameters
         ----------
         data : array_like
             1-dim data array.
-        
+
         Returns
         -------
         convolved_data : array
@@ -265,10 +250,9 @@ class EnergyDispersion(object):
         """
         return np.dot(data, self._pdf_matrix)
 
-
     def plot(self, type='matrix', energy=None):
         """Create energy dispersion plot.
-        
+
         Parameters
         ----------
         type : {'matrix', 'bias', 'pdf_energy_true', 'pdf_energy_reco'}
@@ -276,7 +260,7 @@ class EnergyDispersion(object):
         energy : array_like
             Energies at which to plot the PDF.
             Only applies to type 'pdf_energy_true' and 'pdf_energy_reco'.
-        
+
         Examples
         --------
         TODO
@@ -301,11 +285,10 @@ class EnergyDispersion(object):
         y = self.energy_range('reco')
         return x[0], x[1], y[0], y[1]
 
-
     def _plot_matrix(self):
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
-        
+
         image = self._pdf_matrix
         plt.imshow(image, extent=self._extent, interpolation='none',
                    origin='lower', norm=LogNorm())
@@ -318,20 +301,18 @@ class EnergyDispersion(object):
 
         plt.tight_layout()
 
-
     def _plot_bias(self):
         import matplotlib.pyplot as plt
         plt.figure(figsize=(5, 5))
         plt.xlabel('True energy (TeV)')
         plt.ylabel('Reco energy (TeV)')
 
-
     def _plot_pdf(self, energy, axis):
         raise NotImplementedError
 
 
 def np_to_rmf(rm, erange, ebounds, minprob,
-              telescope='DUMMY', instrument='DUMMY', filter='NONE') :
+              telescope='DUMMY', instrument='DUMMY', filter='NONE'):
     """Converts a 2D numpy array to an RMF FITS file.
 
     Parameters
@@ -357,18 +338,17 @@ def np_to_rmf(rm, erange, ebounds, minprob,
     For more info on the RMF FITS file format see:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
     """
-    
     # Intialize the arrays to be used to construct the RM extension
     n_rows = len(rm)
-    energy_lo = np.zeros(n_rows) # Low energy bounds
-    energy_hi = np.zeros(n_rows) # High energy bounds
-    n_grp = [] # Number of channel subsets
-    f_chan = [] # First channels in each subset
-    n_chan = [] # Number of channels in each subset
-    matrix = [] # Matrix elements
+    energy_lo = np.zeros(n_rows)  # Low energy bounds
+    energy_hi = np.zeros(n_rows)  # High energy bounds
+    n_grp = []  # Number of channel subsets
+    f_chan = []  # First channels in each subset
+    n_chan = []  # Number of channels in each subset
+    matrix = []  # Matrix elements
 
     # Loop over the matrix and fill the arrays
-    for i, r in enumerate(rm) :
+    for i, r in enumerate(rm):
         energy_lo[i] = erange[i]
         energy_hi[i] = erange[i + 1]
         # Create mask for all matrix row values above the minimal probability
@@ -378,20 +358,20 @@ def np_to_rmf(rm, erange, ebounds, minprob,
         f_chan_row, n_chan_row, matrix_row = [], [], []
         new_subset = True
         # Loop over row entries and fill arrays appropriately
-        for j, v in enumerate(r) :
-            if m[j] :
-                if new_subset :
+        for j, v in enumerate(r):
+            if m[j]:
+                if new_subset:
                     n_grp_row += 1
                     f_chan_row.append(j)
                     new_subset = False
                 matrix_row.append(v)
                 n_chan_row_c += 1
-            else :
-                if not new_subset :
+            else:
+                if not new_subset:
                     n_chan_row.append(n_chan_row_c)
                     n_chan_row_c = 0
                     new_subset = True
-        if not new_subset :
+        if not new_subset:
             n_chan_row.append(n_chan_row_c)
         n_grp.append(n_grp_row)
         f_chan.append(f_chan_row)
@@ -481,12 +461,12 @@ def np_to_rmf(rm, erange, ebounds, minprob,
         )
 
     chan_min, chan_max, chan_n = 0, rm.shape[0] - 1, rm.shape[0]
-    
+
     header = tbhdu2.header
     header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
     header['TELESCOP'] = telescope, 'Mission/satellite name'
     header['INSTRUME'] = instrument, 'Instrument/detector'
-    header['FILTER'] = filter, 'Filter information'    
+    header['FILTER'] = filter, 'Filter information'
     header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
     header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
     header['TLMIN1'] = chan_min, 'First legal channel number'
@@ -528,20 +508,20 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
     """Create Gaussian energy dispersion matrix.
 
     TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
-    
+
     TODO: give formula: Gaussian in log(e_reco)
 
     TODO: add option to add poisson noise
 
     TODO: extend to have a vector of bias and resolution for various true energies.
-    
+
     Parameters
     ----------
     ebounds : array_like
         1-dim energy binning array (TeV)
     sigma : float
         RMS width of Gaussian energy dispersion.
-    
+
     Returns
     -------
     pdf_matrix : array
@@ -555,15 +535,14 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
     logemingrid = logerange[:-1] * np.ones([nbins, nbins])
     logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
     logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
-    
+
     # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.) * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
     gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-    
+
     pdf_matrix = gauss_int([1., 10. ** logecentergrid, sigma * 10. ** logecentergrid], 10. ** logemingrid, 10. ** logemaxgrid)
-    
+
     return pdf_matrix
 
     #hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
     #                     telescope=telescope, instrument=instrument)
     #return hdu_list
-

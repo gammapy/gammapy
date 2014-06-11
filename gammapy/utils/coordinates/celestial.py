@@ -29,7 +29,7 @@ def galactic_to_radec(glon, glat, unit='deg'):
     Notes
     -----
     This is a standalone implementation that only uses ``numpy`` for testing.
-    Use `astropy.coordinates.SkyCoord` instead. 
+    Use `astropy.coordinates.SkyCoord` instead.
     Only accurate to ~ 3 digits.
     """
     if unit == 'deg':
@@ -48,7 +48,7 @@ def galactic_to_radec(glon, glat, unit='deg'):
     dec = arcsin(sin_d)
 
     if unit == 'deg':
-        ra, dec = degrees(ra), degrees(dec)    
+        ra, dec = degrees(ra), degrees(dec)
 
     return ra, dec
 
@@ -71,7 +71,7 @@ def radec_to_galactic(ra, dec, unit='deg'):
     Notes
     -----
     This is a standalone implementation that only uses ``numpy`` for testing.
-    Use `astropy.coordinates.SkyCoord` instead. 
+    Use `astropy.coordinates.SkyCoord` instead.
     Only accurate to ~ 3 digits.
     """
     if unit == 'deg':
@@ -97,7 +97,7 @@ def radec_to_galactic(ra, dec, unit='deg'):
 
 def separation(lon1, lat1, lon2, lat2, unit='deg'):
     """Angular separation between points on the sphere.
-    
+
     Parameters
     ----------
     lon1, lat1, lon2, lat2 : array_like
@@ -118,7 +118,7 @@ def separation(lon1, lat1, lon2, lat2, unit='deg'):
     term3 = sin(lat1) * sin(lat2)
     mu = term1 + term2 + term3
     separation = arccos(mu)
-    
+
     if unit == 'deg':
         separation = degrees(separation)
 
@@ -144,7 +144,7 @@ def minimum_separation(lon1, lat1, lon2, lat2, unit='deg'):
     """
     lon1 = np.asanyarray(lon1)
     lat1 = np.asanyarray(lat1)
-    
+
     theta_min = np.empty_like(lon1, dtype=np.float64)
 
     for i1 in range(lon1.size):
@@ -157,7 +157,7 @@ def minimum_separation(lon1, lat1, lon2, lat2, unit='deg'):
 
 def pair_correlation(lon, lat, theta_bins, unit='deg'):
     """Compute pair correlation function for points on the sphere.
-    
+
     Parameters
     ----------
     lon, lat : array_like

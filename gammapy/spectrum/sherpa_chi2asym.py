@@ -12,6 +12,7 @@ import numpy as np
 __all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func',
            'load_chi2asym_stat']
 
+
 def chi2asym_stat_func(data, model, staterror=None,
                        syserror=None, weight=None):
     """Define asymmetric chi-square errors.

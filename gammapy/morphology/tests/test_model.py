@@ -2,5 +2,6 @@
 from __future__ import print_function, division
 from .. import model
 
+
 def test_MorphModelImageCreator():
     pass

@@ -12,6 +12,7 @@ YEAR_TO_SEC = Unit('year').to(Unit('second'))
 CM_TO_PC = Unit('cm').to(Unit('pc'))
 PC_TO_CM = 1. / CM_TO_PC
 
+
 class PWN(object):
     """Pulsar wind nebula (PWN) evolution model.
 
@@ -74,7 +75,7 @@ class PWN(object):
 
     def B(self, t):
         """Evolution of the magnetic field inside the PWN.
-        
+
         Eta denotes the fraction of the spin down energy
         converted to magnetic field energy.
 
@@ -87,7 +88,7 @@ class PWN(object):
 
     def L(self, t):
         """Simple luminosity evolution model.
-        
+
         Assumes that the luminosity just follows the total energy content.
         """
         return (3e-16 * self.pulsar.tau_0 * self.pulsar.L_0 *
@@ -110,7 +111,7 @@ class PWN(object):
 
     def L_spindown(self, L0, tau0, n=3):
         """Pulsar spin-down luminosity (erg s^-1).
-        
+
         Parameters
         ----------
         L0 : float
@@ -128,7 +129,7 @@ class PWN(object):
 
     def q(self, e, t, norm=1, e0=1, index=-2, emin=1e1, emax=1e4, burst=False):
         """Injection spectrum: exponential cutoff power law.
-        
+
         Parameters
         ----------
         TODO
@@ -143,7 +144,7 @@ class PWN(object):
 
     def energy_loss_rate(self, B=10, w_rad=0.25):
         """Energy losses: synchrotron, IC, adiabatic.
-        
+
         Parameters
         ----------
         TODO
@@ -159,15 +160,14 @@ class PWN(object):
 
     def evolve(self, age=1e3, dt=1):
         """Evolve the electron spectrum in time.
-        
+
         From the current age to the new requested age.
 
         If the current age is larger than the requested age,
         the PWN is reset to age 0 and then evolved to the requested age.
 
         *Method*
-        
-        
+
         The evolution is described by the continuity equation::
             $$dn / dt = d(pn) / de + q$$
 
@@ -237,7 +237,7 @@ class PWN(object):
 
     def _get_diff(self, e, side='right'):
         """Implement diff for an array, including handling of end points.
-        
+
         side = 'right': diff[i] = e[i + 1] - e[i]
         side = 'left': diff[i] = e[i] - e[i - 1]
         """

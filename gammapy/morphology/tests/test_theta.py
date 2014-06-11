@@ -13,6 +13,7 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestThetaCalculator(unittest.TestCase):
     """We use a Gaussian, because it has known analytical
@@ -56,6 +57,7 @@ class TestThetaCalculator(unittest.TestCase):
                 desired = self.m.containment_radius(containment)
                 assert_almost_equal(actual, desired, decimal=4)
 
+
 # FIXME: This test is slow and fails with an IndexError.
 def _test_ModelThetaCalculator():
     """Check that Gaussian widths add in quadrature
@@ -74,5 +76,5 @@ def _test_ModelThetaCalculator():
     par_names = ['angle', 'containment']
     par_refs = [ana_angle, ana_containment]
     par_checks = [num_angle, num_containment]
-    
+
     # TODO: add asserts

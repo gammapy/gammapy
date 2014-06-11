@@ -9,7 +9,7 @@ __all__ = ['abramowski_effective_area',
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
-    """Simple IACT effective area parametrizations from Abramowski et al. (2010). 
+    """Simple IACT effective area parametrizations from Abramowski et al. (2010).
 
     TODO: give formula
 
@@ -54,7 +54,7 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 
 def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
-              phafile=None, instrument='DUMMY', filter='NONE') :
+              phafile=None, instrument='DUMMY', filter='NONE'):
     """Create ARF FITS table extension from numpy arrays.
 
     Parameters
@@ -73,7 +73,7 @@ def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
     -----
     For more info on the ARF FITS file format see:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
-    
+
     Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here
     as the more natural units for IACTs
     """
@@ -95,7 +95,7 @@ def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
                       unit='m^2')
          ]
         )
-    
+
     header = hdu.header
 
     # Write FITS extension header
@@ -119,7 +119,7 @@ def np_to_arf(effective_area, energy_bounds, telescope='DUMMY',
     return hdu
 
 
-def arf_to_np(arf) :
+def arf_to_np(arf):
     """Extract ARF FITS table extension to numpy arrays.
 
     Parameters
@@ -138,7 +138,7 @@ def arf_to_np(arf) :
     -----
     For more info on the ARF FITS file format see:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
-    
+
     Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here
     as the more natural units for IACTs
     """

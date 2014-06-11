@@ -24,7 +24,7 @@ def HESS(date='2010/00/00 00:00', time_offset=0, epoch='2000', pressure=0):
     height = 1835
     #height_at_00 = 6.37813594897491205e+06
     # Set up an observer
-    observer =  ephem.Observer()
+    observer = ephem.Observer()
     observer.lon = np.radians(lon)
     observer.lat = np.radians(lat)
     observer.elevation = height
@@ -47,9 +47,9 @@ def transform(in_position, in_system, out_system, observer=None, use360=False):
         equatorial: RA,   DEC
         galactic:   GLON, GLAT
     observer: ephem.Observer (needed when converting to / from horizon system
-    
+
     use360: use longitude range 0 .. 360 if True, else -180 .. +180
-    
+
     Returns: transformed input position as a float tuple (longitude, latitude) in degrees
 
     See http://stackoverflow.com/questions/11169523/how-to-compute-alt-az-for-given-galactic-coordinate-glon-glat-with-pyephem
@@ -58,7 +58,7 @@ def transform(in_position, in_system, out_system, observer=None, use360=False):
     observer = observer if observer else HESS()
     # Internally use radians;
     in_position = np.radians(in_position)
-    
+
     # Transform in_position to Equatorial coordinates ra, dec:
     if in_system == 'horizon':
         ra, dec = map(float, observer.radec_of(in_position[0], in_position[1]))
@@ -91,7 +91,7 @@ def transform(in_position, in_system, out_system, observer=None, use360=False):
     else:
         raise RuntimeError('out_system = %s not supported' % out_system)
 
-    out_position = np.degrees(out_position)    
+    out_position = np.degrees(out_position)
 
     x = out_position[0]
     if use360:
@@ -101,7 +101,7 @@ def transform(in_position, in_system, out_system, observer=None, use360=False):
         if x < 0:
             x += 360
     else:
-        
+
         # Clip longitude to -180 .. +180 deg range
         if x > 180:
             x -= 360
@@ -110,17 +110,17 @@ def transform(in_position, in_system, out_system, observer=None, use360=False):
     out_position[0] = x
 
     # Return out position in degrees
-    return out_position    
+    return out_position
 
 
 def _Galactic_position_angle(GLON, GLAT, observer, eps=1e-3):
     """Compute position angle for the zenith direction in Galactic coordinates.
-    
+
     Parameters
     ----------
     eps : float
         Step in altitude direction in degrees
-    
+
     Returns
     -------
     Position angle in deg
@@ -140,16 +140,16 @@ def _Galactic_position_angle(GLON, GLAT, observer, eps=1e-3):
 
 def compute_position_angle(run, observer=None, time_method='center'):
     """Compute position angle for the zenith direction in Galactic coordinates for one run.
-    
+
     Parameters
     ----------
     eps : step in zenith direction in degrees
     """
     observer = observer if observer else HESS()
-    
+
     GLON, GLAT = run['GLON'], run['GLAT']
     Start_Time = run['Start_Time']
-    
+
     if time_method == 'start':
         # Compute position angle at the start of the run
         observer.date = Start_Time
@@ -173,7 +173,7 @@ def compute_position_angles(runs, observer=None, time_method='center'):
     """Compute the position angle of a vector pointing to zenith
     in Galactic coordinates for a given list of runs."""
     observer = observer if observer else HESS()
-    
+
     position_angle = np.zeros(len(runs), 'f')
     for ii, run in enumerate(runs):
         position_angle[ii] = compute_position_angle(run, observer, time_method)
@@ -187,9 +187,9 @@ def test_HESS():
 
 def test_transform():
     """Test all coordinate transform methods for one test example.
-    
+
     For three systems there are six possible transformations.
-    
+
     TODO: Rewrite these tests as unit tests
     """
     # Example observer:
@@ -236,6 +236,7 @@ def test_compute_position_angles():
     position_angles = compute_position_angles(runs, observer, time_method)
     print position_angles
 
+
 def approximate_nominal_to_altaz(nominal, horizon_center=(0, 0)):
     """Transform nominal coordinates to horizon coordinates.
 
@@ -250,12 +251,13 @@ def approximate_nominal_to_altaz(nominal, horizon_center=(0, 0)):
     """
     x, y = np.asarray(nominal, dtype='float64')
     az_center, alt_center = np.asarray(horizon_center, dtype='float64')
-    
+
     # @note: alt increases where x increases, az increases where y increases
     az = az_center + np.degrees(np.tan(y)) / np.cos(np.radians(alt_center))
     alt = alt_center + np.degrees(np.tan(x))
-    
+
     return az, alt
+
 
 def nominal_to_altaz(nominal, horizon_center=(0, 0)):
     """Transform nominal coordinates to horizon coordinates.
@@ -267,21 +269,28 @@ def nominal_to_altaz(nominal, horizon_center=(0, 0)):
     """
     x, y = np.asarray(nominal, dtype='float64')
     az_center, alt_center = np.asarray(horizon_center, dtype='float64')
-    header = {'NAXIS'  :  2, 
-          'NAXIS1' :  100, 'NAXIS2': 100,
-          'CTYPE1' : 'RA---TAN',
-          'CRVAL1' :  az_center, 'CRPIX1' : 0, 'CUNIT1' : 'deg', 
-          'CDELT1' :  np.degrees(1), 'CTYPE2' : 'DEC--TAN',
-          'CRVAL2' :  alt_center, 'CRPIX2' : 0, 
-          'CUNIT2' : 'deg', 'CDELT2' : np.degrees(1),
-         }
+    header = {'NAXIS': 2,
+              'NAXIS1': 100,
+              'NAXIS2': 100,
+              'CTYPE1': 'RA---TAN',
+              'CRVAL1': az_center,
+              'CRPIX1': 0,
+              'CUNIT1': 'deg',
+              'CDELT1': np.degrees(1),
+              'CTYPE2': 'DEC--TAN',
+              'CRVAL2': alt_center,
+              'CRPIX2': 0,
+              'CUNIT2': 'deg',
+              'CDELT2': np.degrees(1),
+              }
     projection = Projection(header)
-    altaz = projection.toworld((y,x))
-    return altaz[0],altaz[1]
+    altaz = projection.toworld((y, x))
+    return altaz[0], altaz[1]
+
 
 if __name__ == '__main__':
     # Some basic tests
     #test_HESS()
     test_transform()
     #test_compute_position_angles()
-    
+

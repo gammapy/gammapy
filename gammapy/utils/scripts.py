@@ -10,7 +10,7 @@ from astropy.utils.compat import argparse
 class GammapyFormatter(argparse.ArgumentDefaultsHelpFormatter,
                        argparse.RawTextHelpFormatter):
     """ArgumentParser formatter_class argument.
-    
+
     Examples
     --------
     >>> from gammapy.utils.scripts import argparse, GammapyFormatter

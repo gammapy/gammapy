@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import astropy.coordinates as coord 
+import astropy.coordinates as coord
 from .. import coordinate_iau_format, ra_iau_format, dec_iau_format
 
 
@@ -9,23 +9,23 @@ def test_make_source_designation():
     coordinate = coord.SkyCoord('05h34m31.93830s +22d00m52.1758s', frame='icrs')
     strrep = coordinate_iau_format(coordinate, ra_digits=4)
     assert strrep == '0534+220'
-    
+
     # PKS 2155-304 AGN position for 2FGL
     coordinate = coord.SkyCoord('21h58m52.06511s -30d13m32.1182s', frame='icrs')
     strrep = coordinate_iau_format(coordinate, ra_digits=5)
     assert strrep == '2158.8-3013'
 
-    # Check the example from Section 3.2.1 of the IAU spec: 
+    # Check the example from Section 3.2.1 of the IAU spec:
     # http://cdsweb.u-strasbg.fr/Dic/iau-spec.html
     icrs = coord.SkyCoord('00h51m09.38s -42d26m33.8s', frame='icrs')
     fk4 = icrs.transform_to('fk4')
 
     strrep = coordinate_iau_format(icrs, ra_digits=6)
     assert strrep == '005109-4226.5'
-    
+
     strrep = coordinate_iau_format(fk4, ra_digits=6)
     assert strrep == '004848-4242.8'
-    
+
     strrep = coordinate_iau_format(fk4, ra_digits=4)
     assert strrep == '0048-427'
 

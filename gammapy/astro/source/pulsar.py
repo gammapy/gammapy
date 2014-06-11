@@ -9,10 +9,10 @@ __all__ = ['Pulsar', 'ModelPulsar']
 SEC_TO_YEAR = Unit('second').to(Unit('year'))
 YEAR_TO_SEC = 1. / SEC_TO_YEAR
 
-DEFAULT_I = 1e45 # moment of inertia (g cm^2)
-DEFAULT_R = 1e6 # radius (cm)
+DEFAULT_I = 1e45  # moment of inertia (g cm^2)
+DEFAULT_R = 1e6  # radius (cm)
+B_CONST = 3.2e19  # TODO: document
 
-B_CONST = 3.2e19 # TODO: document
 
 class Pulsar(object):
     """Observed pulsar with known period and period derivative.
@@ -96,11 +96,11 @@ class ModelPulsar(Pulsar):
 
         This is simply the time-integrated spin-down luminosity since birth.
         """
-        return self.L_0 * YEAR_TO_SEC * self.tau_0 * (t / (t + self.tau_0)) 
+        return self.L_0 * YEAR_TO_SEC * self.tau_0 * (t / (t + self.tau_0))
 
     def Pdot(self, t):
         """Period derivative (sec sec^-1) at age t (yr).
-        
+
         Pdot[s/s] for a given period P[s] and magnetic field B[log10 Gauss],
         assuming a dipole spin-down.
         """
@@ -108,4 +108,4 @@ class ModelPulsar(Pulsar):
 
     def CharAge(self, t):
         """Characteristic age (yr) at real age t (yr)."""
-        return SEC_TO_YEAR * self.P(t) / (2 * self.Pdot(t)) 
+        return SEC_TO_YEAR * self.P(t) / (2 * self.Pdot(t))

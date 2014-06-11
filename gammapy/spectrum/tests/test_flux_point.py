@@ -5,6 +5,7 @@ from astropy.tests.helper import pytest
 from astropy.utils.compat.odict import OrderedDict
 from ..flux_point import FluxPoints
 
+
 @pytest.mark.xfail
 def test_FluxPoints_from_dict():
     data = OrderedDict(x=[1, 2], y=[3, 4])
@@ -13,7 +14,7 @@ def test_FluxPoints_from_dict():
 
 
 @pytest.mark.xfail
-def test_FluxPoints_from_ascii():    
+def test_FluxPoints_from_ascii():
     points = FluxPoints.from_ascii('input/crab_hess_spec.txt')
     # Check row # 13 (when starting counting at 0)
     # against values from ascii file

@@ -15,7 +15,7 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_center():
-    
+
     # Test dataset parameters
     x_size, y_size = (11, 11)
     total_excess = 100
@@ -27,7 +27,7 @@ def test_center():
     background = total_background * ones / ones.sum()
     counts = excess + background
     images = dict(counts=counts, background=background)
-    
+
     probability = matched_filter.probability_center(images, kernel)
     # TODO: try to get a verified result
     assert_allclose(probability, 0.0043809799783148338)
@@ -46,7 +46,7 @@ def test_image():
     total_excess = 100
     total_background = 1000
     ones = np.ones((x_size_image, y_size_image))
-    
+
     # Create test dataset
     kernel = Gaussian2DKernel(3, x_size=x_size_kernel, y_size=y_size_kernel).array
     excess = total_excess * Gaussian2DKernel(3, x_size=x_size_image, y_size=y_size_image).array

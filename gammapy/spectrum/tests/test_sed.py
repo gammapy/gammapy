@@ -4,6 +4,7 @@ from astropy.tests.helper import pytest
 from ..models import PowerLaw, PLExpCutoff
 from ..sed import SED, add_spec
 
+
 @pytest.mark.xfail
 def test_add_spec():
     # Create empty frame
@@ -102,4 +103,3 @@ def test_42():
     # sed.add(['2FGL J1224.9+2122']) # 4C+21.35
     # sed.add(['2FGL J0534.5+2201']) # Crab
     sed.plot('sed.png')
-

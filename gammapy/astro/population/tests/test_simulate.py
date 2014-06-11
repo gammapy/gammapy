@@ -77,4 +77,3 @@ def test_add_observed_parameters(example_table):
     table = simulate.add_cylindrical_coordinates(example_table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['r', 'phi'])
-

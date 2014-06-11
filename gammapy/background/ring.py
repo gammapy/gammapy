@@ -49,7 +49,7 @@ class RingBgMaker(object):
 
     def correlate_maps(self, maps):
         """Compute off maps as ring-correlated versions of the on maps.
-        
+
         The exclusion map is taken into account.
 
         Parameters
@@ -69,7 +69,7 @@ class RingBgMaker(object):
 
 def ring_correlate_off_maps(maps, r_in, r_out):
     """Ring-correlate the basic off maps.
-    
+
     Parameters
     ----------
     maps : gammapy.background.maps.Maps
@@ -86,12 +86,12 @@ def ring_correlate_off_maps(maps, r_in, r_out):
 
 def ring_r_out(theta, r_in, area_factor):
     """Compute ring outer radius.
-    
+
     The determining equation is:
         area_factor =
         off_area / on_area =
         (pi (r_out**2 - r_in**2)) / (pi * theta**2 )
-    
+
     Parameters
     ----------
     theta : float
@@ -111,7 +111,7 @@ def ring_r_out(theta, r_in, area_factor):
 
 def ring_area_factor(theta, r_in, r_out):
     """Compute ring area factor.
-    
+
     Parameters
     ----------
     theta : float
@@ -126,7 +126,7 @@ def ring_area_factor(theta, r_in, r_out):
 
 def ring_alpha(theta, r_in, r_out):
     """Compute ring alpha, the inverse area factor.
-    
+
     Parameters
     ----------
     theta : float

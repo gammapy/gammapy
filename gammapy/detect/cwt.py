@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 
 __all__ = ['CWT']
 
+
 def gauss_kernel(radius, n_sigmas=8):
     """Normalized 2D gauss kernel array.
     """
@@ -23,6 +24,7 @@ def gauss_kernel(radius, n_sigmas=8):
     y = y / radius
     g = np.exp(-0.5 * (x ** 2 + y ** 2))
     return g / (2 * np.pi * radius ** 2)  # g.sum()
+
 
 def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     """Difference of 2 Gaussians (i.e. Mexican hat) kernel array.
@@ -45,15 +47,16 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
     g2 = g2 / (2 * np.pi * radius ** 2 * scale_step ** 2)  # g2.sum()
     return g1 - g2
 
+
 class CWT(object):
     """Continuous wavelet transform.
-    
+
     TODO: describe algorithm
-    
+
     TODO: give references
-    
+
     Initialization of wavelet family.
-     
+
     Parameters
     ----------
     min_scale : float
@@ -75,32 +78,31 @@ class CWT(object):
 
         # TODO: do we need self.scales and self.scale_array?
         self.scale_array = (scale_step ** (np.arange(0, nscales))) * min_scale
- 
+
         max_scale = min_scale * scale_step ** nscales
         self.kern_approx = gauss_kernel(max_scale)
- 
+
 #        self.transform = dict()
 #        self.error = dict()
 #        self.support = dict()
-        
+
         self.header = None
         self.wcs = None
 
     def set_data(self, image, background):
         """Set input images."""
         # TODO: check that image and background are consistent 
-        self.image = image - 0.0         
+        self.image = image - 0.0
         self.nx, self.ny = self.image.shape
         self.filter = np.zeros((self.nx, self.ny)) 
         self.background = background - 0.0  # hack because of some bug with old version of fft in numpy
         self.model = np.zeros((self.nx, self.ny)) 
         self.approx = np.zeros((self.nx, self.ny))
- 
+
         self.transform = np.zeros((self.nscale, self.nx, self.ny))
         self.error = np.zeros((self.nscale, self.nx, self.ny)) 
         self.support = np.zeros((self.nscale, self.nx, self.ny))
-       
-    
+
     def set_file(self, filename):
         """Set input images from FITS file"""
         # TODO: check the existence of extensions
@@ -120,14 +122,14 @@ class CWT(object):
         for key, kern in self.kernbase.items():
             self.transform[key] = fftconvolve(excess, kern, mode='same')
             self.error[key] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
-            
+
         self.approx = fftconvolve(self.image - self.model - self.bkg,
                                   self.kern_approx, mode='same')
         self.approx_bkg = fftconvolve(self.bkg, self.kern_approx, mode='same')
-                 
+
     def compute_support_peak(self, nsigma=2.0, nsigmap=4.0, remove_isolated=True):
         """Compute the multiresolution support with hard sigma clipping.
-         
+
         Imposing a minimum significance on a connex region of significant pixels
         (i.e. source detection)
         """ 
@@ -140,7 +142,7 @@ class CWT(object):
             l, n = label(tmp)
             for id in range(1, n):
                 index = np.where(l == id)
-                if remove_isolated:                    
+                if remove_isolated:
                     if index[0].size == 1:
                         tmp[index] *= 0.0  # Remove isolated pixels from support
                 signif = sig[key][index]
@@ -149,12 +151,12 @@ class CWT(object):
 
             self.support[key] += tmp
             self.support[key] = self.support[key] > 0.
-            
+
     def inverse_transform(self):
         """Do the inverse transform (reconstruct the image)."""
         res = np.sum(self.support * self.transform, 0)
         self.filter += res * (res > 0)
-        self.model = self.filter 
+        self.model = self.filter
         return res
 
     def iterative_filter_peak(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):

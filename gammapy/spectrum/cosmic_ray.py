@@ -18,6 +18,7 @@ def _power_law(E, N, k):
     flux = N * (E / E0) ** (-k)
     return flux
 
+
 def _log_normal(E, L, E_p, w):
     E = Quantity(E, 'TeV')
     E_p = Quantity(E_p, 'TeV')
@@ -26,28 +27,30 @@ def _log_normal(E, L, E_p, w):
     term2 = np.exp(-np.log(E / E_p) ** 2 / (2 * w ** 2))
     return term1 * term2
 
+
 def _electron_spectrum(E, N, k, L, E_p, w):
     flux = _power_law(E, N, k)
     flux += _log_normal(E, L, E_p, w)
     return flux
 
+
 def cosmic_ray_flux(energy, particle='proton'):
     """Cosmic ray flux at Earth.
-    
+
     These are the spectra assumed in this CTA study:
     Table 3 in http://adsabs.harvard.edu/abs/2013APh....43..171B
 
     The hadronic spectra are simple power-laws, the electron spectrum
     is the sum of  a power law and a log-normal component to model the
     "Fermi shoulder".
-    
+
     Parameters
     ----------
     energy : `~astropy.units.Quantity`
         Particle energy
     particle : {'electron', 'proton', 'He', 'N', 'Si', 'Fe'}
         Particle type
-    
+
     Returns
     -------
     flux : `~astropy.units.Quantity`
@@ -59,7 +62,7 @@ def cosmic_ray_flux(energy, particle='proton'):
     pars['N'] = dict(N=0.0719, k=2.64)
     pars['Si'] = dict(N=0.0284, k=2.66)
     pars['Fe'] = dict(N=0.0134, k=2.63)
-    
+
     if particle == 'electron':
         return _electron_spectrum(energy, **pars['electron'])
     elif particle in ['proton', 'He', 'N', 'Si', 'Fe']:

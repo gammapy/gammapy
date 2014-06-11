@@ -41,8 +41,10 @@ from ..image.utils import disk_correlate
 
 __all__ = ['IterativeSourceDetector', 'run_detection']
 
+
 class FitFailedError(object):
     pass
+
 
 def gauss2d(x, y, xpos, ypos, sigma, flux):
     """2D Gaussian source model."""
@@ -58,7 +60,7 @@ def gauss2d(x, y, xpos, ypos, sigma, flux):
 
 class IterativeSourceDetector(object):
     """An iterative source detection algorithm.
-    
+
     TODO: document
 
     Parameters
@@ -77,7 +79,7 @@ class IterativeSourceDetector(object):
         # Temp maps that change in each iteration
         self.iter_maps = dict()
         self.find_peaks = []
-        
+
         self.scales = np.asanyarray(scales)
         self.max_sources = max_sources
         self.significance_threshold = significance_threshold
@@ -85,9 +87,9 @@ class IterativeSourceDetector(object):
         self.debug_output_folder = debug_output_folder
         self.clobber = clobber
 
-        self.sources_guess = []        
+        self.sources_guess = []
         self.sources = []
-        
+
         # At the moment we only
         # self.peaks = np.zeros_like(self.scales)
 
@@ -112,14 +114,14 @@ class IterativeSourceDetector(object):
                     filename = '{0}/{1}.fits'.format(debug_folder, name)
                     logging.info('Writing {0}'.format(filename))
                     fits.writeto(filename, self.iter_maps[name], clobber=self.clobber)
-                
+
                 # Save per iteration and scale maps
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
                         logging.info('Writing {0}'.format(filename))
                         fits.writeto(filename, self.iter_maps[name][scale], clobber=self.clobber)
-                
+
             self.find_peaks()
             # TODO: debug output to JSON here and for later steps
 
@@ -141,7 +143,7 @@ class IterativeSourceDetector(object):
         """Compute maps for this iteration."""
         logging.debug('Computing maps for this iteration.')
         self.iter_maps = dict()
-        
+
         background = self.maps['background']
         background += self.model_excess(self.sources)
         self.iter_maps['background'] = background
@@ -187,7 +189,7 @@ class IterativeSourceDetector(object):
             self.peaks.append(peak)
             logging.debug('Peak on scale {scale:5.2f} is at ({xpos:5d}, {ypos:5d}) with value {val:7.2f}'
                           ''.format(**peak))
-    
+
     def stop_iteration(self):
         """Criteria to stop the iteration process."""
         max_significance = max([_['val'] for _ in self.peaks])
@@ -201,7 +203,7 @@ class IterativeSourceDetector(object):
 
     def guess_source_parameters(self):
         """Guess source start parameters for the fit.
-        
+
         At the moment take the position and scale of the maximum residual peak
         and compute the excess within a circle around that position.
         """
@@ -232,6 +234,7 @@ class IterativeSourceDetector(object):
         """
         logging.debug('Fitting source parameters')
         from iminuit import Minuit
+
         def fit_stat(xpos, ypos, sigma, flux):
             """Define CASH fit statistic for Gauss model"""
             data = self.maps['counts']
@@ -268,7 +271,6 @@ class IterativeSourceDetector(object):
         else:
             # Store best-fit source parameters
             self.sources.append(source)
-        
 
     def estimate_flux(self, source, method='sum_and_divide'):
         """Estimate flux in a circular region around the source.
@@ -286,7 +288,7 @@ class IterativeSourceDetector(object):
         logging.debug('Estimating flux')
         SOURCE_RADIUS_FACTOR = 2
         radius = SOURCE_RADIUS_FACTOR * source['sigma']
-        r2 = ((self.maps['x'] - source['xpos']) ** 2 + 
+        r2 = ((self.maps['x'] - source['xpos']) ** 2 +
               (self.maps['y'] - source['ypos']) ** 2)
         mask = (r2 < radius ** 2)
         npix = mask.sum()
@@ -367,7 +369,7 @@ def run_detection(args):
         filename = args[mapname]
         logging.info('Reading {0} map: {1}'.format(mapname, filename))
         maps[mapname] = fits.getdata(filename)
-    
+
     # Compute scales in pixel coordinates
     DEG_PER_PIX = np.abs(fits.getval(args['counts'], 'CDELT1'))
     scales_deg = args['scales']

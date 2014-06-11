@@ -3,7 +3,7 @@
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy import sqrt, degrees, pi, arctan, arctan2, arcsin, exp
+from numpy import sqrt, degrees, pi, arctan, arctan2, exp
 from numpy.random import uniform, normal
 from astropy.table import Table, Column
 from astropy.coordinates import SkyCoord
@@ -25,6 +25,7 @@ __all__ = ['make_cat_cube',
            'add_cylindrical_coordinates',
            'add_observed_parameters',
            ]
+
 
 def make_cat_cube(nsources=100, dimension=3, dmax=10,
                   luminosity_default=1,
@@ -109,6 +110,7 @@ def make_cat_gauss_grid(nside=3, sigma_min=0.05, flux_min=1e-11):
     return add_missing_morphology_columns(table)
 '''
 
+
 def make_cat_gal(nsources, rad_dis, vel_dis,
                  max_age, spiralarms=True, n_ISM=1):
     """Make catalog of Galactic sources.
@@ -126,7 +128,7 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
 
     if isinstance(vel_dis, str):
         vel_dis = velocity_distributions[vel_dis]
-    
+
     # Draw r and z values from the given distribution
     r = draw(0, r_range, nsources, rad_dis)
     z = draw(-z_range, z_range, nsources, exponential)
@@ -154,7 +156,6 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
 
     # Set environment interstellar density
     n_ISM = n_ISM * np.ones(nsources)
-
 
     # Compute new position
     # TODO: uncomment this for the moment ... it changes `x` from parsec
@@ -201,7 +202,7 @@ def add_par_snr(table, E_SN=1e51):
     r_in = snr.r_in(age)
     L_SNR = snr.L(age)
 
-    # Add columns to table    
+    # Add columns to table
     table['E_SN'] = Column(E_SN, unit='erg', description='SNR kinetic energy')
     table['r_out'] = Column(r_out, unit='pc', description='SNR outer radius')
     table['r_in'] = Column(r_in, unit='pc', description='SNR inner radius')
@@ -324,7 +325,7 @@ def add_cylindrical_coordinates(table):
     r = sqrt(x ** 2 + y ** 2)
     phi = degrees(arctan2(y, x))
 
-    table['r'] =Column(r, unit='pc', description='Galactic cylindrical coordinate')
+    table['r'] = Column(r, unit='pc', description='Galactic cylindrical coordinate')
     table['phi'] = Column(phi, unit='deg', description='Galactic cylindrical coordinate')
 
     return table

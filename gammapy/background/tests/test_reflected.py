@@ -6,6 +6,7 @@ from ...obs import RunList
 from ..maps import Maps
 from ..reflected import ReflectedRegionMaker
 
+
 @pytest.mark.xfail
 class TestReflectedBgMaker(unittest.TestCase):
 

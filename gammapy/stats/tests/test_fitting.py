@@ -2,7 +2,6 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-import astropy
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian1D
 from ..fitting import PoissonLikelihoodFitter
@@ -25,4 +24,5 @@ def test_PoissonLikelihoodFitter():
 
     fitter = PoissonLikelihoodFitter()
     model = fitter(model, x, y, dx)
-    assert_allclose(model.parameters, [995.29239606, 1.99019548, 3.00869128], rtol=1e-3)
+    expected = [995.29239606, 1.99019548, 3.00869128]
+    assert_allclose(model.parameters, expected, rtol=1e-3)

@@ -12,11 +12,11 @@ def get_hdu(location):
 
     location should be either a ``file_name`` or a file
     and HDU name in the format ``file_name[hdu_name]``.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -44,11 +44,11 @@ def get_table_hdu():
 
 def fits_table_to_pandas(filename, index_columns):
     """Convert a FITS table HDU to a `pandas.DataFrame`.
-    
+
     Parameters
     ----------
     TODO
-    
+
     Returns
     -------
     TODO
@@ -65,7 +65,7 @@ def fits_table_to_pandas(filename, index_columns):
 
     # Strip whitespace for string columns that will become indices
     for index_column in index_columns:
-        table[index_column].map(str.strip)    
+        table[index_column].map(str.strip)
     table = table.set_index(index_columns)
 
     return table

@@ -2,8 +2,6 @@
 """Helper functions and functions for plotting gamma-ray images.
 """
 from __future__ import print_function, division
-from abc import ABCMeta, abstractmethod
-from astropy.extern import six
 import numpy as np
 
 __all__ = ['colormap_hess', 'colormap_milagro',
@@ -22,7 +20,7 @@ def colormap_hess(vmin, vmax, vtransition, width=0.1):
     A sharp blue -> red -> yellow transition is often used for significance images
     with a value of red at ``vtransition ~ 5`` or ``vtransition ~ 7``
     so that the following effect is achieved:
-    
+
     - black, blue: non-significant features, not well visible
     - red: features at the detection threshold ``vtransition``
     - yellow, white: significant features, very well visible
@@ -42,7 +40,7 @@ def colormap_hess(vmin, vmax, vtransition, width=0.1):
     -------
     colormap : `matplotlib.colors.LinearSegmentedColormap`
         Colormap
-    
+
     Examples
     -------- 
     >>> from gammapy.image import colormap_hess
@@ -50,7 +48,7 @@ def colormap_hess(vmin, vmax, vtransition, width=0.1):
     >>> cmap = colormap_hess(vmin=vmin, vmax=vmax, vtransition=vtransition)
 
     .. plot::
-             
+
         from gammapy.image import colormap_hess
         vmin, vmax, vtransition = -5, 15, 5
         cmap = colormap_hess(vmin=vmin, vmax=vmax, vtransition=vtransition)
@@ -78,7 +76,7 @@ def colormap_hess(vmin, vmax, vtransition, width=0.1):
         blue = red - width
 
     yellow = 2. / 3. * (1 - red) + red
-        
+
     black, white = 0, 1
 
     # Create custom colormap
@@ -97,12 +95,12 @@ def colormap_hess(vmin, vmax, vtransition, width=0.1):
 def colormap_milagro(vmin, vmax, vtransition, width=0.0001, huestart=0.6):
     """Colormap often used in Milagro collaboration publications.
 
-    This colormap is gray below ``vtransition`` and similar to the jet colormap above. 
+    This colormap is gray below ``vtransition`` and similar to the jet colormap above.
 
     A sharp gray -> color transition is often used for significance images
     with a transition value of ``vtransition ~ 5`` or ``vtransition ~ 7``,
     so that the following effect is achieved:
-    
+
     - gray: non-significant features are not well visible
     - color: significant features at the detection threshold ``vmid``
 
@@ -128,13 +126,13 @@ def colormap_milagro(vmin, vmax, vtransition, width=0.0001, huestart=0.6):
         Colormap
 
     Examples
-    -------- 
+    --------
     >>> from gammapy.image import colormap_milagro
     >>> vmin, vmax, vtransition = -5, 15, 5
     >>> cmap = colormap_milagro(vmin=vmin, vmax=vmax, vtransition=vtransition)
 
     .. plot::
-             
+
         from gammapy.image import colormap_milagro
         vmin, vmax, vtransition = -5, 15, 5
         cmap = colormap_milagro(vmin=vmin, vmax=vmax, vtransition=vtransition)
@@ -309,7 +307,6 @@ class GalacticPlaneSurveyPanelPlot(object):
 
         # self.figure.canvas.draw()
 
-
     def draw_panel(self, panel=0):
         """Draw panel.
 
@@ -341,7 +338,7 @@ class GalacticPlaneSurveyPanelPlot(object):
     @staticmethod
     def format_fits_figure(fits_figure, theme=None):
         """TODO: describe
-    
+
         Parameters
         ----------
         TODO
