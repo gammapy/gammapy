@@ -8,8 +8,8 @@ The term ``spectrum`` is used for many different things by different people...
 Flux points
 -----------
 
-* ``ENERGY``, ``ENERGY_LO``, ``ENERGY_HI`` with ``TUNIT = TeV``
-* ``FLUX``, ``FLUX_ERR_LO``, ``FLUX_ERR_HI`` with ``TUNIT = cm^-1 s^-1 TeV^-1``
+* ``ENERGY``, ``ENERGY_LO``, ``ENERGY_HI`` with arbitrary units
+* ``FLUX``, ``FLUX_ERR_LO``, ``FLUX_ERR_HI`` with arbitrary units
 
 Counts, effective area, energy resolution
 -----------------------------------------
