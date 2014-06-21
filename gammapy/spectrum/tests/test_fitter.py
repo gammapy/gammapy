@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from astropy.tests.helper import pytest
-from ..flux_point import FluxPoints
+from ..flux_point import compute_differential_flux_points
 from ..models import PowerLaw
 from ..fitter import Fitter
 

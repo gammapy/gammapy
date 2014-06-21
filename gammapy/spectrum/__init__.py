@@ -6,6 +6,7 @@ from .cosmic_ray import *
 from .crab import *
 from .diffuse import *
 from .fitter import *
+from . import fitting_utils
 from .flux_point import *
 from .isrf import *
 from . import models

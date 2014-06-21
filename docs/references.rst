@@ -21,6 +21,9 @@ The best reference to TeV data analysis is Chapter 7 of Mathieu de Naurois's hab
 
 .. [Feldman1998] `Feldman & Cousins (1998) <http://adsabs.harvard.edu/abs/1998PhRvD..57.3873F>`_,
    "Unified approach to the classical statistical analysis of small signals"
+   
+.. [Lafferty1994] `Lafferty & Wyatt (1994) <http://adsabs.harvard.edu/abs/1995NIMPA.355..541L>`_,
+   "Where to stick your data points: The treatment of measurements within wide bins"
 
 .. [LiMa1983] `Li & Ma (1983) <http://adsabs.harvard.edu/abs/1983ApJ...272..317L>`_,
    "Analysis methods for results in gamma-ray astronomy"

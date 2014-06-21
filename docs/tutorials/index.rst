@@ -9,6 +9,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
 
    image/index
    spectrum/index
+   flux_point
 
 External
 ========

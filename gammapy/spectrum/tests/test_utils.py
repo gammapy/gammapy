@@ -8,7 +8,7 @@ from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
 from ...utils.testing import assert_quantity
-from ..utils import np_to_pha, LogEnergyAxis, linear_extrapolator
+from ..utils import np_to_pha, LogEnergyAxis
 
 try:
     import scipy
@@ -62,25 +62,3 @@ def test_LogEnergyAxis():
 
     world = energy_axis.pix2world(pix)
     assert_quantity(world, energy)
-
-
-@pytest.mark.xfail
-def test_linear_extrapolator():
-    # Exact case
-    y_vals = np.arange(5, 100, 0.1)
-    x_vals = 2*y_vals
-    f = linear_extrapolator(x_vals, y_vals)
-    test_value = f(200)
-    assert_allclose(test_value, 400, 1e-1)
-
-    # Realistic case
-    # TODO: Find a better way to implement this
-    x_vals = np.arange(1, 10000)
-    y_vals = 2*x_vals
-    # Introduce Poisson fluctuations on the 0.1 scale
-    new_x = x_vals - 0.1 * np.random.poisson(np.ones(x_vals.shape))
-    new_y = y_vals - 0.1 * np.random.poisson(np.ones(y_vals.shape))
-    g = linear_extrapolator(new_x, new_y)
-    test_value = g(200)
-    # Error within 10%
-    assert_allclose(test_value, 400, 40)
