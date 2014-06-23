@@ -8,10 +8,8 @@ from .diffuse import *
 from .fitter import *
 from . import fitting_utils
 from .flux_point import *
-from .inverse_compton import *
 from .isrf import *
 from . import models
-from .pion import *
 from . import powerlaw
 from .sed import *
 from . import sherpa_chi2asym
