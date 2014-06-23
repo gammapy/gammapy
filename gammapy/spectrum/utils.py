@@ -5,10 +5,47 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 
-__all__ = ['LogEnergyAxis',
+__all__ = ['linear_extrapolator', 'LogEnergyAxis',
            'energy_bounds_equal_log_spacing',
            'np_to_pha',
            ]
+
+
+def linear_extrapolator(x_vals, y_vals):
+    """For linear data points, returns linear function.
+
+    Parameters
+    ----------
+    x_vals : numpy 1D array float
+        An array of the x-ordinates of the data points
+    y_vals : numpy 1D array float
+        An array of the y-ordinates of the data points
+
+    Returns
+    -------
+    f : function
+        A best-fit linear function of x
+
+    Notes
+    -----
+    Only valid for linear cases.
+    """
+    n_points = len(x_vals)
+    point_refs = range(n_points - 1)
+    grads = []
+    for point in point_refs:
+        x_val1 = x_vals[point]
+        y_val1 = y_vals[point]
+        x_val2 = x_vals[point + 1]
+        y_val2 = y_vals[point + 1]
+        diff_x = x_val2 - x_val1
+        diff_y = y_val2 - y_val1
+        grad = diff_y / diff_x
+        grads.append(grad)
+    av_grad = sum(grads) / (n_points - 1)
+    const = y_vals[0] - (av_grad * x_vals[0])
+    f = lambda x: const + av_grad * x
+    return f
 
 
 def energy_bounds_equal_log_spacing(energy_band, bins=10):
