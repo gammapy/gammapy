@@ -17,8 +17,9 @@ by issueing center_psf()
 from __future__ import print_function, division
 import json
 import numpy as np
-from numpy import log, exp
 from astropy.convolution import Gaussian2DKernel
+from astropy.io import fits
+from astropy import log
 from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
 from ..morphology import read_json
 from ..morphology import Gauss2DPDF, MultiGauss2D
@@ -26,6 +27,7 @@ from ..morphology import Gauss2DPDF, MultiGauss2D
 __all__ = ['GaussPSF',
            'HESSMultiGaussPSF',
            'SherpaMultiGaussPSF',
+           'PositionDependentMultiGaussPSF',
            'multi_gauss_psf_kernel'
            ]
 
@@ -95,10 +97,10 @@ class SherpaMultiGaussPSF(object):
 
     def eval(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
         """Hand-coded eval for debugging."""
-        f = 4 * log(2)
-        psf1 = ampl1 * exp(-f * t ** 2 / fwhm1 ** 2)
-        psf2 = ampl2 * exp(-f * t ** 2 / fwhm2 ** 2)
-        psf3 = ampl3 * exp(-f * t ** 2 / fwhm3 ** 2)
+        f = 4 * np.log(2)
+        psf1 = ampl1 * np.exp(-f * t ** 2 / fwhm1 ** 2)
+        psf2 = ampl2 * np.exp(-f * t ** 2 / fwhm2 ** 2)
+        psf3 = ampl3 * np.exp(-f * t ** 2 / fwhm3 ** 2)
         return psf1 + psf2 + psf3
 
     def containment_fraction(self, theta, npix=1000):
@@ -184,7 +186,7 @@ class HESSMultiGaussPSF(object):
         for ii in range(1, self.n_gauss() + 1):
             A = self.pars['A_{0}'.format(ii)]
             sigma = self.pars['sigma_{0}'.format(ii)]
-            total += A * exp(-theta2 / (2 * sigma ** 2))
+            total += A * np.exp(-theta2 / (2 * sigma ** 2))
         return self.pars['scale'] * total
 
     def to_sherpa(self, binsz):
@@ -249,14 +251,77 @@ class HESSMultiGaussPSF(object):
             m.normalize()
         return m
 
-    def containment_radius(self, containment_fraction, sigma=0):
+    def containment_radius(self, containment_fraction):
         """Convolve this PSF with a Gaussian source of width sigma,
         then compute the containment angle of that distribution.
         """
         m = self.to_MultiGauss2D(normalize=True)
-        m.convolve_me(sigma)
         theta = m.containment_radius(containment_fraction)
         return theta
+
+
+class PositionDependentMultiGaussPSF(object):
+    """Position-dependent multi-Gauss PSF.
+
+    Represented by a set of images of multi-Gauss PSF parameters.
+
+    Parameters
+    ----------
+    hdu_list : `~astropy.io.fits.HDUList`
+        HDU list.
+    """
+
+    def __init__(self, hdu_list):
+        self.hdu_list = hdu_list
+        self._psf_pars = ['scale', 'sigma_1', 'A_2', 'sigma_2', 'A_3', 'sigma_3']
+        self._psf_vals = dict()
+        for psf_par in self._psf_pars:
+            self._psf_vals[psf_par] = self.hdu_list[psf_par].data.flat
+        self.shape = self.hdu_list['SCALE'].data.shape
+        self.size = self.hdu_list['SCALE'].data.size
+
+    @staticmethod
+    def read(filename):
+        """Read from FITS file.
+        """
+        hdu_list = fits.open(filename)
+        return PositionDependentMultiGaussPSF(hdu_list)
+
+    def containment_radius_image(self, fraction):
+        """Compute containment radius image.
+
+        Parameters
+        ----------
+        fraction : float
+            Containment fraction
+
+        Returns
+        -------
+        image : `numpy.ndarray`
+            Containment radius image
+        """
+        out = np.zeros(self.shape, dtype=float)
+        npix = self.size
+        for ii in range(npix):
+            if (100 * ii) % npix == 0:
+                percent = 100. * ii / npix
+                log.debug('Processing pixel {ii:5d} of {npix:5d} ({percent:5.2f}%)'
+                          ''.format(**locals()))
+            try:
+                psf = self._get_psf(ii)
+                out.flat[ii] = psf.containment_radius(fraction)
+            except ValueError:
+                # This is what happens to pixels in the map without PSF info
+                out.flat[ii] = np.nan
+
+        return out
+
+    def _get_psf(self, index):
+        """Get PSF at a given flattened index position.
+        """
+        psf_vals = [self._psf_vals[parameter][index] for parameter in self._psf_pars]
+        psf = HESSMultiGaussPSF(dict(zip(self._psf_pars, psf_vals)))
+        return psf
 
 
 def multi_gauss_psf_kernel(psf_parameters, **kwargs):
