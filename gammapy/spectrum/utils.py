@@ -40,7 +40,7 @@ def linear_extrapolator(x_vals, y_vals):
         y_val2 = y_vals[point + 1]
         diff_x = x_val2 - x_val1
         diff_y = y_val2 - y_val1
-        grad = diff_y / diff_x
+        grad = diff_x / diff_y
         grads.append(grad)
     av_grad = sum(grads) / (n_points - 1)
     const = y_vals[0] - (av_grad * x_vals[0])
