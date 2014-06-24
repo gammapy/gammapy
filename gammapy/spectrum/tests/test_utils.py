@@ -64,7 +64,6 @@ def test_LogEnergyAxis():
     assert_quantity(world, energy)
 
 
-@pytest.mark.xfail
 def test_linear_extrapolator():
     # Exact case
     y_vals = np.arange(5, 100, 0.1)
