@@ -29,3 +29,5 @@ Reference/API
 .. automodapi:: gammapy.background
     :no-inheritance-diagram:
 
+.. automodapi:: gammapy.background.models
+    :no-inheritance-diagram:

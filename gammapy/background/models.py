@@ -3,6 +3,8 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.modeling.models import Gaussian1D
 
+__all__ = ['GaussianBand2D']
+
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
 
 
