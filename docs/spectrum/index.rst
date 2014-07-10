@@ -11,8 +11,8 @@ Introduction
 
 `gammapy.spectrum` holds functions and classes to fit spectral models and compute flux points.
 
-Physical SED models (e.g. `gammafit.ElectronOZM` and `gammafit.ProtonOZM`)
-and MCMC fitting is available in the `gammafit`_ package.
+Physical radiative models (synchrotron, inverse Compton and pion-decay emission)
+for arbitrary cosmic ray particle spectra are available in the `gammafit`_ package.
 
 Explain spectrum estimation basics.
 
