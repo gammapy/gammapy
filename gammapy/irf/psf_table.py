@@ -24,7 +24,7 @@ def _quantity_stats_str(x, label=''):
     max = x.max()
     size = x.size
 
-    fmt = 'size = {size:5d}, min = {min}, max = {max}\n'
+    fmt = 'size = {size:5d}, min = {min:6.3f}, max = {max:6.3f}\n'
     ss += fmt.format(**locals())
 
     return ss
@@ -532,7 +532,6 @@ class EnergyDependentTablePSF(object):
 
         energy_index = self._energy_index(energy)
         return self._get_1d_table_psf(energy_index, **kwargs)
-
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.
