@@ -33,7 +33,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         Type must be the same as for int_flux
     x_method : {'lafferty', 'log_center', 'table'}
         Flux point energy computation method; either Lafferty & Wyatt
-        model-based positioning, log bin center positioning 
+        model-based positioning, log bin center positioning
         or user-defined `~astropy.table.Table` positioning
         using column heading ['ENERGY']
     y_method : {'power_law', 'model'}
@@ -57,7 +57,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
     """
     # Use input values if not initially provided with a table
     # and broadcast quantities to arrays if required
-    if table == None:
+    if table is None:
         spectral_index = np.array(spectral_index).reshape(np.array(spectral_index).size,)
         energy_min = np.array(energy_min).reshape(np.array(energy_min).size,)
         energy_max = np.array(energy_max).reshape(np.array(energy_max).size,)
@@ -67,7 +67,10 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         except:
             pass
         # TODO: Can a better implementation be found here?
-        lengths = dict(SPECTRAL_INDEX=len(spectral_index), ENERGY_MIN=len(energy_min), ENERGY_MAX=len(energy_max), FLUX=len(int_flux))
+        lengths = dict(SPECTRAL_INDEX=len(spectral_index),
+                       ENERGY_MIN=len(energy_min),
+                       ENERGY_MAX=len(energy_max),
+                       FLUX=len(int_flux))
         max_length = np.array(lengths.values()).max()
         int_flux = np.array(int_flux) * np.ones(max_length)
         spectral_index = np.array(spectral_index) * np.ones(max_length)
@@ -131,6 +134,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
     table.meta['spectral_index_description'] = "Spectral index assumed in the DIFF_FLUX computation"
     return table
 
+
 def _x_lafferty(xmin, xmax, function):
     """The Lafferty & Wyatt method to compute X.
 
@@ -148,7 +152,10 @@ def _x_lafferty(xmin, xmax, function):
         deltax = xmax[index] - xmin[index]
         I = integrate.quad(function, xmin[index], xmax[index], args=())
         F = (I[0] / deltax)
-        g = lambda x: function(x) - F
+
+        def g(x):
+            return function(x) - F
+
         x_point = brentq(g, xmin[index], xmax[index])
         x_points.append(x_point)
     return x_points

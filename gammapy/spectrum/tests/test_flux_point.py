@@ -27,7 +27,9 @@ def test_x_lafferty():
     # These are the results from the paper
     desired = np.array([0.048, 0.190, 0.428, 0.762])
 
-    f = lambda x: (10 ** 4) * np.exp(-6 * x)
+    def f(x):
+        return (10 ** 4) * np.exp(-6 * x)
+
     emins = np.array([0.0, 0.1, 0.3, 0.6])
     emaxs = np.array([0.1, 0.3, 0.6, 1.0])
     actual = _x_lafferty(xmin=emins, xmax=emaxs, function=f)
@@ -35,10 +37,15 @@ def test_x_lafferty():
 
 
 def test_integration():
-    function = lambda x: x ** 2
+    def function(x):
+        return x ** 2
+
     xmin = np.array([-2])
     xmax = np.array([2])
-    indef_int = lambda x: (x ** 3) / 3
+
+    def indef_int(x):
+        return (x ** 3) / 3
+
     # Calculate analytical result
     desired = indef_int(xmax) - indef_int(xmin)
     # Get numerical result
@@ -50,7 +57,9 @@ def test_integration():
 def test_ydiff_excess_equals_expected():
     """Tests y-value normalization adjustment method.
     """
-    model = lambda x: x ** 2
+    def model(x):
+        return x ** 2
+
     xmin = np.array([10, 20, 30, 40])
     xmax = np.array([20, 30, 40, 50])
     yint = np.array([42, 52, 62, 72])  # 'True' integral flux in this test bin
@@ -89,11 +98,15 @@ def test_array_broadcasting(index, x_method, y_method):
     if y_method == 'power_law':
         model = None
     else:
-        model = lambda x: x ** 2
+        def model(x):
+            return x ** 2
+
     table = compute_differential_flux_points(x_method, y_method, model=model,
-                                     spectral_index=spectral_index, energy_min=energy_min,
-                                     energy_max=energy_max, int_flux=int_flux,
-                                     int_flux_err=int_flux_err)
+                                             spectral_index=spectral_index,
+                                             energy_min=energy_min,
+                                             energy_max=energy_max,
+                                             int_flux=int_flux,
+                                             int_flux_err=int_flux_err)
     # Check output sized
     energy = table['ENERGY']
     actual = len(energy)
@@ -120,10 +133,15 @@ def test_compute_differential_flux_points(x_method, y_method):
         energy = np.sqrt(energy_min * energy_max)
     elif x_method == 'table':
         energy = table['ENERGY'].data
+
     # Arbitrary model (simple exponential case)
-    diff_flux_model = lambda x: np.exp(x)
+    def diff_flux_model(x):
+        return np.exp(x)
+
     # Integral of model
-    int_flux_model = lambda E_min, E_max: np.exp(E_max) - np.exp(E_min)
+    def int_flux_model(E_min, E_max):
+        return np.exp(E_max) - np.exp(E_min)
+
     if y_method == 'power_law':
         if x_method == 'lafferty':
             energy = _energy_lafferty_power_law(energy_min, energy_max,
@@ -145,8 +163,10 @@ def test_compute_differential_flux_points(x_method, y_method):
     table['INT_FLUX_ERR'] = int_flux_err
 
     result_table = compute_differential_flux_points(x_method,
-                                 y_method, table, diff_flux_model,
-                                 spectral_index)
+                                                    y_method,
+                                                    table,
+                                                    diff_flux_model,
+                                                    spectral_index)
     # Test energy
     actual_energy = result_table['ENERGY'].data
     desired_energy = energy
