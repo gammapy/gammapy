@@ -63,13 +63,25 @@ less than 2, and to the left for index greater than 2.
 
 The ability of the two methods to represent an underlying spectrum is demonstrated in the residual images below. Here,
 flux points are positioned using the Lafferty method (left image) and Log Center method (central image) for different
-'true' and 'assumed' power law spectral indices. Residuals are determined as the Log ratio of the reconstructed flux
-compared to the true flux of the underlying spectrum. The closer the residual value is to zero (green), the better the
+'true' and 'assumed' power law spectral indices. Residuals are determined as the difference between the reconstructed flux
+compared to the true flux of the underlying spectrum. The closer the residual value is to zero (white), the better the
 representation offered.
 
-The residuals ratio image (right) shows the ratio of residuals of the Lafferty method to those of the Log Center method,
+The residuals log ratio image (right) shows the log ratio of residuals of the Lafferty method to those of the Log Center method,
 indicating the regions of assumed/true parameter space for which the Lafferty method offers an improved representation
-of the underlying frequency over the Log Center method (i.e the regions closest to zero, or green).
+of the underlying frequency over the Log Center method (blue regions), and where it does not (red regions).
 
 .. plot:: tutorials/residuals_images.py residuals_image
 	:include-source:
+	
+Caveats
+-------
+
+It should be noted that in some cases (for instance, a power law with spectral index lower than 2), the Lafferty & Wyatt approach
+does not offer a better representation of the underlying spectrum compared to simply taking the log bin center. Indeed, the
+improvements that are seen in the Lafferty & Wyatt approach over using the bin Log Center occurs due to Lafferty & Wyatt
+simply positioning the flux point further to the left of the bin. Thus there is reason to consider further methods, namely:
+
+* Positioning the flux point such that the integral flux on either side of it within the energy bin are equal.
+
+* Simply choosing a position towards the left of the bin, for instance at a position 0.2 bin lengths from the left of the bin in log energy.
