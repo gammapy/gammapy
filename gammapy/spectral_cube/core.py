@@ -125,6 +125,11 @@ class GammaSpectralCube(object):
 
         z = self.energy_axis.world2pix(energy)
 
+        shape = (x * y * z).shape
+        x = x * np.ones(shape)
+        y = y * np.ones(shape)
+        z = z * np.ones(shape)
+
         if combine == True:
             x = np.array(x).flat
             y = np.array(y).flat
