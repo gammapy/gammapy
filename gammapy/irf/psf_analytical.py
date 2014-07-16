@@ -39,6 +39,20 @@ class EnergyDependentMultiGaussPSF(object):
         Lower save energy threshold of the psf.
     energy_thresh_hi : `~astropy.units.Quantity`
         Upper save energy threshold of the psf.
+
+    Examples
+    --------
+    Plot R68 of the PSf vs. theta and energy:
+
+        .. plot::
+            :include-source:
+
+            import matplotlib.pyplot as plt
+            from gammapy.irf import EnergyDependentMultiGaussPSF
+            filename = 'gammapy/irf/tests/data/psf.fits'
+            prf = EnergyDependentMultiGaussPSF.read(filename)
+            prf.plot_containment(0.68, show_save_energy=False)
+            plt.show()
     """
     def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
@@ -96,8 +110,6 @@ class EnergyDependentMultiGaussPSF(object):
         extension = 'POINT SPREAD FUNCTION'
         energy_lo = Quantity(hdu_list[extension].data['ENERG_LO'][0], 'TeV')
         energy_hi = Quantity(hdu_list[extension].data['ENERG_HI'][0], 'TeV')
-        energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
-        energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
         theta = Angle(hdu_list[extension].data['THETA_LO'][0], 'degree')
 
         # Get sigmas
@@ -110,8 +122,14 @@ class EnergyDependentMultiGaussPSF(object):
         norms = []
         for key in ['SCALE', 'AMPL_2', 'AMPL_3']:
             norms.append(hdu_list[extension].data[key].reshape(shape))
-        return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
+        try:
+            energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
+            energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
+            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
                                             norms, energy_thresh_lo, energy_thresh_hi)
+        except KeyError:
+            logging.warn('No safe energy thresholds found. Setting to default')
+            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas, norms)
 
     def psf_at_energy_and_theta(self, energy, theta):
         """
@@ -154,7 +172,7 @@ class EnergyDependentMultiGaussPSF(object):
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
 
-    def plot_containment(self, fraction, filename=None):
+    def plot_containment(self, fraction, filename=None, show_save_energy=True):
         """
         Plot containment image with energy and theta axes.
 
@@ -185,14 +203,15 @@ class EnergyDependentMultiGaussPSF(object):
         plt.imshow(containment, origin='lower', interpolation='None',
                    vmin=0.05, vmax=0.3)
 
-        # Log scale transformation for position of energy threshold
-        e_min = self.energy_hi.value.min()
-        e_max = self.energy_hi.value.max()
-        e = (self.energy_thresh_lo.value - e_min) / (e_max - e_min)
-        x = (np.log10(e * (e_max / e_min - 1) + 1) / np.log10(e_max / e_min)
-             * (len(self.energy_hi) + 1))
-        plt.vlines(x, -0.5, len(self.theta) - 0.5)
-        plt.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
+        if show_save_energy:
+            # Log scale transformation for position of energy threshold
+            e_min = self.energy_hi.value.min()
+            e_max = self.energy_hi.value.max()
+            e = (self.energy_thresh_lo.value - e_min) / (e_max - e_min)
+            x = (np.log10(e * (e_max / e_min - 1) + 1) / np.log10(e_max / e_min)
+                 * (len(self.energy_hi) + 1))
+            plt.vlines(x, -0.5, len(self.theta) - 0.5)
+            plt.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
 
         # Axes labels and ticks, colobar
         plt.xlabel('E [TeV]')

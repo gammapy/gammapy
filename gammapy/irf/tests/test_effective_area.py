@@ -1,8 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
+
 from astropy.units import Quantity
-from ..effective_area import abramowski_effective_area
+from astropy.utils.data import get_pkg_data_filename
+
+from ..effective_area import *
 
 
 def test_abramowski_effective_area():
@@ -19,3 +22,11 @@ def test_abramowski_effective_area():
     area = abramowski_effective_area(energy, 'HESS')
     assert_allclose(area, area_ref)
     assert area.unit == area_ref.unit
+
+
+def test_EnergyDependentTableARF():
+    filename = get_pkg_data_filename('data/arf_info.txt')
+    info_str = open(filename, 'r').read()
+    filename = get_pkg_data_filename('data/arf.fits')
+    arf = EnergyDependentTableARF.read(filename)
+    assert arf.info() == info_str

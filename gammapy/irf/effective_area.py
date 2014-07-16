@@ -58,7 +58,36 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 class EnergyDependentTableARF(object):
     """
-    Effective area class.
+    Effective area table class.
+
+    Not interpolation is used.
+
+    Parameters
+    ----------
+    energy_lo : `~astropy.units.Quantity`
+        Lower energy boundary of the energy bin.
+    energy_hi : `~astropy.units.Quantity`
+        Upper energy boundary of the energy bin.
+    efective_area : `~astropy.units.Quantity`
+        Effective area at the given energy bins.
+    energy_thresh_lo : `~astropy.units.Quantity`
+        Lower save energy threshold of the psf.
+    energy_thresh_hi : `~astropy.units.Quantity`
+        Upper save energy threshold of the psf.
+
+    Examples
+    --------
+    Plot effective area vs. energy:
+
+        .. plot::
+            :include-source:
+
+            import matplotlib.pyplot as plt
+            from gammapy.irf import EnergyDependentTableARF
+            filename = 'gammapy/irf/tests/data/arf.fits'
+            arf = EnergyDependentTableARF.read(filename)
+            arf.plot_area_vs_energy(show_save_energy=False)
+            plt.show()
     """
     def __init__(self, energy_lo, energy_hi, effective_area,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
@@ -82,7 +111,7 @@ class EnergyDependentTableARF(object):
     def to_fits(self, telescope='DUMMY', phafile=None,
                 instrument='DUMMY', filter_='NONE'):
         """
-        Convert PSF to FITS HDU list format.
+        Convert ARF to FITS HDU list format.
 
         Parameters
         ----------
@@ -190,11 +219,15 @@ class EnergyDependentTableARF(object):
         """
         energy_lo = Quantity(hdu_list['SPECRESP'].data['ENERG_LO'], 'TeV')
         energy_hi = Quantity(hdu_list['SPECRESP'].data['ENERG_HI'], 'TeV')
-        energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
-        energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
         effective_area = Quantity(hdu_list['SPECRESP'].data['SPECRESP'], 'm^2')
-        return EnergyDependentTableARF(energy_lo, energy_hi, effective_area,
+        try:
+            energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
+            energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
+            return EnergyDependentTableARF(energy_lo, energy_hi, effective_area,
                                        energy_thresh_lo, energy_thresh_hi)
+        except KeyError:
+            logging.warn('No safe energy thresholds found. Setting to default')
+            return EnergyDependentTableARF(energy_lo, energy_hi, effective_area)
 
     def effective_area_at_energy(self, energy):
         """
@@ -243,7 +276,7 @@ class EnergyDependentTableARF(object):
             ss += ("Effective area at E = {0:4.1f}: {1:10.0f}\n".format(energy, eff_area))
         return ss
 
-    def plot_area_vs_energy(self, filename=None):
+    def plot_area_vs_energy(self, filename=None, show_save_energy=True):
         """
         Plot effective area vs. energy.
         """
@@ -252,13 +285,14 @@ class EnergyDependentTableARF(object):
         energy_hi = self.energy_hi.value
         effective_area = self.effective_area.value
         plt.plot(energy_hi, effective_area)
-        plt.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
-        plt.text(self.energy_thresh_hi.value - 1, 3E6,
-                 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi),
-                 ha='right')
-        plt.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
-        plt.text(self.energy_thresh_lo.value + 0.1, 3E3,
-                 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
+        if show_save_energy:
+            plt.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
+            plt.text(self.energy_thresh_hi.value - 1, 3E6,
+                     'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi),
+                     ha='right')
+            plt.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
+            plt.text(self.energy_thresh_lo.value + 0.1, 3E3,
+                     'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
         plt.xlim(0.1, 100)
         plt.ylim(1E3, 1E7)
         plt.loglog()
