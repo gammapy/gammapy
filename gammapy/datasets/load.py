@@ -16,6 +16,7 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
+import numpy as np
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
@@ -25,6 +26,7 @@ from ..spectral_cube import GammaSpectralCube
 
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
+                     'load_crab_flux_points',
                      'diffuse_gamma_spectrum',
                      'electron_spectrum',
                      'FermiGalacticCenter',
@@ -168,6 +170,64 @@ def tev_spectrum(source_name):
     return table
 
 
+def load_crab_flux_points(component='both', with_fermi_flare=False):
+    """Load published Crab pulsar and nebula flux points.
+
+    Besides the usual flux point columns, this table contains
+    the following two columns:
+    * component : {'pulsar', 'nebula'}
+    * paper : Short string describing which point originates from which paper.
+
+    TODO:
+
+    * Add link to Crab flux point tutorial in Gammapy where these points are plotted.
+    * Add html links to ADS directly in the docstring and as a table column.
+
+    Parameters
+    ----------
+    component : {'pulsar', 'nebula', 'both'}
+        Which emission component to include
+
+    Returns
+    -------
+    flux_points : `~astropy.table.Table`
+        Flux point table
+
+    Notes
+    -----
+    This data compilation is from Buehler and Blandford, Rep. Prog. Phys. 77, 2014.
+    It was contributed to Gammapy directly by Rolf Buehler via a pull request.
+
+    The data for the nebula were taken from Meyer et al. Astron. Astrophys. 523 2010
+    with the addition of the Fermi-LAT measurement reported in Buehler et al. ApJ 749 2012.
+
+    The pulsar spectrum is reproduced from Kuiper et al Astron. Astrophys. 378 2001 .
+    Additionally shown are infrared measurements reported in Sollerman et al. ApJ 537 2000
+    and Tziamtzis et al. Astron. Astrophys. 508 2009, radio measurements referenced in
+    Thompson et al. ApJ 516 1999 and gamma-ray measurements referenced in
+    Aleksic et al. ApJ 742 2011, Aliu et al. Science 334 2011,
+    Aleksic et al. Astron. Astrophys. 540 2012
+    and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
+
+    """
+    filename = 'data/tev_spectra/crab_mwl.fits.gz'
+    filename = get_pkg_data_filename(filename)
+    table = Table.read(filename)
+
+    if component == 'pulsar':
+        mask = table['component'] == 'pulsar'
+        table = table[mask]
+    elif component == 'nebula':
+        mask = table['component'] == 'nebula'
+        table = table[mask]
+    elif component == 'both':
+        pass
+    else:
+        raise ValueError('Invalid component: {0}'.format(component))
+
+    return table
+
+
 def diffuse_gamma_spectrum(reference):
     """Get published diffuse gamma-ray spectrum.
 
@@ -181,7 +241,7 @@ def diffuse_gamma_spectrum(reference):
     Returns
     -------
     spectrum : `~astropy.table.Table`
-        Energy spectrum as a table (one flux point per row).    
+        Energy spectrum as a table (one flux point per row).
     """
     if reference == 'Fermi':
         filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'

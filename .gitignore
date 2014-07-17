@@ -50,6 +50,8 @@ docs/_generated
 docs/api
 .coverage
 
+dev/crab
+
 # Data files and images are usually generated
 *.png
 *.fits
