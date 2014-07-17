@@ -12,7 +12,7 @@ from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw
 from ...morphology.shapes import morph_types
 from ..source import SNR, PWN, ModelPulsar
-from .spatial import exponential, FaucherSpiral, r_range, z_range, radial_distributions
+from .spatial import Exponential, FaucherSpiral, r_range, z_range, radial_distributions
 from .velocity import v_range, velocity_distributions
 
 
@@ -25,6 +25,9 @@ __all__ = ['make_cat_cube',
            'add_cylindrical_coordinates',
            'add_observed_parameters',
            ]
+
+
+exponential = Exponential()
 
 
 def make_cat_cube(nsources=100, dimension=3, dmax=10,

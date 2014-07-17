@@ -3,11 +3,11 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy import log
-from astropy.units import Unit
+from astropy.units import Unit, Quantity
 from ...utils.coordinates import flux_to_luminosity
 from astropy import constants as const
 
-__all__ = ['SNR', 'SNR_Truelove']
+__all__ = ['SNR', 'SNRTrueloveMcKee']
 
 M_SUN = const.M_sun.cgs.value
 M_P = const.m_p.cgs.value
@@ -16,9 +16,9 @@ SEC_TO_YEAR = Unit('second').to(Unit('year'))
 YEAR_TO_SEC = 1. / SEC_TO_YEAR
 CM_TO_PC = Unit('cm').to(Unit('pc'))
 
-DEFAULT_N_ISM = 1
-DEFAULT_E_SN = 1e51
-DEFAULT_THETA = 0.1
+DEFAULT_N_ISM = Quantity(1, 'cm^-3').value
+DEFAULT_E_SN = Quantity(1e51, 'erg').value
+DEFAULT_THETA = Quantity(0.1).value
 DEFAULT_M = M_SUN
 
 
@@ -47,13 +47,14 @@ class SNR(object):
     T_stop_ref = 1e6
 
     def __init__(self, E_SN=DEFAULT_E_SN, theta=DEFAULT_THETA, n_ISM=DEFAULT_N_ISM,
-                 m=DEFAULT_M, T_stop=1e6):
+                 m=DEFAULT_M, T_stop=1e6, morphology='Shell2D'):
         self.E_SN = E_SN
         self.theta = theta
         self.n_ISM = n_ISM
         self.rho_ISM = n_ISM * M_P
         self.m = m
         self.T_stop = T_stop
+        self.morphology = morphology
 
         # Characteristic dimensions
         self.r_c = m ** (1. / 3) * self.rho_ISM ** (-1. / 3)
@@ -90,9 +91,18 @@ class SNR(object):
         R_ST = (term1 + term2 * (t - t_ST)) ** (2. / 5)
         return CM_TO_PC * np.select([t < t_ST, t >= t_ST], [R_FE, R_ST])
 
-    def r_in(self, t):
-        """Inner shell radius (pc) at age t (yr)."""
-        return self.r_out(t) * (1 - 0.0914)
+    def r_in(self, t, fraction=0.0914):
+        """
+        Inner shell radius (pc) at age t (yr).
+
+        Parameters
+        ----------
+        t :
+            Time
+        fraction :
+            Fraction of 
+        """
+        return self.r_out(t) * (1 - fraction)
 
     def r_free_expansion(self, t):
         """Shock radius (pc) at age t (yr) during free expansion phase.
@@ -135,10 +145,7 @@ class SNR(object):
 
         # Corresponding luminosity
         L = flux_to_luminosity(F, distance=1)
-
-        # Apply time interval
-        L = np.select([t <= t_start, t <= t_end], [0, L])
-        return L
+        return np.select([t <= t_start, t <= t_end], [0, L])
 
     def _t_start(self):
         term1 = 200 * (self.E_SN / self.E_SN_ref) ** (-1. / 2)
@@ -152,7 +159,7 @@ class SNR(object):
         return SEC_TO_YEAR * (term1 * term2) ** (5. / 6)
 
 
-class SNR_Truelove(SNR):
+class SNRTrueloveMcKee(SNR):
     """SNR model according to Truelove & McKee (1999).
 
     Reference: Gelfand & Slane 2009, Appendix A.

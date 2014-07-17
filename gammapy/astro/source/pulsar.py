@@ -2,16 +2,16 @@
 """Pulsar source models"""
 from __future__ import print_function, division
 from numpy import pi, sqrt
-from astropy.units import Unit
+from astropy.units import Unit, Quantity
 
 __all__ = ['Pulsar', 'ModelPulsar']
 
 SEC_TO_YEAR = Unit('second').to(Unit('year'))
 YEAR_TO_SEC = 1. / SEC_TO_YEAR
 
-DEFAULT_I = 1e45  # moment of inertia (g cm^2)
-DEFAULT_R = 1e6  # radius (cm)
-B_CONST = 3.2e19  # TODO: document
+DEFAULT_I = Quantity(1e45, 'g cm^2').value  # moment of inertia (g cm^2)
+DEFAULT_R = Quantity(1e6, 'cm').value   # radius (cm)
+B_CONST = Quantity(3.2e19, 'gauss').value   # TODO: document
 
 
 class Pulsar(object):
