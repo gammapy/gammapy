@@ -1,29 +1,38 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import numpy as np
-from numpy.testing import assert_allclose
-from ....utils.distributions import normalize
-from ..velocity import H05, F06B, F06P
 
+from astropy.tests.helper import pytest
+from astropy.modeling.tests.test_models import Fittable1DModelTester
 
-def test_call():
-    # TODO: Verify numbers against Papers or Axel's thesis.
-    assert_allclose(H05(1), 4.287452755806417e-08)
+from ..velocity import (FaucherKaspi2006VelocityMaxwellian,
+                        Paczynski1990Velocity,
+                        FaucherKaspi2006VelocityBimodal, VMAX, VMIN)
 
+velocity_models_1D = {
 
-def plot_distributions(self):
-    import matplotlib.pyplot as plt
-    v_min, v_max = 10, 3000  # km / s
-    v = np.linspace(v_min, v_max, 200)
-    plt.plot(v, normalize(H05, v_min, v_max)(v), color='b', linestyle='-', label='H05')
-    plt.plot(v, normalize(F06B, v_min, v_max)(v), color='r', linestyle=':', label='F06B')
-    plt.plot(v, normalize(F06P, v_min, v_max)(v), color='k', linestyle='-', label='F06P')
+    FaucherKaspi2006VelocityMaxwellian: {
+        'parameters': [1, 265],
+        'x_values': [1, 10, 100, 1000],
+        'y_values': [4.28745276e-08, 4.28443169e-06, 3.99282978e-04, 3.46767268e-05],
+        'x_lim': [VMIN, VMAX],
+        'integral': 1
+    },
 
-    plt.xlim(v_min, v_max)
-    plt.ylim(0, 0.004)
-    plt.xlabel('Velocity [km/s]')
-    plt.ylabel('PDF')
-    plt.title('Comparison Velocity Distribution Models (PDF)')
-    plt.semilogx()
-    plt.legend(prop={'size': 10})
-    # plt.show()
+    FaucherKaspi2006VelocityBimodal: {
+        'parameters': [1, 160, 780, 0.9],
+        'constraints': {'fixed': {'sigma_2': True, 'w': True}},
+        'x_values': [1, 10, 100, 1000],
+        'y_values': [1.94792231e-07, 1.94415946e-05, 1.60234848e-03, 6.41602450e-10],
+        'x_lim': [VMIN, VMAX],
+        'integral': 1
+    },
+
+    Paczynski1990Velocity: {
+        'parameters': [1, 560],
+        'x_values': [1, 10, 100, 1000],
+        'y_values': [0.00227363, 0.00227219, 0.00213529, 0.00012958],
+        'x_lim': [VMIN, VMAX],
+        'integral': 1
+    },
+}
+

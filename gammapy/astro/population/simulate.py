@@ -9,11 +9,11 @@ from astropy.table import Table, Column
 from astropy.coordinates import SkyCoord
 from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
-from ...utils.distributions import draw
+from ...utils.distributions import draw, pdf
 from ...morphology.shapes import morph_types
 from ..source import SNR, PWN, ModelPulsar
-from .spatial import Exponential, FaucherSpiral, r_range, z_range, radial_distributions
-from .velocity import v_range, velocity_distributions
+from .spatial import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
+from .velocity import VMIN, VMAX, velocity_distributions
 
 
 __all__ = ['make_cat_cube',
@@ -25,9 +25,6 @@ __all__ = ['make_cat_cube',
            'add_cylindrical_coordinates',
            'add_observed_parameters',
            ]
-
-
-exponential = Exponential()
 
 
 def make_cat_cube(nsources=100, dimension=3, dmax=10,
@@ -133,11 +130,11 @@ def make_cat_gal(nsources, rad_dis, vel_dis,
         vel_dis = velocity_distributions[vel_dis]
 
     # Draw r and z values from the given distribution
-    r = draw(0, r_range, nsources, rad_dis)
-    z = draw(-z_range, z_range, nsources, exponential)
+    r = draw(RMIN, RMAX, nsources, pdf(rad_dis()))
+    z = draw(ZMIN, ZMAX, nsources, Exponential())
 
     # Draw values from velocity distribution
-    v = draw(0, v_range, nsources, vel_dis)
+    v = draw(VMIN, VMAX, nsources, vel_dis())
 
     # Apply spiralarm modelling or not
     if spiralarms:

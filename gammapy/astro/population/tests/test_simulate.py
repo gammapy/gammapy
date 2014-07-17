@@ -13,11 +13,12 @@ except ImportError:
 @pytest.fixture
 def example_table():
     from ..spatial import YusifovKucuk2004
-    from ..velocity import H05
-    rad_dis = YusifovKucuk2004()
+    from ..velocity import FaucherKaspi2006VelocityMaxwellian
+    rad_dis = YusifovKucuk2004
+    vel_dis = FaucherKaspi2006VelocityMaxwellian
     nsources = 42
     max_age = 1e6
-    return simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=H05, max_age=max_age)
+    return simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=vel_dis, max_age=max_age)
 
 
 def has_columns(table, names):
@@ -33,12 +34,13 @@ def test_make_cat_cube():
 
 def test_make_cat_gal():
     from ..spatial import YusifovKucuk2004
-    from ..velocity import H05
-    rad_dis = YusifovKucuk2004()
+    from ..velocity import FaucherKaspi2006VelocityMaxwellian
+    rad_dis = YusifovKucuk2004
+    vel_dis = FaucherKaspi2006VelocityMaxwellian
     nsources = 42
     max_age = 1e6
 
-    table = simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=H05, max_age=max_age)
+    table = simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=vel_dis, max_age=max_age)
     assert len(table) == nsources
 
 

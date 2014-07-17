@@ -6,20 +6,26 @@ from numpy import (cos, sin, arcsin, sqrt,
                    radians, degrees, pi)
 from ...utils.const import d_sun_to_galactic_center
 from astropy.units import Unit
-
+import numpy as np
 
 
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
-           'radius_to_angle', 'angle_to_radius', 'spherical_velocity', 'motion_since_birth']
+           'radius_to_angle', 'angle_to_radius', 'spherical_velocity',
+           'motion_since_birth', 'polar']
 
 
-def cartesian(r, theta, dx=0, dy=0):
-    """Takes polar coordinates r and theta and returns cartesian coordinates x and y.
-    Has the option to add dx and dy for blurring the positions."""
-    x = r * cos(theta) + dx
-    y = r * sin(theta) + dy
+def cartesian(r, theta):
+    """
+    Takes polar coordinates r and theta and returns cartesian coordinates x and y.
+    """
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
     return x, y
 
+def polar(x, y):
+    r = np.sqrt(x ** 2 + y ** 2)
+    theta = np.arctan2(y, x)
+    return r, theta
 
 def galactic(x, y, z, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)

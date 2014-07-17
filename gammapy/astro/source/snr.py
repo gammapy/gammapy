@@ -19,7 +19,7 @@ CM_TO_PC = Unit('cm').to(Unit('pc'))
 DEFAULT_N_ISM = Quantity(1, 'cm^-3').value
 DEFAULT_E_SN = Quantity(1e51, 'erg').value
 DEFAULT_THETA = Quantity(0.1).value
-DEFAULT_M = M_SUN
+DEFAULT_M = M_SUN  # Mass of ejecta
 
 
 class SNR(object):
