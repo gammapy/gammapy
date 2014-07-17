@@ -93,7 +93,6 @@ class TestGammaSpectralCube(object):
         expected = self.spectral_cube.data[0, 0, 0]
         assert_quantity(actual, expected)
 
-    @pytest.mark.xfail
     def test_flux_array(self):
         pix = [2, 2], [3, 3], [4, 4]
         world = self.spectral_cube.pix2world(*pix)
@@ -102,9 +101,6 @@ class TestGammaSpectralCube(object):
         # Quantity([3.50571123e-07, 2], '1 / (cm2 MeV s sr)')
         assert_quantity(actual, expected)
 
-        # TODO: I guess broadcasting should work and be tested here?
-
-    @pytest.mark.xfail
     def test_integral_flux_image(self):
         # For a very small energy band the integral flux should be roughly
         # differential flux times energy bin width
