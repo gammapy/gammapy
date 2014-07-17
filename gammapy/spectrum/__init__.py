@@ -13,4 +13,5 @@ from . import models
 from . import powerlaw
 from .sed import *
 from . import sherpa_chi2asym
+from .viewer import *
 from .utils import *
