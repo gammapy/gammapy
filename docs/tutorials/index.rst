@@ -1,3 +1,5 @@
+.. _tutorials:
+
 *********
 Tutorials
 *********
@@ -10,6 +12,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    image/index
    spectrum/index
    flux_point
+   crab_mwl_sed
 
 External
 ========
