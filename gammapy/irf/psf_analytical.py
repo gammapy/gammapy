@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
 import numpy as np
+
+from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
+from ..extern.validator import validate_physical_type
+from astropy.units.quantity import Quantity
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
@@ -42,31 +44,32 @@ class EnergyDependentMultiGaussPSF(object):
 
     Examples
     --------
-    Plot R68 of the PSf vs. theta and energy:
+    Plot R68 of the PSF vs. theta and energy:
 
-        .. plot::
-            :include-source:
+     .. plot::
+        :include-source:
 
-            import matplotlib.pyplot as plt
-            from gammapy.irf import EnergyDependentMultiGaussPSF
-            filename = 'gammapy/irf/tests/data/psf.fits'
-            prf = EnergyDependentMultiGaussPSF.read(filename)
-            prf.plot_containment(0.68, show_save_energy=False)
-            plt.show()
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EnergyDependentMultiGaussPSF
+        from gammapy.datasets import psf_fits_table
+        psf = EnergyDependentMultiGaussPSF.from_fits(psf_fits_table())
+        psf.plot_containment(0.68, show_save_energy=False)
+        plt.show()
+
     """
     def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV')):
-        if not isinstance(energy_lo, Quantity):
-            raise ValueError("energy_lo must be a Quantity object.")
-        if not isinstance(theta, Quantity):
-            raise ValueError("theta must be an Angle or Quantity object.")
-        if not isinstance(energy_hi, Quantity):
-            raise ValueError("energi_hi must be a Quantity object.")
-        if not isinstance(energy_thresh_lo, Quantity):
-            raise ValueError("energy_thresh_lo must be a Quantity object.")
-        if not isinstance(energy_thresh_hi, Quantity):
-            raise ValueError("energy_hi must be a Quantity object.")
+                 energy_thresh_hi=Quantity(100, 'TeV'),
+                 azimuth=Quantity([0], 'deg'), zenith=Quantity([0], 'deg')):
+
+        # Validate input
+        validate_physical_type('energy_lo', energy_lo, 'energy')
+        validate_physical_type('energy_hi', energy_hi, 'energy')
+        validate_physical_type('theta', theta, 'angle')
+        validate_physical_type('energy_thresh_lo', energy_thresh_lo, 'energy')
+        validate_physical_type('energy_thresh_hi', energy_thresh_hi, 'energy')
+
+        # Set attributes
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
         self.theta = theta.to('deg')
@@ -74,6 +77,8 @@ class EnergyDependentMultiGaussPSF(object):
         self.norms = norms
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
+        self._azimuth = azimuth
+        self._zenith = zenith
 
     @staticmethod
     def read(filename):
@@ -128,12 +133,75 @@ class EnergyDependentMultiGaussPSF(object):
             return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
                                             norms, energy_thresh_lo, energy_thresh_hi)
         except KeyError:
-            logging.warn('No safe energy thresholds found. Setting to default')
+            log.warn('No safe energy thresholds found. Setting to default')
             return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas, norms)
+
+    def to_fits(self, header=None, **kwargs):
+        """
+        Convert psf table data to FITS hdu list.
+
+        Any FITS header keyword can be passed to the function and will be
+        changed in the header.
+
+        Parameters
+        ----------
+        header : `~astropy.io.fits.header.Header`
+            Header to be written in the fits file.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+            PSF in HDU list format.
+        """
+        # Set up header
+        if header is None:
+            from gammapy.datasets import psf_fits_table
+            header = psf_fits_table()[1].header
+        header['LO_THRES'] = self.energy_thresh_lo.value
+        header['HI_THRES'] = self.energy_thresh_hi.value
+
+        for key, value in kwargs.items():
+            header[key] = value
+
+        # Set up data
+        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI', 'AZIMUTH_LO',
+                 'AZIMUTH_HI', 'ZENITH_LO', 'ZENITH_HI', 'SCALE', 'SIGMA_1',
+                 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
+        formats = ['15E', '15E', '12E', '12E', '1E', '1E', '1E', '1E', '180E',
+                   '180E', '180E', '180E', '180E', '180E']
+        data = [self.energy_lo, self.energy_hi, self.theta, self.theta,
+                self._azimuth, self._azimuth, self._zenith, self._zenith,
+                self.norms[0].flatten(), self.sigmas[0].flatten(),
+                self.norms[1].flatten(), self.sigmas[1].flatten(),
+                self.norms[2].flatten(), self.sigmas[2].flatten()]
+        units = ['TeV', 'TeV', 'deg', 'deg', 'deg', 'deg', 'deg', 'deg',
+                 '', 'deg', '', 'deg', '', 'deg']
+
+        # Set up columns
+        columns = []
+        for name_, format_, data_, unit_ in zip(names, formats, data, units):
+            if isinstance(data_, Quantity):
+                data_ = data_.value
+            columns.append(fits.Column(name=name_, format=format_,
+                                       array=[data_], unit=unit_))
+        # Create hdu and hdu list
+        prim_hdu = fits.PrimaryHDU()
+        hdu = fits.BinTableHDU.from_columns(columns)
+        hdu.header = header
+        hdu.add_checksum()
+        hdu.add_datasum()
+        return fits.HDUList([prim_hdu, hdu])
+
+    def write(self, filename, *args, **kwargs):
+        """Write PSF to FITS file.
+
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_fits().writeto(filename, *args, **kwargs)
 
     def psf_at_energy_and_theta(self, energy, theta):
         """
-        Get MultiGauss2D model for given energy and theta.
+        Get `~gammapy.morphology.MultiGauss2D` model for given energy and theta.
 
         No interpolation is used.
 
@@ -146,14 +214,12 @@ class EnergyDependentMultiGaussPSF(object):
 
         Returns
         -------
-        psf : 'morphology.gauss.MultiGauss2D'
+        psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
         from ..irf import HESSMultiGaussPSF
-        if not isinstance(energy, Quantity):
-            raise ValueError("energy must be a Quantity object.")
-        if not isinstance(energy, (Quantity, Angle)):
-            raise ValueError("theta must be a Quantity or Angle object.")
+        validate_physical_type('energy', energy, 'energy')
+        validate_physical_type('energy', energy, 'energy')
 
         # Find nearest energy value
         i = np.argmin(np.abs(self.energy_hi - energy))
@@ -172,12 +238,27 @@ class EnergyDependentMultiGaussPSF(object):
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
 
+    def _containment_radius_array(self, energies, thetas, fraction):
+        """Compute containment for all energy and theta values"""
+        containment = np.empty((len(thetas), len(energies)))
+        for j, energy in enumerate(energies):
+            for i, theta in enumerate(thetas):
+                psf = self.psf_at_energy_and_theta(energy, theta)
+                try:
+                    containment[i, j] = psf.containment_radius(fraction)
+                except ValueError:
+                    log.debug("Computing containment failed for E = {0:.2f}"
+                                 " and Theta={1:.2f}".format(energy, theta))
+                    log.debug("Sigmas: {0} Norms: {1}".format(psf.sigmas, psf.norms))
+                    containment[i, j] = np.nan
+        return Quantity(containment, 'deg')
+
     def plot_containment(self, fraction, filename=None, show_save_energy=True):
         """
         Plot containment image with energy and theta axes.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         fraction : float
             Containment fraction between 0 and 1.
         filename : string
@@ -186,21 +267,10 @@ class EnergyDependentMultiGaussPSF(object):
         import matplotlib.pyplot as plt
 
         # Set up and compute data
-        containment = np.empty((len(self.theta), len(self.energy_hi)))
-        for j, energy in enumerate(self.energy_hi):
-            for i, theta in enumerate(self.theta):
-                psf = self.psf_at_energy_and_theta(energy, theta)
-                try:
-                    containment[i, j] = psf.containment_radius(fraction)
-                except ValueError:
-                    logging.debug("Computing containment failed for E = {0:.2f}"
-                                 " and Theta={1:.2f}".format(energy, theta))
-                    logging.debug("Sigmas: {0} Norms: {1}".format(psf.sigmas, psf.norms))
-                    containment[i, j] = np.nan
-
+        containment = self._containment_radius_array(self.energy_hi, self.theta, fraction)
         # Plotting
         plt.figure(figsize=(8, 5))
-        plt.imshow(containment, origin='lower', interpolation='None',
+        plt.imshow(containment.value, origin='lower', interpolation='None',
                    vmin=0.05, vmax=0.3)
 
         if show_save_energy:
@@ -224,7 +294,7 @@ class EnergyDependentMultiGaussPSF(object):
         cbar.set_label('Containment radius R{0:.0f} [deg]'.format(100 * fraction),
                         labelpad=20)
         if filename != None:
-            logging.info('Wrote {0}'.format(filename))
+            log.info('Wrote {0}'.format(filename))
             plt.savefig(filename)
 
     def info(self, fractions=[0.68, 0.95], energies=Quantity([1., 10.], 'TeV'),
@@ -259,16 +329,11 @@ class EnergyDependentMultiGaussPSF(object):
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
-        for energy in energies:
-            for fraction in fractions:
-                for theta in thetas:
-                    psf = self.psf_at_energy_and_theta(energy, theta)
-                    try:
-                        radius = Quantity(psf.containment_radius(fraction), 'deg')
-                    except ValueError:
-                        radius = Quantity(np.nan, 'TeV')
-                        logging.warn("Computing containment failed for E={0:.2f}"
-                                 " and Theta={1:.2f}".format(energy, theta))
+        for fraction in fractions:
+            containment = self._containment_radius_array(energies, thetas, fraction)
+            for i, energy in enumerate(energies):
+                for j, theta in enumerate(thetas):
+                    radius = containment[j, i]
                     ss += ("{0:2.0f}% containment radius at theta = {1} and "
                            "E = {2:4.1f}: {3:5.8f}\n").format(100 * fraction, theta, energy, radius)
         return ss

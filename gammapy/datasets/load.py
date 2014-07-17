@@ -31,6 +31,8 @@ included_datasets = ['poisson_stats_image',
                      'electron_spectrum',
                      'FermiGalacticCenter',
                      'fetch_fermi_catalog',
+                     'arf_fits_table',
+                     'psf_fits_table',
                      ]
 
 remote_datasets = [
@@ -60,6 +62,18 @@ def download_datasets(names='all'):
         raise NotImplementedError
         # Check if available in cache
         # if not download to cache
+
+
+def arf_fits_table():
+    """Read arf fits table"""
+    filename = get_pkg_data_filename('data/irfs/arf.fits')
+    return fits.open(filename)
+
+
+def psf_fits_table():
+    """Read psf fits table"""
+    filename = get_pkg_data_filename('data/irfs/psf.fits')
+    return fits.open(filename)
 
 
 def poisson_stats_image(extra_info=False, return_filenames=False):

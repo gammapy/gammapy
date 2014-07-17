@@ -1,14 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
 import numpy as np
+
+from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.table import Table
 
-__all__ = ['abramowski_effective_area', 'EnergyDependentTableARF']
+from ..extern.validator import validate_physical_type
+
+__all__ = ['abramowski_effective_area', 'EffectiveAreaTable']
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -56,7 +58,7 @@ def abramowski_effective_area(energy, instrument='HESS'):
     return Quantity(value, 'cm^2')
 
 
-class EnergyDependentTableARF(object):
+class EffectiveAreaTable(object):
     """
     Effective area table class.
 
@@ -68,7 +70,7 @@ class EnergyDependentTableARF(object):
         Lower energy boundary of the energy bin.
     energy_hi : `~astropy.units.Quantity`
         Upper energy boundary of the energy bin.
-    efective_area : `~astropy.units.Quantity`
+    effective_area : `~astropy.units.Quantity`
         Effective area at the given energy bins.
     energy_thresh_lo : `~astropy.units.Quantity`
         Lower save energy threshold of the psf.
@@ -79,49 +81,47 @@ class EnergyDependentTableARF(object):
     --------
     Plot effective area vs. energy:
 
-        .. plot::
-            :include-source:
+     .. plot::
+        :include-source:
 
-            import matplotlib.pyplot as plt
-            from gammapy.irf import EnergyDependentTableARF
-            filename = 'gammapy/irf/tests/data/arf.fits'
-            arf = EnergyDependentTableARF.read(filename)
-            arf.plot_area_vs_energy(show_save_energy=False)
-            plt.show()
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EffectiveAreaTable
+        from gammapy.datasets import arf_fits_table
+        arf = EffectiveAreaTable.from_fits(arf_fits_table())
+        arf.plot_area_vs_energy(show_save_energy=False)
+        plt.show()
     """
     def __init__(self, energy_lo, energy_hi, effective_area,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV')):
-        if not isinstance(effective_area, Quantity):
-            raise ValueError("effective_area must be a Quantity object.")
-        if not isinstance(energy_hi, Quantity):
-            raise ValueError("energy_hi must be a Quantity object.")
-        if not isinstance(energy_lo, Quantity):
-            raise ValueError("energy_lo must be a Quantity object.")
-        if not isinstance(energy_thresh_lo, Quantity):
-            raise ValueError("energy_thresh_lo must be a Quantity object.")
-        if not isinstance(energy_thresh_hi, Quantity):
-            raise ValueError("energy_hi must be a Quantity object.")
+
+        # Validate input
+        validate_physical_type('energy_lo', energy_lo, 'energy')
+        validate_physical_type('energy_hi', energy_hi, 'energy')
+        validate_physical_type('effective_area', effective_area, 'area')
+        validate_physical_type('energy_thresh_lo', energy_thresh_lo, 'energy')
+        validate_physical_type('energy_thresh_hi', energy_thresh_hi, 'energy')
+
+        # Set attributes
         self.energy_hi = energy_hi.to('TeV')
         self.energy_lo = energy_lo.to('TeV')
         self.effective_area = effective_area.to('m^2')
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
-    def to_fits(self, telescope='DUMMY', phafile=None,
-                instrument='DUMMY', filter_='NONE'):
+    def to_fits(self, header=None, **kwargs):
         """
         Convert ARF to FITS HDU list format.
 
         Parameters
         ----------
-        telescope : str
-            Telescope to write in FITS header.
+        header : `~astropy.io.fits.header.Header`
+            Header to be written in the fits file.
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
-            PSF in HDU list format.
+            ARF in HDU list format.
 
         Notes
         -----
@@ -147,35 +147,48 @@ class EnergyDependentTableARF(object):
              ]
             )
 
-        header = hdu.header
+        if header is None:
+            from gammapy.datasets import arf_fits_table
+            header = arf_fits_table()[1].header
 
-        # Write FITS extension header
-        header['EXTNAME'] = 'SPECRESP', 'Name of this binary table extension'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter_, 'Filter information'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'SPECRESP', 'Effective area data is stored'
-        header['HDUVERS '] = '1.1.0', 'Version of file format'
+        if header == 'pyfact':
+            header = hdu.header
 
-        if phafile != None:
-            header['PHAFILE'] = (phafile, 'PHA file for which ARF was produced')
+            # Write FITS extension header
+            header['EXTNAME'] = 'SPECRESP', 'Name of this binary table extension'
+            header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+            header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+            header['FILTER'] = 'NONE', 'Filter information'
+            header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
+            header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
+            header['HDUCLAS2'] = 'SPECRESP', 'Effective area data is stored'
+            header['HDUVERS '] = '1.1.0', 'Version of file format'
 
-        # Obsolete ARF headers, included for the benefit of old software
-        header['ARFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.0.0', 'Obsolete'
-        header['HDUVERS2'] = '1.1.0', 'Obsolete'
+            header['PHAFILE'] = ('', 'PHA file for which ARF was produced')
 
-        hdu_list = fits.HDUList([hdu])
-        return hdu_list
+            # Obsolete ARF headers, included for the benefit of old software
+            header['ARFVERSN'] = '1992a', 'Obsolete'
+            header['HDUVERS1'] = '1.0.0', 'Obsolete'
+            header['HDUVERS2'] = '1.1.0', 'Obsolete'
 
-    def write(self, *args, **kwargs):
+        for key, value in kwargs.items():
+            header[key] = value
+
+        header['LO_THRES'] = self.energy_thresh_lo.value
+        header['HI_THRES'] = self.energy_thresh_hi.value
+
+        prim_hdu = fits.PrimaryHDU()
+        hdu.header = header
+        hdu.add_checksum()
+        hdu.add_datasum()
+        return fits.HDUList([prim_hdu, hdu])
+
+    def write(self, filename, *args, **kwargs):
         """Write ARF to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(*args, **kwargs)
+        self.to_fits().writeto(filename, *args, **kwargs)
 
     @staticmethod
     def read(filename):
@@ -192,7 +205,7 @@ class EnergyDependentTableARF(object):
             ARF object.
         """
         hdu_list = fits.open(filename)
-        return EnergyDependentTableARF.from_fits(hdu_list)
+        return EffectiveAreaTable.from_fits(hdu_list)
 
     @staticmethod
     def from_fits(hdu_list):
@@ -202,7 +215,7 @@ class EnergyDependentTableARF(object):
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with ``SPECRESP``extensions.
+            HDU list with ``SPECRESP`` extensions.
 
         Returns
         -------
@@ -215,7 +228,7 @@ class EnergyDependentTableARF(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here
-        as the more natural units for IACTs
+        as the more natural units for IACTs.
         """
         energy_lo = Quantity(hdu_list['SPECRESP'].data['ENERG_LO'], 'TeV')
         energy_hi = Quantity(hdu_list['SPECRESP'].data['ENERG_HI'], 'TeV')
@@ -223,11 +236,11 @@ class EnergyDependentTableARF(object):
         try:
             energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
-            return EnergyDependentTableARF(energy_lo, energy_hi, effective_area,
+            return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
                                        energy_thresh_lo, energy_thresh_hi)
         except KeyError:
-            logging.warn('No safe energy thresholds found. Setting to default')
-            return EnergyDependentTableARF(energy_lo, energy_hi, effective_area)
+            log.warn('No safe energy thresholds found. Setting to default')
+            return EffectiveAreaTable(energy_lo, energy_hi, effective_area)
 
     def effective_area_at_energy(self, energy):
         """
@@ -300,4 +313,4 @@ class EnergyDependentTableARF(object):
         plt.ylabel('Effective Area [m^2]')
         if filename != None:
             plt.savefig(filename)
-            logging.info('Wrote {0}'.format(filename))
+            log.info('Wrote {0}'.format(filename))
