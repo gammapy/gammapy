@@ -51,6 +51,11 @@ class TestFermiGalacticCenter():
         assert diffuse_model.data.shape == (30, 21, 61)
         assert_quantity(diffuse_model.energy[0], Quantity(50, 'MeV'))
 
+    def test_exposure_cube(self):
+        exposure_cube = FermiGalacticCenter.exposure_cube()
+        assert exposure_cube.data.shape == (61, 21, 61)
+        assert_quantity(exposure_cube.energy[0], Quantity(50, 'MeV'))
+
 
 @remote_data
 def test_fetch_fermi_catalog():
