@@ -8,7 +8,7 @@
 # Note that not all possible configuration values are present in this file.
 #
 # All configuration values have a default. Some values are defined in
-# the global Astropy configuration which is loaded here before anything else. 
+# the global Astropy configuration which is loaded here before anything else.
 # See astropy.sphinx.conf for which values are set there.
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -25,10 +25,28 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
+import datetime
+import os
+import sys
+
+try:
+    import astropy_helpers
+except ImportError:
+    # Building from inside the docs/ directory?
+    if os.path.basename(os.getcwd()) == 'docs':
+        a_h_path = os.path.abspath(os.path.join('..', 'astropy_helpers'))
+        if os.path.isdir(a_h_path):
+            sys.path.insert(1, a_h_path)
+
 # Load all of the global Astropy configuration
-from astropy.sphinx.conf import *
+from astropy_helpers.sphinx.conf import *
 from astropy.extern import six
 
+# Get configuration information from setup.cfg
+from distutils import config
+conf = config.ConfigParser()
+conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
+setup_cfg = dict(conf.items('metadata'))
 
 # -- General configuration ----------------------------------------------------
 
@@ -68,19 +86,22 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = u'Gammapy'
-author = u'The Gammapy Developers'
-copyright = u'2014, ' + author
+project = setup_cfg['package_name']
+author = setup_cfg['author']
+copyright = '{0}, {1}'.format(
+    datetime.datetime.now().year, setup_cfg['author'])
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import gammapy
+__import__(setup_cfg['package_name'])
+package = sys.modules[setup_cfg['package_name']]
+
 # The short X.Y version.
-version = gammapy.__version__.split('-', 1)[0]
+version = package.__version__.split('-', 1)[0]
 # The full version, including alpha/beta/rc tags.
-release = gammapy.__version__
+release = package.__version__
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -150,34 +171,16 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 
 
 ## -- Options for the edit_on_github extension ----------------------------------------
-#
-extensions += ['astropy.sphinx.ext.edit_on_github']
 
-# Don't import the module as "version" or it will override the
-# "version" configuration parameter
-from gammapy import version as versionmod
-edit_on_github_project = "gammapy/gammapy"
-if versionmod.release:
-    edit_on_github_branch = "v" + versionmod.version
-else:
-    edit_on_github_branch = "master"
+if eval(setup_cfg.get('edit_on_github')):
+    extensions += ['astropy.sphinx.ext.edit_on_github']
 
-edit_on_github_source_root = ""
-edit_on_github_doc_root = "docs"
+    versionmod = __import__(setup_cfg['package_name'] + '.version')
+    edit_on_github_project = setup_cfg['github_project']
+    if versionmod.version.release:
+        edit_on_github_branch = "v" + versionmod.version.version
+    else:
+        edit_on_github_branch = "master"
 
-
-# Enable nitpicky mode - which ensures that all references in the docs
-# resolve.
-
-nitpicky = True
-nitpick_ignore = []
-
-for line in open('nitpick-exceptions'):
-    if line.strip() == "" or line.startswith("#"):
-        continue
-    dtype, target = line.split(None, 1)
-    target = target.strip()
-    nitpick_ignore.append((dtype, six.u(target)))
-
-if six.PY2:
-    nitpick_ignore.extend([('py:obj', six.u('bases'))])
+    edit_on_github_source_root = ""
+    edit_on_github_doc_root = "docs"

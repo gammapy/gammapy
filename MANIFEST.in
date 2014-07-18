@@ -1,7 +1,9 @@
 include README.rst
 
-include distribute_setup.py
 recursive-include gammapy *.pyx *.c
+include ez_setup.py
+include ah_bootstrap.py
+include setup.cfg
 
 recursive-include docs *
 recursive-include licenses *
@@ -9,6 +11,10 @@ recursive-include cextern *
 recursive-include scripts *
 recursive-include examples *
 
-exclude *.pyc *.o 
+exclude *.pyc *.o
 prune docs/_build
 prune build
+
+recursive-include astropy_helpers *
+exclude astropy_helpers/.git
+exclude astropy_helpers/.gitignore
