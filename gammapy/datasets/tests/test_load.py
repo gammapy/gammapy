@@ -53,7 +53,7 @@ class TestFermiGalacticCenter():
 
     def test_exposure_cube(self):
         exposure_cube = FermiGalacticCenter.exposure_cube()
-        assert exposure_cube.data.shape == (61, 21, 61)
+        assert exposure_cube.data.shape == (21, 11, 31)
         assert_quantity(exposure_cube.energy[0], Quantity(50, 'MeV'))
 
 
