@@ -11,6 +11,8 @@ ignore-paths:
     - gammapy/conftest.py
     - gammapy/_astropy_init.py
     - gammapy/cython_version.py
+    - ah_bootstrap.py
+    - ez_setup.py
 
 ignore-patterns:
 #   *tests*
