@@ -136,8 +136,10 @@ html_theme_options = {
 # pixels large.
 #html_favicon = ''
 
+# The Gammapy logo doesn't look good so small (would need to make it thicker)
+# So let's use the Astropy icon for now, i.e. not set `html_favicon` here.
 # https://github.com/gammapy/gammapy-website/tree/master/logos
-html_favicon = '_static/gammapy_logo.ico'
+#html_favicon = '_static/gammapy_logo.ico'
 
 # TODO: set this image also in the title bar
 # (html_logo is not the right option)

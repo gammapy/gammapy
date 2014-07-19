@@ -1,32 +1,26 @@
-Gammapy
-=======
+.. image:: _static/gammapy_banner.png
+    :width: 400px
 
-What is it?
------------
 
-**Gammapy** is an open source (BSD licensed) gamma-ray astronomy high-level data analysis Python package.
+**Gammapy** is an open source (BSD licensed) gamma-ray astronomy Python package.
 
-It contains some analysis methods,
-but it's main purpose is to be the glue between the many
-existing data formats and other tools.
+It is an in-development `affiliated package <http://www.astropy.org/affiliated/index.html>`__ of `Astropy <http://www.astropy.org/>`__ 
+that builds on the core `scientific Python stack <http://www.scipy.org/about.html>`__ to provide tools to simulate and analyse
+the gamma-ray sky for telescopes such as `Fermi <http://fermi.gsfc.nasa.gov/>`__, `H.E.S.S. <http://www.mpi-hd.mpg.de/hfm/HESS/>`__
+and `CTA <https://www.cta-observatory.org/>`__.
+
+Currently the functionality is limited and geared towards Galactic plane survey studies,
+but the idea is that Gammapy is a place to share and collaborate for gamma-ray astronomy Pythonistas
+... contributions welcome! 
 
 * Read the `documentation <https://gammapy.readthedocs.org/>`__.
 * Ask questions on our `mailing list <http://groups.google.com/group/gammapy>`__.
 * Request features, report bugs or contribute on `our GitHub page <https://github.com/gammapy/gammapy>`__.
-
-* `Project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
-* `Continuous integration on travis-ci <https://travis-ci.org/gammapy/gammapy/>`__
-* License: BSD-3-Clause
-* Python: version 2.6, 2.7 and 3.3 or later
-* Numpy: version 1.6 or later
-* Astropy: version 0.4 or later
-
-
-Using Gammapy
--------------
+* Check out the `project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
+* Requires Python (version 2.6, 2.7 and 3.3 or later), Numpy (version 1.6 or later) and Astropy (version 0.4 or later)
 
 General documentation
-+++++++++++++++++++++
+---------------------
 
 .. toctree::
   :maxdepth: 1
@@ -39,8 +33,8 @@ General documentation
   references
   credit
 
-Sub-packages
-++++++++++++
+The Gammapy toolbox
+-------------------
 
 .. toctree::
   :maxdepth: 1
