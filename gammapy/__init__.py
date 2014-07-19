@@ -1,10 +1,40 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""gammapy --- Gamma-ray astronomy high-level data analysis Python package
+"""
+Gammapy: A Python package for gamma-ray astronomy
+=================================================
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: https://gammapy.readthedocs.org/
 
-TODO: List sub-packages with one-line description here.
+The top-level `gammapy` namespace is almost empty,
+it only contains this:
+
+::
+
+ test              --- Run Gammapy unit tests
+ __version__       --- Gammapy version string
+
+
+The Gammapy functionality is available for import from
+the following sub-packages (e.g. `gammapy.spectrum`):
+
+::
+
+ `astro`          --- Astrophysical source and population models
+ `background`     --- Background estimation and modeling
+ `catalog`        --- Catalog
+ `datasets`       --- Datasets
+ `detect`         --- Source detection tools
+ `image`          --- Image processing and analysis tools
+ `irf`            --- Instrument response functions (IRFs)
+ `morphology`     --- Morphology and PSF methods
+ `obs`            --- Observation bookkeeping
+ `shower`         --- Air shower image I/O and analysis
+ `spectral_cube`  --- Spectral cube
+ `spectrum`       --- Spectrum estimation and modeling
+ `stats`          --- Statistics tools
+ `utils`          --- Utility functions and classes
+
 """
 
 # Affiliated packages may add whatever they like to this file, but

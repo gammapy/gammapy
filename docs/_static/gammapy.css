@@ -1,0 +1,15 @@
+
+@import url("bootstrap-astropy.css");
+
+div.topbar a.brand {
+  background: transparent url("gammapy_logo_32.png") no-repeat 10px 4px;
+}
+
+div.topbar ul li a.homelink {
+  width: auto;
+  display: block;
+  height: 20px;
+  padding: 5px 25px 5px 10px;
+  background: transparent url("linkout_16.png") no-repeat 10px 10px;
+  background-position: 85px 5px;
+}
