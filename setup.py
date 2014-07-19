@@ -119,6 +119,6 @@ setup(name=PACKAGENAME,
       ],
       cmdclass=cmdclassd,
       zip_safe=False,
-      use_2to3=False
+      use_2to3=False,
       **package_info
 )
