@@ -5,6 +5,7 @@
 ignore-paths:
     - dev
     - examples
+    - docs/conf.py
     - gammapy/extern
     - gammapy/version.py
     - gammapy/conftest.py
