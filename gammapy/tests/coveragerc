@@ -6,6 +6,8 @@ omit =
    gammapy/version*
    gammapy/extern/*
    gammapy/conftest.py
+   gammapy/_astropy_init.py
+   gammapy/cython_version.py
 
 [report]
 exclude_lines =
