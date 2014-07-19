@@ -2,6 +2,5 @@ numpy
 scipy
 Cython
 pytest
--e git+http://github.com/astropy/astropy-helpers.git#egg=astropy_helpers
 -e git+http://github.com/astropy/astropy.git#egg=astropy
 aplpy
