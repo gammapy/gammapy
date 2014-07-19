@@ -71,7 +71,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
                        ENERGY_MIN=len(energy_min),
                        ENERGY_MAX=len(energy_max),
                        FLUX=len(int_flux))
-        max_length = np.array(lengths.values()).max()
+        max_length = np.array(list(lengths.values())).max()
         int_flux = np.array(int_flux) * np.ones(max_length)
         spectral_index = np.array(spectral_index) * np.ones(max_length)
         energy_min = np.array(energy_min) * np.ones(max_length)

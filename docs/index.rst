@@ -17,7 +17,7 @@ existing data formats and other tools.
 * `Project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
 * `Continuous integration on travis-ci <https://travis-ci.org/gammapy/gammapy/>`__
 * License: BSD-3-Clause
-* Python: version 2.6, 2.7 and 3.2 or later
+* Python: version 2.6, 2.7 and 3.3 or later
 * Numpy: version 1.6 or later
 * Astropy: version 0.4 or later
 
