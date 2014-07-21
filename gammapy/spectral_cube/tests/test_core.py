@@ -15,6 +15,36 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+try:
+    # The scipy.interpolation.RegularGridInterpolator class was added in Scipy version 0.14
+    from FITS_tools.cube_regrid import regrid_cube_hdu
+    HAS_FITSTOOLS = True
+except ImportError:
+    HAS_FITSTOOLS = False
+
+
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_correlated_fermi_psf():
+    pass
+
+
+def test_interp_flux():
+    pass
+
+
+def test_interp_exposure():
+    pass
+
+
+@pytest.mark.skipif('not HAS_FITSTOOLS')
+def test_reproject_cube():
+    pass
+
+
+@pytest.mark.skipif('not HAS_FITSTOOLS')
+def test_compute_npred_cube():
+    pass
+
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestGammaSpectralCube(object):
