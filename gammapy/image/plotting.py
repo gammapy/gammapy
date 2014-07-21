@@ -285,13 +285,12 @@ class GalacticPlaneSurveyPanelPlot(object):
             self.fits_figure.colorbar.set_font(size='small')
             self.fits_figure.colorbar._colorbar.set_label(colorbar_label)
 
-    @staticmethod
-    def top(fits_figure):
+    def top(self):
         """TODO: needed?
         """
         pass
 
-    def draw_panels(self, panels='all'):
+    def draw_panels(self, panels='all', format=True):
         """Draw panels.
 
         Parameters
@@ -303,11 +302,11 @@ class GalacticPlaneSurveyPanelPlot(object):
             panels = range(self.panel_parameters['npanels'])
 
         for panel in panels:
-            self.draw_panel(panel)
+            self.draw_panel(panel, format=format)
 
         # self.figure.canvas.draw()
 
-    def draw_panel(self, panel=0):
+    def draw_panel(self, panel=0, format=True):
         """Draw panel.
 
         Parameters
@@ -321,19 +320,22 @@ class GalacticPlaneSurveyPanelPlot(object):
 
         # Execute user-defined plotting ...
         # This must set self.fits_figure
-        fits_figure = self.main(self.figure, self.box)
+        self.main(self.figure, self.box)
 
-        #fits_figure = self.fits_figure
-        # fits_figure.set_auto_refresh(False)
-        fits_figure.recenter(center[0], center[1], width=pp['width'], height=pp['height'])
+        # self.fits_figure.set_auto_refresh(False)
+        self.fits_figure.recenter(center[0], center[1],
+                                  width=pp['width'], height=pp['height'])
 
         if panel == 0:
-            self.bottom(fits_figure)
+            self.bottom()
         if panel == (pp['npanels'] - 1):
-            self.top(fits_figure)
+            self.top()
 
         # fits_figure.refresh()
         # self.figure.canvas.draw()
+
+        if format:
+            GalacticPlaneSurveyPanelPlot.format_fits_figure(self.fits_figure)
 
     @staticmethod
     def format_fits_figure(fits_figure, theme=None):
