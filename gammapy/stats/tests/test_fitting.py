@@ -13,7 +13,6 @@ except ImportError:
     HAS_SCIPY = False
 
 
-@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_PoissonLikelihoodFitter():
     model = Gaussian1D(amplitude=1000, mean=2, stddev=3)
