@@ -14,14 +14,14 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-from gammapy.spectrum import LogEnergyAxis, energy_bounds_equal_log_spacing
-from gammapy.spectrum import powerlaw
-from gammapy.image.utils import coordinates
-from gammapy.datasets import FermiGalacticCenter
-from gammapy.irf import EnergyDependentTablePSF
+from ..spectrum import LogEnergyAxis, energy_bounds_equal_log_spacing
+from ..spectrum import powerlaw
+from ..image.utils import coordinates
+from ..datasets import FermiGalacticCenter
+from ..irf import EnergyDependentTablePSF
 from astropy.coordinates import Angle
 from scipy.ndimage import convolve
-from gammapy.image import cube_to_image
+from ..image import cube_to_image
 
 
 __all__ = ['GammaSpectralCube', 'compute_npred_cube']
