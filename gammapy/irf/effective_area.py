@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-
 import numpy as np
-
 from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.table import Table
-
 from ..extern.validator import validate_physical_type
+from ..utils.array import array_stats_str
 
 __all__ = ['abramowski_effective_area', 'EffectiveAreaTable']
 
@@ -237,7 +235,7 @@ class EffectiveAreaTable(object):
             energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
             return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
-                                       energy_thresh_lo, energy_thresh_hi)
+                                      energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
             return EffectiveAreaTable(energy_lo, energy_hi, effective_area)
@@ -274,13 +272,12 @@ class EffectiveAreaTable(object):
         energies : `~astropy.units.Quantity`
             Energies for which to print effective areas.
         """
-        from psf_table import _quantity_stats_str
         ss = "\nSummary ARF info\n"
         ss += "----------------\n"
         # Summarise data members
-        ss += _quantity_stats_str(self.energy_lo, 'Energy lo')
-        ss += _quantity_stats_str(self.energy_hi, 'Energy hi')
-        ss += _quantity_stats_str(self.effective_area.to('m^2'), 'Effective area')
+        ss += array_stats_str(self.energy_lo, 'Energy lo')
+        ss += array_stats_str(self.energy_hi, 'Energy hi')
+        ss += array_stats_str(self.effective_area.to('m^2'), 'Effective area')
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
@@ -311,6 +308,6 @@ class EffectiveAreaTable(object):
         plt.loglog()
         plt.xlabel('Energy [TeV]')
         plt.ylabel('Effective Area [m^2]')
-        if filename != None:
+        if filename is not None:
             plt.savefig(filename)
             log.info('Wrote {0}'.format(filename))

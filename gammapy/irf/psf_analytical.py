@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-
 import numpy as np
-
 from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-
 from ..extern.validator import validate_physical_type
-from astropy.units.quantity import Quantity
+from ..utils.array import array_stats_str
+from ..irf import HESSMultiGaussPSF
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
+
 # TODO: Improve and add functionality from psf_core to this class
-
-
 class EnergyDependentMultiGaussPSF(object):
     """
     Triple Gauss analytical PSF depending on energy and theta.
@@ -30,7 +27,7 @@ class EnergyDependentMultiGaussPSF(object):
         Center values of the theta bins.
     sigmas : list of 'numpy.ndarray'
         Triple Gauss sigma parameters, where every entry is
-        a two dimensional 'numpy.ndarray' containing the sigma 
+        a two dimensional 'numpy.ndarray' containing the sigma
         value for every given energy and theta.
     norms : list of 'numpy.ndarray'
         Triple Gauss norm parameters, where every entry is
@@ -131,7 +128,7 @@ class EnergyDependentMultiGaussPSF(object):
             energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
             return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
-                                            norms, energy_thresh_lo, energy_thresh_hi)
+                                                norms, energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
             return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas, norms)
@@ -217,7 +214,6 @@ class EnergyDependentMultiGaussPSF(object):
         psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
-        from ..irf import HESSMultiGaussPSF
         validate_physical_type('energy', energy, 'energy')
         validate_physical_type('energy', energy, 'energy')
 
@@ -248,7 +244,7 @@ class EnergyDependentMultiGaussPSF(object):
                     containment[i, j] = psf.containment_radius(fraction)
                 except ValueError:
                     log.debug("Computing containment failed for E = {0:.2f}"
-                                 " and Theta={1:.2f}".format(energy, theta))
+                              " and Theta={1:.2f}".format(energy, theta))
                     log.debug("Sigmas: {0} Norms: {1}".format(psf.sigmas, psf.norms))
                     containment[i, j] = np.nan
         return Quantity(containment, 'deg')
@@ -293,7 +289,8 @@ class EnergyDependentMultiGaussPSF(object):
         cbar = plt.colorbar(fraction=0.1, pad=0.01)
         cbar.set_label('Containment radius R{0:.0f} [deg]'.format(100 * fraction),
                         labelpad=20)
-        if filename != None:
+
+        if filename is not None:
             log.info('Wrote {0}'.format(filename))
             plt.savefig(filename)
 
@@ -319,13 +316,12 @@ class EnergyDependentMultiGaussPSF(object):
         ss : string
             Formatted string containing the summary info.
         """
-        from psf_table import _quantity_stats_str
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
         # Summarise data members
-        ss += _quantity_stats_str(self.theta.to('degree'), 'Theta')
-        ss += _quantity_stats_str(self.energy_hi, 'Energy hi')
-        ss += _quantity_stats_str(self.energy_lo, 'Energy lo')
+        ss += array_stats_str(self.theta.to('degree'), 'Theta')
+        ss += array_stats_str(self.energy_hi, 'Energy hi')
+        ss += array_stats_str(self.energy_lo, 'Energy lo')
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
@@ -335,5 +331,6 @@ class EnergyDependentMultiGaussPSF(object):
                 for j, theta in enumerate(thetas):
                     radius = containment[j, i]
                     ss += ("{0:2.0f}% containment radius at theta = {1} and "
-                           "E = {2:4.1f}: {3:5.8f}\n").format(100 * fraction, theta, energy, radius)
+                           "E = {2:4.1f}: {3:5.8f}\n"
+                           "".format(100 * fraction, theta, energy, radius))
         return ss

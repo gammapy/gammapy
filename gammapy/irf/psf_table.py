@@ -7,27 +7,11 @@ from astropy.coordinates import Angle, SkyCoord
 #from astropy.convolution import discretize_model
 from astropy.convolution.utils import discretize_oversample_2D
 from ..morphology import Gauss2DPDF
+from ..utils.array import array_stats_str
 
 __all__ = ['TablePSF',
            'EnergyDependentTablePSF',
            ]
-
-
-def _quantity_stats_str(x, label=''):
-    """Make a string summarising Quantities ``x``.
-    """
-    ss = ''
-    if label:
-        ss += '{0:15s}: '.format(label)
-
-    min = x.min()
-    max = x.max()
-    size = x.size
-
-    fmt = 'size = {size:5d}, min = {min:6.3f}, max = {max:6.3f}\n'
-    ss += fmt.format(**locals())
-
-    return ss
 
 # Default PSF spline keyword arguments
 # TODO: test and document
@@ -133,7 +117,7 @@ class TablePSF(object):
 
     def info(self):
         """Print basic info."""
-        ss = _quantity_stats_str(self._offset.degree, 'offset')
+        ss = array_stats_str(self._offset.degree, 'offset')
         ss += 'integral = {0}\n'.format(self.integral())
 
         for containment in [50, 68, 80, 95]:
@@ -626,9 +610,9 @@ class EnergyDependentTablePSF(object):
     def info(self):
         """Print basic info."""
         # Summarise data members
-        ss = _quantity_stats_str(self.offset.to('degree'), 'offset')
-        ss += _quantity_stats_str(self.energy, 'energy')
-        ss += _quantity_stats_str(self.exposure, 'exposure')
+        ss = array_stats_str(self.offset.to('degree'), 'offset')
+        ss += array_stats_str(self.energy, 'energy')
+        ss += array_stats_str(self.exposure, 'exposure')
 
         #ss += 'integral = {0}\n'.format(self.integral())
 
