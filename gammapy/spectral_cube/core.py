@@ -17,7 +17,6 @@ from astropy.wcs import WCS
 from ..spectrum import LogEnergyAxis, energy_bounds_equal_log_spacing
 from ..spectrum import powerlaw
 from ..image.utils import coordinates
-from ..datasets import FermiGalacticCenter
 from ..irf import EnergyDependentTablePSF
 from astropy.coordinates import Angle
 from scipy.ndimage import convolve
@@ -29,6 +28,7 @@ __all__ = ['GammaSpectralCube', 'compute_npred_cube']
 
 def _correlate_fermi_psf(image, max_offset, resolution=0.1,
                          energy='None', energy_band=[10, 500]):
+    from ..datasets import FermiGalacticCenter
     filename = FermiGalacticCenter.filenames()['psf']
     pixel_size = Angle(resolution, 'deg')
     offset_max = Angle(max_offset, 'deg')
@@ -68,6 +68,7 @@ def _interp_exposure(hdu_list, new_energy):
     new_energy = new_energy.to('MeV')
     if new_energy.value >= max_energy:
         max_index = len(hdu_list[1].data['Energy'])
+        hdu = hdu_list[0]
         a = hdu.data[max_index - 1]
         out_hdu = fits.ImageHDU(data = a, header = hdu_list[0].header)
         new_table = hdu_list[1].copy()
