@@ -10,7 +10,7 @@ Introduction
 ============
 
 The `gammapy.astro.population` module provides a simple framework for population synthesis of 
-TeV sources. 
+gamma-ray sources. 
 
 Getting Started
 ===============
@@ -45,7 +45,7 @@ and related objects used in literature:
     plt.xlim(0, max_radius)
     plt.ylim(0, 0.28)
     plt.xlabel('Galactocentric Distance [kpc]')
-    plt.ylabel('Surface Density [a.u.]')
+    plt.ylabel('Normalized Surface Density [kpc^-2]')
     plt.legend(prop={'size': 10})
     plt.show()
 
@@ -73,7 +73,7 @@ Here is a comparison plot of all available velocity distribution functions:
     plt.xlim(v_min, v_max)
     plt.ylim(0, 0.004)
     plt.xlabel('Velocity [km/s]')
-    plt.ylabel('PDF [a.u.]')
+    plt.ylabel('Probability Density [(km / s)^-1]')
     plt.semilogx()
     plt.legend(prop={'size': 10})
     plt.show()

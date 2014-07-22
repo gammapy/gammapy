@@ -16,9 +16,10 @@ def example_table():
     from ..velocity import FaucherKaspi2006VelocityMaxwellian
     rad_dis = YusifovKucuk2004
     vel_dis = FaucherKaspi2006VelocityMaxwellian
-    nsources = 42
+    n_sources = 42
     max_age = 1e6
-    return simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=vel_dis, max_age=max_age)
+    return simulate.make_base_catalog_galactic(n_sources=n_sources, rad_dis=rad_dis,
+                                               vel_dis=vel_dis, max_age=max_age)
 
 
 def has_columns(table, names):
@@ -27,9 +28,9 @@ def has_columns(table, names):
 
 
 def test_make_cat_cube():
-    nsources = 100
-    table = simulate.make_cat_cube(nsources=nsources)
-    assert len(table) == nsources
+    n_sources = 100
+    table = simulate.make_cat_cube(n_sources=n_sources)
+    assert len(table) == n_sources
 
 
 def test_make_cat_gal():
@@ -37,47 +38,42 @@ def test_make_cat_gal():
     from ..velocity import FaucherKaspi2006VelocityMaxwellian
     rad_dis = YusifovKucuk2004
     vel_dis = FaucherKaspi2006VelocityMaxwellian
-    nsources = 42
+    n_sources = 42
     max_age = 1e6
 
-    table = simulate.make_cat_gal(nsources=nsources, rad_dis=rad_dis, vel_dis=vel_dis, max_age=max_age)
-    assert len(table) == nsources
+    table = simulate.make_base_catalog_galactic(n_sources=n_sources, rad_dis=rad_dis,
+                                                vel_dis=vel_dis, max_age=max_age)
+    assert len(table) == n_sources
 
 
-def test_add_par_snr(example_table):
-    table = simulate.add_par_snr(example_table)
+def test_add_snr_parameters(example_table):
+    table = simulate.add_snr_parameters(example_table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['E_SN'])
 
 
-def test_add_par_psr(example_table):
-    table = simulate.add_par_psr(example_table)
+def test_add_pulsar_parameters(example_table):
+    table = simulate.add_pulsar_parameters(example_table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['P0'])
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_add_par_pwn(example_table):
+def test_add_pwn_parameters(example_table):
     # To compute PWN parameters we need PSR and SNR parameters first
-    table = simulate.add_par_snr(example_table)
-    table = simulate.add_par_psr(table)
-    table = simulate.add_par_pwn(table)
+    table = simulate.add_snr_parameters(example_table)
+    table = simulate.add_pulsar_parameters(table)
+    table = simulate.add_pwn_parameters(table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['r_out_PWN'])
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_add_par_obs(example_table):
-    table = simulate.add_par_snr(example_table)
-    table = simulate.add_par_psr(table)
-    table = simulate.add_par_pwn(table)
+    table = simulate.add_snr_parameters(example_table)
+    table = simulate.add_pulsar_parameters(table)
+    table = simulate.add_pwn_parameters(table)
     table = simulate.add_observed_parameters(table)
-    table = simulate.add_par_obs(table)
+    table = simulate.add_observed_source_parameters(table)
     assert len(table) == len(example_table)
     assert has_columns(table, ['ext_in_SNR'])
-
-
-def test_add_observed_parameters(example_table):
-    table = simulate.add_cylindrical_coordinates(example_table)
-    assert len(table) == len(example_table)
-    assert has_columns(table, ['r', 'phi'])

@@ -4,6 +4,7 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
+from astropy.units import Quantity
 
 __all__ = ['FaucherKaspi2006VelocityMaxwellian',
            'FaucherKaspi2006VelocityBimodal',
@@ -12,7 +13,7 @@ __all__ = ['FaucherKaspi2006VelocityMaxwellian',
            ]
 
 # Simulation range used for random number drawing
-VMIN, VMAX = 0, 4000  # km/s
+VMIN, VMAX = Quantity(0, 'kpc'), Quantity(4000, 'kpc')  # km/s
 
 
 class FaucherKaspi2006VelocityMaxwellian(Fittable1DModel):

@@ -13,6 +13,7 @@ import numpy as np
 from numpy.random import random_integers, uniform, normal
 
 from numpy import exp, pi, log, abs, cos, sin
+from astropy.units import Quantity
 from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar
@@ -28,16 +29,16 @@ __all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
 R_SUN_GALACTIC = d_sun_to_galactic_center.value
 
 # Simulation range used for random number drawing
-RMIN, RMAX = 0, 20   # kpc
-ZMIN, ZMAX = -0.5, 0.5  # kpc
+RMIN, RMAX = Quantity(0, 'kpc'), Quantity(20, 'kpc')
+ZMIN, ZMAX = Quantity(-0.5, 'kpc'), Quantity(0.5, 'kpc')
 
 
 class Paczynski1990(Fittable1DModel):
     """
     Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
 
-        .. math ::
-            f(r) = A r_{exp}^{-2} \\exp \\left(-\\frac{r}{r_{exp}} \\right)
+    .. math ::
+        f(r) = A r_{exp}^{-2} \\exp \\left(-\\frac{r}{r_{exp}} \\right)
 
     Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
 
@@ -400,12 +401,12 @@ class FaucherSpiral(LogSpiral):
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
     # Parameters
-    k = [4.25, 4.25, 4.89, 4.89]
-    r_0 = [3.48, 3.48, 4.9, 4.9]  # kpc
-    theta_0 = [1.57, 4.71, 4.09, 0.95]  # rad
-    spiralarms = ['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum']
+    k = Quantity([4.25, 4.25, 4.89, 4.89], 'rad')
+    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], 'kpc')
+    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
+    spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
-    def blur(self, radius, theta, amount=0.07):
+    def _blur(self, radius, theta, amount=0.07):
         """
         Blur the positions around the centroid of the spiralarm.
 
@@ -422,13 +423,13 @@ class FaucherSpiral(LogSpiral):
         amount: float
             Amount of blurring of the position, given as a fraction of `radius`.
         """
-        dr = abs(normal(0, amount * radius, radius.size))
-        dtheta = uniform(0, 2 * np.pi, radius.size)
+        dr = Quantity(abs(normal(0, amount * radius, radius.size)), 'kpc')
+        dtheta = Quantity(uniform(0, 2 * np.pi, radius.size), 'rad')
         x, y = cartesian(radius, theta)
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
-    def gc_correction(self, radius, theta, r_corr=2.857):
+    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc')):
         """
         Correction of source distribution towards the galactic center.
 
@@ -444,7 +445,7 @@ class FaucherSpiral(LogSpiral):
         r_corr : `~astropy.units.Quantity`
             Scale of the correction towards the GC
         """
-        theta_corr = uniform(0, 2 * pi, radius.size)
+        theta_corr = Quantity(uniform(0, 2 * pi, radius.size), 'rad')
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
     def __call__(self, radius, blur=True):
@@ -462,8 +463,8 @@ class FaucherSpiral(LogSpiral):
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 
         if blur:  # Apply blurring model according to Faucher
-            radius, theta = self.blur(radius, theta)
-            radius, theta = self.gc_correction(radius, theta)
+            radius, theta = self._blur(radius, theta)
+            radius, theta = self._gc_correction(radius, theta)
         return radius, theta, spiralarm
 
 
