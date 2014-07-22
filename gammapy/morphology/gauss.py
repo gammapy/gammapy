@@ -211,7 +211,7 @@ class MultiGauss2D(object):
         # Expand until we really find a theta_max
         while f(theta_max) < 0:
             theta_max *= 2
-        return brentq(f, 0, theta_max)
+        return brentq(f, a=0, b=theta_max)
 
     def match_sigma(self, containment_fraction):
         """Compute equivalent Gauss width.

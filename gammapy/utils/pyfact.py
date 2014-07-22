@@ -19,8 +19,8 @@ from astropy.io import fits
 from astropy.table import Table, Column
 from astropy.time import Time, TimeDelta
 from ..stats import significance_on_off
-from ..irf import arf_to_np, np_to_arf, np_to_rmf
-from ..irf import EnergyDispersion
+from ..irf import np_to_rmf
+from ..irf import EnergyDispersion, EffectiveAreaTable
 from ..spectrum.utils import np_to_pha
 from ..version import version
 
@@ -325,7 +325,10 @@ def sim_evlist(flux=.1,
     # Read ARF, RMF, and extra file
 
     logging.info('ARF: {0}'.format(arf))
-    ea, ea_erange = arf_to_np(fits.open(arf)[1])
+    arf_obj = EffectiveAreaTable.read(arf)
+    ea = arf_obj.effective_area.value
+    ea_erange = np.hstack(arf_obj.energy_lo.value, arf_obj.energy_hi.value[-1])
+    del arf_obj
 
     # DEBUG
     # ea /= irf_data[:,4]
@@ -1824,9 +1827,10 @@ def create_spectrum(input_file_names,
 
         # Read run ARF file
         logging.info('RUN Reading ARF from : {0}'.format(arf))
-        f = fits.open(arf)
-        ea, ea_erange = arf_to_np(f[1])
-        f.close()
+        arf_obj = EffectiveAreaTable.read(arf)
+        ea = arf_obj.effective_area.value
+        ea_erange = np.hstack(arf_obj.energy_lo.value, arf_obj.energy_hi.value[-1])
+        del arf_obj
 
         # If average ARF is not matched to RMF use first ARF as template
         if firstloop and arf_m_erange is None:
@@ -1936,9 +1940,12 @@ def create_spectrum(input_file_names,
         hdu.writeto('average.pha.fits')
 
         # Write ARF
-        hdu = np_to_arf(arf_m, arf_m_erange, telescope=telescope, instrument=instrument)
-        hdu.writeto('average.arf.fits')
-
+        energy_lo = arf_m_erange[:-1]
+        energy_hi = arf_m_erange[1:]
+        arf_obj = EffectiveAreaTable(energy_lo, energy_hi, arf_m)
+        hdu_list = arf_obj(header='pyfact', telescope=telescope, instrument=instrument)
+        hdu_list.writeto('average.arf.fits')
+        del arf_obj
     #---------------------------------------------------------------------------
     # Plot results
 
