@@ -14,14 +14,15 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-from ..spectrum import LogEnergyAxis, energy_bounds_equal_log_spacing
+from astropy.coordinates import Angle
+from ..spectrum import (LogEnergyAxis,
+                        energy_bounds_equal_log_spacing,
+                        energy_bin_centers_log_spacing
+                        )
 from ..spectrum import powerlaw
 from ..image.utils import coordinates
 from ..irf import EnergyDependentTablePSF
-from astropy.coordinates import Angle
-from scipy.ndimage import convolve
 from ..image import cube_to_image
-
 
 __all__ = ['GammaSpectralCube', 'compute_npred_cube', 'convolve_npred_cube']
 
@@ -194,18 +195,41 @@ class GammaSpectralCube(object):
         return lon, lat, energy
 
     @property
-    def spatial_coordinates(self):
-        """TODO: document.
+    def spatial_coordinate_images(self):
+        """Spatial coordinate iamges.
+
+        Returns
+        -------
+        lon, lat : `astropy.units.Quantity`
+            Arrays of longitude and latitude pixel coordinates.
         """
         n_lon = self.data.shape[2]
         n_lat = self.data.shape[1]
         i_lat, i_lon = np.indices((n_lat, n_lon))
-        lon, lat, _ = self.pix2world(0, i_lat, i_lon)
+        lon, lat, _ = self.pix2world(i_lon, i_lat, 0)
+
         return lon, lat
 
     @property
-    def solid_angle(self):
-        pass
+    def solid_angle_image(self):
+        """Solid angle image.
+
+        TODO: currently uses CDELT1 x CDELT2, which only
+              works for cartesian images near the equator.
+
+        Returns
+        -------
+        solid_angle_image : `~astropy.units.Quantity`
+            Solid angle image (steradian)
+        """
+        cdelt = self.wcs.wcs.cdelt
+        solid_angle = np.abs(cdelt[0]) * np.abs(cdelt[1])
+        shape = self.data.shape[:2]
+
+        solid_angle = solid_angle * np.ones(shape, dtype=float)
+        solid_angle = Quantity(solid_angle, 'deg^2')
+
+        return solid_angle.to('steradian')
 
     def flux(self, lon, lat, energy):
         """Differential flux (linear interpolation).
@@ -347,10 +371,10 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bounds):
     -------
     TODO
     """
-    # desired energy binning for the output npred cube
-    energy_centers = np.diff(energy_bounds)
+    energy_centers = energy_bin_centers_log_spacing(energy_bounds)
 
-    # desired spatial binning assumed to be the same as for expoure cube
+    wcs = exposure_cube.wcs
+
     lon, lat = exposure_cube.spatial_coordinates
 
     solid_angle = exposure_cube.solid_angle
@@ -359,14 +383,14 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bounds):
     for i in range(len(energy_bounds) - 1):
         energy_bin = energy_bounds[i], energy_bounds[i + 1]
         int_flux = flux_cube.integral_flux_image(Quantity(energy_bin, 'MeV'))
-        exposure = exposure_cube.flux(lon, lat, Quantity(energy_bin[0], 'MeV'))
+        exposure = exposure_cube.flux(lon, lat, energy_centers[i])
         solid_angle = solid_angle(fits.ImageHDU(data, header))
         npred = int_flux.data * exposure * solid_angle
         cube_data[i] = npred
 
-    wcs = exposure_cube.wcs
+    npred_cube = GammaSpectralCube(data=cube_data, wcs=wcs, energy=energy_bounds)
 
-    npred_cube = GammaSpectralCube(data=npred, wcs=wcs, energy=energy_bin_edges)
+    return npred_cube
 
 
 def convolve_npred_cube(npred_cube, max_offset, resolution=1):
@@ -380,6 +404,8 @@ def convolve_npred_cube(npred_cube, max_offset, resolution=1):
     -------
     TODO
     """
+    from scipy.ndimage import convolve
+
     pixel_size = Angle(resolution, 'deg')
     offset_max = Angle(max_offset, 'deg')
     if energy == 'None':
@@ -394,4 +420,6 @@ def convolve_npred_cube(npred_cube, max_offset, resolution=1):
     psf.normalize()
     kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
     kernel_image = kernel.value / kernel.value.sum()
-    return convolve(image, kernel_image, mode='constant')
+    result = convolve(image, kernel_image, mode='constant')
+
+    return result

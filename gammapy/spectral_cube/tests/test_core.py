@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
@@ -126,6 +127,18 @@ class TestGammaSpectralCube(object):
         expected = 5.2481972772213124e-05
         assert_allclose(actual, expected)
 
+    def test_solid_angle_image(self):
+        actual = self.spectral_cube.solid_angle_image
+        expected = Quantity(7.61543549e-05 * np.ones((30, 21)), 'steradian')
+        assert_quantity(actual, expected)
+
+    def test_spatial_coordinate_images(self):
+        lon, lat = self.spectral_cube.spatial_coordinate_images
+
+        assert lon.shape == (11, 31)
+        assert lat.shape == (11, 31)
+
+        # TODO assert the four corner values
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_compute_npred_cube():
