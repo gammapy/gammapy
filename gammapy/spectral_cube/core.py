@@ -253,7 +253,7 @@ class GammaSpectralCube(object):
 
         pix_coord = self.world2pix(lon, lat, energy, combine=True)
         values = self._interpolate(pix_coord)
-        values.reshape(shape)
+        values = values.reshape(shape)
 
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
@@ -371,24 +371,27 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bounds):
     -------
     TODO
     """
+    if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
+        raise ValueError('flux_cube and exposure cube must have the same shape!\n'
+                         'flux_cube: {0}\nexposure_cube: {1}'
+                         ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
+
     energy_centers = energy_bin_centers_log_spacing(energy_bounds)
-
     wcs = exposure_cube.wcs
+    lon, lat = exposure_cube.spatial_coordinate_images
+    solid_angle = exposure_cube.solid_angle_image
 
-    lon, lat = exposure_cube.spatial_coordinates
-
-    solid_angle = exposure_cube.solid_angle
-
-    cube_data = np.zeros_like(solid_angle)
+    npred_cube = np.zeros_like(solid_angle)
     for i in range(len(energy_bounds) - 1):
-        energy_bin = energy_bounds[i], energy_bounds[i + 1]
-        int_flux = flux_cube.integral_flux_image(Quantity(energy_bin, 'MeV'))
+        energy_bound = energy_bounds[i:i + 2]
+        int_flux = flux_cube.integral_flux_image(energy_bound)
         exposure = exposure_cube.flux(lon, lat, energy_centers[i])
-        solid_angle = solid_angle(fits.ImageHDU(data, header))
-        npred = int_flux.data * exposure * solid_angle
-        cube_data[i] = npred
+        npred_image = int_flux.data * exposure * solid_angle
+        npred_cube[i] = npred_image
 
-    npred_cube = GammaSpectralCube(data=cube_data, wcs=wcs, energy=energy_bounds)
+    npred_cube = GammaSpectralCube(data=npred_cube,
+                                   wcs=wcs,
+                                   energy=energy_bounds)
 
     return npred_cube
 

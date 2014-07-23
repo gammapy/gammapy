@@ -135,8 +135,8 @@ class TestGammaSpectralCube(object):
     def test_spatial_coordinate_images(self):
         lon, lat = self.spectral_cube.spatial_coordinate_images
 
-        assert lon.shape == (11, 31)
-        assert lat.shape == (11, 31)
+        assert lon.shape == (21, 61)
+        assert lat.shape == (21, 61)
 
         # TODO assert the four corner values
 
