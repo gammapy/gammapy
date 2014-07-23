@@ -48,9 +48,9 @@ def test_EffectiveAreaTable_write():
     psf = EffectiveAreaTable.from_fits(arf_fits_table())
 
     # Write it back to disk
-    psf_file = NamedTemporaryFile(suffix='.fits').name
-    psf.write(psf_file)
+    with NamedTemporaryFile(suffix='.fits') as psf_file:
+        psf.write(psf_file.name)
 
-    # Verify checksum
-    hdu_list = fits.open(psf_file)
-    assert hdu_list[1].verify_checksum() == 1
+        # Verify checksum
+        hdu_list = fits.open(psf_file.name)
+        assert hdu_list[1].verify_checksum() == 1
