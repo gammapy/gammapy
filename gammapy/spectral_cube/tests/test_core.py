@@ -3,7 +3,8 @@ from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
-from ..core import GammaSpectralCube
+from ...datasets import FermiGalacticCenter
+from ..core import GammaSpectralCube, compute_npred_cube, convolve_npred_cube
 from ...utils.testing import assert_quantity
 
 
@@ -15,121 +16,14 @@ except ImportError:
     HAS_SCIPY = False
 
 try:
-    # The scipy.interpolation.RegularGridInterpolator class was added in Scipy version 0.14
-    from reproject.interpolation import interpolate_2d
-    HAS_REPROJECTION = True
+    from reproject import reproject
+    HAS_REPROJECT = True
 except ImportError:
-    HAS_REPROJECTION = False
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
-def test_correlate_fermi_psf():
-    from ..core import _correlate_fermi_psf
-    from ...datasets import FermiGalacticCenter
-    spectral_cube = FermiGalacticCenter.diffuse_model()
-    image = spectral_cube.data[0].value
-    energy = 1000
-    correlated_image_energy = _correlate_fermi_psf(image, max_offset=5, resolution=1, energy=energy)
-    correlated_image_band = _correlate_fermi_psf(image, max_offset=5, resolution=1, energy_band=[10, 500])
-
-    desired = image.sum()
-    actual_energy = correlated_image_energy.sum()
-    actual_band = correlated_image_band.sum()
-
-    assert_allclose(actual_energy, desired, rtol=1e-2)
-    assert_allclose(actual_band, desired, rtol=1e-2)
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
-def test_interp_flux():
-    import numpy as np
-    from gammapy.spectrum import powerlaw
-    from ...datasets import FermiGalacticCenter
-    from astropy.io import fits
-    from ..core import _interp_flux
-
-    hdu_list = fits.open(FermiGalacticCenter.filenames()['diffuse_model'])
-
-    energies = hdu_list[1]
-
-    spectral_cube = hdu_list[0]
-    spectral_cube.data = np.ones_like(spectral_cube.data)
-
-    energies.data[0][0] = 1
-    energies.data[1][0] = np.exp(1)
-    spectral_cube.data[1] = np.exp(1) * spectral_cube.data[0]
-
-    slices = spectral_cube.data.shape[0]
-    #First two slices have already been populated
-    indices = np.arange(2, slices)
-    for index in indices:
-        spectral_cube.data[index] = powerlaw.f_from_points(e1=energies.data[0][0], e2=energies.data[1][0], f1=spectral_cube.data[0], f2=spectral_cube.data[1], e=np.exp(index))
-        energies.data[index][0] = np.exp(index)
-    new_hdus = [spectral_cube, energies]
-
-    # Interpolated case
-    energy_int = np.exp(4.2)
-    actual_energy = _interp_flux(new_hdus, energy_int, method='log')[1].data[0]
-    assert_allclose(actual_energy, energy_int)
-    actual_interp = _interp_flux(new_hdus, energy_int, method='log')[0].data
-    desired_interp = powerlaw.f_from_points(e1=energies.data[0][0], e2=energies.data[1][0], f1=spectral_cube.data[0], f2=spectral_cube.data[1], e=energy_int)
-    assert_allclose(actual_interp, desired_interp)
-    # Extrapolated case
-    energy_ext = np.exp(-2)
-    actual_energy = _interp_flux(new_hdus, energy_ext, method='log')[1].data[0]
-    assert_allclose(actual_energy, energy_ext)
-    actual_extrap = _interp_flux(new_hdus, energy_ext, method='log')[0].data
-    desired_extrap = powerlaw.f_from_points(e1=energies.data[0][0], e2=energies.data[1][0], f1=spectral_cube.data[0], f2=spectral_cube.data[1], e=energy_ext)
-    assert_allclose(actual_extrap, desired_extrap)
-
-@pytest.mark.skipif('not HAS_SCIPY')
-def test_compute_npred_cube():
-    filenames = FermiGalacticCenter.filenames()
-    spectrum = SpectralCube.read(filenames['diffuse'])
-    exposure = SpectralCube.read(filenames['exposure'])
-    psf = EnergyDependentTablePSF.read(filenames['psf'])
-    energy_bin_edges = np.array([10, 30, 100, 500])
-    npred = compute_npred_cube(spectrum, exposure, energy_bin_edges)
-
-    assert npred.data.sum() == 42
-
-    npred_convolved = psf_convolve_npred_cube(npred)
-
-    assert npred_colvolved.sum() == 42
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
-def test_interp_exposure():
-    # test as per flux below cut-off
-    # test separately above cut-off
-    pass
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
-def test_equate_energies():
-    #Test shape of out arrays - should have the same energy dimension
-    #Test energies of out arrays - should be the same as the required
-    pass
-
-
-@pytest.mark.skipif('not HAS_REPROJECTION')
-def test_reproject_cube():
-    # test sum flux before and after (should be the same)
-    # test size and shape of dimensions before and after
-    # test header parameters before and after
-    pass
-
-
-@pytest.mark.skipif('not HAS_REPROJECTION', 'not HAS_SCIPY')
-def test_compute_npred_cube():
-    # Apply to the diffuse and exposure cube and check it's within 10% of the example counts cube
-    # (sum of counts in both cases)
-    pass
+    HAS_REPROJECT = False
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestGammaSpectralCube(object):
-    from ...datasets import FermiGalacticCenter
 
     def setup(self):
         self.spectral_cube = FermiGalacticCenter.diffuse_model()
@@ -231,3 +125,34 @@ class TestGammaSpectralCube(object):
         # TODO: the reference result is not verified ... just pasted from the test output.
         expected = 5.2481972772213124e-05
         assert_allclose(actual, expected)
+
+
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_compute_npred_cube():
+    # TODO: copy over example
+    pass
+
+
+# TODO: test PSF convolution
+@pytest.mark.xfail
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_convolve_npred_cube():
+    spectral_cube = FermiGalacticCenter.diffuse_model()
+    image = spectral_cube.data[0].value
+    energy = 1000
+    correlated_image_energy = convolve_npred_cube(image, max_offset=5, resolution=1, energy=energy)
+    correlated_image_band = convolve_npred_cube(image, max_offset=5, resolution=1, energy_band=[10, 500])
+
+    desired = image.sum()
+    actual_energy = correlated_image_energy.sum()
+    actual_band = correlated_image_band.sum()
+
+    assert_allclose(actual_energy, desired, rtol=1e-2)
+    assert_allclose(actual_band, desired, rtol=1e-2)
+
+@pytest.mark.skipif('not HAS_REPROJECT')
+def test_reproject_cube():
+    # test sum flux before and after (should be the same)
+    # test size and shape of dimensions before and after
+    # test header parameters before and after
+    pass
