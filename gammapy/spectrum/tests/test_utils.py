@@ -8,7 +8,7 @@ from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
 from ...utils.testing import assert_quantity
-from ..utils import np_to_pha, LogEnergyAxis
+from ..utils import np_to_pha, LogEnergyAxis, energy_bin_centers_log_spacing
 
 try:
     import scipy
@@ -62,3 +62,10 @@ def test_LogEnergyAxis():
 
     world = energy_axis.pix2world(pix)
     assert_quantity(world, energy)
+
+
+def test_energy_bin_centers_log_spacing():
+    energy_bounds = Quantity([1, 2, 10], 'GeV')
+    actual = energy_bin_centers_log_spacing(energy_bounds)
+    desired = Quantity([1.41421356, 4.47213595], 'GeV')
+    assert_quantity(actual, desired)

@@ -7,8 +7,29 @@ from astropy.io import fits
 
 __all__ = ['LogEnergyAxis',
            'energy_bounds_equal_log_spacing',
+           'energy_bin_centers_log_spacing',
            'np_to_pha',
            ]
+
+
+def energy_bin_centers_log_spacing(energy_bounds):
+    """Compute energy log bin centers.
+
+    TODO: give formula here.
+
+    Parameters
+    ----------
+    energy_bounds : `~astropy.units.Quantity`
+        Array of energy bin edges.
+
+    Returns
+    -------
+    energy_center : `~astropy.units.Quantity`
+        Array of energy bin centers
+    """
+    e_bounds = energy_bounds.value
+    e_center = np.sqrt(e_bounds[:-1] * e_bounds[1:])
+    return Quantity(e_center, energy_bounds.unit)
 
 
 def energy_bounds_equal_log_spacing(energy_band, bins=10):
