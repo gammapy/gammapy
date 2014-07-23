@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
-from ..core import GammaSpectralCube
 from ...datasets import FermiGalacticCenter
+from ..core import GammaSpectralCube, compute_npred_cube, convolve_npred_cube
 from ...utils.testing import assert_quantity
 
 
@@ -14,6 +15,12 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
+
+try:
+    from reproject import reproject
+    HAS_REPROJECT = True
+except ImportError:
+    HAS_REPROJECT = False
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -119,3 +126,46 @@ class TestGammaSpectralCube(object):
         # TODO: the reference result is not verified ... just pasted from the test output.
         expected = 5.2481972772213124e-05
         assert_allclose(actual, expected)
+
+    def test_solid_angle_image(self):
+        actual = self.spectral_cube.solid_angle_image
+        expected = Quantity(7.61543549e-05 * np.ones((30, 21)), 'steradian')
+        assert_quantity(actual, expected)
+
+    def test_spatial_coordinate_images(self):
+        lon, lat = self.spectral_cube.spatial_coordinate_images
+
+        assert lon.shape == (21, 61)
+        assert lat.shape == (21, 61)
+
+        # TODO assert the four corner values
+
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_compute_npred_cube():
+    # TODO: copy over example
+    pass
+
+
+# TODO: test PSF convolution
+@pytest.mark.xfail
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_convolve_npred_cube():
+    spectral_cube = FermiGalacticCenter.diffuse_model()
+    image = spectral_cube.data[0].value
+    energy = 1000
+    correlated_image_energy = convolve_npred_cube(image, max_offset=5, resolution=1, energy=energy)
+    correlated_image_band = convolve_npred_cube(image, max_offset=5, resolution=1, energy_band=[10, 500])
+
+    desired = image.sum()
+    actual_energy = correlated_image_energy.sum()
+    actual_band = correlated_image_band.sum()
+
+    assert_allclose(actual_energy, desired, rtol=1e-2)
+    assert_allclose(actual_band, desired, rtol=1e-2)
+
+@pytest.mark.skipif('not HAS_REPROJECT')
+def test_reproject_cube():
+    # test sum flux before and after (should be the same)
+    # test size and shape of dimensions before and after
+    # test header parameters before and after
+    pass

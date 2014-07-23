@@ -14,10 +14,17 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-from ..spectrum import LogEnergyAxis, energy_bounds_equal_log_spacing
+from astropy.coordinates import Angle
+from ..spectrum import (LogEnergyAxis,
+                        energy_bounds_equal_log_spacing,
+                        energy_bin_centers_log_spacing
+                        )
 from ..spectrum import powerlaw
+from ..image.utils import coordinates
+from ..irf import EnergyDependentTablePSF
+from ..image import cube_to_image
 
-__all__ = ['GammaSpectralCube']
+__all__ = ['GammaSpectralCube', 'compute_npred_cube', 'convolve_npred_cube']
 
 
 class GammaSpectralCube(object):
@@ -82,6 +89,35 @@ class GammaSpectralCube(object):
                                                               fill_value=None, bounds_error=False)
 
         return self._interpolate_cache
+
+    @staticmethod
+    def read_hdu(hdu_list):
+        """Read spectral cube from HDU.
+
+        Parameters
+        ----------
+        object_hdu : `astropy.io.fits.ImageHDU`
+            Image HDU object to be read
+        energy_table_hdu : `astropy.io.fits.TableHDU`
+            Table HDU object giving energies of each slice
+            of the Image HDU object_hdu
+
+        Returns
+        -------
+        spectral_cube : `GammaSpectralCube`
+            Spectral cube
+        """
+        object_hdu = hdu_list[0]
+        energy_table_hdu = hdu_list[1]
+        data = object_hdu.data
+        data = Quantity(data, '1 / (cm2 MeV s sr)')
+        # Note: the energy axis of the FITS cube is unusable.
+        # We only use proj for LON, LAT and call ENERGY from the table extension
+        header = object_hdu.header
+        wcs = WCS(header)
+        energy = energy_table_hdu.data['Energy']
+        energy = Quantity(energy, 'MeV')
+        return GammaSpectralCube(data, wcs, energy)
 
     @staticmethod
     def read(filename):
@@ -158,6 +194,43 @@ class GammaSpectralCube(object):
 
         return lon, lat, energy
 
+    @property
+    def spatial_coordinate_images(self):
+        """Spatial coordinate iamges.
+
+        Returns
+        -------
+        lon, lat : `astropy.units.Quantity`
+            Arrays of longitude and latitude pixel coordinates.
+        """
+        n_lon = self.data.shape[2]
+        n_lat = self.data.shape[1]
+        i_lat, i_lon = np.indices((n_lat, n_lon))
+        lon, lat, _ = self.pix2world(i_lon, i_lat, 0)
+
+        return lon, lat
+
+    @property
+    def solid_angle_image(self):
+        """Solid angle image.
+
+        TODO: currently uses CDELT1 x CDELT2, which only
+              works for cartesian images near the equator.
+
+        Returns
+        -------
+        solid_angle_image : `~astropy.units.Quantity`
+            Solid angle image (steradian)
+        """
+        cdelt = self.wcs.wcs.cdelt
+        solid_angle = np.abs(cdelt[0]) * np.abs(cdelt[1])
+        shape = self.data.shape[:2]
+
+        solid_angle = solid_angle * np.ones(shape, dtype=float)
+        solid_angle = Quantity(solid_angle, 'deg^2')
+
+        return solid_angle.to('steradian')
+
     def flux(self, lon, lat, energy):
         """Differential flux (linear interpolation).
 
@@ -180,7 +253,7 @@ class GammaSpectralCube(object):
 
         pix_coord = self.world2pix(lon, lat, energy, combine=True)
         values = self._interpolate(pix_coord)
-        values.reshape(shape)
+        values = values.reshape(shape)
 
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
@@ -285,3 +358,71 @@ class GammaSpectralCube(object):
         s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
         s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2], self.wcs.wcs.cunit[2])
         return s
+
+
+def compute_npred_cube(flux_cube, exposure_cube, energy_bounds):
+    """TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Returns
+    -------
+    TODO
+    """
+    if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
+        raise ValueError('flux_cube and exposure cube must have the same shape!\n'
+                         'flux_cube: {0}\nexposure_cube: {1}'
+                         ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
+
+    energy_centers = energy_bin_centers_log_spacing(energy_bounds)
+    wcs = exposure_cube.wcs
+    lon, lat = exposure_cube.spatial_coordinate_images
+    solid_angle = exposure_cube.solid_angle_image
+
+    npred_cube = np.zeros_like(solid_angle)
+    for i in range(len(energy_bounds) - 1):
+        energy_bound = energy_bounds[i:i + 2]
+        int_flux = flux_cube.integral_flux_image(energy_bound)
+        exposure = exposure_cube.flux(lon, lat, energy_centers[i])
+        npred_image = int_flux.data * exposure * solid_angle
+        npred_cube[i] = npred_image
+
+    npred_cube = GammaSpectralCube(data=npred_cube,
+                                   wcs=wcs,
+                                   energy=energy_bounds)
+
+    return npred_cube
+
+
+def convolve_npred_cube(npred_cube, max_offset, resolution=1):
+    """TODO
+
+    Parameters
+    ----------
+    TODO
+
+    Returns
+    -------
+    TODO
+    """
+    from scipy.ndimage import convolve
+
+    pixel_size = Angle(resolution, 'deg')
+    offset_max = Angle(max_offset, 'deg')
+    if energy == 'None':
+        fermi_psf = EnergyDependentTablePSF.read(filename)
+        # PSF energy band calculation doesn't work, so implemented at log center energy instead
+        energy = Quantity(np.sqrt(energy_band[0] * energy_band[1]), 'MeV')
+        psf = fermi_psf.table_psf_at_energy(energy)
+    else:
+        energy = Quantity(energy, 'MeV')
+        fermi_psf = EnergyDependentTablePSF.read(filename)
+        psf = fermi_psf.table_psf_at_energy(energy=energy)
+    psf.normalize()
+    kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
+    kernel_image = kernel.value / kernel.value.sum()
+    result = convolve(image, kernel_image, mode='constant')
+
+    return result
