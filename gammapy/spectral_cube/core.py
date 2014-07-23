@@ -26,130 +26,161 @@ from ..image import cube_to_image
 __all__ = ['GammaSpectralCube', 'compute_npred_cube']
 
 
-def _correlate_fermi_psf(image, max_offset, resolution=0.1,
-                         energy='None', energy_band=[10, 500]):
-    from ..datasets import FermiGalacticCenter
-    filename = FermiGalacticCenter.filenames()['psf']
-    pixel_size = Angle(resolution, 'deg')
-    offset_max = Angle(max_offset, 'deg')
-    if energy == 'None':
-        energy_band = Quantity(energy_band, 'MeV')
-        fermi_psf = EnergyDependentTablePSF.read(filename)
-        psf = fermi_psf.table_psf_in_energy_band(energy_band=energy_band,
-                                                 spectral_index=2.5)
-        #Normalize??
-    else:
-        energy = Quantity(energy, 'MeV')
-        fermi_psf = EnergyDependentTablePSF.read(filename)
-        psf = fermi_psf.table_psf_at_energy(energy=energy)
-        psf.normalize()
-    kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
-    kernel_image = kernel.value / kernel.value.sum()
-    return convolve(image, kernel_image, mode='constant')
+#def _correlate_fermi_psf(image, max_offset, resolution=1,
+#                         energy='None', energy_band=[10, 500]):
+#    from ..datasets import FermiGalacticCenter
+#    filename = FermiGalacticCenter.filenames()['psf']
+#    pixel_size = Angle(resolution, 'deg')
+#    offset_max = Angle(max_offset, 'deg')
+#    if energy == 'None':
+#        fermi_psf = EnergyDependentTablePSF.read(filename)
+#        # PSF energy band calculation doesn't work, so implemented at log center energy instead
+#        energy = Quantity(np.sqrt(energy_band[0] * energy_band[1]), 'MeV')
+#        psf = fermi_psf.table_psf_at_energy(energy)
+#    else:
+#        energy = Quantity(energy, 'MeV')
+#        fermi_psf = EnergyDependentTablePSF.read(filename)
+#        psf = fermi_psf.table_psf_at_energy(energy=energy)
+#    psf.normalize()
+#    kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
+#    kernel_image = kernel.value / kernel.value.sum()
+#    return convolve(image, kernel_image, mode='constant')#
 
 
-def _interp_flux(hdu_list, new_energy):
-    hdu = hdu_list[0]
-    cube = GammaSpectralCube.read_hdu(hdu_list)
-    image_hdu = cube_to_image(hdu_list[0], 0)
-    lat, lon = coordinates(image_hdu, world=True, radians=True)
-    lat = Quantity(lat, 'rad')
-    lon = Quantity(lon, 'rad')
-    array = cube.flux(lat, lon, new_energy.to('MeV'))
-    array = array.reshape(lat.shape)
-    out_hdu = fits.ImageHDU(data = array, header = hdu.header)
-    new_table = hdu_list[1].copy()
-    new_table.data['Energy'] = new_energy
-    return [out_hdu, new_table]
+#def _interp_flux(hdu_list, new_energy, method='linear'):
+#    hdu = hdu_list[0]
+#    cube = GammaSpectralCube.read_hdu(hdu_list)
+#    image_hdu = cube_to_image(hdu_list[0], 0)
+#    lat, lon = coordinates(image_hdu, world=True, radians=True)
+#    lat = Quantity(lat, 'rad')
+#    lon = Quantity(lon, 'rad')
+#    if method == 'linear':
+#        array = cube.flux(lat, lon, new_energy.to('MeV'))
+#    elif method == 'log10':
+#        # Needs to go into cube.flux as linear relation
+#        array = cube.flux(lat, lon, Quantity(np.log10(new_energy), 'MeV'))
+#    elif method == 'log':
+#        # Needs to go into cube.flux as linear relation
+#        array = cube.flux(lat, lon, Quantity(np.log(new_energy), 'MeV'))
+#    array = array.reshape(lat.shape)
+#    out_hdu = fits.ImageHDU(data = array, header = hdu.header)
+#    new_table = hdu_list[1].copy()
+#    # True (linear) values are provided in the table
+#    new_table.data['Energy'] = new_energy
+#    return [out_hdu, new_table]
 
 
-def _interp_exposure(hdu_list, new_energy):
-    max_energy = max(hdu_list[1].data['Energy'])
-    new_energy = new_energy.to('MeV')
-    if new_energy.value >= max_energy:
-        max_index = len(hdu_list[1].data['Energy'])
-        hdu = hdu_list[0]
-        a = hdu.data[max_index - 1]
-        out_hdu = fits.ImageHDU(data = a, header = hdu_list[0].header)
-        new_table = hdu_list[1].copy()
-        new_table.data['Energy'] = new_energy
-        return [out_hdu, new_table]
-    else:
-        cube = GammaSpectralCube.read_hdu(hdu_list)
-        image_hdu = cube_to_image(hdu_list[0], 0)
-        lat, lon = coordinates(image_hdu, world=True, radians=True)
+#def _interp_exposure(hdu_list, new_energy):
+#    max_energy = max(hdu_list[1].data['Energy'])
+#    new_energy = new_energy.to('MeV')
+#    if new_energy.value >= max_energy:
+#        max_index = len(hdu_list[1].data['Energy'])
+#        hdu = hdu_list[0]
+#        a = hdu.data[max_index - 1]
+#        out_hdu = fits.ImageHDU(data = a, header = hdu_list[0].header)
+#        new_table = hdu_list[1].copy()
+#        new_table.data['Energy'] = new_energy
+#        return [out_hdu, new_table]
+#    else:
+#        cube = GammaSpectralCube.read_hdu(hdu_list)
+#        image_hdu = cube_to_image(hdu_list[0], 0)
+#        lat, lon = coordinates(image_hdu, world=True, radians=True)#
+#        lat = Quantity(lat, 'rad')
+#        lon = Quantity(lon, 'rad')
+#        # This doesn't appear to work - just returns the same each time
+#        array = cube.flux(lat, lon, new_energy)#
 
-        lat = Quantity(lat, 'rad')
-        lon = Quantity(lon, 'rad')
-        # This doesn't appear to work - just returns the same each time
-        array = cube.flux(lat, lon, new_energy)
-
-        a = array.reshape(lat.shape)
-        out_hdu = fits.ImageHDU(data = a, header = hdu_list[0].header)
-        new_table = hdu_list[1].copy()
-        new_table.data['Energy'] = new_energy
-        return [out_hdu, new_table]
-
-
-def _equate_energies(hdu_list1, hdu_list2, energies=None):
-    """Interpolates assuming power law the energy axis of hdu1, and returns cube
-    with energy slices of hdu2.
-    """
-    hdu1 = hdu_list1[0]
-    hdu2 = hdu_list2[0]
-    energies1 = hdu_list1[1].data['Energy']
-    energies2 = hdu_list2[1].data['Energy']
-    if energies == None:
-        indices = np.arange(len(energies2))
-        out_hdu = hdu1.copy()
-        # Only need to change the size of the energy axis to be the same as hdu2
-        out_hdu.data = np.zeros((hdu2.data.shape[0], hdu1.data.shape[1],
-                                 hdu1.data.shape[2]))
-        for index in indices:
-            energy = energies2[index]
-            desired_energy = Quantity(energy, 'MeV')
-            slice_hdus = _interp_flux(hdu_list1, desired_energy)
-            # -1 due to different indexing convention
-            out_hdu.data[index] = slice_hdus[0].data
-        return [out_hdu, hdu_list2[1]]
-    else:
-        indices = len(energies)
-        for index in indices:
-            energy = energies[index]
-            desired_energy = Quantity(energy, 'MeV')
-            slice_hdus = _interp_flux(hdu1, desired_energy)
-            # -1 due to different indexing convention
-            out_hdu.data[index - 1] = slice_hdus[0].data
-            out_energies = hdu_list1[1].copy()
-            out_energies.data['Energy'] = energies
-        return [out_hdu, out_energies]
+#        a = array.reshape(lat.shape)
+#        out_hdu = fits.ImageHDU(data = a, header = hdu_list[0].header)
+#        new_table = hdu_list[1].copy()
+#        new_table.data['Energy'] = new_energy
+#        return [out_hdu, new_table]
 
 
-def _reproject_cube(hdu_list1, hdu_list2, smooth=False):
-    """Reprojects hdu1 to the header of hdu2 and returns as hdu.
+#def _equate_energies(hdu_list1, hdu_list2, energies=None):
+#    """Interpolates assuming power law the energy axis of hdu1, and returns cube
+#    with energy slices of hdu2.
+#    """
+#    hdu1 = hdu_list1[0]
+#    hdu2 = hdu_list2[0]
+#    energies1 = hdu_list1[1].data['Energy']
+#    energies2 = hdu_list2[1].data['Energy']
+#    if energies == None:
+#        indices = np.arange(len(energies2))
+#        out_hdu = hdu1.copy()
+#        # Only need to change the size of the energy axis to be the same as hdu2
+#        out_hdu.data = np.zeros((hdu2.data.shape[0], hdu1.data.shape[1],
+#                                 hdu1.data.shape[2]))
+#        for index in indices:
+#            energy = energies2[index]
+#            desired_energy = Quantity(energy, 'MeV')
+#            slice_hdus = _interp_flux(hdu_list1, desired_energy)
+#            # -1 due to different indexing convention
+#            out_hdu.data[index] = slice_hdus[0].data
+#        return [out_hdu, hdu_list2[1]]
+#    else:
+#        indices = len(energies)
+#        for index in indices:
+#            energy = energies[index]
+#            desired_energy = Quantity(energy, 'MeV')
+#            slice_hdus = _interp_flux(hdu1, desired_energy)
+#            # -1 due to different indexing convention
+#            out_hdu.data[index - 1] = slice_hdus[0].data
+#            out_energies = hdu_list1[1].copy()
+#            out_energies.data['Energy'] = energies
+#        return [out_hdu, out_energies]#
 
-    Optionally smooths HDUs to match resolution.
-    """
-    from reproject.interpolation import interpolate_2d
-    if smooth == False:
-        out_hdu_list = _equate_energies(hdu_list1, hdu_list2)
-        array = out_hdu_list[0].data
-        wcs_in = WCS(cube_to_image(hdu_list1[0]).header)
-        wcs_out = WCS(cube_to_image(hdu_list2[0]).header)
-        shape_out = cube_to_image(hdu_list2[0]).data.shape
-        energies = out_hdu_list[1].data['Energy']
-        indices = np.arange(len(energies))
-        out_array = np.zeros_like(hdu_list2[0].data)
-        for index in indices:
-            out_array[index] = interpolate_2d(array[index], wcs_in, wcs_out, shape_out, order=3)
-        out_hdu = fits.ImageHDU(data=out_array, header=out_hdu_list[0].header)
-        return [out_hdu, out_hdu_list[1]]
-    else:
-        raise NotImplementedError
-        # TODO: implement this!
-        # Currently this does not work with smoothing
-        out_hdu = _equate_energies(hdu1, hdu2)
-        return regrid_cube_hdu(out_hdu, hdu2.header, smooth=True)
+
+#def _reproject_cube(hdu_list1, hdu_list2, smooth=False):
+#    """Reprojects hdu1 to the header of hdu2 and returns as hdu.
+
+#    Optionally smooths HDUs to match resolution.
+#    """
+#    from reproject.interpolation import interpolate_2d
+#    out_hdu_list = _equate_energies(hdu_list1, hdu_list2)
+#    array = out_hdu_list[0].data
+#    wcs_in = WCS(cube_to_image(hdu_list1[0]).header)
+#    wcs_out = WCS(cube_to_image(hdu_list2[0]).header)
+#    shape_out = cube_to_image(hdu_list2[0]).data.shape
+#    energies = out_hdu_list[1].data['Energy']
+#    indices = np.arange(len(energies))
+#    out_array = np.zeros_like(hdu_list2[0].data)
+#    for index in indices:
+#        out_array[index] = interpolate_2d(array[index], wcs_in, wcs_out, shape_out, order=3)
+#    out_hdu = fits.ImageHDU(data=out_array, header=out_hdu_list[0].header)
+#    return [out_hdu, out_hdu_list[1]]#
+
+
+#def convolve_npred_cube(npred_cube, psf):
+#    pass
+
+#def compute_npred_cube_simple(flux_cube, exposure_cube, energy_bin_edges):
+#
+#    # desired energy binning for the output npred cube
+#    energy_bin_edges = 'TODO' # the bin edges
+#    energy_bin_centers = np.diff(energy_bin_edges)#
+
+    # desired spatial binning assumed to be the same as for expoure cube
+    #lon, lat = exposure_cube.spatial_coordinates
+
+#    solid_angle = exposure_cube.solid_angle # in steradian
+
+#    exposure = exposure_cube.flux()
+
+
+ #   if method = 'method1':
+ #       int_fluxes = []
+ #       for ii in range(len(enegy_bin_edges) - 1):
+ #           energy_bin = energy_bin_edges[i], energy_bin_edges[i + 1]
+ #           int_flux = flux_cube.integral_flux_image(energy_bin)#
+
+#        npred = int_flux * exposure * solid_angle
+#    elif method = 'method2':
+ #       data = exposure_cube.flux(energ, lon, lat)
+ #       dnpred_denergy = SpectralCube()
+ #       npred = dnpred_denergy.integral_flux_image()#
+
+#    npred_cube = GammaSpectralCube(data=npred, )
 
 
 def compute_npred_cube(flux_hdu_list, exposure_hdu_list, desired_energy=None,
@@ -303,7 +334,6 @@ class GammaSpectralCube(object):
         spectral_cube : `GammaSpectralCube`
             Spectral cube
         """
-        
         object_hdu = hdu_list[0]
         energy_table_hdu = hdu_list[1]
         data = object_hdu.data
@@ -390,6 +420,20 @@ class GammaSpectralCube(object):
         energy = Quantity(energy, self.energy.unit)
 
         return lon, lat, energy
+
+    @property
+    def spatial_coordinates(self):
+        """TODO: document.
+        """
+        n_lon = self.data.shape[2]
+        n_lat = self.data.shape[1]
+        i_lat, i_lon = np.indices((n_lat, n_lon))
+        lon, lat, _ = self.pix2world(0, i_lat, i_lon)
+        return lon, lat
+
+    @property
+    def solid_angle(self):
+        pass
 
     def flux(self, lon, lat, energy):
         """Differential flux (linear interpolation).
