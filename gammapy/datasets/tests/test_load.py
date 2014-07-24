@@ -8,7 +8,7 @@ from astropy.tests.helper import pytest
 from astropy.tests.helper import remote_data
 from ...utils.testing import assert_quantity
 from .. import poisson_stats_image, FermiGalacticCenter
-from .. import fetch_fermi_catalog
+from .. import fetch_fermi_catalog, fetch_fermi_extended_sources
 
 
 def test_poisson_stats_image():
@@ -67,3 +67,12 @@ def test_fetch_fermi_catalog():
 
     n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
     assert n_sources == 1873
+
+
+@remote_data
+def test_fetch_fermi_extended_sources():
+    n_hdu = len(fetch_fermi_extended_sources('2FGL'))
+    assert n_hdu == 12
+
+    n_hdu = len(fetch_fermi_extended_sources('1FHL'))
+    assert n_hdu == 22
