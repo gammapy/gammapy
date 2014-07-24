@@ -6,6 +6,10 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.coordinates import Angle
+from ..morphology import Gauss2DPDF
+from ..datasets import FermiGalacticCenter
+from ..irf import EnergyDependentTablePSF
 
 
 __all__ = ['atrous_hdu', 'atrous_image',
@@ -16,7 +20,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'cube_to_image', 'cube_to_spec',
            'crop_image',
            'disk_correlate', 'exclusion_distance',
-           'image_groupby', 'images_to_cube',
+           'gauss_correlate', 'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels',
            'block_reduce_hdu',
@@ -127,6 +131,34 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
+
+
+def gauss_correlate(image, radius):
+    """Correlate image with Gaussian of a given radius.
+
+    This is also called "Gaussian correlation" and it means that
+    the value of a given pixel in the output image is the
+    integral of all pixels within a given input range convolved with a
+    Gaussian kernel.
+
+    Parameters
+    ----------
+    image : array
+        Image to convolve.
+    radius : float
+        Convolution kernel radius in degrees.
+
+    Returns
+    -------
+    image : array
+        Convolved image.
+    """
+    from scipy.ndimage import convolve
+    radius = int(radius)
+    gaussian = Gauss2DPDF(radius)
+    y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
+    structure = gaussian(x, y)
+    return convolve(image, structure, mode='constant')
 
 
 def exclusion_distance(exclusion):
