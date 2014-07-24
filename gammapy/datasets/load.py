@@ -17,12 +17,16 @@ To download all datasets into a local cache::
     datasets.download_datasets()
 """
 import numpy as np
+from astropy.utils import data
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import data
+import tarfile
+import os
 from ..spectral_cube import GammaSpectralCube
+
 
 included_datasets = ['poisson_stats_image',
                      'tev_spectrum',
@@ -35,7 +39,7 @@ included_datasets = ['poisson_stats_image',
                      'psf_fits_table',
                      ]
 
-remote_datasets = [
+remote_datasets = ['fetch_fermi_extended_sources'
                    ]
 
 datasets = included_datasets + remote_datasets
@@ -431,6 +435,58 @@ def fetch_fermi_catalog(catalog, extension=None):
         return catalog_table
     else:
         return hdu_list
+
+FERMI_EXTENDED = '2FGL 1FHL'.split()
+
+
+def fetch_fermi_extended_sources(catalog):
+    """Get Fermi catalog extended source images.
+
+    Reference: http://fermi.gsfc.nasa.gov/ssc/data/access/lat/.
+
+    Extended source are available for the following Fermi catalogs:
+
+    * 2FGL Catalog : LAT 2-year Point Source Catalog
+    * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
+
+    Parameters
+    ----------
+    catalog : {'2FGL', '1FHL'}
+       Specifies which catalog extended sources to return.
+
+    Returns
+    -------
+    hdu_list : `~astropy.io.fits.HDUList`
+        FITS HDU list of FITS ImageHDUs for the extended sources.
+
+    Examples
+    --------
+    >>> from gammapy.datasets import fetch_fermi_extended_sources
+    >>> sources = fetch_fermi_extended_sources('2FGL')
+    >>> len(sources) = 12
+    """
+    BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
+    if catalog == '2FGL':
+        url = BASE_URL + '2yr_catalog/gll_psc_v07_templates.tgz'
+    elif catalog == '1FHL':
+        url = BASE_URL + '1FHL/LAT_extended_sources_v12.tar'
+    else:
+        ss = 'Invalid catalog: {0}\n'.format(catalog)
+        ss += 'Available: {0}'.format(', '.join(FERMI_EXTENDED))
+        raise ValueError(ss)
+
+    filename = data.download_file(url, cache=True)
+    tar = tarfile.open(filename, 'r')
+
+    hdu_list = []
+    for member in tar.getmembers():
+        if member.name.endswith(".fits"):
+            file = tar.extractfile(member)
+            hdu = fits.open(file)[0]
+            hdu_list.append(hdu)
+    hdu_list = fits.HDUList(hdu_list)
+
+    return hdu_list
 
 
 def get_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
