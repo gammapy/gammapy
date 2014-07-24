@@ -18,7 +18,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
            'crop_image', 'disk_correlate',
-           'exclusion_distance', 'fermipsf_correlate',
+           'exclusion_distance', 'psf_correlate',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels',
@@ -154,13 +154,22 @@ def psf_correlate(image, PSF, max_offset=3, resolution=0.1, energy='None',
         [energy_min, energy_max], energies in GeV.
         Either energy or energy_band must be supplied.
     spectral_index (default = 2.5)
-        Spectral index of assumed spectral power law if PSF
+        Index of assumed spectral power law if PSF
         is required for an energy_band.
 
     Returns
     -------
     convolved_image : array_like
         convolved 2D image.
+        
+    Example
+    -------
+    >>> from gammapy.irf import EnergyDependentTablePSF
+    >>> filename = 'psf.fits'
+    >>> PSF = EnergyDependentTablePSF.read(filename)
+    >>> array = np.ones((9, 9))
+    >>> correlated_array = psf_correlate(array, PSF, 3,
+    >>>                                  1, Quantity(10, 'GeV'))
     """
     from scipy.ndimage import convolve
     pixel_size = Angle(resolution, 'deg')
@@ -728,7 +737,7 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     pars = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
             'CTYPE1': ctype1 + proj,
-            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1': -binsz,
+            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1':-binsz,
             'CTYPE2': ctype2 + proj,
             'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
             }
