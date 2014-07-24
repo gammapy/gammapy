@@ -6,6 +6,10 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.coordinates import Angle
+from ..morphology import Gauss2DPDF
+from ..datasets import FermiGalacticCenter
+from ..irf import EnergyDependentTablePSF
 
 
 __all__ = ['atrous_hdu', 'atrous_image',
@@ -15,7 +19,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
            'crop_image',
-           'disk_correlate', 'exclusion_distance',
+           'disk_correlate', 'exclusion_distance', 'fermipsf_correlate',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels',
@@ -127,6 +131,46 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
+
+
+def fermipsf_correlate(image, max_offset, resolution=0.1, energy='None',
+                       energy_band=[10, 500]):
+    """ Correlates with energy-dependent Fermi PSF kernel.
+
+    Parameters
+    ----------
+    image : array_like
+        2D image array to convolve.
+    max_offset : float
+        maximum size of convolution kernel from center (degrees).
+    resolution : float
+        kernel resolution (degrees per pixel)
+    energy : float
+        energy to call the Fermi PSF convolution kernel (GeV)
+    energy_band : array
+        energy band to call Fermi PSF convolution kernel.
+        [energy_min, energy_max], energies in GeV.
+
+    Returns
+    -------
+    convolved_image : array_like
+        convolved 2D image.
+    """
+    from scipy.ndimage import convolve
+    filename = FermiGalacticCenter.filenames()['psf']
+    pixel_size = Angle(resolution, 'deg')
+    offset_max = Angle(max_offset, 'deg')
+    if energy == 'None':
+        energy_band = Quantity(energy_band, 'GeV')
+        fermi_psf = EnergyDependentTablePSF.read(filename)
+        psf = fermi_psf.table_psf_in_energy_band(energy_band=energy_band, spectral_index=2.5)
+    else:
+        energy = Quantity(energy, 'GeV')
+        fermi_psf = EnergyDependentTablePSF.read(filename)
+        psf = fermi_psf.table_psf_at_energy(energy=energy)
+    kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
+    kernel_image = kernel.value / kernel.value.sum()
+    return convolve(image, kernel_image, mode='constant')
 
 
 def exclusion_distance(exclusion):
