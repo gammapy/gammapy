@@ -4,9 +4,13 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
+from astropy.units import Quantity
 from astropy.wcs import WCS
 from .. import utils
 from .. import measure
+from ...irf import EnergyDependentTablePSF
+from ...datasets import FermiGalacticCenter
+
 
 try:
     import skimage
@@ -31,7 +35,32 @@ def test_binary_ring():
                         [False, True, True, True, False],
                         [False, False, True, False, False]])
     assert_equal(actual, desired)
-
+    
+    
+def test_psf_correlate():
+    filename = FermiGalacticCenter.filenames()['psf']
+    PSF = EnergyDependentTablePSF.read(filename)
+    
+    array = np.zeros((9, 9))
+    array[4][4] = 1
+    correlated_array = utils.psf_correlate(array, PSF, 3, 1, Quantity(10, 'GeV'))
+    
+    # Test normalization of PSF
+    actual = correlated_array.sum()
+    expected = 1.0
+    assert_allclose(expected, actual, rtol=1e-9)
+    
+    # Test size of PSF (outer values should all be
+    # zero as offset 3 pixels from center)
+    actual = correlated_array[0][0]
+    expected = 0.0
+    assert_allclose(expected, actual)
+    
+    # Test value (of central pixel)
+    actual = correlated_array[4][4]
+    expected = 0.89155143111452528
+    assert_allclose(expected, actual)
+   
 
 class TestImageCoordinates(object):
 
@@ -184,11 +213,11 @@ def test_wcs_histogram2d():
 
     EPS = 0.1
     data = [
-            ( 5,  5,  1),        # in image[0, 0]
-            ( 0,  0 + EPS,  2),  # in image[1, 0]
-            ( 5, -5 + EPS,  3),  # in image[0, 0]
-            ( 5,  5 + EPS, 99),  # outside image
-            (10 + EPS, 0, 99),   # outside image
+            (5, 5, 1),  # in image[0, 0]
+            (0, 0 + EPS, 2),  # in image[1, 0]
+            (5, -5 + EPS, 3),  # in image[0, 0]
+            (5, 5 + EPS, 99),  # outside image
+            (10 + EPS, 0, 99),  # outside image
             ]
     lon, lat, weights = np.array(data).T
     image = utils.wcs_histogram2d(header, lon, lat, weights)
