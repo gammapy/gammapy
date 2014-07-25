@@ -4,11 +4,12 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
+from astropy.units import Quantity
 from astropy.wcs import WCS
 from .. import utils
 from .. import measure
-from ..irf import EnergyDependentTablePSF
-from ..datasets import FermiGalacticCenter
+from ...irf import EnergyDependentTablePSF
+from ...datasets import FermiGalacticCenter
 
 
 try:
@@ -42,7 +43,7 @@ def test_psf_correlate():
     
     array = np.zeros((9, 9))
     array[4][4] = 1
-    correlated_array = psf_correlate(array, PSF, 3, 1, Quantity(10, 'GeV'))
+    correlated_array = utils.psf_correlate(array, PSF, 3, 1, Quantity(10, 'GeV'))
     
     # Test normalization of PSF
     actual = correlated_array.sum()
