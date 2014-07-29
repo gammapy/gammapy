@@ -6,6 +6,9 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.coordinates import Angle
+from ..morphology import Gauss2DPDF
+from ..irf import EnergyDependentTablePSF
 
 
 __all__ = ['atrous_hdu', 'atrous_image',
@@ -14,12 +17,12 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'binary_opening_circle', 'binary_ring',
            'contains', 'coordinates',
            'cube_to_image', 'cube_to_spec',
-           'crop_image',
-           'disk_correlate', 'exclusion_distance',
+           'crop_image', 'disk_correlate',
+           'exclusion_distance',
            'image_groupby', 'images_to_cube',
            'make_empty_image', 'make_header',
            'paste_cutout_into_image', 'process_image_pixels',
-           'block_reduce_hdu',
+           'psf_correlate', 'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
            'wcs_histogram2d',
            ]
@@ -127,6 +130,59 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
+
+
+def psf_correlate(image, PSF, max_offset=3, resolution=0.1, energy='None',
+                       energy_band=[10, 500], spectral_index=2.5):
+    """ Correlates with energy-dependent PSF kernel.
+
+    Parameters
+    ----------
+    image : array_like
+        2D image array to convolve.
+    PSF : `~gammapy.irf.EnergyDependentTablePSF`
+        PSF as an EnergyDependentTablePSF of the requried instrument.
+    max_offset : float (default = 3 degrees)
+        maximum size of convolution kernel from center (degrees).
+    resolution : float (default = 0.1 degrees/pixel)
+        kernel resolution (degrees per pixel)
+    energy : float
+        energy to call the PSF convolution kernel (GeV).
+        Either energy or energy_band must be supplied.
+    energy_band : array
+        energy band to call PSF convolution kernel.
+        [energy_min, energy_max], energies in GeV.
+        Either energy or energy_band must be supplied.
+    spectral_index (default = 2.5)
+        Index of assumed spectral power law if PSF
+        is required for an energy_band.
+
+    Returns
+    -------
+    convolved_image : array_like
+        convolved 2D image.
+
+    Example
+    -------
+    >>> from gammapy.irf import EnergyDependentTablePSF
+    >>> filename = 'psf.fits'
+    >>> PSF = EnergyDependentTablePSF.read(filename)
+    >>> array = np.ones((9, 9))
+    >>> correlated_array = psf_correlate(array, PSF, 3,
+    >>>                                  1, Quantity(10, 'GeV'))
+    """
+    from scipy.ndimage import convolve
+    pixel_size = Angle(resolution, 'deg')
+    offset_max = Angle(max_offset, 'deg')
+    if energy == 'None':
+        energy_band = Quantity(energy_band, 'GeV')
+        psf = PSF.table_psf_in_energy_band(energy_band, spectral_index)
+    else:
+        energy = Quantity(energy, 'GeV')
+        psf = PSF.table_psf_at_energy(energy)
+    kernel = psf.kernel(pixel_size, offset_max)
+    kernel_image = kernel.value / kernel.value.sum()
+    return convolve(image, kernel_image, mode='constant')
 
 
 def exclusion_distance(exclusion):
