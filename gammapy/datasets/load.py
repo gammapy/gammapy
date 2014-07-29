@@ -39,7 +39,8 @@ included_datasets = ['poisson_stats_image',
                      'psf_fits_table',
                      ]
 
-remote_datasets = ['fetch_fermi_extended_sources'
+remote_datasets = ['fetch_fermi_extended_sources',
+                   'FermiVelaRegion',
                    ]
 
 datasets = included_datasets + remote_datasets
@@ -171,6 +172,78 @@ class FermiGalacticCenter(object):
             Exposure cube
         """
         filename = FermiGalacticCenter.filenames()['exposure_cube']
+        return GammaSpectralCube.read(filename)
+
+
+class FermiVelaRegion(object):
+    """Fermi high-energy data for the Vela region.
+
+    * 5 years of observation time (2008-08-05 to 2013-08-05)
+    * Event class and IRF: P7REP_CLEAN_V15
+    * Max zenith angle cut: 105 deg
+    * 10 GeV < Energy < 500 GeV in 3 equal log10 bins
+    * CenterPosition: GLON = 263.05836967702709; GLAT = 3.9298511274632784
+    * Coordinate System: GALACTIC
+    * Image Size: 5 x 5 degrees (Search center 3 degrees)
+    * Pixel size: 0.1 degrees/pixel
+    * Image Shape: (50, 50) pixels
+
+    For further details see:
+    https://github.com/gammapy/gammapy-extra/tree/master/datasets/vela_region
+    """
+
+    @staticmethod
+    def filenames():
+        """Dictionary of available file names."""
+        result = dict()
+
+        BASE_URL = 'https://github.com/gammapy/gammapy-extra/raw/master/datasets/vela_region/'
+        url_counts = BASE_URL + 'counts_vela.fits'
+        url_exposure = BASE_URL + 'exposure_vela.fits'
+        url_background = BASE_URL + 'background_vela.fits'
+
+        result['counts_cube'] = data.download_file(url_counts, cache=True)
+        result['exposure_cube'] = data.download_file(url_exposure, cache=True)
+        result['background_image'] = data.download_file(url_background, cache=True)
+        return result
+
+    @staticmethod
+    def counts_cube():
+        """Counts cube.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+            * Counts cube `~astropy.io.fits.PrimaryHDU`.
+            * Energy bins `~astropy.io.fits.BinTableHDU`.
+            * MET bins `~astropy.io.fits.BinTableHDU`.
+        """
+        filename = FermiVelaRegion.filenames()['counts_cube']
+        return fits.open(filename)
+
+    @staticmethod
+    def background_image():
+        """Predicted background counts spectral cube.
+        Based on the Fermi Diffuse model (see class docstring).
+
+        Returns
+        -------
+        background_cube : `~astropy.io.fits.PrimaryHDU`
+            Diffuse model spectral cube
+        """
+        filename = FermiVelaRegion.filenames()['background_image']
+        return fits.open(filename)[0]
+
+    @staticmethod
+    def exposure_cube():
+        """Exposure cube.
+
+        Returns
+        -------
+        exposure_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+            Exposure cube
+        """
+        filename = FermiVelaRegion.filenames()['exposure_cube']
         return GammaSpectralCube.read(filename)
 
 
