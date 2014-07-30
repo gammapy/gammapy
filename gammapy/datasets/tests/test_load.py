@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.tests.helper import pytest
 from astropy.tests.helper import remote_data
 from ...utils.testing import assert_quantity
-from .. import poisson_stats_image, FermiGalacticCenter
+from .. import poisson_stats_image, FermiGalacticCenter, FermiVelaRegion
 from .. import fetch_fermi_catalog, fetch_fermi_extended_sources
 
 
@@ -58,6 +58,33 @@ class TestFermiGalacticCenter():
         exposure_cube = FermiGalacticCenter.exposure_cube()
         assert exposure_cube.data.shape == (21, 11, 31)
         assert_quantity(exposure_cube.energy[0], Quantity(50, 'MeV'))
+
+
+class TestFermiVelaRegion():
+
+    @remote_data
+    def test_filenames(self):
+        filenames = FermiVelaRegion.filenames()
+        assert isinstance(filenames, dict)
+
+    @remote_data
+    def test_counts_cube(self):
+        counts = FermiVelaRegion.counts_cube()[0]
+        assert counts.data.shape == (3, 50, 50) 
+        assert counts.data.sum() == 310
+
+    @remote_data
+    def test_background_image(self):
+        background = FermiVelaRegion.background_image()
+        assert background.data.shape == (50, 50) 
+        assert background.data.sum(), 351.66653
+
+    @remote_data
+    def test_exposure_cube(self):
+        exposure_cube = FermiVelaRegion.exposure_cube()
+        assert exposure_cube.data.shape == (4, 50, 50)
+        assert exposure_cube.data.value.sum(), 1.4978096e+15
+        assert_quantity(exposure_cube.energy[0], Quantity(10000, 'MeV'))
 
 
 @remote_data
