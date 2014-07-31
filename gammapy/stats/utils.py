@@ -7,7 +7,7 @@ import numpy as np
 from numpy import pi, sqrt, log
 
 
-__all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit']
+__all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit', 'cov_to_corr']
 
 __doctest_skip__ = ['*']
 
@@ -118,3 +118,29 @@ def s_to_p_limit(s, guess=1e-100):
     from scipy.optimize import fsolve
     f = lambda p: p_to_s_limit(p) - s if p > 0 else 1e100
     return fsolve(f, guess)
+
+
+def cov_to_corr(covariance):
+    """
+    Compute correlation matrix from covariance matrix.
+
+    The correlation matrix :math:`c` is related to the covariance matrix :math:`\\sigma` by:
+
+    .. math::
+
+        c_{ij} = \\frac{\\sigma_{ij}}{\\sqrt{\\sigma_{ii} \sigma_{jj}}}
+
+    Parameters
+    ----------
+    covariance : `numpy.array`
+        Covariance matrix.
+
+    Returns
+    -------
+    correlation : `numpy.array`
+        Correlation matrix.
+    """
+    diagonal = np.sqrt(covariance.diagonal())
+    return (covariance.T / diagonal).T / diagonal
+
+
