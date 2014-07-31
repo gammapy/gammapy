@@ -9,6 +9,7 @@ from astropy.time import Time
 from astropy.table import Table
 from ...utils.testing import assert_quantity
 from ..utils import np_to_pha, LogEnergyAxis, energy_bin_centers_log_spacing
+from numpy.testing.utils import assert_almost_equal
 
 try:
     import scipy

@@ -6,8 +6,7 @@ TODO: Unusable at the moment. Refactor into classes and clean up.
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['cov2corr',
-           'generate_MC_data',
+__all__ = ['generate_MC_data',
            'plot_chi2',
            'plot_fit',
            'plot_model',
@@ -22,15 +21,6 @@ def set_off_diagonal_to_zero(matrix):
         for j in range(matrix.shape[1]):
             if i != j:
                 matrix[i, j] = 0
-    return matrix
-
-
-def cov2corr(matrix):
-    """Compute the correlation matrix for a given covariance matrix
-    """
-    for i in range(matrix.shape[0]):
-        for j in range(matrix.shape[1]):
-            matrix[i, j] /= np.sqrt(matrix[i, i]) * np.sqrt(matrix[j, j])
     return matrix
 
 
