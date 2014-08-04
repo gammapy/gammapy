@@ -89,6 +89,9 @@ install:
     # install since this ensures Numpy does not get automatically upgraded.
     # - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION ... ; fi
     # - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL ...; fi
+    # TODO: remove the following line once imageutils is moved to the Astropy core
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astropy/imageutils.git#egg=imageutils; fi
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that

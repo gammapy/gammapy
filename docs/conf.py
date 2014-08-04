@@ -61,6 +61,8 @@ del intersphinx_mapping['h5py']
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
+intersphinx_mapping['imageutils'] = ('http://imageutils.readthedocs.org/en/latest/', None)
+intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
 
 # Extend astropy intersphinx_mapping with packages we use in gammapy
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
