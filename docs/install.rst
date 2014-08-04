@@ -40,16 +40,17 @@ Optional dependencies (imported and used only where needed):
 
 * `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods
 * `matplotlib`_ for plotting
+* `aplpy`_ for plotting astro images
 * `pandas`_ CVS read / write; DataFrame
 * `scikit-image`_ for image processing
-* `GammaLib`_ and `ctools`_ 
+* `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
 * `Sherpa`_ for modeling / fitting
 * `ROOT`_ and `rootpy`_ conversion helper functions
 * `photutils`_ for image photometry
-* `Kapteyn`_ for reprojecting images
-* `aplpy`_ for plotting astro images
 * `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for Gaussian error propagation
+* `imageutils`_ for image utility functions (temporary, will become `astropy.image`)
+* `reproject`_ for image reprojection (temporary, will become `astropy.reproject`)
 
 .. note:: I didn't put any effort into minimizing the number of dependencies ...
    I'll limit the number of optional packages if people complain about installation woes.

@@ -3,6 +3,8 @@
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _Astropy: http://astropy.org
+.. _imageutils: http://imageutils.readthedocs.org
+.. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _gammafit: http://gammafit.readthedocs.org
 .. _ROOT: http://root.cern.ch/
@@ -14,3 +16,4 @@
 .. _aplpy: http://aplpy.github.io
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org
+ 
