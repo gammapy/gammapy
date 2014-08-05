@@ -70,14 +70,25 @@ class TestFermiVelaRegion():
     @remote_data
     def test_counts_cube(self):
         counts = FermiVelaRegion.counts_cube()[0]
-        assert counts.data.shape == (3, 50, 50) 
+        assert counts.data.shape == (20, 50, 50) 
         assert counts.data.sum() == 310
+
+    @remote_data    
+    def test_psf(self):
+        psf = FermiVelaRegion.psf()
+        assert psf['PSF'].data.shape == (20,)
+        assert psf['THETA'].data.shape == (300,)
+
+    @remote_data
+    def test_diffuse_model(self):
+        diffuse_model = FermiVelaRegion.diffuse_model()
+        assert diffuse_model.data.shape == (30, 61, 61)
 
     @remote_data
     def test_background_image(self):
         background = FermiVelaRegion.background_image()
         assert background.data.shape == (50, 50) 
-        assert background.data.sum(), 351.66653
+        assert background.data.sum(), 287.03403
 
     @remote_data
     def test_exposure_cube(self):
