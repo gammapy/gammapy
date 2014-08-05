@@ -66,7 +66,13 @@ class TestFermiVelaRegion():
     def test_filenames(self):
         filenames = FermiVelaRegion.filenames()
         assert isinstance(filenames, dict)
-    
+
+    @remote_data
+    def test_counts_cube(self):
+        counts = FermiVelaRegion.counts_cube()[0]
+        assert counts.data.shape == (20, 50, 50) 
+        assert counts.data.sum() == 310
+
     @remote_data    
     def test_psf(self):
         psf = FermiVelaRegion.psf()
@@ -74,10 +80,9 @@ class TestFermiVelaRegion():
         assert psf['THETA'].data.shape == (300,)
 
     @remote_data
-    def test_counts_cube(self):
-        counts = FermiVelaRegion.counts_cube()[0]
-        assert counts.data.shape == (20, 50, 50) 
-        assert counts.data.sum() == 310
+    def test_diffuse_model(self):
+        diffuse_model = FermiVelaRegion.diffuse_model()
+        assert diffuse_model.data.shape == (30, 61, 61)
 
     @remote_data
     def test_background_image(self):
