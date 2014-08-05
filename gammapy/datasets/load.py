@@ -201,10 +201,12 @@ class FermiVelaRegion(object):
         url_counts = BASE_URL + 'counts_vela.fits'
         url_exposure = BASE_URL + 'exposure_vela.fits'
         url_background = BASE_URL + 'background_vela.fits'
+        url_psf = BASE_URL + 'psf_vela.fits'
 
         result['counts_cube'] = data.download_file(url_counts, cache=True)
         result['exposure_cube'] = data.download_file(url_exposure, cache=True)
         result['background_image'] = data.download_file(url_background, cache=True)
+        result['psf'] = data.download_file(url_psf, cache=True)
         return result
 
     @staticmethod
@@ -219,6 +221,18 @@ class FermiVelaRegion(object):
             * MET bins `~astropy.io.fits.BinTableHDU`.
         """
         filename = FermiVelaRegion.filenames()['counts_cube']
+        return fits.open(filename)
+    
+    @staticmethod
+    def psf():
+        """Fermi PSF for the Vela region.
+
+        Returns
+        -------
+        hdu_list : `astropy.io.fits.HDUList`.
+            PSF information as hdu_list
+        """
+        filename = FermiGalacticCenter.filenames()['psf']
         return fits.open(filename)
 
     @staticmethod
