@@ -9,14 +9,22 @@ Astrophysical source models (`gammapy.astro.source`)
 Introduction
 ============
 
-`gammapy.astro.source` implements some common astrophysical source and population models.
+The `gammapy.astro.source` module contains classes of source models, which can be used for population synthesis of galactic gamma-ray sources.
 
-TODO: describe
 
-Getting Started
-===============
+Source Models
+=============
+The following source models are available:
 
-TODO: describe
+.. toctree::
+   :maxdepth: 1
+
+   snr
+   pwn
+   pulsar
+
+
+
 
 Reference/API
 =============

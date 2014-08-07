@@ -21,6 +21,10 @@ The ``gammapy.astro`` namespace is empty ... use these import statements::
   source/index
   population/index
 
+Getting Started
+===============
+
+
 
 Example
 =======

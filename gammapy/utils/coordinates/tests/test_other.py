@@ -1,7 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from .. import other
+
+from astropy.units import Quantity
+from ..other import galactic
 
 
-def test_todo():
-    pass
+def test_galactic():
+    x = Quantity(0, 'kpc')
+    y = Quantity(0, 'kpc')
+    z = Quantity(0, 'kpc')
+    reference = (Quantity(8.5, 'kpc'), Quantity(0, 'deg'), Quantity(0, 'deg'))
+    assert galactic(x, y, z) == reference

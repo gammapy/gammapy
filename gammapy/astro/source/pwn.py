@@ -2,39 +2,159 @@
 """Pulsar wind nebula (PWN) source models"""
 from __future__ import print_function, division
 import logging
+
 import numpy as np
-from astropy.units import Unit
-from . import snr, pulsar
+
+from astropy.units import Quantity
+from astropy.utils.misc import lazyproperty
+import astropy.constants as const
+
+from .snr import SNRTrueloveMcKee
+from .pulsar import Pulsar
+from ...extern.validator import validate_physical_type
+
 
 __all__ = ['PWN']
 
-YEAR_TO_SEC = Unit('year').to(Unit('second'))
-CM_TO_PC = Unit('cm').to(Unit('pc'))
-PC_TO_CM = 1. / CM_TO_PC
-
 
 class PWN(object):
-    """Pulsar wind nebula (PWN) evolution model.
-
-    TODO: document
+    """
+    Simple pulsar wind nebula (PWN) evolution model.
 
     Parameters
     ----------
+    pulsar : `gammapy.astro.source.Pulsar`
+        Pulsar model instance.
+    snr : `gammapy.astro.source.SNRTrueloveMcKee`
+        SNR model instance
     eta_e : float
         Fraction of energy going into electrons.
     eta_B : float
         Fraction of energy going into magnetic fields.
+    age : `~astropy.units.Quantity`
+        Age of the PWN.
+    morphology : str
+        Morphology model of the PWN
     """
-    def __init__(self, pulsar=pulsar.ModelPulsar(), snr=snr.SNR(),
-                 eta_e=0.999,
-                 eta_B=0.001,
-                 q_type='constant',
-                 r_type='constant',
-                 B_type='constant'):
+    def __init__(self, pulsar=Pulsar(), snr=SNRTrueloveMcKee(),
+                 eta_e=0.999, eta_B=0.001, morphology='Gaussian2D',
+                 age=None):
         self.pulsar = pulsar
+        if not isinstance(snr, SNRTrueloveMcKee):
+            raise ValueError('SNR must be instance of SNRTrueloveMcKee')
         self.snr = snr
         self.eta_e = eta_e
         self.eta_B = eta_B
+        self.morphology = morphology
+        if age is not None:
+            validate_physical_type('age', age, 'time')
+            self.age = age
+
+    def _radius_free_expansion(self, t):
+        """
+        Radius at age t during free expansion phase.
+
+        Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
+        """
+        term1 = (self.snr.e_sn ** 3 * self.pulsar.L_0 ** 2) / (self.snr.m_ejecta ** 5)
+        return (1.44 * term1 ** (1. / 10) * t ** (6. / 5)).cgs
+
+    @lazyproperty
+    def _collision_time(self):
+        """
+        Time of collision between the PWN and the reverse shock of the SNR.
+
+        Returns
+        -------
+        t_coll : `~astropy.units.Quantity`
+            Time of collision.
+        """
+        from scipy.optimize import fsolve
+ 
+        def time_coll(t):
+            t = Quantity(t, 'yr')
+            return (self._radius_free_expansion(t) - self.snr.radius_reverse_shock(t)).value
+        # 4e3 years is a typical value that works for fsolve
+        return Quantity(fsolve(time_coll, 4e3), 'yr')
+
+    def radius(self, t=None):
+        """
+        Radius of the PWN at age t.
+
+        Reference: http://adsabs.harvard.edu/abs/2006ARA%26A..44...17G (Formula 8).
+
+        Parameters
+        ----------
+        t : `~astropy.units.Quantity`
+            Time after birth of the SNR.
+
+        Notes
+        -----
+        During the free expansion phase the radius of the PWN evolves like:
+
+        .. math::
+
+            R_{PWN}(t) = 1.44\\text{pc}\\left(\\frac{E_{SN}^3\\dot{E}_0^2}
+            {M_{ej}^5}\\right)^{1/10}t^{6/5}
+
+        After the collision with the reverse shock of the SNR, the radius is
+        assumed to be constant (See `~gammapy.astro.source.SNRTrueloveMcKee.radius_reverse_shock`)
+
+        """
+        if t is not None:
+            validate_physical_type('t', t, 'time')
+        elif hasattr(self, 'age'):
+            t = self.age
+        else:
+            raise ValueError('Need time variable or age attribute.')
+        # Radius at time of collision
+        r_coll = self._radius_free_expansion(self._collision_time)
+        return Quantity(np.where(t < self._collision_time, self._radius_free_expansion(t), r_coll), 'cm')
+
+    def magnetic_field(self, t=None):
+        """
+        Estimation of the magnetic field inside the PWN.
+
+        By assuming that a certain fraction of the spin down energy is
+        converted to magnetic field energy an estimation of the magnetic
+        field can be derived.
+
+        Parameters
+        ----------
+        t : `~astropy.units.Quantity`
+            Time after birth of the SNR.
+        """
+
+        if t is not None:
+            validate_physical_type('t', t, 'time')
+        elif hasattr(self, 'age'):
+            t = self.age
+        else:
+            raise ValueError('Need time variable or age attribute.')
+        return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) / 
+                       (4. / 3 * np.pi * self.radius(t) ** 3))
+
+    def luminosity_tev(self, t=None, fraction=0.1):
+        """
+        Simple luminosity evolution model.
+
+        Assumes that the luminosity is just a fraction of the total energy content
+        of the pulsar. No cooling is considered and therefore the estimate is very bad.
+
+        Parameters
+        ----------
+        t : `~astropy.units.Quantity`
+            Time after birth of the SNR.
+        """
+        return fraction * self.pulsar.energy_integrated(t)
+
+
+# TODO: The following PWN model should be adapted to use gammafit classes.
+
+class PWNElectronSpectrum(PWN):
+    def __init__(self,  q_type='constant', r_type='constant', B_type='constant',
+                 *args, **kwargs):
+        super(PWNElectronSpectrum, self).__init__(*args, **kwargs)
         # Spectrum is not needed for now
         # self.electron_spec = Spectrum.table_spectrum(emin, emax, npoints)
         # Choose appropriate evolution functions for the
@@ -48,84 +168,6 @@ class PWN(object):
         #
         # self.B = Bs[B_type]['function'](Bs[B_type]['params'])
         # self.B = self.B_constant(B=10)
-
-    def r_free(self, t):
-        """Radius (pc) at age t (yr) during free expansion phase.
-
-        Reference: Gaensler & Slane 2006 (Formula 8).
-        """
-        term1 = (self.snr.E_SN ** 3 * self.pulsar.L_0 ** 2) / (self.snr.m ** 5)
-        term2 = (t * YEAR_TO_SEC) ** (6. / 5)
-        return CM_TO_PC * 1.44 * term1 ** (1. / 10) * term2
-
-    def r(self, t):
-        """Radius (pc) at age t (yr).
-
-        After collision with the reverse shock we assume constant radius.
-
-        TODO: shouldn't we assume constant fraction of snr.r_out ???
-        """
-        from scipy.optimize import fsolve
-        t = YEAR_TO_SEC * t
-        t_coll = fsolve(lambda x: self.r_free(x) - self.snr.r_reverse(x), 4e3)
-        # 4e3 years is a typical value that works for fsolve
-        # Radius at time of collision
-        r_coll = self.r_free(t_coll)
-        return np.where(t < t_coll, self.r_free(t), r_coll)
-
-    def B(self, t):
-        """Evolution of the magnetic field inside the PWN.
-
-        Eta denotes the fraction of the spin down energy
-        converted to magnetic field energy.
-
-        TODO: Check this formula and give reference!
-        """
-        return np.sqrt((3 * self.eta_B * self.snr.L0 *
-                     YEAR_TO_SEC * self.pulsar.tau_0) /
-                   (self.r(t) * PC_TO_CM) ** 3 *
-                   (1 - (1 + (t / self.pulsar.tau_0)) ** (-1)))
-
-    def L(self, t):
-        """Simple luminosity evolution model.
-
-        Assumes that the luminosity just follows the total energy content.
-        """
-        return (3e-16 * self.pulsar.tau_0 * self.pulsar.L_0 *
-                (t / (t + self.pulsar.tau_0)))
-
-    def B_constant(self, B):
-        def B_constant(e, t):
-            return B
-        return B_constant
-
-    def B_spindown(self, L0, tau0, n, eta_B):
-        def B_spindown(e, t):
-            return self.L(t) / self.eta_B
-        return B_spindown
-
-    def L_constant(self, L0):
-        def f(t):
-            return L0
-        return f
-
-    def L_spindown(self, L0, tau0, n=3):
-        """Pulsar spin-down luminosity (erg s^-1).
-
-        Parameters
-        ----------
-        L0 : float
-            Luminosity at time tau0 (erg s^-1)
-        tau0 : float
-            Spin-down timescale (yr)
-        n : flaot
-            Braking index
-        """
-        beta = -(n + 1) / (n - 1)
-
-        def f(t):
-            return L0 * (1 + t / tau0) ** beta
-        return f
 
     def q(self, e, t, norm=1, e0=1, index=-2, emin=1e1, emax=1e4, burst=False):
         """Injection spectrum: exponential cutoff power law.
@@ -243,3 +285,36 @@ class PWN(object):
         """
         e = e if side == 'right' else e[::-1]
         return np.ediff1d(e, to_end=e[-1] - e[-2])
+
+    def B_constant(self, B):
+        def B_constant(e, t):
+            return B
+        return B_constant
+
+    def B_spindown(self, L0, tau0, n, eta_B):
+        def B_spindown(e, t):
+            return self.L(t) / self.eta_B
+        return B_spindown
+
+    def L_constant(self, L0):
+        def f(t):
+            return L0
+        return f
+
+    def luminosity_spindown(self, L0, tau0, n=3):
+        """Pulsar spin-down luminosity (erg s^-1).
+
+        Parameters
+        ----------
+        L0 : float
+            Luminosity at time tau0 (erg s^-1)
+        tau0 : float
+            Spin-down timescale (yr)
+        n : flaot
+            Braking index
+        """
+        beta = -(n + 1) / (n - 1)
+
+        def f(t):
+            return L0 * (1 + t / tau0) ** beta
+        return f

@@ -1,81 +1,137 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions"""
 from __future__ import print_function, division
-from numpy import (cos, sin, arcsin, sqrt,
-                   tan, arctan, arctan2,
-                   radians, degrees, pi)
 from ...utils.const import d_sun_to_galactic_center
 from astropy.units import Unit
-
+import numpy as np
 
 
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
-           'radius_to_angle', 'angle_to_radius', 'spherical_velocity', 'motion_since_birth']
+           'radius_to_angle', 'angle_to_radius', 'velocity_glon_glat',
+           'motion_since_birth', 'polar']
 
 
-def cartesian(r, theta, dx=0, dy=0):
-    """Takes polar coordinates r and theta and returns cartesian coordinates x and y.
-    Has the option to add dx and dy for blurring the positions."""
-    x = r * cos(theta) + dx
-    y = r * sin(theta) + dy
+D_SUN_GALACTIC_CENTER = d_sun_to_galactic_center.to('kpc')
+
+
+def cartesian(r, theta):
+    """
+    Convert polar coordinates to cartesian coordinates.
+    """
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
     return x, y
+
+
+def polar(x, y):
+    """Convert cartesian coordinates to polar coordinates."""
+    r = np.sqrt(x ** 2 + y ** 2)
+    theta = np.arctan2(y, x)
+    return r, theta
 
 
 def galactic(x, y, z, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
     for given position in cartesian coordinates (kpc)"""
-    D_SUN_GALACTIC_CENTER = d_sun_to_galactic_center.to('kpc').value
-    d = sqrt(x ** 2 + (y - D_SUN_GALACTIC_CENTER) ** 2 + z ** 2)
-    lon = degrees(arctan2(x, D_SUN_GALACTIC_CENTER - y))
-    lat = degrees(arcsin(z / d))
-    return lon, lat, d
+    y_prime = y + d_sun_to_galactic_center
+    d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
+    glon = np.arctan2(x, y_prime).to('deg')
+    glat = np.arcsin(z / d).to('deg')
+    return d, glon, glat
 
 
 def luminosity_to_flux(luminosity, distance):
     """Distance is assumed to be in kpc"""
-    return luminosity / (4 * pi * (Unit('kpc').to(Unit('cm')) * distance) ** 2)
+    return luminosity / (4 * np.pi * distance ** 2)
 
 
 def flux_to_luminosity(flux, distance):
     """Distance is assumed to be in kpc"""
-    return flux * (4 * pi * (Unit('kpc').to(Unit('cm')) * distance) ** 2)
+    return flux * 4 * np.pi * distance ** 2
 
 
 def radius_to_angle(radius, distance):
     """Radius (pc), distance(kpc), angle(deg)"""
-    return degrees(arctan(Unit('kpc').to(Unit('pc')) * radius / distance))
+    return np.arctan(radius / distance)
 
 
 def angle_to_radius(angle, distance):
     """Radius (pc), distance(kpc), angle(deg)"""
-    return tan(radians(angle)) * Unit('kpc').to(Unit('pc')) * distance
+    return np.tan(angle * distance)
 
 
-def spherical_velocity(x, y, z, vx, vy, vz):
-    """Computes the projected angular velocity in spherical coordinates."""
-    d = sqrt(x ** 2 + y ** 2 + z ** 2)
-    r = sqrt(x ** 2 + y ** 2)
+def velocity_glon_glat(x, y, z, vx, vy, vz):
+    """
+    Compute projected angular velocity in galactic coordinates.
 
-    v_lon = degrees(1. / (Unit('kpc').to(Unit('km')) * r) * (-y * vx + x * vy)) * Unit('year').to(Unit('second')) * 1e6
-    v_lat = (degrees(vz / (sqrt(1 - (z / d) ** 2) * Unit('kpc').to(Unit('km')) * d ) - 
-              sqrt(vx ** 2 + vy ** 2 + vz ** 2) * z / 
-              (Unit('kpc').to(Unit('km')) * (sqrt(1 - (z / d) ** 2) * d ** 2))) * Unit('year').to(Unit('second')) * 1e6)
-    return v_lon, v_lat
+    Parameters
+    ----------
+    x : `~astropy.units.Quantity`
+        Position in x direction
+    y : `~astropy.units.Quantity`
+        Position in y direction
+    z : `~astropy.units.Quantity`
+        Position in z direction
+    vx : `~astropy.units.Quantity`
+        Velocity in x direction
+    vy : `~astropy.units.Quantity`
+        Velocity in y direction
+    vz : `~astropy.units.Quantity`
+        Velocity in z direction
+
+    Returns
+    -------
+    v_glon : `~astropy.units.Quantity`
+        Projected velocity in Galactic longitude
+    v_glat : `~astropy.units.Quantity`
+        Projected velocity in Galactic latitude
+    """
+    y_prime = y + d_sun_to_galactic_center
+    d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
+    r = np.sqrt(x ** 2 + y_prime ** 2)
+
+    v_glon = (-y_prime * vx + x * vy) / r ** 2
+    v_glat = (vz / (np.sqrt(1 - (z / d) ** 2) * d) - np.sqrt(vx ** 2 + vy ** 2 + vz ** 2) * z /
+              ((np.sqrt(1 - (z / d) ** 2) * d ** 2)))
+    return v_glon * Unit('rad'), v_glat * Unit('rad')
 
 
-def motion_since_birth(x, y, z, v, age, theta, phi):
-    """Takes x[kpc], y[kpc], z[kpc], v[km/s] and age[years] chooses an arbitrary direction
-    and computes the new position. Doesn't include any galactic potential modelation.
-    Returns the new position."""
-    vx = v * cos(phi) * sin(theta)
-    vy = v * sin(phi) * sin(theta)
-    vz = v * cos(theta)
+def motion_since_birth(v, age, theta, phi):
+    """
+    Compute motion of a object with given velocity, direction and age.
 
-    age = Unit('year').to(Unit('second')) * age
+    Parameters
+    ----------
+    v : `~astropy.units.Quantity`
+        Absolute value of the velocity
+    age : `~astropy.units.Quantity`
+        Age of the source.
+    theta : `~astropy.units.Quantity`
+        Angular direction of the velocity.
+    phi : `~astropy.units.Quantity`
+        Angular direction of the velocity.
+
+    Returns
+    -------
+    dx : `~astropy.units.Quantity`
+        Displacement in x direction
+    dy : `~astropy.units.Quantity`
+        Displacement in y direction
+    dz : `~astropy.units.Quantity`
+        Displacement in z direction
+    vx : `~astropy.units.Quantity`
+        Velocity in x direction
+    vy : `~astropy.units.Quantity`
+        Velocity in y direction
+    vz : `~astropy.units.Quantity`
+        Velocity in z direction
+    """
+    vx = v * np.cos(phi) * np.sin(theta)
+    vy = v * np.sin(phi) * np.sin(theta)
+    vz = v * np.cos(theta)
 
     # Compute new positions
-    x = x + Unit('kpc').to(Unit('km')) * vx * age
-    y = y + Unit('kpc').to(Unit('km')) * vy * age
-    z = z + Unit('kpc').to(Unit('km')) * vz * age
-
-    return x, y, z, vx, vy, vz
+    dx = vx * age
+    dy = vy * age
+    dz = vz * age
+    return dx, dy, dz, vx, vy, vz

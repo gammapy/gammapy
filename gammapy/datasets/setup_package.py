@@ -9,6 +9,7 @@ def get_package_data():
              'data/poisson_stats_image/*',
              'data/tev_spectra/*.txt',
              'data/tev_spectra/*.fits.gz',
-             'data/irfs/*.fits'
+             'data/irfs/*.fits',
+             'data/atnf/*.txt'
              ]
     return {'gammapy.datasets': files}

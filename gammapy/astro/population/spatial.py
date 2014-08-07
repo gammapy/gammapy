@@ -11,197 +11,312 @@ radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
 from __future__ import print_function, division
 import numpy as np
 from numpy.random import random_integers, uniform, normal
-from numpy import exp, sqrt, pi, log, abs, cos, sin
-from astropy.utils.compat.odict import OrderedDict
 
-__all__ = ['CB98', 'F06', 'L06', 'P90', 'YK04', 'YK04B',
-           'LogSpiral', 'FaucherSpiral', 'ValleeSpiral',
-           'r_range', 'z_range',
-           'radial_distributions',
+from numpy import exp, pi, log, abs, cos, sin
+from astropy.units import Quantity
+from astropy.utils.compat.odict import OrderedDict
+from astropy.modeling import Fittable1DModel, Parameter
+from ...utils.coordinates import cartesian, polar
+
+from ...utils.const import d_sun_to_galactic_center
+
+__all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
+           'Paczynski1990', 'YusifovKucuk2004', 'YusifovKucuk2004B',
+           'Exponential', 'LogSpiral', 'FaucherSpiral', 'ValleeSpiral',
+           'radial_distributions'
            ]
 
-R_SUN_GALACTIC = 8  # kpc
+R_SUN_GALACTIC = d_sun_to_galactic_center.value
 
 # Simulation range used for random number drawing
-r_range = 20  # kpc
-z_range = 0.5  # kpc
+RMIN, RMAX = Quantity(0, 'kpc'), Quantity(20, 'kpc')
+ZMIN, ZMAX = Quantity(-0.5, 'kpc'), Quantity(0.5, 'kpc')
 
 
-def P90(r, R0=4.5):
-    r"""Radial Birth Distribution of neutron stars - Paczynski 1990.
+class Paczynski1990(Fittable1DModel):
+    """
+    Radial distribution of the birth surface density of neutron stars - Paczynski 1990.
 
     .. math ::
-        f(r)  = r R_{0} ^ (-2) \exp(-r / R_{0})
+        f(r) = A r_{exp}^{-2} \\exp \\left(-\\frac{r}{r_{exp}} \\right)
 
-    Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P
+    Reference: http://adsabs.harvard.edu/abs/1990ApJ...348..485P (Formula (2))
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    R0 : array_like
+    amplitude : float
+        See formula
+    r_exp : float
         See formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    CaseBattacharya1998, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
+    FaucherKaspi2006, Exponential
     """
-    return r * R0 ** -2 * exp(-r / R0)
+    amplitude = Parameter()
+    r_exp = Parameter()
+    evolved = False
+
+    def __init__(self, amplitude=1, r_exp=4.5, **kwargs):
+        super(Paczynski1990, self).__init__(amplitude=amplitude,
+                                            r_exp=r_exp, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, r_exp):
+        """One dimensional Paczynski 1990 model function"""
+        return amplitude * r_exp ** -2 * np.exp(-r / r_exp)
 
 
-def CB98(r, a=2, b=3.53):
-    r"""Distribution of supernova remnants - Case and Battacharya 1998.
+class CaseBattacharya1998(Fittable1DModel):
+    """
+    Radial distribution of the surface density of supernova remnants in the
+    galaxy - Case & Battacharya 1998.
 
     .. math ::
-        f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_{sun})
+        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ \\alpha \\exp 
+        \\left[ -\\beta \\left( \\frac{ r - r_{\\odot}}{r_{\\odot}} \\right) \\right]
 
-    Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C
+    Reference: http://adsabs.harvard.edu//abs/1998ApJ...504..761C (Formula (14))
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    a, b : array_like
-        See formula
+    amplitude : float
+        See model formula
+    alpha : float
+        See model formula
+    beta : float
+        See model formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    Paczynski1990, YusifovKucuk2004, Lorimer2006, YusifovKucuk2004B,
+    FaucherKaspi2006, Exponential
     """
-    term1 = r * (r / R_SUN_GALACTIC) ** a
-    term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
-    return term1 * term2
+    amplitude = Parameter()
+    alpha = Parameter()
+    beta = Parameter()
+    evolved = True
+
+    def __init__(self, amplitude=1., alpha=2, beta=3.53, **kwargs):
+        super(CaseBattacharya1998, self).__init__(amplitude=amplitude,
+                                                  alpha=alpha, beta=beta, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, alpha, beta):
+        """One dimensional Case & Battacharya 2006 model function"""
+        term1 = (r / R_SUN_GALACTIC) ** alpha
+        term2 = np.exp(-beta * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+        return amplitude * term1 * term2
 
 
-def YK04(r, a=1.64, b=4.01, R1=0.55):
-    r"""Evolved pulsar distribution - Yusifov and Kucuk 2004.
+class YusifovKucuk2004(Fittable1DModel):
+    """
+    Radial distribution of the surface density of pulsars in the galaxy - Yusifov & Kucuk 2004.
 
     .. math ::
-        f(r) = TODO
+        f(r) = A \\left ( \\frac{r + r_1}{r_{\\odot} + r_1} \\right )^a \\exp 
+        \\left [-b \\left( \\frac{r - r_{\\odot}}{r_{\\odot} + r_1} \\right ) \\right ]
 
-    Used by Faucher-Guigere and Kaspi.
-    Density at ``r = 0`` is nonzero.
+    Used by Faucher-Guigere and Kaspi. Density at ``r = 0`` is nonzero.
 
-    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
+    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (15))
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    a, b, R1 : array_like
-        See formula
+    amplitude : float
+        See model formula
+    a : float
+        See model formula
+    b : float
+        See model formula
+    r_1 : float
+        See model formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    CaseBattacharya1998, Paczynski1990, Lorimer2006, YusifovKucuk2004B,
+    FaucherKaspi2006, Exponential
     """
-    term1 = r * ((r + R1) / (R_SUN_GALACTIC + R1)) ** a
-    term2 = exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + R1))
-    return term1 * term2
+    amplitude = Parameter()
+    a = Parameter()
+    b = Parameter()
+    r_1 = Parameter()
+    evolved = True
+
+    def __init__(self, amplitude=1, a=1.64, b=4.01, r_1=0.55, **kwargs):
+        super(YusifovKucuk2004, self).__init__(amplitude=amplitude,
+                                               a=a, b=b, r_1=r_1, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, a, b, r_1):
+        """One dimensional Yusifov & Kucuk 2004 model function"""
+        term1 = ((r + r_1) / (R_SUN_GALACTIC + r_1)) ** a
+        term2 = np.exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + r_1))
+        return amplitude * term1 * term2
 
 
-def YK04B(r, a=4, b=6.8):
-    r"""Birth pulsar distribution - Yusifov & Kucuk 2004.
+class YusifovKucuk2004B(Fittable1DModel):
+    """
+    Radial distribution of the surface density of OB stars in the galaxy - Yusifov & Kucuk 2004.
 
     .. math ::
-        f(r) = (r / r_{sun}) ^ a \exp(-b (r / r_{sun}))
+        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ a
+        \\exp \\left[ -b \\left( \\frac{r}{r_{\\odot}} \\right) \\right]
 
     Derived empirically from OB-stars distribution.
 
-    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y
+    Reference: http://adsabs.harvard.edu/abs/2004A%26A...422..545Y (Formula (17))
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    a, b : array_like
-        See formula
+    amplitude : float
+        See model formula
+    a : float
+        See model formula
+    b : float
+        See model formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
+    FaucherKaspi2006, Exponential
     """
-    return (r / R_SUN_GALACTIC) ** a * exp(-b * (r / R_SUN_GALACTIC))
+    amplitude = Parameter()
+    a = Parameter()
+    b = Parameter()
+    evolved = False
+
+    def __init__(self, amplitude=1, a=4, b=6.8, **kwargs):
+        super(YusifovKucuk2004B, self).__init__(amplitude=amplitude,
+                                                a=a, b=b, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, a, b):
+        """One dimensional Yusifov & Kucuk 2004 model function"""
+        return amplitude * (r / R_SUN_GALACTIC) ** a * np.exp(-b * (r / R_SUN_GALACTIC))
 
 
-def F06(r, R0=7.04, sigma=1.83):
-    r"""Displaced Gaussian distribution - Faucher-Giguere & Kaspi 2006.
+class FaucherKaspi2006(Fittable1DModel):
+    """
+    Radial distribution of the birth surface density of pulsars in the galaxy - Faucher-Giguere & Kaspi 2006.
 
     .. math ::
-        f(r) = 1 / \sqrt(2 \pi \sigma) \exp(-\frac{(r - R_0)^2}{2 \sigma ^ 2})
+        f(r) = A \\frac{1}{\\sqrt{2 \pi} \sigma} \\exp 
+        \\left(- \\frac{(r - r_0)^2}{2 \sigma ^ 2}\\right)
 
-    Proposed as a pulsar birth distribution in Appendix B.
+    Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F (Appendix B)
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    R0, sigma : array_like
-        See formula
+    amplitude : float
+        See model formula
+    r_0 : float
+        See model formula
+    sigma : float
+        See model formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
+    YusifovKucuk2004B, Exponential
     """
-    term1 = 1. / sqrt(2 * pi * sigma)
-    term2 = exp(-(r - R0) ** 2 / (2 * sigma ** 2))
-    return term1 * term2
+    amplitude = Parameter()
+    r_0 = Parameter()
+    sigma = Parameter()
+    evolved = False
+
+    def __init__(self, amplitude=1, r_0=7.04, sigma=1.83, **kwargs):
+        super(FaucherKaspi2006, self).__init__(amplitude=amplitude,
+                                               r_0=r_0, sigma=sigma, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, r_0, sigma):
+        """One dimensional Faucher-Giguere & Kaspi 2006 model function"""
+        term1 = 1. / np.sqrt(2 * pi * sigma)
+        term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
+        return amplitude * term1 * term2
 
 
-def L06(r, a=1.9, b=5.0):
-    r"""Evolved pulsar distribution - Lorimer 2006.
+class Lorimer2006(Fittable1DModel):
+    """
+    Radial distribution of the suface density of pulsars in the galaxy - Lorimer 2006.
 
     .. math ::
-        f(r) = r (r / r_{sun}) ^ a \exp(-b (r - r_{sun}) / r_sun)
+        f(r) = A \\left( \\frac{r}{r_{\\odot}} \\right) ^ B \\exp 
+        \\left[ -C \\left( \\frac{r - r_{\\odot}}{r_{\\odot}} \\right) \\right]
 
-    Surface density using the NE2001 Model.
-    Similar to Kucuk, but core density is zero.
+    Reference: http://adsabs.harvard.edu/abs/2006MNRAS.372..777L (Formula (10))
 
     Parameters
     ----------
-    r : array_like
-        Galactic radius (kpc)
-    a, b : array_like
-        See formula
+    amplitude : float
+        See model formula
+    B : float
+        See model formula
+    C : float
+        See model formula
 
-    Returns
-    -------
-    density : array_like
-        Density in radius ``r``
+    See Also
+    --------
+    CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
+    YusifovKucuk2004B, FaucherKaspi2006
+
     """
-    term1 = r * (r / R_SUN_GALACTIC) ** a
-    term2 = exp(-b * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
-    return term1 * term2
+    amplitude = Parameter()
+    B = Parameter()
+    C = Parameter()
+    evolved = True
+
+    def __init__(self, amplitude=1, B=1.9, C=5.0, **kwargs):
+        super(Lorimer2006, self).__init__(amplitude=amplitude, B=B, C=C, **kwargs)
+
+    @staticmethod
+    def eval(r, amplitude, B, C):
+        """One dimensional Lorimer 2006 model function"""
+        term1 = (r / R_SUN_GALACTIC) ** B
+        term2 = np.exp(-C * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+        return amplitude * term1 * term2
 
 
-def exponential(z, z0=0.05):
-    r"""Exponential distribution.
+class Exponential(Fittable1DModel):
+    """
+    Exponential distribution.
 
     .. math ::
-        f(z) = \exp(-|z| / z_0)
+        f(z) = A \\exp \\left(- \\frac{|z|}{z_0} \\right)
 
     Usually used for height distribution above the Galactic plane,
     with 0.05 kpc as a commonly used birth height distribution.
 
     Parameters
     ----------
-    z : array_like
-        Galactic z-coordinate (kpc)
-    Returns
-    -------
-    density : array_like
-        Density in height ``z``
+    amplitude : float
+        See model formula
+    z_0 : float
+        Scale height of the distribution
+
+    See Also
+    --------
+    CaseBattacharya1998, Paczynski1990, YusifovKucuk2004, Lorimer2006,
+    YusifovKucuk2004B, FaucherKaspi2006, Exponential
     """
-    return exp(-abs(z) / z0)
+    amplitude = Parameter()
+    z_0 = Parameter()
+    evolved = False
+
+    def __init__(self, amplitude=1, z_0=0.05, **kwargs):
+        super(Exponential, self).__init__(amplitude=amplitude, z_0=z_0, **kwargs)
+
+    @staticmethod
+    def eval(z, amplitude, z_0):
+        """One dimensional exponential model function"""
+        return amplitude * np.exp(-np.abs(z) / z_0)
 
 
 class LogSpiral(object):
-    r"""Logarithmic spiral.
+    """
+    Logarithmic spiral.
 
     Reference: http://en.wikipedia.org/wiki/Logarithmic_spiral
     """
@@ -281,17 +396,59 @@ class LogSpiral(object):
 
 
 class FaucherSpiral(LogSpiral):
-    r"""Milky way spiral arm model from Faucher et al. (2006).
+    r"""Milky way spiral arm used in Faucher et al. (2006).
 
     Reference: http://adsabs.harvard.edu/abs/2006ApJ...643..332F
     """
     # Parameters
-    k = np.array([4.25, 4.25, 4.89, 4.89])
-    r_0 = np.array([3.48, 3.48, 4.9, 4.9])  # kpc
-    theta_0 = np.array([1.57, 4.71, 4.09, 0.95])  # rad
+    k = Quantity([4.25, 4.25, 4.89, 4.89], 'rad')
+    r_0 = Quantity([3.48, 3.48, 4.9, 4.9], 'kpc')
+    theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
     spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
-    def __call__(self, radius, blur=True, stdv=0.07, r_exp=2.857):
+    def _blur(self, radius, theta, amount=0.07):
+        """
+        Blur the positions around the centroid of the spiralarm.
+
+        The given positions are blurred by drawing a displacement in radius from
+        a normal distribution, with sigma = amount * radius. And a direction
+        theta from a uniform distribution in the interval [0, 2 * pi].
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Radius coordinate
+        theta : `~astropy.units.Quantity`
+            Angle coordinate
+        amount: float
+            Amount of blurring of the position, given as a fraction of `radius`.
+        """
+        dr = Quantity(abs(normal(0, amount * radius, radius.size)), 'kpc')
+        dtheta = Quantity(uniform(0, 2 * np.pi, radius.size), 'rad')
+        x, y = cartesian(radius, theta)
+        dx, dy = cartesian(dr, dtheta)
+        return polar(x + dx, y + dy)
+
+    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc')):
+        """
+        Correction of source distribution towards the galactic center.
+
+        To avoid spiralarm features near the Galactic Center, the position angle theta
+        is blurred by a certain amount towards the GC.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Radius coordinate
+        theta : `~astropy.units.Quantity`
+            Angle coordinate
+        r_corr : `~astropy.units.Quantity`
+            Scale of the correction towards the GC
+        """
+        theta_corr = Quantity(uniform(0, 2 * pi, radius.size), 'rad')
+        return radius, theta + theta_corr * np.exp(-radius / r_corr)
+
+    def __call__(self, radius, blur=True):
         """Draw random position from spiral arm distribution.
 
         Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
@@ -306,13 +463,9 @@ class FaucherSpiral(LogSpiral):
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 
         if blur:  # Apply blurring model according to Faucher
-            dr = abs(normal(0, stdv * radius, radius.size))
-            dtheta = uniform(0, 2 * pi, radius.size)
-            dx = dr * cos(dtheta)
-            dy = dr * sin(dtheta)
-            theta = theta + dtheta * exp(-radius / r_exp)
-
-        return theta, spiralarm, dx, dy
+            radius, theta = self._blur(radius, theta)
+            radius, theta = self._gc_correction(radius, theta)
+        return radius, theta, spiralarm
 
 
 class ValleeSpiral(LogSpiral):
@@ -347,9 +500,9 @@ radial_distributions = OrderedDict()
 
 Useful for automatic processing.
 """
-radial_distributions['P90'] = P90
-radial_distributions['CB98'] = CB98
-radial_distributions['YK04'] = YK04
-radial_distributions['YK04B'] = YK04B
-radial_distributions['F06'] = F06
-radial_distributions['L06'] = L06
+radial_distributions['CB98'] = CaseBattacharya1998
+radial_distributions['F06'] = FaucherKaspi2006
+radial_distributions['L06'] = Lorimer2006
+radial_distributions['P90'] = Paczynski1990
+radial_distributions['YK04'] = YusifovKucuk2004
+radial_distributions['YK04B'] = YusifovKucuk2004B

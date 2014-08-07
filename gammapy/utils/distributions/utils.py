@@ -1,7 +1,7 @@
 """Helper functions to work with distributions."""
 from __future__ import print_function, division
 
-__all__ = ['normalize', 'density', 'draw']
+__all__ = ['normalize', 'density', 'draw', 'pdf']
 
 
 def normalize(func, x_min, x_max):
@@ -12,8 +12,14 @@ def normalize(func, x_min, x_max):
     return normalized_func
 
 
+def pdf(func):
+    """Returns the one dimensional PDF of a given radial surface density.
+    """
+    return lambda x: x * func(x)
+
+
 def density(func):
-    """Returns the surface density of a given PDF.
+    """Returns the radial surface density of a given one dimensional PDF.
     """
     return lambda x: func(x) / x
 

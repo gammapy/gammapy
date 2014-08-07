@@ -16,8 +16,6 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
-import numpy as np
-from astropy.utils import data
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
@@ -37,7 +35,7 @@ included_datasets = ['poisson_stats_image',
                      'fetch_fermi_catalog',
                      'arf_fits_table',
                      'psf_fits_table',
-                     ]
+                     'atnf_sample']
 
 remote_datasets = ['fetch_fermi_extended_sources',
                    'FermiVelaRegion',
@@ -67,6 +65,12 @@ def download_datasets(names='all'):
         raise NotImplementedError
         # Check if available in cache
         # if not download to cache
+
+
+def atnf_sample():
+    """Read atnf catalog sample"""
+    filename = get_pkg_data_filename('data/atnf/atnf_sample.txt')
+    return Table.read(filename, format='ascii.csv', delimiter=' ')
 
 
 def arf_fits_table():
