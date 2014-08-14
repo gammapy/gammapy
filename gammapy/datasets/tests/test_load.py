@@ -71,7 +71,7 @@ class TestFermiVelaRegion():
     def test_counts_cube(self):
         counts = FermiVelaRegion.counts_cube()[0]
         assert counts.data.shape == (20, 50, 50) 
-        assert counts.data.sum() == 310
+        assert counts.data.sum() == 1551
 
     @remote_data    
     def test_psf(self):
@@ -82,20 +82,39 @@ class TestFermiVelaRegion():
     @remote_data
     def test_diffuse_model(self):
         diffuse_model = FermiVelaRegion.diffuse_model()
-        assert diffuse_model.data.shape == (30, 61, 61)
+        assert diffuse_model.data.shape == (30, 161, 161)
 
     @remote_data
     def test_background_image(self):
         background = FermiVelaRegion.background_image()
         assert background.data.shape == (50, 50) 
-        assert background.data.sum(), 287.03403
+        assert background.data.sum(), 264.54391
+
+    @remote_data
+    def test_predicted_image(self):
+        background = FermiVelaRegion.predicted_image()
+        assert background.data.shape == (50, 50) 
+        assert background.data.sum(), 322.12299
+
+    @remote_data    
+    def test_events(self):
+        events_list = FermiVelaRegion.events()
+        assert events_list['EVENTS'].data.shape == (2042,)
 
     @remote_data
     def test_exposure_cube(self):
         exposure_cube = FermiVelaRegion.exposure_cube()
-        assert exposure_cube.data.shape == (4, 50, 50)
-        assert exposure_cube.data.value.sum(), 1.4978096e+15
+        assert exposure_cube.data.shape == (21, 50, 50)
+        assert exposure_cube.data.value.sum(), 4.978616e+15
         assert_quantity(exposure_cube.energy[0], Quantity(10000, 'MeV'))
+    
+    @remote_data    
+    def test_livetime(self):
+        livetime_list = FermiVelaRegion.livetime_cube()
+        assert livetime_list[1].data.shape == (12288,)
+        assert livetime_list[2].data.shape == (12288,)
+        assert livetime_list[3].data.shape == (4,)
+        assert livetime_list[4].data.shape == (17276,)
 
 
 @remote_data
