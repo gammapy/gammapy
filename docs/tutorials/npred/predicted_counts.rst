@@ -37,7 +37,8 @@ this example in one energy band with the parameters outlined in the
 Images for the predicted background counts in this region in the Gammapy case
 (left) and Fermi Science Tools gtmodel case (center) are shown below, based on
 the differential flux contribution of the Fermi diffuse model gll_iem_v05_rev1.fit.
-The image on the right shows the ratio.
+The image on the right shows the ratio. **Note that the colorbar scale applies only to
+the ratio image.**
 
 .. plot:: tutorials/npred/npred_convolved.py
 	:include-source:
@@ -45,6 +46,6 @@ The image on the right shows the ratio.
 We may compare these against the true counts observed by Fermi LAT in this region
 for the same parameters:
 
- * True total counts: 1066
- * Fermi Tools gtmodel predicted background counts: 247
- * Gammapy predicted background counts: 264
+ * True total counts: 1551
+ * Fermi Tools gtmodel predicted background counts: 265
+ * Gammapy predicted background counts: 281
