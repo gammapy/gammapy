@@ -1,9 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import numpy as np
+from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ..models import PowerLaw, PLExpCutoff
-from ..sed import SED, add_spec
-
+from ..sed import SED, add_spec, cube_sed
+from ...datasets import FermiGalacticCenter
+from ...image.utils import lon_lat_rectangle_mask
 
 @pytest.mark.xfail
 def test_add_spec():
@@ -103,3 +106,59 @@ def test_42():
     # sed.add(['2FGL J1224.9+2122']) # 4C+21.35
     # sed.add(['2FGL J0534.5+2201']) # Crab
     sed.plot('sed.png')
+
+def test_cube_sed1():
+    """Tests against known results with differential cube of 1s.
+    """
+    spec_cube = FermiGalacticCenter.diffuse_model()
+    spec_cube.data = 10 * np.ones_like(spec_cube.data)
+
+    counts = FermiGalacticCenter.diffuse_model()
+    counts.data = np.ones_like(counts.data)
+
+    lons, lats = spec_cube.spatial_coordinate_images
+    
+    mask = lon_lat_rectangle_mask(lons.value, lats.value, -8, 8, -4, 4)
+
+    sed_table1 = cube_sed(spec_cube, mask, flux_type='differential')
+    assert_allclose(sed_table1['DIFF_FLUX'].data, 2560)# * np.ones(30))
+    assert_allclose(sed_table1['DIFF_FLUX_ERR'].data, 0)
+
+    sed_table2 = cube_sed(spec_cube, mask, flux_type='differential',
+                          errors=True, standard_error = 0.1)
+    assert_allclose(sed_table2['DIFF_FLUX_ERR'].data, 256)
+
+    sed_table3 = cube_sed(spec_cube, mask, flux_type='differential',
+                          errors=True, counts = counts)
+    assert_allclose(sed_table3['DIFF_FLUX_ERR'].data, 2560 * np.sqrt(1./256))
+
+def test_cube_sed2():
+    """Tests against known results with integral cube of 1s.
+    """
+    spec_cube = FermiGalacticCenter.diffuse_model()
+    spec_cube.data = 10 * np.ones_like(spec_cube.data[:-1])
+
+    counts = FermiGalacticCenter.diffuse_model()
+    counts.data = np.ones_like(counts.data[:-1])
+
+    lons, lats = spec_cube.spatial_coordinate_images
+
+    mask = lon_lat_rectangle_mask(lons.value, lats.value, -8, 8, -4, 4)
+
+    sed_table1 = cube_sed(spec_cube, mask, flux_type='integral')
+
+    assert_allclose(sed_table1['ENERGY'][0], 56.95239033587774)
+    assert_allclose(sed_table1['DIFF_FLUX'][0], 170.86224025271986)
+    assert_allclose(sed_table1['DIFF_FLUX_ERR'], 0)
+
+    sed_table2 = cube_sed(spec_cube, mask, flux_type='integral',
+                          errors=True, standard_error = 0.1)
+
+    assert_allclose(sed_table2['DIFF_FLUX_ERR'][0],
+                    0.1 * sed_table2['DIFF_FLUX'][0])
+
+    sed_table3 = cube_sed(spec_cube, mask, flux_type='integral',
+                          errors=True, counts = counts)
+
+    assert_allclose(sed_table3['DIFF_FLUX_ERR'][0],
+                    np.sqrt(1./256) * sed_table3['DIFF_FLUX'][0])
