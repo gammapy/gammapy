@@ -5,7 +5,7 @@ import numpy as np
 
 from astropy.units import Quantity
 import astropy.constants as const
-from astropy.utils.misc import lazyproperty
+from astropy.utils import lazyproperty
 
 from ...extern.validator import validate_physical_type
 
