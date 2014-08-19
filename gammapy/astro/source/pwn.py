@@ -6,7 +6,7 @@ import logging
 import numpy as np
 
 from astropy.units import Quantity
-from astropy.utils.misc import lazyproperty
+from astropy.utils import lazyproperty
 import astropy.constants as const
 
 from .snr import SNRTrueloveMcKee
