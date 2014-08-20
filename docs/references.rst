@@ -53,3 +53,6 @@ Software references:
 
 .. [Knoedlseder2012] `Knödlseder et at. (2012) <http://adsabs.harvard.edu/abs/2012ASPC..461...65K>`_
    "GammaLib: A New Framework for the Analysis of Astronomical Gamma-Ray Data"
+   
+.. [FSSC2013] `Fermi LAT Collaboration (2013) <http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
+   "Science Tools: LAT Data Analysis Tools"

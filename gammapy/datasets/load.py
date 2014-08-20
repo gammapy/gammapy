@@ -182,18 +182,9 @@ class FermiGalacticCenter(object):
 class FermiVelaRegion(object):
     """Fermi high-energy data for the Vela region.
 
-    * 5 years of observation time (2008-08-05 to 2013-08-05)
-    * Event class and IRF: P7REP_CLEAN_V15
-    * Max zenith angle cut: 105 deg
-    * 10 GeV < Energy < 500 GeV in 3 equal log10 bins
-    * CenterPosition: GLON = 263.05836967702709; GLAT = 3.9298511274632784
-    * Coordinate System: GALACTIC
-    * Image Size: 5 x 5 degrees (Search center 3 degrees)
-    * Pixel size: 0.1 degrees/pixel
-    * Image Shape: (50, 50) pixels
-
-    For further details see:
-    https://github.com/gammapy/gammapy-extra/tree/master/datasets/vela_region
+    For details, see
+    `README file for FermiVelaRegion
+    <https://github.com/gammapy/gammapy-extra/blob/master/datasets/vela_region/README.rst>`_.
     """
 
     @staticmethod
@@ -201,18 +192,24 @@ class FermiVelaRegion(object):
         """Dictionary of available file names."""
         result = dict()
 
-        BASE_URL = 'https://github.com/gammapy/gammapy-extra/raw/master/datasets/vela_region/'
-        url_counts = BASE_URL + 'counts_vela.fits'
-        url_exposure = BASE_URL + 'exposure_vela.fits'
-        url_background = BASE_URL + 'background_vela.fits'
-        url_diffuse = BASE_URL + 'gll_iem_v05_rev1_cutout.fit'
-        url_psf = BASE_URL + 'psf_vela.fits'
+        BASE_URL = 'https://github.com/gammapy/gammapy-extra/blob/master/datasets/vela_region/'
+        url_counts = BASE_URL + 'counts_vela.fits?raw=true'
+        url_exposure = BASE_URL + 'exposure_vela.fits?raw=true'
+        url_background = BASE_URL + 'background_vela.fits?raw=true'
+        url_total = BASE_URL + 'total_vela.fits?raw=true'
+        url_diffuse = BASE_URL + 'gll_iem_v05_rev1_cutout.fits?raw=true'
+        url_events = BASE_URL + 'events_vela.fits?raw=true'
+        url_psf = BASE_URL + 'psf_vela.fits?raw=true'
+        url_livetime = BASE_URL + 'livetime_vela.fits?raw=true'
 
         result['counts_cube'] = data.download_file(url_counts, cache=True)
         result['exposure_cube'] = data.download_file(url_exposure, cache=True)
         result['background_image'] = data.download_file(url_background, cache=True)
+        result['total_image'] = data.download_file(url_total, cache=True)
         result['diffuse_model'] = data.download_file(url_diffuse, cache=True)
+        result['events'] = data.download_file(url_events, cache=True)
         result['psf'] = data.download_file(url_psf, cache=True)
+        result['livetime_cube'] = data.download_file(url_livetime, cache=True)
         return result
 
     @staticmethod
@@ -255,16 +252,42 @@ class FermiVelaRegion(object):
 
     @staticmethod
     def background_image():
-        """Predicted background counts spectral cube.
+        """Predicted background counts image.
         Based on the Fermi Diffuse model (see class docstring).
 
         Returns
         -------
         background_cube : `~astropy.io.fits.PrimaryHDU`
-            Diffuse model spectral cube
+            Diffuse model image.
         """
         filename = FermiVelaRegion.filenames()['background_image']
         return fits.open(filename)[0]
+    
+    @staticmethod
+    def predicted_image():
+        """Predicted counts spectral image including Vela Pulsar.
+        Based on the Fermi Diffuse model (see class docstring) and
+        Vela Point source model.
+
+        Returns
+        -------
+        background_cube : `~astropy.io.fits.PrimaryHDU`
+            Predicted model image.
+        """
+        filename = FermiVelaRegion.filenames()['total_image']
+        return fits.open(filename)[0]
+    
+    @staticmethod
+    def events():
+        """Fermi Events list for Vela Region.
+
+        Returns
+        -------
+        hdu_list : `astropy.io.fits.HDUList`.
+            Events list.
+        """
+        filename = FermiVelaRegion.filenames()['events']
+        return fits.open(filename)
 
     @staticmethod
     def exposure_cube():
@@ -277,6 +300,18 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['exposure_cube']
         return GammaSpectralCube.read(filename)
+    
+    @staticmethod
+    def livetime_cube():
+        """Livetime cube.
+
+        Returns
+        -------
+        livetime_cube : `~astropy.io.fits.HDUList`
+            Livetime cube hdu_list
+        """
+        filename = FermiVelaRegion.filenames()['livetime_cube']
+        return fits.open(filename)
 
 
 def tev_spectrum(source_name):

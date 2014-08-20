@@ -148,7 +148,7 @@ class TablePSF(object):
         offset = center.separation(point)
         return self.eval(offset)
 
-    def kernel(self, pixel_size, offset_max=None,
+    def kernel(self, pixel_size, offset_max=None, normalize=True,
                discretize_model_kwargs=dict(factor=10)):
         """Make a 2-dimensional kernel image.
 
@@ -168,8 +168,8 @@ class TablePSF(object):
 
         Returns
         -------
-        kernel : `numpy.array`
-            Kernel 2D image
+        kernel : `~astropy.units.Quantity`
+            Kernel 2D image of Quantities
 
         Notes
         -----
@@ -207,7 +207,10 @@ class TablePSF(object):
         array = discretize_oversample_2D(_model,
                                          x_range=pix_range, y_range=pix_range,
                                          **discretize_model_kwargs)
-        return array
+        if normalize:
+            return array / array.value.sum()
+        else:
+            return array
 
     def eval(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.

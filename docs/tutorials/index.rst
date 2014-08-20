@@ -13,6 +13,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    spectrum/index
    flux_point
    crab_mwl_sed
+   npred/predicted_counts
 
 External
 ========

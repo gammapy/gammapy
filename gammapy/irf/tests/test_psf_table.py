@@ -8,6 +8,7 @@ from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
 from ...utils.testing import assert_quantity
 from ..psf_table import TablePSF, EnergyDependentTablePSF
+from ...datasets import FermiGalacticCenter
 
 try:
     import scipy
@@ -87,7 +88,7 @@ def test_EnergyDependentTablePSF():
 
     # TODO: test __init__
 
-    filename = get_pkg_data_filename('../../datasets/data/fermi/psf.fits')
+    filename = FermiGalacticCenter.filenames()['psf']
     psf = EnergyDependentTablePSF.read(filename)
 
     # Test cases
@@ -95,6 +96,8 @@ def test_EnergyDependentTablePSF():
     offset = Angle(0.1, 'deg')
     energies = Quantity([1, 2], 'GeV').to('TeV')
     offsets = Angle([0.1, 0.2], 'deg')
+    
+    pixel_size = Angle(0.1, 'deg')
 
     #actual = psf.eval(energy=energy, offset=offset)
     #desired = Quantity(17760.814249206363, 'sr^-1')
@@ -113,6 +116,13 @@ def test_EnergyDependentTablePSF():
     # TODO: test containment_fraction
     # TODO: test info
     # TODO: test plotting methods
+
+    desired = 1.0
+    energy_band = Quantity([10, 500], 'GeV')
+    psf_band = psf.table_psf_in_energy_band(energy_band)
+    actual = psf_band.kernel(pixel_size, pixel_size, normalize=True).value.sum()
+
+    assert_allclose(actual, desired)
 
 
 def interactive_test():
