@@ -372,7 +372,7 @@ def add_observed_parameters(table, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     try:
         luminosity = table['luminosity']
         flux = astrometry.luminosity_to_flux(luminosity, distance)
-        table['flux'] = Column(flux, unit='', description='Source flux')
+        table['flux'] = Column(flux.value, unit=flux.unit, description='Source flux')
     except KeyError:
         pass
 
