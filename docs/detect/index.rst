@@ -17,8 +17,8 @@ Getting Started
 ===============
 
 * TODO: general intro
-* TODO: describe the ``gp-iterative-source-detect`` tool.
-* TODO: describe the ``gp-image-decompose-a-trous`` tool.
+* TODO: describe the ``gammapy-iterative-source-detect`` tool.
+* TODO: describe the ``gammapy-image-decompose-a-trous`` tool.
 
 
 Reference/API

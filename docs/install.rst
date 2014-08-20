@@ -31,7 +31,7 @@ To check if the Gammapy command line tools are on your ``$PATH`` try this:
 
 .. code-block:: bash
 
-   $ gp-info --tools
+   $ gammapy-info --tools
 
 Requirements
 ------------

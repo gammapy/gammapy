@@ -1,15 +1,15 @@
-Spectra with ``gp-pfspec`` and Sherpa
-=====================================
+Spectra with ``gammapy-pfspec`` and Sherpa
+==========================================
 
-Running ``gp-pfspec``
----------------------
+Running ``gammapy-pfspec``
+--------------------------
 
-The script ``gp-pfspec`` produces PHA spectrum files from FITS event lists, which can be analyzed with tools like XSPEC.
+The script ``gammapy-pfspec`` produces PHA spectrum files from FITS event lists, which can be analyzed with tools like XSPEC.
 The instrument response is taken from ARF (effective area) and RMF (energy distribution matrix) files
 and is assumed to be constant over the duration of a data segment (run).
 The background is estimated using a ring at the same camera/FoV distance as the source, cutting out the source position.
 
-Per data file, ``gp-pfspec`` needs three inputs:
+Per data file, ``gammapy-pfspec`` needs three inputs:
 the name of the data file and the corresponding ARF and RMF file names.
 These can be given via command line but usually it is more efficient to create an ASCII file (bankfile),
 with each row giving the data file name, the ARF and the RMF file names, separate by spaces.
@@ -17,7 +17,7 @@ We assume, such a bankfile has been created for the data called my.bnk.
 
 To create the pha files run::
 
-   $ python scripts/pfspec.py my.bnk -w -r 0.125
+   $ gammapy-pfspec my.bnk -w -r 0.125
 
 The option ``-r`` denotes the radius in degree of the circular source region from which the spectrum will be extracted (theta cut).
 This should match the cut used in the ARF files.
