@@ -53,10 +53,10 @@ Using ``findruns`` is easy, you don't have to remember all the options, just typ
 
    $ findruns --help
 
-at the command line or read the usage help `here <TODO>`_
+at the command line or read the usage help (TODO: add link here).
 
-.. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`_ run selection
-      (`docs <http://ndawe.github.io/goodruns/>`_, `code <https://github.com/ndawe/goodruns>`_)
+.. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`__ run selection
+      (`docs <http://ndawe.github.io/goodruns/>`__, `code <https://github.com/ndawe/goodruns>`__)
       is a nice example for a run selection tool.
 
 Reference/API
