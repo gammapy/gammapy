@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Print various info on gammapy to the console.
+"""Print various info on Gammapy to the console.
 
 TODO: explain.
 """
@@ -11,7 +11,7 @@ from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=GammapyFormatter)
 parser.add_argument('--version', action='store_true',
-                    help='Print gammapy version number')
+                    help='Print Gammapy version number')
 parser.add_argument('--tools', action='store_true',
                     help='Print available command line tools')
 args = parser.parse_args()
@@ -29,21 +29,21 @@ if len(sys.argv) <= 1:
 
 if args['version']:
     from gammapy import version
-    print('\n*** gammapy version info ***\n')
+    print('\n*** Gammapy version info ***\n')
     print('version: {0}'.format(version.version))
     print('release: {0}'.format(version.release))
     print('githash: {0}'.format(version.githash))
     print('')
 
 if args['tools']:
-    print('\n*** gammapy tools ***\n')
+    print('\n*** Gammapy tools ***\n')
     # We assume all tools are installed in the same folder as this script
-    # and their names start with "gp-".
+    # and their names start with "gammapy-".
     import os
     from glob import glob
     DIR = os.path.dirname(__file__)
     os.chdir(DIR)
-    tools = glob('gp-*')
+    tools = glob('gammapy-*')
     for tool in tools:
         # Extract first line from docstring as description
         description = 'no description available'
@@ -54,6 +54,6 @@ if args['tools']:
                 if description.endswith('"""'):
                     description = description[:-3]
                 break
-        print('{0:30s} : {1}'.format(tool, description))
+        print('{0:35s} : {1}'.format(tool, description))
 
     print('')

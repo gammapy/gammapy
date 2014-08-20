@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-"""Fit the morphology of a number of sources using
-initial parameters from a JSON file (for now only Gaussians)"""
+"""Fit the morphology of a number of sources.
+
+Uses initial parameters from a JSON file (for now only Gaussians).
+"""
 
 # Parse command line arguments
 
