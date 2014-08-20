@@ -1,11 +1,9 @@
-"""Runs commands to produce convolved predicted counts map in current directory
+"""Runs commands to produce convolved predicted counts map in current directory.
 """
-
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.stats import significance
 from gammapy.image.utils import disk_correlate
-
 from npred_general import prepare_images
 
 model, gtmodel, ratio, counts = prepare_images()

@@ -16,13 +16,12 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
-from astropy.utils.data import get_pkg_data_filename
+from astropy.utils.data import get_pkg_data_filename, download_file
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import data
 import tarfile
-import os
 from ..spectral_cube import GammaSpectralCube
 
 
@@ -43,7 +42,8 @@ remote_datasets = ['fetch_fermi_extended_sources',
 
 datasets = included_datasets + remote_datasets
 
-__all__ = ['list_datasets',
+__all__ = ['get_path',
+           'list_datasets',
            'download_datasets',
            ] + datasets
 
@@ -67,21 +67,58 @@ def download_datasets(names='all'):
         # if not download to cache
 
 
+def get_path(filename, location='local'):
+    """Get path (location on your disk) for a given file.
+
+    Parameters
+    ----------
+    filename : str
+        File name in the local or remote data folder
+    location : {'local', 'remote'}
+        File location.
+        ``'local'`` means bundled with ``gammapy``.
+        ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
+
+    Returns
+    -------
+    path : str
+        Path (location on your disk) of the file.
+
+    Examples
+    --------
+    >>> from gammapy import datasets
+    >>> datasets.get_path('fermi/fermi_counts.fits.gz')
+    '/Users/deil/code/gammapy/gammapy/datasets/data/fermi/fermi_counts.fits.gz'
+    >>> datasets.get_path('vela_region/counts_vela.fits', location='remote')
+    '/Users/deil/.astropy/cache/download/ce2456b0c9d1476bfd342eb4148144dd'
+    """
+    if location == 'local':
+        path = get_pkg_data_filename('data/' + filename)
+    elif location == 'remote':
+        url = ('https://github.com/gammapy/gammapy-extra/blob/master/datasets/'
+               '{0}?raw=true'.format(filename))
+        path = download_file(url, cache=True)
+    else:
+        raise ValueError('Invalid location: {0}'.format(location))
+
+    return path
+
+
 def atnf_sample():
     """Read atnf catalog sample"""
-    filename = get_pkg_data_filename('data/atnf/atnf_sample.txt')
+    filename = get_path('atnf/atnf_sample.txt')
     return Table.read(filename, format='ascii.csv', delimiter=' ')
 
 
 def arf_fits_table():
     """Read arf fits table"""
-    filename = get_pkg_data_filename('data/irfs/arf.fits')
+    filename = get_path('irfs/arf.fits')
     return fits.open(filename)
 
 
 def psf_fits_table():
     """Read psf fits table"""
-    filename = get_pkg_data_filename('data/irfs/psf.fits')
+    filename = get_path('irfs/psf.fits')
     return fits.open(filename)
 
 
@@ -106,16 +143,14 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
     if extra_info:
         out = dict()
         for name in ['counts', 'model', 'source', 'background']:
-            filename = 'data/poisson_stats_image/{0}.fits.gz'.format(name)
-            filename = get_pkg_data_filename(filename)
+            filename = get_path('poisson_stats_image/{0}.fits.gz'.format(name))
             if return_filenames:
                 out[name] = filename
             else:
                 data = fits.getdata(filename)
                 out[name] = data
     else:
-        filename = 'data/poisson_stats_image/counts.fits.gz'
-        filename = get_pkg_data_filename(filename)
+        filename = get_path('poisson_stats_image/counts.fits.gz')
         if return_filenames:
             out = filename
         else:
@@ -127,18 +162,19 @@ def poisson_stats_image(extra_info=False, return_filenames=False):
 class FermiGalacticCenter(object):
     """Fermi high-energy data for the Galactic center region.
 
-    TODO: document energy band, region, content of the files. 
-    TODO: document
+    For details, see this
+    `README file
+    <https://github.com/gammapy/gammapy/blob/master/gammapy/datasets/data/fermi/README.rst>`_.
     """
 
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
         result = dict()
-        result['psf'] = get_pkg_data_filename('data/fermi/psf.fits')
-        result['counts'] = get_pkg_data_filename('data/fermi/fermi_counts.fits.gz')
-        result['diffuse_model'] = get_pkg_data_filename('data/fermi/gll_iem_v02_cutout.fits')
-        result['exposure_cube'] = get_pkg_data_filename('data/fermi/fermi_exposure.fits.gz')
+        result['psf'] = get_path('fermi/psf.fits')
+        result['counts'] = get_path('fermi/fermi_counts.fits.gz')
+        result['diffuse_model'] = get_path('fermi/gll_iem_v02_cutout.fits')
+        result['exposure_cube'] = get_path('fermi/fermi_exposure.fits.gz')
 
         return result
 
@@ -190,26 +226,18 @@ class FermiVelaRegion(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
+        def get(filename):
+            return get_path('vela_region/' + filename, location='remote')
+
         result = dict()
-
-        BASE_URL = 'https://github.com/gammapy/gammapy-extra/blob/master/datasets/vela_region/'
-        url_counts = BASE_URL + 'counts_vela.fits?raw=true'
-        url_exposure = BASE_URL + 'exposure_vela.fits?raw=true'
-        url_background = BASE_URL + 'background_vela.fits?raw=true'
-        url_total = BASE_URL + 'total_vela.fits?raw=true'
-        url_diffuse = BASE_URL + 'gll_iem_v05_rev1_cutout.fits?raw=true'
-        url_events = BASE_URL + 'events_vela.fits?raw=true'
-        url_psf = BASE_URL + 'psf_vela.fits?raw=true'
-        url_livetime = BASE_URL + 'livetime_vela.fits?raw=true'
-
-        result['counts_cube'] = data.download_file(url_counts, cache=True)
-        result['exposure_cube'] = data.download_file(url_exposure, cache=True)
-        result['background_image'] = data.download_file(url_background, cache=True)
-        result['total_image'] = data.download_file(url_total, cache=True)
-        result['diffuse_model'] = data.download_file(url_diffuse, cache=True)
-        result['events'] = data.download_file(url_events, cache=True)
-        result['psf'] = data.download_file(url_psf, cache=True)
-        result['livetime_cube'] = data.download_file(url_livetime, cache=True)
+        result['counts_cube'] = get('counts_vela.fits')
+        result['exposure_cube'] = get('exposure_vela.fits')
+        result['background_image'] = get('background_vela.fits')
+        result['total_image'] = get('total_vela.fits')
+        result['diffuse_model'] = get('gll_iem_v05_rev1_cutout.fits')
+        result['events'] = get('events_vela.fits')
+        result['psf'] = get('psf_vela.fits')
+        result['livetime_cube'] = get('livetime_vela.fits')
         return result
 
     @staticmethod
@@ -225,7 +253,7 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['counts_cube']
         return fits.open(filename)
-    
+
     @staticmethod
     def psf():
         """Fermi PSF for the Vela region.
@@ -237,7 +265,7 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['psf']
         return fits.open(filename)
-    
+
     @staticmethod
     def diffuse_model():
         """Diffuse model spectral cube cutout for Vela region.
@@ -262,7 +290,7 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['background_image']
         return fits.open(filename)[0]
-    
+
     @staticmethod
     def predicted_image():
         """Predicted counts spectral image including Vela Pulsar.
@@ -276,7 +304,7 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['total_image']
         return fits.open(filename)[0]
-    
+
     @staticmethod
     def events():
         """Fermi Events list for Vela Region.
@@ -300,7 +328,7 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['exposure_cube']
         return GammaSpectralCube.read(filename)
-    
+
     @staticmethod
     def livetime_cube():
         """Livetime cube.
