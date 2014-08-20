@@ -64,11 +64,12 @@ intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
 intersphinx_mapping['imageutils'] = ('http://imageutils.readthedocs.org/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
 
-# Extend astropy intersphinx_mapping with packages we use in gammapy
+# Extend intersphinx_mapping with packages we use in gammapy
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
 intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.org/en/latest/', None)
+intersphinx_mapping['wcsaxes'] = ('http://wcsaxes.readthedocs.org/en/latest/', None)
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
 intersphinx_mapping['gammafit'] = ('http://gammafit.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)

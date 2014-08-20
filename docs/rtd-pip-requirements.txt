@@ -1,8 +1,10 @@
 numpy
 scipy
+scikit-image
 Cython
-pytest
 -e git+http://github.com/astropy/astropy.git#egg=astropy
 -e git+http://github.com/astropy/imageutils.git#egg=imageutils
 -e git+http://github.com/astropy/reproject.git#egg=reproject
+-e git+http://github.com/zblz/gammafit.git#egg=gammafit
+wcsaxes
 aplpy
