@@ -29,7 +29,7 @@ class TablePSF(object):
 
     Parameters
     ----------
-    offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+    offset : `~astropy.coordinates.Angle`
         Offset angle array
     dp_domega : `~astropy.units.Quantity`
         PSF value array
@@ -55,8 +55,8 @@ class TablePSF(object):
     """
     def __init__(self, offset, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
-        if not isinstance(offset, Quantity):
-            raise ValueError("offset must be a Quantity object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("offset must be an Angle object.")
         if not isinstance(dp_domega, Quantity):
             raise ValueError("dp_domega must be a Quantity object.")
 
@@ -81,9 +81,9 @@ class TablePSF(object):
         ----------
         shape : {'disk', 'gauss'}
             PSF shape.
-        width : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        width : `~astropy.coordinates.Angle`
             PSF width angle (radius for disk, sigma for Gauss).
-        offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        offset : `~astropy.coordinates.Angle`
             Offset angle
 
         Returns
@@ -99,10 +99,10 @@ class TablePSF(object):
         >>> make_table_psf(shape='gauss', width=Angle(0.2, 'degree'),
         ...                offset=Angle(np.linspace(0, 0.7, 100), 'degree'))
         """
-        if not isinstance(width, Quantity):
-            raise ValueError("width must be an Angle or Quantity object.")
-        if not isinstance(offset, Quantity):
-            raise ValueError("offset must be an Angle or Quantity object.")
+        if not isinstance(width, Angle):
+            raise ValueError("width must be an Angle object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("offset must be an Angle object.")
 
         if shape == 'disk':
             amplitude = 1 / (np.pi * width.radian ** 2)
@@ -160,7 +160,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        pixel_size : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        pixel_size : `~astropy.coordinates.Angle`
             Kernel pixel size
         discretize_model_kwargs : dict
             Keyword arguments passed to
@@ -177,8 +177,8 @@ class TablePSF(object):
           `astropy.convolution.Model2DKernel` could be used to construct
           the kernel.
         """
-        if not isinstance(pixel_size, Quantity):
-            raise ValueError("pixel_size must be an Angle or Quantity object.")
+        if not isinstance(pixel_size, Angle):
+            raise ValueError("pixel_size must be an Angle object.")
 
         if offset_max == None:
             offset_max = self._offset.max()
@@ -227,7 +227,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        offset : `~astropy.coordinates.Angle`
             Offset angle
         quantity : {'dp_domega', 'dp_dtheta'}
             Which PSF quantity?
@@ -237,8 +237,8 @@ class TablePSF(object):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        if not isinstance(offset, Quantity):
-            raise ValueError("offset must be an Angle or Quantity object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("offset must be an Angle object.")
 
         shape = offset.shape
         x = np.array(offset.radian).flat
@@ -259,7 +259,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        offset_min, offset_max : `~astropy.coordinates.Angle`
             Offset angle range
 
         Returns
@@ -267,17 +267,17 @@ class TablePSF(object):
         integral : float
             PSF integral
         """
-        if offset_min == None:
+        if offset_min is None:
             offset_min = self._offset[0]
         else:
-            if not isinstance(offset_min, Quantity):
-                raise ValueError("offset_min must be an Angle or Quantity object.")
+            if not isinstance(offset_min, Angle):
+                raise ValueError("offset_min must be an Angle object.")
 
-        if offset_max == None:
+        if offset_max is None:
             offset_max = self._offset[-1]
         else:
-            if not isinstance(offset_max, Quantity):
-                raise ValueError("offset_max must be an Angle or Quantity object.")
+            if not isinstance(offset_max, Angle):
+                raise ValueError("offset_max must be an Angle object.")
 
         offset_min = self._offset_clip(offset_min)
         offset_max = self._offset_clip(offset_max)
@@ -410,7 +410,7 @@ class EnergyDependentTablePSF(object):
     ----------
     energy : `~astropy.units.Quantity`
         Energy (1-dim)
-    offset : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+    offset : `~astropy.coordinates.Angle`
         Offset angle (1-dim)
     exposure : `~astropy.units.Quantity`
         Exposure (1-dim)
@@ -420,8 +420,8 @@ class EnergyDependentTablePSF(object):
     def __init__(self, energy, offset, exposure, psf_value):
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
-        if not isinstance(offset, Quantity):
-            raise ValueError("offset must be an Angle or Quantity object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("offset must be an Angle object.")
         if not isinstance(exposure, Quantity):
             raise ValueError("exposure must be a Quantity object.")
         if not isinstance(psf_value, Quantity):
@@ -598,7 +598,7 @@ class EnergyDependentTablePSF(object):
         ----------
         energy : `~astropy.units.Quantity`
             Energy
-        offset_min, offset_max : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        offset_min, offset_max : `~astropy.coordinates.Angle`
             Offset
 
         Returns

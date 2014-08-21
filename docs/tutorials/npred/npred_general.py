@@ -35,7 +35,7 @@ def prepare_images():
 
     psf = EnergyDependentTablePSF.read(FermiVelaRegion.filenames()['psf'])
     convolved_npred_cube = convolve_cube(npred_cube, psf,
-                                         Angle(3, 'deg'), Angle(1, 'deg'))
+                                         offset_max=Angle(3, 'deg'))
 
     # Counts data
     counts_data = fits.open(counts_file)[0].data
