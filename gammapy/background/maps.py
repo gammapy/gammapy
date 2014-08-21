@@ -156,7 +156,7 @@ class Maps(fits.HDUList):
 
         Returns
         -------
-        hdu : `astropy.io.fits.ImageHDU`
+        hdu : `~astropy.io.fits.ImageHDU`
             Map HDU
         """
         return fits.ImageHDU(data, self.ref_hdu.header, name)

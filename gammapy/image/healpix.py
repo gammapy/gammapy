@@ -22,7 +22,7 @@ def healpix_to_image(healpix_data, reference_image, hpx_coord_system):
     ----------
     healpix_data : `numpy.ndarray`
         HEALPIX data array
-    reference_image : `astropy.io.fits.ImageHDU`
+    reference_image : `~astropy.io.fits.ImageHDU`
         A reference image to project to.  Must have a 'COORDSYS' keyword of
         either 'galactic' or 'icrs'
     hpx_coord_system : 'galactic' or 'icrs'
@@ -65,7 +65,7 @@ def image_to_healpix(image, healpix_pars):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         The input image
     healpix_pars : TODO
         TODO: what HEALPIX parameters do we need?

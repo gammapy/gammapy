@@ -97,9 +97,9 @@ class GammaSpectralCube(object):
 
         Parameters
         ----------
-        object_hdu : `astropy.io.fits.ImageHDU`
+        object_hdu : `~astropy.io.fits.ImageHDU`
             Image HDU object to be read
-        energy_table_hdu : `astropy.io.fits.TableHDU`
+        energy_table_hdu : `~astropy.io.fits.TableHDU`
             Table HDU object giving energies of each slice
             of the Image HDU object_hdu
 
@@ -201,7 +201,7 @@ class GammaSpectralCube(object):
 
         Returns
         -------
-        lon, lat : `astropy.units.Quantity`
+        lon, lat : `~astropy.units.Quantity`
             Arrays of longitude and latitude pixel coordinates.
         """
         n_lon = self.data.shape[2]
@@ -407,10 +407,10 @@ class GammaSpectralCube(object):
 
         Returns
         -------
-        hdu_list : `astropy.io.fits.HDUList`
-            * hdu_list[0] : `astropy.io.fits.ImageHDU`
+        hdu_list : `~astropy.io.fits.HDUList`
+            * hdu_list[0] : `~astropy.io.fits.ImageHDU`
                 Image array of data
-            * hdu_list[1] : `astropy.io.fits.BinTableHDU`
+            * hdu_list[1] : `~astropy.io.fits.BinTableHDU`
                 Table of energies
         """
         image = fits.ImageHDU(self.data, self.wcs.to_header())

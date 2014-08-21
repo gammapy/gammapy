@@ -228,7 +228,7 @@ def find_max(image):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         Input image
 
     Returns

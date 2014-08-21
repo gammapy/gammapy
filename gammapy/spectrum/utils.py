@@ -44,7 +44,7 @@ def energy_bounds_equal_log_spacing(energy_band, bins=10):
 
     Returns
     -------
-    energy_bounds : ~astropy.units.Quantity`
+    energy_bounds : `~astropy.units.Quantity`
         Energy bounds array (1-dim with length ``bins + 1``).
     """
     x_min, x_max = np.log10(energy_band.value)
@@ -169,7 +169,7 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
 
     Returns
     -------
-    pha : `astropy.io.fits.BinTableHDU`
+    pha : `~astropy.io.fits.BinTableHDU`
         PHA FITS HDU
 
     Notes

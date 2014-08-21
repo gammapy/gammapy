@@ -186,7 +186,7 @@ class FermiGalacticCenter(object):
 
     @staticmethod
     def psf():
-        """PSF as `astropy.io.fits.HDUList`."""
+        """PSF as `~astropy.io.fits.HDUList`."""
         filename = FermiGalacticCenter.filenames()['psf']
         return fits.open(filename)
 
@@ -260,7 +260,7 @@ class FermiVelaRegion(object):
 
         Returns
         -------
-        hdu_list : `astropy.io.fits.HDUList`.
+        hdu_list : `~astropy.io.fits.HDUList`.
             PSF information as hdu_list
         """
         filename = FermiVelaRegion.filenames()['psf']
@@ -311,7 +311,7 @@ class FermiVelaRegion(object):
 
         Returns
         -------
-        hdu_list : `astropy.io.fits.HDUList`.
+        hdu_list : `~astropy.io.fits.HDUList`.
             Events list.
         """
         filename = FermiVelaRegion.filenames()['events']

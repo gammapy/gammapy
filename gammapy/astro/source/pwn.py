@@ -23,9 +23,9 @@ class PWN(object):
 
     Parameters
     ----------
-    pulsar : `gammapy.astro.source.Pulsar`
+    pulsar : `~gammapy.astro.source.Pulsar`
         Pulsar model instance.
-    snr : `gammapy.astro.source.SNRTrueloveMcKee`
+    snr : `~gammapy.astro.source.SNRTrueloveMcKee`
         SNR model instance
     eta_e : float
         Fraction of energy going into electrons.

@@ -124,7 +124,7 @@ class FluxProfile(object):
     def compute(self):
         """Compute the flux profile.
 
-        TODO: call `gammapy.stats.compute_total_stats` instead.
+        TODO: call `~gammapy.stats.compute_total_stats` instead.
 
         Note: the current implementation is very inefficienct in speed and memory.
         There are various fast implementations, but none is flexible enough to

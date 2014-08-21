@@ -29,7 +29,7 @@ def galactic_to_radec(glon, glat, unit='deg'):
     Notes
     -----
     This is a standalone implementation that only uses ``numpy`` for testing.
-    Use `astropy.coordinates.SkyCoord` instead.
+    Use `~astropy.coordinates.SkyCoord` instead.
     Only accurate to ~ 3 digits.
     """
     if unit == 'deg':
@@ -71,7 +71,7 @@ def radec_to_galactic(ra, dec, unit='deg'):
     Notes
     -----
     This is a standalone implementation that only uses ``numpy`` for testing.
-    Use `astropy.coordinates.SkyCoord` instead.
+    Use `~astropy.coordinates.SkyCoord` instead.
     Only accurate to ~ 3 digits.
     """
     if unit == 'deg':

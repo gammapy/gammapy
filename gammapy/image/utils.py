@@ -219,7 +219,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         Input image
     world : bool
         Use world coordinates (or pixel coordinates)?
@@ -420,12 +420,12 @@ def images_to_cube(hdu_list):
 
     Parameters
     ----------
-    hdu_list : `astropy.io.fits.HDUList`
+    hdu_list : `~astropy.io.fits.HDUList`
         List of 2-dimensional image HDUs
 
     Returns
     -------
-    cube : `astropy.io.fits.ImageHDU`
+    cube : `~astropy.io.fits.ImageHDU`
         3-dimensional cube HDU
     """
     shape = list(hdu_list[0].data.shape)
@@ -662,7 +662,7 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     Returns
     -------
-    header : `astropy.io.fits.Header`
+    header : `~astropy.io.fits.Header`
         Header
     """
     nxpix = int(nxpix)
@@ -711,7 +711,7 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
         Creates checkerboard image or uniform image of any float
     Returns
     -------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         Empty image
     """
     header = make_header(nxpix, nypix, binsz, xref, yref,
@@ -734,14 +734,14 @@ def crop_image(image, bounding_box):
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image : `~astropy.io.fits.ImageHDU`
         Image
     bounding_box : `~gammapy.image.BoundingBox`
         Bounding box
 
     Returns
     -------
-    new_image : `astropy.io.fits.ImageHDU`
+    new_image : `~astropy.io.fits.ImageHDU`
         Cropped image
 
     See Also
@@ -842,14 +842,14 @@ def paste_cutout_into_image(total, cutout, method='sum'):
 
     Parameters
     ----------
-    total, cutout : `astropy.io.fits.ImageHDU`
+    total, cutout : `~astropy.io.fits.ImageHDU`
         Total and cutout image.
     method : {'sum', 'replace'}
         Sum or replace total values with cutout values.
 
     Returns
     -------
-    total : `astropy.io.fits.ImageHDU`
+    total : `~astropy.io.fits.ImageHDU`
         A reference to the total input HDU that was modified in-place.
 
     See Also
@@ -879,7 +879,7 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
 
     Parameters
     ----------
-    image_hdu : `astropy.io.fits.ImageHDU`
+    image_hdu : `~astropy.io.fits.ImageHDU`
         Original image HDU, unscaled
     block_size : array_like
         Array containing down-sampling integer factor along each axis.
@@ -891,7 +891,7 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
 
     Returns
     -------
-    image_hdu : `astropy.io.fits.ImageHDU`
+    image_hdu : `~astropy.io.fits.ImageHDU`
         Rebinned Image HDU
     """
     from skimage.measure import block_reduce
