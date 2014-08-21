@@ -2,8 +2,11 @@
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
 from __future__ import print_function, division
 import numpy as np
+from astropy.table import Table
+from astropy.units import Quantity
+from .utils import coordinates
 
-__all__ = ['compute_binning', 'FluxProfile']
+__all__ = ['compute_binning', 'FluxProfile', 'image_profile']
 
 
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):
@@ -186,3 +189,135 @@ class FluxProfile(object):
         ----------
         """
         raise NotImplementedError
+
+
+def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
+                  mask=None, errors=False, standard_error=0.1):
+    """Creates a latitude or longitude profile from input flux image HDU.
+
+    Parameters
+    ----------
+    profile_axis : String, {'lat', 'lon'}
+        Specified whether galactic latitude ('lat') or longitude ('lon')
+        profile is to be returned.
+    image : `~astropy.io.fits.ImageHDU`
+        Image HDU object to produce GLAT or GLON profile.
+    lats : array_like
+        Specified as [GLAT_min, GLAT_max], with GLAT_min and GLAT_max
+        as floats. A 1x2 array specifying the maximum and minimum latitudes to
+        include in the region of the image for which the profile is formed, 
+        which should be within the spatial bounds of the image.
+    lons : array_like
+        Specified as [GLON_min, GLON_max], with GLON_min and GLON_max
+        as floats. A 1x2 array specifying the maximum and minimum longitudes to
+        include in the region of the image for which the profile is formed, 
+        which should be within the spatial bounds of the image.
+    binsz : float
+        Latitude bin size of the resulting latitude profile. This should be
+        no less than 5 times the pixel resolution.
+    counts : `~astropy.io.fits.ImageHDU`
+        Counts image to allow Poisson errors to be calculated. If not provided,
+        a standard_error should be provided, or zero errors will be returned.
+        (Optional).
+    mask : array_like
+        2D mask array, matching spatial dimensions of input image. (Optional).
+        A mask value of True indicates a value that should be ignored, while a
+        mask value of False indicates a valid value.
+    errors : bool
+        If True, computes errors, if possible, according to provided inputs.
+        If False (default), returns all errors as zero.
+    standard_error : float
+        If counts image is not provided, but error values required, this
+        specifies a standard fractional error to be applied to values.
+        Default = 0.1.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Galactic latitude or longitude profile as table, with latitude bin
+        boundaries, profile values and errors.
+    """
+    if profile_axis == 'lat':
+        res_bound = 5 * np.abs(image.header['CDELT2'])
+    elif profile_axis == 'lon':
+        res_bound = 5 * np.abs(image.header['CDELT1'])
+    # Assert that the called binsz is at least 5 times
+    # GLAT image resolution to avoid binning bug
+    if binsz < res_bound:
+        raise ValueError('Minimum bin size is 5 times resolution.')
+
+    lon, lat = coordinates(image)
+    mask_init = (lats[0] <= lat) & (lat < lats[1])
+    mask_bounds = mask_init & (lons[0] <= lon) & (lon < lons[1])
+    if mask != None:
+        mask = mask_bounds & mask
+    else:
+        mask = mask_bounds
+
+    # Need to preserve shape here so use multiply
+    cut_image = image.data * mask
+    if counts != None:
+        cut_counts = counts.data * mask
+    values = []
+    count_vals = []
+
+    if profile_axis == 'lat':
+
+        bins = np.arange((lats[1] - lats[0]) / binsz)
+        glats_min = lats[0] + bins[:-1] * binsz
+        glats_max = lats[0] + bins[1:] * binsz
+
+        # Table is required here to avoid rounding problems with floats
+        bounds = Table([glats_min, glats_max], names=('GLAT_MIN', 'GLAT_MAX'))
+        for bin in bins[:-1]:
+            lat_mask = (bounds['GLAT_MIN'][bin] <= lat) & (lat < bounds['GLAT_MAX'][bin])
+            lat_band = cut_image[lat_mask]
+            values.append(lat_band.sum())
+            if counts != None:
+                count_band = cut_counts[lat_mask]
+                count_vals.append(count_band.sum())
+            else:
+                count_vals.append(0)
+
+    elif profile_axis == 'lon':
+
+        bins = np.arange((lons[1] - lons[0]) / binsz)
+        glons_min = lons[0] + bins[:-1] * binsz
+        glons_max = lons[0] + bins[1:] * binsz
+
+        # Table is required here to avoid rounding problems with floats
+        bounds = Table([glons_min, glons_max], names=('GLON_MIN', 'GLON_MAX'))
+        for bin in bins[:-1]:
+            lon_mask = (bounds['GLON_MIN'][bin] <= lon) & (lon < bounds['GLON_MAX'][bin])
+            lon_band = cut_image[lon_mask]
+            values.append(lon_band.sum())
+            if counts != None:
+                count_band = cut_counts[lon_mask]
+                count_vals.append(count_band.sum())
+            else:
+                count_vals.append(0)
+
+    if errors == True:
+        if counts != None:
+            rel_errors = 1. / np.sqrt(count_vals)
+            error_vals = values * rel_errors
+        else:
+            error_vals = values * (np.ones(len(values)) * standard_error)
+    else:
+        error_vals = np.zeros_like(values)
+
+    if profile_axis == 'lat':
+        table = Table([Quantity(glats_min, 'deg'),
+                       Quantity(glats_max, 'deg'),
+                       values,
+                       error_vals],
+                      names=('GLAT_MIN', 'GLAT_MAX', 'BIN_VALUE', 'BIN_ERR'))
+
+    elif profile_axis == 'lon':
+        table = Table([Quantity(glons_min, 'deg'),
+                       Quantity(glons_max, 'deg'),
+                       values,
+                       error_vals],
+                      names=('GLON_MIN', 'GLON_MAX', 'BIN_VALUE', 'BIN_ERR'))
+
+    return table
