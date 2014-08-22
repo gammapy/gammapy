@@ -5,3 +5,4 @@ from .measure import *
 from .profile import *
 from .utils import *
 from .plotting import *
+from .catalog import *

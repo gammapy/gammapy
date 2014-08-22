@@ -14,6 +14,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    flux_point
    crab_mwl_sed
    npred/predicted_counts
+   catalog/source_images
 
 External
 ========
