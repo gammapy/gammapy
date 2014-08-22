@@ -21,7 +21,7 @@ __all__ = ['atrous_hdu', 'atrous_image',
            'paste_cutout_into_image', 'process_image_pixels',
            'block_reduce_hdu',
            'ring_correlate', 'separation', 'solid_angle', 'threshold',
-           'wcs_histogram2d',
+           'wcs_histogram2d', 'lon_lat_rectangle_mask',
            ]
 
 
@@ -911,3 +911,53 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     # Put rebinned data into a fitsHDU
     rebinned_image = fits.ImageHDU(data=data_reduced, header=header)
     return rebinned_image
+
+
+def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
+                           lat_min=None, lat_max=None):
+    """Produces a rectangular boolean mask array based on lat and lon limits.
+
+    Parameters
+    ----------
+    lons : `~numpy.ndarray`
+        Array of longitude values.
+    lats : `~numpy.ndarray`
+        Array of latitude values.
+    lon_min : float, optional
+        Minimum longitude of rectangular mask.
+    lon_max : float, optional
+        Maximum longitude of rectangular mask.
+    lat_min : float, optional
+        Minimum latitude of rectangular mask.
+    lat_max : float, optional
+        Maximum latitude of rectangular mask.
+
+    Returns
+    -------
+    mask : `~numpy.ndarray`
+        Boolean mask array for a rectangular sub-region defined by specified
+        maxima and minima lon and lat.
+    """
+    if lon_min:
+        mask_lon_min = (lon_min <= lons)
+    else:
+        mask_lon_min = np.ones(lons.shape, dtype=bool)
+    if lon_max:
+        mask_lon_max = (lons < lon_max)
+    else:
+        mask_lon_max = np.ones(lons.shape, dtype=bool)
+
+    lon_mask = mask_lon_min & mask_lon_max
+
+    if lat_min:
+        mask_lat_min = (lat_min <= lats)
+    else:
+        mask_lat_min = np.ones(lats.shape, dtype=bool)
+    if lon_max:
+        mask_lat_max = (lats < lat_max)
+    else:
+        mask_lat_max = np.ones(lats.shape, dtype=bool)
+
+    lat_mask = mask_lat_min & mask_lat_max
+
+    return lon_mask & lat_mask
