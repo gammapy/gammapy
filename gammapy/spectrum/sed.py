@@ -4,9 +4,11 @@
 from __future__ import print_function, division
 import logging
 import numpy as np
-from astropy.units import Unit
+from astropy.table import Table, Column
+from astropy.units import Unit, Quantity
+from .flux_point import compute_differential_flux_points
 
-__all__ = ['SEDComponent', 'SED']
+__all__ = ['SEDComponent', 'SED', 'cube_sed']
 
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
 MeV_to_erg = Unit('MeV').to(Unit('erg'))
@@ -240,3 +242,91 @@ def add_crab(ax):
                        e_scale = 1e6, norm_scale = 1e-6, color='g', butterfly = True)
     # Add published fermi result
     """
+
+
+def cube_sed(cube, mask=None, flux_type='differential', counts=None,
+             errors=False, standard_error=0.1, spectral_index=2.3):
+    """Creates SED from GammaSpectralCube within given lat and lon range.
+
+    Parameters
+    ----------
+    cube : `~gammapy.spectral_cube.GammaSpectralCube`
+        Spectral cube of either differential or integral fluxes (specified
+        with flux_type)
+    mask : array_like, optional
+        2D mask array, matching spatial dimensions of input cube.
+        A mask value of True indicates a value that should be ignored, 
+        while a mask value of False indicates a valid value.
+    flux_type : {'differential', 'integral'}
+        Specify whether input cube includes differential or integral fluxes.
+    counts :  `~gammapy.spectral_cube.GammaSpectralCube`, optional
+        Counts cube to allow Poisson errors to be calculated. If not provided,
+        a standard_error should be provided, or zero errors will be returned.
+    errors : bool
+        If True, computes errors, if possible, according to provided inputs.
+        If False (default), returns all errors as zero.
+    standard_error : float
+        If counts cube not provided, but error values required, this specifies
+        a standard fractional error to be applied to values. Default = 0.1.
+    spectral_index : float
+        If integral flux is provided, this is used to calculate differential
+        fluxes and energies (according to the Lafferty & Wyatt model-based
+        method, assuming a power-law model).
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        A spectral energy table of energies, differential fluxes and
+        differential flux errors. Units as those input.
+    """
+
+    lon, lat = cube.spatial_coordinate_images
+
+    values = []
+    for i in np.arange(cube.data.shape[0]):
+        if mask is None:
+            bin = cube.data[i].sum()
+        else:
+            bin = cube.data[i][mask].sum()
+        values.append(bin.value)
+    values = np.array(values)
+
+    if errors:
+        if counts is None:
+            # Counts cube required to calculate poisson errors
+            errors = np.ones_like([values]) * standard_error
+        else:
+            errors = []
+            for i in np.arange(counts.data.shape[0]):
+                if mask is None:
+                    bin = counts.data[i].sum()
+                else:
+                    bin = counts.data[i][mask].sum()
+                r_error = 1. / (np.sqrt(bin.value))
+                errors.append(r_error)
+            errors = np.array([errors])
+    else:
+        errors = np.zeros_like([values])
+
+    if flux_type == 'differential':
+        energy = cube.energy
+        table = Table()
+        table['ENERGY'] = energy,
+        table['DIFF_FLUX'] = Quantity(values, cube.data.unit),
+        table['DIFF_FLUX_ERR'] = Quantity(errors * values, cube.data.unit)
+
+    elif flux_type == 'integral':
+
+        emins = cube.energy[:-1]
+        emaxs = cube.energy[1:]
+        table = compute_differential_flux_points(x_method='lafferty',
+                                                 y_method='power_law',
+                                                 spectral_index=spectral_index,
+                                                 energy_min=emins, energy_max=emaxs,
+                                                 int_flux=values, 
+                                                 int_flux_err=errors * values)
+
+    else:
+        raise ValueError('Unknown flux_type: {0}'.format(flux_type))
+
+    return table

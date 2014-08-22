@@ -7,7 +7,8 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from .. import utils
 from .. import measure
-
+from ...datasets import FermiGalacticCenter
+from ...image.utils import coordinates
 try:
     import skimage
     HAS_SKIMAGE = True
@@ -195,3 +196,16 @@ def test_wcs_histogram2d():
 
     assert measure.lookup(image, 0, 0, world=False) == 1 + 3
     assert measure.lookup(image, 1, 0, world=False) == 2
+
+
+def test_lon_lat_rectangle_mask():
+    counts = FermiGalacticCenter.counts()
+    lons, lats = coordinates(counts)
+    mask = utils.lon_lat_rectangle_mask(lons, lats, lon_min = -1,
+                                        lon_max = 1, lat_min = -1, lat_max = 1)
+    assert_allclose(mask.sum(), 400)
+    
+    mask = utils.lon_lat_rectangle_mask(lons, lats, lon_min = None,
+                                        lon_max = None, lat_min = None,
+                                        lat_max = None)
+    assert_allclose(mask.sum(), 80601)
