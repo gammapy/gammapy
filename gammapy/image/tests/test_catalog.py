@@ -24,7 +24,7 @@ def test_extended_image():
 
 
 @remote_data
-def test_source_image():    
+def test_source_image():
     reference_hdu = make_empty_image(10, 10, 1)
     reference_wcs = WCS(reference_hdu.header)
     energy = Quantity([10, 500], 'GeV')

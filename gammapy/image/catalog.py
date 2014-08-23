@@ -6,9 +6,7 @@ from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.table import Table
-from ..datasets import fetch_fermi_extended_sources, fetch_fermi_catalog
 from . import coordinates
-from ..spectral_cube import GammaSpectralCube
 
 __all__ = ['catalog_image', 'catalog_table']
 
@@ -16,12 +14,17 @@ __all__ = ['catalog_image', 'catalog_table']
 def _extended_image(catalog, reference_cube):
     """Reprojects and adds extended source images to a larger survey image.
     """
+    # This import is here instead of at the top to avoid an ImportError
+    # due to circular dependencies
+    from ..datasets import fetch_fermi_extended_sources
+    from ..spectral_cube import GammaSpectralCube
+
     # Note that the first extended source fits file is unreadable...
     hdu_list = fetch_fermi_extended_sources(catalog)[1:]
     for source in hdu_list:
         source_wcs = WCS(source.header)
         source_spec_cube = GammaSpectralCube(data=Quantity(np.array([source.data]), ''),
-                                                 wcs=source_wcs, energy=energy)
+                                             wcs=source_wcs, energy=energy)
         new_source_cube = source_spec_cube.reproject_to(reference_cube)
         # TODO: Fix this hack
         reference_cube.data = reference_cube.data + np.nan_to_num(new_source_cube.data * 1e-30)
@@ -32,7 +35,7 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
     """Adds point sources to a larger survey image.
     """
     new_image = np.zeros_like(reference_cube.data, dtype=np.float64)
-    if sim_table == None:
+    if sim_table is None:
         source_table = catalog_table(catalog, energy_bands=False)
     else:
         source_table = sim_table
@@ -45,7 +48,7 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
         lon = source_table['GLON'][source]
         if lon >= 180:
             lon = lon - 360
-        if (glon_min < lon) & (lon < glon_max):            
+        if (glon_min < lon) & (lon < glon_max):
             lat = source_table['GLAT'][source]
             if (glat_min < lat) & (lat < glat_max):
                 flux = source_table['flux'][source]
@@ -62,7 +65,7 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
 
 
 def catalog_image(reference, psf, catalog='1FHL', source_type='point',
-                  total_flux=False, sim_table=None):  
+                  total_flux=False, sim_table=None):
     """Creates an image from a simulated catalog, or from 1FHL or 2FGL sources.
 
     Parameters
@@ -92,12 +95,16 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     This is currently only implemented for a single energy band.
     """
     from scipy.ndimage import convolve
+    # This import is here instead of at the top to avoid an ImportError
+    # due to circular dependencies
+    from ..spectral_cube import GammaSpectralCube
+
     lons, lats = coordinates(reference)
     wcs = WCS(reference.header)
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack
     reference_cube = GammaSpectralCube(data=Quantity(np.array(reference.data), ''),
-                                          wcs=wcs, energy=Quantity([0, 1], 'GeV'))
+                                       wcs=wcs, energy=Quantity([0, 1], 'GeV'))
 
     if source_type == 'extended':
         raise NotImplementedError
@@ -131,11 +138,12 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
 
     convolved_cube = convolve(new_image, kernel_array, mode='constant')
 
-    out_cube = GammaSpectralCube(data=convolved_cube, wcs=total_point_image.wcs,
-                                     energy=energy)
+    out_cube = GammaSpectralCube(data=convolved_cube,
+                                 wcs=total_point_image.wcs,
+                                 energy=energy)
 
     return out_cube
- 
+
 
 def catalog_table(catalog, energy_bands=False):
     """Creates catalog table from published source catalog.
@@ -157,6 +165,10 @@ def catalog_table(catalog, energy_bands=False):
     table : `~astropy.table.Table`
         Point source catalog table.
     """
+    # This import is here instead of at the top to avoid an ImportError
+    # due to circular dependencies
+    from ..datasets import fetch_fermi_catalog
+
     data = []
     cat_table = fetch_fermi_catalog(catalog, 'LAT_Point_Source_Catalog')
 
@@ -184,7 +196,7 @@ def catalog_table(catalog, energy_bands=False):
         elif catalog == '2FGL':
             energy = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'GeV') 
 
-            if energy_bands == False:
+            if not energy_bands:
                 flux_bol = cat_table['Flux_Density'][source]
                 row = dict(Source_Type='PointSource',
                            GLON=glon,

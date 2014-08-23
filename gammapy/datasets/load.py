@@ -34,7 +34,8 @@ included_datasets = ['poisson_stats_image',
                      'fetch_fermi_catalog',
                      'arf_fits_table',
                      'psf_fits_table',
-                     'atnf_sample']
+                     'atnf_sample',
+                     ]
 
 remote_datasets = ['fetch_fermi_extended_sources',
                    'FermiVelaRegion',
