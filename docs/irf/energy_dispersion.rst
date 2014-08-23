@@ -1,3 +1,5 @@
+.. _irf-energy_dispersion:
+
 Energy dispersion
 =================
 

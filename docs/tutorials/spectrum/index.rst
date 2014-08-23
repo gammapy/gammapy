@@ -1,3 +1,5 @@
+.. _tutorials-gammapy-pfspec:
+
 Spectra with ``gammapy-pfspec`` and Sherpa
 ==========================================
 

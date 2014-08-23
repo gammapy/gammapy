@@ -1,3 +1,5 @@
+.. _tutorials-npred:
+
 Fermi-LAT diffuse model predicted counts image
 ==============================================
 

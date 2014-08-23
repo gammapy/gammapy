@@ -1,3 +1,5 @@
+.. _stats:
+
 ************************************
 Statistics tools (``gammapy.stats``)
 ************************************
@@ -7,7 +9,7 @@ Statistics tools (``gammapy.stats``)
 Introduction
 ============
 
-``gammapy.stats`` holds statistical estimators,
+`gammapy.stats` holds statistical estimators,
 fit statistics and algorithms commonly used in gamma-ray astronomy.
 
 It is mostly concerned with the evaluation of one or several observations

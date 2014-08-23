@@ -1,10 +1,11 @@
+.. _astro-source-pwn:
+
 Pulsar Wind Nebula Source Models
 ================================
 
 Plot the evolution of the radius of the PWN:
 
-
- .. plot::
+.. plot::
     :include-source:
 
     import numpy as np

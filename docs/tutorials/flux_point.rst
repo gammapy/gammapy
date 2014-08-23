@@ -1,3 +1,5 @@
+.. _tutorials-flux_point:
+
 Where to stick your Spectral Points?
 ====================================
 
@@ -31,7 +33,6 @@ So it follows that, in setting expectation equal to :math:`g(E)` at :math:`E_{lw
 For instances where a power law of spectral index 2 is taken, it can be analytically shown that the Lafferty & Wyatt method and log center method are
 coincident. In the case of steeper power laws (e.g. spectral index 3), the Lafferty & Wyatt method
 returns a lower coordinate on the energy axis than the log bin center, and the reverse effect is seen for less steep power laws (e.g. spectral index 1).
-
 
 Power Law Assumption
 --------------------

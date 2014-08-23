@@ -1,3 +1,5 @@
+.. _irf-effective_area:
+
 Effective area
 ==============
 

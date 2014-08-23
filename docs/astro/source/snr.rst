@@ -1,10 +1,12 @@
+.. _astro-source-snr:
+
 Supernova Remnant Models
 ========================
 
 Plot the evolution of radius of the SNR:
 
 
- .. plot::
+.. plot::
     :include-source:
 
     import numpy as np
@@ -33,7 +35,7 @@ Plot the evolution of radius of the SNR:
 
 Plot the evolution of the flux of the SNR above 1 TeV and at 1 kpc distance:
 
- .. plot::
+.. plot::
     :include-source:
 
     import numpy as np

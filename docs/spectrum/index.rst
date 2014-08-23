@@ -1,5 +1,7 @@
 .. include:: ../references.txt
 
+.. _spectrum:
+
 *****************************************************
 Spectrum estimation and modeling (`gammapy.spectrum`)
 *****************************************************

@@ -1,3 +1,5 @@
+.. _image-bounding_box:
+
 Bounding boxes
 ==============
 

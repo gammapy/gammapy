@@ -1,3 +1,5 @@
+.. _tutorials-catalog:
+
 Catalog & Simulation Images
 ===========================
 

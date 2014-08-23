@@ -1,5 +1,7 @@
 .. include:: ../references.txt
 
+.. _image:
+
 *****************************************************
 Image processing and analysis tools (`gammapy.image`)
 *****************************************************

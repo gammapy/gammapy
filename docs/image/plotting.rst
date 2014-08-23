@@ -1,3 +1,5 @@
+.. _image-plotting:
+
 Image plotting
 ==============
 

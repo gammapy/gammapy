@@ -1,3 +1,5 @@
+.. _tutorials-gammapy-pfmap:
+
 Skymaps with ``gammapy-pfmap`` and Sherpa
 =========================================
 
@@ -14,7 +16,7 @@ Using ``gammapy-pfmap`` is straight forward.
 To create skymaps from a file ``data.fits`` using the object position from the header of the file
 as center of skymap and writing the skymaps to FITS files (option: ``-w``), use::
 
-   $ python scripts/pfmap.py data.fits -w
+   $ gammapy-pfmap data.fits -w
 
 ``gammapy-pfmap`` can also handle compressed files (gzip).
 
@@ -27,7 +29,7 @@ you need to create an ASCII file containing the filenames
 
 You can change the parameters of the skymap via command line options, e.g.,::
 
-   $ python scripts/pfmap.py my.bnk -w -s 4. -b 0.1 -r 0.1 -c "(83.633, 22.0145)"
+   $ gammapy-pfmap my.bnk -w -s 4. -b 0.1 -r 0.1 -c "(83.633, 22.0145)"
 
 creating a skymap of size 4 deg (``-s``) with a bin size 0.1 deg (``-c``)
 and correlation radius for the oversampled skymap of 0.1 deg (``-r``).

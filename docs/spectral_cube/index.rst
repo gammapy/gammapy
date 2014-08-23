@@ -1,5 +1,7 @@
 .. include:: ../references.txt
 
+.. _spectral-cube:
+
 ***************************************
 Spectral cube (`gammapy.spectral_cube`)
 ***************************************

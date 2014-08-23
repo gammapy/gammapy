@@ -1,3 +1,5 @@
+.. _irf-psf:
+
 Point spread function
 =====================
 

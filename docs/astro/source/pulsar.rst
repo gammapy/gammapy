@@ -1,10 +1,11 @@
+.. _astro-source-pulsar:
+
 Pulsar Source Models
 ====================
 
 Plot spin frequency of the pulsar with time:
 
-
- .. plot::
+.. plot::
     :include-source:
         
     import numpy as np
