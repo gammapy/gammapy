@@ -27,7 +27,7 @@ General documentation
 
   install
   introduction
-  tools
+  scripts/index
   tutorials/index
   examples/index
   dataformats/index
