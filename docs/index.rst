@@ -29,6 +29,7 @@ General documentation
   introduction
   tools
   tutorials/index
+  examples/index
   dataformats/index
   references
   credit
