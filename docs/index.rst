@@ -33,6 +33,7 @@ General documentation
   dataformats/index
   references
   credit
+  development/index
 
 The Gammapy toolbox
 -------------------
