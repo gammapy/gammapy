@@ -24,7 +24,7 @@ for the Vela region for energies between 10 and 500 GeV.
 .. literalinclude:: npred_general.py
 
 .. plot:: tutorials/npred/npred_convolved_significance.py
-	:include-source:
+   :include-source:
    
    
 Checks
@@ -43,7 +43,7 @@ The image on the right shows the ratio. **Note that the colorbar scale applies o
 the ratio image.**
 
 .. plot:: tutorials/npred/npred_convolved.py
-	:include-source:
+   :include-source:
 
 We may compare these against the true counts observed by Fermi LAT in this region
 for the same parameters:

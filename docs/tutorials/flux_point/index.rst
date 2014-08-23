@@ -46,8 +46,8 @@ The plot demonstrates that in these cases where the true spectrum is not known, 
 points offers a closer representation than the log center method. Residuals showing the percentage difference of each data point from the true
 spectrum are also shown.
 
-.. plot:: tutorials/flux_point_demo.py plot_plaw
-	:include-source:
+.. plot:: tutorials/flux_point/flux_point_demo.py plot_plaw
+   :include-source:
 
 Method Evaluation
 -----------------
@@ -59,8 +59,8 @@ Log Energy scale, and so the position is 0.5. The coincidence of the two methods
 with the Lafferty method positioning the flux point to the right of the Log Center position for power law spectra of index
 less than 2, and to the left for index greater than 2. 
 
-.. plot:: tutorials/x_position_plot.py make_x_plot
-	:include-source:
+.. plot:: tutorials/flux_point/x_position_plot.py make_x_plot
+   :include-source:
 
 The ability of the two methods to represent an underlying spectrum is demonstrated in the residual images below. Here,
 flux points are positioned using the Lafferty method (left image) and Log Center method (central image) for different
@@ -72,8 +72,8 @@ The residuals log ratio image (right) shows the log ratio of residuals of the La
 indicating the regions of assumed/true parameter space for which the Lafferty method offers an improved representation
 of the underlying frequency over the Log Center method (blue regions), and where it does not (red regions).
 
-.. plot:: tutorials/residuals_images.py residuals_image
-	:include-source:
+.. plot:: tutorials/flux_point/residuals_images.py residuals_image
+   :include-source:
 	
 Caveats
 -------

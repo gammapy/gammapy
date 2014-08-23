@@ -10,5 +10,6 @@ TODO:
 * describe data and emission components
 * perform fit with gammafit!
 
-.. plot:: tutorials/crab_mwl_sed.py
+.. plot:: tutorials/crab_mwl_sed/crab_mwl_sed.py
    :include-source:
+   

@@ -43,5 +43,4 @@ Therefore, the fit results have to be converted correspondingly.
 Some output has been omitted below and has been replaced with dots (...).
 
 .. literalinclude:: xspec_session.txt
-    :linenos:
     :language: text
