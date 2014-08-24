@@ -52,8 +52,6 @@ class TestFermiGalacticCenter():
         assert diffuse_model.data.shape == (30, 21, 61)
         assert_quantity(diffuse_model.energy[0], Quantity(50, 'MeV'))
 
-    # temporarily disable test ... weird fail in astropy.io.fits for Python 2.6 only
-    @pytest.mark.xfail
     def test_exposure_cube(self):
         exposure_cube = FermiGalacticCenter.exposure_cube()
         assert exposure_cube.data.shape == (21, 11, 31)
