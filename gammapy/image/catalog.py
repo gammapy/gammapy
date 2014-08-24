@@ -17,14 +17,14 @@ def _extended_image(catalog, reference_cube):
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
     from ..datasets import fetch_fermi_extended_sources
-    from ..spectral_cube import GammaSpectralCube
+    from ..data import SpectralCube
 
     # Note that the first extended source fits file is unreadable...
     hdu_list = fetch_fermi_extended_sources(catalog)[1:]
     for source in hdu_list:
         source_wcs = WCS(source.header)
-        source_spec_cube = GammaSpectralCube(data=Quantity(np.array([source.data]), ''),
-                                             wcs=source_wcs, energy=energy)
+        source_spec_cube = SpectralCube(data=Quantity(np.array([source.data]), ''),
+                                        wcs=source_wcs, energy=energy)
         new_source_cube = source_spec_cube.reproject_to(reference_cube)
         # TODO: Fix this hack
         reference_cube.data = reference_cube.data + np.nan_to_num(new_source_cube.data * 1e-30)
@@ -87,7 +87,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
 
     Returns
     -------
-    out_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+    out_cube : `~gammapy.data.SpectralCube`
         2D Spectral cube containing the image.
 
     Notes
@@ -97,14 +97,14 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     from scipy.ndimage import convolve
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
-    from ..spectral_cube import GammaSpectralCube
+    from ..data import SpectralCube
 
     lons, lats = coordinates(reference)
     wcs = WCS(reference.header)
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack
-    reference_cube = GammaSpectralCube(data=Quantity(np.array(reference.data), ''),
-                                       wcs=wcs, energy=Quantity([0, 1], 'GeV'))
+    reference_cube = SpectralCube(data=Quantity(np.array(reference.data), ''),
+                                  wcs=wcs, energy=Quantity([0, 1], 'GeV'))
 
     if source_type == 'extended':
         raise NotImplementedError
@@ -125,11 +125,11 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     else:
         raise ValueError
 
-    total_point_image = GammaSpectralCube(data=new_image, wcs=wcs, energy=energy)
+    total_point_image = SpectralCube(data=new_image, wcs=wcs, energy=energy)
     convolved_cube = new_image.copy()
 
     psf = psf.table_psf_in_energy_band(Quantity([np.min(energy).value,
-                                        np.max(energy).value], energy.unit))
+                                       np.max(energy).value], energy.unit))
 
     resolution = abs(reference.header['CDELT1'])
 
@@ -138,9 +138,9 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
 
     convolved_cube = convolve(new_image, kernel_array, mode='constant')
 
-    out_cube = GammaSpectralCube(data=convolved_cube,
-                                 wcs=total_point_image.wcs,
-                                 energy=energy)
+    out_cube = SpectralCube(data=convolved_cube,
+                            wcs=total_point_image.wcs,
+                            energy=energy)
 
     return out_cube
 

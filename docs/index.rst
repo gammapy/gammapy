@@ -44,6 +44,7 @@ The Gammapy toolbox
   astro/index
   background/index
   catalog/index
+  data/index
   datasets/index
   detect/index
   image/index
@@ -51,7 +52,6 @@ The Gammapy toolbox
   morphology/index
   obs/index
   shower/index
-  spectral_cube/index
   spectrum/index
   stats/index
   utils/index

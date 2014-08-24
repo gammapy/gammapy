@@ -3,9 +3,9 @@
 Fermi-LAT diffuse model predicted counts image
 ==============================================
 
-The `gammapy.spectral_cube` module allows for image-based analysis in energy
+The `~gammapy.data.SpectralCube` class allows for image-based analysis in energy
 bands. In particular, similar functionality to gtmodel in the Fermi Science
-tools [FSSC2013]_ is offered in `gammapy.spectral_cube.compute_npred_cube`
+tools [FSSC2013]_ is offered in `~gammapy.data.compute_npred_cube`
 which generates a predicted instrument PSF-convolved counts cube based on a
 provided background model. Unlike the science tools, this implementation is
 appropriate for use with large regions of the sky. 

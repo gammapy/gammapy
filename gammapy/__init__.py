@@ -22,15 +22,15 @@ the following sub-packages (e.g. `gammapy.spectrum`):
 
  `astro`          --- Astrophysical source and population models
  `background`     --- Background estimation and modeling
- `catalog`        --- Catalog
- `datasets`       --- Datasets
+ `catalog`        --- Source catalog tools
+ `data`           --- Data: event lists, spectral cubes, ...
+ `datasets`       --- Access example datasets
  `detect`         --- Source detection tools
  `image`          --- Image processing and analysis tools
  `irf`            --- Instrument response functions (IRFs)
  `morphology`     --- Morphology and PSF methods
  `obs`            --- Observation bookkeeping
  `shower`         --- Air shower image I/O and analysis
- `spectral_cube`  --- Spectral cube
  `spectrum`       --- Spectrum estimation and modeling
  `stats`          --- Statistics tools
  `utils`          --- Utility functions and classes
