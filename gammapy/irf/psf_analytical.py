@@ -206,7 +206,7 @@ class EnergyDependentMultiGaussPSF(object):
         ----------
         energy : `~astropy.units.Quantity`
             Energy at which a PSF is requested.
-        theta : `~astropy.coordinates.Angle` or `~astropy.units.Quantity`
+        theta : `~astropy.coordinates.Angle`
             Offset angle at which a PSF is requested.
 
         Returns
@@ -215,7 +215,7 @@ class EnergyDependentMultiGaussPSF(object):
             Multigauss PSF object.
         """
         validate_physical_type('energy', energy, 'energy')
-        validate_physical_type('energy', energy, 'energy')
+        # TODO: validate `theta`
 
         # Find nearest energy value
         i = np.argmin(np.abs(self.energy_hi - energy))

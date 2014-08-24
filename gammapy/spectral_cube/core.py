@@ -81,7 +81,7 @@ class GammaSpectralCube(object):
 
     @property
     def _interpolate(self):
-        if self._interpolate_cache == None:
+        if self._interpolate_cache is None:
             # Initialise the interpolator
             # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
             from scipy.interpolate import RegularGridInterpolator
@@ -167,7 +167,7 @@ class GammaSpectralCube(object):
         y = y * np.ones(shape)
         z = z * np.ones(shape)
 
-        if combine == True:
+        if combine:
             x = np.array(x).flat
             y = np.array(y).flat
             z = np.array(z).flat
@@ -223,7 +223,7 @@ class GammaSpectralCube(object):
         cube_hdu = fits.ImageHDU(self.data, self.wcs.to_header())
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2
-        
+
         return solid_angle(image_hdu).to('sr')
 
     def flux(self, lon, lat, energy):
@@ -231,9 +231,9 @@ class GammaSpectralCube(object):
 
         Parameters
         ----------
-        lon : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
+        lon : `~astropy.coordinates.Angle`
             Longitude
-        lat : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
+        lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
             Energy
@@ -260,9 +260,9 @@ class GammaSpectralCube(object):
 
         Parameters
         ----------
-        lon : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
+        lon : `~astropy.coordinates.Angle`
             Longitude
-        lat : `~astropy.units.Quantity` or `~astropy.coordinates.Angle`
+        lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
             Energy
@@ -420,7 +420,6 @@ class GammaSpectralCube(object):
 
         return hdu_list
 
-
     def writeto(self, filename, clobber=False):
         """Writes GammaSpectralCube to fits file.
 
@@ -434,7 +433,6 @@ class GammaSpectralCube(object):
             output directory.
         """
         self.to_fits.writeto(filename, clobber)
-
 
     def __repr__(self):
         # Copied from `spectral-cube` package
@@ -496,7 +494,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
     return npred_cube
 
 
-def convolve_cube(cube, psf, offset_max, pixel_size=1):
+def convolve_cube(cube, psf, offset_max):
     """Convolves a predicted counts cube in energy bins with the an
     energy-dependent PSF.
 
@@ -508,8 +506,6 @@ def convolve_cube(cube, psf, offset_max, pixel_size=1):
         Energy dependent PSF.
     offset_max : `~astropy.units.Quantity`
         Maximum offset in degrees of the PSF convolution kernel from its center.
-    pixel_size : `~astropy.units.Quantity`
-        Resolution of the PSF convolution kernel.
 
     Returns
     -------
@@ -520,6 +516,8 @@ def convolve_cube(cube, psf, offset_max, pixel_size=1):
     energy = cube.energy
     indices = np.arange(len(energy) - 1)
     convolved_cube = np.zeros_like(cube.data)
+    pixel_size = Angle(np.abs(cube.wcs.wcs.cdelt[0]), 'deg')
+
     for i in indices:
         energy_band = energy[i:i + 2]
         psf_at_energy = psf.table_psf_in_energy_band(energy_band)

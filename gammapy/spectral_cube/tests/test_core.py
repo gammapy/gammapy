@@ -167,8 +167,7 @@ def test_compute_npred_cube():
     assert_allclose(expected_sum, actual_sum, rtol=1)
     # PSF convolve the npred cube
     psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
-    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(3, 'deg'),
-                                               pixel_size=Angle(0.1, 'deg'))
+    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(3, 'deg'))
     actual_convolved_sum = npred_cube_convolved.data.sum()
     # Check sum is the same after convolution
     assert_allclose(actual_sum, actual_convolved_sum, rtol=0.1)
@@ -260,8 +259,7 @@ def test_convolve_cube():
                                     energy_bounds)
     # PSF convolve the npred cube
     psf = EnergyDependentTablePSF.read(FermiGalacticCenter.filenames()['psf'])
-    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(5, 'deg'),
-                                               pixel_size=Angle(1, 'deg'))
+    npred_cube_convolved = convolve_cube(npred_cube, psf, offset_max=Angle(5, 'deg'))
     expected = npred_cube.data.sum()
     actual = npred_cube_convolved.data.sum()
 
