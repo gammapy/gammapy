@@ -36,6 +36,12 @@ To check if the Gammapy command line tools are on your ``$PATH`` try this:
 Requirements
 ------------
 
+Gammapy works with Python 2 and 3.
+More specifically, in the Python 2 series we only support Python 2.7,
+and in the Python 3 series we support version 3.3 or later.
+Gammapy will not work with Python 2.6 or 3.2
+(see :ref:`development-python2and3` if you care why).
+
 Optional dependencies (imported and used only where needed):
 
 * `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods

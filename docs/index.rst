@@ -17,7 +17,7 @@ but the idea is that Gammapy is a place to share and collaborate for gamma-ray a
 * Ask questions on our `mailing list <http://groups.google.com/group/gammapy>`__.
 * Request features, report bugs or contribute on `our GitHub page <https://github.com/gammapy/gammapy>`__.
 * Check out the `project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
-* Requires Python (version 2.6, 2.7 and 3.3 or later), Numpy (version 1.6 or later) and Astropy (version 0.4 or later)
+* Requires Python (version 2.7 and 3.3 or later), Numpy (version 1.6 or later) and Astropy (version 0.4 or later)
 
 General documentation
 ---------------------
