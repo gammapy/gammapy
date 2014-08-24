@@ -3,3 +3,4 @@
 Data: event lists, spectral cubes, ...
 """
 from .spectral_cube import *
+from .event_list import *

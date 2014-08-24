@@ -11,15 +11,16 @@ Data (`gammapy.data`)
 Introduction
 ============
 
-`gammapy.data` defines the `~gammapy.data.SpectralCube` class,
-which represents a 3-dimensional array with longitude, latitude and spectral axes.
+`gammapy.data` contains classes to represent gamma-ray data.
 
-TODO: explain why this package for radio spectral cubes doesn't quite work
-for gamma-ray astronomy.
+An `~gammapy.data.EventList` contains unbinned data,
+i.e. the longitude, latitude, energy and time for each event.
 
-* http://spectral-cube.readthedocs.org/en/latest/index.html
-* https://github.com/radio-astro-tools/spectral-cube/issues/110
-
+A `~gammapy.data.SpectralCube` contains binned dat as a 3-dimensional array
+with longitude, latitude and spectral axes.
+The event time information has been removed ... it is represented by
+a `~gammapy.data.GTI` (GTI = Good Time Interval) class that is needed
+for exposure and flux computations.
 
 Getting Started
 ===============

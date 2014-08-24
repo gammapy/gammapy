@@ -10,6 +10,23 @@ Note that Astropy has very extensive developer documentation
 `here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
 this page should only mention Gammapy-specific things.
 
+
+Why we don't sub-class other data classes
+_________________________________________
+
+We have considered re-using data classes developed by others,
+namely `~astropy.nddata.NDData` and the
+`spectral_cube.SpectralCube <http://spectral-cube.readthedocs.org/en/latest/index.html>`__
+classes.
+
+But in both cases, the data model didn't really fit our use cases for gamma-ray astronomy
+and so we decided to write our own data classes from scratch.
+
+Here's some issues where this was discussed:
+* https://github.com/radio-astro-tools/spectral-cube/issues/110
+* https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
+
+
 .. _development-python2and3:
 
 Python 2 and 3 support
