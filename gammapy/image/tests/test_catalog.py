@@ -4,12 +4,12 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import remote_data
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
+from astropy.wcs import WCS
 from .. import catalog
 from ...image import make_empty_image
 from ...irf import EnergyDependentTablePSF
+from ...data import SpectralCube
 from ...datasets import FermiGalacticCenter
-from ...spectral_cube import SpectralCube
-from ...image.utils import WCS
 
 try:
     from scipy.ndimage import convolve

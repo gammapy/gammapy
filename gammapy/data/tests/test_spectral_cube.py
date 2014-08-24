@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
-from ..core import SpectralCube, compute_npred_cube, convolve_cube
+from ...data import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import solid_angle
 from ...image.utils import make_header, WCS, make_empty_image
 from ...irf import EnergyDependentTablePSF
