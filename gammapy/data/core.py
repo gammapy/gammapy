@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gamma-ray spectral cube.
+"""Gamma-ray spectral cube: longitude, latitude and spectral axis.
 
-TODO: split `GammaSpectralCube` into a base class ``SpectralCube`` and a few sub-classes:
+TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-classes:
 
-* ``GammaSpectralCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
-* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``GammaSpectralCube`` (``gtexpcube`` format)
+* ``SpectralCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
+* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
 * ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import print_function, division
@@ -25,10 +25,10 @@ from ..image import cube_to_image
 from ..image import solid_angle
 
 
-__all__ = ['GammaSpectralCube', 'compute_npred_cube', 'convolve_cube']
+__all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
 
 
-class GammaSpectralCube(object):
+class SpectralCube(object):
     """Spectral cube for gamma-ray astronomy.
 
     Can be used e.g. for Fermi or GALPROP diffuse model cubes.
@@ -105,7 +105,7 @@ class GammaSpectralCube(object):
 
         Returns
         -------
-        spectral_cube : `GammaSpectralCube`
+        spectral_cube : `SpectralCube`
             Spectral cube
         """
         object_hdu = hdu_list[0]
@@ -118,7 +118,7 @@ class GammaSpectralCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        return GammaSpectralCube(data, wcs, energy)
+        return SpectralCube(data, wcs, energy)
 
     @staticmethod
     def read(filename):
@@ -131,7 +131,7 @@ class GammaSpectralCube(object):
 
         Returns
         -------
-        spectral_cube : `GammaSpectralCube`
+        spectral_cube : `SpectralCube`
             Spectral cube
         """
         data = fits.getdata(filename)
@@ -143,7 +143,7 @@ class GammaSpectralCube(object):
         energy = Table.read(filename, 'ENERGIES')['Energy']
         energy = Quantity(energy, 'MeV')
 
-        return GammaSpectralCube(data, wcs, energy)
+        return SpectralCube(data, wcs, energy)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -344,11 +344,11 @@ class GammaSpectralCube(object):
 
     def reproject_to(self, reference_cube, projection_type='bicubic'):
         """
-        Spatially reprojects a `GammaSpectralCube` onto a reference cube.
+        Spatially reprojects a `SpectralCube` onto a reference cube.
 
         Parameters
         ----------
-        reference_cube : `GammaSpectralCube`
+        reference_cube : `SpectralCube`
             Reference cube with the desired spatial projection.
         projection_type : {'nearest-neighbor', 'bilinear',
             'biquadratic', 'bicubic', 'flux-conserving'}
@@ -356,7 +356,7 @@ class GammaSpectralCube(object):
 
         Returns
         -------
-        reprojected_cube : `GammaSpectralCube`
+        reprojected_cube : `SpectralCube`
             Cube spatially reprojected to the reference cube.
         """
         from reproject import reproject
@@ -400,10 +400,10 @@ class GammaSpectralCube(object):
 
         wcs_out = WCS(header_out)
 
-        return GammaSpectralCube(new_cube, wcs_out, energy)
+        return SpectralCube(new_cube, wcs_out, energy)
 
     def to_fits(self):
-        """Writes GammaSpectralCube to fits hdu_list.
+        """Writes SpectralCube to fits hdu_list.
 
         Returns
         -------
@@ -421,7 +421,7 @@ class GammaSpectralCube(object):
         return hdu_list
 
     def writeto(self, filename, clobber=False):
-        """Writes GammaSpectralCube to fits file.
+        """Writes SpectralCube to fits file.
 
         Parameters
         ----------
@@ -436,7 +436,7 @@ class GammaSpectralCube(object):
 
     def __repr__(self):
         # Copied from `spectral-cube` package
-        s = "GammaSpectralCube with shape={0}".format(self.data.shape)
+        s = "SpectralCube with shape={0}".format(self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
             s += ":\n"
         else:
@@ -453,9 +453,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     Parameters
     ----------
-    flux_cube : `GammaSpectralCube`
+    flux_cube : `SpectralCube`
         Differential flux cube.
-    exposure_cube : `GammaSpectralCube`
+    exposure_cube : `SpectralCube`
         Instrument exposure cube.
     energy_bins : `~astropy.units.Quantity`
         An array of Quantities specifying the edges of the energy band
@@ -465,7 +465,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     Returns
     -------
-    npred_cube : `GammaSpectralCube`
+    npred_cube : `SpectralCube`
         Predicted counts cube in energy bins.
     """
     if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
@@ -488,9 +488,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         npred_cube[i] = npred_image.to('')
     npred_cube = np.nan_to_num(npred_cube)
 
-    npred_cube = GammaSpectralCube(data=npred_cube,
-                                   wcs=wcs,
-                                   energy=energy_bins)
+    npred_cube = SpectralCube(data=npred_cube,
+                              wcs=wcs,
+                              energy=energy_bins)
     return npred_cube
 
 
@@ -500,7 +500,7 @@ def convolve_cube(cube, psf, offset_max):
 
     Parameters
     ----------
-    cube : `GammaSpectralCube`
+    cube : `SpectralCube`
         Counts cube in energy bins.
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Energy dependent PSF.
@@ -509,7 +509,7 @@ def convolve_cube(cube, psf, offset_max):
 
     Returns
     -------
-    convolved_cube : `GammaSpectralCube`
+    convolved_cube : `SpectralCube`
         PSF convolved predicted counts cube in energy bins.
     """
     from scipy.ndimage import convolve
@@ -524,6 +524,6 @@ def convolve_cube(cube, psf, offset_max):
         kernel_image = psf_at_energy.kernel(pixel_size, offset_max, normalize=True)
         convolved_cube[i] = convolve(cube.data[i], kernel_image,
                                      mode='constant')
-    convolved_cube = GammaSpectralCube(data=convolved_cube, wcs=cube.wcs,
-                                       energy=cube.energy)
+    convolved_cube = SpectralCube(data=convolved_cube, wcs=cube.wcs,
+                                  energy=cube.energy)
     return convolved_cube

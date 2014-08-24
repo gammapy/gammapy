@@ -22,7 +22,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils import data
 import tarfile
-from ..spectral_cube import GammaSpectralCube
+from ..data import SpectralCube
 
 
 included_datasets = ['poisson_stats_image',
@@ -197,11 +197,11 @@ class FermiGalacticCenter(object):
 
         Returns
         -------
-        spectral_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+        spectral_cube : `~gammapy.data.SpectralCube`
             Diffuse model spectral cube
         """
         filename = FermiGalacticCenter.filenames()['diffuse_model']
-        return GammaSpectralCube.read(filename)
+        return SpectralCube.read(filename)
 
     @staticmethod
     def exposure_cube():
@@ -209,11 +209,11 @@ class FermiGalacticCenter(object):
 
         Returns
         -------
-        spectral_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+        spectral_cube : `~gammapy.data.SpectralCube`
             Exposure cube
         """
         filename = FermiGalacticCenter.filenames()['exposure_cube']
-        return GammaSpectralCube.read(filename)
+        return SpectralCube.read(filename)
 
 
 class FermiVelaRegion(object):
@@ -273,11 +273,11 @@ class FermiVelaRegion(object):
 
         Returns
         -------
-        spectral_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+        spectral_cube : `~gammapy.data.SpectralCube`
             Diffuse model spectral cube
         """
         filename = FermiVelaRegion.filenames()['diffuse_model']
-        return GammaSpectralCube.read(filename)
+        return SpectralCube.read(filename)
 
     @staticmethod
     def background_image():
@@ -324,11 +324,11 @@ class FermiVelaRegion(object):
 
         Returns
         -------
-        exposure_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+        exposure_cube : `~gammapy.data.SpectralCube`
             Exposure cube
         """
         filename = FermiVelaRegion.filenames()['exposure_cube']
-        return GammaSpectralCube.read(filename)
+        return SpectralCube.read(filename)
 
     @staticmethod
     def livetime_cube():

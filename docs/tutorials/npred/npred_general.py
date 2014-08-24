@@ -5,9 +5,9 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-from gammapy.spectral_cube import (GammaSpectralCube,
-                                   compute_npred_cube,
-                                   convolve_cube)
+from gammapy.data import (SpectralCube,
+                          compute_npred_cube,
+                          convolve_cube)
 from gammapy.datasets import FermiVelaRegion
 from gammapy.irf import EnergyDependentTablePSF
 
@@ -19,8 +19,8 @@ def prepare_images():
     background_file = FermiVelaRegion.filenames()['diffuse_model']
     exposure_file = FermiVelaRegion.filenames()['exposure_cube']
     counts_file = FermiVelaRegion.filenames()['counts_cube']
-    background_model = GammaSpectralCube.read(background_file)
-    exposure_cube = GammaSpectralCube.read(exposure_file)
+    background_model = SpectralCube.read(background_file)
+    exposure_cube = SpectralCube.read(exposure_file)
     # Add correct units
     exposure_cube.data = Quantity(exposure_cube.data, '1/(cm2 deg2 s GeV)')
     # Re-project background cube
@@ -40,9 +40,9 @@ def prepare_images():
     # Counts data
     counts_data = fits.open(counts_file)[0].data
     counts_wcs = WCS(fits.open(counts_file)[0].header)
-    counts_cube = GammaSpectralCube(data=Quantity(counts_data, ''),
-                                    wcs=counts_wcs,
-                                    energy=energies)
+    counts_cube = SpectralCube(data=Quantity(counts_data, ''),
+                               wcs=counts_wcs,
+                               energy=energies)
     counts_cube = counts_cube.reproject_to(npred_cube)
 
     counts = counts_cube.data[0]

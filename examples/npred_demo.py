@@ -4,13 +4,13 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from gammapy.datasets import FermiGalacticCenter
 from gammapy.irf import EnergyDependentTablePSF
-from gammapy.spectral_cube import (GammaSpectralCube,
-                                   compute_npred_cube,
-                                   convolve_cube)
+from gammapy.data import (SpectralCube,
+                          compute_npred_cube,
+                          convolve_cube)
 
 filenames = FermiGalacticCenter.filenames()
-spectral_cube = GammaSpectralCube.read(filenames['diffuse_model'])
-exposure_cube = GammaSpectralCube.read(filenames['exposure_cube'])
+spectral_cube = SpectralCube.read(filenames['diffuse_model'])
+exposure_cube = SpectralCube.read(filenames['exposure_cube'])
 psf = EnergyDependentTablePSF.read(filenames['psf'])
 
 spectral_cube = spectral_cube.reproject_to(exposure_cube)

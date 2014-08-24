@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from ...datasets import FermiGalacticCenter, FermiVelaRegion
-from ..core import GammaSpectralCube, compute_npred_cube, convolve_cube
+from ..core import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import solid_angle
 from ...image.utils import make_header, WCS, make_empty_image
 from ...irf import EnergyDependentTablePSF
@@ -29,7 +29,7 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-class TestGammaSpectralCube(object):
+class TestSpectralCube(object):
 
     def setup(self):
         self.spectral_cube = FermiGalacticCenter.diffuse_model()
@@ -40,7 +40,7 @@ class TestGammaSpectralCube(object):
         wcs = self.spectral_cube.wcs
         energy = self.spectral_cube.energy
 
-        spectral_cube = GammaSpectralCube(data, wcs, energy)
+        spectral_cube = SpectralCube(data, wcs, energy)
         assert spectral_cube.data.shape == (30, 21, 61)
 
     def test_pix2world(self):
@@ -151,8 +151,8 @@ class TestGammaSpectralCube(object):
 def test_compute_npred_cube():
     # A quickly implemented check - should be improved
     filenames = FermiGalacticCenter.filenames()
-    spectral_cube = GammaSpectralCube.read(filenames['diffuse_model'])
-    exposure_cube = GammaSpectralCube.read(filenames['exposure_cube'])
+    spectral_cube = SpectralCube.read(filenames['diffuse_model'])
+    exposure_cube = SpectralCube.read(filenames['exposure_cube'])
     counts_cube = FermiGalacticCenter.counts()
     energy_bounds = Quantity([10, 30, 100, 500], 'GeV')
 
@@ -193,9 +193,9 @@ def make_test_cubes(energies, nxpix, nypix, binsz):
 
     Returns
     -------
-    exposure_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+    exposure_cube : `~gammapy.spectral_cube.SpectralCube`
         Cube of uniform exposure = 1 cm^2 s
-    spectral_cube : `~gammapy.spectral_cube.GammaSpectralCube`
+    spectral_cube : `~gammapy.spectral_cube.SpectralCube`
         Cube of differential fluxes in units of cm^-2 s^-1 GeV^-1 sr^-1
     """
     hdu = make_empty_image(nxpix, nypix, binsz)
@@ -208,16 +208,16 @@ def make_test_cubes(energies, nxpix, nypix, binsz):
     header['CRPIX3'] = 1
     wcs = WCS(header)
     data_array = np.ones((len(energies), 10, 10))
-    exposure_cube = GammaSpectralCube(data=Quantity(data_array, 'cm2 s'),
-                                      wcs=wcs, energy=energies)
+    exposure_cube = SpectralCube(data=Quantity(data_array, 'cm2 s'),
+                                 wcs=wcs, energy=energies)
 
     flux = Quantity(power_law_eval(energies.value, 1, 2,
                                    1), '1/(cm2 s GeV sr)')
     flux_array = np.zeros_like(data_array)
     for i in np.arange(len(flux)):
         flux_array[i] = flux.value[i] * data_array[i]
-    spectral_cube = GammaSpectralCube(data=Quantity(flux_array, flux.unit),
-                                      wcs=wcs, energy=energies)
+    spectral_cube = SpectralCube(data=Quantity(flux_array, flux.unit),
+                                 wcs=wcs, energy=energies)
     return exposure_cube, spectral_cube
 
 
@@ -248,8 +248,8 @@ def test_analytical_npred_cube():
 @pytest.mark.skipif('not HAS_REPROJECT')
 def test_convolve_cube():
     filenames = FermiGalacticCenter.filenames()
-    spectral_cube = GammaSpectralCube.read(filenames['diffuse_model'])
-    exposure_cube = GammaSpectralCube.read(filenames['exposure_cube'])
+    spectral_cube = SpectralCube.read(filenames['diffuse_model'])
+    exposure_cube = SpectralCube.read(filenames['exposure_cube'])
     energy_bounds = Quantity([10, 30, 100, 500], 'GeV')
 
     spectral_cube = spectral_cube.reproject_to(exposure_cube)
@@ -272,8 +272,8 @@ def test_reproject_cube():
     # TODO: a better test can probably be implemented here to avoid
     # repeating code
     filenames = FermiGalacticCenter.filenames()
-    spectral_cube = GammaSpectralCube.read(filenames['diffuse_model'])
-    exposure_cube = GammaSpectralCube.read(filenames['exposure_cube'])
+    spectral_cube = SpectralCube.read(filenames['diffuse_model'])
+    exposure_cube = SpectralCube.read(filenames['exposure_cube'])
 
     original_cube = Quantity(np.nan_to_num(spectral_cube.data.value),
                              spectral_cube.data.unit)

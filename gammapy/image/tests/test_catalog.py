@@ -8,7 +8,7 @@ from .. import catalog
 from ...image import make_empty_image
 from ...irf import EnergyDependentTablePSF
 from ...datasets import FermiGalacticCenter
-from ...spectral_cube import GammaSpectralCube
+from ...spectral_cube import SpectralCube
 from ...image.utils import WCS
 
 try:
@@ -28,8 +28,8 @@ def test_source_image():
     reference_hdu = make_empty_image(10, 10, 1)
     reference_wcs = WCS(reference_hdu.header)
     energy = Quantity([10, 500], 'GeV')
-    reference = GammaSpectralCube(data=reference_hdu.data,
-                                  wcs=reference_wcs, energy=energy)
+    reference = SpectralCube(data=reference_hdu.data,
+                             wcs=reference_wcs, energy=energy)
 
     psf_file = FermiGalacticCenter.filenames()['psf']
     psf = EnergyDependentTablePSF.read(psf_file)

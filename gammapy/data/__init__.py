@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Spectral cube: longitude, latitude and spectral axis.
+Data: event lists, spectral cubes, ...
 """
-from .core import *
+from .spectral_cube import *

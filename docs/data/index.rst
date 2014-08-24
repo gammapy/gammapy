@@ -1,17 +1,17 @@
 .. include:: ../references.txt
 
-.. _spectral-cube:
+.. _data:
 
-***************************************
-Spectral cube (`gammapy.spectral_cube`)
-***************************************
+*********************
+Data (`gammapy.data`)
+*********************
 
-.. currentmodule:: gammapy.spectral_cube
+.. currentmodule:: gammapy.data
 
 Introduction
 ============
 
-`gammapy.spectral_cube` defines the `~gammapy.spectral_cube.GammaSpectralCube` class,
+`gammapy.data` defines the `~gammapy.data.SpectralCube` class,
 which represents a 3-dimensional array with longitude, latitude and spectral axes.
 
 TODO: explain why this package for radio spectral cubes doesn't quite work
@@ -29,5 +29,5 @@ TODO
 Reference/API
 =============
 
-.. automodapi:: gammapy.spectral_cube
+.. automodapi:: gammapy.data
     :no-inheritance-diagram:
