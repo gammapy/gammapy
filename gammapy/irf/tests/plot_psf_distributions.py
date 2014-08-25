@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from ...morphology import Gauss2DPDF, MultiGauss2D
 from ...irf import HESSMultiGaussPSF

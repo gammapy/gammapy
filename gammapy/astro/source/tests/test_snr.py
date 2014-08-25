@@ -8,7 +8,7 @@ from ...source import SNR, SNRTrueloveMcKee
 
 t = Quantity([0, 1, 10, 100, 1000, 10000], 'yr')
 snr = SNR()
-snr_mcgee = SNRTrueloveMcKee()
+snr_mckee = SNRTrueloveMcKee()
 
 
 def test_SNR_luminosity_tev():
@@ -36,11 +36,11 @@ def test_SNRTrueloveMcKee_luminosity_tev():
     """Test SNR Truelov McKee luminosity"""
     reference = [0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
                  0.00000000e+00, 1.07680000e+33, 1.07680000e+33]
-    assert_allclose(snr_mcgee.luminosity_tev(t), reference)
+    assert_allclose(snr_mckee.luminosity_tev(t), reference)
 
 
 def test_SNRTrueloveMcKee_radius():
     """Test SNR RTruelove McKee radius"""
     reference = [0.00000000e+00, 1.95327725e+17, 9.06630987e+17,
                  4.20820826e+18, 1.57916052e+19, 4.11702961e+19]
-    assert_allclose(snr_mcgee.radius(t), reference)
+    assert_allclose(snr_mckee.radius(t), reference)

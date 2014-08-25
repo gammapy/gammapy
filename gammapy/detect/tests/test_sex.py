@@ -4,7 +4,7 @@ import subprocess
 from tempfile import NamedTemporaryFile
 from astropy.tests.helper import pytest
 from astropy.io import fits
-from ...datasets import poisson_stats_image
+from ...datasets import load_poisson_stats_image
 from ...detect import sex
 
 try:
@@ -24,7 +24,7 @@ def test_sex():
     # from astropy.utils.data import get_pkg_data_filename
     # filename = get_pkg_data_filename('../../data/poisson_stats_image/counts.fits.gz')
     # Instead we make a non-zipped copy of the file:
-    data = poisson_stats_image()
+    data = load_poisson_stats_image()
     filename = NamedTemporaryFile(suffix='.fits').name
     fits.writeto(filename, data=data)
     catalog, checkimage = sex(filename)

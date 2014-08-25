@@ -43,13 +43,13 @@ class EnergyDependentMultiGaussPSF(object):
     --------
     Plot R68 of the PSF vs. theta and energy:
 
-     .. plot::
+    .. plot::
         :include-source:
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.datasets import psf_fits_table
-        psf = EnergyDependentMultiGaussPSF.from_fits(psf_fits_table())
+        from gammapy.datasets import load_psf_fits_table
+        psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
         psf.plot_containment(0.68, show_save_energy=False)
         plt.show()
 
@@ -88,8 +88,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         Returns
         -------
-        prf : `EnergyDependentMultiGaussPSF`
-            PSF object.
+        psf : `EnergyDependentMultiGaussPSF`
+            PSF
         """
         hdu_list = fits.open(filename)
         return EnergyDependentMultiGaussPSF.from_fits(hdu_list)
@@ -107,7 +107,7 @@ class EnergyDependentMultiGaussPSF(object):
         Returns
         -------
         psf : `EnergyDependentMultiGaussPSF`
-            PSF object.
+            PSF
         """
         extension = 'POINT SPREAD FUNCTION'
         energy_lo = Quantity(hdu_list[extension].data['ENERG_LO'][0], 'TeV')
@@ -152,8 +152,8 @@ class EnergyDependentMultiGaussPSF(object):
         """
         # Set up header
         if header is None:
-            from gammapy.datasets import psf_fits_table
-            header = psf_fits_table()[1].header
+            from ..datasets import load_psf_fits_table
+            header = load_psf_fits_table()[1].header
         header['LO_THRES'] = self.energy_thresh_lo.value
         header['HI_THRES'] = self.energy_thresh_hi.value
 

@@ -5,6 +5,7 @@ import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.tests.helper import pytest
+from ....datasets import load_atnf_sample
 from ...source import Pulsar, SimplePulsar
 
 try:
@@ -19,15 +20,13 @@ t = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
 
 def test_SimplePulsar_atnf():
     """Test functions against ATNF pulsar catalog values"""
-    from ....datasets import atnf_sample
-
-    atnf_sample = atnf_sample()
-    P = Quantity(atnf_sample['P0'], 's')
-    P_dot = Quantity(atnf_sample['P1'], '')
+    atnf = load_atnf_sample()
+    P = Quantity(atnf['P0'], 's')
+    P_dot = Quantity(atnf['P1'], '')
     simple_pulsar = SimplePulsar(P=P, P_dot=P_dot)
-    assert_allclose(simple_pulsar.tau.to('yr'), atnf_sample['AGE'], rtol=0.01)
-    assert_allclose(simple_pulsar.luminosity_spindown.to('erg s^-1'), atnf_sample['EDOT'], rtol=0.01)
-    assert_allclose(simple_pulsar.magnetic_field.to('gauss'), atnf_sample['BSURF'], rtol=0.01)
+    assert_allclose(simple_pulsar.tau.to('yr'), atnf['AGE'], rtol=0.01)
+    assert_allclose(simple_pulsar.luminosity_spindown.to('erg s^-1'), atnf['EDOT'], rtol=0.01)
+    assert_allclose(simple_pulsar.magnetic_field.to('gauss'), atnf['BSURF'], rtol=0.01)
 
 
 def test_Pulsar_period():

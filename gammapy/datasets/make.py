@@ -7,10 +7,10 @@ import numpy as np
 from astropy.units import Quantity
 from ..irf import EnergyDependentMultiGaussPSF
 
-__all__ = ['make_test_psf_fits_table']
+__all__ = ['make_test_psf']
 
 
-def make_test_psf_fits_table(filename, N_energy=15, N_theta=12):
+def make_test_psf(energy_bins=15, theta_bins=12):
     """Create a test FITS PSf file.
 
     A log-linear dependency in energy is assumed, where the size of
@@ -20,17 +20,20 @@ def make_test_psf_fits_table(filename, N_energy=15, N_theta=12):
 
     Parameters
     ----------
-    filename : str
-        FITS file name
-    N_energy : int
+    energy_bins : int
         Number of energy bins
-    N_theta : int
+    theta_bins : int
         Number of theta bins
+
+    Returns
+    -------
+    psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
+        PSF
     """
-    energies_all = np.logspace(-1, 2, N_energy + 1)
+    energies_all = np.logspace(-1, 2, energy_bins + 1)
     energies_lo = energies_all[:-1]
     energies_hi = energies_all[1:]
-    theta_lo = theta_hi = np.linspace(0, 2.2, N_theta)
+    theta_lo = theta_hi = np.linspace(0, 2.2, theta_bins)
     azimuth_lo = azimuth_hi = 0
     zenith_lo = zenith_hi = 0
 
@@ -52,11 +55,12 @@ def make_test_psf_fits_table(filename, N_energy=15, N_theta=12):
 
     norms = []
     for norm in 302.654 * np.array([1, 0.0406003, 0.444632]):
-        norms.append(norm * np.ones((N_theta, N_energy)))
+        norms.append(norm * np.ones((theta_bins, energy_bins)))
 
     psf = EnergyDependentMultiGaussPSF(Quantity(energies_lo, 'TeV'),
                                        Quantity(energies_hi, 'TeV'),
                                        Quantity(theta_lo, 'deg'),
                                        sigmas, norms, azimuth=azimuth_hi,
                                        zenith=zenith_hi)
-    psf.write(filename)
+
+    return psf

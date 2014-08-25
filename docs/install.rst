@@ -90,7 +90,7 @@ copy & pasting the following lines into your terminal:
    export PATH="$PWD/miniconda/bin:$PATH"
    conda config --set always_yes yes --set changeps1 no
    conda update -q conda
-   conda install pip scipy matplotlib scikit-image astropy
+   conda install pip scipy matplotlib scikit-image scikit-learn astropy
    pip install reproject aplpy
    pip install gammapy
  
@@ -130,9 +130,11 @@ Optional dependencies (imported and used only where needed):
 
 * `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods
 * `matplotlib`_ for plotting
-* `aplpy`_ for plotting astro images
+* `wcsaxes`_ for sky image plotting (provides a low-level API)
+* `aplpy`_ for sky image plotting (provides a high-level API)
 * `pandas`_ CVS read / write; DataFrame
-* `scikit-image`_ for image processing
+* `scikit-image`_ for some image processing tasks
+* `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
 * `Sherpa`_ for modeling / fitting
 * `ROOT`_ and `rootpy`_ conversion helper functions
