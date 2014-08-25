@@ -23,8 +23,8 @@ the following sub-packages (e.g. `gammapy.spectrum`):
  `astro`          --- Astrophysical source and population models
  `background`     --- Background estimation and modeling
  `catalog`        --- Source catalog tools
- `data`           --- Data: event lists, spectral cubes, ...
- `datasets`       --- Access example datasets
+ `data`           --- Data classes
+ `datasets`       --- Access datasets
  `detect`         --- Source detection tools
  `image`          --- Image processing and analysis tools
  `irf`            --- Instrument response functions (IRFs)

@@ -84,8 +84,8 @@ class EffectiveAreaTable(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EffectiveAreaTable
-        from gammapy.datasets import arf_fits_table
-        arf = EffectiveAreaTable.from_fits(arf_fits_table())
+        from gammapy.datasets import load_arf_fits_table
+        arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
         arf.plot_area_vs_energy(show_save_energy=False)
         plt.show()
     """
@@ -146,8 +146,8 @@ class EffectiveAreaTable(object):
             )
 
         if header is None:
-            from gammapy.datasets import arf_fits_table
-            header = arf_fits_table()[1].header
+            from ..datasets import load_arf_fits_table
+            header = load_arf_fits_table()[1].header
 
         if header == 'pyfact':
             header = hdu.header

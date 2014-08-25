@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.utils.data import get_pkg_data_filename
 from astropy.tests.helper import pytest
 from ...irf import EffectiveAreaTable, abramowski_effective_area
-from ...datasets import arf_fits_table
+from ...datasets import load_arf_fits_table
 
 try:
     import scipy
@@ -34,7 +35,7 @@ def test_abramowski_effective_area():
 def test_EffectiveAreaTable():
     filename = get_pkg_data_filename('data/arf_info.txt')
     info_str = open(filename, 'r').read()
-    arf = EffectiveAreaTable.from_fits(arf_fits_table())
+    arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
     assert arf.info() == info_str
 
 
@@ -43,7 +44,7 @@ def test_EffectiveAreaTable_write():
     from astropy.io import fits
 
     # Read test psf file
-    psf = EffectiveAreaTable.from_fits(arf_fits_table())
+    psf = EffectiveAreaTable.from_fits(load_arf_fits_table())
 
     # Write it back to disk
     with NamedTemporaryFile(suffix='.fits') as psf_file:

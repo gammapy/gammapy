@@ -3,13 +3,14 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.datasets import poisson_stats_image
+from gammapy.datasets import load_poisson_stats_image
 from gammapy.image import disk_correlate
 from gammapy.stats import significance
 from gammapy.image import colormap_hess, colormap_milagro
 
 # Compute an example significance image
-counts = disk_correlate(poisson_stats_image(), radius=5, mode='reflect')
+counts = load_poisson_stats_image()
+counts = disk_correlate(counts, radius=5, mode='reflect')
 background = np.median(counts) * np.ones_like(counts)
 image = significance(counts, background)
 

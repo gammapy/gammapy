@@ -2,9 +2,9 @@
 
 .. _data:
 
-*********************
-Data (`gammapy.data`)
-*********************
+*****************************
+Data classes (`gammapy.data`)
+*****************************
 
 .. currentmodule:: gammapy.data
 
