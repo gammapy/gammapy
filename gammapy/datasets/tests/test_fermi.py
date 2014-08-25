@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.tests.helper import remote_data
@@ -12,6 +13,12 @@ from ...datasets import (FermiGalacticCenter,
                          fetch_fermi_diffuse_background_model,
                          )
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
 
 class TestFermiGalacticCenter():
 
@@ -19,6 +26,7 @@ class TestFermiGalacticCenter():
         filenames = FermiGalacticCenter.filenames()
         assert isinstance(filenames, dict)
 
+    @pytest.mark.skipif('not HAS_SCIPY')
     def test_psf(self):
         psf = FermiGalacticCenter.psf()
         energy = Quantity(100, 'GeV')
@@ -56,6 +64,7 @@ class TestFermiVelaRegion():
         assert counts.data.sum() == 1551
 
     @remote_data
+    @pytest.mark.skipif('not HAS_SCIPY')
     def test_psf(self):
         psf = FermiVelaRegion.psf()
         energy = Quantity(100, 'GeV')
