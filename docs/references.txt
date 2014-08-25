@@ -16,4 +16,11 @@
 .. _aplpy: http://aplpy.github.io
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org
- 
+.. _pip: http://www.pip-installer.org/
+.. _conda: http://conda.pydata.org/
+
+.. _Gammapy mailing list: http://groups.google.com/group/gammapy
+.. _Gammapy Github page: https://github.com/gammapy/gammapy
+.. _Gammapy documentation: https://gammapy.readthedocs.org/
+.. _Gammapy project summary on Ohloh: https://www.ohloh.net/p/gammapy
+.. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy 

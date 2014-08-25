@@ -1,3 +1,5 @@
+.. include:: references.txt
+
 .. image:: _static/gammapy_banner.png
     :width: 400px
 
@@ -13,10 +15,10 @@ Currently the functionality is limited and geared towards Galactic plane survey 
 but the idea is that Gammapy is a place to share and collaborate for gamma-ray astronomy Pythonistas
 ... contributions welcome! 
 
-* Read the `documentation <https://gammapy.readthedocs.org/>`__.
-* Ask questions on our `mailing list <http://groups.google.com/group/gammapy>`__.
-* Request features, report bugs or contribute on `our GitHub page <https://github.com/gammapy/gammapy>`__.
-* Check out the `project summary on Ohloh <https://www.ohloh.net/p/gammapy>`__
+* Read the `Gammapy documentation`_.
+* Ask questions on the `Gammapy mailing list`_.
+* Request features, report bugs or contribute on the `Gammapy GitHub page`_.
+* Check out the `Gammapy project summary on Ohloh`_ or the `Gammapy page on the PyPI`_.
 * Requires Python (version 2.7 and 3.3 or later), Numpy (version 1.6 or later) and Astropy (version 0.4 or later)
 
 General documentation

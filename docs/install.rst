@@ -5,20 +5,101 @@
 Installation
 ============
 
-To install the latest Gammapy stable version the easiest way is using the
-`pip <http://www.pip-installer.org/>`_ installer:
+Here we provide short installation instructions for Gammapy and its dependencies
+using the `pip`_ and `conda`_ tools.
+
+If you get stuck, have a look at the extensive installation instructions for Astropy
+at http://www.astropy.org/ or ask on the `Gammapy mailing list`_.
+
+Install Gammapy using pip
+-------------------------
+
+To install the latest Gammapy **stable** version using `pip`_:
 
 .. code-block:: bash
 
    $ pip install gammapy
 
-To install the latest developer version of Gammapy, use
+To install the current Gammapy **development** version using `pip`_:
+
+.. code-block:: bash
+
+   $ pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
+
+Download and install Gammapy manually
+-------------------------------------
+
+To download the latest stable version of Gammapy, download it from
+https://pypi.python.org/pypi/gammapy, if you have the
+`wget <http://www.gnu.org/software/wget/>`_ tool available you can do this
+from the command line:
+
+.. code-block:: bash
+
+   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.1.tar.gz  
+   $ tar zxf gammapy-0.1.tar.gz
+   $ cd gammapy-0.1
+
+To download the latest development version of Gammapy:
 
 .. code-block:: bash
 
    $ git clone https://github.com/gammapy/gammapy.git
    $ cd gammapy
-   $ python setup.py install --user
+
+Either way, you now can install, test or build the documentation:
+
+.. code-block:: bash
+
+   $ python setup.py install
+   $ python setup.py test
+   $ python setup.py build_sphinx
+
+Also you have easy access to the Python scripts from the tutorials and examples: 
+
+.. code-block:: bash
+
+   $ cd docs/tutorials
+   $ cd examples
+
+If you want to contribute to Gammapy, but are not familiar with Python or
+git or Astropy yet, please have a look at the  
+`Astropy developer documentation <http://docs.astropy.org/en/latest/#developer-documentation>`__.
+
+Install Gammapy and its dependencies using Conda
+------------------------------------------------
+
+In the past it has often been hard to install Python packages and all their dependencies.
+Not any more ... using `conda`_ you can install Gammapy and most of its dependencies on
+any Linux machine or Mac in 5 minutes (without needing root access on the machine).
+
+Go to http://conda.pydata.org/miniconda.html and download the installer for your system,
+e.g. currently for Linux and Mac you can use:
+
+.. code-block:: bash
+
+   $ wget http://repo.continuum.io/miniconda/Miniconda3-3.6.0-Linux-x86_64.sh -O miniconda.sh
+   $ wget http://repo.continuum.io/miniconda/Miniconda3-3.6.0-MacOSX-x86_64.sh -O miniconda.sh
+
+Then install binary packages using ``conda`` and source packages using ``pip`` by
+copy & pasting the following lines into your terminal:
+
+.. code-block:: bash
+
+   bash miniconda.sh -b -p $PWD/miniconda
+   export PATH="$PWD/miniconda/bin:$PATH"
+   conda config --set always_yes yes --set changeps1 no
+   conda update -q conda
+   conda install pip scipy matplotlib scikit-image astropy
+   pip install reproject aplpy
+   pip install gammapy
+ 
+Overall ``conda`` is a great cross-platform package manager, you can quickly learn how to use
+it by reading the docs here: http://conda.pydata.org/docs/
+
+
+Check if your Gammapy installation is OK
+----------------------------------------
 
 To check if Gammapy is correctly installed, start up python or ipython,
 import Gammapy and run the unit tests:
@@ -33,10 +114,13 @@ To check if the Gammapy command line tools are on your ``$PATH`` try this:
 
    $ gammapy-info --tools
 
+.. _install-requirements:
+
 Requirements
 ------------
 
 Gammapy works with Python 2 and 3.
+
 More specifically, in the Python 2 series we only support Python 2.7,
 and in the Python 3 series we support version 3.3 or later.
 Gammapy will not work with Python 2.6 or 3.2
@@ -58,11 +142,11 @@ Optional dependencies (imported and used only where needed):
 * `imageutils`_ for image utility functions (temporary, will become `astropy.image`)
 * `reproject`_ for image reprojection (temporary, will become `astropy.reproject`)
 
-.. note:: I didn't put any effort into minimizing the number of dependencies ...
+.. note:: We didn't put any effort into minimizing the number of dependencies ...
    I'll limit the number of optional packages if people complain about installation woes.
 
-Sherpa
-------
+How to make Astropy / Gammapy work with the CIAO Sherpa Python?
+---------------------------------------------------------------
 
 Some parts of Gammapy use the `Sherpa`_ Python modeling / fitting package
 from the `CIAO`_ Chandra satellite X-ray data analysis package. 
@@ -104,3 +188,16 @@ Here's a few tricks that might help you make it work.
 
    $ export PATH=$CIAO_DIR/ots/bin:$PATH
    $ export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
+
+How to make Astropy / Gammapy work with the Fermi ScienceTools Python?
+----------------------------------------------------------------------
+
+Try installing `pip`_ into that Python and then:
+
+.. code-block:: bash
+
+   $ pip install astropy
+   $ pip install gammapy
+
+If this doesn't work (which is not uncommon, this is known to fail to compile the C extensions of Astropy
+on some platforms), ask your Python-installation-savvy co-worker or on the Astropy or Gammapy mailing list.
