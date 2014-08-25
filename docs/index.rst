@@ -29,7 +29,6 @@ General documentation
   introduction
   scripts/index
   tutorials/index
-  examples/index
   dataformats/index
   references
   credit
