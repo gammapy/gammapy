@@ -16,12 +16,11 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
+import tarfile
 from astropy.utils.data import get_pkg_data_filename, download_file
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils import data
-import tarfile
 from ..data import SpectralCube
 
 
@@ -596,7 +595,7 @@ def fetch_fermi_catalog(catalog, extension=None):
         ss += 'Available: {0}'.format(', '.join(FERMI_CATALOGS))
         raise ValueError(ss)
 
-    filename = data.download_file(url, cache=True)
+    filename = download_file(url, cache=True)
     hdu_list = fits.open(filename)
 
     if extension != None:
@@ -644,7 +643,7 @@ def fetch_fermi_extended_sources(catalog):
         ss += 'Available: {0}'.format(', '.join(FERMI_EXTENDED))
         raise ValueError(ss)
 
-    filename = data.download_file(url, cache=True)
+    filename = download_file(url, cache=True)
     tar = tarfile.open(filename, 'r')
 
     hdu_list = []
@@ -674,6 +673,6 @@ def get_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/'
 
     url = BASE_URL + filename
-    filename = data.download_file(url, cache=True)
+    filename = download_file(url, cache=True)
 
     return filename

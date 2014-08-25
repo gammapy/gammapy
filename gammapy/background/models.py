@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Background models.
+"""
 from __future__ import print_function, division
 import numpy as np
 from astropy.modeling.models import Gaussian1D

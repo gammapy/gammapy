@@ -11,19 +11,18 @@ radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
 from __future__ import print_function, division
 import numpy as np
 from numpy.random import random_integers, uniform, normal
-
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
 from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar
-
 from ...utils.const import d_sun_to_galactic_center
 
 __all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
            'Paczynski1990', 'YusifovKucuk2004', 'YusifovKucuk2004B',
            'Exponential', 'LogSpiral', 'FaucherSpiral', 'ValleeSpiral',
-           'radial_distributions'
+           'radial_distributions',
+           'RMIN', 'RMAX', 'ZMIN', 'ZMAX',
            ]
 
 R_SUN_GALACTIC = d_sun_to_galactic_center.value

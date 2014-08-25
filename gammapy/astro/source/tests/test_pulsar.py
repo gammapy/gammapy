@@ -2,11 +2,10 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 import numpy as np
-
+from astropy.table import Table
 from astropy.units import Quantity
 from astropy.tests.helper import pytest
-
-from ..pulsar import Pulsar, SimplePulsar
+from ...source import Pulsar, SimplePulsar
 
 try:
     import scipy
@@ -19,8 +18,7 @@ t = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
 
 
 def test_SimplePulsar_atnf():
-    """Test functions against ATNF pular catalog values"""
-    from astropy.table import Table
+    """Test functions against ATNF pulsar catalog values"""
     from ....datasets import atnf_sample
 
     atnf_sample = atnf_sample()
@@ -72,4 +70,3 @@ def test_Pulsar_magnetic_field():
     """Test against numerical integration"""
     reference = np.ones_like(t) * 10 ** pulsar.logB
     assert_allclose(pulsar.magnetic_field(t), reference)
-

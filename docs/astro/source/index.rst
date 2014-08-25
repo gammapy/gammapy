@@ -23,9 +23,6 @@ The following source models are available:
    pwn
    pulsar
 
-
-
-
 Reference/API
 =============
 

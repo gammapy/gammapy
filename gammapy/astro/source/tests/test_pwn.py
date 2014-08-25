@@ -2,11 +2,9 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 import numpy as np
-
-from astropy.units import Quantity 
+from astropy.units import Quantity
 from astropy.tests.helper import pytest
-
-from ..pwn import PWN
+from ...source import PWN
 
 try:
     import scipy
@@ -18,12 +16,14 @@ except ImportError:
 t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], 'yr')
 pwn = PWN()
 
+
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_PWN_radius():
     """Test SNR luminosity"""
     reference = [0.00000000e+00, 1.33404629e+14, 2.11432089e+15,
                  3.35097278e+16, 5.31093395e+17, 6.92792702e+17, 6.92792702e+17]
     assert_allclose(pwn.radius(t), reference)
+
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_magnetic_field():

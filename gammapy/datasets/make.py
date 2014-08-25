@@ -1,21 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Make example datasets.
+"""Make example datasets.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
 import numpy as np
-
 from astropy.units import Quantity
 from gammapy.irf import EnergyDependentMultiGaussPSF
 
-__all__ = []
+__all__ = ['make_test_psf_fits_table']
 
 
 def make_test_psf_fits_table(filename, N_energy=15, N_theta=12):
-    """
-    Create a test FITS PSf file.
+    """Create a test FITS PSf file.
 
     A log-linear dependency in energy is assumed, where the size of
     the PSF decreases by a factor of tow over tow decades. The
@@ -26,9 +22,9 @@ def make_test_psf_fits_table(filename, N_energy=15, N_theta=12):
     ----------
     filename : str
         FITS file name
-    N_energy : int (default 15)
+    N_energy : int
         Number of energy bins
-    N_theta : int (default 12)
+    N_theta : int
         Number of theta bins
     """
     energies_all = np.logspace(-1, 2, N_energy + 1)

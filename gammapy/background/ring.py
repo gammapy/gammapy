@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Ring background estimation."""
+"""Ring background estimation.
+"""
 from __future__ import print_function, division
 import numpy as np
-from ..image.utils import ring_correlate
+from ..image import ring_correlate
 
 __all__ = ['ring_correlate_off_maps', 'RingBgMaker',
            'ring_r_out', 'ring_area_factor', 'ring_alpha']

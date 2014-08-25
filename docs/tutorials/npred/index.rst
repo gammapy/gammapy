@@ -15,9 +15,9 @@ Predicting Counts
 -----------------
 
 The example script below computes the Fermi PSF-convolved predicted counts map
-using `gammapy.spectral_cube`. This is then used to produce a Li & Ma significance
-image [LiMa1983]_. The left image shows the significance image produced using the
-methods in `gammapy.spectral_cube`, while a comparison against the significance image
+using `~gammapy.data.SpectralCube`. This is then used to produce a Li & Ma significance
+image [LiMa1983]_. The left image shows the significance image,
+while a comparison against the significance image
 produced using the Fermi Science tools is shown on the right. These results are
 for the Vela region for energies between 10 and 500 GeV.
 

@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 __all__ = ['argparse', 'GammapyFormatter']
 
-from astropy.utils.compat import argparse
+import argparse
 
 
 class GammapyFormatter(argparse.ArgumentDefaultsHelpFormatter,

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from astropy.table import Table
-from .. import FluxDistribution
+from ...catalog import FluxDistribution
 
 
 def test_FluxDistribution():

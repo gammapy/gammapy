@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
 from __future__ import print_function, division
-
 from astropy.units import Quantity
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
            'dec_iau_format',
-           'as_quantity']
+           'as_quantity',
+           ]
 
 
 def as_quantity(*args):
