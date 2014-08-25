@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
-from ..general_random_array import GeneralRandomArray
+from ....utils.distributions import GeneralRandomArray
 
 
 def plot_simple_1d():

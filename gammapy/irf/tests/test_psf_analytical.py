@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from ..psf_analytical import EnergyDependentMultiGaussPSF
-
 from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
+from ...irf import EnergyDependentMultiGaussPSF
 
 try:
     import scipy

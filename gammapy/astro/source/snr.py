@@ -2,13 +2,10 @@
 """Supernova remnant (SNR) source models"""
 from __future__ import print_function, division
 import numpy as np
-
 from astropy.units import Quantity
 import astropy.constants as const
 from astropy.utils import lazyproperty
-
 from ...extern.validator import validate_physical_type
-
 
 __all__ = ['SNR', 'SNRTrueloveMcKee']
 

@@ -8,8 +8,6 @@ Other SExtractor Python wrappers (not BSD licensed!):
 * http://chimera.googlecode.com/svn/trunk/src/chimera/util/sextractor.py
 * https://pypi.python.org/pypi/pysex/
 * http://gitorious.org/pysextractor/pysextractor/trees/master/pysextractor
-
-
 """
 from __future__ import print_function, division
 import logging

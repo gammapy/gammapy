@@ -33,16 +33,19 @@ TODO: tons of things, e.g.
 """
 from __future__ import print_function, division
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 import numpy as np
 from astropy.io import fits
 from .. import stats
-from ..image.utils import disk_correlate
+from ..image import disk_correlate
 
-__all__ = ['IterativeSourceDetector', 'run_detection']
+__all__ = ['IterativeSourceDetector',
+           'run_detection',
+           ]
 
 
 class FitFailedError(object):
+    """Fit failed error.
+    """
     pass
 
 

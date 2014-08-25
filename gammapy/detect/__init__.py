@@ -7,4 +7,4 @@ from .iterfind import *
 from .matched_filter import *
 from .sex import *
 from .test_statistic import *
-from .utils import *
+from .scale_cube import *

@@ -1,16 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
-from numpy.testing import assert_allclose
-
 from astropy.tests.helper import pytest
 from astropy.modeling.tests.test_models import Fittable1DModelTester
-
-from ..spatial import (FaucherKaspi2006, Lorimer2006,
-                       YusifovKucuk2004, YusifovKucuk2004B,
-                       Paczynski1990, CaseBattacharya1998,
-                       RMIN, RMAX, ZMIN, ZMAX, Exponential)
-
+from ...population import (FaucherKaspi2006, Lorimer2006,
+                           YusifovKucuk2004, YusifovKucuk2004B,
+                           Paczynski1990, CaseBattacharya1998,
+                           RMIN, RMAX, ZMIN, ZMAX, Exponential)
 from .test_velocity import velocity_models_1D
 
 radial_models_1D = {
@@ -88,5 +84,3 @@ class TestMorphologyModels(Fittable1DModelTester):
         self.x1 = np.arange(1, 10, .1)
         self.y1 = np.arange(1, 10, .1)
         self.y2, self.x2 = np.mgrid[:10, :8]
-
-

@@ -8,8 +8,11 @@ finished and need tests!
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['ModelThetaCalculator', 'ThetaCalculator',
-           'ThetaCalculator2D', 'ThetaCalculatorScipy']
+__all__ = ['ModelThetaCalculator',
+           'ThetaCalculator',
+           'ThetaCalculator2D',
+           'ThetaCalculatorScipy',
+           ]
 
 
 class ThetaCalculator(object):

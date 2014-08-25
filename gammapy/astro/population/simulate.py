@@ -3,7 +3,7 @@
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy import sqrt, degrees, pi, arctan, arctan2, exp
+from numpy import degrees, pi, arctan, exp
 from numpy.random import uniform, normal
 from astropy.table import Table, Column
 from astropy.units import Quantity
@@ -13,11 +13,10 @@ from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw, pdf
 from ...morphology.shapes import morph_types
-from ..source import SNR, PWN, Pulsar
 from ...catalog.utils import as_quantity
-from .spatial import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
-from .velocity import VMIN, VMAX, velocity_distributions
-from gammapy.astro.source.snr import SNRTrueloveMcKee
+from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
+from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
+from ..population import VMIN, VMAX, velocity_distributions
 
 
 __all__ = ['make_cat_cube',

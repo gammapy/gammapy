@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar source models"""
 from __future__ import print_function, division
-
 import numpy as np
-
 from astropy.units import Quantity
-
 from ...extern.validator import validate_physical_type
 
-__all__ = ['Pulsar']
+__all__ = ['Pulsar', 'SimplePulsar']
 
 DEFAULT_I = Quantity(1e45, 'g cm^2')  # moment of inertia
 DEFAULT_R = Quantity(1e6, 'cm')   # radius of the neutron star
@@ -16,8 +13,7 @@ B_CONST = Quantity(3.2e19, 'gauss s^(-1/2)')   # magnetic field constant
 
 
 class SimplePulsar(object):
-    """
-    Magnetic dipole spin-down model for a pulsar.
+    """Magnetic dipole spin-down model for a pulsar.
 
     Reference: http://home.strw.leidenuniv.nl/~oberg/Pulsars/Verbunt_Heise_NeutronStars.pdf
 
@@ -88,8 +84,7 @@ class SimplePulsar(object):
 
 
 class Pulsar(SimplePulsar):
-    """
-    Magnetic dipole spin-down pulsar model.
+    """Magnetic dipole spin-down pulsar model.
 
     Reference: http://home.strw.leidenuniv.nl/~oberg/Pulsars/Verbunt_Heise_NeutronStars.pdf
 
@@ -105,7 +100,6 @@ class Pulsar(SimplePulsar):
         Moment of inertia
     R : float
         Radius
-
     """
 
     def __init__(self, P_0=Quantity(0.1, 's'), logB=10, n=3, I=DEFAULT_I,

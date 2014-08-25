@@ -10,6 +10,7 @@ __all__ = ['FaucherKaspi2006VelocityMaxwellian',
            'FaucherKaspi2006VelocityBimodal',
            'Paczynski1990Velocity',
            'velocity_distributions',
+           'VMIN', 'VMAX',
            ]
 
 # Simulation range used for random number drawing

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.tests.helper import pytest
-from ..general_random import GeneralRandom
+from ....utils.distributions import GeneralRandom
 
 
 @pytest.mark.xfail

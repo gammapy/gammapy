@@ -4,7 +4,7 @@ import numpy as np
 
 __all__ = ['Gauss2DPDF',
            'MultiGauss2D',
-           'gaussian_sum_moments'
+           'gaussian_sum_moments',
            ]
 
 __doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}

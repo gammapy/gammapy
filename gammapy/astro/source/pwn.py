@@ -2,17 +2,13 @@
 """Pulsar wind nebula (PWN) source models"""
 from __future__ import print_function, division
 import logging
-
 import numpy as np
-
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import astropy.constants as const
-
-from .snr import SNRTrueloveMcKee
-from .pulsar import Pulsar
 from ...extern.validator import validate_physical_type
-
+from ..source import SNRTrueloveMcKee
+from ..source import Pulsar
 
 __all__ = ['PWN']
 
@@ -150,7 +146,6 @@ class PWN(object):
 
 
 # TODO: The following PWN model should be adapted to use gammafit classes.
-
 class PWNElectronSpectrum(PWN):
     def __init__(self,  q_type='constant', r_type='constant', B_type='constant',
                  *args, **kwargs):

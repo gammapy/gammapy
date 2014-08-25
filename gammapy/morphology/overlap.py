@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""Source overlap tools.
+"""
 from __future__ import print_function, division
 import json
 import os
 import logging
-logging.basicConfig(format='%(levelname)s:  %(message)s', level=logging.INFO)
 import numpy as np
 from numpy import exp, pi, log, sqrt
 from astropy.extern.configobj import configobj
 from astropy.io import fits, ascii
 from astropy.table import Table, Column
-from astropy import wcs
+from astropy.wcs import WCS
 
 # TODO: add what is publicly used here
 __all__ = ['read_model_components']
@@ -71,7 +72,7 @@ def write_test_model_components(component_table):
         return amplitude * exp(exponent)
 
     # Set up fits header
-    w = wcs.WCS(naxis=2)
+    w = WCS(naxis=2)
     w.wcs.crpix = [200, 200]
     w.wcs.cdelt = np.array([-0.02, 0.02])
     w.wcs.crval = [180, 0]
@@ -172,7 +173,7 @@ def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
     """Get mask from pre-computed containment radius.
     """
     hdulist = fits.open('../counts.fits')
-    w = wcs.WCS(hdulist[0].header)
+    w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
     glon, glat = w.wcs_pix2world(x, y, 1)
 
@@ -192,7 +193,7 @@ def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
     """
     # Setup wcs coordinate transformation
     hdulist = fits.open('../counts.fits')
-    w = wcs.WCS(hdulist[0].header)
+    w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
     glon, glat = w.wcs_pix2world(x, y, 1)
 
@@ -558,7 +559,7 @@ def make_example_plots(component_table):
     hdulist = fits.open('../exposure.fits')
 
     # Parse the WCS keywords in the primary HDU
-    w = wcs.WCS(hdulist[0].header)
+    w = WCS(hdulist[0].header)
 
     # Slice through center
     y_slice, x_slice = w.wcs_world2pix(0, 0, 0)

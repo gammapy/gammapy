@@ -8,7 +8,7 @@ https://github.com/healpy/healpy/issues/129
 """
 from __future__ import print_function, division
 from astropy.coordinates import SkyCoord
-from .utils import coordinates
+from ..image import coordinates
 
 __all__ = ['healpix_to_image', 'image_to_healpix']
 

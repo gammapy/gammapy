@@ -6,8 +6,11 @@ import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)
 
-__all__ = ['galactic_to_radec', 'radec_to_galactic',
-           'separation', 'minimum_separation', 'pair_correlation'
+__all__ = ['galactic_to_radec',
+           'radec_to_galactic',
+           'separation',
+           'minimum_separation',
+           'pair_correlation',
            ]
 
 

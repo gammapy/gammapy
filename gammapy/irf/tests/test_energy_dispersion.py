@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ..energy_dispersion import EnergyDispersion
+from ...irf import EnergyDispersion
 
 
 @pytest.mark.xfail

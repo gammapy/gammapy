@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.table import Table
 from astropy.modeling.models import Gaussian1D
-from ..models import GaussianBand2D
+from ...background.models import GaussianBand2D
 
 try:
     import scipy

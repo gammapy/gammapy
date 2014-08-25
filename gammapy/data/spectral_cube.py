@@ -20,9 +20,7 @@ from ..spectrum import (LogEnergyAxis,
                         energy_bin_centers_log_spacing,
                         powerlaw
                         )
-from ..image.utils import coordinates
-from ..image import cube_to_image
-from ..image import solid_angle
+from ..image import coordinates, cube_to_image, solid_angle
 
 
 __all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']

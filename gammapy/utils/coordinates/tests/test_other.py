@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from astropy.units import Quantity
-from ..other import galactic
+from ...coordinates import galactic
 
 
 def test_galactic():

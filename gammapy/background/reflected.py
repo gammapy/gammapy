@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Reflected region background estimation
+"""Reflected region background estimation.
 """
 from __future__ import print_function, division
 import numpy as np

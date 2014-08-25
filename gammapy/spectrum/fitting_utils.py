@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Convenience functions for chi**2 and likelihood fitting
+"""Convenience functions for chi**2 and likelihood fitting.
 
 TODO: Unusable at the moment. Refactor into classes and clean up.
 """

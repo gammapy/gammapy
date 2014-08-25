@@ -2,7 +2,7 @@
 """""Make a few example plots to see if PWN model works."""
 from __future__ import print_function, division
 import numpy as np
-from ..pwn import PWN
+from ...population import PWN
 
 
 def plot_hoppe(pwn):

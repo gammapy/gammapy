@@ -2,11 +2,15 @@
 """Matched filter source detection methods"""
 from __future__ import print_function, division
 import numpy as np
-from ..image.utils import process_image_pixels
+from ..image import process_image_pixels
 from ..stats import p_to_s
 
-__all__ = ['probability_center', 'probability_image',
-           'significance_center', 'significance_image']
+__all__ = ['probability_center',
+           'probability_image',
+           'significance_center',
+           'significance_image',
+           ]
+
 
 def probability_center(images, kernel):
     """Compute matched-filter p-value at the kernel center.

@@ -1,5 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 from __future__ import print_function, division
 import itertools
 import numpy as np
@@ -9,7 +8,7 @@ from astropy.table import Table
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law)
-from ..powerlaw import power_law_eval, power_law_integral_flux
+from ...spectrum.powerlaw import power_law_eval, power_law_integral_flux
 
 try:
     import scipy

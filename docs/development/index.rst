@@ -10,6 +10,33 @@ Note that Astropy has very extensive developer documentation
 `here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
 this page should only mention Gammapy-specific things.
 
+Where should I import from?
+---------------------------
+
+You should import from the "end-user namespaces", not the "implementation module".
+
+.. code-block:: python
+
+   from gammapy.data import EventList  # good
+   from gammapy.data.event_list import EventList # bad
+
+   from gammapy.stats import cash  # good
+   from gammapy.stats.fit_statistics import cash  # bad
+
+The end-user namespace is the location that is shown in the API docs, i.e. you can
+use the Sphinx full-text search to quickly find it.
+
+To make code maintenance easier, the implementation of the functions and classes is
+spread across multiple modules (`.py` files), but the user shouldn't care about their
+names, that would be too much to remember.
+
+The only reason to import from a module directly is if you need to access a private
+function, class or variable (something that is not listed in `__all__` and thus not
+imported into the end-user namespace. 
+
+Note that this means that in the definition of an "end-user namespace", e.g. in the
+``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
+modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package. 
 
 Why we don't sub-class other data classes
 _________________________________________
@@ -23,6 +50,7 @@ But in both cases, the data model didn't really fit our use cases for gamma-ray 
 and so we decided to write our own data classes from scratch.
 
 Here's some issues where this was discussed:
+
 * https://github.com/radio-astro-tools/spectral-cube/issues/110
 * https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
 

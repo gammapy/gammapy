@@ -3,5 +3,5 @@
 Astrophysical source models
 """
 from .pulsar import *
-from .pwn import *
 from .snr import *
+from .pwn import *

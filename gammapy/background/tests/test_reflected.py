@@ -3,8 +3,7 @@ from __future__ import print_function, division
 import unittest
 from astropy.tests.helper import pytest
 from ...obs import RunList
-from ..maps import Maps
-from ..reflected import ReflectedRegionMaker
+from ...background import Maps, ReflectedRegionMaker
 
 
 @pytest.mark.xfail

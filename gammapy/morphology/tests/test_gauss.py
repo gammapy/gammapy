@@ -2,13 +2,12 @@
 from __future__ import print_function, division
 import unittest
 import numpy as np
-from numpy.testing.utils import assert_allclose
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian2D
-from astropy.convolution.utils import discretize_model
-from ...image.measure import measure_image_moments
-from ..gauss import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
+from astropy.convolution import discretize_model
+from ...image import measure_image_moments
+from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 try:
     import scipy

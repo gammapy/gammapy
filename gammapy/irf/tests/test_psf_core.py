@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
-from astropy.tests.helper import pytest
-from numpy.testing import assert_almost_equal, assert_allclose
 import numpy as np
+from numpy.testing import assert_almost_equal, assert_allclose
+from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
-from ..psf_core import HESSMultiGaussPSF, multi_gauss_psf_kernel
+from ...irf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 try:
     import scipy

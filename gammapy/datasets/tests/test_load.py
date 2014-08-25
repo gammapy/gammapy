@@ -4,11 +4,14 @@ from numpy.testing import assert_allclose
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
-from astropy.tests.helper import pytest
 from astropy.tests.helper import remote_data
 from ...utils.testing import assert_quantity
-from .. import poisson_stats_image, FermiGalacticCenter, FermiVelaRegion
-from .. import fetch_fermi_catalog, fetch_fermi_extended_sources
+from ...datasets import (poisson_stats_image,
+                         FermiGalacticCenter,
+                         FermiVelaRegion,
+                         fetch_fermi_catalog,
+                         fetch_fermi_extended_sources,
+                         )
 
 
 def test_poisson_stats_image():
@@ -71,7 +74,7 @@ class TestFermiVelaRegion():
         assert counts.data.shape == (20, 50, 50) 
         assert counts.data.sum() == 1551
 
-    @remote_data    
+    @remote_data
     def test_psf(self):
         psf = FermiVelaRegion.psf()
         assert psf['PSF'].data.shape == (20,)
@@ -94,7 +97,7 @@ class TestFermiVelaRegion():
         assert background.data.shape == (50, 50) 
         assert background.data.sum(), 322.12299
 
-    @remote_data    
+    @remote_data
     def test_events(self):
         events_list = FermiVelaRegion.events()
         assert events_list['EVENTS'].data.shape == (2042,)
@@ -105,8 +108,8 @@ class TestFermiVelaRegion():
         assert exposure_cube.data.shape == (21, 50, 50)
         assert exposure_cube.data.value.sum(), 4.978616e+15
         assert_quantity(exposure_cube.energy[0], Quantity(10000, 'MeV'))
-    
-    @remote_data    
+
+    @remote_data
     def test_livetime(self):
         livetime_list = FermiVelaRegion.livetime_cube()
         assert livetime_list[1].data.shape == (12288,)
