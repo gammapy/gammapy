@@ -4,8 +4,11 @@ import unittest
 from astropy.tests.helper import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
-from .. import gauss
-from .. import theta
+from ...morphology import (Gauss2DPDF,
+                           MultiGauss2D,
+                           ThetaCalculator,
+                           ThetaCalculatorScipy,
+                           )
 
 try:
     import scipy
@@ -20,13 +23,13 @@ class TestThetaCalculator(unittest.TestCase):
     solutions for theta and containment."""
     def setUp(self):
         # Single Gauss
-        self.g = gauss.Gauss2DPDF(sigma=1)
-        self.g_tc = theta.ThetaCalculator(self.g.dpdtheta2, theta_max=5, n_bins=1e6)
-        self.g_tcs = theta.ThetaCalculatorScipy(self.g.dpdtheta2, theta_max=5)
+        self.g = Gauss2DPDF(sigma=1)
+        self.g_tc = ThetaCalculator(self.g.dpdtheta2, theta_max=5, n_bins=1e6)
+        self.g_tcs = ThetaCalculatorScipy(self.g.dpdtheta2, theta_max=5)
         # Multi Gauss
-        self.m = gauss.MultiGauss2D(sigmas=[1, 2])
-        self.m_tc = theta.ThetaCalculator(self.m.dpdtheta2, theta_max=5, n_bins=1e6)
-        self.m_tcs = theta.ThetaCalculatorScipy(self.m.dpdtheta2, theta_max=5)
+        self.m = MultiGauss2D(sigmas=[1, 2])
+        self.m_tc = ThetaCalculator(self.m.dpdtheta2, theta_max=5, n_bins=1e6)
+        self.m_tcs = ThetaCalculatorScipy(self.m.dpdtheta2, theta_max=5)
         # self.tc2 = mt.ThetaCalculator2D.from_source(self.g, theta_max=5, d)
 
     def test_containment_Gauss2D(self):
@@ -62,14 +65,14 @@ class TestThetaCalculator(unittest.TestCase):
 def _test_ModelThetaCalculator():
     """Check that Gaussian widths add in quadrature
     i.e. sigma_psf = 3, sigma_source = 4 ===> sigma_model = 5"""
-    source, psf = gauss.Gauss2DPDF(3), gauss.Gauss2DPDF(4)
+    source, psf = Gauss2DPDF(3), Gauss2DPDF(4)
     # Correct analytical reference
-    ana = gauss.Gauss2DPDF(5)
+    ana = Gauss2DPDF(5)
     ana_angle = ana.containment_radius(0.5)
     ana_containment = ana.containment(ana_angle)
     # Numerical method
     fov, binsz = 20, 0.2
-    num = theta.ModelThetaCalculator(source, psf, fov, binsz)
+    num = ModelThetaCalculator(source, psf, fov, binsz)
     num_angle = num.containment_radius(0.5)
     num_containment = num.containment(num_angle)
     # Compare results

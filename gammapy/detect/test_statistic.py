@@ -37,9 +37,11 @@ TODO:
 from __future__ import print_function, division
 import numpy as np
 from .. import stats
-from ..image.utils import process_image_pixels
+from ..image import process_image_pixels
 
-__all__ = ['ts_image', 'TSMapCalculator']
+__all__ = ['ts_image',
+           'TSMapCalculator',
+           ]
 
 
 def fit_amplitude(counts, background, kernel, start_value):

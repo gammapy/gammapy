@@ -2,7 +2,10 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from .. import plotting
+from ...image import (colormap_hess,
+                      colormap_milagro,
+                      GalacticPlaneSurveyPanelPlot,
+                      )
 
 try:
     import matplotlib
@@ -26,7 +29,7 @@ def _check_cmap_rgb_vals(vals, cmap, vmin, vmax):
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_colormap_hess():
     vmin, vmax, vtransition = -5, 15, 5
-    cmap = plotting.colormap_hess(vmin=vmin, vmax=vmax, vtransition=vtransition)
+    cmap = colormap_hess(vmin=vmin, vmax=vmax, vtransition=vtransition)
     vals = [(-5, (0.0, 0.0, 0.0)),
             (0, (0.0, 0.0, 0.50196078)),
             (5, (1.0, 0.0058823529411764722, 0.0)),
@@ -39,18 +42,18 @@ def test_colormap_hess():
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_colormap_milagro():
     vmin, vmax, vtransition = -5, 15, 5
-    cmap = plotting.colormap_milagro(vmin=vmin, vmax=vmax, vtransition=vtransition)
+    cmap = colormap_milagro(vmin=vmin, vmax=vmax, vtransition=vtransition)
     vals = [(-5, (1.0, 1.0, 1.0)),
             (0, (0.4979388, 0.4979388, 0.4979388)),
             (5, (0.00379829, 0.3195442, 0.79772102)),
             (10, (0.51610773, 0.25806707, 0.49033536)),
             (15, (1.0, 1.0, 1.0)),
-           ]
+            ]
     _check_cmap_rgb_vals(vals, cmap, vmin, vmax)
 
 
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_GalacticPlaneSurveyPanelPlot():
 
-    plot = plotting.GalacticPlaneSurveyPanelPlot(npanels=3)
+    plot = GalacticPlaneSurveyPanelPlot(npanels=3)
     assert_allclose(plot.panel_parameters['npanels'], 3)

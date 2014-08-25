@@ -4,8 +4,10 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.units import Unit, Quantity
 
-__all__ = ['conversion_factor', 'd_sun_to_galactic_center',
-           'sigma_to_fwhm', 'fwhm_to_sigma'
+__all__ = ['conversion_factor',
+           'd_sun_to_galactic_center',
+           'sigma_to_fwhm',
+           'fwhm_to_sigma',
            ]
 
 

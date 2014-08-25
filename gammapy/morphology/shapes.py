@@ -6,13 +6,10 @@ Might be useful to keep around anyways.
 """
 from __future__ import print_function, division
 import numpy as np
-
-try:
-    from astropy.modeling import Fittable2DModel
-except ImportError:
-    from astropy.modeling import Parametric2DModel as Fittable2DModel
-
-from astropy.modeling import Parameter, ModelDefinitionError
+from astropy.modeling import (Parameter,
+                              ModelDefinitionError,
+                              Fittable2DModel,
+                              )
 from astropy.modeling.models import Gaussian2D
 
 __all__ = ['morph_types', 'Shell2D', 'Sphere2D', 'Delta2D']

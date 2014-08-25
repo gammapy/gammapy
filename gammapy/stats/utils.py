@@ -4,7 +4,6 @@ Miscellaneous utility functions
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy import pi, sqrt, log
 
 
 __all__ = ['s_to_p', 'p_to_s', 'p_to_s_limit', 's_to_p_limit', 'cov_to_corr']
@@ -80,7 +79,7 @@ def _p_to_s_direct(p, one_sided=True):
     from scipy.special import erfinv
     p = 1 - p  # We want p to be the tail probability
     temp = np.where(one_sided, 2 * p - 1, p)
-    return sqrt(2) * erfinv(temp)
+    return np.sqrt(2) * erfinv(temp)
 
 
 def _s_to_p_direct(s, one_sided=True):
@@ -89,7 +88,7 @@ def _s_to_p_direct(s, one_sided=True):
     @see: _p_to_s_direct was solved for p.
     """
     from scipy.special import erf
-    temp = erf(s / sqrt(2))
+    temp = erf(s / np.sqrt(2))
     p = np.where(one_sided, (temp + 1) / 2., temp)
     return 1 - p  # We want p to be the tail probability
 
@@ -104,8 +103,8 @@ def p_to_s_limit(p):
 
     Asymptotically: s ~ sqrt(-log(p))
     """
-    u = -2 * log(p * sqrt(2 * pi))
-    return sqrt(u - log(u))
+    u = -2 * np.log(p * np.sqrt(2 * nppi))
+    return np.sqrt(u - np.log(u))
 
 
 def s_to_p_limit(s, guess=1e-100):
@@ -116,7 +115,10 @@ def s_to_p_limit(s, guess=1e-100):
     @note s^2 = u - log(u) can't be solved analytically.
     """
     from scipy.optimize import fsolve
-    f = lambda p: p_to_s_limit(p) - s if p > 0 else 1e100
+
+    def f(p):
+        return p_to_s_limit(p) - s if p > 0 else 1e100
+
     return fsolve(f, guess)
 
 
@@ -142,5 +144,3 @@ def cov_to_corr(covariance):
     """
     diagonal = np.sqrt(covariance.diagonal())
     return (covariance.T / diagonal).T / diagonal
-
-

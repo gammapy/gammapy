@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
-from .. import matched_filter
+from ...detect import matched_filter
 
 try:
     import scipy

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Other coordinate and distance-related functions"""
 from __future__ import print_function, division
-from ...utils.const import d_sun_to_galactic_center
-from astropy.units import Unit
 import numpy as np
+from astropy.units import Unit
+from ...utils.const import d_sun_to_galactic_center
 
 
 __all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',

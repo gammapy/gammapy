@@ -3,8 +3,11 @@
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['Stats', 'make_stats', 'combine_stats',
-           'compute_total_stats']
+__all__ = ['Stats',
+           'make_stats',
+           'combine_stats',
+           'compute_total_stats',
+           ]
 
 
 class Stats(object):

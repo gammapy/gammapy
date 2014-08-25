@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from astropy.tests.helper import pytest
-from .. import healpix
+from ...image import healpix_to_image
 
 try:
     import healpy

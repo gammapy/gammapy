@@ -2,7 +2,6 @@
 from __future__ import print_function, division
 import logging
 import numpy as np
-
 from astropy.io import fits
 from astropy.wcs import WCS
 

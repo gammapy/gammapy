@@ -8,8 +8,12 @@ from astropy.utils.compat.odict import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 
-__all__ = ['hist1d_to_table', 'graph1d_to_table',
-           'TH2_to_FITS_header', 'TH2_to_FITS_data', 'TH2_to_FITS']
+__all__ = ['hist1d_to_table',
+           'graph1d_to_table',
+           'TH2_to_FITS_header',
+           'TH2_to_FITS_data',
+           'TH2_to_FITS',
+           ]
 
 __doctest_skip__ = ['TH2_to_FITS']
 
@@ -38,7 +42,7 @@ def hist1d_to_table(hist):
              ('y_err', 'GetBinError'),
              ('y_err_lo', 'GetBinErrorLow'),
              ('y_err_hi', 'GetBinErrorUp'),
-            ]
+             ]
 
     for column, method in names:
         try:

@@ -7,7 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
 from ...utils.testing import assert_quantity
-from ..psf_table import TablePSF, EnergyDependentTablePSF
+from ...irf import TablePSF, EnergyDependentTablePSF
 from ...datasets import FermiGalacticCenter
 
 try:

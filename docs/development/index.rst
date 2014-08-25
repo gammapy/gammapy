@@ -50,6 +50,7 @@ But in both cases, the data model didn't really fit our use cases for gamma-ray 
 and so we decided to write our own data classes from scratch.
 
 Here's some issues where this was discussed:
+
 * https://github.com/radio-astro-tools/spectral-cube/issues/110
 * https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
 

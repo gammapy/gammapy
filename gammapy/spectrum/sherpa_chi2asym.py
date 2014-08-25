@@ -9,8 +9,11 @@ To load the ``chi2asym`` fit statistic in your sherpa session::
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['check_chi2', 'chi2asym_err_func', 'chi2asym_stat_func',
-           'load_chi2asym_stat']
+__all__ = ['check_chi2',
+           'chi2asym_err_func',
+           'chi2asym_stat_func',
+           'load_chi2asym_stat',
+           ]
 
 
 def chi2asym_stat_func(data, model, staterror=None,

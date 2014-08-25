@@ -4,9 +4,12 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from .utils import coordinates
+from ..image import coordinates
 
-__all__ = ['compute_binning', 'FluxProfile', 'image_profile']
+__all__ = ['compute_binning',
+           'FluxProfile',
+           'image_profile',
+           ]
 
 
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):

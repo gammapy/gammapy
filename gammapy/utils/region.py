@@ -9,7 +9,10 @@ References:
 from __future__ import print_function, division
 
 
-__all__ = ['make_ds9_region', 'Circle', 'SkyCircle']
+__all__ = ['make_ds9_region',
+           'Circle',
+           'SkyCircle',
+           ]
 
 
 class Circle(object):

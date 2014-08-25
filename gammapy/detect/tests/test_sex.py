@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from ...datasets import poisson_stats_image
-from ..sex import sex
+from ...detect import sex
 
 try:
     #subprocess.call('sex')

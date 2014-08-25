@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity
-from ..diffuse import diffuse_gamma_ray_flux
+from ...spectrum import diffuse_gamma_ray_flux
 
 
 def test_diffuse_gamma_ray_flux():

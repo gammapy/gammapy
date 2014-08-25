@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.table import Table
-from .powerlaw import power_law_flux
+from ..spectrum.powerlaw import power_law_flux
 
 __all__ = ['compute_differential_flux_points']
 

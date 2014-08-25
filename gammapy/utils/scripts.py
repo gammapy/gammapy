@@ -2,7 +2,9 @@
 """Utils to create scripts and command-line tools"""
 from __future__ import print_function, division
 
-__all__ = ['argparse', 'GammapyFormatter']
+__all__ = ['argparse',
+           'GammapyFormatter',
+           ]
 
 import argparse
 

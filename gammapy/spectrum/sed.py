@@ -6,9 +6,13 @@ import logging
 import numpy as np
 from astropy.table import Table, Column
 from astropy.units import Unit, Quantity
-from .flux_point import compute_differential_flux_points
+from ..spectrum import compute_differential_flux_points
 
-__all__ = ['SEDComponent', 'SED', 'cube_sed']
+__all__ = ['SEDComponent',
+           'SED',
+           'cube_sed',
+           'add_spec',
+           ]
 
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
 MeV_to_erg = Unit('MeV').to(Unit('erg'))

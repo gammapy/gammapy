@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Morphology and PSF methods. 
+"""Morphology and PSF methods.
 
 Some parts of this package use Sherpa.
 """

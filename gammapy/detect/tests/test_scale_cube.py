@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from .. import utils
+from ...detect import write_scale_cube
 
 
-def test_dummy():
-    assert 42 == 42
+def test_write_scale_cube():
+    # TODO
+    pass

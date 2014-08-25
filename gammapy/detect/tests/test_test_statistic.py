@@ -3,8 +3,7 @@ from __future__ import print_function, division
 from time import time
 import numpy as np
 from astropy.tests.helper import pytest
-from ..test_statistic import ts_image
-from ..test_statistic import TSMapCalculator as TSMC
+from ...detect import ts_image, TSMapCalculator
 
 
 def make_test_images(shape=(100, 200)):
@@ -51,9 +50,9 @@ def test_optimizers():
 
     for optimizer in optimizers:
         for start_value in start_values:
-            tsmc = TSMC(images, kernel,
-                        optmizier=optimizer,
-                        start_value=start_value)
+            tsmc = TSMapCalculator(images, kernel,
+                                   optmizier=optimizer,
+                                   start_value=start_value)
             tsmc.run()
             tsmc.report()
 

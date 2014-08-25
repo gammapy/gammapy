@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 from astropy.units import Quantity
-from gammapy.irf import EnergyDependentMultiGaussPSF
+from ..irf import EnergyDependentMultiGaussPSF
 
 __all__ = ['make_test_psf_fits_table']
 

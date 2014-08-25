@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian1D
-from ..fitting import PoissonLikelihoodFitter
+from ...stats import PoissonLikelihoodFitter
 
 try:
     import scipy

@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ..isrf import Schlickeiser, Galprop
+from ...spectrum import Schlickeiser, Galprop
 
 
 @pytest.mark.xfail

@@ -3,10 +3,11 @@ from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ..models import PowerLaw, PLExpCutoff
-from ..sed import SED, add_spec, cube_sed
 from ...datasets import FermiGalacticCenter
-from ...image.utils import lon_lat_rectangle_mask
+from ...image import lon_lat_rectangle_mask
+from ...spectrum import SED, add_spec, cube_sed
+from ...spectrum.models import PowerLaw, PLExpCutoff
+
 
 @pytest.mark.xfail
 def test_add_spec():

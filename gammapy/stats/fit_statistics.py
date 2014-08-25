@@ -32,7 +32,6 @@ Here's an example for the `~cash` statistic::
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy import log, sqrt
 
 __all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat',
            'chi2', 'chi2constvar', 'chi2datavar',
@@ -76,7 +75,7 @@ def cash(n_observed, mu_observed):
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
     mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
 
-    stat = 2 * (mu_observed - n_observed * log(mu_observed))
+    stat = 2 * (mu_observed - n_observed * np.log(mu_observed))
     stat = np.where(mu_observed > 0, stat, 0)
 
     return stat
@@ -124,7 +123,7 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
 
     n_observed = np.where(n_observed <= n_observed_min, n_observed_min, n_observed)
 
-    term1 = log(n_observed) - log(mu_observed)
+    term1 = np.log(n_observed) - np.log(mu_observed)
     stat = 2 * (mu_observed - n_observed + n_observed * term1)
     stat = np.where(mu_observed > 0, stat, 0)
 
@@ -234,8 +233,8 @@ def chi2gehrels(N_S, N_B, A_S, A_B):
     A_B = np.asanyarray(A_B, dtype=np.float64)
 
     alpha2 = (A_S / A_B) ** 2
-    sigma_S = 1 + sqrt(N_S + 0.75)
-    sigma_B = 1 + sqrt(N_B + 0.75)
+    sigma_S = 1 + np.sqrt(N_S + 0.75)
+    sigma_B = 1 + np.sqrt(N_B + 0.75)
     sigma2 = sigma_S ** 2 + alpha2 * sigma_B ** 2
 
     stat = chi2(N_S, A_B, A_S, sigma2)

@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
-
 from astropy.units import Quantity
 from astropy.utils.data import get_pkg_data_filename
 from astropy.tests.helper import pytest
-
-from ..effective_area import EffectiveAreaTable, abramowski_effective_area
+from ...irf import EffectiveAreaTable, abramowski_effective_area
 from ...datasets import arf_fits_table
 
 try:

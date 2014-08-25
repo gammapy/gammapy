@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from .. import powerlaw
+from ...spectrum import powerlaw
 
 try:
     import scipy

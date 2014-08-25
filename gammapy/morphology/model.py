@@ -1,18 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Utility funtions for reading / writing model parameters to JSON files.
+"""Utility functions for reading / writing model parameters to JSON files.
 
 At the moment you can have any number of Gaussians.
 """
 from __future__ import print_function, division
 import logging
-logging.basicConfig(format='%(levelname)s:  %(message)s', level=logging.DEBUG)
 import numpy as np
 from astropy.io import fits
 from ..utils.const import fwhm_to_sigma
 
 
-__all__ = ['GaussCatalog', 'make_test_model', 'read_json',
-           'MorphModelImageCreator']
+__all__ = ['GaussCatalog',
+           'make_test_model',
+           'read_json',
+           'MorphModelImageCreator',
+           ]
 
 __doctest_skip__ = ['MorphModelImageCreator']
 
