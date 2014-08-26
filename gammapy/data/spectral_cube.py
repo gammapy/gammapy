@@ -310,8 +310,8 @@ class SpectralCube(object):
         if isinstance(energy_bins, int):
             energy_bins = energy_bounds_equal_log_spacing(energy_band, energy_bins)
 
-        energy1 = energy_bins[:-1]
-        energy2 = energy_bins[1:]
+        energy1 = energy_bins[:-1].to('MeV')
+        energy2 = energy_bins[1:].to('MeV')
 
         # Compute differential flux at energy bin edges of all pixels
         xx = np.arange(self.data.shape[2])
@@ -335,7 +335,8 @@ class SpectralCube(object):
         integral_flux = integral_flux.sum(axis=0)
 
         header = self.wcs.sub(['longitude', 'latitude']).to_header()
-        hdu = fits.ImageHDU(data=Quantity(integral_flux, 'cm^-2 s^-1 sr^-1'),
+
+        hdu = fits.ImageHDU(data=integral_flux,
                             header=header, name='integral_flux')
 
         return hdu
