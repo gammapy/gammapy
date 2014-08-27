@@ -16,6 +16,7 @@ __all__ = ['FermiGalacticCenter',
            'fetch_fermi_catalog',
            'fetch_fermi_extended_sources',
            'fetch_fermi_diffuse_background_model',
+           'load_lat_psf_performance',
            ]
 
 
@@ -350,3 +351,44 @@ class FermiVelaRegion(object):
         """
         filename = FermiVelaRegion.filenames()['livetime_cube']
         return fits.open(filename)
+
+def load_lat_psf_performance(performance_file):
+    """Loads Fermi-LAT TOTAL PSF performance data.
+
+    These points are extracted by hand from:
+
+    * `PSF_P7REP_SOURCE_V15 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/p7rep_v15/lat_Performance_files/cPsfEnergy_P7REP_SOURCE_V15.png>`_
+    * `PSF_P7SOURCEV6 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/pass7v6/lat_Performance_files/cPsfEnergy_P7SOURCE_V6.png>`_
+
+    As such, a 10% error in the values should be assumed. 
+
+    Parameters
+    ----------
+    performance_file : str
+        Specify which PSF performance file to return.
+
+        * ``P7REP_SOURCE_V15_68`` Total Fermi-LAT PSF 68% containment radius with energy for P7REP_SOURCE_V15 
+        * ``P7REP_SOURCE_V15_95`` Total Fermi-LAT PSF 95% containment radius with energy for P7REP_SOURCE_V15
+        * ``P7SOURCEV6_68`` Total Fermi-LAT PSF 68% containment radius with  energy for P7SOURCEV6
+        * ``P7SOURCEV6_95`` Total Fermi-LAT PSF 95% containment radius with  energy for P7SOURCEV6
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Table of psf size (deg) for selected containment radius and IRF at
+        energies (MeV).
+    """
+    from astropy.units import Quantity
+    perf_files = dict()
+    perf_files['P7REP_SOURCE_V15_68'] = get_path('fermi/PSF_P7REP_SOURCE_V15_total_68.txt')
+    perf_files['P7REP_SOURCE_V15_95'] = get_path('fermi/PSF_P7REP_SOURCE_V15_total_95.txt')
+    perf_files['P7SOURCEV6_68'] = get_path('fermi/PSF_P7SOURCEV6_total_68.txt')
+    perf_files['P7SOURCEV6_95'] = get_path('fermi/PSF_P7SOURCEV6_total_95.txt')
+    filename = perf_files[performance_file]
+    table = Table.read(filename, format='ascii',
+                       names=['energy', 'containment_angle'])
+
+    table['energy'].unit = 'MeV'
+    table['containment_angle'].unit = 'deg'
+
+    return table
