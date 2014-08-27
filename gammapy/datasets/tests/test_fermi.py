@@ -11,6 +11,7 @@ from ...datasets import (FermiGalacticCenter,
                          fetch_fermi_catalog,
                          fetch_fermi_extended_sources,
                          fetch_fermi_diffuse_background_model,
+                         load_lat_psf_performance,
                          )
 
 try:
@@ -123,3 +124,23 @@ def test_fetch_fermi_catalog():
 def test_fetch_fermi_extended_sources():
     assert len(fetch_fermi_extended_sources('2FGL')) == 12
     assert len(fetch_fermi_extended_sources('1FHL')) == 23
+
+
+def test_load_lat_psf_performance():
+    """Tests loading of each file by asserting first value is correct."""
+
+    table_p7rep_68 = load_lat_psf_performance('P7REP_SOURCE_V15_68')
+    assert table_p7rep_68['energy'][0] == 29.65100879793481
+    assert table_p7rep_68['containment_angle'][0] == 11.723606254043286
+
+    table_p7rep_95 = load_lat_psf_performance('P7REP_SOURCE_V15_95')
+    assert table_p7rep_95['energy'][0] == 29.989807922064667
+    assert table_p7rep_95['containment_angle'][0] == 24.31544392270023
+
+    table_p7_68 = load_lat_psf_performance('P7SOURCEV6_68')
+    assert table_p7_68['energy'][0] == 31.9853049046
+    assert table_p7_68['containment_angle'][0] == 14.7338699328
+
+    table_p7_95 = load_lat_psf_performance('P7SOURCEV6_95')
+    assert table_p7_95['energy'][0] == 31.6227766017
+    assert table_p7_95['containment_angle'][0] == 38.3847234362
