@@ -522,7 +522,7 @@ def convolve_cube(cube, psf, offset_max):
         psf_at_energy = psf.table_psf_in_energy_band(energy_band)
         kernel_image = psf_at_energy.kernel(pixel_size, offset_max, normalize=True)
         convolved_cube[i] = convolve(cube.data[i], kernel_image,
-                                     mode='constant')
+                                     mode='mirror')
     convolved_cube = SpectralCube(data=convolved_cube, wcs=cube.wcs,
                                   energy=cube.energy)
     return convolved_cube
