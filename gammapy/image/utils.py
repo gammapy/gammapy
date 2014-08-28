@@ -649,13 +649,13 @@ def solid_angle(image):
     # Area of one pixel at the equator
     cdelt0 = image.header['CDELT1']
     cdelt1 = image.header['CDELT2']
-    equator_area = Quantity(abs(cdelt0 * cdelt1), 'sr')
+    equator_area = Quantity(abs(cdelt0 * cdelt1), 'deg2')
 
     # Compute image with fraction of pixel area at equator
     glat = coordinates(image)[1]
     area_fraction = np.cos(np.radians(glat))
 
-    result = area_fraction * equator_area
+    result = area_fraction * equator_area.to('sr')
 
     return result
 
