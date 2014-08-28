@@ -2,11 +2,13 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.io import fits
 from gammapy.stats import significance
 from gammapy.image.utils import disk_correlate
 from npred_general import prepare_images
+from aplpy import FITSFigure
 
-model, gtmodel, ratio, counts = prepare_images()
+model, gtmodel, ratio, counts, header = prepare_images()
 
 # Top hat correlation
 correlation_radius = 3
@@ -21,27 +23,30 @@ fermi_significance = np.nan_to_num(significance(correlated_counts, gtmodel,
 # Gammapy significance
 significance = np.nan_to_num(significance(correlated_counts, correlated_model,
                                           method='lima'))
-# Plotting
 
-vmin, vmax = 0, 10
-
-fig, axes = plt.subplots(nrows=1, ncols=2)
-
-results = [significance, fermi_significance]
 titles = ['Gammapy Significance', 'Fermi Tools Significance']
 
-for i in np.arange(2):
-    im = axes.flat[i].imshow(results[i],
-                         interpolation='nearest',
-                         origin="lower", vmin=vmin, vmax=vmax,
-                         cmap=plt.get_cmap())
+#Plot
 
-    axes.flat[i].set_title(titles[i], fontsize=12)
+fig = plt.figure()
+hdu1 = fits.ImageHDU(significance, header)
+f1 = FITSFigure(hdu1, figure=fig, convention='wells', subplot=[0.15,0.214,0.38,0.494])
+f1.set_tick_labels_font(size='x-small')
+f1.tick_labels.set_xformat('ddd')
+f1.tick_labels.set_yformat('ddd')
+f1.show_colorscale(vmin=0, vmax=10)
 
-fig.subplots_adjust(right=0.8)
-cbar_ax = fig.add_axes([0.85, 0.3, 0.025, 0.4])
-fig.colorbar(im, cax=cbar_ax)
-a = fig.get_axes()[0]
-b = fig.get_axes()[1]
-a.set_axis_off()
-b.set_axis_off()
+hdu2 = fits.ImageHDU(fermi_significance, header)
+f2 = FITSFigure(hdu2, figure=fig, convention='wells', subplot=[0.56,0.2,0.4,0.52])
+f2.set_tick_labels_font(size='x-small')
+f2.tick_labels.set_xformat('ddd')
+f2.hide_ytick_labels()
+f2.hide_yaxis_label()
+f2.show_colorscale(vmin=0, vmax=10)
+f2.add_colorbar()
+f2.colorbar.set_width(0.1)
+f2.colorbar.set_location('right')
+fig.text(0.22,0.72,"Gammapy Significance",color='black',size='14')
+fig.text(0.63,0.72,"Fermi Tools Significance",color='black',size='14')
+
+fig.canvas.draw()

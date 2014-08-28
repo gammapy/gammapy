@@ -22,7 +22,7 @@ def prepare_images():
     background_model = SpectralCube.read(background_file)
     exposure_cube = SpectralCube.read(exposure_file)
     # Add correct units
-    exposure_cube.data = Quantity(exposure_cube.data, '1/(cm2 sr s GeV)')
+    exposure_cube.data = Quantity(exposure_cube.data, '1/(cm2 sr s MeV)')
     # Re-project background cube
     repro_bg_cube = background_model.reproject_to(exposure_cube)
     # Define energy band required for output
@@ -54,4 +54,9 @@ def prepare_images():
     # Ratio for the two background images
     ratio = np.nan_to_num(model / gtmodel)
 
-    return model, gtmodel, ratio, counts
+    # Header is required for plotting, so returned here
+    wcs = npred_cube.wcs
+    wcs = wcs.dropaxis(2)
+    header = wcs.to_header() 
+
+    return model, gtmodel, ratio, counts, header

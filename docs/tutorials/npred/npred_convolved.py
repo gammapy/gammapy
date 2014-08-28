@@ -2,34 +2,48 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.io import fits
 from npred_general import prepare_images
+from aplpy import FITSFigure
 
-model, gtmodel, ratio, counts = prepare_images()
+model, gtmodel, ratio, counts, header = prepare_images()
 
 # Plotting
 
-fig, axes = plt.subplots(nrows=1, ncols=3)
+fig = plt.figure()
+hdu1 = fits.ImageHDU(model, header)
+f1 = FITSFigure(hdu1, figure=fig, convention='wells', subplot=[0.18,0.264,0.18,0.234])
+f1.set_tick_labels_font(size='x-small')
+f1.tick_labels.set_xformat('ddd')
+f1.tick_labels.set_yformat('ddd')
+f1.hide_xaxis_label()
+f1.show_colorscale(vmin=0, vmax=0.3)
 
-results = [model, gtmodel, ratio]
-titles = ['Gammapy Background', 'Fermi Tools Background', 'Ratio: \n Gammapy/Fermi Tools']
+hdu2 = fits.ImageHDU(gtmodel, header)
+f2 = FITSFigure(hdu2, figure=fig, convention='wells', subplot=[0.38,0.25,0.2,0.26])
+f2.set_tick_labels_font(size='x-small')
+f2.tick_labels.set_xformat('ddd')
+f2.hide_ytick_labels()
+f2.hide_yaxis_label()
+f2.show_colorscale(vmin=0, vmax=0.3)
+f2.add_colorbar()
+f2.colorbar.set_width(0.1)
+f2.colorbar.set_location('right')
 
-vmins = [0, 0, 0.9]
-vmaxs = [0.3, 0.3, 1.2]
+hdu3 = fits.ImageHDU(ratio, header)
+f3 = FITSFigure(hdu3, figure=fig, convention='wells', subplot=[0.67,0.25,0.2,0.26])
+f3.set_tick_labels_font(size='x-small')
+f3.tick_labels.set_xformat('ddd')
+f3.hide_ytick_labels()
+f3.hide_yaxis_label()
+f3.hide_xaxis_label()
+f3.show_colorscale(vmin=0.9, vmax=1.1)
+f3.add_colorbar()
+f3.colorbar.set_width(0.1)
+f3.colorbar.set_location('right')
 
-for i in np.arange(3):
-    im = axes.flat[i].imshow(results[i],
-                             interpolation='nearest',
-                             origin="lower", vmin=vmins[i], vmax=vmaxs[i],
-                             cmap=plt.get_cmap())
+fig.text(0.19,0.53,"Gammapy Background",color='black',size='9')
+fig.text(0.39,0.53,"Fermi Tools Background",color='black',size='9')
+fig.text(0.68,0.53,"Ratio: \n Gammapy/Fermi Tools",color='black',size='9')
 
-    axes.flat[i].set_title(titles[i], fontsize=12)
-
-fig.subplots_adjust(right=0.8)
-cbar_ax = fig.add_axes([0.85, 0.3, 0.025, 0.4])
-fig.colorbar(im, cax=cbar_ax)
-a = fig.get_axes()[0]
-b = fig.get_axes()[1]
-c = fig.get_axes()[2]
-a.set_axis_off()
-b.set_axis_off()
-c.set_axis_off()
+fig.canvas.draw()

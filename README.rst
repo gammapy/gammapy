@@ -7,16 +7,44 @@ A Python Package for Gamma-ray Astronomy
 * Docs: https://gammapy.readthedocs.org/
 
 
-Status reports for developers:
+Status shields
+++++++++++++++
 
-.. image:: https://travis-ci.org/gammapy/gammapy.png?branch=master
+(mostly useful for developers)
+
+* .. image:: http://img.shields.io/travis/gammapy/gammapy.svg?branch=master
     :target: https://travis-ci.org/gammapy/gammapy
     :alt: Test Status
 
-.. image:: https://coveralls.io/repos/gammapy/gammapy/badge.png
+* .. image:: https://img.shields.io/coveralls/gammapy/gammapy.svg
     :target: https://coveralls.io/r/gammapy/gammapy
     :alt: Code Coverage
 
-.. image:: https://landscape.io/github/gammapy/gammapy/master/landscape.png
+* .. image:: https://landscape.io/github/gammapy/gammapy/master/landscape.png
     :target: https://landscape.io/github/gammapy/gammapy/master
     :alt: Code Health
+
+* .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
+	:target: https://readthedocs.org/projects/gammapy/?badge=latest
+	:alt: Documentation Status
+
+* .. image:: http://img.shields.io/pypi/l/gammapy.svg
+    :target: https://pypi.python.org/pypi/gammapy/
+	:alt: License
+
+* .. image:: https://pypip.in/status/gammapy/badge.svg
+    :target: https://pypi.python.org/pypi/gammapy/
+    :alt: Development Status
+
+* .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
+    :target: https://pypi.python.org/pypi/gammapy/
+	:alt: Latest release
+
+* .. image:: http://img.shields.io/pypi/dm/gammapy.svg
+    :target: https://pypi.python.org/pypi/gammapy/
+	:alt: Downloads per month
+
+* .. image:: https://pypip.in/py_versions/gammapy/badge.svg
+    :target: https://pypi.python.org/pypi/gammapy/
+    :alt: Supported Python versions
+
