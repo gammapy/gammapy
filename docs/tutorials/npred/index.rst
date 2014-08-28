@@ -50,4 +50,4 @@ for the same parameters:
 
  * True total counts: 1551
  * Fermi Tools gtmodel predicted background counts: 265
- * Gammapy predicted background counts: 281
+ * Gammapy predicted background counts: 282
