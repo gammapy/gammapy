@@ -147,8 +147,8 @@ class TestSpectralCube(object):
 
     def test_solid_angle_image(self):
         actual = self.spectral_cube.solid_angle_image[10][30]
-        expected = Quantity(0.24999762018018362, 'steradian')
-        assert_quantity(actual, expected)
+        expected = Quantity(0.24999762018018362, 'deg2')
+        assert_quantity(actual, expected.to('sr'))
 
     def test_spatial_coordinate_images(self):
         lon, lat = self.spectral_cube.spatial_coordinate_images
