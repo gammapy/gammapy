@@ -8,3 +8,4 @@ from .on_off import *
 from .reflected import *
 from .ring import *
 from .template import *
+from .kernel import *
