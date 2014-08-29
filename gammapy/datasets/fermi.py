@@ -367,10 +367,10 @@ def load_lat_psf_performance(performance_file):
     performance_file : str
         Specify which PSF performance file to return.
 
-        * ``P7REP_SOURCE_V15_68`` Total Fermi-LAT PSF 68% containment radius with energy for P7REP_SOURCE_V15 
-        * ``P7REP_SOURCE_V15_95`` Total Fermi-LAT PSF 95% containment radius with energy for P7REP_SOURCE_V15
-        * ``P7SOURCEV6_68`` Total Fermi-LAT PSF 68% containment radius with  energy for P7SOURCEV6
-        * ``P7SOURCEV6_95`` Total Fermi-LAT PSF 95% containment radius with  energy for P7SOURCEV6
+        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment 
+        * ``P7REP_SOURCE_V15_95`` P7REP_SOURCE_V15, 95% containment
+        * ``P7SOURCEV6_68`` P7SOURCEV6, 68% containment
+        * ``P7SOURCEV6_95`` P7SOURCEV6, 95% containment
 
     Returns
     -------

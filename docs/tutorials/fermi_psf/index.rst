@@ -20,6 +20,14 @@ extracted by hand and so **a 10% error should be assumed**
    
 .. plot:: tutorials/fermi_psf/plot_95.py
  
+The plot for `P7REP_SOURCE_V15` is not available online, but `P7REP_CLEAN_V15`
+is very similar to `P7REP_SOURCE_V15` which is used for this study.
+
+The plots indicate that `P7REP_CLEAN_V15` cuts (which are very similar to
+`P7REP_SOURCE_V15` cuts) were used for the Vela Region data. However, for
+the Galactic Center region, `P7SOURCEV6` cuts are consistent with the PSF
+data, and `P7REP_CLEAN_V15` could not have been used here.
+ 
 The published LAT PSF data may be found at:
 
 * `PSF_P7REP_SOURCE_V15 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/p7rep_v15/lat_Performance_files/cPsfEnergy_P7REP_SOURCE_V15.png>`_
