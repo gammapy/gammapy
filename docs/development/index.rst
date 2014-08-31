@@ -43,7 +43,7 @@ modules in ``gammapy/data`` are loaded when imported from other modules in that 
 .. _development-data_subclasses:
 
 Why we don't sub-class other data classes
-_________________________________________
+-----------------------------------------
 
 We have considered re-using data classes developed by others,
 namely `~astropy.nddata.NDData` and the

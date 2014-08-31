@@ -24,8 +24,8 @@ This is a short summary of who contributed what to Gammapy.
   (see `GH PR 68 <https://github.com/gammapy/gammapy/pull/68>`__
   for details which parts of Gammapy originate from PyFACT).
 
-For further information see the :ref:`Gammapy contributors page on Github`
-and the :ref:`Gammapy project summary on Open HUB`.
+For further information see the `Gammapy contributors page on Github`_
+and the `Gammapy project summary on Open HUB`_.
 
 Note that because Gammapy started out as a fork of the
 `Astropy affiliated package template <https://github.com/astropy/package-template>`__,
