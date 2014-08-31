@@ -10,6 +10,8 @@ Note that Astropy has very extensive developer documentation
 `here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
 this page should only mention Gammapy-specific things.
 
+.. _development-import_from:
+
 Where should I import from?
 ---------------------------
 
@@ -27,16 +29,18 @@ The end-user namespace is the location that is shown in the API docs, i.e. you c
 use the Sphinx full-text search to quickly find it.
 
 To make code maintenance easier, the implementation of the functions and classes is
-spread across multiple modules (`.py` files), but the user shouldn't care about their
+spread across multiple modules (``.py`` files), but the user shouldn't care about their
 names, that would be too much to remember.
 
 The only reason to import from a module directly is if you need to access a private
-function, class or variable (something that is not listed in `__all__` and thus not
+function, class or variable (something that is not listed in ``__all__`` and thus not
 imported into the end-user namespace. 
 
 Note that this means that in the definition of an "end-user namespace", e.g. in the
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
 modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package. 
+
+.. _development-data_subclasses:
 
 Why we don't sub-class other data classes
 _________________________________________
@@ -53,7 +57,6 @@ Here's some issues where this was discussed:
 
 * https://github.com/radio-astro-tools/spectral-cube/issues/110
 * https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
-
 
 .. _development-python2and3:
 
@@ -76,18 +79,26 @@ based on a few scientific Python user surveys on the web that show that only a s
 using such an old version, so that it's not worth the developer and maintainer effort to test
 these old versions and to find workarounds for their missing features or bugs.
 
+.. _development-wipe_readthedocs:
+
 Wipe readthedocs
 ----------------
 
 As described `here <http://read-the-docs.readthedocs.org/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__,
 if the docs on readthedocs show old stuff, you need to first log in `here <https://readthedocs.org/accounts/login/>`__
-and then wipe it to create a fresh / clean version by hitting `this URL <http://readthedocs.org/wipe/gammapy/latest/>`_
+and then wipe it to create a fresh / clean version by hitting this URL::
+
+   http://readthedocs.org/wipe/gammapy/latest/
+
 and then clicking the "wipe version" button.
 
 You don't get a confirmation that the wipe has taken place, but you can check
 `here <https://readthedocs.org/builds/gammapy/>`__ (wait a few minutes)
 and if needed manually start a new build by going
 `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
+
+
+.. _development-skip_tests:
 
 Skip unit tests for some Astropy versions
 -----------------------------------------
@@ -102,7 +113,38 @@ Skip unit tests for some Astropy versions
    def test_something():
       ...
 
+.. _development-check_html_links:
+
+Check HTML links
+----------------
+
+There's two ways to check the docs for broken links.
+
+
+This will check external links (not nice because you have to install first):
+
+.. code-block:: bash
+
+   $ python setup.py install
+   $ cd docs; make linkcheck
+
+To check all internal and external links use this `linkchecker <https://github.com/wummel/linkchecker>`__:
+
+.. code-block:: bash
+
+   $ pip install linkchecker
+   $ linkchecker --check-extern docs/_build/html/index.html
+
+Because Sphinx doesn't warn about some broken internal links for some reason,
+we run ``linkchecker docs/_build/html/index.html`` on travis-ci,
+but not with the ``--check-extern`` option as that would probably fail
+randomly quite often whenever one of the external websites is down.
+
+.. _development-release_gammapy:
+
 Make a Gammapy release
 ----------------------
 
 For now, see https://github.com/astropy/package-template/issues/103
+
+* Check external HTML links (see :ref:`here <development-check_html_links>`).

@@ -16,11 +16,7 @@ class GeneralRandomArray(object):
 
     For a general description of the method see the end of the following page:
     http://www.cs.utk.edu/~parker/Courses/CS302-Fall06/Notes/PQueues/random_num_gen.html
-
-    This implementation was copied from
-    http://johnstachurski.net/lectures/more_numpy.html
-    ( the file discreterv.py )
-    and then I added the treatment of arbitrary array dimension."""
+    """
 
     def __init__(self, pdf):
         """

@@ -52,8 +52,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
 
     Notes
     -----
-    For usage, see also tutorial:
-    https://gammapy.readthedocs.org/en/latest/tutorials/flux_point.html
+    For usage, see this tutorial: :ref:`tutorials-flux_point`.
     """
     # Use input values if not initially provided with a table
     # and broadcast quantities to arrays if required

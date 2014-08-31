@@ -17,7 +17,7 @@ CVS format
 We use the `CSV <http://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for run lists.
 This has the advantage that everyone can work with whatever tool they like. Here's some good options:
 
-* `LibreOffice Calc <http://www.libreoffice.org/features/calc/>`_ 
+* `LibreOffice Calc <http://www.libreoffice.org/discover/calc/>`_ 
 * `TOPCAT <http://www.star.bris.ac.uk/~mbt/topcat/>`_ or `STILTS <http://www.star.bris.ac.uk/~mbt/stilts/>`_
 * `csvkit <https://csvkit.readthedocs.org/en/latest/>`_
 * Your own script using e.g the `Python standard library CSV module <http://docs.python.org/2/library/csv.html>`_ or `pandas <http://pandas.pydata.org>`_

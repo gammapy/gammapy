@@ -95,6 +95,7 @@ install:
     # this matplotlib will *not* work with py 3.x, but our sphinx build is
     # currently 2.7, so that's fine
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION Sphinx matplotlib scipy; fi
+    - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_INSTALL linkchecker; fi
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_INSTALL aplpy; fi
 
     # COVERAGE DEPENDENCIES
@@ -102,6 +103,7 @@ install:
 
 script:
     - python setup.py $SETUP_CMD
+    - if [[ $SETUP_CMD == build_sphinx* ]]; then linkchecker docs/_build/html; fi
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
