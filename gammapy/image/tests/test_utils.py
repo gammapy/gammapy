@@ -222,3 +222,12 @@ def test_lon_lat_rectangle_mask():
                                   lon_max=None, lat_min=None,
                                   lat_max=None)
     assert_allclose(mask.sum(), 80601)
+
+
+def test_solid_angle():
+    from astropy.units import Quantity
+    nxpix, nypix, binsz = 50, 10, 0.1
+    image = utils.make_empty_image(nxpix=nxpix, nypix=nypix, binsz=binsz)
+    actual = utils.solid_angle(image, method='2').sum()
+    expected = Quantity(nxpix * nypix * binsz ** 2, 'deg^2').to('sr').value
+    assert_allclose(actual, expected, rtol=1e-4)

@@ -3,7 +3,7 @@
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy import (cos, sin, arccos, arcsin,
+from numpy import (cos, sin, arcsin,
                    arctan2, radians, degrees, pi)
 
 __all__ = ['galactic_to_radec',

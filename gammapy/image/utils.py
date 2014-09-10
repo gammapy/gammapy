@@ -631,33 +631,60 @@ def binary_opening_circle(input, radius):
     return binary_opening(input, structure)
 
 
-def solid_angle(image):
+def solid_angle(image, method='1'):
     """Compute the solid angle of each pixel.
 
-    This will only give correct results for CAR maps!
+    Estimates solid angles of pixels using the Girard equation for excess area
+    Reference: http://mathworld.wolfram.com/SphericalPolygon.html
+    See GWcs::solidangle in GammaLib
 
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU`
         Input image
+    method : {'1', '2'}
+        Method to compute the solid angle
 
     Returns
     -------
     area_image : `~astropy.units.Quantity`
         Solid angle image (matching the input image) in steradians.
     """
-    # Area of one pixel at the equator
-    cdelt0 = image.header['CDELT1']
-    cdelt1 = image.header['CDELT2']
-    equator_area = Quantity(abs(cdelt0 * cdelt1), 'sr')
+    from astropy.wcs import WCS
+    from ..utils.coordinates import pixel_solid_angle
 
-    # Compute image with fraction of pixel area at equator
-    glat = coordinates(image)[1]
-    area_fraction = np.cos(np.radians(glat))
+    # Compute pixel corner coordinates
+    shape = np.array(image.data.shape) + np.array([1, 1])
+    y_pix, x_pix = np.indices(shape, dtype=np.float64)    
+    wcs = WCS(image.header)
+    lon, lat = wcs.wcs_pix2world(x_pix, y_pix, 0)
 
-    result = area_fraction * equator_area
+    lon, lat = np.radians(lon), np.radians(lat)
+    corners = []
+    corners.append(dict(lon=lon[ :-1,  :-1], lat=lat[ :-1,  :-1])) # Case: x-, y-
+    corners.append(dict(lon=lon[1:  ,  :-1], lat=lat[1:  ,  :-1])) # Case: x+, y-
+    corners.append(dict(lon=lon[1:  , 1:  ], lat=lat[1:  , 1:  ])) # Case: x+, y+
+    corners.append(dict(lon=lon[ :-1, 1:  ], lat=lat[ :-1, 1:  ])) # Case: x-, y+
 
-    return result
+    """
+    TODO: this should be more efficient because spherical_to_cartesian
+          is called on fewer points.
+    if method == 'vector':
+        from astropy.coordinates import spherical_to_cartesian
+        x, y , z = spherical_to_cartesian(1, lon, lat)
+        corners.append(dict(lon=lon[:-1], lat=lat[:-1])) # Case: x-, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[:-1])) # Case: x+, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[1:]))  # Case: x+, y+
+        corners.append(dict(lon=lon[:-1], lat=lat[1:]))  # Case: x-, y+
+        
+    elif method == 'triangle':
+        corners.append(dict(lon=lon[:-1], lat=lat[:-1])) # Case: x-, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[:-1])) # Case: x+, y-
+        corners.append(dict(lon=lon[1:],  lat=lat[1:]))  # Case: x+, y+
+        corners.append(dict(lon=lon[:-1], lat=lat[1:]))  # Case: x-, y+
+    """
+
+    return pixel_solid_angle(corners, method=method)
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
@@ -672,12 +699,43 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     Parameters
     ----------
-    TODO
-
+    nxpix, nypix : int
+        Length of data axis (NAXIS1, NAXIS2)
+    binsz : float
+        Pixel size (CDELT1, CDELT2)
+    xref, yref : float
+        Value at ref. pixel (CRVAL1, CRVAL2) 
+    proj : str
+        Type of co-ordinate projection (CTYPE1, CTYPE2)
+    coordsys : str
+        Type of co-ordinate system (CTYPE1, CTYPE2)
+    xrefpix, yrefpix : float or None
+        Reference pixel on axis (CRPIX1, CRPIX2)
+        Computed as the center pixel if `None` is given.
+    
     Returns
     -------
-    header : `~astropy.io.fits.Header`
+    header : `astropy.io.fits.Header`
         Header
+    
+    Examples
+    --------
+    >>> from gammapy.image import make_header
+    >>> header = make_header()
+    >>> print(repr(header))
+    NAXIS   =                    2                                                  
+    NAXIS1  =                  100                                                  
+    NAXIS2  =                  100                                                  
+    CTYPE1  = 'GLON-CAR'                                                            
+    CTYPE2  = 'GLAT-CAR'                                                            
+    CRVAL1  =                    0                                                  
+    CRVAL2  =                    0                                                  
+    CRPIX1  =                 50.5                                                  
+    CRPIX2  =                 50.5                                                  
+    CDELT1  =                 -0.1                                                  
+    CDELT2  =                  0.1                                                  
+    CUNIT1  = 'deg     '                                                            
+    CUNIT2  = 'deg     '                                                            
     """
     nxpix = int(nxpix)
     nypix = int(nypix)
@@ -693,15 +751,21 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     else:
         raise Exception('Unsupported coordsys: {0}'.format(proj))
 
-    pars = {'NAXIS': 2, 'NAXIS1': nxpix, 'NAXIS2': nypix,
-            'CTYPE1': ctype1 + proj,
-            'CRVAL1': xref, 'CRPIX1': xrefpix, 'CUNIT1': 'deg', 'CDELT1': -binsz,
-            'CTYPE2': ctype2 + proj,
-            'CRVAL2': yref, 'CRPIX2': yrefpix, 'CUNIT2': 'deg', 'CDELT2': binsz,
-            }
-
     header = fits.Header()
-    header.update(pars)
+
+    header['NAXIS'] = 2
+    header['NAXIS1'] = nxpix
+    header['NAXIS2'] = nypix
+    header['CTYPE1'] = ctype1 + proj
+    header['CTYPE2'] = ctype2 + proj
+    header['CRVAL1'] = xref
+    header['CRVAL2'] = yref
+    header['CRPIX1'] = xrefpix
+    header['CRPIX2'] = yrefpix
+    header['CDELT1'] = -binsz
+    header['CDELT2'] = binsz
+    header['CUNIT1'] = 'deg'
+    header['CUNIT2'] = 'deg'
 
     return header
 
@@ -723,6 +787,7 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
         Data type, default is float32
     fill : float or 'checkerboard'
         Creates checkerboard image or uniform image of any float
+
     Returns
     -------
     image : `~astropy.io.fits.ImageHDU`
@@ -731,7 +796,6 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
     header = make_header(nxpix, nypix, binsz, xref, yref,
                          proj, coordsys, xrefpix, yrefpix)
 
-    # Note that FITS and NumPy axis order are reversed
     shape = (header['NAXIS2'], header['NAXIS1'])
     if fill == 'checkerboard':
         A = np.zeros(shape, dtype=dtype)
