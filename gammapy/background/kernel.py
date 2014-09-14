@@ -16,29 +16,37 @@ class GammaImages(object):
     that can be re-used in other places as well.
     """
 
-    def __init__(self, counts, background=None, mask=None):
-        self.counts = np.asarray(counts.data, dtype=float)
-        self.header = counts.header
-        if background == None:
-            # Start with a flat background estimate
-            self.background = np.ones_like(counts.data, dtype=float)
-        else:
-            self.background = np.asarray(background.data, dtype=float)
-
+    def __init__(self, counts, background=None, mask=None, header=None):
+        self.counts = counts
+        
+        if header:
+            self.header = header
+        
+        if background != None:
+            self.background = background
+        
         if mask == None:
-            self.mask = np.ones_like(counts.data, dtype=bool)
+            self.mask = np.ones_like(counts, dtype=bool)
         else:
-            self.mask = np.asarray(mask.data, dtype=bool)
+            self.mask = np.asarray(mask, dtype=bool)
+    
+    def initial_background(self, kernel):
+        """Computes initial background estimation
+        """
+        from scipy.ndimage import convolve
+        self.background = convolve(self.counts, kernel)
+        return self
     
     def compute_correlated_maps(self, kernel):
         """Compute significance image for a given kernel.
         """
         from scipy.ndimage import convolve
-
+        if self.background == None:
+            self.initial_background(kernel)    
         self.counts_corr = convolve(self.counts, kernel)
         self.background_corr = convolve(self.background, kernel)
-        self.significance = significance(self.counts_corr, self.background_corr)
-
+        self.significance = np.nan_to_num(significance(self.counts_corr,
+                                                       self.background_corr))
         return self
 
 
@@ -66,13 +74,6 @@ class IterativeKernelBackgroundEstimator(object):
         Default False.
     filebase : str (optional)
         Base of filenames if save_intermediate_results = True. Default 'temp'.
-
-    Returns
-    -------
-    mask : `~astropy.io.fits.ImageHDU`
-        Final exclusion mask, when iterations are complete.
-    background : `~astropy.io.fits.ImageHDU`
-        Final background estimation, when iterations are complete.
     """
 
     def __init__(self, images, source_kernel, background_kernel,
@@ -80,96 +81,75 @@ class IterativeKernelBackgroundEstimator(object):
                  delete_intermediate_results=True,
                  save_intermediate_results=False, filebase='temp'):
         
+        self.source_kernel = source_kernel
+        self.background_kernel = background_kernel
+        
+        images.initial_background(background_kernel)
         # self._data[i] is a GammaImages object representing iteration number `i`.
         self._data = list()
         self._data.append(images)
         
         self.header = images.header
-        
-        self.source_kernel = source_kernel
-        self.background_kernel = background_kernel
 
         self.significance_threshold = significance_threshold
         self.mask_dilation_radius = mask_dilation_radius
         
         self.delete_intermediate_results = delete_intermediate_results
         self.save_intermediate_results = save_intermediate_results
-
         # Calculate initial significance image
-        self._data[-1].compute_correlated_maps(self.source_kernel)        
+        self._data[-1].compute_correlated_maps(self.source_kernel)
         gc.collect()
     
-    def run_ntimes(self, n_iterations, filebase=None):
-        """Run N iterations."""
+    def run(self, filebase=None, max_iterations=10):
+        """Run iterations until mask does not change (stopping condition).
 
-        self._data[-1].compute_correlated_maps(self.source_kernel)
+        Parameters
+        ----------
+        filebase : str
+            Base string for filenames if iterations are saved to disk.
+            Default None.
+        max_iterations : int
+            Maximum number of iterations after which the algorithm is
+            terminated, if the termination condition (no change of mask between
+            iterations) is not already satisfied.
+
+        Returns
+        -------
+        mask : array-like
+            Boolean array for the final mask after iterations are ended.
+        background : array-like
+            Array of floats for the final background estimation after
+            iterations are complete.
+        """
+
         if self.save_intermediate_results:
             self.save_files(filebase, index=0)
 
-        for ii in range(1, n_iterations + 1):
-            if ii == 1:
-                # This is needed to avoid excluding the whole Galactic plane
-                # in case the initial background estimate is much too low.
-                update_mask = False
-            else:
-                update_mask = True
-            
-            self.run_iteration(update_mask)
+        for ii in np.arange(max_iterations):
+            self.run_iteration()
             
             if self.save_intermediate_results: 
                 self.save_files(filebase, index=ii)
 
+            # Dilate old mask to compare with new mask
+            old_mask = self._data[0].mask
+            new_mask = self._data[-1].mask            
+            
+            if ii >= 3:
+                # Prevents early termination in first two steps when
+                # mask is not yet correct
+                if np.alltrue(old_mask == new_mask):
+                    continue
+            
             if self.delete_intermediate_results:
                 # Remove results from previous iteration
                 del self._data[0]
                 gc.collect()
-
-            mask = self.mask_image_hdu
-            background = self.background_image_hdu
+                
+        mask = self._data[-1].mask.astype(np.uint8)
+        background = self._data[-1].background
 
         return mask, background
-
-
-    def run(self, filebase=None):
-        """Run until mask is stable."""
-
-        self._data[-1].compute_correlated_maps(self.source_kernel)
-        if self.save_intermediate_results:
-            self.save_files(filebase, index=0)
-        
-        self.run_iteration(update_mask=False)
-            
-        if self.save_intermediate_results: 
-            self.save_files(filebase, index=ii)
-        
-        check_mask = False
-
-        while check_mask == False:
-            mask = self.mask_image_hdu
-            old_mask = mask.data
-            self.run_iteration(update_mask=True)
-            
-            if self.save_intermediate_results: 
-                self.save_files(filebase, index=ii)
-
-            if self.delete_intermediate_results:
-                # Remove results from previous iteration
-                del self._data[0]
-                gc.collect()
-
-            new_mask = self.mask_image_hdu
-            background = self.background_image_hdu
-            
-            # Test mask (note will terminate as soon as mask does not change).
-            new = np.nan_to_num(new_mask.data.sum())
-            old = np.nan_to_num(old_mask.sum())
-
-            if new == old:
-                check_mask = True
-            else:
-                check_mask = False
-
-        return new_mask, background
 
 
     def run_iteration(self, update_mask=True):
@@ -182,51 +162,52 @@ class IterativeKernelBackgroundEstimator(object):
             `~gammapy.background.GammaImages` object with the exclusion mask
             newly calculated in this method.
         """
-
         from scipy.ndimage import convolve
-        # Start with images from the last iteration
-        images = self._data[-1]
-
-        # Compute new exclusion mask:
-        if update_mask:
-            mask = np.where(images.significance > self.significance_threshold, 0, 1)
-            mask = np.invert(binary_dilation_circle(mask == 0, radius=self.mask_dilation_radius))
+        # Start with images from the last iteration. If not, makes one.
+        # Check if initial mask exists:
+        if len(self._data) >= 2:
+            mask = np.where(self._data[-1].significance > self.significance_threshold, 0, 1)
         else:
-            mask = images.mask.copy()
-        
+            # Compute new exclusion mask:
+            if update_mask:
+                
+                mask = np.where(self._data[-1].significance > self.significance_threshold, 0, 1)
+                mask = np.invert(binary_dilation_circle(mask == 0, radius=self.mask_dilation_radius))
+            else:
+                mask = self._data[-1].mask.copy()
+                
         # Compute new background estimate:
         # Convolve old background estimate with background kernel,
         # excluding sources via the old mask.
-        weighted_counts = convolve(images.mask * images.counts, self.background_kernel)
-        weighted_counts_normalisation = convolve(images.mask.astype(float), self.background_kernel)
-        background = weighted_counts / weighted_counts_normalisation
+        weighted_counts = convolve(mask * self._data[-1].counts,
+                                   self.background_kernel)
+        weighted_counts_normalisation = convolve(mask.astype(float),
+                                                 self.background_kernel)
         
-        # Convert new Images to HDUs to store in a GammaImages object
-        counts = fits.ImageHDU(data=images.counts, header=images.header)
-        background = fits.ImageHDU(data=background, header=images.header)
-        mask = fits.ImageHDU(data=mask.astype(int), header=images.header)
+        background = weighted_counts / weighted_counts_normalisation
+        counts = self._data[-1].counts
+        mask = mask.astype(int)
+        
         images = GammaImages(counts, background, mask)
         images.compute_correlated_maps(self.source_kernel)
-        significance = fits.ImageHDU(data=images.significance, header=images.header)
-
         self._data.append(images)
     
     def save_files(self, filebase, index):
         """Saves files to fits."""
 
         header = self.header
-        images = self._data[-1]
 
         filename = filebase + '{0:02d}_mask'.format(index) + '.fits'
-        hdu = fits.ImageHDU(data=images.mask.astype(np.uint8), header=header)
+        hdu = fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
+                            header=header)
         hdu.writeto(filename, clobber=True)
 
         filename = filebase + '{0:02d}_background'.format(index) + '.fits'
-        hdu = fits.ImageHDU(data=images.background, header=header)
+        hdu = fits.ImageHDU(data=self._data[-1].background, header=header)
         hdu.writeto(filename, clobber=True)
 
         filename = filebase + '{0:02d}_significance'.format(index) + '.fits'
-        hdu = fits.ImageHDU(data=images.significance, header=header)
+        hdu = fits.ImageHDU(data=self._data[-1].significance, header=header)
         hdu.writeto(filename, clobber=True)    
 
     @property
@@ -234,24 +215,21 @@ class IterativeKernelBackgroundEstimator(object):
         """Returns mask as `~astropy.io.fits.ImageHDU`."""
 
         header = self.header
-        images = self._data[-1]
-
-        return fits.ImageHDU(data=images.mask.astype(np.uint8), header=header)    
+        return fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
+                             header=header)    
 
     @property
     def background_image_hdu(self):
         """Returns resulting background estimate as `~astropy.io.fits.ImageHDU`."""
 
         header = self.header
-        images = self._data[-1]
-
-        return fits.ImageHDU(data=images.background, header=header)
+        return fits.ImageHDU(data=self._data[-1].background,
+                             header=header)
 
     @property
     def significance_image_hdu(self):
         """Returns resulting background estimate as `~astropy.io.fits.ImageHDU`."""
 
         header = self.header
-        images = self._data[-1]
-
-        return fits.ImageHDU(data=images.significance, header=header)
+        return fits.ImageHDU(data=self._data[-1].significance,
+                             header=header)
