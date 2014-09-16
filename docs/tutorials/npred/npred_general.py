@@ -22,7 +22,7 @@ def prepare_images():
     background_model = SpectralCube.read(background_file)
     exposure_cube = SpectralCube.read(exposure_file)
     # Add correct units
-    exposure_cube.data = Quantity(exposure_cube.data, '1/(cm2 sr s MeV)')
+    exposure_cube.data = Quantity(exposure_cube.data, 'cm2 s')
     # Re-project background cube
     repro_bg_cube = background_model.reproject_to(exposure_cube)
     # Define energy band required for output
