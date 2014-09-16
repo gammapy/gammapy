@@ -120,8 +120,9 @@ class TestSpectralCube(object):
         denergy = 0.001 * energy
         energy_band = Quantity([energy, energy + denergy])
         dflux = self.spectral_cube.flux(lon, lat, energy)
-        expected = (dflux * denergy).to('cm^-2 s^-1 sr^-1')
-        actual = self.spectral_cube.integral_flux_image(energy_band).data[0, 0]
+        expected = dflux * denergy
+        actual = Quantity(self.spectral_cube.integral_flux_image(energy_band).data[0, 0],
+                          '1 / (cm2 s sr)')
         assert_quantity(actual, expected, rtol=1e-3)
 
         # Test a wide energy band
@@ -129,13 +130,25 @@ class TestSpectralCube(object):
         image = self.spectral_cube.integral_flux_image(energy_band)
         actual = image.data.sum()
         # TODO: the reference result is not verified ... just pasted from the test output.
-        expected = 5.2481972772213124e-05
+        expected = 5.2481972772213124e-02
         assert_allclose(actual, expected)
+
+        # Test integral flux for energy bands with units.
+        energy_band_check = Quantity([1000, 10000], 'MeV')
+        new_image = self.spectral_cube.integral_flux_image(energy_band_check)
+        assert_allclose(new_image.data, image.data)
+
+        # Test Header Keys
+        expected = [('CDELT1', 0.5), ('CDELT2', 0.5), ('NAXIS1', 61),
+                    ('NAXIS2', 21), ('CRVAL1', 0), ('CRVAL2', 0)]
+
+        for key, value in expected:
+            assert_allclose(np.abs(image.header[key]), value)
 
     def test_solid_angle_image(self):
         actual = self.spectral_cube.solid_angle_image[10][30]
-        expected = Quantity(0.24999762018018362, 'steradian')
-        assert_quantity(actual, expected)
+        expected = Quantity(self.spectral_cube.wcs.wcs.cdelt[:-1].prod(), 'deg2')
+        assert_quantity(actual, expected.to('sr'), rtol=1e-4)
 
     def test_spatial_coordinate_images(self):
         lon, lat = self.spectral_cube.spatial_coordinate_images
@@ -229,7 +242,7 @@ def test_analytical_npred_cube():
     # Exposure = 1, so solid angle only factor which varies.
     # Result should be 0.5 * 1 * solid_angle_array from integrating analytically
 
-    energies = Quantity([1, 2], 'GeV')
+    energies = Quantity([1, 2], 'MeV')
     exposure_cube, spectral_cube = make_test_cubes(energies, 10, 10, 1)
 
     solid_angle_array = exposure_cube.solid_angle_image

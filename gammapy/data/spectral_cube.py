@@ -482,7 +482,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         energy_bound = energy_bins[i:i + 2]
         int_flux = flux_cube.integral_flux_image(energy_bound, integral_resolution)
         int_flux = Quantity(int_flux.data, '1 / (cm2 s sr)')
-        exposure = Quantity(exposure_cube.flux(lon, lat, energy_centers[i]).value, 'cm2 s')
+        exposure = Quantity(exposure_cube.flux(lon, lat,
+                                               energy_centers[i]).value, 'cm2 s')
         npred_image = int_flux * exposure * solid_angle
         npred_cube[i] = npred_image.to('')
     npred_cube = np.nan_to_num(npred_cube)
