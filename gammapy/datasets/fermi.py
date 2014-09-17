@@ -380,13 +380,16 @@ def load_lat_psf_performance(performance_file):
     """
     from astropy.units import Quantity
     perf_files = dict()
-    perf_files['P7REP_SOURCE_V15_68'] = get_path('fermi/PSF_P7REP_SOURCE_V15_total_68.txt')
-    perf_files['P7REP_SOURCE_V15_95'] = get_path('fermi/PSF_P7REP_SOURCE_V15_total_95.txt')
-    perf_files['P7SOURCEV6_68'] = get_path('fermi/PSF_P7SOURCEV6_total_68.txt')
-    perf_files['P7SOURCEV6_95'] = get_path('fermi/PSF_P7SOURCEV6_total_95.txt')
-    filename = perf_files[performance_file]
-    table = Table.read(filename, format='ascii',
-                       names=['energy', 'containment_angle'])
+    filename = get_path('fermi/fermi_irf_data.fits')
+    hdus = fits.open(filename)
+    perf_files['P7REP_SOURCE_V15_68'] = hdus[1]
+    perf_files['P7REP_SOURCE_V15_95'] = hdus[4]
+    perf_files['P7SOURCEV6_68'] = hdus[3]
+    perf_files['P7SOURCEV6_95'] = hdus[2]
+    hdu = perf_files[performance_file]
+    table = Table(hdu.data)
+    table.rename_column('col1', 'energy')
+    table.rename_column('col2', 'containment_angle')
 
     table['energy'].unit = 'MeV'
     table['containment_angle'].unit = 'deg'
