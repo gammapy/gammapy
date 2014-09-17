@@ -29,6 +29,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    flux_point/index
    gammapy-pfmap/index
    gammapy-pfspec/index
+   background/index
 
 .. _tutorials-examples:
 
