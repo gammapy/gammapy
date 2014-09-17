@@ -7,7 +7,7 @@ Parameters
 ----------
 
 * 5 years of observation time (2008-08-05 to 2013-08-05)
-* Event class and IRF: P7REP_CLEAN_V15
+* Event class and IRF: P7SOURCEV6
 * Max zenith angle cut: 105 deg
 * 10 GeV < Energy < 500 GeV
 
@@ -54,5 +54,5 @@ Fermi LAT Key Parameters:
 
 Commands:
 
-I produced the `fermi_exposure.fits.gz` file using the commands in the executable script ``exposure_commands.sh`` with the FSSC Fermi Science Tools.
+I produced the `fermi_exposure.fits.gz` file using the commands in the executable script ``make.sh`` with the FSSC Fermi Science Tools.
    
