@@ -240,14 +240,6 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
         Galactic latitude or longitude profile as table, with latitude bin
         boundaries, profile values and errors.
     """
-    if profile_axis == 'lat':
-        res_bound = 5 * np.abs(image.header['CDELT2'])
-    elif profile_axis == 'lon':
-        res_bound = 5 * np.abs(image.header['CDELT1'])
-    # Assert that the called binsz is at least 5 times
-    # GLAT image resolution to avoid binning bug
-    if binsz < res_bound:
-        raise ValueError('Minimum bin size is 5 times resolution.')
 
     lon, lat = coordinates(image)
     mask_init = (lats[0] <= lat) & (lat < lats[1])
