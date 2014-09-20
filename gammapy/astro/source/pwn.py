@@ -105,7 +105,10 @@ class PWN(object):
             raise ValueError('Need time variable or age attribute.')
         # Radius at time of collision
         r_coll = self._radius_free_expansion(self._collision_time)
-        return Quantity(np.where(t < self._collision_time, self._radius_free_expansion(t), r_coll), 'cm')
+        r = np.where(t < self._collision_time,
+                     self._radius_free_expansion(t).value,
+                     r_coll.value)
+        return Quantity(r, 'cm')
 
     def magnetic_field(self, t=None):
         """
