@@ -81,8 +81,8 @@ class SNR(object):
         else:
             raise ValueError('Need time variable or age attribute.')
         r = np.where(t > self.sedov_taylor_begin,
-                     self._radius_sedov_taylor(t).to('cm'),
-                     self._radius_free_expansion(t).to('cm'))
+                     self._radius_sedov_taylor(t).to('cm').value,
+                     self._radius_free_expansion(t).to('cm').value)
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
@@ -270,8 +270,9 @@ class SNRTrueloveMcKee(SNR):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
-        r = np.where(t > self.sedov_taylor_begin, self._radius_sedov_taylor(t).to('cm'),
-                     self._radius_free_expansion(t).to('cm'))
+        r = np.where(t > self.sedov_taylor_begin,
+                     self._radius_sedov_taylor(t).to('cm').value,
+                     self._radius_free_expansion(t).to('cm').value)
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
@@ -347,4 +348,7 @@ class SNRTrueloveMcKee(SNR):
         term2 = (1.49 - 0.16 * term1 - 0.46 * np.log(t / t_core))
         R_1 = self._radius_free_expansion(t) / 1.19
         R_RS = term2 * (self.r_c / self.t_c) * t
-        return Quantity(np.where(t < t_core, R_1.to('cm'), R_RS.to('cm')), 'cm')
+        r = np.where(t < t_core,
+                     R_1.to('cm').value,
+                     R_RS.to('cm').value)
+        return Quantity(r, 'cm')
