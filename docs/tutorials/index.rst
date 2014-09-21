@@ -30,6 +30,7 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    gammapy-pfmap/index
    gammapy-pfspec/index
    background/index
+   fermi_psf/index
 
 .. _tutorials-examples:
 

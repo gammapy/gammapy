@@ -19,4 +19,4 @@ gtltcube evfile=$EVENTS scfile=$SPACECRAFT \
          outfile=$LIVETIME dcostheta=0.1 binsz=2 \
 
 gtexpcube2 infile=$LIVETIME cmap=$COUNTS \
-           outfile=$EXPOSURE irf=P7REP_CLEAN_V15 \
+           outfile=$EXPOSURE irf=P7SOURCEV6 \
