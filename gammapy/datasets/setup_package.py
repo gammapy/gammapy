@@ -8,6 +8,7 @@ def get_package_data():
              'data/fermi_vela/*',
              'data/poisson_stats_image/*',
              'data/tev_spectra/*',
+             'data/tev_catalogs/*',
              'data/irfs/*',
              'data/atnf/*'
              ]
