@@ -316,11 +316,11 @@ class GalacticPlaneSurveyPanelPlot(object):
         """
         pp = self.panel_parameters
         center = pp['centers'][panel]
-        self.box = pp['boxes'][panel]
+        self.subplot = pp['subplots'][panel]
 
         # Execute user-defined plotting ...
         # This must set self.fits_figure
-        self.main(self.figure, self.box)
+        self.main(self.figure, self.subplot)
 
         # self.fits_figure.set_auto_refresh(False)
         self.fits_figure.recenter(center[0], center[1],
@@ -414,19 +414,19 @@ def _panel_parameters(npanels, center, fov,
     dyspacing = yspacing / ysize
 
     # List of y slice offsets
-    boxes = []
-    box_centers = []
+    subplots = []
+    subplot_centers = []
     for ii in range(npanels):
-        box_center = [center[0] - fov[0] / 2 + (ii + 0.5) * width, center[1]]
-        box = [xborder / xsize, yborder / ysize + ii * (dy + dyspacing), dx, dy]
-        box_centers.append(box_center)
-        boxes.append(box)
+        subplot_center = [center[0] - fov[0] / 2 + (ii + 0.5) * width, center[1]]
+        subplot = [xborder / xsize, yborder / ysize + ii * (dy + dyspacing), dx, dy]
+        subplot_centers.append(subplot_center)
+        subplots.append(subplot)
 
     pp = dict()
     pp['figsize'] = figsize
     pp['npanels'] = npanels
-    pp['centers'] = box_centers
-    pp['boxes'] = boxes
+    pp['centers'] = subplot_centers
+    pp['subplots'] = subplots
     pp['width'] = width
     pp['height'] = height
 
