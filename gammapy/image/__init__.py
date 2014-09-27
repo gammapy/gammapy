@@ -5,4 +5,3 @@ from .measure import *
 from .profile import *
 from .plotting import *
 from .catalog import *
-from .healpix import *
