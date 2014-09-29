@@ -3,6 +3,7 @@
 """
 from __future__ import print_function, division
 import numpy as np
+
 from gammapy.image.utils import coordinates
 
 __all__ = ['BoundingBox',
@@ -441,10 +442,42 @@ def measure_containment_fraction(r, rr, image):
     # Set up indices and containment mask
     containment_mask = rr < r ** 2
     mask = np.logical_and(np.isfinite(image), containment_mask)
-
     containment_fraction = image[mask].sum()
-
     return containment_fraction
+
+
+def measure_curve_of_growth(image, glon, glat, r_max=0.2, delta_r=0.01):
+    """
+    Measure the curve of growth for a given source position.
+
+    The curve of growth is determined by measuring the flux in a circle around
+    the source and radius of this circle is increased
+
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+        Image to measure on.
+    glon : float
+        Source longitude in degree.
+    glat : float
+        Source latitude in degree.
+    r_max : float (default 0.2)
+        Maximal radius, up to which the containment is measured in degree.
+    delta_r : int (default 10)
+        Stepsize for the radius grid in degree.
+
+    Returns
+    -------
+    radii : array
+        Radii where the containment was measured.
+    containment : array
+        Corresponding contained flux.
+    """
+    containment = []
+    radii = np.arange(0, r_max, delta_r)
+    for radius in radii:
+        containment.append(measure_containment(image, glon, glat, radius))
+    return radii, np.array(containment)
 
 
 def _split_xys(pos):
