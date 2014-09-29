@@ -3,6 +3,7 @@
 """
 from __future__ import print_function, division
 import numpy as np
+from gammapy.image.utils import coordinates
 
 __all__ = ['BoundingBox',
            'bbox',
@@ -13,6 +14,7 @@ __all__ = ['BoundingBox',
            'measure_containment_radius',
            'measure_image_moments',
            'measure_labeled_regions',
+           'measure_containment',
            ]
 
 
@@ -354,6 +356,26 @@ def measure_image_moments(image, shift=0.5):
     y_sigma = np.sqrt(y_var)
 
     return A, x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
+
+
+def measure_containment(image, glon, glat, radius):
+    """
+    Measure containment in a given circle around the source position.
+
+    Parameters
+    ----------
+    image : `astropy.io.fits.ImageHDU`
+        Image to measure on.
+    glon : float
+        Source longitude in degree.
+    glat : float
+        Source latitude in degree.
+    radius : float
+        Radius of the region to measure the containment in.
+    """
+    GLON, GLAT = coordinates(image, lon_sym=False)
+    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
+    return measure_containment_fraction(radius, rr, image.data)
 
 
 def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
