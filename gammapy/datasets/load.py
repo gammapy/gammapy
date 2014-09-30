@@ -35,6 +35,7 @@ __all__ = ['get_path',
            'load_arf_fits_table',
            'load_psf_fits_table',
            'load_atnf_sample',
+           'load_tevcat',
            ]
 
 
@@ -355,3 +356,19 @@ def _read_electron_spectrum_fermi(filename):
     table['flux_err'] = Quantity(flux_err, 'm^-2 s^-1 GeV^-1 sr^-1').to('m^-2 s^-1 TeV^-1 sr^-1')
 
     return table
+
+
+def load_tevcat():
+    """Load TeVCat source catalog.
+
+    This is a dump of TeVCat (http://tevcat.uchicago.edu/)
+    as of 2014-009-24 created by Christoph Deil using this code:
+    https://github.com/astropy/astroquery/pull/41
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        TeVCat source catalog table.
+    """
+    filename = get_path('tev_catalogs/tevcat.fits.gz')
+    return Table.read(filename)

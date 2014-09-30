@@ -7,6 +7,7 @@ from ...datasets import (load_poisson_stats_image,
                          load_arf_fits_table,
                          load_psf_fits_table,
                          load_atnf_sample,
+                         load_tevcat,
                          )
 
 
@@ -23,17 +24,19 @@ def test_load_poisson_stats_image():
 
 def test_load_arf_fits_table():
     data = load_arf_fits_table()
-    # TODO: add useful asserts
     assert len(data) == 2
 
 
 def test_load_psf_fits_table():
     data = load_psf_fits_table()
-    # TODO: add useful asserts
     assert len(data) == 2
 
 
-def test_load_atnf_samplee():
+def test_load_atnf_sample():
     data = load_atnf_sample()
-    # TODO: add useful asserts
     assert len(data) == 10
+
+
+def test_load_tevcat():
+    table = load_tevcat()
+    assert len(table) == 173
