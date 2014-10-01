@@ -1,6 +1,9 @@
 numpy
 Cython
-scipy>=0.14
+# pip-install scipy>=0.14 fails on readthedocs, so we don't
+# even try. We'll just have to wait for them to update the
+# system-installed version until the plots that need it work.
+#scipy>=0.14
 scikit-image
 -e git+http://github.com/astropy/astropy.git#egg=astropy
 -e git+http://github.com/astropy/imageutils.git#egg=imageutils
