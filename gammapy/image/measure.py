@@ -16,6 +16,7 @@ __all__ = ['BoundingBox',
            'measure_image_moments',
            'measure_labeled_regions',
            'measure_containment',
+           'measure_curve_of_growth'
            ]
 
 
@@ -322,37 +323,32 @@ def lookup_max(image, GLON, GLAT, theta):
     return val
 
 
-def measure_image_moments(image, shift=0.5):
+def measure_image_moments(image):
     """Compute 0th, 1st and 2nd moments of an image.
 
     NaN values are ignored in the computation.
 
     Parameters
     ----------
-    image : array
-        Input image array.
-    shift : float (default value 0.5)
-        Depending on where the image values are given, the grid has to be
-        shifted. If the values are given at the center of the pixel
-        shift = 0.5.
+    image :`astropy.io.fits.ImageHDU`
+        Image to measure on.
 
     Returns
     -------
     image moments : list
         List of image moments:
         [A, x_cms, y_cms, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
-        All value are given in pixel coordinates.
     """
-    A = image[np.isfinite(image)].sum()
-    y, x = np.indices(image.shape) + shift
+    x, y = coordinates(image, lon_sym=True)
+    A = image.data[np.isfinite(image.data)].sum()
 
     # Center of mass
-    x_cms = (x * image)[np.isfinite(image)].sum() / A
-    y_cms = (y * image)[np.isfinite(image)].sum() / A
+    x_cms = (x * image.data)[np.isfinite(image.data)].sum() / A
+    y_cms = (y * image.data)[np.isfinite(image.data)].sum() / A
 
     # Second moments
-    x_var = ((x - x_cms) ** 2 * image)[np.isfinite(image)].sum() / A
-    y_var = ((y - y_cms) ** 2 * image)[np.isfinite(image)].sum() / A
+    x_var = ((x - x_cms) ** 2 * image.data)[np.isfinite(image.data)].sum() / A
+    y_var = ((y - y_cms) ** 2 * image.data)[np.isfinite(image.data)].sum() / A
     x_sigma = np.sqrt(x_var)
     y_sigma = np.sqrt(y_var)
 
@@ -374,30 +370,26 @@ def measure_containment(image, glon, glat, radius):
     radius : float
         Radius of the region to measure the containment in.
     """
-    GLON, GLAT = coordinates(image, lon_sym=False)
+    GLON, GLAT = coordinates(image, lon_sym=True)
     rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
     return measure_containment_fraction(radius, rr, image.data)
 
 
-def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
-                               shift=0.5, normalize_image=True):
+def measure_containment_radius(image, glon, glat, containment_fraction=0.8):
     """Measure containment radius.
 
     Uses `scipy.optimize.brentq`.
 
     Parameters
     ----------
-    x_pos : float
-        x position of the source in pixel coordinates.
-    y_pos : float
-        y position of the source in pixel coordinates.
-    image : array
-        Intensity image
-    containment_fraction : float
+    image : `astropy.io.fits.ImageHDU`
+        Image to measure on.
+    glon : float
+        Source longitude in degree.
+    glat : float
+        Source latitude in degree.
+    containment_fraction : float (default 0.8)
         Containment fraction
-    normalize_image : bool
-        Set ``normalize_image=False`` if it already is normalized
-        and you want the speed.
 
     Returns
     -------
@@ -406,18 +398,16 @@ def measure_containment_radius(x_pos, y_pos, image, containment_fraction,
     """
     from scipy.optimize import brentq
 
-    # Set up squared radius array
-    y, x = np.indices(image.shape) + shift
-    rr = (x - x_pos) ** 2 + (y - y_pos) ** 2
+    GLON, GLAT = coordinates(image, lon_sym=True)
+    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
 
-    if normalize_image:
-        image = image / image[np.isfinite(image)].sum()
+    # Normalize image
+    image.data = image.data / image.data[np.isfinite(image.data)].sum()
 
     def func(r):
-        return measure_containment_fraction(r, rr, image) - containment_fraction
+        return measure_containment_fraction(r, rr, image.data) - containment_fraction
 
     containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
-
     return containment_radius
 
 
@@ -432,7 +422,6 @@ def measure_containment_fraction(r, rr, image):
         Squared radius array.
     image : array
         The image has to be normalized! I.e. image.sum() = 1.
-
 
     Returns
     -------
