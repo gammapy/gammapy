@@ -320,7 +320,7 @@ class GalacticPlaneSurveyPanelPlot(object):
 
         # Execute user-defined plotting ...
         # This must set self.fits_figure
-        self.main(self.figure, self.subplot)
+        self.main()
 
         # self.fits_figure.set_auto_refresh(False)
         self.fits_figure.recenter(center[0], center[1],
@@ -334,6 +334,7 @@ class GalacticPlaneSurveyPanelPlot(object):
         # fits_figure.refresh()
         # self.figure.canvas.draw()
 
+        self.post()
         if format:
             GalacticPlaneSurveyPanelPlot.format_fits_figure(self.fits_figure)
 
