@@ -334,6 +334,9 @@ class GalacticPlaneSurveyPanelPlot(object):
         # fits_figure.refresh()
         # self.figure.canvas.draw()
 
+        # To ensure compatibility with old code
+        if hasattr(self, 'post'):
+            self.post()
         if format:
             GalacticPlaneSurveyPanelPlot.format_fits_figure(self.fits_figure)
 
