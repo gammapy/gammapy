@@ -378,11 +378,11 @@ class SpectralCube(object):
         energy_slices = np.arange(cube.shape[0])
         # TODO: Re-implement to reproject cubes directly without needing
         # to loop over energies here. Errors with reproject when doing this
-        # first need to be understood and fixed. 
+        # first need to be understood and fixed.
         for i in energy_slices:
             array = cube[i]
             data_in = (array.value, wcs_in)
-            new_cube[i] = reproject(data_in, wcs_out, shape_out, projection_type)
+            new_cube[i] = reproject(data_in, wcs_out, shape_out, projection_type)[0]
         new_cube = Quantity(new_cube, array.unit)
         # Create new wcs
         header_in = self.wcs.to_header()
