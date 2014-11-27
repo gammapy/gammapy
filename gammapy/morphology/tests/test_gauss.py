@@ -1,11 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import unittest
+
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
+
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
+from astropy.io import fits
+from astropy.wcs import WCS
+
+from ...image.tests.test_measure import set_header, BINSZ
 from ...image import measure_image_moments
 from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
@@ -124,8 +130,7 @@ class TestMultiGauss2D(unittest.TestCase):
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """
-
-    # We define three components with different flux, position and size
+    # We define three components with different flux, position and size in pixel coordinates
     F_1, F_2, F_3 = 100, 200, 300
     sigma_1, sigma_2, sigma_3 = 15, 10, 5
     x_1, x_2, x_3 = 100, 120, 70
@@ -140,19 +145,24 @@ def test_gaussian_sum_moments():
     f_2 = Gaussian2D(A(F_2, sigma_2), x_2, y_2, sigma_2, sigma_2)
     f_3 = Gaussian2D(A(F_3, sigma_3), x_3, y_3, sigma_3, sigma_3)
 
-    F_1_image = discretize_model(f_1, (0, 200), (0, 200))
-    F_2_image = discretize_model(f_2, (0, 200), (0, 200))
-    F_3_image = discretize_model(f_3, (0, 200), (0, 200))
+    F_1_image = discretize_model(f_1, (0, 201), (0, 201))
+    F_2_image = discretize_model(f_2, (0, 201), (0, 201))
+    F_3_image = discretize_model(f_3, (0, 201), (0, 201))
+    image = set_header(fits.ImageHDU(F_1_image + F_2_image + F_3_image))
+    moments_num = measure_image_moments(image)
 
-    moments_num = measure_image_moments(F_1_image + F_2_image + F_3_image)
+    wcs = WCS(image.header)
 
     # Compute analytical values
     cov_matrix = np.zeros((12, 12))
     F = [F_1, F_2, F_3]
-    sigma = [sigma_1, sigma_2, sigma_3]
-    x = [x_1, x_2, x_3]
-    y = [y_1, y_2, y_3]
+    sigma = np.array([sigma_1, sigma_2, sigma_3]) * BINSZ
+    x, y = wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
 
-    moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix)
+    # Fix longitude range, is there a wcs option for this?
+    x = np.where(x > 180, x - 360, x)
+
+    moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0)
     assert_allclose(moments_ana, moments_num, 1e-6)
     assert_allclose(uncertainties, 0)
+

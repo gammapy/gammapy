@@ -58,6 +58,21 @@ Here's some issues where this was discussed:
 * https://github.com/radio-astro-tools/spectral-cube/issues/110
 * https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
 
+
+.. _development-result_object:
+
+Functions returning several values 
+----------------------------------
+
+Functions that return more than a single value shouldn't return a list
+or dictionary of values but rather a Python Bunch result object. A Bunch
+is similar to a dict, except that it allows attribute access to the result
+values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
+An example of how Bunches are used in gammapy is given by the `~gammapy.detect.TSMapResult`
+class.   
+ 
+
+
 .. _development-python2and3:
 
 Python 2 and 3 support
