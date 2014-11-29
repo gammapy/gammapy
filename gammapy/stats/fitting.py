@@ -54,7 +54,7 @@ class PoissonLikelihoodFitter(Fitter):
         """
         from scipy.optimize import minimize
 
-        if dx == None:
+        if dx is None:
             dx = np.ones_like(x)
 
         try:

@@ -181,17 +181,17 @@ def compute_total_stats(counts, exposure, background=None,
     counts = np.asanyarray(counts)
     exposure = np.asanyarray(exposure)
 
-    if solid_angle == None:
+    if solid_angle is None:
         background = np.zeros_like(counts)
     else:
         background = np.asanyarray(background)
 
-    if solid_angle == None:
+    if solid_angle is None:
         solid_angle = np.ones_like(counts)
     else:
         solid_angle = np.asanyarray(solid_angle)
 
-    if mask == None:
+    if mask is None:
         mask = np.ones_like(counts)
     else:
         mask = np.asanyarray(mask)

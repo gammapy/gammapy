@@ -91,7 +91,7 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     if coordinate.frame.name == 'galactic':
         coordinate = coordinate.transform_to('icrs')
 
-    if dec_digits == None:
+    if dec_digits is None:
         dec_digits = max(2, ra_digits - 1)
 
     ra_str = ra_iau_format(coordinate.ra, ra_digits)

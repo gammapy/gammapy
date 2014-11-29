@@ -355,7 +355,7 @@ def multi_gauss_psf_kernel(psf_parameters, **kwargs):
         pars = psf_parameters['psf{0}'.format(ii)]
         sigma = fwhm_to_sigma * pars['fwhm']
         ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
-        if psf == None:
+        if psf is None:
             psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
         else:
             psf += float(ampl) * Gaussian2DKernel(sigma, **kwargs)

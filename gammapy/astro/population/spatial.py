@@ -337,9 +337,9 @@ class LogSpiral(object):
         x, y : array_like
             Position (x, y)
         """
-        if (theta == None) and not (radius == None):
+        if (theta is None) and not (radius is None):
             theta = self.theta(radius, spiralarm_index=spiralarm_index)
-        elif (radius == None) and not (theta == None):
+        elif (radius is None) and not (theta is None):
             radius = self.radius(theta, spiralarm_index=spiralarm_index)
         else:
             ValueError('Specify only one of: theta, radius')

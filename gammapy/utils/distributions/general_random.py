@@ -39,7 +39,7 @@ class GeneralRandom(object):
         x = np.linspace(min_range, max_range, ran_res)
         # This is a good default for the number of reverse
         # lookups to not loose much information in the pdf
-        if ninversecdf == None:
+        if ninversecdf is None:
             ninversecdf = 5 * x.size
 
         self.nx = x.size

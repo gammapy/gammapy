@@ -72,16 +72,16 @@ def sex(image,
 
     TODO: return filenames or dict with results?
     """
-    if catalog_name == None:
+    if catalog_name is None:
         catalog_name = tempfile.mktemp('.fits')
 
-    if checkimage_name == None:
+    if checkimage_name is None:
         checkimage_name = tempfile.mktemp('.fits')
 
-    if config_name == None:
+    if config_name is None:
         config_name = get_pkg_data_filename('sex.cfg')
 
-    if parameters_name == None:
+    if parameters_name is None:
         parameters_name = get_pkg_data_filename('sex.param')
 
     logging.info('Running SExtractor')

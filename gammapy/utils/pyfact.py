@@ -111,7 +111,7 @@ class ChisquareFitter(object):
 
     def print_results(self):
         """Prints out results to the command line using the logging module."""
-        if self.results == None:
+        if self.results is None:
             logging.warning('No fit results to report since no fit has been performed yet')
             return
         if self.results[4] < 5:
@@ -1016,9 +1016,9 @@ def create_sky_map(input_file_name,
         # Intialize & GTI
 
         objra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
-        if firstloop :
+        if firstloop:
             # If skymap center is not set, set it to the object position of the first run
-            if skycenra == None or skycendec == None:
+            if skycenra is None or skycendec is None:
                 skycenra, skycendec = objra, objdec
                 logging.debug('Setting skymap center to skycenra, skycendec = {0}, {1}'.format(skycenra, skycendec))
             if 'TELESCOP' in ex1hdr:
@@ -1046,7 +1046,7 @@ def create_sky_map(input_file_name,
         #  Handle exclusion region
 
         # If no exclusion regions are given, use the object position from the first run
-        if sky_ex_reg == None :
+        if sky_ex_reg is None:
             sky_ex_reg = [SkyCircle(SkyCoord(objra, objdec), rexdeg)]
             logging.info('Setting exclusion region to object position (ra={0}, dec={1}, r={2}'.format(objra, objdec, rexdeg))
 
@@ -1139,7 +1139,7 @@ def create_sky_map(input_file_name,
         # Object position in the sky
         if firstloop:
             # skycenra, objdec, skymap_size = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ'], 6.
-            # if skycenra == None or objdec == None :
+            # if skycenra is None or objdec is None:
             #    skycenra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
 
             # Calculate skymap limits
@@ -1700,7 +1700,7 @@ def create_spectrum(input_file_names,
 
         if firstloop:
             # If skymap center is not set, set it to the target position of the first run
-            if objra == None or objdec == None :
+            if objra is None or objdec is None:
                 objra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
                 logging.info('Analysis position from header: RA {0}, Dec {1}'.format(objra, objdec))
 
@@ -1708,7 +1708,7 @@ def create_spectrum(input_file_names,
         obj_cam_dist = SkyCoord(objra, objdec).dist(SkyCoord(pntra, pntdec))
 
         # If no exclusion regions are given, use the object position from the first run
-        if sky_ex_reg == None:
+        if sky_ex_reg is None:
             sky_ex_reg = [SkyCircle(SkyCoord(objra, objdec), rexdeg)]
 
         exposure_run = ex1hdr['LIVETIME']
@@ -2185,7 +2185,7 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     #----------------------------------------------
     # Read EA
     h = irf_root_file.Get('EffectiveAreaEtrue')  # ARF should be in true energy
-    if h == None:
+    if h is None:
         logging.info('ROOT file does not contain EffectiveAreaEtrue (EA vs E_true)')
         logging.info('Will use EffectiveArea (EA vs E_reco) for ARF')
         h = irf_root_file.Get('EffectiveArea')

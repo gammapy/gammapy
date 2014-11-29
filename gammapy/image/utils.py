@@ -479,7 +479,7 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     --------
     numpy.histogramdd
     """
-    if weights == None:
+    if weights is None:
         weights = np.ones_like(lon)
 
     # Get pixel coordinates
@@ -794,7 +794,7 @@ def cube_to_image(cube, slicepos=None):
     del header['CTYPE3']
     del header['CRPIX3']
     del header['CUNIT3']
-    if slicepos == None:
+    if slicepos is None:
         data = cube.data.sum(0)
     else:
         data = cube.data[slicepos]

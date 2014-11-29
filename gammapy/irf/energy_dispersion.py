@@ -36,7 +36,7 @@ class EnergyDispersion(object):
                  pdf_threshold=DEFAULT_PDF_THRESHOLD):
         self._pdf_matrix = np.asarray(pdf_matrix)
         self._energy_true_bounds = np.asarray(energy_true_bounds)
-        if energy_reco_bounds == None:
+        if energy_reco_bounds is None:
             self._energy_reco_bounds = np.asarray(energy_true_bounds)
         else:
             self._energy_reco_bounds = np.asarray(energy_reco_bounds)
@@ -225,7 +225,7 @@ class EnergyDispersion(object):
             raise ValueError(ss)
 
     def _interpolate2d(self, x, y):
-        if self._interpolate2d_func == None:
+        if self._interpolate2d_func is None:
             # TODO: set up spline representation
             self._interpolate2d_func = 42
         else:

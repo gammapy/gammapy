@@ -180,7 +180,7 @@ class TablePSF(object):
         if not isinstance(pixel_size, Angle):
             raise ValueError("pixel_size must be an Angle object.")
 
-        if offset_max == None:
+        if offset_max is None:
             offset_max = self._offset.max()
 
         def _model(x, y):
@@ -540,7 +540,7 @@ class EnergyDependentTablePSF(object):
         psf : `TablePSF`
             Table PSF
         """
-        if spectrum == None:
+        if spectrum is None:
             def spectrum(energy):
                 return (energy / energy_band[0]) ** (-spectral_index)
 
@@ -716,7 +716,7 @@ class EnergyDependentTablePSF(object):
             Table PSF
         """
         # TODO: support array_like `energy_index` here?
-        if self._table_psf_cache[energy_index] == None:
+        if self._table_psf_cache[energy_index] is None:
             psf_value = self._get_1d_psf_values(energy_index)
             table_psf = TablePSF(self.offset, psf_value, **kwargs)
             self._table_psf_cache[energy_index] = table_psf

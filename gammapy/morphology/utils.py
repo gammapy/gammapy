@@ -132,9 +132,9 @@ def write_all(filename='results.json'):
                     parval = conf.parvals[i]
                     parmin = conf.parmins[i]
                     parmax = conf.parmaxes[i]
-                if parmin == None:
+                if parmin is None:
                     parmin = -float('inf')  # None from conf means infinity, so set accordingly
-                if parmax == None:
+                if parmax is None:
                     parmax = float('inf')
                 elif fullname in fit.parnames:  # Conf failed or par is uninteresting and wasn't sent to conf
                     i = fit.parnames.index(fullname)

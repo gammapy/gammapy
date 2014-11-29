@@ -173,7 +173,7 @@ class FluxProfile(object):
         TODO
         """
         import matplotlib.pyplot as plt
-        if ylabel == None:
+        if ylabel is None:
             ylabel = which
         p = self.profile
         x = p['x_center']

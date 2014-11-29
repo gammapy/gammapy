@@ -46,9 +46,9 @@ class Model(object):
         return CompositeModel(self, other, 'pow')
 
     def _elim(self, emin=None, emax=None):
-        if emin == None:
+        if emin is None:
             emin = self.emin
-        if emax == None:
+        if emax is None:
             emax = self.emax
         # @todo: Is this necessary?
         # emin = np.asarray(emin, dtype=float)
