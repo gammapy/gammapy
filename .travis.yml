@@ -86,8 +86,8 @@ install:
     # conda for packages available through conda, or pip for any other
     # packages. You should leave the `numpy=$NUMPY_VERSION` in the `conda`
     # install since this ensures Numpy does not get automatically upgraded.
-    # - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION ... ; fi
-    # - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL ...; fi
+    - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy scikit-image pandas; fi
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL uncertainties; fi
     # TODO: remove the following line once imageutils is moved to the Astropy core
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astropy/imageutils.git#egg=imageutils; fi
     - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi

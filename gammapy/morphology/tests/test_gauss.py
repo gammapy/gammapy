@@ -119,6 +119,7 @@ class TestMultiGauss2D(unittest.TestCase):
         assert_equal(m.norms, [5])
 
 
+@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_UNCERTAINTIES')
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
