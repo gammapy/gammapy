@@ -6,12 +6,22 @@ from astropy.tests.helper import pytest
 
 HAS_ROOT = False
 
-try:
-    import ROOT
-    from ... import root
-    HAS_ROOT = True
-except:
-    HAS_ROOT = False
+# TODO: re-enable this
+# I'm disabling ROOT because it makes the pytest collector crash like this:
+# _____________________________________________________ ERROR collecting gammapy/utils/tests/test_const.py _____________________________________________________
+#gammapy/utils/tests/test_const.py:4: in <module>
+#>   from ..const import conversion_factor as cf
+#/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/ROOT.py:354: in _importhook
+#>      return _orig_ihook( name, glbls, lcls, fromlist )
+#E      ImportError: No module named 'const'
+
+#
+#try:
+#    import ROOT
+#    from ... import root
+#    HAS_ROOT = True
+#except:
+#    HAS_ROOT = False
 
 
 @pytest.mark.skipif('not HAS_ROOT')
