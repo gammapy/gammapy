@@ -52,12 +52,14 @@ from astropy.io import fits
 from astropy.convolution import convolve, Gaussian2DKernel
 from gammapy.detect import compute_ts_map
 from gammapy.irf import multi_gauss_psf_kernel
-from gammapy.image import dict_to_hdulist, upsample_2N, downsample_2N
+from gammapy.image import dict_to_hdulist, upsample_2N, downsample_2N, shape_2N
+
 
 
 # Read data
 logging.info('Reading {0}'.format(args.data))
 maps = fits.open(args.data)
+shape = maps[0].data.shape
 
 if args.residual:
     logging.info('Reading {0}'.format(args.model))
@@ -77,15 +79,15 @@ if factor == 1:
 else:
     funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
     for map_, func in zip(maps, funcs):
-         map_.data = downsample_2N(map_.data, factor, func, shape=(512, 9472))
+         map_.data = downsample_2N(map_.data, factor, func, shape=shape_2N(shape))
     downsampled = True
 
 # Set up PSF and source kernel
-BINSZ = 0.02 * factor
+BINSZ = abs(maps[0].header['CDELT1'])
 psf_parameters = json.load(open(args.psf))
-kernel = multi_gauss_psf_kernel(psf_parameters, NEW_BINSZ=BINSZ, mode='oversample', x_size=21)
+kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ, NEW_BINSZ=BINSZ * factor, mode='oversample', x_size=21)
 if args.scale > 0:
-    sigma = args.scale / BINSZ
+    sigma = args.scale / (BINSZ * factor)
     source_kernel = Gaussian2DKernel(sigma, x_size=21)
     kernel = convolve(source_kernel, kernel)
     
@@ -112,7 +114,7 @@ for name, order in zip(['ts', 'amplitude', 'niter'], [3, 3, 0]):
         ts_results[name] = np.clip(ts_results[name], 0, np.inf)
 
     if downsampled:
-        results[name] = upsample_2N(ts_results[name], factor, order=order, shape=(500, 9400))
+        results[name] = upsample_2N(ts_results[name], factor, order=order, shape=shape)
     else:
         results[name] = ts_results[name]
     

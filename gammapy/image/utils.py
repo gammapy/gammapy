@@ -35,6 +35,7 @@ __all__ = ['atrous_hdu',
            'process_image_pixels',
            'ring_correlate',
            'separation',
+           'shape_2N',
            'solid_angle',
            'threshold',
            'upsample_2N',
@@ -188,7 +189,7 @@ def upsample_2N(image, factor, order=3, shape=None):
     """
     Up sample image by a power of two.
 
-    The image is up sampled using 'scipy.ndimage.zoom'. Only
+    The image is up sampled using `scipy.ndimage.zoom`. Only
     up sampling factors, that are a power of two are allowed. The image is
     cropped to a given size.
 
@@ -221,6 +222,22 @@ def upsample_2N(image, factor, order=3, shape=None):
         return zoom(image, factor, order=order)[y_crop:-y_crop, x_crop:-x_crop]
     else:
         return zoom(image, factor, order=order)
+
+
+def shape_2N(shape, N=3):
+    """
+    Round a given shape to values that are divisible by 2^N.
+
+    Parameters
+    ----------
+    shape : tuple
+        Input shape.
+    N : int (default = 3)
+        Exponent of two.
+    """
+    shape_x = shape[1] + (2 ** N - np.mod(shape[1], 2 ** N))
+    shape_y = shape[0] + (2 ** N - np.mod(shape[0], 2 ** N))
+    return (shape_y, shape_x)
 
 
 def exclusion_distance(exclusion):
