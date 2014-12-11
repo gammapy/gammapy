@@ -234,10 +234,15 @@ def shape_2N(shape, N=3):
         Input shape.
     N : int (default = 3)
         Exponent of two.
+
+    Returns
+    -------
+    new_shape : Tuple
+        New shape extended to integers divisible by 2^N
     """
-    shape_x = shape[1] + (2 ** N - np.mod(shape[1], 2 ** N))
-    shape_y = shape[0] + (2 ** N - np.mod(shape[0], 2 ** N))
-    return (shape_y, shape_x)
+    shape = np.array(shape)
+    new_shape = shape + (2 ** N - np.mod(shape, 2 ** N))
+    return tuple(new_shape)
 
 
 def exclusion_distance(exclusion):
@@ -388,7 +393,7 @@ def dict_to_hdulist(image_dict, header):
         HDU list of input dictionary.
     """
     hdu_list = fits.HDUList()
-    for name, image in image_dict.iteritems():
+    for name, image in image_dict.items():
         hdu_list.append(fits.ImageHDU(image, header, name.upper()))
     return hdu_list
 

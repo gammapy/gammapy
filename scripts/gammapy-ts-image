@@ -68,10 +68,13 @@ if args.residual:
     maps.append(fits.ImageHDU(data, header, 'OnModel'))
 logging.info('Computing (residual) TS map for scale {0} deg'.format(args.scale))
 
+BINSZ = abs(maps[0].header['CDELT1'])
+
 # Sample down if required
 downsampled = False
 if args.downsample == 'auto':
-    args.downsample = np.select([args.scale < 0.1, args.scale < 0.2, args.scale < 0.4], [1, 2, 4], 8)
+    args.downsample = np.select([args.scale < 5 * BINSZ, args.scale < 10 * BINSZ,
+                                 args.scale < 20 * BINSZ], [1, 2, 4], 8)
     logging.info('Using down sampling factor of {0}'.format(args.downsample))
 factor = int(args.downsample)
 if factor == 1:
@@ -83,9 +86,9 @@ else:
     downsampled = True
 
 # Set up PSF and source kernel
-BINSZ = abs(maps[0].header['CDELT1'])
 psf_parameters = json.load(open(args.psf))
-kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ, NEW_BINSZ=BINSZ * factor, mode='oversample', x_size=21)
+kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
+                                NEW_BINSZ=BINSZ * factor, mode='oversample', x_size=21)
 if args.scale > 0:
     sigma = args.scale / (BINSZ * factor)
     source_kernel = Gaussian2DKernel(sigma, x_size=21)

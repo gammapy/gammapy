@@ -1,12 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Functions to compute TS maps
+"""
+Functions to compute TS maps
 
 This is in the exploratory phase, we are trying to get a fast tool for a large map.
 Here we compare different ways to split the map into parts and different optimizers.
-
-Reference : Stewart (2009) "Maximum-likelihood detection of sources among Poissonian noise"
-            Appendix A: Cash amplitude fitting
-            http://adsabs.harvard.edu/abs/2009A%26A...495..989S
 """
 from __future__ import print_function, division
 import logging
@@ -41,11 +38,11 @@ class TSMapResult(Bunch):
     Attributes
     ----------
     ts : ndarray
-        Estimated TS map.
+        Estimated TS map
     amplitude : ndarray
-        Estimated best fit flux amplitude map.
+        Estimated best fit flux amplitude map
     niter : ndarray
-        Number of iterations per pixel.
+        Number of iterations map
     runtime : float
         Time needed to compute TS map.
     """
@@ -90,9 +87,9 @@ def f_cash(x, counts, background, model):
 
 def compute_ts_map(counts, background, exposure, kernel, flux=None,
                    method='root', optimizer='Brent', parallel=True,
-                   threshold=None, debug=False):
+                   threshold=None):
     """
-    Compute TS map using different methods.
+    Compute TS map using different fitting methods. 
 
     Parameters
     ----------
@@ -123,14 +120,15 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
-    debug : bool (False)
-        Run function in debug mode which returns and additional fitted flux and
-        number of iterations map (see section `Returns`).
 
     Returns
     -------
     TS : `TSMapResult`
         `TSMapResult` object.
+
+    References
+    ----------
+    [Stewart2009]_
     """
     from scipy.ndimage.morphology import binary_erosion
     from time import time
@@ -160,8 +158,7 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
     positions = [(i, j) for i, j in positions if mask[j][i] and flux[j][i] > 0]
     wrap = partial(_ts_value, counts=counts, exposure=exposure,
                    background=background, kernel=kernel, flux=flux,
-                   method=method, optimizer=optimizer, threshold=threshold,
-                   debug=debug)
+                   method=method, optimizer=optimizer, threshold=threshold)
 
     if parallel:
         logging.info('Using {0} cores to compute TS map.'.format(cpu_count()))
@@ -174,21 +171,17 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
 
     # Set TS values at given positions
     i, j = zip(*positions)
-    if debug:
-        amplitudes = np.zeros(TS.shape)
-        niter = np.zeros(TS.shape)
-        TS[j, i] = [_[0] for _ in results]
-        amplitudes[j, i] = [_[1] for _ in results]
-        niter[j, i] = [_[2] for _ in results]
-        return TSMapResult(ts=TS, amplitude=amplitudes * FLUX_FACTOR,
-                           niter=niter, runtime=time() - t_0)
-    else:
-        TS[j, i] = results
-        return TSMapResult(ts=TS)
+    amplitudes = np.zeros(TS.shape)
+    niter = np.zeros(TS.shape)
+    TS[j, i] = [_[0] for _ in results]
+    amplitudes[j, i] = [_[1] for _ in results]
+    niter[j, i] = [_[2] for _ in results]
+    return TSMapResult(ts=TS, amplitude=amplitudes * FLUX_FACTOR,
+                       niter=niter, runtime=np.round(time() - t_0, 2))
 
 
 def _ts_value(position, counts, exposure, background, kernel, flux,
-              method, optimizer, threshold, debug):
+              method, optimizer, threshold):
     """
     Compute TS value at a given pixel position i, j using the approach described
     in Stewart (2009).
@@ -233,10 +226,7 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
     # Don't fit if pixel is low significant
     TS = C_0 - C_1
     if threshold is not None and TS < threshold:
-        if debug:
-            return TS, flux_value, 0
-        else:
-            return TS
+        return TS, flux_value, 0
     else:
         if method == 'fit minuit':
             amplitude, niter = _fit_amplitude_minuit(counts_slice, background_slice,
@@ -249,19 +239,13 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
                                                model, flux_value)
         if niter > MAXNITER:
             logging.warn('Exceeded maximum number of function evaluations!')
-            if debug:
-                return np.nan, amplitude, niter
-            else:
-                return np.nan
+            return np.nan, amplitude, niter
 
         with np.errstate(invalid='ignore', divide='ignore'):
             C_1 = cash(counts_slice, background_slice + amplitude * FLUX_FACTOR * model).sum()
 
         # Compute and return TS value
-        if debug:
-            return C_0 - C_1, amplitude, niter
-        else:
-            return C_0 - C_1
+        return C_0 - C_1, amplitude, niter
 
 
 def _root_amplitude(counts, background, model, flux):
