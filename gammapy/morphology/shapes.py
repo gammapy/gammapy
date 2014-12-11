@@ -1,15 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Morphological models for astrophysical sources.
-
-This was written before I used sherpa and is independent.
-Might be useful to keep around anyways.
 """
+Morphological models for astrophysical gamma-ray sources.
+"""
+
 from __future__ import print_function, division
 import numpy as np
-from astropy.modeling import (Parameter,
-                              ModelDefinitionError,
-                              Fittable2DModel,
-                              )
+from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
 
 __all__ = ['morph_types', 'Shell2D', 'Sphere2D', 'Delta2D']
@@ -79,7 +75,8 @@ class Shell2D(Fittable2DModel):
     r_in = Parameter('r_in')
     width = Parameter('width')
 
-    def __init__(self, amplitude, x_0, y_0, r_in, width=None, r_out=None, normed=True, **constraints):
+    def __init__(self, amplitude, x_0, y_0, r_in, width=None, r_out=None,
+                 normed=True, **constraints):
         if r_out is not None:
             width = r_out - r_in
         if r_out is None and width is None:
@@ -88,7 +85,7 @@ class Shell2D(Fittable2DModel):
         if not normed:
             self.eval = self.eval_peak_norm
         super(Shell2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                     y_0=y_0, r_in=r_in, width=width, **constraints)
+                                      y_0=y_0, r_in=r_in, width=width, **constraints)
 
     @staticmethod
     def eval(x, y, amplitude, x_0, y_0, r_in, width):
@@ -102,8 +99,8 @@ class Shell2D(Fittable2DModel):
         # Note: for r > r_out 'np.select' fills automatically zeros!
         with np.errstate(invalid='ignore'):
             values = np.select([rr <= rr_in, rr <= rr_out],
-                           [np.sqrt(rr_out - rr) - np.sqrt(rr_in - rr),
-                            np.sqrt(rr_out - rr)])
+                               [np.sqrt(rr_out - rr) - np.sqrt(rr_in - rr),
+                                np.sqrt(rr_out - rr)])
         return amplitude * values / (2 * np.pi / 3 *
                                      (rr_out * (r_in + width) - rr_in * r_in))
 
@@ -119,8 +116,8 @@ class Shell2D(Fittable2DModel):
         # Note: for r > r_out 'np.select' fills automatically zeros!
         with np.errstate(invalid='ignore'):
             values = np.select([rr <= rr_in, rr <= rr_out],
-                           [np.sqrt(rr_out - rr) - np.sqrt(rr_in - rr),
-                            np.sqrt(rr_out - rr)])
+                               [np.sqrt(rr_out - rr) - np.sqrt(rr_in - rr),
+                                np.sqrt(rr_out - rr)])
         return amplitude * values / np.sqrt(rr_out - rr_in)
 
 
@@ -184,7 +181,7 @@ class Sphere2D(Fittable2DModel):
         if not normed:
             self.eval = self.eval_peak_norm
         super(Sphere2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                     y_0=y_0, r_0=r_0, **constraints)
+                                       y_0=y_0, r_0=r_0, **constraints)
 
     @staticmethod
     def eval(x, y, amplitude, x_0, y_0, r_0):
@@ -253,7 +250,7 @@ class Delta2D(Fittable2DModel):
 
     def __init__(self, amplitude, x_0, y_0, **constraints):
         super(Delta2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                     y_0=y_0, **constraints)
+                                      y_0=y_0, **constraints)
 
     @staticmethod
     def eval(x, y, amplitude, x_0, y_0):

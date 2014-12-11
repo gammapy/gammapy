@@ -324,7 +324,7 @@ class PositionDependentMultiGaussPSF(object):
         return psf
 
 
-def multi_gauss_psf_kernel(psf_parameters, **kwargs):
+def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs):
     """Create multi-Gauss PSF kernel.
 
     The Gaussian PSF components are specified via the
@@ -335,10 +335,14 @@ def multi_gauss_psf_kernel(psf_parameters, **kwargs):
     ----------
     psf_parameters : dict
         PSF parameters
+    BINSZ : float (0.02)
+        Pixel size used for the given parameters in deg.
+    NEW_BINSZ : float (0.02)
+        New pixel size in deg. USed to change the resolution of the PSF.
 
     Returns
     -------
-    psf_kernel : `astropy.convolution.Kernel`
+    psf_kernel : `astropy.convolution.Kernel2D`
         PSF kernel
 
     Examples
@@ -353,13 +357,11 @@ def multi_gauss_psf_kernel(psf_parameters, **kwargs):
     for ii in range(1, 4):
         # Convert sigma and amplitude
         pars = psf_parameters['psf{0}'.format(ii)]
-        sigma = fwhm_to_sigma * pars['fwhm']
+        sigma = fwhm_to_sigma * pars['fwhm'] * BINSZ / NEW_BINSZ
         ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
         if psf is None:
             psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)
         else:
             psf += float(ampl) * Gaussian2DKernel(sigma, **kwargs)
-
     psf.normalize()
-
     return psf

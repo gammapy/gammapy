@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""
+Compute source model residual images.
+
+The input `data` fits file must contain the following HDU extensions:
+
+* 'On' -- Counts image
+* 'Background' -- Background image
+* 'Diffuse' -- Diffuse model image
+* 'ExpGammaMap' -- Exposure image
+"""
+
+# Parse command line arguments
+
+from gammapy.utils.scripts import argparse, GammapyFormatter
+parser = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=GammapyFormatter)
+parser.add_argument('data', type=str,
+                    help='Input data FITS file name')
+parser.add_argument('--psf', type=str, default='psf.json', 
+                    help='JSON file containing PSF information. ')
+parser.add_argument('--kernel', type=str, default='Gaussian2DKernel', 
+                    help='Which kernel to use for TS calculation.')
+parser.add_argument('--scale', type=float, default=0,
+                    help='Scale of the kernel in deg.')
+parser.add_argument('--downsample', type=str, default='auto',
+                    help="Downsample factor of the data to obtain optimal performance. "
+                     "Must be power of 2. Can be 'auto' to choose the downsample "
+                     "factor automatically depending on the scale.")
+parser.add_argument('--residual', action='store_true',
+                    help="Whether to compute a residual TS image. If a residual TS image is computed "
+                    "an excess model has to be provided using the '--model' parameter.")
+parser.add_argument('--model', type=str,
+                    help='Input excess model FITS file name')
+parser.add_argument('--threshold', type=float, default=None,
+                    help="Minimal required initial (before fitting) TS value, that the fit is done at all.")
+parser.add_argument('--clobber', action='store_true',
+                    help='Clobber output files?')
+args = parser.parse_args()
+
+# Execute script
+import json
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+from time import time
+from collections import OrderedDict
+
+import numpy as np
+
+from astropy.io import fits
+from astropy.convolution import convolve, Gaussian2DKernel
+from gammapy.detect import compute_ts_map
+from gammapy.irf import multi_gauss_psf_kernel
+from gammapy.image import dict_to_hdulist, upsample_2N, downsample_2N
+
+
+# Read data
+logging.info('Reading {0}'.format(args.data))
+maps = fits.open(args.data)
+
+if args.residual:
+    logging.info('Reading {0}'.format(args.model))
+    data = fits.getdata(args.model)
+    header = fits.getheader(args.model)
+    maps.append(fits.ImageHDU(data, header, 'OnModel'))
+logging.info('Computing (residual) TS map for scale {0} deg'.format(args.scale))
+
+# Sample down if required
+downsampled = False
+if args.downsample == 'auto':
+    args.downsample = np.select([args.scale < 0.1, args.scale < 0.2, args.scale < 0.4], [1, 2, 4], 8)
+    logging.info('Using down sampling factor of {0}'.format(args.downsample))
+factor = int(args.downsample)
+if factor == 1:
+    logging.info('No down sampling used.')
+else:
+    funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
+    for map_, func in zip(maps, funcs):
+         map_.data = downsample_2N(map_.data, factor, func, shape=(512, 9472))
+    downsampled = True
+
+# Set up PSF and source kernel
+BINSZ = 0.02 * factor
+psf_parameters = json.load(open(args.psf))
+kernel = multi_gauss_psf_kernel(psf_parameters, NEW_BINSZ=BINSZ, mode='oversample', x_size=21)
+if args.scale > 0:
+    sigma = args.scale / BINSZ
+    source_kernel = Gaussian2DKernel(sigma, x_size=21)
+    kernel = convolve(source_kernel, kernel)
+    
+# Compute TS map
+if args.residual:
+    background = maps['Background'].data + maps['DIFFUSE'].data + maps['OnModel'].data 
+else:
+    background = maps['Background'].data + maps['Diffuse'].data 
+ts_results = compute_ts_map(maps['On'].data, background, maps['ExpGammaMap'].data,
+                        kernel, debug=True, threshold=args.threshold)
+logging.info('TS map computation took {0:.1f} s'.format(ts_results.runtime))
+
+# Write results to file
+if args.residual:
+    filename = 'residual_ts_map_{0:.2f}.fits'.format(args.scale)
+else:
+    filename = 'ts_map_{0:.2f}.fits'.format(args.scale)
+
+# Use an OrderedDict to have a well defined order of the FITS extensions
+results = OrderedDict()
+for name, order in zip(['ts', 'amplitude', 'niter'], [3, 3, 0]):
+    if name == 'ts':
+        # We don't allow negative TS values and clip
+        ts_results[name] = np.clip(ts_results[name], 0, np.inf)
+
+    if downsampled:
+        results[name] = upsample_2N(ts_results[name], factor, order=order, shape=(500, 9400))
+    else:
+        results[name] = ts_results[name]
+    
+logging.info('Writing {0}'.format(filename))
+dict_to_hdulist(results, maps['ExpGammaMap'].header).writeto(filename, clobber=args.clobber)
