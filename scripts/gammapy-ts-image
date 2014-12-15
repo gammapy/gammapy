@@ -100,7 +100,7 @@ if args.residual:
 else:
     background = maps['Background'].data + maps['Diffuse'].data 
 ts_results = compute_ts_map(maps['On'].data, background, maps['ExpGammaMap'].data,
-                        kernel, debug=True, threshold=args.threshold)
+                        kernel, threshold=args.threshold)
 logging.info('TS map computation took {0:.1f} s'.format(ts_results.runtime))
 
 # Write results to file
