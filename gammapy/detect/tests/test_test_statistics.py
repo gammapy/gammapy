@@ -29,7 +29,7 @@ def test_compute_ts_map():
         data[_] = downsample_2N(data[_], 2, func)
 
     result = compute_ts_map(data['counts'], data['background'], data['exposure'],
-                            kernel, debug=True)
+                            kernel)
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = upsample_2N(result[name], 2, order=order)
     assert_allclose([[99], [99]], np.where(result.ts == result.ts.max()))
