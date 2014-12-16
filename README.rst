@@ -24,6 +24,10 @@ Status shields
     :target: https://landscape.io/github/gammapy/gammapy/master
     :alt: Code Health
 
+* .. image:: http://img.shields.io/badge/benchmarks-asv-green.svg?style=flat
+    :target: http://gammapy.github.io/gammapy-benchmarks/
+    :alt: Benchmarks
+
 * .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
 	:target: https://readthedocs.org/projects/gammapy/?badge=latest
 	:alt: Documentation Status
