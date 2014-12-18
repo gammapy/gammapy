@@ -14,7 +14,7 @@ Introduction
 `gammapy.spectrum` holds functions and classes to fit spectral models and compute flux points.
 
 Physical radiative models (synchrotron, inverse Compton and pion-decay emission)
-for arbitrary cosmic ray particle spectra are available in the `gammafit`_ package.
+for arbitrary cosmic ray particle spectra are available in the `naima`_ package.
 
 Explain spectrum estimation basics.
 

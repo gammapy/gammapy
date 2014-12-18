@@ -8,7 +8,7 @@
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
-.. _gammafit: http://gammafit.readthedocs.org
+.. _naima: http://naima.readthedocs.org
 .. _ROOT: http://root.cern.ch/
 .. _rootpy: http://rootpy.org
 .. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/

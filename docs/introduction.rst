@@ -68,12 +68,12 @@ Make sure to also check out the following packages that contain very useful func
 
 * `Sherpa`_ --- X-ray modeling and fitting package
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
-* `gammafit`_ --- an SED modeling and fitting package by Victor Zabalza
+* `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools/
-.. _gammafit: https://github.com/zblz/gammafit
+.. _naima: https://github.com/zblz/naima
 
 Some other projects:
 
