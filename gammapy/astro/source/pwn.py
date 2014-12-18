@@ -148,7 +148,7 @@ class PWN(object):
         return fraction * self.pulsar.energy_integrated(t)
 
 
-# TODO: The following PWN model should be adapted to use gammafit classes.
+# TODO: The following PWN model should be adapted to use naima classes.
 class PWNElectronSpectrum(PWN):
     def __init__(self,  q_type='constant', r_type='constant', B_type='constant',
                  *args, **kwargs):
