@@ -29,12 +29,12 @@ Status shields
     :alt: Benchmarks
 
 * .. image:: https://readthedocs.org/projects/gammapy/badge/?version=latest
-	:target: https://readthedocs.org/projects/gammapy/?badge=latest
-	:alt: Documentation Status
+    :target: https://readthedocs.org/projects/gammapy/?badge=latest
+    :alt: Documentation Status
 
 * .. image:: http://img.shields.io/pypi/l/gammapy.svg
     :target: https://pypi.python.org/pypi/gammapy/
-	:alt: License
+    :alt: License
 
 * .. image:: https://pypip.in/status/gammapy/badge.svg
     :target: https://pypi.python.org/pypi/gammapy/
@@ -42,11 +42,11 @@ Status shields
 
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
     :target: https://pypi.python.org/pypi/gammapy/
-	:alt: Latest release
+    :alt: Latest release
 
 * .. image:: http://img.shields.io/pypi/dm/gammapy.svg
     :target: https://pypi.python.org/pypi/gammapy/
-	:alt: Downloads per month
+    :alt: Downloads per month
 
 * .. image:: https://pypip.in/py_versions/gammapy/badge.svg
     :target: https://pypi.python.org/pypi/gammapy/
