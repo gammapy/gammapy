@@ -59,10 +59,10 @@ def add_tan_pix_coordinates(in_file_name, out_file_name):
     alt = data['altevent']
     alts = data['altsystem']
     azs = data['azsystem']
-    infile = file(in_file_name)
+    infile = open(in_file_name)
 
     logging.info('Writing file: {0}'.format(out_file_name))
-    outfile = file(out_file_name, 'w')
+    outfile = open(out_file_name, 'w')
     names = infile.readline().split()
     names.append(',Nomx,Nomy\n')
     line = ' '.join(names)
@@ -93,10 +93,10 @@ def add_tan_world_coordinates(csv_file, outfile):
     camY = data['camerayevent']
     alts = data['altsystem']
     azs = data['azsystem']
-    infile = file(csv_file)
+    infile = open(csv_file)
 
     logging.info('Writing file: {0}'.format(outfile))
-    outfile = file(outfile, 'w')
+    outfile = open(outfile, 'w')
     names = infile.readline().split()
     names.append(',GnomAz,GnomAlt\n')
     line = ' '.join(names)

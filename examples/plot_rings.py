@@ -46,7 +46,7 @@ for i_theta, theta in enumerate(thetas):
 
         index = i_theta * len(r_is) + i_r_i
         ax = grid[index]
-        print index, theta, r_i, r_o, true_areafactor
+        print(index, theta, r_i, r_o, true_areafactor)
         ax.imshow(-mask,
                   interpolation='nearest',
                   cmap='gray',

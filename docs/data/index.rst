@@ -19,7 +19,7 @@ i.e. the longitude, latitude, energy and time for each event.
 A `~gammapy.data.SpectralCube` contains binned dat as a 3-dimensional array
 with longitude, latitude and spectral axes.
 The event time information has been removed ... it is represented by
-a `~gammapy.data.GTI` (GTI = Good Time Interval) class that is needed
+a `~gammapy.data.GoodTimeInterval` (a.k.a. ``GTI``) class that is needed
 for exposure and flux computations.
 
 Getting Started

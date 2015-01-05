@@ -17,7 +17,7 @@ outfile = 'fermi_psf_image.fits'
 
 # Compute PSF image
 fermi_psf = EnergyDependentTablePSF.read(filename)
-#psf = fermi_psf.table_psf_at_energy(energy=energy)
+# psf = fermi_psf.table_psf_at_energy(energy=energy)
 psf = fermi_psf.table_psf_in_energy_band(energy_band=energy_band, spectral_index=2.5)
 psf.normalize()
 kernel = psf.kernel(pixel_size=pixel_size, offset_max=offset_max)
@@ -27,10 +27,7 @@ kernel_image_integral = kernel_image.sum() * pixel_size.to('radian').value ** 2
 print('Kernel image integral: {0}'.format(kernel_image_integral))
 print('shape: {0}'.format(kernel_image.shape))
 
-#import IPython; IPython.embed()
-# Print some info and save to FITS file
-#print(fermi_psf.info())
-
 print(psf.info())
+
 print('Writing {0}'.format(outfile))
 fits.writeto(outfile, data=kernel_image, clobber=True)
