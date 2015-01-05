@@ -5,8 +5,8 @@ import numpy as np
 from astropy.units import Quantity
 import matplotlib.pyplot as plt
 from gammapy.datasets import electron_spectrum, diffuse_gamma_spectrum
-from gammapy.spectrum.cosmic_ray import cosmic_ray_flux
-from gammapy.spectrum.diffuse import diffuse_gamma_ray_flux
+from gammapy.spectrum import cosmic_ray_flux
+# from gammapy.spectrum import diffuse_gamma_ray_flux
 
 GAMMA = 2.55
 UNIT = 'm^-2 s^-1 sr^-1 TeV^-1'
@@ -40,7 +40,7 @@ x = energy
 y = (energy ** GAMMA) * flux.to(UNIT)
 #plt.plot(x.value, y.value, lw=3, label='Electron spectrum model')
 
-# Diffuse gamma-ray model spectra
+# TODO: Add diffuse gamma-ray model spectra
 
 
 # Make the plot nice

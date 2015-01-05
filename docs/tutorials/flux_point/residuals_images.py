@@ -1,12 +1,9 @@
 """Create residuals image based on the two flux point methods
 """
 import numpy as np
-from astropy.table import Table
-from gammapy.spectrum.flux_point import (compute_differential_flux_points,
-                                         _energy_lafferty_power_law,
-                                         _x_lafferty, _integrate)
-from gammapy.spectrum.powerlaw import power_law_eval, power_law_integral_flux
 import matplotlib.pyplot as plt
+from gammapy.spectrum.flux_point import compute_differential_flux_points
+from gammapy.spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 
 def compute_flux_error(gamma_true, gamma_reco, method):
@@ -20,15 +17,15 @@ def compute_flux_error(gamma_true, gamma_reco, method):
                                        energy_ref, energy_min, energy_max)
     # Compute flux point
     table = compute_differential_flux_points(method, 'power_law',
-                                     spectral_index=gamma_reco,
-                                     energy_min=energy_min, energy_max=energy_max,
-                                     int_flux=int_flux)
+                                             spectral_index=gamma_reco,
+                                             energy_min=energy_min, energy_max=energy_max,
+                                             int_flux=int_flux)
     # Compute relative error of the flux point
     energy = table['ENERGY'].data
     flux_reco = table['DIFF_FLUX'].data
-    flux_true = power_law_eval(energy, diff_flux_ref * np.ones_like(energy),
-                               np.array(gamma_true).reshape(energy.shape),
-                               energy_ref * np.ones_like(energy))
+    flux_true = power_law_evaluate(energy, diff_flux_ref * np.ones_like(energy),
+                                   np.array(gamma_true).reshape(energy.shape),
+                                   energy_ref * np.ones_like(energy))
     flux_true = flux_true.reshape(gamma_true.shape)
     flux_reco = flux_reco.reshape(gamma_true.shape)
     flux_error = (flux_reco - flux_true) / flux_true

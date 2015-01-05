@@ -14,7 +14,7 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_eval():
+def test_evaluate():
     e, e1, e2 = 2, 1, 1e3
 
     # This is just a test that the functions run

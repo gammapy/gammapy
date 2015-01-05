@@ -146,7 +146,7 @@ class TablePSF(object):
         center = SkyCoord(0, 0, unit='radian')
         point = SkyCoord(lon, lat)
         offset = center.separation(point)
-        return self.eval(offset)
+        return self.evaluate(offset)
 
     def kernel(self, pixel_size, offset_max=None, normalize=True,
                discretize_model_kwargs=dict(factor=10)):
@@ -186,7 +186,7 @@ class TablePSF(object):
         def _model(x, y):
             """Model in the appropriate format for discretize_model."""
             offset = np.sqrt(x * x + y * y) * pixel_size
-            return self.eval(offset)
+            return self.evaluate(offset)
 
         npix = int(offset_max.radian / pixel_size.radian)
         pix_range = (-npix, npix + 1)
@@ -198,7 +198,7 @@ class TablePSF(object):
         #
         #class TempModel(Fittable2DModel):
         #    @staticmethod
-        #    def eval(x, y):
+        #    def evaluate(x, y):
         #        return 42 temp_model_function(x, y)
         #
         #temp_model = TempModel()
@@ -212,7 +212,7 @@ class TablePSF(object):
         else:
             return array
 
-    def eval(self, offset, quantity='dp_domega'):
+    def evaluate(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
 
         The following PSF quantities are available:
@@ -355,7 +355,7 @@ class TablePSF(object):
         import matplotlib.pyplot as plt
 
         x = self._offset.to('degree')
-        y = self.eval(self._offset, quantity)
+        y = self.evaluate(self._offset, quantity)
 
         plt.plot(x.value, y.value, lw=2)
         plt.semilogy()

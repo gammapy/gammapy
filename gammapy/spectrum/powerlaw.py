@@ -6,7 +6,7 @@ Convert differential and integral fluxes with error propagation.
 from __future__ import print_function, division
 import numpy as np
 
-__all__ = ['power_law_eval', 'power_law_pivot_energy', 'df_over_f',
+__all__ = ['power_law_evaluate', 'power_law_pivot_energy', 'df_over_f',
            'power_law_flux', 'power_law_integral_flux',
            'g_from_f', 'g_from_points', 'I_from_points',
            'f_from_points', 'f_with_err', 'I_with_err', 'compatibility']
@@ -15,7 +15,7 @@ E_INF = 1e10  # practically infinitely high flux
 g_DEFAULT = 2
 
 
-def power_law_eval(energy, norm, gamma, energy_ref):
+def power_law_evaluate(energy, norm, gamma, energy_ref):
     r"""Differential flux at a given energy.
 
     .. math:: f(energy) = N (E / E_0) ^ - \Gamma

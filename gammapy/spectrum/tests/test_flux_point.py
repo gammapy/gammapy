@@ -8,7 +8,7 @@ from astropy.table import Table
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law)
-from ...spectrum.powerlaw import power_law_eval, power_law_integral_flux
+from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 try:
     import scipy
@@ -158,7 +158,7 @@ def test_compute_differential_flux_points(x_method, y_method):
             # log center result
             desired_energy = np.sqrt(energy_min * energy_max)
             assert_allclose(energy, desired_energy, rtol=1e-6)
-        desired = power_law_eval(energy, 1, spectral_index, energy)
+        desired = power_law_evaluate(energy, 1, spectral_index, energy)
         int_flux = power_law_integral_flux(desired, spectral_index, energy,
                                            energy_min, energy_max)
     elif y_method == 'model':

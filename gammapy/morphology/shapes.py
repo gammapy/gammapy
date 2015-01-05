@@ -83,12 +83,12 @@ class Shell2D(Fittable2DModel):
             raise ModelDefinitionError("Either specify width or r_out.")
 
         if not normed:
-            self.eval = self.eval_peak_norm
+            self.evaluate = self.evaluate_peak_norm
         super(Shell2D, self).__init__(amplitude=amplitude, x_0=x_0,
                                       y_0=y_0, r_in=r_in, width=width, **constraints)
 
     @staticmethod
-    def eval(x, y, amplitude, x_0, y_0, r_in, width):
+    def evaluate(x, y, amplitude, x_0, y_0, r_in, width):
         """Two dimensional Shell model function normed to integral"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
         rr_in = r_in ** 2
@@ -105,7 +105,7 @@ class Shell2D(Fittable2DModel):
                                      (rr_out * (r_in + width) - rr_in * r_in))
 
     @staticmethod
-    def eval_peak_norm(x, y, amplitude, x_0, y_0, r_in, width):
+    def evaluate_peak_norm(x, y, amplitude, x_0, y_0, r_in, width):
         """Two dimensional Shell model function normed to peak value"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
         rr_in = r_in ** 2
@@ -179,12 +179,12 @@ class Sphere2D(Fittable2DModel):
 
     def __init__(self, amplitude, x_0, y_0, r_0, normed=True, **constraints):
         if not normed:
-            self.eval = self.eval_peak_norm
+            self.evaluate = self.evaluate_peak_norm
         super(Sphere2D, self).__init__(amplitude=amplitude, x_0=x_0,
                                        y_0=y_0, r_0=r_0, **constraints)
 
     @staticmethod
-    def eval(x, y, amplitude, x_0, y_0, r_0):
+    def evaluate(x, y, amplitude, x_0, y_0, r_0):
         """Two dimensional Sphere model function normed to integral"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
         rr_0 = r_0 ** 2
@@ -196,7 +196,7 @@ class Sphere2D(Fittable2DModel):
         return amplitude * values / (4 / 3. * np.pi * rr_0 * r_0)
 
     @staticmethod
-    def eval_peak_norm(x, y, amplitude, x_0, y_0, r_0):
+    def evaluate_peak_norm(x, y, amplitude, x_0, y_0, r_0):
         """Two dimensional Sphere model function normed to peak value"""
         rr = (x - x_0) ** 2 + (y - y_0) ** 2
         rr_0 = r_0 ** 2
@@ -253,7 +253,7 @@ class Delta2D(Fittable2DModel):
                                       y_0=y_0, **constraints)
 
     @staticmethod
-    def eval(x, y, amplitude, x_0, y_0):
+    def evaluate(x, y, amplitude, x_0, y_0):
         """Two dimensional delta model function"""
         dx = x - x_0
         dy = y - y_0
