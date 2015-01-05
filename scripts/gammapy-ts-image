@@ -26,8 +26,8 @@ parser.add_argument('--scale', type=float, default=0,
                     help='Scale of the kernel in deg.')
 parser.add_argument('--downsample', type=str, default='auto',
                     help="Downsample factor of the data to obtain optimal performance. "
-                     "Must be power of 2. Can be 'auto' to choose the downsample "
-                     "factor automatically depending on the scale.")
+                         "Must be power of 2. Can be 'auto' to choose the downsample "
+                         "factor automatically depending on the scale.")
 parser.add_argument('--residual', action='store_true',
                     help="Whether to compute a residual TS image. If a residual TS image is computed "
                     "an excess model has to be provided using the '--model' parameter.")
@@ -43,7 +43,6 @@ args = parser.parse_args()
 import json
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-from time import time
 from collections import OrderedDict
 
 import numpy as np
@@ -53,7 +52,6 @@ from astropy.convolution import convolve, Gaussian2DKernel
 from gammapy.detect import compute_ts_map
 from gammapy.irf import multi_gauss_psf_kernel
 from gammapy.image import dict_to_hdulist, upsample_2N, downsample_2N, shape_2N
-
 
 
 # Read data

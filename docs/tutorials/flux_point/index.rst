@@ -46,7 +46,7 @@ The plot demonstrates that in these cases where the true spectrum is not known, 
 points offers a closer representation than the log center method. Residuals showing the percentage difference of each data point from the true
 spectrum are also shown.
 
-.. plot:: tutorials/flux_point/flux_point_demo.py plot_plaw
+.. plot:: tutorials/flux_point/flux_point_demo.py plot_power_law
    :include-source:
 
 Method Evaluation

@@ -20,14 +20,14 @@ from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=GammapyFormatter)
 parser.add_argument('--exposure', type=str, default='exposure.fits',
-                  help='Exposure FITS file name')
+                    help='Exposure FITS file name')
 parser.add_argument('--psf', type=str, default='psf.json',
-                  help='PSF JSON file name')
+                    help='PSF JSON file name')
 parser.add_argument('--sources', type=str, default='sources.json',
-                  help='Sources JSON file name (contains start '
-                  'values for fit of Gaussians)')
+                    help='Sources JSON file name (contains start '
+                    'values for fit of Gaussians)')
 parser.add_argument('--model_image', type=str, default='model.fits',
-                  help='Output model image FITS file name')
+                    help='Output model image FITS file name')
 args = parser.parse_args()
 args = vars(args)
 

@@ -18,7 +18,7 @@ for energy in energies:
     print('1')
     psf.normalize()
     print('2')
-    print('3', psf.eval(Angle(0.1, 'deg')))
+    print('3', psf.evaluate(Angle(0.1, 'deg')))
     kernel = psf.kernel(pixel_size=Angle(0.1, 'deg'))
     print('4')
     

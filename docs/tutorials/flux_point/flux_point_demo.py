@@ -1,11 +1,11 @@
 """Spectral plotting with gammapy.spectrum.flux_point
 """
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.table import Table
 from gammapy.spectrum.flux_point import (compute_differential_flux_points,
                                          _x_lafferty, _integrate)
 from gammapy.spectrum.powerlaw import power_law_integral_flux
-import matplotlib.pyplot as plt
 
 SPECTRAL_INDEX = 4
 
@@ -34,7 +34,7 @@ def get_flux_tables(table, y_method, function, spectral_index):
                                                      function, spectral_index)
     table2 = table1.copy()
     log_flux = compute_differential_flux_points('log_center', y_method, table2,
-                                                     function, spectral_index)
+                                                function, spectral_index)
     return lafferty_flux, log_flux
 
 

@@ -7,7 +7,6 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 import os
 
-import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 
@@ -46,8 +45,8 @@ def retrieve_arf_info(hdu_list, energies, plot=False):
     plot : bool
         Make an effective area vs. energy plot.
     """
-    from gammapy.irf import EnergyDependentTableARF
-    arf = EnergyDependentTableARF.from_fits(hdu_list)
+    from gammapy.irf import EffectiveAreaTable
+    arf = EffectiveAreaTable.from_fits(hdu_list)
     energies = Quantity(energies, 'TeV')
     print(arf.info(energies=energies))
     

@@ -28,7 +28,7 @@ args = vars(args)
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 from gammapy.utils.fits import get_hdu
-from gammapy.image.utils import lookup
+from gammapy.image import lookup
 
 logging.debug('Reading {0}'.format(args['infile']))
 hdu = get_hdu(args['infile'])

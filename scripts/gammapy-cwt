@@ -40,7 +40,7 @@ import sys
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
-if  os.path.isfile(args.outfile) and not args.clobber:
+if os.path.isfile(args.outfile) and not args.clobber:
     logging.error("Output file exists and clobber is False")
     sys.exit()
 

@@ -29,5 +29,5 @@ from gammapy.image.utils import bin_events_in_cube
 events = Table.read(args['event_file'])
 reference_cube = fits.open(args['reference_file'])
 energies = Table.read(args['cube_file'], 'ENERGIES')
-out_cube = bin_events_in_cube(events, reference_cube)
+out_cube = bin_events_in_cube(events, reference_cube, energies)
 out_cube.writeto(args['out_file'])
