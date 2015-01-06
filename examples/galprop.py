@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions for working with GALPROP results.
 
 prepare(), reproject_to() and make_mask_and_area() should

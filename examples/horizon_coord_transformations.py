@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Coordinate transformation methods using PyEphem
 
 http://rhodesmill.org/pyephem/
@@ -182,7 +181,7 @@ def compute_position_angles(runs, observer=None, time_method='center'):
 
 def test_HESS():
     observer = HESS()
-    print observer
+    print(observer)
 
 
 def test_transform():
@@ -196,25 +195,25 @@ def test_transform():
     observer = HESS()
     # Example coordinate:
     galactic0 = 0., 0.
-    print 'galactic0:', galactic0
+    print('galactic0:', galactic0)
 
     print('\ngalactic <-> equatorial:')
     equatorial1 = transform(galactic0, 'galactic', 'equatorial')
-    print 'equatorial1:', equatorial1
+    print('equatorial1:', equatorial1)
     galactic1 = transform(equatorial1, 'equatorial', 'galactic')
-    print 'galactic1:', galactic1
+    print('galactic1:', galactic1)
 
     print('\ngalactic <-> horizon:')
     horizon1 = transform(galactic0, 'galactic', 'horizon', observer)
-    print 'horizon1:', horizon1
+    print('horizon1:', horizon1)
     galactic2 = transform(horizon1, 'horizon', 'galactic', observer)
-    print 'galactic2:', galactic2
+    print('galactic2:', galactic2)
 
     print('\nequatorial <-> horizon')
     horizon2 = transform(equatorial1, 'equatorial', 'horizon', observer)
-    print 'horizon2:', horizon2
+    print('horizon2:', horizon2)
     equatorial2 = transform(horizon2, 'horizon', 'equatorial', observer)
-    print 'equatorial2:', equatorial2
+    print('equatorial2:', equatorial2)
 
 
 def get_test_runlist():
@@ -234,7 +233,7 @@ def test_compute_position_angles():
     time_method = 'center'
     runs = get_test_runlist()
     position_angles = compute_position_angles(runs, observer, time_method)
-    print position_angles
+    print(position_angles)
 
 
 def approximate_nominal_to_altaz(nominal, horizon_center=(0, 0)):

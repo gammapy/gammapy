@@ -1,22 +1,21 @@
 """Plot of x position depending on spectral index estimation
 """
 import numpy as np
-from astropy.table import Table
-from gammapy.spectrum.flux_point import (compute_differential_flux_points,
-                                         _energy_lafferty_power_law,
-                                         _x_lafferty, _integrate)
-from gammapy.spectrum.powerlaw import power_law_eval, power_law_integral_flux
 import matplotlib.pyplot as plt
+from astropy.table import Table
+from gammapy.spectrum.flux_point import _energy_lafferty_power_law
+from gammapy.spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 from flux_point_demo import get_flux_tables
 
 SPECTRAL_INDEX = 4
+
 
 def make_x_plot():
     energy_min = np.array([300])
     energy_max = np.array([1000])
     energies = np.array(_energy_lafferty_power_law(energy_min, energy_max,
                                                    SPECTRAL_INDEX))
-    diff_flux =  power_law_eval(energies, 1, SPECTRAL_INDEX, 1)
+    diff_flux = power_law_evaluate(energies, 1, SPECTRAL_INDEX, 1)
     # `True' differential & integral fluxes
     int_flux = power_law_integral_flux(diff_flux, SPECTRAL_INDEX,
                                        energies, energy_min, energy_max)

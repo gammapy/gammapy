@@ -36,12 +36,12 @@ def test_TablePSF_disk():
     offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
     psf = TablePSF.from_shape(shape='disk', width=width, offset=offset)
 
-    # Check psf.eval by checking if probabilities sum to 1
-    psf_value = psf.eval(offset, quantity='dp_dtheta')
+    # Check psf.evaluate by checking if probabilities sum to 1
+    psf_value = psf.evaluate(offset, quantity='dp_dtheta')
     integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
     assert_allclose(integral, 1, rtol=1e-3)
 
-    psf_value = psf.eval(offset, quantity='dp_domega')
+    psf_value = psf.evaluate(offset, quantity='dp_domega')
     psf_value = (2 * np.pi * offset * psf_value).to('radian^-1')
     integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
     assert_allclose(integral, 1, rtol=1e-3)
@@ -68,11 +68,11 @@ def test_TablePSF():
     # Test inputs
     offset = Angle([0.1, 0.3], 'deg')
 
-    actual = psf.eval(offset=offset, quantity='dp_domega')
+    actual = psf.evaluate(offset=offset, quantity='dp_domega')
     desired = Quantity([5491.52067694, 3521.07804604], 'sr^-1')
     assert_quantity(actual, desired)
 
-    actual = psf.eval(offset=offset, quantity='dp_dtheta')
+    actual = psf.evaluate(offset=offset, quantity='dp_dtheta')
     desired = Quantity([60.22039017, 115.83738017], 'rad^-1')
     assert_quantity(actual, desired, rtol=1e-6)
 
@@ -99,11 +99,11 @@ def test_EnergyDependentTablePSF():
     
     pixel_size = Angle(0.1, 'deg')
 
-    #actual = psf.eval(energy=energy, offset=offset)
+    #actual = psf.evaluate(energy=energy, offset=offset)
     #desired = Quantity(17760.814249206363, 'sr^-1')
     #assert_quantity(actual, desired)
 
-    #actual = psf.eval(energy=energies, offset=offsets)
+    #actual = psf.evaluate(energy=energies, offset=offsets)
     #desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
     #assert_quantity(actual, desired)
 

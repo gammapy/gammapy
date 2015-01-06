@@ -22,7 +22,7 @@ parser.add_argument('--sources', type=str, default='sources.json',
                     'values for fit of Gaussians)')
 parser.add_argument('--roi', type=str, default='roi.reg',
                     help='Region of interest (ROI) file name (ds9 reg format)')
-parser.add_argument('fit_result', type=str, default=None,
+parser.add_argument('outfile', type=str, default='fit_results.json',
                     help='Output JSON file with fit results')
 args = parser.parse_args()
 args = vars(args)
@@ -87,6 +87,6 @@ sherpa.astro.ui.fit()  # Does the fit
 sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
 # conf() # Computes asymmetric errors (slow)
 # image_fit() # Shows data, model, residuals in ds9
-logging.info('Writing %s' % outfile)
-write_all(outfile)
+logging.info('Writing {}'.format(args['outfile']))
+write_all(args['outfile'])
 

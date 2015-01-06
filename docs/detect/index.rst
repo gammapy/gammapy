@@ -42,23 +42,29 @@ Pythons's `multiprocessing` facility is used.
 In the following the computation of a TS map for prepared Fermi survey data, which is provided in 
 `gammapy-extra <https://github.com/gammapy/gammapy-extra/tree/master/datasets/fermi_survey>`_, shall be demonstrated:
 
->>> from astropy.io import fits
->>> from gammapy.detect import compute_ts_map
->>> maps = fits.open('all.fits.gz') 
->>> kernel = Gaussian2DKernel(5)
->>> result = compute_ts_map(maps['On'].data, maps['Background'].data, maps['ExpGammaMap'].data, kernel, threshold=0)
+.. code-block:: python
+
+	from astropy.io import fits
+	from astropy.convolution import Gaussian2DKernel
+	from gammapy.detect import compute_ts_map
+	hdu_list = fits.open('all.fits.gz')
+	kernel = Gaussian2DKernel(5)
+	result = compute_ts_map(hdu_list['On'].data, hdu_list['Background'].data,
+							hdu_list['ExpGammaMap'].data, kernel, threshold=0)
 
 The option ``threshold=0`` sets a minimal required TS value based on the initial flux estimate, that the pixel is
 processed at all. The function returns a `~gammapy.detect.TSMapResult` object, that bundles all relevant
 data. E.g. the time needed for the TS map computation can be checked by:
 
->>> print(result.runtime)
+.. code-block:: python
+
+	print(result.runtime)
 
 The TS map itself can bes accessed using the ``ts`` attribute of the `~gammapy.detect.TSMapResult` object:
 
->>> print(result.ts.max())
+.. code-block:: python
 
-
+	print(result.ts.max())
 
 Command line tool
 -----------------
@@ -66,7 +72,7 @@ Command line tool
 Gammapy also provides a command line tool ``gammapy-ts-image`` for TS map computation, which can be run
 on the Fermi example dataset by:
 
-.. code:: bash
+.. code-block:: bash
 
 	$ cd gammapy-extra/datasets/fermi_survey
 	$ gammapy-ts-image all.fits.gz --threshold 0 --scale 0 
@@ -80,12 +86,11 @@ sampled up again to speed up the performance. See `~gammapy.image.downsample_2N`
 
 Furthermore it is possible to compute residual TS maps. Using the following options:
  
-.. code:: bash
+.. code-block:: bash
 
 	$ gammapy-ts-image all.fits.gz --threshold 0 --scale 0 --residual --model model.fits.gz 
 
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
-
 
 Reference/API
 =============

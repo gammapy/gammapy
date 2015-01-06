@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Perform a binned Poisson maximum likelihood fit.
-"""
+"""Perform a binned Poisson maximum likelihood fit."""
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.modeling.models import Gaussian1D

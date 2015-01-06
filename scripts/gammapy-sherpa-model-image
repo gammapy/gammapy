@@ -20,14 +20,14 @@ from gammapy.utils.scripts import argparse, GammapyFormatter
 parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=GammapyFormatter)
 parser.add_argument('--exposure', type=str, default='exposure.fits',
-                  help='Exposure FITS file name')
+                    help='Exposure FITS file name')
 parser.add_argument('--psf', type=str, default='psf.json',
-                  help='PSF JSON file name ')
+                    help='PSF JSON file name ')
 parser.add_argument('--sources', type=str, default='sources.json',
-                  help='Sources JSON file name (contains start '
-                  'values for fit of Gaussians)')
+                    help='Sources JSON file name (contains start '
+                    'values for fit of Gaussians)')
 parser.add_argument('--model_image', type=str, default='model.fits',
-                  help='Output model image FITS file name')
+                    help='Output model image FITS file name')
 args = parser.parse_args()
 args = vars(args)
 
@@ -39,21 +39,21 @@ import sherpa.astro.ui as sau #@UnresolvedImport
 #import morphology.utils
 import morphology.psf
 
-logging.info('Reading exposure: {0}'.format(options.exposure))
+logging.info('Reading exposure: {0}'.format(args['exposure']))
 # We don't really need the exposure as data,
 # but this is a simple way to init the dataspace to the correct shape
-sau.load_data(options.exposure)
-sau.load_table_model('exposure', options.exposure)
+sau.load_data(args.exposure)
+sau.load_table_model('exposure', args.exposure)
 
-logging.info('Reading PSF: {0}'.format(options.psf))
-morphology.psf.Sherpa(options.psf).set()
+logging.info('Reading PSF: {0}'.format(args.psf))
+morphology.psf.Sherpa(args.psf).set()
 
-logging.info('Reading sources: {0}'.format(options.sources))
-morphology.utils.read_json(options.sources, sau.set_source)
+logging.info('Reading sources: {0}'.format(args.sources))
+morphology.utils.read_json(args.sources, sau.set_source)
 
 #set_full_model(get_source().name)
 #set_full_model('exposure * ' + get_source().name)
 sau.set_full_model('exposure * psf(' + sau.get_source().name + ')')
 
-logging.info('Computing and writing model_image: {0}'.format(options.model_image))
-sau.save_model(options.model_image, clobber=True)
+logging.info('Computing and writing model_image: {0}'.format(args.model_image))
+sau.save_model(args.model_image, clobber=True)

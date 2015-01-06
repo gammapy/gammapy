@@ -26,11 +26,11 @@ class TestGaussianBand2D():
         self.table = table
         self.model = GaussianBand2D(table)
 
-    def test_eval(self):
+    def test_evaluate(self):
         x = np.linspace(-100, 20, 5)
         y = np.linspace(-2, 2, 7)
         x, y = np.meshgrid(x, y)
-        image = self.model.eval(x, y)
+        image = self.model.evaluate(x, y)
         assert_allclose(image.sum(), 1.223962643740966)
 
     def test_parvals(self):

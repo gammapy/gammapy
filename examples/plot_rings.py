@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Create an illustration of rings used for background estimation
-"""
+"""Create an illustration of rings used for background estimation."""
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
@@ -46,7 +44,7 @@ for i_theta, theta in enumerate(thetas):
 
         index = i_theta * len(r_is) + i_r_i
         ax = grid[index]
-        print index, theta, r_i, r_o, true_areafactor
+        print(index, theta, r_i, r_o, true_areafactor)
         ax.imshow(-mask,
                   interpolation='nearest',
                   cmap='gray',

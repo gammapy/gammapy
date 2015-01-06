@@ -40,10 +40,10 @@ class GaussianBand2D(object):
             s[parname] = UnivariateSpline(x, y, **spline_kwargs)
         self._par_model = s
 
-    def _eval_y(self, y, pars):
+    def _evaluate_y(self, y, pars):
         """Evaluate Gaussian model at a given ``y`` position.
         """
-        return Gaussian1D.eval(y, **pars)
+        return Gaussian1D.evaluate(y, **pars)
 
     def parvals(self, x):
         """Interpolated parameter values at a given ``x``.
@@ -64,10 +64,10 @@ class GaussianBand2D(object):
         parvals = self.parvals(x)
         return Gaussian1D(**parvals)
 
-    def eval(self, x, y):
+    def evaluate(self, x, y):
         """Evaluate model at a given position ``(x, y)`` position.
         """
         x = np.asanyarray(x, dtype=float)
         y = np.asanyarray(y, dtype=float)
         parvals = self.parvals(x)
-        return self._eval_y(y, parvals)
+        return self._evaluate_y(y, parvals)

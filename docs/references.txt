@@ -4,7 +4,6 @@
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _Astropy: http://astropy.org
-.. _imageutils: http://imageutils.readthedocs.org
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes

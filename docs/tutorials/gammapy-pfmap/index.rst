@@ -14,7 +14,9 @@ Running ``gammapy-pfmap``
 
 Using ``gammapy-pfmap`` is straight forward.
 To create skymaps from a file ``data.fits`` using the object position from the header of the file
-as center of skymap and writing the skymaps to FITS files (option: ``-w``), use::
+as center of skymap and writing the skymaps to FITS files (option: ``-w``), use:
+
+.. code-block:: bash
 
    $ gammapy-pfmap data.fits -w
 
@@ -22,12 +24,16 @@ as center of skymap and writing the skymaps to FITS files (option: ``-w``), use:
 
 If you want to analyse several files together,
 you need to create an ASCII file containing the filenames
-(first string per row is used; bankfile), e.g.,::
+(first string per row is used; bankfile), e.g.,:
+
+.. code-block:: bash
 
    $ ls *.fits.gz > my.bnk
    $ python scripts/pfmap.py my.bnk -w
 
-You can change the parameters of the skymap via command line options, e.g.,::
+You can change the parameters of the skymap via command line options, e.g.,:
+
+.. code-block:: bash
 
    $ gammapy-pfmap my.bnk -w -s 4. -b 0.1 -r 0.1 -c "(83.633, 22.0145)"
 

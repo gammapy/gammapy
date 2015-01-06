@@ -38,11 +38,11 @@ from gammapy.image import disk_correlate
 from gammapy.stats import significance
 
 logging.info('Reading {0}'.format(args['data_file']))
-hdus = fits.open(args['data_file'])
-header = hdus[0].header
-counts = hdus['On'].data.astype(np.float64)
-background = hdus['Background'].data.astype(np.float64)
-diffuse = hdusp['Diffuse'].data.astype(np.float64)
+hdu_list = fits.open(args['data_file'])
+header = hdu_list[0].header
+counts = hdu_list['On'].data.astype(np.float64)
+background = hdu_list['Background'].data.astype(np.float64)
+diffuse = hdu_list['Diffuse'].data.astype(np.float64)
 
 logging.info('Reading {0}'.format(args['model_file']))
 model = fits.getdata(args['model_file'])
@@ -58,7 +58,7 @@ for theta in thetas:
     counts_corr = disk_correlate(counts, theta_pix)
     background_plus_model_corr = disk_correlate(background_plus_model_diffuse, theta_pix)
 
-    #excess_corr = counts_corr - background_plus_model_corr
+    # excess_corr = counts_corr - background_plus_model_corr
     significance_corr = significance(counts_corr, background_plus_model_corr)
 
     name = 'RESIDUAL_SIGNIFICANCE_{0}'.format(theta)

@@ -1,9 +1,6 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Plot energy dispersion example.
-"""
+"""Plot energy dispersion example."""
 import numpy as np
 import matplotlib.pyplot as plt
-#from astropy.units import Quantity
 from gammapy import irf
 
 ebounds = np.logspace(-1, 2, 100)

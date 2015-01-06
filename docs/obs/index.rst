@@ -27,33 +27,43 @@ TODO: reference run list format
 findruns
 --------
 
-The ``findruns`` command line tool can be used to select a subset of runs from a given run list.
+The ``gammapy-findruns`` command line tool can be used to select a subset of runs from a given run list.
 
 Examples:
 
-* Find all runs within 5 deg of the Galactic center::
+* Find all runs within 5 deg of the Galactic center:
 
-   $ findruns cone --x 0 --y 0 --r 5 --system galactic \
-     --in all_runs.lis --out galactic_center_runs.lis
+  .. code-block:: bash
+
+      $ gammapy-findruns cone --x 0 --y 0 --r 5 --system galactic \
+                         --in all_runs.lis --out galactic_center_runs.lis
    
-* Select all runs in a box along the Galactic plane (GLON = -20 .. +20 deg, GLAT = -3 .. +3 deg)::
+* Select all runs in a box along the Galactic plane (GLON = -20 .. +20 deg, GLAT = -3 .. +3 deg):
 
-   $ findruns box --x 0 --y 0 --dx 20 --dy 3 --system galactic \
-     --in all_runs.lis  --out galactic_plane_runs.lis
+  .. code-block:: bash
 
-* Select all runs in a given date range (can of course be combined with other selections shown above)::
+      $ gammapy-findruns box --x 0 --y 0 --dx 20 --dy 3 --system galactic \
+                         --in all_runs.lis  --out galactic_plane_runs.lis
 
-   $ findruns --date_min 2010-04-26 --date_max "2010-04-29 12:42" \
-     --in all_runs.lis --out run_042_to_100.lis
+* Select all runs in a given date range (can of course be combined with other selections shown above):
 
-* Select all runs in a given run range (can of course be combined with other selections shown above)::
+  .. code-block:: bash
 
-   $ findruns --run_min 42 --run_max 100 \
-     --in all_runs.lis --out run_042_to_100.lis
+      $ gammapy-findruns --date_min 2010-04-26 --date_max "2010-04-29 12:42" \
+                         --in all_runs.lis --out run_042_to_100.lis
+
+* Select all runs in a given run range (can of course be combined with other selections shown above):
+
+  .. code-block:: bash
+
+      $ gammapy-findruns --run_min 42 --run_max 100 \
+                         --in all_runs.lis --out run_042_to_100.lis
    
-Using ``findruns`` is easy, you don't have to remember all the options, just type::
+Using ``gammapy-findruns`` is easy, you don't have to remember all the options, just type:
 
-   $ findruns --help
+  .. code-block:: bash
+
+      $ findruns --help
 
 at the command line or read the usage help (TODO: add link here).
 

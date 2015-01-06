@@ -6,11 +6,11 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from astropy.wcs import WCS
-from ...datasets import FermiGalacticCenter, FermiVelaRegion
+from ...datasets import FermiGalacticCenter
 from ...data import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import solid_angle, make_header, make_empty_image
 from ...irf import EnergyDependentTablePSF
-from ...spectrum.powerlaw import power_law_eval
+from ...spectrum.powerlaw import power_law_evaluate
 from ...utils.testing import assert_quantity
 
 
@@ -225,8 +225,8 @@ def make_test_cubes(energies, nxpix, nypix, binsz):
     exposure_cube = SpectralCube(data=Quantity(data_array, 'cm2 s'),
                                  wcs=wcs, energy=energies)
 
-    flux = Quantity(power_law_eval(energies.value, 1, 2,
-                                   1), '1/(cm2 s GeV sr)')
+    flux = power_law_evaluate(energies.value, 1, 2, 1)
+    flux = Quantity(flux, '1/(cm2 s GeV sr)')
     flux_array = np.zeros_like(data_array)
     for i in np.arange(len(flux)):
         flux_array[i] = flux.value[i] * data_array[i]

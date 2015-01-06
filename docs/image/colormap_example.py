@@ -1,5 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Plot significicance image with HESS- and MILAGRO-colormap.
+"""Plot significance image with HESS and MILAGRO colormap.
 """
 import numpy as np
 import matplotlib.pyplot as plt

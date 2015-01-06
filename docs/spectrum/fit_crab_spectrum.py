@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fit and plot Crab nebula spectrum."""
 import matplotlib.pyplot as plt
 from astropy.modeling.models import PowerLaw1D
@@ -6,7 +5,7 @@ from astropy.modeling.fitting import NonLinearLSQFitter
 from gammapy.datasets import tev_spectrum
 
 data = tev_spectrum('crab')
-energy, flux, flux_err  = data['energy'], data['flux'], data['flux_err']
+energy, flux, flux_err = data['energy'], data['flux'], data['flux_err']
 
 model = PowerLaw1D(4e-11, 1, 2.6)
 model.x_0.fixed = True

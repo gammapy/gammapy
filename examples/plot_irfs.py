@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Make plots illustrating exposure in the FOV.
-
 """
 
 

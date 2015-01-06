@@ -15,13 +15,17 @@ CVS format
 
 We use the `CSV <http://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for target lists.
 
-A target list must have at least a column called ``Number`` with unique entries::
+A target list must have at least a column called ``Number`` with unique entries:
+
+.. code-block:: text
 
    Number
    42
    43
 
-Usually it has many more columns with information about each target::
+Usually it has many more columns with information about each target:
+
+.. code-block:: text
 
    Number,Name,RA,DEC
    42,Crab,83.633212,22.014460

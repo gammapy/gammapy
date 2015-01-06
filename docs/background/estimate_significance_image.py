@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Estimate a Poisson significance image for a given counts image.
 
 Here's a high-level description ... see the code for details:
@@ -8,6 +7,7 @@ Here's a high-level description ... see the code for details:
 * An iterative scheme is used to define an exclusion mask of
   pixels that shouldn't be used for background estimation.
 """
+# TODO: Fix this script and include images in the docs!
 __doctest_skip__ = ['*']
 import numpy as np
 from astropy.io import fits

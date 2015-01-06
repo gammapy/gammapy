@@ -13,7 +13,9 @@ or don't fit in one of the other packages.
 Since the various sub-modules of ``gammapy.utils`` are mostly unrelated,
 they are not imported into the top-level namespace.
 Here are some examples of how to import functionality from the ``gammapy.utils``
-sub-modules::
+sub-modules:
+
+.. code-block:: python
 
    from gammapy.utils.random import sample_sphere
    sample_sphere(size=10)

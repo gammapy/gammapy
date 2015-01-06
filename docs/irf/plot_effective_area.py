@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Plot approximate effective area for HESS, HESS2 and CTA.
-"""
+"""Plot approximate effective area for HESS, HESS2 and CTA."""
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.units import Quantity

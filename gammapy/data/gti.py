@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Event list: table of LON, LAT, ENERGY, TIME
+"""Good time interval (GTI) handling.
 """
 from __future__ import print_function, division
 
-__all__ = ['EventList']
+__all__ = ['GoodTimeInterval']
 
 
-class EventList(object):
-    """Event list.
+class GoodTimeInterval(object):
+    """Good time interval (GTI) container.
     """
     # TODO: implement
     pass

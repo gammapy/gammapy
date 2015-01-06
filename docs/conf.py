@@ -61,7 +61,6 @@ del intersphinx_mapping['h5py']
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
-intersphinx_mapping['imageutils'] = ('http://imageutils.readthedocs.org/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
 
 # Extend intersphinx_mapping with packages we use in gammapy
@@ -75,7 +74,6 @@ intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
-# intersphinx_mapping['pyephem'] = ('http://rhodesmill.org/pyephem/', None)
 
 
 # List of patterns, relative to source directory, that match files and

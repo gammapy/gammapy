@@ -62,7 +62,7 @@ class Paczynski1990(Fittable1DModel):
                                             r_exp=r_exp, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, r_exp):
+    def evaluate(r, amplitude, r_exp):
         """One dimensional Paczynski 1990 model function"""
         return amplitude * r_exp ** -2 * np.exp(-r / r_exp)
 
@@ -102,7 +102,7 @@ class CaseBattacharya1998(Fittable1DModel):
                                                   alpha=alpha, beta=beta, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, alpha, beta):
+    def evaluate(r, amplitude, alpha, beta):
         """One dimensional Case & Battacharya 2006 model function"""
         term1 = (r / R_SUN_GALACTIC) ** alpha
         term2 = np.exp(-beta * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
@@ -148,7 +148,7 @@ class YusifovKucuk2004(Fittable1DModel):
                                                a=a, b=b, r_1=r_1, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, a, b, r_1):
+    def evaluate(r, amplitude, a, b, r_1):
         """One dimensional Yusifov & Kucuk 2004 model function"""
         term1 = ((r + r_1) / (R_SUN_GALACTIC + r_1)) ** a
         term2 = np.exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + r_1))
@@ -191,7 +191,7 @@ class YusifovKucuk2004B(Fittable1DModel):
                                                 a=a, b=b, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, a, b):
+    def evaluate(r, amplitude, a, b):
         """One dimensional Yusifov & Kucuk 2004 model function"""
         return amplitude * (r / R_SUN_GALACTIC) ** a * np.exp(-b * (r / R_SUN_GALACTIC))
 
@@ -230,7 +230,7 @@ class FaucherKaspi2006(Fittable1DModel):
                                                r_0=r_0, sigma=sigma, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, r_0, sigma):
+    def evaluate(r, amplitude, r_0, sigma):
         """One dimensional Faucher-Giguere & Kaspi 2006 model function"""
         term1 = 1. / np.sqrt(2 * pi * sigma)
         term2 = np.exp(-(r - r_0) ** 2 / (2 * sigma ** 2))
@@ -271,7 +271,7 @@ class Lorimer2006(Fittable1DModel):
         super(Lorimer2006, self).__init__(amplitude=amplitude, B=B, C=C, **kwargs)
 
     @staticmethod
-    def eval(r, amplitude, B, C):
+    def evaluate(r, amplitude, B, C):
         """One dimensional Lorimer 2006 model function"""
         term1 = (r / R_SUN_GALACTIC) ** B
         term2 = np.exp(-C * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
@@ -308,7 +308,7 @@ class Exponential(Fittable1DModel):
         super(Exponential, self).__init__(amplitude=amplitude, z_0=z_0, **kwargs)
 
     @staticmethod
-    def eval(z, amplitude, z_0):
+    def evaluate(z, amplitude, z_0):
         """One dimensional exponential model function"""
         return amplitude * np.exp(-np.abs(z) / z_0)
 

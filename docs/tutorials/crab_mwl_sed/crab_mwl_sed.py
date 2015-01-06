@@ -1,5 +1,4 @@
-"""Plot Crab pulsar and nebula spectral energy distribution (SED).
-"""
+"""Plot Crab pulsar and nebula spectral energy distribution (SED)."""
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u

@@ -27,7 +27,8 @@ parser.add_argument('-r', '--analysis_radius', type=float, default=0.125,
 parser.add_argument('-m', '--match_rmf', type=str, default=None,
                     help='RMF filename to which the average PHA file binning is matched.')
 parser.add_argument('-d', '--data_dir', type=str, default='',
-                    help='Directory in which the data is located. Will be added as prefix to the entries in the bankfile.')
+                    help='Directory in which the data is located. '
+                         'Will be added as prefix to the entries in the bankfile.')
 parser.add_argument('-w', '--write_output', action='store_true', default=False,
                     help='Write results to FITS files in current directory.')
 parser.add_argument('--no_graphical_output', action='store_false', default=True,

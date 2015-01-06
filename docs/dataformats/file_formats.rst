@@ -137,7 +137,9 @@ are the most easy to write and edit for humans and can contain ``#`` comments
 and are thus a good for configuration files.
 file extensions of ``.ini``, ``.conf`` and ``.cfg`` are common.
 Astropy bundles `configobj <http://configobj.readthedocs.org/>`__ to read, write and validate
-INI files ... to use it in your code::
+INI files ... to use it in your code
+
+.. code-block:: python
 
    from astropy.extern.configobj import configobj, validate
 
@@ -166,11 +168,13 @@ been defined with a clear CVS format specification and associated metadata in an
 (see also `here <https://github.com/astropy/astropy-APEs/pull/7>`__).
 
 To read and write CSV data from Python you can use the extensible `astropy.io.ascii` methods
-via the `unified Astropy table I/O interface <http://astropy.readthedocs.org/en/latest/io/unified.html>`__::
+via the `unified Astropy table I/O interface <http://astropy.readthedocs.org/en/latest/io/unified.html>`__
+
+.. code-block:: python
 
    from astropy.table import Table
    table = Table.read('measurements.csv', format='csv')
-   table.write('measuremets.tex', format='latex')
+   table.write('measurements.tex', format='latex')
 
 There's also the
 `Python standard library csv module <http://pymotw.com/2/csv/>`__ as well as the 

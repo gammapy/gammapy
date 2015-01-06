@@ -95,8 +95,8 @@ class SherpaMultiGaussPSF(object):
         sau.set_psf('psf')
         self.center_psf()
 
-    def eval(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
-        """Hand-coded eval for debugging."""
+    def evaluate(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
+        """Hand-coded evaluate for debugging."""
         f = 4 * np.log(2)
         psf1 = ampl1 * np.exp(-f * t ** 2 / fwhm1 ** 2)
         psf2 = ampl2 * np.exp(-f * t ** 2 / fwhm2 ** 2)

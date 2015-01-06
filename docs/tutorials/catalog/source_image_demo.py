@@ -12,7 +12,7 @@ psf = EnergyDependentTablePSF.read(psf_file)
 
 # Create image
 image = catalog_image(reference, psf, catalog='1FHL', source_type='point',
-                  total_flux='True')
+                      total_flux='True')
 
 # Plot
 fig = FITSFigure(image.to_fits()[0])

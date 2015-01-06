@@ -32,13 +32,7 @@ args = vars(args)
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-from gammapy.obs import RunList
+# from gammapy.obs import RunList
 
-print args
-args['out'].write('hi\n')
-print args['in'].read()
-args['out'].close()
-#logging.debug('Reading {0}'.format(args['infile']))
-#hdus = fits.open(args['infile'])
-#hdu = get_hdu(args['infile'])
-#x, y = args['x'], args['y']
+# TODO: implement
+raise NotImplementedError

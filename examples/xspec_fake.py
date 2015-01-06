@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Fake example spectral data in XSPEC format.
 
 The following files are generated:

@@ -1,7 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Plot Milky Way spiral arm models.
-"""
+"""Plot Milky Way spiral arm models."""
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')

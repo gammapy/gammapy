@@ -41,14 +41,14 @@ hdu = get_hdu(args['infile'])
 out_hdus = fits.HDUList()
 
 if args['make_coordinate_maps']:
-    from gammapy.utils.image import coordinates
+    from gammapy.image import coordinates
     logging.info('Computing LON and LAT maps')
     lon, lat = coordinates(hdu)
     out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))
     out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 
 if args['make_distance_map']:
-    from gammapy.utils.image import exclusion_distance
+    from gammapy.image import exclusion_distance
     logging.info('Computing DIST map')
     dist = exclusion_distance(hdu.data)
     out_hdus.append(fits.ImageHDU(dist, hdu.header, 'DIST'))

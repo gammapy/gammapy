@@ -8,7 +8,7 @@ Here we load Crab pulsar and nebula flux points `gammapy.datasets.load_crab_flux
 TODO:
 
 * describe data and emission components
-* perform fit with naima!
+* perform fit with ``naima``!
 
 .. plot:: tutorials/crab_mwl_sed/crab_mwl_sed.py
    :include-source:

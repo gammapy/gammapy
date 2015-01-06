@@ -8,12 +8,13 @@ and each source has associated PSR, PWN und SNR parameters.
 
 from gammapy.astro import population
 
+
 def _make_list(distributions):
-	ss = ""
-	for name in distributions.keys():
-		description = distributions[name].__doc__.splitlines()[0] 
-		ss += "{0:10s} : {1}\n".format(name, description)
-	return ss
+    ss = ""
+    for name in distributions.keys():
+        description = distributions[name].__doc__.splitlines()[0]
+        ss += "{0:10s} : {1}\n".format(name, description)
+    return ss
 
 radial_distributions_list = _make_list(population.radial_distributions)
 velocity_distributions_list = _make_list(population.velocity_distributions)
