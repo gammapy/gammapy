@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Plot Fermi PSF.
-"""
+"""Plot Fermi PSF."""
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.coordinates import Angle
@@ -13,16 +11,9 @@ fermi_psf = EnergyDependentTablePSF.read(filename)
 
 energies = Quantity([1], 'GeV')
 for energy in energies:
-    print('0')
     psf = fermi_psf.table_psf_at_energy(energy=energy)
-    print('1')
     psf.normalize()
-    print('2')
-    print('3', psf.evaluate(Angle(0.1, 'deg')))
     kernel = psf.kernel(pixel_size=Angle(0.1, 'deg'))
-    print('4')
-    
-    print(np.nansum(kernel.value))
     plt.imshow(np.log(kernel.value))
     #psf.plot_psf_vs_theta()
 
