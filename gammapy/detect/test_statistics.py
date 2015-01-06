@@ -11,13 +11,11 @@ import warnings
 from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
-
-
+from time import time
 import numpy as np
-from astropy.convolution import Tophat2DKernel
 from astropy.io.fits import ImageHDU
-
-
+from astropy.convolution import Tophat2DKernel
+from astropy.nddata.utils import extract_array
 from ..stats import cash
 from ..image import measure_containment_radius
 from ..extern.zeros import newton
@@ -27,7 +25,7 @@ __all__ = ['compute_ts_map', 'TSMapResult']
 
 
 FLUX_FACTOR = 1E-12
-MAXNITER = 20
+MAX_NITER = 20
 CONTAINMENT = 0.8
 
 
@@ -37,11 +35,11 @@ class TSMapResult(Bunch):
 
     Attributes
     ----------
-    ts : ndarray
+    ts : `~numpy.ndarray`
         Estimated TS map
-    amplitude : ndarray
+    amplitude : `~numpy.ndarray`
         Estimated best fit flux amplitude map
-    niter : ndarray
+    niter : `~numpy.ndarray`
         Number of iterations map
     runtime : float
         Time needed to compute TS map.
@@ -56,11 +54,11 @@ def f_cash_root(x, counts, background, model):
     ----------
     x : float
         Model amplitude.
-    counts : array
+    counts : `~numpy.ndarray`
         Count map slice, where model is defined.
-    background : array
+    background : `~numpy.ndarray`
         Background map slice, where model is defined.
-    model : array
+    model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     return (model - (counts * model) / (background + x * FLUX_FACTOR * model)).sum()
@@ -74,11 +72,11 @@ def f_cash(x, counts, background, model):
     ----------
     x : float
         Model amplitude.
-    counts : array
+    counts : `~numpy.ndarray`
         Count map slice, where model is defined.
-    background : array
+    background : `~numpy.ndarray`
         Background map slice, where model is defined.
-    model : array
+    model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     with np.errstate(invalid='ignore', divide='ignore'):
@@ -93,11 +91,11 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Count map
-    background : array
+    background : `~numpy.ndarray`
         Background map
-    exposure : array
+    exposure : `~numpy.ndarray`
         Exposure map
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
@@ -123,15 +121,14 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
 
     Returns
     -------
-    TS : `TSMapResult`
-        `TSMapResult` object.
+    ts_map_result : `TSMapResult`
+        Result object.
 
     References
     ----------
     [Stewart2009]_
     """
     from scipy.ndimage.morphology import binary_erosion
-    from time import time
     t_0 = time()
 
     assert counts.shape == background.shape
@@ -147,7 +144,7 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
     else:
         assert counts.shape == flux.shape
 
-    TS = np.zeros(counts.shape)
+    ts = np.zeros(counts.shape)
 
     x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
     y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
@@ -171,13 +168,16 @@ def compute_ts_map(counts, background, exposure, kernel, flux=None,
 
     # Set TS values at given positions
     i, j = zip(*positions)
-    amplitudes = np.zeros(TS.shape)
-    niter = np.zeros(TS.shape)
-    TS[j, i] = [_[0] for _ in results]
+    amplitudes = np.zeros_like(ts)
+    niter = np.zeros_like(ts)
+    ts[j, i] = [_[0] for _ in results]
     amplitudes[j, i] = [_[1] for _ in results]
     niter[j, i] = [_[2] for _ in results]
-    return TSMapResult(ts=TS, amplitude=amplitudes * FLUX_FACTOR,
-                       niter=niter, runtime=np.round(time() - t_0, 2))
+
+    runtime = time() - t_0
+
+    return TSMapResult(ts=ts, amplitude=amplitudes * FLUX_FACTOR,
+                       niter=niter, runtime=runtime)
 
 
 def _ts_value(position, counts, exposure, background, kernel, flux,
@@ -196,7 +196,7 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
         Background map.
     exposure : array
         Exposure map.
-    kernel : astropy.convolution.core.Kernel2D
+    kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
     flux : array
         Flux map. The flux value at the given pixel position is used as
@@ -207,12 +207,10 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
     TS : float
         TS value at the given pixel position.
     """
-    from imageutils import extract_array_2d
-
     # Get data slices
-    counts_slice = extract_array_2d(counts, kernel.shape, position).astype(float)
-    background_slice = extract_array_2d(background, kernel.shape, position).astype(float)
-    exposure_slice = extract_array_2d(exposure, kernel.shape, position).astype(float)
+    counts_slice = extract_array(counts, kernel.shape, position).astype(float)
+    background_slice = extract_array(background, kernel.shape, position).astype(float)
+    exposure_slice = extract_array(exposure, kernel.shape, position).astype(float)
     model = (exposure_slice * kernel._array).astype(float)
 
     # Compute null hypothesis statistics
@@ -237,14 +235,13 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
         elif method == 'root':
             amplitude, niter = _root_amplitude(counts_slice, background_slice,
                                                model, flux_value)
-        if niter > MAXNITER:
-            logging.warn('Exceeded maximum number of function evaluations!')
+        if niter > MAX_NITER:
+            logging.warning('Exceeded maximum number of function evaluations!')
             return np.nan, amplitude, niter
 
         with np.errstate(invalid='ignore', divide='ignore'):
             C_1 = cash(counts_slice, background_slice + amplitude * FLUX_FACTOR * model).sum()
 
-        # Compute and return TS value
         return C_0 - C_1, amplitude, niter
 
 
@@ -254,11 +251,11 @@ def _root_amplitude(counts, background, model, flux):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.array`
         Slice of count map.
-    background : array
+    background : `~numpy.array`
         Slice of background map.
-    model : array
+    model : `~numpy.array`
         Model template to fit.
     flux : float
         Starting value for the fit.
@@ -274,10 +271,10 @@ def _root_amplitude(counts, background, model, flux):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return newton(f_cash_root, flux, args=args, maxiter=MAXNITER, tol=0.1)
+            return newton(f_cash_root, flux, args=args, maxiter=MAX_NITER, tol=0.1)
         except RuntimeError:
             # Where the root finding fails NaN is set as amplitude
-            return np.nan, MAXNITER
+            return np.nan, MAX_NITER
 
 
 def _fit_amplitude_scipy(counts, background, model, flux, optimizer='Brent'):
@@ -286,11 +283,11 @@ def _fit_amplitude_scipy(counts, background, model, flux, optimizer='Brent'):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.array`
         Slice of count map.
-    background : array
+    background : `~numpy.array`
         Slice of background map.
-    model : array
+    model : `~numpy.array`
         Model template to fit.
     flux : float
         Starting value for the fit.
@@ -320,11 +317,11 @@ def _fit_amplitude_minuit(counts, background, model, flux):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.array`
         Slice of count map.
-    background : array
+    background : `~numpy.array`
         Slice of background map.
-    model : array
+    model : `~numpy.array`
         Model template to fit.
     flux : float
         Starting value for the fit.
@@ -347,7 +344,7 @@ def _fit_amplitude_minuit(counts, background, model, flux):
 
 def _flux_correlation_radius(kernel, containment=CONTAINMENT):
     """
-    Compute equivalent Tophat kernel radius for a given kernel instance and
+    Compute equivalent top-hat kernel radius for a given kernel instance and
     containment fraction.
 
     Parameters
@@ -360,11 +357,11 @@ def _flux_correlation_radius(kernel, containment=CONTAINMENT):
     Returns
     -------
     kernel : `astropy.convolution.Tophat2DKernel`
-        Equivalent Tophat kernel.
+        Equivalent top-hat kernel.
     """
     kernel_image = ImageHDU(kernel.array)
     y, x = kernel.center
     r_c = measure_containment_radius(kernel_image, x, y, containment)
-    # Containment radius of Tophat kernel is given by r_c_tophat = r_0 * sqrt(C)
+    # Containment radius of top-hat kernel is given by r_c_tophat = r_0 * sqrt(C)
     # by setting r_c = r_c_tophat we can estimate the equivalent containment radius r_0
     return r_c / np.sqrt(containment)
