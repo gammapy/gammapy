@@ -17,7 +17,9 @@ These can be given via command line but usually it is more efficient to create a
 with each row giving the data file name, the ARF and the RMF file names, separate by spaces.
 We assume, such a bankfile has been created for the data called my.bnk.
 
-To create the pha files run::
+To create the pha files run:
+
+.. code-block:: bash
 
    $ gammapy-pfspec my.bnk -w -r 0.125
 

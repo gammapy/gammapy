@@ -1,5 +1,4 @@
-"""Runs commands to produce convolved predicted counts map in current directory.
-"""
+"""Runs commands to produce convolved predicted counts map in current directory."""
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
@@ -26,7 +25,7 @@ significance = np.nan_to_num(significance(correlated_counts, correlated_model,
 
 titles = ['Gammapy Significance', 'Fermi Tools Significance']
 
-#Plot
+# Plot
 
 fig = plt.figure()
 hdu1 = fits.ImageHDU(significance, header)

@@ -19,7 +19,9 @@ What's a bounding box and why do we need it?
 
 In gammapy we use `bounding boxes <http://en.wikipedia.org/wiki/Minimum_bounding_box>`_ to speed up image processing.
 
-Let's say you have a large image, but are only interested in a small box (a rectangular sub-image)::
+Let's say you have a large image, but are only interested in a small box (a rectangular sub-image)
+
+.. code-block:: python
 
    import numpy as np
    full_array = np.random.random((2000, 3000))
@@ -33,7 +35,9 @@ and
 `views <http://scipy-lectures.github.io/intro/numpy/array_object.html#copies-and-views>`__.
 
 By slicing ``[1000:1010, 2000:2020]`` we created a view (not a copy) ``sub_array`` into the ``full_array``.
-On my machine making a measurement on ``sub_array`` is about 1000 times as fast as for ``full_array``::
+On my machine making a measurement on ``sub_array`` is about 1000 times as fast as for ``full_array``:
+
+.. code-block:: python
 
    In [34]: %timeit np.sum(full_array)
    100 loops, best of 3: 5.32 ms per loop
@@ -48,7 +52,9 @@ In gammapy we frequently need to bass bounding boxes around, e.g. from a functio
 many small objects in a large survey image to another function that measures some properties of these objects.  
 
 Python does have a built-in `slice <http://docs.python.org/2/library/functions.html#slice>`__ class,
-and we can use it to represent 1-dimensional slices::
+and we can use it to represent 1-dimensional slices:
+
+.. code-block:: python
 
    def find_objects(array, threshold):
        """Find segments above threshold in 1-dimensional array."""
@@ -79,7 +85,6 @@ and we can use it to represent 1-dimensional slices::
    objects = find_objects(array, threshold)
    measure_objects(array, objects)
 
-
 Unfortunately, there is no n-dimensional slice or bounding box class in Python or Numpy.
 
 Bounding boxes in other packages
@@ -90,12 +95,16 @@ Before inventing our own, let's look at what kinds of representations others hav
 * The `scipy.ndimage.measurements.find_objects` function returns a Python list of
   Python tuples of Python `slice` objects to represent a list of bounding boxes.
   I.e. a single n-dimensional bounding box is represented as a Python tuple of n slice objects,
-  e.g. for a 2-dimensional bounding box::
+  e.g. for a 2-dimensional bounding box:
 
-    bbox = (slice(1, 3, None), slice(2, 5, None))
+  .. code-block:: python
+
+      bbox = (slice(1, 3, None), slice(2, 5, None))
   
   This has the advantage that for a numpy array it is very easy to create views
-  for the rectangles represented by the bounding box::
+  for the rectangles represented by the bounding box:
+
+  .. code-block:: python
 
     array = np.random.random((1000, 2000))
     bboxes = scipy.ndimage.find_objects(array, ...)
@@ -115,11 +124,13 @@ Before inventing our own, let's look at what kinds of representations others hav
   Looking under the hood (this is not part of their API) at the implementation in
   `skimage/measure/_regionprops.py <https://github.com/scikit-image/scikit-image/blob/master/skimage/measure/_regionprops.py>`__ ,
   we see that `skimage.measure.regionprops` is just a wrapper storing the `scipy.ndimage.measurements.find_objects` bboxes
-  in an object as ``RegionProperties._slice`` and then generating the integer index tuple on demand::
+  in an object as ``RegionProperties._slice`` and then generating the integer index tuple on demand:
 
-    def bbox(self):
-        return (self._slice[0].start, self._slice[1].start,
-                self._slice[0].stop, self._slice[1].stop)
+  .. code-block:: python
+
+      def bbox(self):
+          return (self._slice[0].start, self._slice[1].start,
+                  self._slice[0].stop, self._slice[1].stop)
 
   As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`. 
 

@@ -58,7 +58,6 @@ Here's some issues where this was discussed:
 * https://github.com/radio-astro-tools/spectral-cube/issues/110
 * https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
 
-
 .. _development-result_object:
 
 Functions returning several values 
@@ -70,8 +69,6 @@ is similar to a dict, except that it allows attribute access to the result
 values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
 An example of how Bunches are used in gammapy is given by the `~gammapy.detect.TSMapResult`
 class.   
- 
-
 
 .. _development-python2and3:
 
@@ -111,7 +108,6 @@ You don't get a confirmation that the wipe has taken place, but you can check
 `here <https://readthedocs.org/builds/gammapy/>`__ (wait a few minutes)
 and if needed manually start a new build by going
 `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
-
 
 .. _development-skip_tests:
 

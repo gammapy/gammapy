@@ -11,7 +11,7 @@ Introduction
 
 `gammapy.background` contains methods to estimate and model background.
 
-The central data structure is the `~gammapy.background.maps.Maps` container.
+The central data structure is the `~gammapy.background.Maps` container.
 TODO: describe
 
 Most of the methods implemented are described in [Berge2007]_.

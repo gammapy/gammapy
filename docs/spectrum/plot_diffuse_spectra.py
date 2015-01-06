@@ -1,9 +1,7 @@
-"""Plot spectra of cosmic ray protons, electrons and diffuse gammas.
-
-"""
+"""Plot spectra of cosmic ray protons, electrons and diffuse gammas."""
 import numpy as np
-from astropy.units import Quantity
 import matplotlib.pyplot as plt
+from astropy.units import Quantity
 from gammapy.datasets import electron_spectrum, diffuse_gamma_spectrum
 from gammapy.spectrum import cosmic_ray_flux
 # from gammapy.spectrum import diffuse_gamma_ray_flux

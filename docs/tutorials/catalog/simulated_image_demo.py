@@ -48,7 +48,7 @@ table = population.add_observed_parameters(table)
 table.meta['Energy Bins'] = Quantity([10, 500], 'GeV')
 # Create image
 image = catalog_image(reference, psf, catalog='simulation', source_type='point',
-                  total_flux=True, sim_table=table)
+                      total_flux=True, sim_table=table)
 
 # Plot
 fig = FITSFigure(image.to_fits()[0])

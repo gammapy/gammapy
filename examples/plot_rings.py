@@ -1,6 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Create an illustration of rings used for background estimation
-"""
+"""Create an illustration of rings used for background estimation."""
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid

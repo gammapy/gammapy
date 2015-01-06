@@ -1,5 +1,4 @@
-"""Runs commands to produce convolved predicted counts map in current directory
-"""
+"""Runs commands to produce convolved predicted counts map in current directory."""
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity

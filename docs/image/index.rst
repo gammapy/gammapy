@@ -21,14 +21,15 @@ Getting Started
 
 Most of the functions in this module have objects of type `numpy.array`
 or an `astropy.io.fits.ImageHDU` or `astropy.io.fits.PrimaryHDU`
-as input and output::
+as input and output:
+
+.. code-block:: python
 
    >>> from gammapy.datasets import poisson_stats_image
    >>> from gammapy.image import lookup
    >>> image = poisson_stats_image() # image is a 2D numpy array
    >>> lookup(image, 42, 44, world=False)
    3.0
-
 
 Using `gammapy.image`
 =====================

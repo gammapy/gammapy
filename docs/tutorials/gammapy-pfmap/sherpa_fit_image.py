@@ -1,5 +1,4 @@
-"""Fit gamma-ray images with Sherpa.
-"""
+"""Fit gamma-ray images with Sherpa."""
 import sherpa.astro.ui as ui
 from kapteyn import wcs, positions
 try:

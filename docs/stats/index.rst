@@ -71,10 +71,11 @@ and that is :math:`a_{off}/a_{on}=10` times larger than the on-region.
 Here's how you compute the statistical significance of your detection 
 with the Li \& Ma formula:
 
+.. code-block:: python
+
    >>> from gammapy.stats import significance_on_off
    >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
    2.2421704424844875
-
 
 TODO: More examples.
 

@@ -1,3 +1,4 @@
+"""Plot velocity distributions of Galactic sources."""
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.astro.population import velocity_distributions
