@@ -142,6 +142,7 @@ Optional dependencies (imported and used only where needed):
 * `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for Gaussian error propagation
 * `reproject`_ for image reprojection (temporary, will become `astropy.reproject`)
+* `naima`_ for SED modeling
 
 .. note:: We didn't put any effort into minimizing the number of dependencies ...
    I'll limit the number of optional packages if people complain about installation woes.
