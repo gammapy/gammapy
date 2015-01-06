@@ -9,6 +9,7 @@ python:
     - 3.3
     - 3.4
     # This is just for "egg_info".  All other builds are explicitly given in the matrix
+
 env:
     global:
         # The following versions are the 'default' for tests, unless
@@ -25,7 +26,6 @@ env:
 
 matrix:
     include:
-
         # Do a coverage test in Python 2. This requires the latest
         # development version of Astropy, which fixes some issues with
         # coverage testing in affiliated packages.
@@ -63,7 +63,6 @@ matrix:
         #  env: NUMPY_VERSION=1.6 SETUP_CMD='test'
 
 before_install:
-
     # Use utf8 encoding. Should be default, but this is insurance against
     # future changes
     - export PYTHONIOENCODING=UTF8
@@ -74,13 +73,12 @@ before_install:
     - conda update --yes conda
 
     # UPDATE APT-GET LISTINGS
-    - sudo apt-get update
+    - apt-get update
 
     # DOCUMENTATION DEPENDENCIES
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
+    - if [[ $SETUP_CMD == build_sphinx* ]]; then apt-get install graphviz texlive-latex-extra dvipng; fi
 
 install:
-
     # Certificate checking is not working with Python 2.7.9 (due to PEP 476)
     # This is a temp workaround ... see https://github.com/astropy/photutils/issues/202
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then export TRAVIS_PYTHON_VERSION=2.7.8; fi
