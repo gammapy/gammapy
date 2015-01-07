@@ -150,6 +150,13 @@ Optional dependencies (imported and used only where needed):
 How to make Astropy / Gammapy work with the CIAO Sherpa Python?
 ---------------------------------------------------------------
 
+Note: CIAO 4.7 (released 16 December 2014)
+includes Python 2.7.6, Numpy 1.8.1, IPython 2.0.0 and no PyFITS, Scipy or Matplotlib.
+
+Note: It looks like Sherpa installation is improving ... e.g. it's now available
+as a binary install via Conda:
+http://cxc.harvard.edu/sherpa/contrib.html#pysherpa
+
 Some parts of Gammapy use the `Sherpa`_ Python modeling / fitting package
 from the `CIAO`_ Chandra satellite X-ray data analysis package. 
 
@@ -193,6 +200,9 @@ Here's a few tricks that might help you make it work.
 
 How to make Astropy / Gammapy work with the Fermi ScienceTools Python?
 ----------------------------------------------------------------------
+
+Note: ``ScienceTools-v9r33p0-fssc-20140520`` (v9r33p0, released Jun 03, 2014)
+includes Python 2.7.2, Numpy 1.6.1, Scipy 0.10.1, Matplotlib 1.1.1, PyFITS 3.1.2 and no IPython.
 
 Try installing `pip`_ into that Python and then:
 
