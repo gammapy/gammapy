@@ -105,7 +105,7 @@ setup(name=PACKAGENAME,
       # Note: these are the versions we test.
       # Older versions could work, but are unsupported.
       # To find out if everything works run the Gammapy tests.
-      install_requires=['numpy>=1.6', 'astropy>=1.0dev'],
+      install_requires=['numpy>=1.6', 'astropy'],
       extras_require=dict(
           plotting=['matplotlib>=1.4', 'wcsaxes>=0.3', 'aplpy>=0.9'],
           analysis=['scipy>=0.14', 'scikit-image>=0.10', 'photutils>=0.1',
