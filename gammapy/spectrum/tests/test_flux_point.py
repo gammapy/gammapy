@@ -181,7 +181,7 @@ def test_compute_differential_flux_points(x_method, y_method):
     assert_allclose(actual_energy, desired_energy, rtol=1e-3)
     # Test flux
     actual = result_table['DIFF_FLUX'].data
-    assert_allclose(actual, desired, rtol=1e-3)
+    assert_allclose(actual, desired, rtol=1e-2)
     # Test error
     actual = result_table['DIFF_FLUX_ERR'].data
     desired = 0.1 * result_table['DIFF_FLUX'].data

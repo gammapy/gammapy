@@ -169,7 +169,7 @@ def _ydiff_excess_equals_expected(yint, xmin, xmax, x, model):
     return y_model * (yint / yint_model)
 
 
-def _integrate(xmin, xmax, function, segments=1e6):
+def _integrate(xmin, xmax, function, segments=1e3):
     """Integrates method function using the trapezium rule between xmin and xmax.
     """
     indices = np.arange(len(xmin))
