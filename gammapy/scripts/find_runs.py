@@ -2,15 +2,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import sys
+import argparse
+from ..utils.scripts import get_parser
 
 __all__ = ['find_runs']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = find_runs.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(find_runs)
     parser.add_argument('infile', type=argparse.FileType('r'),
                         help='Input run list file name')
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),

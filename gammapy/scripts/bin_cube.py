@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['bin_cube']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = bin_cube.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(bin_cube)
     parser.add_argument('event_file', type=str,
                         help='Input FITS event file name')
     parser.add_argument('reference_file', type=str,

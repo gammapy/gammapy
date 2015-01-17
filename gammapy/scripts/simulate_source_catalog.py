@@ -1,16 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from gammapy.astro import population
+from ..utils.scripts import get_parser
+from ..astro import population
 
 __all__ = ['simulate_source_catalog']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = simulate_source_catalog.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(simulate_source_catalog)
     parser.add_argument('outfile', type=str,
                         help='Output filename')
     parser.add_argument('nsources', type=float,

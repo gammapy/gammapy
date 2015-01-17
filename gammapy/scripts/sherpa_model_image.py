@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['sherpa_model_image']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = sherpa_model_image.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(sherpa_model_image)
     parser.add_argument('--exposure', type=str, default='exposure.fits',
                         help='Exposure FITS file name')
     parser.add_argument('--psf', type=str, default='psf.json',

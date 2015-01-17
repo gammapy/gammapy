@@ -3,15 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import sys
 import logging
+from ..utils.scripts import get_parser
 
 __all__ = ['info']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = info.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(info)
     parser.add_argument('--version', action='store_true',
                         help='Print Gammapy version number')
     parser.add_argument('--tools', action='store_true',
@@ -41,6 +39,8 @@ def info(version=False, tools=False):
         print('')
 
     if tools:
+        # TODO: re-write ... this doesn't work any more
+        raise NotImplementedError
         print('\n*** Gammapy tools ***\n')
         # We assume all tools are installed in the same folder as this script
         # and their names start with "gammapy-".

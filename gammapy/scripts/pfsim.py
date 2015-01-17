@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['pfsim']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = pfsim.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(pfsim)
     parser.add_argument('arf', type=str,
                         help='Input ARF file.')
     parser.add_argument('-t', '--exposure_time', type=float, default=.5,

@@ -1,15 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['sherpa_image_like']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = sherpa_image_like.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(sherpa_image_like)
     parser.add_argument('--counts', type=str, default='counts.fits',
                         help='Counts FITS file name')
     parser.add_argument('--exposure', type=str, default='exposure.fits',

@@ -5,9 +5,9 @@ from __future__ import print_function, division
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 import os
-
 from astropy.units import Quantity
 from astropy.io import fits
+from ..utils.scripts import get_parser
 
 __all__ = ['irf_info']
 
@@ -56,10 +56,7 @@ def retrieve_arf_info(hdu_list, energies, plot=False):
     
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = irf_info.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(irf_info)
     parser.add_argument('infiles', type=str, nargs='+',
                         help='Input FITS file name')
     parser.add_argument('--plot', action='store_true',

@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
+
+__all__ = ['image_decompose_a_trous']
 
 # TODO: add option to copy over input file
 # TODO: add option to select input HDU name or number
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = image_decompose_a_trous.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(image_decompose_a_trous)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('outfile', type=str,

@@ -6,15 +6,13 @@ for developers and the test runner from including it in test collection.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['check']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = check.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(check)
     parser.add_argument('--package', type=str, default=None,
                         help='Package to test')
     args = parser.parse_args(args)

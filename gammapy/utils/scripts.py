@@ -9,6 +9,7 @@ import os
 import glob
 
 __all__ = ['GammapyFormatter',
+           'get_parser',
            'get_installed_scripts',
            'get_all_main_functions',
            ]
@@ -26,6 +27,16 @@ class GammapyFormatter(argparse.ArgumentDefaultsHelpFormatter,
     ...                                  formatter_class=GammapyFormatter)
     """
     pass
+
+
+def get_parser(function=None, description='N/A'):
+    """Make an ArgumentParser how we like it.
+    """
+    if function:
+        description = function.__doc__.split('\n')[0]
+    parser = argparse.ArgumentParser(description=description,
+                                     formatter_class=GammapyFormatter)
+    return parser
 
 
 def get_installed_scripts():

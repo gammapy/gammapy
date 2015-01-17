@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 
 __all__ = ['look_up_image']
 
@@ -11,10 +12,7 @@ __all__ = ['look_up_image']
 
 
 def main(args=None):
-    from gammapy.utils.scripts import argparse, GammapyFormatter
-    description = look_up_image.__doc__.split('\n')[0]
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=GammapyFormatter)
+    parser = get_parser(look_up_image)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('x', type=float,
