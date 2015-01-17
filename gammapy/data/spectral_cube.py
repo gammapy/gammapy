@@ -419,19 +419,17 @@ class SpectralCube(object):
 
         return hdu_list
 
-    def writeto(self, filename, clobber=False):
+    def writeto(self, filename, overwrite=False):
         """Writes SpectralCube to fits file.
 
         Parameters
         ----------
         filename : string
             Name of output file (.fits)
-        clobber : bool
-            True: overwrites existing files of same name.
-            False: returns error if a file exists of the same name in the
-            output directory.
+        overwrite : bool
+            Overwrite existing output file?
         """
-        self.to_fits.writeto(filename, clobber)
+        self.to_fits.writeto(filename, overwrite)
 
     def __repr__(self):
         # Copied from `spectral-cube` package

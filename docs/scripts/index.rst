@@ -1,26 +1,36 @@
 .. _scripts:
 
-Command line tools
-==================
+***************************************
+Command line tools  (`gammapy.scripts`)
+***************************************
 
-The ``gammapy/scripts`` folder contains command line tools
-that are also installed in the ``bin`` directory if you install Gammapy
-and are thus available to you if that is on your ``$PATH``. 
+.. currentmodule:: gammapy.scripts
 
-TODO: explain better how to find out where the scripts were installed,
-i.e. what the user should add to their ``$PATH``.
+Introduction
+============
 
-.. note:: For now the full list of scripts is only available here:
-   https://github.com/gammapy/gammapy/tree/master/scripts
-   
-   We plan to integrate that into the online Sphinx docs ...
-   please help if you know how to do this:
-   https://github.com/gammapy/gammapy/issues/24
+Currently the `gammapy.scripts` sub-package contains the Gammapy command line tools.
 
-Here's an example of a script listed by hand ... this should be auto-generated
-by ``build_sphinx``:
+This might change though ... see the notes here:
+https://github.com/gammapy/gammapy/pull/230
 
-.. toctree::
-  :maxdepth: 1
+To be able to use them you have to install Gammapy:
 
-  gammapy-info
+.. code-block:: bash
+
+    $ pip install --user .
+
+
+For Gammapy development we recommend you run this command so that you can edit
+Gammapy and the tools and don't have to re-install after every change.
+
+.. code-block:: bash
+
+    $ pip install --user --editable .
+
+
+Reference/API
+=============
+
+.. automodapi:: gammapy.scripts
+    :no-inheritance-diagram:
