@@ -183,10 +183,10 @@ class CWT(object):
         maximum = np.argmax(self.transform, 0)
         return self.scale_array[maximum] * (self.support.sum(0) > 0)
 
-    def save_filter(self, filename, clobber=False):
+    def save_filter(self, filename, overwrite=False):
         """Save filter to file."""
         hdu = fits.PrimaryHDU(self.filter, self.header)
-        hdu.writeto(filename, clobber=clobber)
+        hdu.writeto(filename, clobber=overwrite)
         fits.append(filename, self.approx, self.header)
         fits.append(filename, self.filter + self.approx, self.header)
         fits.append(filename, self.max_scale_image(), self.header)

@@ -67,11 +67,6 @@ adjust_compiler(PACKAGENAME)
 generate_version_py(PACKAGENAME, VERSION, RELEASE,
                     get_debug_option(PACKAGENAME))
 
-# Treat everything in scripts except README.rst as a script to be installed
-scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
-           if os.path.basename(fname) != 'README.rst']
-
-
 # Get configuration information from all of the various subpackages.
 # See the docstring for setup_helpers.update_package_files for more
 # details.
@@ -79,6 +74,40 @@ package_info = get_package_info()
 
 # Add the project-global data
 package_info['package_data'].setdefault(PACKAGENAME, [])
+
+# Command-line scripts
+# Please keep the list in alphabetical order
+entry_points = {}
+entry_points['console_scripts'] = [
+    'gammapy-background-cube = gammapy.scripts.background_cube:main',
+    'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
+    'gammapy-bin-image = gammapy.scripts.bin_image:main',
+    'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',
+    'gammapy-cwt = gammapy.scripts.cwt:main',
+    'gammapy-derived-images = gammapy.scripts.derived_images:main',
+    'gammapy-detect = gammapy.scripts.detect:main',
+    'gammapy-find-runs = gammapy.scripts.find_runs:main',
+    'gammapy-image-decompose-a-trous = gammapy.scripts.image_decompose_a_trous:main',
+    'gammapy-info = gammapy.scripts.info:main',
+    'gammapy-irf-info = gammapy.scripts.irf_info:main',
+    'gammapy-irf-root-to-fits = gammapy.scripts.irf_root_to_fits:main',
+    'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
+    'gammapy-look-up-image = gammapy.scripts.look_up_image:main',
+    'gammapy-model-image = gammapy.scripts.model_image:main',
+    'gammapy-pfmap = gammapy.scripts.pfmap:main',
+    'gammapy-pfsim = gammapy.scripts.pfsim:main',
+    'gammapy-pfspec = gammapy.scripts.pfspec:main',
+    'gammapy-reflected-regions = gammapy.scripts.reflected_regions:main',
+    'gammapy-residual-images = gammapy.scripts.residual_images:main',
+    'gammapy-root-to-fits = gammapy.scripts.root_to_fits:main',
+    'gammapy-sherpa-like = gammapy.scripts.sherpa_like:main',
+    'gammapy-sherpa-model-image = gammapy.scripts.sherpa_model_image:main',
+    'gammapy-significance-image = gammapy.scripts.significance_image:main',
+    'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
+    'gammapy-test = gammapy.scripts.check:main',
+    # 'gammapy-ts-image = gammapy.scripts.ts_image:main',
+    'gammapy-xspec = gammapy.scripts.xpsec:main',
+]
 
 # Note: usually the `affiliated_package/data` folder is used for data files.
 # In Gammapy we use `gammapy/data` as a sub-package.
@@ -101,7 +130,6 @@ package_info['package_data'][PACKAGENAME].extend(c_files)
 setup(name=PACKAGENAME,
       version=VERSION,
       description=DESCRIPTION,
-      scripts=scripts,
       # Note: these are the versions we test.
       # Older versions could work, but are unsupported.
       # To find out if everything works run the Gammapy tests.
@@ -135,5 +163,6 @@ setup(name=PACKAGENAME,
       cmdclass=cmdclassd,
       zip_safe=False,
       use_2to3=False,
+      entry_points=entry_points,
       **package_info
 )

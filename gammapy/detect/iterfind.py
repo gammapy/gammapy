@@ -39,7 +39,6 @@ from .. import stats
 from ..image import disk_correlate
 
 __all__ = ['IterativeSourceDetector',
-           'run_detection',
            ]
 
 
@@ -73,7 +72,7 @@ class IterativeSourceDetector(object):
     """
 
     def __init__(self, maps, scales, max_sources=10, significance_threshold=5,
-                 max_ncall=300, debug_output_folder='', clobber=False):
+                 max_ncall=300, debug_output_folder='', overwrite=False):
         self.maps = maps
         # Note: FITS convention is to start counting pixels at 1
         y, x = np.indices(maps['counts'].shape, dtype=np.int32) + 1
@@ -88,7 +87,7 @@ class IterativeSourceDetector(object):
         self.significance_threshold = significance_threshold
         self.max_ncall = max_ncall
         self.debug_output_folder = debug_output_folder
-        self.clobber = clobber
+        self.overwrite = overwrite
 
         self.sources_guess = []
         self.sources = []
@@ -116,14 +115,14 @@ class IterativeSourceDetector(object):
                 for name in ['background']:
                     filename = '{0}/{1}.fits'.format(debug_folder, name)
                     logging.info('Writing {0}'.format(filename))
-                    fits.writeto(filename, self.iter_maps[name], clobber=self.clobber)
+                    fits.writeto(filename, self.iter_maps[name], clobber=self.overwrite)
 
                 # Save per iteration and scale maps
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
                         logging.info('Writing {0}'.format(filename))
-                        fits.writeto(filename, self.iter_maps[name][scale], clobber=self.clobber)
+                        fits.writeto(filename, self.iter_maps[name][scale], clobber=self.overwrite)
 
             self.find_peaks()
             # TODO: debug output to JSON here and for later steps
@@ -362,33 +361,3 @@ class IterativeSourceDetector(object):
         # TypeError: 1.2617354e-10 is not JSON serializable 
         with open(filename, 'w') as outfile:
             json.dump(data, outfile, indent=4)
-
-
-def run_detection(args):
-    """Run iterative source detection."""
-    # Load data
-    maps = dict()
-    for mapname in ['counts', 'background', 'exposure']:
-        filename = args[mapname]
-        logging.info('Reading {0} map: {1}'.format(mapname, filename))
-        maps[mapname] = fits.getdata(filename)
-
-    # Compute scales in pixel coordinates
-    DEG_PER_PIX = np.abs(fits.getval(args['counts'], 'CDELT1'))
-    scales_deg = args['scales']
-    scales_pix = np.array(scales_deg) / DEG_PER_PIX
-    logging.info('Number of scales: {0}'.format(len(scales_deg)))
-    logging.info('DEG_PER_PIX: {0}'.format(DEG_PER_PIX))
-    logging.info('Scales in deg: {0}'.format(scales_deg))
-    logging.info('Scales in pix: {0}'.format(scales_pix))
-
-    # Run the iterative source detection
-    detector = IterativeSourceDetector(maps=maps, scales=scales_pix,
-                                       debug_output_folder=args['debug_output_folder'],
-                                       clobber=True)
-    detector.run()
-
-    # Save the results
-    # detector.save_fits(args['output_fits'])
-    detector.save_regions(args['output_regions'])
-    # detector.save_json('detect.json')

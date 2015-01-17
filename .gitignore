@@ -18,6 +18,9 @@ htmlcov
 # Sphinx
 _build
 
+# Pytest
+.cache
+
 # Packages/installer info
 *.egg
 *.egg-info
