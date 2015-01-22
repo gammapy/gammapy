@@ -179,11 +179,6 @@ def compute_position_angles(runs, observer=None, time_method='center'):
     return position_angle
 
 
-def test_HESS():
-    observer = HESS()
-    print(observer)
-
-
 def test_transform():
     """Test all coordinate transform methods for one test example.
 
