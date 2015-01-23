@@ -44,11 +44,11 @@ list(observatory_locations.keys())
 """
 # Locations / height info mostly taken from Wikipedia unless noted differently
 observatory_locations = Bunch()
-# CTA location taken from the site evaluation summary table
-# This is just a random selection ... there's other candidate sites listed
+# The selection of CTA candidate sites is somewhat random ... there's other candidate sites I think
 # http://en.wikipedia.org/wiki/Cherenkov_Telescope_Array#Site_Selection
 observatory_locations['CTA_South_Aar'] = _obs_loc(lon='16.44d', lat='-26.69d', height=1650)
-observatory_locations['CTA_South_Armazones'] = _obs_loc(lon='16.44d', lat='-26.69d', height=1650)
+observatory_locations['CTA_South_Armazones'] = _obs_loc(lon='-70.24d', lat='-24.58d', height=2500)
+observatory_locations['CTA_South_Armazones_2K'] = _obs_loc(lon='-70.31d', lat='-24.69d', height=2100)
 observatory_locations['CTA_South_Leoncito'] = _obs_loc(lon='-69.27d', lat='31.72d', height=2640)
 observatory_locations['CTA_North_Teide'] = _obs_loc(lon='-16.54d', lat='28.28d', height=2290)
 observatory_locations['CTA_North_Meteor_Crator'] = _obs_loc(lon='-111.03d', lat='35.04d', height=1680)

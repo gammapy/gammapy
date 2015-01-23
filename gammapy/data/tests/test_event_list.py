@@ -4,5 +4,6 @@ from ...data import EventList
 
 
 def test_EventList():
-    event_list = EventList()
+    event_list = EventList('TODO')
+
     # TODO: add tests
