@@ -12,7 +12,7 @@ from astropy.coordinates import SkyCoord
 from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw, pdf
-from ...morphology.shapes import morph_types
+from gammapy.morphology.models import morph_types
 from ...catalog.utils import as_quantity
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
