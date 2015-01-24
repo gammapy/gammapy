@@ -9,3 +9,4 @@ def test_EventList():
     ds = EventListDataset.read(filename)
 
     assert len(ds.event_list) == 49
+    assert isinstance(ds.info, str)

@@ -1,7 +1,10 @@
 """Eventlist coordinate check.
 """
-from gammapy.data import EventList, check_event_list_coordinates
+from gammapy.data import EventListDataset, check_event_list_coordinates
+from gammapy.datasets import get_path
 
-filename = '/Users/deil/work/host/howto/ctools_crab/cta-1dc/data/hess/CTA1DC-HESS-run_00023523_eventlist.fits'
-event_list = EventList.read(filename)
-check_event_list_coordinates(event_list)
+
+filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
+event_list = EventListDataset.read(filename)
+print(event_list.info)
+# check_event_list_coordinates(event_list)

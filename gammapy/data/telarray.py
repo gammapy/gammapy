@@ -10,9 +10,12 @@ __all__ = ['TelescopeArray']
 class TelescopeArray(Table):
     """Telescope array info.
     """
-    def __str__(self):
-        # TODO: implement useful info
-        return str(self)
+    @property
+    def info(self):
+        """Summary info string."""
+        s = '---> Telescope array info:\n'
+        s += '- number of telescopes: {}\n'.format(len(self))
+        return s
 
     def get_earth_location(self):
         """Array center `~astropy.coordinates.EarthLocation`.

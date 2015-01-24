@@ -30,7 +30,12 @@ class EventList(Table):
     I.e. does the end-user ever need to use it or is
     interacting with `EventDataset` enough?
     """
-    pass
+    @property
+    def info(self):
+        """Summary info string."""
+        s = '---> EventList info:\n'
+        s += '- events: {}\n'.format(len(self))
+        return s
 
 
 class EventListDataset(object):
@@ -81,10 +86,13 @@ class EventListDataset(object):
 
         return EventListDataset(event_list, telescope_array, good_time_intervals)
 
-    def __str__(self):
-        # TODO: implement useful info (min, max, sum)
-        s = 'Event list dataset information:'
-        s += '- events: {}\n'.format(len(self.events))
+    @property
+    def info(self):
+        """Summary info string."""
+        s = '===> Event list dataset information:\n'
+        s += self.event_list.info
+        s += self.telescope_array.info
+        s += self.good_time_intervals.info
         s += '- telescopes: {}\n'.format(len(self.telescope_array))
         s += '- good time intervals: {}\n'.format(len(self.good_time_intervals))
         return s
