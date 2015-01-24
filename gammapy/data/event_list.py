@@ -9,33 +9,49 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.table import Table
 from ..data import GoodTimeIntervals, TelescopeArray
 
-__all__ = ['EventList',
+__all__ = ['EventListDataset',
+           'EventList',
            'check_event_list_coordinates',
            ]
 
 logger = logging.getLogger(__name__)
 
 
-class EventList(object):
-    """Event list.
+class EventList(Table):
+    """Event list table.
 
-    Table of event parameters and optional extra info.
+     Reconstructed event parameters:
+     - Time
+     - Position
+     - Energy
+     - ...
 
-    TODO: better to split out the events table container
-    into a separate class?
+    TODO: should this be private or public?
+    I.e. does the end-user ever need to use it or is
+    interacting with `EventDataset` enough?
+    """
+    pass
+
+
+class EventListDataset(object):
+    """Event list dataset (event list plus some extra info).
+
+    TODO: I'm not sure if IRFs should be included in this
+    class or if an extra container class should be added.
 
     Parameters
     ----------
-    events : `~astropy.table.Table`
-        Events table
+    event_list : `~gammapy.data.EventList`
+        Event list table
     telescope_array : `~gammapy.data.TelescopeArray`
         Telescope array info
-    good_time_intervals : `~gammapy.data.TelescopeArray`
+    good_time_intervals : `~gammapy.data.GoodTimeIntervals`
+        Observation time interval info
     """
-    def __init__(self, events,
+    def __init__(self, event_list,
                  telescope_array=None,
                  good_time_intervals=None):
-        self.events = events
+        self.event_list = event_list
         self.telescope_array = telescope_array
         self.good_time_intervals = good_time_intervals
 
@@ -48,50 +64,50 @@ class EventList(object):
         # to an in-memory buffer with StringIO and then read it
         # back using Table.read()?
         raise NotImplementedError
-        events = Table(hdu_list['EVENTS'])
+        event_list = EventList.from_hdu(hdu_list['EVENTS'])
         telescope_array = TelescopeArray.from_hdu(hdu_list['TELARRAY'])
         good_time_intervals = GoodTimeIntervals.from_hdu(hdu_list['GTI'])
 
-        return EventList(events, telescope_array, good_time_intervals)
+        return EventListDataset(event_list, telescope_array, good_time_intervals)
 
     @staticmethod
     def read(filename):
         """Read event list from FITS file.
         """
         # return EventList.from_hdu_list(fits.open(filename))
-        events = Table.read(filename, hdu='EVENTS')
-        telescope_array = Table.read(filename, hdu='TELARRAY')
-        good_time_intervals = Table.read(filename, hdu='GTI')
+        event_list = EventList.read(filename, hdu='EVENTS')
+        telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
+        good_time_intervals = GoodTimeIntervals.read(filename, hdu='GTI')
 
-        return EventList(events, telescope_array, good_time_intervals)
+        return EventListDataset(event_list, telescope_array, good_time_intervals)
 
     def __str__(self):
         # TODO: implement useful info (min, max, sum)
-        s = 'Event list information:'
+        s = 'Event list dataset information:'
         s += '- events: {}\n'.format(len(self.events))
         s += '- telescopes: {}\n'.format(len(self.telescope_array))
         s += '- good time intervals: {}\n'.format(len(self.good_time_intervals))
         return s
 
 
-def _check_event_list_coordinates_galactic(event_list, accuracy):
+def _check_event_list_coordinates_galactic(event_list_dataset, accuracy):
     """Check if RA / DEC matches GLON / GLAT."""
-    events = event_list.events
+    event_list = event_list_dataset.event_list
 
     for colname in ['RA', 'DEC', 'GLON', 'GLAT']:
-        if colname not in events.colnames:
+        if colname not in event_list.colnames:
             # GLON / GLAT columns are optional ...
             # so it's OK if they are not present ... just move on ...
             logger.info('Skipping Galactic coordinate check. '
                         'Missing column: "{}".'.format(colname))
             return True
 
-    ra = events['RA'].astype('f64')
-    dec = events['DEC'].astype('f64')
+    ra = event_list['RA'].astype('f64')
+    dec = event_list['DEC'].astype('f64')
     radec = SkyCoord(ra, dec, unit='deg', frame='icrs')
 
-    glon = events['GLON'].astype('f64')
-    glat = events['GLAT'].astype('f64')
+    glon = event_list['GLON'].astype('f64')
+    glat = event_list['GLAT'].astype('f64')
     galactic = SkyCoord(glon, glat, unit='deg', frame='galactic')
 
     separation = radec.separation(galactic).to('arcsec')
@@ -107,19 +123,24 @@ def _check_event_list_coordinates_galactic(event_list, accuracy):
         return True
 
 
-def _check_event_list_coordinates_horizon(event_list, accuracy):
-    """Check if ALT / AZ and DETX / DETY matches RA / DEC."""
-    events = event_list.events
-    meta = event_list.telarray.meta
+def _check_event_list_coordinates_horizon(event_list_dataset, accuracy):
+    """Check if ALT / AZ matches RA / DEC."""
+    event_list = event_list_dataset.event_list
+    location = event_list.telescope_array.get_earth_location()
 
-    location = event_list.telarray.get_earth_location()
-
-    # import IPython; IPython.embed(); 1/0
+    import IPython; IPython.embed(); 1/0
+    # TODO: convert RA / DEC to ALT / AZ and then compute
+    # separation in ALT / AZ
 
     return True
 
 
-def check_event_list_coordinates(event_list, accuracy=Angle('1 arcsec')):
+def _check_event_list_coordinates_field_of_view(event_list_dataset, accuracy):
+    """Check if DETX / DETY matches ALT / AZ"""
+    return True
+
+
+def check_event_list_coordinates(event_list_dataset, accuracy=Angle('1 arcsec')):
     """Check if various event list coordinates are consistent.
 
     This can be useful to discover issue in the coordinate
@@ -130,7 +151,7 @@ def check_event_list_coordinates(event_list, accuracy=Angle('1 arcsec')):
 
     Parameters
     ----------
-    event_list : `EventList`
+    event_list : `~gammapy.data.EventListDataset`
         Event list
     accuracy : `~astropy.coordinates.Angle`
         Required accuracy.
@@ -141,6 +162,7 @@ def check_event_list_coordinates(event_list, accuracy=Angle('1 arcsec')):
         All coordinates consistent?
     """
     ok = True
-    ok &= _check_event_list_coordinates_galactic(event_list, accuracy)
-    ok &= _check_event_list_coordinates_horizon(event_list, accuracy)
+    ok &= _check_event_list_coordinates_galactic(event_list_dataset, accuracy)
+    ok &= _check_event_list_coordinates_horizon(event_list_dataset, accuracy)
+    ok &= _check_event_list_coordinates_field_of_view(event_list_dataset, accuracy)
     return ok

@@ -159,3 +159,26 @@ Make a Gammapy release
 For now, see https://github.com/astropy/package-template/issues/103
 
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
+
+Other codes
+-----------
+
+These projects are on Github, which is great because
+it has full-text search and git history view:
+
+* https://github.com/gammapy/gammapy
+* https://github.com/gammapy/gammapy-extra
+* https://github.com/astropy/astropy
+* https://github.com/astropy/photutils
+* https://github.com/gammalib/gammalib
+* https://github.com/ctools/ctools
+* https://github.com/zblz/naima
+* https://github.com/woodmd/gammatools
+* https://github.com/kialio/VHEObserverTools
+
+These are unofficial, unmaintained copies on open codes on Github:
+
+* https://github.com/brefsdal/sherpa
+* https://github.com/Xarthisius/yt-drone
+* https://github.com/cdeil/Fermi-ScienceTools-mirror
+* https://github.com/cdeil/kapteyn-mirror
