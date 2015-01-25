@@ -12,6 +12,7 @@ def test_GoodTimeIntervals():
 
     assert len(gtis) == 1
     assert 'Good time interval info' in gtis.info
+    # TODO: add asserts
     gtis.time_observations
     gtis.time_observation
     gtis.time_start

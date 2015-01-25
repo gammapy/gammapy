@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 from collections import OrderedDict
+from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
@@ -23,7 +24,7 @@ class EventList(Table):
     The most important reconstructed event parameters
     are available as the following columns:
 
-    - ``TIM'`` - Mission elapsed time (sec)
+    - ``TIME`` - Mission elapsed time (sec)
     - ``RA``, ``DEC`` - FK5 J2000 (or ICRS?) position (deg)
     - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
 
@@ -36,7 +37,10 @@ class EventList(Table):
     values directly, but access them via properties which create objects
     of the appropriate class and convert to 64 bit:
 
-    - `obstime` for '`TIME`'
+    - `obstime` for ``TIME``
+    - `radec` for ``RA``, ``DEC``
+    - `energy` for ``ENERGY``
+    - `galactic` for ``GLON``, ``GLAT``
     """
     @property
     def info(self):
@@ -46,15 +50,27 @@ class EventList(Table):
         return s
 
     @property
+    def obstime(self):
+        """Event times as `~astropy.time.Time` objects."""
+        met_ref = utils._time_ref_from_dict(self.meta)
+        met = TimeDelta(self['TIME'].astype('f64'), format='sec')
+        return met_ref + met
+
+    @property
     def radec(self):
         """RA / DEC sky coordinate (`~astropy.coordinates.SkyCoord`)"""
         lon = self['RA'].astype('f64')
         lat = self['DEC'].astype('f64')
-        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+        return SkyCoord(lon, lat, unit='deg', frame='fk5')
 
     @property
     def galactic(self):
-        """Galactic sky coordinate (`~astropy.coordinates.SkyCoord`)"""
+        """Galactic sky coordinate (`~astropy.coordinates.SkyCoord`).
+
+        Note: uses the ``GLON`` and ``GLAT`` columns.
+        If only ``RA`` and ``DEC`` are present use the explicit
+        ``event_list.radec.to('galactic')`` instead.
+        """
         lon = self['GLON'].astype('f64')
         lat = self['GLAT'].astype('f64')
         return SkyCoord(lon, lat, unit='deg', frame='galactic')
@@ -70,11 +86,10 @@ class EventList(Table):
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
 
     @property
-    def obstime(self):
-        """Event times as `~astropy.time.Time` objects."""
-        met_ref = utils._time_ref_from_dict(self.meta)
-        met = TimeDelta(self['TIME'].astype('f64'), format='sec')
-        return met_ref + met
+    def energy(self):
+        """Event energy (`~astropy.units.Quantity`)."""
+        energy = self['ENERGY'].astype('f64')
+        return Quantity(energy, self.meta['EUNIT'])
 
     @property
     def observatory_earth_location(self):

@@ -13,16 +13,22 @@ def test_EventList():
 
     assert len(event_list) == 49
     assert 'Event list info' in event_list.info
+    # TODO: add asserts:
+    event_list.obstime
+    event_list.radec
+    event_list.altaz
+    event_list.energy
+    event_list.observatory_earth_location
 
 
 def test_EventListDataset():
     dset = EventListDataset.read(filename)
 
     assert len(dset.event_list) == 49
-    assert 'a' in dset.info
+    assert 'Event list dataset info' in dset.info
 
 
 def test_EventListDatasetChecker():
     dset = EventListDataset.read(filename)
     checker = EventListDatasetChecker(dset)
-    # checker.check('all')
+    checker.run('all')
