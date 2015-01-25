@@ -11,7 +11,7 @@ def test_GoodTimeIntervals():
     gtis = GoodTimeIntervals.read(filename, hdu='GTI')
 
     assert len(gtis) == 1
-    assert isinstance(gtis.info, str)
+    assert 'Good time interval info' in gtis.info
     gtis.time_observations
     gtis.time_observation
     gtis.time_start

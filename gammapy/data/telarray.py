@@ -17,9 +17,9 @@ class TelescopeArray(Table):
         s += '- number of telescopes: {}\n'.format(len(self))
         return s
 
-    def get_earth_location(self):
-        """Array center `~astropy.coordinates.EarthLocation`.
-        """
+    @property
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)"""
         return utils._earth_location_from_dict(self.meta)
 
     def plot(self, ax):

@@ -41,7 +41,7 @@ class EventList(Table):
     @property
     def info(self):
         """Summary info string."""
-        s = '---> EventList info:\n'
+        s = '---> Event list info:\n'
         s += '- events: {}\n'.format(len(self))
         return s
 

@@ -12,14 +12,14 @@ def test_EventList():
     event_list = EventList.read(filename, hdu='EVENTS')
 
     assert len(event_list) == 49
-    assert isinstance(event_list.info, str)
+    assert 'Event list info' in event_list.info
 
 
 def test_EventListDataset():
     dset = EventListDataset.read(filename)
 
     assert len(dset.event_list) == 49
-    assert isinstance(dset.info, str)
+    assert 'a' in dset.info
 
 
 def test_EventListDatasetChecker():
