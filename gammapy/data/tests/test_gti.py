@@ -11,11 +11,8 @@ def test_GoodTimeIntervals():
     gtis = GoodTimeIntervals.read(filename, hdu='GTI')
 
     assert len(gtis) == 1
-    assert 'Good time interval info' in gtis.info
-    # TODO: add asserts
-    gtis.time_observations
-    gtis.time_observation
-    gtis.time_start
-    gtis.time_stop
-    gtis.time_dead_fraction
-    gtis.time_live
+    assert 'Good time interval (GTI) info' in gtis.info
+    assert '{:1.5f}'.format(gtis.time_delta[0]) == '1568.00000 s'
+    assert '{:1.5f}'.format(gtis.time_sum) == '1568.00000 s'
+    assert gtis.time_start[0].iso == '2004-10-14 00:08:36.797'
+    assert gtis.time_stop[-1].iso == '2004-10-14 00:34:37.734'

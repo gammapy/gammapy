@@ -5,11 +5,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 from collections import OrderedDict
+import numpy as np
 from astropy.units import Quantity
-from astropy.time import Time, TimeDelta
+from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
 from ..data import GoodTimeIntervals, TelescopeArray
+from ..data import InvalidDataError
 from . import utils
 
 __all__ = ['EventList',
@@ -46,14 +48,29 @@ class EventList(Table):
     def info(self):
         """Summary info string."""
         s = '---> Event list info:\n'
-        s += '- events: {}\n'.format(len(self))
+        # TODO: Which telescope?
+
+        # When and how long was the observation?
+        s += '- Observation duration: {}\n'.format(self.observation_time_duration)
+        s += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+
+        # TODO: Which target was observed?
+
+        s += '-- Event info:\n'
+        s += '- Number of events: {}\n'.format(len(self))
+        # TODO: add time, RA, DEC and if present GLON, GLAT info ...
+        s += '- Median energy: {}\n'.format(np.median(self.energy))
+        # TODO: azimuth should be circular median
+        s += '- Median azimuth: {}\n'.format(np.median(self['AZ']))
+        s += '- Median altitude: {}\n'.format(np.median(self['ALT']))
+
         return s
 
     @property
     def time(self):
         """Event times (`~astropy.time.Time`)"""
         met_ref = utils._time_ref_from_dict(self.meta)
-        met = TimeDelta(self['TIME'].astype('f64'), format='sec')
+        met = Quantity(self['TIME'].astype('f64'), 'second')
         return met_ref + met
 
     @property
@@ -95,6 +112,46 @@ class EventList(Table):
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)"""
         return utils._earth_location_from_dict(self.meta)
+
+    # TODO: I'm not sure how to best exposure header data
+    # as quantities ... maybe expose them on `meta` or
+    # a completely separate namespace?
+    # For now I'm taking very verbose names ...
+
+    @property
+    def observation_time_duration(self):
+        """Observation time duration in seconds (`~astropy.units.Quantity`).
+
+        The wall time, including dead-time.
+        """
+        return Quantity(self.meta['ONTIME'], 'second')
+
+    @property
+    def observation_live_time_duration(self):
+        """Live-time duration in seconds (`~astropy.units.Quantity`).
+
+        The dead-time-corrected observation time.
+
+        Computed as ``t_live = t_observation * (1 - f_dead)``
+        where ``f_dead`` is the dead-time fraction.
+        """
+        return Quantity(self.meta['LIVETIME'], 'second')
+
+    @property
+    def observation_dead_time_fraction(self):
+        """Dead-time fraction.
+
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector didn't record events:
+        http://en.wikipedia.org/wiki/Dead_time
+        http://adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+        """
+        return 1 - self.meta['DEADC']
 
 
 class EventListDataset(object):
@@ -209,7 +266,7 @@ class EventListDatasetChecker(object):
 
     accuracy = OrderedDict(
         angle=Angle('1 arcsec'),
-        time=TimeDelta(1e-6, format='sec'),
+        time=Quantity(1, 'microsecond'),
 
     )
 
@@ -262,6 +319,27 @@ class EventListDatasetChecker(object):
         # TODO: implement more basic checks that all required info is present.
 
         return ok
+
+    def _check_times_gtis(self):
+        """Check GTI info"""
+        # TODO:
+        # Check that required info is there
+        for colname in ['START', 'STOP']:
+            if colname not in self.colnames:
+                raise InvalidDataError('GTI missing column: {}'.format(colname))
+
+        for key in ['TSTART', 'TSTOP', 'MJDREFI', 'MJDREFF']:
+            if key not in self.meta:
+                raise InvalidDataError('GTI missing header keyword: {}'.format(key))
+
+        # TODO: Check that header keywords agree with table entries
+        # TSTART, TSTOP, MJDREFI, MJDREFF
+
+        # Check that START and STOP times are consecutive
+        times = np.ravel(self['START'], self['STOP'])
+        # TODO: not sure this is correct ... add test with a multi-gti table from Fermi.
+        if not np.all(np.diff(times) >= 0):
+            raise InvalidDataError('GTIs are not consecutive or sorted.')
 
     def check_times(self):
         """Check if various times are consistent.
