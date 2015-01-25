@@ -206,6 +206,8 @@ which means that when you write a function you should write it like this:
             out = 3 * data
         elif option == 'that':
             out = data ** 5
+        else:
+            ValueError('Invalid option: {}'.format(option))
 
         return out
 
@@ -224,6 +226,7 @@ which means that when you write a function you should write it like this:
   but not adding it would mean users get this error if they pass an invalid option::
 
       UnboundLocalError: local variable 'out' referenced before assignment
+
 
 Now if you really want, you can add the `numpy.asanyarray` and `isinstance` checks
 for functions that end-users might often use for interactive work to provide them with

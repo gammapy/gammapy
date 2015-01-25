@@ -37,7 +37,7 @@ class EventList(Table):
     values directly, but access them via properties which create objects
     of the appropriate class and convert to 64 bit:
 
-    - `obstime` for ``TIME``
+    - `time` for ``TIME``
     - `radec` for ``RA``, ``DEC``
     - `energy` for ``ENERGY``
     - `galactic` for ``GLON``, ``GLAT``
@@ -50,22 +50,22 @@ class EventList(Table):
         return s
 
     @property
-    def obstime(self):
-        """Event times as `~astropy.time.Time` objects."""
+    def time(self):
+        """Event times (`~astropy.time.Time`)"""
         met_ref = utils._time_ref_from_dict(self.meta)
         met = TimeDelta(self['TIME'].astype('f64'), format='sec')
         return met_ref + met
 
     @property
     def radec(self):
-        """RA / DEC sky coordinate (`~astropy.coordinates.SkyCoord`)"""
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
         lon = self['RA'].astype('f64')
         lat = self['DEC'].astype('f64')
         return SkyCoord(lon, lat, unit='deg', frame='fk5')
 
     @property
     def galactic(self):
-        """Galactic sky coordinate (`~astropy.coordinates.SkyCoord`).
+        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
 
         Note: uses the ``GLON`` and ``GLAT`` columns.
         If only ``RA`` and ``DEC`` are present use the explicit
@@ -77,17 +77,17 @@ class EventList(Table):
 
     @property
     def altaz(self):
-        """Horizontal sky coordinate (`~astropy.coordinates.SkyCoord`)"""
+        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)"""
         lon = self['AZ'].astype('f64')
         lat = self['ALT'].astype('f64')
-        obstime = self.obstime
+        time = self.time
         location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=obstime, location=location)
+        altaz_frame = AltAz(obstime=time, location=location)
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
 
     @property
     def energy(self):
-        """Event energy (`~astropy.units.Quantity`)."""
+        """Event energies (`~astropy.units.Quantity`)."""
         energy = self['ENERGY'].astype('f64')
         return Quantity(energy, self.meta['EUNIT'])
 
@@ -366,12 +366,6 @@ class EventListDatasetChecker(object):
                 self.logger.info('Skipping AltAz coordinate check. '
                                  'Missing column: "{}".'.format(colname))
                 return True
-
-        # TODO: I think we don't need this here, because `event_list.altaz`
-        # can be used as the coordinate frame to transform to...
-        # location = telescope_array.get_earth_location()
-        # obstime = event_list.obstime
-        # altaz_frame = AltAz(location=location, obstime=obstime)
 
         radec = event_list.radec
         altaz_expected = event_list.altaz

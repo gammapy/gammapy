@@ -13,12 +13,15 @@ def test_EventList():
 
     assert len(event_list) == 49
     assert 'Event list info' in event_list.info
-    # TODO: add asserts:
-    event_list.obstime
-    event_list.radec
-    event_list.altaz
-    event_list.energy
-    event_list.observatory_earth_location
+    assert event_list.time[0].iso == '2004-10-14 00:08:32.000'
+    assert event_list.radec[0].to_string() == '82.7068 19.8186'
+    assert event_list.altaz[0].to_string() == '46.2059 31.2001'
+    assert '{:1.5f}'.format(event_list.energy[0]) == '11.64355 TeV'
+
+    lon, lat, height = event_list.observatory_earth_location.to_geodetic()
+    assert '{:1.5f}'.format(lon) == '16.50022 deg'
+    assert '{:1.5f}'.format(lat) == '-23.27178 deg'
+    assert '{:1.5f}'.format(height) == '1835.00000 m'
 
 
 def test_EventListDataset():

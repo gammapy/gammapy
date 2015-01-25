@@ -11,6 +11,5 @@ event_list.check()
 
 """
 TODO: figure out the origin of this offset:
-
 ALT / AZ not consistent with RA / DEC. Max separation: 823.3407076612169 arcsec
 """
