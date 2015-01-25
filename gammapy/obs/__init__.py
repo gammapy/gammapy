@@ -2,4 +2,5 @@
 """
 Observation utility functions and classes
 """
+from .observers import *
 from .run import *

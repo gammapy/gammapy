@@ -159,3 +159,119 @@ Make a Gammapy release
 For now, see https://github.com/astropy/package-template/issues/103
 
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
+
+Other codes
+-----------
+
+These projects are on Github, which is great because
+it has full-text search and git history view:
+
+* https://github.com/gammapy/gammapy
+* https://github.com/gammapy/gammapy-extra
+* https://github.com/astropy/astropy
+* https://github.com/astropy/photutils
+* https://github.com/gammalib/gammalib
+* https://github.com/ctools/ctools
+* https://github.com/zblz/naima
+* https://github.com/woodmd/gammatools
+* https://github.com/kialio/VHEObserverTools
+
+These are unofficial, unmaintained copies on open codes on Github:
+
+* https://github.com/brefsdal/sherpa
+* https://github.com/Xarthisius/yt-drone
+* https://github.com/cdeil/Fermi-ScienceTools-mirror
+* https://github.com/cdeil/kapteyn-mirror
+
+What checks and conversions should I do for inputs?
+---------------------------------------------------
+
+In Gammapy we assume that
+`"we're all consenting adults" <https://mail.python.org/pipermail/tutor/2003-October/025932.html>`_,
+which means that when you write a function you should write it like this:
+
+.. code-block:: python
+
+    def do_something(data, option):
+        """Do something.
+
+        Parameters
+        ----------
+        data : `numpy.ndarray`
+            Data
+        option : {'this', 'that'}
+            Option
+        """
+        if option == 'this':
+            out = 3 * data
+        elif option == 'that':
+            out = data ** 5
+        else:
+            ValueError('Invalid option: {}'.format(option))
+
+        return out
+
+* **Don't always add `isinstance` checks for everything** ... assume the caller passes valid inputs,
+  ... in the example above this is not needed::
+
+        assert isinstance(option, str)
+
+* **Don't always add `numpy.asanyarray` calls for all array-like inputs** ... the caller can do this if
+  it's really needed ... in the example above document ``data`` as type `~numpy.ndarray`
+  instead of array-like and don't put this line::
+
+        data = np.asanyarray(data)
+
+* **Do always add an `else` clause to your `if`-`elif` clauses** ... this is boilerplate code,
+  but not adding it would mean users get this error if they pass an invalid option::
+
+      UnboundLocalError: local variable 'out' referenced before assignment
+
+
+Now if you really want, you can add the `numpy.asanyarray` and `isinstance` checks
+for functions that end-users might often use for interactive work to provide them with
+better exception messages, but doing it everywhere would mean 1000s of lines of boilerplate
+code and take the fun out of Python programming.
+
+Float data type: 32 bit or 64 bit?
+----------------------------------
+
+Most of the time what we want is to use 32 bit to store data on disk and 64 bit to do
+computations in memory.
+
+Using 64 bit to store data and results (e.g. large images or cubes) on disk would mean
+a factor ~2 increase in file sizes and slower I/O, but I'm not aware of any case
+where we need that precision.
+
+On the other hand, doing computations with millions and billions of pixels very frequently
+results in inaccurate results ... e.g. the likelihood is the sum over per-pixel likelihoods
+and using 32-bit will usually result in erratic and hard-to-debug optimizer behaviour
+and even if the fit works incorrect results.
+
+Now you shouldn't put this line at the top of every function ... assume the caller
+passes 64-bit data::
+
+        data = np.asanyarray(data, dtype='float64')
+
+But you should add explicit type conversions to 64 bit when reading float data from files
+and explicit type conversions to 32 bit before writing to file.
+
+Clobber or overwrite?
+---------------------
+
+In Gammapy we use on ``overwrite`` bool option for `gammapy.scripts` and functions that
+write to files.
+
+Why not use ``clobber`` instead?
+After all the
+`FTOOLS <http://heasarc.gsfc.nasa.gov/ftools/ftools_menu.html>`__
+always use ``clobber``.
+
+The reason is that ``overwrite`` is clear to everyone, but ``clobber`` is defined by the dictionary
+(e.g. see `here <http://dictionary.reference.com/browse/clobber>`__)
+as "to batter severely; strike heavily. to defeat decisively. to denounce or criticize vigorously."
+and isn't intuitively clear to new users.
+
+Astropy uses both ``clobber`` and ``overwrite`` in various places at the moment.
+For Gammapy we can re-visit this decision before the 1.0 release, but for now,
+please be consistent and use ``overwrite``.

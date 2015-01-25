@@ -6,6 +6,7 @@ def get_package_data():
              'data/README.rst',
              'data/fermi/*',
              'data/fermi_vela/*',
+             'data/hess/*',
              'data/poisson_stats_image/*',
              'data/tev_spectra/*',
              'data/tev_catalogs/*',

@@ -8,8 +8,12 @@ from astropy.io import fits
 __all__ = ['LogEnergyAxis',
            'energy_bounds_equal_log_spacing',
            'energy_bin_centers_log_spacing',
+           'EnergyBinCenters',
+           'EnergyBinEdges',
            'np_to_pha',
            ]
+
+# TODO: remove functions now that we have classes!
 
 
 def energy_bin_centers_log_spacing(energy_bounds):
@@ -52,6 +56,58 @@ def energy_bounds_equal_log_spacing(energy_band, bins=10):
     energy_bounds = Quantity(energy_bounds, energy_band.unit)
 
     return energy_bounds
+
+
+class EnergyBinCenters(object):
+    """Energy bin centers.
+
+    Stored as "ENERGIES" FITS table extensions.
+    """
+    # TODO: implement FITS I/O to E
+    # TODO: implement info()
+
+    def info(self):
+        s = 'Energy bin centers:'
+        s += 'TODO'
+        return s
+
+    def log_edges(self):
+        """Log energy bin edges.
+
+        Chooses log center between two points.
+        The left and right edge is chosen so that the points
+        are at the log center, i.e. the log internal is reflected
+        to get the outermost bin edges.
+
+        Returns
+        -------
+        edges : `EnergyBinEdges`
+            Energy bin edges
+        """
+        raise NotImplementedError
+
+
+class EnergyBinEdges(object):
+    """Energy bin edges.
+
+    Stored as "EBOUNDS" FITS table extensions.
+    """
+    # TODO: implement FITS I/O
+
+    def info(self):
+        s = 'Energy bin edges:'
+        s += 'TODO'
+        return s
+
+    def log_centers(self):
+        """Log energy bin centers.
+
+        Returns
+        -------
+        centers : `EnergyBinCenters`
+            Energy bin centers
+        """
+        raise NotImplementedError
 
 
 class LogEnergyAxis(object):

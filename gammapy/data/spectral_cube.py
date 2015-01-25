@@ -7,7 +7,8 @@ TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-clas
 * ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
 * ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -334,7 +335,10 @@ class SpectralCube(object):
 
         integral_flux = integral_flux.sum(axis=0)
 
-        header = self.wcs.sub(['longitude', 'latitude']).to_header()
+        # TODO: get rid of the `str` calls once this `WCS.sub` issue is fixed:
+        # https://github.com/astropy/astropy/issues/3356
+        axes = [str('longitude'), str('latitude')]
+        header = self.wcs.sub(axes).to_header()
 
         hdu = fits.ImageHDU(data=integral_flux,
                             header=header, name='integral_flux')
