@@ -1,24 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import logging
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from astropy.time import Time
+from ..data import InvalidDataError
 
 __all__ = ['GoodTimeIntervals']
 
 logger = logging.getLogger(__name__)
 
 
-class InvalidDataError(Exception):
-    """Invalid data found."""
-
 
 class GoodTimeIntervals(Table):
-    """Good time intervals (GTI) container.
-
-    This is a `~astropy.table.Table` subclass ... you can use any of it's methods!
+    """Good time intervals (GTI) `~astropy.table.Table`.
     """
 
     # TODO: return absolute times as `astropy.time.Time` objects using

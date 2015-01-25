@@ -7,7 +7,8 @@ TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-clas
 * ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
 * ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
