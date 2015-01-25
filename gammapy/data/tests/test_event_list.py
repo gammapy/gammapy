@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from numpy.testing import assert_allclose
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import get_path
 
@@ -23,9 +24,9 @@ def test_EventList():
     assert '{:1.5f}'.format(lat) == '-23.27178 deg'
     assert '{:1.5f}'.format(height) == '1835.00000 m'
 
-    # event_list.observation_time_duration
-    # event_list.observation_live_time_duration
-    # event_list.observation_dead_time_fraction
+    assert '{:1.5f}'.format(event_list.observation_time_duration) == '1577.00000 s'
+    assert '{:1.5f}'.format(event_list.observation_live_time_duration) == '1510.95911 s'
+    assert_allclose(event_list.observation_dead_time_fraction, 0.03576320037245795)
 
 
 def test_EventListDataset():

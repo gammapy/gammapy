@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import numpy as np
+from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from ...datasets import get_path
 from ...data import TelescopeArray
@@ -16,4 +16,4 @@ def test_TelescopeArray():
     location = telescope_array.observatory_earth_location.geocentric
     hess_location = observatory_locations.HESS.geocentric
     offset = Quantity(location) - Quantity(hess_location)
-    assert np.linalg.norm(offset) < 1e-3  # meter
+    assert_allclose(offset, 0, atol=1e-3)  # meter
