@@ -2,32 +2,15 @@
 """Catalog utility functions / classes."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
            'dec_iau_format',
-           'as_quantity',
            'skycoord_from_table',
            'select_sky_box',
            ]
-
-
-def as_quantity(*args):
-    """
-    Get data from `~astropy.table.Column` as `~astropy.units.Quantity` with
-    proper units.
-    """
-    columns = []
-    for column in args:
-        data = Quantity(column.data, column.unit)
-        columns.append(data)
-    if len(columns) == 1:
-        return columns[0]
-    else:
-        return columns
 
 
 def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,

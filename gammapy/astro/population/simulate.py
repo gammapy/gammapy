@@ -13,7 +13,6 @@ from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw, pdf
 from ...morphology.models import morph_types
-from ...catalog.utils import as_quantity
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
 from ..population import VMIN, VMAX, velocity_distributions
@@ -220,8 +219,8 @@ def add_snr_parameters(table):
     """Adds SNR parameters to the table.
     """
     # Read relevant columns
-    age = as_quantity(table['age'])
-    n_ISM = as_quantity(table['n_ISM'])
+    age = table['age'].quantity
+    n_ISM = table['n_ISM'].quantity
 
     # Compute properties
     snr = SNR(n_ISM=n_ISM)
@@ -246,7 +245,7 @@ def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
     Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15
     """
     # Read relevant columns
-    age = as_quantity(table['age'])
+    age = table['age'].quantity
 
     # Draw the initial values for the period and magnetic field
     P_dist = lambda x: exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
@@ -274,10 +273,10 @@ def add_pwn_parameters(table):
     """Adds PWN parameters to the table.
     """
     # Read relevant columns
-    age = as_quantity(table['age'])
-    E_SN = as_quantity(table['E_SN'])
-    n_ISM = as_quantity(table['n_ISM'])
-    P0_birth = as_quantity(table['P0_birth'])
+    age = table['age'].quantity
+    E_SN = table['E_SN'].quantity
+    n_ISM = table['n_ISM'].quantity
+    P0_birth = table['P0_birth'].quantity
     logB = table['logB']
 
     # Compute properties
@@ -345,8 +344,8 @@ def add_observed_parameters(table, obs_pos=[d_sun_to_galactic_center, 0, 0]):
     Center of galaxy as origin, x-axis goes trough sun.
     """
     # Get data
-    x, y, z = as_quantity(table['x'], table['y'], table['z'])
-    vx, vy, vz = as_quantity(table['vx'], table['vy'], table['vz'])
+    x, y, z = table['x'].quantity, table['y'].quantity, table['z'].quantity
+    vx, vy, vz = table['vx'].quantity, table['vy'].quantity, table['vz'].quantity
 
     distance, glon, glat = astrometry.galactic(x, y, z)
 

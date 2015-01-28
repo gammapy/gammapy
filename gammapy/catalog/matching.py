@@ -8,10 +8,14 @@ from astropy.extern import six
 from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.table import vstack as table_vstack
+from astropy.table import hstack as table_hstack
+from astropy.coordinates import SkyCoord
 from .utils import skycoord_from_table
 
 __all__ = ['catalog_associate_circle',
            'catalog_combine_associations',
+           'table_match_circle_criterion',
+           'table_match',
            ]
 
 
@@ -52,16 +56,11 @@ def catalog_associate_circle(catalog, other_catalog,
     skycoord = skycoord_from_table(catalog)
     other_skycoord = skycoord_from_table(other_catalog)
 
-    association_catalog_name = getattr(other_catalog, 'name', 'N/A')
+    association_catalog_name = other_catalog.meta.get('name', 'N/A')
 
     # Compute associations as list of dict and store in `Table` at the end
     associations = []
     for source_index in range(len(catalog)):
-        logging.debug('Processing source {} of {}'.format(source_index, len(catalog)))
-        # Note: this computation can't be in the inner loop because it's super slow:
-        # https://github.com/astropy/astropy/issues/3323#issuecomment-71657245
-        # other_catalog['_match_separation'] = source['_match_skycoord'].separation(other_catalog['_match_skycoord'])
-
         # TODO: check if this is slower or faster than calling `SkyCoord.search_around_sky` here!?
 
         separation = skycoord[source_index].separation(other_skycoord)
@@ -73,13 +72,16 @@ def catalog_associate_circle(catalog, other_catalog,
                 Source_Name=catalog['Source_Name'][source_index],
                 Association_Catalog=association_catalog_name,
                 Association_Name=other_catalog['Source_Name'][other_index],
-                Separation=separation[other_index],
+                # There's an issue with scalar `Quantity` objects to init the `Table`
+                # https://github.com/astropy/astropy/issues/3378
+                # For now I'll just store the values without unit
+                Separation=separation[other_index].degree,
             )
-            import IPython; IPython.embed(); 1/0
             associations.append(association)
 
     # Need to define columns if there's not a single association
-    names=['Source_Name', 'Association_Catalog', 'Association_Name', 'Separation']
+    # names=['Source_Name', 'Association_Catalog', 'Association_Name', 'Separation']
+    names = list(association.keys())
     if len(associations) == 0:
         logging.debug('No associations found.')
         table = Table(names=names)
@@ -88,6 +90,75 @@ def catalog_associate_circle(catalog, other_catalog,
         table = Table(associations, names=names)
 
     return table
+
+
+def table_match_circle_criterion(max_separation):
+    """An example match criterion for `table_match` that reproduces `catalog_associate_circle`.
+
+    TODO: finish implementing this and test it.
+
+    Parameters
+    ----------
+    max_separation : `~astropy.coordinates.Angle`
+        Maximum separation
+
+    Returns
+    -------
+    matcher : function
+        Match function to be passed to `table_match`.
+    """
+    def matcher(row1, row2):
+        skycoord1 = SkyCoord(row1['RAJ2000'], row1['DEJ2000'], unit='deg')
+        skycoord2 = SkyCoord(row2['RAJ2000'], row2['DEJ2000'], unit='deg')
+        separation = skycoord1.separation(skycoord2)
+        if separation < max_separation:
+            return True
+        else:
+            return False
+
+    return matcher
+
+
+def table_match(table1, table2, match_criterion, return_indices=True):
+    """Match rows from two tables with a match criterion callback.
+
+    Note: This is a very flexible and simple way to find matching
+    rows from two tables, but it can be very slow, e.g. if you
+    create `~astropy.coordinates.SkyCoord` objects or index into them
+    in the callback match criterion function:
+    https://github.com/astropy/astropy/issues/3323#issuecomment-71657245
+
+    Parameters
+    ----------
+    table1, table2 : `~astropy.table.Table`
+        Input tables
+    match_criterion : callable
+        Callable that takes two `~astropy.table.Row` objects as input
+        and returns `True` / `False` when they match / don't match.
+    return_indices : bool
+        If `True` this function returns a Table with match indices
+        `idx1` and `idx2`, if `False` it stacks the matches in a table using
+        `~astropy.table.hstack`.
+
+    Returns
+    -------
+    matches : `~astropy.table.Table`
+        Match table (one match per row)
+    """
+    matches = Table(names=['idx1', 'idx2'], dtype=[int, int])
+    for row1 in table1:
+        for row2 in table2:
+            if match_criterion(row1, row2):
+                matches.add_row([row1.index, row2.index])
+
+
+    if return_indices == True:
+        return matches
+    else:
+        raise NotImplementedError
+        # TODO: need to sub-set table1 and table1 using the matches
+        table = table_hstack([matches, table1, table2])
+        return table
 
 
 def catalog_combine_associations(associations):
