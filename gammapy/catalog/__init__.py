@@ -3,4 +3,5 @@
 """
 
 from .analysis import *
+from .matching import *
 from .utils import *

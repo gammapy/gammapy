@@ -1,12 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+import numpy as np
 from astropy.units import Quantity
+from astropy.coordinates import Angle, SkyCoord
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
            'dec_iau_format',
            'as_quantity',
+           'skycoord_from_table',
+           'select_sky_box',
            ]
 
 
@@ -242,3 +247,68 @@ def _dec_iau_format_scalar(dec, digits):
         dec_str = fmt.format(dec_sign, dec_d, dec_m, SS, s)
 
     return dec_str
+
+
+def skycoord_from_table(table):
+    """Make `~astropy.coordinates.SkyCoord` from lon, lat columns in `~astropy.table.Table`.
+
+    This is a convenience function similar to `~astropy.coordinates.SkyCoord.guess_from_table`,
+    but with the column names we usually use.
+
+    TODO: I'm not sure if it's a good idea to use this because it's not always clear
+    which positions are taken.
+    """
+
+    if set(['RAJ2000', 'DEJ2000']).issubset(table.colnames):
+        lon, lat, frame = 'RAJ2000', 'DEJ2000', 'fk5'
+    elif set(['RA', 'DEC']).issubset(table.colnames):
+        lon, lat, frame = 'RA', 'DEC', 'galactic'
+    elif set(['GLON', 'GLAT']).issubset(table.colnames):
+        lon, lat, frame = 'GLON', 'GLAT', 'galactic'
+    else:
+        raise KeyError('No column GLON / GLAT or RAJ2000 / DEJ2000 found.')
+
+    unit = table[lon].unit if table[lon].unit else 'deg'
+
+    skycoord = SkyCoord(table[lon], table[lat], unit=unit, frame=frame)
+    return skycoord
+
+
+def select_sky_box(table, lon_lim, lat_lim, frame):
+    """Select sky positions in a box.
+
+    This function can be applied e.g. to event lists of source catalogs.
+
+    Note: if useful we can add a function that returns the mask
+    or indices instead of applying the selection directly
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table with sky coordinate columns
+    lon_lim, lat_lim : `~astropy.coordinates.Angle`
+        Box limits (each should be a min, max tuple)
+    frame : str
+        Frame in which to apply the box cut.
+        Built-in Astropy coordinate frames are supported, e.g.
+        'icrs', 'fk5' or 'galactic'.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Copy of input table with box cut applied
+
+    Examples
+    --------
+    TODO
+    """
+    skycoord = skycoord_from_table(table)
+    skycoord = skycoord.transform_to(frame)
+    lon = skycoord.data.lon.wrap_at(Angle(180, 'deg'))
+    lat = skycoord.data.lat
+
+    lon_mask = (lon_lim[0] < lon) & (lon < lon_lim[1])
+    lat_mask = (lat_lim[0] < lat) & (lat < lat_lim[1])
+    mask = lon_mask & lat_mask
+
+    return table[mask]
