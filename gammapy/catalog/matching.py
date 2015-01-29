@@ -12,16 +12,16 @@ from astropy.table import hstack as table_hstack
 from astropy.coordinates import SkyCoord
 from .utils import skycoord_from_table
 
-__all__ = ['catalog_associate_circle',
-           'catalog_combine_associations',
-           'table_match_circle_criterion',
-           'table_match',
+__all__ = ['catalog_xmatch_circle',
+           'catalog_xmatch_combine',
+           'table_xmatch_circle_criterion',
+           'table_xmatch',
            ]
 
 
-def catalog_associate_circle(catalog, other_catalog,
-                             radius='Association_Radius',
-                             other_radius=Angle(0, 'deg')):
+def catalog_xmatch_circle(catalog, other_catalog,
+                          radius='Association_Radius',
+                          other_radius=Angle(0, 'deg')):
     """Find associations within a circle around each source.
 
     This is convenience function built on `~astropy.coordinates.SkyCoord.search_around_sky`,
@@ -48,10 +48,10 @@ def catalog_associate_circle(catalog, other_catalog,
         The list of associations.
     """
     if isinstance(radius, six.text_type):
-        radius = catalog[radius]
+        radius = Angle(catalog[radius])
 
     if isinstance(other_radius, six.text_type):
-        other_radius = other_catalog[other_radius]
+        other_radius = Angle(other_catalog[other_radius])
 
     skycoord = skycoord_from_table(catalog)
     other_skycoord = skycoord_from_table(other_catalog)
@@ -92,8 +92,8 @@ def catalog_associate_circle(catalog, other_catalog,
     return table
 
 
-def table_match_circle_criterion(max_separation):
-    """An example match criterion for `table_match` that reproduces `catalog_associate_circle`.
+def table_xmatch_circle_criterion(max_separation):
+    """An example cross-match criterion for `table_xmatch` that reproduces `catalog_xmatch_circle`.
 
     TODO: finish implementing this and test it.
 
@@ -104,10 +104,10 @@ def table_match_circle_criterion(max_separation):
 
     Returns
     -------
-    matcher : function
-        Match function to be passed to `table_match`.
+    xmatch : function
+        Cross-match function to be passed to `table_xmatch`.
     """
-    def matcher(row1, row2):
+    def xmatch(row1, row2):
         skycoord1 = SkyCoord(row1['RAJ2000'], row1['DEJ2000'], unit='deg')
         skycoord2 = SkyCoord(row2['RAJ2000'], row2['DEJ2000'], unit='deg')
         separation = skycoord1.separation(skycoord2)
@@ -116,23 +116,23 @@ def table_match_circle_criterion(max_separation):
         else:
             return False
 
-    return matcher
+    return xmatch
 
 
-def table_match(table1, table2, match_criterion, return_indices=True):
-    """Match rows from two tables with a match criterion callback.
+def table_xmatch(table1, table2, xmatch_criterion, return_indices=True):
+    """Cross-match rows from two tables with a cross-match criterion callback.
 
     Note: This is a very flexible and simple way to find matching
     rows from two tables, but it can be very slow, e.g. if you
     create `~astropy.coordinates.SkyCoord` objects or index into them
-    in the callback match criterion function:
+    in the callback cross-match criterion function:
     https://github.com/astropy/astropy/issues/3323#issuecomment-71657245
 
     Parameters
     ----------
     table1, table2 : `~astropy.table.Table`
         Input tables
-    match_criterion : callable
+    xmatch_criterion : callable
         Callable that takes two `~astropy.table.Row` objects as input
         and returns `True` / `False` when they match / don't match.
     return_indices : bool
@@ -148,7 +148,7 @@ def table_match(table1, table2, match_criterion, return_indices=True):
     matches = Table(names=['idx1', 'idx2'], dtype=[int, int])
     for row1 in table1:
         for row2 in table2:
-            if match_criterion(row1, row2):
+            if xmatch_criterion(row1, row2):
                 matches.add_row([row1.index, row2.index])
 
 
@@ -161,7 +161,7 @@ def table_match(table1, table2, match_criterion, return_indices=True):
         return table
 
 
-def catalog_combine_associations(associations):
+def catalog_xmatch_combine(associations):
     """Combine (vertical stack) association tables.
 
     Parameters

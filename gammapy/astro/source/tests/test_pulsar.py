@@ -2,10 +2,9 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 import numpy as np
-from astropy.table import Table
 from astropy.units import Quantity
 from astropy.tests.helper import pytest
-from ....datasets import load_atnf_sample
+from ....datasets import load_catalog_atnf
 from ...source import Pulsar, SimplePulsar
 
 try:
@@ -20,7 +19,7 @@ t = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
 
 def test_SimplePulsar_atnf():
     """Test functions against ATNF pulsar catalog values"""
-    atnf = load_atnf_sample()
+    atnf = load_catalog_atnf(small_sample=True)
     P = Quantity(atnf['P0'], 's')
     P_dot = Quantity(atnf['P1'], '')
     simple_pulsar = SimplePulsar(P=P, P_dot=P_dot)

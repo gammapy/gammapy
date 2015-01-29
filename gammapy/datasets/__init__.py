@@ -3,4 +3,5 @@
 """
 from .load import *
 from .make import *
+from .catalogs import *
 from .fermi import *
