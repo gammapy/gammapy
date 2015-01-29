@@ -41,11 +41,11 @@ class TSMapResult(Bunch):
 
     Attributes
     ----------
-    ts : ndarray
+    ts : `~numpy.ndarray`
         Estimated TS map
-    amplitude : ndarray
+    amplitude : `~numpy.ndarray`
         Estimated best fit flux amplitude map
-    niter : ndarray
+    niter : `~numpy.ndarray`
         Number of iterations map
     runtime : float
         Time needed to compute TS map.
@@ -78,7 +78,7 @@ class TSMapResult(Bunch):
         hdu_list = fits.HDUList()
         if 'MORPH' not in header and hasattr(self, 'morphology'):
             header['MORPH'] = self.morphology, 'Source morphology assumption.'
-        if not type(self.scale) == float:
+        if not np.isscalar(self.scale):
             header['EXTNAME'] = 'scale'
             header['HDUNAME'] = 'scale'
             header['SCALE'] = 'max',  'Source morphology scale parameter.'
@@ -100,11 +100,11 @@ def f_cash_root(x, counts, background, model):
     ----------
     x : float
         Model amplitude.
-    counts : array
+    counts : `~numpy.ndarray`
         Count map slice, where model is defined.
-    background : array
+    background : `~numpy.ndarray`
         Background map slice, where model is defined.
-    model : array
+    model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     return (model * (counts / (x * FLUX_FACTOR * model + background) - 1)).sum()
@@ -118,11 +118,11 @@ def f_cash(x, counts, background, model):
     ----------
     x : float
         Model amplitude.
-    counts : array
+    counts : `~numpy.ndarray`
         Count map slice, where model is defined.
-    background : array
+    background : `~numpy.ndarray`
         Background map slice, where model is defined.
-    model : array
+    model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     with np.errstate(invalid='ignore', divide='ignore'):
@@ -142,12 +142,11 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     Parameters
     ----------
     maps : `astropy.io.fits.HDUList`
-        HDU list containing the data. The list must contain the following HDU
-        extensions:
-            * 'On' -- Counts image
-            * 'Background' -- Background image
-            * 'Diffuse' -- Diffuse model image
-            * 'ExpGammaMap' -- Exposure image
+        HDU list containing the data. The list must contain the following HDU extensions:
+            * 'On', Counts image
+            * 'Background', Background image
+            * 'Diffuse', Diffuse model image
+            * 'ExpGammaMap', Exposure image
     psf_parameters : dict
         Dict defining the multi gauss PSF parameters.
         See `~gammapy.irf.multi_gauss_psf` for details.
@@ -195,10 +194,10 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         maps_ = {}
         for map_, func in zip(maps, funcs):
             if downsampled:
-                maps_[map_.name] = downsample_2N(map_.data, factor, func,
-                                                 shape=shape_2N(shape))
+                maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
+                                                         shape=shape_2N(shape))
             else:
-                maps_[map_.name] = map_.data
+                maps_[map_.name.lower()] = map_.data
 
         # Set up PSF and source kernel
         kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
@@ -215,15 +214,17 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
                 x_size = _round_up_to_odd_integer(2 * sigma * (1 + width)
                                                   + kernel.shape[0] / 2)
                 source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
+            else:
+                raise ValueError('Unknown morphology model.')
             kernel = convolve(source_kernel, kernel)
             kernel.normalize()
 
         # Compute TS map
         if residual:
-            background = (maps_['Background'] + maps_['DIFFUSE'] + maps_['OnModel'])
+            background = (maps_['background'] + maps_['diffuse'] + maps_['OnModel'])
         else:
-            background = maps_['Background'] + maps_['DIFFUSE']
-        ts_results = compute_ts_map(maps_['On'], background, maps_['ExpGammaMap'],
+            background = maps_['background'] + maps_['diffuse']
+        ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
                                     kernel, *args, **kwargs)
         logging.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
@@ -280,11 +281,11 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Count map
-    background : array
+    background : `~numpy.ndarray`
         Background map
-    exposure : array
+    exposure : `~numpy.ndarray`
         Exposure map
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
@@ -379,15 +380,15 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
     ----------
     position : tuple (i, j)
         Pixel position.
-    counts : array
+    counts : `~numpy.ndarray`
         Count map.
-    background : array
+    background : `~numpy.ndarray`
         Background map.
-    exposure : array
+    exposure : `~numpy.ndarray`
         Exposure map.
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
-    flux : array
+    flux : `~numpy.ndarray`
         Flux map. The flux value at the given pixel position is used as
         starting value for the minimization.
 
@@ -441,11 +442,11 @@ def _amplitude_bounds(counts, background, model):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Count map.
-    background : array
+    background : `~numpy.ndarray`
         Background map.
-    model : array
+    model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
     # Check that counts slice contains at least one count
@@ -465,11 +466,11 @@ def _root_amplitude(counts, background, model, flux):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Slice of count map.
-    background : array
+    background : `~numpy.ndarray`
         Slice of background map.
-    model : array
+    model : `~numpy.ndarray`
         Model template to fit.
     flux : float
         Starting value for the fit.
@@ -499,11 +500,11 @@ def _root_amplitude_brentq(counts, background, model):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Slice of count map.
-    background : array
+    background : `~numpy.ndarray`
         Slice of background map.
-    model : array
+    model : `~numpy.ndarray`
         Model template to fit.
 
     Returns
@@ -538,11 +539,11 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Slice of count map.
-    background : array
+    background : `~numpy.ndarray`
         Slice of background map.
-    model : array
+    model : `~numpy.ndarray`
         Model template to fit.
     flux : float
         Starting value for the fit.
@@ -572,11 +573,11 @@ def _fit_amplitude_minuit(counts, background, model, flux):
 
     Parameters
     ----------
-    counts : array
+    counts : `~numpy.ndarray`
         Slice of count map.
-    background : array
+    background : `~numpy.ndarray`
         Slice of background map.
-    model : array
+    model : `~numpy.ndarray`
         Model template to fit.
     flux : float
         Starting value for the fit.

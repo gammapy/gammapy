@@ -6,6 +6,6 @@ Some parts of this package use Sherpa.
 from .gauss import *
 from .model import *
 from .overlap import *
-from gammapy.morphology.models import *
+from .models import *
 from .theta import *
 from .utils import *

@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from ..utils.scripts import get_parser
 import os
 
-from ..utils.scripts import get_parser
+__all__ = ['ts_image']
 
 
 def main(args=None):
@@ -15,27 +16,27 @@ def main(args=None):
     parser.add_argument('--psf', type=str, default='psf.json',
                         help='JSON file containing PSF information. ')
     parser.add_argument('--morphology', type=str, default='Gaussian2D',
-                        help="Which source morphology to use for TS calculation.\n"
+                        help="Which source morphology to use for TS calculation."
                         "Either 'Gaussian2D' or 'Shell2D'.")
     parser.add_argument('--width', type=float, default=None,
                         help="Width of the shell, measured as fraction of the"
-                        " inner radius.\n")
+                        " inner radius.")
     parser.add_argument('--scales', type=float, default=[0], nargs='+',
                         help='List of scales to compute TS maps for in deg.')
     parser.add_argument('--downsample', type=str, default='auto',
                         help="Downsample factor of the data to obtain optimal"
-                        " performance.\n"
-                        "Must be power of 2. Can be 'auto' to choose the downsample \n"
+                        " performance."
+                        "Must be power of 2. Can be 'auto' to choose the downsample"
                         "factor automatically depending on the scale.")
     parser.add_argument('--residual', action='store_true',
-                        help="Whether to compute a residual TS image. If a residual \n"
-                        "TS image is computed an excess model has to be provided \n"
+                        help="Whether to compute a residual TS image. If a residual"
+                        "TS image is computed an excess model has to be provided"
                         "using the '--model' parameter.")
     parser.add_argument('--model', type=str,
                         help='Input excess model FITS file name')
     parser.add_argument('--threshold', type=float, default=None,
                         help="Minimal required initial (before fitting) TS value,"
-                        " that the \nfit is done at all.")
+                        " that the fit is done at all.")
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite output files.')
     args = parser.parse_args()
