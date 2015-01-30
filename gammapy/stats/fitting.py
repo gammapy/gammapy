@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Define `astropy.modeling.fitting.Fitter` sub-classes for our fit statistics.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from astropy.modeling.fitting import Fitter
 from .fit_statistics import cash, cstat

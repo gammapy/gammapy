@@ -8,7 +8,8 @@ Poisson statistics computations for these two cases.
 
 TODO: More detailed description here.
 """
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from numpy import sign, log, sqrt
 
@@ -160,6 +161,10 @@ def excess_error(n_on, n_off, alpha):
     return sqrt(variance)
 
 
+# TODO: rename this function to something more explicit.
+# It currently has the same name as the `gammapy/stats/significance.py`
+# and shadows in in `gammapy/stats/__init.py`
+# Maybe `significance_poisson`?
 def significance(n_observed, mu_background, method='lima'):
     r"""Compute significance for an observed number of counts and known background.
 

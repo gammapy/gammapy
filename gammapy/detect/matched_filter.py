@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 import numpy as np
 from ..image import process_image_pixels
-from ..stats import p_to_s
+from ..stats import probability_to_significance_normal
 
 __all__ = ['probability_center',
            'probability_image',
@@ -57,7 +57,7 @@ def significance_center(images, kernel):
     See `probability_center` docstring.
     """
     probability = probability_center(images, kernel)
-    return p_to_s(probability)
+    return probability_to_significance_normal(probability)
 
 
 def probability_image(images, kernel):
@@ -85,5 +85,5 @@ def significance_image(images, kernel):
     See `probability_image` docstring.
     """
     probability = probability_image(images, kernel)
-    significance = p_to_s(probability)
+    significance = probability_to_significance_normal(probability)
     return significance

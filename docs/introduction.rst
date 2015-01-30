@@ -79,11 +79,13 @@ Make sure to also check out the following packages that contain very useful func
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `gammatools`_ --- Python tools for gamma-ray data analysis by Matthew Wood
   (unclear if open source ... currently has no license file)
+* `GamERa`_ --- a C++ gamma-ray source modeling package by Joachim Hahn
 
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools/
 .. _naima: https://github.com/zblz/naima
+.. _GamERa: https://github.com/JoachimHahn/GamERa
 .. _gammatools: https://github.com/woodmd/gammatools
 
 Some other projects:
