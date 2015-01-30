@@ -44,7 +44,7 @@ Hmm ... OK.
 Some of the Gammapy functionality can be called from command line tools.
 
 But, to be honest, if you're an astronomer, you should learn to code in Python.
-Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_  
+Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_
 
 For example, if you have a counts and background model image and would like to compute
 a significance image with a correlation radius of 0.1 deg:
@@ -58,7 +58,7 @@ a significance image with a correlation radius of 0.1 deg:
 
 Say you have an image that contains the
 `Crab nebula <http://en.wikipedia.org/wiki/Crab_Nebula>`_
-and want to look up the map value at the Crab position 
+and want to look up the map value at the Crab position
 (name lookup is done with `SIMBAD <http://simbad.u-strasbg.fr/simbad/>`_):
 
 .. code-block:: bash
@@ -74,11 +74,10 @@ Other related packages
 
 Make sure to also check out the following packages that contain very useful functionality for gamma-ray astronomy:
 
-* `Sherpa`_ --- X-ray modeling and fitting package
+* `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `gammatools`_ --- Python tools for gamma-ray data analysis by Matthew Wood
-  (unclear if open source ... currently has no license file)
 * `GamERa`_ --- a C++ gamma-ray source modeling package by Joachim Hahn
 
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
