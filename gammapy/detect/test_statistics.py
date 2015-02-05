@@ -4,7 +4,6 @@ Functions to compute TS maps
 
 """
 from __future__ import print_function, division
-import sys
 import logging
 import warnings
 from itertools import product
@@ -24,7 +23,6 @@ from ..extern.zeros import newton
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N)
-
 
 __all__ = ['compute_ts_map', 'compute_ts_map_multiscale',
            'compute_maximum_ts_map', 'TSMapResult']
@@ -215,7 +213,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
                                                   + kernel.shape[0] / 2)
                 source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
             else:
-                raise ValueError('Unknown morphology model.')
+                raise ValueError('Unknown morphology: {}'.format(morphology))
             kernel = convolve(source_kernel, kernel)
             kernel.normalize()
 
@@ -269,6 +267,7 @@ def compute_maximum_ts_map(ts_map_results):
         scale_max[index] = scale
         niter_max[index] = niter[:, :, i][index]
         amplitude_max[index] = amplitude[:, :, i][index]
+
     return TSMapResult(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
                        morphology=ts_map_results[0].morphology, scale=scale_max)
 
@@ -425,9 +424,10 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
         amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
     else:
         raise ValueError('Invalid fitting method.')
+
     if niter > MAX_NITER:
         logging.warn('Exceeded maximum number of function evaluations!')
-        return np.nan, amplitude, niter
+        return np.nan, amplitude * FLUX_FACTOR, niter
 
     with np.errstate(invalid='ignore', divide='ignore'):
         C_1 = f_cash(amplitude, counts_, background_, model)
@@ -438,8 +438,8 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
 
 def _amplitude_bounds(counts, background, model):
     """
-    Compute bounds for     the root of `f_cash_root`.
-
+    Compute bounds for the root of `f_cash_root`.
+ 
     Parameters
     ----------
     counts : `~numpy.ndarray`
@@ -486,8 +486,7 @@ def _root_amplitude(counts, background, model, flux):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return newton(f_cash_root, flux, args=args,
-                          maxiter=MAX_NITER, tol=0.1)
+            return newton(f_cash_root, flux, args=args, maxiter=MAX_NITER, tol=0.1)
         except RuntimeError:
             # Where the root finding fails NaN is set as amplitude
             return np.nan, MAX_NITER

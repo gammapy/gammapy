@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from ..utils.scripts import get_parser
 import os
+
+from ..utils.scripts import get_parser
 
 __all__ = ['ts_image']
 
@@ -43,7 +44,7 @@ def main(args=None):
     ts_image(**vars(args))
 
 
-def ts_image(input, psf, model, scales, downsample, residual, morphology,
+def ts_image(input_file, psf, model, scales, downsample, residual, morphology,
              width, overwrite, folder, threshold):
     """
     Compute source model residual images.
@@ -64,8 +65,8 @@ def ts_image(input, psf, model, scales, downsample, residual, morphology,
     from gammapy.detect import compute_ts_map_multiscale
 
     # Read data
-    logging.info('Reading {0}'.format(input))
-    maps = fits.open(input)
+    logging.info('Reading {0}'.format(input_file))
+    maps = fits.open(input_file)
     logging.info('Reading {0}'.format(psf))
     psf_parameters = json.load(open(psf))
 

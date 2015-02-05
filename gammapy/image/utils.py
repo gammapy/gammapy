@@ -376,47 +376,6 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     return lon, lat
 
 
-def detect_peaks(image, threshold, mask=None, world=True):
-    """
-    Detect peaks using `skimage.feature.peak_local_max`.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU` or ndarray
-        Input image.
-    threshold : float
-        Minimal value for a peak to be detected.
-    mask : ndarray
-        Mask of regions to be excluded from peak detection.
-    world : bool (True)
-        Use world coordinates (or pixel coordinates)?
-
-    Returns
-    -------
-    output : `~astropy.table.Table`
-        A table containing the x and y location of the peaks and
-        their values.
-    """
-    from skimage.feature import peak_local_max
-
-    if world:
-        image = image.data
-        header = image.header
-    if mask is not None:
-        image = image.copy()
-        image[mask] = threshold
-
-    # Detect peaks
-    y, x = zip(*peak_local_max(image, threshold_abs=threshold))
-    if world:
-        wcs = WCS(header)
-        lon, lat = wcs.wcs_pix2world(x, y, 1)
-        return Table((lon, lat, x, y, image[(y, x)]),
-                     names=('GLON', 'GLAT', 'X', 'Y', 'VALUE'))
-    else:
-        return Table((x, y, image[(y, x)]), names=('X', 'Y', 'VALUE'))
-
-
 def dict_to_hdulist(image_dict, header):
     """
     Take a dictionary of image data and a header to create a HDUList.
