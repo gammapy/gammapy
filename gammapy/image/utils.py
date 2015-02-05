@@ -6,6 +6,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.table import Table
 
 
 __all__ = ['atrous_hdu',

@@ -6,6 +6,6 @@ Some parts of this package use Sherpa.
 from .gauss import *
 from .model import *
 from .overlap import *
-from .shapes import *
+from .models import *
 from .theta import *
 from .utils import *

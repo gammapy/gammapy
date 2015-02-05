@@ -32,7 +32,7 @@ class Shell2D(Fittable2DModel):
     r_out : float (optional)
         Outer radius of the shell
     normed : bool (True)
-        If set the amplitude parameter  corresponds to the integral of the
+        If set the amplitude parameter corresponds to the integral of the
         function. If not set the 'amplitude' parameter corresponds to the
         peak value of the function (value at :math:`r = r_{in}`).
 
@@ -85,7 +85,8 @@ class Shell2D(Fittable2DModel):
         if not normed:
             self.evaluate = self.evaluate_peak_norm
         super(Shell2D, self).__init__(amplitude=amplitude, x_0=x_0,
-                                      y_0=y_0, r_in=r_in, width=width, **constraints)
+                                      y_0=y_0, r_in=r_in, width=width,
+                                      **constraints)
 
     @staticmethod
     def evaluate(x, y, amplitude, x_0, y_0, r_in, width):

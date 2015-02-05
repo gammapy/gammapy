@@ -105,7 +105,7 @@ entry_points['console_scripts'] = [
     'gammapy-significance-image = gammapy.scripts.significance_image:main',
     'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
     'gammapy-test = gammapy.scripts.check:main',
-    # 'gammapy-ts-image = gammapy.scripts.ts_image:main',
+    'gammapy-ts-image = gammapy.scripts.ts_image:main',
     'gammapy-xspec = gammapy.scripts.xpsec:main',
 ]
 
