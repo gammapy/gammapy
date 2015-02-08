@@ -7,18 +7,20 @@ from numpy import degrees, pi, arctan, exp
 from numpy.random import uniform, normal
 from astropy.table import Table, Column
 from astropy.units import Quantity
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, spherical_to_cartesian
 
 from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw, pdf
+from ...utils.random import sample_sphere, sample_sphere_distance
 from ...morphology.models import morph_types
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
 from ..population import VMIN, VMAX, velocity_distributions
 
 
-__all__ = ['make_cat_cube',
+__all__ = ['make_catalog_random_positions_cube',
+           'make_catalog_random_positions_sphere',
            'make_base_catalog_galactic',
            'add_snr_parameters',
            'add_pulsar_parameters',
@@ -28,37 +30,101 @@ __all__ = ['make_cat_cube',
            ]
 
 
-def make_cat_cube(n_sources=100, dimension=3, dmax=10,
-                  luminosity_default=1,
-                  extension_default=1):
+def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10):
     """Make a catalog of sources randomly distributed
     on a line, square or cube.
+
+    TODO: is this useful enough for general use or should we hide it as an
+      internal method to generate test datasets?
+
+    Parameters
+    ----------
+    size : int
+        Number of sources
+
+    Returns
+    -------
+    catalog : `~astropy.table.Table`
+        Source catalog with columns:
     """
     # Generate positions 1D, 2D, or 3D
     if dimension == 3:
-        x = uniform(-dmax, dmax, n_sources)
-        y = uniform(-dmax, dmax, n_sources)
-        z = uniform(-dmax, dmax, n_sources)
+        x = uniform(-dmax, dmax, size)
+        y = uniform(-dmax, dmax, size)
+        z = uniform(-dmax, dmax, size)
     elif dimension == 2:
-        x = uniform(-dmax, dmax, n_sources)
-        y = uniform(-dmax, dmax, n_sources)
-        z = np.zeros(n_sources)
+        x = uniform(-dmax, dmax, size)
+        y = uniform(-dmax, dmax, size)
+        z = np.zeros_like(x)
     else:
-        x = uniform(-dmax, dmax, n_sources)
-        y = np.zeros(n_sources)
-        z = np.zeros(n_sources)
-
-    luminosity = luminosity_default * np.ones(n_sources)
-    extension = extension_default * np.ones(n_sources)
+        x = uniform(-dmax, dmax, size)
+        y = np.zeros_like(x)
+        z = np.zeros_like(x)
 
     table = Table()
     table['x'] = Column(x, unit='pc', description='Galactic cartesian coordinate')
     table['y'] = Column(y, unit='pc', description='Galactic cartesian coordinate')
     table['z'] = Column(z, unit='pc', description='Galactic cartesian coordinate')
-    table['luminosity'] = Column(luminosity, description='Source luminosity')
-    table['extension'] = Column(extension, unit='pc', description='Source physical radius')
 
     return table
+
+
+def make_catalog_random_positions_sphere(size, center='Earth', distance=Quantity([0, 1], 'Mpc')):
+    """Sample random source locations in a sphere.
+
+    This can be used to generate an isotropic source population
+    to represent extra-galactic sources.
+
+    Parameters
+    ----------
+    size : int
+        Number of sources
+    center : {'Earth', 'Milky Way'}
+        Sphere center
+    distance : `~astropy.units.Quantity` tuple
+        Distance min / max range.
+
+    Returns
+    -------
+    catalog : `~astropy.table.Table`
+        Source catalog with columns:
+
+        - RAJ2000, DEJ2000 (deg)
+        - GLON, GLAT (deg)
+        - Distance (Mpc)
+    """
+    lon, lat = sample_sphere(size)
+    radius = sample_sphere_distance(distance[0], distance[1], size)
+
+    # TODO: it shouldn't be necessary here to convert to cartesian ourselves ...
+    x, y, z = spherical_to_cartesian(radius, lat, lon)
+    pos = SkyCoord(x, y, z, frame='galactocentric', representation='cartesian')
+
+    if center == 'Milky Way':
+        pass
+    elif center == 'Earth':
+        # TODO: add shift Galactic center -> Earth
+        raise NotImplementedError
+    else:
+        msg = 'Invalid center: {}\n'.format(center)
+        msg += 'Choose one of: Earth, Milky Way'
+        raise ValueError(msg)
+
+    table = Table()
+    table.meta['center'] = center
+
+    icrs = pos.transform_to('icrs')
+    table['RAJ2000'] = icrs.ra.to('deg')
+    table['DEJ2000'] = icrs.dec.to('deg')
+
+    galactic = icrs.transform_to('galactic')
+    table['GLON'] = galactic.l.to('deg')
+    table['GLAT'] = galactic.b.to('deg')
+
+    table['Distance'] = icrs.distance.to('Mpc')
+
+    return table
+
 
 '''
 def make_cat_gauss_random(n_sources=100, glon_sigma=30, glat_sigma=1,

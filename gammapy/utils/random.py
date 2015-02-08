@@ -96,7 +96,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None):
     return x
 
 
-def sample_sphere_distance(distance_min, distance_max, size=None):
+def sample_sphere_distance(distance_min=0, distance_max=1, size=None):
     """Sample random distances if the 3-dim space density is constant.
 
     This function uses inverse transform sampling
