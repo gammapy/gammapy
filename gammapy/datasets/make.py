@@ -11,7 +11,7 @@ __all__ = ['make_test_psf']
 
 
 def make_test_psf(energy_bins=15, theta_bins=12):
-    """Create a test FITS PSf file.
+    """Create a test FITS PSF file.
 
     A log-linear dependency in energy is assumed, where the size of
     the PSF decreases by a factor of tow over tow decades. The
