@@ -33,12 +33,12 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
     # Convert inputs to internal format (all radians)
     size = int(size)
 
-    if (lon_range != None) and (unit == 'deg'):
+    if (lon_range is not None) and (unit == 'deg'):
         lon_range = np.radians(lon_range)
     else:
         lon_range = 0, 2 * np.pi
 
-    if (lat_range != None) and (unit == 'deg'):
+    if (lat_range is not None) and (unit == 'deg'):
         lat_range = np.radians(lat_range)
     else:
         lat_range = -np.pi / 2, np.pi / 2

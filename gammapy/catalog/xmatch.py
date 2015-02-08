@@ -69,9 +69,11 @@ def catalog_xmatch_circle(catalog, other_catalog,
 
         for other_index in other_indices:
             association = OrderedDict(
+                Source_Index=source_index,
                 Source_Name=catalog['Source_Name'][source_index],
-                Association_Catalog=association_catalog_name,
+                Association_Index=other_index,
                 Association_Name=other_catalog['Source_Name'][other_index],
+                Association_Catalog=association_catalog_name,
                 # There's an issue with scalar `Quantity` objects to init the `Table`
                 # https://github.com/astropy/astropy/issues/3378
                 # For now I'll just store the values without unit
@@ -168,6 +170,7 @@ def catalog_xmatch_combine(associations):
     ----------
     associations : dict or (str, `~astropy.table.Table`)
         Associations
+
     Returns
     -------
     combined_associations : `~astropy.table.Table`
