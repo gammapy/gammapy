@@ -24,14 +24,14 @@ def main(args=None):
 def model_image():
     """Given a catalog of sources, simulate a flux image.
 
-    Inputs
-    ------
+    Inputs:
+
     * Source list (JSON file)
     * PSF (JSON file)
     * Exposure image (FITS file)
 
-    Outputs
-    -------
+    Outputs:
+
     * Source model flux image (FITS file)
     * Source model excess image (FITS file)
     """
