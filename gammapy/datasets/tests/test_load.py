@@ -2,17 +2,19 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from numpy.testing import assert_allclose
-from ...utils.testing import assert_quantity
-from ...datasets import (load_poisson_stats_image,
-                         load_arf_fits_table,
-                         load_psf_fits_table,
-                         load_atnf_sample,
-                         load_tevcat,
-                         )
+from ...datasets import (
+    load_arf_fits_table,
+    load_poisson_stats_image,
+    load_psf_fits_table,
+)
+
+
+def test_load_arf_fits_table():
+    data = load_arf_fits_table()
+    assert len(data) == 2
 
 
 def test_load_poisson_stats_image():
-    """Get the data file via the gammapy.data.poisson_stats_image function"""
     data = load_poisson_stats_image()
     assert data.sum() == 40896
 
@@ -22,21 +24,6 @@ def test_load_poisson_stats_image():
         assert_allclose(images[name].sum(), expected)
 
 
-def test_load_arf_fits_table():
-    data = load_arf_fits_table()
-    assert len(data) == 2
-
-
 def test_load_psf_fits_table():
     data = load_psf_fits_table()
     assert len(data) == 2
-
-
-def test_load_atnf_sample():
-    data = load_atnf_sample()
-    assert len(data) == 10
-
-
-def test_load_tevcat():
-    table = load_tevcat()
-    assert len(table) == 173

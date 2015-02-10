@@ -1,14 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 from astropy.tests.helper import pytest
-from ...population import (make_base_catalog_galactic,
-                           make_cat_cube,
-                           add_snr_parameters,
-                           add_pulsar_parameters,
-                           add_pwn_parameters,
-                           add_observed_parameters,
-                           add_observed_source_parameters,
-                           )
+from ...population import (
+    make_base_catalog_galactic,
+    make_catalog_random_positions_cube,
+    make_catalog_random_positions_sphere,
+    add_snr_parameters,
+    add_pulsar_parameters,
+    add_pwn_parameters,
+    add_observed_parameters,
+    add_observed_source_parameters,
+)
 
 try:
     import scipy
@@ -34,13 +36,20 @@ def has_columns(table, names):
     return set(names).issubset(table.colnames)
 
 
-def test_make_cat_cube():
-    n_sources = 100
-    table = make_cat_cube(n_sources=n_sources)
-    assert len(table) == n_sources
+def test_make_catalog_random_positions_cube():
+    size = 100
+    table = make_catalog_random_positions_cube(size=size)
+    assert len(table) == size
 
 
-def test_make_cat_gal():
+def test_make_catalog_random_positions_sphere():
+    size = 100
+    table = make_catalog_random_positions_sphere(size=size,
+                                                 center='Milky Way')
+    assert len(table) == size
+
+
+def test_make_base_catalog_galactic():
     from ..spatial import YusifovKucuk2004
     from ..velocity import FaucherKaspi2006VelocityMaxwellian
     rad_dis = YusifovKucuk2004

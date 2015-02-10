@@ -2,10 +2,9 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 import numpy as np
-from astropy.table import Table
 from astropy.units import Quantity
+from astropy.table import Table
 from astropy.tests.helper import pytest
-from ....datasets import load_atnf_sample
 from ...source import Pulsar, SimplePulsar
 
 try:
@@ -18,9 +17,26 @@ pulsar = Pulsar()
 t = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
 
 
+def get_atnf_catalog_sample():
+    data = """
+    NUM   NAME            Gl          Gb       P0        P1        AGE        BSURF     EDOT
+    1     J0006+1834      108.172    -42.985   0.693748  2.10e-15  5.24e+06   1.22e+12  2.48e+32
+    2     J0007+7303      119.660     10.463   0.315873  3.60e-13  1.39e+04   1.08e+13  4.51e+35
+    3     B0011+47        116.497    -14.631   1.240699  5.64e-16  3.48e+07   8.47e+11  1.17e+31
+    7     B0021-72E       305.883    -44.883   0.003536  9.85e-20  5.69e+08   5.97e+08  8.79e+34
+    8     B0021-72F       305.899    -44.892   0.002624  6.45e-20  6.44e+08   4.16e+08  1.41e+35
+    16    J0024-7204O     305.897    -44.889   0.002643  3.04e-20  1.38e+09   2.87e+08  6.49e+34
+    18    J0024-7204Q     305.877    -44.899   0.004033  3.40e-20  1.88e+09   3.75e+08  2.05e+34
+    21    J0024-7204T     305.890    -44.894   0.007588  2.94e-19  4.09e+08   1.51e+09  2.65e+34
+    22    J0024-7204U     305.890    -44.905   0.004343  9.52e-20  7.23e+08   6.51e+08  4.59e+34
+    28    J0026+6320      120.176      0.593   0.318358  1.50e-16  3.36e+07   2.21e+11  1.84e+32
+    """[1:-1]
+    return Table.read(data, format='ascii')
+
+
 def test_SimplePulsar_atnf():
     """Test functions against ATNF pulsar catalog values"""
-    atnf = load_atnf_sample()
+    atnf = get_atnf_catalog_sample()
     P = Quantity(atnf['P0'], 's')
     P_dot = Quantity(atnf['P1'], '')
     simple_pulsar = SimplePulsar(P=P, P_dot=P_dot)
