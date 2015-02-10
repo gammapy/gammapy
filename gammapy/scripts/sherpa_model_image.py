@@ -30,14 +30,14 @@ def sherpa_model_image(exposure,
                        overwrite):
     """Compute source model image with Sherpa.
 
-    Inputs
-    ------
+    Inputs:
+
     * Source list (JSON file)
     * PSF (JSON file)
     * Exposure image (FITS file)
 
-    Outputs
-    -------
+    Outputs:
+
     * Source model flux image (FITS file)
     * Source model excess image (FITS file)
     """
