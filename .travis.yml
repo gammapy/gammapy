@@ -11,9 +11,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - NUMPY_VERSION=1.9
-        # TODO: at the moment we don't support Astropy 0.4 ... put stable here again once 1.0 is out!
-        - ASTROPY_VERSION=development
-        #- ASTROPY_VERSION=stable
+        - ASTROPY_VERSION=stable
         - CONDA_INSTALL='conda install -c astropy-ci-extras --yes'
         - PIP_INSTALL='pip install'
     matrix:
@@ -50,13 +48,10 @@ matrix:
         # Try older numpy versions
         - python: 2.7
           env: NUMPY_VERSION=1.8 SETUP_CMD='test'
-        # Temporarily disabling failing builds on travis-ci
-        # TODO: re-enable
-        # https://travis-ci.org/gammapy/gammapy/builds/44074440
-        #- python: 2.7
-        #  env: NUMPY_VERSION=1.7 SETUP_CMD='test'
-        #- python: 2.7
-        #  env: NUMPY_VERSION=1.6 SETUP_CMD='test'
+        - python: 2.7
+          env: NUMPY_VERSION=1.7 SETUP_CMD='test'
+        - python: 2.7
+          env: NUMPY_VERSION=1.6 SETUP_CMD='test'
 
 before_install:
 
@@ -77,16 +72,9 @@ before_install:
 
 install:
 
-    # Certificate checking is not working with Python 2.7.9 (due to PEP 476)
-    # This is a temp workaround ... see https://github.com/astropy/photutils/issues/202
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then export TRAVIS_PYTHON_VERSION=2.7.8; fi
-
     # CONDA
     - conda create --yes -n test -c astropy-ci-extras python=$TRAVIS_PYTHON_VERSION
     - source activate test
-
-    # TODO: remove when issue #202 workaround is removed (see line above)
-    - export CONDA_INSTALL="conda install -c astropy-ci-extras --yes python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION"
 
     # CORE DEPENDENCIES
     - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION pytest pip Cython jinja2; fi
@@ -121,7 +109,4 @@ script:
     - if [[ $SETUP_CMD == build_sphinx* ]]; then linkchecker docs/_build/html; fi
 
 after_success:
-    # If coveralls.io is set up for this package, uncomment the line
-    # below and replace "packagename" with the name of your package.
-    # The coveragerc file may be customized as needed for your package.
     - if [[ $SETUP_CMD == 'test --coverage' ]]; then coveralls --rcfile='gammapy/tests/coveragerc'; fi
