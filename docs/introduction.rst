@@ -76,9 +76,12 @@ Make sure to also check out the following packages that contain very useful func
 
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
+* `threeml`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
+  (`code <https://github.com/giacomov/3ML>`__,
+  `example notebook <http://nbviewer.ipython.org/github/giacomov/3ML/blob/master/examples/090217206.ipynb>`__)
+* `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
-* `gammatools`_ --- Python tools for gamma-ray data analysis by Matthew Wood
-* `GamERa`_ --- a C++ gamma-ray source modeling package by Joachim Hahn
+* `GamERa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) by Joachim Hahn
 
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
@@ -86,6 +89,7 @@ Make sure to also check out the following packages that contain very useful func
 .. _naima: https://github.com/zblz/naima
 .. _GamERa: https://github.com/JoachimHahn/GamERa
 .. _gammatools: https://github.com/woodmd/gammatools
+.. _threeml: http://threeml.stanford.edu/
 
 Some other projects:
 
