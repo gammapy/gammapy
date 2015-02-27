@@ -1,11 +1,13 @@
 Gammapy
 =======
 
-A Python Package for Gamma-ray Astronomy
+A Python Package for Gamma-ray Astronomy.
 
 * Code: https://github.com/gammapy/gammapy
 * Docs: https://gammapy.readthedocs.org/
 
+.. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
+    :target: http://www.astropy.org/
 
 Status shields
 ++++++++++++++
