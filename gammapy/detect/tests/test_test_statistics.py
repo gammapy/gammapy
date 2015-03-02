@@ -33,7 +33,7 @@ def test_compute_ts_map():
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = upsample_2N(result[name], 2, order=order)
 
-    assert_allclose([[99], [99]], np.where(result.ts == result.ts.max()))
     assert_allclose(1705.840212274973, result.ts[99, 99], rtol=1e-3)
+    assert_allclose([[99], [99]], np.where(result.ts == result.ts.max()))
     assert_allclose(6, result.niter[99, 99])
     assert_allclose(1.0227934338735763e-09, result.amplitude[99, 99], rtol=1e-3)

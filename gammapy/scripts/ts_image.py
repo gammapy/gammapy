@@ -10,10 +10,10 @@ __all__ = ['ts_image']
 
 def main(args=None):
     parser = get_parser(ts_image)
-    parser.add_argument('input', type=str,
+    parser.add_argument('input_file', type=str,
                         help='Input data FITS file name')
-    parser.add_argument('--folder', type=str, default='gaussian2d',
-                        help='Output folder name.')
+    parser.add_argument('output_file', type=str,
+                        help='Input data FITS file name')
     parser.add_argument('--psf', type=str, default='psf.json',
                         help='JSON file containing PSF information. ')
     parser.add_argument('--morphology', type=str, default='Gaussian2D',
@@ -44,8 +44,8 @@ def main(args=None):
     ts_image(**vars(args))
 
 
-def ts_image(input_file, psf, model, scales, downsample, residual, morphology,
-             width, overwrite, folder, threshold):
+def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
+             morphology, width, overwrite, threshold):
     """
     Compute source model residual images.
 
@@ -77,14 +77,18 @@ def ts_image(input_file, psf, model, scales, downsample, residual, morphology,
         maps.append(fits.ImageHDU(data, header, 'OnModel'))
     results = compute_ts_map_multiscale(maps, psf_parameters, scales, downsample,
                                         residual, morphology, width)
-    folder = morphology.lower()
-    if not os.path.exists(folder):
+
+    folder, filename = os.path.split(output_file)
+    if not os.path.exists(folder) and folder != '':
         os.mkdir(folder)
 
     # Write results to file
     header = maps[0].header
-    for scale, result in zip(scales, results):
-        filename = os.path.join(folder, 'ts_{0:.3f}.fits'.format(scale))
-        logging.info('Writing {0}'.format(filename))
-        result.write(filename, header, overwrite=overwrite)
-
+    if len(results) > 1:
+        for scale, result in zip(scales, results):
+            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
+            logging.info('Writing {0}'.format(os.path.join(folder, filename_)))
+            result.write(os.path.join(folder, filename_), header, overwrite=overwrite)
+    else:
+        logging.info('Writing {0}'.format(output_file))
+        results[0].write(output_file, header, overwrite=overwrite)

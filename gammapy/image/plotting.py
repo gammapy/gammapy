@@ -252,7 +252,7 @@ class GalacticPlaneSurveyPanelPlot(object):
     """
 
     def __init__(self, npanels=4, center=(0, 0), fov=(10, 1),
-                 xsize=10, xborder=0.5, yborder=0.5, yspacing=0.5):
+                 xsize=10, ysize=None, xborder=0.5, yborder=0.5, yspacing=0.5):
         """Compute panel parameters and make a matplotlib Figure.
         """
         import matplotlib.pyplot as plt
@@ -261,6 +261,7 @@ class GalacticPlaneSurveyPanelPlot(object):
                                                   center=center,
                                                   fov=fov,
                                                   xsize=xsize,
+                                                  ysize=ysize,
                                                   xborder=xborder,
                                                   yborder=yborder,
                                                   yspacing=yspacing)
@@ -529,7 +530,7 @@ def fitsfigure_add_colorbar_inset(ff, box, linewidth=1, color='w', normalize=Non
     ticks_pos = np.linspace(0, 1, n_ticks)
     if normalize is not None:
         ticks_pos = normalize.inverse(ticks_pos)
-    tick_labels = ['{0:' + ticklabel_format + '}'.format(_) for _ in ticks_pos]
+    tick_labels = [('{0:' + ticklabel_format + '}').format(_) for _ in ticks_pos]
     cbar.set_ticks(np.linspace(0, 1, n_ticks))
     cbar_axes.set_yticklabels(tick_labels, color=color)
     if label_position == 'bottom':

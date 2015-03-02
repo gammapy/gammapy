@@ -16,7 +16,7 @@ from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.nddata.utils import extract_array
 from astropy.io import fits
 
-from ..stats import cash
+from _test_statistics import _cash, __amplitude_bounds, _cash_sum, _f_cash_root
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.zeros import newton
@@ -41,6 +41,8 @@ class TSMapResult(Bunch):
     ----------
     ts : `~numpy.ndarray`
         Estimated TS map
+    ts : `~numpy.ndarray`
+        Estimated sqrt(TS) map
     amplitude : `~numpy.ndarray`
         Estimated best fit flux amplitude map
     niter : `~numpy.ndarray`
@@ -60,13 +62,14 @@ class TSMapResult(Bunch):
         """
         hdu_list = fits.open(filename)
         ts = hdu_list['ts'].data
+        sqrt_ts = hdu_list['sqrt_ts'].data
         amplitude = hdu_list['amplitude'].data
         niter = hdu_list['niter'].data
         scale = hdu_list[0].header['SCALE']
         if scale == 'max':
             scale = hdu_list['scale'].data
         morphology = hdu_list[0].header['MORPH']
-        return TSMapResult(ts=ts, amplitude=amplitude, niter=niter,
+        return TSMapResult(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
                            scale=scale, morphology=morphology)
 
     def write(self, filename, header, overwrite=False):
@@ -83,7 +86,7 @@ class TSMapResult(Bunch):
             hdu_list.append(fits.ImageHDU(self.scale.astype('float32'), header))
         else:
             header['SCALE'] = self.scale,  'Source morphology scale parameter.'
-        for key in ['ts', 'amplitude', 'niter']:
+        for key in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
             header['EXTNAME'] = key
             header['HDUNAME'] = key
             hdu_list.append(fits.ImageHDU(self[key].astype('float32'), header))
@@ -105,7 +108,7 @@ def f_cash_root(x, counts, background, model):
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    return (model * (counts / (x * FLUX_FACTOR * model + background) - 1)).sum()
+    return _f_cash_root(x, counts, background, model)
 
 
 def f_cash(x, counts, background, model):
@@ -123,8 +126,7 @@ def f_cash(x, counts, background, model):
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    with np.errstate(invalid='ignore', divide='ignore'):
-        return cash(counts, background + x * FLUX_FACTOR * model).sum()
+    return _cash_sum(counts, background + x * FLUX_FACTOR * model)
 
 
 def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto',
@@ -169,7 +171,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
     for scale in scales:
         logging.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
-                     ' morphology.'.format('residual' if residual else '',
+                     ' morphology.'.format('residual ' if residual else '',
                                            scale, morphology))
 
         # Sample down and require that scale parameters is at least 5 pix
@@ -219,16 +221,16 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
         # Compute TS map
         if residual:
-            background = (maps_['background'] + maps_['diffuse'] + maps_['OnModel'])
+            background = (maps_['background'] + maps_['diffuse'] + maps_['onmodel'])
         else:
-            background = maps_['background'] + maps_['diffuse']
+            background = maps_['background']  # + maps_['diffuse']
         ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
                                     kernel, *args, **kwargs)
         logging.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
         ts_results['morphology'] = morphology
         if downsampled:
-            for name, order in zip(['ts', 'amplitude', 'niter'], [1, 1, 0]):
+            for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
                 ts_results[name] = upsample_2N(ts_results[name], factor,
                                                order=order, shape=shape)
         multiscale_result.append(ts_results)
@@ -307,6 +309,10 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     threshold : float (None)
         If the TS value corresponding to the initial flux estimate is not above
         this threshold, the optimizing step is omitted to save computing time.
+    sqrt : bool
+        Whether to return a sqrt(TS) map.
+    clean : bool
+        Whether to apply an edge cleaning algorithm to the TS map.
 
     Returns
     -------
@@ -334,7 +340,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
             flux = (counts - background) / exposure / FLUX_FACTOR
         flux = convolve(flux, tophat.array) / CONTAINMENT
 
-    TS = np.zeros(counts.shape)
+    # Compute null statistics for the whole map
+    C_0_map = _cash(counts.astype(float), background.astype(float))
 
     x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
     y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
@@ -342,11 +349,11 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     # Positions where exposure == 0 are not processed
     if mask is None:
-        mask = binary_erosion(exposure > 0, np.ones(np.array(kernel.shape) + 1))
+        mask = binary_erosion(exposure > 0, np.ones(np.array(kernel.shape) + 2))
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
     wrap = partial(_ts_value, counts=counts, exposure=exposure,
-                   background=background, kernel=kernel, flux=flux,
+                   background=background, C_0_map=C_0_map, kernel=kernel, flux=flux,
                    method=method, optimizer=optimizer, threshold=threshold)
 
     if parallel:
@@ -360,16 +367,20 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     # Set TS values at given positions
     j, i = zip(*positions)
+    TS = np.ones(counts.shape) * np.nan
     amplitudes = np.zeros(TS.shape)
     niter = np.zeros(TS.shape)
     TS[j, i] = [_[0] for _ in results]
     amplitudes[j, i] = [_[1] for _ in results]
     niter[j, i] = [_[2] for _ in results]
-    return TSMapResult(ts=TS, amplitude=amplitudes,
+
+    # Compute edge cleaned sqrt TS map
+    sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
+    return TSMapResult(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes,
                        niter=niter, runtime=np.round(time() - t_0, 2))
 
 
-def _ts_value(position, counts, exposure, background, kernel, flux,
+def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
               method, optimizer, threshold):
     """
     Compute TS value at a given pixel position i, j using the approach described
@@ -400,10 +411,10 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
     counts_ = extract_array(counts, kernel.shape, position).astype(float)
     background_ = extract_array(background, kernel.shape, position).astype(float)
     exposure_ = extract_array(exposure, kernel.shape, position).astype(float)
+    C_0_ = extract_array(C_0_map, kernel.shape, position)
     model = (exposure_ * kernel._array).astype(float)
 
-    with np.errstate(invalid='ignore', divide='ignore'):
-        C_0 = cash(counts_, background_).sum()
+    C_0 = C_0_.sum()
 
     if threshold is not None:
         with np.errstate(invalid='ignore', divide='ignore'):
@@ -433,13 +444,13 @@ def _ts_value(position, counts, exposure, background, kernel, flux,
         C_1 = f_cash(amplitude, counts_, background_, model)
 
     # Compute and return TS value
-    return C_0 - C_1, amplitude * FLUX_FACTOR, niter
+    return (C_0 - C_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
 
 
 def _amplitude_bounds(counts, background, model):
     """
     Compute bounds for the root of `f_cash_root`.
- 
+
     Parameters
     ----------
     counts : `~numpy.ndarray`
@@ -449,14 +460,7 @@ def _amplitude_bounds(counts, background, model):
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    # Check that counts slice contains at least one count
-    # if not, set flux estimate to -min(B/S).
-    with np.errstate(invalid='ignore', divide='ignore'):
-        sn = background / model
-    sn[counts == 0] = np.inf
-    index = np.unravel_index(np.nanargmin(sn), sn.shape)
-    bounds = np.array([counts[index], counts.sum()])
-    return (bounds / model.sum() - np.nanmin(sn)) / FLUX_FACTOR
+    return __amplitude_bounds(counts, background, model)
 
 
 def _root_amplitude(counts, background, model, flux):
@@ -620,4 +624,3 @@ def _flux_correlation_radius(kernel, containment=CONTAINMENT):
     # Containment radius of Tophat kernel is given by r_c_tophat = r_0 * sqrt(C)
     # by setting r_c = r_c_tophat we can estimate the equivalent containment radius r_0
     return r_c / np.sqrt(containment)
-
