@@ -6,7 +6,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.extern import six
 from astropy.coordinates import Angle
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.table import vstack as table_vstack
 from astropy.table import hstack as table_hstack
 from astropy.coordinates import SkyCoord
@@ -82,14 +82,18 @@ def catalog_xmatch_circle(catalog, other_catalog,
             associations.append(association)
 
     # Need to define columns if there's not a single association
-    # names=['Source_Name', 'Association_Catalog', 'Association_Name', 'Separation']
-    names = list(association.keys())
     if len(associations) == 0:
         logging.debug('No associations found.')
-        table = Table(names=names)
+        table = Table()
+        table.add_column(Column([], name='Source_Index', dtype=int))
+        table.add_column(Column([], name='Source_Name', dtype=str))
+        table.add_column(Column([], name='Association_Index', dtype=int))
+        table.add_column(Column([], name='Association_Name', dtype=str))
+        table.add_column(Column([], name='Association_Catalog', dtype=str))
+        table.add_column(Column([], name='Separation', dtype=float))
     else:
         logging.debug('Found {} associations.'.format(len(associations)))
-        table = Table(associations, names=names)
+        table = Table(associations, names=associations[0].keys())
 
     return table
 
