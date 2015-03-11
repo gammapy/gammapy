@@ -26,7 +26,7 @@ Available observatories (alphabetical order):
 - CTA (`Website <http://www.cta-observatory.org/>`__, `Wikipedia <http://en.wikipedia.org/wiki/Cherenkov_Telescope_Array>`__):
   Several candidate sites are listed here:
   CTA_South_Aar, CTA_South_Armazones, CTA_South_Leoncito, CTA_North_Teide, CTA_North_Meteor_Crater
-- HAWK (`Website <>`__, `Wikipedia <http://en.wikipedia.org/wiki/High_Altitude_Water_Cherenkov_Experiment>`__)
+- HAWC (`Website <>`__, `Wikipedia <http://en.wikipedia.org/wiki/High_Altitude_Water_Cherenkov_Experiment>`__)
 - HEGRA (`Wikipedia <http://en.wikipedia.org/wiki/HEGRA>`__)
 - HESS (`Website <https://www.mpi-hd.mpg.de/hfm/HESS/>`__, `Wikipedia <http://en.wikipedia.org/wiki/HESS>`__)
 - MAGIC (`Website <https://wwwmagic.mpp.mpg.de/>`__, `Wikipedia <http://en.wikipedia.org/wiki/MAGIC_(telescope)>`__)
@@ -53,7 +53,7 @@ observatory_locations['CTA_South_Leoncito'] = _obs_loc(lon='-69.27d', lat='31.72
 observatory_locations['CTA_North_Teide'] = _obs_loc(lon='-16.54d', lat='28.28d', height=2290)
 observatory_locations['CTA_North_Meteor_Crator'] = _obs_loc(lon='-111.03d', lat='35.04d', height=1680)
 # HAWC location taken from http://arxiv.org/pdf/1108.6034v2.pdf
-observatory_locations['HAWK'] = _obs_loc(lon='-97d18m34s', lat='18d59m48s', height=4100)
+observatory_locations['HAWC'] = _obs_loc(lon='-97d18m34s', lat='18d59m48s', height=4100)
 observatory_locations['HEGRA'] = _obs_loc(lon='28d45m42s', lat='17d53m27s', height=3)
 # Precision position of HESS from the HESS software (slightly different from Wikipedia)
 observatory_locations['HESS'] = _obs_loc(lon='16d30m00.8s', lat='-23d16m18.4s', height=1835)
