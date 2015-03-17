@@ -113,6 +113,12 @@ class TestFermiVelaRegion():
 
 @remote_data
 def test_fetch_fermi_catalog():
+    n_hdu = len(fetch_fermi_catalog('3FGL'))
+    assert n_hdu == 6
+
+    n_sources = len(fetch_fermi_catalog('3FGL', 'LAT_Point_Source_Catalog'))
+    assert n_sources == 3034
+
     n_hdu = len(fetch_fermi_catalog('2FGL'))
     assert n_hdu == 5
 
@@ -122,6 +128,7 @@ def test_fetch_fermi_catalog():
 
 @remote_data
 def test_fetch_fermi_extended_sources():
+    assert len(fetch_fermi_extended_sources('3FGL')) == 26
     assert len(fetch_fermi_extended_sources('2FGL')) == 12
     assert len(fetch_fermi_extended_sources('1FHL')) == 23
 

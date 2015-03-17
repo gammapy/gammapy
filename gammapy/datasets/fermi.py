@@ -20,7 +20,7 @@ __all__ = ['FermiGalacticCenter',
            ]
 
 
-FERMI_CATALOGS = '2FGL 1FGL 1FHL 2PC'.split()
+FERMI_CATALOGS = '3FGL 2FGL 1FGL 1FHL 2PC'.split()
 
 
 def fetch_fermi_catalog(catalog, extension=None):
@@ -30,6 +30,9 @@ def fetch_fermi_catalog(catalog, extension=None):
 
     The Fermi catalogs contain the following relevant catalog HDUs:
 
+    * 3FGL Catalog : LAT 4-year Point Source Catalog
+        * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
+        * ``ExtendedSources`` Extended Source Catalog Table.
     * 2FGL Catalog : LAT 2-year Point Source Catalog
         * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
         * ``ExtendedSources`` Extended Source Catalog Table.
@@ -45,7 +48,7 @@ def fetch_fermi_catalog(catalog, extension=None):
 
     Parameters
     ----------
-    catalog : {'2FGL', '1FGL', '1FHL', '2PC'}
+    catalog : {'3FGL', '2FGL', '1FGL', '1FHL', '2PC'}
        Specifies which catalog to display.
     extension : str
         Specifies which catalog HDU to provide as a table (optional).
@@ -74,7 +77,9 @@ def fetch_fermi_catalog(catalog, extension=None):
     """
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
 
-    if catalog == '2FGL':
+    if catalog == '3FGL':
+        url = BASE_URL + '4yr_catalog/gll_psc_v14.fit'
+    elif catalog == '2FGL':
         url = BASE_URL + '2yr_catalog/gll_psc_v08.fit'
     elif catalog == '1FGL':
         url = BASE_URL + '/1yr_catalog/gll_psc_v03.fit'
@@ -96,7 +101,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     else:
         return hdu_list
 
-FERMI_EXTENDED = '2FGL 1FHL'.split()
+FERMI_EXTENDED = '3FGL 2FGL 1FHL'.split()
 
 
 def fetch_fermi_extended_sources(catalog):
@@ -106,12 +111,13 @@ def fetch_fermi_extended_sources(catalog):
 
     Extended source are available for the following Fermi catalogs:
 
+    * 3FGL Catalog : LAT 4-year Point Source Catalog
     * 2FGL Catalog : LAT 2-year Point Source Catalog
     * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
 
     Parameters
     ----------
-    catalog : {'2FGL', '1FHL'}
+    catalog : {'3FGL', '2FGL', '1FHL'}
        Specifies which catalog extended sources to return.
 
     Returns
@@ -126,7 +132,9 @@ def fetch_fermi_extended_sources(catalog):
     >>> len(sources) = 12
     """
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
-    if catalog == '2FGL':
+    if catalog == '3FGL':
+        url = BASE_URL + '4yr_catalog/LAT_extended_sources_v15.tgz'
+    elif catalog == '2FGL':
         url = BASE_URL + '2yr_catalog/gll_psc_v07_templates.tgz'
     elif catalog == '1FHL':
         url = BASE_URL + '1FHL/LAT_extended_sources_v12.tar'
