@@ -7,7 +7,8 @@ import numpy as np
 __all__ = ['colormap_hess', 'colormap_milagro',
            'fits_to_png',
            'GalacticPlaneSurveyPanelPlot',
-           ]
+           'fitsfigure_add_psf_inset',
+           'world2fig']
 
 __doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
 
@@ -434,3 +435,79 @@ def _panel_parameters(npanels, center, fov,
     pp['height'] = height
 
     return pp
+
+
+def fitsfigure_add_psf_inset(ff, psf_image, box, linewidth=1, color='w',
+                             psf_position=(0, 0), **kwargs):
+    """
+    Add PSF inset to `~aplpy.FITSFigure` instance.
+
+    Parameters
+    ----------
+    ff : `~aplpy.FITSFigure`
+        `~aplpy.FITSFigure` instance.
+    psf : `astropy.io.fits.ImageHDU`
+        PSF image.
+    box : tuple
+        (x, y, width, height) of the PSF inset in world coordinates.
+    linewidth : float
+        Linewidth of the PSF inset frame.
+    color : str
+        Color of the PSF inset frame.
+    psf_position : tuple
+        (x, y) position of the psf in in the psf image in pixel coordinates.
+    """
+    from matplotlib.transforms import Bbox, TransformedBbox
+    h = psf_image.header
+    x, y, width, height = box
+    xp, yp = ff.world2pixel(x, y)
+    psf_box = Bbox.from_bounds(xp, yp, width / abs(h['CDELT1']),
+                               height / abs(h['CDELT2']))
+
+    f = TransformedBbox(psf_box, ff._ax1.transData)
+    g = TransformedBbox(f, ff._figure.transFigure.inverted())
+    p1, p2 = g.get_points()
+    rect = [p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1]]
+
+    # WCSAxes should be used here
+    psf = ff._figure.add_axes(rect)
+
+    for spline in psf.spines.values():
+        spline.set_edgecolor(color)
+        spline.set_linewidth(linewidth)
+
+    psf.xaxis.set_ticks([])
+    psf.yaxis.set_ticks([])
+
+    psf.imshow(psf_image.data, **kwargs)
+    xc, yc = psf_position
+    wc = width / abs(h['CDELT1']) / 2.
+    hc = height / abs(h['CDELT2']) / 2.
+    psf.set_xlim(xc - wc, xc + wc)
+    psf.set_ylim(yc - hc, yc + hc)
+
+
+def world2fig(ff, x, y):
+    """
+    Helper function to convert world to figure coordinates.
+
+    Parameters
+    ----------
+    ff : `~aplpy.FITSFigure`
+        `~aplpy.FITSFigure` instance.
+    x : ndarray
+        Array of x coordinates.
+    y : ndarray
+        Array of y coordinates.
+    """
+    # Convert world to pixel coordinates
+    xp, yp = ff.world2pixel(x, y)
+
+    # Pixel to Axes coordinates
+    coordsa = ff._ax1.transData.transform(zip(xp, yp))
+
+    # Axes to figure coordinates
+    coordsf = ff._figure.transFigure.inverted().transform(coordsa)
+    return coordsf[:, 0], coordsf[:, 1]
+
+
