@@ -8,8 +8,8 @@ __all__ = ['colormap_hess', 'colormap_milagro',
            'fits_to_png',
            'GalacticPlaneSurveyPanelPlot',
            'fitsfigure_add_psf_inset',
-           'world2fig',
-           'analyze_cmap']
+           'illustrate_colormap',
+           'grayify_colormap']
 
 __doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
 
@@ -27,7 +27,9 @@ def colormap_hess(transition=0.5, width=0.1):
     - red: features at the detection threshold ``transition``
     - yellow, white: significant features, very well visible
 
-    The transition 
+    The transition parameter is defined between 0 and 1. To calculate the value
+    from data units an `~astropy.visualization.mpl_normalize.ImageNormalize`
+    instance should be used (see example below).
 
     Parameters
     ----------
@@ -44,22 +46,18 @@ def colormap_hess(transition=0.5, width=0.1):
     Examples
     --------
     >>> from gammapy.image import colormap_hess
-    >>> cmap = colormap_hess(transition=0.2)
+    >>> from astropy.visualization.mpl_normalize import ImageNormalize
+    >>> from astropy.visualization import LinearStretch
+    >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
+    >>> transition = normalize(5)
+    >>> cmap = colormap_hess(transition=transition)
 
     .. plot::
 
-        from gammapy.image import colormap_hess
-        cmap = colormap_hess(transition=0.2)
-
-        # This is how to plot a colorbar only with matplotlib
-        # http://matplotlib.org/examples/api/colorbar_only.html
+        from gammapy.image import colormap_hess, illustrate_colormap
         import matplotlib.pyplot as plt
-        from matplotlib.colorbar import ColorbarBase
-        from matplotlib.colors import Normalize
-        norm = Normalize(vmin, vmax)
-        fig = plt.figure(figsize=(8, 1))
-        fig.add_axes([0.05, 0.3, 0.9, 0.6])
-        ColorbarBase(plt.gca(), cmap, norm, orientation='horizontal')
+        cmap = colormap_hess()
+        illustrate_colormap(cmap)
         plt.show()
     """
     from matplotlib.colors import LinearSegmentedColormap
@@ -105,6 +103,10 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     Note that this colormap is often critizised for over-exaggerating small differences
     in significance below and above the gray - color transition threshold.
 
+    The transition parameter is defined between 0 and 1. To calculate the value
+    from data units an `~astropy.visualization.ImageNormalize` instance should be
+    used (see example below).
+
     Parameters
     ----------
     transition : float (default = 0.5)
@@ -122,22 +124,19 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     Examples
     --------
     >>> from gammapy.image import colormap_milagro
-    >>> cmap = colormap_milagro(transition=0.2)
+    >>> from astropy.visualization.mpl_normalize import ImageNormalize
+    >>> from astropy.visualization import LinearStretch
+    >>> normalize = ImageNormalize(vmin=-5, vmax=15, stretch=LinearStretch())
+    >>> transition = normalize(5)
+    >>> cmap = colormap_milagro(transition=transition)
+
 
     .. plot::
 
-        from gammapy.image import colormap_milagro
-        cmap = colormap_milagro(transition=0.2)
-
-        # This is how to plot a colorbar only with matplotlib
-        # http://matplotlib.org/examples/api/colorbar_only.html
+        from gammapy.image import colormap_milagro, illustrate_colormap
         import matplotlib.pyplot as plt
-        from matplotlib.colorbar import ColorbarBase
-        from matplotlib.colors import Normalize
-        norm = Normalize(vmin, vmax)
-        fig = plt.figure(figsize=(8, 1))
-        fig.add_axes([0.05, 0.3, 0.9, 0.6])
-        ColorbarBase(plt.gca(), cmap, norm, orientation='horizontal')
+        cmap = colormap_milagro()
+        illustrate_colormap(cmap)
         plt.show()
     """
     from colorsys import hls_to_rgb
@@ -447,6 +446,13 @@ def fitsfigure_add_psf_inset(ff, psf_image, box, linewidth=1, color='w',
         Color of the PSF inset frame.
     psf_position : tuple
         (x, y) position of the psf in in the psf image in pixel coordinates.
+    kwargs : dict
+        Further arguments passed to `~matplotlib.pyplot.imshow`.
+
+    Returns
+    -------
+    psf : `~matplotlib.axes.Axes`
+        PSF `~matplotlib.axes.Axes` instance, can be used for further plotting.
     """
     from matplotlib.transforms import Bbox, TransformedBbox
     h = psf_image.header
@@ -476,6 +482,7 @@ def fitsfigure_add_psf_inset(ff, psf_image, box, linewidth=1, color='w',
     hc = height / abs(h['CDELT2']) / 2.
     psf.set_xlim(xc - wc, xc + wc)
     psf.set_ylim(yc - hc, yc + hc)
+    return psf
 
 
 def world2fig(ff, x, y):
@@ -490,6 +497,11 @@ def world2fig(ff, x, y):
         Array of x coordinates.
     y : ndarray
         Array of y coordinates.
+
+    Returns
+    -------
+    coordsf : tuple
+        Figure coordinates as tuple (xfig, yfig) of arrays.
     """
     # Convert world to pixel coordinates
     xp, yp = ff.world2pixel(x, y)
@@ -502,24 +514,31 @@ def world2fig(ff, x, y):
     return coordsf[:, 0], coordsf[:, 1]
 
 
-def grayify_cmap(cmap, mode='skimage'):
+def grayify_colormap(cmap, mode='hsp'):
     """
     Return a grayscale version a the colormap.
 
     The grayscale conversion of the colormap is bases on perceived luminance of
-    the colors. For the conversion either the `skimage.color.grgb2gray` or a
-    generic method called `hsp` [1] can be used.
+    the colors. For the conversion either the `~skimage.color.rgb2gray` or a
+    generic method called ``hsp`` [1]_ can be used. The code is loosely based
+    on [2]_.
+
 
     Parameters
     ----------
-    cmap : str or `~matplotlib.cm.Colormap`
+    cmap : str or `~matplotlib.colors.Colormap`
         Colormap name or instance.
-    mode : str
-        Grayscale conversion method. Either `skimage` or `hsp`.
+    mode : {'skimage, 'hsp'}
+        Grayscale conversion method. Either ``skimage`` or ``hsp``.
 
     References
     ----------
-    [1] http://alienryderflex.com/hsp.html
+
+    .. [1] Darel Rex Finley, "HSP Color Model - Alternative to HSV (HSB) and HSL"
+       http://alienryderflex.com/hsp.html
+
+    .. [2] Jake VanderPlas, "How Bad Is Your Colormap?"
+       https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/
     """
     import matplotlib.pyplot as plt
     cmap = plt.cm.get_cmap(cmap)
@@ -535,21 +554,24 @@ def grayify_cmap(cmap, mode='skimage'):
             colors[:, :3] = luminance[:, np.newaxis]
     else:
         raise ValueError('Not a valid grayscale conversion mode.')
+
     return cmap.from_list(cmap.name + "_grayscale", colors, cmap.N)
 
 
-def analyze_cmap(cmap, **kwargs):
+def illustrate_colormap(cmap, **kwargs):
     """
-    Analyze color distribution and perceived luminance of a colormap.
+    Illustrate color distribution and perceived luminance of a colormap.
 
     Parameters
     ----------
-    cmap : str or `~matplotlib.cm.Colormap`
+    cmap : str or `~matplotlib.colors.Colormap`
         Colormap name or instance.
+    kwargs : dicts
+        Keyword arguments passed to `grayify_colormap`.
     """
     import matplotlib.pyplot as plt
     cmap = plt.cm.get_cmap(cmap)
-    cmap_gray = grayify_cmap(cmap, **kwargs)
+    cmap_gray = grayify_colormap(cmap, **kwargs)
     figure = plt.figure(figsize=(6, 4))
     v = np.linspace(0, 1, 4 * cmap.N)
 
@@ -561,7 +583,7 @@ def analyze_cmap(cmap, **kwargs):
     show_cmap.set_yticklabels([])
     show_cmap.set_yticks([])
     show_cmap.set_title('RGB & Gray Luminance of colormap {0}'.format(cmap.name))
-    
+
     # Show colormap gray
     show_cmap_gray = figure.add_axes([0.1, 0.72, 0.8, 0.09])
     show_cmap_gray.imshow(im, cmap=cmap_gray, origin='lower')
@@ -577,5 +599,3 @@ def analyze_cmap(cmap, **kwargs):
     plot_rgb.plot(v, [cmap_gray(_)[0] for _ in v], color='k', linestyle='--')
     plot_rgb.set_ylabel('Luminance')
     plot_rgb.set_ylim(-0.005, 1.005)
-
-

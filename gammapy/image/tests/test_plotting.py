@@ -15,7 +15,7 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 
-def _check_cmap_rgb_vals(vals, cmap, vmin, vmax):
+def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
     """Helper function to check RGB values of color maps"""
     from matplotlib.colors import Normalize
     from matplotlib.cm import ScalarMappable
@@ -28,28 +28,28 @@ def _check_cmap_rgb_vals(vals, cmap, vmin, vmax):
 
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_colormap_hess():
-    vmin, vmax, vtransition = -5, 15, 5
-    cmap = colormap_hess(vmin=vmin, vmax=vmax, vtransition=vtransition)
-    vals = [(-5, (0.0, 0.0, 0.0)),
-            (0, (0.0, 0.0, 0.50196078)),
-            (5, (1.0, 0.0058823529411764722, 0.0)),
-            (10, (1.0, 0.75882352941176501, 0.0)),
-            (15, (1.0, 1.0, 1.0)),
+    transition = 0.5
+    cmap = colormap_hess(transition=transition)
+    vals = [(0, (0.0, 0.0, 0.0)),
+            (0.25, (0.0, 0.0, 0.50196078)),
+            (0.5, (1.0, 0.0058823529411764722, 0.0)),
+            (0.75, (1.0, 0.75882352941176501, 0.0)),
+            (1, (1.0, 1.0, 1.0)),
            ]
-    _check_cmap_rgb_vals(vals, cmap, vmin, vmax)
+    _check_cmap_rgb_vals(vals, cmap)
 
 
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_colormap_milagro():
-    vmin, vmax, vtransition = -5, 15, 5
-    cmap = colormap_milagro(vmin=vmin, vmax=vmax, vtransition=vtransition)
-    vals = [(-5, (1.0, 1.0, 1.0)),
-            (0, (0.4979388, 0.4979388, 0.4979388)),
-            (5, (0.00379829, 0.3195442, 0.79772102)),
-            (10, (0.51610773, 0.25806707, 0.49033536)),
-            (15, (1.0, 1.0, 1.0)),
+    transition = 0.5
+    cmap = colormap_milagro(transition=transition)
+    vals = [(0, (1.0, 1.0, 1.0)),
+            (0.25, (0.4979388, 0.4979388, 0.4979388)),
+            (0.5, (0.00379829, 0.3195442, 0.79772102)),
+            (0.75, (0.51610773, 0.25806707, 0.49033536)),
+            (1., (1.0, 1.0, 1.0)),
             ]
-    _check_cmap_rgb_vals(vals, cmap, vmin, vmax)
+    _check_cmap_rgb_vals(vals, cmap)
 
 
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
