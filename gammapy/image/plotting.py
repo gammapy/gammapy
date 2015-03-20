@@ -350,8 +350,8 @@ class GalacticPlaneSurveyPanelPlot(object):
         # fits_figure.tick_labels.set_font(size='small')
 
 
-def _panel_parameters(npanels, center, fov,
-                      xsize, xborder, yborder, yspacing):
+def _panel_parameters(npanels, center, fov, xborder, yborder,
+                      yspacing, xoverlap=0, xsize=None, ysize=None):
     """Compute panel parameters.
 
     This function computes all relevant quantities to plot
@@ -372,12 +372,16 @@ def _panel_parameters(npanels, center, fov,
         Image full-width and full-height
     xsize : float
         Width of the figure in inches
+    ysize : float (None)
+        Height of the figure in inches
     xborder : float
         Free space to x border in inches
     yborder : float
         Free space to y border in inches
     yspacing : float
         Free space between slices in inches
+    xoverlap : float
+        Overlap between single panels in deg.
 
     Returns
     -------
@@ -387,19 +391,24 @@ def _panel_parameters(npanels, center, fov,
     # Need floats for precise divisions
     center = [float(center[0]), float(center[1])]
     fov = [float(fov[0]), float(fov[1])]
-    xsize = float(xsize)
-    xborder = float(xborder)
-    yborder = float(yborder)
+    xborder, yborder = float(xborder), float(yborder)
     yspacing = float(yspacing)
 
     # Width and height in deg of a slice
-    width = fov[0] / npanels
+    width = fov[0] / npanels + xoverlap
     height = fov[1]
     # Aspect ratio y:x of a slice
     aspectratio = fov[1] / (fov[0] / npanels)
     # Absolute figure dimensions
-    ysize = (2 * yborder + (npanels - 1) * yspacing +
-             npanels * aspectratio * (xsize - 2 * xborder))
+    if ysize is None and xsize is not None:
+        ysize = (2 * yborder + (npanels - 1) * yspacing +
+                 npanels * aspectratio * (float(xsize) - 2 * xborder))
+    elif xsize is None and ysize is not None:
+        xsize = ((float(ysize) - (2 * yborder + (npanels - 1) * yspacing)) /
+                 (npanels * aspectratio) + 2 * xborder)
+    else:
+        raise ValueError('Either xsize or ysize must be specified.')
+
     figsize = [xsize, ysize]
 
     # Relative slice subplot dimensions
@@ -427,7 +436,7 @@ def _panel_parameters(npanels, center, fov,
     return pp
 
 
-def fitsfigure_add_psf_inset(ff, psf_image, box, linewidth=1, color='w',
+def fitsfigure_add_psf_inset(ff, psf, box, linewidth=1, color='w',
                              psf_position=(0, 0), **kwargs):
     """
     Add PSF inset to `~aplpy.FITSFigure` instance.
@@ -454,38 +463,108 @@ def fitsfigure_add_psf_inset(ff, psf_image, box, linewidth=1, color='w',
     psf : `~matplotlib.axes.Axes`
         PSF `~matplotlib.axes.Axes` instance, can be used for further plotting.
     """
-    from matplotlib.transforms import Bbox, TransformedBbox
-    h = psf_image.header
-    x, y, width, height = box
-    xp, yp = ff.world2pixel(x, y)
-    psf_box = Bbox.from_bounds(xp, yp, width / abs(h['CDELT1']),
-                               height / abs(h['CDELT2']))
-
-    f = TransformedBbox(psf_box, ff._ax1.transData)
-    g = TransformedBbox(f, ff._figure.transFigure.inverted())
-    p1, p2 = g.get_points()
-    rect = [p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1]]
+    rect = _rect_world2fig(ff, box)
 
     # WCSAxes should be used here
-    psf = ff._figure.add_axes(rect)
-
-    for spline in psf.spines.values():
+    psf_axes = ff._figure.add_axes(rect)
+    for spline in psf_axes.spines.values():
         spline.set_edgecolor(color)
         spline.set_linewidth(linewidth)
 
-    psf.xaxis.set_ticks([])
-    psf.yaxis.set_ticks([])
+    psf_axes.xaxis.set_ticks([])
+    psf_axes.yaxis.set_ticks([])
 
-    psf.imshow(psf_image.data, **kwargs)
+    psf_axes.imshow(psf.data, **kwargs)
     xc, yc = psf_position
-    wc = width / abs(h['CDELT1']) / 2.
-    hc = height / abs(h['CDELT2']) / 2.
-    psf.set_xlim(xc - wc, xc + wc)
-    psf.set_ylim(yc - hc, yc + hc)
-    return psf
+    wc = box[2] / abs(psf.header['CDELT1']) / 2.
+    hc = box[3] / abs(psf.header['CDELT2']) / 2.
+    psf_axes.set_xlim(xc - wc, xc + wc)
+    psf_axes.set_ylim(yc - hc, yc + hc)
+    return psf_axes
 
 
-def world2fig(ff, x, y):
+def fitsfigure_add_colorbar_inset(ff, box, linewidth=1, color='w', normalize=None,
+                                  label='', label_position='right', label_pad=0,
+                                  n_ticks=5, ticklabel_format='.1f', tick_size=5):
+    """
+    Add colorbar inset to existing `~aplpy.FITSFigure` instance.
+
+    Parameters
+    ----------
+    ff : `~aplpy.FITSFigure`
+        `~aplpy.FITSFigure` instance.
+    box : tuple
+        (x, y, width, height) of the colorbar inset in world coordinates.
+    linewidth : float
+        Linewidth of the colorbar inset frame.
+    color : str
+        Color of the colorbar inset frame.
+    normalize : `~astropy.visualization.mpl_normalize.ImageNormalize` (None)
+        `~astropy.visualization.mpl_normalize.ImageNormalize` instance.
+    label : str
+        Colorbar label.
+    label_position : {'right', 'bottom'}
+        Colorbar label position.
+    label_pad : float
+        Colorbar label padding.
+    n_ticks : int (default = 5)
+        Number of ticks and tick labels.
+    ticklabel_format : str (default = '.1f')
+        Tick label fomating string.
+    ticksize : float
+        Size of the colorbar ticks.
+
+    Returns
+    -------
+    psf : `~matplotlib.axes.Axes`
+        Colorbar `~matplotlib.axes.Axes` instance, can be used for further plotting.
+    """
+    rect = _rect_world2fig(ff, box)
+    cbar_axes = ff._figure.add_axes(rect)
+    cbar = ff._figure.colorbar(ff.image, cax=cbar_axes)
+    cbar.solids.set_edgecolor('face')
+    cbar.outline.set_edgecolor(color)
+    cbar.outline.set_linewidth(linewidth)
+    cbar.ax.yaxis.set_tick_params(color=color, size=tick_size)
+    ticks_pos = np.linspace(0, 1, n_ticks)
+    if normalize is not None:
+        ticks_pos = normalize.inverse(ticks_pos)
+    tick_labels = ['{0:' + ticklabel_format + '}'.format(_) for _ in ticks_pos]
+    cbar.set_ticks(np.linspace(0, 1, n_ticks))
+    cbar_axes.set_yticklabels(tick_labels, color=color)
+    if label_position == 'bottom':
+        cbar_axes.set_xlabel(label, color=color, labelpad=label_pad)
+    elif label_position == 'right':
+        cbar_axes.set_ylabel(label, color=color, labelpad=label_pad)
+    else:
+        raise ValueError("Position of the label must be either 'right' or 'bottom'")
+    return cbar_axes
+
+
+def _rect_world2fig(ff, rect):
+    """
+    Transform rectangle from world to figure coordinates.
+
+    Paramaters
+    ----------
+    ff : `~aplpy.FITSFigure`
+        `~aplpy.FITSFigure` instance.
+    rect : tuple
+        Tuple that defines the rectangle like [x, y, width, height] in world
+        coordinates.
+
+    Returns
+    -------
+    rect : tuple
+        Tuple that defines the rectangle like [x, y, width, height] in figure
+        coordinates.
+    """
+    x, y, width, height = rect
+    xf, yf = _world2fig(ff, [x, x + width], [y, y + height])
+    return [xf[0], yf[0], abs(xf[1] - xf[0]), abs(yf[1] - yf[0])]
+
+
+def _world2fig(ff, x, y):
     """
     Helper function to convert world to figure coordinates.
 

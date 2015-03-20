@@ -2,14 +2,17 @@
 """Catalog utility functions / classes."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from astropy.units import Quantity
+import numpy as np
 from astropy.coordinates import Angle, SkyCoord
+
 
 __all__ = ['coordinate_iau_format',
            'ra_iau_format',
            'dec_iau_format',
            'skycoord_from_table',
            'select_sky_box',
+           'to_ds9_region',
+           'get_source_by_name'
            ]
 
 
@@ -295,3 +298,156 @@ def select_sky_box(table, lon_lim, lat_lim, frame):
     mask = lon_mask & lat_mask
 
     return table[mask]
+
+
+def get_source_by_name(source, catalog, id_column='Source_Name'):
+    """
+    Get source catalog entry by source name.
+
+    Parameters
+    ----------
+    source : string
+        Source name.
+    catalog : `~astropy.table.Table`
+        Catalog table.
+    id_column : str (default = 'Source_Name')
+        Column name of the source names.
+
+    Returns
+    -------
+    source : `~astropy.table.Row`
+        Entry for the given source.
+    """
+    index = np.where(catalog[id_column] == source)[0]
+    if len(index) == 0:
+        raise ValueError('Source {0} not found in catalog!'.format(source))
+    else:
+        return catalog[index[0]]
+
+
+def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=None,
+                  glat='GLAT', unc_glat=None, label=None, label_position='top',
+                  label_additional_info=None, label_distance=1.2, marker='diamond',
+                  dashed=False, width=3):
+    """
+    Write ds9 region file from catalog.
+
+    Currently works only for galactic coordinates.
+
+
+    Parameters
+    ----------
+    catalog : `~astropy.table.Table`
+        Catalog with position and size information.
+    glon : str ('GLON')
+        Catalog column containing galactic longitude position.
+    glat : str ('GLAT')
+        Catalog column containing galactic latitude position.
+    unc_glon : str (None)
+        Catalog column containing galactic longitude position uncertainty.
+    unc_glat : str (None)
+        Catalog column containing galactic latitude position uncertainty.
+    radius : str (None)
+        Catalog column containing extension information.
+    color : str ('green')
+        Valid ds9 color.
+    label : str (None)
+        Catalog column to use for the label.
+    label_position: str ('top')
+        Position of the region label. Either 'top' or 'bottom'.
+    label_distance: float (1.2)
+        Distance of the label from the regions center. Given
+        in multiple of the region's radius.
+    label_additional_info: dict
+        Additional info to be shown in the region label.
+    dashed : bool (False)
+        Dashed region line.
+    width : int
+        Width of the region line.
+
+    Examples
+    --------
+    This example reads Greens catalog from `gammapy.datasets` and writes it to a
+    ds9 region file.
+
+    >>> from gammapy.datasets import load_catalog_green
+    >>> green = load_catalog_green()
+    >>> green['MeanDiam'] /= 120.
+    >>> green_str = to_ds9_region(green, radius='MeanDiam',
+    >>>                           label='Source_Name', color='red')
+    >>> with open("region_green.reg", "w") as region_file:
+    >>>     region_file.write(green_str)
+
+    Returns
+    -------
+    region : str
+        DS9 region string.
+    """
+    region_string = ''
+
+    dash = '1' if dashed else '0'
+
+    format_ = ' color = {color} width = {width} dash = {dash}\n'.format(**locals())
+    if radius is not None:
+        shape = 'galactic;circle({0:.5f},{1:.5f},{2:.5f}) #'
+    else:
+        shape = 'galactic;point({0:.5f},{1:.5f})' + ' # point = {0}'.format(marker)
+    shape += format_
+
+    text = 'galactic;text({0:5f},{1:5f}) # text = {{{2}}} '
+    text += 'color = {0}\n'.format(color)
+
+    for row in catalog:
+        label_ = row[label] if label is not None else ''
+        if label_additional_info is not None:
+            text_add_ = ', '.join([__.format(row[_]) for __, _
+                                   in label_additional_info.items()])
+            label_ += '(' + text_add_ + ')'
+        if radius is not None:
+            shape_ = shape.format(row[glon], row[glat], row[radius])
+            text_ = text.format(row[glon], row[glat] + row[radius]
+                                * label_distance, label_)
+        else:
+            shape_ = shape.format(row[glon], row[glat])
+            text_ = text.format(row[glon], row[glat] + 0.05, label_)
+
+        region_string += shape_ + text_
+
+        if unc_glat and unc_glat is not None:
+            cross_ = _get_cross_ds9_region(row[glon], row[glat], row[unc_glon],
+                                           row[unc_glat], color, width)
+            region_string += cross_
+    return region_string
+
+
+def _get_cross_ds9_region(x, y, unc_x, unc_y, color, width, endbar=0.01):
+    """
+    Get ds9 region string for a cross that represents position uncertainties.
+
+    Parameters
+    ----------
+    x : float
+        Position in x direction.
+    y : float
+        Position in y direction.
+    unc_x : float
+        Uncertainty of the position in x direction.
+    unc_y : float
+        Uncertainty of the position in y direction.
+    color : str ('green')
+        Valid ds9 color.
+    width : float
+        Linewidth of the cross.
+    endbar : float (default = 0.01)
+        Length of the endbar in deg.
+    """
+    format_line = ' color = {0} width = {1}\n'.format(color, width)
+    line_ = ''
+    line = 'galactic;line({0:.5f},{1:.5f},{2:.5f},{3:.5f}) #'
+    line_ += line.format(x - unc_x, y, x + unc_x, y) + format_line
+    line_ += line.format(x, y - unc_y, x, y + unc_y) + format_line
+    line_ += line.format(x - unc_x, y - endbar, x - unc_x, y + endbar) + format_line
+    line_ += line.format(x + unc_x, y - endbar, x + unc_x, y + endbar) + format_line
+    line_ += line.format(x - endbar, y + unc_y, x + endbar, y + unc_y) + format_line
+    line_ += line.format(x - endbar, y - unc_y, x + endbar, y - unc_y) + format_line
+    return line_
