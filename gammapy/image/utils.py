@@ -103,7 +103,6 @@ def binary_ring(r_in, r_out):
     ----------
     r_in : float
         Ring inner radius in pixels
-
     r_out : float
         Ring outer radius in pixels
 
@@ -123,14 +122,14 @@ def disk_correlate(image, radius, mode='constant'):
 
     Parameters
     ----------
-    image : array_like
+    image : ~numpy.ndarray
         Image to be correlated.
-
     radius : float
         Disk radius in pixels.
-
-    mode : {‘reflect’,’constant’,’nearest’,’mirror’, ‘wrap’}, optional
-	the mode parameter determines how the array borders are handled. For ‘constant’ mode, values beyond borders are set to be cval. Default is ‘constant’.
+    mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
+	the mode parameter determines how the array borders are handled.
+        For 'constant' mode, values beyond borders are set to be cval.
+        Default is 'constant'.
 
     Returns
     -------
@@ -148,17 +147,16 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
     Parameters
     ----------
-    image : array_like
+    image : ~numpy.ndarray
         Image to be correlated.
-
     r_in : float
         Ring inner radius in pixels.
-
     r_out : float
         Ring outer radius in pixels.
-
-    mode : {‘reflect’,’constant’,’nearest’,’mirror’, ‘wrap’}, optional
-	the mode parameter determines how the array borders are handled. For ‘constant’ mode, values beyond borders are set to be cval. Default is ‘constant’.
+    mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
+	the mode parameter determines how the array borders are handled.
+        For 'constant' mode, values beyond borders are set to be cval.
+        Default is 'constant'.
 
     Returns
     -------
@@ -185,9 +183,9 @@ def downsample_2N(image, factor, method=np.nansum, shape=None):
         Image to be down sampled.
     factor : int
         Down sampling factor, must be power of two.
-    method : np.ufunc (np.nansum)
+    method : np.ufunc (np.nansum), optional
         Method how to combine the image blocks.
-    shape : tuple (None)
+    shape : tuple (None), optional
         If shape is specified, the image is padded prior to the down sampling
         symmetrically in x and y direction to the given shape.
 
@@ -222,9 +220,9 @@ def upsample_2N(image, factor, order=3, shape=None):
         Image to be up sampled.
     factor : int
         up sampling factor, must be power of two.
-    order : np.ufunc (np.nansum)
+    order : np.ufunc (np.nansum), optional
         Method how to combine the image blocks.
-    shape : tuple (None)
+    shape : tuple (None), optional
         If shape is specified, the image is cropped after the up sampling
         symmetrically in x and y direction to the given shape.
 
@@ -255,7 +253,7 @@ def shape_2N(shape, N=3):
     ----------
     shape : tuple
         Input shape.
-    N : int (default = 3)
+    N : int (default = 3), optional
         Exponent of two.
 
     Returns
@@ -282,7 +280,7 @@ def exclusion_distance(exclusion):
 
     Parameters
     ----------
-    exclusion : array_like
+    exclusion : ~numpy.ndarray
 	Exclusion regions as mask.
 
     Returns
@@ -291,7 +289,6 @@ def exclusion_distance(exclusion):
 	Map of distance to nearest exclusion region.
     """
     from scipy.ndimage import distance_transform_edt
-    exclusion = np.asanyarray(exclusion, bool)
     distance_outside = distance_transform_edt(exclusion)
     distance_inside = distance_transform_edt(np.invert(exclusion))
     distance = np.where(exclusion, distance_outside, -distance_inside)
@@ -362,10 +359,14 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
     ----------
     image : `~astropy.io.fits.ImageHDU` or ndarray
         Input image
-    world : bool
+    world : bool, optional
         Use world coordinates (or pixel coordinates)?
-    lon_sym : bool
+    lon_sym : bool, optional
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
+    radians : bool, optional
+	Return coordinates in radians or degrees?
+    system : (unused!), optional
+	Unused parameter.
 
     Returns
     -------
@@ -432,8 +433,11 @@ def separation(image, center, world=True, radians=False):
         Input image
     center : (x, y) tuple
         Center position
-    world : bool
+    world : bool, optional
         Use world coordinates (or pixel coordinates)?
+    radians : bool, optional
+	Return distance in radians or degrees?
+        (only applicable for world coordinates).
 
     Returns
     -------
@@ -555,14 +559,14 @@ def image_groupby(images, labels):
 
     Parameters
     ----------
-    images : list of array_like
+    images : list of ~numpy.ndarray
 	List of image objects.
     labels : ndarray
 	Labels for pixel grouping.
 
     Returns
     -------
-    groups : list of array_like
+    groups : list of ~numpy.ndarray
 	Grouped pixels acording to the labels.
     """
     for image in images:
@@ -620,9 +624,9 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     ----------
     header : `~astropy.io.fits.Header`
         FITS Header
-    lon, lat : array_like
+    lon, lat : ~numpy.ndarray
         World coordinates
-    weights : array_like, optional
+    weights : ~numpy.ndarray, optional
         Weights
 
     Returns
@@ -683,7 +687,7 @@ def bin_events_in_cube(events, reference_cube, energies):
     ----------
     events : `~astropy.table.Table`
         Event list table
-    cube : `~astropy.io.fits.ImageHDU`
+    reference_cube : `~astropy.io.fits.ImageHDU`
         A cube defining the spatial bins.
     energies : `~astropy.table.Table`
         Table defining the energy bins.
@@ -726,14 +730,14 @@ def threshold(array, threshold=5):
 
     Parameters
     ----------
-    array : array_like
+    array : ~numpy.ndarray
         Input array
-    threshold : float
+    threshold : float, optional
         Minimum threshold
 
     Returns
     -------
-    data : array_like
+    data : ~numpy.ndarray
 	Copy of input array with pixels below threshold set to zero.
     """
     # TODO: np.clip is simpler, no?
@@ -754,7 +758,7 @@ def binary_dilation_circle(input, radius):
 
     Parameters
     ----------
-    input : array_like
+    input : ~numpy.ndarray
         Input array
     radius : float
         Dilation radius (pix)
@@ -777,7 +781,7 @@ def binary_opening_circle(input, radius):
 
     Parameters
     ----------
-    input : array_like
+    input : ~numpy.ndarray
         Input array
     radius : float
         Dilation radius (pix)
@@ -833,23 +837,23 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     Parameters
     ----------
-    nxpix : int
+    nxpix : int, optional
 	Number of pixels in x axis. Default is 100.
-    nypix : int
+    nypix : int, optional
 	Number of pixels in y axis. Default is 100.
-    binsz : float
+    binsz : float, optional
 	Bin size for x and y axes in units of degrees. Default is 0.1.
-    xref : float
+    xref : float, optional
         Coordinate system value at reference pixel for x axis. Default is 0.
-    yref :
+    yref : float, optional
         Coordinate system value at reference pixel for y axis. Default is 0.
-    proj : string
+    proj : string, optional
 	Projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}
+    coordsys : {'CEL', 'GAL'}, optional
 	Coordinate system. Default is 'GAL' (Galactic).
-    xrefpix : float
+    xrefpix : float, optional
         Coordinate system reference pixel for x axis. Default is None.
-    yrefpix: float
+    yrefpix: float, optional
         Coordinate system reference pixel for y axis. Default is None.
 
     Returns
@@ -897,10 +901,29 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
 
     Parameters
     ----------
-    dtype : str
-        Data type, default is float32
-    fill : float or 'checkerboard'
+    nxpix : int, optional
+	Number of pixels in x axis. Default is 100.
+    nypix : int, optional
+	Number of pixels in y axis. Default is 100.
+    binsz : float, optional
+	Bin size for x and y axes in units of degrees. Default is 0.1.
+    xref : float, optional
+        Coordinate system value at reference pixel for x axis. Default is 0.
+    yref : float, optional
+        Coordinate system value at reference pixel for y axis. Default is 0.
+    fill : float or 'checkerboard', optional
         Creates checkerboard image or uniform image of any float
+    proj : string, optional
+	Projection type. Default is 'CAR' (cartesian).
+    coordsys : {'CEL', 'GAL'}, optional
+	Coordinate system. Default is 'GAL' (Galactic).
+    xrefpix : float, optional
+        Coordinate system reference pixel for x axis. Default is None.
+    yrefpix: float, optional
+        Coordinate system reference pixel for y axis. Default is None.
+    dtype : str, optional
+        Data type, default is float32
+
     Returns
     -------
     image : `~astropy.io.fits.ImageHDU`
@@ -955,7 +978,7 @@ def cube_to_image(cube, slicepos=None):
     ----------
     cube : `~astropy.io.fits.ImageHDU`
         3-dim FITS cube
-    slicepos : int or None
+    slicepos : int or None, optional
         Slice position (None means to sum along the spectral axis)
 
     Returns
@@ -990,7 +1013,7 @@ def cube_to_spec(cube, mask, weighting='none'):
         3-dim FITS cube
     mask : numpy.array
         2-dim mask array.
-    weighting : {'none', 'solid_angle'}
+    weighting : {'none', 'solid_angle'}, optional
         Weighting factor to use.
 
     Returns
@@ -1013,6 +1036,12 @@ def contains(image, x, y, world=True):
     ----------
     image : `~astropy.io.fits.ImageHDU`
         2-dim FITS image
+    x : float
+	x coordinate in the image
+    y : float
+	y coordinate in the image
+    world : bool, optional
+        Are x and y in world coordinates (or pixel coordinates)?
 
     Returns
     -------
@@ -1036,7 +1065,7 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     ----------
     total, cutout : `~astropy.io.fits.ImageHDU`
         Total and cutout image.
-    method : {'sum', 'replace'}
+    method : {'sum', 'replace'}, optional
         Sum or replace total values with cutout values.
 
     Returns
@@ -1073,12 +1102,12 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     ----------
     image_hdu : `~astropy.io.fits.ImageHDU`
         Original image HDU, unscaled
-    block_size : array_like
+    block_size : ~numpy.ndarray
         Array containing down-sampling integer factor along each axis.
     func : callable
         Function object which is used to calculate the return value for each local block. 
         This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
-    cval : float (optional)
+    cval : float, optional
         Constant padding value if image is not perfectly divisible by the block size. Default 0.
 
     Returns
