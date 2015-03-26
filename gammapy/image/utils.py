@@ -51,11 +51,13 @@ def _get_structure_indices(radius):
 
     Parameters
     ----------
-    TODO
+    radius : float
+        Structure radius in pixels.
 
     Returns
     -------
-    TODO
+    y, x : mesh-grid `ndarrays` all of the same dimensions
+        Structure indices arrays.
     """
     radius = int(radius)
     y, x = np.mgrid[-radius: radius + 1, -radius: radius + 1]
@@ -121,11 +123,20 @@ def disk_correlate(image, radius, mode='constant'):
 
     Parameters
     ----------
-    TODO
+    image : array_like
+        Image to be correlated.
+
+    radius : float
+        Disk radius in pixels.
+
+    mode : {‘reflect’,’constant’,’nearest’,’mirror’, ‘wrap’}, optional
+	the mode parameter determines how the array borders are handled. For ‘constant’ mode, values beyond borders are set to be cval. Default is ‘constant’.
 
     Returns
     -------
-    TODO
+    convolve : ndarray
+	The result of convolution of image with disk of given radius.
+
     """
     from scipy.ndimage import convolve
     structure = binary_disk(radius)
@@ -137,11 +148,22 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
     Parameters
     ----------
-    TODO
+    image : array_like
+        Image to be correlated.
+
+    r_in : float
+        Ring inner radius in pixels.
+
+    r_out : float
+        Ring outer radius in pixels.
+
+    mode : {‘reflect’,’constant’,’nearest’,’mirror’, ‘wrap’}, optional
+	the mode parameter determines how the array borders are handled. For ‘constant’ mode, values beyond borders are set to be cval. Default is ‘constant’.
 
     Returns
     -------
-    TODO
+    convolve : ndarray
+	The result of convolution of image with ring of given inner and outer radii.
     """
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
@@ -260,11 +282,13 @@ def exclusion_distance(exclusion):
 
     Parameters
     ----------
-    TODO
+    exclusion : array_like
+	Exclusion regions as mask.
 
     Returns
     -------
-    TODO
+    distance : ndarray
+	Map of distance to nearest exclusion region.
     """
     from scipy.ndimage import distance_transform_edt
     exclusion = np.asanyarray(exclusion, bool)
@@ -531,11 +555,15 @@ def image_groupby(images, labels):
 
     Parameters
     ----------
-    TODO
+    images : list of array_like
+	List of image objects.
+    labels : ndarray
+	Labels for pixel grouping.
 
     Returns
     -------
-    TODO
+    groups : list of array_like
+	Grouped pixels acording to the labels.
     """
     for image in images:
         assert image.shape == labels.shape
@@ -705,7 +733,8 @@ def threshold(array, threshold=5):
 
     Returns
     -------
-    TODO
+    data : array_like
+	Copy of input array with pixels below threshold set to zero.
     """
     # TODO: np.clip is simpler, no?
     from scipy import stats
@@ -732,7 +761,8 @@ def binary_dilation_circle(input, radius):
 
     Returns
     -------
-    TODO
+    binary_dilation : ndarray of bools
+	Dilation of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_dilation
     structure = binary_disk(radius)
@@ -747,11 +777,15 @@ def binary_opening_circle(input, radius):
 
     Parameters
     ----------
-    TODO
+    input : array_like
+        Input array
+    radius : float
+        Dilation radius (pix)
 
     Returns
     -------
-    TODO
+    binary_opening : ndarray of bools
+	Opening of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_opening
     structure = binary_disk(radius)
@@ -799,7 +833,24 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
 
     Parameters
     ----------
-    TODO
+    nxpix : int
+	Number of pixels in x axis. Default is 100.
+    nypix : int
+	Number of pixels in y axis. Default is 100.
+    binsz : float
+	Bin size for x and y axes in units of degrees. Default is 0.1.
+    xref : float
+        Coordinate system value at reference pixel for x axis. Default is 0.
+    yref :
+        Coordinate system value at reference pixel for y axis. Default is 0.
+    proj : string
+	Projection type. Default is 'CAR' (cartesian).
+    coordsys : {'CEL', 'GAL'}
+	Coordinate system. Default is 'GAL' (Galactic).
+    xrefpix : float
+        Coordinate system reference pixel for x axis. Default is None.
+    yrefpix: float
+        Coordinate system reference pixel for y axis. Default is None.
 
     Returns
     -------
