@@ -56,7 +56,7 @@ def _get_structure_indices(radius):
 
     Returns
     -------
-    y, x : mesh-grid `ndarrays` all of the same dimensions
+    y, x : mesh-grid `~numpy.ndarrays` all of the same dimensions
         Structure indices arrays.
     """
     radius = int(radius)
@@ -122,7 +122,7 @@ def disk_correlate(image, radius, mode='constant'):
 
     Parameters
     ----------
-    image : ~numpy.ndarray
+    image : `~numpy.ndarray`
         Image to be correlated.
     radius : float
         Disk radius in pixels.
@@ -133,7 +133,7 @@ def disk_correlate(image, radius, mode='constant'):
 
     Returns
     -------
-    convolve : ndarray
+    convolve : `~numpy.ndarray`
 	The result of convolution of image with disk of given radius.
 
     """
@@ -147,7 +147,7 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
     Parameters
     ----------
-    image : ~numpy.ndarray
+    image : `~numpy.ndarray`
         Image to be correlated.
     r_in : float
         Ring inner radius in pixels.
@@ -160,7 +160,7 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
 
     Returns
     -------
-    convolve : ndarray
+    convolve : `~numpy.ndarray`
 	The result of convolution of image with ring of given inner and outer radii.
     """
     from scipy.ndimage import convolve
@@ -179,7 +179,7 @@ def downsample_2N(image, factor, method=np.nansum, shape=None):
 
     Parameters
     ----------
-    image : ndarray
+    image : `~numpy.ndarray`
         Image to be down sampled.
     factor : int
         Down sampling factor, must be power of two.
@@ -191,7 +191,7 @@ def downsample_2N(image, factor, method=np.nansum, shape=None):
 
     Returns
     -------
-    image : ndarray
+    image : `~numpy.ndarray`
         Down sampled image.
     """
     from skimage.measure import block_reduce
@@ -216,7 +216,7 @@ def upsample_2N(image, factor, order=3, shape=None):
 
     Parameters
     ----------
-    image : ndarray
+    image : `~numpy.ndarray`
         Image to be up sampled.
     factor : int
         up sampling factor, must be power of two.
@@ -228,7 +228,7 @@ def upsample_2N(image, factor, order=3, shape=None):
 
     Returns
     -------
-    image : ndarray
+    image : `~numpy.ndarray`
         Down sampled image.
     """
     from scipy.ndimage import zoom
@@ -280,12 +280,12 @@ def exclusion_distance(exclusion):
 
     Parameters
     ----------
-    exclusion : ~numpy.ndarray
+    exclusion : `~numpy.ndarray`
 	Exclusion regions as mask.
 
     Returns
     -------
-    distance : ndarray
+    distance : `~numpy.ndarray`
 	Map of distance to nearest exclusion region.
     """
     from scipy.ndimage import distance_transform_edt
@@ -349,7 +349,7 @@ def atrous_hdu(hdu, n_levels):
     return hdus
 
 
-def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
+def coordinates(image, world=True, lon_sym=True, radians=False):
     """Get coordinate images for a given image.
 
     This function is useful if you want to compute
@@ -357,7 +357,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
 
     Parameters
     ----------
-    image : `~astropy.io.fits.ImageHDU` or ndarray
+    image : `~astropy.io.fits.ImageHDU` or `~numpy.ndarray`
         Input image
     world : bool, optional
         Use world coordinates (or pixel coordinates)?
@@ -365,8 +365,6 @@ def coordinates(image, world=True, lon_sym=True, radians=False, system=None):
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
     radians : bool, optional
 	Return coordinates in radians or degrees?
-    system : (unused!), optional
-	Unused parameter.
 
     Returns
     -------
@@ -559,14 +557,14 @@ def image_groupby(images, labels):
 
     Parameters
     ----------
-    images : list of ~numpy.ndarray
+    images : list of `~numpy.ndarray`
 	List of image objects.
-    labels : ndarray
+    labels : `~numpy.ndarray`
 	Labels for pixel grouping.
 
     Returns
     -------
-    groups : list of ~numpy.ndarray
+    groups : list of `~numpy.ndarray`
 	Grouped pixels acording to the labels.
     """
     for image in images:
@@ -624,9 +622,9 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     ----------
     header : `~astropy.io.fits.Header`
         FITS Header
-    lon, lat : ~numpy.ndarray
+    lon, lat : `~numpy.ndarray`
         World coordinates
-    weights : ~numpy.ndarray, optional
+    weights : `~numpy.ndarray`, optional
         Weights
 
     Returns
@@ -730,14 +728,14 @@ def threshold(array, threshold=5):
 
     Parameters
     ----------
-    array : ~numpy.ndarray
+    array : `~numpy.ndarray`
         Input array
     threshold : float, optional
         Minimum threshold
 
     Returns
     -------
-    data : ~numpy.ndarray
+    data : `~numpy.ndarray`
 	Copy of input array with pixels below threshold set to zero.
     """
     # TODO: np.clip is simpler, no?
@@ -758,14 +756,14 @@ def binary_dilation_circle(input, radius):
 
     Parameters
     ----------
-    input : ~numpy.ndarray
+    input : `~numpy.ndarray`
         Input array
     radius : float
         Dilation radius (pix)
 
     Returns
     -------
-    binary_dilation : ndarray of bools
+    binary_dilation : `~numpy.ndarray` of bools
 	Dilation of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_dilation
@@ -781,14 +779,14 @@ def binary_opening_circle(input, radius):
 
     Parameters
     ----------
-    input : ~numpy.ndarray
+    input : `~numpy.ndarray`
         Input array
     radius : float
         Dilation radius (pix)
 
     Returns
     -------
-    binary_opening : ndarray of bools
+    binary_opening : `~numpy.ndarray` of bools
 	Opening of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_opening
@@ -1102,7 +1100,7 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     ----------
     image_hdu : `~astropy.io.fits.ImageHDU`
         Original image HDU, unscaled
-    block_size : ~numpy.ndarray
+    block_size : `~numpy.ndarray`
         Array containing down-sampling integer factor along each axis.
     func : callable
         Function object which is used to calculate the return value for each local block. 
