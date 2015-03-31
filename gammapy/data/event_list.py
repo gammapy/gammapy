@@ -5,7 +5,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 from collections import OrderedDict
+import os
 import numpy as np
+from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
@@ -17,6 +19,7 @@ from . import utils
 __all__ = ['EventList',
            'EventListDataset',
            'EventListDatasetChecker',
+           'event_lists_to_counts_image',
            ]
 
 
@@ -197,10 +200,131 @@ class EventListDataset(object):
         """
         # return EventList.from_hdu_list(fits.open(filename))
         event_list = EventList.read(filename, hdu='EVENTS')
-        telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
-        good_time_intervals = GoodTimeIntervals.read(filename, hdu='GTI')
+        try:
+            telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
+        except KeyError:
+            telescope_array = None
+            # self.logger.debug('No TELARRAY extension')
+
+        try:
+            good_time_intervals = GoodTimeIntervals.read(filename, hdu='GTI')
+        except KeyError:
+            good_time_intervals = None
 
         return EventListDataset(event_list, telescope_array, good_time_intervals)
+
+    @staticmethod
+    def vstack_from_files(filenames, logger=None):
+        """Stack event lists vertically (combine events and GTIs).
+
+        This function stacks (a.k.a. concatenates) event lists.
+        E.g. if you have one event list with 100 events (i.e. 100 rows)
+        and another with 42 events, the output event list will have 142 events.
+
+        It also stacks the GTIs so that exposure computations are still
+        possible using the stacked event list.
+
+
+        At the moment this can require a lot of memory.
+        All event lists are loaded into memory at the same time.
+
+        TODO: implement and benchmark different a more efficient method:
+        Get number of rows from headers, pre-allocate a large table,
+        open files one by one and fill correct rows.
+
+        TODO: handle header keywords "correctly".
+        At the moment the output event list header keywords are copies of
+        the values from the first observation, i.e. meaningless.
+        Here's a (probably incomplete) list of values we should handle
+        (usually by computing the min, max or mean or removing it):
+        - OBS_ID
+        - DATE_OBS, DATE_END
+        - TIME_OBS, TIME_END
+        - TSTART, TSTOP
+        - LIVETIME, DEADC
+        - RA_PNT, DEC_PNT
+        - ALT_PNT, AZ_PNT
+
+
+        Parameters
+        ----------
+        filenames : list of str
+            List of event list filenames
+
+        Returns
+        -------
+        event_list_dataset : `~gammapy.data.EventListDataset`
+
+        """
+        total_filesize = 0
+        for filename in filenames:
+            total_filesize += os.path.getsize(filename)
+
+        if logger:
+            logger.info('Number of files to stack: {}'.format(len(filenames)))
+            logger.info('Total filesize: {:.2f} MB'.format(total_filesize / 1024. ** 2))
+            logger.info('Reading event list files ...')
+
+        event_lists = []
+        gtis = []
+        from astropy.utils.console import ProgressBar
+        for filename in ProgressBar(filenames):
+            # logger.info('Reading {}'.format(filename))
+            event_list = Table.read(filename, hdu='EVENTS')
+
+            # TODO: Remove and modify header keywords for stacked event list
+            meta_del = ['OBS_ID', 'OBJECT']
+            meta_mod = ['DATE_OBS', 'DATE_END', 'TIME_OBS', 'TIME_END']
+
+            gti = Table.read(filename, hdu='GTI')
+            event_lists.append(event_list)
+            gtis.append(gti)
+
+        from astropy.table import vstack as vstack_tables
+        total_event_list = vstack_tables(event_lists, metadata_conflicts='silent')
+        total_gti = vstack_tables(gtis, metadata_conflicts='silent')
+
+        total_event_list.meta['EVTSTACK'] = 'yes'
+        total_gti.meta['EVTSTACK'] = 'yes'
+
+        return EventListDataset(event_list=total_event_list, good_time_intervals=total_gti)
+
+    def write(self, *args, **kwargs):
+        """Write to FITS file.
+
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_fits().writeto(*args, **kwargs)
+
+    def to_fits(self):
+        """Convert to FITS HDU list format.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with EVENTS and GTI extension.
+        """
+        # TODO: simplify when Table / FITS integration improves:
+        # https://github.com/astropy/astropy/issues/2632#issuecomment-70281392
+        # TODO: I think this makes an in-memory copy, i.e. is inefficient.
+        # Can we avoid this?
+        hdu_list = fits.HDUList()
+
+
+        # TODO:
+        del self.event_list['TELMASK']
+
+        data = self.event_list.as_array()
+        header = fits.Header()
+        header.update(self.event_list.meta)
+        hdu_list.append(fits.BinTableHDU(data=data, header=header, name='EVENTS'))
+
+        data = self.good_time_intervals.as_array()
+        header = fits.Header()
+        header.update(self.good_time_intervals.meta)
+        hdu_list.append(fits.BinTableHDU(data, header=header, name='GTI'))
+
+        return hdu_list
 
     @property
     def info(self):
@@ -468,3 +592,37 @@ class EventListDatasetChecker(object):
             return False
         else:
             return True
+
+
+def event_lists_to_counts_image(header, table_of_files, logger=None):
+    """Make count image from event lists (like gtbin).
+
+    TODO: what's a good API and location for this?
+
+    Parameters
+    ----------
+    header : `~astropy.io.fits.Header`
+        FITS header
+    table_of_files : `~astropy.table.Table`
+        Table of event list filenames
+    logger : `logging.Logger` or None
+        Logger to use
+
+    Returns
+    -------
+    image : `~astropy.io.fits.ImageHDU`
+        Count image
+    """
+    shape = (header['NAXIS2'], header['NAXIS1'])
+    data = np.zeros(shape, dtype='int')
+
+    for row in table_of_files:
+        if row['filetype'] != 'events':
+            continue
+        ds = EventListDataset.read(row['filename'])
+        if logger:
+            logger.info('Processing OBS_ID = {:06d} with {:6d} events.'
+                        ''.format(row['OBS_ID'], len(ds.event_list)))
+        # TODO: fill events in image.
+
+    return fits.ImageHDU(data=data, header=header)
