@@ -3,10 +3,13 @@
 Field-of-view (FOV) background estimation
 """
 from __future__ import print_function, division
+
+import numpy as np
+
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
-import numpy as np
-from scipy.interpolate import interp1d
+
+from ..image.utils import coordinates
 
 __all__ = ['fill_acceptance_image',
            ]
@@ -24,8 +27,8 @@ def fill_acceptance_image(image, center, offset, acceptance):
         Empty image to fill.
     center : `~astropy.coordinates.SkyCoord`
         Coordinate of the center of the image.
-    offset : `~numpy.ndarray` of `~astropy.coordinates.Angle`
-        Array of offset values in degrees where acceptance is defined.
+    offset : `~astropy.coordinates.Angle`
+        1D array of offset values where acceptance is defined.
     acceptance : `~numpy.ndarray`
         Array of acceptance values.
 
@@ -34,29 +37,23 @@ def fill_acceptance_image(image, center, offset, acceptance):
     image : `~astropy.io.fits.ImageHDU`
         Image filled with radial acceptance.
     """
-    #initialize WCS to the header of the image
+    from scipy.interpolate import interp1d
+
+    # initialize WCS to the header of the image
     w = WCS(image.header)
 
-    #define grids of pixel coorinates
-    nx, ny = image.shape
-    xpix_coord_grid = np.zeros(image.shape)
-    for y in range(0, ny):
-        xpix_coord_grid[0:nx, y] = np.arange(0, nx)
-    print(xpix_coord_grid) #debug
-    ypix_coord_grid = np.zeros(image.shape)
-    for x in range(0, nx):
-        ypix_coord_grid[x, 0:nx] = np.arange(0, ny)
-    print(ypix_coord_grid) #debug
+    # define grids of pixel coorinates
+    xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
 
-    #calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, 1)
+    # calculate pixel offset from center (in world coordinates)
+    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, 0)
     pix_off = coord.separation(center)
 
-    #interpolate
+    # interpolate
     f = interp1d(offset, acceptance, kind='cubic')
     pix_acc = f(pix_off)
 
-    #fill value in image
+    # fill value in image
     image.data = pix_acc
 
     return image
