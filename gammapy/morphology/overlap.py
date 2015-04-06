@@ -175,7 +175,7 @@ def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
     hdulist = fits.open('../counts.fits')
     w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
-    glon, glat = w.wcs_pix2world(x, y, 1)
+    glon, glat = w.wcs_pix2world(x, y, 0)
 
     # Fix glon and glon_pos
     glon = np.select([glon > 180, glon <= 180], [glon - 360, glon])
@@ -195,7 +195,7 @@ def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
     hdulist = fits.open('../counts.fits')
     w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
-    glon, glat = w.wcs_pix2world(x, y, 1)
+    glon, glat = w.wcs_pix2world(x, y, 0)
 
     # Compute containment radius
     r_containment = sqrt(2 * log(1 / (1 - frac))) * sigma  # Has to be tested!
