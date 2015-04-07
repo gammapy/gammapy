@@ -172,13 +172,13 @@ it has full-text search and git history view:
 * https://github.com/astropy/photutils
 * https://github.com/gammalib/gammalib
 * https://github.com/ctools/ctools
+* https://github.com/sherpa/sherpa
 * https://github.com/zblz/naima
 * https://github.com/woodmd/gammatools
 * https://github.com/kialio/VHEObserverTools
 
 These are unofficial, unmaintained copies on open codes on Github:
 
-* https://github.com/brefsdal/sherpa
 * https://github.com/Xarthisius/yt-drone
 * https://github.com/cdeil/Fermi-ScienceTools-mirror
 * https://github.com/cdeil/kapteyn-mirror
@@ -275,3 +275,42 @@ and isn't intuitively clear to new users.
 Astropy uses both ``clobber`` and ``overwrite`` in various places at the moment.
 For Gammapy we can re-visit this decision before the 1.0 release, but for now,
 please be consistent and use ``overwrite``.
+
+Pixel coordinate convention
+---------------------------
+
+All code in Gammapy should follow the Astropy pixel coordinate convention that the center of the first pixel
+has pixel coordinates ``(0, 0)`` (and not ``(1, 1)`` as shown e.g. in ds9).
+It's currently documented `here <http://photutils.readthedocs.org/en/latest/photutils/overview.html#coordinate-conventions>`__
+but I plan to document it in the Astropy docs soon (see `issue 2607 <https://github.com/astropy/astropy/issues/2607>`__).
+
+You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
+
+
+When to use C or Cython or Numba for speed
+------------------------------------------
+
+Most of Gammapy is written using Python and Numpy array expressions calling functions (e.g. from Scipy)
+that operate on Numpy arrays.
+This is often nice because it means that algorithms can be implemented with few lines of high-level code,
+
+There is a very small fraction of code though (one or a few percent) where this results in code that is
+either cumbersome or too slow. E.g. to compute TS or upper limit images, one needs to do a root finding
+method with different number of iterations for each pixel ... that's impossible (or at least very
+cumbersome / hard to read) to implement with array expressions and Python loops over pixels are slow.
+
+In these cases we encourage the use of `Cython <http://cython.org/>`__ or `Numba <http://numba.pydata.org/>`__,
+or writing the core code in C and exposing it to Python via Cython.
+These are popular and simple ways to get C speed from Python.
+
+To use several CPU cores consider using the Python standard library
+`multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`__ module.
+
+Note that especially the use of Numba should be considered an experiment.
+It is a very nice, but new technology and no-one uses it in production.
+Before the Gammapy 1.0 release we will re-evaluate the status of Numba and decide whether it's
+an optional dependency we use for speed, or whether we use the much more established Cython
+(Scipy, scikit-image, Astropy, ... all use Cython).
+
+At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
+and Numba is not used yet.
