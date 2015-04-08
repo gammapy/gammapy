@@ -1,4 +1,5 @@
 include README.rst
+include CHANGES.rst
 
 recursive-include gammapy *.pyx *.c
 include ez_setup.py
