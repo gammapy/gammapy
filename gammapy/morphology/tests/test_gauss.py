@@ -157,7 +157,8 @@ def test_gaussian_sum_moments():
     cov_matrix = np.zeros((12, 12))
     F = [F_1, F_2, F_3]
     sigma = np.array([sigma_1, sigma_2, sigma_3]) * BINSZ
-    x, y = wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], 0)
+    origin = 0  # convention for gammapy
+    x, y = wcs.wcs_pix2world([x_1, x_2, x_3], [y_1, y_2, y_3], origin)
 
     # Fix longitude range, is there a wcs option for this?
     x = np.where(x > 180, x - 360, x)

@@ -39,7 +39,7 @@ def test_fill_acceptance_image():
     # initialize WCS to the header of the image
     w = WCS(image.header)
 
-    x_center_pix, y_center_pix = skycoord_to_pixel(center, w, 0)
+    x_center_pix, y_center_pix = skycoord_to_pixel(center, w, origin=0)
 
     # define pixel sizes
     x_pix_size = Angle(abs(image.header['CDELT1'])*u.degree)
@@ -66,13 +66,13 @@ def test_fill_acceptance_image():
     xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
 
     # calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, 0)
+    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)
     pix_off = coord.separation(center)
 
-    # x axis defined in the array positions [y_center_pix - 1,:]
-    # only interested in semi axis, so [y_center_pix - 1, x_center_pix - 1:]
-    ix_min = int(round(x_center_pix - 1))
-    iy = int(round(y_center_pix - 1))
+    # x axis defined in the array positions [y_center_pix,:]
+    # only interested in semi axis, so [y_center_pix, x_center_pix:]
+    ix_min = int(x_center_pix)
+    iy = int(y_center_pix)
     pix_off_x_axis = pix_off[iy, ix_min:]
     image.data_x_axis = image.data[iy, ix_min:]
 

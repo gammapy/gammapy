@@ -53,7 +53,8 @@ def _source_image(catalog, reference_cube, sim_table=None, total_flux=True):
             if (glat_min < lat) & (lat < glat_max):
                 flux = source_table['flux'][source]
                 wcs = reference_cube.wcs
-                x, y = wcs.wcs_world2pix(lon, lat, 0)
+                origin = 0  # convention for gammapy
+                x, y = wcs.wcs_world2pix(lon, lat, origin)
                 xi, yi = x.astype(int), y.astype(int)
                 new_image[yi, xi] = new_image[yi, xi] + flux
     if total_flux:
