@@ -46,7 +46,7 @@ def fill_acceptance_image(image, center, offset, acceptance):
     xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
 
     # calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, 0)
+    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)
     pix_off = coord.separation(center)
 
     # interpolate

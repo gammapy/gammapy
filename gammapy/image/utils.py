@@ -380,14 +380,14 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
     >>> dist = np.sqrt(lon ** 2 + lat ** 2)
     """
     # Create arrays of pixel coordinates
+    y, x = np.indices(image.shape, dtype='int32')
+
     if not world:
-        y, x = np.indices(image.shape, dtype='int32') + 1
         return x, y
-    else:
-        y, x = np.indices(image.data.shape, dtype='int32') + 1
 
     wcs = WCS(image.header)
-    lon, lat = wcs.wcs_pix2world(x, y, 1)
+    origin = 0  # convention for gammapy
+    lon, lat = wcs.wcs_pix2world(x, y, origin)
 
     if lon_sym:
         lon = np.where(lon > 180, lon - 360, lon)
@@ -641,7 +641,8 @@ def wcs_histogram2d(header, lon, lat, weights=None):
 
     # Get pixel coordinates
     wcs = WCS(header)
-    xx, yy = wcs.wcs_world2pix(lon, lat, 0)
+    origin = 0  # convention for gammapy
+    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
 
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
@@ -707,7 +708,8 @@ def bin_events_in_cube(events, reference_cube, energies):
     # Get pixel coordinates
     wcs = WCS(reference_cube.header)
     # We're not interested in the energy axis, so we give a dummy value of 1
-    xx, yy = wcs.wcs_world2pix(lon, lat, 1, 0)[:-1]
+    origin = 0  # convention for gammapy
+    xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)[:-1]
 
     event_energies = events['Energy']
     zz = np.searchsorted(event_energies, energies)
@@ -1050,7 +1052,8 @@ def contains(image, x, y, world=True):
 
     if world:
         wcs = WCS(header)
-        x, y = wcs.wcs_world2pix(x, y, 0)
+        origin = 0  # convention for gammapy
+        x, y = wcs.wcs_world2pix(x, y, origin)
 
     nx, ny = header['NAXIS2'], header['NAXIS1']
     return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
@@ -1076,8 +1079,9 @@ def paste_cutout_into_image(total, cutout, method='sum'):
     crop_image
     """
     # find offset
-    lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, 0)
-    x, y = WCS(total.header).wcs_world2pix(lon, lat, 0)
+    origin = 0  # convention for gammapy
+    lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, origin)
+    x, y = WCS(total.header).wcs_world2pix(lon, lat, origin)
     x, y = int(np.round(x)), int(np.round(y))
     dy, dx = cutout.shape
 

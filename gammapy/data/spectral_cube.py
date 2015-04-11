@@ -157,7 +157,8 @@ class SpectralCube(object):
         """
         lon = lon.to('deg').value
         lat = lat.to('deg').value
-        x, y, _ = self.wcs.wcs_world2pix(lon, lat, 0, 0)
+        origin = 0  # convention for gammapy
+        x, y, _ = self.wcs.wcs_world2pix(lon, lat, 0, origin)
 
         z = self.energy_axis.world2pix(energy)
 
@@ -185,7 +186,8 @@ class SpectralCube(object):
         -------
         lon, lat, energy
         """
-        lon, lat, _ = self.wcs.wcs_pix2world(x, y, 0, 0)
+        origin = 0  # convention for gammapy
+        lon, lat, _ = self.wcs.wcs_pix2world(x, y, 0, origin)
         energy = self.energy_axis.pix2world(z)
 
         lon = Quantity(lon, 'deg')

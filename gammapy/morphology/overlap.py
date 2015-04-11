@@ -79,7 +79,8 @@ def write_test_model_components(component_table):
     w.wcs.ctype = ["GLON-CAR", "GLAT-CAR"]
     header = w.to_header()
     y, x = np.indices((401, 401))
-    glon, glat = w.wcs_pix2world(x, y, 0)
+    origin = 0  # convention for gammapy
+    glon, glat = w.wcs_pix2world(x, y, origin)
 
     # All source components added
     all_components = np.zeros_like(x, dtype=np.float32)
@@ -175,7 +176,8 @@ def get_containment_mask(glon_pos, glat_pos, r_containment, shape):
     hdulist = fits.open('../counts.fits')
     w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
-    glon, glat = w.wcs_pix2world(x, y, 1)
+    origin = 0  # convention for gammapy
+    glon, glat = w.wcs_pix2world(x, y, origin)
 
     # Fix glon and glon_pos
     glon = np.select([glon > 180, glon <= 180], [glon - 360, glon])
@@ -195,7 +197,8 @@ def get_containment_mask_from_sigma(glon_pos, glat_pos, sigma, frac, shape):
     hdulist = fits.open('../counts.fits')
     w = WCS(hdulist[0].header)
     y, x = np.indices(shape)
-    glon, glat = w.wcs_pix2world(x, y, 1)
+    origin = 0  # convention for gammapy
+    glon, glat = w.wcs_pix2world(x, y, origin)
 
     # Compute containment radius
     r_containment = sqrt(2 * log(1 / (1 - frac))) * sigma  # Has to be tested!
@@ -545,7 +548,8 @@ def overlap_plot(profile_A, profile_B, w, y_slice):
     ax2.tick_params(axis='both', which='major', labelsize=16)
 
     pos = np.linspace(0, profile_A.size, 11)
-    y_labels, x_labels = w.wcs_pix2world(pos, np.ones_like(pos) * y_slice, 0)
+    origin = 0  # convention for gammapy
+    y_labels, x_labels = w.wcs_pix2world(pos, np.ones_like(pos) * y_slice, origin)
     plt.xticks(pos, x_labels)
     plt.setp(ax1.get_xticklabels(), visible=False)
     plt.legend()
@@ -562,7 +566,8 @@ def make_example_plots(component_table):
     w = WCS(hdulist[0].header)
 
     # Slice through center
-    y_slice, x_slice = w.wcs_world2pix(0, 0, 0)
+    origin = 0  # convention for gammapy
+    y_slice, x_slice = w.wcs_world2pix(0, 0, origin)
 
     for row_A in range(len(component_table)):
         for row_B in range(len(component_table)):

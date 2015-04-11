@@ -246,7 +246,8 @@ def find_max(image):
     data = image.data
     data[np.isnan(data)] = -np.inf
     y, x = maximum_position(data)
-    GLON, GLAT = proj.wcs_pix2world(x, y, 0)
+    origin = 0  # convention for gammapy
+    GLON, GLAT = proj.wcs_pix2world(x, y, origin)
     val = data[int(y), int(x)]
     return GLON, GLAT, val
 
@@ -275,7 +276,8 @@ def _lookup_world(image, lon, lat):
     """
     from astropy.wcs import WCS
     wcs = WCS(image.header)
-    x, y = wcs.wcs_world2pix(lon, lat, 0)
+    origin = 0  # convention for gammapy
+    x, y = wcs.wcs_world2pix(lon, lat, origin)
     return _lookup_pix(image.data, x, y)
 
 
