@@ -36,9 +36,9 @@ from the command line:
 
 .. code-block:: bash
 
-   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.1.tar.gz  
-   $ tar zxf gammapy-0.1.tar.gz
-   $ cd gammapy-0.1
+   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.2.tar.gz
+   $ tar zxf gammapy-0.2.tar.gz
+   $ cd gammapy-0.2
 
 To download the latest development version of Gammapy:
 

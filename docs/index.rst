@@ -3,23 +3,28 @@
 .. image:: _static/gammapy_banner.png
     :width: 400px
 
+.. _gammapy_welcome:
+
+What is Gammapy?
+----------------
 
 **Gammapy** is an open source (BSD licensed) gamma-ray astronomy Python package.
 
 It is an in-development `affiliated package <http://www.astropy.org/affiliated/index.html>`__ of `Astropy <http://www.astropy.org/>`__ 
 that builds on the core `scientific Python stack <http://www.scipy.org/about.html>`__ to provide tools to simulate and analyse
-the gamma-ray sky for telescopes such as `Fermi <http://fermi.gsfc.nasa.gov/>`__, `H.E.S.S. <http://www.mpi-hd.mpg.de/hfm/HESS/>`__
-and `CTA <https://www.cta-observatory.org/>`__.
+the gamma-ray sky for telescopes such as `CTA <https://www.cta-observatory.org/>`__, `H.E.S.S. <http://www.mpi-hd.mpg.de/hfm/HESS/>`__,
+and `Fermi <http://fermi.gsfc.nasa.gov/>`__.
 
-Currently the functionality is limited and geared towards Galactic plane survey studies,
-but the idea is that Gammapy is a place to share and collaborate for gamma-ray astronomy Pythonistas
-... contributions welcome! 
+Gammapy is a place for Python-coding gamma-ray astronomers to share their code and collaborate.
+Contributions welcome!
 
 * Read the `Gammapy documentation`_.
 * Ask questions on the `Gammapy mailing list`_.
 * Request features, report bugs or contribute on the `Gammapy GitHub page`_.
-* Check out the `Gammapy project summary on Open HUB`_ or the `Gammapy page on PyPI`_.
-* Requires Python (version 2.7 and 3.3 or later), Numpy (version 1.6 or later) and Astropy (version 1.0 or later)
+* Check out the `Gammapy project summary on Open HUB`_.
+* The latest Gammapy release is version **0.2** and is available from the `Gammapy page on PyPI`_.
+
+.. _gammapy_general_docs:
 
 General documentation
 ---------------------
@@ -36,6 +41,8 @@ General documentation
   credit
   development/index
   changelog
+
+.. gammapy_toolbox:
 
 The Gammapy toolbox
 -------------------
@@ -57,3 +64,16 @@ The Gammapy toolbox
   spectrum/index
   stats/index
   utils/index
+
+.. gammapy_support:
+
+Support Gammapy
+---------------
+
+If you use Gammapy in your work, we would be grateful if you could include an acknowledgment in papers and/or presentations.
+
+Currently there is no academic reference for Gammapy.
+We have submitted a poster for `ICRC 2015 <http://icrc2015.nl/>`__
+and plan to write a paper about it after the Gammapy 1.0 release in August 2015.
+
+For now, you could mention the URL https://github.com/gammapy/gammapy or include the Gammapy banner.

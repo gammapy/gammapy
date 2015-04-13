@@ -160,6 +160,8 @@ To make a Gammapy release, follow the instructions how to release an Astropy aff
 `here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 
 Here's some additional notes / things to check:
+
+* Update the Gammapy version number on the :ref:`gammapy_welcome` section and the :ref:`install` section.
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
 
 Other codes
