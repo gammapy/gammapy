@@ -240,8 +240,8 @@ class DataStore(object):
         table : `~gammapy.obs.ObservationTable`
             Observation table
 
-        Example
-        -------
+        Examples
+        --------
         >>> selection = dict(shape='box', frame='galactic',
         ...                  lon=(-100, 50), lat=(-5, 5), border=2)
         >>> run_list = data_store.make_observation_table(selection)
