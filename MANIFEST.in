@@ -1,7 +1,8 @@
 include README.rst
+include LONG_DESCRIPTION.rst
 include CHANGES.rst
 
-recursive-include gammapy *.pyx *.c
+recursive-include gammapy *.pyx *.pxd *.c
 include ez_setup.py
 include ah_bootstrap.py
 include setup.cfg
@@ -21,4 +22,4 @@ recursive-include astropy_helpers *
 exclude astropy_helpers/.git
 exclude astropy_helpers/.gitignore
 
-exclude *.pyc *.o
+global-exclude *.pyc *.o
