@@ -50,10 +50,9 @@ In the following the computation of a TS map for prepared Fermi survey data, whi
 	hdu_list = fits.open('all.fits.gz')
 	kernel = Gaussian2DKernel(5)
 	result = compute_ts_map(hdu_list['On'].data, hdu_list['Background'].data,
-							hdu_list['ExpGammaMap'].data, kernel, threshold=0)
+							hdu_list['ExpGammaMap'].data, kernel)
 
-The option ``threshold=0`` sets a minimal required TS value based on the initial flux estimate, that the pixel is
-processed at all. The function returns a `~gammapy.detect.TSMapResult` object, that bundles all relevant
+The function returns a `~gammapy.detect.TSMapResult` object, that bundles all relevant
 data. E.g. the time needed for the TS map computation can be checked by:
 
 .. code-block:: python
@@ -75,7 +74,7 @@ on the Fermi example dataset by:
 .. code-block:: bash
 
 	$ cd gammapy-extra/datasets/fermi_survey
-	$ gammapy-ts-image all.fits.gz --threshold 0 --scale 0 
+	$ gammapy-ts-image all.fits.gz ts_map_0.00.fits --scale 0 
 
 The command line tool additionally requires a psf json file, where the psf shape is defined by the parameters
 of a triple Gaussian model. See also `gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
@@ -88,7 +87,7 @@ Furthermore it is possible to compute residual TS maps. Using the following opti
  
 .. code-block:: bash
 
-	$ gammapy-ts-image all.fits.gz --threshold 0 --scale 0 --residual --model model.fits.gz 
+	$ gammapy-ts-image all.fits.gz residual_ts_map_0.00.fits --scale 0 --residual --model model.fits.gz 
 
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
 
