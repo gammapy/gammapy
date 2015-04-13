@@ -24,6 +24,16 @@ Contributions welcome!
 * Check out the `Gammapy project summary on Open HUB`_.
 * The latest Gammapy release is version **0.2** and is available from the `Gammapy page on PyPI`_.
 
+.. _gammapy_news:
+
+News
+----
+
+To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
+
+* April 13, 2015: Gammapy 0.2 release. See changelog: :ref:`gammapy_0p2_release`
+* August 25, 2014: Gammapy 0.1 release. See changelog: :ref:`gammapy_0p1_release`
+
 .. _gammapy_general_docs:
 
 General documentation

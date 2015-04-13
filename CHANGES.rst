@@ -15,12 +15,17 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 Pull requests
 +++++++++++++
 
+
+.. _gammapy_0p3_release:
+
 0.3 (May 18 , 2015)
 -------------------
 
 Gammapy 0.3 will be released on April 13, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
+
+.. _gammapy_0p2_release:
 
 0.2 (April 13, 2015)
 --------------------
@@ -64,6 +69,8 @@ Pull requests
 - Add data store and observation table classes, improve event list classes [#249] (Christoph Deil)
 - Implement TS map computation in Cython [#252] (Axel Donath)
 - Add changelog for Gammapy [#254] (Christoph Deil)
+
+.. _gammapy_0p1_release:
 
 0.1 (August 25, 2014)
 ---------------------

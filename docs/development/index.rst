@@ -162,7 +162,11 @@ To make a Gammapy release, follow the instructions how to release an Astropy aff
 Here's some additional notes / things to check:
 
 * Update the Gammapy version number on the :ref:`gammapy_welcome` section and the :ref:`install` section.
+* Mention release in the :ref:`gammapy_news` section.
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
+* Check that the tarball from PyPI is OK.
+* Check that the new release shows up on readthedocs.
+* Send announcement to Gammapy mailing list, Astropy mailing list and Twitter.
 
 Other codes
 -----------
