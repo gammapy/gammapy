@@ -27,7 +27,7 @@ Pull requests
 0.3 (May 18 , 2015)
 -------------------
 
-Gammapy 0.3 will be released on April 13, 2015.
+Gammapy 0.3 will be released on May 18, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
 
@@ -44,7 +44,7 @@ Pull requests
 Release notes
 +++++++++++++
 
-- Will be released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.python.org/pypi/gammapy/0.2>`__)
+- Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.python.org/pypi/gammapy/0.2>`__)
 - Contributors: Manuel Paz Arribas (new), Axel Donath, Ellis Owen, Christoph Deil
 - 8 months of work (from August 25, 2014 to April 13, 2015)
 - 40 pull requests, 4 authors
