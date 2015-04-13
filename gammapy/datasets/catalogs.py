@@ -11,7 +11,7 @@ __all__ = ['load_catalog_atnf',
            'load_catalog_hess_galactic',
            # 'load_catalog_hgps',
            'load_catalog_green',
-           'load_catalog_snrcat',
+           # 'load_catalog_snrcat',
            'load_catalog_tevcat',
            ]
 
@@ -116,7 +116,7 @@ def load_catalog_tevcat():
     filename = get_path('catalogs/tevcat.fits.gz', location='remote')
     return Table.read(filename)
 
-
+# TODO: implement properly
 def load_catalog_snrcat():
     """Load SNRcat supernova remnant catalog.
 

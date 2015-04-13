@@ -41,8 +41,12 @@ def _is_galactic(source_class):
     """
     source_class = source_class.lower().strip()
 
-    GAL = ['psr', 'pwn', 'snr', 'spp', 'lbv', 'hmb', 'hpsr', 'sfr']
-    EGAL = ['agu', 'bzb', 'bzq', 'gal', 'rdg']
+    GAL = ['psr', 'pwn', 'snr', 'spp', 'lbv', 'hmb', 'hpsr', 'sfr', 'glc', 'bin',
+           'nov',
+           ]
+    EGAL = ['agn', 'agu', 'bzb', 'bzq', 'bll', 'gal', 'rdg', 'fsrq',
+            'css', 'sey', 'sbg', 'nlsy1', 'ssrq', 'bcu',
+            ]
 
     if source_class in GAL:
         return 'galactic'
