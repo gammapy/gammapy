@@ -3,7 +3,7 @@
 .. _scikit-learn: http://scikit-learn.org/stable/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
-.. _Astropy: http://www.astropy.org/
+.. _Astropy: http://astropy.org
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
