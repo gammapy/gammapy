@@ -164,8 +164,9 @@ Here's some additional notes / things to check:
 * Update the Gammapy version number on the :ref:`gammapy_welcome` section and the :ref:`install` section.
 * Mention release in the :ref:`gammapy_news` section.
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
-* Check that the tarball from PyPI is OK.
-* Check that the new release shows up on readthedocs.
+* Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
+* Check that the new release shows up OK on readthedocs.
+* Check `here <https://github.com/gammapy/gammapy/tags>`__ that the release tag is present on Github
 * Send announcement to Gammapy mailing list, Astropy mailing list and Twitter.
 
 Other codes
