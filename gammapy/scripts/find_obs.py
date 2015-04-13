@@ -5,11 +5,11 @@ import sys
 import argparse
 from ..utils.scripts import get_parser
 
-__all__ = ['find_runs']
+__all__ = ['find_obs']
 
 
 def main(args=None):
-    parser = get_parser(find_runs)
+    parser = get_parser(find_obs)
     parser.add_argument('infile', type=argparse.FileType('r'),
                         help='Input run list file name')
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
@@ -25,16 +25,16 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    find_runs(**vars(args))
+    find_obs(**vars(args))
 
 
-def find_runs(infile,
-              outfile,
-              x,
-              y,
-              pix,
-              overwrite):
-    """Select a subset of runs from a given run list.
+def find_obs(infile,
+             outfile,
+             x,
+             y,
+             pix,
+             overwrite):
+    """Select a subset of observations from a given observation list.
 
     TODO: explain.
     """

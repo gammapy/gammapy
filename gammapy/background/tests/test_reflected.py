@@ -2,7 +2,6 @@
 from __future__ import print_function, division
 import unittest
 from astropy.tests.helper import pytest
-from ...obs import RunList
 from ...background import Maps, ReflectedRegionMaker
 
 
@@ -10,7 +9,7 @@ from ...background import Maps, ReflectedRegionMaker
 class TestReflectedBgMaker(unittest.TestCase):
 
     def test_analysis(self):
-        runs = RunList('runs.lis')
+        runs = 'TODO'
         maps = Maps('maps.fits')
         reflected_bg_maker = ReflectedRegionMaker(runs, maps, psi=2, theta=0.1)
         total_maps = Maps('total_maps.fits')

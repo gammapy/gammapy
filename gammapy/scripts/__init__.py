@@ -13,7 +13,7 @@ from .coordinate_images import *
 from .cwt import *
 from .derived_images import *
 from .detect import *
-from .find_runs import *
+from .find_obs import *
 from .image_decompose_a_trous import *
 from .info import *
 from .irf_info import *
