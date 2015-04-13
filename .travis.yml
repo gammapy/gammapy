@@ -14,6 +14,7 @@ env:
         - ASTROPY_VERSION=stable
         - CONDA_INSTALL='conda install -c astropy-ci-extras --yes'
         - PIP_INSTALL='pip install'
+        - INSTALL_OPTIONAL=true
     matrix:
         - SETUP_CMD='egg_info'
 
@@ -42,6 +43,12 @@ matrix:
           env: SETUP_CMD='test'
         - python: 3.4
           env: SETUP_CMD='test'
+
+        # Try with optional dependencies disabled
+        - python: 2.7
+          env: SETUP_CMD='test' INSTALL_OPTIONAL=false
+        - python: 3.4
+          env: SETUP_CMD='test' INSTALL_OPTIONAL=false
 
         # Try older numpy versions
         - python: 2.7
@@ -87,9 +94,9 @@ install:
     # conda for packages available through conda, or pip for any other
     # packages. You should leave the `numpy=$NUMPY_VERSION` in the `conda`
     # install since this ensures Numpy does not get automatically upgraded.
-    - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL scipy scikit-image pandas; fi
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL uncertainties; fi
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $CONDA_INSTALL scipy scikit-image pandas; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL uncertainties; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that
