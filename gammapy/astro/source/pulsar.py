@@ -15,7 +15,7 @@ B_CONST = Quantity(3.2e19, 'gauss s^(-1/2)')   # magnetic field constant
 class SimplePulsar(object):
     """Magnetic dipole spin-down model for a pulsar.
 
-    Reference: http://home.strw.leidenuniv.nl/~oberg/Pulsars/Verbunt_Heise_NeutronStars.pdf
+    Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
 
     Parameters
     ----------
@@ -86,7 +86,7 @@ class SimplePulsar(object):
 class Pulsar(SimplePulsar):
     """Magnetic dipole spin-down pulsar model.
 
-    Reference: http://home.strw.leidenuniv.nl/~oberg/Pulsars/Verbunt_Heise_NeutronStars.pdf
+    Reference: http://www.cv.nrao.edu/course/astr534/Pulsars.html
 
     Parameters
     ----------

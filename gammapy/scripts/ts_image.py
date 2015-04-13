@@ -65,13 +65,13 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
     from gammapy.detect import compute_ts_map_multiscale
 
     # Read data
-    logging.info('Reading {0}'.format(input_file))
+    logging.info('Reading {}'.format(input_file))
     maps = fits.open(input_file)
-    logging.info('Reading {0}'.format(psf))
+    logging.info('Reading {}'.format(psf))
     psf_parameters = json.load(open(psf))
 
     if residual:
-        logging.info('Reading {0}'.format(model))
+        logging.info('Reading {}'.format(model))
         data = fits.getdata(model)
         header = fits.getheader(model)
         maps.append(fits.ImageHDU(data, header, 'OnModel'))
@@ -87,8 +87,8 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
     if len(results) > 1:
         for scale, result in zip(scales, results):
             filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
-            logging.info('Writing {0}'.format(os.path.join(folder, filename_)))
+            logging.info('Writing {}'.format(os.path.join(folder, filename_)))
             result.write(os.path.join(folder, filename_), header, overwrite=overwrite)
     else:
-        logging.info('Writing {0}'.format(output_file))
+        logging.info('Writing {}'.format(output_file))
         results[0].write(output_file, header, overwrite=overwrite)

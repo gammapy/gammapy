@@ -31,6 +31,7 @@ def test_compute_ts_map():
     result = compute_ts_map(data['counts'], data['background'], data['exposure'],
                             kernel)
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
+        result[name] = np.nan_to_num(result[name])
         result[name] = upsample_2N(result[name], 2, order=order)
 
     assert_allclose(1705.840212274973, result.ts[99, 99], rtol=1e-3)

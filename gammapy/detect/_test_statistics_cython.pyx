@@ -5,16 +5,28 @@ import numpy as np
 cimport numpy as np
 cimport cython
 
-cdef np.float_t FLUX_FACTOR
-
-FLUX_FACTOR = 1E-12
+cdef np.float_t FLUX_FACTOR = 1E-12
 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def _f_cash_root(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
-                 np.ndarray[np.float_t, ndim=2] background,
-                 np.ndarray[np.float_t, ndim=2] model):
+def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
+                        np.ndarray[np.float_t, ndim=2] background,
+                        np.ndarray[np.float_t, ndim=2] model):
+    """
+    Function to find root of. Described in Appendix A, Stewart (2009).
+
+    Parameters
+    ----------
+    x : float
+        Model amplitude.
+    counts : `~numpy.ndarray`
+        Count map slice, where model is defined.
+    background : `~numpy.ndarray`
+        Background map slice, where model is defined.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    """
     cdef np.float_t sum
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
@@ -29,9 +41,22 @@ def _f_cash_root(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
-def __amplitude_bounds(np.ndarray[np.float_t, ndim=2] counts,
-                       np.ndarray[np.float_t, ndim=2] background,
-                       np.ndarray[np.float_t, ndim=2] model):
+def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
+                             np.ndarray[np.float_t, ndim=2] background,
+                             np.ndarray[np.float_t, ndim=2] model):
+    """
+    Compute bounds for the root of `_f_cash_root_cython`.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count map.
+    background : `~numpy.ndarray`
+        Background map.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    """
+
     cdef float s_model = 0, s_counts = 0, sn, sn_min = 1E14, c_min
     cdef float b_min, b_max
     cdef unsigned int i, j, ni, nj
@@ -56,8 +81,19 @@ cdef extern from "math.h":
     float log(float x)
 
 
-def _cash(np.ndarray[np.float_t, ndim=2] counts,
-          np.ndarray[np.float_t, ndim=2] model):
+def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
+                 np.ndarray[np.float_t, ndim=2] model):
+    """
+    Cash fit statistics.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count map slice, where model is defined.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    """
+
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
@@ -70,8 +106,18 @@ def _cash(np.ndarray[np.float_t, ndim=2] counts,
     return cash
 
 
-def _cash_sum(np.ndarray[np.float_t, ndim=2] counts,
-              np.ndarray[np.float_t, ndim=2] model):
+def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
+                     np.ndarray[np.float_t, ndim=2] model):
+    """
+    Summed cash fit statistics.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count map slice, where model is defined.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    """
     cdef np.float_t sum = 0
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
