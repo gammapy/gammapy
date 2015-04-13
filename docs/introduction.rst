@@ -44,7 +44,7 @@ Hmm ... OK.
 Some of the Gammapy functionality can be called from command line tools.
 
 But, to be honest, if you're an astronomer, you should learn to code in Python.
-Start at http://python4astronomers.github.io or `here <http://www.astropy.org>`_
+Start at http://python4astronomers.github.io or the `astropy` docs.
 
 For example, if you have a counts and background model image and would like to compute
 a significance image with a correlation radius of 0.1 deg:

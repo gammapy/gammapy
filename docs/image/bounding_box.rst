@@ -51,7 +51,7 @@ How to represent bounding boxes and pass them around in code?
 In gammapy we frequently need to bass bounding boxes around, e.g. from a function that detects
 many small objects in a large survey image to another function that measures some properties of these objects.  
 
-Python does have a built-in `slice <http://docs.python.org/2/library/functions.html#slice>`__ class,
+Python does have a built-in `slice <https://docs.python.org/3/library/functions.html#slice>`__ class,
 and we can use it to represent 1-dimensional slices:
 
 .. code-block:: python
@@ -134,15 +134,13 @@ Before inventing our own, let's look at what kinds of representations others hav
 
   As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`. 
 
-* `photutils` has this `coordinate convention <http://photutils.readthedocs.org/en/latest/photutils/index.html#coordinate-convention-in-photutils>`__.
+* `photutils` has this `coordinate convention <http://photutils.readthedocs.org/en/latest/photutils/overview.html#coordinate-conventions>`__.
   Looking at the `photutils.aperture_photometry` implementation, it looks like they don't have an official ``bbox`` representation,
   but simply compute ``(x_min, x_max, y_min, y_max)`` where needed and then use ``data[y_min:y_max, x_min:x_max]`` views.
   TODO: update once this is in: https://github.com/astropy/astropy/issues/2607 
 
-* `findobj <http://findobj.readthedocs.org/>`__ doesn't use bounding boxes in the public API.
-  Internally they use an ``_ImgCutout`` class and use it in their ``_findobjs`` function.
-  
-  TODO: briefly describe how it works. 
+* `imutils <http://imutils.readthedocs.org/en/latest/>`__ has a
+  `Cutout <http://imutils.readthedocs.org/en/latest/api/imutils.Cutout.html>`__ class.
 
 I also found 
 `this <http://stackoverflow.com/questions/9525313/rectangular-bounding-box-around-blobs-in-a-monochrome-image-using-python>`__

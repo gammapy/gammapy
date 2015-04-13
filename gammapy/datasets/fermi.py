@@ -23,6 +23,41 @@ __all__ = ['FermiGalacticCenter',
 FERMI_CATALOGS = '3FGL 2FGL 1FGL 1FHL 2PC'.split()
 
 
+def _is_galactic(source_class):
+    """Re-group sources into rough categories.
+
+    Categories:
+    - 'galactic'
+    - 'extra-galactic'
+    - 'unknown'
+    - 'other'
+
+    Source identifications and associations are treated identically,
+    i.e. lower-case and upper-case source classes are not distinguished.
+
+    References:
+    - Table 3 in 3FGL paper: http://adsabs.harvard.edu/abs/2015arXiv150102003T
+    - Table 4 in the 1FHL paper: http://adsabs.harvard.edu/abs/2013ApJS..209...34A
+    """
+    source_class = source_class.lower().strip()
+
+    GAL = ['psr', 'pwn', 'snr', 'spp', 'lbv', 'hmb', 'hpsr', 'sfr', 'glc', 'bin',
+           'nov',
+           ]
+    EGAL = ['agn', 'agu', 'bzb', 'bzq', 'bll', 'gal', 'rdg', 'fsrq',
+            'css', 'sey', 'sbg', 'nlsy1', 'ssrq', 'bcu',
+            ]
+
+    if source_class in GAL:
+        return 'galactic'
+    elif source_class in EGAL:
+        return 'extra-galactic'
+    elif source_class == '':
+        return 'unknown'
+    else:
+        raise ValueError('Unknown source class: {}'.format(source_class))
+
+
 def fetch_fermi_catalog(catalog, extension=None):
     """Fetch Fermi catalog data.
 
@@ -95,11 +130,15 @@ def fetch_fermi_catalog(catalog, extension=None):
     filename = download_file(url, cache=True)
     hdu_list = fits.open(filename)
 
-    if extension != None:
-        catalog_table = Table(hdu_list[extension].data)
-        return catalog_table
-    else:
+    if extension is None:
         return hdu_list
+
+    table = Table(hdu_list[extension].data)
+    # import IPython; IPython.embed(); 1/0
+    table['IS_GALACTIC'] = [_is_galactic(_) for _ in table['CLASS1']]
+
+    return table
+
 
 FERMI_EXTENDED = '3FGL 2FGL 1FHL'.split()
 

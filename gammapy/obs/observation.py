@@ -4,7 +4,10 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.table import Table
 
-__all__ = ['Observation', 'ObservationTable']
+__all__ = [
+    # 'Observation',
+    'ObservationTable',
+]
 
 
 class Observation(object):
@@ -64,6 +67,15 @@ class ObservationTable(Table):
         TODO: implement more methods to subset and split observation lists
         as well as functions to summarise differences between
         observation lists and e.g. select the common subset.
+
+        Parameters
+        ----------
+        num : int
+            Number of samples to select.
+        Returns
+        -------
+        table : `ObservationTable`
+            Subset observation table (a copy).
         """
         indices = np.linspace(start=0, stop=len(self), num=num, endpoint=False)
         # Round down to nearest integer

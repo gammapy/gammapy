@@ -26,5 +26,3 @@ Note that because Gammapy started out as a fork of the
 `Astropy affiliated package template <https://github.com/astropy/package-template>`__,
 the automatic contributors summary on Github and Ohloh is not accurate in the sense
 that it contains the contributions to the (non-Gammapy-specific) Astropy affiliated project template.
-
-.. _PyFACT: http://pyfact.readthedocs.org

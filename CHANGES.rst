@@ -15,12 +15,17 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 Pull requests
 +++++++++++++
 
+
+.. _gammapy_0p3_release:
+
 0.3 (May 18 , 2015)
 -------------------
 
 Gammapy 0.3 will be released on April 13, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
+
+.. _gammapy_0p2_release:
 
 0.2 (April 13, 2015)
 --------------------
@@ -44,16 +49,13 @@ Pull requests
 - Add tests for spectral_cube.integral_flux_image [#188] (Ellis Owen)
 - Add Fermi PSF dataset and example [#191] (Ellis Owen)
 - Bundle TeVCat in gammapy.datasets [#194] (Christoph Deil)
-- Remove warning statements in profile function [#199] (Ellis Owen)
 - Fix quantity errors from astro source models [#200] (Christoph Deil)
 - Remove healpix_to_image function (moved to reproject repo) [#205] (Christoph Deil)
 - Restructure image measurement functions [#210] (Axel Donath)
 - Bundle xmltodict.py in gammapy/extern [#212] (Christoph Deil)
 - Restructure TS map computation [#215] (Axel Donath)
 - TS map calculation update and docs [#221] (Axel Donath)
-- Change gammafit name to naima [#224] (Victor Zabalza)
 - Misc cleanup [#225] (Christoph Deil)
-- Fix flux point test. Add script and notes how to debug with Docker [#226] (Christoph Deil)
 - Use setuptools entry_points for scripts [#230] (Christoph Deil)
 - Add observatory and data classes [#231] (Christoph Deil)
 - Add multi-scale TS image computation [#234] (Axel Donath)
@@ -67,6 +69,8 @@ Pull requests
 - Add data store and observation table classes, improve event list classes [#249] (Christoph Deil)
 - Implement TS map computation in Cython [#252] (Axel Donath)
 - Add changelog for Gammapy [#254] (Christoph Deil)
+
+.. _gammapy_0p1_release:
 
 0.1 (August 25, 2014)
 ---------------------

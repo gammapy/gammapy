@@ -1,15 +1,15 @@
 .. _uncertainties: http://pythonhosted.org/uncertainties/
 .. _scikit-image: http://scikit-image.org
-.. _scikit-learn: http://scikit-learn.org
+.. _scikit-learn: http://scikit-learn.org/stable/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _Astropy: http://astropy.org
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
-.. _naima: http://naima.readthedocs.org
-.. _ROOT: http://root.cern.ch/
-.. _rootpy: http://rootpy.org
+.. _naima: http://naima.readthedocs.org/en/latest/
+.. _ROOT: https://root.cern.ch/drupal/
+.. _rootpy: http://www.rootpy.org/
 .. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _CIAO: http://cxc.cfa.harvard.edu/ciao/
@@ -17,10 +17,12 @@
 .. _aplpy: http://aplpy.github.io
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org
-.. _pip: http://www.pip-installer.org/
+.. _pip: https://pip.pypa.io/en/stable/
 .. _conda: http://conda.pydata.org/
+.. _PyFACT: http://pyfact.readthedocs.org/en/latest/
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
+.. _Gammapy on Twitter: https://twitter.com/Gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: https://gammapy.readthedocs.org/
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy

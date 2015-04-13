@@ -46,7 +46,7 @@ builtins._ASTROPY_PACKAGE_NAME_ = PACKAGENAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 # We use the format is `x.y` or `x.y.z` or `x.y.dev`
-VERSION = '0.2.dev'
+VERSION = '0.2'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -133,7 +133,7 @@ setup(name=PACKAGENAME,
       # Note: these are the versions we test.
       # Older versions could work, but are unsupported.
       # To find out if everything works run the Gammapy tests.
-      install_requires=['numpy>=1.6', 'astropy'],
+      install_requires=['numpy>=1.6', 'astropy>=1.0'],
       extras_require=dict(
           plotting=['matplotlib>=1.4', 'wcsaxes>=0.3', 'aplpy>=0.9'],
           analysis=['scipy>=0.14', 'scikit-image>=0.10', 'photutils>=0.1',
