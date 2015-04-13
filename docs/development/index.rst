@@ -156,8 +156,10 @@ randomly quite often whenever one of the external websites is down.
 Make a Gammapy release
 ----------------------
 
-For now, see https://github.com/astropy/package-template/issues/103
+To make a Gammapy release, follow the instructions how to release an Astropy affiliated package
+`here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 
+Here's some additional notes / things to check:
 * Check external HTML links (see :ref:`here <development-check_html_links>`).
 
 Other codes

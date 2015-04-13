@@ -241,7 +241,7 @@ for CTA, e.g. shower image I/O can be much more efficient that with FITS variabl
   pickled. (Do we care at all for Gammapy or is our policy that we don't support pickling
   Gammapy objects?)
 
-* `SQLite <https://sqlite.org/>`__ gives you a `SQL <http://en.wikipedia.org/wiki/SQL>`__
+* `SQLite <http://sqlite.org/>`__ gives you a `SQL <http://en.wikipedia.org/wiki/SQL>`__
   database in memory or a simple file (no server, no configuration).
   TODO: describe how it can be useful for pipeline processing (async I/O and easy select)
 
