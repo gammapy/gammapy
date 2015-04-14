@@ -15,7 +15,8 @@ def _earth_location_from_dict(meta):
 
 
 def _time_ref_from_dict(meta):
-    mjd = meta['MJDREFI'] + meta['MJDREFF']
+    # Note: the `float` call here is to make sure we use 64-bit
+    mjd = float(meta['MJDREFI']) + float(meta['MJDREFF'])
     # TODO: Is 'tt' a default we should put here?
     scale = meta.get('TIMESYS', 'tt').lower()
     # Note: we could call .copy('iso') or .replicate('iso')

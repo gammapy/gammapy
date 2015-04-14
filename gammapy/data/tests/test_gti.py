@@ -14,5 +14,5 @@ def test_GoodTimeIntervals():
     assert 'Good time interval (GTI) info' in gtis.info
     assert '{:1.5f}'.format(gtis.time_delta[0]) == '1568.00000 s'
     assert '{:1.5f}'.format(gtis.time_sum) == '1568.00000 s'
-    assert gtis.time_start[0].iso == '2004-10-14 00:08:36.797'
-    assert gtis.time_stop[-1].iso == '2004-10-14 00:34:37.734'
+    assert gtis.time_start[0].iso == '2004-10-14 00:08:32.000'
+    assert gtis.time_stop[-1].iso == '2004-10-14 00:34:40.000'

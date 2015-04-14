@@ -261,7 +261,7 @@ def skycoord_from_table(table):
     return skycoord
 
 
-def select_sky_box(table, lon_lim, lat_lim, frame):
+def select_sky_box(table, lon_lim, lat_lim, frame='icrs'):
     """Select sky positions in a box.
 
     This function can be applied e.g. to event lists of source catalogs.

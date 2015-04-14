@@ -30,7 +30,7 @@ This is a quick benchmarking of the precision, speed of sum as a function of the
 
 from timeit import Timer
 
-dtypes = ['f32', 'f64', 'f128']
+dtypes = ['float32', 'float64', 'float128']
 sizes = [int(1e6), int(1e9)]
 
 

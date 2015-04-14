@@ -1,6 +1,4 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Event list: table of LON, LAT, ENERGY, TIME
-"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
@@ -12,6 +10,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
 from . import utils
@@ -40,7 +39,7 @@ class EventList(Table):
 
     Note that when reading data for analysis you shouldn't use those
     values directly, but access them via properties which create objects
-    of the appropriate class and convert to 64 bit:
+    of the appropriate class:
 
     - `time` for ``TIME``
     - `radec` for ``RA``, ``DEC``
@@ -71,16 +70,26 @@ class EventList(Table):
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`)"""
+        """Event times (`~astropy.time.Time`).
+
+        Notes
+        -----
+        Times are automatically converted to 64-bit floats.
+        With 32-bit floats times will be incorrect by a few seconds
+        when e.g. adding them to the reference time.
+        """
         met_ref = utils._time_ref_from_dict(self.meta)
-        met = Quantity(self['TIME'].astype('f64'), 'second')
-        return met_ref + met
+        met = Quantity(self['TIME'].astype('float64'), 'second')
+        time = met_ref + met
+        return time
 
     @property
     def radec(self):
-        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        lon = self['RA'].astype('f64')
-        lat = self['DEC'].astype('f64')
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)
+
+        TODO: the `radec` and `galactic` properties should be cached as table columns
+        """
+        lon, lat = self['RA'], self['DEC']
         return SkyCoord(lon, lat, unit='deg', frame='fk5')
 
     @property
@@ -91,24 +100,38 @@ class EventList(Table):
         If only ``RA`` and ``DEC`` are present use the explicit
         ``event_list.radec.to('galactic')`` instead.
         """
-        lon = self['GLON'].astype('f64')
-        lat = self['GLAT'].astype('f64')
+        self.add_galactic_columns()
+        lon, lat = self['GLON'], self['GLAT']
         return SkyCoord(lon, lat, unit='deg', frame='galactic')
+
+    def add_galactic_columns(self):
+        """Add Galactic coordinate columns to the table.
+
+        Adds the following columns to the table if not already present:
+        - "GLON" - Galactic longitude (deg)
+        - "GLAT" - Galactic latitude (deg)
+        """
+        if set(['GLON', 'GLAT']).issubset(self.colnames):
+            return
+
+        galactic = self.radec.galactic
+        self['GLON'] = galactic.l.degree
+        self['GLAT'] = galactic.b.degree
 
     @property
     def altaz(self):
         """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        lon = self['AZ'].astype('f64')
-        lat = self['ALT'].astype('f64')
         time = self.time
         location = self.observatory_earth_location
         altaz_frame = AltAz(obstime=time, location=location)
+
+        lon, lat = self['AZ'], self['ALT']
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
 
     @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)."""
-        energy = self['ENERGY'].astype('f64')
+        energy = self['ENERGY']
         return Quantity(energy, self.meta['EUNIT'])
 
     @property
@@ -156,6 +179,121 @@ class EventList(Table):
         """
         return 1 - self.meta['DEADC']
 
+    def select_energy(self, energy_band):
+        """Select events in energy band.
+
+        Parameters
+        ----------
+        energy_band : `~astropy.units.Quantity`
+            Energy band ``[energy_min, energy_max)``
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+
+        Examples
+        --------
+        >>> from astropy.units import Quantity
+        >>> from gammapy.data import EventList
+        >>> event_list = EventList.read('events.fits')
+        >>> energy_band = Quantity([1, 20], 'TeV')
+        >>> event_list = event_list.select_energy()
+        """
+        energy = self.energy
+        mask = (energy_band[0] <= energy)
+        mask &= (energy < energy_band[1])
+        return self[mask]
+
+    def select_time(self, time_interval):
+        """Select events in interval.
+        """
+        time = self.time
+        mask = (time_interval[0] <= time)
+        mask &= (time < time_interval[1])
+        return self[mask]
+
+    def select_sky_cone(self, center, radius):
+        """Select events in sky circle.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Sky circle center
+        radius : `~astropy.coordinates.Angle`
+            Sky circle radius
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        position = self.radec
+        separation = center.separation(position)
+        mask = separation > radius
+        return self[mask]
+
+    def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
+        """Select events in sky box.
+
+        TODO: move `gammapy.catalog.select_sky_box` to `gammapy.utils`.
+        """
+        from ..catalog import select_sky_box
+        return select_sky_box(self, lon_lim, lat_lim, frame)
+
+    def fill_counts_image(self, image):
+        """Fill events in counts image.
+
+        TODO: what's a good API here to support ImageHDU and Header as input?
+
+        Parameters
+        ----------
+        image : `~astropy.io.fits.ImageHDU`
+            Image HDU
+
+        Returns
+        -------
+        image : `~astropy.io.fits.ImageHDU`
+            Input image with changed data (event count added)
+
+        See also
+        --------
+        EventList.fill_counts_header
+        """
+        header = image.header
+        lon, lat = self._get_lon_lat(header)
+        counts_image = wcs_histogram2d(header, lon, lat)
+        image.data += counts_image.data
+        return image
+
+    def fill_counts_header(self, header):
+        """Fill events in counts image specified by a FITS header.
+
+        TODO: document. Is this a good API?
+
+        See also
+        --------
+        EventList.fill_counts_image
+        """
+        lon, lat = self._get_lon_lat(header)
+        counts_image = wcs_histogram2d(header, lon, lat)
+        return counts_image
+
+    def _get_lon_lat(self, header):
+        # TODO: this frame detection should be moved to a utility function
+        CTYPE1 = header['CTYPE1']
+        if 'RA' in CTYPE1:
+            pos = self.radec
+            lon = pos.ra.degree
+            lat = pos.dec.degree
+        elif 'GLON' in CTYPE1:
+            pos = self.galactic
+            lon = pos.l.degree
+            lat = pos.b.degree
+        else:
+            raise ValueError('CTYPE1 = {} is not supported.'.format(CTYPE1))
+
+        return lon, lat
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
