@@ -32,8 +32,8 @@ class GoodTimeIntervals(Table):
     @property
     def time_delta(self):
         """GTI durations in seconds (`~astropy.units.Quantity`)."""
-        start = self['START'].astype('f64')
-        stop = self['STOP'].astype('f64')
+        start = self['START'].astype('float64')
+        stop = self['STOP'].astype('float64')
         return Quantity(stop - start, 'second')
 
     @property
@@ -45,12 +45,12 @@ class GoodTimeIntervals(Table):
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
         met_ref = utils._time_ref_from_dict(self.meta)
-        met = Quantity(self['START'].astype('f64'), 'second')
+        met = Quantity(self['START'].astype('float64'), 'second')
         return met_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
         met_ref = utils._time_ref_from_dict(self.meta)
-        met = Quantity(self['STOP'].astype('f64'), 'second')
+        met = Quantity(self['STOP'].astype('float64'), 'second')
         return met_ref + met

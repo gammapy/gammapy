@@ -372,7 +372,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     # Handle negative TS values
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
-    return TSMapResult(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes,
+    # TODO: this is a dummy value for `scale` ... is there a better way to do this?
+    return TSMapResult(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes, scale=0,
                        niter=niter, runtime=np.round(time() - t_0, 2))
 
 
