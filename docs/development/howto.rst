@@ -704,7 +704,7 @@ Note that if you distribute Gammapy together with one of the GPL dependencies,
 the whole distribution then falls under the GPL license.
 
 Gammapy plotting style
-++++++++++++++++++++++
+----------------------
 
 Figures and plots in the Gammapy docs use the same consistent plotting style,
 that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
