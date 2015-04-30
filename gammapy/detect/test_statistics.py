@@ -166,7 +166,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         if downsample == 'auto':
             factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
                                     scale < 20 * BINSZ, scale < 40 * BINSZ],
-                                   [1, 2, 4, 8], 16))
+                                   [1, 2, 4, 4], 8))
         else:
             factor = int(downsample)
         if factor == 1:
@@ -323,12 +323,21 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     ----------
     [Stewart2009]_
     """
-    from scipy.ndimage.morphology import binary_erosion
     from time import time
     t_0 = time()
 
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
+
+    # in some maps there are pixels, which have exposure, but zero
+    # background, which doesn't make sense and causes the TS computation
+    # to fail, this is a temporary fix
+    mask_ = np.logical_and(background == 0,  exposure > 0)
+    if mask_.any():
+        log.warn('There are pixels in the data, that have exposure, but zero '
+                 'background, which can cause the ts computation to fail. '
+                 'Setting exposure of this pixels to zero.')
+        exposure[mask_] = 0
 
     if (flux is None and method != 'root brentq') or threshold is not None:
         from scipy.ndimage import convolve
@@ -349,7 +358,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     # Positions where exposure == 0 are not processed
     if mask is None:
-        mask = binary_erosion(exposure > 0, np.ones(np.array(kernel.shape) + 2))
+        mask = exposure > 0
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
     wrap = partial(_ts_value, counts=counts, exposure=exposure,

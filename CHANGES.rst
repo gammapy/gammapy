@@ -24,13 +24,14 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 Contributors
 ++++++++++++
 
-- ...
+- Axel Donath
 
 Pull requests
 +++++++++++++
 
 - Make background cube models [#319] (Manuel Paz Arribas)
--  Production of true/reco bg cube models should use the same model. [#335] (Manuel Paz Arribas)
+- Production of true/reco bg cube models should use the same model. [#335] (Manuel Paz Arribas)
+- Fix TS map boundary handling [#332] (Axel Donath) 
 
 .. _gammapy_0p3_release:
 

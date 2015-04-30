@@ -5,7 +5,7 @@ import os
 import json
 import logging
 log = logging.getLogger(__name__)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['ts_image']
 
@@ -42,7 +42,11 @@ def main(args=None):
                         " that the fit is done at all.")
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite output files.')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     args = parser.parse_args()
+    set_up_logging_from_args(args)
     ts_image(**vars(args))
 
 
