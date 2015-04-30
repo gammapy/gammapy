@@ -4,11 +4,16 @@ import numpy as np
 from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 
-__all__ = ['abramowski_effective_area', 'EffectiveAreaTable']
+__all__ = ['abramowski_effective_area', 'TableEffectiveArea', 'OffsetDependentTableEffectiveArea']
+
+
+#Copied from PSF class
+DEFAULT_EFFAREA_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -56,7 +61,7 @@ def abramowski_effective_area(energy, instrument='HESS'):
     return Quantity(value, 'cm^2')
 
 
-class EffectiveAreaTable(object):
+class TableEffectiveArea(object):
     """
     Effective area table class.
 
@@ -83,9 +88,9 @@ class EffectiveAreaTable(object):
         :include-source:
 
         import matplotlib.pyplot as plt
-        from gammapy.irf import EffectiveAreaTable
+        from gammapy.irf import TableEffectiveArea
         from gammapy.datasets import load_arf_fits_table
-        arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
+        arf = TableEffectiveArea.from_fits(load_arf_fits_table())
         arf.plot_area_vs_energy(show_save_energy=False)
         plt.show()
     """
@@ -203,7 +208,7 @@ class EffectiveAreaTable(object):
             ARF object.
         """
         hdu_list = fits.open(filename)
-        return EffectiveAreaTable.from_fits(hdu_list)
+        return TableEffectiveArea.from_fits(hdu_list)
 
     @staticmethod
     def from_fits(hdu_list):
@@ -234,11 +239,11 @@ class EffectiveAreaTable(object):
         try:
             energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
-            return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
+            return TableEffectiveArea(energy_lo, energy_hi, effective_area,
                                       energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
-            return EffectiveAreaTable(energy_lo, energy_hi, effective_area)
+            return TableEffectiveArea(energy_lo, energy_hi, effective_area)
 
     def effective_area_at_energy(self, energy):
         """
@@ -311,3 +316,120 @@ class EffectiveAreaTable(object):
         if filename is not None:
             plt.savefig(filename)
             log.info('Wrote {0}'.format(filename))
+
+
+class OffsetDependentTableEffectiveArea(object):
+    """Offset-dependent radially-symmetric table effective area (``GCTAAeff2D FITS`` format).
+
+    TODO: add references and explanations.
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Energy (1-dim)
+    offset : `~astropy.coordinates.Angle`
+        Offset angle (1-dim)
+    psf_value : `~astropy.units.Quantity`
+        Effective Area (2-dim with axes: eff_area_value[energy_index, offset_index]
+    """
+    def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco):
+        if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
+            raise ValueError("Energies must be Quantity objects.")
+        if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
+            raise ValueError("Offsets must be Angle objects.")
+        if not isinstance(eff_area, Quantity) or not isinstance(eff_area_reco, Quantity):
+            raise ValueError("Effective areas must be Quantity objects.")
+
+        self.energ_lo      = energ_lo.to('TeV')
+        self.energ_hi      = energ_hi.to('TeV')
+        self.offset_lo     = offset_lo.to('degree')
+        self.offset_hi     = offset_hi.to('degree')
+        self.eff_area      = eff_area.to('m^2')
+        self.eff_area_reco = eff_area_reco.to('m^2')
+        
+        self.offset = (offset_hi+offset_lo)/2  #actually offset_hi = offset_lo
+        self.energy = np.sqrt(energ_lo*energ_hi)
+
+
+    @staticmethod
+    def from_fits(hdu_list):
+        """Create OffsetDependentTableEffectiveArea from ``GCTAAeff2D`` format HDU list.
+
+        Parameters
+        ----------
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with ``EFFECTIVE AREA`` extension.
+
+        Returns
+        -------
+        eff_area : `OffsetDependentTableEffectiveArea`
+            Offset dependent Effective Area object.
+        """
+        energ_lo = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_LO'], 'TeV')
+        energ_hi = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_HI'], 'TeV')
+        offset_lo = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_LO'], 'degree')
+        offset_hi = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_HI'], 'degree')
+        eff_area = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA'], 'm^2')
+        eff_area_reco = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA_RECO'], 'm^2')
+
+        return OffsetDependentTableEffectiveArea(energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco)
+
+
+    @staticmethod
+    def read(filename):
+        """Read FITS format Effective Area file (``GCTAAeff2D`` output).
+
+        Parameters
+        ----------
+        filename : str
+            File name
+
+        Returns
+        -------
+        eff_area : `OffsetDependentTableEffectiveArea`
+            Offset dependent Effective Area object.
+    
+        """
+        hdu_list = fits.open(filename)
+        return OffsetDependentTableEffectiveArea.from_fits(hdu_list)
+
+
+    def _get_1d_eff_area_values(self, offset_index, reco = False):
+        """Get 1-dim Effective Area array.
+
+        Parameters
+        ----------
+        offset_index : int
+            offset index
+
+        Returns
+        -------
+        eff_area : `~astropy.units.Quantity`
+            Effective Area array 
+        """
+        eff_area = self.eff_area[0,offset_index,].copy()
+        return eff_area
+
+
+    def _offset_index(self, offset):
+        """Find index for a given offset (always rounded up)
+        """
+        return np.searchsorted(self.offset[0,:].value, offset)  #offset has shape (1,5) for some reason
+
+    def _energy_index(self, energy):
+        """Find index for a given energy (always rounded up)
+        """
+        return np.searchsorted(self.energy[0,:].value, energy)  #offset has shape (1,5) for some reason
+
+
+
+    def _compute_splines(self, spline_kwargs=DEFAULT_EFFAREA_SPLINE_KWARGS):
+        """Compute a spline representing the effective area as a function of the offset for a fixed energy
+
+        """
+        from scipy.interpolate import UnivariateSpline
+
+        # Compute splines
+        x, y = self.offset[0,:].value, self.eff_area.value[0,:,:]
+        self._energy_spline = UnivariateSpline(x, y, **spline_kwargs)
+
