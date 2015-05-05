@@ -82,6 +82,8 @@ Make sure to also check out the following packages that contain very useful func
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `GamERa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) by Joachim Hahn
+* http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
+
 
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
@@ -100,3 +102,15 @@ Some other projects:
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
 .. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
+
+Other useful packages
+---------------------
+
+In addition to the packages mentioned in the last section and at :ref:`install-requirements`,
+here's a few other Python packages you might find useful / interesting:
+
+* See the list here: http://www.astropy.org/affiliated/
+* Pulsar timing package `PINT <https://github.com/nanograv/PINT>`__
+* `iminuit <https://github.com/iminuit/iminuit>`__ fitter and
+  `probfit <https://github.com/iminuit/probfit>`__ likelihood function builder.
+

@@ -141,7 +141,7 @@ Optional dependencies (imported and used only where needed):
 * `photutils`_ for image photometry
 * `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for Gaussian error propagation
-* `reproject`_ for image reprojection (temporary, will become `astropy.reproject`)
+* `reproject`_ for image reprojection
 * `naima`_ for SED modeling
 
 .. note:: We didn't put any effort into minimizing the number of dependencies ...
