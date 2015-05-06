@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
@@ -8,12 +9,11 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
+from scipy.interpolate import LinearNDInterpolator, RectBivariateSpline
+
 
 __all__ = ['abramowski_effective_area', 'TableEffectiveArea', 'OffsetDependentTableEffectiveArea']
 
-
-#Copied from PSF class
-DEFAULT_EFFAREA_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -321,16 +321,42 @@ class TableEffectiveArea(object):
 class OffsetDependentTableEffectiveArea(object):
     """Offset-dependent radially-symmetric table effective area (``GCTAAeff2D FITS`` format).
 
-    TODO: add references and explanations.
+    The table is  read by interpolated by triangulating the input data with Qhull (http://www.qhull.org/R42).
+    This behaviour can be change to 2D spline interpolation with set_interpolation_method.
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
-        Energy (1-dim)
-    offset : `~astropy.coordinates.Angle`
-        Offset angle (1-dim)
-    psf_value : `~astropy.units.Quantity`
-        Effective Area (2-dim with axes: eff_area_value[energy_index, offset_index]
+    energ_lo : `~astropy.units.Quantity`
+        Lower energy bin edges vector 
+    energ_hi : `~astropy.units.Quantity`
+        Upper energy bin edges vector
+    offset_lo : `~astropy.coordonates.Angle`
+        Lower offset bin edges vector 
+    offset_hi : `~astropy.coordonates.Angle`
+        Upper offset bin edges  vector
+    eff_area : `~astropy.units.Quantity`
+        Effective area vector (true energy)
+    eff_area_reco : `~astropy.units.Quantity`
+        Effective area vector (reconstructed energy)
+
+    Examples
+    --------
+    Get effective area vs. energy for a given offset and energy binning:
+
+     .. plot::
+        :include-source:
+
+        import numpy as np
+        from astropy.coordinates import Angle
+        from astropy.units import Quantity
+        from gammapy.irf import OffsetDependentTableEffectiveArea
+        from gammapy.datasets import load_aeff2D_fits_table
+
+        aeff2D = OffsetDependentTableEffectiveArea.from_fits(load_aeff2D_fits_table())
+        offset  = Angle( 0.6 , 'degree')
+        energies = Quantity(np.logspace(0,1,60), 'TeV')
+        eff_area = aeff2D.eval_at_offset(offset,energies)
+        
     """
     def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco):
         if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
@@ -350,6 +376,10 @@ class OffsetDependentTableEffectiveArea(object):
         self.offset = (offset_hi+offset_lo)/2  #actually offset_hi = offset_lo
         self.energy = np.sqrt(energ_lo*energ_hi)
 
+        self._prepare_linear_interpolator()
+        self._prepare_spline_interpolator()
+
+        self._interpolation_method='linear'  #set to linear interpolation by default
 
     @staticmethod
     def from_fits(hdu_list):
@@ -365,12 +395,12 @@ class OffsetDependentTableEffectiveArea(object):
         eff_area : `OffsetDependentTableEffectiveArea`
             Offset dependent Effective Area object.
         """
-        energ_lo = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_LO'], 'TeV')
-        energ_hi = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_HI'], 'TeV')
-        offset_lo = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_LO'], 'degree')
-        offset_hi = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_HI'], 'degree')
-        eff_area = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA'], 'm^2')
-        eff_area_reco = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA_RECO'], 'm^2')
+        energ_lo = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_LO'][0,:], 'TeV')
+        energ_hi = Quantity(hdu_list['EFFECTIVE AREA'].data['ENERG_HI'][0,:], 'TeV')
+        offset_lo = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_LO'][0,:], 'degree')
+        offset_hi = Angle(hdu_list['EFFECTIVE AREA'].data['THETA_HI'][0,:], 'degree')
+        eff_area = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA'][0,:,:], 'm^2')
+        eff_area_reco = Quantity(hdu_list['EFFECTIVE AREA'].data['EFFAREA_RECO'][0,:,:], 'm^2')
 
         return OffsetDependentTableEffectiveArea(energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco)
 
@@ -393,6 +423,169 @@ class OffsetDependentTableEffectiveArea(object):
         hdu_list = fits.open(filename)
         return OffsetDependentTableEffectiveArea.from_fits(hdu_list)
 
+    
+    def __call__(self,offset, energy):
+        """ Executes evaluate function 
+        """
+        return self.evaluate(offset,energy)
+        
+        
+        
+    def evaluate(self,offset, energy):
+        """
+        Evalute Effective Area for a given energy and offset 
+        The Interpolation method is defined by self._interpolation_method
+
+        Parameters
+        ----------
+        offset : Angle
+            offset 
+
+        energy : Quantity
+            energy
+
+
+        Returns
+        -------
+        eff_area : `~astropy.units.Quantity`
+            Effective Area 
+
+        """
+        if not isinstance(energy, Quantity) or not isinstance(offset, Angle):
+            raise ValueError("Energies (Offset) must be a Quantity (Angle) object.")
+
+        offset = offset.to('degree')
+        energy = energy.to('TeV')
+
+        if(self._interpolation_method=='linear'):
+            val =  self._linear(offset.value,np.log10(energy.value))
+        elif (self._interpolation_method=='spline'):
+            val =  self._spline(offset.value,np.log10(energy.value)).squeeze()
+        else:
+            raise NotImplementedError("An unavailable interpolation method was set by hand.")
+
+        return Quantity(val,self.eff_area.unit)
+           
+        
+    def eval_at_offset(self,offset,energies=[]):
+        """
+        Return Effective Area histogram for a given offset 
+        An optional energy array can provide the binning of the histogram (usefull for spectral fitting).
+        If none is given, the energies values in the Lookup table are used
+
+        Uses memebr function 'evaluate'
+        
+        Parameters
+        ----------
+        offset : Angle
+            offset 
+
+        Returns
+        -------
+        eff_area : `~astropy.units.Quantity`
+            Effective Area histogram
+
+        """
+        if not isinstance(offset, Angle):
+            raise ValueError("Offset must be an Angle object.")
+        
+        enarray=self.energy if energies==[] else energies
+        
+        areahist = self.evaluate(offset,enarray)
+        return areahist
+
+    def eval_at_energy(self,energy,offsets=[]):
+        """
+        Return Effective Area histogram for a given energy
+        Uses member function 'evaluate'
+        
+        Parameters
+        ----------
+        energy : Quantity
+            energy
+
+        Returns
+        -------
+        eff_area : `~astropy.units.Quantity`
+            Effective Area histogram
+
+        #TODO: support 1D or 2D arrays of offsets
+        #NOTE: flatten and reshape
+
+        """
+        if not isinstance(energy, Quantity):
+            raise ValueError("Energies must be a Quantity object.")
+
+        offarray=self.offset if offsets==[] else offsets
+
+        areahist = self.evaluate(offarray,energy)
+        return areahist
+
+
+    def plot_at_offset(self,offset,energies=[]):
+        """
+        Plot Effective Area histogram for a given offset 
+        Uses memebr function 'eval_at_offset'
+        """
+        areahist = self.eval_at_offset(offset,energies)
+
+        enarray=self.energy if energies==[] else energies  #code duplication find better solution
+
+        plt.plot(enarray,areahist.value, 'ro')
+        plt.xlabel('Energy ({0})'.format(self.energy.unit))
+        plt.ylabel('Effective Area ({0})'.format(areahist.unit))
+
+    def plot_at_energy(self,energy):
+        """
+        Plot Effective Area histogram for a given energy
+        Uses member function 'eval_at_energy'
+
+        #TODO: support 1D or 2D arrays of offsets
+        """
+        areahist = self.eval_at_energy(energy)
+        plt.plot(self.offset.value,areahist.value, 'bo')
+        plt.xlabel('Offset ({0})'.format(self.offset.unit))
+        plt.ylabel('Effective Area ({0})'.format(areahist.unit))
+        
+    
+    def set_interpolation_method(self,method):
+        """
+        Choose method used for interpolating the lookup table
+        Available methods
+        - linear
+        - spline
+        """
+
+        if not method in ['linear','spline']:
+            raise NotImplementedError("The method you require is not implemented.")
+
+        self._interpolation_method = method
+    
+
+    def _prepare_linear_interpolator(self):
+        """
+        Could be generalized for non-radial symmetric input files (N>2)
+        The interpolant is constructed by triangulating the input data with Qhull (http://www.qhull.org/R42) and on each triangle performing linear barycentric interpolation.
+        """
+        x = self.offset.value
+        y = np.log10(self.energy.value)
+        coord = [(xx, yy) for xx in x for yy in y]
+        
+        self._linear = LinearNDInterpolator(coord,self.eff_area.value.flatten())
+
+
+    def _prepare_spline_interpolator(self):
+        """
+        Bivariate spline approximation over a rectangular mesh.
+        Only works for radial symmetric input files (N=2)
+        """
+        x = self.offset.value
+        y = np.log10(self.energy.value)
+        
+        self._spline = RectBivariateSpline(x,y,self.eff_area.value)
+
+
+#unused helper functions (remove?)
 
     def _get_1d_eff_area_values(self, offset_index, reco = False):
         """Get 1-dim Effective Area array.
@@ -414,22 +607,10 @@ class OffsetDependentTableEffectiveArea(object):
     def _offset_index(self, offset):
         """Find index for a given offset (always rounded up)
         """
-        return np.searchsorted(self.offset[0,:].value, offset)  #offset has shape (1,5) for some reason
+        return np.searchsorted(self.offset[0,:].value, offset)  
 
     def _energy_index(self, energy):
         """Find index for a given energy (always rounded up)
         """
-        return np.searchsorted(self.energy[0,:].value, energy)  #offset has shape (1,5) for some reason
-
-
-
-    def _compute_splines(self, spline_kwargs=DEFAULT_EFFAREA_SPLINE_KWARGS):
-        """Compute a spline representing the effective area as a function of the offset for a fixed energy
-
-        """
-        from scipy.interpolate import UnivariateSpline
-
-        # Compute splines
-        x, y = self.offset[0,:].value, self.eff_area.value[0,:,:]
-        self._energy_spline = UnivariateSpline(x, y, **spline_kwargs)
+        return np.searchsorted(self.energy[0,:].value, energy)  
 
