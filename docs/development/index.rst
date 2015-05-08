@@ -189,7 +189,9 @@ it has full-text search and git history view:
 * https://github.com/sherpa/sherpa
 * https://github.com/zblz/naima
 * https://github.com/woodmd/gammatools
+* https://github.com/fermiPy/fermipy
 * https://github.com/kialio/VHEObserverTools
+* https://github.com/taldcroft/xrayevents
 
 These are unofficial, unmaintained copies on open codes on Github:
 

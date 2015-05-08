@@ -34,7 +34,9 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
 Pull requests
 +++++++++++++
 
-- No changes yet
+- EventList class fixes and new features [#256] (Christoph Deil)
+- Add offset-dependent effective area IRF class [#260] (Johannes King)
+- Fix spiral arm model bar radius [#261] (Stefan Klepser)
 
 .. _gammapy_0p2_release:
 

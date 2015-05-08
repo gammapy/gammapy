@@ -58,7 +58,20 @@ see `here <http://nbviewer.ipython.org/github/gammapy/gammapy-extra/blob/master/
 External
 ========
 
-TODO: make a separate sub-page for presentations / posters / papers about Gammapy and move this:
+Here's some links to good external resources to learn Python, Numpy, Scipy, Astropy, ...
 
+Python is very popular in astronomy (and data science in general).
+It's possible to learn the basics within a day and to become productive within a week.
+
+* Tom Robitaille Python for scientists workshop –– http://www2.mpia-hd.mpg.de/~robitaille/PY4SCI_SS_2015/
+* Scientific Python lecture notes –– https://scipy-lectures.github.io/
+* Practical Python for astronomers — http://python4astronomers.github.io
+* MPIK Astropy workshop — https://astropy4mpik.readthedocs.org/
+* CEA Python for astronomers workshop –– https://github.com/kosack/CEAPythonWorkshopForAstronomers
+* ctools — http://cta.irap.omp.eu/ctools-devel/
+* Astropy tutorials — http://www.astropy.org/astropy-tutorials/
+* Naima examples — http://naima.readthedocs.org/en/latest/
+* Fermi ScienceTools analysis threads ––– http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/
+* CIAO Sherpa threads ––– http://cxc.harvard.edu/sherpa/threads/index.html
 * `Astropy tutorial by Axel Donath from December 2013
   <http://nbviewer.ipython.org/github/adonath/gamma_astropy_talk/blob/master/gamma_astropy_talk.ipynb>`_
