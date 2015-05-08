@@ -478,8 +478,9 @@ class ValleeSpiral(LogSpiral):
     r_sun = 7.6  # distance sun to Galactic center in kpc
     r_0 = 2.1  # spiral inner radius in kpc
     theta_0 = -20  # Norma spiral arm start angle
+    bar_radius = 3.0 # Radius of the galactic bar (not equal r_0!)
 
-    spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
+    spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
 
     def __init__(self):
         self.r_0 = self.r_0 * np.ones(4)
@@ -487,8 +488,8 @@ class ValleeSpiral(LogSpiral):
         self.k = 1. / np.tan(np.radians(self.p)) * np.ones(4)
 
         # Compute start and end point of the bar
-        x_0, y_0 = self.xy_position(radius=2.1, spiralarm_index=0)
-        x_1, y_1 = self.xy_position(radius=2.1, spiralarm_index=2)
+        x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)
+        x_1, y_1 = self.xy_position(radius=self.bar_radius, spiralarm_index=2)
         self.bar = dict(x=np.array([x_0, x_1]), y=np.array([y_0, y_1]))
 
 # TODO: this is not picked up in the HTML docs ... don't know why.
