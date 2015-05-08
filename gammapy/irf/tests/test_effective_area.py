@@ -7,7 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
 from astropy.tests.helper import pytest
-from ...irf import OffsetDependentTableEffectiveArea,TableEffectiveArea, abramowski_effective_area
+from ...irf import OffsetDependentEffectiveAreaTable, EffectiveAreaTable, abramowski_effective_area
 from ...datasets import load_arf_fits_table, load_aeff2D_fits_table
 
 try:
@@ -34,19 +34,19 @@ def test_abramowski_effective_area():
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_TableEffectiveArea():
+def test_EffectiveAreaTable():
     filename = get_pkg_data_filename('data/arf_info.txt')
     info_str = open(filename, 'r').read()
-    arf = TableEffectiveArea.from_fits(load_arf_fits_table())
+    arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
     assert arf.info() == info_str
 
 
-def test_TableEffectiveArea_write():
+def test_EffectiveAreaTable_write():
     from tempfile import NamedTemporaryFile
     from astropy.io import fits
 
     # Read test psf file
-    psf = TableEffectiveArea.from_fits(load_arf_fits_table())
+    psf = EffectiveAreaTable.from_fits(load_arf_fits_table())
 
     # Write it back to disk
     with NamedTemporaryFile(suffix='.fits') as psf_file:
@@ -61,51 +61,72 @@ def test_TableEffectiveArea_write():
         assert len(hdu_list) == 2
 
 
+INTERPOLATION_METHODS = ['linear', 'spline']
+
+
+@pytest.mark.parametrize(('method'), INTERPOLATION_METHODS)
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_OffsetDependentTableEffectiveArea():
-    
-    print("Executing tests ...)")
+def test_OffsetDependentEffectiveAreaTable(method):
 
-    #Read test effective area file
-    effarea = OffsetDependentTableEffectiveArea.from_fits(load_aeff2D_fits_table())
+    # Read test effective area file
+    effarea = OffsetDependentEffectiveAreaTable.from_fits(
+        load_aeff2D_fits_table())
 
+    effarea.interpolation_method = method
 
-    #Check that nodes are evaluated correctly
-    e_node   = 42
+    # Check that nodes are evaluated correctly
+    e_node = 42
     off_node = 3
-    actual  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node])
-    desired =  effarea.eff_area[off_node,e_node]
+    offset = effarea.offset[off_node]
+    energy = effarea.energy[e_node]
+    actual = effarea.evaluate(offset, energy)
+    desired = effarea.eff_area[off_node, e_node]
+    assert_allclose(actual, desired)
+
+    # Check that values between node make sense
+    energy2 = effarea.energy[e_node + 1]
+    upper = effarea.evaluate(offset, energy)
+    lower = effarea.evaluate(offset, energy2)
+    e_val = (energy + energy2) / 2
+    actual = effarea.evaluate(offset, e_val)
+    assert_equal(lower > actual and actual > upper, True)
+
+    # Test evaluate function (return shape)
+    # Case 0; offset = scalar, energy = scalar, done
+
+    # Case 1: offset = scalar, energy = None
+    offset = Angle(0.234, 'degree')
+    actual = effarea.evaluate(offset=offset).shape
+    desired = effarea.energy.shape
     assert_equal(actual, desired)
 
-    #Check that values between node make sense    
-    upper  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node])
-    lower  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node+1])
-    e_val  =  (effarea.energy[e_node]+effarea.energy[e_node+1])/2
-    actual =  effarea.evaluate(effarea.offset[off_node],e_val)
-    assert_equal(lower > actual and actual > upper , True)
-    
-    #and the same for the spline interpolator
-    effarea.set_interpolation_method('spline')
-    actual  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node])
-    assert_allclose(actual, desired)  #not exactly equal!
-    upper  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node])
-    lower  =  effarea.evaluate(effarea.offset[off_node],effarea.energy[e_node+1])
-    e_val  =  (effarea.energy[e_node]+effarea.energy[e_node+1])/2
-    actual =  effarea.evaluate(effarea.offset[off_node],e_val)
-    assert_equal(lower > actual and actual > upper , True)
-
-
-    #USECASE: SpectralAnalysis
-    offset = Angle(0.234,'degree')
-
-    #Get a 1D vector of effective area values
+    # Case 2: offset = scalar, energy = 1Darray
+    offset = Angle(0.564, 'degree')
     nbins = 42
-    energies = Quantity(np.logspace(3,4,nbins),'GeV')
-    actual = effarea.eval_at_offset(offset,energies).shape
+    energy = Quantity(np.logspace(3, 4, nbins), 'GeV')
+    actual = effarea.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros(nbins).shape
     assert_equal(actual, desired)
 
-    
+    # Case 3: offset = None, energy = scalar
+    energy = Quantity(1.1, 'TeV')
+    actual = effarea.evaluate(energy=energy).shape
+    desired = effarea.offset.shape
+    assert_equal(actual, desired)
 
-    #USECASE: ExposureMap 
-    #TODO
+    # Case 4: offset = 1Darray, energy = scalar
+    energy = Quantity(1.5, 'TeV')
+    nbins = 4
+    offset = Angle(np.linspace(0, 1, nbins), 'degree')
+    actual = effarea.evaluate(offset=offset, energy=energy).shape
+    desired = np.zeros(nbins).shape
+    assert_equal(actual, desired)
+
+    # case 5: offset = 1Darray, energy = 1Darray
+    nbinse = 50
+    nbinso = 10
+    offset = Angle(np.linspace(0, 1, nbinso), 'degree')
+    energy = Quantity(np.logspace(0, 1, nbinse), 'TeV')
+    actual = effarea.evaluate(offset=offset, energy=energy).shape
+    desired = np.zeros([nbinso, nbinse]).shape
+    assert_equal(actual, desired)
