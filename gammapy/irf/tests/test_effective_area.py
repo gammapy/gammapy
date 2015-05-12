@@ -7,7 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
 from astropy.tests.helper import pytest
-from ...irf import OffsetDependentEffectiveAreaTable, EffectiveAreaTable, abramowski_effective_area
+from ...irf import EffectiveAreaTable2D, EffectiveAreaTable, abramowski_effective_area
 from ...datasets import load_arf_fits_table, load_aeff2D_fits_table
 
 try:
@@ -66,10 +66,10 @@ INTERPOLATION_METHODS = ['linear', 'spline']
 
 @pytest.mark.parametrize(('method'), INTERPOLATION_METHODS)
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_OffsetDependentEffectiveAreaTable(method):
+def test_EffectiveAreaTable2D(method):
 
     # Read test effective area file
-    effarea = OffsetDependentEffectiveAreaTable.from_fits(
+    effarea = EffectiveAreaTable2D.from_fits(
         load_aeff2D_fits_table())
 
     effarea.interpolation_method = method

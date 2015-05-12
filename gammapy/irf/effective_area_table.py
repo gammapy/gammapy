@@ -10,7 +10,7 @@ from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 
 __all__ = ['abramowski_effective_area', 'EffectiveAreaTable',
-           'OffsetDependentEffectiveAreaTable']
+           'EffectiveAreaTable2D']
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -82,7 +82,7 @@ class EffectiveAreaTable(object):
     --------
     Plot effective area vs. energy:
 
-     .. plot::
+    .. plot::
         :include-source:
 
         import matplotlib.pyplot as plt
@@ -320,15 +320,16 @@ class EffectiveAreaTable(object):
             log.info('Wrote {0}'.format(filename))
 
 
-class OffsetDependentEffectiveAreaTable(object):
+class EffectiveAreaTable2D(object):
 
-    """Offset-dependent radially-symmetric table effective area (``GCTAAeff2D FITS`` format).
+    """Offset-dependent radially-symmetric table effective area.
 
-    Two Interpolation methods area available
-    `~scipy.interpolate.LinearNDInterpolator` (default)
-    `~scipy.interpolate.RectBivariateSpline`
+    Two Interpolation methods area available:
 
-    The interpolation method is defined by self.interpolation_method
+    * `~scipy.interpolate.LinearNDInterpolator` (default)
+    * `~scipy.interpolate.RectBivariateSpline`
+
+    Equivalent to GammaLib/ctools``GCTAAeff2D FITS`` format
 
     Parameters
     ----------
@@ -344,28 +345,38 @@ class OffsetDependentEffectiveAreaTable(object):
         Effective area vector (true energy)
     eff_area_reco : `~astropy.units.Quantity`
         Effective area vector (reconstructed energy)
+    method : str
+        Interpolation method
+
 
     Examples
     --------
     Get effective area vs. energy for a given offset and energy binning:
+    
+    >>> import numpy as np
+    >>> from astropy.coordinates import Angle
+    >>> from astropy.units import Quantity
+    >>> from gammapy.irf import EffectiveAreaTable2D
+    >>> from gammapy.datasets import load_aeff2D_fits_table
+    >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+    >>> offset = Angle(0.6, 'degree')
+    >>> energies = Quantity(np.logspace(0, 1, 60), 'TeV')
+    >>> eff_area = aeff2D.evaluate(offset, energies)
 
-     .. plot::
+    Plot energy dependence 
+
+    .. plot::
         :include-source:
 
-        import numpy as np
-        from astropy.coordinates import Angle
-        from astropy.units import Quantity
-        from gammapy.irf import OffsetDependentEffectiveAreaTable
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EffectiveAreaTable2D
         from gammapy.datasets import load_aeff2D_fits_table
-
-        aeff2D = OffsetDependentEffectiveAreaTable.from_fits(load_aeff2D_fits_table())
-        offset  = Angle( 0.6 , 'degree')
-        energies = Quantity(np.logspace(0,1,60), 'TeV')
-        eff_area = aeff2D.evaluate(offset,energies)
+        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        aeff2D.plot_energy_dependence()
 
     """
 
-    def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco):
+    def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco, method = 'linear'):
         if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
@@ -388,11 +399,11 @@ class OffsetDependentEffectiveAreaTable(object):
         self._prepare_spline_interpolator()
 
         # set to linear interpolation by default
-        self.interpolation_method = 'linear'
+        self.interpolation_method = method
 
     @staticmethod
     def from_fits(hdu_list):
-        """Create OffsetDependentEffectiveAreaTable from ``GCTAAeff2D`` format HDU list.
+        """Create EffectiveAreaTable2D from ``GCTAAeff2D`` format HDU list.
 
         Parameters
         ----------
@@ -401,19 +412,19 @@ class OffsetDependentEffectiveAreaTable(object):
 
         Returns
         -------
-        eff_area : `OffsetDependentEffectiveAreaTable`
+        eff_area : `EffectiveAreaTable2D`
             Offset dependent Effective Area object.
         """
 
         data = hdu_list['EFFECTIVE AREA'].data
-        e_lo = Quantity(data['ENERG_LO'][0, :], 'TeV')
-        e_hi = Quantity(data['ENERG_HI'][0, :], 'TeV')
-        o_lo = Angle(data['THETA_LO'][0, :], 'degree')
-        o_hi = Angle(data['THETA_HI'][0, :], 'degree')
-        ef = Quantity(data['EFFAREA'][0, :, :], 'm^2')
-        efrec = Quantity(data['EFFAREA_RECO'][0, :, :], 'm^2')
+        e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
+        e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
+        o_lo = Angle(data['THETA_LO'].squeeze(), 'degree')
+        o_hi = Angle(data['THETA_HI'].squeeze(), 'degree')
+        ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
+        efrec = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
 
-        return OffsetDependentEffectiveAreaTable(e_lo, e_hi, o_lo, o_hi, ef, efrec)
+        return EffectiveAreaTable2D(e_lo, e_hi, o_lo, o_hi, ef, efrec)
 
     @staticmethod
     def read(filename):
@@ -426,12 +437,12 @@ class OffsetDependentEffectiveAreaTable(object):
 
         Returns
         -------
-        eff_area : `OffsetDependentEffectiveAreaTable`
+        eff_area : `EffectiveAreaTable2D`
             Offset dependent Effective Area object.
 
         """
         hdu_list = fits.open(filename)
-        return OffsetDependentEffectiveAreaTable.from_fits(hdu_list)
+        return EffectiveAreaTable2D.from_fits(hdu_list)
 
     def evaluate(self, offset=None, energy=None):
         """Evalute effective area for a given energy and offset
