@@ -10,10 +10,10 @@ Pull requests
 
 - No changes yet
 
-0.4 (June 11, 2015)
+0.4 (July 9, 2015)
 -------------------
 
-Gammapy 0.4 will be released on June 11, 2015.
+Gammapy 0.4 will be released on July 9, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
@@ -24,10 +24,10 @@ Pull requests
 
 .. _gammapy_0p3_release:
 
-0.3 (May 18 , 2015)
+0.3 (May 31 , 2015)
 -------------------
 
-Gammapy 0.3 will be released on May 18, 2015.
+Gammapy 0.3 will be released on May 31, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
 
@@ -37,6 +37,7 @@ Pull requests
 - EventList class fixes and new features [#256] (Christoph Deil)
 - Add offset-dependent effective area IRF class [#260] (Johannes King)
 - Fix spiral arm model bar radius [#261] (Stefan Klepser)
+- Add hspec - spectral analysis using Sherpa [#264] (Regis Terrier, Ignasi Reichardt, Christoph Deil)
 
 .. _gammapy_0p2_release:
 
