@@ -1,3 +1,4 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """hspec - Spectral analysis with Sherpa
 
 What is this?
@@ -27,8 +28,4 @@ In the case above, powlaw1d could represent the source of interest and logparabo
 Please use --manual to fix parameters.
 
 Use --noplot to just perform the fit (without graphical output).
-
-Authors:
-ignasi.reichardt@apc.univ-paris7.fr;
-Régis terrier@apc.univ-paris7.fr
 """

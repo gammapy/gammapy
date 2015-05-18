@@ -101,6 +101,7 @@ entry_points['console_scripts'] = [
     'gammapy-residual-images = gammapy.scripts.residual_images:main',
     'gammapy-root-to-fits = gammapy.scripts.root_to_fits:main',
     'gammapy-sherpa-like = gammapy.scripts.sherpa_like:main',
+    'gammapy-sherpa-hspec = gammapy.hspec.run_fit:main',
     'gammapy-sherpa-model-image = gammapy.scripts.sherpa_model_image:main',
     'gammapy-significance-image = gammapy.scripts.significance_image:main',
     'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
