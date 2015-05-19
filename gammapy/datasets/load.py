@@ -33,6 +33,7 @@ __all__ = ['get_path',
            'load_diffuse_gamma_spectrum',
            'load_electron_spectrum',
            'load_arf_fits_table',
+           'load_aeff2D_fits_table',
            'load_psf_fits_table',
            ]
 
@@ -116,6 +117,18 @@ def load_psf_fits_table():
         ARF file contents.
     """
     filename = get_path('irfs/psf.fits')
+    return fits.open(filename)
+
+
+def load_aeff2D_fits_table():
+    """Load an example aeff2D FITS file..
+
+    Returns
+    -------
+    hdu_list : `~astropy.io.fits.HDUList`
+        aeff2D file contents.
+    """
+    filename = get_path('irfs/aeff2D.fits')
     return fits.open(filename)
 
 

@@ -4,11 +4,13 @@ import numpy as np
 from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 
-__all__ = ['abramowski_effective_area', 'EffectiveAreaTable']
+__all__ = ['abramowski_effective_area', 'EffectiveAreaTable',
+           'EffectiveAreaTable2D']
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -44,7 +46,7 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
     energy = energy.to('MeV').value
 
-    if not instrument in pars.keys():
+    if instrument not in pars.keys():
         ss = 'Unknown instrument: {0}\n'.format(instrument)
         ss += 'Valid instruments: HESS, HESS2, CTA'
         raise ValueError(ss)
@@ -57,6 +59,7 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 
 class EffectiveAreaTable(object):
+
     """
     Effective area table class.
 
@@ -79,7 +82,7 @@ class EffectiveAreaTable(object):
     --------
     Plot effective area vs. energy:
 
-     .. plot::
+    .. plot::
         :include-source:
 
         import matplotlib.pyplot as plt
@@ -89,6 +92,7 @@ class EffectiveAreaTable(object):
         arf.plot_area_vs_energy(show_save_energy=False)
         plt.show()
     """
+
     def __init__(self, energy_lo, energy_hi, effective_area,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV')):
@@ -131,19 +135,19 @@ class EffectiveAreaTable(object):
         """
         hdu = fits.new_table(
             [fits.Column(name='ENERG_LO',
-                          format='1E',
-                          array=self.energy_lo,
-                          unit='TeV'),
+                         format='1E',
+                         array=self.energy_lo,
+                         unit='TeV'),
              fits.Column(name='ENERG_HI',
-                          format='1E',
-                          array=self.energy_hi,
-                          unit='TeV'),
+                         format='1E',
+                         array=self.energy_hi,
+                         unit='TeV'),
              fits.Column(name='SPECRESP',
-                          format='1E',
-                          array=self.effective_area,
-                          unit='m^2')
+                         format='1E',
+                         array=self.effective_area,
+                         unit='m^2')
              ]
-            )
+        )
 
         if header is None:
             from ..datasets import load_arf_fits_table
@@ -232,8 +236,10 @@ class EffectiveAreaTable(object):
         energy_hi = Quantity(hdu_list['SPECRESP'].data['ENERG_HI'], 'TeV')
         effective_area = Quantity(hdu_list['SPECRESP'].data['SPECRESP'], 'm^2')
         try:
-            energy_thresh_lo = Quantity(hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
+            energy_thresh_lo = Quantity(
+                hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
+            energy_thresh_hi = Quantity(
+                hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
             return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
                                       energy_thresh_lo, energy_thresh_hi)
         except KeyError:
@@ -298,7 +304,8 @@ class EffectiveAreaTable(object):
         if show_save_energy:
             plt.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
             plt.text(self.energy_thresh_hi.value - 1, 3E6,
-                     'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi),
+                     'Safe energy threshold: {0:3.2f}'.format(
+                         self.energy_thresh_hi),
                      ha='right')
             plt.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
             plt.text(self.energy_thresh_lo.value + 0.1, 3E3,
@@ -311,3 +318,255 @@ class EffectiveAreaTable(object):
         if filename is not None:
             plt.savefig(filename)
             log.info('Wrote {0}'.format(filename))
+
+
+class EffectiveAreaTable2D(object):
+
+    """Offset-dependent radially-symmetric table effective area.
+
+    Two Interpolation methods area available:
+
+    * `~scipy.interpolate.LinearNDInterpolator` (default)
+    * `~scipy.interpolate.RectBivariateSpline`
+
+    Equivalent to GammaLib/ctools``GCTAAeff2D FITS`` format
+
+    Parameters
+    ----------
+    energ_lo : `~astropy.units.Quantity`
+        Lower energy bin edges vector
+    energ_hi : `~astropy.units.Quantity`
+        Upper energy bin edges vector
+    offset_lo : `~astropy.coordonates.Angle`
+        Lower offset bin edges vector
+    offset_hi : `~astropy.coordonates.Angle`
+        Upper offset bin edges  vector
+    eff_area : `~astropy.units.Quantity`
+        Effective area vector (true energy)
+    eff_area_reco : `~astropy.units.Quantity`
+        Effective area vector (reconstructed energy)
+    method : str
+        Interpolation method
+
+
+    Examples
+    --------
+    Get effective area vs. energy for a given offset and energy binning:
+    
+    >>> import numpy as np
+    >>> from astropy.coordinates import Angle
+    >>> from astropy.units import Quantity
+    >>> from gammapy.irf import EffectiveAreaTable2D
+    >>> from gammapy.datasets import load_aeff2D_fits_table
+    >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+    >>> offset = Angle(0.6, 'degree')
+    >>> energies = Quantity(np.logspace(0, 1, 60), 'TeV')
+    >>> eff_area = aeff2D.evaluate(offset, energies)
+
+    Plot energy dependence 
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EffectiveAreaTable2D
+        from gammapy.datasets import load_aeff2D_fits_table
+        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        aeff2D.plot_energy_dependence()
+
+    """
+
+    def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco, method = 'linear'):
+        if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
+            raise ValueError("Energies must be Quantity objects.")
+        if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
+            raise ValueError("Offsets must be Angle objects.")
+        if not isinstance(eff_area, Quantity) or not isinstance(eff_area_reco, Quantity):
+            raise ValueError("Effective areas must be Quantity objects.")
+
+        self.energ_lo = energ_lo.to('TeV')
+        self.energ_hi = energ_hi.to('TeV')
+        self.offset_lo = offset_lo.to('degree')
+        self.offset_hi = offset_hi.to('degree')
+        self.eff_area = eff_area.to('m^2')
+        self.eff_area_reco = eff_area_reco.to('m^2')
+
+        # actually offset_hi = offset_lo
+        self.offset = (offset_hi + offset_lo) / 2
+        self.energy = np.sqrt(energ_lo * energ_hi)
+
+        self._prepare_linear_interpolator()
+        self._prepare_spline_interpolator()
+
+        # set to linear interpolation by default
+        self.interpolation_method = method
+
+    @staticmethod
+    def from_fits(hdu_list):
+        """Create EffectiveAreaTable2D from ``GCTAAeff2D`` format HDU list.
+
+        Parameters
+        ----------
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with ``EFFECTIVE AREA`` extension.
+
+        Returns
+        -------
+        eff_area : `EffectiveAreaTable2D`
+            Offset dependent Effective Area object.
+        """
+
+        data = hdu_list['EFFECTIVE AREA'].data
+        e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
+        e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
+        o_lo = Angle(data['THETA_LO'].squeeze(), 'degree')
+        o_hi = Angle(data['THETA_HI'].squeeze(), 'degree')
+        ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
+        efrec = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
+
+        return EffectiveAreaTable2D(e_lo, e_hi, o_lo, o_hi, ef, efrec)
+
+    @staticmethod
+    def read(filename):
+        """Read FITS format effective area file (``GCTAAeff2D`` output).
+
+        Parameters
+        ----------
+        filename : str
+            File name
+
+        Returns
+        -------
+        eff_area : `EffectiveAreaTable2D`
+            Offset dependent Effective Area object.
+
+        """
+        hdu_list = fits.open(filename)
+        return EffectiveAreaTable2D.from_fits(hdu_list)
+
+    def evaluate(self, offset=None, energy=None):
+        """Evalute effective area for a given energy and offset
+
+        If a parameter is not given, the nodes from the FITS table are used.
+        2D input arrays are not supported yet.
+
+        Parameters
+        ----------
+        offset : `~astropy.coordinates.Angle`
+            offset
+        energy : `~astropy.units.Quantity`
+            energy
+
+        Returns
+        -------
+        eff_area : `~astropy.units.Quantity`
+            Effective Area
+
+        """
+
+        if offset is None:
+            offset = self.offset
+        if energy is None:
+            energy = self.energy
+        if not isinstance(energy, Quantity):
+            raise ValueError("Energy must be a Quantity object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("Offset must be an Angle object.")
+
+        offset = offset.to('degree')
+        energy = energy.to('TeV')
+
+        # support energy=1Darray & offset=1Darray
+        if offset.shape != () and energy.shape != ():
+            val = np.zeros([len(offset), len(energy)])
+            for i in range(len(offset)):
+                val[i] = self._eval(offset[i], energy)
+        # default
+        else:
+            val = self._eval(offset=offset, energy=energy)
+
+        return Quantity(val, self.eff_area.unit)
+
+    def _eval(self, offset=None, energy=None):
+        method = self.interpolation_method
+        if(method == 'linear'):
+            val = self._linear(offset.value, np.log10(energy.value))
+        elif (method == 'spline'):
+            val = self._spline(offset.value, np.log10(energy.value)).squeeze()
+        else:
+            raise ValueError('Invalid interpolation method: {}'.format(method))
+        return Quantity(val, self.eff_area.unit)
+
+    def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+        """Plot effective area versus energy for a given offset.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        if offset is None:
+            val = self.offset
+            offset = np.linspace(np.min(val), np.max(val), 5)
+
+        if energy is None:
+            energy = self.energy
+
+        for off in offset:
+            area = self.evaluate(off, energy)
+            label = 'offset = {:.1f}'.format(off)
+            plt.plot(energy, area.value, label=label, **kwargs)
+
+        plt.xlabel('Energy ({0})'.format(self.energy.unit))
+        plt.ylabel('Effective Area ({0})'.format(self.eff_area.unit))
+        plt.legend()
+
+        return ax
+
+    def plot_offset_dependence(self, ax=None, offset=None, energy=None, **kwargs):
+        """Plot effective area versus offset for a given energy
+        """
+        import matplotlib.pyplot as plt
+        
+        ax = plt.gca() if ax is None else ax
+
+        if energy is None:
+            val = self.energy
+            energy = np.linspace(np.min(val), np.max(val), 4)
+
+        if offset is None:
+            offset = self.offset
+
+        for ener in energy:
+            area = self.evaluate(offset, ener)
+            label = 'energy = {:.1f}'.format(ener)
+            plt.plot(offset, area.value, label=label, **kwargs)
+
+        plt.xlabel('Offset ({0})'.format(self.offset.unit))
+        plt.ylabel('Effective Area ({0})'.format(self.eff_area.unit))
+        plt.legend()
+
+        return ax
+
+    def _prepare_linear_interpolator(self):
+        """Could be generalized for non-radial symmetric input files (N>2)
+        """
+
+        from scipy.interpolate import LinearNDInterpolator
+
+        x = self.offset.value
+        y = np.log10(self.energy.value)
+        coord = [(xx, yy) for xx in x for yy in y]
+
+        vals = self.eff_area.value.flatten()
+        self._linear = LinearNDInterpolator(coord, vals)
+
+    def _prepare_spline_interpolator(self):
+        """Only works for radial symmetric input files (N=2)
+        """
+
+        from scipy.interpolate import RectBivariateSpline
+
+        x = self.offset.value
+        y = np.log10(self.energy.value)
+
+        self._spline = RectBivariateSpline(x, y, self.eff_area.value)
