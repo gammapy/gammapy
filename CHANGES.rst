@@ -37,6 +37,7 @@ Pull requests
 - EventList class fixes and new features [#256] (Christoph Deil)
 - Add offset-dependent effective area IRF class [#260] (Johannes King)
 - Fix spiral arm model bar radius [#261] (Stefan Klepser)
+- Add SNRCat dataset access function [#262] (Christoph Deil)
 - Add hspec - spectral analysis using Sherpa [#264] (Regis Terrier, Ignasi Reichardt, Christoph Deil)
 
 .. _gammapy_0p2_release:
