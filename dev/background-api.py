@@ -129,40 +129,61 @@ bg_event_list = EventList(DETX, DETY, energy)
 
 # Use case: implement FoV bg method
 # - given a list of ON runs
-# - subtract the bg according to the FoV method from Berge 2007 in 2D (X, Y)
+# - model the bg according to the FoV method from Berge 2007 in 2D (X, Y)
 #   or 3D (X, Y, E) using existing bg models
 # - deliver absolute numbers (bg statistics) and maps or cubes
 
 # High-level pseudo-code:
 
+# TODO: discuss
 telarray = TelArray('hess')
-run_list = Runlist.read_from_file(runlist.txt)
-run_groups = RunGroups(zenith=[0, 20, 40, 60], azimuth[0, 180, 360])
 
-from group_id in run_groups.ids:
-    run_group = run_groups.get_run_group(group_id)
-    event_list = run_group.stack_runs
+from gammapy.obs import ObservationTable
+obs_table = ObservationTable.read_from_file(‘obslist.txt’)
+# Maybe better … unsure:
+obs_table = ObservationTable.read(‘obslist.txt’, format=’ascii’)
+#ref: http://astropy.readthedocs.org/en/latest/api/astropy.table.Table.html#astropy.table.Table.read
+
+from gammapy.obs import ObservationGroups, ObservationTable
+from gammapy.obs import BackgroundObservationMatcher
+
+class BackgroundObservationMatcher:
+    “””“Matches runs / run groups with similar background.”””
+    def __init__(off_obs)
+    def find_best_off_obs(ObservationTable on_obs, int n_obs)
+          “””Called for on / off bg analysis needs to find matching off observations.”””
+          return ObservationTable
+    def find_best_off_obsgroup(on_obs : ObservationTable):
+          “””Called for FOV bg analysis, need to find matching off template.”””
+
+obs_groups = ObservationGroups(obs_table, zenith=[0, 20, 40, 60], azimuth=[0, 180, 360])
+
+from group_id in obs_groups.ids:
+    obs_group = obs_groups.get_obs_group(group_id) # this is an ObservationTable
+    event_list = obs_group.stack_obs
     # TODO: apply exclusion regions + correct livetime accordingly
     # search bg template (2D or 3D) for this group
-    bg_template = fov_bg_maker.search_template(run_group.properties()) ## off map
+    from gammapy.background import FovBgMaker
+    fov_bg_maker = FovBgMaker()
+    bg_template = fov_bg_maker.search_template(obs_group.properties()) ## off map
     # apply template in order to subtract bg: to the event list or to binned
     # data (i.e. image or cube)? -> let's bin the data for now, supposing 2D
     image_on = event_list.bin_data("DETX", "DETY") ## on map
     image_alpha = livetime_off / livetime_on ## alpha map
     # maps could go into a bgmaps class
-    bg_maps_one_run.onmap = image_on
+    bg_maps_one_obs.onmap = image_on
     ... (same for off and alpha, maybe even livetime/exposure on/off)
     # compute bg stats
-    bg_stats_one_run.on = bg_maps_one_run.onmap.sum() # or restrict to ON region
+    bg_stats_one_obs.on = bg_maps_one_obs.onmap.sum() # or restrict to ON region
     ... (similar for off, alpha, ...)
     # stack all maps and stats
-    total_bg_maps.stack(bg_maps_one_run)
-    total_bg_stats.stack(bg_stats_one_run)
+    total_bg_maps.stack(bg_maps_one_obs)
+    total_bg_stats.stack(bg_stats_one_obs)
 
-# TODO: bg is still not subtracted (no excess/significance/TS (map) has been
+# optional: bg is still not subtracted (no excess/significance/TS (map) has been
 # calculated), but all ingredients are there, except for user-specific options
 # like correlation radius (optional: or smoothing factor)
-# TODO: we also need to define an ON region, and map/cube boundaries.
+#           we also need to define an ON region, and map/cube boundaries.
 
 total_bg_maps.write(folder_name)
 total_bg_stats.write(folder_name)
@@ -173,7 +194,7 @@ total_bg_stats.write(folder_name)
 
 # Use case: implement ON/OFF bg method
 # - given a list of ON runs and a list of OFF runs
-# - subtract the bg from the ON runs according to the ON/OFF method from Berge
+# - model the bg from the ON runs according to the ON/OFF method from Berge
 #   2007 in 2D (X, Y) or 3D (X, Y, E) developping bg models from the OFF runs
 # - deliver absolute numbers (bg statistics) and maps or cubes
 
