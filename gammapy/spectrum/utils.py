@@ -197,7 +197,9 @@ class LogEnergyAxis(object):
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
-              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE'):
+              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
+              backfile='none', corrfile='none', respfile='none', ancrfile='none'):
+
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters
@@ -269,10 +271,10 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     header['FILTER'] = filter, 'Instrument filter in use'
     header['EXPOSURE'] = exposure, 'Exposure time'
 
-    header['BACKFILE'] = 'none', 'Background FITS file'
-    header['CORRFILE'] = 'none', 'Correlation FITS file'
-    header['RESPFILE'] = 'none', 'Redistribution matrix file (RMF)'
-    header['ANCRFILE'] = 'none', 'Ancillary response file (ARF)'
+    header['BACKFILE'] = backfile, 'Background FITS file'
+    header['CORRFILE'] = corrfile, 'Correlation FITS file'
+    header['RESPFILE'] = respfile, 'Redistribution matrix file (RMF)'
+    header['ANCRFILE'] = ancrfile, 'Ancillary response file (ARF)'
 
     header['HDUCLASS'] = 'OGIP', 'Format conforms to OGIP/GSFC spectral standards'
     header['HDUCLAS1'] = 'SPECTRUM', 'Extension contains a spectrum'
