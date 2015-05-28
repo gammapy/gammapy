@@ -44,6 +44,24 @@ bg_model_set.write(folder_name)
 
 
 # Use case: simulate toy bg
+# - given a certain set of observation conditions (i.e. zenith/azimuth
+# angle, time)
+# - simulate bg events according to the CTA background rate FITS files
+# - save the events into an event list (optional: save also binned data)
+# this function can be used for testing different bg modeling methods:
+# does the modeled bg match the background rate used for the simulations?
+# reference: https://github.com/gammapy/gammapy/issues/1
+
+# High-level pseudo-code:
+
+telarray = TelArray('cta-prod2')
+observation_table = ... # ObservationTable with some distribution of zenith angles
+for observation in observation_table:
+    event_list = telarray.simulate_background(observation)
+    event_list.write_to_folder('sim_data')
+
+
+# Use case: simulate toy bg
 # - given a certain observation time and observation condition (i.e.
 #   zenith/azimuth angle)
 # - simulate bg events according to a simple analytical model
@@ -114,6 +132,40 @@ bg_event_list = EventList(DETX, DETY, energy)
 # - subtract the bg according to the FoV method from Berge 2007 in 2D (X, Y)
 #   or 3D (X, Y, E) using existing bg models
 # - deliver absolute numbers (bg statistics) and maps or cubes
+
+# High-level pseudo-code:
+
+telarray = TelArray('hess')
+run_list = Runlist.read_from_file(runlist.txt)
+run_groups = RunGroups(zenith=[0, 20, 40, 60], azimuth[0, 180, 360])
+
+from group_id in run_groups.ids:
+    run_group = run_groups.get_run_group(group_id)
+    event_list = run_group.stack_runs
+    # TODO: apply exclusion regions + correct livetime accordingly
+    # search bg template (2D or 3D) for this group
+    bg_template = fov_bg_maker.search_template(run_group.properties()) ## off map
+    # apply template in order to subtract bg: to the event list or to binned
+    # data (i.e. image or cube)? -> let's bin the data for now, supposing 2D
+    image_on = event_list.bin_data("DETX", "DETY") ## on map
+    image_alpha = livetime_off / livetime_on ## alpha map
+    # maps could go into a bgmaps class
+    bg_maps_one_run.onmap = image_on
+    ... (same for off and alpha, maybe even livetime/exposure on/off)
+    # compute bg stats
+    bg_stats_one_run.on = bg_maps_one_run.onmap.sum() # or restrict to ON region
+    ... (similar for off, alpha, ...)
+    # stack all maps and stats
+    total_bg_maps.stack(bg_maps_one_run)
+    total_bg_stats.stack(bg_stats_one_run)
+
+# TODO: bg is still not subtracted (no excess/significance/TS (map) has been
+# calculated), but all ingredients are there, except for user-specific options
+# like correlation radius (optional: or smoothing factor)
+# TODO: we also need to define an ON region, and map/cube boundaries.
+
+total_bg_maps.write(folder_name)
+total_bg_stats.write(folder_name)
 
 
 # Use case: implement ring bg method
