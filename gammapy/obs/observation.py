@@ -72,6 +72,7 @@ class ObservationTable(Table):
         ----------
         num : int
             Number of samples to select.
+
         Returns
         -------
         table : `ObservationTable`
