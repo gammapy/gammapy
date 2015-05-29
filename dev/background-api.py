@@ -139,7 +139,7 @@ ApplyExclusionRegions(image, livetime, catalog, radius, False)
 
 from gammapy.obs import DataStore, ObservationTable, ObservationGroups
 from gammapy.data import EventList
-from gammapy.background.utils import ApplyExclusionRegions make_bg_model_set
+from gammapy.background.utils import ApplyExclusionRegions, make_bg_model_set
 
 def make_bg_model_set(obs_groups):
     """Loop over observation groups. For each group:
@@ -170,6 +170,7 @@ bg_model_set.write(folder_name)
 
 ###### Part 2: develop bg modeling methods ######
 
+#TODO: REVIEW!
 # Use case: simulate toy bg
 # - given a certain set of observation conditions (i.e. zenith/azimuth
 # angle, time)
@@ -188,6 +189,7 @@ for observation in observation_table:
     event_list.write_to_folder('sim_data')
 
 
+#TODO: REVIEW!
 # Use case: simulate toy bg
 # - given a certain observation time and observation condition (i.e.
 #   zenith/azimuth angle)
@@ -354,6 +356,8 @@ from obs_id in obs_table.ids: # loop over observations
 total_bg_maps.write(folder_name)
 total_bg_stats.write(folder_name)
 
+# optional: bg is still not subtracted
+
 
 # Use case: implement ring bg method
 
@@ -372,6 +376,7 @@ total_bg_stats.write(folder_name)
 #   images or cubes for n_on, n_off, exp_on, exp_off.
 
 
+#TODO: REVIEW!
 ##########################
 ## Function definitions ##
 ##########################
