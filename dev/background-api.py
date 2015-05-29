@@ -36,7 +36,7 @@ ObservationTable obs_table
 class ObservationGroups:
     """Collection of ObservationTable objects grouped according to different
     observation properties."""
-# ObservationGroups could also be an ObservationTable or an stropy Table with
+# ObservationGroups could also be an ObservationTable or an astropy Table with
 # one row per observation and a column OBSERVATION_GROUP_ID = 1, 2, 3, ...
     def __init__(ObservationTable obs_table, array zenith, array azimuth):
     	"""Take a list of observations and group them according to a given
