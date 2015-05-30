@@ -42,7 +42,9 @@ def info(version=False, tools=False, dependencies=False):
     if dependencies:
         _info_dependencies()
 
+
 def _info_version():
+    """Print Gammapy version info."""
     from gammapy import version
     print('\n*** Gammapy version info ***\n')
     print('version: {0}'.format(version.version))
@@ -52,27 +54,38 @@ def _info_version():
 
 
 def _info_tools():
-    # TODO: re-write ... this doesn't work any more
-    raise NotImplementedError
+    """Print info about Gammapy command line tools."""
     print('\n*** Gammapy tools ***\n')
+
+    # TODO: how to get a one-line description or
+    # full help text from the docstring or ArgumentParser?
+    # This is the function names, we want the command-line names
+    # that are defined in setup.py !???
+    from gammapy.utils.scripts import get_all_main_functions
+    scripts = get_all_main_functions()
+    names = sorted(scripts.keys())
+    for name in names:
+        print(name)
+
+    # Old stuff that doesn't work any more ...
     # We assume all tools are installed in the same folder as this script
     # and their names start with "gammapy-".
-    import os
-    from glob import glob
-    DIR = os.path.dirname(__file__)
-    os.chdir(DIR)
-    tools = glob('gammapy-*')
-    for tool in tools:
-        # Extract first line from docstring as description
-        description = 'no description available'
-        lines = open(tool).readlines()
-        for line in lines:
-            if line.startswith('"""'):
-                description = line.strip()[3:]
-                if description.endswith('"""'):
-                    description = description[:-3]
-                break
-        print('{0:35s} : {1}'.format(tool, description))
+    # import os
+    # from glob import glob
+    # DIR = os.path.dirname(__file__)
+    # os.chdir(DIR)
+    # tools = glob('gammapy-*')
+    # for tool in tools:
+    #     # Extract first line from docstring as description
+    #     description = 'no description available'
+    #     lines = open(tool).readlines()
+    #     for line in lines:
+    #         if line.startswith('"""'):
+    #             description = line.strip()[3:]
+    #             if description.endswith('"""'):
+    #                 description = description[:-3]
+    #             break
+    #     print('{0:35s} : {1}'.format(tool, description))
 
     print('')
 
