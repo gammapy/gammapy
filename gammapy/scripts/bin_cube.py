@@ -22,7 +22,6 @@ def main(args=None):
 
 def bin_cube(event_file,
              reference_file,
-             cube_file,
              out_file,
              overwrite):
     """Bin events into a LON-LAT-Energy cube."""
@@ -34,6 +33,6 @@ def bin_cube(event_file,
 
     events = Table.read(event_file)
     reference_cube = fits.open(reference_file)
-    energies = Table.read(cube_file, 'ENERGIES')
+    energies = Table.read(reference_file, 'ENERGIES')
     out_cube = bin_events_in_cube(events, reference_cube, energies)
     out_cube.writeto(out_file, clobber=overwrite)

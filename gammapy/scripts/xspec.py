@@ -25,4 +25,4 @@ def xspec():
     TODO: describe
     """
     # TODO: implement
-    raise NotImplementedError
+    print('error: this tool is not implemented')

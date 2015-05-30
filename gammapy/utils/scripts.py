@@ -63,8 +63,6 @@ def get_all_main_functions():
     path = os.path.join(os.path.dirname(__file__), '../scripts')
     names = glob.glob1(path, '*.py')
     names = [_.replace('.py', '') for _ in names]
-    print(names)
-    print(path)
     for name in ['__init__']:
         names.remove(name)
 
@@ -72,4 +70,5 @@ def get_all_main_functions():
     for name in names:
         module = importlib.import_module('gammapy.scripts.{}'.format(name))
         out[name] = module.main
+
     return out
