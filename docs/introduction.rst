@@ -106,7 +106,7 @@ Some other projects:
 Other useful packages
 ---------------------
 
-In addition to the packages mentioned in the last section and at :ref:`install-requirements`,
+In addition to the packages mentioned in the last section and at :ref:`install-dependencies`,
 here's a few other Python packages you might find useful / interesting:
 
 * See the list here: http://www.astropy.org/affiliated/

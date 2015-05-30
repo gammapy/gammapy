@@ -1,12 +1,18 @@
 .. _uncertainties: http://pythonhosted.org/uncertainties/
 .. _scikit-image: http://scikit-image.org
 .. _scikit-learn: http://scikit-learn.org/stable/
+.. _scipy library: http://scipy.org/scipylib/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
+.. _Numpy: http://www.numpy.org/
 .. _Astropy: http://astropy.org
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
+.. _astroplan: http://astroplan.readthedocs.org
+.. _gwcs: http://gwcs.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
+.. _iminuit: https://github.com/iminuit/iminuit
+.. _h5py: http://www.h5py.org/
 .. _naima: http://naima.readthedocs.org/en/latest/
 .. _ROOT: https://root.cern.ch/drupal/
 .. _rootpy: http://www.rootpy.org/
@@ -20,6 +26,9 @@
 .. _pip: https://pip.pypa.io/en/stable/
 .. _conda: http://conda.pydata.org/
 .. _PyFACT: http://pyfact.readthedocs.org/en/latest/
+.. _healpy: https://healpy.readthedocs.org/en/latest/
+.. _PyYAML: https://pypi.python.org/pypi/PyYAML/
+.. _emcee: http://dan.iel.fm/emcee/current/
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy on Twitter: https://twitter.com/Gammapy

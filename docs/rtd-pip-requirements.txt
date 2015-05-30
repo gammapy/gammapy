@@ -7,6 +7,8 @@ Cython
 scikit-image
 -e git+http://github.com/astropy/astropy.git#egg=astropy
 -e git+http://github.com/astrofrog/reproject.git#egg=reproject
+-e git+http://github.com/astroplanners/astroplan.git#egg=astroplan
 -e git+http://github.com/zblz/naima.git#egg=naima
 -e git+http://github.com/astrofrog/wcsaxes.git#egg=wcsaxes
 -e git+http://github.com/aplpy/aplpy.git#egg=aplpy
+-e git+http://github.com/spacetelescope/gwcs.git#egg=gwcs

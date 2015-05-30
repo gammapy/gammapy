@@ -138,7 +138,8 @@ setup(name=PACKAGENAME,
       extras_require=dict(
           plotting=['matplotlib>=1.4', 'wcsaxes>=0.3', 'aplpy>=0.9'],
           analysis=['scipy>=0.14', 'scikit-image>=0.10', 'photutils>=0.1',
-                    'reproject', 'uncertainties>=2.4', 'naima']
+                    'reproject', 'gwcs', 'astroplan', 'uncertainties>=2.4', 'naima',
+                    'iminuit', 'sherpa']
       ),
       provides=[PACKAGENAME],
       author=AUTHOR,
