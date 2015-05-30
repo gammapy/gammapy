@@ -53,10 +53,6 @@ setup_cfg = dict(conf.items('metadata'))
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.1'
 
-# We don't have references to `h5py` in gammapy ...
-# removing it so it the intersphinx mapping file isn't downloaded.
-del intersphinx_mapping['h5py']
-
 # We currently want to link to the latest development version of the astropy docs,
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
@@ -72,6 +68,9 @@ intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.org/en/latest/
 intersphinx_mapping['wcsaxes'] = ('http://wcsaxes.readthedocs.org/en/latest/', None)
 intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
 intersphinx_mapping['naima'] = ('http://naima.readthedocs.org/en/latest/', None)
+intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
+intersphinx_mapping['gwcs'] = ('http://gwcs.readthedocs.org/en/latest/', None)
+intersphinx_mapping['astroplan'] = ('http://astroplan.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)
 # intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
 

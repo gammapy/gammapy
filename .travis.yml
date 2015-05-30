@@ -21,9 +21,10 @@ env:
 matrix:
     include:
 
-        # Do a coverage test in Python 2. This requires the latest
+        # Do a coverage test in Python 2 with Numpy 1.8,
+        # because that's the only build where Sherpa is available
         - python: 2.7
-          env: SETUP_CMD='test --coverage'
+          env: NUMPY_VERSION=1.8 SETUP_CMD='test --coverage'
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
@@ -75,6 +76,13 @@ before_install:
     # DOCUMENTATION DEPENDENCIES
     - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
 
+    # Make sure that interactive matplotlib backends work
+    - export DISPLAY=:99.0
+    - sh -e /etc/init.d/xvfb start
+
+    # Make sure matplotlib uses PyQT not PySide
+    - export QT_API=pyqt
+
 install:
 
     # CONDA
@@ -94,9 +102,21 @@ install:
     # conda for packages available through conda, or pip for any other
     # packages. You should leave the `numpy=$NUMPY_VERSION` in the `conda`
     # install since this ensures Numpy does not get automatically upgraded.
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $CONDA_INSTALL scipy scikit-image pandas; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $CONDA_INSTALL scipy h5py scikit-image scikit-learn pandas; fi
     - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL uncertainties; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL photutils; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL wcsaxes; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL aplpy; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL pyregion; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL naima; fi
     - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/astroplanners/astroplan.git#egg=astroplan; fi
+    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/spacetelescope/gwcs.git#egg=gwcs; fi
+    # For Sherpa conda package, see https://github.com/sherpa/sherpa/pull/31
+    - if $OPTIONAL_DEPS && [[ $SETUP_CMD != egg_info ]] && [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] && [[ $NUMPY_VERSION == 1.8 ]]; then $CONDA_INSTALL -c https://conda.binstar.org/cxc sherpa; fi
+    # For iminuit conda package, see https://github.com/iminuit/iminuit/issues/127#issuecomment-100921747
+    - if $OPTIONAL_DEPS && [[ $SETUP_CMD != egg_info ]] && [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] && [[ $NUMPY_VERSION == 1.8 ]]; then $CONDA_INSTALL -c https://conda.binstar.org/fabianrost iminuit; fi
+
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that

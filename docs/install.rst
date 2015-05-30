@@ -73,13 +73,20 @@ In the past it has often been hard to install Python packages and all their depe
 Not any more ... using `conda`_ you can install Gammapy and most of its dependencies on
 any Linux machine or Mac in 5 minutes (without needing root access on the machine).
 
-Go to http://conda.pydata.org/miniconda.html and download the installer for your system,
-e.g. currently for Linux and Mac you can use:
+Go to http://conda.pydata.org/miniconda.html and download the installer for your system.
+Or directly use `wget <https://www.gnu.org/software/wget/>`__ from the terminal:
+
+For Linux:
 
 .. code-block:: bash
 
-   $ wget http://repo.continuum.io/miniconda/Miniconda3-3.6.0-Linux-x86_64.sh -O miniconda.sh
-   $ wget http://repo.continuum.io/miniconda/Miniconda3-3.6.0-MacOSX-x86_64.sh -O miniconda.sh
+   $ wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+
+For Mac:
+
+.. code-block:: bash
+
+   $ wget http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
 
 Then install binary packages using ``conda`` and source packages using ``pip`` by
 copy & pasting the following lines into your terminal:
@@ -90,8 +97,8 @@ copy & pasting the following lines into your terminal:
    export PATH="$PWD/miniconda/bin:$PATH"
    conda config --set always_yes yes --set changeps1 no
    conda update -q conda
-   conda install pip scipy matplotlib scikit-image scikit-learn astropy
-   pip install reproject aplpy
+   conda install pip scipy matplotlib scikit-image scikit-learn astropy h5py pandas
+   pip install reproject aplpy wcsaxes naima astroplan gwcs photutils
    pip install gammapy
  
 Overall ``conda`` is a great cross-platform package manager, you can quickly learn how to use
@@ -114,9 +121,16 @@ To check if the Gammapy command line tools are on your ``$PATH`` try this:
 
    $ gammapy-info --tools
 
-.. _install-requirements:
+To check which dependencies of Gammapy you have installed:
 
-Requirements
+.. code-block:: bash
+
+   $ gammapy-info --dependencies
+
+
+.. _install-dependencies:
+
+Dependencies
 ------------
 
 Gammapy works with Python 2 and 3.
@@ -126,26 +140,60 @@ and in the Python 3 series we support version 3.3 or later.
 Gammapy will not work with Python 2.6 or 3.2
 (see :ref:`development-python2and3` if you care why).
 
-Optional dependencies (imported and used only where needed):
+.. note:: The philosophy of Gammapy is to build on the existing scientific Python stack.
+   This means that you need to install those dependencies to use Gammapy.
 
-* `scipy library <http://scipy.org/scipylib/index.html>`_ for numerical methods
+   We are aware that too many dependencies is an issue for deployment and maintenance.
+   That's why currently Gammapy only has two core dependencies --- Numpy and Astropy.
+   We are considering making Sherpa, Scipy, scikit-image, photutils, reproject and naima
+   core dependencies.
+
+   In addition there are about a dozen optional dependencies that are OK to import
+   from Gammapy because they are potentially useful (not all of those are
+   actually currently imported).
+
+   Before the Gammapy 1.0 release we will re-evaluate and clarify the Gammapy dependencies.
+
+The required core dependencies of Gammapy are:
+
+* `Numpy`_ - the fundamental package for scientific computing with Python
+* `Astropy`_ - the core package for Astronomy in Python
+
+Currently optional dependencies that are being considered as core dependencies:
+
+* `Sherpa`_ for modeling / fitting (doesn't work with Python 3 yet)
+* `scipy library`_ for numerical methods
+* `scikit-image`_ for some image processing tasks
+* `photutils`_ for image photometry
+* `reproject`_ for image reprojection
+* `naima`_ for SED modeling
+
+Allowed optional dependencies:
+
 * `matplotlib`_ for plotting
 * `wcsaxes`_ for sky image plotting (provides a low-level API)
 * `aplpy`_ for sky image plotting (provides a high-level API)
 * `pandas`_ CVS read / write; DataFrame
-* `scikit-image`_ for some image processing tasks
 * `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
-* `Sherpa`_ for modeling / fitting
-* `ROOT`_ and `rootpy`_ conversion helper functions
-* `photutils`_ for image photometry
+* `ROOT`_ and `rootpy`_ conversion helper functions (still has some Python 3 issues)
 * `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for Gaussian error propagation
-* `reproject`_ for image reprojection
-* `naima`_ for SED modeling
+* `gwcs`_ for generalised world coordinate transformations
+* `astroplan`_ for observation planning and scheduling
+* `iminuit`_ for fitting by optimization (doesn't work with Python 3 yet)
+* `emcee`_ for fitting by MCMC sampling
+* `h5py`_ for `HDF5 <http://en.wikipedia.org/wiki/Hierarchical_Data_Format>`__ data handling
+* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling
+* `healpy`_ for `HEALPIX <http://healpix.jpl.nasa.gov/>`__ data handling
 
-.. note:: We didn't put any effort into minimizing the number of dependencies ...
-   I'll limit the number of optional packages if people complain about installation woes.
+Actually at this point we welcome experimentation, so you can use cool new technologies
+to implement some functionality in Gammapy if you like, e.g.
+
+* `Numba <http://numba.pydata.org/>`__
+* `Bokeh <http://bokeh.pydata.org/en/latest/>`__
+* `Blaze <http://blaze.pydata.org/en/latest/>`__
+
 
 How to make Astropy / Gammapy work with the CIAO Sherpa Python?
 ---------------------------------------------------------------

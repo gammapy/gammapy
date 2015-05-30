@@ -12,22 +12,27 @@ from astropy.tests.pytest_plugins import *
 ## from the list of packages for which version numbers are displayed
 ## when running the tests ... this was added in Astropy 1.0
 try:
-    del PYTEST_HEADER_MODULES['h5py']
-
     PYTEST_HEADER_MODULES['cython'] = 'cython'
     PYTEST_HEADER_MODULES['pandas'] = 'pandas'
     PYTEST_HEADER_MODULES['skimage'] = 'skimage'
     PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
     PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
+    PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
+    # ROOT doesn't have a __version__ attribute
+    # PYTEST_HEADER_MODULES['ROOT'] = 'ROOT'
+    # PYTEST_HEADER_MODULES['rootpy'] = 'rootpy'
 
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
+    PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
     PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
     PYTEST_HEADER_MODULES['naima'] = 'naima'
     PYTEST_HEADER_MODULES['reproject'] = 'reproject'
     PYTEST_HEADER_MODULES['photutils'] = 'photutils'
+    PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
     PYTEST_HEADER_MODULES['wcsaxes'] = 'wcsaxes'
     PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
     PYTEST_HEADER_MODULES['pyregion'] = 'pyregion'
+    PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
     # `ginga` doesn't have a __version__ attribute yet, so this won't work:
     #PYTEST_HEADER_MODULES['ginga'] = 'ginga'
