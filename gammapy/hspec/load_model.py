@@ -73,12 +73,14 @@ def assign_model(model_name, i):
         p1.Eo = 1
         sau.freeze(p1.Eo)
     elif model_name == 'Finke':  # EBL model from Finke et al. 2010
-        enable_table_model()
-        filename = '/home/ignasi/sw/Hspec/models/frd_abs.fits'
+        # enable_table_model()
+        from ..datasets import get_path
+        filename = get_path('ebl/frd_abs.fits.gz', location='remote')
         sau.load_table_model('p1', filename)
     elif model_name == 'Franceschini':  # EBL model from Franceschini et al. 2012
-        enable_table_model()
-        filename = '/home/ignasi/sw/Hspec/models/ebl_franceschini.fits'
+        # enable_table_model()
+        from ..datasets import get_path
+        filename = get_path('ebl/ebl_franceschini.fits.gz', location='remote')
         sau.load_table_model('p1', filename)
     elif model_name == 'synchro':
         # print('Synchrotron model not available yet, sorry.')
