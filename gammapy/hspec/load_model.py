@@ -117,7 +117,7 @@ def set_manual_model(model, par_array=None):
     print(model)
     for i in range(len(model.pars)):
         para = model.pars[i]
-        if par_array == None:  # one by one
+        if par_array is None:  # one by one
             while True:
                 print(para.fullname, '=', para.val)
                 new_val = raw_input("New parameter value? (Enter to leave unchanged)\n")
@@ -144,10 +144,15 @@ def set_manual_model(model, par_array=None):
             para.val = par_array[i]
 
 
-def enable_table_model():  # Absolutely not tested
-    try:
-        from sherpa.astro.xspec.XSTableModel import *
-        # from sherpa.utils import linear_interp
-    except ImportError:
-        print(' ! Xspec models are not available, sorry')
-        quit()
+# TODO: import * is evil in general.
+# Specifically in Python 3 it is only possible at the top level.
+# Probably this should simply go in the documentation
+# and this function can be removed?
+# Commenting this function out for now ...
+# def enable_table_model():  # Absolutely not tested
+#     try:
+#         from sherpa.astro.xspec.XSTableModel import *
+#         from sherpa.utils import linear_interp
+#     except ImportError:
+#         print(' ! Xspec models are not available, sorry')
+#         quit()
