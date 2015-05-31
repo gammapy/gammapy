@@ -2,23 +2,12 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from tempfile import NamedTemporaryFile
-from astropy.tests.helper import pytest, remote_data
+from astropy.tests.helper import pytest
 from ...datasets import get_path
 from ..bin_image import main as bin_image_main
 
 
 def test_bin_image_main():
-    with pytest.raises(SystemExit) as exc:
-        bin_image_main()
-
-    with pytest.raises(SystemExit) as exc:
-        bin_image_main(['--help'])
-
-    # TODO: how to assert that it ran OK?
-    # Assert exit code or what was printed to sys.stdout?
-    # print(exc.value)
-    # assert exc.value == SystemExit(0)
-
     # TODO: make a better example dataset where the counts are actually
     # inside the image, then add useful asserts
 

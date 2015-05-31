@@ -126,6 +126,22 @@ Skip unit tests for some Astropy versions
 
 .. _development-check_html_links:
 
+
+Fix non-Unix line endings
+-------------------------
+
+In the past we had non-Unix (i.e. Mac or Windows) line endings in some files.
+This can be painful, e.g. git diff and autopep8 behave strangely.
+Here's to commands to check for and fix this (see `here <http://stackoverflow.com/a/22521008/498873>`__):
+
+.. code-block:: bash
+
+    $ git clean -fdx
+    $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c mac
+    $ find . -type f -print0 | xargs -0 -n 1 -P 4 dos2unix -c ascii
+    $ git status
+    $ cd astropy_helpers && git checkout -- . && cd ..
+
 Check HTML links
 ----------------
 
