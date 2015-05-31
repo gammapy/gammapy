@@ -1,5 +1,5 @@
 1.0 (Fall, 2015)
----------------------
+----------------
 
 Gammapy 1.0 will be released in fall 2015.
 
@@ -16,7 +16,7 @@ Pull requests
 - No changes yet
 
 0.4 (August 24, 2015)
--------------------
+---------------------
 
 Gammapy 0.4 will be released on August 24, 2015.
 
