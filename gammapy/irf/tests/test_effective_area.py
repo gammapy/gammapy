@@ -130,3 +130,20 @@ def test_EffectiveAreaTable2D(method):
     actual = effarea.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros([nbinso, nbinse]).shape
     assert_equal(actual, desired)
+
+    # Test ARF export
+    offset = Angle(0.236, 'degree')
+    e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
+    energ_lo = e_axis[:-1]
+    energ_hi = e_axis[1:]
+
+    effareafrom2d = effarea.to_effective_area_table(offset, energ_lo, energ_hi)
+
+    energy = Quantity(np.sqrt(energ_lo.value * energ_hi.value), 'TeV')
+    area = effarea.evaluate(offset, energy)
+    effarea1d = EffectiveAreaTable(energ_lo, energ_hi, area)
+
+    test_energy = Quantity(2.34, 'TeV')
+    actual = effareafrom2d.effective_area_at_energy(test_energy)
+    desired = effarea1d.effective_area_at_energy(test_energy)
+    assert_equal(actual, desired)
