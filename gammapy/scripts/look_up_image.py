@@ -7,7 +7,7 @@ __all__ = ['look_up_image']
 
 # TODO: support coordinate parsing
 # TODO: support multiple input images
-# TODO: support reading lists of coordinates from FITS and CVS tables
+# TODO: support reading lists of coordinates from FITS and CSV tables
 # TODO: implement world coordinates option (`pix` option)
 
 

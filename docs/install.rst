@@ -173,7 +173,7 @@ Allowed optional dependencies:
 * `matplotlib`_ for plotting
 * `wcsaxes`_ for sky image plotting (provides a low-level API)
 * `aplpy`_ for sky image plotting (provides a high-level API)
-* `pandas`_ CVS read / write; DataFrame
+* `pandas`_ CSV read / write; DataFrame
 * `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
 * `ROOT`_ and `rootpy`_ conversion helper functions (still has some Python 3 issues)

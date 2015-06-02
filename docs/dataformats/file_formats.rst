@@ -160,11 +160,11 @@ as well as astronomy table programs such as e.g.
 Since it's a simple text format it's easy to read or edit in any text editor or
 put under version control (using e.g. `git <http://git-scm.com/>`__ or
 `SVN <http://en.wikipedia.org/wiki/Apache_Subversion>`__). 
-CVS files are not standardised (there's many variants which causes problems in practice),
+CSV files are not standardised (there's many variants which causes problems in practice),
 don't support metadata (e.g. units or descriptions of columns).
 
 A `tabular data package format <http://dataprotocols.org/tabular-data-package/>`__ has
-been defined with a clear CVS format specification and associated metadata in an extra JSON file
+been defined with a clear CSV format specification and associated metadata in an extra JSON file
 (see also `here <https://github.com/astropy/astropy-APEs/pull/7>`__).
 
 To read and write CSV data from Python you can use the extensible `astropy.io.ascii` methods
