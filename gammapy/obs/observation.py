@@ -11,7 +11,7 @@ __all__ = [
 
 
 class Observation(object):
-    """Observation (a.k.a. Run).
+    """Observation (a.k.a. run).
 
     TODO: not clear if this class is useful.
 
@@ -43,6 +43,9 @@ class ObservationTable(Table):
     * ``OBS_ID``
     * ``ONTIME``
     * ``LIVETIME``
+    * ``RA``
+    * ``DEC``
+    * ``DATE``
     * ...
 
     """
@@ -56,6 +59,7 @@ class ObservationTable(Table):
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
         ss += 'Average dead time fraction: {:5.2f}%'.format(dtf)
+        #TODO: units are not shown!!!
         return ss
 
     def select_linspace_subset(self, num):
