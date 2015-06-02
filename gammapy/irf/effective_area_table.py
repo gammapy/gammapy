@@ -111,7 +111,7 @@ class EffectiveAreaTable(object):
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
-    def to_fits(self, header=None, **kwargs):
+    def to_fits(self, header=None, units=['TeV','m2'], **kwargs):
         """
         Convert ARF to FITS HDU list format.
 
@@ -130,11 +130,13 @@ class EffectiveAreaTable(object):
         For more info on the ARF FITS file format see:
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
-        Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here
-        as the more natural units for IACTs
+        Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here by default, as they are the more natural units for IACTs
         """
-        #TODO add option to choose units, or leave it to the user to find a hack?
-        
+       
+        self.energy_lo = self.energy_lo.to(units[0])
+        self.energy_hi = self.energy_hi.to(units[0])
+        self.effective_area = self.effective_area.to(units[1])
+
         hdu = fits.new_table(
             [fits.Column(name='ENERG_LO',
                          format='1E',
@@ -354,7 +356,7 @@ class EffectiveAreaTable2D(object):
     Examples
     --------
     Get effective area vs. energy for a given offset and energy binning:
-    
+
     >>> import numpy as np
     >>> from astropy.coordinates import Angle
     >>> from astropy.units import Quantity
@@ -362,8 +364,24 @@ class EffectiveAreaTable2D(object):
     >>> from gammapy.datasets import load_aeff2D_fits_table
     >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
     >>> offset = Angle(0.6, 'degree')
-    >>> energies = Quantity(np.logspace(0, 1, 60), 'TeV')
-    >>> eff_area = aeff2D.evaluate(offset, energies)
+    >>> energy = Quantity(np.logspace(0, 1, 60), 'TeV')
+    >>> eff_area = aeff2D.evaluate(offset, energy)
+
+    Create ARF fits file for a given offest and energy binning:
+
+    >>> import numpy as np
+    >>> from astropy.coordinates import Angle
+    >>> from astropy.units import Quantity
+    >>> from gammapy.irf import EffectiveAreaTable2D
+    >>> from gammapy.datasets import load_aeff2D_fits_table
+    >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+    >>> offset = Angle(0.43, 'degree')
+    >>> nbins = 50
+    >>> energy = Quantity(np.logspace(0, 1, nbins+1), 'TeV')
+    >>> energ_lo = energy[:-1]
+    >>> energ_hi = energy[1:]
+    >>> arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
+    >>> arf_table.write('arf.fits', format='arf')
 
     Plot energy dependence 
 
@@ -378,7 +396,8 @@ class EffectiveAreaTable2D(object):
 
     """
 
-    def __init__(self, energ_lo, energ_hi, offset_lo, offset_hi, eff_area, eff_area_reco, method = 'linear'):
+    def __init__(self, energ_lo, energ_hi, offset_lo,
+                 offset_hi, eff_area, eff_area_reco, method='linear'):
         if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
@@ -446,14 +465,13 @@ class EffectiveAreaTable2D(object):
         hdu_list = fits.open(filename)
         return EffectiveAreaTable2D.from_fits(hdu_list)
 
-    def to_effectiveareatable(self, offset, energ_lo = None, energ_hi = None):
-        """Evaluate at a given offset and return effective area table object.
+    def to_effective_area_table(self, offset, energ_lo=None, energ_hi=None):
+        """Evaluate at a given offset and return effective area table instance.
 
         The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
-        the final energy binning should be given at this point, since the
-        effective area table class is not able to perform interpolation at
-        this point.
+        the final energy binning should be given here, since the
+        effective area table class does no interpolation.
 
         Parameters
         ----------
@@ -465,11 +483,11 @@ class EffectiveAreaTable2D(object):
         Returns
         -------
         eff_area_table : `EffectiveAreaTable`
-             Effective area table class. 
+             Effective area table instance. 
         """
 
         if energ_lo is None and energ_lo is None:
-            energ_lo = self.energ_lo  
+            energ_lo = self.energ_lo
             energ_hi = self.energ_hi
         elif energ_lo is None or energ_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
@@ -478,34 +496,12 @@ class EffectiveAreaTable2D(object):
         if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
             raise ValueError("Energy must be a Quantity object.")
         if len(energ_lo) != len(energ_hi):
-            raise ValueError("Energy Vectors must have same dimension")
-        
+            raise ValueError("Energy Vectors must have same length")
+
         energy = np.sqrt(energ_lo * energ_hi)
-        area = self.evaluate(offset,energy) 
+        area = self.evaluate(offset, energy)
 
         return EffectiveAreaTable(energ_lo, energ_hi, area)
-
-    def write_ARF(self, filename, offset, energ_lo = None, energ_hi = None):
-        """Write ARF Fits file 
-
-        Uses the write method of the effective area table class
-        
-        Parameters
-        ----------
-        filename: str
-            output file name        
-        offset : `~astropy.coordinates.Angle`
-            offset
-        energy : `~astropy.units.Quantity`
-            energy
-
-        Returns
-       -------
-        arf : `EnergyDependentARF`
-            ARF object.
-        """
-        aeff = self.to_effectiveareatable(offset, energ_lo, energ_hi)
-        aeff.write(filename)
 
     def evaluate(self, offset=None, energy=None):
         """Evalute effective area for a given energy and offset
@@ -589,7 +585,7 @@ class EffectiveAreaTable2D(object):
         """Plot effective area versus offset for a given energy
         """
         import matplotlib.pyplot as plt
-        
+
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
