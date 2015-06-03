@@ -11,7 +11,7 @@ or there can be naming conventions, e.g. the event list for run ``42`` could be 
 at ``$TEV_DATA/RUN_000042/Events.fits``.
 
 
-CVS format
+CSV format
 ----------
 
 We use the `CSV <http://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for run lists.

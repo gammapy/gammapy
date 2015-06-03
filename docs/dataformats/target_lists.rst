@@ -10,7 +10,7 @@ A typical application is that there are many (potential) target positions to ana
 but the "target list" could also contain the same target position several times,
 varying other parameters.
 
-CVS format
+CSV format
 ----------
 
 We use the `CSV <http://en.wikipedia.org/wiki/Comma-separated_values>`_ (comma-separated values) format for target lists.
