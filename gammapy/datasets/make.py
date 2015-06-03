@@ -131,12 +131,13 @@ def generate_observation_table(observatory, n_obs):
     # random points between the start of 2010 and the end of 2014
     #TODO: should this represent the time at the beginning of the run?
     #      this has consequences for the ra/dec -> alt/az conversion
-    datestart = Time('2010-01-01T00:00:00', format='fits', scale='utc')
-    dateend = Time('2015-01-01T00:00:00', format='fits', scale='utc')
-    date = Time((dateend.mjd - datestart.mjd)*np.random.random(len(col_obs_id)) + datestart.mjd, format='mjd', scale='utc').fits
+    datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
+    dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
+    date = Time((dateend.mjd - datestart.mjd)*np.random.random(len(col_obs_id)) + datestart.mjd, format='mjd', scale='utc').iso
+    # TODO: using format "iso" for ~astropy.Time for now; eventually change it
+    # to "fits" after the next astropy stable release (>1.0) is out.
     col_date = Column(name='DATE', data=date)
     astro_table.add_column(col_date)
-
 
     # alt, az
     # TODO: should they be in the ObservationTable? (they are derived quantities, like dead time)
