@@ -19,6 +19,29 @@ obs_table = ObservationTable.read('obslist.txt', format='ascii')
 #ref: http://astropy.readthedocs.org/en/latest/api/astropy.table.Table.html#astropy.table.Table.read
 
 
+# Use case: tool for building an observation table and apply some basic cuts
+# - given an observation table (i.e. all observations from a certain observatory)
+# - make some selection cuts
+# - return filtered observation table
+# (similar to H.E.S.S. findruns)
+
+# High-level pseudo-code:
+
+from gammapy.dataset import FindObservations
+
+filtered_obs_table = FindObservations(global_obs_table, cuts...)
+
+# The function should be executable and it should implement cuts in:
+# - time (Tmin, Tmax)
+# - sky region: circle or box
+#   - optional: cut in circle (offset) could have both min and max values for the
+#     offset:
+#     analysing a large source with the reflected region bg the analyzer may want
+#     to avoid runs taken within the ON region, because the analysis would (or
+#     should) skip them anyways
+# - ...?
+
+
 # Use case: allow grouping of observations with similar properties
 # - given a list of observations (ON or OFF)
 # - group them according to similar observation properties (zenith angle,
