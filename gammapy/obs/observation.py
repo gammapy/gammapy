@@ -43,9 +43,12 @@ class ObservationTable(Table):
     * ``OBS_ID``
     * ``ONTIME``
     * ``LIVETIME``
+    * ``TSTART``
+    * ``TSTOP``
+    * ``AZ``
+    * ``ALT``
     * ``RA``
     * ``DEC``
-    * ``DATE``
     * ...
 
     """
