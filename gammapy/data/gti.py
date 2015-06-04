@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
+from ..utils.time import time_ref_from_dict
 from . import utils
 
 __all__ = ['GoodTimeIntervals']
@@ -44,13 +45,13 @@ class GoodTimeIntervals(Table):
     @property
     def time_start(self):
         """GTI start times (`~astropy.time.Time`)."""
-        met_ref = utils._time_ref_from_dict(self.meta)
+        met_ref = time_ref_from_dict(self.meta)
         met = Quantity(self['START'].astype('float64'), 'second')
         return met_ref + met
 
     @property
     def time_stop(self):
         """GTI end times (`~astropy.time.Time`)."""
-        met_ref = utils._time_ref_from_dict(self.meta)
+        met_ref = time_ref_from_dict(self.meta)
         met = Quantity(self['STOP'].astype('float64'), 'second')
         return met_ref + met
