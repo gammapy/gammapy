@@ -13,7 +13,7 @@ from ..obs import ObservationTable, observatory_locations
 from ..utils.random import sample_sphere
 
 __all__ = ['make_test_psf',
-           'generate_observation_table',
+           'make_test_observation_table',
            ]
 
 
@@ -73,7 +73,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     return psf
 
 
-def generate_observation_table(observatory, n_obs):
+def make_test_observation_table(observatory, n_obs):
     """Generate an observation table.
 
     For the moment, only random observation tables are created.
@@ -92,22 +92,22 @@ def generate_observation_table(observatory, n_obs):
     """
     n_obs_start = 1
 
-    astro_table = Table()
+    obs_table = ObservationTable()
 
     # obs id
     obs_id = np.arange(n_obs_start, n_obs_start + n_obs)
     col_obs_id = Column(name='OBS_ID', data=obs_id)
-    astro_table.add_column(col_obs_id)
+    obs_table.add_column(col_obs_id)
 
     # on time
     ontime = Quantity(30.*np.ones_like(col_obs_id.data), 'minute')
     col_ontime = Column(name='ONTIME', data=ontime)
-    astro_table.add_column(col_ontime)
+    obs_table.add_column(col_ontime)
 
     # livetime
     livetime = Quantity(25.*np.ones_like(col_obs_id.data), 'minute')
     col_livetime = Column(name='LIVETIME', data=livetime)
-    astro_table.add_column(col_livetime)
+    obs_table.add_column(col_livetime)
 
     # TODO: add columns for coordinates:
     #       alt az
@@ -120,24 +120,28 @@ def generate_observation_table(observatory, n_obs):
     # TODO: format times!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # TODO: alt az at mean time!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     # TODO: restrict to night time? (or dark time?)!!!!!!!!!!!!
+    # TODO: in utils.time
+    #       - a function to convert a certain time to time ref (int + fraction) + seconds after ref
+    #       - a function to convert a certain time to seconds after a given time ref (int + fraction)
 
     # start time
     # random points between the start of 2010 and the end of 2014
+    # using the start of 2010 as a reference time for the header of the table
     # TODO: restrict to night time? (or dark time?)!!!
-    #       if so: take into acount that enough time has to be permitted for the observation to finish (~ 30 min)
+    #       if so: take into account that enough time has to be granted for the last observation of the night to finish (~ 30 min)
     datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
     dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
     time_start = Time((dateend.mjd - datestart.mjd)*np.random.random(len(col_obs_id)) + datestart.mjd, format='mjd', scale='utc').iso
     # TODO: using format "iso" for ~astropy.Time for now; eventually change it
     # to "fits" after the next astropy stable release (>1.0) is out.
     col_time_start = Column(name='TSTART', data=time_start)
-    astro_table.add_column(col_time_start)
+    obs_table.add_column(col_time_start)
 
     # stop time
     # calculated as TSTART + ONTIME
-    time_stop = Time(astro_table['TSTART']) + astro_table['ONTIME']
+    time_stop = Time(obs_table['TSTART']) + obs_table['ONTIME']
     col_time_stop = Column(name='TSTOP', data=time_stop)
-    astro_table.add_column(col_time_stop)
+    obs_table.add_column(col_time_stop)
 
     # az, alt
     # random points in a sphere above 45 deg altitude
@@ -145,29 +149,27 @@ def generate_observation_table(observatory, n_obs):
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
     col_az = Column(name='AZ', data=az)
-    astro_table.add_column(col_az)
+    obs_table.add_column(col_az)
     col_alt = Column(name='ALT', data=alt)
-    astro_table.add_column(col_alt)
+    obs_table.add_column(col_alt)
 
     # RA, dec
     # derive from az, alt taking into account that alt, az represent the values at the middle of the observation, i.e. at (TSTART + TSTOP)/2 (or TSTART + (ONTIME/2))
-    az = Angle(astro_table['AZ'])
-    alt = Angle(astro_table['ALT'])
-    obstime = astro_table['TSTART']
-    ##obstime = astro_table['TSTART'] + astro_table['TSTOP']
-    ##obstime = Time(astro_table['TSTART']) + Time(astro_table['TSTOP'])
+    az = Angle(obs_table['AZ'])
+    alt = Angle(obs_table['ALT'])
+    obstime = obs_table['TSTART']
+    ##obstime = obs_table['TSTART'] + obs_table['TSTOP']
+    ##obstime = Time(obs_table['TSTART']) + Time(obs_table['TSTOP'])
     location = observatory_locations[observatory]
     alt_az_coord = AltAz(az = az, alt = alt, obstime = obstime, location = location)
     # TODO: make it depend on other pars: temperature, pressure, humidity,...
     sky_coord = alt_az_coord.transform_to(FK5)
     ra = sky_coord.ra
     col_ra = Column(name='RA', data=ra)
-    astro_table.add_column(col_ra)
+    obs_table.add_column(col_ra)
     dec = sky_coord.dec
     col_dec = Column(name='DEC', data=dec)
-    astro_table.add_column(col_dec)
-
-    obs_table = ObservationTable(astro_table)
+    obs_table.add_column(col_dec)
 
 #    #t1 = Time('2010-01-01 00:00:00')
 #    #t2 = Time('2010-02-01 00:00:00')
@@ -183,7 +185,7 @@ def generate_observation_table(observatory, n_obs):
 ###    from astropy.coordinates import builtin_frames
 ###    iers.IERS.iers_table = iers.IERS_A.open(download_file(iers.IERS_A_URL, cache=True)) [builtin_frames.utils]
 #
-#    #dtss = astro_table['TSTART'] + astro_table['TSTOP']
-#    #dtss = Time(astro_table['TSTART']) + Time(astro_table['TSTOP'])
+#    #dtss = obs_table['TSTART'] + obs_table['TSTOP']
+#    #dtss = Time(obs_table['TSTART']) + Time(obs_table['TSTOP'])
 
     return obs_table

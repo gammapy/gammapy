@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity
-from ...datasets import make_test_psf, generate_observation_table
+from ...datasets import make_test_psf, make_test_observation_table
 from ...obs import ObservationTable
 
 
@@ -17,8 +17,8 @@ def test_make_test_psf_fits_table():
     fraction = psf2.containment_fraction(0.1)
     assert fraction == 0.44485638998490795
 
-def test_generate_observation_table():
+def test_make_test_observation_table():
     observatory='HESS'
     n_obs = 10
-    obs_table = generate_observation_table(observatory, n_obs)
+    obs_table = make_test_observation_table(observatory, n_obs)
     assert len(obs_table) == n_obs

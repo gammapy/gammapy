@@ -2,14 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
-#from ...utils import time_ref_from_dict
-#from ...utils.time import time_ref_from_dict
-#from ..utils.time import time_ref_from_dict
-#from .utils.time import time_ref_from_dict
-#from ..time import time_ref_from_dict
-from gammapy.utils.time import time_ref_from_dict #OK!
-#from . import time_ref_from_dict
-#from .. import time_ref_from_dict
+from ..time import time_ref_from_dict
 
 def test_time_ref_from_dict():
     mjd_int = 500
