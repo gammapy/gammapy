@@ -45,6 +45,7 @@ Pull requests
 - Add SNRCat dataset access function [#262] (Christoph Deil)
 - Add hspec - spectral analysis using Sherpa [#264] (Regis Terrier, Ignasi Reichardt, Christoph Deil)
 - Improve SNRcat dataset [#279] (Christoph Deil)
+- Add new subpackage: gammapy.time [#280] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 

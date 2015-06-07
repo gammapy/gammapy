@@ -76,6 +76,7 @@ The Gammapy toolbox
   obs/index
   shower/index
   spectrum/index
+  time/index
   stats/index
   utils/index
 
