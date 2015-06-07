@@ -1,12 +1,33 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
 from __future__ import print_function, division
+import numbers
 import numpy as np
 
-__all__ = ['sample_sphere',
+__all__ = ['check_random_state',
+           'sample_sphere',
            'sample_sphere_distance',
            'sample_powerlaw',
            ]
+
+def check_random_state(seed):
+    """Turn seed into a `numpy.random.RandomState` instance.
+
+    * If seed is None, return the RandomState singleton used by np.random.
+    * If seed is an int, return a new RandomState instance seeded with seed.
+    * If seed is already a RandomState instance, return it.
+    * Otherwise raise ValueError.
+
+    This function was copied from scikit-learn.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError('{} cannot be used to seed a numpy.random.RandomState'
+                     ' instance'.format(seed))
 
 
 def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):

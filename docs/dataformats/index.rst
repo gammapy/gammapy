@@ -28,7 +28,8 @@ in the :ref:`dataformats_file_formats` section.
    maps
    cubes
    spectra
-   
+   lightcurves
+
    psf
    observation_lists
    source_models

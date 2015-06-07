@@ -29,6 +29,7 @@
 .. _healpy: https://healpy.readthedocs.org/en/latest/
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
+.. _Enrico: https://github.com/gammapy/enrico/
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy on Twitter: https://twitter.com/Gammapy

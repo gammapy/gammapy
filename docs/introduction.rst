@@ -82,6 +82,7 @@ Make sure to also check out the following packages that contain very useful func
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `GamERa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) by Joachim Hahn
+* `Enrico <https://github.com/gammapy/enrico/>`__ --- helps you with your Fermi data analysis
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 
 
