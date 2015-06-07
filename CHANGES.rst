@@ -44,7 +44,7 @@ Pull requests
 - Fix spiral arm model bar radius [#261] (Stefan Klepser)
 - Add SNRCat dataset access function [#262] (Christoph Deil)
 - Add hspec - spectral analysis using Sherpa [#264] (Regis Terrier, Ignasi Reichardt, Christoph Deil)
-
+- Improve SNRcat dataset [#279] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 
