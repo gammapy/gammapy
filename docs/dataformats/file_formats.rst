@@ -194,6 +194,9 @@ XML
 
 **XML** files (see `Wikipedia <http://en.wikipedia.org/wiki/Xml>`__)
 
+GammaLib / ctools uses an "observation definition" XML format described
+`here <http://gammalib.sourceforge.net/user_manual/modules/obs.html#describing-observations-using-xml>`__.
+
 TODO: describe
 
 FITS

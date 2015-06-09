@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 from astropy.table import Table
+from ..utils.time import time_ref_from_dict
 
 __all__ = [
     # 'Observation',
@@ -38,30 +39,26 @@ class ObservationTable(Table):
     """Observation table (a.k.a. run list).
 
     This is an `~astropy.table.Table` sub-class, with a few
-    convenience methods and the following columns:
-
-    * ``OBS_ID``
-    * ``TIME_OBSERVATION``
-    * ``TIME_LIVE``
-    * ``TIME_START``
-    * ``TIME_STOP``
-    * ``AZ``
-    * ``ALT``
-    * ``RA``
-    * ``DEC``
-    * ...
+    convenience methods. The format of the observation table
+    is described in:
+        http://gammapy.readthedocs.org/en/latest/dataformats/observation_lists.html
+    TODO: is there a better way to refer to the gammapy doc?!!!
 
     """
 
     def info(self):
         ss = 'Observation table:\n'
+        obs_name = self.meta['OBSERVATORY_NAME']
+        ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
         ontime = self['TIME_OBSERVATION'].sum()
         ss += 'Total observation time: {}\n'.format(ontime)
         livetime = self['TIME_LIVE'].sum()
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
-        ss += 'Average dead time fraction: {:5.2f}%'.format(dtf)
+        ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
+        time_ref = time_ref_from_dict(self.meta)
+        ss += 'Time reference: {}'.format(time_ref)
         #TODO: units are not shown!!!
         return ss
 
@@ -89,4 +86,3 @@ class ObservationTable(Table):
         # Round down to nearest integer
         indices = indices.astype('int')
         return self[indices]
-
