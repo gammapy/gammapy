@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from astropy.time import Time, TimeDelta
 
 __all__ = ['time_ref_from_dict',
@@ -8,18 +10,18 @@ __all__ = ['time_ref_from_dict',
 
 
 def time_ref_from_dict(meta):
-    """Calculte the time reference from metadata.
+    """Calculate the time reference from metadata.
     The time reference is built as MJDREFI + MJDREFF in units of MJD.
     All other times should be interpreted as seconds after the reference.
 
     Parameters
     ----------
     meta : dict
-    	dictionnary with the keywords 'MJDREFI' and 'MJDREFF'
+    	dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns
     -------
-    `~astropy.Time` object with the reference time in units of MJD.
+    `~astropy.time.Time` object with the reference time in format of `MJD`.
     """
     # Note: the `float` call here is to make sure we use 64-bit
     mjd = float(meta['MJDREFI']) + float(meta['MJDREFF'])
@@ -38,14 +40,14 @@ def time_relative_to_ref(time, meta):
 
     Parameters
     ----------
-    time: `~astropy.Time`
+    time: `~astropy.time.Time`
     	time to be converted.
     meta : dict
-    	dictionnary with the keywords 'MJDREFI' and 'MJDREFF'
+    	dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns
     -------
-    `~astropy.TimeDelta` object with the time in seconds after the reference.
+    `~astropy.time.TimeDelta` object with the time in seconds after the reference.
     """
     time_ref = time_ref_from_dict(meta)
     delta_time = TimeDelta(time - time_ref, format='sec')

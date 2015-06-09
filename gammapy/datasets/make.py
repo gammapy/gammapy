@@ -75,14 +75,14 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name, n_obs, debug=False):
-    """Generate an observation table.
+    """Make a test observation table.
 
     For the moment, only random observation tables are created.
 
     Parameters
     ----------
     observatory_name : string
-    	name of the observatory
+    	name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
     n_obs : integer
     	number of observations for the obs table
     debug : bool

@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 from astropy.table import Table
+from astropy.units import Quantity
+from astropy.time import Time
 from ..utils.time import time_ref_from_dict
 
 __all__ = [
@@ -40,10 +42,7 @@ class ObservationTable(Table):
 
     This is an `~astropy.table.Table` sub-class, with a few
     convenience methods. The format of the observation table
-    is described in:
-        http://gammapy.readthedocs.org/en/latest/dataformats/observation_lists.html
-    TODO: is there a better way to refer to the gammapy doc?!!!
-
+    is described in :ref:`dataformats_observation_lists`.
     """
 
     def info(self):
@@ -51,15 +50,19 @@ class ObservationTable(Table):
         obs_name = self.meta['OBSERVATORY_NAME']
         ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = self['TIME_OBSERVATION'].sum()
+        ontime = Quantity(self['TIME_OBSERVATION'].sum(), self['TIME_OBSERVATION'].unit)
         ss += 'Total observation time: {}\n'.format(ontime)
-        livetime = self['TIME_LIVE'].sum()
+        livetime = Quantity(self['TIME_LIVE'].sum(), self['TIME_LIVE'].unit)
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
         ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
         time_ref = time_ref_from_dict(self.meta)
-        ss += 'Time reference: {}'.format(time_ref)
-        #TODO: units are not shown!!!
+        time_ref_unit = time_ref_from_dict(self.meta).format
+        ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
+        # TODO: for an unknown reason, I can't enable astropy.units.cds
+        # as explained in the following link
+        # http://astropy.readthedocs.org/en/latest/units/#module-astropy.units.cds
+        # for using a Quantity object with MJD units.
         return ss
 
     def select_linspace_subset(self, num):
