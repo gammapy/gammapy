@@ -17,8 +17,9 @@ def test_make_test_psf_fits_table():
     fraction = psf2.containment_fraction(0.1)
     assert fraction == 0.44485638998490795
 
+
 def test_make_test_observation_table():
-    observatory='HESS'
+    observatory_name='HESS'
     n_obs = 10
-    obs_table = make_test_observation_table(observatory, n_obs)
+    obs_table = make_test_observation_table(observatory_name, n_obs)
     assert len(obs_table) == n_obs
