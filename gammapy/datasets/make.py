@@ -119,20 +119,17 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # until this issue is solved (and included into a stable release), quantity
     # objects are used.
 
-    # on time: 30 min
-    ontime = TimeDelta(30.*60.*np.ones_like(col_obs_id.data), format='sec')
-    ontime = Quantity(ontime.sec, 'second') # converting to quantity
-    col_ontime = Column(name='ONTIME', data=ontime)
-    obs_table.add_column(col_ontime)
+    # obs time: 30 min
+    time_observation = TimeDelta(30.*60.*np.ones_like(col_obs_id.data), format='sec')
+    time_observation = Quantity(time_observation.sec, 'second') # converting to quantity
+    col_time_observation = Column(name='TIME_OBSERVATION', data=time_observation)
+    obs_table.add_column(col_time_observation)
 
     # livetime: 25 min
-    livetime = TimeDelta(25.*60.*np.ones_like(col_obs_id.data), format='sec')
-    livetime = Quantity(livetime.sec, 'second') # converting to quantity
-    col_livetime = Column(name='LIVETIME', data=livetime)
-    obs_table.add_column(col_livetime)
-
-    # TODO: adopt new name scheme defined in sphinx doc!!!!!!
-    # TODO: is there a way to comment on the column names?!!!
+    time_live = TimeDelta(25.*60.*np.ones_like(col_obs_id.data), format='sec')
+    time_live = Quantity(time_live.sec, 'second') # converting to quantity
+    col_time_live = Column(name='TIME_LIVE', data=time_live)
+    obs_table.add_column(col_time_live)
 
     # start time
     # random points between the start of 2010 and the end of 2014
@@ -164,18 +161,18 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
         time_start = time_relative_to_ref(time_start, header)
         time_start = Quantity(time_start.sec, 'second') # converting to quantity
 
-    col_time_start = Column(name='TSTART', data=time_start)
+    col_time_start = Column(name='TIME_START', data=time_start)
     obs_table.add_column(col_time_start)
 
     # stop time
-    # calculated as TSTART + ONTIME
+    # calculated as TIME_START + TIME_OBSERVATION
     if debug :
-        time_stop = Time(obs_table['TSTART']) + TimeDelta(obs_table['ONTIME'])
+        time_stop = Time(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
     else :
-        time_stop = TimeDelta(obs_table['TSTART']) + TimeDelta(obs_table['ONTIME'])
+        time_stop = TimeDelta(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
         time_stop = Quantity(time_stop.sec, 'second') # converting to quantity
 
-    col_time_stop = Column(name='TSTOP', data=time_stop)
+    col_time_stop = Column(name='TIME_STOP', data=time_stop)
     obs_table.add_column(col_time_stop)
 
     # az, alt
@@ -190,16 +187,16 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # RA, dec
     # derive from az, alt taking into account that alt, az represent the values
-    # at the middle of the observation, i.e. at time_ref + (TSTART + TSTOP)/2
-    # (or better: time_ref + TSTART + (ONTIME/2))
+    # at the middle of the observation, i.e. at time_ref + (TIME_START + TIME_STOP)/2
+    # (or better: time_ref + TIME_START + (TIME_OBSERVATION/2))
     # in debug modus, the time_ref should not be added, since it's already included
-    # in TSTART and TSTOP
+    # in TIME_START and TIME_STOP
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
     if debug :
-        obstime = Time(obs_table['TSTART']) + TimeDelta(obs_table['ONTIME'])/2.
+        obstime = Time(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])/2.
     else :
-        obstime = time_ref_from_dict(obs_table.meta) + TimeDelta(obs_table['TSTART']) + TimeDelta(obs_table['ONTIME'])/2.
+        obstime = time_ref_from_dict(obs_table.meta) + TimeDelta(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])/2.
     location = observatory_locations[observatory_name]
     alt_az_coord = AltAz(az = az, alt = alt, obstime = obstime, location = location)
     # optional: make it depend on other pars: temperature, pressure, humidity,...

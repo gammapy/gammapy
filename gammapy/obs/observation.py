@@ -41,10 +41,10 @@ class ObservationTable(Table):
     convenience methods and the following columns:
 
     * ``OBS_ID``
-    * ``ONTIME``
-    * ``LIVETIME``
-    * ``TSTART``
-    * ``TSTOP``
+    * ``TIME_OBSERVATION``
+    * ``TIME_LIVE``
+    * ``TIME_START``
+    * ``TIME_STOP``
     * ``AZ``
     * ``ALT``
     * ``RA``
@@ -56,9 +56,9 @@ class ObservationTable(Table):
     def info(self):
         ss = 'Observation table:\n'
         ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = self['ONTIME'].sum()
+        ontime = self['TIME_OBSERVATION'].sum()
         ss += 'Total observation time: {}\n'.format(ontime)
-        livetime = self['LIVETIME'].sum()
+        livetime = self['TIME_LIVE'].sum()
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
         ss += 'Average dead time fraction: {:5.2f}%'.format(dtf)
