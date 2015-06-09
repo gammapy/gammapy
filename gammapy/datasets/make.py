@@ -210,4 +210,20 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # optional: it would be nice to plot a skymap with the simulated RA/dec positions
 
+    # number of telescopes
+    # random integers between 3 and 4
+    n_tels_min = 3
+    n_tels_max = 4
+    n_tels = np.random.randint(n_tels_min, n_tels_max + 1, len(col_obs_id))
+    col_n_tels = Column(name='N_TELS', data=n_tels)
+    obs_table.add_column(col_n_tels)
+
+    # muon efficiency
+    # random between 0.6 and 1.0
+    muon_efficiency_min = 0.6
+    muon_efficiency_max = 1.0
+    muon_efficiency = (muon_efficiency_max - muon_efficiency_min)*np.random.random(len(col_obs_id)) + muon_efficiency_min
+    col_muon_efficiency = Column(name='MUON_EFFICIENCY', data=muon_efficiency)
+    obs_table.add_column(col_muon_efficiency)
+
     return obs_table
