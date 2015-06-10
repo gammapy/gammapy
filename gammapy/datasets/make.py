@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
-from astropy.table import Table, Column
+from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
 from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations
@@ -110,26 +110,15 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # obs id
     obs_id = np.arange(n_obs_start, n_obs_start + n_obs)
-    col_obs_id = Column(name='OBS_ID', data=obs_id)
-    obs_table.add_column(col_obs_id)
-
-    # TODO: `~astropy.table.Table` doesn't handle `~astropy.time.TimeDelta` columns
-    # properly see:
-    #  https://github.com/astropy/astropy/issues/3832
-    # until this issue is solved (and included into a stable release), quantity
-    # objects are used.
+    obs_table['OBS_ID'] = obs_id
 
     # obs time: 30 min
-    time_observation = TimeDelta(30.*60.*np.ones_like(col_obs_id.data), format='sec')
-    time_observation = Quantity(time_observation.sec, 'second') # converting to quantity
-    col_time_observation = Column(name='TIME_OBSERVATION', data=time_observation)
-    obs_table.add_column(col_time_observation)
+    time_observation = Quantity(30.*np.ones_like(obs_id), 'minute').to('second')
+    obs_table['TIME_OBSERVATION'] = time_observation
 
     # livetime: 25 min
-    time_live = TimeDelta(25.*60.*np.ones_like(col_obs_id.data), format='sec')
-    time_live = Quantity(time_live.sec, 'second') # converting to quantity
-    col_time_live = Column(name='TIME_LIVE', data=time_live)
-    obs_table.add_column(col_time_live)
+    time_live = Quantity(25.*np.ones_like(obs_id), 'minute').to('second')
+    obs_table['TIME_LIVE'] = time_live
 
     # start time
     # random points between the start of 2010 and the end of 2014
@@ -139,16 +128,19 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # start of the night, when generating random night hours
     datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
     dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
-    time_start = Time((dateend.mjd - datestart.mjd)*np.random.random(len(col_obs_id)) + datestart.mjd, format='mjd', scale='utc')
+    time_start = Time((dateend.mjd - datestart.mjd)
+                      *np.random.random(len(obs_id))
+                      + datestart.mjd, format='mjd', scale='utc')
 
     # keep only the integer part (i.e. the day, not the fraction of the day)
     time_start_f, time_start_i = np.modf(time_start.mjd)
     time_start = Time(time_start_i, format='mjd', scale='utc')
 
-    # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h time for the last run to finish
-    night_start = TimeDelta(22.*60.*60., format='sec')
-    night_duration = TimeDelta(5.5*60.*60., format='sec')
-    hour_start = night_start + TimeDelta(night_duration.sec*np.random.random(len(col_obs_id)), format='sec')
+    # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
+    # time for the last run to finish
+    night_start = Quantity(22., 'hour')
+    night_duration = Quantity(5.5, 'hour')
+    hour_start = night_start + night_duration*np.random.random(len(obs_id))
 
     # add night hour to integer part of MJD
     time_start += hour_start
@@ -159,10 +151,10 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     else :
         # show the observation times in seconds after the reference
         time_start = time_relative_to_ref(time_start, header)
-        time_start = Quantity(time_start.sec, 'second') # converting to quantity
+        # converting to quantity (beter treatment of units)
+        time_start = Quantity(time_start.sec, 'second')
 
-    col_time_start = Column(name='TIME_START', data=time_start)
-    obs_table.add_column(col_time_start)
+    obs_table['TIME_START'] = time_start
 
     # stop time
     # calculated as TIME_START + TIME_OBSERVATION
@@ -170,20 +162,18 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
         time_stop = Time(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
     else :
         time_stop = TimeDelta(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
-        time_stop = Quantity(time_stop.sec, 'second') # converting to quantity
+        # converting to quantity (beter treatment of units)
+        time_stop = Quantity(time_stop.sec, 'second')
 
-    col_time_stop = Column(name='TIME_STOP', data=time_stop)
-    obs_table.add_column(col_time_stop)
+    obs_table['TIME_STOP'] = time_stop
 
     # az, alt
     # random points in a sphere above 45 deg altitude
-    az, alt = sample_sphere(len(col_obs_id), (0, 360), (45, 90), 'degree')
+    az, alt = sample_sphere(len(obs_id), (0, 360), (45, 90), 'degree')
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
-    col_az = Column(name='AZ', data=az)
-    obs_table.add_column(col_az)
-    col_alt = Column(name='ALT', data=alt)
-    obs_table.add_column(col_alt)
+    obs_table['AZ'] = az
+    obs_table['ALT'] = alt
 
     # RA, dec
     # derive from az, alt taking into account that alt, az represent the values
@@ -194,19 +184,18 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
     if debug :
-        obstime = Time(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])/2.
+        obstime = Time(obs_table['TIME_START'])
+        obstime += TimeDelta(obs_table['TIME_OBSERVATION'])/2.
     else :
-        obstime = time_ref_from_dict(obs_table.meta) + TimeDelta(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])/2.
+        obstime = time_ref_from_dict(obs_table.meta)
+        obstime += TimeDelta(obs_table['TIME_START'])
+        obstime += TimeDelta(obs_table['TIME_OBSERVATION'])/2.
     location = observatory_locations[observatory_name]
     alt_az_coord = AltAz(az = az, alt = alt, obstime = obstime, location = location)
     # optional: make it depend on other pars: temperature, pressure, humidity,...
     sky_coord = alt_az_coord.transform_to(FK5)
-    ra = sky_coord.ra
-    col_ra = Column(name='RA', data=ra)
-    obs_table.add_column(col_ra)
-    dec = sky_coord.dec
-    col_dec = Column(name='DEC', data=dec)
-    obs_table.add_column(col_dec)
+    obs_table['RA'] = sky_coord.ra
+    obs_table['DEC'] = sky_coord.dec
 
     # optional: it would be nice to plot a skymap with the simulated RA/dec positions
 
@@ -214,16 +203,16 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # random integers between 3 and 4
     n_tels_min = 3
     n_tels_max = 4
-    n_tels = np.random.randint(n_tels_min, n_tels_max + 1, len(col_obs_id))
-    col_n_tels = Column(name='N_TELS', data=n_tels)
-    obs_table.add_column(col_n_tels)
+    n_tels = np.random.randint(n_tels_min, n_tels_max + 1, len(obs_id))
+    obs_table['N_TELS'] = n_tels
 
     # muon efficiency
     # random between 0.6 and 1.0
     muon_efficiency_min = 0.6
     muon_efficiency_max = 1.0
-    muon_efficiency = (muon_efficiency_max - muon_efficiency_min)*np.random.random(len(col_obs_id)) + muon_efficiency_min
-    col_muon_efficiency = Column(name='MUON_EFFICIENCY', data=muon_efficiency)
-    obs_table.add_column(col_muon_efficiency)
+    muon_efficiency = np.random.random(len(obs_id))
+    muon_efficiency *= (muon_efficiency_max - muon_efficiency_min)
+    muon_efficiency += muon_efficiency_min
+    obs_table['MUON_EFFICIENCY'] = muon_efficiency
 
     return obs_table

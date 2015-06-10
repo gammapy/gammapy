@@ -11,17 +11,19 @@ __all__ = ['time_ref_from_dict',
 
 def time_ref_from_dict(meta):
     """Calculate the time reference from metadata.
+
     The time reference is built as MJDREFI + MJDREFF in units of MJD.
     All other times should be interpreted as seconds after the reference.
 
     Parameters
     ----------
-    meta : dict
+    meta : `~dict`
     	dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns
     -------
-    `~astropy.time.Time` object with the reference time in format of `MJD`.
+    time : `~astropy.time.Time`
+    	reference time with ``format='MJD'``
     """
     # Note: the `float` call here is to make sure we use 64-bit
     mjd = float(meta['MJDREFI']) + float(meta['MJDREFF'])
@@ -35,6 +37,7 @@ def time_ref_from_dict(meta):
 
 def time_relative_to_ref(time, meta):
     """Convert a time using an existing reference.
+
     The time reference is built as MJDREFI + MJDREFF in units of MJD.
     The time will be converted to seconds after the reference.
 

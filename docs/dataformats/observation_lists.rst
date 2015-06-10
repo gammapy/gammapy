@@ -19,7 +19,7 @@ A run list must have at least a column called ``OBS_ID``::
 Usually it has many more columns with information about each observation. A list of Gammapy supported columns is:
 
 ================  ================================================================================================  =========
-column name          description                                                                                       required?
+column name       description                                                                                       required?
 ================  ================================================================================================  =========
 OBS_ID            observation ID as an integer                                                                      yes
 RA                pointing position right ascension in equatorial (ICRS) coordinates                                yes?
@@ -58,11 +58,10 @@ Extra user defined header entries are allowed; Gammapy will ignore them.
 TODO: ``TEL_LIST``: since the final format is not clear, please mind having a look to this issue and its outcome:
 https://github.com/gammapy/gammapy/issues/282
 
-TODO: add an example table?!!! (and header? how?)
 
 Example
 -------
-The tool `~gammapy.datasets.make.make_test_observation_table` can generate a `~gammapy.obs.ObservationTable` with dummy values.
+The tool `~gammapy.datasets.make_test_observation_table` can generate a `~gammapy.obs.ObservationTable` with dummy values.
 
 Header (metadata)::
 
