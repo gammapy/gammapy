@@ -11,17 +11,13 @@ def test_time_ref_from_dict():
     mjd_frac = 0.5
     time_ref_dict = dict(MJDREFI=mjd_int, MJDREFF=mjd_frac)
     time_ref = time_ref_from_dict(time_ref_dict)
-    decimal = 4
-    assert_almost_equal(time_ref.mjd, mjd_int + mjd_frac, decimal)
+    assert_almost_equal(time_ref.mjd, mjd_int + mjd_frac, decimal=4)
 
 
 def test_time_relative_to_ref():
-    mjd_int = 500
-    mjd_frac = 0.5
-    time_ref_dict = dict(MJDREFI=mjd_int, MJDREFF=mjd_frac)
+    time_ref_dict = dict(MJDREFI=500, MJDREFF=0.5)
     time_ref = time_ref_from_dict(time_ref_dict)
     delta_time_1sec = TimeDelta(1., format='sec')
     time = time_ref + delta_time_1sec
     delta_time = time_relative_to_ref(time, time_ref_dict)
-    decimal = 4
-    assert_almost_equal(delta_time.sec, delta_time_1sec.sec, decimal)
+    assert_almost_equal(delta_time.sec, delta_time_1sec.sec, decimal=4)

@@ -14,8 +14,9 @@ __all__ = [
 
 
 class Observation(object):
-    """Observation (a.k.a. run).
+    """Observation.
 
+    An observation is a.k.a. run.
     TODO: not clear if this class is useful.
 
     Parameters
@@ -59,10 +60,6 @@ class ObservationTable(Table):
         time_ref = time_ref_from_dict(self.meta)
         time_ref_unit = time_ref_from_dict(self.meta).format
         ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
-        # TODO: for an unknown reason, I can't enable astropy.units.cds
-        # as explained in the following link
-        # http://astropy.readthedocs.org/en/latest/units/#module-astropy.units.cds
-        # for using a Quantity object with MJD units.
         return ss
 
     def select_linspace_subset(self, num):

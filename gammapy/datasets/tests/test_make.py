@@ -22,4 +22,24 @@ def test_make_test_observation_table():
     observatory_name='HESS'
     n_obs = 10
     obs_table = make_test_observation_table(observatory_name, n_obs)
+
+    # test: assert if the length of the table is n_obs:
     assert len(obs_table) == n_obs
+
+    # test: assert if the TIME_START > 0:
+    assert (obs_table['TIME_START'] > 0).all()
+
+    # test: assert if TIME_STOP > TIME_START:
+    assert (obs_table['TIME_STOP'] > obs_table['TIME_START']).all()
+
+    # test: assert if RA is in the interval (0, 360) deg:
+    ra_min = Angle(0, 'degree')
+    ra_max = Angle(360, 'degree')
+    assert (ra_min < obs_table['RA']).all()
+    assert (obs_table['RA'] < ra_max).all()
+
+    # test: assert if dec is inthe interval (-90, 90) deg:
+    dec_min = Angle(-90, 'degree')
+    dec_max = Angle(90, 'degree')
+    assert (dec_min < obs_table['DEC']).all()
+    assert (obs_table['DEC'] < dec_max).all()

@@ -18,45 +18,46 @@ A run list must have at least a column called ``OBS_ID``::
 
 Usually it has many more columns with information about each observation. A list of Gammapy supported columns is:
 
-================  ================================================================================================  =========
-column name       description                                                                                       required?
-================  ================================================================================================  =========
-OBS_ID            observation ID as an integer                                                                      yes
-RA                pointing position right ascension in equatorial (ICRS) coordinates                                yes?
-DEC               pointing position declination in equatorial (ICRS) coordinates                                    yes?
-AZ                average azimuth angle during the observation                                                      yes?
-ALT               average altitude angle during the observation                                                     yes?
-MUON_EFFICIENCY   average muon efficiency of the telescopes                                                         yes?
-TIME_START        start time of the observation stored as number of seconds after the time reference in the header  yes?
-TIME_STOP         end time of the observation in the same forma as TIME_START                                       yes?
-TIME_OBSERVATION  duration of the observation                                                                       yes?
-TIME_LIVE         duration of the observation without dead time                                                     yes?
-TRIGGER_RATE      average trigger rate of the system                                                                no
-MEAN_TEMPERATURE  average temperature of the atmosphere                                                             no
-N_TELS            number of telescopes participating in the observation                                             yes?
-TEL_LIST          string with a CSV list of telescope IDs participating in the observation                          yes?
-QUALITY           data quality; recommended: "spectral" or "detection" (not used by Gammapy at the moment)          no
-================  ================================================================================================  =========
+================  ===========================================================================  =========
+column name       description                                                                  required?
+================  ===========================================================================  =========
+OBS_ID            observation ID as an integer                                                 yes
+RA                pointing position right ascension in equatorial (ICRS) coordinates           yes?
+DEC               pointing position declination in equatorial (ICRS) coordinates               yes?
+AZ                average azimuth angle during the observation                                 no
+ALT               average altitude angle during the observation                                no
+MUON_EFFICIENCY   average muon efficiency of the telescopes                                    yes?
+TIME_START        start time of the observation stored as number of seconds after [MET]_       yes?
+TIME_STOP         end time of the observation in the same format as TIME_START                 no
+TIME_OBSERVATION  duration of the observation                                                  no
+TIME_LIVE         duration of the observation without dead time                                no
+TRIGGER_RATE      average trigger rate of the system                                           no
+MEAN_TEMPERATURE  average temperature of the atmosphere                                        no
+N_TELS            number of telescopes participating in the observation                        yes?
+TEL_LIST          string with a [CSV]_ list of telescope IDs participating in the observation  yes?
+QUALITY           data quality; recommended: "spectral" or "detection"                         no
+================  ===========================================================================  =========
 
-Extra user defined columns are allowed; Gammapy will ignore them.
+Extra user-defined columns are allowed; Gammapy will ignore them.
 
 In order for the extra columns to have full meaning the following is needed:
 
  * Extra row right after the column name, specifying the unit of the quantity listed on each column.
  * A header with at least the following keywords:
 
-================  ==========================================================================================================================================================================================================
-keyword           description
-================  ==========================================================================================================================================================================================================
-OBSERVATORY_NAME  name of the observatory where the observations were taken. This is important for instance for coordinate transformations between celestial (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems.
-MJDREFI           reference time for other times in the list (i.e. TIME_START/TIME_STOP). Integer value in mean julian days.
-MJDREFF           fraction of integer value defined in MJDREFI.
-================  ==========================================================================================================================================================================================================
+================  ===========================================================================  =========
+keyword           description                                                                  required?
+================  ===========================================================================  =========
+OBSERVATORY_NAME  name of the observatory where the observations were taken. This is           no
+                  important for instance for coordinate transformations between celestial
+                  (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems.
+MJDREFI           reference time: integer value in mean julian days; details in                yes?
+                  :ref:`time_gammapy`.
+MJDREFF           reference time: fraction of integer value defined in MJDREFI; details in     yes?
+                  :ref:`time_gammapy`.
+================  ===========================================================================  =========
 
-Extra user defined header entries are allowed; Gammapy will ignore them.
-
-TODO: ``TEL_LIST``: since the final format is not clear, please mind having a look to this issue and its outcome:
-https://github.com/gammapy/gammapy/issues/282
+Extra user-defined header entries are allowed; Gammapy will ignore them.
 
 
 Example

@@ -82,16 +82,16 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     Parameters
     ----------
     observatory_name : string
-    	name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
+        name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
     n_obs : integer
-    	number of observations for the obs table
+        number of observations for the obs table
     debug : bool
-    	show UTC times instead of seconds after the reference
+        show UTC times instead of seconds after the reference
 
     Returns
     -------
     obs_table : `~gammapy.obs.ObservationTable`
-    	observation table
+        observation table
     """
     n_obs_start = 1
 
@@ -99,8 +99,6 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # build a time reference as the start of 2010
     dateref = Time('2010-01-01 00:00:00', format='iso', scale='utc')
-    # TODO: using format "iso" for `~astropy.Time` for now; eventually change it
-    # to "fits" after the next astropy stable release (>1.0) is out.
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
     # header
@@ -113,11 +111,12 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     obs_table['OBS_ID'] = obs_id
 
     # obs time: 30 min
-    time_observation = Quantity(30.*np.ones_like(obs_id), 'minute').to('second')
+    time_observation = Quantity(
+        30. * np.ones_like(obs_id), 'minute').to('second')
     obs_table['TIME_OBSERVATION'] = time_observation
 
     # livetime: 25 min
-    time_live = Quantity(25.*np.ones_like(obs_id), 'minute').to('second')
+    time_live = Quantity(25. * np.ones_like(obs_id), 'minute').to('second')
     obs_table['TIME_LIVE'] = time_live
 
     # start time
@@ -128,9 +127,8 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # start of the night, when generating random night hours
     datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
     dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
-    time_start = Time((dateend.mjd - datestart.mjd)
-                      *np.random.random(len(obs_id))
-                      + datestart.mjd, format='mjd', scale='utc')
+    time_start = Time((dateend.mjd - datestart.mjd) *
+                      np.random.random(len(obs_id)) + datestart.mjd, format='mjd', scale='utc')
 
     # keep only the integer part (i.e. the day, not the fraction of the day)
     time_start_f, time_start_i = np.modf(time_start.mjd)
@@ -140,15 +138,15 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # time for the last run to finish
     night_start = Quantity(22., 'hour')
     night_duration = Quantity(5.5, 'hour')
-    hour_start = night_start + night_duration*np.random.random(len(obs_id))
+    hour_start = night_start + night_duration * np.random.random(len(obs_id))
 
     # add night hour to integer part of MJD
     time_start += hour_start
 
-    if debug :
+    if debug:
         # show the observation times in UTC
         time_start = time_start.iso
-    else :
+    else:
         # show the observation times in seconds after the reference
         time_start = time_relative_to_ref(time_start, header)
         # converting to quantity (beter treatment of units)
@@ -158,10 +156,12 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # stop time
     # calculated as TIME_START + TIME_OBSERVATION
-    if debug :
-        time_stop = Time(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
-    else :
-        time_stop = TimeDelta(obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
+    if debug:
+        time_stop = Time(obs_table['TIME_START']) + \
+            TimeDelta(obs_table['TIME_OBSERVATION'])
+    else:
+        time_stop = TimeDelta(
+            obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
         # converting to quantity (beter treatment of units)
         time_stop = Quantity(time_stop.sec, 'second')
 
@@ -183,21 +183,21 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # in TIME_START and TIME_STOP
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
-    if debug :
-        obstime = Time(obs_table['TIME_START'])
-        obstime += TimeDelta(obs_table['TIME_OBSERVATION'])/2.
-    else :
-        obstime = time_ref_from_dict(obs_table.meta)
-        obstime += TimeDelta(obs_table['TIME_START'])
-        obstime += TimeDelta(obs_table['TIME_OBSERVATION'])/2.
+    if debug:
+        obstime = Time(obs_table['TIME_START']) + \
+            TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
+    else:
+        obstime = time_ref_from_dict(obs_table.meta) + TimeDelta(
+            obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     location = observatory_locations[observatory_name]
-    alt_az_coord = AltAz(az = az, alt = alt, obstime = obstime, location = location)
-    # optional: make it depend on other pars: temperature, pressure, humidity,...
+    alt_az_coord = AltAz(az=az, alt=alt, obstime=obstime, location=location)
+    # optional: make it depend on other pars: temperature, pressure,
+    # humidity,...
     sky_coord = alt_az_coord.transform_to(FK5)
     obs_table['RA'] = sky_coord.ra
     obs_table['DEC'] = sky_coord.dec
 
-    # optional: it would be nice to plot a skymap with the simulated RA/dec positions
+    # positions
 
     # number of telescopes
     # random integers between 3 and 4
@@ -210,9 +210,8 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # random between 0.6 and 1.0
     muon_efficiency_min = 0.6
     muon_efficiency_max = 1.0
-    muon_efficiency = np.random.random(len(obs_id))
-    muon_efficiency *= (muon_efficiency_max - muon_efficiency_min)
-    muon_efficiency += muon_efficiency_min
+    muon_efficiency = np.random.random(
+        len(obs_id)) * (muon_efficiency_max - muon_efficiency_min) + muon_efficiency_min
     obs_table['MUON_EFFICIENCY'] = muon_efficiency
 
     return obs_table
