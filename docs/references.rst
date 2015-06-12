@@ -70,5 +70,5 @@ Software references:
 Glossary
 --------
 
-.. [CSV] comma-separated values; see also :ref:`CSV`
+.. [CSV] comma-separated values; see also :ref:`CSV_files`.
 .. [MET] mission elapsed time; see also :ref:`time_gammapy`.

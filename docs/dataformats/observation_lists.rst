@@ -16,7 +16,8 @@ A run list must have at least a column called ``OBS_ID``::
    42
    43
 
-Usually it has many more columns with information about each observation. A list of Gammapy supported columns is:
+Usually it has many more columns with information about each observation. A list of
+Gammapy supported columns is:
 
 ================  ===========================================================================  =========
 column name       description                                                                  required?
@@ -62,7 +63,8 @@ Extra user-defined header entries are allowed; Gammapy will ignore them.
 
 Example
 -------
-The tool `~gammapy.datasets.make_test_observation_table` can generate a `~gammapy.obs.ObservationTable` with dummy values.
+The tool `~gammapy.datasets.make_test_observation_table` can generate a `~gammapy.obs.ObservationTable`
+with dummy values.
 
 Header (metadata)::
 

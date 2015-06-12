@@ -191,8 +191,6 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
             obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     location = observatory_locations[observatory_name]
     alt_az_coord = AltAz(az=az, alt=alt, obstime=obstime, location=location)
-    # optional: make it depend on other pars: temperature, pressure,
-    # humidity,...
     sky_coord = alt_az_coord.transform_to(FK5)
     obs_table['RA'] = sky_coord.ra
     obs_table['DEC'] = sky_coord.dec

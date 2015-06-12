@@ -18,12 +18,12 @@ def time_ref_from_dict(meta):
     Parameters
     ----------
     meta : `~dict`
-    	dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns
     -------
     time : `~astropy.time.Time`
-    	reference time with ``format='MJD'``
+        reference time with ``format='MJD'``
     """
     # Note: the `float` call here is to make sure we use 64-bit
     mjd = float(meta['MJDREFI']) + float(meta['MJDREFF'])
@@ -44,13 +44,14 @@ def time_relative_to_ref(time, meta):
     Parameters
     ----------
     time: `~astropy.time.Time`
-    	time to be converted.
+        time to be converted.
     meta : dict
-    	dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns
     -------
-    `~astropy.time.TimeDelta` object with the time in seconds after the reference.
+    time_delta : `~astropy.time.TimeDelta`
+        time in seconds after the reference
     """
     time_ref = time_ref_from_dict(meta)
     delta_time = TimeDelta(time - time_ref, format='sec')
