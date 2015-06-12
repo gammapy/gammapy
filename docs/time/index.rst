@@ -26,6 +26,7 @@ our data formats or units might make sense.
 
 Some references (please add what you find useful
 
+* https://github.com/astroML/gatspy
 * https://github.com/matteobachetti/MaLTPyNT
 * https://github.com/nanograv/PINT
 * http://www.astroml.org/modules/classes.html#module-astroML.time_series
