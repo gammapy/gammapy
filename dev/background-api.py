@@ -45,7 +45,7 @@ filtered_obs_table = FindObservations(global_obs_table, cuts...)
 # Use case: allow grouping of observations with similar properties
 # - given a list of observations (ON or OFF)
 # - group them according to similar observation properties (zenith angle,
-#   athimut angle, ...?)
+#   azimuth angle, ...?)
 # This can later be used to allow the loop over observations to run over
 # observation groups instead of over single observations in the bg makers
 # (and maybe other places too)
