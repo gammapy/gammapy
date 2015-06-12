@@ -4,3 +4,4 @@ Timing analysis tools.
 """
 from .plot import *
 from .simulate import *
+from .utils import *

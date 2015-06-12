@@ -106,7 +106,7 @@ It's not clear yet how to best implement METs, it's one of the tasks here:
 https://github.com/gammapy/gammapy/issues/284
 
 For now, we use the `gammapy.time.time_ref_from_dict` and `gammapy.time.time_relative_to_ref` functions
-to convert MET floats to Time objects via the reference times stored in FITS headers.
+to convert MET floats to `~astropy.time.Time` objects via the reference times stored in FITS headers.
 
 See `Cicerone: Data - Time in Fermi Data Analysis
 <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/
@@ -116,7 +116,7 @@ Time differences
 ----------------
 
 TODO: discuss when to use `astropy.time.TimeDelta` or `astropy.units.Quantity` or MET floats and
-where one needs to convert between those.
+where one needs to convert between those and what to watch out for.
 
 Reference/API
 =============

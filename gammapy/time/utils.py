@@ -17,7 +17,7 @@ def time_ref_from_dict(meta):
 
     Parameters
     ----------
-    meta : `~dict`
+    meta : `dict`
         dictionary with the keywords `MJDREFI` and `MJDREFF`
 
     Returns

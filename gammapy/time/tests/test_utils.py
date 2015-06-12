@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from numpy.testing import assert_almost_equal
 from astropy.time import Time, TimeDelta
-from ..time import time_ref_from_dict, time_relative_to_ref
+from ..utils import time_ref_from_dict, time_relative_to_ref
 
 
 def test_time_ref_from_dict():
