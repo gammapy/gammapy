@@ -3,6 +3,11 @@
 References
 ==========
 
+.. _publications:
+
+Publications
+------------
+
 This is the bibliography containing the literature references for the implemented methods
 referenced from the Gammapy docs.
 
@@ -58,3 +63,12 @@ Software references:
    
 .. [FSSC2013] `Fermi LAT Collaboration (2013) <http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
    "Science Tools: LAT Data Analysis Tools"
+
+
+.. _glossary:
+
+Glossary
+--------
+
+.. [CSV] comma-separated values; see also :ref:`CSV_files`.
+.. [MET] mission elapsed time; see also :ref:`time_gammapy`.

@@ -19,6 +19,21 @@ we simply use general-purpose file formats define our own semantics as described
 in the :ref:`dataformats_file_formats` section. 
 
 
+.. _time_gammapy:
+
+***************
+Time in Gammapy
+***************
+
+Gammapy adopts the exact same time standard as the Fermi Science Tools as described on
+this page: `Cicerone: Data - Time in Fermi Data Analysis
+<http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/
+Time_in_ScienceTools.html>`_.
+Every time should be defined as a `~astropy.time.Time` object, representing UTC seconds
+after the "Mission elapsed time" [MET]_ origin. Each experiment may have a different
+[MET]_ origin that should be included in the header of the data files.
+
+
 .. toctree::
    :maxdepth: 1
 

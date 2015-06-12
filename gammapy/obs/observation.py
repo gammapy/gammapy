@@ -3,6 +3,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 from astropy.table import Table
+from astropy.units import Quantity
+from astropy.time import Time
+from ..utils.time import time_ref_from_dict
 
 __all__ = [
     # 'Observation',
@@ -11,8 +14,9 @@ __all__ = [
 
 
 class Observation(object):
-    """Observation (a.k.a. Run).
+    """Observation.
 
+    An observation is a.k.a. run.
     TODO: not clear if this class is useful.
 
     Parameters
@@ -38,24 +42,24 @@ class ObservationTable(Table):
     """Observation table (a.k.a. run list).
 
     This is an `~astropy.table.Table` sub-class, with a few
-    convenience methods and the following columns:
-
-    * ``OBS_ID``
-    * ``ONTIME``
-    * ``LIVETIME``
-    * ...
-
+    convenience methods. The format of the observation table
+    is described in :ref:`dataformats_observation_lists`.
     """
 
     def info(self):
         ss = 'Observation table:\n'
+        obs_name = self.meta['OBSERVATORY_NAME']
+        ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = self['ONTIME'].sum()
+        ontime = Quantity(self['TIME_OBSERVATION'].sum(), self['TIME_OBSERVATION'].unit)
         ss += 'Total observation time: {}\n'.format(ontime)
-        livetime = self['LIVETIME'].sum()
+        livetime = Quantity(self['TIME_LIVE'].sum(), self['TIME_LIVE'].unit)
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
-        ss += 'Average dead time fraction: {:5.2f}%'.format(dtf)
+        ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
+        time_ref = time_ref_from_dict(self.meta)
+        time_ref_unit = time_ref_from_dict(self.meta).format
+        ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
         return ss
 
     def select_linspace_subset(self, num):
@@ -82,4 +86,3 @@ class ObservationTable(Table):
         # Round down to nearest integer
         indices = indices.astype('int')
         return self[indices]
-
