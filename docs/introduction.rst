@@ -114,4 +114,5 @@ here's a few other Python packages you might find useful / interesting:
 * Pulsar timing package `PINT <https://github.com/nanograv/PINT>`__
 * `iminuit <https://github.com/iminuit/iminuit>`__ fitter and
   `probfit <https://github.com/iminuit/probfit>`__ likelihood function builder.
-
+* Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
+  and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .

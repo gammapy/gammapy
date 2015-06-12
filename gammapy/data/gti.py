@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from ..utils.time import time_ref_from_dict
-from . import utils
+from ..time import time_ref_from_dict
 
 __all__ = ['GoodTimeIntervals']
 

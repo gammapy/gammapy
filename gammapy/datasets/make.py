@@ -6,12 +6,11 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
-from astropy.table import Table
 from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
 from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations
 from ..utils.random import sample_sphere
-from ..utils.time import time_ref_from_dict, time_relative_to_ref
+from ..time import time_ref_from_dict, time_relative_to_ref
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',

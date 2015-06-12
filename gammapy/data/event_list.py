@@ -13,7 +13,7 @@ from astropy.table import Table
 from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
-from ..utils.time import time_ref_from_dict
+from ..time import time_ref_from_dict
 from . import utils
 
 __all__ = ['EventList',

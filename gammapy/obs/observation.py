@@ -4,8 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from astropy.time import Time
-from ..utils.time import time_ref_from_dict
+from ..time import time_ref_from_dict
 
 __all__ = [
     # 'Observation',
