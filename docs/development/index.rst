@@ -10,6 +10,52 @@ Note that Astropy has very extensive developer documentation
 `here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
 this page should only mention Gammapy-specific things.
 
+.. _make_clean:
+
+How to clean up old files
+-------------------------
+
+Many projects have a ``Makefile`` to build and install the software and do all kinds of other tasks.
+In Astropy and Gammapy and most Python projects, there is no ``Makefile``, but the ``setup.py`` file
+and you're supposed to type ``python setup.py <cmd>`` and use ``--help`` and ``--help-commands`` to
+see all the available commands and options.
+
+There's one common task, cleaning up old generated files, that's not done via ``setup.py``.
+The equivalent of ``make clean`` is:
+
+.. code-block:: bash
+
+    $ rm -r build docs/_build docs/api htmlcov
+
+These folders only contain generated files and are always safe to delete!
+Most of the time you don't have to delete them, but if you e.g. remove or rename files or functions / classes,
+then you should, because otherwise the old files will still be around and you might get confusing results,
+such as Sphinx warnings or import errors or code that works locally because it uses old things, but fails
+on travis-ci or for other developers.
+
+* The ``build`` folder is where ``python setup.py build`` or ``python setup.py install`` generate files.
+* The ``docs/api`` folder is where ``python setup.py build_sphinx`` generates [RST]_ files from the docstrings
+  (temporary files part of the HTML documentation generation).
+* The  ``docs/_build`` folder is where ``python setup.py build_sphinx`` generates the HTML and other Sphinx
+  documentation output files.
+* The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
+
+If you use ``python setup.py build_ext --inplace``, then files are generated in the ``gammapy`` source folder.
+Usually that's not a problem, but if you want to clean up those generated files, you can use
+`git clean <http://git-scm.com/docs/git-clean>`__:
+
+.. code-block:: bash
+
+    $ git status
+    # The following command will remove all untracked files!
+    # If you have written code that is not committed yet in a new file it will be gone!
+    # So use with caution!
+    $ git clean -fdx
+
+At least for now we prefer not to add a ``Makefile`` to Gammapy, because that splits the developers into
+those that use ``setup.py`` and those that use ``make``, which can grow into an overall **more** complicated
+system where some things are possible only with ``setup.py`` and others only with ``make``.
+
 .. _development-import_from:
 
 Where should I import from?

@@ -56,6 +56,3 @@ Reference/API
 
 .. automodapi:: gammapy.utils.testing
     :no-inheritance-diagram:
-
-.. automodapi:: gammapy.utils.time
-    :no-inheritance-diagram:

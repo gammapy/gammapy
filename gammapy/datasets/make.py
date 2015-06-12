@@ -149,7 +149,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     else:
         # show the observation times in seconds after the reference
         time_start = time_relative_to_ref(time_start, header)
-        # converting to quantity (beter treatment of units)
+        # converting to quantity (better treatment of units)
         time_start = Quantity(time_start.sec, 'second')
 
     obs_table['TIME_START'] = time_start
@@ -162,7 +162,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     else:
         time_stop = TimeDelta(
             obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
-        # converting to quantity (beter treatment of units)
+        # converting to quantity (better treatment of units)
         time_stop = Quantity(time_stop.sec, 'second')
 
     obs_table['TIME_STOP'] = time_stop
@@ -179,7 +179,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # derive from az, alt taking into account that alt, az represent the values
     # at the middle of the observation, i.e. at time_ref + (TIME_START + TIME_STOP)/2
     # (or better: time_ref + TIME_START + (TIME_OBSERVATION/2))
-    # in debug modus, the time_ref should not be added, since it's already included
+    # in debug mode, the time_ref should not be added, since it's already included
     # in TIME_START and TIME_STOP
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
@@ -206,10 +206,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # muon efficiency
     # random between 0.6 and 1.0
-    muon_efficiency_min = 0.6
-    muon_efficiency_max = 1.0
-    muon_efficiency = np.random.random(
-        len(obs_id)) * (muon_efficiency_max - muon_efficiency_min) + muon_efficiency_min
+    muon_efficiency = np.random.uniform(low=0.6, high=1.0, size=len(obs_id))
     obs_table['MUON_EFFICIENCY'] = muon_efficiency
 
     return obs_table
