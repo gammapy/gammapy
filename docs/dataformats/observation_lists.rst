@@ -53,9 +53,9 @@ OBSERVATORY_NAME  name of the observatory where the observations were taken. Thi
                   important for instance for coordinate transformations between celestial
                   (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems.
 MJDREFI           reference time: integer value in mean julian days; details in                yes?
-                  :ref:`time_gammapy`.
+                  :ref:`time_handling`.
 MJDREFF           reference time: fraction of integer value defined in MJDREFI; details in     yes?
-                  :ref:`time_gammapy`.
+                  :ref:`time_handling`.
 ================  ===========================================================================  =========
 
 Extra user-defined header entries are allowed; Gammapy will ignore them.
