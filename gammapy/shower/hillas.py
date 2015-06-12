@@ -7,7 +7,7 @@ import numpy as np
 __all__ = ['hillas_parameters']
 
 
-def hillas_parameters(x, y, s):
+def hillas_parameters(x, y, value):
     """Compute Hillas parameters for a given shower image.
 
     Reference: Appendix of the Whipple Crab paper Weekes et al. (1998) 
@@ -20,7 +20,7 @@ def hillas_parameters(x, y, s):
         Pixel x-coordinate
     y : array_like
         Pixel y-coordinate
-    s : array_like
+    value : array-like
         Pixel value
 
     Returns
