@@ -113,7 +113,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
 
     if catalog == '3FGL':
-        url = BASE_URL + '4yr_catalog/gll_psc_v14.fit'
+        url = BASE_URL + '4yr_catalog/gll_psc_v16.fit'
     elif catalog == '2FGL':
         url = BASE_URL + '2yr_catalog/gll_psc_v08.fit'
     elif catalog == '1FGL':
