@@ -13,6 +13,7 @@ from astropy.table import Table
 from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
+from ..time import time_ref_from_dict
 from . import utils
 
 __all__ = ['EventList',
@@ -78,7 +79,7 @@ class EventList(Table):
         With 32-bit floats times will be incorrect by a few seconds
         when e.g. adding them to the reference time.
         """
-        met_ref = utils._time_ref_from_dict(self.meta)
+        met_ref = time_ref_from_dict(self.meta)
         met = Quantity(self['TIME'].astype('float64'), 'second')
         time = met_ref + met
         return time
@@ -619,7 +620,7 @@ class EventListDatasetChecker(object):
         )
 
         telescope = self.dset.event_list.meta['TELESCOP']
-        met_ref = utils._time_ref_from_dict(self.dset.event_list.meta)
+        met_ref = time_ref_from_dict(self.dset.event_list.meta)
 
         if telescope in telescope_met_refs.keys():
             dt = (met_ref - telescope_met_refs[telescope])

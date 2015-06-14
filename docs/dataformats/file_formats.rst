@@ -145,6 +145,8 @@ INI files ... to use it in your code
 
 Unfortunately INI files are not standardised, so there's only conventions and tons of variants.
 
+.. _CSV_files:
+
 CSV
 +++
 
@@ -193,6 +195,9 @@ XML
 +++
 
 **XML** files (see `Wikipedia <http://en.wikipedia.org/wiki/Xml>`__)
+
+GammaLib / ctools uses an "observation definition" XML format described
+`here <http://cta.irap.omp.eu/gammalib-devel/user_manual/modules/obs.html#describing-observations-using-xml>`__.
 
 TODO: describe
 

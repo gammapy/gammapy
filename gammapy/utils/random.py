@@ -30,7 +30,7 @@ def check_random_state(seed):
                      ' instance'.format(seed))
 
 
-def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
+def sample_sphere(size, lon_range=None, lat_range=None, unit='rad'):
     """Sample random points on the sphere.
 
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
@@ -42,7 +42,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
     lon_range : tuple
         Longitude range (min, max) tuple in range (0, 360)
     lat_range : tuple
-        Latitude range (min, max) tuple in range (-180, 180)
+        Latitude range (min, max) tuple in range (-90, 90)
     units : {'rad', 'deg'}
         Units of input range and returned angles
 
@@ -51,6 +51,14 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
     lon, lat: arrays
         Longitude and latitude coordinate arrays
     """
+    # Correctly interpret units at an early stage
+    if unit in ['rad', 'radian', 'radians']:
+        unit = 'rad'
+    elif unit in ['deg', 'degree', 'degrees']:
+        unit = 'deg'
+    else:
+        raise ValueError('Invalid unit: {0}'.format(unit))
+
     # Convert inputs to internal format (all radians)
     size = int(size)
 
@@ -76,12 +84,10 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='radians'):
     lat = np.arcsin(z)
 
     # Return result
-    if unit in ['rad', 'radian', 'radians']:
+    if unit == 'rad':
         return lon, lat
-    elif unit in ['deg', 'degree', 'degrees']:
+    elif unit == 'deg':
         return np.degrees(lon), np.degrees(lat)
-    else:
-        raise ValueError('Invalid unit: {0}'.format(unit))
 
 
 def sample_powerlaw(x_min, x_max, gamma, size=None):
