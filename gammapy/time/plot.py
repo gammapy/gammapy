@@ -29,28 +29,38 @@ def plot_time_difference_distribution(time, ax=None):
     # TODO: implement!
     raise NotImplementedError
 
-def plot_light_curve(name_3FGL, fermi_met_start = 2.3933e8, fermi_met_end = 3.65467550e8):
+def plot_light_curve(name_3FGL, time_start, time_end):
     """Plot flux as a function of time for a fermi 3FGL object.
 
     Parameters
     ----------
     name_3FGL : `string`
         The 3FGL catalog name of the object to plot
-    fermi_met_start : `int`
-        Start time of the light curve in Fermi MET
-    fermi_met_end : `int`
-        End time of the light curve in Fermi MET
+    fermi_met_start : `~astropy.time.Time`
+        Astropy time object for the start of the light curve
+    fermi_met_end : `~astropy.time.Time`
+        Astropy time object for the end of the light curve
 
     Usage
     gammapy.time.plot_light_curve('3FGL J0349.9-2102', 2.1e8, 3.2e8)
     """
     from ..datasets import fetch_fermi_catalog
+    import astropy.time
     import numpy as np
     import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
     import math
+
+    fermi_met_base = astropy.time.Time('2001-01-01T00:00:00')
+
+    fermi_met_start = (time_start - fermi_met_base).sec
+
+    fermi_met_end = (time_end - fermi_met_base).sec
 
     # As far as I know light curves were only included in 3FGL, so we must use this catalog.
     fermi_cat = fetch_fermi_catalog('3FGL')
+
+    catalog_index = np.where(fermi_cat[1].data['Source_Name'] == name_3FGL)[0][0]
 
     time_index_start = np.where(fermi_cat[3].data['Hist_Start'] >= fermi_met_start)[0][0]
 
@@ -116,9 +126,13 @@ def plot_light_curve(name_3FGL, fermi_met_start = 2.3933e8, fermi_met_end = 3.65
     flux_history_lower_bound = \
         flux_history_lower_bound[np.where((flux_history_lower_bound) > 0)]
 
+    time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec')).plot_date
+    upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
+
+
     # Plot data points and upper limits.
     plt.errorbar(time_mid, flux_history, yerr=(flux_history_lower_bound, flux_history_upper_bound), \
-                 xerr=0.5 * time_diff, \
+                 #xerr=0.5 * time_diff, \
                  marker='o', elinewidth=1, linewidth=0, color='black')
     plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)], upper_lims_y[np.where(upper_lims_y > 0)], \
                  yerr=(upper_lims_y_end[np.where(upper_lims_y > 0)], upper_lims_y_start[np.where(upper_lims_y > 0)]), \
@@ -126,6 +140,10 @@ def plot_light_curve(name_3FGL, fermi_met_start = 2.3933e8, fermi_met_end = 3.65
     plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)], upper_lims_y[np.where(upper_lims_y <= 0)], \
                  yerr=(upper_lims_y_end[np.where(upper_lims_y <= 0)], upper_lims_y_start[np.where(upper_lims_y <= 0)]), \
                  marker=None, elinewidth=1, linewidth=0, lolims=True, color='black')
-    plt.xlabel('time [Fermi MET]')
+    plt.xlabel('date')
     plt.ylabel('flux [ph/cm^2/s]')
+    plt.gca().xaxis_date()
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))
+    plt.gcf().autofmt_xdate()
     plt.show()
