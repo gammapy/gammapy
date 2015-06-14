@@ -29,7 +29,7 @@ def plot_time_difference_distribution(time, ax=None):
     # TODO: implement!
     raise NotImplementedError
 
-def plot_light_curve(name_3FGL, time_start, time_end):
+def plot_light_curve(name_3FGL, time_start, time_end, ax = None):
     """Plot flux as a function of time for a fermi 3FGL object.
 
     Parameters
@@ -50,6 +50,8 @@ def plot_light_curve(name_3FGL, time_start, time_end):
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
     import math
+
+    ax = plt.gca() if ax is None else ax
 
     fermi_met_base = astropy.time.Time('2001-01-01T00:00:00')
 
@@ -125,7 +127,6 @@ def plot_light_curve(name_3FGL, time_start, time_end):
     time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec')).plot_date
     upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
 
-
     # Plot data points and upper limits.
     plt.errorbar(time_mid, flux_history, yerr=(flux_history_lower_bound, flux_history_upper_bound),
                  #TODO: x-error bars
@@ -142,4 +143,6 @@ def plot_light_curve(name_3FGL, time_start, time_end):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))
     plt.gcf().autofmt_xdate()
-    plt.show()
+    #plt.show()
+
+    return ax
