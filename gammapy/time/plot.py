@@ -40,9 +40,28 @@ def plot_light_curve(name_3FGL, time_start, time_end, ax = None):
         Astropy time object for the start of the light curve
     fermi_met_end : `~astropy.time.Time`
         Astropy time object for the end of the light curve
+    ax : `~matplotlib.axes.Axes` or None
+        Axes
+    Returns
+    -------
+    ax : `~matplotlib.axes.Axes`
 
-    Usage
-    gammapy.time.plot_light_curve('3FGL J0349.9-2102', 2.1e8, 3.2e8)
+    Examples
+    --------
+    Plot effective area vs. energy:
+
+    .. plot::
+        :include-source:
+
+        import gammapy.time
+        import astropy.time
+        import matplotlib.pyplot as plt
+
+        time_start = astropy.time.Time('2010-01-01T00:00:00')
+        time_end = astropy.time.Time('2015-02-02T02:02:02')
+
+        plt.plot = gammapy.time.plot_light_curve('3FGL J0349.9-2102', time_start, time_end)
+        plt.show()
     """
     from ..datasets import fetch_fermi_catalog
     import astropy.time
