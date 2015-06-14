@@ -2,7 +2,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from ..datasets import fetch_fermi_catalog
 
 __all__ = ['plot_light_curve',
            ]
@@ -23,6 +22,7 @@ def plot_light_curve(name_3FGL, fermi_met_start = 2.3933e8, fermi_met_end = 3.65
     Usage
     gammapy.time.plot_light_curve('3FGL J0349.9-2102', 2.1e8, 3.2e8)
     """
+    from ..datasets import fetch_fermi_catalog
     import numpy as np
     import matplotlib.pyplot as plt
     import math
