@@ -96,11 +96,13 @@ def plot_light_curve(name_3FGL, time_start, time_end):
 
     upper_lims_y = np.copy(flux_history)
 
-    upper_lims_x = upper_lims_x[np.where(flux_history_lower_bound <= 0)]
+    idx = np.where(flux_history_lower_bound <= 0)
 
-    upper_lims_y_start = upper_lims_y_start[np.where(flux_history_lower_bound <= 0)]
+    upper_lims_x = upper_lims_x[idx]
 
-    upper_lims_y = upper_lims_y[np.where(flux_history_lower_bound <= 0)]
+    upper_lims_y_start = upper_lims_y_start[idx]
+
+    upper_lims_y = upper_lims_y[idx]
 
     upper_lims_y_end = np.copy(upper_lims_y_start)
 
@@ -108,15 +110,17 @@ def plot_light_curve(name_3FGL, time_start, time_end):
     upper_lims_y_end *= -0.3
 
     # Create an array of data points where a lower bound was recorded.
-    time_mid = time_mid[np.where((flux_history_lower_bound) > 0)]
+    idx = np.where((flux_history_lower_bound) > 0)
 
-    time_diff = time_diff[np.where((flux_history_lower_bound) > 0)]
+    time_mid = time_mid[idx]
 
-    flux_history = flux_history[np.where((flux_history_lower_bound) > 0)]
+    time_diff = time_diff[idx]
 
-    flux_history_upper_bound = flux_history_upper_bound[np.where((flux_history_lower_bound) > 0)]
+    flux_history = flux_history[idx]
 
-    flux_history_lower_bound = flux_history_lower_bound[np.where((flux_history_lower_bound) > 0)]
+    flux_history_upper_bound = flux_history_upper_bound[idx]
+
+    flux_history_lower_bound = flux_history_lower_bound[idx]
 
     time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec')).plot_date
     upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
@@ -129,7 +133,7 @@ def plot_light_curve(name_3FGL, time_start, time_end):
     plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)], upper_lims_y[np.where(upper_lims_y > 0)],
                  yerr=(upper_lims_y_end[np.where(upper_lims_y > 0)], upper_lims_y_start[np.where(upper_lims_y > 0)]),
                  marker='o', elinewidth=1, linewidth=0, lolims=True, color='black')
-    plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)], upper_lims_y[np.where(upper_lims_y <= 0)], 
+    plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)], upper_lims_y[np.where(upper_lims_y <= 0)],
                  yerr=(upper_lims_y_end[np.where(upper_lims_y <= 0)], upper_lims_y_start[np.where(upper_lims_y <= 0)]),
                  marker=None, elinewidth=1, linewidth=0, lolims=True, color='black')
     plt.xlabel('date')
