@@ -49,26 +49,8 @@ def plot_light_curve(name_3FGL, fermi_met_start = 2.3933e8, fermi_met_end = 3.65
     import matplotlib.pyplot as plt
     import math
 
-    try:
-        fermi_met_start = int(fermi_met_start)
-    except:
-        print("Fermi_met_start not a valid numerical input.")
-        return
-
-    try:
-        fermi_met_end = int(fermi_met_end)
-    except:
-        print("Fermi_met_end not a valid numerical input.")
-        return
-
     # As far as I know light curves were only included in 3FGL, so we must use this catalog.
     fermi_cat = fetch_fermi_catalog('3FGL')
-
-    try:
-        catalog_index = np.where(fermi_cat[1].data['Source_Name'] == name_3FGL)[0][0]
-    except IndexError:
-        print("Could not find " + name_3FGL + " in the 3GL catalog.")
-        return
 
     time_index_start = np.where(fermi_cat[3].data['Hist_Start'] >= fermi_met_start)[0][0]
 
