@@ -49,6 +49,7 @@ Pull requests
 - Document observation tables and improve ``gammapy.obs`` [#278] (Manuel Paz Arribas)
 - Add infos how to handle times in Gammapy [#285] (Christoph Deil)
 - Function to plot Fermi 3FGL light curves [#286] (Jonathan Harris)
+- Add EffectiveAreaTable exporter to EffectiveAreaTable2D [#276] (Johannes King)
 
 .. _gammapy_0p2_release:
 
