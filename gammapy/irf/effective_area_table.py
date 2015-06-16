@@ -111,7 +111,7 @@ class EffectiveAreaTable(object):
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
-    def to_fits(self, header=None, units=['TeV','m2'], **kwargs):
+    def to_fits(self, header=None, energy_unit='TeV', effarea_unit='m2', **kwargs):
         """
         Convert ARF to FITS HDU list format.
 
@@ -119,6 +119,10 @@ class EffectiveAreaTable(object):
         ----------
         header : `~astropy.io.fits.header.Header`
             Header to be written in the fits file.
+        energy_unit : str
+            Unit in which the energy is written in the fits file
+        effarea__u : str
+            Unit in which the effective area is written in the fits file
 
         Returns
         -------
@@ -130,12 +134,14 @@ class EffectiveAreaTable(object):
         For more info on the ARF FITS file format see:
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
-        Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here by default, as they are the more natural units for IACTs
+        Recommended units for ARF tables in X-ray astronomy are keV and cm^2,
+        but TeV and m^2 are chosen here by default, as they are the more
+        natural units for IACTs
         """
-       
-        self.energy_lo = self.energy_lo.to(units[0])
-        self.energy_hi = self.energy_hi.to(units[0])
-        self.effective_area = self.effective_area.to(units[1])
+
+        self.energy_lo = self.energy_lo.to(energy_unit)
+        self.energy_hi = self.energy_hi.to(energy_unit)
+        self.effective_area = self.effective_area.to(effarea_unit)
 
         hdu = fits.new_table(
             [fits.Column(name='ENERG_LO',
@@ -233,8 +239,8 @@ class EffectiveAreaTable(object):
         For more info on the ARF FITS file format see:
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
-        Recommended units for ARF tables are keV and cm^2, but TeV and m^2 are chosen here
-        as the more natural units for IACTs.
+        Recommended units for ARF tables are keV and cm^2,
+        but TeV and m^2 are chosen here as the more natural units for IACTs.
         """
         energy_lo = Quantity(hdu_list['SPECRESP'].data['ENERG_LO'], 'TeV')
         energy_hi = Quantity(hdu_list['SPECRESP'].data['ENERG_HI'], 'TeV')
@@ -373,17 +379,18 @@ class EffectiveAreaTable2D(object):
     >>> from astropy.coordinates import Angle
     >>> from astropy.units import Quantity
     >>> from gammapy.irf import EffectiveAreaTable2D
+    >>> from gammapy.spectrum import energy_bounds_equal_log_spacing
     >>> from gammapy.datasets import load_aeff2D_fits_table
     >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
     >>> offset = Angle(0.43, 'degree')
     >>> nbins = 50
-    >>> energy = Quantity(np.logspace(0, 1, nbins+1), 'TeV')
+    >>> energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV', nbins)
     >>> energ_lo = energy[:-1]
     >>> energ_hi = energy[1:]
     >>> arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
     >>> arf_table.write('arf.fits', format='arf')
 
-    Plot energy dependence 
+    Plot energy dependence
 
     .. plot::
         :include-source:
@@ -465,8 +472,8 @@ class EffectiveAreaTable2D(object):
         hdu_list = fits.open(filename)
         return EffectiveAreaTable2D.from_fits(hdu_list)
 
-    def to_effective_area_table(self, offset, energ_lo=None, energ_hi=None):
-        """Evaluate at a given offset and return effective area table instance.
+    def to_effective_area_table(self, offset, energy_lo=None, energy_hi=None):
+        """Evaluate at a given offset and return effective area table.
 
         The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
@@ -477,31 +484,35 @@ class EffectiveAreaTable2D(object):
         ----------
         offset : `~astropy.coordinates.Angle`
             offset
-        energy : `~astropy.units.Quantity`
-            energy
+        energy_lo : `~astropy.units.Quantity`
+            energy lower bounds array
+        energy_hi : `~astropy.units.Quantity`
+            energy upper bounds array
+
 
         Returns
         -------
         eff_area_table : `EffectiveAreaTable`
-             Effective area table instance. 
+             Effective area table
         """
 
-        if energ_lo is None and energ_lo is None:
-            energ_lo = self.energ_lo
-            energ_hi = self.energ_hi
-        elif energ_lo is None or energ_hi is None:
+        if energy_lo is None and energy_hi is None:
+            energy_lo = self.energy_lo
+            energy_hi = self.energy_hi
+        elif energy_lo is None or energy_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
-        if not isinstance(offset, Angle):
-            raise ValueError("Offset must be an angle object.")
-        if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
+        if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
             raise ValueError("Energy must be a Quantity object.")
-        if len(energ_lo) != len(energ_hi):
+        if len(energy_lo) != len(energy_hi):
             raise ValueError("Energy Vectors must have same length")
 
-        energy = np.sqrt(energ_lo * energ_hi)
+        if not isinstance(offset, Angle):
+            raise ValueError("Offset must be an angle object.")
+
+        energy = np.sqrt(energy_lo * energy_hi)
         area = self.evaluate(offset, energy)
 
-        return EffectiveAreaTable(energ_lo, energ_hi, area)
+        return EffectiveAreaTable(energy_lo, energy_hi, area)
 
     def evaluate(self, offset=None, energy=None):
         """Evalute effective area for a given energy and offset
