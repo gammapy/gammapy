@@ -4,10 +4,10 @@ import datetime
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
+from ..utils.array import array_stats_str
 
 __all__ = ['LogEnergyAxis',
-           'energy_bounds_equal_log_spacing',
-           'energy_bin_centers_log_spacing',
+           'EnergyBinning',
            'EnergyBinCenters',
            'EnergyBinEdges',
            'np_to_pha',
@@ -16,49 +16,126 @@ __all__ = ['LogEnergyAxis',
 # TODO: remove functions now that we have classes!
 
 
-def energy_bin_centers_log_spacing(energy_bounds):
-    """Compute energy log bin centers.
+class EnergyBinning(object):
 
-    TODO: give formula here.
-
-    Parameters
-    ----------
-    energy_bounds : `~astropy.units.Quantity`
-        Array of energy bin edges.
-
-    Returns
-    -------
-    energy_center : `~astropy.units.Quantity`
-        Array of energy bin centers
     """
-    e_bounds = energy_bounds.value
-    e_center = np.sqrt(e_bounds[:-1] * e_bounds[1:])
-    return Quantity(e_center, energy_bounds.unit)
+    class to handle energy dimension for e.g. counts spectra, ARF tables
+    and so on. The idea is to handel everything related to energy in this
+    class. It should probably be move somewhere else (not spectrum.utils)
+    rather datasets.energyhandler or similar. All other classes should then
+    takes this class as argument.
 
-
-def energy_bounds_equal_log_spacing(energy_band, bins=10):
-    """Make energy bounds array with equal-log spacing.
+    TODO:
+    - document once we agreed on a mechanism
+    - implement FITS I/O
+    - What shall happen with the other classes
 
     Parameters
     ----------
-    energy_band : `~astropy.units.Quantity`
-        Tuple ``(energy_min, energy_max)``
-    bins : int
+    energy : `~astropy.units.Quantity`
+    Energy bin edges
+    """
+
+    def __init__(self, energy):
+
+        if not isinstance(energy, Quantity):
+            raise ValueError("Energy must be a Quantity object.")
+
+        self.emin = np.min(energy)
+        self.emax = np.max(energy)
+        self.nbins = len(energy) - 1
+        self.energy_bounds = energy
+        self._energy_find_log_centers()
+
+    def _energy_find_log_centers(self):
+        """Compute energy bin log centers.
+
+        center = sqrt(low_edge * high_edge)
+        """
+
+        bounds = self.energy_bounds
+        self._log_centers = np.sqrt(bounds[:-1] * bounds[1:])
+
+    @staticmethod
+    def equal_log_spacing(emin, emax, nbins):
+        """Make energy bounds array with equal-log spacing.
+
+        Parameters
+        ----------
+        emin : `~astropy.units.Quantity`
+        emax : `~astropy.units.Quantity`
+        bins : int
         Number of bins
 
-    Returns
-    -------
-    energy_bounds : `~astropy.units.Quantity`
-        Energy bounds array (1-dim with length ``bins + 1``).
-    """
-    x_min, x_max = np.log10(energy_band.value)
-    energy_bounds = np.logspace(x_min, x_max, bins + 1)
-    energy_bounds = Quantity(energy_bounds, energy_band.unit)
+        Returns
+        -------
+        Energy Binning
+        """
 
-    return energy_bounds
+        if not isinstance(emin, Quantity) or not isinstance(emax, Quantity):
+            raise ValueError("Energies must be Quantity objects.")
+
+        emin = emin.to('TeV')
+        emax = emax.to('TeV')
+
+        x_min, x_max = np.log10([emin.value, emax.value])
+        energy_bounds = np.logspace(x_min, x_max, nbins + 1)
+
+        energy_bounds = Quantity(energy_bounds, emin.unit)
+
+        return EnergyBinning(energy_bounds)
+
+    @staticmethod
+    def from_log_centers(energy):
+        """Make energy bounds array starting from log centers
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+        Energy bin log centers
+
+        Returns
+        -------
+        Energy Binning
+        """
+
+        if not isinstance(energy, Quantity):
+            raise ValueError("Energy must be a Quantity object.")
+
+        center = energy.value
+        bounds = np.sqrt(center[:-1] * center[1:])
+        first = center[0] * center[0] / bounds[0]
+        last = center[-1] * center[-1] / bounds[-1]
+        bounds = np.append(first, bounds)
+        bounds = np.append(bounds, last)
+        bounds = Quantity(bounds, 'TeV')
+
+        return EnergyBinning(bounds)
+
+    @property
+    def log_centers(self):
+        """
+        Log centers of the energy bins
+        """
+        return self._log_centers
+
+    def to_fits(self):
+        """
+        Where do we need these extensions?
+        """
+        pass
+
+    def info(self):
+        s = '\nEnergy bins\n'
+        s += "------------\n"
+        s += 'Nbins: {0}\n'.format(self.nbins)
+        s += array_stats_str(self._log_centers, 'Energy bin centers')
+        s += array_stats_str(self.energy_bounds, 'Energy bin edges')
+        return s
 
 
 class EnergyBinCenters(object):
+
     """Energy bin centers.
 
     Stored as "ENERGIES" FITS table extensions.
@@ -88,6 +165,7 @@ class EnergyBinCenters(object):
 
 
 class EnergyBinEdges(object):
+
     """Energy bin edges.
 
     Stored as "EBOUNDS" FITS table extensions.
@@ -111,6 +189,7 @@ class EnergyBinEdges(object):
 
 
 class LogEnergyAxis(object):
+
     """Log10 energy axis.
 
     Defines a transformation between:
@@ -131,6 +210,7 @@ class LogEnergyAxis(object):
     energy : `~astropy.units.Quantity`
         Energy array
     """
+
     def __init__(self, energy):
 
         self.energy = energy
@@ -194,6 +274,8 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
+# MOVE TO DATA.COUNTSPECTRUM
+
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
@@ -237,30 +319,30 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     """
     # Create PHA FITS table extension from data
     cols = [fits.Column(name='CHANNEL',
-                          format='I',
-                          array=channel,
-                          unit='channel'),
+                        format='I',
+                        array=channel,
+                        unit='channel'),
             fits.Column(name='COUNTS',
-                          format='1E',
-                          array=counts,
-                          unit='count')
+                        format='1E',
+                        array=counts,
+                        unit='count')
             ]
 
     if stat_err is not None:
         cols.append(fits.Column(name='STAT_ERR',
-                                  format='1E',
-                                  array=stat_err,
-                                  unit='count'))
+                                format='1E',
+                                array=stat_err,
+                                unit='count'))
 
     if syserr is not None:
         cols.append(fits.Column(name='SYS_ERR',
-                                  format='E',
-                                  array=syserr))
+                                format='E',
+                                array=syserr))
 
     if quality is not None:
         cols.append(fits.Column(name='QUALITY',
-                                  format='I',
-                                  array=quality))
+                                format='I',
+                                array=quality))
 
     hdu = fits.new_table(cols)
     header = hdu.header
