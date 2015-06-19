@@ -72,16 +72,15 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
         plt.show()
     """
     from ..datasets import fetch_fermi_catalog
+    from ..time.utils import TIME_REF_FERMI
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 
     ax = plt.gca() if ax is None else ax
 
-    fermi_met_base = astropy.time.Time('2001-01-01T00:00:00')
+    fermi_met_start = (time_start - TIME_REF_FERMI).sec
 
-    fermi_met_start = (time_start - fermi_met_base).sec
-
-    fermi_met_end = (time_end - fermi_met_base).sec
+    fermi_met_end = (time_end - TIME_REF_FERMI).sec
 
     fermi_cat = fetch_fermi_catalog('3FGL')
 
@@ -149,7 +148,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
 
     flux_history_lower_bound = flux_history_lower_bound[idx]
 
-    time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec'))
+    time_mid = (TIME_REF_FERMI + astropy.time.TimeDelta(time_mid, format='sec'))
 
     time_at_bin_start = time_mid - astropy.time.TimeDelta(time_diff, format='sec')
 
@@ -165,7 +164,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
 
     time_diff_at_bin_end = time_at_bin_end - time_mid
     
-    upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
+    upper_lims_x = (TIME_REF_FERMI + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
 
     # Plot data points and upper limits.
     plt.errorbar(time_mid, flux_history,
