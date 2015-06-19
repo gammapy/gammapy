@@ -34,7 +34,7 @@ def plot_time_difference_distribution(time, ax=None):
     raise NotImplementedError
 
 
-def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
+def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=None):
     """Plot flux as a function of time for a fermi 3FGL object.
 
     Parameters
@@ -77,6 +77,12 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     import matplotlib.dates as mdates
 
     ax = plt.gca() if ax is None else ax
+
+    if time_start is None:
+        time_start = astropy.time.Time('2008-08-02T00:33:19')
+
+    if time_end is None:
+        time_end = astropy.time.Time('2012-07-31T22:45:47')
 
     fermi_met_start = (time_start - TIME_REF_FERMI).sec
 
