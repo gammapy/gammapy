@@ -58,14 +58,15 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     .. plot::
         :include-source:
 
-        import gammapy.time
-        import astropy.time
+        from astropy.time import Time
+        from gammapy.time import plot_fermi_3fgl_light_curve
         import matplotlib.pyplot as plt
 
-        time_start = astropy.time.Time('2010-01-01T00:00:00')
-        time_end = astropy.time.Time('2015-02-02T02:02:02')
+        time_start = Time('2010-01-01T00:00:00')
+        time_end = Time('2015-02-02T02:02:02')
 
-        plt.plot = gammapy.time.plot_light_curve('3FGL J0349.9-2102', time_start, time_end)
+        plt.plot = plot_fermi_3fgl_light_curve('3FGL J0349.9-2102', time_start, time_end)
+
         plt.show()
     """
     from ..datasets import fetch_fermi_catalog
