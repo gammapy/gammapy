@@ -3,8 +3,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 
-__all__ = ['plot_light_curve',
+__all__ = ['plot_fermi_3fgl_light_curve',
            ]
+
 
 def plot_time_difference_distribution(time, ax=None):
     """Plot event time difference distribution.
@@ -30,7 +31,8 @@ def plot_time_difference_distribution(time, ax=None):
     # TODO: implement!
     raise NotImplementedError
 
-def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
+
+def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     """Plot flux as a function of time for a fermi 3FGL object.
 
     Parameters
@@ -82,7 +84,7 @@ def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
     # As far as I know light curves were only included in 3FGL, so we must use this catalog.
     fermi_cat = fetch_fermi_catalog('3FGL')
 
-    catalog_index = np.where(fermi_cat[1].data['Source_Name'] == name_3FGL)[0][0]
+    catalog_index = np.where(fermi_cat[1].data['Source_Name'] == name_3fgl)[0][0]
 
     time_index_start = np.where(fermi_cat[3].data['Hist_Start'] >= fermi_met_start)[0][0]
 
@@ -100,10 +102,12 @@ def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
     # Midpoints of each bin.
     time_mid = time_start[0:-1] + time_diff
 
-    flux_history = fermi_cat[1].data[catalog_index]['Flux_History'][time_index_start: time_index_end]
+    cat_row = fermi_cat[1].data[catalog_index]
 
-    flux_history_lower_bound = fermi_cat[1].data[catalog_index]['Unc_Flux_History'][time_index_start: time_index_end, 0]
-    flux_history_upper_bound = fermi_cat[1].data[catalog_index]['Unc_Flux_History'][time_index_start: time_index_end, 1]
+    flux_history = cat_row['Flux_History'][time_index_start: time_index_end]
+
+    flux_history_lower_bound = cat_row['Unc_Flux_History'][time_index_start: time_index_end, 0]
+    flux_history_upper_bound = cat_row['Unc_Flux_History'][time_index_start: time_index_end, 1]
     flux_history_lower_bound = abs(flux_history_lower_bound)
 
     # Change bins with no flux value from nan to zero.
@@ -148,14 +152,19 @@ def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
     upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
 
     # Plot data points and upper limits.
-    plt.errorbar(time_mid, flux_history, yerr=(flux_history_lower_bound, flux_history_upper_bound),
+    plt.errorbar(time_mid, flux_history,
+                 yerr=(flux_history_lower_bound, flux_history_upper_bound),
                  #TODO: x-error bars
                  marker='o', elinewidth=1, linewidth=0, color='black')
-    plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)], upper_lims_y[np.where(upper_lims_y > 0)],
-                 yerr=(upper_lims_y_end[np.where(upper_lims_y > 0)], upper_lims_y_start[np.where(upper_lims_y > 0)]),
+    plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)],
+                 upper_lims_y[np.where(upper_lims_y > 0)],
+                 yerr=(upper_lims_y_end[np.where(upper_lims_y > 0)],
+                       upper_lims_y_start[np.where(upper_lims_y > 0)]),
                  marker='o', elinewidth=1, linewidth=0, lolims=True, color='black')
-    plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)], upper_lims_y[np.where(upper_lims_y <= 0)],
-                 yerr=(upper_lims_y_end[np.where(upper_lims_y <= 0)], upper_lims_y_start[np.where(upper_lims_y <= 0)]),
+    plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)],
+                 upper_lims_y[np.where(upper_lims_y <= 0)],
+                 yerr=(upper_lims_y_end[np.where(upper_lims_y <= 0)],
+                       upper_lims_y_start[np.where(upper_lims_y <= 0)]),
                  marker=None, elinewidth=1, linewidth=0, lolims=True, color='black')
     plt.xlabel('date')
     plt.ylabel('flux [ph/cm^2/s]')
@@ -163,6 +172,5 @@ def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))
     plt.gcf().autofmt_xdate()
-    #plt.show()
 
     return ax
