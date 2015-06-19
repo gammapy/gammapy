@@ -8,6 +8,7 @@ __all__ = ['plot_light_curve',
 
 def plot_time_difference_distribution(time, ax=None):
     """Plot event time difference distribution.
+
     Parameters
     ----------
     time : `~astropy.time.Time`
