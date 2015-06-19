@@ -74,7 +74,6 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
-    import math
 
     ax = plt.gca() if ax is None else ax
 
@@ -114,7 +113,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
 
     # Change bins with no flux value from nan to zero.
     for i in range(0, np.size(flux_history_lower_bound)):
-        if math.isnan(flux_history_lower_bound[i]):
+        if np.isnan(flux_history_lower_bound[i]):
             flux_history_lower_bound[i] = 0
 
     # Create array of upper limits where no lower bound was recorded.
