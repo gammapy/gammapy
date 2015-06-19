@@ -42,9 +42,9 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
     name_3FGL : `string`
         The 3FGL catalog name of the object to plot
     time_start : `~astropy.time.Time`
-        Light curve start time
+        Light curve start time.  If none, use the earliest time in the catalog.
     time_end : `~astropy.time.Time`
-        Light curve end time
+        Light curve end time.  If none, use the latest time in the catalog.
     ax : `~matplotlib.axes.Axes` or None
         Axes
 
