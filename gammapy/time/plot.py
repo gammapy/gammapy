@@ -84,7 +84,6 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
 
     fermi_met_end = (time_end - fermi_met_base).sec
 
-    # As far as I know light curves were only included in 3FGL, so we must use this catalog.
     fermi_cat = fetch_fermi_catalog('3FGL')
 
     catalog_index = np.where(fermi_cat[1].data['Source_Name'] == name_3fgl)[0][0]
