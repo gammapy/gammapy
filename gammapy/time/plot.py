@@ -95,7 +95,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     time_start = fermi_cat[3].data['Hist_Start'][time_index_start: time_index_end]
     time_end = np.roll(time_start, -1)
 
-    time_diff = time_end - time_start
+    time_diff = 0.5*(time_end - time_start)
 
     # Trim because there is one more bin edge than there is bin mid point
     time_diff = time_diff[0:-1]
@@ -137,7 +137,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     upper_lims_y_end *= -0.3
 
     # Create an array of data points where a lower bound was recorded.
-    idx = np.where((flux_history_lower_bound) > 0)
+    idx = np.where(flux_history_lower_bound > 0)
 
     time_mid = time_mid[idx]
 
@@ -149,13 +149,28 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
 
     flux_history_lower_bound = flux_history_lower_bound[idx]
 
-    time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec')).plot_date
+    time_mid = (fermi_met_base + astropy.time.TimeDelta(time_mid, format='sec'))
+
+    time_at_bin_start = time_mid - astropy.time.TimeDelta(time_diff, format='sec')
+
+    time_at_bin_end = time_mid + astropy.time.TimeDelta(time_diff, format='sec')
+
+    time_mid = time_mid.plot_date
+
+    time_at_bin_start = time_at_bin_start.plot_date
+
+    time_at_bin_end = time_at_bin_end.plot_date
+
+    time_diff_at_bin_start = time_mid - time_at_bin_start
+
+    time_diff_at_bin_end = time_at_bin_end - time_mid
+    
     upper_lims_x = (fermi_met_base + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
 
     # Plot data points and upper limits.
     plt.errorbar(time_mid, flux_history,
                  yerr=(flux_history_lower_bound, flux_history_upper_bound),
-                 #TODO: x-error bars
+                 xerr=(time_diff_at_bin_start,time_diff_at_bin_end),
                  marker='o', elinewidth=1, linewidth=0, color='black')
     plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)],
                  upper_lims_y[np.where(upper_lims_y > 0)],
