@@ -30,7 +30,7 @@ def plot_time_difference_distribution(time, ax=None):
     # TODO: implement!
     raise NotImplementedError
 
-def plot_light_curve(name_3FGL, time_start, time_end, ax = None):
+def plot_fermi_3fgl_light_curve(name_3FGL, time_start, time_end, ax = None):
     """Plot flux as a function of time for a fermi 3FGL object.
 
     Parameters
