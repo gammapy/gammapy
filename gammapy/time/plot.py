@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import astropy.time
+import numpy as np
 
 
 __all__ = ['plot_fermi_3fgl_light_curve',
@@ -70,8 +72,6 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
         plt.show()
     """
     from ..datasets import fetch_fermi_catalog
-    import astropy.time
-    import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 
