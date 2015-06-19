@@ -39,15 +39,17 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start, time_end, ax=None):
     ----------
     name_3FGL : `string`
         The 3FGL catalog name of the object to plot
-    fermi_met_start : `~astropy.time.Time`
-        Astropy time object for the start of the light curve
-    fermi_met_end : `~astropy.time.Time`
-        Astropy time object for the end of the light curve
+    time_start : `~astropy.time.Time`
+        Light curve start time
+    time_end : `~astropy.time.Time`
+        Light curve end time
     ax : `~matplotlib.axes.Axes` or None
         Axes
+
     Returns
     -------
     ax : `~matplotlib.axes.Axes`
+        Axes
 
     Examples
     --------
