@@ -100,7 +100,7 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
     time_start = fermi_cat[3].data['Hist_Start'][time_index_start: time_index_end]
     time_end = np.roll(time_start, -1)
 
-    time_diff = 0.5*(time_end - time_start)
+    time_diff = 0.5 * (time_end - time_start)
 
     # Trim because there is one more bin edge than there is bin mid point
     time_diff = time_diff[0:-1]
@@ -169,13 +169,14 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
     time_diff_at_bin_start = time_mid - time_at_bin_start
 
     time_diff_at_bin_end = time_at_bin_end - time_mid
-    
-    upper_lims_x = (TIME_REF_FERMI + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
+
+    upper_lims_x = (TIME_REF_FERMI
+                    + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
 
     # Plot data points and upper limits.
     plt.errorbar(time_mid, flux_history,
                  yerr=(flux_history_lower_bound, flux_history_upper_bound),
-                 xerr=(time_diff_at_bin_start,time_diff_at_bin_end),
+                 xerr=(time_diff_at_bin_start, time_diff_at_bin_end),
                  marker='o', elinewidth=1, linewidth=0, color='black')
     plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)],
                  upper_lims_y[np.where(upper_lims_y > 0)],
