@@ -9,3 +9,4 @@ from .reflected import *
 from .ring import *
 from .template import *
 from .kernel import *
+from .models import *
