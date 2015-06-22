@@ -7,7 +7,8 @@ def plot_example():
     DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
     filename = DIR + 'hist_alt3_az0.fits.gz'
     bg_model = CubeBackgroundModel.read(filename)
-    bg_model.plot_images('cube_background_model.png')
+    bg_model.plot_images()
+    bg_model.plot_spectra()
     bg_model.write_cube('cube_background_model.fits')
 
 if __name__ == '__main__':
