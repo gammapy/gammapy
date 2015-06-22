@@ -337,9 +337,9 @@ class EffectiveAreaTable2D(object):
         Lower energy bin edges vector
     energ_hi : `~astropy.units.Quantity`
         Upper energy bin edges vector
-    offset_lo : `~astropy.coordonates.Angle`
+    offset_lo : `~astropy.coordinates.Angle`
         Lower offset bin edges vector
-    offset_hi : `~astropy.coordonates.Angle`
+    offset_hi : `~astropy.coordinates.Angle`
         Upper offset bin edges  vector
     eff_area : `~astropy.units.Quantity`
         Effective area vector (true energy)

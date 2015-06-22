@@ -3,9 +3,12 @@ from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
+
 from astropy.table import Table
+from astropy.utils.data import get_pkg_data_filename
 from astropy.modeling.models import Gaussian1D
-from ...background.models import GaussianBand2D
+from ...background.models import GaussianBand2D, CubeBackgroundModel
+
 
 try:
     import scipy
@@ -43,3 +46,21 @@ class TestGaussianBand2D():
         model = self.model.y_model(-30)
         assert isinstance(model, Gaussian1D)
         assert_allclose(model.parameters, [0, -1, 0.4])
+
+class TestCubeBackgroundModel():
+
+    def test_read(self):
+        # test shape of bg cube when reading a file
+        filename = 'data/bg_test.fits'
+        #DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
+        #filename = DIR + filename
+        filename = get_pkg_data_filename(filename)
+        # this is failing!!! -> here it works: gammapy/irf/tests/test_effective_area.py test_EffectiveAreaTable
+        #CREO QUE ES PORQUE LA FUNCION NO ESTA EN EL MODULO!!!
+        # TODO: intentar hacerlo con las IRFs de CTA:
+        # https://github.com/gammapy/gammapy/issues/267
+        bg_cube_file = CubeBackgroundModel.read(filename)
+        assert len(bg_cube_file.background.shape) == 3
+
+    def test_plot(self):
+        # test values 1 plot of each kind (image: 1 bin in energy; spectrum: 1 bin in (detx, dety))
