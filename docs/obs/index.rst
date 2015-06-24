@@ -1,15 +1,15 @@
 .. _obs:
 
-****************************************
-Observation bookkeeping  (`gammapy.obs`)
-****************************************
+*************************************
+Observation handling  (`gammapy.obs`)
+*************************************
 
 .. currentmodule:: gammapy.obs
 
 Introduction
 ============
 
-`gammapy.obs` contains methods to do the bookkeeping for processing multiple observations.
+`gammapy.obs` contains methods to handle observations.
 
 In TeV astronomy an observation (a.k.a. a run) means pointing the telescopes at some
 position on the sky (fixed in celestial coordinates, not in horizon coordinates)

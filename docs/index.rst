@@ -74,10 +74,9 @@ The Gammapy toolbox
   irf/index
   morphology/index
   obs/index
-  shower/index
   spectrum/index
-  time/index
   stats/index
+  time/index
   utils/index
 
 .. gammapy_support:
