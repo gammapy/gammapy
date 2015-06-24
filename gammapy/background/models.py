@@ -145,14 +145,32 @@ class CubeBackgroundModel(object):
         header = hdu.header
         data = hdu.data
 
-        det_bins = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
-        det_bins = Angle(det_bins, 'deg')
-        # TODO: SPATIAL UNITS HARD CODED!!! but detx/y units don't appear in the fits file?!!
+        det_bins_x = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
+        det_bins_y = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
+        if (det_bins_x == det_bins_y).all():
+            det_bins = det_bins_x
+        else:
+            raise ValueError(
+                "Det bins not matching for x and y ({0}, {1}); is detector not simmetric?".format(
+                    det_bins_x, det_bins_y))
+        if header['TUNIT1'] == header['TUNIT2'] == header['TUNIT3'] == header['TUNIT4']:
+            det_unit = header['TUNIT1']
+        else:
+            raise ValueError("Detector x, y units not matching ({0}, {1}, {2}, {3})"
+                             .format(header['TUNIT1'], header['TUNIT2'], header['TUNIT3'], header['TUNIT4']))
+        #det_bins = Angle(det_bins, 'degree')
+        #det_bins = Angle(det_bins, 'radian')
+        det_bins = Angle(det_bins, det_unit)
+        # TODO: SPATIAL UNITS HARD CODED!!! but detx/y units don't appear in the fits file?!!! -> ~solved (keep reading)
+        #       bei M.Mayer Dateien ja, bei der CTA Beispiel nein (und ich denke es ist in rad)
+        # TODO: edit the example, save it with units, and use it as the test file
+        #       (after checking for consistency with original file)!!!
+
         energy_bins = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
         if header['TUNIT5'] == header['TUNIT6']:
             energy_unit = header['TUNIT5']
         else:
-            raise ValueError("Energy units not matching ({1}, {2})"
+            raise ValueError("Energy units not matching ({0}, {1})"
                              .format(header['TUNIT5'], header['TUNIT6']))
         energy_bins = Quantity(energy_bins, energy_unit)
         background = data['Bgd'][0]
@@ -325,9 +343,12 @@ class CubeBackgroundModel(object):
       	
         Returns
         -------
-        fig : `~matplotlib.pyplot`
+        fig : `~matplotlib.figure.Figure`
 		figure with image of bin of the bg model for the
                 selected energy value (if any), optional
+        axes : `~matplotlib.pyplot.axes`
+        	axes of the figure, optional
+
         """
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
@@ -395,12 +416,6 @@ class CubeBackgroundModel(object):
 
             count_pads += 1 # increase
 
-            # TODO: I need this in the test!!!!!!
-            print("plot data")
-            print(image.get_array())
-            # I need also the bin ids!!!
-            print("plot extent", image.get_extent())
-
             if count_pads > npads_per_canvas or count_images == nimages:
                 print("Canvas full, saving and creating a new canvas")
                 if do_only_1_plot:
@@ -409,16 +424,17 @@ class CubeBackgroundModel(object):
                     filename = "cube_background_model_images{}.png".format(count_canvases)
                 print('Writing {}'.format(filename))
                 fig.savefig(filename)
-                plt.close('all') # close all open figures
-                fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-                fig.set_size_inches(35., 35., forward=True)
+                if not do_only_1_plot:
+                    plt.close('all') # close all open figures
+                    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+                    fig.set_size_inches(35., 35., forward=True)
                 count_canvases += 1 # increase
                 count_pads = 1 # reset
 
             count_images += 1 # increase
 
         if do_only_1_plot:
-            return fig
+            return fig, axes, image
 
 
     def plot_spectra(self, det=None):
@@ -438,9 +454,11 @@ class CubeBackgroundModel(object):
       	
         Returns
         -------
-        fig : `~matplotlib.pyplot`
+        fig : `~matplotlib.figure.Figure`
 		figure with image of bin of the bg model for the
                 selected det (X,Y) pair (if any), optional
+        axes : `~matplotlib.pyplot.axes`
+        	axes of the figure, optional
         """
         import matplotlib.pyplot as plt
 
@@ -513,10 +531,6 @@ class CubeBackgroundModel(object):
                 ax.set_ylabel('Bg rate / {}'.format(data.unit))
                 count_pads += 1 # increase
 
-                # TODO: I need this in the test!!!!!!
-                print("plot data")
-                print(ax.get_lines()[0].get_xydata())
-
                 if count_pads > npads_per_canvas or count_images == nimages:
                     print("Canvas full, saving and creating a new canvas")
                     if do_only_1_plot:
@@ -525,19 +539,20 @@ class CubeBackgroundModel(object):
                         filename = "cube_background_model_spectra{}.png".format(count_canvases)
                     print('Writing {}'.format(filename))
                     fig.savefig(filename)
-                    plt.close('all') # close all open figures
-                    fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
-                    fig.set_size_inches(25., 25., forward=True)
+                    if not do_only_1_plot:
+                        plt.close('all') # close all open figures
+                        fig, axes = plt.subplots(nrows=nrows, ncols=ncols)
+                        fig.set_size_inches(25., 25., forward=True)
                     count_canvases += 1 # increase
                     count_pads = 1 # reset
 
                 count_images += 1 # increase
 
         if do_only_1_plot:
-            return fig
+            return fig, axes, image
 
 
-    def write_cube(self, filename):
+    def write(self, filename):
         """Write cube background model to fits file.
 
         Parameters
