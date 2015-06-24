@@ -76,6 +76,7 @@ Make sure to also check out the following packages that contain very useful func
 
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
+* `ctapipe`_ --- CTA Python pipeline experimental version
 * `threeml`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
   (`code <https://github.com/giacomov/3ML>`__,
   `example notebook <http://nbviewer.ipython.org/github/giacomov/3ML/blob/master/examples/090217206.ipynb>`__)
@@ -86,6 +87,7 @@ Make sure to also check out the following packages that contain very useful func
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 
 
+.. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools/

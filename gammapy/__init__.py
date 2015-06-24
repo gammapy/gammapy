@@ -29,10 +29,10 @@ the following sub-packages (e.g. `gammapy.spectrum`):
  `image`          --- Image processing and analysis tools
  `irf`            --- Instrument response functions (IRFs)
  `morphology`     --- Morphology and PSF methods
- `obs`            --- Observation bookkeeping
- `shower`         --- Air shower image I/O and analysis
+ `obs`            --- Observation handling
  `spectrum`       --- Spectrum estimation and modeling
  `stats`          --- Statistics tools
+ `time`           --- Time handling and analysis
  `utils`          --- Utility functions and classes
 
 """

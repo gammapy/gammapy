@@ -48,6 +48,7 @@ Pull requests
 - Add new subpackage: gammapy.time [#280] (Christoph Deil)
 - Document observation tables and improve ``gammapy.obs`` [#278] (Manuel Paz Arribas)
 - Add infos how to handle times in Gammapy [#285] (Christoph Deil)
+- Remove gammapy.shower package [#291] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 
