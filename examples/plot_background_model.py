@@ -9,7 +9,7 @@ def plot_example():
     bg_model = CubeBackgroundModel.read(filename)
     bg_model.plot_images()
     bg_model.plot_spectra()
-    bg_model.write_cube('cube_background_model.fits')
+    bg_model.write('cube_background_model.fits')
 
 if __name__ == '__main__':
     plot_example()
