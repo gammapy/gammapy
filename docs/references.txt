@@ -2,6 +2,7 @@
 .. _scikit-image: http://scikit-image.org
 .. _scikit-learn: http://scikit-learn.org/stable/
 .. _scipy library: http://scipy.org/scipylib/
+.. _scipy: http://scipy.org/scipylib/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _Numpy: http://www.numpy.org/
@@ -30,6 +31,7 @@
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _Enrico: https://github.com/gammapy/enrico/
+.. _ctapipe: https://github.com/cta-observatory/ctapipe
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy on Twitter: https://twitter.com/Gammapy
