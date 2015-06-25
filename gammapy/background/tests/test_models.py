@@ -88,6 +88,7 @@ class TestCubeBackgroundModel():
         # test if both arrays are equal
         decimal = 4
         np.testing.assert_almost_equal(plot_data, model_data.value, decimal)
+        # TODO: clean up after test (remove created files)
 
 
     def test_spectrum_plot(self):
@@ -112,6 +113,7 @@ class TestCubeBackgroundModel():
         # test if both arrays are equal
         decimal = 4
         np.testing.assert_almost_equal(plot_data[:,1], model_data.value, decimal)
+        # TODO: clean up after test (remove created files)
 
 
     def test_write(self):
@@ -122,10 +124,19 @@ class TestCubeBackgroundModel():
         #TODO: change this, when test_read is fixed!!!
         #      - use data/bg_test.fits
         #      - use get_pkg_data_filename
-        bg_cube_model = CubeBackgroundModel.read(filename)
+        bg_model_1 = CubeBackgroundModel.read(filename)
 
         outfile = 'test_write_bg_cube_model.fits'
-        bg_cube_model.write(outfile)
+        bg_model_1.write(outfile)
 
         # test if values are correct in the saved file: compare both files
-        #TODODELTODO
+        bg_model_2 = CubeBackgroundModel.read(outfile)
+        decimal = 4
+        np.testing.assert_almost_equal(bg_model_2.background.value,
+                                       bg_model_1.background.value, decimal)
+        np.testing.assert_almost_equal(bg_model_2.det_bins.value,
+                                       bg_model_1.det_bins.value, decimal)
+        np.testing.assert_almost_equal(bg_model_2.energy_bins.value,
+                                       bg_model_1.energy_bins.value, decimal)
+        # TODO: clean up after test (remove created files)
+        # TODO: test also write_image
