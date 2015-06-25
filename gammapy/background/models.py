@@ -146,7 +146,7 @@ class CubeBackgroundModel(object):
         data = hdu.data
 
         det_bins_x = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
-        det_bins_y = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
+        det_bins_y = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI'])
         if (det_bins_x == det_bins_y).all():
             det_bins = det_bins_x
         else:
@@ -177,7 +177,7 @@ class CubeBackgroundModel(object):
         background_unit = header['TUNIT7']
         if background_unit in ['1/s/TeV/sr']:
             background_unit = '1 / (s TeV sr)'
-        elif background_unit in ['1/s/MeV/sr']:
+        elif background_unit in ['1/s/MeV/sr', 'MeV-1 s-1 sr-1']:
             background_unit = '1 / (s MeV sr)'
         else:
             raise ValueError("Cannot interpret units ({})".format(background_unit))
@@ -560,8 +560,60 @@ class CubeBackgroundModel(object):
         filename : `~string`
         	name of file for the bg cube
         """
+        # number of fields
+        n_detx = len(self.det_bins) - 1
+        n_dety = len(self.det_bins) - 1
+        n_energy = len(self.energy_bins) - 1
+        n_bg = n_detx*n_dety*n_energy
+
+        # fits format string
+        f_detx = '{}E'.format(n_detx)
+        f_dety = '{}E'.format(n_dety)
+        f_energy = '{}E'.format(n_energy)
+        f_bg = '{}E'.format(n_bg)
+
+        # fits unit string
+        u_detx = '{0.unit:FITS}'.format(self.det_bins)
+        u_dety = '{0.unit:FITS}'.format(self.det_bins)
+        u_energy = '{0.unit:FITS}'.format(self.energy_bins)
+        u_bg = '{0.unit:FITS}'.format(self.background)
+
+        # fits dimension string
+        dim_bg = '({0},{1},{2})'.format(n_detx, n_dety, n_energy)
+
+        # data arrays
+        a_detx_lo = np.array([self.det_bins[:-1].value])
+        a_detx_hi = np.array([self.det_bins[1:].value])
+        a_dety_lo = np.array([self.det_bins[:-1].value])
+        a_dety_hi = np.array([self.det_bins[1:].value])
+        a_energy_lo = np.array([self.energy_bins[:-1].value])
+        a_energy_hi = np.array([self.energy_bins[1:].value])
+        a_bg = np.array([self.background.value.flatten()])
+
+        tbhdu = fits.BinTableHDU.from_columns(
+            [fits.Column(name='DETX_LO', format=f_detx, unit=u_detx, array=a_detx_lo),
+             fits.Column(name='DETX_HI', format=f_detx, unit=u_detx, array=a_detx_hi),
+             fits.Column(name='DETY_LO', format=f_dety, unit=u_dety, array=a_dety_lo),
+             fits.Column(name='DETY_HI', format=f_dety, unit=u_dety, array=a_dety_hi),
+             fits.Column(name='ENERG_LO', format=f_energy, unit=u_energy, array=a_energy_lo),
+             fits.Column(name='ENERG_HI', format=f_energy, unit=u_energy, array=a_energy_hi),
+             fits.Column(name='Bgd', format=f_bg, unit=u_bg, dim=dim_bg, array=a_bg)
+             ])
+        tbhdu.name = 'BACKGROUND'
+        tbhdu.header['E_THRES'] = a_energy_lo.flatten()[0]
+        print('Writing {}'.format(filename))
+        tbhdu.writeto(filename, clobber=True)
+
+
+    def write_image(self, filename):
+        """Write cube background model to fits file as image.
+
+        Parameters
+        ----------
+        filename : `~string`
+        	name of file for the bg cube
+        """
         hdu = fits.ImageHDU(data=self.background.value)
-        # TODO: save binning also!!!!
-        #       and units in fits header!!!!
+        #TODO: store unit somewhere in header??!!!!
         print('Writing {}'.format(filename))
         hdu.writeto(filename, clobber=True)
