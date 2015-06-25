@@ -48,28 +48,33 @@ class TestGaussianBand2D():
         assert isinstance(model, Gaussian1D)
         assert_allclose(model.parameters, [0, -1, 0.4])
 
+
 class TestCubeBackgroundModel():
 
-##    def test_read(self):
-##        # test shape of bg cube when reading a file
-##        filename = 'data/bg_test.fits'
-##        #DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
-##        #filename = DIR + filename
-##        filename = get_pkg_data_filename(filename)
-##        # TODO: this is failing!!!
-##        # maybe because the class is not part of the module?!!!
-##        # Here it works:
-##        # gammapy/irf/tests/test_effective_area.py test_EffectiveAreaTable
-##        # TODO: the test file doesn't have units for the det x,y axes!!!
-##        #        produce correct file (test_write), then come back here!!!
-##        bg_cube_file = CubeBackgroundModel.read(filename)
-##        assert len(bg_cube_file.background.shape) == 3
+    def test_read(self):
+        # test shape of bg cube when reading a file
+        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
+        #filename = 'hist_alt3_az0.fits.gz'
+        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
+        filename = 'data/bg_test.fits'
+        filename = DIR + filename
+        #filename = get_pkg_data_filename(filename)
+        # TODO: this is failing!!!
+        # maybe because the class is not part of the module?!!!
+        # Here it works:
+        # gammapy/irf/tests/test_effective_area.py test_EffectiveAreaTable
+        # TODO: the test file doesn't have units for the det x,y axes!!!
+        #        produce correct file (test_write), then come back here!!!
+        bg_cube_file = CubeBackgroundModel.read(filename)
+        assert len(bg_cube_file.background.shape) == 3
 
 
     def test_image_plot(self):
 
-        DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        filename = 'hist_alt3_az0.fits.gz'
+        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
+        #filename = 'hist_alt3_az0.fits.gz'
+        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
+        filename = 'data/bg_test.fits'
         filename = DIR + filename
         #TODO: change this, when test_read is fixed!!!
         #      - use data/bg_test.fits
@@ -93,8 +98,10 @@ class TestCubeBackgroundModel():
 
     def test_spectrum_plot(self):
 
-        DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        filename = 'hist_alt3_az0.fits.gz'
+        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
+        #filename = 'hist_alt3_az0.fits.gz'
+        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
+        filename = 'data/bg_test.fits'
         filename = DIR + filename
         #TODO: change this, when test_read is fixed!!!
         #      - use data/bg_test.fits
@@ -118,8 +125,10 @@ class TestCubeBackgroundModel():
 
     def test_write(self):
 
-        DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        filename = 'hist_alt3_az0.fits.gz'
+        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
+        #filename = 'hist_alt3_az0.fits.gz'
+        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
+        filename = 'data/bg_test.fits'
         filename = DIR + filename
         #TODO: change this, when test_read is fixed!!!
         #      - use data/bg_test.fits
