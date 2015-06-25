@@ -175,7 +175,7 @@ class CubeBackgroundModel(object):
         energy_bins = Quantity(energy_bins, energy_unit)
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
-        if background_unit in ['1/s/TeV/sr']:
+        if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1']:
             background_unit = '1 / (s TeV sr)'
         elif background_unit in ['1/s/MeV/sr', 'MeV-1 s-1 sr-1']:
             background_unit = '1 / (s MeV sr)'
