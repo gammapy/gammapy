@@ -116,44 +116,6 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
     flux_history_upper_bound = cat_row['Unc_Flux_History'][time_index_start: time_index_end, 1]
     flux_history_lower_bound = abs(flux_history_lower_bound)
 
-    # Change bins with no flux value from nan to zero.
-    for i in range(0, np.size(flux_history_lower_bound)):
-        if np.isnan(flux_history_lower_bound[i]):
-            flux_history_lower_bound[i] = 0
-
-    # Create array of upper limits where no lower bound was recorded.
-    upper_lims_x = np.copy(time_mid)
-
-    upper_lims_y_start = np.copy(flux_history_upper_bound)
-
-    upper_lims_y = np.copy(flux_history)
-
-    idx = np.where(flux_history_lower_bound <= 0)
-
-    upper_lims_x = upper_lims_x[idx]
-
-    upper_lims_y_start = upper_lims_y_start[idx]
-
-    upper_lims_y = upper_lims_y[idx]
-
-    upper_lims_y_end = np.copy(upper_lims_y_start)
-
-    # Scale the size of the arrow to an arbitrary value.
-    upper_lims_y_end *= -0.3
-
-    # Create an array of data points where a lower bound was recorded.
-    idx = np.where(flux_history_lower_bound > 0)
-
-    time_mid = time_mid[idx]
-
-    time_diff = time_diff[idx]
-
-    flux_history = flux_history[idx]
-
-    flux_history_upper_bound = flux_history_upper_bound[idx]
-
-    flux_history_lower_bound = flux_history_lower_bound[idx]
-
     time_mid = (TIME_REF_FERMI + astropy.time.TimeDelta(time_mid, format='sec'))
 
     time_at_bin_start = time_mid - astropy.time.TimeDelta(time_diff, format='sec')
@@ -170,29 +132,31 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
 
     time_diff_at_bin_end = time_at_bin_end - time_mid
 
-    upper_lims_x = (TIME_REF_FERMI
-                    + astropy.time.TimeDelta(upper_lims_x, format='sec')).plot_date
+    # Where a lower bound was recorded.
+    idx1 = np.where(np.isnan(flux_history_lower_bound) == False)
+
+    # Where a lower bound was not recorded.
+    idx2 = np.where(np.isnan(flux_history_lower_bound))
+
+    # Where no lower bound was recorded, set to zero flux.
+    flux_history_lower_bound[idx2] = flux_history[idx2]
 
     # Plot data points and upper limits.
-    plt.errorbar(time_mid, flux_history,
-                 yerr=(flux_history_lower_bound, flux_history_upper_bound),
-                 xerr=(time_diff_at_bin_start, time_diff_at_bin_end),
+    ax.errorbar(time_mid[idx1], flux_history[idx1],
+                 yerr=(flux_history_lower_bound[idx1], flux_history_upper_bound[idx1]),
+                 xerr=(time_diff_at_bin_start[idx1], time_diff_at_bin_end[idx1]),
                  marker='o', elinewidth=1, linewidth=0, color='black')
-    plt.errorbar(upper_lims_x[np.where(upper_lims_y > 0)],
-                 upper_lims_y[np.where(upper_lims_y > 0)],
-                 yerr=(upper_lims_y_end[np.where(upper_lims_y > 0)],
-                       upper_lims_y_start[np.where(upper_lims_y > 0)]),
-                 marker='o', elinewidth=1, linewidth=0, lolims=True, color='black')
-    plt.errorbar(upper_lims_x[np.where(upper_lims_y <= 0)],
-                 upper_lims_y[np.where(upper_lims_y <= 0)],
-                 yerr=(upper_lims_y_end[np.where(upper_lims_y <= 0)],
-                       upper_lims_y_start[np.where(upper_lims_y <= 0)]),
-                 marker=None, elinewidth=1, linewidth=0, lolims=True, color='black')
-    plt.xlabel('date')
-    plt.ylabel('flux [ph/cm^2/s]')
-    plt.gca().xaxis_date()
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=6))
+    ax.errorbar(time_mid[idx2], flux_history[idx2],
+                 yerr=(flux_history_lower_bound[idx2], flux_history_upper_bound[idx2]),
+                 marker=None, elinewidth=1, linewidth=0, color='black')
+    ax.scatter(time_mid[idx2], (flux_history[idx2] + flux_history_upper_bound[idx2]),
+                marker='v', color='black')
+    ax.set_xlabel('date')
+    ax.set_ylabel('flux [ph/cm^2/s]')
+    ax.set_ylim(ymin=0)
+    ax.xaxis_date()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
+    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
     plt.gcf().autofmt_xdate()
 
     return ax
