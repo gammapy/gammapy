@@ -157,6 +157,6 @@ def plot_fermi_3fgl_light_curve(name_3fgl, time_start=None, time_end=None, ax=No
     ax.xaxis_date()
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
     ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
-    plt.gcf().autofmt_xdate()
+    ax.figure.autofmt_xdate()
 
     return ax
