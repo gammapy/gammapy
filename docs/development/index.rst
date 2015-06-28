@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _development:
 
 ***********
@@ -392,3 +394,25 @@ an optional dependency we use for speed, or whether we use the much more establi
 
 At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
 and Numba is not used yet.
+
+
+What belongs in Gammapy and what doesn't?
+-----------------------------------------
+
+The scope of Gammapy is currently not very well defined ... if in doubt whether it makes sense to
+add something, please ask on the mailing list or via a Github issue.
+
+Roughly the scope is high-level science analysis of gamma-ray data, starting with event lists
+after gamma-hadron separation and corresponding IRFs, as well as source and source population modeling.
+
+For lower-level data processing (calibration, event reconstruction, gamma-hadron separation)
+there's `ctapipe`_. There's some functionality (event list processing, PSF or background model building,
+sensitivity computations ...) that could go in either ctapipe or Gammapy and we'll have to try
+and avoid duplication.
+
+SED modeling code belongs in `naima`_.
+
+A lot of code that's not gamma-ray specific belongs in other packages
+(e.g. `Scipy`_, `Astropy`_, other Astropy-affiliated packages, `Sherpa`_).
+We currently have quite a bit of code that should be moved "upstream" or already has been,
+but the Gammapy code hasn't been adapted yet.
