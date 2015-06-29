@@ -94,7 +94,7 @@ class DataStoreIndexTable(Table):
             self['GLON'] = skycoord.l.degree
             self['GLAT'] = skycoord.b.degree
 
-    def info(self):
+    def summary(self):
         ss = 'Data store index table summary:\n'
         ss += 'Number of observations: {}\n'.format(len(self))
         obs_id = self['OBS_ID']

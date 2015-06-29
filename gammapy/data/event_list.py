@@ -48,7 +48,7 @@ class EventList(Table):
     - `galactic` for ``GLON``, ``GLAT``
     """
     @property
-    def info(self):
+    def summary(self):
         """Summary info string."""
         s = '---> Event list info:\n'
         # TODO: Which telescope?

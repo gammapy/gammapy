@@ -19,7 +19,7 @@ class GoodTimeIntervals(Table):
         super(GoodTimeIntervals, self).__init__(*args, **kwargs)
 
     @property
-    def info(self):
+    def summary(self):
         """Summary info string."""
         s = '---> Good time interval (GTI) info:\n'
         s += '- Number of GTIs: {}\n'.format(len(self))
