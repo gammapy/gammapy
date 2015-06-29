@@ -94,21 +94,21 @@ class ObservationTable(Table):
     def filter_observations_var_range(self, selection_variable, value_min, value_max, inverted):
         """Make an observation table, applying some selection.
 
-        Generic function to apply a 1D box selection [min, max) to a table on any variable.
+        Generic function to apply a 1D box selection (min, max) to a table on any variable.
         TODO: not working for zenith angle!!!!
-              and if it would: [ , ) selection is applied ( , ], right?!!!
+              and if it would: ( , ) selection is applied like [ , ], right?!!!
               (this [ , ) thing is also tricky for circle selections!!!) -> remove the "="?? (i.e. do a ( , ) selection?!!!))!!!!
 
         Parameters
         ----------
         selection_variable : string
             name of variable to apply a cut (it should exist on the table)
-        value_min : ???!!!
-            minimum value
-        value_max : ???!!!
-            maximum value
+        value_min : TBD
+            minimum value; type should be consistent with selection_variable
+        value_max : TBD
+            maximum value; type should be consistent with selection_variable
         inverted : bool
-            invert selection: keep all entries outside the [min, max) range
+            invert selection: keep all entries outside the (min, max) range
 
         Returns
         -------
@@ -117,12 +117,22 @@ class ObservationTable(Table):
         obs_table = self
         # check that variable exists on the table
         if selection_variable not in obs_table.keys():
-            raise KeyError('Key not present in table: {}'.format(selection_variable))
-        value = obs_table[selection_variable]
+            # some values are still recognized
+            if selection_variable not in ['zenith']:
+                raise KeyError('Key not present in table: {}'.format(selection_variable))
+            elif selection_variable == 'zenith':
+                # transform zenith to altitude
+                selection_variable = 'ALT'
+                zenith_min = value_min
+                zenith_max = value_max
+                value_min = Angle(90., 'degree') - zenith_max
+                value_max = Angle(90., 'degree') - zenith_min
+        # read values into a quantity in case units have to be taken into account
+        value = Quantity(obs_table[selection_variable])
         if not inverted:
-            mask = (value_min <= value) & (value < value_max)
+            mask = (value_min < value) & (value < value_max)
         else:
-            mask = (value_min > value) | (value >= value_max)
+            mask = (value_min >= value) | (value >= value_max)
         obs_table = obs_table[mask]
         return obs_table
 
@@ -171,8 +181,8 @@ class ObservationTable(Table):
                 inverted = selection['inverted']
 
             if selection_region_shape == 'box':
-                value_min = selection['min']
-                value_max = selection['max']
+                value_min = selection['value_min']
+                value_max = selection['value_max']
                 obs_table = obs_table.filter_observations_var_range(selection_variable, value_min, value_max, inverted)
             elif selection_region_shape == 'circle':
                 value_min = selection['center'] - selection['radius']
@@ -201,6 +211,7 @@ class ObservationTable(Table):
 ##
 ##1D
 ##2D -> sky_box, sky_circle
+## time_box? (time_circle?)
 ##
 ##inverted?
 
