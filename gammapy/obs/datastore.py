@@ -2,8 +2,8 @@
 import os
 import numpy as np
 from astropy.table import Table
-from astropy.coordinates import SkyCoord, Angle
-from ..catalog import select_sky_box, skycoord_from_table
+from astropy.coordinates import SkyCoord
+from ..catalog import skycoord_from_table
 from ..obs import ObservationTable
 
 __all__ = ['DataStore',
@@ -53,7 +53,7 @@ class DataStoreIndexTable(Table):
     The index table is a FITS file that stores which observations
     are available and what their most important parameters are.
 
-    This makes it possible to select observation of interest and find out
+    This makes it possible to select observations of interest and find out
     what data is available without opening up thousands of FITS files
     that contain the event list and IRFs and have similar information in the
     FITS header.
@@ -168,7 +168,7 @@ class DataStore(object):
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `~gammapy.obs.ObservationTable`
             Table summarising info about files.
         """
         if observation_table is None:
@@ -184,7 +184,7 @@ class DataStore(object):
                 row['filename'] = filename
                 data.append(row)
 
-        return Table(data=data, names=['OBS_ID', 'filetype', 'filename'])
+        return ObservationTable(data=data, names=['OBS_ID', 'filetype', 'filename'])
 
     def make_summary_plots(self):
         """Make some plots summarising the available observations.
@@ -226,19 +226,18 @@ class DataStore(object):
     def make_observation_table(self, selection=None):
         """Make an observation table, applying some selection.
 
-        TODO: implement a more flexible scheme to make box cuts
-        on any fields (including e.g. OBSID or TIME
-        Not sure what a simple yet powerful method to implement this is!?
+        Wrapper function for `~gammapy.obs.Observationtable.filter_observations`.
 
         Parameters
         ----------
-        selection : TODO
-            TODO: describe me
+        selection : `~dict`
+            Dictionary with a few keywords for applying selection cuts.
+            TODO: add doc with allowed selection cuts!!! and link here!!!
 
         Returns
         -------
         table : `~gammapy.obs.ObservationTable`
-            Observation table
+            Observation table with observatiosn passing the selection.
 
         Examples
         --------
@@ -248,23 +247,12 @@ class DataStore(object):
         """
         table = self.index_table
 
+        table = ObservationTable(table)
+
         if selection:
-            selection_region_shape = selection['shape']
+            table = table.filter_observations(selection)
 
-            if selection_region_shape == 'box':
-                lon = selection['lon']
-                lat = selection['lat']
-                border = selection['border']
-                lon = Angle([lon[0] - border, lon[1] + border], 'deg')
-                lat = Angle([lat[0] - border, lat[1] + border], 'deg')
-                # print(lon, lat)
-                table = select_sky_box(table,
-                                       lon_lim=lon, lat_lim=lat,
-                                       frame=selection['frame'])
-            else:
-                raise ValueError('Invalid selection type: {}'.format(selection_region_shape))
-
-        return ObservationTable(table)
+        return table
 
     def check_available_event_lists(self, logger=None):
         """Check if all event lists are available.

@@ -28,6 +28,9 @@ def test_make_test_observation_table():
     # test: assert if the length of the table is n_obs:
     assert len(obs_table) == n_obs
 
+    # test: assert if the header 'OBSERVATORY_NAME' is observatory_name
+    assert obs_table.meta['OBSERVATORY_NAME'] == observatory_name
+
     # test: assert if the TIME_START > 0:
     assert (obs_table['TIME_START'] > 0).all()
 

@@ -108,10 +108,11 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     dateref = Time('2010-01-01 00:00:00', format='iso', scale='utc')
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
-    # header
-    header = {'OBSERVATORY_NAME': observatory_name,
-              'MJDREFI': dateref_mjd_int, 'MJDREFF': dateref_mjd_fra}
-    ObservationTable.meta = header
+    # define table header
+    obs_table.meta['OBSERVATORY_NAME'] = observatory_name
+    obs_table.meta['MJDREFI'] = dateref_mjd_int
+    obs_table.meta['MJDREFF'] = dateref_mjd_fra
+    header = obs_table.meta
 
     # obs id
     obs_id = np.arange(n_obs_start, n_obs_start + n_obs)
