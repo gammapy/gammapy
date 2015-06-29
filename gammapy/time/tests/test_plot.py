@@ -2,7 +2,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from astropy.tests.helper import pytest
-from ..plot import plot_time_difference_distribution
+from astropy.tests.helper import remote_data
+from ..plot import plot_fermi_3fgl_light_curve
 
 try:
     import matplotlib
@@ -14,3 +15,12 @@ except ImportError:
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_plot_time_difference_distribution():
     pass
+
+
+# TODO: put 3FGL in gammapy-extra for testing ...
+@remote_data
+@pytest.mark.skipif('not HAS_MATPLOTLIB')
+def test_plot_fermi_3fgl_light_curve():
+    plot_fermi_3fgl_light_curve('3FGL J0349.9-2102',
+                                time_start='2010-01-01',
+                                time_end='2015-02-02')
