@@ -189,9 +189,6 @@ def test_cube_to_image():
     assert_allclose(case2.data, layer.data)
 
 
-# TODO: remove xfail marker when this issue in Astropy is fixed:
-# https://github.com/astropy/astropy/issues/3891#issuecomment-116520445
-@pytest.mark.xfail
 def test_wcs_histogram2d():
 
     # A simple test case that can by checked by hand:
