@@ -91,6 +91,42 @@ class ObservationTable(Table):
         return self[indices]
 
 
+    def filter_observations_var_range(self, selection_variable, value_min, value_max, inverted):
+        """Make an observation table, applying some selection.
+
+        Generic function to apply a 1D box selection [min, max) to a table on any variable.
+        TODO: not working for zenith angle!!!!
+              and if it would: [ , ) selection is applied ( , ], right?!!!
+              (this [ , ) thing is also tricky for circle selections!!!) -> remove the "="?? (i.e. do a ( , ) selection?!!!))!!!!
+
+        Parameters
+        ----------
+        selection_variable : string
+            name of variable to apply a cut (it should exist on the table)
+        value_min : ???!!!
+            minimum value
+        value_max : ???!!!
+            maximum value
+        inverted : bool
+            invert selection: keep all entries outside the [min, max) range
+
+        Returns
+        -------
+        obs_table : `~gammapy.obs.ObservationTable`
+            observation table with observations passing the selection        """
+        obs_table = self
+        # check that variable exists on the table
+        if selection_variable not in obs_table.keys():
+            raise KeyError('Key not present in table: {}'.format(selection_variable))
+        value = obs_table[selection_variable]
+        if not inverted:
+            mask = (value_min <= value) & (value < value_max)
+        else:
+            mask = (value_min > value) | (value >= value_max)
+        obs_table = obs_table[mask]
+        return obs_table
+
+        
     def filter_observations(self, selection=None):
         """Make an observation table, applying some selection.
 
@@ -101,13 +137,13 @@ class ObservationTable(Table):
         Parameters
         ----------
         selection : `~dict`
-            Dictionary with a few keywords for applying selection cuts.
+            dictionary with a few keywords for applying selection cuts
             TODO: add doc with allowed selection cuts!!! and link here!!!
 
         Returns
         -------
-        table : `~gammapy.obs.ObservationTable`
-            Observation table with observatiosn passing the selection.
+        obs_table : `~gammapy.obs.ObservationTable`
+            observation table with observations passing the selection
 
         Examples
         --------
@@ -128,8 +164,21 @@ class ObservationTable(Table):
 
         if selection:
             selection_region_shape = selection['shape']
+            if 'variable' in selection.keys():
+                selection_variable = selection['variable']
+            inverted = False
+            if 'inverted' in selection.keys():
+                inverted = selection['inverted']
 
             if selection_region_shape == 'box':
+                value_min = selection['min']
+                value_max = selection['max']
+                obs_table = obs_table.filter_observations_var_range(selection_variable, value_min, value_max, inverted)
+            elif selection_region_shape == 'circle':
+                value_min = selection['center'] - selection['radius']
+                value_max = selection['center'] + selection['radius']
+                obs_table = obs_table.filter_observations_var_range(selection_variable, value_min, value_max, inverted)
+            elif selection_region_shape == 'sky_box':
                 lon = selection['lon']
                 lat = selection['lat']
                 border = selection['border']
@@ -139,11 +188,20 @@ class ObservationTable(Table):
                 obs_table = select_sky_box(obs_table,
                                            lon_lim=lon, lat_lim=lat,
                                            frame=selection['frame'])
+            elif selection_region_shape == 'sky_circle':
+                raise NotImplemented
             else:
                 raise ValueError('Invalid selection type: {}'.format(selection_region_shape))
 
 #TODO: should I take already Angle objects as parameters in the selection???!!!!!!!!!!!!!!!
 
 
+##box (min, max)
+##circle (center, radius)
+##
+##1D
+##2D -> sky_box, sky_circle
+##
+##inverted?
 
         return obs_table
