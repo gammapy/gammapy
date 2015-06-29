@@ -8,6 +8,9 @@ __all__ = ['time_ref_from_dict',
            'time_relative_to_ref',
            ]
 
+# TODO: implement and document this properly.
+# see https://github.com/gammapy/gammapy/issues/284
+TIME_REF_FERMI = Time('2001-01-01T00:00:00')
 
 def time_ref_from_dict(meta):
     """Calculate the time reference from metadata.
