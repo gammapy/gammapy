@@ -469,9 +469,9 @@ class EventListDataset(object):
     def info(self):
         """Summary info string."""
         s = '===> Event list dataset information:\n'
-        s += self.event_list.info
-        s += self.telescope_array.info
-        s += self.good_time_intervals.info
+        s += self.event_list.summary
+        s += self.telescope_array.summary
+        s += self.good_time_intervals.summary
         s += '- telescopes: {}\n'.format(len(self.telescope_array))
         s += '- good time intervals: {}\n'.format(len(self.good_time_intervals))
         return s
