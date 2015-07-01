@@ -2,13 +2,14 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, remote_data
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from ...background.models import GaussianBand2D, CubeBackgroundModel
+from ... import datasets
 
 
 try:
@@ -51,34 +52,21 @@ class TestGaussianBand2D():
 
 class TestCubeBackgroundModel():
 
+    @remote_data
     def test_read(self):
+        
         # test shape of bg cube when reading a file
-        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        #filename = 'hist_alt3_az0.fits.gz'
-        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
-        filename = 'data/bg_test.fits'
-        filename = DIR + filename
-        #filename = get_pkg_data_filename(filename)
-        # TODO: this is failing!!!
-        # maybe because the class is not part of the module?!!!
-        # Here it works:
-        # gammapy/irf/tests/test_effective_area.py test_EffectiveAreaTable
-        # TODO: the test file doesn't have units for the det x,y axes!!!
-        #        produce correct file (test_write), then come back here!!!
+        filename = '../test_datasets/background/bg_cube_model_test.fits'
+        filename = datasets.get_path(filename, location='remote')
         bg_cube_file = CubeBackgroundModel.read(filename)
         assert len(bg_cube_file.background.shape) == 3
 
 
+    @remote_data
     def test_image_plot(self):
 
-        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        #filename = 'hist_alt3_az0.fits.gz'
-        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
-        filename = 'data/bg_test.fits'
-        filename = DIR + filename
-        #TODO: change this, when test_read is fixed!!!
-        #      - use data/bg_test.fits
-        #      - use get_pkg_data_filename
+        filename = '../test_datasets/background/bg_cube_model_test.fits'
+        filename = datasets.get_path(filename, location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename)
 
         # test bg rate values plotted for image plot of energy bin conaining E = 2 TeV
@@ -96,16 +84,11 @@ class TestCubeBackgroundModel():
         # TODO: clean up after test (remove created files)
 
 
+    @remote_data
     def test_spectrum_plot(self):
 
-        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        #filename = 'hist_alt3_az0.fits.gz'
-        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
-        filename = 'data/bg_test.fits'
-        filename = DIR + filename
-        #TODO: change this, when test_read is fixed!!!
-        #      - use data/bg_test.fits
-        #      - use get_pkg_data_filename
+        filename = '../test_datasets/background/bg_cube_model_test.fits'
+        filename = datasets.get_path(filename, location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename)
 
         # test bg rate values plotted for spectrum plot of detector bin conaining det (0, 0) deg (center)
@@ -123,17 +106,12 @@ class TestCubeBackgroundModel():
         # TODO: clean up after test (remove created files)
 
 
+    @remote_data
     def test_write(self):
 
-        #DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-        #filename = 'hist_alt3_az0.fits.gz'
-        DIR = '/home/mapaz/astropy/development_code/gammapy/gammapy/background/tests/'
-        filename = 'data/bg_test.fits'
-        filename = DIR + filename
-        #TODO: change this, when test_read is fixed!!!
-        #      - use data/bg_test.fits
-        #      - use get_pkg_data_filename
-        bg_model_1 = CubeBackgroundModel.read(filename)
+        filename = '../test_datasets/background/bg_cube_model_test.fits'
+        filename = datasets.get_path(filename, location='remote')
+        bg_model_1= CubeBackgroundModel.read(filename)
 
         outfile = 'test_write_bg_cube_model.fits'
         bg_model_1.write(outfile)
