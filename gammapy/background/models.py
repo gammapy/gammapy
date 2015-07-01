@@ -131,12 +131,12 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         filename : `~string`
-        	name of file with the bg cube
+            name of file with the bg cube
 
         Returns
         -------
-        bg_cube : `~gammapy.models.CubeBackgroundModel
-		bg model cube object
+        bg_cube : `~gammapy.models.CubeBackgroundModel`
+            bg model cube object
         """
         # TODO: should we use the Table class here to read the data?
         hdu_list = fits.open(filename)
@@ -194,7 +194,7 @@ class CubeBackgroundModel(object):
         Returns
         -------
         im_extent : `~astropy.coordinates.Angle`
-        	array of bins with the image extent
+            array of bins with the image extent
         """
         b = self.det_bins.degree
         return Angle([b[0], b[-1], b[0], b[-1]], 'degree')
@@ -207,7 +207,7 @@ class CubeBackgroundModel(object):
         Returns
         -------
         spec_extent : `~astropy.units.Quantity`
-        	array of bins with the spectrum extent
+            array of bins with the spectrum extent
         """
         b = self.energy_bins.to('TeV')
         return Quantity([b[0], b[-1]], 'TeV')
@@ -220,7 +220,7 @@ class CubeBackgroundModel(object):
         Returns
         -------
         det_edges_centers : `~astropy.coordinates.Angle`
-        	array of bins with the image bin centers
+            array of bins with the image bin centers
         """
         det_edges_low = self.det_bins[:-1]
         det_edges_high = self.det_bins[1:]
@@ -235,7 +235,7 @@ class CubeBackgroundModel(object):
         Returns
         -------
         energy_bin_centers : `~astropy.units.Quantity`
-        	array of bins with the spectrum bin centers
+            array of bins with the spectrum bin centers
         """
         energy_edges_low = self.energy_bins[:-1]
         energy_edges_high = self.energy_bins[1:]
@@ -249,14 +249,14 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         det : `~astropy.coordinates.Angle`
-        	det (X, Y) pair to search for
+            det (X, Y) pair to search for
 
         Returns
         -------
         bin_pos : `~int`
-		index of the det bin containing the specified det (X, Y) pair
+            index of the det bin containing the specified det (X, Y) pair
         bin_edges : `~astropy.units.Quantity`
-		det bin edges (x_lo, x_hi, y_lo, y_hi)
+            det bin edges (x_lo, x_hi, y_lo, y_hi)
         """
         # check shape of det: only 1 pair is accepted
         nvalues = len(det.flatten())
@@ -293,14 +293,14 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-        	energy to search for
+            energy to search for
 
         Returns
         -------
         bin_pos : `~int`
-		index of the energy bin containing the specified energy
+            index of the energy bin containing the specified energy
         bin_edges : `~astropy.units.Quantity`
-		energy bin edges [E_min, E_max)
+            energy bin edges [E_min, E_max)
         """
         # check shape of energy: only 1 value is accepted
         nvalues = len(energy.flatten())
@@ -339,15 +339,15 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`, optional
-        	energy of bin to plot the bg model
+            energy of bin to plot the bg model
       	
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
-		figure with image of bin of the bg model for the
+            figure with image of bin of the bg model for the
                 selected energy value (if any), optional
         axes : `~matplotlib.pyplot.axes`
-        	axes of the figure, optional
+            axes of the figure, optional
 
         """
         import matplotlib.pyplot as plt
@@ -450,15 +450,15 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         det : `~astropy.units.Quantity`, optional
-        	det (X,Y) pair of bin to plot the bg model
+            det (X,Y) pair of bin to plot the bg model
       	
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
-		figure with image of bin of the bg model for the
-                selected det (X,Y) pair (if any), optional
+            figure with image of bin of the bg model for the
+            selected det (X,Y) pair (if any), optional
         axes : `~matplotlib.pyplot.axes`
-        	axes of the figure, optional
+            axes of the figure, optional
         """
         import matplotlib.pyplot as plt
 
@@ -558,7 +558,7 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         filename : `~string`
-        	name of file for the bg cube
+            name of file for the bg cube
         """
         # number of fields
         n_detx = len(self.det_bins) - 1
@@ -611,7 +611,7 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         filename : `~string`
-        	name of file for the bg cube
+            name of file for the bg cube
         """
         hdu = fits.ImageHDU(data=self.background.value)
         #TODO: store unit somewhere in header??!!!!
