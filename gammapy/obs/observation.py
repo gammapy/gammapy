@@ -159,7 +159,7 @@ class ObservationTable(Table):
         obs_table = obs_table[mask]
         return obs_table
 
-        
+
     def filter_observations(self, selection=None):
         """Make an observation table, applying some selection.
 
@@ -169,18 +169,18 @@ class ObservationTable(Table):
             - `shape`: ``box``, ``circle``, ``sky_box``, ``sky_circle``
 
                 - ``box`` and ``circle`` are 1D selection criteria acting on any
-                variable defined in the observation table, specified using the
-                `variable` keyword
+                  variable defined in the observation table, specified using the
+                  `variable` keyword
 
                     - `box` is an interval delimited by the `value_min` and
-                    `value_max` parameters
+                      `value_max` parameters
 
                     - `circle` is a centered interval defined by the `center`
-                    and `radius` parameters
+                      and `radius` parameters
 
                 - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
-                on sky coordinates, similar to ``box`` and ``circle``
-                TODO: finish implementing and documenting sky_box and sky_circle!!!
+                  on sky coordinates, similar to ``box`` and ``circle``
+                  TODO: finish implementing and documenting sky_box and sky_circle!!!
 
             In all cases, the selection can be inverted by activating the
             `inverted` flag, in which case, the filter is applied to keep all
@@ -205,6 +205,7 @@ class ObservationTable(Table):
         >>> selection = dict(shape='sky_box', frame='galactic',
         ...                  lon=(-100, 50), lat=(-5, 5), border=2)
         >>> filtered_obs_table = obs_table.filter_observations(selection)
+        TODO: update example (or remove it, since we have an exhaustive doc?) !!!!!!!!!!!!!!!!!!!!!!
         """
         obs_table = self
 
