@@ -50,6 +50,7 @@ Pull requests
 - Add infos how to handle times in Gammapy [#285] (Christoph Deil)
 - Function to plot Fermi 3FGL light curves [#286] (Jonathan Harris)
 - Add EffectiveAreaTable exporter to EffectiveAreaTable2D [#276] (Johannes King)
+- Add interface to HESS FitSpectrum JSON output [#296] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 
