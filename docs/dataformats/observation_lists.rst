@@ -29,6 +29,7 @@ AZ                average azimuth angle during the observation                  
 ALT               average altitude angle during the observation                                no
 MUON_EFFICIENCY   average muon efficiency of the telescopes                                    yes?
 TIME_START        start time of the observation stored as number of seconds after [MET]_       yes?
+                  or as absolute times in UTC (see header keyword `TIME FORMAT`)
 TIME_STOP         end time of the observation in the same format as TIME_START                 no
 TIME_OBSERVATION  duration of the observation                                                  no
 TIME_LIVE         duration of the observation without dead time                                no
@@ -56,6 +57,7 @@ MJDREFI           reference time: integer value in mean julian days; details in 
                   :ref:`time_handling`.
 MJDREFF           reference time: fraction of integer value defined in MJDREFI; details in     yes?
                   :ref:`time_handling`.
+TIME_FORMAT       format in which times are stored: `absolute` (UTC) or `relative` ([MET]_)    yes?
 ================  ===========================================================================  =========
 
 Extra user-defined header entries are allowed; Gammapy will ignore them.

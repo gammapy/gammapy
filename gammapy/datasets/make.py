@@ -75,18 +75,30 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     return psf
 
 
-def make_test_observation_table(observatory_name, n_obs, debug=False,
+def make_test_observation_table(observatory_name, n_obs,
+ datestart=None, dateend=None, debug=False,
                                 random_state='random-seed'):
     """Make a test observation table.
 
     For the moment, only random observation tables are created.
+    If `datestart` and `dateend` are specified, the starting time
+    of the observations will be restricted to the specified interval.
+    These parameters are interpreted as date, the precise hour of the
+    day is ignored, unless the end date is closer than 1 day to the
+    starting date, in which case, the precise time of the day is also
+    considered.
 
     Parameters
     ----------
     observatory_name : str
-        name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
+        name of the observatory; a list of choices is given in
+        `~gammapy.obs.observatory_locations`
     n_obs : int
         number of observations for the obs table
+    datestart : `~astropy.time.Time`, optional
+    	starting date for random generation of observation start time
+    dateend : `~astropy.time.Time`, optional
+    	ending date for random generation of observation start time
     debug : bool, optional
         show UTC times instead of seconds after the reference
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
@@ -112,6 +124,12 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     obs_table.meta['OBSERVATORY_NAME'] = observatory_name
     obs_table.meta['MJDREFI'] = dateref_mjd_int
     obs_table.meta['MJDREFF'] = dateref_mjd_fra
+    if debug:
+        # show the observation times in UTC
+        obs_table.meta['TIME_FORMAT'] = 'absolute'
+    else:
+        # show the observation times in seconds after the reference
+        obs_table.meta['TIME_FORMAT'] = 'relative'
     header = obs_table.meta
 
     # obs id
@@ -127,31 +145,37 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     obs_table['TIME_LIVE'] = time_live
 
     # start time
-    # random points between the start of 2010 and the end of 2014
-    # using the start of 2010 as a reference time for the header of the table
-    # observations restrict to night time
-    # considering start of astronomical day at midday: implicit in setting the
-    # start of the night, when generating random night hours
-    datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
-    dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
+    #  - random points between the start of 2010 and the end of 2014 (unless
+    # otherwise specified)
+    #  - using the start of 2010 as a reference time for the header of the table
+    #  - observations restrict to night time (only if specified time interval is
+    # more than 1 day)
+    #  - considering start of astronomical day at midday: implicit in setting
+    # the start of the night, when generating random night hours
+    if datestart == None:
+        datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
+    if dateend == None:
+        dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
     time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
     time_start = Time(time_start, format='mjd', scale='utc')
 
-    # keep only the integer part (i.e. the day, not the fraction of the day)
-    time_start_f, time_start_i = np.modf(time_start.mjd)
-    time_start = Time(time_start_i, format='mjd', scale='utc')
+    #check if time interval selected is more than 1 day
+    if (dateend - datestart).jd > 1.:
+        # keep only the integer part (i.e. the day, not the fraction of the day)
+        time_start_f, time_start_i = np.modf(time_start.mjd)
+        time_start = Time(time_start_i, format='mjd', scale='utc')
 
-    # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
-    # time for the last run to finish
-    night_start = Quantity(22., 'hour')
-    night_duration = Quantity(5.5, 'hour')
-    hour_start = random_state.uniform(night_start.value,
-                                      night_start.value + night_duration.value,
-                                      len(obs_id))
-    hour_start = Quantity(hour_start, 'hour')
+        # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
+        # time for the last run to finish
+        night_start = Quantity(22., 'hour')
+        night_duration = Quantity(5.5, 'hour')
+        hour_start = random_state.uniform(night_start.value,
+                                 night_start.value + night_duration.value,
+                                 len(obs_id))
+        hour_start = Quantity(hour_start, 'hour')
 
-    # add night hour to integer part of MJD
-    time_start += hour_start
+        # add night hour to integer part of MJD
+        time_start += hour_start
 
     if debug:
         # show the observation times in UTC
