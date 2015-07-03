@@ -102,20 +102,26 @@ def _make_bin_edges_array(lo, hi):
 class CubeBackgroundModel(object):
     """Cube background model.
 
-    TODO: this is a prototype that can only read and plot a cube.
+    Container class for cube background model (X, Y, energy).
+    (X, Y) are detector coordinates (a.k.a. nominal system).
+    The class hass methods for reading a model from a fits file,
+    write a model to a fits file and plot the models.
 
     Parameters
     ----------
-    det_bins : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high). X, Y are equivalent.
+    detx_bins : `~astropy.coordinates.Angle`
+        Spatial bin edges vector (low and high). X coordinate.
+    dety_bins : `~astropy.coordinates.Angle`
+        Spatial bin edges vector (low and high). Y coordinate.
     energy_bins : `~astropy.units.Quantity`
         Energy bin edges vector (low and high).
     background : `~astropy.units.Quantity`
     	Background cube in (energy, X, Y) format.
     """
 
-    def __init__(self, det_bins, energy_bins, background):
-        self.det_bins = det_bins
+    def __init__(self, detx_bins, dety_bins, energy_bins, background):
+        self.detx_bins = detx_bins
+        self.dety_bins = dety_bins
         self.energy_bins = energy_bins
 
         # TODO: what's the axes order?
@@ -145,27 +151,27 @@ class CubeBackgroundModel(object):
         header = hdu.header
         data = hdu.data
 
-        det_bins_x = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
-        det_bins_y = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI'])
-        if (det_bins_x == det_bins_y).all():
-            det_bins = det_bins_x
+        # get det X, Y binning
+        detx_bins = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
+        dety_bins = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI'])
+        if header['TUNIT1'] == header['TUNIT2']:
+            detx_unit = header['TUNIT1']
         else:
-            raise ValueError(
-                "Det bins not matching for x and y ({0}, {1}); is detector not simmetric?".format(
-                    det_bins_x, det_bins_y))
-        if header['TUNIT1'] == header['TUNIT2'] == header['TUNIT3'] == header['TUNIT4']:
-            det_unit = header['TUNIT1']
+            raise ValueError("Detector x units not matching ({0}, {1})"
+                             .format(header['TUNIT1'], header['TUNIT2']))
+        if header['TUNIT3'] == header['TUNIT4']:
+            dety_unit = header['TUNIT3']
         else:
-            raise ValueError("Detector x, y units not matching ({0}, {1}, {2}, {3})"
-                             .format(header['TUNIT1'], header['TUNIT2'], header['TUNIT3'], header['TUNIT4']))
-        #det_bins = Angle(det_bins, 'degree')
-        #det_bins = Angle(det_bins, 'radian')
-        det_bins = Angle(det_bins, det_unit)
-        # TODO: SPATIAL UNITS HARD CODED!!! but detx/y units don't appear in the fits file?!!! -> ~solved (keep reading)
-        #       bei M.Mayer Dateien ja, bei der CTA Beispiel nein (und ich denke es ist in rad)
-        # TODO: edit the example, save it with units, and use it as the test file
-        #       (after checking for consistency with original file)!!!
+            raise ValueError("Detector y units not matching ({0}, {1})"
+                             .format(header['TUNIT3'], header['TUNIT4']))
+        if not detx_unit == dety_unit:
+            ss = "This is odd: detector x and y units not matching"
+            ss += "({0}, {1})".format(detx_unit, dety_unit)
+            raise ValueError(ss)
+        detx_bins = Angle(detx_bins, detx_unit)
+        dety_bins = Angle(dety_bins, dety_unit)
 
+        # get energy binning
         energy_bins = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
         if header['TUNIT5'] == header['TUNIT6']:
             energy_unit = header['TUNIT5']
@@ -173,6 +179,9 @@ class CubeBackgroundModel(object):
             raise ValueError("Energy units not matching ({0}, {1})"
                              .format(header['TUNIT5'], header['TUNIT6']))
         energy_bins = Quantity(energy_bins, energy_unit)
+
+        # get background data
+        # TODO: again: what's the axes order?
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
         if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1']:
@@ -183,7 +192,8 @@ class CubeBackgroundModel(object):
             raise ValueError("Cannot interpret units ({})".format(background_unit))
         background = Quantity(background, background_unit)
 
-        return CubeBackgroundModel(det_bins=det_bins,
+        return CubeBackgroundModel(detx_bins=detx_bins,
+                                   dety_bins=dety_bins,
                                    energy_bins=energy_bins,
                                    background=background)
 
@@ -196,8 +206,9 @@ class CubeBackgroundModel(object):
         im_extent : `~astropy.coordinates.Angle`
             array of bins with the image extent
         """
-        b = self.det_bins.degree
-        return Angle([b[0], b[-1], b[0], b[-1]], 'degree')
+        bx = self.detx_bins.degree
+        by = self.dety_bins.degree
+        return Angle([bx[0], bx[-1], by[0], by[-1]], 'degree')
 
 
     @property
@@ -222,10 +233,13 @@ class CubeBackgroundModel(object):
         det_edges_centers : `~astropy.coordinates.Angle`
             array of bins with the image bin centers
         """
-        det_edges_low = self.det_bins[:-1]
-        det_edges_high = self.det_bins[1:]
-        det_edges_centers = (det_edges_low + det_edges_high)/2.
-        return Angle([det_edges_centers, det_edges_centers])
+        detx_edges_low = self.detx_bins[:-1]
+        detx_edges_high = self.detx_bins[1:]
+        detx_edges_centers = (detx_edges_low + detx_edges_high)/2.
+        dety_edges_low = self.dety_bins[:-1]
+        dety_edges_high = self.dety_bins[1:]
+        dety_edges_centers = (dety_edges_low + dety_edges_high)/2.
+        return Angle([detx_edges_centers, dety_edges_centers])
 
 
     @property
@@ -270,18 +284,21 @@ class CubeBackgroundModel(object):
             print("Specified det {0} is outside the boundaries {1}.".format(det, det_extent))
             raise ValueError
 
-        det_edges_low = self.det_bins[:-1]
-        det_edges_high = self.det_bins[1:]
-        detx_mask = (det_edges_low <= det[0]) & (det[0] < det_edges_high)
-        dety_mask = (det_edges_low <= det[1]) & (det[1] < det_edges_high)
-        bin_ids = np.arange(len(self.det_bins)-1)
-        bin_pos_x = bin_ids[detx_mask]
-        bin_pos_y = bin_ids[dety_mask]
+        detx_edges_low = self.detx_bins[:-1]
+        detx_edges_high = self.detx_bins[1:]
+        dety_edges_low = self.dety_bins[:-1]
+        dety_edges_high = self.dety_bins[1:]
+        detx_mask = (detx_edges_low <= det[0]) & (det[0] < detx_edges_high)
+        dety_mask = (dety_edges_low <= det[1]) & (det[1] < dety_edges_high)
+        binx_ids = np.arange(len(self.detx_bins)-1)
+        biny_ids = np.arange(len(self.dety_bins)-1)
+        bin_pos_x = binx_ids[detx_mask]
+        bin_pos_y = biny_ids[dety_mask]
         bin_pos = np.array([bin_pos_x[0], bin_pos_y[0]])
-        bin_detx_low = det_edges_low[detx_mask]
-        bin_dety_low = det_edges_low[dety_mask]
-        bin_detx_high = det_edges_high[detx_mask]
-        bin_dety_high = det_edges_high[dety_mask]
+        bin_detx_low = detx_edges_low[detx_mask]
+        bin_dety_low = dety_edges_low[dety_mask]
+        bin_detx_high = detx_edges_high[detx_mask]
+        bin_dety_high = dety_edges_high[dety_mask]
         bin_edges = Angle([bin_detx_low, bin_detx_high, bin_dety_low, bin_dety_high])
 
         return bin_pos, bin_edges.flatten()
@@ -339,16 +356,17 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`, optional
-            energy of bin to plot the bg model
+        	energy of bin to plot the bg model
       	
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
             figure with image of bin of the bg model for the
-                selected energy value (if any), optional
+            selected energy value (if any), optional
         axes : `~matplotlib.pyplot.axes`
             axes of the figure, optional
-
+        image : !!!!!!!!!!!!
+            !!!!!!!!!!!!!!!!, optional(??!!)
         """
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
@@ -459,6 +477,8 @@ class CubeBackgroundModel(object):
             selected det (X,Y) pair (if any), optional
         axes : `~matplotlib.pyplot.axes`
             axes of the figure, optional
+        image : !!!!!!!!!!!!
+            !!!!!!!!!!!!!!!!, optional(??!!)
         """
         import matplotlib.pyplot as plt
 
@@ -474,9 +494,8 @@ class CubeBackgroundModel(object):
                 print("Reqested plot only for 1 det: {}".format(det))
                 do_only_1_plot = True
 
-        n_det_bins = len(self.det_bins) - 1
-        n_det_bins_x = n_det_bins
-        n_det_bins_y = n_det_bins
+        n_det_bins_x = len(self.detx_bins) - 1
+        n_det_bins_y = len(self.dety_bins) - 1
         nimages = n_det_bins_x*n_det_bins_y
         ncols = 4
         nrows = 4
@@ -561,8 +580,8 @@ class CubeBackgroundModel(object):
             name of file for the bg cube
         """
         # number of fields
-        n_detx = len(self.det_bins) - 1
-        n_dety = len(self.det_bins) - 1
+        n_detx = len(self.detx_bins) - 1
+        n_dety = len(self.dety_bins) - 1
         n_energy = len(self.energy_bins) - 1
         n_bg = n_detx*n_dety*n_energy
 
@@ -573,8 +592,8 @@ class CubeBackgroundModel(object):
         f_bg = '{}E'.format(n_bg)
 
         # fits unit string
-        u_detx = '{0.unit:FITS}'.format(self.det_bins)
-        u_dety = '{0.unit:FITS}'.format(self.det_bins)
+        u_detx = '{0.unit:FITS}'.format(self.detx_bins)
+        u_dety = '{0.unit:FITS}'.format(self.dety_bins)
         u_energy = '{0.unit:FITS}'.format(self.energy_bins)
         u_bg = '{0.unit:FITS}'.format(self.background)
 
@@ -582,10 +601,10 @@ class CubeBackgroundModel(object):
         dim_bg = '({0},{1},{2})'.format(n_detx, n_dety, n_energy)
 
         # data arrays
-        a_detx_lo = np.array([self.det_bins[:-1].value])
-        a_detx_hi = np.array([self.det_bins[1:].value])
-        a_dety_lo = np.array([self.det_bins[:-1].value])
-        a_dety_hi = np.array([self.det_bins[1:].value])
+        a_detx_lo = np.array([self.detx_bins[:-1].value])
+        a_detx_hi = np.array([self.detx_bins[1:].value])
+        a_dety_lo = np.array([self.dety_bins[:-1].value])
+        a_dety_hi = np.array([self.dety_bins[1:].value])
         a_energy_lo = np.array([self.energy_bins[:-1].value])
         a_energy_hi = np.array([self.energy_bins[1:].value])
         a_bg = np.array([self.background.value.flatten()])

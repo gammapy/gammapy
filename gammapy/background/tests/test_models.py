@@ -121,8 +121,10 @@ class TestCubeBackgroundModel():
         decimal = 4
         np.testing.assert_almost_equal(bg_model_2.background.value,
                                        bg_model_1.background.value, decimal)
-        np.testing.assert_almost_equal(bg_model_2.det_bins.value,
-                                       bg_model_1.det_bins.value, decimal)
+        np.testing.assert_almost_equal(bg_model_2.detx_bins.value,
+                                       bg_model_1.detx_bins.value, decimal)
+        np.testing.assert_almost_equal(bg_model_2.dety_bins.value,
+                                       bg_model_1.dety_bins.value, decimal)
         np.testing.assert_almost_equal(bg_model_2.energy_bins.value,
                                        bg_model_1.energy_bins.value, decimal)
         # TODO: clean up after test (remove created files)
