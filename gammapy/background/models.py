@@ -288,20 +288,13 @@ class CubeBackgroundModel(object):
         detx_edges_high = self.detx_bins[1:]
         dety_edges_low = self.dety_bins[:-1]
         dety_edges_high = self.dety_bins[1:]
-        detx_mask = (detx_edges_low <= det[0]) & (det[0] < detx_edges_high)
-        dety_mask = (dety_edges_low <= det[1]) & (det[1] < dety_edges_high)
-        binx_ids = np.arange(len(self.detx_bins)-1)
-        biny_ids = np.arange(len(self.dety_bins)-1)
-        bin_pos_x = binx_ids[detx_mask]
-        bin_pos_y = biny_ids[dety_mask]
-        bin_pos = np.array([bin_pos_x[0], bin_pos_y[0]])
-        bin_detx_low = detx_edges_low[detx_mask]
-        bin_dety_low = dety_edges_low[dety_mask]
-        bin_detx_high = detx_edges_high[detx_mask]
-        bin_dety_high = dety_edges_high[dety_mask]
-        bin_edges = Angle([bin_detx_low, bin_detx_high, bin_dety_low, bin_dety_high])
+	bin_pos_x = np.searchsorted(detx_edges_high, det[0])
+	bin_pos_y = np.searchsorted(dety_edges_high, det[1])
+        bin_pos = np.array([bin_pos_x, bin_pos_y])
+        bin_edges = Angle([detx_edges_low[bin_pos[0]], detx_edges_high[bin_pos[0]],
+                           dety_edges_low[bin_pos[1]], dety_edges_high[bin_pos[1]]])
 
-        return bin_pos, bin_edges.flatten()
+        return bin_pos, bin_edges
 
 
     def find_energy_bin(self, energy):
@@ -333,14 +326,10 @@ class CubeBackgroundModel(object):
 
         energy_edges_low = self.energy_bins[:-1]
         energy_edges_high = self.energy_bins[1:]
-        energy_mask = (energy_edges_low <= energy) & (energy < energy_edges_high)
-        bin_ids = np.arange(len(self.energy_bins)-1)
-        bin_pos = bin_ids[energy_mask]
-        bin_emin = energy_edges_low[energy_mask]
-        bin_emax = energy_edges_high[energy_mask]
-        bin_edges = Quantity([bin_emin, bin_emax])
+	bin_pos = np.searchsorted(energy_edges_high, energy)
+        bin_edges = Quantity([energy_edges_low[bin_pos], energy_edges_high[bin_pos]])
 
-        return bin_pos[0], bin_edges.flatten()
+        return bin_pos, bin_edges
 
 
     def plot_images(self, energy=None):
