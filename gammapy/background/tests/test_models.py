@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
+from tempfile import NamedTemporaryFile
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data
 from astropy.table import Table
@@ -113,7 +114,7 @@ class TestCubeBackgroundModel():
         filename = datasets.get_path(filename, location='remote')
         bg_model_1= CubeBackgroundModel.read_bin_table(filename)
 
-        outfile = 'test_write_bg_cube_model.fits'
+        outfile = NamedTemporaryFile(suffix='.fits').name
         bg_model_1.write_bin_table(outfile)
 
         # test if values are correct in the saved file: compare both files
