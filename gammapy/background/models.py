@@ -124,10 +124,6 @@ class CubeBackgroundModel(object):
         self.dety_bins = dety_bins
         self.energy_bins = energy_bins
 
-        # TODO: what's the axes order?
-        # ENERGY, DETX, DETY
-        # or
-        # ENERGY, DETY, DETX
         self.background = background
 
     @staticmethod
@@ -149,21 +145,35 @@ class CubeBackgroundModel(object):
         header = hdu.header
         data = hdu.data
 
+        # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
+        if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'):
+            raise ValueError("Expecting X axis in first 2 places, not ({0}, {1})"
+                             .format(header['TTYPE1'], header['TTYPE2']))
+        if (header['TTYPE3'] != 'DETY_LO') or (header['TTYPE4'] != 'DETY_HI'):
+            raise ValueError("Expecting Y axis in second 2 places, not ({0}, {1})"
+                             .format(header['TTYPE3'], header['TTYPE4']))
+        if (header['TTYPE5'] != 'ENERG_LO') or (header['TTYPE6'] != 'ENERG_HI'):
+            raise ValueError("Expecting E axis in third 2 places, not ({0}, {1})"
+                             .format(header['TTYPE5'], header['TTYPE6']))
+        if (header['TTYPE7'] != 'Bgd'):
+            raise ValueError("Expecting bg axis in fourth place, not ({})"
+                             .format(header['TTYPE7']))
+
         # get det X, Y binning
         detx_bins = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
         dety_bins = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI'])
         if header['TUNIT1'] == header['TUNIT2']:
             detx_unit = header['TUNIT1']
         else:
-            raise ValueError("Detector x units not matching ({0}, {1})"
+            raise ValueError("Detector X units not matching ({0}, {1})"
                              .format(header['TUNIT1'], header['TUNIT2']))
         if header['TUNIT3'] == header['TUNIT4']:
             dety_unit = header['TUNIT3']
         else:
-            raise ValueError("Detector y units not matching ({0}, {1})"
+            raise ValueError("Detector Y units not matching ({0}, {1})"
                              .format(header['TUNIT3'], header['TUNIT4']))
         if not detx_unit == dety_unit:
-            ss = "This is odd: detector x and y units not matching"
+            ss = "This is odd: detector X and Y units not matching"
             ss += "({0}, {1})".format(detx_unit, dety_unit)
             raise ValueError(ss)
         detx_bins = Angle(detx_bins, detx_unit)
@@ -179,7 +189,6 @@ class CubeBackgroundModel(object):
         energy_bins = Quantity(energy_bins, energy_unit)
 
         # get background data
-        # TODO: again: what's the axes order?
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
         if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)']:
