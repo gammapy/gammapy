@@ -182,9 +182,9 @@ class CubeBackgroundModel(object):
         # TODO: again: what's the axes order?
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
-        if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1']:
+        if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)']:
             background_unit = '1 / (s TeV sr)'
-        elif background_unit in ['1/s/MeV/sr', 'MeV-1 s-1 sr-1']:
+        elif background_unit in ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)']:
             background_unit = '1 / (s MeV sr)'
         else:
             raise ValueError("Cannot interpret units ({})".format(background_unit))
@@ -256,47 +256,52 @@ class CubeBackgroundModel(object):
         tbhdu : `~astropy.io.fits.BinTableHDU`
             table containing the bg cube
         """
-        # number of fields
-        n_detx = len(self.detx_bins) - 1
-        n_dety = len(self.dety_bins) - 1
-        n_energy = len(self.energy_bins) - 1
-        n_bg = n_detx*n_dety*n_energy
-
-        # fits format string
-        f_detx = '{}E'.format(n_detx)
-        f_dety = '{}E'.format(n_dety)
-        f_energy = '{}E'.format(n_energy)
-        f_bg = '{}E'.format(n_bg)
-
         # fits unit string
         u_detx = '{0.unit:FITS}'.format(self.detx_bins)
         u_dety = '{0.unit:FITS}'.format(self.dety_bins)
         u_energy = '{0.unit:FITS}'.format(self.energy_bins)
         u_bg = '{0.unit:FITS}'.format(self.background)
 
-        # fits dimension string
-        dim_bg = '({0},{1},{2})'.format(n_detx, n_dety, n_energy)
-
         # data arrays
-        a_detx_lo = np.array([self.detx_bins[:-1].value])
-        a_detx_hi = np.array([self.detx_bins[1:].value])
-        a_dety_lo = np.array([self.dety_bins[:-1].value])
-        a_dety_hi = np.array([self.dety_bins[1:].value])
-        a_energy_lo = np.array([self.energy_bins[:-1].value])
-        a_energy_hi = np.array([self.energy_bins[1:].value])
-        a_bg = np.array([self.background.value.flatten()])
+        a_detx_lo = Quantity([self.detx_bins[:-1]])
+        a_detx_hi = Quantity([self.detx_bins[1:]])
+        a_dety_lo = Quantity([self.dety_bins[:-1]])
+        a_dety_hi = Quantity([self.dety_bins[1:]])
+        a_energy_lo = Quantity([self.energy_bins[:-1]])
+        a_energy_hi = Quantity([self.energy_bins[1:]])
+        a_bg = Quantity([self.background])
 
-        tbhdu = fits.BinTableHDU.from_columns(
-            [fits.Column(name='DETX_LO', format=f_detx, unit=u_detx, array=a_detx_lo),
-             fits.Column(name='DETX_HI', format=f_detx, unit=u_detx, array=a_detx_hi),
-             fits.Column(name='DETY_LO', format=f_dety, unit=u_dety, array=a_dety_lo),
-             fits.Column(name='DETY_HI', format=f_dety, unit=u_dety, array=a_dety_hi),
-             fits.Column(name='ENERG_LO', format=f_energy, unit=u_energy, array=a_energy_lo),
-             fits.Column(name='ENERG_HI', format=f_energy, unit=u_energy, array=a_energy_hi),
-             fits.Column(name='Bgd', format=f_bg, unit=u_bg, dim=dim_bg, array=a_bg)
-             ])
-        tbhdu.name = 'BACKGROUND'
-        tbhdu.header['E_THRES'] = a_energy_lo.flatten()[0]
+        table = Table()
+        table['DETX_LO'] = a_detx_lo
+        table['DETX_HI'] = a_detx_hi
+        table['DETY_LO'] = a_dety_lo
+        table['DETY_HI'] = a_dety_hi
+        table['ENERG_LO'] = a_energy_lo
+        table['ENERG_HI'] = a_energy_hi
+        table['Bgd'] = a_bg
+
+        table.meta['E_THRES'] = a_energy_lo.flatten()[0].value
+
+        data = table.as_array()
+
+        header = fits.Header()
+        header.update(table.meta)
+ 
+        #name = table.name
+        # TODO: is it possible to give a name to a `~astropy.table.Table`?
+        #       (without writing it in the header)
+        name = 'BACKGROUND'
+
+        tbhdu = fits.BinTableHDU(data, header, name=name)
+ 
+        # Copy over column meta-data
+        for colname in table.colnames:
+            tbhdu.columns[colname].unit = str(table[colname].unit)
+
+        # TODO: this method works fine but the order of keywords in the table
+        # header is not logical: for instnce, list of keywords with column
+        # units (TUNITi) is appended after the list of column keywords
+        # (TTYPEi, TFORMi), instead of in between.
 
         return tbhdu
 
