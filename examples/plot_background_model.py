@@ -1,15 +1,17 @@
 """Plot background model and store as cube so that it can viewed with ds9.
 """
 from gammapy.background.models import CubeBackgroundModel
+from gammapy import datasets
 
 def plot_example():
-    #DIR = '/Users/deil/work/_Data/hess/HESSFITS/pa/Model_Deconvoluted_Prod26/Mpp_Std/background/'
-    DIR = '/home/mapaz/astropy/testing_cube_bg_michael_mayer/background/'
-    filename = DIR + 'hist_alt3_az0.fits.gz'
-    bg_model = CubeBackgroundModel.read(filename)
+    filename = '../test_datasets/background/bg_cube_model_test.fits'
+    filename = datasets.get_path(filename, location='remote')
+    bg_model = CubeBackgroundModel.read_bin_table(filename)
     bg_model.plot_images()
     bg_model.plot_spectra()
-    bg_model.write('cube_background_model.fits')
+    outname = 'cube_background_model'
+    bg_model.write_bin_table('{}_bin_table.fits'.format(outname), clobber=True)
+    bg_model.write_image('{}_image.fits'.format(outname), clobber=True)
 
 if __name__ == '__main__':
     plot_example()

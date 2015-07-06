@@ -53,12 +53,12 @@ class TestGaussianBand2D():
 class TestCubeBackgroundModel():
 
     @remote_data
-    def test_read(self):
+    def test_read_bin_table(self):
         
         # test shape of bg cube when reading a file
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_file = CubeBackgroundModel.read(filename)
+        bg_cube_file = CubeBackgroundModel.read_bin_table(filename)
         assert len(bg_cube_file.background.shape) == 3
 
 
@@ -67,7 +67,7 @@ class TestCubeBackgroundModel():
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_model = CubeBackgroundModel.read(filename)
+        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
 
         # test bg rate values plotted for image plot of energy bin conaining E = 2 TeV
         energy = Quantity(2., 'TeV')
@@ -89,7 +89,7 @@ class TestCubeBackgroundModel():
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_model = CubeBackgroundModel.read(filename)
+        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
 
         # test bg rate values plotted for spectrum plot of detector bin conaining det (0, 0) deg (center)
         det = Angle([0., 0.], 'degree')
@@ -107,17 +107,17 @@ class TestCubeBackgroundModel():
 
 
     @remote_data
-    def test_write(self):
+    def test_write_bin_table(self):
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_model_1= CubeBackgroundModel.read(filename)
+        bg_model_1= CubeBackgroundModel.read_bin_table(filename)
 
         outfile = 'test_write_bg_cube_model.fits'
-        bg_model_1.write(outfile)
+        bg_model_1.write_bin_table(outfile)
 
         # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read(outfile)
+        bg_model_2 = CubeBackgroundModel.read_bin_table(outfile)
         decimal = 4
         np.testing.assert_almost_equal(bg_model_2.background.value,
                                        bg_model_1.background.value, decimal)
@@ -128,4 +128,4 @@ class TestCubeBackgroundModel():
         np.testing.assert_almost_equal(bg_model_2.energy_bins.value,
                                        bg_model_1.energy_bins.value, decimal)
         # TODO: clean up after test (remove created files)
-        # TODO: test also write_image
+        # TODO: test also read_image and write_image
