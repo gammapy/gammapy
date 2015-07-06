@@ -131,22 +131,20 @@ class CubeBackgroundModel(object):
         self.background = background
 
     @staticmethod
-    def read(filename):
-        """Read cube background model from fits file.
+    def from_fits_bin_table(tbhdu):
+        """Read cube background model from binary table in fits file.
 
         Parameters
         ----------
-        filename : `~string`
-            name of file with the bg cube
+        tbhdu : `~astropy.io.fits.BinTableHDU`
+            HDU binary table for the bg cube
 
         Returns
         -------
         bg_cube : `~gammapy.models.CubeBackgroundModel`
             bg model cube object
         """
-        # TODO: should we use the Table class here to read the data?
-        hdu_list = fits.open(filename)
-        hdu = hdu_list['BACKGROUND']
+        hdu = tbhdu['BACKGROUND']
 
         header = hdu.header
         data = hdu.data
@@ -196,6 +194,150 @@ class CubeBackgroundModel(object):
                                    dety_bins=dety_bins,
                                    energy_bins=energy_bins,
                                    background=background)
+
+    @staticmethod
+    def from_fits_image(tbhdu):
+        """Read cube background model from image in fits file.
+
+        Parameters
+        ----------
+        tbhdu : `~astropy.io.fits.BinTableHDU`
+            HDU binary table for the bg cube
+
+        Returns
+        -------
+        bg_cube : `~gammapy.models.CubeBackgroundModel`
+            bg model cube object
+        """
+        raise NotImplementedError
+
+
+    @staticmethod
+    def read_bin_table(filename):
+        """Read cube background model from binary table in fits file.
+
+        Parameters
+        ----------
+        filename : `~string`
+            name of file with the bg cube
+
+        Returns
+        -------
+        bg_cube : `~gammapy.models.CubeBackgroundModel`
+            bg model cube object
+        """
+        hdu = fits.open(filename)
+        return CubeBackgroundModel.from_fits_bin_table(hdu)
+
+
+    @staticmethod
+    def read_image(filename):
+        """Read cube background model from image in fits file.
+
+        Parameters
+        ----------
+        filename : `~string`
+            name of file with the bg cube
+
+        Returns
+        -------
+        bg_cube : `~gammapy.models.CubeBackgroundModel`
+            bg model cube object
+        """
+        hdu = fits.open(filename)
+        return CubeBackgroundModel.from_fits_image(hdu)        
+
+
+    def to_fits_bin_table(self):
+        """Convert cube background model to binary table fits format.
+
+        Returns
+        -------
+        tbhdu : `~astropy.io.fits.BinTableHDU`
+            table containing the bg cube
+        """
+        # number of fields
+        n_detx = len(self.detx_bins) - 1
+        n_dety = len(self.dety_bins) - 1
+        n_energy = len(self.energy_bins) - 1
+        n_bg = n_detx*n_dety*n_energy
+
+        # fits format string
+        f_detx = '{}E'.format(n_detx)
+        f_dety = '{}E'.format(n_dety)
+        f_energy = '{}E'.format(n_energy)
+        f_bg = '{}E'.format(n_bg)
+
+        # fits unit string
+        u_detx = '{0.unit:FITS}'.format(self.detx_bins)
+        u_dety = '{0.unit:FITS}'.format(self.dety_bins)
+        u_energy = '{0.unit:FITS}'.format(self.energy_bins)
+        u_bg = '{0.unit:FITS}'.format(self.background)
+
+        # fits dimension string
+        dim_bg = '({0},{1},{2})'.format(n_detx, n_dety, n_energy)
+
+        # data arrays
+        a_detx_lo = np.array([self.detx_bins[:-1].value])
+        a_detx_hi = np.array([self.detx_bins[1:].value])
+        a_dety_lo = np.array([self.dety_bins[:-1].value])
+        a_dety_hi = np.array([self.dety_bins[1:].value])
+        a_energy_lo = np.array([self.energy_bins[:-1].value])
+        a_energy_hi = np.array([self.energy_bins[1:].value])
+        a_bg = np.array([self.background.value.flatten()])
+
+        tbhdu = fits.BinTableHDU.from_columns(
+            [fits.Column(name='DETX_LO', format=f_detx, unit=u_detx, array=a_detx_lo),
+             fits.Column(name='DETX_HI', format=f_detx, unit=u_detx, array=a_detx_hi),
+             fits.Column(name='DETY_LO', format=f_dety, unit=u_dety, array=a_dety_lo),
+             fits.Column(name='DETY_HI', format=f_dety, unit=u_dety, array=a_dety_hi),
+             fits.Column(name='ENERG_LO', format=f_energy, unit=u_energy, array=a_energy_lo),
+             fits.Column(name='ENERG_HI', format=f_energy, unit=u_energy, array=a_energy_hi),
+             fits.Column(name='Bgd', format=f_bg, unit=u_bg, dim=dim_bg, array=a_bg)
+             ])
+        tbhdu.name = 'BACKGROUND'
+        tbhdu.header['E_THRES'] = a_energy_lo.flatten()[0]
+
+        return tbhdu
+
+
+    def to_fits_image(self):
+        """Convert cube background model to image fits format.
+
+        Returns
+        -------
+        hdu : `~astropy.io.fits.ImageHDU`
+            image containing the bg cube
+        """
+        hdu = fits.ImageHDU(data=self.background.value)
+        #TODO: store units (of bg) somewhere in header??!!!!
+        #TODO: implement WCS object to be able to read the det coords
+        #TODO: energy binning: store in HDU table like for SpectralCube class
+
+        return hdu
+
+
+    def write_bin_table(self, *args, **kwargs):
+        """Write cube background model to binary table in fits file.
+
+        This function is expected to be called on a
+        `~astropy.io.fits.BinTableHDU` object.
+        It calls `~astropy.io.fits.BinTableHDU.writeto`,
+        forwarding all arguments.
+        """
+        self.to_fits_bin_table().writeto(*args, **kwargs)
+
+
+    def write_image(self, *args, **kwargs):
+        """Write cube background model to image in fits file.
+
+        This function is expected to be called on a
+        `~astropy.io.fits.ImageHDU` object.
+        It calls `~astropy.io.fits.ImageHDU.writeto`,
+        forwarding all arguments.
+        """
+        self.to_fits_image().writeto(*args, **kwargs)
+
 
     @property
     def image_extent(self):
@@ -260,6 +402,8 @@ class CubeBackgroundModel(object):
     def find_det_bin(self, det):
         """Find the bin that contains the specified det (X, Y) pair.
 
+        TODO: implement test as suggested in:
+            https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
         Parameters
         ----------
         det : `~astropy.coordinates.Angle`
@@ -300,6 +444,8 @@ class CubeBackgroundModel(object):
     def find_energy_bin(self, energy):
         """Find the bin that contains the specified energy value.
 
+        TODO: implement test as suggested in:
+            https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
@@ -558,70 +704,3 @@ class CubeBackgroundModel(object):
 
         if do_only_1_plot:
             return fig, axes, image
-
-
-    def write(self, filename):
-        """Write cube background model to fits file.
-
-        Parameters
-        ----------
-        filename : `~string`
-            name of file for the bg cube
-        """
-        # number of fields
-        n_detx = len(self.detx_bins) - 1
-        n_dety = len(self.dety_bins) - 1
-        n_energy = len(self.energy_bins) - 1
-        n_bg = n_detx*n_dety*n_energy
-
-        # fits format string
-        f_detx = '{}E'.format(n_detx)
-        f_dety = '{}E'.format(n_dety)
-        f_energy = '{}E'.format(n_energy)
-        f_bg = '{}E'.format(n_bg)
-
-        # fits unit string
-        u_detx = '{0.unit:FITS}'.format(self.detx_bins)
-        u_dety = '{0.unit:FITS}'.format(self.dety_bins)
-        u_energy = '{0.unit:FITS}'.format(self.energy_bins)
-        u_bg = '{0.unit:FITS}'.format(self.background)
-
-        # fits dimension string
-        dim_bg = '({0},{1},{2})'.format(n_detx, n_dety, n_energy)
-
-        # data arrays
-        a_detx_lo = np.array([self.detx_bins[:-1].value])
-        a_detx_hi = np.array([self.detx_bins[1:].value])
-        a_dety_lo = np.array([self.dety_bins[:-1].value])
-        a_dety_hi = np.array([self.dety_bins[1:].value])
-        a_energy_lo = np.array([self.energy_bins[:-1].value])
-        a_energy_hi = np.array([self.energy_bins[1:].value])
-        a_bg = np.array([self.background.value.flatten()])
-
-        tbhdu = fits.BinTableHDU.from_columns(
-            [fits.Column(name='DETX_LO', format=f_detx, unit=u_detx, array=a_detx_lo),
-             fits.Column(name='DETX_HI', format=f_detx, unit=u_detx, array=a_detx_hi),
-             fits.Column(name='DETY_LO', format=f_dety, unit=u_dety, array=a_dety_lo),
-             fits.Column(name='DETY_HI', format=f_dety, unit=u_dety, array=a_dety_hi),
-             fits.Column(name='ENERG_LO', format=f_energy, unit=u_energy, array=a_energy_lo),
-             fits.Column(name='ENERG_HI', format=f_energy, unit=u_energy, array=a_energy_hi),
-             fits.Column(name='Bgd', format=f_bg, unit=u_bg, dim=dim_bg, array=a_bg)
-             ])
-        tbhdu.name = 'BACKGROUND'
-        tbhdu.header['E_THRES'] = a_energy_lo.flatten()[0]
-        print('Writing {}'.format(filename))
-        tbhdu.writeto(filename, clobber=True)
-
-
-    def write_image(self, filename):
-        """Write cube background model to fits file as image.
-
-        Parameters
-        ----------
-        filename : `~string`
-            name of file for the bg cube
-        """
-        hdu = fits.ImageHDU(data=self.background.value)
-        #TODO: store unit somewhere in header??!!!!
-        print('Writing {}'.format(filename))
-        hdu.writeto(filename, clobber=True)
