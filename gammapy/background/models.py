@@ -248,12 +248,14 @@ class CubeBackgroundModel(object):
         return CubeBackgroundModel.from_fits_image(hdu)        
 
 
-    def to_fits_bin_table(self):
-        """Convert cube background model to binary table fits format.
+    def to_astropy_table(self):
+        """Convert cube background model to astropy table format.
 
         Returns
         -------
-        tbhdu : `~astropy.io.fits.BinTableHDU`
+        name : `~string`
+            name of the table
+        table : `~astropy..table.Table`
             table containing the bg cube
         """
         # fits unit string
@@ -271,6 +273,12 @@ class CubeBackgroundModel(object):
         a_energy_hi = Quantity([self.energy_bins[1:]])
         a_bg = Quantity([self.background])
 
+        # name
+        name = 'BACKGROUND'
+        # TODO: is it possible to give a name to a `~astropy.table.Table`?
+        #       (without writing it in the header)
+
+        # table
         table = Table()
         table['DETX_LO'] = a_detx_lo
         table['DETX_HI'] = a_detx_hi
@@ -282,16 +290,25 @@ class CubeBackgroundModel(object):
 
         table.meta['E_THRES'] = a_energy_lo.flatten()[0].value
 
+        return name, table
+
+
+    def to_fits_bin_table(self):
+        """Convert cube background model to binary table fits format.
+
+        Returns
+        -------
+        tbhdu : `~astropy.io.fits.BinTableHDU`
+            table containing the bg cube
+        """
+        # build astropy table
+        name, table = self.to_astropy_table()
+
         data = table.as_array()
 
         header = fits.Header()
         header.update(table.meta)
  
-        #name = table.name
-        # TODO: is it possible to give a name to a `~astropy.table.Table`?
-        #       (without writing it in the header)
-        name = 'BACKGROUND'
-
         tbhdu = fits.BinTableHDU(data, header, name=name)
  
         # Copy over column meta-data
