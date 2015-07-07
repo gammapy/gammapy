@@ -364,7 +364,6 @@ but I plan to document it in the Astropy docs soon (see `issue 2607 <https://git
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
 
-
 When to use C or Cython or Numba for speed
 ------------------------------------------
 
@@ -392,3 +391,43 @@ an optional dependency we use for speed, or whether we use the much more establi
 
 At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
 and Numba is not used yet.
+
+What belongs in Gammapy and what doesn't?
+-----------------------------------------
+
+The scope of Gammapy is currently not very well defined ... if in doubt whether it makes sense to
+add something, please ask on the mailing list or via a Github issue.
+
+Roughly the scope is high-level science analysis of gamma-ray data, starting with event lists
+after gamma-hadron separation and corresponding IRFs, as well as source and source population modeling.
+
+For lower-level data processing (calibration, event reconstruction, gamma-hadron separation)
+there's `ctapipe`_. There's some functionality (event list processing, PSF or background model building,
+sensitivity computations ...) that could go in either ctapipe or Gammapy and we'll have to try
+and avoid duplication.
+
+SED modeling code belongs in `naima`_.
+
+A lot of code that's not gamma-ray specific belongs in other packages
+(e.g. `Scipy`_, `Astropy`_, other Astropy-affiliated packages, `Sherpa`_).
+We currently have quite a bit of code that should be moved "upstream" or already has been,
+but the Gammapy code hasn't been adapted yet.
+
+Assert convention
+-----------------
+
+When performing tests, the preferred numerical assert method is
+`numpy.testing.assert_allclose`. Use
+
+``from numpy.testing import assert_allclose``
+
+at the top of the file and then just use ``assert_allclose`` for
+the tests. This makes the lines shorter, i.e. there is more space
+for the arguments.
+
+``assert_allclose`` covers all use cases for numerical asserts, so
+it should be used consistently everywhere instead of using the
+dozens of other available asserts from pytest or numpy in various
+places.
+
+More details in `numpy.testing.assert_allclose`.

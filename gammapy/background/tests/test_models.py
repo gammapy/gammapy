@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-import numpy as np
 from tempfile import NamedTemporaryFile
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data
 from astropy.table import Table
@@ -80,8 +80,7 @@ class TestCubeBackgroundModel():
         model_data = bg_cube_model.background[energy_bin]
 
         # test if both arrays are equal
-        decimal = 4
-        np.testing.assert_almost_equal(plot_data, model_data.value, decimal)
+        assert_allclose(plot_data, model_data.value)
         # TODO: clean up after test (remove created files)
 
 
@@ -102,8 +101,7 @@ class TestCubeBackgroundModel():
         model_data = bg_cube_model.background[:, det_bin[0], det_bin[1]]
 
         # test if both arrays are equal
-        decimal = 4
-        np.testing.assert_almost_equal(plot_data[:,1], model_data.value, decimal)
+        assert_allclose(plot_data[:,1], model_data.value)
         # TODO: clean up after test (remove created files)
 
 
@@ -119,14 +117,13 @@ class TestCubeBackgroundModel():
 
         # test if values are correct in the saved file: compare both files
         bg_model_2 = CubeBackgroundModel.read_bin_table(outfile)
-        decimal = 4
-        np.testing.assert_almost_equal(bg_model_2.background.value,
-                                       bg_model_1.background.value, decimal)
-        np.testing.assert_almost_equal(bg_model_2.detx_bins.value,
-                                       bg_model_1.detx_bins.value, decimal)
-        np.testing.assert_almost_equal(bg_model_2.dety_bins.value,
-                                       bg_model_1.dety_bins.value, decimal)
-        np.testing.assert_almost_equal(bg_model_2.energy_bins.value,
-                                       bg_model_1.energy_bins.value, decimal)
-        # TODO: clean up after test (remove created files)
+        assert_allclose(bg_model_2.background.value,
+                                       bg_model_1.background.value)
+        assert_allclose(bg_model_2.detx_bins.value,
+                                       bg_model_1.detx_bins.value)
+        assert_allclose(bg_model_2.dety_bins.value,
+                                       bg_model_1.dety_bins.value)
+        assert_allclose(bg_model_2.energy_bins.value,
+                                       bg_model_1.energy_bins.value)
+
         # TODO: test also read_image and write_image
