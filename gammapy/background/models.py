@@ -173,9 +173,9 @@ class CubeBackgroundModel(object):
             raise ValueError("Detector Y units not matching ({0}, {1})"
                              .format(header['TUNIT3'], header['TUNIT4']))
         if not detx_unit == dety_unit:
-            ss = "This is odd: detector X and Y units not matching"
-            ss += "({0}, {1})".format(detx_unit, dety_unit)
-            raise ValueError(ss)
+            ss_error = "This is odd: detector X and Y units not matching"
+            ss_error += "({0}, {1})".format(detx_unit, dety_unit)
+            raise ValueError(ss_error)
         detx_bins = Angle(detx_bins, detx_unit)
         dety_bins = Angle(dety_bins, dety_unit)
 
@@ -426,7 +426,9 @@ class CubeBackgroundModel(object):
         """
         energy_edges_low = self.energy_bins[:-1]
         energy_edges_high = self.energy_bins[1:]
-        energy_bin_centers = 10.**(0.5*(np.log10(energy_edges_low.to('TeV').value*energy_edges_high.to('TeV').value)))
+        e_lo_tev = energy_edges_low.to('TeV').value
+        e_hi_tev = energy_edges_high.to('TeV').value
+        energy_bin_centers = 10.**(0.5*(np.log10(e_lo_tev*e_hi_tev)))
         return Quantity(energy_bin_centers, 'TeV')
 
 
@@ -435,6 +437,7 @@ class CubeBackgroundModel(object):
 
         TODO: implement test as suggested in:
             https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
+
         Parameters
         ----------
         det : `~astropy.coordinates.Angle`
@@ -450,14 +453,18 @@ class CubeBackgroundModel(object):
         # check shape of det: only 1 pair is accepted
         nvalues = len(det.flatten())
         if nvalues != 2:
-            print("Expected exactly 2 values for det (X, Y), got {}.".format(nvalues))
-            raise IndexError
+            raise IndexError("Expected exactly 2 values for det (X, Y), got {}."
+                             .format(nvalues))
 
         # check that the specified det is within the boundaries of the model
         det_extent = self.image_extent
-        if not ((det_extent[0] <= det[0]) and (det[0] < det_extent[1])) or not ((det_extent[2] <= det[1]) and (det[1] < det_extent[3])):
-            print("Specified det {0} is outside the boundaries {1}.".format(det, det_extent))
-            raise ValueError
+        check_x_lo = (det_extent[0] <= det[0])
+        check_x_hi = (det[0] < det_extent[1])
+        check_y_lo = (det_extent[2] <= det[1])
+        check_y_hi = (det[1] < det_extent[3])
+        if not (check_x_lo and check_x_hi) or not (check_y_lo and check_y_hi):
+            raise ValueError("Specified det {0} is outside the boundaries {1}."
+                             .format(det, det_extent))
 
         detx_edges_low = self.detx_bins[:-1]
         detx_edges_high = self.detx_bins[1:]
@@ -477,6 +484,7 @@ class CubeBackgroundModel(object):
 
         TODO: implement test as suggested in:
             https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
+
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
@@ -492,14 +500,15 @@ class CubeBackgroundModel(object):
         # check shape of energy: only 1 value is accepted
         nvalues = len(energy.flatten())
         if nvalues != 1:
-            print("Expected exactly 1 value for energy, got {}.".format(nvalues))
-            raise IndexError
+            raise IndexError("Expected exactly 1 value for energy, got {}."
+                             .format(nvalues))
 
         # check that the specified energy is within the boundaries of the model
         energy_extent = self.spectrum_extent
         if not (energy_extent[0] <= energy) and (energy < energy_extent[1]):
-            print("Specified energy {0} is outside the boundaries {1}.".format(energy, energy_extent))
-            raise ValueError
+            ss_error = "Specified energy {}".format(energy)
+            ss_error += " is outside the boundaries {}.".format(energy_extent)
+            raise ValueError(ss_error)
 
         energy_edges_low = self.energy_bins[:-1]
         energy_edges_high = self.energy_bins[1:]
@@ -544,8 +553,8 @@ class CubeBackgroundModel(object):
             # check shape of energy: only 1 value is accepted
             nvalues = len(energy)
             if nvalues != 1:
-                print("Expected exactly 1 value for energy, got {}.".format(nvalues))
-                raise IndexError
+                raise IndexError("Expected exactly 1 value for energy, got {}."
+                                 .format(nvalues))
             else:
                 energy = Quantity(energy[0])
                 print("Reqested plot only for 1 energy: {}".format(energy))
@@ -654,8 +663,9 @@ class CubeBackgroundModel(object):
             # check shape of det: only 1 pair is accepted
             nvalues = len(det.flatten())
             if nvalues != 2:
-                print("Expected exactly 2 values for det (X, Y), got {}.".format(nvalues))
-                raise IndexError
+                ss_error = "Expected exactly 2 values for det (X, Y),"
+                ss_error += "got {}.".format(nvalues)
+                raise IndexError(ss_error)
             else:
                 print("Reqested plot only for 1 det: {}".format(det))
                 do_only_1_plot = True
