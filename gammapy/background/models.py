@@ -12,6 +12,8 @@ from astropy import wcs
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
+           'make_linear_bin_edges_arrays_from_wcs',
+           'make_linear_wcs_from_bin_edges_arrays'
            ]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
@@ -100,15 +102,61 @@ def _make_bin_edges_array(lo, hi):
     return np.append(lo.flatten(), hi.flatten()[-1:])
 
 
-def _make_linear_bin_edges_arrays_from_wcs(wcs):
-    # TODO: del todo!!!
-    raise NotImplementedError
+def make_linear_bin_edges_arrays_from_wcs(w, nbins_x, nbins_y):
+    """Make a 2D linear binning from a WCS object.
+
+    This method gives the correct answer only for linear X, Y binning.
+    The method expects angular quantities in the WCS object.
+    X is identified with WCS axis 1, Y is identified with WCS axis 2.
+    The method needs the number of bins as input, since it is not in
+    the WCS object.
+
+    TODO: move this function to somewhere else? (i.e. utils?)
+
+    Parameters
+    ----------
+    w : `~astropy.wcs.WCS`
+    	WCS object describing the bin coordinates
+    nbins_x : `~int`
+    	number of bins in X coordinate
+    nbins_y : `~int`
+    	number of bins in Y coordinate
+
+    Returns
+    -------
+    bins_x : `~numpy.array` of `~astropy.coordinates.Angle`
+    	array with the bin edges for the X coordinate
+    bins_y : `~numpy.array` of `~astropy.coordinates.Angle`
+    	array with the bin edges for the Y coordinate
+    """
+    # check number of dimensions
+    if w.wcs.naxis != 2:
+        raise ValueError("Expected exactly 2 dimensions, got {}".format(
+            w.wcs.naxis))
+    
+    unit_x, unit_y = w.wcs.cunit
+    delta_x, delta_y = w.wcs.cdelt
+    delta_x = Angle(delta_x, unit_x)
+    delta_y = Angle(delta_y, unit_y)
+    bins_x = np.arange(nbins_x + 1)*delta_x
+    bins_y = np.arange(nbins_y + 1)*delta_y
+    # translate bins to correct values according to WCS reference
+    # coordinate start empiricaly determined at pix = 0.5: why 0.5?
+    refpix_x, refpix_y = w.wcs.crpix
+    refval_x, refval_y = w.wcs.crval
+    refval_x = Angle(refval_x, unit_x)
+    refval_y = Angle(refval_y, unit_y)
+    bins_x += refval_x - (refpix_x - 0.5)*delta_x
+    bins_y += refval_y - (refpix_y - 0.5)*delta_y
+
+    return bins_x, bins_y
 
 
-def _make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
+def make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
     """Make a 2D linear WCS object from arrays of bin edges.
 
     This method gives the correct answer only for linear X, Y binning.
+    X is identified with WCS axis 1, Y is identified with WCS axis 2.
 
     TODO: move this function to somewhere else? (i.e. utils?)
 
@@ -127,32 +175,33 @@ def _make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
     -------
     w : `~astropy.wcs.WCS`
     	WCS object describing the bin coordinates
-    """
-    # Create a new WCS object. The number of axes must be set from the start
-    w = wcs.WCS(naxis=2)
-
+    """ 
     # check units
     unit_x = bins_x.unit
     unit_y = bins_y.unit
     if unit_x != unit_y:
         ss_error = "Units of X ({0}) and Y ({1}) bins do not match!".format(
             unit_x, unit_y)
-        ss_error += "Is this expected?"
+        ss_error += " Is this expected?"
         raise ValueError(ss_error)
 
+    # Create a new WCS object. The number of axes must be set from the start
+    w = wcs.WCS(naxis=2)
+
     # Set up DET coordinates in degrees
-    nbinsx = len(bins_x) - 1
-    nbinsy = len(bins_y) - 1
-    rangex = Angle([bins_x[0], bins_x[-1]])
-    rangey = Angle([bins_y[0], bins_y[-1]])
-    deltax = (rangex[1] - rangex[0])/nbinsx
-    deltay = (rangey[1] - rangey[0])/nbinsy
+    nbins_x = len(bins_x) - 1
+    nbins_y = len(bins_y) - 1
+    range_x = Angle([bins_x[0], bins_x[-1]])
+    range_y = Angle([bins_y[0], bins_y[-1]])
+    delta_x = (range_x[1] - range_x[0])/nbins_x
+    delta_y = (range_y[1] - range_y[0])/nbins_y
     w.wcs.ctype = [name_x, name_y]
     w.wcs.cunit = [unit_x, unit_y]
-    w.wcs.cdelt = [deltax.to(unit_x).value, deltay.to(unit_y).value]
+    w.wcs.cdelt = [delta_x.to(unit_x).value, delta_y.to(unit_y).value]
     # ref as lower left corner (start of (X, Y) bin coordinates)
-    w.wcs.crpix = [0.5, 0.5] # empiricaly determined (why 0.5?)
-    w.wcs.crval = [bins_x[0].to(unit_x).value, bins_y[0].to(unit_y).value]
+    # coordinate start empiricaly determined at pix = 0.5: why 0.5?
+    w.wcs.crpix = [0.5, 0.5]
+    w.wcs.crval = [(bins_x[0] + (w.wcs.crpix[0] - 0.5)*delta_x).to(unit_x).value, (bins_y[0] + (w.wcs.crpix[1] - 0.5)*delta_y).to(unit_y).value]
 
     return w
 
@@ -524,10 +573,10 @@ class CubeBackgroundModel(object):
         wcs : `~astropy.wcs.WCS`
             WCS object describing the bin coordinates
         """
-        wcs = _make_linear_wcs_from_bin_edges_arrays(name_x="DETX",
-                                                     name_y="DETY",
-                                                     bins_x=self.detx_bins,
-                                                     bins_y=self.detx_bins)
+        wcs = make_linear_wcs_from_bin_edges_arrays(name_x="DETX",
+                                                    name_y="DETY",
+                                                    bins_x=self.detx_bins,
+                                                    bins_y=self.detx_bins)
         return wcs
 
 
