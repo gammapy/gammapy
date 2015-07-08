@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
+from astropy import wcs
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
@@ -97,6 +98,63 @@ def _make_bin_edges_array(lo, hi):
     	array of bin edges as [[low], [high]]
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
+
+
+def _make_linear_bin_edges_arrays_from_wcs(wcs):
+    # TODO: del todo!!!
+    raise NotImplementedError
+
+
+def _make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
+    """Make a 2D linear WCS object from arrays of bin edges.
+
+    This method gives the correct answer only for linear X, Y binning.
+
+    TODO: move this function to somewhere else? (i.e. utils?)
+
+    Parameters
+    ----------
+    name_x : `~string`
+    	name of X coordinate, to be used as 'CTYPE' value
+    name_y : `~string`
+    	name of Y coordinate, to be used as 'CTYPE' value
+    bins_x : `~numpy.array` of `~astropy.coordinates.Angle`
+    	array with the bin edges for the X coordinate
+    bins_y : `~numpy.array` of `~astropy.coordinates.Angle`
+    	array with the bin edges for the Y coordinate
+
+    Returns
+    -------
+    w : `~astropy.wcs.WCS`
+    	WCS object describing the bin coordinates
+    """
+    # Create a new WCS object. The number of axes must be set from the start
+    w = wcs.WCS(naxis=2)
+
+    # check units
+    unit_x = bins_x.unit
+    unit_y = bins_y.unit
+    if unit_x != unit_y:
+        ss_error = "Units of X ({0}) and Y ({1}) bins do not match!".format(
+            unit_x, unit_y)
+        ss_error += "Is this expected?"
+        raise ValueError(ss_error)
+
+    # Set up DET coordinates in degrees
+    nbinsx = len(bins_x) - 1
+    nbinsy = len(bins_y) - 1
+    rangex = Angle([bins_x[0], bins_x[-1]])
+    rangey = Angle([bins_y[0], bins_y[-1]])
+    deltax = (rangex[1] - rangex[0])/nbinsx
+    deltay = (rangey[1] - rangey[0])/nbinsy
+    w.wcs.ctype = [name_x, name_y]
+    w.wcs.cunit = [unit_x, unit_y]
+    w.wcs.cdelt = [deltax.to(unit_x).value, deltay.to(unit_y).value]
+    # ref as lower left corner (start of (X, Y) bin coordinates)
+    w.wcs.crpix = [0.5, 0.5] # empiricaly determined (why 0.5?)
+    w.wcs.crval = [bins_x[0].to(unit_x).value, bins_y[0].to(unit_y).value]
+
+    return w
 
 
 class CubeBackgroundModel(object):
@@ -191,9 +249,13 @@ class CubeBackgroundModel(object):
         # get background data
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
-        if background_unit in ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)']:
+        TeV_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
+                     '1 / (TeV s sr)']
+        MeV_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
+                     '1 / (MeV s sr)']
+        if background_unit in TeV_units:
             background_unit = '1 / (s TeV sr)'
-        elif background_unit in ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)']:
+        elif background_unit in MeV_units:
             background_unit = '1 / (s MeV sr)'
         else:
             raise ValueError("Cannot interpret units ({})".format(background_unit))
@@ -342,8 +404,27 @@ class CubeBackgroundModel(object):
         """
         hdu = fits.ImageHDU(data=self.background.value)
         #TODO: store units (of bg) somewhere in header??!!!!
-        #TODO: implement WCS object to be able to read the det coords
+        #TODO: implement WCS object to be able to read the det coords -> done
         #TODO: energy binning: store in HDU table like for SpectralCube class
+
+        # get WCS object
+        wcs = self.det_WCS
+
+        # Now, write out the WCS object as a FITS header
+        wcs_header = wcs.to_header()
+
+        # transfering header values
+        # need to copy necessary values one by one
+        hdu.header['CTYPE1'] = wcs_header['CTYPE1']
+        hdu.header['CTYPE2'] = wcs_header['CTYPE2']
+        hdu.header['CUNIT1'] = wcs_header['CUNIT1']
+        hdu.header['CUNIT2'] = wcs_header['CUNIT2']
+        hdu.header['CDELT1'] = wcs_header['CDELT1']
+        hdu.header['CDELT2'] = wcs_header['CDELT2']
+        hdu.header['CRPIX1'] = wcs_header['CRPIX1']
+        hdu.header['CRPIX2'] = wcs_header['CRPIX2']
+        hdu.header['CRVAL1'] = wcs_header['CRVAL1']
+        hdu.header['CRVAL2'] = wcs_header['CRVAL2']
 
         return hdu
 
@@ -430,6 +511,24 @@ class CubeBackgroundModel(object):
         e_hi_tev = energy_edges_high.to('TeV').value
         energy_bin_centers = 10.**(0.5*(np.log10(e_lo_tev*e_hi_tev)))
         return Quantity(energy_bin_centers, 'TeV')
+
+
+    @property
+    def det_WCS(self):
+        """WCS object describing the coordinates of the det (X, Y) bins.
+
+        This method gives the correct answer only for linear X, Y binning.
+
+        Returns
+        -------
+        wcs : `~astropy.wcs.WCS`
+            WCS object describing the bin coordinates
+        """
+        wcs = _make_linear_wcs_from_bin_edges_arrays(name_x="DETX",
+                                                     name_y="DETY",
+                                                     bins_x=self.detx_bins,
+                                                     bins_y=self.detx_bins)
+        return wcs
 
 
     def find_det_bin(self, det):
@@ -595,8 +694,12 @@ class CubeBackgroundModel(object):
                 ax = axes
             else:
                 ax = axes.flat[count_pads - 1]
-            image = ax.imshow(data.value, extent=extent.value, interpolation='nearest',
-                              norm=LogNorm(), cmap='afmhot') # color log scale
+            image = ax.imshow(data.value,
+                              extent=extent.value,
+                              interpolation='nearest',
+                              norm=LogNorm(), # color log scale
+                              cmap='afmhot')
+            # TODO: image seems mirrored in Y axis w.r.t. image in fits!!!
             if do_only_1_plot:
                 ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value, energy_bin_edges[1].value, energy_bin_edges.unit))
             else:
