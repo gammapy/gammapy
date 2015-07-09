@@ -75,8 +75,8 @@ class TestCubeBackgroundModel():
         # test shape of bg cube when reading a file
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_file = CubeBackgroundModel.read_bin_table(filename)
-        assert len(bg_cube_file.background.shape) == 3
+        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
+        assert len(bg_cube_model.background.shape) == 3
 
     @remote_data
     def test_image_plot(self):
@@ -97,7 +97,6 @@ class TestCubeBackgroundModel():
 
         # test if both arrays are equal
         assert_allclose(plot_data, model_data.value)
-        # TODO: clean up after test (remove created files)
 
     @remote_data
     def test_spectrum_plot(self):
@@ -118,7 +117,6 @@ class TestCubeBackgroundModel():
 
         # test if both arrays are equal
         assert_allclose(plot_data[:, 1], model_data.value)
-        # TODO: clean up after test (remove created files)
 
     @remote_data
     def test_write_bin_table(self):

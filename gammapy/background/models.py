@@ -371,10 +371,11 @@ class CubeBackgroundModel(object):
     def to_astropy_table(self):
         """Convert cube background model to astropy table format.
 
+        The name of the table is stored in the table meta information
+        under the keyword 'name'.
+
         Returns
         -------
-        name : `~string`
-            name of the table
         table : `~astropy..table.Table`
             table containing the bg cube
         """
@@ -393,11 +394,6 @@ class CubeBackgroundModel(object):
         a_energy_hi = Quantity([self.energy_bins[1:]])
         a_bg = Quantity([self.background])
 
-        # name
-        name = 'BACKGROUND'
-        # TODO: is it possible to give a name to a `~astropy.table.Table`?
-        #       (without writing it in the header)
-
         # table
         table = Table()
         table['DETX_LO'] = a_detx_lo
@@ -410,7 +406,10 @@ class CubeBackgroundModel(object):
 
         table.meta['E_THRES'] = a_energy_lo.flatten()[0].value
 
-        return name, table
+        # name
+        table.meta['name'] = 'BACKGROUND'
+
+        return table
 
     def to_fits_bin_table(self):
         """Convert cube background model to binary table fits format.
@@ -421,7 +420,11 @@ class CubeBackgroundModel(object):
             table containing the bg cube
         """
         # build astropy table
-        name, table = self.to_astropy_table()
+        table = self.to_astropy_table()
+
+        # read name and drop it from the meta information, otherwise
+        # it would be stored as a header keyword in the BinTableHDU
+        name = table.meta.popitem('name')[1]
 
         data = table.as_array()
 
@@ -438,6 +441,7 @@ class CubeBackgroundModel(object):
         # header is not logical: for instnce, list of keywords with column
         # units (TUNITi) is appended after the list of column keywords
         # (TTYPEi, TFORMi), instead of in between.
+        # https://github.com/gammapy/gammapy/issues/298
 
         return tbhdu
 
@@ -455,13 +459,16 @@ class CubeBackgroundModel(object):
         # TODO: energy binning: store in HDU table like for SpectralCube class
 
         # get WCS object
-        wcs = self.det_WCS
+        wcs = self.det_wcs
 
         # Now, write out the WCS object as a FITS header
         wcs_header = wcs.to_header()
 
         # transfering header values
         # need to copy necessary values one by one
+        # TODO: can this be simplified? just copy the header doesn't
+        #       work, since it overwrites important keywords (for
+        #       instance the ones for the energy axis)
         hdu.header['CTYPE1'] = wcs_header['CTYPE1']
         hdu.header['CTYPE2'] = wcs_header['CTYPE2']
         hdu.header['CUNIT1'] = wcs_header['CUNIT1']
@@ -504,9 +511,9 @@ class CubeBackgroundModel(object):
         im_extent : `~astropy.coordinates.Angle`
             array of bins with the image extent
         """
-        bx = self.detx_bins.degree
-        by = self.dety_bins.degree
-        return Angle([bx[0], bx[-1], by[0], by[-1]], 'degree')
+        bx = self.detx_bins.to('degree')
+        by = self.dety_bins.to('degree')
+        return Angle([bx[0], bx[-1], by[0], by[-1]])
 
     @property
     def spectrum_extent(self):
@@ -518,7 +525,7 @@ class CubeBackgroundModel(object):
             array of bins with the spectrum extent
         """
         b = self.energy_bins.to('TeV')
-        return Quantity([b[0], b[-1]], 'TeV')
+        return Quantity([b[0], b[-1]])
 
     @property
     def image_bin_centers(self):
@@ -554,7 +561,7 @@ class CubeBackgroundModel(object):
         return Quantity(energy_bin_centers, 'TeV')
 
     @property
-    def det_WCS(self):
+    def det_wcs(self):
         """WCS object describing the coordinates of the det (X, Y) bins.
 
         This method gives the correct answer only for linear X, Y binning.
