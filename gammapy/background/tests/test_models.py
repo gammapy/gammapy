@@ -71,13 +71,12 @@ class TestCubeBackgroundModel():
 
     @remote_data
     def test_read_bin_table(self):
-        
+
         # test shape of bg cube when reading a file
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
         bg_cube_file = CubeBackgroundModel.read_bin_table(filename)
         assert len(bg_cube_file.background.shape) == 3
-
 
     @remote_data
     def test_image_plot(self):
@@ -86,7 +85,8 @@ class TestCubeBackgroundModel():
         filename = datasets.get_path(filename, location='remote')
         bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
 
-        # test bg rate values plotted for image plot of energy bin conaining E = 2 TeV
+        # test bg rate values plotted for image plot of energy bin
+        # conaining E = 2 TeV
         energy = Quantity(2., 'TeV')
         fig_image, ax_im, image_im = bg_cube_model.plot_images(energy)
         plot_data = image_im.get_array()
@@ -99,7 +99,6 @@ class TestCubeBackgroundModel():
         assert_allclose(plot_data, model_data.value)
         # TODO: clean up after test (remove created files)
 
-
     @remote_data
     def test_spectrum_plot(self):
 
@@ -107,7 +106,8 @@ class TestCubeBackgroundModel():
         filename = datasets.get_path(filename, location='remote')
         bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
 
-        # test bg rate values plotted for spectrum plot of detector bin conaining det (0, 0) deg (center)
+        # test bg rate values plotted for spectrum plot of detector bin
+        # conaining det (0, 0) deg (center)
         det = Angle([0., 0.], 'degree')
         fig_spec, ax_spec, image_spec = bg_cube_model.plot_spectra(det)
         plot_data = ax_spec.get_lines()[0].get_xydata()
@@ -117,16 +117,15 @@ class TestCubeBackgroundModel():
         model_data = bg_cube_model.background[:, det_bin[0], det_bin[1]]
 
         # test if both arrays are equal
-        assert_allclose(plot_data[:,1], model_data.value)
+        assert_allclose(plot_data[:, 1], model_data.value)
         # TODO: clean up after test (remove created files)
-
 
     @remote_data
     def test_write_bin_table(self):
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_model_1= CubeBackgroundModel.read_bin_table(filename)
+        bg_model_1 = CubeBackgroundModel.read_bin_table(filename)
 
         outfile = NamedTemporaryFile(suffix='.fits').name
         bg_model_1.write_bin_table(outfile)
@@ -134,13 +133,12 @@ class TestCubeBackgroundModel():
         # test if values are correct in the saved file: compare both files
         bg_model_2 = CubeBackgroundModel.read_bin_table(outfile)
         assert_allclose(bg_model_2.background.value,
-                                       bg_model_1.background.value)
+                        bg_model_1.background.value)
         assert_allclose(bg_model_2.detx_bins.value,
-                                       bg_model_1.detx_bins.value)
+                        bg_model_1.detx_bins.value)
         assert_allclose(bg_model_2.dety_bins.value,
-                                       bg_model_1.dety_bins.value)
+                        bg_model_1.dety_bins.value)
         assert_allclose(bg_model_2.energy_bins.value,
-                                       bg_model_1.energy_bins.value)
+                        bg_model_1.energy_bins.value)
 
         # TODO: test also read_image and write_image
-

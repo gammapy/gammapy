@@ -20,6 +20,7 @@ DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 class GaussianBand2D(object):
+
     """Gaussian band model.
 
     This 2-dimensional model is Gaussian in ``y`` for a given ``x``,
@@ -90,14 +91,14 @@ def _make_bin_edges_array(lo, hi):
     Parameters
     ----------
     lo : `~numpy.array`
-    	lower boundaries
+        lower boundaries
     hi : `~numpy.array`
-    	higher boundaries
+        higher boundaries
 
     Returns
     -------
     bin_edges : `~numpy.array`
-    	array of bin edges as [[low], [high]]
+        array of bin edges as [[low], [high]]
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
 
@@ -116,24 +117,24 @@ def make_linear_bin_edges_arrays_from_wcs(w, nbins_x, nbins_y):
     Parameters
     ----------
     w : `~astropy.wcs.WCS`
-    	WCS object describing the bin coordinates
+        WCS object describing the bin coordinates
     nbins_x : `~int`
-    	number of bins in X coordinate
+        number of bins in X coordinate
     nbins_y : `~int`
-    	number of bins in Y coordinate
+        number of bins in Y coordinate
 
     Returns
     -------
     bins_x : `~numpy.array` of `~astropy.coordinates.Angle`
-    	array with the bin edges for the X coordinate
+        array with the bin edges for the X coordinate
     bins_y : `~numpy.array` of `~astropy.coordinates.Angle`
-    	array with the bin edges for the Y coordinate
+        array with the bin edges for the Y coordinate
     """
     # check number of dimensions
     if w.wcs.naxis != 2:
         raise ValueError("Expected exactly 2 dimensions, got {}".format(
             w.wcs.naxis))
-    
+
     unit_x, unit_y = w.wcs.cunit
     delta_x, delta_y = w.wcs.cdelt
     delta_x = Angle(delta_x, unit_x)
@@ -163,19 +164,19 @@ def make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
     Parameters
     ----------
     name_x : `~string`
-    	name of X coordinate, to be used as 'CTYPE' value
+        name of X coordinate, to be used as 'CTYPE' value
     name_y : `~string`
-    	name of Y coordinate, to be used as 'CTYPE' value
+        name of Y coordinate, to be used as 'CTYPE' value
     bins_x : `~numpy.array` of `~astropy.coordinates.Angle`
-    	array with the bin edges for the X coordinate
+        array with the bin edges for the X coordinate
     bins_y : `~numpy.array` of `~astropy.coordinates.Angle`
-    	array with the bin edges for the Y coordinate
+        array with the bin edges for the Y coordinate
 
     Returns
     -------
     w : `~astropy.wcs.WCS`
-    	WCS object describing the bin coordinates
-    """ 
+        WCS object describing the bin coordinates
+    """
     # check units
     unit_x = bins_x.unit
     unit_y = bins_y.unit
@@ -201,12 +202,14 @@ def make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
     # ref as lower left corner (start of (X, Y) bin coordinates)
     # coordinate start empiricaly determined at pix = 0.5: why 0.5?
     w.wcs.crpix = [0.5, 0.5]
-    w.wcs.crval = [(bins_x[0] + (w.wcs.crpix[0] - 0.5)*delta_x).to(unit_x).value, (bins_y[0] + (w.wcs.crpix[1] - 0.5)*delta_y).to(unit_y).value]
+    w.wcs.crval = [(bins_x[0] + (w.wcs.crpix[0] - 0.5)*delta_x).to(unit_x).value,
+                   (bins_y[0] + (w.wcs.crpix[1] - 0.5)*delta_y).to(unit_y).value]
 
     return w
 
 
 class CubeBackgroundModel(object):
+
     """Cube background model.
 
     Container class for cube background model (X, Y, energy).
@@ -223,7 +226,7 @@ class CubeBackgroundModel(object):
     energy_bins : `~astropy.units.Quantity`
         Energy bin edges vector (low and high).
     background : `~astropy.units.Quantity`
-    	Background cube in (energy, X, Y) format.
+        Background cube in (energy, X, Y) format.
     """
 
     def __init__(self, detx_bins, dety_bins, energy_bins, background):
@@ -331,7 +334,6 @@ class CubeBackgroundModel(object):
         """
         raise NotImplementedError
 
-
     @staticmethod
     def read_bin_table(filename):
         """Read cube background model from binary table in fits file.
@@ -349,7 +351,6 @@ class CubeBackgroundModel(object):
         hdu = fits.open(filename)
         return CubeBackgroundModel.from_fits_bin_table(hdu)
 
-
     @staticmethod
     def read_image(filename):
         """Read cube background model from image in fits file.
@@ -365,8 +366,7 @@ class CubeBackgroundModel(object):
             bg model cube object
         """
         hdu = fits.open(filename)
-        return CubeBackgroundModel.from_fits_image(hdu)        
-
+        return CubeBackgroundModel.from_fits_image(hdu)
 
     def to_astropy_table(self):
         """Convert cube background model to astropy table format.
@@ -412,7 +412,6 @@ class CubeBackgroundModel(object):
 
         return name, table
 
-
     def to_fits_bin_table(self):
         """Convert cube background model to binary table fits format.
 
@@ -428,9 +427,9 @@ class CubeBackgroundModel(object):
 
         header = fits.Header()
         header.update(table.meta)
- 
+
         tbhdu = fits.BinTableHDU(data, header, name=name)
- 
+
         # Copy over column meta-data
         for colname in table.colnames:
             tbhdu.columns[colname].unit = str(table[colname].unit)
@@ -442,7 +441,6 @@ class CubeBackgroundModel(object):
 
         return tbhdu
 
-
     def to_fits_image(self):
         """Convert cube background model to image fits format.
 
@@ -452,9 +450,9 @@ class CubeBackgroundModel(object):
             image containing the bg cube
         """
         hdu = fits.ImageHDU(data=self.background.value)
-        #TODO: store units (of bg) somewhere in header??!!!!
-        #TODO: implement WCS object to be able to read the det coords -> done
-        #TODO: energy binning: store in HDU table like for SpectralCube class
+        # TODO: store units (of bg) somewhere in header??!!!!
+        # TODO: implement WCS object to be able to read the det coords -> done
+        # TODO: energy binning: store in HDU table like for SpectralCube class
 
         # get WCS object
         wcs = self.det_WCS
@@ -477,7 +475,6 @@ class CubeBackgroundModel(object):
 
         return hdu
 
-
     def write_bin_table(self, *args, **kwargs):
         """Write cube background model to binary table in fits file.
 
@@ -488,7 +485,6 @@ class CubeBackgroundModel(object):
         """
         self.to_fits_bin_table().writeto(*args, **kwargs)
 
-
     def write_image(self, *args, **kwargs):
         """Write cube background model to image in fits file.
 
@@ -498,7 +494,6 @@ class CubeBackgroundModel(object):
         forwarding all arguments.
         """
         self.to_fits_image().writeto(*args, **kwargs)
-
 
     @property
     def image_extent(self):
@@ -513,7 +508,6 @@ class CubeBackgroundModel(object):
         by = self.dety_bins.degree
         return Angle([bx[0], bx[-1], by[0], by[-1]], 'degree')
 
-
     @property
     def spectrum_extent(self):
         """Spectrum extent `(e_lo, e_hi)`.
@@ -525,7 +519,6 @@ class CubeBackgroundModel(object):
         """
         b = self.energy_bins.to('TeV')
         return Quantity([b[0], b[-1]], 'TeV')
-
 
     @property
     def image_bin_centers(self):
@@ -544,7 +537,6 @@ class CubeBackgroundModel(object):
         dety_edges_centers = (dety_edges_low + dety_edges_high)/2.
         return Angle([detx_edges_centers, dety_edges_centers])
 
-
     @property
     def spectrum_bin_centers(self):
         """Spectrum bin centers (log center)
@@ -560,7 +552,6 @@ class CubeBackgroundModel(object):
         e_hi_tev = energy_edges_high.to('TeV').value
         energy_bin_centers = 10.**(0.5*(np.log10(e_lo_tev*e_hi_tev)))
         return Quantity(energy_bin_centers, 'TeV')
-
 
     @property
     def det_WCS(self):
@@ -578,7 +569,6 @@ class CubeBackgroundModel(object):
                                                     bins_x=self.detx_bins,
                                                     bins_y=self.detx_bins)
         return wcs
-
 
     def find_det_bin(self, det):
         """Find the bin that contains the specified det (X, Y) pair.
@@ -618,14 +608,13 @@ class CubeBackgroundModel(object):
         detx_edges_high = self.detx_bins[1:]
         dety_edges_low = self.dety_bins[:-1]
         dety_edges_high = self.dety_bins[1:]
-	bin_pos_x = np.searchsorted(detx_edges_high, det[0])
-	bin_pos_y = np.searchsorted(dety_edges_high, det[1])
+        bin_pos_x = np.searchsorted(detx_edges_high, det[0])
+        bin_pos_y = np.searchsorted(dety_edges_high, det[1])
         bin_pos = np.array([bin_pos_x, bin_pos_y])
         bin_edges = Angle([detx_edges_low[bin_pos[0]], detx_edges_high[bin_pos[0]],
                            dety_edges_low[bin_pos[1]], dety_edges_high[bin_pos[1]]])
 
         return bin_pos, bin_edges
-
 
     def find_energy_bin(self, energy):
         """Find the bin that contains the specified energy value.
@@ -660,11 +649,10 @@ class CubeBackgroundModel(object):
 
         energy_edges_low = self.energy_bins[:-1]
         energy_edges_high = self.energy_bins[1:]
-	bin_pos = np.searchsorted(energy_edges_high, energy)
+        bin_pos = np.searchsorted(energy_edges_high, energy)
         bin_edges = Quantity([energy_edges_low[bin_pos], energy_edges_high[bin_pos]])
 
         return bin_pos, bin_edges
-
 
     def plot_images(self, energy=None):
         """Plot images for each energy bin.
@@ -679,8 +667,8 @@ class CubeBackgroundModel(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`, optional
-        	energy of bin to plot the bg model
-      	
+                energy of bin to plot the bg model
+
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
@@ -727,8 +715,12 @@ class CubeBackgroundModel(object):
         if do_only_1_plot:
             # find energy bin containing the specified energy
             energy_bin, energy_bin_edges = self.find_energy_bin(energy)
-            ss_energy_bin_edges = "[{0}, {1}) {2}".format(energy_bin_edges[0].value, energy_bin_edges[1].value, energy_bin_edges.unit)
-            print("Found energy {0} in bin {1} with boundaries {2}.".format(energy, energy_bin, ss_energy_bin_edges))
+            ss_energy_bin_edges = "[{0}, {1}) {2}".format(energy_bin_edges[0].value,
+                                                          energy_bin_edges[1].value,
+                                                          energy_bin_edges.unit)
+            print("Found energy {0} in bin {1} with boundaries {2}.".format(energy,
+                                                                            energy_bin,
+                                                                            ss_energy_bin_edges))
 
         for ii in range(n_energy_bins):
             if do_only_1_plot:
@@ -736,7 +728,7 @@ class CubeBackgroundModel(object):
             print("ii", ii)
             data = self.background[ii]
             energy_bin_center = energy_bin_centers[ii]
-            print ( "  image({}) canvas({}) pad({})".format(count_images, count_canvases, count_pads))
+            print ("  image({}) canvas({}) pad({})".format(count_images, count_canvases, count_pads))
 
             if do_only_1_plot:
                 fig.set_size_inches(8., 8., forward=True)
@@ -750,7 +742,9 @@ class CubeBackgroundModel(object):
                               cmap='afmhot')
             # TODO: image seems mirrored in Y axis w.r.t. image in fits!!!
             if do_only_1_plot:
-                ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value, energy_bin_edges[1].value, energy_bin_edges.unit))
+                ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value,
+                                                                      energy_bin_edges[1].value,
+                                                                      energy_bin_edges.unit))
             else:
                 ax.set_title('Energy = {:.1f}'.format(energy_bin_center))
             ax.set_xlabel('X / {}'.format(extent.unit))
@@ -781,7 +775,6 @@ class CubeBackgroundModel(object):
         if do_only_1_plot:
             return fig, axes, image
 
-
     def plot_spectra(self, det=None):
         """Plot spectra for each spatial (X, Y) bin.
 
@@ -796,7 +789,7 @@ class CubeBackgroundModel(object):
         ----------
         det : `~astropy.units.Quantity`, optional
             det (X,Y) pair of bin to plot the bg model
-      	
+
         Returns
         -------
         fig : `~matplotlib.figure.Figure`
@@ -842,9 +835,15 @@ class CubeBackgroundModel(object):
         if do_only_1_plot:
             # find det bin containing the specified det coordinates
             det_bin, det_bin_edges = self.find_det_bin(det)
-            ss_detx_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[0].value, det_bin_edges[1].value, det_bin_edges.unit)
-            ss_dety_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[2].value, det_bin_edges[3].value, det_bin_edges.unit)
-            print("Found det {0} in bin {1} with boundaries {2}, {3}.".format(det, det_bin, ss_detx_bin_edges, ss_dety_bin_edges))
+            ss_detx_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[0].value,
+                                                        det_bin_edges[1].value,
+                                                        det_bin_edges.unit)
+            ss_dety_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[2].value,
+                                                        det_bin_edges[3].value,
+                                                        det_bin_edges.unit)
+            print("Found det {0} in bin {1} with boundaries {2}, {3}.".format(det, det_bin,
+                                                                              ss_detx_bin_edges,
+                                                                              ss_dety_bin_edges))
 
         for ii in range(n_det_bins_x):
             if do_only_1_plot:
@@ -857,18 +856,23 @@ class CubeBackgroundModel(object):
                 data = self.background[:, ii, jj]
                 detx_bin_center = det_bin_centers[0, ii]
                 dety_bin_center = det_bin_centers[0, jj]
-                print ( "  image({}) canvas({}) pad({})".format(count_images, count_canvases, count_pads))
+                print ("  image({}) canvas({}) pad({})".format(count_images, count_canvases, count_pads))
 
                 if do_only_1_plot:
                     fig.set_size_inches(8., 8., forward=True)
                     ax = axes
                 else:
                     ax = axes.flat[count_pads - 1]
-                image = ax.plot(energy_points.to('TeV'), data, drawstyle='default') # connect points with lines
+                image = ax.plot(energy_points.to('TeV'), data,
+                                drawstyle='default') # connect points with lines
                 ax.loglog() # double log scale # slow!
                 if do_only_1_plot:
-                    ss_detx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[0].value, det_bin_edges[1].value, det_bin_edges.unit)
-                    ss_dety_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[2].value, det_bin_edges[3].value, det_bin_edges.unit)
+                    ss_detx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[0].value,
+                                                                        det_bin_edges[1].value,
+                                                                        det_bin_edges.unit)
+                    ss_dety_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[2].value,
+                                                                        det_bin_edges[3].value,
+                                                                        det_bin_edges.unit)
 
                     ax.set_title('Det = {0} {1}'.format(ss_detx_bin_edges, ss_dety_bin_edges))
                 else:
@@ -881,7 +885,9 @@ class CubeBackgroundModel(object):
                 if count_pads > npads_per_canvas or count_images == nimages:
                     print("Canvas full, saving and creating a new canvas")
                     if do_only_1_plot:
-                        filename = "cube_background_model_spectrum{0}{2}{1}{2}.png".format(det.value[0], det.value[1], det.unit)
+                        filename = "cube_background_model_spectrum{0}{2}{1}{2}.png".format(det.value[0],
+                                                                                           det.value[1],
+                                                                                           det.unit)
                     else:
                         filename = "cube_background_model_spectra{}.png".format(count_canvases)
                     print('Writing {}'.format(filename))
