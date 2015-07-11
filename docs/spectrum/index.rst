@@ -29,7 +29,47 @@ Getting Started
 
 TODO
 
-Hello World
+Energy handling in Gammapy
+==========================
+
+.. warning::
+
+   This is  completely experimental
+
+Basics
+------
+
+Most objects in Astronomy require an energy axis, e.g. counts spectra or effective area tables. In general, this axis can be defined in two ways.
+
+* As an array of energy bin edges. This is usually stored in EBOUNDS tables, e.g. for Fermi-LAT counts cubes. In Gammalib this is represented by GEbounds.
+* As an array of energy values. E.g. the Fermi-LAT diffuse flux is given at certain energies and those are stored in an ENERGY FITS table extension. In Gammalib this is represented by GEnergy.
+
+In Gammapy both use cases are handled by `gammapy.spectrum.utils.EnergyBinning` (to be renamed!). By default, the first case, i.e. an array of energy bin edges is expected in the constructor. 
+
+.. code-block:: python
+    
+    >>> from gammapy.spectrum import EnergyBinning
+    >>> from astropy.units import Quantity
+    >>> binning = Quantity(np.logspace(-1,1,11))
+    >>> e_axis = EnergyBinning(e_axis, 'bin_edges')
+
+Note, that the 'bin_edges' flag can be left out. Of course the second way of defining the axis, i.e. by the energy bin centers, is also supported. 
+
+.. code-block:: python
+    
+    >>> from gammapy.spectrum import EnergyBinning
+    >>> from astropy.units import Quantity
+    >>> binning = Quantity(np.logspace(-1,1,11))
+    >>> centers = np.sqrt(binning[:-1]*binning[1:])
+    >>> e_axis = EnergyBinning(center, 'bin_centers')
+
+The main advantage of the EnergyBinning class with respect to pure numpy arrays or two separate classes handling both use cases is that the transition from energy bin edges to bin centers has to be only done once in constructor. All other class do not need to deal with the energy binning conversions anymore.
+
+FITS I/O
+--------
+
+TODO
+
 
 Reference/API
 =============
