@@ -75,7 +75,7 @@ class TestCubeBackgroundModel():
         # test shape of bg cube when reading a file
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
+        bg_cube_model = CubeBackgroundModel.read(filename, format='bin_table')
         assert len(bg_cube_model.background.shape) == 3
 
     @remote_data
@@ -83,12 +83,12 @@ class TestCubeBackgroundModel():
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
+        bg_cube_model = CubeBackgroundModel.read(filename, format='bin_table')
 
         # test bg rate values plotted for image plot of energy bin
         # conaining E = 2 TeV
         energy = Quantity(2., 'TeV')
-        fig_image, ax_im, image_im = bg_cube_model.plot_images(energy)
+        fig_image, ax_im, image_im = bg_cube_model.plot_image(energy)
         plot_data = image_im.get_array()
 
         # get data from bg model object to compare
@@ -103,12 +103,12 @@ class TestCubeBackgroundModel():
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_cube_model = CubeBackgroundModel.read_bin_table(filename)
+        bg_cube_model = CubeBackgroundModel.read(filename, format='bin_table')
 
         # test bg rate values plotted for spectrum plot of detector bin
         # conaining det (0, 0) deg (center)
         det = Angle([0., 0.], 'degree')
-        fig_spec, ax_spec, image_spec = bg_cube_model.plot_spectra(det)
+        fig_spec, ax_spec, image_spec = bg_cube_model.plot_spectrum(det)
         plot_data = ax_spec.get_lines()[0].get_xydata()
 
         # get data from bg model object to compare
@@ -123,13 +123,13 @@ class TestCubeBackgroundModel():
 
         filename = '../test_datasets/background/bg_cube_model_test.fits'
         filename = datasets.get_path(filename, location='remote')
-        bg_model_1 = CubeBackgroundModel.read_bin_table(filename)
+        bg_model_1 = CubeBackgroundModel.read(filename, format='bin_table')
 
         outfile = NamedTemporaryFile(suffix='.fits').name
-        bg_model_1.write_bin_table(outfile)
+        bg_model_1.write(outfile, format='bin_table')
 
         # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read_bin_table(outfile)
+        bg_model_2 = CubeBackgroundModel.read(outfile, format='bin_table')
         assert_allclose(bg_model_2.background.value,
                         bg_model_1.background.value)
         assert_allclose(bg_model_2.detx_bins.value,
