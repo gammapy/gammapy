@@ -3,8 +3,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-__all__ = ['make_linear_bin_edges_arrays_from_wcs',
-           'make_linear_wcs_from_bin_edges_arrays',
+__all__ = ['linear_arrays_from_wcs',
+           'linear_wcs_from_arrays',
            ]
 
 import numpy as np
@@ -12,7 +12,7 @@ from astropy.wcs import WCS
 from astropy.coordinates import Angle
 
 
-def make_linear_bin_edges_arrays_from_wcs(w, nbins_x, nbins_y):
+def linear_arrays_from_wcs(w, nbins_x, nbins_y):
     """Make a 2D linear binning from a WCS object.
 
     This method gives the correct answer only for linear X, Y binning.
@@ -60,7 +60,7 @@ def make_linear_bin_edges_arrays_from_wcs(w, nbins_x, nbins_y):
     return bins_x, bins_y
 
 
-def make_linear_wcs_from_bin_edges_arrays(name_x, name_y, bins_x, bins_y):
+def linear_wcs_from_arrays(name_x, name_y, bins_x, bins_y):
     """Make a 2D linear WCS object from arrays of bin edges.
 
     This method gives the correct answer only for linear X, Y binning.
