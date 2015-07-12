@@ -8,12 +8,16 @@ from ..utils.array import array_stats_str
 
 __all__ = ['LogEnergyAxis',
            'EnergyBinning',
-           'EnergyBinCenters',
-           'EnergyBinEdges',
            'np_to_pha',
            ]
 
-# TODO: remove functions now that we have classes!
+
+def find_log_centers(bin_edges):
+    """Compute energy bin log centers.
+
+    Bin center = sqrt(low_edge * high_edge)
+    """
+    return np.sqrt(bin_edges[:-1] * bin_edges[1:])
 
 
 class EnergyBinning(object):
@@ -28,7 +32,7 @@ class EnergyBinning(object):
     TODO:
     - document once we agreed on a mechanism
     - implement FITS I/O
-    - What shall happen with the other classes
+    - What shall happen with the other classes?
 
     Parameters
     ----------
@@ -36,34 +40,49 @@ class EnergyBinning(object):
     Energy bin edges
     """
 
-    def __init__(self, energy):
+    def __init__(self, bin_edges = None, bin_centers = None):
 
-        if not isinstance(energy, Quantity):
-            raise ValueError("Energy must be a Quantity object.")
+        if not isinstance (bin_edges,Quantity) and not isinstance (bin_centers,Quantity):
+            raise ValueError("Energies must be Quantity objects")
+        
+        self._bin_edges = bin_edges
+        self._bin_centers = bin_centers
 
-        self.emin = np.min(energy)
-        self.emax = np.max(energy)
-        self.nbins = len(energy) - 1
-        self.energy_bounds = energy
-        self._energy_find_log_centers()
+        if bin_centers is not None:
+            self.nbins = len(self.bin_centers)
+        elif bin_edges is not None:
+            self.nbins = len(self.bin_edges) - 1
+        else:
+            self.nbins = 0
+    
+    @staticmethod 
+    def from_edges(bin_edges, centers = 'log'):
+        """Create EnergyBinning by given the bin edges and a method how to place the bin centers.
 
-    def _energy_find_log_centers(self):
-        """Compute energy bin log centers.
-
-        center = sqrt(low_edge * high_edge)
+        Options for placing the bin centers are:
+        
+        - 'log' : Place bin centers at the log center of the bin (default)
+        - to be implemented
         """
 
-        bounds = self.energy_bounds
-        self._log_centers = np.sqrt(bounds[:-1] * bounds[1:])
+        if centers == 'log':
+            bin_centers = find_log_centers(bin_edges)
+        else:
+            raise ValueError("Method for placing bin centers not implemented")
+    
+        return EnergyBinning(bin_edges,bin_centers)     
+        
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins):
-        """Make energy bounds array with equal-log spacing.
+        """Create EnergyBinning with equal log-spacing by giving the outer bin edges
 
         Parameters
         ----------
         emin : `~astropy.units.Quantity`
+        Lower bound of lowest energy bin
         emax : `~astropy.units.Quantity`
+        Upper bound of highest energy bin
         bins : int
         Number of bins
 
@@ -79,45 +98,93 @@ class EnergyBinning(object):
         emax = emax.to('TeV')
 
         x_min, x_max = np.log10([emin.value, emax.value])
-        energy_bounds = np.logspace(x_min, x_max, nbins + 1)
+        bin_edges = np.logspace(x_min, x_max, nbins + 1)
 
-        energy_bounds = Quantity(energy_bounds, emin.unit)
+        bin_edges = Quantity(bin_edges, emin.unit)
 
-        return EnergyBinning(energy_bounds)
+        return EnergyBinning.from_edges(bin_edges, 'log')
 
     @staticmethod
-    def from_log_centers(energy):
-        """Make energy bounds array starting from log centers
+    def from_centers(bin_centers):
+        """Create EnergyBinning equally spaced in log by giving the log bin centers
+
+        This special case allows computation of the bin edges if only the bin centers are known (I don't know if thats really necessary, there could be also a tet for equal log spacing the constructor)
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-        Energy bin log centers
+        bin_centers : `~astropy.units.Quantity`
+        Energy bin centers
 
         Returns
         -------
         Energy Binning
         """
 
-        if not isinstance(energy, Quantity):
-            raise ValueError("Energy must be a Quantity object.")
+        bin_edges = np.sqrt(bin_centers[:-1] * bin_centers[1:])
+        first = bin_centers[0] * bin_centers[0] / bin_edges[0]
+        last = bin_centers[-1] * bin_centers[-1] / bin_edges[-1]
+        bin_edges = np.append(first, bin_edges)
+        bin_edges = np.append(bin_edges, last)
+        bin_edges = Quantity(bin_edges, 'TeV')
 
-        center = energy.value
-        bounds = np.sqrt(center[:-1] * center[1:])
-        first = center[0] * center[0] / bounds[0]
-        last = center[-1] * center[-1] / bounds[-1]
-        bounds = np.append(first, bounds)
-        bounds = np.append(bounds, last)
-        bounds = Quantity(bounds, 'TeV')
+        return EnergyBinning(bin_edges, bin_centers)
 
-        return EnergyBinning(bounds)
+    @staticmethod
+    def from_fits(hdulist):
+        """Read energy axis from hdulist
 
+        Support all formats here
+        """
+        
+        try:
+            bin_centers=Quantity(hdulist['ENERGIES'].data['Energy'],'MeV')
+            #Could check for equal log spacing here to compute bin edges
+            return EnergyBinning(bin_centers=bin_centers)
+        except KeyError:
+            pass
+
+        try:
+            energy_lo = hdulist['SPECRESP'].data['ENERG_LO']
+            energy_hi = hdulist['SPECRESP'].data['ENERG_HI']
+            bin_edges = Quantity(energy_lo + energy_hi[-1],
+                                 hdulist['SPECRESP'].header['TUNIT1'])
+            return EnergyBinning.from_edges(bin_edges, centers='log')
+        except KeyError:
+            pass
+
+        raise ValueError("The hdulist does not contain a valid energy extension")
+            
+    def to_fits(self, name, **kwargs):
+        """Write energy axis to hdulist
+        """
+
+        if name=='ENERGIES':
+            data = self.bin_centers
+            header=fits.header
+            header['EXTNAME']='TEST'
+            return fits.BinTableHDU(data=data,header=header,name=name)
+                        
     @property
-    def log_centers(self):
+    def bin_centers(self):
         """
-        Log centers of the energy bins
+        Centers of the energy bins
         """
-        return self._log_centers
+        
+        if self._bin_centers is not None:
+            return self._bin_centers
+        else:
+            raise ValueError("Bin centers not defined for this energy axis")
+        
+    @property
+    def bin_edges(self):
+        """
+        Edges of the energy bins
+        """
+        
+        if self._bin_edges is not None:
+            return self._bin_edges
+        else:
+            raise ValueError("Bin edges not defined for this energy axis")
 
     def to_fits(self):
         """
@@ -129,63 +196,15 @@ class EnergyBinning(object):
         s = '\nEnergy bins\n'
         s += "------------\n"
         s += 'Nbins: {0}\n'.format(self.nbins)
-        s += array_stats_str(self._log_centers, 'Energy bin centers')
-        s += array_stats_str(self.energy_bounds, 'Energy bin edges')
+        try:
+            s += array_stats_str(self.bin_edges, 'Energy bin edges')
+        except ValueError:
+            s += 'Bin edges not defined'
+        try:
+            s += array_stats_str(self.bin_centers, 'Energy bin centers')
+        except ValueError:
+            s += 'Bin centers not defined'
         return s
-
-
-class EnergyBinCenters(object):
-
-    """Energy bin centers.
-
-    Stored as "ENERGIES" FITS table extensions.
-    """
-    # TODO: implement FITS I/O to E
-    # TODO: implement info()
-
-    def info(self):
-        s = 'Energy bin centers:'
-        s += 'TODO'
-        return s
-
-    def log_edges(self):
-        """Log energy bin edges.
-
-        Chooses log center between two points.
-        The left and right edge is chosen so that the points
-        are at the log center, i.e. the log internal is reflected
-        to get the outermost bin edges.
-
-        Returns
-        -------
-        edges : `EnergyBinEdges`
-            Energy bin edges
-        """
-        raise NotImplementedError
-
-
-class EnergyBinEdges(object):
-
-    """Energy bin edges.
-
-    Stored as "EBOUNDS" FITS table extensions.
-    """
-    # TODO: implement FITS I/O
-
-    def info(self):
-        s = 'Energy bin edges:'
-        s += 'TODO'
-        return s
-
-    def log_centers(self):
-        """Log energy bin centers.
-
-        Returns
-        -------
-        centers : `EnergyBinCenters`
-            Energy bin centers
-        """
-        raise NotImplementedError
 
 
 class LogEnergyAxis(object):
