@@ -9,8 +9,8 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy import wcs
-from ..utils.wcs import (make_linear_bin_edges_arrays_from_wcs,
-                               make_linear_wcs_from_bin_edges_arrays)
+from ..utils.wcs import (linear_arrays_from_wcs,
+                         linear_wcs_from_arrays)
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
@@ -145,10 +145,9 @@ class CubeBackgroundModel(object):
         bg_cube : `~gammapy.models.CubeBackgroundModel`
             bg model cube object
         """
-        hdu = tbhdu['BACKGROUND']
-
-        header = hdu.header
-        data = hdu.data
+ 
+        header = tbhdu.header
+        data = tbhdu.data
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
         if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'):
@@ -196,13 +195,13 @@ class CubeBackgroundModel(object):
         # get background data
         background = data['Bgd'][0]
         background_unit = header['TUNIT7']
-        TeV_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
+        tev_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
                      '1 / (TeV s sr)']
-        MeV_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
+        mev_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
                      '1 / (MeV s sr)']
-        if background_unit in TeV_units:
+        if background_unit in tev_units:
             background_unit = '1 / (s TeV sr)'
-        elif background_unit in MeV_units:
+        elif background_unit in mev_units:
             background_unit = '1 / (s MeV sr)'
         else:
             raise ValueError("Cannot interpret units ({})".format(background_unit))
@@ -214,13 +213,13 @@ class CubeBackgroundModel(object):
                                    background=background)
 
     @staticmethod
-    def from_fits_image(tbhdu):
+    def from_fits_image(imhdu):
         """Read cube background model from a fits image.
 
         Parameters
         ----------
-        tbhdu : `~astropy.io.fits.BinTableHDU`
-            HDU binary table for the bg cube
+        imhdu : `~astropy.io.fits.ImageHDU`
+            HDU image for the bg cube
 
         Returns
         -------
@@ -230,7 +229,7 @@ class CubeBackgroundModel(object):
         raise NotImplementedError
 
     @staticmethod
-    def read(filename, format='bin_table'):
+    def read(filename, format='table'):
         """Read cube background model from fits file.
 
         Several input formats are accepted, depending on the value
@@ -241,9 +240,9 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        filename : `~string`
+        filename : `~str`
             name of file with the bg cube
-        format : `~string`, optional
+        format : `~str`, optional
             format of the bg cube to read
 
         Returns
@@ -252,15 +251,15 @@ class CubeBackgroundModel(object):
             bg model cube object
         """
         hdu = fits.open(filename)
-        if format == 'bin_table':
+        hdu = hdu['BACKGROUND']
+        if format == 'table':
             return CubeBackgroundModel.from_fits_bin_table(hdu)
         elif format == 'image':
             return CubeBackgroundModel.from_fits_image(hdu)
         else:
-            raise ValueError("Got format {}, which is not understood."
-                             .format(format))
+            raise ValueError("Invalid format {}.".format(format))
 
-    def to_astropy_table(self):
+    def to_table(self):
         """Convert cube background model to astropy table format.
 
         The name of the table is stored in the table meta information
@@ -268,15 +267,9 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        table : `~astropy..table.Table`
+        table : `~astropy.table.Table`
             table containing the bg cube
         """
-        # fits unit string
-        u_detx = '{0.unit:FITS}'.format(self.detx_bins)
-        u_dety = '{0.unit:FITS}'.format(self.dety_bins)
-        u_energy = '{0.unit:FITS}'.format(self.energy_bins)
-        u_bg = '{0.unit:FITS}'.format(self.background)
-
         # data arrays
         a_detx_lo = Quantity([self.detx_bins[:-1]])
         a_detx_hi = Quantity([self.detx_bins[1:]])
@@ -312,7 +305,7 @@ class CubeBackgroundModel(object):
             table containing the bg cube
         """
         # build astropy table
-        table = self.to_astropy_table()
+        table = self.to_table()
 
         # read name and drop it from the meta information, otherwise
         # it would be stored as a header keyword in the BinTableHDU
@@ -333,6 +326,8 @@ class CubeBackgroundModel(object):
         # header is not logical: for instance, list of keywords with column
         # units (TUNITi) is appended after the list of column keywords
         # (TTYPEi, TFORMi), instead of in between.
+        # As a matter of fact, the units aren't yet in the header, but
+        # only when calling the write method and opening the output file.
         # https://github.com/gammapy/gammapy/issues/298
 
         return tbhdu
@@ -342,39 +337,23 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        hdu : `~astropy.io.fits.ImageHDU`
+        imhdu : `~astropy.io.fits.ImageHDU`
             image containing the bg cube
         """
-        hdu = fits.ImageHDU(data=self.background.value)
+        imhdu = fits.ImageHDU(data=self.background.value, name='BACKGROUND')
         # TODO: store units (of bg) somewhere in header??!!!!
         # TODO: implement WCS object to be able to read the det coords -> done
         # TODO: energy binning: store in HDU table like for SpectralCube class
 
-        # get WCS object
-        wcs = self.det_wcs
+        # get WCS object and write it out as a FITS header
+        wcs_header = self.det_wcs.to_header()
 
-        # Now, write out the WCS object as a FITS header
-        wcs_header = wcs.to_header()
+        # transferring header values
+        imhdu.header.update(wcs_header)
 
-        # transfering header values
-        # need to copy necessary values one by one
-        # TODO: can this be simplified? just copy the header doesn't
-        #       work, since it overwrites important keywords (for
-        #       instance the ones for the energy axis)
-        hdu.header['CTYPE1'] = wcs_header['CTYPE1']
-        hdu.header['CTYPE2'] = wcs_header['CTYPE2']
-        hdu.header['CUNIT1'] = wcs_header['CUNIT1']
-        hdu.header['CUNIT2'] = wcs_header['CUNIT2']
-        hdu.header['CDELT1'] = wcs_header['CDELT1']
-        hdu.header['CDELT2'] = wcs_header['CDELT2']
-        hdu.header['CRPIX1'] = wcs_header['CRPIX1']
-        hdu.header['CRPIX2'] = wcs_header['CRPIX2']
-        hdu.header['CRVAL1'] = wcs_header['CRVAL1']
-        hdu.header['CRVAL2'] = wcs_header['CRVAL2']
+        return imhdu
 
-        return hdu
-
-    def write(self, outfile, format='bin_table', write_kwargs=None):
+    def write(self, outfile, format='table', write_kwargs=None):
         """Write cube background model to fits file.
 
         Several output formats are accepted, depending on the value
@@ -390,9 +369,9 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        outfile : `~string`
+        outfile : `~str`
             name of file to write
-        format : `~string`, optional
+        format : `~str`, optional
             format of the bg cube to write
         write_kwargs : `~dict`, optional
             extra arguments for the corresponding `io.fits` `writeto` method
@@ -400,13 +379,12 @@ class CubeBackgroundModel(object):
         if write_kwargs is None:
             write_kwargs = dict()
 
-        if format == 'bin_table':
+        if format == 'table':
             self.to_fits_bin_table().writeto(outfile, **write_kwargs)
         elif format == 'image':
             self.to_fits_image().writeto(outfile, **write_kwargs)
         else:
-            raise ValueError("Got format {}, which is not understood."
-                             .format(format))
+            raise ValueError("Invalid format {}.".format(format))
 
     @property
     def image_extent(self):
@@ -417,8 +395,8 @@ class CubeBackgroundModel(object):
         im_extent : `~astropy.coordinates.Angle`
             array of bins with the image extent
         """
-        bx = self.detx_bins.to('degree')
-        by = self.dety_bins.to('degree')
+        bx = self.detx_bins
+        by = self.dety_bins
         return Angle([bx[0], bx[-1], by[0], by[-1]])
 
     @property
@@ -430,7 +408,7 @@ class CubeBackgroundModel(object):
         spec_extent : `~astropy.units.Quantity`
             array of bins with the spectrum extent
         """
-        b = self.energy_bins.to('TeV')
+        b = self.energy_bins
         return Quantity([b[0], b[-1]])
 
     @property
@@ -451,8 +429,8 @@ class CubeBackgroundModel(object):
         return Angle([detx_edges_centers, dety_edges_centers])
 
     @property
-    def spectrum_bin_centers(self):
-        """Spectrum bin centers (log center)
+    def energy_bin_centers(self):
+        """Energy bin centers (logarithmic center).
 
         Returns
         -------
@@ -464,6 +442,11 @@ class CubeBackgroundModel(object):
         e_lo_tev = energy_edges_low.to('TeV').value
         e_hi_tev = energy_edges_high.to('TeV').value
         energy_bin_centers = 10.**(0.5*(np.log10(e_lo_tev*e_hi_tev)))
+        # TODO: this function should be reviewed/re-written, when
+        # the following PR is completed:
+        # https://github.com/gammapy/gammapy/pull/290
+        # as suggested in:
+        # https://github.com/gammapy/gammapy/pull/292#discussion_r34412865
         return Quantity(energy_bin_centers, 'TeV')
 
     @property
@@ -477,10 +460,10 @@ class CubeBackgroundModel(object):
         wcs : `~astropy.wcs.WCS`
             WCS object describing the bin coordinates
         """
-        wcs = make_linear_wcs_from_bin_edges_arrays(name_x="DETX",
-                                                    name_y="DETY",
-                                                    bins_x=self.detx_bins,
-                                                    bins_y=self.detx_bins)
+        wcs = linear_wcs_from_arrays(name_x="DETX",
+                                     name_y="DETY",
+                                     bins_x=self.detx_bins,
+                                     bins_y=self.detx_bins)
         return wcs
 
     def find_det_bin(self, det):
@@ -567,7 +550,7 @@ class CubeBackgroundModel(object):
 
         return bin_pos, bin_edges
 
-    def plot_image(self, energy, ax=None, save=False):
+    def plot_image(self, energy, ax=None):
         """Plot image for the energy bin containing the specified energy.
 
         Parameters
@@ -575,19 +558,12 @@ class CubeBackgroundModel(object):
         energy : `~astropy.units.Quantity`
             energy of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
-            axes of the figure
-        save : `~bool`, optional
-            flag to turn on/off the saving of the figure in a png file
+            axes of the figure for the plot
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            figure with image of bin of the bg model for the
-            selected energy value
         ax : `~matplotlib.axes.Axes`
-            axes of the figure
-        image : `~matplotlib.image.AxesImage`
-            image of the figure, optional
+            axes of the figure containing the plot
         """
         import matplotlib.pyplot as plt
         from matplotlib.colors import LogNorm
@@ -597,23 +573,19 @@ class CubeBackgroundModel(object):
         # check shape of energy: only 1 value is accepted
         nvalues = len(energy)
         if nvalues != 1:
-            print("Expected exactly 1 value for energy, got {}.".format(nvalues))
-            raise IndexError
+            ss_error = "Expected exactly 1 value for energy, got {}.".format(nvalues)
+            raise IndexError(ss_error)
         else:
             energy = Quantity(energy[0])
-            print("Reqested plot only for 1 energy: {}".format(energy))
 
         extent = self.image_extent
-        energy_bin_centers = self.spectrum_bin_centers
+        energy_bin_centers = self.energy_bin_centers
 
         # find energy bin containing the specified energy
         energy_bin, energy_bin_edges = self.find_energy_bin(energy)
         ss_energy_bin_edges = "[{0}, {1}) {2}".format(energy_bin_edges[0].value,
                                                       energy_bin_edges[1].value,
                                                       energy_bin_edges.unit)
-        print("Found energy {0} in bin {1} with boundaries {2}.".format(energy,
-                                                                        energy_bin,
-                                                                        ss_energy_bin_edges))
 
         # get data for the plot
         ii = energy_bin
@@ -646,18 +618,9 @@ class CubeBackgroundModel(object):
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(image, cax=cax, label='Bg rate / {}'.format(data.unit))
 
-        # save output
-        if save:
-            # save image in png file
-            filename = "cube_background_model_image"
-            filename += "{0}{1}.png".format(energy.value,
-                                            energy.unit)
-            print('Writing {}'.format(filename))
-            fig.savefig(filename)
+        return ax
 
-        return fig, ax, image
-
-    def plot_spectrum(self, det, ax=None, save=False):
+    def plot_spectrum(self, det, ax=None):
         """Plot spectra for the det bin containing the specified det (X, Y) pair.
 
         Parameters
@@ -665,19 +628,12 @@ class CubeBackgroundModel(object):
         det : `~astropy.units.Quantity`
             det (X,Y) pair of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
-            axes of the figure
-        save : `~bool`, optional
-            flag to turn on/off the saving of the figure in a png file
+            axes of the figure for the plot
 
         Returns
         -------
-        fig : `~matplotlib.figure.Figure`
-            figure with image of bin of the bg model for the
-            selected det (X,Y) pair (if any), optional
         ax : `~matplotlib.axes.Axes`
-            axes of the figure, optional
-        image : `~matplotlib.image.AxesImage`
-            image of the figure, optional
+            axes of the figure containing the plot
         """
         import matplotlib.pyplot as plt
 
@@ -689,10 +645,9 @@ class CubeBackgroundModel(object):
             ss_error += "got {}.".format(nvalues)
             raise IndexError(ss_error)
         else:
-            print("Reqested plot only for 1 det: {}".format(det))
             do_only_1_plot = True
 
-        energy_points = self.spectrum_bin_centers
+        energy_points = self.energy_bin_centers
         det_bin_centers = self.image_bin_centers
 
         # find det bin containing the specified det coordinates
@@ -703,9 +658,6 @@ class CubeBackgroundModel(object):
         ss_dety_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[2].value,
                                                     det_bin_edges[3].value,
                                                     det_bin_edges.unit)
-        print("Found det {0} in bin {1} with boundaries {2}, {3}.".format(det, det_bin,
-                                                                          ss_detx_bin_edges,
-                                                                          ss_dety_bin_edges))
 
         # get data for the plot
         ii = det_bin[0]
@@ -737,14 +689,4 @@ class CubeBackgroundModel(object):
         ax.set_xlabel('E / {}'.format(energy_points.unit))
         ax.set_ylabel('Bg rate / {}'.format(data.unit))
 
-        # save output
-        if save:
-            # save image in png file
-            filename = "cube_background_model_spectrum"
-            filename += "{0}{2}{1}{2}.png".format(det.value[0],
-                                                  det.value[1],
-                                                  det.unit)
-            print('Writing {}'.format(filename))
-            fig.savefig(filename)
-
-        return fig, ax, image
+        return ax
