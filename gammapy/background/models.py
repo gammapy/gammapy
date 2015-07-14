@@ -640,7 +640,7 @@ class CubeBackgroundModel(object):
 
         return bin_pos, bin_edges
 
-    def plot_image(self, energy, ax=None):
+    def plot_image(self, energy, ax=None, style_kwargs=None):
         """Plot image for the energy bin containing the specified energy.
 
         Parameters
@@ -649,6 +649,8 @@ class CubeBackgroundModel(object):
             energy of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
             axes of the figure for the plot
+        style_kwargs : `~dict`, optional
+            style options for the plot
 
         Returns
         -------
@@ -686,6 +688,8 @@ class CubeBackgroundModel(object):
         fig = plt.figure()
         if ax is None:
             ax = fig.add_subplot(111)
+        if style_kwargs is None:
+            style_kwargs = dict()
 
         fig.set_size_inches(8., 8., forward=True)
 
@@ -694,7 +698,8 @@ class CubeBackgroundModel(object):
                           origin='lower', # do not invert image
                           interpolation='nearest',
                           norm=LogNorm(), # color log scale
-                          cmap='afmhot')
+                          cmap='afmhot',
+                          **style_kwargs)
 
         # set title and axis names
         ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value,
@@ -710,7 +715,7 @@ class CubeBackgroundModel(object):
 
         return ax
 
-    def plot_spectrum(self, det, ax=None):
+    def plot_spectrum(self, det, ax=None, style_kwargs=None):
         """Plot spectra for the det bin containing the specified det (X, Y) pair.
 
         Parameters
@@ -719,6 +724,8 @@ class CubeBackgroundModel(object):
             det (X,Y) pair of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
             axes of the figure for the plot
+        style_kwargs : `~dict`, optional
+            style options for the plot
 
         Returns
         -------
@@ -760,11 +767,15 @@ class CubeBackgroundModel(object):
         fig = plt.figure()
         if ax is None:
             ax = fig.add_subplot(111)
+        if style_kwargs is None:
+            style_kwargs = dict()
 
         fig.set_size_inches(8., 8., forward=True)
 
-        image = ax.plot(energy_points.to('TeV'), data,
-                        drawstyle='default') # connect points with lines
+        image = ax.plot(energy_points.to('TeV'),
+                        data,
+                        drawstyle='default', # connect points with lines
+                        **style_kwargs)
         ax.loglog() # double log scale # slow!
 
         # set title and axis names
