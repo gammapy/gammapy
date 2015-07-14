@@ -18,7 +18,7 @@ In other cases (flux points, point spread function, run lists) there is no stand
 we simply use general-purpose file formats define our own semantics as described
 in the :ref:`dataformats_file_formats` section. 
 
-.. dataformats_overview:
+.. _dataformats_overview:
 
 Overview
 --------
@@ -36,7 +36,7 @@ Counts            PHA              `~gammapy.data.CountsSpectrumDataset`     `GP
 ----------------- ---------------- ----------------------------------------- ----------------------------
 Exposure          EXPOSURE_3D      `~gammapy.data.SpectralCube`?             `GCTACubeExposure`_
 ----------------- ---------------- ----------------------------------------- ----------------------------
-Background        BACKGROUND_3D    `~gammapy.background.CubeBackgroundModel` `GCTABackground3D`_
+Background        [BACKGROUND_3D]_ `~gammapy.background.CubeBackgroundModel` `GCTABackground3D`_
 Background        BACKGROUND_1D    N/A                                       `GCTAModelRadialAcceptance`_
 Exposure          ???              `~gammapy.data.SpectralCube`?             `GCTACubeBackground`_
 ----------------- ---------------- ----------------------------------------- ----------------------------

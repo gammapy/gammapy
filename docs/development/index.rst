@@ -431,3 +431,11 @@ dozens of other available asserts from pytest or numpy in various
 places.
 
 More details in `numpy.testing.assert_allclose`.
+
+Tip: in case of assertion errors on arrays of quantity objects, such
+as `astropy.units.Quantity` or `~astropy.coordinates.Angle`,
+`assert_allclose` will not show the values. For debugging you can
+use the `.value` methods of these object types. Don't forget to
+remove the call to `.value` after performing the test.
+
+* TODO: should we submit a bug report to Astropy?
