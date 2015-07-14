@@ -4,11 +4,12 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.modeling.models import Gaussian1D
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy import wcs
+from astropy.wcs import WCS
 from ..utils.wcs import (linear_arrays_from_wcs,
                          linear_wcs_from_arrays)
 
@@ -103,6 +104,68 @@ def _make_bin_edges_array(lo, hi):
     return np.append(lo.flatten(), hi.flatten()[-1:])
 
 
+def _table_to_fits_bin_table(table):
+    """Convert astropy table to binary table fits format.
+
+    This is a generic method to convert a `~astropy.table.Table`
+    to a `~astropy.io.fits.BinTableHDU`.
+    TODO: move to a more generic position (i.e. utils)?
+
+    Returns
+    -------
+    tbhdu : `~astropy.io.fits.BinTableHDU`
+    fits bin table containing the astropy table columns
+    """
+    # read name and drop it from the meta information, otherwise
+    # it would be stored as a header keyword in the BinTableHDU
+    name = table.meta.popitem('name')[1]
+
+    data = table.as_array()
+
+    header = fits.Header()
+    header.update(table.meta)
+
+    tbhdu = fits.BinTableHDU(data, header, name=name)
+
+    # Copy over column meta-data
+    for colname in table.colnames:
+        tbhdu.columns[colname].unit = str(table[colname].unit)
+
+    # TODO: this method works fine but the order of keywords in the table
+    # header is not logical: for instance, list of keywords with column
+    # units (TUNITi) is appended after the list of column keywords
+    # (TTYPEi, TFORMi), instead of in between.
+    # As a matter of fact, the units aren't yet in the header, but
+    # only when calling the write method and opening the output file.
+    # https://github.com/gammapy/gammapy/issues/298
+
+    return tbhdu
+
+
+def _parse_bg_units(background_unit):
+    """
+    Utility function to parse the bg units correctly.
+    """
+    # try 1st to parse them as astropy units
+    try:
+        u.Unit(background_unit)
+    # if it fails, try to parse them manually
+    except ValueError:
+        tev_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
+                     '1 / (TeV s sr)']
+        mev_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
+                     '1 / (MeV s sr)']
+        if background_unit in tev_units:
+            background_unit = '1 / (s TeV sr)'
+        elif background_unit in mev_units:
+            background_unit = '1 / (s MeV sr)'
+        # if it still fails, raise an exception
+        else:
+            raise ValueError("Cannot interpret units ({})".format(background_unit))
+
+    return background_unit
+
+
 class CubeBackgroundModel(object):
 
     """Cube background model.
@@ -142,7 +205,7 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube : `~gammapy.models.CubeBackgroundModel`
+        bg_cube : `~gammapy.background.CubeBackgroundModel`
             bg model cube object
         """
  
@@ -194,17 +257,7 @@ class CubeBackgroundModel(object):
 
         # get background data
         background = data['Bgd'][0]
-        background_unit = header['TUNIT7']
-        tev_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
-                     '1 / (TeV s sr)']
-        mev_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
-                     '1 / (MeV s sr)']
-        if background_unit in tev_units:
-            background_unit = '1 / (s TeV sr)'
-        elif background_unit in mev_units:
-            background_unit = '1 / (s MeV sr)'
-        else:
-            raise ValueError("Cannot interpret units ({})".format(background_unit))
+        background_unit = _parse_bg_units(header['TUNIT7'])
         background = Quantity(background, background_unit)
 
         return CubeBackgroundModel(detx_bins=detx_bins,
@@ -213,30 +266,76 @@ class CubeBackgroundModel(object):
                                    background=background)
 
     @staticmethod
-    def from_fits_image(imhdu):
+    def from_fits_image(imhdu, enhdu):
         """Read cube background model from a fits image.
 
         Parameters
         ----------
         imhdu : `~astropy.io.fits.ImageHDU`
-            HDU image for the bg cube
+            image for the bg cube
+        enhdu : `~astropy.io.fits.BinTableHDU`
+             table for the energy binning
 
         Returns
         -------
-        bg_cube : `~gammapy.models.CubeBackgroundModel`
+        bg_cube : `~gammapy.background.CubeBackgroundModel`
             bg model cube object
         """
-        raise NotImplementedError
+        im_header = imhdu.header
+        en_header = enhdu.header
+
+        # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
+        if (im_header['CTYPE1'] != 'DETX'):
+            raise ValueError("Expecting X axis in first place, not ({})"
+                             .format(im_header['CTYPE1']))
+        if (im_header['CTYPE2'] != 'DETY'):
+            raise ValueError("Expecting Y axis in second place, not ({})"
+                             .format(im_header['CTYPE2']))
+        if (im_header['CTYPE3'] != 'ENERGY'):
+            raise ValueError("Expecting E axis in third place, not ({})"
+                             .format(im_header['CTYPE3']))
+
+        # check units
+        if (im_header['CUNIT1'] != im_header['CUNIT2']):
+            ss_error = "This is odd: detector X and Y units not matching"
+            ss_error += "({0}, {1})".format(im_header['CUNIT1'], im_header['CUNIT2'])
+            raise ValueError(ss_error)
+        if (im_header['CUNIT3'] != en_header['TUNIT1']):
+            ss_error = "This is odd: energy units not matching"
+            ss_error += "({0}, {1})".format(im_header['CUNIT3'], en_header['TUNIT1'])
+            raise ValueError(ss_error)
+
+        # get det X, Y binning
+        wcs = WCS(im_header, naxis=2) # select only the (X, Y) axes
+        detx_bins, dety_bins = linear_arrays_from_wcs(wcs,
+                                                      im_header['NAXIS1'],
+                                                      im_header['NAXIS2'])
+
+        # get energy binning
+        energy_bins = Quantity(enhdu.data['ENERGY_BIN_EDGES'],
+                               en_header['TUNIT1'])
+
+        # get background data
+        background = imhdu.data
+        background_unit = _parse_bg_units(im_header['BG_UNIT'])
+        background = Quantity(background, background_unit)
+
+        return CubeBackgroundModel(detx_bins=detx_bins,
+                                   dety_bins=dety_bins,
+                                   energy_bins=energy_bins,
+                                   background=background)
 
     @staticmethod
     def read(filename, format='table'):
         """Read cube background model from fits file.
 
         Several input formats are accepted, depending on the value
-        of the 'format' parameter:
+        of the `format` parameter:
 
         * bin_table (default and preferred format): `~astropy.io.fits.BinTableHDU`
-        * image (alternative format): `~astropy.io.fits.ImageHDU`
+
+        * image (alternative format): `~astropy.io.fits.ImageHDU`,
+          with the energy binning stored as `~astropy.io.fits.BinTableHDU`
 
         Parameters
         ----------
@@ -247,15 +346,14 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        bg_cube : `~gammapy.models.CubeBackgroundModel`
+        bg_cube : `~gammapy.background.CubeBackgroundModel`
             bg model cube object
         """
         hdu = fits.open(filename)
-        hdu = hdu['BACKGROUND']
         if format == 'table':
-            return CubeBackgroundModel.from_fits_bin_table(hdu)
+            return CubeBackgroundModel.from_fits_bin_table(hdu['BACKGROUND'])
         elif format == 'image':
-            return CubeBackgroundModel.from_fits_image(hdu)
+            return CubeBackgroundModel.from_fits_image(hdu['BACKGROUND'], hdu['ENERGY_BINS'])
         else:
             raise ValueError("Invalid format {}.".format(format))
 
@@ -304,46 +402,28 @@ class CubeBackgroundModel(object):
         tbhdu : `~astropy.io.fits.BinTableHDU`
             table containing the bg cube
         """
-        # build astropy table
-        table = self.to_table()
-
-        # read name and drop it from the meta information, otherwise
-        # it would be stored as a header keyword in the BinTableHDU
-        name = table.meta.popitem('name')[1]
-
-        data = table.as_array()
-
-        header = fits.Header()
-        header.update(table.meta)
-
-        tbhdu = fits.BinTableHDU(data, header, name=name)
-
-        # Copy over column meta-data
-        for colname in table.colnames:
-            tbhdu.columns[colname].unit = str(table[colname].unit)
-
-        # TODO: this method works fine but the order of keywords in the table
-        # header is not logical: for instance, list of keywords with column
-        # units (TUNITi) is appended after the list of column keywords
-        # (TTYPEi, TFORMi), instead of in between.
-        # As a matter of fact, the units aren't yet in the header, but
-        # only when calling the write method and opening the output file.
-        # https://github.com/gammapy/gammapy/issues/298
-
-        return tbhdu
+        # build astropy table and convert it to fits bin table
+        return _table_to_fits_bin_table(self.to_table())
 
     def to_fits_image(self):
         """Convert cube background model to image fits format.
 
         Returns
         -------
-        imhdu : `~astropy.io.fits.ImageHDU`
-            image containing the bg cube
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with:
+
+            * one `~astropy.io.fits.ImageHDU` image for the bg cube
+
+            * one `~astropy.io.fits.BinTableHDU` table for the energy binning
         """
+        # data
         imhdu = fits.ImageHDU(data=self.background.value, name='BACKGROUND')
-        # TODO: store units (of bg) somewhere in header??!!!!
-        # TODO: implement WCS object to be able to read the det coords -> done
-        # TODO: energy binning: store in HDU table like for SpectralCube class
+        # add some important header information
+        imhdu.header['BG_UNIT'] = '{0.unit:FITS}'.format(self.background)
+        imhdu.header['CTYPE3'] = 'ENERGY'
+        imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_bins)
+        imhdu.header['E_THRES'] = self.energy_bins[0].value
 
         # get WCS object and write it out as a FITS header
         wcs_header = self.det_wcs.to_header()
@@ -351,7 +431,16 @@ class CubeBackgroundModel(object):
         # transferring header values
         imhdu.header.update(wcs_header)
 
-        return imhdu
+        # get energy values as a table HDU, via an astropy table
+        energy_table = Table()
+        energy_table['ENERGY_BIN_EDGES'] = self.energy_bins
+        energy_table.meta['name'] = 'ENERGY_BINS'
+
+        enhdu = _table_to_fits_bin_table(energy_table)
+
+        hdu_list = fits.HDUList([fits.PrimaryHDU(), imhdu, enhdu])
+
+        return hdu_list
 
     def write(self, outfile, format='table', write_kwargs=None):
         """Write cube background model to fits file.
@@ -360,11 +449,12 @@ class CubeBackgroundModel(object):
         of the `format` parameter:
 
         * bin_table (default and preferred format): `~astropy.io.fits.BinTableHDU`
-        * image (alternative format): `~astropy.io.fits.ImageHDU`
+        * image (alternative format): `~astropy.io.fits.ImageHDU`,
+          with the energy binning stored as `~astropy.io.fits.BinTableHDU`
 
         Depending on the value of the `format` parameter, this
         method calls either `~astropy.io.fits.BinTableHDU.writeto` or
-        `~astropy.io.fits.ImageHDU.writeto`, forwarding the
+        `~astropy.io.fits.HDUList.writeto`, forwarding the
         `write_kwargs` arguments.
 
         Parameters
@@ -462,8 +552,8 @@ class CubeBackgroundModel(object):
         """
         wcs = linear_wcs_from_arrays(name_x="DETX",
                                      name_y="DETY",
-                                     bins_x=self.detx_bins,
-                                     bins_y=self.detx_bins)
+                                     bin_edges_x=self.detx_bins,
+                                     bin_edges_y=self.detx_bins)
         return wcs
 
     def find_det_bin(self, det):
