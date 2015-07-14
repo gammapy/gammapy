@@ -686,8 +686,11 @@ class CubeBackgroundModel(object):
 
         # create plot
         fig = plt.figure()
+        do_not_close_fig = False
         if ax is None:
             ax = fig.add_subplot(111)
+            # if no axis object is passed by ref, the figure should remain open
+            do_not_close_fig = True
         if style_kwargs is None:
             style_kwargs = dict()
 
@@ -713,6 +716,9 @@ class CubeBackgroundModel(object):
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(image, cax=cax, label='Bg rate / {}'.format(data.unit))
 
+        # eventually close figure to avoid white canvases
+        if not do_not_close_fig:
+            plt.close(fig)
         return ax
 
     def plot_spectrum(self, det, ax=None, style_kwargs=None):
@@ -765,8 +771,11 @@ class CubeBackgroundModel(object):
 
         # create plot
         fig = plt.figure()
+        do_not_close_fig = False
         if ax is None:
             ax = fig.add_subplot(111)
+            # if no axis object is passed by ref, the figure should remain open
+            do_not_close_fig = True
         if style_kwargs is None:
             style_kwargs = dict()
 
@@ -790,4 +799,7 @@ class CubeBackgroundModel(object):
         ax.set_xlabel('E / {}'.format(energy_points.unit))
         ax.set_ylabel('Bg rate / {}'.format(data.unit))
 
+        # eventually close figure to avoid white canvases
+        if not do_not_close_fig:
+            plt.close(fig)
         return ax
