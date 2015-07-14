@@ -126,4 +126,23 @@ class TestCubeBackgroundModel():
         assert_allclose(bg_model_2.energy_bins,
                         bg_model_1.energy_bins)
 
-        # TODO: test also read_image and write_image
+    @remote_data
+    def test_read_write_image(self):
+        
+        filename = '../test_datasets/background/bg_cube_model_test.fits'
+        filename = datasets.get_path(filename, location='remote')
+        bg_model_1 = CubeBackgroundModel.read(filename, format='table')
+
+        outfile = NamedTemporaryFile(suffix='.fits').name
+        bg_model_1.write(outfile, format='image')
+
+        # test if values are correct in the saved file: compare both files
+        bg_model_2 = CubeBackgroundModel.read(outfile, format='image')
+        assert_allclose(bg_model_2.background,
+                        bg_model_1.background)
+        assert_allclose(bg_model_2.detx_bins,
+                        bg_model_1.detx_bins)
+        assert_allclose(bg_model_2.dety_bins,
+                        bg_model_1.dety_bins)
+        assert_allclose(bg_model_2.energy_bins,
+                        bg_model_1.energy_bins)
