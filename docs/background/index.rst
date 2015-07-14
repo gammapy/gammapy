@@ -37,6 +37,8 @@ The naming of the models in this section follows the convention from
 
 TODO: because of the link capabilities, this looks horrible:
       what is the best way to have a link to this info?
+      The idea is to link `BACKGROUND_3D` to the table in
+      :ref:`dataformats_overview`
 
 .. [BACKGROUND_3D] is a bacground rate 3D cube (X, Y, energy) in
 units of per energy, per time, per solid angle. `X` and `Y` are
