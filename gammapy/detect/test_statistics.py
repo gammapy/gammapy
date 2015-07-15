@@ -42,7 +42,7 @@ class TSMapResult(Bunch):
     ----------
     ts : `~numpy.ndarray`
         Estimated TS map
-    ts : `~numpy.ndarray`
+    sqrt_ts : `~numpy.ndarray`
         Estimated sqrt(TS) map
     amplitude : `~numpy.ndarray`
         Estimated best fit flux amplitude map
