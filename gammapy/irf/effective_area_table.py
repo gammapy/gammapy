@@ -363,32 +363,36 @@ class EffectiveAreaTable2D(object):
     --------
     Get effective area vs. energy for a given offset and energy binning:
 
-    >>> import numpy as np
-    >>> from astropy.coordinates import Angle
-    >>> from astropy.units import Quantity
-    >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> from gammapy.datasets import load_aeff2D_fits_table
-    >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
-    >>> offset = Angle(0.6, 'degree')
-    >>> energy = Quantity(np.logspace(0, 1, 60), 'TeV')
-    >>> eff_area = aeff2D.evaluate(offset, energy)
+    .. code-block:: python
+    
+        import numpy as np
+        from astropy.coordinates import Angle
+        from astropy.units import Quantity
+        from gammapy.irf import EffectiveAreaTable2D
+        from gammapy.datasets import load_aeff2D_fits_table
+        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        offset = Angle(0.6, 'degree')
+        energy = Quantity(np.logspace(0, 1, 60), 'TeV')
+        eff_area = aeff2D.evaluate(offset, energy)
 
     Create ARF fits file for a given offest and energy binning:
 
-    >>> import numpy as np
-    >>> from astropy.coordinates import Angle
-    >>> from astropy.units import Quantity
-    >>> from gammapy.irf import EffectiveAreaTable2D
-    >>> from gammapy.spectrum import energy_bounds_equal_log_spacing
-    >>> from gammapy.datasets import load_aeff2D_fits_table
-    >>> aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
-    >>> offset = Angle(0.43, 'degree')
-    >>> nbins = 50
-    >>> energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV', nbins)
-    >>> energ_lo = energy[:-1]
-    >>> energ_hi = energy[1:]
-    >>> arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
-    >>> arf_table.write('arf.fits', format='arf')
+    .. code-block:: python
+    
+        import numpy as np
+        from astropy.coordinates import Angle
+        from astropy.units import Quantity
+        from gammapy.irf import EffectiveAreaTable2D
+        from gammapy.spectrum import energy_bounds_equal_log_spacing
+        from gammapy.datasets import load_aeff2D_fits_table
+        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        offset = Angle(0.43, 'degree')
+        nbins = 50
+        energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV'), nbins)
+        energ_lo = energy[:-1]
+        energ_hi = energy[1:]
+        arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi) 
+        arf_table.write('arf.fits')
 
     Plot energy dependence
 
