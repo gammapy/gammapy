@@ -413,29 +413,43 @@ class SpectralCube(object):
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
-            * hdu_list[0] : `~astropy.io.fits.ImageHDU`
+            * hdu_list[0] : `~astropy.io.fits.PrimaryHDU`
                 Image array of data
             * hdu_list[1] : `~astropy.io.fits.BinTableHDU`
                 Table of energies
         """
-        image = fits.ImageHDU(self.data, self.wcs.to_header())
-        energies = fits.BinTableHDU(self.energy, 'ENERGY')
+        image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
+        image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
+
+        # for BinTableHDU's the data must be added via a Table object
+        # TODO: this could be simplified a bit by using
+        #       `~gammapy.background.models._table_to_fits_bin_table`
+        #       move this function to utils and use it here?
+        energy_table = Table()
+        energy_table['Energy'] = self.energy
+        data = energy_table.as_array()
+        
+        energies = fits.BinTableHDU(data, name='ENERGY')
+
+        # Copy over column meta-data
+        for colname in energy_table.colnames:
+            energies.columns[colname].unit = str(energy_table[colname].unit)
 
         hdu_list = fits.HDUList([image, energies])
 
         return hdu_list
 
-    def writeto(self, filename, overwrite=False):
+    def writeto(self, filename, **kwargs):###, overwrite=False):
         """Writes SpectralCube to fits file.
 
         Parameters
         ----------
         filename : string
             Name of output file (.fits)
-        overwrite : bool
-            Overwrite existing output file?
+        ###overwrite : bool
+        ###    Overwrite existing output file?
         """
-        self.to_fits.writeto(filename, overwrite)
+        self.to_fits().writeto(filename, **kwargs)###, overwrite)
 
     def __repr__(self):
         # Copied from `spectral-cube` package
