@@ -42,6 +42,9 @@ def linear_arrays_from_wcs(w, nbins_x, nbins_y):
         raise ValueError("Expected exactly 2 dimensions, got {}"
                          .format(w.wcs.naxis))
 
+    # check that wcs axes are linear
+    # TODO: is there an easy way to do this?
+
     # set bins
     unit_x, unit_y = w.wcs.cunit
     delta_x, delta_y = w.wcs.cdelt
@@ -99,6 +102,14 @@ def linear_wcs_from_arrays(name_x, name_y, bin_edges_x, bin_edges_y):
             unit_x, unit_y)
         ss_error += " Is this expected?"
         raise ValueError(ss_error)
+
+    # check that bins are linear (edges equally spaced)
+    bin_widths_x = np.diff(bin_edges_x)
+    if not np.allclose(bin_widths_x, bin_widths_x[0]):
+        raise ValueError("The X bins are not linear! Diff = {}".format(np.diff(bin_edges_x.value)))
+    bin_widths_y = np.diff(bin_edges_y)
+    if not np.allclose(bin_widths_y, bin_widths_y[0]):
+        raise ValueError("The Y bins are not linear! Diff = {}".format(np.diff(bin_edges_y.value)))
 
     # Create a new WCS object. The number of axes must be set from the start
     w = WCS(naxis=2)

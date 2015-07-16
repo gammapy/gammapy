@@ -57,16 +57,16 @@ class TestCubeBackgroundModel():
     def test_read_bin_table(self):
 
         # test shape of bg cube when reading a file
-        filename = '../test_datasets/background/bg_cube_model_test.fits'
-        filename = datasets.get_path(filename, location='remote')
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+                                     location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
         assert len(bg_cube_model.background.shape) == 3
 
     @remote_data
     def test_image_plot(self):
 
-        filename = '../test_datasets/background/bg_cube_model_test.fits'
-        filename = datasets.get_path(filename, location='remote')
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+                                     location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
 
         # test bg rate values plotted for image plot of energy bin
@@ -78,7 +78,7 @@ class TestCubeBackgroundModel():
         plot_data = image_im.get_array()
 
         # get data from bg model object to compare
-        energy_bin, energy_bin_edges = bg_cube_model.find_energy_bin(energy)
+        energy_bin = bg_cube_model.find_energy_bin(energy)
         model_data = bg_cube_model.background[energy_bin]
 
         # test if both arrays are equal
@@ -87,8 +87,8 @@ class TestCubeBackgroundModel():
     @remote_data
     def test_spectrum_plot(self):
 
-        filename = '../test_datasets/background/bg_cube_model_test.fits'
-        filename = datasets.get_path(filename, location='remote')
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+                                     location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
 
         # test bg rate values plotted for spectrum plot of detector bin
@@ -99,7 +99,7 @@ class TestCubeBackgroundModel():
         plot_data = ax_spec.get_lines()[0].get_xydata()
 
         # get data from bg model object to compare
-        det_bin, det_bin_edges = bg_cube_model.find_det_bin(det)
+        det_bin = bg_cube_model.find_det_bin(det)
         model_data = bg_cube_model.background[:, det_bin[0], det_bin[1]]
 
         # test if both arrays are equal
@@ -108,8 +108,8 @@ class TestCubeBackgroundModel():
     @remote_data
     def test_write_bin_table(self):
 
-        filename = '../test_datasets/background/bg_cube_model_test.fits'
-        filename = datasets.get_path(filename, location='remote')
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+                                     location='remote')
         bg_model_1 = CubeBackgroundModel.read(filename, format='table')
 
         outfile = NamedTemporaryFile(suffix='.fits').name
@@ -129,8 +129,8 @@ class TestCubeBackgroundModel():
     @remote_data
     def test_read_write_image(self):
         
-        filename = '../test_datasets/background/bg_cube_model_test.fits'
-        filename = datasets.get_path(filename, location='remote')
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+                                     location='remote')
         bg_model_1 = CubeBackgroundModel.read(filename, format='table')
 
         outfile = NamedTemporaryFile(suffix='.fits').name
