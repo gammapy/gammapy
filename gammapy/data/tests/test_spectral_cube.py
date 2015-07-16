@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
@@ -42,6 +43,18 @@ class TestSpectralCube(object):
         energy = self.spectral_cube.energy
 
         spectral_cube = SpectralCube(data, wcs, energy)
+        assert spectral_cube.data.shape == (30, 21, 61)
+
+    def test_read_write(self):
+        data = self.spectral_cube.data
+        wcs = self.spectral_cube.wcs
+        energy = self.spectral_cube.energy
+
+        spectral_cube = SpectralCube(data, wcs, energy)
+        outfile = NamedTemporaryFile(suffix='.fits').name
+        spectral_cube.writeto(outfile)
+
+        spectral_cube.read(outfile)
         assert spectral_cube.data.shape == (30, 21, 61)
 
     def test_pix2world(self):
