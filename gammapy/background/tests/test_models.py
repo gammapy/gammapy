@@ -61,6 +61,9 @@ class TestCubeBackgroundModel():
                                      location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
         assert len(bg_cube_model.background.shape) == 3
+        assert bg_cube_model.background.shape == (len(bg_cube_model.energy_bins) - 1,
+                                                  len(bg_cube_model.dety_bins) - 1,
+                                                  len(bg_cube_model.detx_bins) - 1)
 
     @remote_data
     def test_image_plot(self):
@@ -128,7 +131,7 @@ class TestCubeBackgroundModel():
 
     @remote_data
     def test_read_write_image(self):
-        
+
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                                      location='remote')
         bg_model_1 = CubeBackgroundModel.read(filename, format='table')

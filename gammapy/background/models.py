@@ -175,6 +175,10 @@ class CubeBackgroundModel(object):
     The class hass methods for reading a model from a fits file,
     write a model to a fits file and plot the models.
 
+    The order of the axes in the background cube is `(E, y, x)`,
+    so in order to access the data correctly, the call is
+    `bg_cube_model.background[energy_bin, dety_bin, detx_bin]`.
+
     Parameters
     ----------
     detx_bins : `~astropy.coordinates.Angle`
@@ -185,6 +189,17 @@ class CubeBackgroundModel(object):
         Energy bin edges vector (low and high).
     background : `~astropy.units.Quantity`
         Background cube in (energy, X, Y) format.
+
+    Examples
+    --------
+    Access cube bg model data:
+
+    .. code:: python
+
+        energy_bin = bg_cube_model.find_energy_bin(energy=Quantity(2., 'TeV'))
+        det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
+        bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
+    TODO: how can I link to this example in the models.rst doc subpage?!!!
     """
 
     def __init__(self, detx_bins, dety_bins, energy_bins, background):
@@ -208,7 +223,7 @@ class CubeBackgroundModel(object):
         bg_cube : `~gammapy.background.CubeBackgroundModel`
             bg model cube object
         """
- 
+
         header = tbhdu.header
         data = tbhdu.data
 
@@ -500,12 +515,14 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        det_edges_centers : `~astropy.coordinates.Angle`
-            array of bins with the image bin centers [[x_centers], [y_centers]]
+        detx_edges_centers : `~astropy.coordinates.Angle`
+            array of image bin centers (X coord)
+        dety_edges_centers : `~astropy.coordinates.Angle`
+            array of image bin centers (Y coord)
         """
         detx_edges_centers = self.detx_bins[:-1] + np.diff(self.detx_bins)/2.
         dety_edges_centers = self.dety_bins[:-1] + np.diff(self.dety_bins)/2.
-        return Angle([detx_edges_centers, dety_edges_centers])
+        return detx_edges_centers, dety_edges_centers
 
     @property
     def energy_bin_centers(self):
@@ -514,7 +531,7 @@ class CubeBackgroundModel(object):
         Returns
         -------
         energy_bin_centers : `~astropy.units.Quantity`
-            array of bins with the spectrum bin centers
+            array of spectrum bin centers
         """
         log_bin_edges = np.log(self.energy_bins.value)
         log_bin_centers = log_bin_edges[:-1] + np.diff(log_bin_edges)/2.
@@ -544,15 +561,12 @@ class CubeBackgroundModel(object):
         return wcs
 
     def find_det_bin(self, det):
-        """Find the bin that contains the specified det (X, Y) pair.
-
-        TODO: implement test as suggested in:
-            https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
+        """Find the bins that contain the specified det (X, Y) pairs.
 
         Parameters
         ----------
-        det : `~astropy.coordinates.Angle`
-            det (X, Y) pair to search for
+        det : `~numpy.array`
+            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
 
         Returns
         -------
@@ -560,53 +574,37 @@ class CubeBackgroundModel(object):
             array of integers with the indices (x, y) of the det
             bin containing the specified det (X, Y) pair
         """
-        # check shape of det: only 1 pair is accepted
-        nvalues = len(det.flatten())
-        if nvalues != 2:
-            raise IndexError("Expected exactly 2 values for det (X, Y), got {}."
-                             .format(nvalues))
-
         # check that the specified det is within the boundaries of the model
         det_extent = self.image_extent
-        check_x_lo = (det_extent[0] <= det[0])
-        check_x_hi = (det[0] < det_extent[1])
-        check_y_lo = (det_extent[2] <= det[1])
-        check_y_hi = (det[1] < det_extent[3])
+        check_x_lo = (det_extent[0] <= det[0]).all()
+        check_x_hi = (det[0] < det_extent[1]).all()
+        check_y_lo = (det_extent[2] <= det[1]).all()
+        check_y_hi = (det[1] < det_extent[3]).all()
         if not (check_x_lo and check_x_hi) or not (check_y_lo and check_y_hi):
             raise ValueError("Specified det {0} is outside the boundaries {1}."
                              .format(det, det_extent))
 
         bin_index_x = np.searchsorted(self.detx_bins[1:], det[0])
         bin_index_y = np.searchsorted(self.dety_bins[1:], det[1])
-        bin_index = np.array([bin_index_x, bin_index_y])
 
-        return bin_index
+        return np.array([bin_index_x, bin_index_y])
 
     def find_energy_bin(self, energy):
-        """Find the bin that contains the specified energy value.
-
-        TODO: implement test as suggested in:
-            https://github.com/gammapy/gammapy/pull/292#discussion_r33843508
+        """Find the bins that contain the specified energy values.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            energy to search for
+        energy : `~numpy.array`
+            array of `~astropy.units.Quantity` energies to search for
 
         Returns
         -------
-        bin_index : `~int`
-            index of the energy bin containing the specified energy
+        bin_index : `~numpy.array`
+            indices of the energy bins containing the specified energies
         """
-        # check shape of energy: only 1 value is accepted
-        nvalues = len(energy.flatten())
-        if nvalues != 1:
-            raise IndexError("Expected exactly 1 value for energy, got {}."
-                             .format(nvalues))
-
         # check that the specified energy is within the boundaries of the model
         energy_extent = self.spectrum_extent
-        if not (energy_extent[0] <= energy) and (energy < energy_extent[1]):
+        if not (energy_extent[0] <= energy).all() and (energy < energy_extent[1]).all():
             ss_error = "Specified energy {}".format(energy)
             ss_error += " is outside the boundaries {}.".format(energy_extent)
             raise ValueError(ss_error)
@@ -615,19 +613,17 @@ class CubeBackgroundModel(object):
 
         return bin_index
 
-
-
     def find_det_bin_edges(self, det):
-        """Find the bin edges of the specified det (X, Y) pair.
+        """Find the bin edges of the specified det (X, Y) pairs.
 
         Parameters
         ----------
-        det : `~astropy.coordinates.Angle`
-            det (X, Y) pair to search for
+        det : `~numpy.array`
+            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
 
         Returns
         -------
-        bin_edges : `~astropy.units.Quantity`
+        bin_edges : `~astropy.coordinates.Angle`
             det bin edges (x_lo, x_hi, y_lo, y_hi)
         """
         bin_index = self.find_det_bin(det)
@@ -639,12 +635,12 @@ class CubeBackgroundModel(object):
         return bin_edges
 
     def find_energy_bin_edges(self, energy):
-        """Find the bin edges of the specified energy value.
+        """Find the bin edges of the specified energy values.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
-            energy to search for
+        energy : `~numpy.array`
+            array of `~astropy.units.Quantity` energies to search for
 
         Returns
         -------
@@ -712,13 +708,15 @@ class CubeBackgroundModel(object):
             style_kwargs = dict()
 
         fig.set_size_inches(8., 8., forward=True)
+        #import IPython; IPython.embed()
+
+        if not 'cmap' in style_kwargs:
+            style_kwargs['cmap'] = 'afmhot'
 
         image = ax.imshow(data.value,
                           extent=extent.value,
                           origin='lower', # do not invert image
                           interpolation='nearest',
-                          norm=LogNorm(), # color log scale
-                          cmap='afmhot',
                           **style_kwargs)
 
         # set title and axis names
@@ -768,7 +766,7 @@ class CubeBackgroundModel(object):
             do_only_1_plot = True
 
         energy_points = self.energy_bin_centers
-        det_bin_centers = self.image_bin_centers
+        detx_bin_centers, dety_bin_centers = self.image_bin_centers
 
         # find det bin containing the specified det coordinates
         det_bin = self.find_det_bin(det)
@@ -781,9 +779,9 @@ class CubeBackgroundModel(object):
                                                     det_bin_edges.unit)
 
         # get data for the plot
-        data = self.background[:, det_bin[0], det_bin[1]]
-        detx_bin_center = det_bin_centers[0, det_bin[0]]
-        dety_bin_center = det_bin_centers[1, det_bin[1]]
+        data = self.background[:, det_bin[1], det_bin[0]]
+        detx_bin_center = detx_bin_centers[det_bin[0]]
+        dety_bin_center = dety_bin_centers[det_bin[1]]
 
         # create plot
         fig = plt.figure()

@@ -4,7 +4,8 @@ from __future__ import (absolute_import, division, print_function,
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity
-from ...datasets import make_test_psf, make_test_observation_table
+from ...datasets import (make_test_psf, make_test_observation_table,
+                         make_test_bg_cube_model)
 from ...obs import ObservationTable
 
 
@@ -19,7 +20,7 @@ def test_make_test_psf_fits_table():
 
 
 def test_make_test_observation_table():
-    observatory_name='HESS'
+    observatory_name = 'HESS'
     n_obs = 10
     obs_table = make_test_observation_table(observatory_name, n_obs)
 
@@ -43,3 +44,34 @@ def test_make_test_observation_table():
     dec_max = Angle(90, 'degree')
     assert (dec_min < obs_table['DEC']).all()
     assert (obs_table['DEC'] < dec_max).all()
+
+
+def make_test_bg_cube_model():
+
+    # make a cube bg model with non-equal axes
+    ndetx_bins = 1
+    ndety_bins = 2
+    nenergy_bins = 3
+    bg_cube_model = make_test_bg_cube_model(ndetx_bins=ndetx_bins,
+                                            ndety_bins=ndety_bins,
+                                            nenergy_bins=nenergy_bins)
+
+    # test shape of cube bg model
+    assert len(bg_cube_model.background.shape) == 3
+    assert bg_cube_model.background.shape == (nenergy_bins, ndety_bins, ndetx_bins)
+
+    # make masked bg model
+    bg_cube_model = make_test_bg_cube_model(apply_mask=True)
+
+    # test that values with (x, y) > (0, 0) are zero
+    x_points = Angle(np.arange(5), 'degree') + Angle(0.01, 'degree')
+    y_points = Angle(np.arange(5), 'degree') + Angle(0.01, 'degree')
+    e_points = bg_cube_model.energy_bin_centers
+    x_points, y_points, e_points = np.meshgrid(x_points, y_points, e_points,
+                                               indexing='ij')
+    det_bin_index = bg_cube_model.find_det_bin(Angle([x_points, y_points]))
+    e_bin_index = bg_cube_model.find_energy_bin(e_points)
+    bg = bg_cube_model.background[e_bin_index, det_bin_index[1], det_bin_index[0]]
+
+    # assert that values are 0
+    assert_allclose(bg, 0.)
