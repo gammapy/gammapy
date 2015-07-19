@@ -7,6 +7,7 @@ from astropy.io import fits
 from ..utils.array import array_stats_str
 
 __all__ = ['LogEnergyAxis',
+           'energy_bounds_equal_log_spacing',
            'EnergyBinning',
            'np_to_pha',
            ]
@@ -20,10 +21,22 @@ def find_log_centers(bin_edges):
     return np.sqrt(bin_edges[:-1] * bin_edges[1:])
 
 
+def find_log_edges(bin_centers):
+    """Compute equally log-spaced energy bin edges
+    """
+
+    bin_edges = np.sqrt(bin_centers[:-1] * bin_centers[1:])
+    first = bin_centers[0] * bin_centers[0] / bin_edges[0]
+    last = bin_centers[-1] * bin_centers[-1] / bin_edges[-1]
+    bin_edges = np.append(first, bin_edges)
+    bin_edges = np.append(bin_edges, last)
+
+    return bin_edges
+
+
 class EnergyBinning(object):
 
-    """
-    class to handle energy dimension for e.g. counts spectra, ARF tables
+    """Class to handle energy dimension for e.g. counts spectra, ARF tables
     and so on. The idea is to handel everything related to energy in this
     class. It should probably be move somewhere else (not spectrum.utils)
     rather datasets.energyhandler or similar. All other classes should then
@@ -32,19 +45,52 @@ class EnergyBinning(object):
     TODO:
     - document once we agreed on a mechanism
     - implement FITS I/O
-    - What shall happen with the other classes?
 
+ 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    bin_edges : `~astropy.units.Quantity`
     Energy bin edges
+    bin_centers: `~astropy.units.Quantity`
+    Energy bin centers
+
+
+    Examples
+    --------
+
+    Create EnergyBinning by giving the bin centers and write FITS ENERGIES extension:
+    
+    .. code-block:: python
+    
+       from gammapy.spectrum.utils import *  
+       from astropy.units import Quantity
+       from astropy.io import fits
+       bin_centers = Quantity([0.1,1,1.5,2,2.3], 'TeV')
+       binning = EnergyBinning(bin_centers=bin_centers)          
+       prihdr = fits.Header()
+       prihdu = fits.PrimaryHDU(header=prihdr)
+       tbhdu = binning.to_fits('ENERGIES')
+       hdulist = fits.HDUList([prihdu, tbhdu])
+       hdulist.writeto('test.fits')
+
+    Create EnergyBinning by giving the bin edges and place centers at log 
+
+    .. code-block:: python
+
+       from gammapy.spectrum.utils import *  
+       from astropy.units import Quantity
+       import numpy as np
+       bin_edges = np.logspace(-1,1,20)
+       bin_edges = Quantity(bin_edges, 'TeV')
+       binning = EnergyBinning.from_edges(bin_edges, 'log')
+
     """
 
-    def __init__(self, bin_edges = None, bin_centers = None):
+    def __init__(self, bin_edges=None, bin_centers=None):
 
-        if not isinstance (bin_edges,Quantity) and not isinstance (bin_centers,Quantity):
+        if not isinstance(bin_edges, Quantity) and not isinstance(bin_centers, Quantity):
             raise ValueError("Energies must be Quantity objects")
-        
+
         self._bin_edges = bin_edges
         self._bin_centers = bin_centers
 
@@ -54,24 +100,53 @@ class EnergyBinning(object):
             self.nbins = len(self.bin_edges) - 1
         else:
             self.nbins = 0
-    
-    @staticmethod 
-    def from_edges(bin_edges, centers = 'log'):
+
+    @staticmethod
+    def from_edges(bin_edges, centers='log'):
         """Create EnergyBinning by given the bin edges and a method how to place the bin centers.
 
         Options for placing the bin centers are:
-        
+
         - 'log' : Place bin centers at the log center of the bin (default)
         - to be implemented
-        """
 
+        Parameters
+        ----------
+        bin_edges : `~astropy.units.Quantity`
+        Energy bin edges
+        centeres : str
+        Method how to place the energy bin centers
+
+        Returns
+        -------
+        Energy Binning
+        """
         if centers == 'log':
             bin_centers = find_log_centers(bin_edges)
         else:
             raise ValueError("Method for placing bin centers not implemented")
-    
-        return EnergyBinning(bin_edges,bin_centers)     
-        
+
+        return EnergyBinning(bin_edges, bin_centers)
+
+    @staticmethod
+    def from_centers(bin_centers):
+        """Create EnergyBinning by given the bin centers
+
+        The difference between this method and the contrsuctor is that a check for equal log spacing is done. If the given bin centers are equally spaced in log, the bin edges are computed  (I don't know if thats really necessary, it doesn't hurt for sure)
+        Parameters
+        ----------
+        bin_centers : `~astropy.units.Quantity`
+        Energy bin centers
+
+        Returns
+        -------
+        Energy Binning
+        """
+
+        # TODO: test for equal log spacing
+        bin_edges = find_log_edges(bin_centers)
+
+        return EnergyBinning(bin_edges, bin_centers)
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins):
@@ -105,41 +180,15 @@ class EnergyBinning(object):
         return EnergyBinning.from_edges(bin_edges, 'log')
 
     @staticmethod
-    def from_centers(bin_centers):
-        """Create EnergyBinning equally spaced in log by giving the log bin centers
-
-        This special case allows computation of the bin edges if only the bin centers are known (I don't know if thats really necessary, there could be also a tet for equal log spacing the constructor)
-
-        Parameters
-        ----------
-        bin_centers : `~astropy.units.Quantity`
-        Energy bin centers
-
-        Returns
-        -------
-        Energy Binning
-        """
-
-        bin_edges = np.sqrt(bin_centers[:-1] * bin_centers[1:])
-        first = bin_centers[0] * bin_centers[0] / bin_edges[0]
-        last = bin_centers[-1] * bin_centers[-1] / bin_edges[-1]
-        bin_edges = np.append(first, bin_edges)
-        bin_edges = np.append(bin_edges, last)
-        bin_edges = Quantity(bin_edges, 'TeV')
-
-        return EnergyBinning(bin_edges, bin_centers)
-
-    @staticmethod
     def from_fits(hdulist):
         """Read energy axis from hdulist
 
         Support all formats here
         """
-        
+
         try:
-            bin_centers=Quantity(hdulist['ENERGIES'].data['Energy'],'MeV')
-            #Could check for equal log spacing here to compute bin edges
-            return EnergyBinning(bin_centers=bin_centers)
+            bin_centers = Quantity(hdulist['ENERGIES'].data['Energy'], 'MeV')
+            return EnergyBinning.from_centers(bin_centers)
         except KeyError:
             pass
 
@@ -153,44 +202,39 @@ class EnergyBinning(object):
             pass
 
         raise ValueError("The hdulist does not contain a valid energy extension")
-            
+
     def to_fits(self, name, **kwargs):
         """Write energy axis to hdulist
         """
 
-        if name=='ENERGIES':
-            data = self.bin_centers
-            header=fits.header
-            header['EXTNAME']='TEST'
-            return fits.BinTableHDU(data=data,header=header,name=name)
-                        
+        if name == 'ENERGIES':
+            #this sould go to a separate function in the end I guess
+            #TODO write header, and so on
+            col1 = fits.Column(name='Energy', format='D', array=self.bin_centers)
+            cols = fits.ColDefs([col1])
+            return fits.BinTableHDU.from_columns(cols)
+
     @property
     def bin_centers(self):
         """
         Centers of the energy bins
         """
-        
+
         if self._bin_centers is not None:
             return self._bin_centers
         else:
             raise ValueError("Bin centers not defined for this energy axis")
-        
+
     @property
     def bin_edges(self):
         """
         Edges of the energy bins
         """
-        
+
         if self._bin_edges is not None:
             return self._bin_edges
         else:
             raise ValueError("Bin edges not defined for this energy axis")
-
-    def to_fits(self):
-        """
-        Where do we need these extensions?
-        """
-        pass
 
     def info(self):
         s = '\nEnergy bins\n'
@@ -199,11 +243,11 @@ class EnergyBinning(object):
         try:
             s += array_stats_str(self.bin_edges, 'Energy bin edges')
         except ValueError:
-            s += 'Bin edges not defined'
+            s += 'Bin edges not defined\n'
         try:
             s += array_stats_str(self.bin_centers, 'Energy bin centers')
         except ValueError:
-            s += 'Bin centers not defined'
+            s += 'Bin centers not defined\n'
         return s
 
 
