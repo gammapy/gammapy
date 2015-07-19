@@ -17,7 +17,7 @@ given in detector coordinates `(DETX, DETY)`, a.k.a.
 `nominal system`. This is a tangential system to the instrument
 during observations.
 
-The `~CubeBackgroundModel` is used as container class for this model.
+The `~gammapy.background.CubeBackgroundModel` is used as container class for this model.
 It has methods to read, write and operate the 3D cubes.
 
 For the moment, only I/O and visualization methods are implemented.
@@ -37,9 +37,15 @@ The data of the cube can be accessed via:
 
    energy_bin = bg_cube_model.find_energy_bin(energy=Quantity(2., 'TeV'))
    det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
-   bg_cube_model.background[energy_bin, det_bin[0], det_bin[1]]
+   bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
+
+TODO: how can I link here the exmaple from the CubeBackgroundModel cass?!!! (to avoid duplication)!!!
 
 More complex plots can be easily produced with a few lines of code:
 
 .. plot:: background/plot_bgcube.py
    :include-source:
+
+There is also a method in the `~gammapy.datasets` module called
+`~gammapy.datasets.make_test_bg_cube_model` for creating test
+`~gammapy.background.CubeBackgroundModel` objects.
