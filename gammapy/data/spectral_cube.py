@@ -52,7 +52,7 @@ class SpectralCube(object):
 
     Parameters
     ----------
-    data : array_like
+    data : `~astropy.units.Quantity`
         Data array (3-dim)
     wcs : `~astropy.wcs.WCS`
         Word coordinate system transformation
