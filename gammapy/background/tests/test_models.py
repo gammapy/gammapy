@@ -11,6 +11,7 @@ from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from ...background import GaussianBand2D, CubeBackgroundModel
 from ... import datasets
+from ...datasets.make import make_test_bg_cube_model
 
 
 try:
@@ -65,12 +66,9 @@ class TestCubeBackgroundModel():
                                                   len(bg_cube_model.dety_bins) - 1,
                                                   len(bg_cube_model.detx_bins) - 1)
 
-    @remote_data
     def test_image_plot(self):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                                     location='remote')
-        bg_cube_model = CubeBackgroundModel.read(filename, format='table')
+        bg_cube_model = make_test_bg_cube_model()
 
         # test bg rate values plotted for image plot of energy bin
         # conaining E = 2 TeV
@@ -87,12 +85,9 @@ class TestCubeBackgroundModel():
         # test if both arrays are equal
         assert_allclose(plot_data, model_data.value)
 
-    @remote_data
     def test_spectrum_plot(self):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                                     location='remote')
-        bg_cube_model = CubeBackgroundModel.read(filename, format='table')
+        bg_cube_model = make_test_bg_cube_model()
 
         # test bg rate values plotted for spectrum plot of detector bin
         # conaining det (0, 0) deg (center)
@@ -103,7 +98,7 @@ class TestCubeBackgroundModel():
 
         # get data from bg model object to compare
         det_bin = bg_cube_model.find_det_bin(det)
-        model_data = bg_cube_model.background[:, det_bin[0], det_bin[1]]
+        model_data = bg_cube_model.background[:, det_bin[1], det_bin[0]]
 
         # test if both arrays are equal
         assert_allclose(plot_data[:, 1], model_data.value)
