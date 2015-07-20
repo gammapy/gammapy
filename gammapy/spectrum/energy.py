@@ -6,13 +6,14 @@ from ..utils.array import array_stats_str
 import astropy.units as u
 
 
-__all__= ['Energy',
-          'EnergyBounds']
+__all__ = ['Energy',
+           'EnergyBounds']
 
 
 class Energy(Quantity):
+
     """Energy bin centers.
-    
+
     Stored as "ENERGIES" FITS table extensions.
 
     Parameters
@@ -40,10 +41,8 @@ class Energy(Quantity):
         elif unit is None:
             raise UnitsError("No unit was specified in Energy initializer")
 
-        
         self._unit = unit
         self._value = energy
-
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins):
@@ -91,7 +90,6 @@ class Energy(Quantity):
         energy = Quantity(hdulist['ENERGIES'].data['Energy'], 'MeV')
         return Energy(energy)
 
-
     def to_fits(self, **kwargs):
         """Write ENERGIES fits extension
 
@@ -107,16 +105,15 @@ class Energy(Quantity):
         cols = fits.ColDefs([col1])
         return fits.BinTableHDU.from_columns(cols)
 
-
     def info(self):
-        #is this really necessary? what's the benefit towards just typing the
-        #name of the instance?
+        # is this really necessary? what's the benefit towards just typing the
+        # name of the instance?
         pass
 
-
 class EnergyBounds(Quantity):
+
     """Energy bin edges
-    
+
     Stored as "EBOUNDS" FITS table extensions.
 
     Parameters
@@ -144,10 +141,8 @@ class EnergyBounds(Quantity):
         elif unit is None:
             raise UnitsError("No unit was specified in EnergyBounds initializer")
 
-        
         self._unit = unit
         self._value = energy
-
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins):
@@ -173,7 +168,7 @@ class EnergyBounds(Quantity):
             raise ValueError("Energies must be Quantities")
 
         x_min, x_max = np.log10([emin.value, emax.value])
-        energy = np.logspace(x_min, x_max, nbins+1)
+        energy = np.logspace(x_min, x_max, nbins + 1)
         energy = Quantity(energy, emax.unit)
 
         return EnergyBounds(energy)
@@ -195,7 +190,6 @@ class EnergyBounds(Quantity):
         energy = Quantity(hdulist['EBOUNDS'].data['Energy'], 'MeV')
         return EnergyBounds(energy)
 
-
     def to_fits(self, **kwargs):
         """Write EBOUNDS fits extension
 
@@ -208,5 +202,3 @@ class EnergyBounds(Quantity):
         col1 = fits.Column(name='Energy', format='D', array=self.value)
         cols = fits.ColDefs([col1])
         return fits.BinTableHDU.from_columns(cols)
-
-
