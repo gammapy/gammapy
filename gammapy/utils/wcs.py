@@ -25,9 +25,9 @@ def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
     ----------
     wcs : `~astropy.wcs.WCS`
         WCS object describing the bin coordinates
-    nbins_x : `~int`
+    nbins_x : int
         number of bins in X coordinate
-    nbins_y : `~int`
+    nbins_y : int
         number of bins in Y coordinate
 
     Returns
@@ -80,9 +80,9 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
 
     Parameters
     ----------
-    name_x : `~string`
+    name_x : str
         name of X coordinate, to be used as 'CTYPE' value
-    name_y : `~string`
+    name_y : str
         name of Y coordinate, to be used as 'CTYPE' value
     bin_edges_x : `~astropy.coordinates.Angle`
         array with the bin edges for the X coordinate
