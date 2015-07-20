@@ -20,7 +20,7 @@ and Section 7.4 "Acceptance determination and predicted background"
 in [Naurois2012]_ describe mostly the same methods as [Berge2007]_,
 except for the "2D acceptance model" described in Section 7.4.3.
 
-The backgrund models implemented in Gammapy are documented in :ref:`bg_models`.
+The background models implemented in Gammapy are documented in :ref:`bg_models`.
 
 Getting Started
 ===============

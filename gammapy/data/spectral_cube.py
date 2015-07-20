@@ -22,6 +22,7 @@ from ..spectrum import (LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
+from ..utils.fits import table_to_fits_bin_table 
 
 
 __all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
@@ -422,34 +423,25 @@ class SpectralCube(object):
         image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
 
         # for BinTableHDU's the data must be added via a Table object
-        # TODO: this could be simplified a bit by using
-        #       `~gammapy.background.models._table_to_fits_bin_table`
-        #       move this function to utils and use it here?
         energy_table = Table()
         energy_table['Energy'] = self.energy
-        data = energy_table.as_array()
-        
-        energies = fits.BinTableHDU(data, name='ENERGY')
+        energy_table.meta['name'] = 'ENERGY'
 
-        # Copy over column meta-data
-        for colname in energy_table.colnames:
-            energies.columns[colname].unit = str(energy_table[colname].unit)
+        energies = table_to_fits_bin_table(energy_table)
 
         hdu_list = fits.HDUList([image, energies])
 
         return hdu_list
 
-    def writeto(self, filename, **kwargs):###, overwrite=False):
+    def writeto(self, filename, **kwargs):
         """Writes SpectralCube to fits file.
 
         Parameters
         ----------
         filename : string
             Name of output file (.fits)
-        ###overwrite : bool
-        ###    Overwrite existing output file?
         """
-        self.to_fits().writeto(filename, **kwargs)###, overwrite)
+        self.to_fits().writeto(filename, **kwargs)
 
     def __repr__(self):
         # Copied from `spectral-cube` package
