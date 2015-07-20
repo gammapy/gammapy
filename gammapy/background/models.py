@@ -12,6 +12,7 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from ..utils.wcs import (linear_arrays_from_wcs,
                          linear_wcs_from_arrays)
+from ..utils.fits import table_to_fits_bin_table 
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
@@ -102,44 +103,6 @@ def _make_bin_edges_array(lo, hi):
         array of bin edges as [[low], [high]]
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
-
-
-def _table_to_fits_bin_table(table):
-    """Convert astropy table to binary table fits format.
-
-    This is a generic method to convert a `~astropy.table.Table`
-    to a `~astropy.io.fits.BinTableHDU`.
-    TODO: move to a more generic position (i.e. utils)?
-
-    Returns
-    -------
-    tbhdu : `~astropy.io.fits.BinTableHDU`
-    fits bin table containing the astropy table columns
-    """
-    # read name and drop it from the meta information, otherwise
-    # it would be stored as a header keyword in the BinTableHDU
-    name = table.meta.popitem('name')[1]
-
-    data = table.as_array()
-
-    header = fits.Header()
-    header.update(table.meta)
-
-    tbhdu = fits.BinTableHDU(data, header, name=name)
-
-    # Copy over column meta-data
-    for colname in table.colnames:
-        tbhdu.columns[colname].unit = str(table[colname].unit)
-
-    # TODO: this method works fine but the order of keywords in the table
-    # header is not logical: for instance, list of keywords with column
-    # units (TUNITi) is appended after the list of column keywords
-    # (TTYPEi, TFORMi), instead of in between.
-    # As a matter of fact, the units aren't yet in the header, but
-    # only when calling the write method and opening the output file.
-    # https://github.com/gammapy/gammapy/issues/298
-
-    return tbhdu
 
 
 def _parse_bg_units(background_unit):
@@ -354,9 +317,9 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        filename : `~str`
+        filename : str
             name of file with the bg cube
-        format : `~str`, optional
+        format : str, optional
             format of the bg cube to read
 
         Returns
@@ -416,7 +379,7 @@ class CubeBackgroundModel(object):
         tbhdu : `~astropy.io.fits.BinTableHDU`
             table containing the bg cube
         """
-        return _table_to_fits_bin_table(self.to_table())
+        return table_to_fits_bin_table(self.to_table())
 
     def to_fits_image(self):
         """Convert cube background model to image fits format.
@@ -447,7 +410,7 @@ class CubeBackgroundModel(object):
         energy_table['ENERGY_BIN_EDGES'] = self.energy_bins
         energy_table.meta['name'] = 'ENERGY_BINS'
 
-        enhdu = _table_to_fits_bin_table(energy_table)
+        enhdu = table_to_fits_bin_table(energy_table)
 
         hdu_list = fits.HDUList([imhdu, enhdu])
 
@@ -470,9 +433,9 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        outfile : `~str`
+        outfile : str
             name of file to write
-        format : `~str`, optional
+        format : str, optional
             format of the bg cube to write
         kwargs
             extra arguments for the corresponding `io.fits` `writeto` method
@@ -662,7 +625,7 @@ class CubeBackgroundModel(object):
             energy of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
             axes of the figure for the plot
-        style_kwargs : `~dict`, optional
+        style_kwargs : dict, optional
             style options for the plot
 
         Returns
@@ -671,7 +634,6 @@ class CubeBackgroundModel(object):
             axes of the figure containing the plot
         """
         import matplotlib.pyplot as plt
-        from matplotlib.colors import LogNorm
         from mpl_toolkits.axes_grid1 import make_axes_locatable
 
         energy = energy.flatten()
@@ -745,7 +707,7 @@ class CubeBackgroundModel(object):
             det (X,Y) pair of bin to plot the bg model
         ax : `~matplotlib.axes.Axes`, optional
             axes of the figure for the plot
-        style_kwargs : `~dict`, optional
+        style_kwargs : dict, optional
             style options for the plot
 
         Returns
