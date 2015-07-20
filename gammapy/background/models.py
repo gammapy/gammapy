@@ -162,8 +162,8 @@ class CubeBackgroundModel(object):
         energy_bin = bg_cube_model.find_energy_bin(energy=Quantity(2., 'TeV'))
         det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
         bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
-    TODO: how can I link to this example in the models.rst doc subpage?!!!
     """
+    # TODO: how can I link to this example in the models.rst doc subpage?!!!
 
     def __init__(self, detx_bins, dety_bins, energy_bins, background):
         self.detx_bins = detx_bins
