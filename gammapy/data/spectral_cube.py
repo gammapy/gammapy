@@ -22,7 +22,7 @@ from ..spectrum import (LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
-from ..utils.fits import table_to_fits_bin_table 
+from ..utils.fits import table_to_fits_table 
 
 
 __all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
@@ -427,7 +427,7 @@ class SpectralCube(object):
         energy_table['Energy'] = self.energy
         energy_table.meta['name'] = 'ENERGY'
 
-        energies = table_to_fits_bin_table(energy_table)
+        energies = table_to_fits_table(energy_table)
 
         hdu_list = fits.HDUList([image, energies])
 

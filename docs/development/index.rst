@@ -435,6 +435,5 @@ places.
 
 In case of assertion on arrays of quantity objects, such as
 `~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
-following methods can be used:
-`~gammapy.utils.testing.assert_quantity`,
-`~gammapy.utils.testing.assert_angle`.
+following method can be used:
+`~gammapy.utils.testing.assert_quantity`.

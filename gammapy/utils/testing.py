@@ -6,7 +6,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 
 __all__ = ['assert_quantity',
-           'assert_angle']
+           ]
 
 
 def assert_quantity(actual, desired, *args, **kwargs):
@@ -18,20 +18,6 @@ def assert_quantity(actual, desired, *args, **kwargs):
         raise ValueError("actual must be a Quantity object.")
     if not isinstance(desired, Quantity):
         raise ValueError("desired must be a Quantity object.")
-
-    assert actual.unit == desired.unit
-    assert_allclose(actual, desired, *args, **kwargs)
-
-
-def assert_angle(actual, desired, *args, **kwargs):
-    """Assert value and unit for astropy Angle.
-
-    Calls `numpy.testing.assert_allclose`.
-    """
-    if not isinstance(actual, Angle):
-        raise ValueError("actual must be a Angle object.")
-    if not isinstance(desired, Angle):
-        raise ValueError("desired must be a Angle object.")
 
     assert actual.unit == desired.unit
     assert_allclose(actual, desired, *args, **kwargs)

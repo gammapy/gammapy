@@ -61,7 +61,7 @@ class TestGaussianBand2D():
 class TestCubeBackgroundModel():
 
     @remote_data
-    def test_read_bin_table(self):
+    def test_read_fits_table(self):
 
         # test shape of bg cube when reading a file
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
@@ -112,7 +112,7 @@ class TestCubeBackgroundModel():
         assert_allclose(plot_data[:, 1], model_data.value)
 
     @remote_data
-    def test_write_bin_table(self):
+    def test_write_fits_table(self):
 
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                                      location='remote')
@@ -133,7 +133,7 @@ class TestCubeBackgroundModel():
                         bg_model_1.energy_bins)
 
     @remote_data
-    def test_read_write_image(self):
+    def test_read_write_fits_image(self):
 
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                                      location='remote')

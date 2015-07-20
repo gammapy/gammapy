@@ -65,8 +65,8 @@ def test_make_test_bg_cube_model():
     bg_cube_model = make_test_bg_cube_model(apply_mask=True)
 
     # test that values with (x, y) > (0, 0) are zero
-    x_points = Angle(np.arange(5), 'degree') + Angle(0.01, 'degree')
-    y_points = Angle(np.arange(5), 'degree') + Angle(0.01, 'degree')
+    x_points = Angle(np.arange(5) + 0.01, 'degree')
+    y_points = Angle(np.arange(5) + 0.01, 'degree')
     e_points = bg_cube_model.energy_bin_centers
     x_points, y_points, e_points = np.meshgrid(x_points, y_points, e_points,
                                                indexing='ij')

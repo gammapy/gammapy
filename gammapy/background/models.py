@@ -12,7 +12,7 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from ..utils.wcs import (linear_wcs_to_arrays,
                          linear_arrays_to_wcs)
-from ..utils.fits import table_to_fits_bin_table 
+from ..utils.fits import table_to_fits_table 
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
@@ -172,7 +172,7 @@ class CubeBackgroundModel(object):
         self.background = background
 
     @staticmethod
-    def from_fits_bin_table(tbhdu):
+    def from_fits_table(tbhdu):
         """Read cube background model from a fits binary table.
 
         Parameters
@@ -289,7 +289,7 @@ class CubeBackgroundModel(object):
                                                     im_header['NAXIS2'])
 
         # get energy binning
-        energy_bins = Quantity(enhdu.data['ENERGY_BIN_EDGES'],
+        energy_bins = Quantity(enhdu.data['ENERGY'],
                                en_header['TUNIT1'])
 
         # get background data
@@ -309,7 +309,7 @@ class CubeBackgroundModel(object):
         Several input formats are accepted, depending on the value
         of the `format` parameter:
 
-        * bin_table (default and preferred format): `~astropy.io.fits.BinTableHDU`
+        * table (default and preferred format): `~astropy.io.fits.BinTableHDU`
 
         * image (alternative format): `~astropy.io.fits.PrimaryHDU`,
           with the energy binning stored as `~astropy.io.fits.BinTableHDU`
@@ -328,9 +328,9 @@ class CubeBackgroundModel(object):
         """
         hdu = fits.open(filename)
         if format == 'table':
-            return CubeBackgroundModel.from_fits_bin_table(hdu['BACKGROUND'])
+            return CubeBackgroundModel.from_fits_table(hdu['BACKGROUND'])
         elif format == 'image':
-            return CubeBackgroundModel.from_fits_image(hdu['PRIMARY'], hdu['ENERGY_BINS'])
+            return CubeBackgroundModel.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
         else:
             raise ValueError("Invalid format {}.".format(format))
 
@@ -370,7 +370,7 @@ class CubeBackgroundModel(object):
 
         return table
 
-    def to_fits_bin_table(self):
+    def to_fits_table(self):
         """Convert cube background model to binary table fits format.
 
         Returns
@@ -378,7 +378,7 @@ class CubeBackgroundModel(object):
         tbhdu : `~astropy.io.fits.BinTableHDU`
             table containing the bg cube
         """
-        return table_to_fits_bin_table(self.to_table())
+        return table_to_fits_table(self.to_table())
 
     def to_fits_image(self):
         """Convert cube background model to image fits format.
@@ -406,10 +406,15 @@ class CubeBackgroundModel(object):
 
         # get energy values as a table HDU, via an astropy table
         energy_table = Table()
-        energy_table['ENERGY_BIN_EDGES'] = self.energy_bins
-        energy_table.meta['name'] = 'ENERGY_BINS'
+        energy_table['ENERGY'] = self.energy_bins
+        energy_table.meta['name'] = 'EBOUNDS'
+        # TODO: this function should be reviewed/re-written, when
+        # the following PR is completed:
+        # https://github.com/gammapy/gammapy/pull/290
+        # as suggested in:
+        # https://github.com/gammapy/gammapy/pull/299#discussion_r35044977
 
-        enhdu = table_to_fits_bin_table(energy_table)
+        enhdu = table_to_fits_table(energy_table)
 
         hdu_list = fits.HDUList([imhdu, enhdu])
 
@@ -421,7 +426,7 @@ class CubeBackgroundModel(object):
         Several output formats are accepted, depending on the value
         of the `format` parameter:
 
-        * bin_table (default and preferred format): `~astropy.io.fits.BinTableHDU`
+        * table (default and preferred format): `~astropy.io.fits.BinTableHDU`
         * image (alternative format): `~astropy.io.fits.PrimaryHDU`,
           with the energy binning stored as `~astropy.io.fits.BinTableHDU`
 
@@ -440,7 +445,7 @@ class CubeBackgroundModel(object):
             extra arguments for the corresponding `io.fits` `writeto` method
         """
         if format == 'table':
-            self.to_fits_bin_table().writeto(outfile, **kwargs)
+            self.to_fits_table().writeto(outfile, **kwargs)
         elif format == 'image':
             self.to_fits_image().writeto(outfile, **kwargs)
         else:
@@ -482,8 +487,8 @@ class CubeBackgroundModel(object):
         dety_edges_centers : `~astropy.coordinates.Angle`
             array of image bin centers (Y coord)
         """
-        detx_edges_centers = self.detx_bins[:-1] + np.diff(self.detx_bins)/2.
-        dety_edges_centers = self.dety_bins[:-1] + np.diff(self.dety_bins)/2.
+        detx_edges_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
+        dety_edges_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
         return detx_edges_centers, dety_edges_centers
 
     @property
@@ -496,7 +501,7 @@ class CubeBackgroundModel(object):
             array of spectrum bin centers
         """
         log_bin_edges = np.log(self.energy_bins.value)
-        log_bin_centers = log_bin_edges[:-1] + np.diff(log_bin_edges)/2.
+        log_bin_centers = 0.5 * (log_bin_edges[:-1] + log_bin_edges[1:])
         energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_bins.unit)
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
