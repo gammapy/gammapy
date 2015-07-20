@@ -34,3 +34,11 @@ Reference/API
 
 .. automodapi:: gammapy.background
     :no-inheritance-diagram:
+
+Sub-pages
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   models
