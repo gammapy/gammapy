@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import numpy as np
+from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...utils.testing import assert_quantity
@@ -46,8 +48,7 @@ def test_make_test_observation_table():
     assert (obs_table['DEC'] < dec_max).all()
 
 
-def make_test_bg_cube_model():
-
+def test_make_test_bg_cube_model():
     # make a cube bg model with non-equal axes
     ndetx_bins = 1
     ndety_bins = 2

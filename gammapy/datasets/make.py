@@ -213,17 +213,14 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     return obs_table
 
 
-def make_test_bg_cube_model(detx_min=Angle(-10., 'degree'),
-                            detx_max=Angle(10., 'degree'),
+def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                             ndetx_bins=24,
-                            dety_min=Angle(-10., 'degree'),
-                            dety_max=Angle(10., 'degree'),
+                            dety_range=Angle([-10., 10.], 'degree'),
                             ndety_bins=24,
-                            energy_min=Quantity(0.01, 'TeV'),
-                            energy_max=Quantity(100., 'TeV'),
+                            energy_band=Quantity([0.01, 100.], 'TeV'),
                             nenergy_bins=14,
                             sigma=Angle(5., 'deg'),
-                            index=2.7,
+                            spectral_index=2.7,
                             apply_mask=False):
     """Make a test bg cube model.
 
@@ -232,33 +229,27 @@ def make_test_bg_cube_model(detx_min=Angle(-10., 'degree'),
     energy.
     The Gaussian width varies in energy from sigma/2 to sigma.
     The power-law slope in log-log representation is given by
-    the index parameter.
+    the spectral_index parameter.
     It is possible to mask 1/4th of the image (for `x > x_center` and
     `y > y_center`). Useful for testing coordinate rotations.
 
     Parameters
     ----------
-    detx_min : `~astropy.coordinates.Angle`, optional
-        minimum X coordinate
-    detx_max : `~astropy.coordinates.Angle`, optional
-        maximum X coordinate
+    detx_range : `~astropy.coordinates.Angle`, optional
+        X coordinate range (min, max)
     ndetx_bins : int, optional
         number of (linear) bins in X coordinate
-    dety_min : `~astropy.coordinates.Angle`, optional
-        minimum Y coordinate
-    dety_max : `~astropy.coordinates.Angle`, optional
-        maximum Y coordinate
+    dety_range : `~astropy.coordinates.Angle`, optional
+        Y coordinate range (min, max)
     ndety_bins : int, optional
         number of (linear) bins in Y coordinate
-    energy_min : `~astropy.units.Quantity`, optional
-        minimum energy
-    energy_max : `~astropy.units.Quantity`, optional
-        maximum energy
+    energy_band : `~astropy.units.Quantity`, optional
+        energy range (min, max)
     nenergy_bins : int, optional
         number of (logarithmic) bins in energy
     sigma : `~astropy.coordinates.Angle`, optional
         width of the gaussian model used for the spatial coordinates
-    index : double, optional
+    spectral_index : double, optional
         index for the power-law model used for the energy coordinate
     apply_mask : bool, optional
         if set, 1/4th of the image is masked (for `x > x_center` and
@@ -270,18 +261,18 @@ def make_test_bg_cube_model(detx_min=Angle(-10., 'degree'),
         bg cube model
     """
     # spatial bins (linear)
-    delta_x = (detx_max - detx_min)/ndetx_bins
-    detx_bin_edges = np.arange(ndetx_bins + 1)*delta_x + detx_min
+    delta_x = (detx_range[1] - detx_range[0])/ndetx_bins
+    detx_bin_edges = np.arange(ndetx_bins + 1)*delta_x + detx_range[0]
 
-    delta_y = (dety_max - dety_min)/ndety_bins
-    dety_bin_edges = np.arange(ndety_bins + 1)*delta_y + dety_min
+    delta_y = (dety_range[1] - dety_range[0])/ndety_bins
+    dety_bin_edges = np.arange(ndety_bins + 1)*delta_y + dety_range[0]
 
     # energy bins (logarithmic)
-    log_delta_energy = (np.log(energy_max.value)
-                        - np.log(energy_min.value))/nenergy_bins
+    log_delta_energy = (np.log(energy_band[1].value)
+                        - np.log(energy_band[0].value))/nenergy_bins
     energy_bin_edges = np.exp(np.arange(nenergy_bins + 1)*log_delta_energy
-                              + np.log(energy_min.value))
-    energy_bin_edges = Quantity(energy_bin_edges, energy_min.unit)
+                              + np.log(energy_band[0].value))
+    energy_bin_edges = Quantity(energy_bin_edges, energy_band[0].unit)
     # TODO: this function should be reviewed/re-written, when
     # the following PR is completed:
     # https://github.com/gammapy/gammapy/pull/290
@@ -317,22 +308,17 @@ def make_test_bg_cube_model(detx_min=Angle(-10., 'degree'),
 
     # calculate bg
     gaussian = np.exp(-((detx_points)**2 + (dety_points)**2)/sigma**2)
-    powerlaw = (energy_points/E_0)**-index
+    powerlaw = (energy_points/E_0)**-spectral_index
     background = norm*gaussian*powerlaw
 
     # apply mask if requested
     if apply_mask:
         # find central coordinate
-        detx_center = (detx_max + detx_min)/2.
-        dety_center = (dety_max + dety_min)/2.
-        mask = (detx_points > detx_center) & (dety_points > dety_center)
-        #import IPython; IPython.embed()
-        # background[mask]
-        m_bg = np.ma.array(data=background, mask=mask, fill_value=0.)
-        background = m_bg.filled(m_bg.fill_value)
-        #import IPython; IPython.embed()
+        detx_center = (detx_range[1] + detx_range[0])/2.
+        dety_center = (dety_range[1] + dety_range[0])/2.
+        mask = (detx_points <= detx_center) & (dety_points <= dety_center)
+        background = background*mask
 
-    #import IPython; IPython.embed()
     bg_cube_model.background = Quantity(background, '1 / (s TeV sr)')
 
     return bg_cube_model

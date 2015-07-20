@@ -433,8 +433,6 @@ it should be used consistently everywhere instead of using the
 dozens of other available asserts from pytest or numpy in various
 places.
 
-More details in `numpy.testing.assert_allclose`.
-
 In case of assertion on arrays of quantity objects, such as
 `~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
 following methods can be used:

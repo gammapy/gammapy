@@ -3,8 +3,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-__all__ = ['linear_arrays_from_wcs',
-           'linear_wcs_from_arrays',
+__all__ = ['linear_wcs_to_arrays',
+           'linear_arrays_to_wcs',
            ]
 
 import numpy as np
@@ -12,7 +12,7 @@ from astropy.wcs import WCS
 from astropy.coordinates import Angle
 
 
-def linear_arrays_from_wcs(w, nbins_x, nbins_y):
+def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):
     """Make a 2D linear binning from a WCS object.
 
     This method gives the correct answer only for linear X, Y binning.
@@ -23,7 +23,7 @@ def linear_arrays_from_wcs(w, nbins_x, nbins_y):
 
     Parameters
     ----------
-    w : `~astropy.wcs.WCS`
+    wcs : `~astropy.wcs.WCS`
         WCS object describing the bin coordinates
     nbins_x : `~int`
         number of bins in X coordinate
@@ -38,24 +38,24 @@ def linear_arrays_from_wcs(w, nbins_x, nbins_y):
         array with the bin edges for the Y coordinate
     """
     # check number of dimensions
-    if w.wcs.naxis != 2:
+    if wcs.wcs.naxis != 2:
         raise ValueError("Expected exactly 2 dimensions, got {}"
-                         .format(w.wcs.naxis))
+                         .format(wcs.wcs.naxis))
 
     # check that wcs axes are linear
     # TODO: is there an easy way to do this?
 
     # set bins
-    unit_x, unit_y = w.wcs.cunit
-    delta_x, delta_y = w.wcs.cdelt
+    unit_x, unit_y = wcs.wcs.cunit
+    delta_x, delta_y = wcs.wcs.cdelt
     delta_x = Angle(delta_x, unit_x)
     delta_y = Angle(delta_y, unit_y)
     bin_edges_x = np.arange(nbins_x + 1)*delta_x
     bin_edges_y = np.arange(nbins_y + 1)*delta_y
     # translate bins to correct values according to WCS reference
     # In FITS, the edge of the image is at pixel coordinate +0.5.
-    refpix_x, refpix_y = w.wcs.crpix
-    refval_x, refval_y = w.wcs.crval
+    refpix_x, refpix_y = wcs.wcs.crpix
+    refval_x, refval_y = wcs.wcs.crval
     refval_x = Angle(refval_x, unit_x)
     refval_y = Angle(refval_y, unit_y)
     bin_edges_x += refval_x - (refpix_x - 0.5)*delta_x
@@ -72,7 +72,7 @@ def linear_arrays_from_wcs(w, nbins_x, nbins_y):
     return bin_edges_x, bin_edges_y
 
 
-def linear_wcs_from_arrays(name_x, name_y, bin_edges_x, bin_edges_y):
+def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
     """Make a 2D linear WCS object from arrays of bin edges.
 
     This method gives the correct answer only for linear X, Y binning.
@@ -91,7 +91,7 @@ def linear_wcs_from_arrays(name_x, name_y, bin_edges_x, bin_edges_y):
 
     Returns
     -------
-    w : `~astropy.wcs.WCS`
+    wcs : `~astropy.wcs.WCS`
         WCS object describing the bin coordinates
     """
     # check units
@@ -112,7 +112,7 @@ def linear_wcs_from_arrays(name_x, name_y, bin_edges_x, bin_edges_y):
         raise ValueError("The Y bins are not linear! Diff = {}".format(np.diff(bin_edges_y.value)))
 
     # Create a new WCS object. The number of axes must be set from the start
-    w = WCS(naxis=2)
+    wcs = WCS(naxis=2)
 
     # Set up DET coordinates in degrees
     nbins_x = len(bin_edges_x) - 1
@@ -121,13 +121,13 @@ def linear_wcs_from_arrays(name_x, name_y, bin_edges_x, bin_edges_y):
     range_y = Angle([bin_edges_y[0], bin_edges_y[-1]])
     delta_x = (range_x[1] - range_x[0])/nbins_x
     delta_y = (range_y[1] - range_y[0])/nbins_y
-    w.wcs.ctype = [name_x, name_y]
-    w.wcs.cunit = [unit_x, unit_y]
-    w.wcs.cdelt = [delta_x.to(unit_x).value, delta_y.to(unit_y).value]
+    wcs.wcs.ctype = [name_x, name_y]
+    wcs.wcs.cunit = [unit_x, unit_y]
+    wcs.wcs.cdelt = [delta_x.to(unit_x).value, delta_y.to(unit_y).value]
     # ref as lower left corner (start of (X, Y) bin coordinates)
-    # coordinate start empiricaly determined at pix = 0.5: why 0.5?
-    w.wcs.crpix = [0.5, 0.5]
-    w.wcs.crval = [(bin_edges_x[0] + (w.wcs.crpix[0] - 0.5)*delta_x).to(unit_x).value,
-                   (bin_edges_y[0] + (w.wcs.crpix[1] - 0.5)*delta_y).to(unit_y).value]
+    # coordinate start at pix = 0.5
+    wcs.wcs.crpix = [0.5, 0.5]
+    wcs.wcs.crval = [(bin_edges_x[0] + (wcs.wcs.crpix[0] - 0.5)*delta_x).to(unit_x).value,
+                   (bin_edges_y[0] + (wcs.wcs.crpix[1] - 0.5)*delta_y).to(unit_y).value]
 
-    return w
+    return wcs
