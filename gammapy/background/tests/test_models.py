@@ -20,6 +20,12 @@ try:
 except ImportError:
     HAS_SCIPY = False
 
+try:
+    import matplotlib
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestGaussianBand2D():
@@ -66,6 +72,7 @@ class TestCubeBackgroundModel():
                                                   len(bg_cube_model.dety_bins) - 1,
                                                   len(bg_cube_model.detx_bins) - 1)
 
+    @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_image_plot(self):
 
         bg_cube_model = make_test_bg_cube_model()
@@ -85,6 +92,7 @@ class TestCubeBackgroundModel():
         # test if both arrays are equal
         assert_allclose(plot_data, model_data.value)
 
+    @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_spectrum_plot(self):
 
         bg_cube_model = make_test_bg_cube_model()

@@ -39,8 +39,6 @@ The data of the cube can be accessed via:
    det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
    bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
 
-TODO: how can I link here the exmaple from the CubeBackgroundModel cass?!!! (to avoid duplication)!!!
-
 More complex plots can be easily produced with a few lines of code:
 
 .. plot:: background/plot_bgcube.py

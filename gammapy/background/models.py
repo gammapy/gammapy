@@ -10,8 +10,8 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
 from astropy.wcs import WCS
-from ..utils.wcs import (linear_arrays_from_wcs,
-                         linear_wcs_from_arrays)
+from ..utils.wcs import (linear_wcs_to_arrays,
+                         linear_arrays_to_wcs)
 from ..utils.fits import table_to_fits_bin_table 
 
 __all__ = ['GaussianBand2D',
@@ -163,7 +163,6 @@ class CubeBackgroundModel(object):
         det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
         bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
     """
-    # TODO: how can I link to this example in the models.rst doc subpage?!!!
 
     def __init__(self, detx_bins, dety_bins, energy_bins, background):
         self.detx_bins = detx_bins
@@ -285,9 +284,9 @@ class CubeBackgroundModel(object):
 
         # get det X, Y binning
         wcs = WCS(im_header, naxis=2) # select only the (X, Y) axes
-        detx_bins, dety_bins = linear_arrays_from_wcs(wcs,
-                                                      im_header['NAXIS1'],
-                                                      im_header['NAXIS2'])
+        detx_bins, dety_bins = linear_wcs_to_arrays(wcs,
+                                                    im_header['NAXIS1'],
+                                                    im_header['NAXIS2'])
 
         # get energy binning
         energy_bins = Quantity(enhdu.data['ENERGY_BIN_EDGES'],
@@ -517,10 +516,10 @@ class CubeBackgroundModel(object):
         wcs : `~astropy.wcs.WCS`
             WCS object describing the bin coordinates
         """
-        wcs = linear_wcs_from_arrays(name_x="DETX",
-                                     name_y="DETY",
-                                     bin_edges_x=self.detx_bins,
-                                     bin_edges_y=self.detx_bins)
+        wcs = linear_arrays_to_wcs(name_x="DETX",
+                                   name_y="DETY",
+                                   bin_edges_x=self.detx_bins,
+                                   bin_edges_y=self.detx_bins)
         return wcs
 
     def find_det_bin(self, det):
