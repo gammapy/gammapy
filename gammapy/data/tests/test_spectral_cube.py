@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
 from ...datasets import FermiGalacticCenter
@@ -13,7 +13,6 @@ from ...data import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import solid_angle, make_header, make_empty_image
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
-from ...utils.testing import assert_quantity
 
 
 try:
@@ -60,9 +59,9 @@ class TestSpectralCube(object):
     def test_pix2world(self):
         # Corner pixel with index [0, 0, 0]
         lon, lat, energy = self.spectral_cube.pix2world(0, 0, 0)
-        assert_quantity(lon, Quantity(344.75, 'deg'))
-        assert_quantity(lat, Quantity(-5.25, 'deg'))
-        assert_quantity(energy, Quantity(50, 'MeV'))
+        assert_quantity_allclose(lon, Quantity(344.75, 'deg'))
+        assert_quantity_allclose(lat, Quantity(-5.25, 'deg'))
+        assert_quantity_allclose(energy, Quantity(50, 'MeV'))
 
     def test_world2pix(self):
         lon = Quantity(344.75, 'deg')
@@ -92,7 +91,7 @@ class TestSpectralCube(object):
         energy = Quantity(50, 'MeV')  # slice 0
         actual = self.spectral_cube.flux(lon, lat, energy)
         expected = self.spectral_cube.data[0, 0, 0]
-        assert_quantity(actual, expected)
+        assert_quantity_allclose(actual, expected)
 
         # Galactic center position
         lon = Quantity(0, 'deg')  # beween pixel 11 and 12 in ds9 viewer
@@ -108,7 +107,7 @@ class TestSpectralCube(object):
         # TODO: why are these currently inconsistent by a few % !?
         # actual   =  9.67254380e-07
         # expected = 10.13733026e-07
-        assert_quantity(actual, expected)
+        assert_quantity_allclose(actual, expected)
 
     def test_flux_mixed(self):
         # Corner pixel with index [0, 0, 0]
@@ -117,7 +116,7 @@ class TestSpectralCube(object):
         energy = Quantity(50, 'MeV')  # slice 0
         actual = self.spectral_cube.flux(lon, lat, energy)
         expected = self.spectral_cube.data[0, 0, 0]
-        assert_quantity(actual, expected)
+        assert_quantity_allclose(actual, expected)
 
     def test_flux_array(self):
         pix = [2, 2], [3, 3], [4, 4]
@@ -125,7 +124,7 @@ class TestSpectralCube(object):
         actual = self.spectral_cube.flux(*world)
         expected = self.spectral_cube.data[4, 3, 2]
         # Quantity([3.50571123e-07, 2], '1 / (cm2 MeV s sr)')
-        assert_quantity(actual, expected)
+        assert_quantity_allclose(actual, expected)
 
     def test_integral_flux_image(self):
         # For a very small energy band the integral flux should be roughly
@@ -137,7 +136,7 @@ class TestSpectralCube(object):
         expected = dflux * denergy
         actual = Quantity(self.spectral_cube.integral_flux_image(energy_band).data[0, 0],
                           '1 / (cm2 s sr)')
-        assert_quantity(actual, expected, rtol=1e-3)
+        assert_quantity_allclose(actual, expected, rtol=1e-3)
 
         # Test a wide energy band
         energy_band = Quantity([1, 10], 'GeV')
@@ -162,7 +161,7 @@ class TestSpectralCube(object):
     def test_solid_angle_image(self):
         actual = self.spectral_cube.solid_angle_image[10][30]
         expected = Quantity(self.spectral_cube.wcs.wcs.cdelt[:-1].prod(), 'deg2')
-        assert_quantity(actual, expected.to('sr'), rtol=1e-4)
+        assert_quantity_allclose(actual, expected.to('sr'), rtol=1e-4)
 
     def test_spatial_coordinate_images(self):
         lon, lat = self.spectral_cube.spatial_coordinate_images
@@ -315,4 +314,4 @@ def test_reproject_cube():
     expected = 0.0625 * original_cube.sum()
     actual = reprojected_cube.sum()
 
-    assert_quantity(actual, expected, rtol=1e-2)
+    assert_quantity_allclose(actual, expected, rtol=1e-2)

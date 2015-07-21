@@ -436,4 +436,10 @@ places.
 In case of assertion on arrays of quantity objects, such as
 `~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
 following method can be used:
-`~gammapy.utils.testing.assert_quantity`.
+`astropy.tests.helper.assert_quantity_allclose`.
+In this case, use
+
+``from astropy.tests.helper import assert_quantity_allclose``
+
+at the top of the file and then just use ``assert_quantity_allclose``
+for the tests.

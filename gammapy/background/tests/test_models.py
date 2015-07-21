@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, remote_data
+from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
 from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
@@ -123,14 +123,14 @@ class TestCubeBackgroundModel():
 
         # test if values are correct in the saved file: compare both files
         bg_model_2 = CubeBackgroundModel.read(outfile, format='table')
-        assert_allclose(bg_model_2.background,
-                        bg_model_1.background)
-        assert_allclose(bg_model_2.detx_bins,
-                        bg_model_1.detx_bins)
-        assert_allclose(bg_model_2.dety_bins,
-                        bg_model_1.dety_bins)
-        assert_allclose(bg_model_2.energy_bins,
-                        bg_model_1.energy_bins)
+        assert_quantity_allclose(bg_model_2.background,
+                                 bg_model_1.background)
+        assert_quantity_allclose(bg_model_2.detx_bins,
+                                 bg_model_1.detx_bins)
+        assert_quantity_allclose(bg_model_2.dety_bins,
+                                 bg_model_1.dety_bins)
+        assert_quantity_allclose(bg_model_2.energy_bins,
+                                 bg_model_1.energy_bins)
 
     @remote_data
     def test_read_write_fits_image(self):
@@ -144,11 +144,11 @@ class TestCubeBackgroundModel():
 
         # test if values are correct in the saved file: compare both files
         bg_model_2 = CubeBackgroundModel.read(outfile, format='image')
-        assert_allclose(bg_model_2.background,
-                        bg_model_1.background)
-        assert_allclose(bg_model_2.detx_bins,
-                        bg_model_1.detx_bins)
-        assert_allclose(bg_model_2.dety_bins,
-                        bg_model_1.dety_bins)
-        assert_allclose(bg_model_2.energy_bins,
-                        bg_model_1.energy_bins)
+        assert_quantity_allclose(bg_model_2.background,
+                                 bg_model_1.background)
+        assert_quantity_allclose(bg_model_2.detx_bins,
+                                 bg_model_1.detx_bins)
+        assert_quantity_allclose(bg_model_2.dety_bins,
+                                 bg_model_1.dety_bins)
+        assert_quantity_allclose(bg_model_2.energy_bins,
+                                 bg_model_1.energy_bins)

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
+from astropy.tests.helper import assert_quantity_allclose
 from ...utils.wcs import (linear_wcs_to_arrays,
                           linear_arrays_to_wcs)
 
@@ -16,5 +16,5 @@ def test_wcs_object():
     reco_bins_x, reco_bins_y = linear_wcs_to_arrays(wcs, nbins_x, nbins_y)
 
     # test: reconstructed bins should match original bins
-    assert_allclose(reco_bins_x, bins_x)
-    assert_allclose(reco_bins_y, bins_y)
+    assert_quantity_allclose(reco_bins_x, bins_x)
+    assert_quantity_allclose(reco_bins_y, bins_y)
