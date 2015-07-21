@@ -2,12 +2,11 @@
 from __future__ import print_function, division
 from tempfile import NamedTemporaryFile
 from astropy.units import Quantity
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
-from ...utils.testing import assert_quantity
 from ...spectrum import np_to_pha, LogEnergyAxis, energy_bin_centers_log_spacing
 
 try:
@@ -54,18 +53,18 @@ def test_LogEnergyAxis():
     energy_axis = LogEnergyAxis(energy)
 
     assert_allclose(energy_axis.x, [0, 1, 2])
-    assert_quantity(energy_axis.energy, energy)
+    assert_quantity_allclose(energy_axis.energy, energy)
 
     energy = Quantity(gmean([1, 10]), 'TeV')
     pix = energy_axis.world2pix(energy.to('MeV'))
     assert_allclose(pix, 0.5)
 
     world = energy_axis.pix2world(pix)
-    assert_quantity(world, energy)
+    assert_quantity_allclose(world, energy)
 
 
 def test_energy_bin_centers_log_spacing():
     energy_bounds = Quantity([1, 2, 10], 'GeV')
     actual = energy_bin_centers_log_spacing(energy_bounds)
     desired = Quantity([1.41421356, 4.47213595], 'GeV')
-    assert_quantity(actual, desired)
+    assert_quantity_allclose(actual, desired)

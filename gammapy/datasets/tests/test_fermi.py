@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.tests.helper import remote_data
-from ...utils.testing import assert_quantity
 from ...datasets import (FermiGalacticCenter,
                          FermiVelaRegion,
                          fetch_fermi_catalog,
@@ -33,7 +32,7 @@ class TestFermiGalacticCenter():
         energy = Quantity(100, 'GeV')
         fraction = 0.68
         angle = psf.containment_radius(energy, fraction)
-        assert_quantity(angle, Angle('0.1927459865412511 deg'))
+        assert_quantity_allclose(angle, Angle(0.1927459865412511, 'degree'))
 
     def test_counts(self):
         counts = FermiGalacticCenter.counts()
@@ -43,12 +42,12 @@ class TestFermiGalacticCenter():
     def test_diffuse_model(self):
         diffuse_model = FermiGalacticCenter.diffuse_model()
         assert diffuse_model.data.shape == (30, 21, 61)
-        assert_quantity(diffuse_model.energy[0], Quantity(50, 'MeV'))
+        assert_quantity_allclose(diffuse_model.energy[0], Quantity(50, 'MeV'))
 
     def test_exposure_cube(self):
         exposure_cube = FermiGalacticCenter.exposure_cube()
         assert exposure_cube.data.shape == (21, 11, 31)
-        assert_quantity(exposure_cube.energy[0], Quantity(50, 'MeV'))
+        assert_quantity_allclose(exposure_cube.energy[0], Quantity(50, 'MeV'))
 
 
 class TestFermiVelaRegion():
@@ -71,7 +70,7 @@ class TestFermiVelaRegion():
         energy = Quantity(100, 'GeV')
         fraction = 0.68
         angle = psf.containment_radius(energy, fraction)
-        assert_quantity(angle, Angle('0.13185321269896136 deg'))
+        assert_quantity_allclose(angle, Angle(0.13185321269896136, 'degree'))
 
     @remote_data
     def test_diffuse_model(self):
@@ -100,7 +99,7 @@ class TestFermiVelaRegion():
         exposure_cube = FermiVelaRegion.exposure_cube()
         assert exposure_cube.data.shape == (21, 50, 50)
         assert exposure_cube.data.value.sum(), 4.978616e+15
-        assert_quantity(exposure_cube.energy[0], Quantity(10000, 'MeV'))
+        assert_quantity_allclose(exposure_cube.energy[0], Quantity(10000, 'MeV'))
 
     @remote_data
     def test_livetime(self):
