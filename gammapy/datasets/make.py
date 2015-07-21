@@ -11,9 +11,11 @@ from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations
 from ..utils.random import sample_sphere
 from ..time import time_ref_from_dict, time_relative_to_ref
+from ..background import CubeBackgroundModel
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
+           'make_test_bg_cube_model',
            ]
 
 
@@ -80,9 +82,9 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     Parameters
     ----------
-    observatory_name : string
+    observatory_name : str
         name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
-    n_obs : integer
+    n_obs : int
         number of observations for the obs table
     debug : bool
         show UTC times instead of seconds after the reference
@@ -110,8 +112,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     obs_table['OBS_ID'] = obs_id
 
     # obs time: 30 min
-    time_observation = Quantity(
-        30. * np.ones_like(obs_id), 'minute').to('second')
+    time_observation = Quantity(30. * np.ones_like(obs_id), 'minute').to('second')
     obs_table['TIME_OBSERVATION'] = time_observation
 
     # livetime: 25 min
@@ -156,11 +157,11 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     # stop time
     # calculated as TIME_START + TIME_OBSERVATION
     if debug:
-        time_stop = Time(obs_table['TIME_START']) + \
-            TimeDelta(obs_table['TIME_OBSERVATION'])
+        time_stop = Time(obs_table['TIME_START'])
+        time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
     else:
-        time_stop = TimeDelta(
-            obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION'])
+        time_stop = TimeDelta(obs_table['TIME_START'])
+        time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
         # converting to quantity (better treatment of units)
         time_stop = Quantity(time_stop.sec, 'second')
 
@@ -183,11 +184,12 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
     if debug:
-        obstime = Time(obs_table['TIME_START']) + \
-            TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
+        obstime = Time(obs_table['TIME_START'])
+        obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     else:
-        obstime = time_ref_from_dict(obs_table.meta) + TimeDelta(
-            obs_table['TIME_START']) + TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
+        obstime = time_ref_from_dict(obs_table.meta)
+        obstime += TimeDelta(obs_table['TIME_START'])
+        obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     location = observatory_locations[observatory_name]
     alt_az_coord = AltAz(az=az, alt=alt, obstime=obstime, location=location)
     sky_coord = alt_az_coord.transform_to(FK5)
@@ -209,3 +211,114 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
     obs_table['MUON_EFFICIENCY'] = muon_efficiency
 
     return obs_table
+
+
+def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
+                            ndetx_bins=24,
+                            dety_range=Angle([-10., 10.], 'degree'),
+                            ndety_bins=24,
+                            energy_band=Quantity([0.01, 100.], 'TeV'),
+                            nenergy_bins=14,
+                            sigma=Angle(5., 'deg'),
+                            spectral_index=2.7,
+                            apply_mask=False):
+    """Make a test bg cube model.
+
+    The background is created following a 2D symmetric gaussian
+    model for the spatial coordinates (X, Y) and a power-law in
+    energy.
+    The Gaussian width varies in energy from sigma/2 to sigma.
+    The power-law slope in log-log representation is given by
+    the spectral_index parameter.
+    It is possible to mask 1/4th of the image (for `x > x_center` and
+    `y > y_center`). Useful for testing coordinate rotations.
+
+    Parameters
+    ----------
+    detx_range : `~astropy.coordinates.Angle`, optional
+        X coordinate range (min, max)
+    ndetx_bins : int, optional
+        number of (linear) bins in X coordinate
+    dety_range : `~astropy.coordinates.Angle`, optional
+        Y coordinate range (min, max)
+    ndety_bins : int, optional
+        number of (linear) bins in Y coordinate
+    energy_band : `~astropy.units.Quantity`, optional
+        energy range (min, max)
+    nenergy_bins : int, optional
+        number of (logarithmic) bins in energy
+    sigma : `~astropy.coordinates.Angle`, optional
+        width of the gaussian model used for the spatial coordinates
+    spectral_index : double, optional
+        index for the power-law model used for the energy coordinate
+    apply_mask : bool, optional
+        if set, 1/4th of the image is masked (for `x > x_center` and
+        `y > y_center`)
+
+    Returns
+    -------
+    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+        bg cube model
+    """
+    # spatial bins (linear)
+    delta_x = (detx_range[1] - detx_range[0])/ndetx_bins
+    detx_bin_edges = np.arange(ndetx_bins + 1)*delta_x + detx_range[0]
+
+    delta_y = (dety_range[1] - dety_range[0])/ndety_bins
+    dety_bin_edges = np.arange(ndety_bins + 1)*delta_y + dety_range[0]
+
+    # energy bins (logarithmic)
+    log_delta_energy = (np.log(energy_band[1].value)
+                        - np.log(energy_band[0].value))/nenergy_bins
+    energy_bin_edges = np.exp(np.arange(nenergy_bins + 1)*log_delta_energy
+                              + np.log(energy_band[0].value))
+    energy_bin_edges = Quantity(energy_bin_edges, energy_band[0].unit)
+    # TODO: this function should be reviewed/re-written, when
+    # the following PR is completed:
+    # https://github.com/gammapy/gammapy/pull/290
+
+    # define empty bg cube model and set bins
+    bg_cube_model = CubeBackgroundModel(detx_bins=detx_bin_edges,
+                                        dety_bins=dety_bin_edges,
+                                        energy_bins=energy_bin_edges,
+                                        background=None)
+
+    # background
+
+    # define coordinate grids for the calculations
+    det_bin_centers = bg_cube_model.image_bin_centers
+    energy_bin_centers = bg_cube_model.energy_bin_centers
+    energy_points, dety_points, detx_points = np.meshgrid(energy_bin_centers,
+                                                          det_bin_centers[1],
+                                                          det_bin_centers[0],
+                                                          indexing='ij')
+    E_0 = Quantity(1., 'TeV')
+    norm = Quantity(1., '1 / (s TeV sr)')
+
+    # define E dependent sigma
+    # it is defined via a PL, in order to be log-linear
+    # it is equal to the parameter sigma at E max
+    # and sigma/2. at E min
+    sigma_min = sigma/2. # at E min
+    sigma_max = sigma # at E max
+    s_index = np.log(sigma_max/sigma_min)
+    s_index /= np.log(energy_bin_edges[-1]/energy_bin_edges[0])
+    s_norm = sigma_min*((energy_bin_edges[0]/E_0)**-s_index)
+    sigma = s_norm*((energy_points/E_0)**s_index)
+
+    # calculate bg
+    gaussian = np.exp(-((detx_points)**2 + (dety_points)**2)/sigma**2)
+    powerlaw = (energy_points/E_0)**-spectral_index
+    background = norm*gaussian*powerlaw
+
+    # apply mask if requested
+    if apply_mask:
+        # find central coordinate
+        detx_center = (detx_range[1] + detx_range[0])/2.
+        dety_center = (dety_range[1] + dety_range[0])/2.
+        mask = (detx_points <= detx_center) & (dety_points <= dety_center)
+        background = background*mask
+
+    bg_cube_model.background = Quantity(background, '1 / (s TeV sr)')
+
+    return bg_cube_model

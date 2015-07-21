@@ -22,6 +22,7 @@ from ..spectrum import (LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
+from ..utils.fits import table_to_fits_table 
 
 
 __all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
@@ -51,7 +52,7 @@ class SpectralCube(object):
 
     Parameters
     ----------
-    data : array_like
+    data : `~astropy.units.Quantity`
         Data array (3-dim)
     wcs : `~astropy.wcs.WCS`
         Word coordinate system transformation
@@ -413,29 +414,34 @@ class SpectralCube(object):
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
-            * hdu_list[0] : `~astropy.io.fits.ImageHDU`
+            * hdu_list[0] : `~astropy.io.fits.PrimaryHDU`
                 Image array of data
             * hdu_list[1] : `~astropy.io.fits.BinTableHDU`
                 Table of energies
         """
-        image = fits.ImageHDU(self.data, self.wcs.to_header())
-        energies = fits.BinTableHDU(self.energy, 'ENERGY')
+        image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
+        image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
+
+        # for BinTableHDU's the data must be added via a Table object
+        energy_table = Table()
+        energy_table['Energy'] = self.energy
+        energy_table.meta['name'] = 'ENERGY'
+
+        energies = table_to_fits_table(energy_table)
 
         hdu_list = fits.HDUList([image, energies])
 
         return hdu_list
 
-    def writeto(self, filename, overwrite=False):
+    def writeto(self, filename, **kwargs):
         """Writes SpectralCube to fits file.
 
         Parameters
         ----------
         filename : string
             Name of output file (.fits)
-        overwrite : bool
-            Overwrite existing output file?
         """
-        self.to_fits.writeto(filename, overwrite)
+        self.to_fits().writeto(filename, **kwargs)
 
     def __repr__(self):
         # Copied from `spectral-cube` package

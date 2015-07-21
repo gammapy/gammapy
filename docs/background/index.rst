@@ -20,6 +20,8 @@ and Section 7.4 "Acceptance determination and predicted background"
 in [Naurois2012]_ describe mostly the same methods as [Berge2007]_,
 except for the "2D acceptance model" described in Section 7.4.3.
 
+The background models implemented in Gammapy are documented in :ref:`bg_models`.
+
 Getting Started
 ===============
 
@@ -33,5 +35,10 @@ Reference/API
 .. automodapi:: gammapy.background
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.background.models
-    :no-inheritance-diagram:
+Sub-pages
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   models

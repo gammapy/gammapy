@@ -59,7 +59,7 @@ def download_datasets(names='all'):
         # if not download to cache
 
 
-def get_path(filename, location='local'):
+def get_path(filename, location='local', cache=True):
     """Get path (location on your disk) for a given file.
 
     Parameters
@@ -70,6 +70,10 @@ def get_path(filename, location='local'):
         File location.
         ``'local'`` means bundled with ``gammapy``.
         ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
+    cache : bool
+        if `True` and using `location=remote`, the file is searched
+        first within the local astropy cache and only downloaded if
+        it does not exist
 
     Returns
     -------
@@ -89,7 +93,7 @@ def get_path(filename, location='local'):
     elif location == 'remote':
         url = ('https://github.com/gammapy/gammapy-extra/blob/master/datasets/'
                '{0}?raw=true'.format(filename))
-        path = download_file(url, cache=True)
+        path = download_file(url, cache)
     else:
         raise ValueError('Invalid location: {0}'.format(location))
 

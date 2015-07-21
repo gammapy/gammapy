@@ -3,8 +3,10 @@
 from __future__ import print_function, division
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
+from astropy.coordinates import Angle
 
-__all__ = ['assert_quantity']
+__all__ = ['assert_quantity',
+           ]
 
 
 def assert_quantity(actual, desired, *args, **kwargs):
@@ -15,7 +17,7 @@ def assert_quantity(actual, desired, *args, **kwargs):
     if not isinstance(actual, Quantity):
         raise ValueError("actual must be a Quantity object.")
     if not isinstance(desired, Quantity):
-        raise ValueError("actual must be a Quantity object.")
+        raise ValueError("desired must be a Quantity object.")
 
     assert actual.unit == desired.unit
     assert_allclose(actual, desired, *args, **kwargs)

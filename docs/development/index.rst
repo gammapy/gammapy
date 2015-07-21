@@ -366,7 +366,6 @@ but I plan to document it in the Astropy docs soon (see `issue 2607 <https://git
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
 
-
 When to use C or Cython or Numba for speed
 ------------------------------------------
 
@@ -416,3 +415,25 @@ A lot of code that's not gamma-ray specific belongs in other packages
 (e.g. `Scipy`_, `Astropy`_, other Astropy-affiliated packages, `Sherpa`_).
 We currently have quite a bit of code that should be moved "upstream" or already has been,
 but the Gammapy code hasn't been adapted yet.
+
+Assert convention
+-----------------
+
+When performing tests, the preferred numerical assert method is
+`numpy.testing.assert_allclose`. Use
+
+``from numpy.testing import assert_allclose``
+
+at the top of the file and then just use ``assert_allclose`` for
+the tests. This makes the lines shorter, i.e. there is more space
+for the arguments.
+
+``assert_allclose`` covers all use cases for numerical asserts, so
+it should be used consistently everywhere instead of using the
+dozens of other available asserts from pytest or numpy in various
+places.
+
+In case of assertion on arrays of quantity objects, such as
+`~astropy.units.Quantity` or `~astropy.coordinates.Angle`, the
+following method can be used:
+`~gammapy.utils.testing.assert_quantity`.

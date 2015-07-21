@@ -8,6 +8,7 @@ __all__ = ['get_hdu',
            'get_image_hdu',
            'get_table_hdu',
            'fits_table_to_pandas',
+           'table_to_fits_table',
            ]
 
 
@@ -73,3 +74,50 @@ def fits_table_to_pandas(filename, index_columns):
     table = table.set_index(index_columns)
 
     return table
+
+
+def table_to_fits_table(table):
+    """Convert astropy table to binary table fits format.
+
+    This is a generic method to convert a `~astropy.table.Table`
+    to a `~astropy.io.fits.BinTableHDU`.
+    The name of the table can be stored in the Table meta information
+    under the `name` keyword.
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        astropy table containing the desired columns
+
+    Returns
+    -------
+    tbhdu : `~astropy.io.fits.BinTableHDU`
+        fits bin table containing the astropy table columns
+    """
+    # read name and drop it from the meta information, otherwise
+    # it would be stored as a header keyword in the BinTableHDU
+    if 'name' in table.meta:
+        name = table.meta.popitem('name')[1]
+    else:
+        name = None
+
+    data = table.as_array()
+
+    header = fits.Header()
+    header.update(table.meta)
+
+    tbhdu = fits.BinTableHDU(data, header, name=name)
+
+    # Copy over column meta-data
+    for colname in table.colnames:
+        tbhdu.columns[colname].unit = str(table[colname].unit)
+
+    # TODO: this method works fine but the order of keywords in the table
+    # header is not logical: for instance, list of keywords with column
+    # units (TUNITi) is appended after the list of column keywords
+    # (TTYPEi, TFORMi), instead of in between.
+    # As a matter of fact, the units aren't yet in the header, but
+    # only when calling the write method and opening the output file.
+    # https://github.com/gammapy/gammapy/issues/298
+
+    return tbhdu

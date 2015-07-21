@@ -139,7 +139,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
 
     convolved_cube = convolve(new_image, kernel_array, mode='constant')
 
-    out_cube = SpectralCube(data=convolved_cube,
+    out_cube = SpectralCube(data=Quantity(convolved_cube, ''),
                             wcs=total_point_image.wcs,
                             energy=energy)
 
