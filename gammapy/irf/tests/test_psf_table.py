@@ -2,11 +2,10 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.utils.data import get_pkg_data_filename
-from ...utils.testing import assert_quantity
 from ...irf import TablePSF, EnergyDependentTablePSF
 from ...datasets import FermiGalacticCenter
 
@@ -54,7 +53,7 @@ def test_TablePSF_disk():
     # TODO
     #actual = psf.containment_radius([0.01, 0.25, 0.99])
     #desired = Angle([0, 1, 2], 'deg')
-    #assert_quantity(actual, desired, rtol=1e-3)
+    #assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -70,11 +69,11 @@ def test_TablePSF():
 
     actual = psf.evaluate(offset=offset, quantity='dp_domega')
     desired = Quantity([5491.52067694, 3521.07804604], 'sr^-1')
-    assert_quantity(actual, desired)
+    assert_quantity_allclose(actual, desired)
 
     actual = psf.evaluate(offset=offset, quantity='dp_dtheta')
     desired = Quantity([60.22039017, 115.83738017], 'rad^-1')
-    assert_quantity(actual, desired, rtol=1e-6)
+    assert_quantity_allclose(actual, desired, rtol=1e-6)
 
     offset_min = Angle([0.0, 0.1, 0.3], 'deg')
     offset_max = Angle([0.1, 0.3, 2.0], 'deg')
@@ -101,11 +100,11 @@ def test_EnergyDependentTablePSF():
 
     #actual = psf.evaluate(energy=energy, offset=offset)
     #desired = Quantity(17760.814249206363, 'sr^-1')
-    #assert_quantity(actual, desired)
+    #assert_quantity_allclose(actual, desired)
 
     #actual = psf.evaluate(energy=energies, offset=offsets)
     #desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
-    #assert_quantity(actual, desired)
+    #assert_quantity_allclose(actual, desired)
 
     psf1 = psf.table_psf_at_energy(energy)
 

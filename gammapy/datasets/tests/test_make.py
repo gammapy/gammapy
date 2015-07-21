@@ -2,10 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
-from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from ...utils.testing import assert_quantity
+from astropy.tests.helper import assert_quantity_allclose
 from ...datasets import (make_test_psf, make_test_observation_table,
                          make_test_bg_cube_model)
 from ...obs import ObservationTable
@@ -75,4 +74,4 @@ def test_make_test_bg_cube_model():
     bg = bg_cube_model.background[e_bin_index, det_bin_index[1], det_bin_index[0]]
 
     # assert that values are 0
-    assert_allclose(bg, 0.)
+    assert_quantity_allclose(bg, Quantity(0., bg.unit))
