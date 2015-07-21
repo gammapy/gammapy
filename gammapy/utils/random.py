@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 import numbers
 import numpy as np
+from astropy.units import Quantity
 
 __all__ = ['check_random_state',
            'sample_sphere',
@@ -30,7 +31,7 @@ def check_random_state(seed):
                      ' instance'.format(seed))
 
 
-def sample_sphere(size, lon_range=None, lat_range=None, unit='rad'):
+def sample_sphere(size, lon_range=None, lat_range=None):
     """Sample random points on the sphere.
 
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
@@ -39,38 +40,32 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='rad'):
     ----------
     size : int
         Number of samples to generate
-    lon_range : tuple
-        Longitude range (min, max) tuple in range (0, 360)
-    lat_range : tuple
-        Latitude range (min, max) tuple in range (-90, 90)
-    units : {'rad', 'deg'}
-        Units of input range and returned angles
+    lon_range : `~astropy.units.Quantity`, optional
+        Longitude range (min, max) in range (0, 360) deg
+    lat_range : `~astropy.units.Quantity`, optional
+        Latitude range (min, max) in range (-90, 90) deg
 
     Returns
     -------
-    lon, lat: arrays
+    lon, lat: `~astropy.units.Quantity`
         Longitude and latitude coordinate arrays
     """
-    # Correctly interpret units at an early stage
-    if unit in ['rad', 'radian', 'radians']:
-        unit = 'rad'
-    elif unit in ['deg', 'degree', 'degrees']:
-        unit = 'deg'
-    else:
-        raise ValueError('Invalid unit: {0}'.format(unit))
-
     # Convert inputs to internal format (all radians)
     size = int(size)
 
-    if (lon_range is not None) and (unit == 'deg'):
-        lon_range = np.radians(lon_range)
+    if lon_range is not None:
+        lon_unit = lon_range.unit
+        lon_range.to('radian')
     else:
-        lon_range = 0, 2 * np.pi
+        lon_unit = 'radian'
+        lon_range = Quantity([0., 2*np.pi], lon_unit)
 
-    if (lat_range is not None) and (unit == 'deg'):
-        lat_range = np.radians(lat_range)
+    if lat_range is not None:
+        lat_unit = lon_range.unit
+        lat_range.to('radian')
     else:
-        lat_range = -np.pi / 2, np.pi / 2
+        lat_unit = 'radian'
+        lat_range = Quantity([-np.pi/2., np.pi/2.], lat_unit)
 
     # Sample random longitude
     u = np.random.random(size)
@@ -78,16 +73,14 @@ def sample_sphere(size, lon_range=None, lat_range=None, unit='rad'):
 
     # Sample random latitude
     v = np.random.random(size)
-    z_range = np.sin(np.array(lat_range))
+    #z_range = np.sin(np.array(lat_range))
+    z_range = np.sin(lat_range)
     z = z_range[0] + (z_range[1] - z_range[0]) * v
     # This is not the formula given in the reference, but it is equivalent.
     lat = np.arcsin(z)
 
     # Return result
-    if unit == 'rad':
-        return lon, lat
-    elif unit == 'deg':
-        return np.degrees(lon), np.degrees(lat)
+    return lon.to(lon_unit), lat.to(lat_unit)
 
 
 def sample_powerlaw(x_min, x_max, gamma, size=None):

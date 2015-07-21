@@ -169,7 +169,9 @@ def make_test_observation_table(observatory_name, n_obs, debug=False):
 
     # az, alt
     # random points in a sphere above 45 deg altitude
-    az, alt = sample_sphere(len(obs_id), (0, 360), (45, 90), 'degree')
+    az, alt = sample_sphere(len(obs_id),
+                            Quantity([0, 360], 'degree'),
+                            Quantity([45, 90], 'degree'))
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
     obs_table['AZ'] = az

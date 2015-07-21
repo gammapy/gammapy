@@ -2,14 +2,15 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.units import Quantity
 from ..random import sample_sphere, sample_powerlaw, sample_sphere_distance
 
 
 def test_sample_sphere():
     np.random.seed(0)
     lon, lat = sample_sphere(size=2)
-    assert_allclose(lon, [3.44829694, 4.49366732])
-    assert_allclose(lat, [0.20700192, 0.08988736])
+    assert_allclose(lon, Quantity([3.44829694, 4.49366732], 'radian'))
+    assert_allclose(lat, Quantity([0.20700192, 0.08988736], 'radian'))
 
 
 def test_sample_powerlaw():
