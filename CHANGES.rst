@@ -52,7 +52,8 @@ Pull requests
 - Add EffectiveAreaTable exporter to EffectiveAreaTable2D [#276] (Johannes King)
 - Add interface to HESS FitSpectrum JSON output [#296] (Christoph Deil)
 - Remove gammapy.shower package [#291] (Christoph Deil)
--  Add cube background model class [#299] (Manuel Paz Arribas)
+- Add cube background model class [#299] (Manuel Paz Arribas)
+- Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
 
 .. _gammapy_0p2_release:
 
