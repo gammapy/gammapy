@@ -32,7 +32,7 @@ class TestFermiGalacticCenter():
         energy = Quantity(100, 'GeV')
         fraction = 0.68
         angle = psf.containment_radius(energy, fraction)
-        assert_quantity_allclose(angle, Angle('0.1927459865412511 deg'))
+        assert_quantity_allclose(angle, Angle(0.1927459865412511, 'degree'))
 
     def test_counts(self):
         counts = FermiGalacticCenter.counts()
@@ -70,7 +70,7 @@ class TestFermiVelaRegion():
         energy = Quantity(100, 'GeV')
         fraction = 0.68
         angle = psf.containment_radius(energy, fraction)
-        assert_quantity_allclose(angle, Angle('0.13185321269896136 deg'))
+        assert_quantity_allclose(angle, Angle(0.13185321269896136, 'degree'))
 
     @remote_data
     def test_diffuse_model(self):

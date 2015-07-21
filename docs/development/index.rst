@@ -422,7 +422,9 @@ Assert convention
 When performing tests, the preferred numerical assert method is
 `numpy.testing.assert_allclose`. Use
 
-``from numpy.testing import assert_allclose``
+.. code-block:: python
+
+    from numpy.testing import assert_allclose
 
 at the top of the file and then just use ``assert_allclose`` for
 the tests. This makes the lines shorter, i.e. there is more space
@@ -439,7 +441,9 @@ following method can be used:
 `astropy.tests.helper.assert_quantity_allclose`.
 In this case, use
 
-``from astropy.tests.helper import assert_quantity_allclose``
+.. code-block:: python
+
+    from astropy.tests.helper import assert_quantity_allclose
 
 at the top of the file and then just use ``assert_quantity_allclose``
 for the tests.
