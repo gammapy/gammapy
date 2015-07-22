@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 import numbers
 import numpy as np
-from astropy.units import Quantity
+from astropy.coordinates import Angle
 
 __all__ = ['check_random_state',
            'sample_sphere',
@@ -40,14 +40,14 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     ----------
     size : int
         Number of samples to generate
-    lon_range : `~astropy.units.Quantity`, optional
+    lon_range : `~astropy.coordinates.Angle`, optional
         Longitude range (min, max) in range (0, 360) deg
-    lat_range : `~astropy.units.Quantity`, optional
+    lat_range : `~astropy.coordinates.Angle`, optional
         Latitude range (min, max) in range (-90, 90) deg
 
     Returns
     -------
-    lon, lat: `~astropy.units.Quantity`
+    lon, lat: `~astropy.units.Angle`
         Longitude and latitude coordinate arrays
     """
     # Convert inputs to internal format (all radians)
@@ -58,14 +58,14 @@ def sample_sphere(size, lon_range=None, lat_range=None):
         lon_range.to('radian')
     else:
         lon_unit = 'radian'
-        lon_range = Quantity([0., 2*np.pi], lon_unit)
+        lon_range = Angle([0., 2*np.pi], lon_unit)
 
     if lat_range is not None:
         lat_unit = lon_range.unit
         lat_range.to('radian')
     else:
         lat_unit = 'radian'
-        lat_range = Quantity([-np.pi/2., np.pi/2.], lat_unit)
+        lat_range = Angle([-np.pi/2., np.pi/2.], lat_unit)
 
     # Sample random longitude
     u = np.random.random(size)

@@ -2,15 +2,16 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.units import Quantity
+from astropy.coordinates import Angle
+from astropy.tests.helper import assert_quantity_allclose
 from ..random import sample_sphere, sample_powerlaw, sample_sphere_distance
 
 
 def test_sample_sphere():
     np.random.seed(0)
     lon, lat = sample_sphere(size=2)
-    assert_allclose(lon, Quantity([3.44829694, 4.49366732], 'radian'))
-    assert_allclose(lat, Quantity([0.20700192, 0.08988736], 'radian'))
+    assert_quantity_allclose(lon, Angle([3.44829694, 4.49366732], 'radian'))
+    assert_quantity_allclose(lat, Angle([0.20700192, 0.08988736], 'radian'))
 
 
 def test_sample_powerlaw():
