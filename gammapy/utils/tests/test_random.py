@@ -8,10 +8,32 @@ from ..random import sample_sphere, sample_powerlaw, sample_sphere_distance
 
 
 def test_sample_sphere():
+
+    # test general case
     np.random.seed(0)
     lon, lat = sample_sphere(size=2)
     assert_quantity_allclose(lon, Angle([3.44829694, 4.49366732], 'radian'))
     assert_quantity_allclose(lat, Angle([0.20700192, 0.08988736], 'radian'))
+
+    # test specify a limited range
+    lon_min = Angle(40., 'degree')
+    lon_max = Angle(45., 'degree')
+    lat_min = Angle(10., 'degree')
+    lat_max = Angle(15., 'degree')
+    lon, lat = sample_sphere(size=10,
+                             lon_range=Angle([lon_min, lon_max]),
+                             lat_range=Angle([lat_min, lat_max]))
+    assert (lon_min <= lon).all() & (lon < lon_max).all()
+    assert (lat_min <= lat).all() & (lat < lat_max).all()
+
+    # test long in (-180, 180) deg range
+    lon_min = Angle(-40., 'degree')
+    lon_max = Angle(0., 'degree')
+    lon, lat = sample_sphere(size=10, lon_range=Angle([lon_min, lon_max]))
+    assert (lon_min <= lon).all() & (lon < lon_max).all()
+    lat_min = Angle(-90., 'degree')
+    lat_max = Angle(90., 'degree')
+    assert (lat_min <= lat).all() & (lat < lat_max).all()
 
 
 def test_sample_powerlaw():

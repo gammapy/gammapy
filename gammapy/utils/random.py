@@ -41,7 +41,7 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     size : int
         Number of samples to generate
     lon_range : `~astropy.coordinates.Angle`, optional
-        Longitude range (min, max) in range (0, 360) deg
+        Longitude range (min, max) in range (0, 360) deg or (-180, 180) deg
     lat_range : `~astropy.coordinates.Angle`, optional
         Latitude range (min, max) in range (-90, 90) deg
 
@@ -50,22 +50,19 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     lon, lat: `~astropy.units.Angle`
         Longitude and latitude coordinate arrays
     """
-    # Convert inputs to internal format (all radians)
-    size = int(size)
+    #Check input parameters
+    if lon_range is None:
+        lon_range = Angle([0., 2*np.pi], 'radian')
 
-    if lon_range is not None:
-        lon_unit = lon_range.unit
-        lon_range.to('radian')
-    else:
-        lon_unit = 'radian'
-        lon_range = Angle([0., 2*np.pi], lon_unit)
+    if lat_range is None:
+        lat_range = Angle([-np.pi/2., np.pi/2.], 'radian')
 
-    if lat_range is not None:
-        lat_unit = lon_range.unit
-        lat_range.to('radian')
+    if lon_range[0] < 0:
+        # convert to (0, 360) deg
+        lon_format = '-180_180_deg'
+        lon_range += Angle(180., 'degree')
     else:
-        lat_unit = 'radian'
-        lat_range = Angle([-np.pi/2., np.pi/2.], lat_unit)
+        lon_format = '0_360_deg'
 
     # Sample random longitude
     u = np.random.random(size)
@@ -73,14 +70,16 @@ def sample_sphere(size, lon_range=None, lat_range=None):
 
     # Sample random latitude
     v = np.random.random(size)
-    #z_range = np.sin(np.array(lat_range))
     z_range = np.sin(lat_range)
     z = z_range[0] + (z_range[1] - z_range[0]) * v
     # This is not the formula given in the reference, but it is equivalent.
     lat = np.arcsin(z)
 
     # Return result
-    return lon.to(lon_unit), lat.to(lat_unit)
+    if lon_format == '-180_180_deg':
+        # convert back to (-180, 180) deg
+        lon -= Angle(180., 'degree')
+    return lon, lat
 
 
 def sample_powerlaw(x_min, x_max, gamma, size=None):
