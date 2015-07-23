@@ -46,7 +46,7 @@ class EnergyDispersion(object):
 
     @property
     def pdf_threshold(self):
-        """PDF matrix zero-suppression threshold."""
+        """PDF matrix zero-suppression threshold (float)"""
         return self._pdf_threshold
 
     @pdf_threshold.setter
@@ -280,7 +280,10 @@ class EnergyDispersion(object):
 
     @property
     def _extent(self):
-        """Extent (x0, x1, y0, y1) for plotting"""
+        """Extent (x0, x1, y0, y1) for plotting (4x float)
+
+        x stands for true energy and y for reconstructed energy
+        """
         x = self.energy_range('true')
         y = self.energy_range('reco')
         return x[0], x[1], y[0], y[1]

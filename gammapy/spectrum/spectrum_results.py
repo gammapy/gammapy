@@ -108,6 +108,7 @@ class Spectrum(Table):
 
     @property
     def nonzero_exposure_part(self):
+        """Table of bins with exposure (`~astropy.table.Table`)"""
         bins = self.meta['bins_with_exposure']
         table = self[bins[0]: bins[1]]
         return table
@@ -199,16 +200,30 @@ class SpectralModel:
 
     @property
     def covariance_matrix(self):
+        """Covariance matrix (`numpy.ndarray`)"""
         d = self.meta['covariance_matrix']
         self._matrix_dict_to_array(d)
 
     @property
     def correlation_matrix(self):
+        """Correlation matrix (`numpy.ndarray`)"""
         d = self.meta['correlation_matrix']
         self._matrix_dict_to_array(d)
 
     @staticmethod
     def _matrix_dict_to_array(d):
+        """Convert matrix dict entry to array
+
+        Parameters
+        ----------
+        d : `~array_like`
+            matrix dict value
+
+        Returns
+        -------
+        d_array : `~numpy.ndarray`
+            matrix array
+        """
         return np.array(d)
 
     def info(self, out=None):

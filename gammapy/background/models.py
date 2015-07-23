@@ -92,14 +92,14 @@ def _make_bin_edges_array(lo, hi):
 
     Parameters
     ----------
-    lo : `~numpy.array`
+    lo : `~numpy.ndarray`
         lower boundaries
-    hi : `~numpy.array`
+    hi : `~numpy.ndarray`
         higher boundaries
 
     Returns
     -------
-    bin_edges : `~numpy.array`
+    bin_edges : `~numpy.ndarray`
         array of bin edges as [[low], [high]]
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
@@ -453,12 +453,9 @@ class CubeBackgroundModel(object):
 
     @property
     def image_extent(self):
-        """Image extent `(x_lo, x_hi, y_lo, y_hi)`.
+        """Image extent (`~astropy.coordinates.Angle`)
 
-        Returns
-        -------
-        im_extent : `~astropy.coordinates.Angle`
-            array of bins with the image extent
+        The output array format is `(x_lo, x_hi, y_lo, y_hi)`.
         """
         bx = self.detx_bins
         by = self.dety_bins
@@ -466,40 +463,26 @@ class CubeBackgroundModel(object):
 
     @property
     def spectrum_extent(self):
-        """Spectrum extent `(e_lo, e_hi)`.
+        """Spectrum extent (`~astropy.units.Quantity`)
 
-        Returns
-        -------
-        spec_extent : `~astropy.units.Quantity`
-            array of bins with the spectrum extent
+        The output array format is  `(e_lo, e_hi)`.
         """
         b = self.energy_bins
         return Quantity([b[0], b[-1]])
 
     @property
     def image_bin_centers(self):
-        """Image bin centers `(x, y)`.
+        """Image bin centers `(x, y)` (2x `~astropy.coordinates.Angle`)
 
-        Returns
-        -------
-        detx_edges_centers : `~astropy.coordinates.Angle`
-            array of image bin centers (X coord)
-        dety_edges_centers : `~astropy.coordinates.Angle`
-            array of image bin centers (Y coord)
+        Returning two separate elements for the X and Y bin centers.
         """
-        detx_edges_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
-        dety_edges_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
-        return detx_edges_centers, dety_edges_centers
+        detx_bin_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
+        dety_bin_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
+        return detx_bin_centers, dety_bin_centers
 
     @property
     def energy_bin_centers(self):
-        """Energy bin centers (logarithmic center).
-
-        Returns
-        -------
-        energy_bin_centers : `~astropy.units.Quantity`
-            array of spectrum bin centers
-        """
+        """Energy bin centers (logarithmic center) (`~astropy.units.Quantity`)"""
         log_bin_edges = np.log(self.energy_bins.value)
         log_bin_centers = 0.5 * (log_bin_edges[:-1] + log_bin_edges[1:])
         energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_bins.unit)
@@ -512,14 +495,9 @@ class CubeBackgroundModel(object):
 
     @property
     def det_wcs(self):
-        """WCS object describing the coordinates of the det (X, Y) bins.
+        """WCS object describing the coordinates of the det (X, Y) bins (`~astropy.wcs.WCS`)
 
         This method gives the correct answer only for linear X, Y binning.
-
-        Returns
-        -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object describing the bin coordinates
         """
         wcs = linear_arrays_to_wcs(name_x="DETX",
                                    name_y="DETY",
@@ -532,12 +510,12 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.array`
+        det : `~numpy.ndarray`
             array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
 
         Returns
         -------
-        bin_index : `~numpy.array`
+        bin_index : `~numpy.ndarray`
             array of integers with the indices (x, y) of the det
             bin containing the specified det (X, Y) pair
         """
@@ -561,12 +539,12 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.array`
+        energy : `~numpy.ndarray`
             array of `~astropy.units.Quantity` energies to search for
 
         Returns
         -------
-        bin_index : `~numpy.array`
+        bin_index : `~numpy.ndarray`
             indices of the energy bins containing the specified energies
         """
         # check that the specified energy is within the boundaries of the model
@@ -585,7 +563,7 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.array`
+        det : `~numpy.ndarray`
             array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
 
         Returns
@@ -606,7 +584,7 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.array`
+        energy : `~numpy.ndarray`
             array of `~astropy.units.Quantity` energies to search for
 
         Returns

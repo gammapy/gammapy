@@ -105,7 +105,7 @@ class Maps(fits.HDUList):
 
         Returns
         -------
-        image : `numpy.array`
+        image : `numpy.ndarray`
             Map data
         """
         # Build a list of maps requiring correlation
@@ -133,7 +133,7 @@ class Maps(fits.HDUList):
 
         Returns
         -------
-        image : `numpy.array`
+        image : `numpy.ndarray`
             Map data
         """
         try:
@@ -163,7 +163,7 @@ class Maps(fits.HDUList):
 
     @property
     def alpha(self):
-        """Alpha map HDU."""
+        """Alpha map (`~astropy.io.fits.ImageHDU`)"""
         a_on = self.get_basic('a_on')
         a_off = self.get_basic('a_off')
         alpha = a_on / a_off
@@ -172,7 +172,7 @@ class Maps(fits.HDUList):
 
     @property
     def area_factor(self):
-        """Area factor map HDU."""
+        """Area factor map (`~astropy.io.fits.ImageHDU`)"""
         alpha = self.get_derived('alpha')
         area_factor = 1. / alpha
 
@@ -180,7 +180,7 @@ class Maps(fits.HDUList):
 
     @property
     def background(self):
-        """Background map HDU."""
+        """Background map (`~astropy.io.fits.ImageHDU`)"""
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
         background = stats.background(n_off, alpha)
@@ -189,7 +189,7 @@ class Maps(fits.HDUList):
 
     @property
     def make_excess(self):
-        """Excess map HDU."""
+        """Excess map (`~astropy.io.fits.ImageHDU`)"""
         n_on = self.get_basic('n_on')
         background = self.get_derived('background')
         excess = n_on - background
@@ -198,7 +198,7 @@ class Maps(fits.HDUList):
 
     @property
     def significance(self, method='lima', neglect_background_uncertainty=False):
-        """Significance map HDU."""
+        """Significance map (`~astropy.io.fits.ImageHDU`)"""
         n_on = self.get_basic('n_on')
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
@@ -209,7 +209,7 @@ class Maps(fits.HDUList):
 
     @property
     def flux(self):
-        """Flux map HDU."""
+        """Flux map (`~astropy.io.fits.ImageHDU`)"""
         exposure = self.get_basic('exposure')
         excess = self.get_derived('excess')
 

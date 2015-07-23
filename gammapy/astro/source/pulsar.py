@@ -40,7 +40,7 @@ class SimplePulsar(object):
     @property
     def luminosity_spindown(self):
         """
-        Spin-down luminosity.
+        Spin-down luminosity (`~astropy.units.Quantity`)
 
         Notes
         -----
@@ -55,7 +55,7 @@ class SimplePulsar(object):
     @property
     def tau(self):
         """
-        Characteristic age.
+        Characteristic age (`~astropy.units.Quantity`)
 
         Notes
         -----
@@ -70,7 +70,7 @@ class SimplePulsar(object):
     @property
     def magnetic_field(self):
         """
-        Magnetic field strength at the polar cap.
+        Magnetic field strength at the polar cap (`~astropy.units.Quantity`)
 
         Notes
         -----
