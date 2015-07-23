@@ -54,7 +54,7 @@ Pull requests
 - Remove gammapy.shower package [#291] (Christoph Deil)
 - Add cube background model class [#299] (Manuel Paz Arribas)
 - Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
-- sample_sphere should use Quantity objects [#283] (Manuel Paz Arribas)
+- Change sample_sphere to use Angle objects [#283] (Manuel Paz Arribas)
 
 .. _gammapy_0p2_release:
 
