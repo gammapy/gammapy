@@ -1,20 +1,25 @@
-MODULE = gammapy
+# Makefile with some convenient quick ways to do common things
 
-CURDIR = $(shell pwd)
-
-build:
-	python $(CURDIR)/setup.py develop
-
-test: build
-	python $(CURDIR)/setup.py test
-
-doc:
-	python $(CURDIR)/setup.py build_sphinx
-
-all: build test doc
+help:
+	@echo ''
+	@echo 'Gammapy available make targets:'
+	@echo ''
+	@echo '  help             Print this help message (the default)'
+	@echo '  clean            Remove generated files'
+	@echo '  clean-repo       Remove all untracked files and directories (use with care!)'
+	@echo '  trailing-spaces  Remove trailing spaces at the end of lines in *.py files'
+	@echo '  cython           Compile cython files'
+	@echo ''
 
 clean:
-	rm -rf $(CURDIR)/build $(CURDIR)/docs/_build $(CURDIR)/docs/api $(CURDIR)/htmlcov
+	rm -rf build docs/_build docs/api htmlcov
+	# TODO: do we need to clean CYTHON stuff???!!!
 
-distclean: clean
-	python $(CURDIR)/setup.py develop -u
+clean-repo:
+	@git clean -f -x -d
+
+trailing-spaces:
+	find -name "*.py" -exec perl -p -i -e 's/[ \t]*$$//' {} \;
+
+cython:
+	find -name "*.pyx" -exec $(CYTHON) {} \;
