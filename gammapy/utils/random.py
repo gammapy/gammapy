@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 import numbers
 import numpy as np
-from astropy.coordinates import Angle
+from astropy.coordinates import Longitude, Latitude
 
 __all__ = ['check_random_state',
            'sample_sphere',
@@ -40,29 +40,32 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     ----------
     size : int
         Number of samples to generate
-    lon_range : `~astropy.coordinates.Angle`, optional
-        Longitude range (min, max) in range (0, 360) deg or (-180, 180) deg
-    lat_range : `~astropy.coordinates.Angle`, optional
-        Latitude range (min, max) in range (-90, 90) deg
+    lon_range : `~astropy.coordinates.Longitude`, optional
+        Longitude range (min, max)
+    lat_range : `~astropy.coordinates.Latitude`, optional
+        Latitude range (min, max)
 
     Returns
     -------
-    lon, lat: `~astropy.units.Angle`
+    lon, lat: `~astropy.units.Longitude`, `~astropy.coordinates.Latitude`
         Longitude and latitude coordinate arrays
     """
     #Check input parameters
     if lon_range is None:
-        lon_range = Angle([0., 2*np.pi], 'radian')
+        epsilon = 1.e-8
+        lon_range = Longitude([0., 2*np.pi-epsilon], 'radian')
 
     if lat_range is None:
-        lat_range = Angle([-np.pi/2., np.pi/2.], 'radian')
+        lat_range = Latitude([-np.pi/2., np.pi/2.], 'radian')
 
-    if lon_range[0] < 0:
-        # convert to (0, 360) deg
-        lon_format = '-180_180_deg'
-        lon_range += Angle(180., 'degree')
-    else:
-        lon_format = '0_360_deg'
+    ##import IPython; IPython.embed()
+
+#    if lon_range[0] < 0:
+#        # convert to (0, 360) deg
+#        lon_format = '-180_180_deg'
+#        lon_range += Angle(180., 'degree')
+#    else:
+#        lon_format = '0_360_deg'
 
     # Sample random longitude
     u = np.random.random(size)
@@ -76,9 +79,9 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     lat = np.arcsin(z)
 
     # Return result
-    if lon_format == '-180_180_deg':
-        # convert back to (-180, 180) deg
-        lon -= Angle(180., 'degree')
+#    if lon_format == '-180_180_deg':
+#        # convert back to (-180, 180) deg
+#        lon -= Angle(180., 'degree')
     return lon, lat
 
 
