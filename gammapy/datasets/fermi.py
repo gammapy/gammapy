@@ -4,12 +4,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import tarfile
+import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from ..irf import EnergyDependentTablePSF
 from ..data import SpectralCube
 from ..datasets import get_path
+
 
 __all__ = ['FermiGalacticCenter',
            'FermiVelaRegion',
@@ -214,6 +216,133 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
     filename = download_file(url, cache=True)
 
     return filename
+
+class Fermi3FGLObject(object):
+    """TODO: Doccomments
+    """
+    fermi_cat = fetch_fermi_catalog('3FGL')
+
+    x_bins = np.log10([0.03, 0.1, 0.3, 1, 3, 10, 100])
+
+    y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
+                'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
+
+    def __init__(self, source_name):
+        self.name_3FGL = source_name
+        self.catalog_index = np.where(self.fermi_cat[1].data['Source_Name'] == source_name)[0][0]
+        self.cat_row = self.fermi_cat[1].data[self.catalog_index]
+        self.ra = self.cat_row['RAJ2000']
+        self.dec = self.cat_row['DEJ2000']
+        self.gal_long = self.cat_row['GLON']
+        self.gal_lat = self.cat_row['GLAT']
+        self.int_flux = self.cat_row['Flux_Density']
+        self.unc_int_flux = self.cat_row['Unc_Flux_Density']
+        self.spec_type = self.cat_row['SpectrumType']
+        self.pivot_en = self.cat_row['PIVOT_ENERGY']
+        self.spec_index = self.cat_row['Spectral_Index']
+        self.unc_spec_index = self.cat_row['Unc_Spectral_Index']
+        self.beta = self.cat_row['beta']
+        self.unc_beta = self.cat_row['unc_beta']
+        self.cutoff = self.cat_row['Cutoff']
+        self.unc_cutoff = self.cat_row['Unc_Cutoff']
+        self.exp_index = self.cat_row['Exp_Index']
+        self.unc_exp_index = self.cat_row['Unc_Exp_Index']
+        self.signif = self.cat_row['Signif_Avg']
+
+    def plot_spectrum(self, ax=None):
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+
+
+        bin_edges1 = np.zeros(0)
+
+        bin_edges2 = np.zeros(0)
+
+        x_vals = np.zeros(0)
+
+        y_vals = np.zeros(0)
+
+        y_upper = np.zeros(0)
+        y_lower = np.zeros(0)
+
+
+        for i in range(0, np.size(self.x_bins) - 1):
+
+            flux = self.cat_row[self.y_labels[i]]
+
+
+
+            # Require both a detection and a lower bound
+            if np.isnan(flux) == False:
+                y_err_label = "Unc_" + self.y_labels[i]
+
+                print(self.cat_row[y_err_label])
+                flux_lower_bound = self.cat_row[y_err_label][0]
+                if np.isnan(flux_lower_bound) == False:
+
+                    y_vals = np.append(y_vals, flux)
+
+                    #print(y_err_label)
+                    #print(self.cat_row[y_err_label])
+
+                    y_lower = np.append(y_lower, flux + self.cat_row[y_err_label][0])
+
+                    y_upper = np.append(y_upper, flux + self.cat_row[y_err_label][1])
+
+                    y_vals[-1] = np.log10(y_vals[-1])
+
+                    y_upper[-1] = np.log10(y_upper[-1])
+
+                    y_lower[-1] = np.log10(y_lower[-1])
+
+                    # y_val - new_y_lower = y_lower
+
+                    y_lower[-1] = -(y_lower[-1] - y_vals[-1])
+
+                    # y_val + new_y_upper = y_upper
+
+                    y_upper[-1] = y_upper[-1]  - y_vals[-1]
+
+                    x_vals = np.append(x_vals,
+                                       0.5 * (self.x_bins[i + 1] - self.x_bins[i]) + self.x_bins[i])
+
+                    #print(self.x_bins[i])
+                    #print(self.x_bins[i+1])
+                    #print(x_vals[i])
+
+                    # x_vals - bin_edge1 = x_bin[i]
+                    # x_vals + bin_edge2 = x_bin[i + 1]
+                    bin_edges1 = np.append(bin_edges1,
+                                           -(self.x_bins[i] - x_vals[-1]))
+
+                    bin_edges2 = np.append(bin_edges2,
+                                           self.x_bins[i + 1] - x_vals[-1])
+
+                    #print("")
+                    #print(x_vals[i] - bin_edges1[i])
+                    #print(x_vals[i] + bin_edges2[i])
+                    #raw_input(" ")
+
+
+
+        ax.errorbar(x_vals, y_vals,
+                    xerr=(bin_edges1, bin_edges2),
+                    yerr=(y_lower, y_upper),
+                    elinewidth=1, linewidth=0, color='black')
+
+        if self.spec_type == "PowerLaw":
+            print(type(self.spec_index))
+            #y_spectrum = self.int_flux * (10 ** x_vals / self.pivot_en) ** -self.spec_index
+            #y_spectrum = np.log10(y_spectrum)
+
+            #ax.plot(x_vals, y_spectrum)
+
+
+        return ax
+
+
 
 
 class FermiGalacticCenter(object):
