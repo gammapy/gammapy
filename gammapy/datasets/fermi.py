@@ -329,12 +329,12 @@ class Fermi3FGLObject(object):
                     xerr=(bin_edges1, bin_edges2),
                     yerr=(y_lower, y_upper),
                     elinewidth=1, linewidth=0, color='black')
-
-	x_spectrum = np.linspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
-	x_spectrum = 10**x_spectrum
+        
+	#x_spectrum = np.linspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
+	#x_spectrum = 10**x_spectrum
         if self.spec_type == "PowerLaw":
             print(type(self.spec_index))
-            y_spectrum = self.int_flux * (x_spectrum / self.pivot_en) ** -self.spec_index
+            y_spectrum = self.int_flux * (10 ** x_vals / self.pivot_en) ** -self.spec_index
             y_spectrum = np.log10(y_spectrum)
 
             ax.plot(x_vals, y_spectrum)
