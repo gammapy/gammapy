@@ -20,7 +20,6 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
     `here <http://stackoverflow.com/questions/1155539/how-do-i-generate-a-poisson-process>`__,
     as well as `numpy.random.exponential`.
 
-
     TODO: I think usually one has a given observation duration,
     not a given number of events to generate.
     Implementing this is more difficult because then the number
@@ -32,8 +31,12 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
         Number of samples
     rate : `~astropy.units.Quantity`
         Event rate (dimension: 1 / TIME)
-    dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`
+    dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`, optional
         Dead time after event (dimension: TIME)
+    random_state : int or `~numpy.random.RandomState`, optional
+        Pseudo-random number generator state used for random
+        sampling. Separate function calls with the same parameters
+        and ``random_state`` will generate identical results.
 
     Returns
     -------

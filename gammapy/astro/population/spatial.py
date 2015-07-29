@@ -10,13 +10,13 @@ radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
 """
 from __future__ import print_function, division
 import numpy as np
-from numpy.random import random_integers, uniform, normal
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
 from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar
 from ...utils.const import d_sun_to_galactic_center
+from ...utils.random import check_random_state
 
 __all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
            'Paczynski1990', 'YusifovKucuk2004', 'YusifovKucuk2004B',
@@ -405,7 +405,7 @@ class FaucherSpiral(LogSpiral):
     theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
     spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
-    def _blur(self, radius, theta, amount=0.07):
+    def _blur(self, radius, theta, amount=0.07, random_state=None):
         """
         Blur the positions around the centroid of the spiralarm.
 
@@ -419,16 +419,24 @@ class FaucherSpiral(LogSpiral):
             Radius coordinate
         theta : `~astropy.units.Quantity`
             Angle coordinate
-        amount: float
+        amount: float, optional
             Amount of blurring of the position, given as a fraction of `radius`.
+        random_state : int or `~numpy.random.RandomState`, optional
+            Pseudo-random number generator state used for random
+            sampling. Separate function calls with the same parameters
+            and ``random_state`` will generate identical result.
         """
-        dr = Quantity(abs(normal(0, amount * radius, radius.size)), 'kpc')
-        dtheta = Quantity(uniform(0, 2 * np.pi, radius.size), 'rad')
+        # initialise random number generator
+        rng = check_random_state(random_state)
+
+        dr = Quantity(abs(rng.normal(0, amount * radius, radius.size)), 'kpc')
+        dtheta = Quantity(rng.uniform(0, 2 * np.pi, radius.size), 'rad')
         x, y = cartesian(radius, theta)
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
-    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc')):
+    def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc'),
+                       random_state=None):
         """
         Correction of source distribution towards the galactic center.
 
@@ -441,13 +449,20 @@ class FaucherSpiral(LogSpiral):
             Radius coordinate
         theta : `~astropy.units.Quantity`
             Angle coordinate
-        r_corr : `~astropy.units.Quantity`
+        r_corr : `~astropy.units.Quantity`, optional
             Scale of the correction towards the GC
+        random_state : int or `~numpy.random.RandomState`, optional
+            Pseudo-random number generator state used for random
+            sampling. Separate function calls with the same parameters
+            and ``random_state`` will generate identical result.
         """
-        theta_corr = Quantity(uniform(0, 2 * pi, radius.size), 'rad')
+        # initialise random number generator
+        rng = check_random_state(random_state)
+
+        theta_corr = Quantity(rng.uniform(0, 2 * pi, radius.size), 'rad')
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
-    def __call__(self, radius, blur=True):
+    def __call__(self, radius, blur=True, random_state=None):
         """Draw random position from spiral arm distribution.
 
         Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
@@ -457,7 +472,10 @@ class FaucherSpiral(LogSpiral):
         Perseus = 2
         Crux Scutum = 3.
         Returns dx and dy, if blurring= true."""
-        N = random_integers(0, 3, radius.size)  # Choose Spiralarm
+        # initialise random number generator
+        rng = check_random_state(random_state)
+
+        N = rng.random_integers(0, 3, radius.size)  # Choose Spiralarm
         theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 
