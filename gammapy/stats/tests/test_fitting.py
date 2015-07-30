@@ -20,8 +20,9 @@ def test_PoissonLikelihoodFitter():
     model = Gaussian1D(amplitude=1000, mean=2, stddev=3)
     x = np.arange(-10, 20, 0.1)
     dx = 0.1 * np.ones_like(x)
-    np.random.seed(0)
-    y = np.random.poisson(dx * model(x))
+    # initialise random number generator
+    rng = check_random_state(0)
+    y = rng.poisson(dx * model(x))
 
     fitter = PoissonLikelihoodFitter()
     model = fitter(model, x, y, dx)
