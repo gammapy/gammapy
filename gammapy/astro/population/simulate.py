@@ -145,6 +145,7 @@ def make_catalog_random_positions_sphere(size, center='Earth',
     return table
 
 
+'''
 def make_cat_gauss_random(n_sources=100, glon_sigma=30, glat_sigma=1,
                           extension_mean=0, extension_sigma=0.3,
                           flux_index=1, flux_min=10, flux_max=1000,
@@ -154,7 +155,10 @@ def make_cat_gauss_random(n_sources=100, glon_sigma=30, glat_sigma=1,
     Default GLON, GLAT, EXTENSION, FLUX distributions
     are similar to what was observed by HESS.
 
-    Useful for simulations of detection and fitting methods."""
+    Useful for simulations of detection and fitting methods.
+
+    TODO: this function is commented out: improve/remove it?
+    """
     # initialise random number generator
     rng = check_random_state(random_state)
 
@@ -175,7 +179,10 @@ def make_cat_gauss_random(n_sources=100, glon_sigma=30, glat_sigma=1,
 
 def make_cat_gauss_grid(nside=3, sigma_min=0.05, flux_min=1e-11):
     """A test catalog for fitting which contains
-    just a few Gaussians in a grid"""
+    just a few Gaussians in a grid
+
+    TODO: this function is commented out: improve/remove it?
+    """
     n_sources = nside ** 2
     GLON = np.zeros(n_sources)
     GLAT = np.zeros(n_sources)
@@ -197,6 +204,7 @@ def make_cat_gauss_grid(nside=3, sigma_min=0.05, flux_min=1e-11):
              'sigma', 'flux', 'ampl']
     table = make_fits_table(locals(), names)
     return add_missing_morphology_columns(table)
+'''
 
 
 def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
