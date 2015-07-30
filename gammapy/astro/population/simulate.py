@@ -81,7 +81,9 @@ def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
     return table
 
 
-def make_catalog_random_positions_sphere(size, center='Earth', distance=Quantity([0, 1], 'Mpc')):
+def make_catalog_random_positions_sphere(size, center='Earth',
+                                         distance=Quantity([0, 1], 'Mpc'),
+                                         random_state=None):
     """Sample random source locations in a sphere.
 
     This can be used to generate an isotropic source population
@@ -95,6 +97,10 @@ def make_catalog_random_positions_sphere(size, center='Earth', distance=Quantity
         Sphere center
     distance : `~astropy.units.Quantity` tuple
         Distance min / max range.
+    random_state : int or `~numpy.random.RandomState`, optional
+        Pseudo-random number generator state used for random
+        sampling. Separate function calls with the same parameters
+        and ``random_state`` will generate identical result.
 
     Returns
     -------
@@ -105,8 +111,9 @@ def make_catalog_random_positions_sphere(size, center='Earth', distance=Quantity
         - GLON, GLAT (deg)
         - Distance (Mpc)
     """
-    lon, lat = sample_sphere(size)
-    radius = sample_sphere_distance(distance[0], distance[1], size)
+    lon, lat = sample_sphere(size, random_state=random_state)
+    radius = sample_sphere_distance(distance[0], distance[1], size,
+                                    random_state=random_state)
 
     # TODO: it shouldn't be necessary here to convert to cartesian ourselves ...
     x, y, z = spherical_to_cartesian(radius, lat, lon)

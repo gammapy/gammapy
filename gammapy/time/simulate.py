@@ -43,7 +43,9 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
     time : `~astropy.time.TimeDelta`
         Time differences (second) after time zero.
     """
+    # initialise random number generator
     rng = check_random_state(random_state)
+
     dead_time = TimeDelta(dead_time)
 
     scale = (1 / rate).to('second').value

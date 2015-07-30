@@ -31,7 +31,7 @@ def check_random_state(seed):
                      ' instance'.format(seed))
 
 
-def sample_sphere(size, lon_range=None, lat_range=None):
+def sample_sphere(size, lon_range=None, lat_range=None, random_state=None):
     """Sample random points on the sphere.
 
     Reference: http://mathworld.wolfram.com/SpherePointPicking.html
@@ -44,12 +44,19 @@ def sample_sphere(size, lon_range=None, lat_range=None):
         Longitude range (min, max)
     lat_range : `~astropy.coordinates.Latitude`, optional
         Latitude range (min, max)
+    random_state : int or `~numpy.random.RandomState`, optional
+        Pseudo-random number generator state used for random
+        sampling. Separate function calls with the same parameters
+        and ``random_state`` will generate identical results.
 
     Returns
     -------
     lon, lat: `~astropy.units.Longitude`, `~astropy.coordinates.Latitude`
         Longitude and latitude coordinate arrays
     """
+    # initialise random number generator
+    rng = check_random_state(random_state)
+
     #Check input parameters
     if lon_range is None:
         epsilon = 1.e-8
@@ -68,14 +75,13 @@ def sample_sphere(size, lon_range=None, lat_range=None):
 #        lon_format = '0_360_deg'
 
     # Sample random longitude
-    u = np.random.random(size)
+    u = rng.uniform(size=size)
     lon = lon_range[0] + (lon_range[1] - lon_range[0]) * u
 
     # Sample random latitude
-    v = np.random.random(size)
+    v = rng.uniform(size=size)
     z_range = np.sin(lat_range)
     z = z_range[0] + (z_range[1] - z_range[0]) * v
-    # This is not the formula given in the reference, but it is equivalent.
     lat = np.arcsin(z)
 
     # Return result
@@ -85,7 +91,7 @@ def sample_sphere(size, lon_range=None, lat_range=None):
     return lon, lat
 
 
-def sample_powerlaw(x_min, x_max, gamma, size=None):
+def sample_powerlaw(x_min, x_max, gamma, size=None, random_state=None):
     """Sample random values from a power law distribution.
 
     f(x) = x ** (-gamma) in the range x_min to x_max
@@ -100,25 +106,31 @@ def sample_powerlaw(x_min, x_max, gamma, size=None):
         x range maximum
     gamma : float
         Power law index
-    size : int
+    size : int, optional
         Number of samples to generate
+    random_state : int or `~numpy.random.RandomState`, optional
+        Pseudo-random number generator state used for random
+        sampling. Separate function calls with the same parameters
+        and ``random_state`` will generate identical results.
 
     Returns
     -------
     x : array
         Array of samples from the distribution
     """
+    # initialise random number generator
+    rng = check_random_state(random_state)
+
     size = int(size)
 
-    u = np.random.random(size)
     exp = 1. - gamma
-    base = x_min ** exp + u * (x_max ** exp - x_min ** exp)
+    base = rng.uniform(x_min ** exp, x_max ** exp, size)
     x = base ** (1 / exp)
 
     return x
 
 
-def sample_sphere_distance(distance_min=0, distance_max=1, size=None):
+def sample_sphere_distance(distance_min=0, distance_max=1, size=None, random_state=None):
     """Sample random distances if the 3-dim space density is constant.
 
     This function uses inverse transform sampling
@@ -128,16 +140,23 @@ def sample_sphere_distance(distance_min=0, distance_max=1, size=None):
 
     Parameters
     ----------
-    size : int
-        Number of samples
-    distance_min, distance_max : float
+    distance_min, distance_max : float, optional
         Distance range in which to sample
+    size : int, optional
+        Number of samples
+    random_state : int or `~numpy.random.RandomState`, optional
+        Pseudo-random number generator state used for random
+        sampling. Separate function calls with the same parameters
+        and ``random_state`` will generate identical results.
 
     Returns
     -------
     distance : array
         Array of samples
     """
+    # initialise random number generator
+    rng = check_random_state(random_state)
+
     # Since the differential distribution is dP / dr ~ r ^ 2,
     # we have a cumulative distribution
     #     P(r) = a * r ^ 3 + b
@@ -152,7 +171,7 @@ def sample_sphere_distance(distance_min=0, distance_max=1, size=None):
     #     u = a * r ^ 3 + b
     # which is
     #     r = [(u - b)/ a] ^ (1 / 3)
-    u = np.random.random(size)
+    u = rng.uniform(size=size)
     distance = ((u - b) / a) ** (1. / 3)
 
     return distance
