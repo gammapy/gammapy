@@ -209,6 +209,19 @@ class ObservationTable(Table):
         """
         obs_table = self
 
+        #TODO: search code for criteria implemented!!!
+        # in datastore, in event lists, ...?
+        # gammapy/catalog/utils.py select_sky_box
+	# gammapy/gammapy/scripts/find_obs.py
+	#Copy EventList class methods for event selection to ObservationTable class and adapt a bit. Look for mask in http://gammapy.readthedocs.org/en/latest/_modules/gammapy/data/event_list.html#EventList
+	#Code: https://github.com/gammapy/gammapy/blob/master/gammapy/scripts/find_obs.py
+	#Docs: https://github.com/gammapy/gammapy/blob/master/docs/obs/findruns.rst
+        # check that I don't break anything because of missing tests in existing code!!! (i.e. in https://github.com/mapazarr/hess-host-analyses/blob/master/hgps_survey_map/hgps_survey_map.py#L62)
+        #TOOD: implement script that provides a run list and outputs a filtered run list!!!
+
+# test if it works with ra dec (is in that case long = RA, lat = dec? (or does it cleverly transform coordinates and makes selection?)
+# do a more user-friendly way of giving ra dec (without long lat)!!!
+
         if selection:
             selection_region_shape = selection['shape']
             if 'variable' in selection.keys():
@@ -269,5 +282,18 @@ class ObservationTable(Table):
                 raise NotImplemented
             else:
                 raise ValueError('Invalid selection type: {}'.format(selection_region_shape))
+
+#TODO: should I take already Angle objects as parameters in the selection???!!!!!!!!!!!!!!!
+
+
+##box (min, max)
+##circle (center, radius)
+##
+##1D
+##2D -> sky_box, sky_circle
+## time_box? (time_circle?)
+##  time in table could be absolute time (as Time) or relative (MET, as Quantity)
+##
+##inverted?
 
         return obs_table

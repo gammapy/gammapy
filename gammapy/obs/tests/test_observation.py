@@ -56,8 +56,8 @@ def test_filter_observations():
 
     # test box selection in alt
     variable = 'ALT'
-    value_min = Angle(Angle(70., 'degree').radian, 'radian')
-    value_max = Angle(Angle(80., 'degree').radian, 'radian')
+    value_min = Angle(60., 'degree')
+    value_max = Angle(70., 'degree')
     selection = dict(shape='box', variable=variable,
                      value_min=value_min, value_max=value_max)
     filtered_obs_table = obs_table.filter_observations(selection)
