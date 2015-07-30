@@ -76,8 +76,8 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name, n_obs,
- datestart=None, dateend=None, debug=False,
-                                random_state='random-seed'):
+                                datestart=None, dateend=None,
+                                debug=False, random_state=None):
     """Make a test observation table.
 
     For the moment, only random observation tables are created.
@@ -101,7 +101,7 @@ def make_test_observation_table(observatory_name, n_obs,
     	ending date for random generation of observation start time
     debug : bool, optional
         show UTC times instead of seconds after the reference
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
 
