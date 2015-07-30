@@ -25,7 +25,7 @@ from ..irf import (np_to_rmf,
                    )
 from ..spectrum import np_to_pha
 from ..version import version
-from ..utils.random import check_random_state
+from ..utils.random import get_random_state
 
 
 __all__ = ['ChisquareFitter',
@@ -298,14 +298,16 @@ def sim_evlist(flux=.1,
                write_pha=False,
                do_graphical_output=True,
                loglevel='INFO',
-               random_state=None):
+               random_state='random-seed'):
     """Simulate IACT eventlist using an ARF file.
 
     TODO: describe.
 
-    Paramters
-    ---------
-    TODO
+    Parameters
+    ----------
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
@@ -315,8 +317,7 @@ def sim_evlist(flux=.1,
     from scipy.integrate import quad
     import matplotlib.pyplot as plt
 
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     #---------------------------------------------------------------------------
 
@@ -467,7 +468,7 @@ def sim_evlist(flux=.1,
     logging.debug('Number of photons : {0}'.format(n_events))
 
     # Generate energy event list
-    evlist_e = ev_gen_f(rng.rand(n_events))
+    evlist_e = ev_gen_f(random_state.rand(n_events))
 
     # Sanity
     logging.debug('Number of photons with E = NaN : {0}'.format(np.sum(np.isnan(evlist_e))))
@@ -494,10 +495,10 @@ def sim_evlist(flux=.1,
         evlist_psf = bpl(psf_p1, 10. ** evlist_e)
         logging.warning('Using dummy PSF extracted from SubarrayE_IFAE_50hours_20101102')
 
-    evlist_dec = obj_dec + rng.randn(n_events) * evlist_psf
-    evlist_ra = obj_ra + rng.randn(n_events) * evlist_psf / objcosdec
+    evlist_dec = obj_dec + random_state.randn(n_events) * evlist_psf
+    evlist_ra = obj_ra + random_state.randn(n_events) * evlist_psf / objcosdec
 
-    evlist_t = t_min + obstime * rng.rand(n_events) / 86400.
+    evlist_t = t_min + obstime * random_state.rand(n_events) / 86400.
 
     #---------------------------------------------------------------------------
     # Background
@@ -539,30 +540,30 @@ def sim_evlist(flux=.1,
     logging.debug('Number of protons : {0}'.format(n_events_bg))
 
     tplt_multi = 5
-    evlist_bg_e = ev_gen_f(rng.rand(n_events_bg * (tplt_multi + 1)))
+    evlist_bg_e = ev_gen_f(random_state.rand(n_events_bg * (tplt_multi + 1)))
 
     temp42 = quad(lambda x: cam_acc(cam_acc_par, x) * 2. * x * np.pi, 0., 4.)[0]
     ev_gen_f2 = UnivariateSpline(int_cam_acc / temp42,
                                  r_steps, s=0, k=1)
 
-    evlist_bg_r = ev_gen_f2(rng.rand(n_events_bg * (tplt_multi + 1)))
+    evlist_bg_r = ev_gen_f2(random_state.rand(n_events_bg * (tplt_multi + 1)))
 
     r_max = 4.
     # evlist_bg_r = np.sqrt(rng.rand(n_events_bg * (tplt_multi + 1))) * r_max
-    rnd = rng.rand(n_events_bg * (1 + tplt_multi))
-    evlist_bg_rx = np.sqrt(rnd) * evlist_bg_r * np.where(rng.randint(2, size=(n_events_bg * (tplt_multi + 1))) == 0, -1., 1.)
-    evlist_bg_ry = np.sqrt(1. - rnd) * evlist_bg_r * np.where(rng.randint(2, size=(n_events_bg * (tplt_multi + 1))) == 0, -1., 1.)
+    rnd = random_state.rand(n_events_bg * (1 + tplt_multi))
+    evlist_bg_rx = np.sqrt(rnd) * evlist_bg_r * np.where(random_state.randint(2, size=(n_events_bg * (tplt_multi + 1))) == 0, -1., 1.)
+    evlist_bg_ry = np.sqrt(1. - rnd) * evlist_bg_r * np.where(random_state.randint(2, size=(n_events_bg * (tplt_multi + 1))) == 0, -1., 1.)
 
     # evlist_bg_sky_r = np.sqrt(rng.rand(n_events_bg * (tplt_multi + 1))) * r_max
     # evlist_bg_sky_r = ev_gen_f2(rng.rand(n_events_bg * (tplt_multi + 1)))
-    rnd = rng.rand(n_events_bg * (tplt_multi + 1))
+    rnd = random_state.rand(n_events_bg * (tplt_multi + 1))
     evlist_bg_ra = np.sin(2. * np.pi * rnd) * evlist_bg_r / objcosdec
     evlist_bg_dec = np.cos(2. * np.pi * rnd) * evlist_bg_r
 
     # plt.hist(evlist_bg_rx ** 2. + evlist_bg_ry**2., bins=50)
 
     # print float(n_events_bg * (tplt_multi + 1)) / np.sum(p_rate_area) / 86400.
-    evlist_bg_t = t_min + obstime * rng.rand(n_events_bg * (tplt_multi + 1)) / 86400.
+    evlist_bg_t = t_min + obstime * random_state.rand(n_events_bg * (tplt_multi + 1)) / 86400.
 
     #---------------------------------------------------------------------------
     # Plots & debug

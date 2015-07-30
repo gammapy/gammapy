@@ -447,35 +447,64 @@ In this case, use
 at the top of the file and then just use ``assert_quantity_allclose``
 for the tests.
 
+.. _development_random:
+
 Random numbers
 --------------
 
-When generating random numbers it is useful to define a `random
-state` (a.k.a. `seed`) in order to produce pseudo-random numbers.
-This has the advantage of having random number that are reproducible
-if using the same `random state`, so the results can be reproduced.
-
-In Gammapy, there is a utility function to deal with random states:
-`~gammapy.utils.random.check_random_state`. The best way is to
-import it on top of the file that should use it with
+All functions that need to call a random number generator should
+take a ``random_state`` input parameter and call the
+`~gammapy.utils.random.get_random_state` utility function like this
+(you can copy & paste the three docstring lines and the first code line
+to the function you're writing):
 
 .. code-block:: python
 
-    from gammapy.utils.random import check_random_state
+    from gammapy.utils.random import get_random_state
 
-and define a random number generator as
+    def make_random_stuff(X, random_state='random-seed'):
+        """...
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+        data = random_state.uniform(low=0, high=3, size=10)
+        return data
+
+This allows callers flexible control over which random number generator
+(i.e. which `numpy.random.RandomState` instance) is used and how it's initialised.
+The default ``random_state='random-seed'`` means "create a new RNG, seed it in a random way",
+i.e. different random numbers will be generated on every call.
+
+There's a few ways to get deterministic results from a script that call
+functions that generate random numbers.
+
+One option is to create a single `~numpy.random.RandomState` object seeded with an integer
+and then pass that ``random_state`` object to every function that generates random numbers:
 
 .. code-block:: python
 
-    rng = check_random_state(random_state)
+    from numpy.random import RandomState
+    random_state = RandomState(seed=0)
 
-where ``random_state`` is either an int or a
-`~numpy.random.RandomState`. If using it on a function, ``random_state`` should be made a parameter of it. Then one can call the desired random generator method on top of ``rng``. For example
+    stuff1 = make_some_random_stuff(random_state=random_state)
+    stuff2 = make_more_random_stuff(random_state=random_state)
+
+
+Another option is to pass an integer seed to every function that generates random numbers:
 
 .. code-block:: python
 
-    rng.uniform(low, high, size)
+    seed = 0
+    stuff1 = make_some_random_stuff(random_state=seed)
+    stuff2 = make_more_random_stuff(random_state=seed)
 
-For more details, please see the
-`scikit-learn <http://scikit-learn.org/stable/developers/#random-numbers>`__
-doc on random numbers.
+This pattern was inspired by the way
+`scikit-learn handles random numbers <http://scikit-learn.org/stable/developers/#random-numbers>`__.
+We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'global-rng'``,
+because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
+uses a different meaning (for which we use the option ``'global-rng'``).

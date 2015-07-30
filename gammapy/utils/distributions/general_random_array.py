@@ -1,7 +1,7 @@
 """Implementation of the GeneralRandomArray class"""
 from __future__ import print_function, division
 import numpy as np
-from ...utils.random import check_random_state
+from ...utils.random import get_random_state
 
 __all__ = ['GeneralRandomArray']
 
@@ -19,12 +19,9 @@ class GeneralRandomArray(object):
     http://www.cs.utk.edu/~parker/Courses/CS302-Fall06/Notes/PQueues/random_num_gen.html
     """
 
-    def __init__(self, pdf, random_state=None):
+    def __init__(self, pdf):
+        """Computes the cdf from the pdf.
         """
-        Computes the cdf from the pdf
-        """
-        # initialise random number generator
-        rng = check_random_state(random_state)
 
         # Note that numpy flattens the array automatically,
         # i.e. cdf is a 1D array (normalization not necessary)
@@ -35,10 +32,19 @@ class GeneralRandomArray(object):
         self.ndim = pdf.ndim
         self.shape = pdf.shape
 
-    def draw(self, n=1, return_flat_index=False):
+    def draw(self, n=1, return_flat_index=False, random_state='random-seed'):
         """Returns n draws from the pdf
-        If return_flat_index == true, a linearized index is returned."""
-        u = rng.uniform(0, self.cdfmax, size=n)
+        If return_flat_index == true, a linearized index is returned.
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+        """
+        random_state = get_random_state(random_state)
+
+        u = random_state.uniform(0, self.cdfmax, size=n)
         indices = self.cdf.searchsorted(u)
         if return_flat_index:
             return indices

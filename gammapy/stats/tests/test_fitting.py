@@ -21,8 +21,8 @@ def test_PoissonLikelihoodFitter():
     x = np.arange(-10, 20, 0.1)
     dx = 0.1 * np.ones_like(x)
     # initialise random number generator
-    rng = check_random_state(0)
-    y = rng.poisson(dx * model(x))
+    random_state = np.random.RandomState(seed=0)
+    y = random_state.poisson(dx * model(x))
 
     fitter = PoissonLikelihoodFitter()
     model = fitter(model, x, y, dx)

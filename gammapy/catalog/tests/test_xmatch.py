@@ -10,19 +10,17 @@ from ...catalog import (
     table_xmatch_circle_criterion,
     table_xmatch,
 )
-from ...utils.random import check_random_state
 
 
 def test_catalog_xmatch_circle():
-    # initialise random number generator
-    rng = check_random_state(0)
+    random_state = np.random.RandomState(seed=0)
 
     catalog = make_catalog_random_positions_sphere(size=100, center='Milky Way',
-                                                   random_state=rng)
+                                                   random_state=random_state)
     catalog['Source_Name'] = ['source_{:04d}'.format(_) for _ in range(len(catalog))]
-    catalog['Association_Radius'] = Angle(rng.uniform(0, 10, len(catalog)), unit='deg')
+    catalog['Association_Radius'] = Angle(random_state.uniform(0, 10, len(catalog)), unit='deg')
     other_catalog = make_catalog_random_positions_sphere(size=100, center='Milky Way',
-                                                         random_state=rng)
+                                                         random_state=random_state)
     other_catalog['Source_Name'] = ['source_{:04d}'.format(_) for _ in range(len(other_catalog))]
     result = catalog_xmatch_circle(catalog, other_catalog)
     assert len(result) == 23

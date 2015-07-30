@@ -5,7 +5,6 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
 from ...detect import matched_filter
-from ...utils.random import check_random_state
 
 try:
     import scipy
@@ -53,9 +52,6 @@ def test_image():
     excess = total_excess * Gaussian2DKernel(3, x_size=x_size_image, y_size=y_size_image).array
     background = total_background * ones / ones.sum()
     counts = excess + background
-    # initialise random number generator
-    #rng = check_random_state(0)
-    #counts = rng.poisson(counts)
     images = dict(counts=counts, background=background)
 
     probability = matched_filter.probability_image(images, kernel)

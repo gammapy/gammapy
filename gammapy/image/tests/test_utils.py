@@ -6,22 +6,22 @@ from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
 from ...datasets import FermiGalacticCenter
-from ...image import (coordinates,
-                      binary_disk,
-                      binary_ring,
-                      separation,
-                      make_empty_image,
-                      make_header,
-                      contains,
-                      solid_angle,
-                      images_to_cube,
-                      cube_to_image,
-                      block_reduce_hdu,
-                      wcs_histogram2d,
-                      lookup,
-                      lon_lat_rectangle_mask,
-                      )
-from ...utils.random import check_random_state
+from ...image import (
+    coordinates,
+    binary_disk,
+    binary_ring,
+    separation,
+    make_empty_image,
+    make_header,
+    contains,
+    solid_angle,
+    images_to_cube,
+    cube_to_image,
+    block_reduce_hdu,
+    wcs_histogram2d,
+    lookup,
+    lon_lat_rectangle_mask,
+)
 
 try:
     import skimage
@@ -106,7 +106,7 @@ def test_process_image_pixels():
     from astropy.convolution import convolve as astropy_convolve
 
     def convolve(image, kernel):
-        '''Convolve image with kernel'''
+        """Convolve image with kernel"""
         from ..utils import process_image_pixels
         images = dict(image=np.asanyarray(image))
         kernel = np.asanyarray(kernel)
@@ -119,11 +119,10 @@ def test_process_image_pixels():
         process_image_pixels(images, kernel, out, convolve_function)
         return out['image']
 
-    # initialise random number generator
-    rng = check_random_state(0)
+    random_state = np.testing.RandomState(seed=0)
 
-    image = rng.uniform(size=(7, 10))
-    kernel = rng.uniform(size=(3, 5))
+    image = random_state.uniform(size=(7, 10))
+    kernel = random_state.uniform(size=(3, 5))
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
     assert_allclose(actual, desired)

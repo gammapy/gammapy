@@ -3,7 +3,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
-from ..utils.random import check_random_state
+from ..utils.random import get_random_state
 
 __all__ = ['Stats',
            'make_stats',
@@ -69,18 +69,26 @@ class Stats(object):
 
 
 def make_stats(signal, background, area_factor, weight_method="background",
-               poisson_fluctuate=False, random_state=None):
+               poisson_fluctuate=False, random_state='random-seed'):
     """Fill using some weight method for the exposure.
+
+    Parameters
+    ----------
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+
+    Returns
+    -------
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     # Compute counts
     n_on = signal + background
     n_off = area_factor * background
     if poisson_fluctuate:
-        n_on = rng.poisson(n_on)
-        n_off = rng.poisson(n_off)
+        n_on = random_state.poisson(n_on)
+        n_off = random_state.poisson(n_off)
 
     # Compute weight
     if weight_method == "none":
@@ -95,6 +103,7 @@ def make_stats(signal, background, area_factor, weight_method="background",
     # Compute exposure
     a_on = weight
     a_off = weight * area_factor
+
     return Stats(n_on, n_off, a_on, a_off)
 
 
