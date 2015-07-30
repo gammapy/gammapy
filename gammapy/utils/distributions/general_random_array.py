@@ -1,6 +1,7 @@
 """Implementation of the GeneralRandomArray class"""
 from __future__ import print_function, division
 import numpy as np
+from ...utils.random import check_random_state
 
 __all__ = ['GeneralRandomArray']
 
@@ -18,10 +19,13 @@ class GeneralRandomArray(object):
     http://www.cs.utk.edu/~parker/Courses/CS302-Fall06/Notes/PQueues/random_num_gen.html
     """
 
-    def __init__(self, pdf):
+    def __init__(self, pdf, random_state=None):
         """
         Computes the cdf from the pdf
         """
+        # initialise random number generator
+        rng = check_random_state(random_state)
+
         # Note that numpy flattens the array automatically,
         # i.e. cdf is a 1D array (normalization not necessary)
         self.cdf = pdf.cumsum()
@@ -34,7 +38,7 @@ class GeneralRandomArray(object):
     def draw(self, n=1, return_flat_index=False):
         """Returns n draws from the pdf
         If return_flat_index == true, a linearized index is returned."""
-        u = np.random.uniform(0, self.cdfmax, size=n)
+        u = rng.uniform(0, self.cdfmax, size=n)
         indices = self.cdf.searchsorted(u)
         if return_flat_index:
             return indices

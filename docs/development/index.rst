@@ -394,7 +394,6 @@ an optional dependency we use for speed, or whether we use the much more establi
 At the time of writing (April 2015), the TS map computation code uses Cython and multiprocessing
 and Numba is not used yet.
 
-
 What belongs in Gammapy and what doesn't?
 -----------------------------------------
 
@@ -447,3 +446,36 @@ In this case, use
 
 at the top of the file and then just use ``assert_quantity_allclose``
 for the tests.
+
+Random numbers
+--------------
+
+When generating random numbers it is useful to define a `random
+state` (a.k.a. `seed`) in order to produce pseudo-random numbers.
+This has the advantage of having random number that are reproducible
+if using the same `random state`, so the results can be reproduced.
+
+In Gammapy, there is a utility function to deal with random states:
+`~gammapy.utils.random.check_random_state`. The best way is to
+import it on top of the file that should use it with
+
+.. code-block:: python
+
+    from gammapy.utils.random import check_random_state
+
+and define a random number generator as
+
+.. code-block:: python
+
+    rng = check_random_state(random_state)
+
+where ``random_state`` is either an int or a
+`~numpy.random.RandomState`. If using it on a function, ``random_state`` should be made a parameter of it. Then one can call the desired random generator method on top of ``rng``. For example
+
+.. code-block:: python
+
+    rng.uniform(low, high, size)
+
+For more details, please see the
+`scikit-learn <http://scikit-learn.org/stable/developers/#random-numbers>`__
+doc on random numbers.

@@ -8,6 +8,7 @@ from ...stats import (cash,
                       cstat,
                       chi2datavar,
                       )
+from ...utils.random import check_random_state
 
 # TODO: test against Sherpa results
 # see scripts here: https://github.com/gammapy/gammapy/tree/master/dev/sherpa/stats
@@ -16,8 +17,9 @@ from ...stats import (cash,
 def test_likelihood_stats():
     # Create some example input
     M = np.array([[0.2, 0.5, 1, 2], [10, 10.5, 100.5, 1000]])
-    np.random.seed(0)
-    D = np.random.poisson(M)
+    # initialise random number generator
+    rng = check_random_state(0)
+    D = rng.poisson(M)
 
     assert_allclose(cash(D, M), 42)
     assert_allclose(cstat(D, M), 42)

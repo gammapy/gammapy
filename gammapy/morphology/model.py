@@ -8,6 +8,7 @@ import logging
 import numpy as np
 from astropy.io import fits
 from ..utils.const import fwhm_to_sigma
+from ..utils.random import check_random_state
 
 
 __all__ = ['GaussCatalog',
@@ -158,13 +159,17 @@ class MorphModelImageCreator(object):
             fits_hdu_list = fits.HDUList(hdu_list)
             fits_hdu_list.writeto('counts_' + filename, **kwargs)
 
-    def fake_counts(self, N, **kwargs):
+    def fake_counts(self, N, random_state=None, **kwargs):
         """Fake measurement data by adding Poisson noise to the model image.
 
         Parameters
         ----------
         N : int
             Number of measurements to fake.
+        random_state : int or `~numpy.random.RandomState`, optional
+            Pseudo-random number generator state used for random
+            sampling. Separate function calls with the same parameters
+            and ``random_state`` will generate identical result.
         """
         if not self._compute_excess:
             self.model_image = self.model_image * self.exposure
@@ -173,12 +178,12 @@ class MorphModelImageCreator(object):
             from astropy.convolution import convolve
             self.model_image = convolve(self.model_image, psf)
 
-        # Set random seed to get reproducible results
-        np.random.seed(0)
+        # initialise random number generator
+        rng = check_random_state(random_state)
 
         # Fake measurements
         for _ in range(N):
-            self.measurements.append(np.random.poisson(self.model_image))
+            self.measurements.append(rng.poisson(self.model_image))
 
 
 class GaussCatalog(dict):
@@ -202,19 +207,23 @@ class GaussCatalog(dict):
         pass
 
 
-def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30):
+def make_test_model(nsources=100, npix=500, ampl=100, fwhm=30,
+                    random_state=None):
     """Create a model of several Gaussian sources.
     """
-    from numpy.random import random
     from sherpa.astro.ui import set_source
     from morphology.utils import _set, _name
+
+    # initialise random number generator
+    rng = check_random_state(random_state)
+
     model = ' + '.join([_name(ii) for ii in range(nsources)])
     set_source(model)
     for ii in range(nsources):
-        _set(_name(ii), 'xpos', npix * random())
-        _set(_name(ii), 'ypos', npix * random())
-        _set(_name(ii), 'ampl', ampl * random())
-        _set(_name(ii), 'fwhm', fwhm * random())
+        _set(_name(ii), 'xpos', rng.uniform(0, npix))
+        _set(_name(ii), 'ypos', rng.uniform(0, npix))
+        _set(_name(ii), 'ampl', rng.uniform(0, ampl))
+        _set(_name(ii), 'fwhm', rng.uniform(0, fwhm))
 
 
 def read_json(filename):

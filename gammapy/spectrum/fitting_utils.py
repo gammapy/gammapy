@@ -5,6 +5,7 @@ TODO: Unusable at the moment. Refactor into classes and clean up.
 """
 from __future__ import print_function, division
 import numpy as np
+from ..utils.random import check_random_state
 
 __all__ = ['generate_MC_data',
            'plot_chi2',
@@ -24,7 +25,7 @@ def set_off_diagonal_to_zero(matrix):
     return matrix
 
 
-def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0):
+def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0, random_state=None):
     """Generate points with equal-log spacing in x given by the model.
 
     model = [function, parameters, constants]
@@ -33,6 +34,9 @@ def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0):
     Returns:
     data = x, y, ydn, yup
     """
+    # initialise random number generator
+    rng = check_random_state(random_state)
+
     # Generate equal-log spaced x points
     logx = np.linspace(np.log10(xlim[0]), np.log10(xlim[1]), npoints)
     x = 10 ** logx
@@ -50,11 +54,11 @@ def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0):
     #
 
     # First decide if an up or down fluctuation occurs
-    fluctuate_up = np.random.randint(0, 2, npoints)  # 1 = yes, 2 = no
+    fluctuate_up = rng.randint(0, 2, npoints)  # 1 = yes, 2 = no
 
     # Then draw a random y value
-    yobs_dn = np.fabs(np.random.normal(0, ydn, size=npoints))
-    yobs_up = np.fabs(np.random.normal(0, yup, size=npoints))
+    yobs_dn = np.fabs(rng.normal(0, ydn, size=npoints))
+    yobs_up = np.fabs(rng.normal(0, yup, size=npoints))
     yobs = y + np.where(fluctuate_up == 1, yobs_up, -yobs_dn)
 
     if verbose > 0:

@@ -2,27 +2,109 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy.testing import assert_allclose
-from ..random import sample_sphere, sample_powerlaw, sample_sphere_distance
+from astropy.coordinates import Angle
+from astropy.tests.helper import assert_quantity_allclose
+from ..random import (sample_sphere, sample_powerlaw,
+                      sample_sphere_distance, check_random_state)
 
 
 def test_sample_sphere():
-    np.random.seed(0)
-    lon, lat = sample_sphere(size=2)
-    assert_allclose(lon, [3.44829694, 4.49366732])
-    assert_allclose(lat, [0.20700192, 0.08988736])
+
+    # initialise random number generator
+    rng = check_random_state(0)
+
+    # test general case
+    lon, lat = sample_sphere(size=2, random_state=rng)
+    assert_quantity_allclose(lon, Angle([3.44829694, 4.49366732], 'radian'))
+    assert_quantity_allclose(lat, Angle([0.20700192, 0.08988736], 'radian'))
+
+    # test specify a limited range
+    lon_range = Angle([40., 45.], 'degree')
+    lat_range = Angle([10., 15.], 'degree')
+    lon, lat = sample_sphere(size=10,
+                             lon_range=lon_range,
+                             lat_range=lat_range,
+                             random_state=rng)
+    assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
+    assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
+
+    # test lon within (-180, 180) deg range
+    lon_range = Angle([-40., 0.], 'degree')
+    lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=rng)
+    assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
+    lat_range = Angle([-90., 90.], 'degree')
+    assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
+
+    # test lon range explicitly (0, 360) deg
+    lon_range = Angle([0., 360.], 'degree')
+    lon, lat = sample_sphere(size=100, lon_range=lon_range, random_state=rng)
+    # test values in the desired range
+    lat_range = Angle([-90., 90.], 'degree')
+    assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
+    assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
+    # test if values are distributed along the whole range
+    nbins = 4
+    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    lat_delta = (lat_range[1] - lat_range[0])/nbins
+    for i in np.arange(nbins):
+        assert ((lon_range[0] + i*lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
+        assert ((lat_range[0] + i*lat_delta <= lat) &
+                (lat < lat_range[0] + (i + 1)*lat_delta)).any()
+
+    # test lon range explicitly (-180, 180) deg
+    lon_range = Angle([-180., 180.], 'degree')
+    lon, lat = sample_sphere(size=100, lon_range=lon_range, random_state=rng)
+    # test values in the desired range
+    lat_range = Angle([-90., 90.], 'degree')
+    assert ((lon_range[0] <= lon) & (lon < lon_range[1])).all()
+    assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
+    # test if values are distributed along the whole range
+    nbins = 4
+    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    lat_delta = (lat_range[1] - lat_range[0])/nbins
+    for i in np.arange(nbins):
+        assert ((lon_range[0] + i*lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
+        assert ((lat_range[0] + i*lat_delta <= lat) &
+                (lat < lat_range[0] + (i + 1)*lat_delta)).any()
+
+    # test box around Galactic center
+    lon_range = Angle([-5., 5.], 'degree')
+    lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=rng)
+    # test if values are distributed along the whole range
+    nbins = 2
+    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    for i in np.arange(nbins):
+        assert ((lon_range[0] + i*lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
+
+    # test box around Galactic anticenter
+    lon_range = Angle([175., 185.], 'degree')
+    lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=rng)
+    # test if values are distributed along the whole range
+    nbins = 2
+    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    for i in np.arange(nbins):
+        assert ((lon_range[0] + i*lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
 
 
 def test_sample_powerlaw():
-    np.random.seed(0)
-    x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2)
+    # initialise random number generator
+    rng = check_random_state(0)
+
+    x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2, random_state=rng)
     assert_allclose(x, [0.21897428, 0.34250971])
 
 
 def test_sample_sphere_distance():
-    np.random.seed(0)
-    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=2)
+    # initialise random number generator
+    rng = check_random_state(0)
+
+    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=2, random_state=rng)
     assert_allclose(x, [34.386731, 37.559774])
 
-    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=1e3)
+    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=1e3, random_state=rng)
     assert x.min() >= 0.1
     assert x.max() <= 42

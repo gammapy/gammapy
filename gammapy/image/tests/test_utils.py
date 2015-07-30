@@ -21,6 +21,7 @@ from ...image import (coordinates,
                       lookup,
                       lon_lat_rectangle_mask,
                       )
+from ...utils.random import check_random_state
 
 try:
     import skimage
@@ -118,9 +119,11 @@ def test_process_image_pixels():
         process_image_pixels(images, kernel, out, convolve_function)
         return out['image']
 
-    np.random.seed(0)
-    image = np.random.random((7, 10))
-    kernel = np.random.random((3, 5))
+    # initialise random number generator
+    rng = check_random_state(0)
+
+    image = rng.uniform(size=(7, 10))
+    kernel = rng.uniform(size=(3, 5))
     actual = convolve(image, kernel)
     desired = astropy_convolve(image, kernel, boundary='fill')
     assert_allclose(actual, desired)

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.extern.six.moves import range
+from ...utils.random import check_random_state
 
 __all__ = ['GeneralRandom']
 
@@ -76,15 +77,32 @@ class GeneralRandom(object):
         self.delta_inversecdf = \
             np.concatenate((np.diff(self.inversecdf), [0]))
 
-    def draw(self, N=1000):
+    def draw(self, N=1000, random_state=None):
         """Returns an array of random numbers with the requested distribution.
 
-        N: array length
-
         The random numbers x are generated using the lookups
-        inversecdf and delta_inversecdf."""
+        inversecdf and delta_inversecdf.
+
+        Parameters
+        ----------
+        N: int
+            array length
+
+        random_state : int or `~numpy.random.RandomState`, optional
+            Pseudo-random number generator state used for random
+            sampling. Separate function calls with the same parameters
+            and ``random_state`` will generate identical results.
+
+        Returns
+        -------
+        x : `~numpy.ndarray`
+            random numbers
+        """
+        # initialise random number generator
+        rng = check_random_state(random_state)
+
         # Generate uniform random float index in range [0, ninversecdf-1]
-        idx_f = np.random.uniform(size=N, high=self.ninversecdf - 1)
+        idx_f = rng.uniform(size=N, high=self.ninversecdf - 1)
         # Round down to next integer
         idx = np.array(idx_f, 'i')
         # Use the inversecdf lookup to get the corresponding x

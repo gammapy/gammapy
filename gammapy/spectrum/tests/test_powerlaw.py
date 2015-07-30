@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ...spectrum import powerlaw
+from ...utils.random import check_random_state
 
 try:
     import scipy
@@ -47,15 +48,18 @@ def test_closure(g_error_mag=0):
     I and g have correlated errors, but we
     effectively throw away these correlations!"""
 
+    # initialise random number generator
+    rng = check_random_state(0)
+
     npoints = 100
     # Generate some random f values with errors
-    f_val = 10 ** (10 * np.random.random(npoints) - 5)
-    f_err = f_val * np.random.normal(1, 0.1, npoints)
+    f_val = 10 ** (10 * rng.uniform(size=npoints) - 5)
+    f_err = f_val * rng.normal(1, 0.1, npoints)
     # f = unumpy.uarray((f_val, f_err))
 
     # Generate some random g values with errors
-    g_val = 5 * np.random.random(npoints)
-    g_err = g_val * np.random.normal(1, 0.1, npoints)
+    g_val = 5 * rng.uniform(size=npoints)
+    g_err = g_val * rng.normal(1, 0.1, npoints)
     # g = unumpy.uarray((g_val, g_err))
 
     I_val, I_err = powerlaw.I_with_err(f_val, f_err, g_val, g_err)
