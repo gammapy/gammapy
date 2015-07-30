@@ -16,10 +16,7 @@ The functions have a naming pattern (following the `sklearn.datasets` lead):
 
 * ``load_*`` functions load datasets that are distributed with Gammapy (bundled in the repo) 
 * ``fetch_*`` functions fetch datasets from the web (either from ``gammapy-extra`` or other sites)
-* ``make_*`` functions create datasets programetically (sometimes involving a random number generator)
-
-Functions that create random datasets should take a `random_state` argument as explained in the
-scikit-learn docs `here <http://scikit-learn.org/stable/developers/#random-numbers>`__.
+* ``make_*`` functions create datasets programatically (sometimes involving a random number generator)
 
 .. note:: The `gammapy.datasets` sub-package shouldn't be confused with the `gammapy.data`
           sub-package, which contains classes representing gamma-ray data.
