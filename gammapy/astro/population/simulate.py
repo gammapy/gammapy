@@ -12,7 +12,7 @@ from ...utils import coordinates as astrometry
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.distributions import draw, pdf
 from ...utils.random import (sample_sphere, sample_sphere_distance,
-                             check_random_state)
+                             get_random_state)
 from ...morphology.models import morph_types
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
@@ -31,7 +31,7 @@ __all__ = ['make_catalog_random_positions_cube',
 
 
 def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
-                                       random_state=None):
+                                       random_state='random-seed'):
     """Make a catalog of sources randomly distributed
     on a line, square or cube.
 
@@ -46,30 +46,28 @@ def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
         Number of dimensions
     dmax : int, optional
         Maximum distance in pc.
-    random_state : int or `~numpy.random.RandomState`, optional
-        Pseudo-random number generator state used for random
-        sampling. Separate function calls with the same parameters
-        and ``random_state`` will generate identical result.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
     catalog : `~astropy.table.Table`
         Source catalog with columns:
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     # Generate positions 1D, 2D, or 3D
     if dimension == 3:
-        x = rng.uniform(-dmax, dmax, size)
-        y = rng.uniform(-dmax, dmax, size)
-        z = rng.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-dmax, dmax, size)
+        y = random_state.uniform(-dmax, dmax, size)
+        z = random_state.uniform(-dmax, dmax, size)
     elif dimension == 2:
-        x = rng.uniform(-dmax, dmax, size)
-        y = rng.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-dmax, dmax, size)
+        y = random_state.uniform(-dmax, dmax, size)
         z = np.zeros_like(x)
     else:
-        x = rng.uniform(-dmax, dmax, size)
+        x = random_state.uniform(-dmax, dmax, size)
         y = np.zeros_like(x)
         z = np.zeros_like(x)
 
@@ -83,7 +81,7 @@ def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,
 
 def make_catalog_random_positions_sphere(size, center='Earth',
                                          distance=Quantity([0, 1], 'Mpc'),
-                                         random_state=None):
+                                         random_state='random-seed'):
     """Sample random source locations in a sphere.
 
     This can be used to generate an isotropic source population
@@ -97,10 +95,9 @@ def make_catalog_random_positions_sphere(size, center='Earth',
         Sphere center
     distance : `~astropy.units.Quantity` tuple
         Distance min / max range.
-    random_state : int or `~numpy.random.RandomState`, optional
-        Pseudo-random number generator state used for random
-        sampling. Separate function calls with the same parameters
-        and ``random_state`` will generate identical result.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
@@ -111,6 +108,8 @@ def make_catalog_random_positions_sphere(size, center='Earth',
         - GLON, GLAT (deg)
         - Distance (Mpc)
     """
+    random_state = get_random_state(random_state)
+
     lon, lat = sample_sphere(size, random_state=random_state)
     radius = sample_sphere_distance(distance[0], distance[1], size,
                                     random_state=random_state)
@@ -159,14 +158,13 @@ def make_cat_gauss_random(n_sources=100, glon_sigma=30, glat_sigma=1,
 
     TODO: this function is commented out: improve/remove it?
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     morph_type = np.array(['gauss2d']*n_sources)
-    glon = rng.normal(0, glon_sigma, n_sources) % 360
+    glon = random_state.normal(0, glon_sigma, n_sources) % 360
     glon_sym = np.where(glon < 180, glon, glon - 360)
-    glat = rng.normal(0, glat_sigma, n_sources)
-    sigma = rng.normal(extension_mean, extension_sigma, n_sources)
+    glat = random_state.normal(0, glat_sigma, n_sources)
+    sigma = random_state.normal(extension_mean, extension_sigma, n_sources)
     sigma[sigma < 0] = 0
     ampl = draw(flux_min, flux_max, n_sources, power_law,
                 index=flux_index)
@@ -210,7 +208,7 @@ def make_cat_gauss_grid(nside=3, sigma_min=0.05, flux_min=1e-11):
 def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
                                max_age=Quantity(1E6, 'yr'),
                                spiralarms=True, n_ISM=Quantity(1, 'cm^-3'),
-                               random_state=None):
+                               random_state='random-seed'):
     """
     Make a catalog of Galactic sources, with basic parameters like position, age and
     proper velocity.
@@ -237,18 +235,16 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
         Include a spiralarm model in the catalog.
     n_ISM : `~astropy.units.Quantity`
         Density of the interstellar medium.
-    random_state : int or `~numpy.random.RandomState`, optional
-        Pseudo-random number generator state used for random
-        sampling. Separate function calls with the same parameters
-        and ``random_state`` will generate identical results.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
     table : `~astropy.table.Table`
         Catalog of simulated source positions and proper velocities.
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     if isinstance(rad_dis, str):
         rad_dis = radial_distributions[rad_dis]
@@ -267,18 +263,18 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
     if spiralarms:
         r, theta, spiralarm = FaucherSpiral()(r)
     else:
-        theta = Quantity(rng.uniform(0, 2 * pi, n_sources), 'rad')
+        theta = Quantity(random_state.uniform(0, 2 * pi, n_sources), 'rad')
         spiralarm = None
 
     # Compute cartesian coordinates
     x, y = astrometry.cartesian(r, theta)
 
     # Draw random values for the age
-    age = Quantity(rng.uniform(0, max_age, n_sources), 'yr')
+    age = Quantity(random_state.uniform(0, max_age, n_sources), 'yr')
 
     # Draw random direction of initial velocity
-    theta = Quantity(rng.uniform(0, pi, x.size), 'rad')
-    phi = Quantity(rng.uniform(0, 2 * pi, x.size), 'rad')
+    theta = Quantity(random_state.uniform(0, pi, x.size), 'rad')
+    phi = Quantity(random_state.uniform(0, 2 * pi, x.size), 'rad')
 
     # Set environment interstellar density
     n_ISM = n_ISM * np.ones(n_sources)
@@ -342,21 +338,27 @@ def add_snr_parameters(table):
 
 def add_pulsar_parameters(table, B_mean=12.05, B_stdv=0.55,
                           P_mean=0.3, P_stdv=0.15,
-                          random_state=None):
+                          random_state='random-seed'):
     """Adds pulsar parameters to the table.
 
     For the initial normal distribution of period and logB can exist the following
     Parameters: B_mean=12.05[log Gauss], B_stdv=0.55, P_mean=0.3[s], P_stdv=0.15
+
+    Parameters
+    ----------
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
     # Read relevant columns
     age = table['age'].quantity
 
     # Draw the initial values for the period and magnetic field
     P_dist = lambda x: exp(-0.5 * ((x - P_mean) / P_stdv) ** 2)
     P0_birth = Quantity(draw(0, 2, len(table), P_dist), 's')
-    logB = rng.normal(B_mean, B_stdv, len(table))
+    logB = random_state.normal(B_mean, B_stdv, len(table))
 
     # Set up pulsar model
     psr = Pulsar(P0_birth, logB)

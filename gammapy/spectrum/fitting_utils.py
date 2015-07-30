@@ -5,7 +5,7 @@ TODO: Unusable at the moment. Refactor into classes and clean up.
 """
 from __future__ import print_function, division
 import numpy as np
-from ..utils.random import check_random_state
+from ..utils.random import get_random_state
 
 __all__ = ['generate_MC_data',
            'plot_chi2',
@@ -25,17 +25,24 @@ def set_off_diagonal_to_zero(matrix):
     return matrix
 
 
-def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0, random_state=None):
+def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0, random_state='random-seed'):
     """Generate points with equal-log spacing in x given by the model.
 
+    Parameters
+    ----------
     model = [function, parameters, constants]
     xlim = [xmin, xmax]
     yerr = [ydn_err, yup_err] = fractional error on model y
-    Returns:
+
+    Returns
+    -------
     data = x, y, ydn, yup
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
     """
     # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     # Generate equal-log spaced x points
     logx = np.linspace(np.log10(xlim[0]), np.log10(xlim[1]), npoints)
@@ -54,11 +61,11 @@ def generate_MC_data(model, xlim, yerr, npoints=5, verbose=0, random_state=None)
     #
 
     # First decide if an up or down fluctuation occurs
-    fluctuate_up = rng.randint(0, 2, npoints)  # 1 = yes, 2 = no
+    fluctuate_up = random_state.randint(0, 2, npoints)  # 1 = yes, 2 = no
 
     # Then draw a random y value
-    yobs_dn = np.fabs(rng.normal(0, ydn, size=npoints))
-    yobs_up = np.fabs(rng.normal(0, yup, size=npoints))
+    yobs_dn = np.fabs(random_state.normal(0, ydn, size=npoints))
+    yobs_up = np.fabs(random_state.normal(0, yup, size=npoints))
     yobs = y + np.where(fluctuate_up == 1, yobs_up, -yobs_dn)
 
     if verbose > 0:

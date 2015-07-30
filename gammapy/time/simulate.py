@@ -2,14 +2,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from astropy.time import TimeDelta
-from ..utils.random import check_random_state
+from ..utils.random import get_random_state
 
 __all__ = ['make_random_times_poisson_process',
            ]
 
 
 def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format='sec'),
-                                      random_state=None):
+                                      random_state='random-seed'):
     """Make random times assuming a Poisson process.
 
     This function can be used to test event time series,
@@ -33,10 +33,9 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
         Event rate (dimension: 1 / TIME)
     dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`, optional
         Dead time after event (dimension: TIME)
-    random_state : int or `~numpy.random.RandomState`, optional
-        Pseudo-random number generator state used for random
-        sampling. Separate function calls with the same parameters
-        and ``random_state`` will generate identical results.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
@@ -44,12 +43,12 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
         Time differences (second) after time zero.
     """
     # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)
 
     scale = (1 / rate).to('second').value
-    time_delta = rng.exponential(scale=scale, size=size)
+    time_delta = random_state.exponential(scale=scale, size=size)
 
     time_delta = TimeDelta(time_delta, format='sec')
     time_delta += dead_time

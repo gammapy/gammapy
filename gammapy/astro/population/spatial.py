@@ -16,7 +16,7 @@ from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar
 from ...utils.const import d_sun_to_galactic_center
-from ...utils.random import check_random_state
+from ...utils.random import get_random_state
 
 __all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
            'Paczynski1990', 'YusifovKucuk2004', 'YusifovKucuk2004B',
@@ -405,7 +405,7 @@ class FaucherSpiral(LogSpiral):
     theta_0 = Quantity([1.57, 4.71, 4.09, 0.95], 'rad')
     spiralarms = np.array(['Norma', 'Carina Sagittarius', 'Perseus', 'Crux Scutum'])
 
-    def _blur(self, radius, theta, amount=0.07, random_state=None):
+    def _blur(self, radius, theta, amount=0.07, random_state='random-seed'):
         """
         Blur the positions around the centroid of the spiralarm.
 
@@ -421,22 +421,20 @@ class FaucherSpiral(LogSpiral):
             Angle coordinate
         amount: float, optional
             Amount of blurring of the position, given as a fraction of `radius`.
-        random_state : int or `~numpy.random.RandomState`, optional
-            Pseudo-random number generator state used for random
-            sampling. Separate function calls with the same parameters
-            and ``random_state`` will generate identical result.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         """
-        # initialise random number generator
-        rng = check_random_state(random_state)
+        random_state = get_random_state(random_state)
 
-        dr = Quantity(abs(rng.normal(0, amount * radius, radius.size)), 'kpc')
-        dtheta = Quantity(rng.uniform(0, 2 * np.pi, radius.size), 'rad')
+        dr = Quantity(abs(random_state.normal(0, amount * radius, radius.size)), 'kpc')
+        dtheta = Quantity(random_state.uniform(0, 2 * np.pi, radius.size), 'rad')
         x, y = cartesian(radius, theta)
         dx, dy = cartesian(dr, dtheta)
         return polar(x + dx, y + dy)
 
     def _gc_correction(self, radius, theta, r_corr=Quantity(2.857, 'kpc'),
-                       random_state=None):
+                       random_state='random-seed'):
         """
         Correction of source distribution towards the galactic center.
 
@@ -451,31 +449,39 @@ class FaucherSpiral(LogSpiral):
             Angle coordinate
         r_corr : `~astropy.units.Quantity`, optional
             Scale of the correction towards the GC
-        random_state : int or `~numpy.random.RandomState`, optional
-            Pseudo-random number generator state used for random
-            sampling. Separate function calls with the same parameters
-            and ``random_state`` will generate identical result.
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
         """
-        # initialise random number generator
-        rng = check_random_state(random_state)
+        random_state = get_random_state(random_state)
 
-        theta_corr = Quantity(rng.uniform(0, 2 * pi, radius.size), 'rad')
+        theta_corr = Quantity(random_state.uniform(0, 2 * pi, radius.size), 'rad')
         return radius, theta + theta_corr * np.exp(-radius / r_corr)
 
-    def __call__(self, radius, blur=True, random_state=None):
+    def __call__(self, radius, blur=True, random_state='random-seed'):
         """Draw random position from spiral arm distribution.
 
         Returns the corresponding angle theta[rad] to a given radius[kpc] and number of spiralarm.
         Possible numbers are:
-        Norma = 0,
-        Carina Sagittarius = 1,
-        Perseus = 2
-        Crux Scutum = 3.
-        Returns dx and dy, if blurring= true."""
-        # initialise random number generator
-        rng = check_random_state(random_state)
 
-        N = rng.random_integers(0, 3, radius.size)  # Choose Spiralarm
+        * Norma = 0,
+        * Carina Sagittarius = 1,
+        * Perseus = 2
+        * Crux Scutum = 3.
+
+        Parameters
+        ----------
+        random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+            Defines random number generator initialisation.
+            Passed to `~gammapy.utils.random.get_random_state`.
+
+        Returns
+        -------
+        Returns dx and dy, if blurring= true.
+        """
+        random_state = get_random_state(random_state)
+
+        N = random_state.random_integers(0, 3, radius.size)  # Choose Spiralarm
         theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 

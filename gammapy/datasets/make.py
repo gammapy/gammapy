@@ -9,7 +9,7 @@ from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
 from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations
-from ..utils.random import sample_sphere, check_random_state
+from ..utils.random import sample_sphere, get_random_state
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..background import CubeBackgroundModel
 
@@ -76,7 +76,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name, n_obs, debug=False,
-                                random_state=None):
+                                random_state='random-seed'):
     """Make a test observation table.
 
     For the moment, only random observation tables are created.
@@ -89,18 +89,16 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
         number of observations for the obs table
     debug : bool, optional
         show UTC times instead of seconds after the reference
-    random_state : int or `~numpy.random.RandomState`, optional
-        Pseudo-random number generator state used for random
-        sampling. Separate function calls with the same parameters
-        and ``random_state`` will generate identical results.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
     obs_table : `~gammapy.obs.ObservationTable`
         observation table
     """
-    # initialise random number generator
-    rng = check_random_state(random_state)
+    random_state = get_random_state(random_state)
 
     n_obs_start = 1
 
@@ -135,9 +133,8 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     # start of the night, when generating random night hours
     datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
     dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
-    time_start = Time(rng.uniform(datestart.mjd, dateend.mjd, len(obs_id)),
-                      format='mjd',
-                      scale='utc')
+    time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
+    time_start = Time(time_start, format='mjd', scale='utc')
 
     # keep only the integer part (i.e. the day, not the fraction of the day)
     time_start_f, time_start_i = np.modf(time_start.mjd)
@@ -147,9 +144,9 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     # time for the last run to finish
     night_start = Quantity(22., 'hour')
     night_duration = Quantity(5.5, 'hour')
-    hour_start = rng.uniform(night_start.value,
-                             night_start.value + night_duration.value,
-                             len(obs_id))
+    hour_start = random_state.uniform(night_start.value,
+                                      night_start.value + night_duration.value,
+                                      len(obs_id))
     hour_start = Quantity(hour_start, 'hour')
 
     # add night hour to integer part of MJD
@@ -216,12 +213,12 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     # random integers between 3 and 4
     n_tels_min = 3
     n_tels_max = 4
-    n_tels = rng.randint(n_tels_min, n_tels_max + 1, len(obs_id))
+    n_tels = random_state.randint(n_tels_min, n_tels_max + 1, len(obs_id))
     obs_table['N_TELS'] = n_tels
 
     # muon efficiency
     # random between 0.6 and 1.0
-    muon_efficiency = rng.uniform(low=0.6, high=1.0, size=len(obs_id))
+    muon_efficiency = random_state.uniform(low=0.6, high=1.0, size=len(obs_id))
     obs_table['MUON_EFFICIENCY'] = muon_efficiency
 
     return obs_table
