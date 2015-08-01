@@ -94,6 +94,7 @@ Pull requests
 - Consistent random number handling and improve sample_sphere [#283] (Manuel Paz Arribas)
 - Add Feldman Cousins algorithm [#311] (Dirk Lennarz)
 - Simplified attribute docstrings [#301] (Manuel Paz Arribas)
+- Filter observation tables [#295] (Manuel Paz Arribas)
 - Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
 
 .. _gammapy_0p2_release:
