@@ -100,24 +100,30 @@ no need for explicit time scale transformations in Gammapy
 The "Time Systems in a nutshell" section `here <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html>`__
 gives a good, brief explanation of the differences between the relevant time scales `UT1`, `UTC` and `TT`.
 
+.. _MET:
+
 Mission elapsed times (MET)
 ---------------------------
 
-It's not clear yet how to best implement METs, it's one of the tasks here:
+[MET]_ time references are times representing UTC seconds after a
+specific origin. Each experiment may have a different MET origin
+that should be included in the header of the corresponding data
+files. For more details see `Cicerone: Data - Time in Fermi Data Analysis
+<http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/
+Time_in_ScienceTools.html>`_.
+
+It's not clear yet how to best implement METs in Gammapy, it's one
+of the tasks here:
 https://github.com/gammapy/gammapy/issues/284
 
 For now, we use the `gammapy.time.time_ref_from_dict`, `gammapy.time.time_relative_to_ref`
 and `gammapy.time.absolute_time` functions to convert MET floats to `~astropy.time.Time`
 objects via the reference times stored in FITS headers.
 
-See `Cicerone: Data - Time in Fermi Data Analysis
-<http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/
-Time_in_ScienceTools.html>`_.
-
 Time differences
 ----------------
 
-TODO: discuss when to use `astropy.time.TimeDelta` or `astropy.units.Quantity` or MET floats and
+TODO: discuss when to use `astropy.time.TimeDelta` or `astropy.units.Quantity` or [MET]_ floats and
 where one needs to convert between those and what to watch out for.
 
 Reference/API

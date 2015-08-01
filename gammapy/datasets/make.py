@@ -96,9 +96,9 @@ def make_test_observation_table(observatory_name, n_obs,
     n_obs : int
         number of observations for the obs table
     datestart : `~astropy.time.Time`, optional
-    	starting date for random generation of observation start time
+        starting date for random generation of observation start time
     dateend : `~astropy.time.Time`, optional
-    	ending date for random generation of observation start time
+        ending date for random generation of observation start time
     debug : bool, optional
         show UTC times instead of seconds after the reference
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
@@ -153,13 +153,13 @@ def make_test_observation_table(observatory_name, n_obs,
     #  - considering start of astronomical day at midday: implicit in setting
     # the start of the night, when generating random night hours
     if datestart == None:
-        datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
+        datestart = Time('2010-01-01T00:00:00', format='isot', scale='utc')
     if dateend == None:
-        dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
+        dateend = Time('2015-01-01T00:00:00', format='isot', scale='utc')
     time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
     time_start = Time(time_start, format='mjd', scale='utc')
 
-    #check if time interval selected is more than 1 day
+    # check if time interval selected is more than 1 day
     if (dateend - datestart).jd > 1.:
         # keep only the integer part (i.e. the day, not the fraction of the day)
         time_start_f, time_start_i = np.modf(time_start.mjd)
@@ -179,7 +179,7 @@ def make_test_observation_table(observatory_name, n_obs,
 
     if debug:
         # show the observation times in UTC
-        time_start = time_start.iso
+        time_start = Time(time_start.isot)
     else:
         # show the observation times in seconds after the reference
         time_start = time_relative_to_ref(time_start, header)

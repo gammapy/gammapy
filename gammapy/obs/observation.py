@@ -7,7 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
 from ..time import time_ref_from_dict, time_relative_to_ref
-from ..catalog import select_sky_box
+from ..catalog import select_sky_box, select_sky_circle
 
 __all__ = [
     # 'Observation',
@@ -16,6 +16,7 @@ __all__ = [
 
 
 class Observation(object):
+
     """Observation.
 
     An observation is a.k.a. run.
@@ -25,6 +26,7 @@ class Observation(object):
     ----------
     TODO
     """
+
     def __init__(self, GLON, GLAT, livetime=1800,
                  eff_area=1e12, background=0):
         self.GLON = GLON
@@ -41,13 +43,13 @@ class Observation(object):
 
 
 class ObservationTable(Table):
+
     """Observation table (a.k.a. run list).
 
     This is an `~astropy.table.Table` sub-class, with a few
     convenience methods. The format of the observation table
     is described in :ref:`dataformats_observation_lists`.
     """
-
 
     def summary(self):
         ss = 'Observation table:\n'
@@ -64,7 +66,6 @@ class ObservationTable(Table):
         time_ref_unit = time_ref_from_dict(self.meta).format
         ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
         return ss
-
 
     def select_linspace_subset(self, num):
         """Select subset of observations.
@@ -91,15 +92,14 @@ class ObservationTable(Table):
         indices = indices.astype('int')
         return self[indices]
 
-
-    def filter_observations_var_range(self, selection_variable,
-                                      value_min, value_max, inverted):
+    def filter_obs_var_range(self, selection_variable,
+                             value_min, value_max, inverted=False):
         """Make an observation table, applying some selection.
 
         Generic function to apply a 1D box selection (min, max) to a
-        table on any variable that is in the observation table. In
-        addition, support has been added for `zenith` anlge, computed
-        as `(90 deg - altitude)`.
+        table on any variable that is in the observation table and can
+        be casted into a `~astropy.units.Quantity` object.
+
         If the inverted flag is activated, the filter is applied to
         keep all elements outside the selected range.
 
@@ -107,11 +107,11 @@ class ObservationTable(Table):
         ----------
         selection_variable : string
             name of variable to apply a cut (it should exist on the table)
-        value_min : TBD
+        value_min : `~astropy.units.Quantity`-like
             minimum value; type should be consistent with selection_variable
-        value_max : TBD
+        value_max : `~astropy.units.Quantity`-like
             maximum value; type should be consistent with selection_variable
-        inverted : bool
+        inverted : bool, optional
             invert selection: keep all entries outside the (min, max) range
 
         Returns
@@ -122,34 +122,11 @@ class ObservationTable(Table):
         obs_table = self
 
         # check that variable exists on the table
-        special_values = ['zenith']
         if selection_variable not in obs_table.keys():
-            # some values are still recognized
-            if selection_variable not in special_values:
-                raise KeyError('Key not present in table: {}'.format(selection_variable))
+            raise KeyError('Key not present in table: {}'.format(selection_variable))
 
-        if selection_variable == 'zenith':
-            # transform zenith to altitude
-            selection_variable = 'ALT'
-            zenith_min = value_min
-            zenith_max = value_max
-            value_min = Angle(90., 'degree') - zenith_max
-            value_max = Angle(90., 'degree') - zenith_min
-            # read values into a quantity in case units have to be taken into account
-            value = Quantity(obs_table[selection_variable])
-        elif selection_variable in ['TIME_START', 'TIME_STOP']:
-            if obs_table.meta['TIME_FORMAT'] == 'absolute':
-                # read values into a Time object
-                value = Time(obs_table[selection_variable])
-            else:
-                # transform time to MET
-                value_min = time_relative_to_ref(value_min, obs_table.meta)
-                value_max = time_relative_to_ref(value_max, obs_table.meta)
-                # read values into a quantity in case units have to be taken into account
-                value = Quantity(obs_table[selection_variable])
-        else:
-            # read values into a quantity in case units have to be taken into account
-            value = Quantity(obs_table[selection_variable])
+        # read values into a quantity in case units have to be taken into account
+        value = Quantity(obs_table[selection_variable])
 
         # build and apply mask
         if not inverted:
@@ -159,36 +136,111 @@ class ObservationTable(Table):
         obs_table = obs_table[mask]
         return obs_table
 
+    def filter_obs_time_range(self, selection_variable,
+                              time_min, time_max, inverted=False):
+        """Make an observation table, applying a time selection.
+
+        Apply a 1D box selection (min, max) to a
+        table on any time variable that is in the observation table.
+        It supports both fomats: absolute times in
+        `~astropy.time.Time` variables and [MET]_.
+
+        If the inverted flag is activated, the filter is applied to
+        keep all elements outside the selected range.
+
+        Parameters
+        ----------
+        selection_variable : string
+            name of variable to apply a cut (it should exist on the table)
+        time_min : `~astropy.time.Time`
+            minimum time
+        time_max : `~astropy.time.Time`
+            maximum time
+        inverted : bool, optional
+            invert selection: keep all entries outside the (min, max) range
+
+        Returns
+        -------
+        obs_table : `~gammapy.obs.ObservationTable`
+            observation table with observations passing the selection
+        """
+        obs_table = self
+
+        # check that variable exists on the table
+        if selection_variable not in obs_table.keys():
+            raise KeyError('Key not present in table: {}'.format(selection_variable))
+
+        if obs_table.meta['TIME_FORMAT'] == 'absolute':
+            # read times into a Time object
+            time = Time(obs_table[selection_variable])
+        else:
+            # transform time to MET
+            time_min = time_relative_to_ref(time_min, obs_table.meta)
+            time_max = time_relative_to_ref(time_max, obs_table.meta)
+            # read values into a quantity in case units have to be taken into account
+            time = Quantity(obs_table[selection_variable])
+
+        # build and apply mask
+        if not inverted:
+            mask = (time_min < time) & (time < time_max)
+        else:
+            mask = (time_min >= time) | (time >= time_max)
+        obs_table = obs_table[mask]
+        return obs_table
 
     def filter_observations(self, selection=None):
         """Make an observation table, applying some selection.
 
+        There are 3 main kinds of selection criteria, according to the
+        value of the `type` keyword in the `selection` dictionary:
+
+            - sky regions (boxes or circles)
+
+            - time intervals (min, max)
+
+            - intervals (min, max) on any other parameter present in the
+              observation table, that can be casted into an
+              `~astropy.units.Quantity` object
+
         Allowed selection criteria are interpreted using the following
         keywords in the `selection` dictionary:
 
-            - `shape`: ``box``, ``circle``, ``sky_box``, ``sky_circle``
-
-                - ``box`` and ``circle`` are 1D selection criteria acting on any
-                  variable defined in the observation table, specified using the
-                  `variable` keyword
-
-                    - `box` is an interval delimited by the `value_min` and
-                      `value_max` parameters
-
-                    - `circle` is a centered interval defined by the `center`
-                      and `radius` parameters
+            - `type`: ``sky_box``, ``sky_circle``, ``'time_box``, ``par_box``
 
                 - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
-                  on sky coordinates, similar to ``box`` and ``circle``
-                  TODO: finish implementing and documenting sky_box and sky_circle!!!
+                  on sky coordinates
+
+                    - ``sky_box`` is a squared region delimited by the `lon` and
+                      `lat` keywords: both tuples of format (min, max); uses
+                      `~gammapy.catalog.select_sky_box`
+
+                    - ``sky_circle`` is a circular region centered in the coordinate
+                      marked by the `lon` and `lat` keywords, and radius `radius`;
+                      uses `~gammapy.catalog.select_sky_circle`
+
+                  in each case, the coordinate system can be specified by the `frame`
+                  keyword (built-in Astropy coordinate frames are supported, e.g.
+                  \'icrs\' or \'galactic\'); an aditional border can be defined using
+                  the `border` keyword
+
+                - ``time_box`` is a 1D selection criterion acting on the observation
+                  time (`TIME_START` and `TIME_STOP`); the interval is set via the
+                  `time_min` and `time_max` keywords; uses
+                  `~gammapy.obs.ObservationTable.filter_obs_time_range`
+
+                - ``par_box`` is a 1D selection criterion acting on any
+                  parameter defined in the observation table that can be casted
+                  into an `~astropy.units.Quantity` object; the parameter name
+                  and interval can be specified using the keywords 'variable',
+                  'value_min' and 'value_max' respectively; uses
+                  `~gammapy.obs.ObservationTable.filter_obs_var_range`
 
             In all cases, the selection can be inverted by activating the
             `inverted` flag, in which case, the filter is applied to keep all
             elements outside the selected range.
 
-        A few examples of selection criteria can be found in the tests in
-        `test_filter_observations`.
-        TODO: is there a way to insert a non-hard-coded link to the tests?!!!
+        A few examples of selection criteria are given below and more can be
+        found in the tests in `test_filter_observations`.
 
         Parameters
         ----------
@@ -202,98 +254,81 @@ class ObservationTable(Table):
 
         Examples
         --------
-        >>> selection = dict(shape='sky_box', frame='galactic',
-        ...                  lon=(-100, 50), lat=(-5, 5), border=2)
+        >>> selection = dict(type='sky_box', frame='icrs',
+        ...                  lon=Angle([150, 300], 'degree'),
+        ...                  lat=Angle([-50, 0], 'degree'),
+        ...                  border=Angle(2, 'degree'))
         >>> filtered_obs_table = obs_table.filter_observations(selection)
-        TODO: update example (or remove it, since we have an exhaustive doc?) !!!!!!!!!!!!!!!!!!!!!!
+
+        >>> selection = dict(type='sky_circle', frame='galactic',
+        ...                  lon=Angle(0, 'degree'),
+        ...                  lat=Angle(0, 'degree'),
+        ...                  radius=Angle(5, 'degree'),
+        ...                  border=Angle(2, 'degree'))
+        >>> filtered_obs_table = obs_table.filter_observations(selection)
+
+        >>> selection = dict(type='time_box',
+        ...                  time_min=Time('2012-01-01T01:00:00', format='isot', scale='utc'),
+        ...                  time_max=Time('2012-01-01T02:00:00', format='isot', scale='utc'))
+        >>> filtered_obs_table = obs_table.filter_observations(selection)
+
+        >>> selection = dict(type='par_box', variable='ALT',
+        ...                  value_min=Angle(60., 'degree'),
+        ...                  value_max=Angle(70., 'degree'),
+        >>> filtered_obs_table = obs_table.filter_observations(selection)
+
+        >>> selection = dict(type='par_box', variable='OBS_ID',
+        ...                  value_min=2,
+        ...                  value_max=5)
+        >>> filtered_obs_table = obs_table.filter_observations(selection)
         """
         obs_table = self
 
-        #TODO: search code for criteria implemented!!!
-        # in datastore, in event lists, ...?
-        # gammapy/catalog/utils.py select_sky_box
-	# gammapy/gammapy/scripts/find_obs.py
-	#Copy EventList class methods for event selection to ObservationTable class and adapt a bit. Look for mask in http://gammapy.readthedocs.org/en/latest/_modules/gammapy/data/event_list.html#EventList
-	#Code: https://github.com/gammapy/gammapy/blob/master/gammapy/scripts/find_obs.py
-	#Docs: https://github.com/gammapy/gammapy/blob/master/docs/obs/findruns.rst
-        # check that I don't break anything because of missing tests in existing code!!! (i.e. in https://github.com/mapazarr/hess-host-analyses/blob/master/hgps_survey_map/hgps_survey_map.py#L62)
-        #TOOD: implement script that provides a run list and outputs a filtered run list!!!
-
-# test if it works with ra dec (is in that case long = RA, lat = dec? (or does it cleverly transform coordinates and makes selection?)
-# do a more user-friendly way of giving ra dec (without long lat)!!!
-
         if selection:
-            selection_region_shape = selection['shape']
-            if 'variable' in selection.keys():
-                selection_variable = selection['variable']
-            inverted = False
-            if 'inverted' in selection.keys():
-                inverted = selection['inverted']
+            selection_type = selection['type']
 
-            if selection_region_shape == 'box':
-                value_min = selection['value_min']
-                value_max = selection['value_max']
-                if selection_variable == 'time':
-                    # apply twice the mask: to TIME_START and TIME_STOP
-                    obs_table = obs_table.filter_observations_var_range('TIME_START',
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-                    obs_table = obs_table.filter_observations_var_range('TIME_STOP',
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-                else:
-                    # regular case
-                    obs_table = obs_table.filter_observations_var_range(selection_variable,
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-            elif selection_region_shape == 'circle':
-                value_min = selection['center'] - selection['radius']
-                value_max = selection['center'] + selection['radius']
-                if selection_variable == 'time':
-                    # apply twice the mask: to TIME_START and TIME_STOP
-                    obs_table = obs_table.filter_observations_var_range('TIME_START',
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-                    obs_table = obs_table.filter_observations_var_range('TIME_STOP',
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-                else:
-                    # regular case
-                    obs_table = obs_table.filter_observations_var_range(selection_variable,
-                                                                        value_min,
-                                                                        value_max,
-                                                                        inverted)
-            elif selection_region_shape == 'sky_box':
+            if 'inverted' not in selection.keys():
+                selection['inverted'] = False
+
+            if selection_type == 'sky_circle':
+                lon = selection['lon']
+                lat = selection['lat']
+                radius = selection['radius'] + selection['border']
+                obs_table = select_sky_circle(obs_table,
+                                              lon_cen=lon, lat_cen=lat,
+                                              radius=radius,
+                                              frame=selection['frame'],
+                                              inverted=selection['inverted'])
+
+            elif selection_type == 'sky_box':
                 lon = selection['lon']
                 lat = selection['lat']
                 border = selection['border']
-                lon = Angle([lon[0] - border, lon[1] + border], 'deg')
-                lat = Angle([lat[0] - border, lat[1] + border], 'deg')
-                # print(lon, lat)
+                lon = Angle([lon[0] - border, lon[1] + border])
+                lat = Angle([lat[0] - border, lat[1] + border])
                 obs_table = select_sky_box(obs_table,
                                            lon_lim=lon, lat_lim=lat,
-                                           frame=selection['frame'])
-            elif selection_region_shape == 'sky_circle':
-                raise NotImplemented
+                                           frame=selection['frame'],
+                                           inverted=selection['inverted'])
+
+            elif selection_type == 'time_box':
+                # apply twice the mask: to TIME_START and TIME_STOP
+                obs_table = obs_table.filter_obs_time_range('TIME_START',
+                                                            selection['time_min'],
+                                                            selection['time_max'],
+                                                            selection['inverted'])
+                obs_table = obs_table.filter_obs_time_range('TIME_STOP',
+                                                            selection['time_min'],
+                                                            selection['time_max'],
+                                                            selection['inverted'])
+
+            elif selection_type == 'par_box':
+                obs_table = obs_table.filter_obs_var_range(selection['variable'],
+                                                           selection['value_min'],
+                                                           selection['value_max'],
+                                                           selection['inverted'])
+
             else:
-                raise ValueError('Invalid selection type: {}'.format(selection_region_shape))
-
-#TODO: should I take already Angle objects as parameters in the selection???!!!!!!!!!!!!!!!
-
-
-##box (min, max)
-##circle (center, radius)
-##
-##1D
-##2D -> sky_box, sky_circle
-## time_box? (time_circle?)
-##  time in table could be absolute time (as Time) or relative (MET, as Quantity)
-##
-##inverted?
+                raise ValueError('Invalid selection type: {}'.format(selection_type))
 
         return obs_table

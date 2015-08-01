@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from ...obs import ObservationTable
 from ...datasets import make_test_observation_table
 from ...time import absolute_time
+from ...catalog import skycoord_from_table
 
 
 # def test_Observation():
@@ -14,7 +15,67 @@ from ...time import absolute_time
 def test_ObservationTable():
     ObservationTable()
 
-def test_filter_observations():
+
+def common_sky_region_filter_test_routines(obs_table, selection):
+    """Common routines for the tests of sky_box/sky_circle filtering of obs tables"""
+    type = selection['type']
+    if type not in ['sky_box', 'sky_circle']:
+        raise ValueError("Invalid type: {}".format(type))
+
+    if type == 'sky_box':
+        lon_range_eff = (selection['lon'][0] - selection['border'], selection['lon'][1] + selection['border'])
+        lat_range_eff = (selection['lat'][0] - selection['border'], selection['lat'][1] + selection['border'])
+    elif type == 'sky_circle':
+        lon_cen = selection['lon']
+        lat_cen = selection['lat']
+        center = SkyCoord(lon_cen, lat_cen, frame=selection['frame'])
+        radius_eff = selection['radius'] + selection['border']
+
+    do_wrapping = False
+    # not needed in the case of sky_circle
+    if (type == 'sky_box' and
+        any(l < Angle(0., 'degree') for l in lon_range_eff)):
+        do_wrapping = True
+
+    # observation table
+    skycoord = skycoord_from_table(obs_table)
+
+    # test on the selection
+    filtered_obs_table = obs_table.filter_observations(selection)
+    skycoord = skycoord_from_table(filtered_obs_table)
+    if type == 'sky_box':
+        skycoord = skycoord.transform_to(selection['frame'])
+        lon = skycoord.data.lon
+        lat = skycoord.data.lat
+        if do_wrapping:
+            lon = lon.wrap_at(Angle(180, 'degree'))
+        assert ((lon_range_eff[0] < lon) & (lon < lon_range_eff[1]) &
+                (lat_range_eff[0] < lat) & (lat < lat_range_eff[1])).all()
+    elif type == 'sky_circle':
+        ang_distance = skycoord.separation(center)
+        assert (ang_distance < radius_eff).all()
+
+    # test on the inverted selection
+    selection['inverted'] = True
+    inv_filtered_obs_table = obs_table.filter_observations(selection)
+    skycoord = skycoord_from_table(inv_filtered_obs_table)
+    if type == 'sky_box':
+        skycoord = skycoord.transform_to(selection['frame'])
+        lon = skycoord.data.lon
+        lat = skycoord.data.lat
+        if do_wrapping:
+            lon = lon.wrap_at(Angle(180, 'degree'))
+        assert ((lon_range_eff[0] >= lon) | (lon >= lon_range_eff[1]) |
+                (lat_range_eff[0] >= lat) | (lat >= lat_range_eff[1])).all()
+    elif type == 'sky_circle':
+        ang_distance = skycoord.separation(center)
+        assert (ang_distance >= radius_eff).all()
+
+    # the sum of number of entries in both selections should be the total number of entries
+    assert len(filtered_obs_table) + len(inv_filtered_obs_table) == len(obs_table)
+
+
+def test_filter_parameter_box():
     # create random observation table
     observatory_name='HESS'
     n_obs = 10
@@ -30,76 +91,48 @@ def test_filter_observations():
     variable = 'OBS_ID'
     value_min = 2
     value_max = 5
-    selection = dict(shape='box', variable=variable,
+    selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max)
     filtered_obs_table = obs_table.filter_observations(selection)
     assert (value_min < filtered_obs_table[variable]).all()
     assert (filtered_obs_table[variable] < value_max).all()
 
     # test box selection in obs_id inverted
-    selection = dict(shape='box', variable=variable,
+    selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max, inverted=True)
     filtered_obs_table = obs_table.filter_observations(selection)
-    selection = dict(shape='box', variable=variable,
-                     value_min=value_min, value_max=value_max, inverted=True)
-    filtered_obs_table = obs_table.filter_observations(selection)
-
-    # test circle selection in obs_id
-    variable = 'OBS_ID'
-    center = 4
-    radius = 2
-    selection = dict(shape='circle', variable=variable,
-                     center=center, radius=radius)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    assert (center - radius < filtered_obs_table[variable]).all()
-    assert (filtered_obs_table[variable] < center + radius).all()
+    assert len(filtered_obs_table) == 8
+    assert ((value_min >= filtered_obs_table[variable]) |
+            (filtered_obs_table[variable] >= value_max)).all()
 
     # test box selection in alt
     variable = 'ALT'
     value_min = Angle(60., 'degree')
     value_max = Angle(70., 'degree')
-    selection = dict(shape='box', variable=variable,
+    selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max)
     filtered_obs_table = obs_table.filter_observations(selection)
     assert (value_min < Angle(filtered_obs_table[variable])).all()
     assert (Angle(filtered_obs_table[variable]) < value_max).all()
 
-    # test box selection in zenith angle
-    variable = 'zenith'
-    value_min = Angle(20., 'degree')
-    value_max = Angle(30., 'degree')
-    selection = dict(shape='box', variable=variable,
-                     value_min=value_min, value_max=value_max)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    zenith = Angle(90., 'degree') - filtered_obs_table['ALT']
-    assert (value_min < zenith).all()
-    assert (zenith < value_max).all()
 
-    # test box selection in time_start
-    variable = 'TIME_START'
-    value_min = Time('2012-01-01 00:00:00', format='iso', scale='utc')
-    value_max = Time('2014-01-01 00:00:00', format='iso', scale='utc')
-    selection = dict(shape='box', variable=variable,
-                     value_min=value_min, value_max=value_max)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    time_start = absolute_time(filtered_obs_table['TIME_START'],
-                               filtered_obs_table.meta)
-    assert (value_min < time_start).all()
-    assert (time_start < value_max).all()
-
-    # test box selection in time: (time_start, time_stop) within (value_min,
-    # value_min)
-    # new obs table with very close (in time) observations (and times in
-    # absolute times)
-    datestart = Time('2012-01-01 00:03:00', format='iso', scale='utc')
-    dateend = Time('2012-01-01 02:03:00', format='iso', scale='utc')
+def test_filter_time_box():
+    # create random observation table with very close (in time)
+    # observations (and times in absolute times)
+    observatory_name='HESS'
+    n_obs = 10
+    datestart = Time('2012-01-01T00:30:00', format='isot', scale='utc')
+    dateend = Time('2012-01-01T02:30:00', format='isot', scale='utc')
     obs_table_time = make_test_observation_table(observatory_name, n_obs,
                                                  datestart, dateend, True)
-    variable = 'time'
-    value_min = Time('2012-01-01 01:00:00', format='iso', scale='utc')
-    value_max = Time('2012-01-01 02:00:00', format='iso', scale='utc')
-    selection = dict(shape='box', variable=variable,
-                     value_min=value_min, value_max=value_max)
+
+    # test box selection in time: (time_start, time_stop) within (value_min, value_max)
+    print()
+    print("Test box selection in time")
+    value_min = Time('2012-01-01T01:00:00', format='isot', scale='utc')
+    value_max = Time('2012-01-01T02:00:00', format='isot', scale='utc')
+    selection = dict(type='time_box',
+                     time_min=value_min, time_max=value_max)
     filtered_obs_table = obs_table_time.filter_observations(selection)
     time_start = filtered_obs_table['TIME_START']
     time_stop = filtered_obs_table['TIME_STOP']
@@ -107,3 +140,55 @@ def test_filter_observations():
     assert (time_start < value_max).all()
     assert (value_min < time_stop).all()
     assert (time_stop < value_max).all()
+
+
+def test_filter_sky_regions():
+
+    # create random observation table with many entries
+    observatory_name='HESS'
+    n_obs = 100
+    obs_table = make_test_observation_table(observatory_name, n_obs)
+
+    # test sky box selection in gal coordinates
+    lon_range = Angle([-100., 50.], 'degree')
+    lat_range = Angle([-25., 25.], 'degree')
+    frame = 'galactic'
+    border = Angle(2., 'degree')
+    selection = dict(type='sky_box', frame=frame,
+                     lon=lon_range,
+                     lat=lat_range,
+                     border=border)
+    common_sky_region_filter_test_routines(obs_table, selection)
+
+    # test sky box selection in radec coordinates
+    lon_range = Angle([150., 300.], 'degree')
+    lat_range = Angle([-50., 0.], 'degree')
+    frame = 'icrs'
+    border = Angle(2., 'degree')
+    selection = dict(type='sky_box', frame=frame,
+                     lon=lon_range,
+                     lat=lat_range,
+                     border=border)
+    common_sky_region_filter_test_routines(obs_table, selection)
+
+    # test sky circle selection in gal coordinates
+    lon_cen = Angle(0., 'degree')
+    lat_cen = Angle(0., 'degree')
+    radius = Angle(50., 'degree')
+    frame = 'galactic'
+    border = Angle(2., 'degree')
+    selection = dict(type='sky_circle', frame=frame,
+                     lon=lon_cen, lat=lat_cen,
+                     radius=radius, border=border)
+    common_sky_region_filter_test_routines(obs_table, selection)
+
+    # test sky circle selection in radec coordinates
+    lon_cen = Angle(130., 'degree')
+    lat_cen = Angle(-40., 'degree')
+    radius = Angle(50., 'degree')
+    frame = 'icrs'
+    border = Angle(2., 'degree')
+    selection = dict(type='sky_circle', frame=frame,
+                     lon=lon_cen, lat=lat_cen,
+                     radius=radius, border=border)
+    common_sky_region_filter_test_routines(obs_table, selection)

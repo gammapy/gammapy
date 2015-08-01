@@ -35,7 +35,7 @@ Using `gammapy.obs`
 .. toctree::
    :maxdepth: 1
 
-   findruns
+   find_observations
 
 Reference/API
 =============
