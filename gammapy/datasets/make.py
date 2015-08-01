@@ -77,7 +77,8 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 def make_test_observation_table(observatory_name, n_obs,
                                 datestart=None, dateend=None,
-                                debug=False, random_state=None):
+                                debug=False,
+                                random_state='random-seed'):
     """Make a test observation table.
 
     For the moment, only random observation tables are created.
@@ -117,7 +118,7 @@ def make_test_observation_table(observatory_name, n_obs,
     obs_table = ObservationTable()
 
     # build a time reference as the start of 2010
-    dateref = Time('2010-01-01 00:00:00', format='iso', scale='utc')
+    dateref = Time('2010-01-01T00:00:00', format='isot', scale='utc')
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
     # define table header
