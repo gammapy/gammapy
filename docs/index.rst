@@ -22,7 +22,7 @@ Contributions welcome!
 * Ask questions on the `Gammapy mailing list`_.
 * Request features, report bugs or contribute on the `Gammapy GitHub page`_.
 * Check out the `Gammapy project summary on Open HUB`_.
-* The latest Gammapy release is version **0.2** and is available from the `Gammapy page on PyPI`_.
+* The latest Gammapy release is version **0.2**.
 
 .. _gammapy_news:
 
@@ -31,10 +31,9 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
 
+
 * May - August 2015 --- Manuel Paz Arribas GSoC 2015 on `gammapy.background`
   (`project description <https://github.com/astropy/astropy/wiki/GSoC-2015-Application-Manuel-Paz-Arribas:-Astropy:-background-modeling-for-Gammapy>`__)
-* April 20, 2015 --- Sherpa becomes an open project (`blog post <http://pysherpa.blogspot.de/2015/04/sherpa-becomes-open-project.html>`_)
-  ... will be used more in Gammapy.
 * April 13, 2015 --- Gammapy 0.2 release. See changelog: :ref:`gammapy_0p2_release`
 * August 25, 2014 --- Gammapy 0.1 release. See changelog: :ref:`gammapy_0p1_release`
 

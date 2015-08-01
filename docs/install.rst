@@ -5,16 +5,54 @@
 Installation
 ============
 
-Here we provide short installation instructions for Gammapy and its dependencies
-using the `pip`_ and `conda`_ tools.
+Here we provide short installation instructions for Gammapy and its dependencies.
+
+Due to the large variety of systems, package managers and setups in us it's not
+possible to give a detailed description for every option.
+
+Using `conda`_ is a good option to get everything installed from scratch within minutes.
+It works on any Linux, Mac or Windows machine and doesn't require root access.
 
 If you get stuck, have a look at the extensive installation instructions for Astropy
 at http://www.astropy.org/ or ask on the `Gammapy mailing list`_.
 
+Install Gammapy using conda
+---------------------------
+
+To install the latest Gammapy **stable** version as well as the most common
+optional dependencies for Gammapy, first install `Anaconda <http://continuum.io/downloads>`__
+and then run these commands:
+
+.. code-block:: bash
+
+    conda config --add channels astropy --add channels sherpa
+    conda install gammapy
+
+For a super-quick (depending on your download speed, usually a few minutes),
+non-interactive install of `Miniconda <http://conda.pydata.org/miniconda.html>`__
+and Gammapy from scratch, you can also download and execute the
+`gammapy-conda-install.sh <https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh>`__
+script like this:
+
+.. code-block:: bash
+
+    bash "$(curl -fsSL https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh)"
+
+
+To update to the latest version:
+
+.. code-block:: bash
+
+    conda update --all
+    conda update gammapy
+
+Overall ``conda`` is a great cross-platform package manager, you can quickly learn how to use
+it by reading the docs `here <http://conda.pydata.org/docs/>`__.
+
 Install Gammapy using pip
 -------------------------
 
-To install the latest Gammapy **stable** version using `pip`_:
+To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_) using `pip`_:
 
 .. code-block:: bash
 
@@ -26,8 +64,8 @@ To install the current Gammapy **development** version using `pip`_:
 
    $ pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
-Download and install Gammapy manually
--------------------------------------
+Install Gammapy manually
+------------------------
 
 To download the latest stable version of Gammapy, download it from
 https://pypi.python.org/pypi/gammapy, if you have the
@@ -66,43 +104,66 @@ If you want to contribute to Gammapy, but are not familiar with Python or
 git or Astropy yet, please have a look at the  
 `Astropy developer documentation <http://docs.astropy.org/en/latest/#developer-documentation>`__.
 
-Install Gammapy and its dependencies using Conda
-------------------------------------------------
+Install Gammapy dependencies using other package managers
+---------------------------------------------------------
 
-In the past it has often been hard to install Python packages and all their dependencies.
-Not any more ... using `conda`_ you can install Gammapy and most of its dependencies on
-any Linux machine or Mac in 5 minutes (without needing root access on the machine).
+Besides conda, Gammapy and some of the optional dependencies (Sherpa, Astropy-affiliated packages)
+as not yet available in other package managers (such as
+e.g. `apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__
+or `yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ on Linux
+or `Macports <https://www.macports.org/>`__
+or `homebrew <http://brew.sh/>`__ on Mac.
 
-Go to http://conda.pydata.org/miniconda.html and download the installer for your system.
-Or directly use `wget <https://www.gnu.org/software/wget/>`__ from the terminal:
+So installing Gammapy this way is not recommended at this time.
+(The recommended method is conda as mentioned above).
 
-For Linux:
+Still, it's possible and common on systems where users have root access
+to install some of the dependencies using those package managers, and then
+to use `pip`_ to do the rest of the installation.
+
+So as a convenience, here we show the commands to install those packages that are available,
+so that you don't have to look up the package names.
+
+We do hope this situation will improve in the future as more astronomy packages become
+available in those distributions and versions are updated.
+
+apt-get
++++++++
 
 .. code-block:: bash
 
-   $ wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    sudo apt-get install TODO
 
-For Mac:
 
-.. code-block:: bash
+yum
++++
 
-   $ wget http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
-
-Then install binary packages using ``conda`` and source packages using ``pip`` by
-copy & pasting the following lines into your terminal:
 
 .. code-block:: bash
 
-   bash miniconda.sh -b -p $PWD/miniconda
-   export PATH="$PWD/miniconda/bin:$PATH"
-   conda config --set always_yes yes --set changeps1 no
-   conda update -q conda
-   conda install pip scipy matplotlib scikit-image scikit-learn astropy h5py pandas
-   pip install reproject aplpy wcsaxes naima astroplan gwcs photutils
-   pip install gammapy
- 
-Overall ``conda`` is a great cross-platform package manager, you can quickly learn how to use
-it by reading the docs here: http://conda.pydata.org/docs/
+    sudo yum install TODO
+
+
+Macports
+++++++++
+
+`Macports <https://www.macports.org/>`__ is a popular package manager on Mac.
+
+.. code-block:: bash
+
+    sudo port install py34-astropy py34-pip py34-matplotlib
+    pip install gammapy --user
+
+
+Homebrew
+++++++++
+
+`Homebrew <http://brew.sh/>`_ is a popular package manager on Mac.
+
+.. code-block:: bash
+
+    sudo brew install TODO
+    pip install gammapy --user
 
 
 Check if your Gammapy installation is OK
@@ -127,6 +188,28 @@ To check which dependencies of Gammapy you have installed:
 
    $ gammapy-info --dependencies
 
+.. _install-issues:
+
+Common issues
+-------------
+
+If you have an issue with Gammapy installation or usage, please check
+this list. If your issue is not adressed, please send an email to the
+mailing list.
+
+- Q: I get an error mentioning something (e.g. Astropy) isn't available,
+  but I did install it.
+
+  A: Check that you're using the right ``python`` and that your
+  ``PYTHONPATH`` isn't pointing to places that aren't appropriate
+  for this Python (usually it's best to not set it at all)
+  using these commands:
+
+  .. code-block:: bash
+
+      which python
+      echo $PYTHONPATH
+      python -c 'import astropy'
 
 .. _install-dependencies:
 
@@ -261,24 +344,3 @@ Try installing `pip`_ into that Python and then:
 
 If this doesn't work (which is not uncommon, this is known to fail to compile the C extensions of Astropy
 on some platforms), ask your Python-installation-savvy co-worker or on the Astropy or Gammapy mailing list.
-
-
-BSD or GPL license?
--------------------
-
-Gammapy is BSD licensed (same license as Numpy, Scipy, Matplotlib, scikit-image, Astropy, photutils, yt, ...).
-
-We prefer this over the GPL3 or LGPL license because it means that the packages we are most likely to
-share code with have the same license, e.g. we can take a function or class and "upstream" it, i.e. contribute
-it e.g. to Astropy or Scipy if it's generally useful.
-
-Some optional dependencies of Gammapy (i.e. other packages like Sherpa or Gammalib or ROOT that we import in some
-places) are GPL3 or LGPL licensed.
-
-Now the GPL3 and LGPL license contains clauses that other package that copy or modify it must be released under
-the same license.
-We take the standpoint that Gammapy is independent from these libraries, because we don't copy or modify them.
-This is a common standpoint, e.g. ``astropy.wcs`` is BSD licensed, but uses the LGPL-licensed WCSLib.
-
-Note that if you distribute Gammapy together with one of the GPL dependencies,
-the whole distribution then falls under the GPL license.

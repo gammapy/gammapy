@@ -721,3 +721,23 @@ This sets up the root logger with the log level and format (the format isn't con
 for the command line scripts at the moment).
 
 See ``gammapy/scripts/find_obs.py`` as an example.
+
+BSD or GPL license?
+-------------------
+
+Gammapy is BSD licensed (same license as Numpy, Scipy, Matplotlib, scikit-image, Astropy, photutils, yt, ...).
+
+We prefer this over the GPL3 or LGPL license because it means that the packages we are most likely to
+share code with have the same license, e.g. we can take a function or class and "upstream" it, i.e. contribute
+it e.g. to Astropy or Scipy if it's generally useful.
+
+Some optional dependencies of Gammapy (i.e. other packages like Sherpa or Gammalib or ROOT that we import in some
+places) are GPL3 or LGPL licensed.
+
+Now the GPL3 and LGPL license contains clauses that other package that copy or modify it must be released under
+the same license.
+We take the standpoint that Gammapy is independent from these libraries, because we don't copy or modify them.
+This is a common standpoint, e.g. ``astropy.wcs`` is BSD licensed, but uses the LGPL-licensed WCSLib.
+
+Note that if you distribute Gammapy together with one of the GPL dependencies,
+the whole distribution then falls under the GPL license.
