@@ -107,8 +107,8 @@ class SpectralCube(object):
 
         return self._interpolate_cache
 
-    @staticmethod
-    def read_hdu(hdu_list):
+    @classmethod
+    def read_hdu(cls, hdu_list):
         """Read spectral cube from HDU.
 
         Parameters
@@ -134,10 +134,10 @@ class SpectralCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        return SpectralCube(data, wcs, energy)
+        return cls(data, wcs, energy)
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """Read spectral cube from FITS file.
 
         Parameters
@@ -159,7 +159,7 @@ class SpectralCube(object):
         energy = Table.read(filename, 'ENERGIES')['Energy']
         energy = Quantity(energy, 'MeV')
 
-        return SpectralCube(data, wcs, energy)
+        return cls(data, wcs, energy)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.

@@ -171,13 +171,13 @@ class CubeBackgroundModel(object):
 
         self.background = background
 
-    @staticmethod
-    def from_fits_table(tbhdu):
+    @classmethod
+    def from_fits_table(cls, hdu):
         """Read cube background model from a fits binary table.
 
         Parameters
         ----------
-        tbhdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             HDU binary table for the bg cube
 
         Returns
@@ -186,8 +186,8 @@ class CubeBackgroundModel(object):
             bg model cube object
         """
 
-        header = tbhdu.header
-        data = tbhdu.data
+        header = hdu.header
+        data = hdu.data
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
         if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'):
@@ -237,73 +237,73 @@ class CubeBackgroundModel(object):
         background_unit = _parse_bg_units(header['TUNIT7'])
         background = Quantity(background, background_unit)
 
-        return CubeBackgroundModel(detx_bins=detx_bins,
-                                   dety_bins=dety_bins,
-                                   energy_bins=energy_bins,
-                                   background=background)
+        return cls(detx_bins=detx_bins,
+                   dety_bins=dety_bins,
+                   energy_bins=energy_bins,
+                   background=background)
 
-    @staticmethod
-    def from_fits_image(imhdu, enhdu):
+    @classmethod
+    def from_fits_image(cls, image_hdu, energy_hdu):
         """Read cube background model from a fits image.
 
         Parameters
         ----------
-        imhdu : `~astropy.io.fits.PrimaryHDU`
-            image for the bg cube
-        enhdu : `~astropy.io.fits.BinTableHDU`
-             table for the energy binning
+        image_hdu : `~astropy.io.fits.PrimaryHDU`
+            Background cube image HDU
+        energy_hdu : `~astropy.io.fits.BinTableHDU`
+            Energy binning table
 
         Returns
         -------
         bg_cube : `~gammapy.background.CubeBackgroundModel`
-            bg model cube object
+            Background cube
         """
-        im_header = imhdu.header
-        en_header = enhdu.header
+        image_header = image_hdu.header
+        energy_header = energy_hdu.header
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
-        if (im_header['CTYPE1'] != 'DETX'):
+        if (image_header['CTYPE1'] != 'DETX'):
             raise ValueError("Expecting X axis in first place, not ({})"
-                             .format(im_header['CTYPE1']))
-        if (im_header['CTYPE2'] != 'DETY'):
+                             .format(image_header['CTYPE1']))
+        if (image_header['CTYPE2'] != 'DETY'):
             raise ValueError("Expecting Y axis in second place, not ({})"
-                             .format(im_header['CTYPE2']))
-        if (im_header['CTYPE3'] != 'ENERGY'):
+                             .format(image_header['CTYPE2']))
+        if (image_header['CTYPE3'] != 'ENERGY'):
             raise ValueError("Expecting E axis in third place, not ({})"
-                             .format(im_header['CTYPE3']))
+                             .format(image_header['CTYPE3']))
 
         # check units
-        if (im_header['CUNIT1'] != im_header['CUNIT2']):
+        if (image_header['CUNIT1'] != image_header['CUNIT2']):
             ss_error = "This is odd: detector X and Y units not matching"
-            ss_error += "({0}, {1})".format(im_header['CUNIT1'], im_header['CUNIT2'])
+            ss_error += "({0}, {1})".format(image_header['CUNIT1'], image_header['CUNIT2'])
             raise ValueError(ss_error)
-        if (im_header['CUNIT3'] != en_header['TUNIT1']):
+        if (image_header['CUNIT3'] != energy_header['TUNIT1']):
             ss_error = "This is odd: energy units not matching"
-            ss_error += "({0}, {1})".format(im_header['CUNIT3'], en_header['TUNIT1'])
+            ss_error += "({0}, {1})".format(image_header['CUNIT3'], energy_header['TUNIT1'])
             raise ValueError(ss_error)
 
         # get det X, Y binning
-        wcs = WCS(im_header, naxis=2) # select only the (X, Y) axes
+        wcs = WCS(image_header, naxis=2) # select only the (X, Y) axes
         detx_bins, dety_bins = linear_wcs_to_arrays(wcs,
-                                                    im_header['NAXIS1'],
-                                                    im_header['NAXIS2'])
+                                                    image_header['NAXIS1'],
+                                                    image_header['NAXIS2'])
 
         # get energy binning
-        energy_bins = Quantity(enhdu.data['ENERGY'],
-                               en_header['TUNIT1'])
+        energy_bins = Quantity(energy_hdu.data['ENERGY'],
+                               energy_header['TUNIT1'])
 
         # get background data
-        background = imhdu.data
-        background_unit = _parse_bg_units(im_header['BG_UNIT'])
+        background = image_hdu.data
+        background_unit = _parse_bg_units(image_header['BG_UNIT'])
         background = Quantity(background, background_unit)
 
-        return CubeBackgroundModel(detx_bins=detx_bins,
-                                   dety_bins=dety_bins,
-                                   energy_bins=energy_bins,
-                                   background=background)
+        return cls(detx_bins=detx_bins,
+                   dety_bins=dety_bins,
+                   energy_bins=energy_bins,
+                   background=background)
 
-    @staticmethod
-    def read(filename, format='table'):
+    @classmethod
+    def read(cls, filename, format='table'):
         """Read cube background model from fits file.
 
         Several input formats are accepted, depending on the value
@@ -328,9 +328,9 @@ class CubeBackgroundModel(object):
         """
         hdu = fits.open(filename)
         if format == 'table':
-            return CubeBackgroundModel.from_fits_table(hdu['BACKGROUND'])
+            return cls.from_fits_table(hdu['BACKGROUND'])
         elif format == 'image':
-            return CubeBackgroundModel.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
+            return cls.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
         else:
             raise ValueError("Invalid format {}.".format(format))
 
