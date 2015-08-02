@@ -220,9 +220,19 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
 class Fermi3FGLObject(object):
     """TODO: Doccomments
     """
+
+    from astropy.units import Quantity
+    from gammapy.spectrum import energy_bin_centers_log_spacing
+
     fermi_cat = fetch_fermi_catalog('3FGL')
 
-    x_bins = np.log10([0.03, 0.1, 0.3, 1, 3, 10, 100])
+    x_bins_edges = [0.03, 0.1, 0.3, 1, 3, 10, 100]
+
+    x_bins_log10 = np.log10(x_bins_edges)
+
+    x_bins = Quantity(x_bins_edges, 'GeV').to('MeV')
+
+    x = energy_bin_centers_log_spacing(x_bins).value
 
     y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
@@ -233,8 +243,8 @@ class Fermi3FGLObject(object):
         self.cat_row = self.fermi_cat[1].data[self.catalog_index]
         self.ra = self.cat_row['RAJ2000']
         self.dec = self.cat_row['DEJ2000']
-        self.gal_long = self.cat_row['GLON']
-        self.gal_lat = self.cat_row['GLAT']
+        self.glon = self.cat_row['GLON']
+        self.glat = self.cat_row['GLAT']
         self.int_flux = self.cat_row['Flux_Density']
         self.unc_int_flux = self.cat_row['Unc_Flux_Density']
         self.spec_type = self.cat_row['SpectrumType']
@@ -251,6 +261,10 @@ class Fermi3FGLObject(object):
 
     def plot_spectrum(self, ax=None):
         import matplotlib.pyplot as plt
+        from astropy.units import Quantity
+        from astropy.modeling.models import PowerLaw1D
+        from gammapy.spectrum import energy_bin_centers_log_spacing, compute_differential_flux_points
+
 
         ax = plt.gca() if ax is None else ax
 
@@ -260,7 +274,7 @@ class Fermi3FGLObject(object):
 
         bin_edges2 = np.zeros(0)
 
-        x_vals = np.zeros(0)
+        x_vals = []
 
         y_vals = np.zeros(0)
 
@@ -268,7 +282,7 @@ class Fermi3FGLObject(object):
         y_lower = np.zeros(0)
 
 
-        for i in range(0, np.size(self.x_bins) - 1):
+        for i in range(0, np.size(self.x_bins_edges) - 1):
 
             flux = self.cat_row[self.y_labels[i]]
 
@@ -291,11 +305,11 @@ class Fermi3FGLObject(object):
 
                     y_upper = np.append(y_upper, flux + self.cat_row[y_err_label][1])
 
-                    y_vals[-1] = np.log10(y_vals[-1])
+                    #y_vals[-1] = np.log10(y_vals[-1])
 
-                    y_upper[-1] = np.log10(y_upper[-1])
+                    #y_upper[-1] = np.log10(y_upper[-1])
 
-                    y_lower[-1] = np.log10(y_lower[-1])
+                    #y_lower[-1] = np.log10(y_lower[-1])
 
                     # y_val - new_y_lower = y_lower
 
@@ -305,8 +319,10 @@ class Fermi3FGLObject(object):
 
                     y_upper[-1] = y_upper[-1]  - y_vals[-1]
 
-                    x_vals = np.append(x_vals,
-                                       0.5 * (self.x_bins[i + 1] - self.x_bins[i]) + self.x_bins[i])
+                    #x_vals = np.append(x_vals,
+                    #                   0.5 * (self.x_bins_edges[i + 1] - self.x_bins_edges[i]) + self.x_bins_edges[i])
+
+                    x_vals = np.append(x_vals, Quantity(self.x[i], 'GeV'))
 
                     #print(self.x_bins[i])
                     #print(self.x_bins[i+1])
@@ -315,31 +331,47 @@ class Fermi3FGLObject(object):
                     # x_vals - bin_edge1 = x_bin[i]
                     # x_vals + bin_edge2 = x_bin[i + 1]
                     bin_edges1 = np.append(bin_edges1,
-                                           -(self.x_bins[i] - x_vals[-1]))
+                                           -(self.x_bins_edges[i]*1e3 - x_vals[-1]))
 
                     bin_edges2 = np.append(bin_edges2,
-                                           self.x_bins[i + 1] - x_vals[-1])
+                                           self.x_bins_edges[i + 1]*1e3 - x_vals[-1])
 
                     #print("")
                     #print(x_vals[i] - bin_edges1[i])
                     #print(x_vals[i] + bin_edges2[i])
                     #raw_input(" ")
 
-
-
+        y_vals /= x_vals
+        y_upper /= x_vals
+        y_lower /= x_vals
+        #y_vals /= 1e3
+        #y_upper /= 1e3
+        #y_lower /= 1e3
+        ax.loglog()
         ax.errorbar(x_vals, y_vals,
                     xerr=(bin_edges1, bin_edges2),
                     yerr=(y_lower, y_upper),
                     elinewidth=1, linewidth=0, color='black')
         
-	#x_spectrum = np.linspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
-	#x_spectrum = 10**x_spectrum
-        if self.spec_type == "PowerLaw":
-            print(type(self.spec_index))
-            y_spectrum = self.int_flux * (10 ** x_vals / self.pivot_en) ** -self.spec_index
-            y_spectrum = np.log10(y_spectrum)
 
-            ax.plot(x_vals, y_spectrum)
+        # x_specutrum = energy_bin_centers_log_spacing(self.x_bins_log10).value
+        if self.spec_type == "PowerLaw":
+
+            #x_model = Quantity(np.logspace(-2, 2, 100), 'GeV').to('MeV').value
+            x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
+
+            y_model = PowerLaw1D(amplitude=self.int_flux,
+                                 x_0=self.pivot_en,
+                                 alpha=self.spec_index)
+            test = y_model(x_model)
+
+            raw_input("_    _")
+            raw_input(x_vals)
+            raw_input(y_vals)
+            raw_input(x_model)
+            raw_input(test)
+
+            ax.plot(x_model, test)
 
 
         return ax
