@@ -18,7 +18,7 @@ class NumberCountingUtils(object):
     to Li & Ma."""
 
     @staticmethod
-    def _f(self, main, aux, tau):
+    def _f(main, aux, tau):
         """Little wrapper for incomplete beta function computation
         because the argument order is different from ROOT and
         there are problems with certain sets of arguments."""
@@ -30,7 +30,7 @@ class NumberCountingUtils(object):
         return result
 
     @staticmethod
-    def BinomialExpP(self, signalExp, backgroundExp, relativeBkgUncert):
+    def BinomialExpP(signalExp, backgroundExp, relativeBkgUncert):
         """Expected P-value for s=0 in a ratio of Poisson means.
         Here the background and its uncertainty are provided directly and
         assumed to be from the double Poisson counting setup described in the
@@ -44,10 +44,10 @@ class NumberCountingUtils(object):
         mainInf = signalExp + backgroundExp
         tau = 1. / backgroundExp / (relativeBkgUncert * relativeBkgUncert)
         auxiliaryInf = backgroundExp * tau
-        return self._f(mainInf, auxiliaryInf, tau)
+        return NumberCountingUtils._f(mainInf, auxiliaryInf, tau)
 
     @staticmethod
-    def BinomialWithTauExpP(self, signalExp, backgroundExp, tau):
+    def BinomialWithTauExpP(signalExp, backgroundExp, tau):
         """Expected P-value for s=0 in a ratio of Poisson means.
         Based on two expectations, a main measurement that might have signal
         and an auxiliarly measurement for the background that is signal free.
@@ -55,10 +55,10 @@ class NumberCountingUtils(object):
         tau larger than in the main measurement."""
         mainInf = signalExp + backgroundExp
         auxiliaryInf = backgroundExp * tau
-        return self._f(mainInf, auxiliaryInf, tau)
+        return NumberCountingUtils._f(mainInf, auxiliaryInf, tau)
 
     @staticmethod
-    def BinomialObsP(self, mainObs, backgroundObs, relativeBkgUncert):
+    def BinomialObsP(mainObs, backgroundObs, relativeBkgUncert):
         """"P-value for s=0 in a ratio of Poisson means.
         Here the background and its uncertainty are provided directly and
         assumed to be from the double Poisson counting setup.
@@ -69,10 +69,10 @@ class NumberCountingUtils(object):
         auxiliaryInf = backgroundObs * tau
         # SIDE BAND EXAMPLE
         # See Eqn. (19) of Cranmer and pp. 36-37 of Linnemann.
-        return self._f(mainObs, auxiliaryInf, tau)
+        return NumberCountingUtils._f(mainObs, auxiliaryInf, tau)
 
     @staticmethod
-    def BinomialWithTauObsP(self, mainObs, auxiliaryObs, tau):
+    def BinomialWithTauObsP(mainObs, auxiliaryObs, tau):
         """"P-value for s=0 in a ratio of Poisson means.
         Based on two observations, a main measurement that might have signal
         and an auxiliarly measurement for the background that is signal free.
@@ -80,4 +80,4 @@ class NumberCountingUtils(object):
         tau larger than in the main measurement."""
         # SIDE BAND EXAMPLE
         # See Eqn. (19) of Cranmer and pp. 36-37 of Linnemann.
-        return self._f(mainObs, auxiliaryObs, tau)
+        return NumberCountingUtils._f(mainObs, auxiliaryObs, tau)

@@ -39,6 +39,7 @@ class DictWithInfo(OrderedDict):
 class SpectrumAsciiTableMixin:
     """Mixin class providing a from_ascii method.
     """
+    # TODO: should this be a `classmethod` or `staticmethod`?
     @staticmethod
     def from_ascii(filename,
                    energy_unit='TeV',
@@ -66,6 +67,7 @@ class SpectrumAsciiTableMixin:
 
 class FitOptions(DictWithInfo):
     """Fit options."""
+    # TODO: should this be a `classmethod` or `staticmethod`?
     @staticmethod
     def from_dict(data):
         out = DictWithInfo(data)
@@ -75,6 +77,7 @@ class FitOptions(DictWithInfo):
 
 class SpectrumStats(DictWithInfo):
     """Spectrum global stats."""
+    # TODO: should this be a `classmethod` or `staticmethod`?
     @staticmethod
     def from_dict(data):
         out = DictWithInfo(data)
@@ -84,9 +87,9 @@ class SpectrumStats(DictWithInfo):
 
 class Spectrum(Table):
     """Spectrum info (counts, exposure, ...)"""
-    @staticmethod
-    def from_json(data):
-        table = Spectrum(data=data['bin_values'], masked=True)
+    @classmethod
+    def from_json(cls, data):
+        table = cls(data=data['bin_values'], masked=True)
 
         # TODO: not sure if it's useful to do this here!?
         # Mask out spectral bins with zero exposure
@@ -131,9 +134,9 @@ class Spectrum(Table):
 
 class FluxPoints(Table, SpectrumAsciiTableMixin):
     """Flux points (energy, flux, ...)."""
-    @staticmethod
-    def from_json(data):
-        table = FluxPoints(data=data['bin_values'], masked=True)
+    @classmethod
+    def from_json(cls, data):
+        table = cls(data=data['bin_values'], masked=True)
 
         # TODO: set column format for float columns to something like %.3f
 
@@ -169,6 +172,7 @@ class SpectralModel:
     """Spectral model base class
 
     """
+    # TODO: should this be a `classmethod` or `staticmethod`?
     @staticmethod
     def from_json(data):
         """Factory function."""
@@ -235,7 +239,6 @@ class SpectralModel:
         out.write('{}\n'.format(self.meta))
 
 
-
 class SpectralModelPowerLaw(SpectralModel):
     """Power-law spectral model.
     """
@@ -259,15 +262,14 @@ class SpectralModelExponentialCutoffPowerLaw(SpectralModel):
         return f0 * (energy / e0) ** (-g) * np.exp(-(energy / e_cut))
 
 
-
 class SpectralModels(list):
     """List of spectral models.
 
     Has some convenience methods to compare the different models.
     """
-    @staticmethod
-    def from_json(data):
-        models = SpectralModels()
+    @classmethod
+    def from_json(cls, data):
+        models = cls()
         for model_data in data['fit_functions']:
             model = SpectralModel.from_json(model_data)
             models.append(model)

@@ -71,8 +71,8 @@ class TablePSF(object):
 
         self._compute_splines(spline_kwargs)
 
-    @staticmethod
-    def from_shape(shape, width, offset):
+    @classmethod
+    def from_shape(cls, shape, width, offset):
         """Make TablePSF objects with commonly used shapes.
 
         This function is mostly useful for examples and testing. 
@@ -113,7 +113,7 @@ class TablePSF(object):
 
         psf_value = Quantity(psf_value, 'sr^-1')
 
-        return TablePSF(offset, psf_value)
+        return cls(offset, psf_value)
 
     def info(self):
         """Print basic info."""
@@ -435,26 +435,21 @@ class EnergyDependentTablePSF(object):
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
 
-    @staticmethod
-    def from_fits(hdu_list):
-        """Create EnergyDependentTablePSF from ``gtpsf`` format HDU list.
+    @classmethod
+    def from_fits(cls, hdu_list):
+        """Create `EnergyDependentTablePSF` from ``gtpsf`` format HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``THETA`` and ``PSF`` extensions.
-
-        Returns
-        -------
-        psf : `EnergyDependentTablePSF`
-            PSF object.
         """
         offset = Angle(hdu_list['THETA'].data['Theta'], 'degree')
         energy = Quantity(hdu_list['PSF'].data['Energy'], 'MeV')
         exposure = Quantity(hdu_list['PSF'].data['Exposure'], 'cm^2 s')
         psf_value = Quantity(hdu_list['PSF'].data['PSF'], 'sr^-1')
 
-        return EnergyDependentTablePSF(energy, offset, exposure, psf_value)
+        return cls(energy, offset, exposure, psf_value)
 
     def to_fits(self):
         """Convert to FITS HDU list format.
@@ -475,22 +470,17 @@ class EnergyDependentTablePSF(object):
         hdu_list = fits.HDUList([theta_hdu, psf_hdu])
         return hdu_list
 
-    @staticmethod
-    def read(filename):
-        """Read FITS format PSF file (``gtpsf`` output).
+    @classmethod
+    def read(cls, filename):
+        """Create `EnergyDependentTablePSF` from ``gtpsf``-format FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-
-        Returns
-        -------
-        psf : `EnergyDependentTablePSF`
-            PSF object.
         """
         hdu_list = fits.open(filename)
-        return EnergyDependentTablePSF.from_fits(hdu_list)
+        return cls.from_fits(hdu_list)
 
     def write(self, *args, **kwargs):
         """Write to FITS file.

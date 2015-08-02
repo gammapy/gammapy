@@ -25,8 +25,12 @@ from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N)
 
-__all__ = ['compute_ts_map', 'compute_ts_map_multiscale',
-           'compute_maximum_ts_map', 'TSMapResult']
+__all__ = [
+    'compute_ts_map',
+    'compute_ts_map_multiscale',
+    'compute_maximum_ts_map',
+    'TSMapResult'
+]
 
 
 FLUX_FACTOR = 1E-12
@@ -56,8 +60,8 @@ class TSMapResult(Bunch):
         Source morphology assumption.
     """
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """
         Read TS map result from file.
         """
@@ -70,13 +74,11 @@ class TSMapResult(Bunch):
         if scale == 'max':
             scale = hdu_list['scale'].data
         morphology = hdu_list[0].header['MORPH']
-        return TSMapResult(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
-                           scale=scale, morphology=morphology)
+        return cls(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
+                   scale=scale, morphology=morphology)
 
     def write(self, filename, header, overwrite=False):
-        """
-        Write TS map results to file.
-        """
+        """Write TS map results to file"""
         hdu_list = fits.HDUList()
         if 'MORPH' not in header and hasattr(self, 'morphology'):
             header['MORPH'] = self.morphology, 'Source morphology assumption.'
@@ -91,6 +93,7 @@ class TSMapResult(Bunch):
             header['EXTNAME'] = key
             header['HDUNAME'] = key
             hdu_list.append(fits.ImageHDU(self[key].astype('float32'), header))
+
         hdu_list.writeto(filename, clobber=overwrite)
 
 
@@ -445,8 +448,8 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
 
 
 def _root_amplitude(counts, background, model, flux):
-    """
-    Fit amplitude by finding roots using newton algorithm.
+    """Fit amplitude by finding roots using newton algorithm.
+
     See Appendix A Stewart (2009).
 
     Parameters
@@ -478,8 +481,8 @@ def _root_amplitude(counts, background, model, flux):
 
 
 def _root_amplitude_brentq(counts, background, model):
-    """
-    Fit amplitude by finding roots using Brent algorithm.
+    """Fit amplitude by finding roots using Brent algorithm.
+
     See Appendix A Stewart (2009).
 
     Parameters
@@ -518,8 +521,7 @@ def _root_amplitude_brentq(counts, background, model):
 
 
 def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
-    """
-    Fit amplitude using scipy.optimize.
+    """Fit amplitude using scipy.optimize.
 
     Parameters
     ----------
@@ -552,8 +554,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
 
 
 def _fit_amplitude_minuit(counts, background, model, flux):
-    """
-    Fit amplitude using minuit.
+    """Fit amplitude using minuit.
 
     Parameters
     ----------

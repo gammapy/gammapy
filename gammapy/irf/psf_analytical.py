@@ -77,37 +77,26 @@ class EnergyDependentMultiGaussPSF(object):
         self._azimuth = azimuth
         self._zenith = zenith
 
-    @staticmethod
-    def read(filename):
-        """Read FITS format PSF file.
+    @classmethod
+    def read(cls, filename):
+        """Create `EnergyDependentMultiGaussPSF` from FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-
-        Returns
-        -------
-        psf : `EnergyDependentMultiGaussPSF`
-            PSF
         """
         hdu_list = fits.open(filename)
-        return EnergyDependentMultiGaussPSF.from_fits(hdu_list)
+        return cls.from_fits(hdu_list)
 
-    @staticmethod
-    def from_fits(hdu_list):
-        """
-        Create EnergyDependentMultiGaussPSF from HDU list.
+    @classmethod
+    def from_fits(cls, hdu_list):
+        """Create `EnergyDependentMultiGaussPSF` from HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with correct extensions.
-
-        Returns
-        -------
-        psf : `EnergyDependentMultiGaussPSF`
-            PSF
         """
         extension = 'POINT SPREAD FUNCTION'
         energy_lo = Quantity(hdu_list[extension].data['ENERG_LO'][0], 'TeV')
@@ -127,11 +116,11 @@ class EnergyDependentMultiGaussPSF(object):
         try:
             energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
-            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
-                                                norms, energy_thresh_lo, energy_thresh_hi)
+            return cls(energy_lo, energy_hi, theta, sigmas,
+                       norms, energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
-            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas, norms)
+            return cls(energy_lo, energy_hi, theta, sigmas, norms)
 
     def to_fits(self, header=None, **kwargs):
         """

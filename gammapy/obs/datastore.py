@@ -72,11 +72,11 @@ class DataStoreIndexTable(Table):
     #     super(DataStoreIndexTable, self).__init__(*args, **kwargs)
     #     self._fixes()
 
-    @staticmethod
-    def read(*args, **kwargs):
+    @classmethod
+    def read(cls, *args, **kwargs):
         """Read from FITS file. See `~astropy.table.Table.read`."""
         table = Table.read(*args, **kwargs)
-        table = DataStoreIndexTable(table)
+        table = cls(table)
         table._init_cleanup()
         return table
 

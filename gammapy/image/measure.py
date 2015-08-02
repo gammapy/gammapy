@@ -38,8 +38,8 @@ class BoundingBox(object):
         self.x_stop = x_stop
         self.y_stop = y_stop
 
-    @staticmethod
-    def for_circle(x, y, radius):
+    @classmethod
+    def for_circle(cls, x, y, radius):
         """Compute bounding box for a circle.
 
         Parameters
@@ -59,7 +59,7 @@ class BoundingBox(object):
         y_start = y - radius
         x_stop = x + radius
         y_stop = y + radius
-        return BoundingBox(x_start, y_start, x_stop, y_stop)
+        return cls(x_start, y_start, x_stop, y_stop)
 
     def __str__(self):
         ss = 'x = ({x_start}, {x_stop}), '.format(**self)

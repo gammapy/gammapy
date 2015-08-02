@@ -318,8 +318,8 @@ class EventListDataset(object):
         self.telescope_array = telescope_array
         self.good_time_intervals = good_time_intervals
 
-    @staticmethod
-    def from_hdu_list(hdu_list):
+    @classmethod
+    def from_hdu_list(cls, hdu_list):
         """Create `EventList` from a `~astropy.io.fits.HDUList`.
         """
         # TODO: This doesn't work because FITS / Table is not integrated.
@@ -331,10 +331,10 @@ class EventListDataset(object):
         telescope_array = TelescopeArray.from_hdu(hdu_list['TELARRAY'])
         good_time_intervals = GoodTimeIntervals.from_hdu(hdu_list['GTI'])
 
-        return EventListDataset(event_list, telescope_array, good_time_intervals)
+        return cls(event_list, telescope_array, good_time_intervals)
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """Read event list from FITS file.
         """
         # return EventList.from_hdu_list(fits.open(filename))
@@ -350,10 +350,10 @@ class EventListDataset(object):
         except KeyError:
             good_time_intervals = None
 
-        return EventListDataset(event_list, telescope_array, good_time_intervals)
+        return cls(event_list, telescope_array, good_time_intervals)
 
-    @staticmethod
-    def vstack_from_files(filenames, logger=None):
+    @classmethod
+    def vstack_from_files(cls, filenames, logger=None):
         """Stack event lists vertically (combine events and GTIs).
 
         This function stacks (a.k.a. concatenates) event lists.
@@ -426,7 +426,7 @@ class EventListDataset(object):
         total_event_list.meta['EVTSTACK'] = 'yes'
         total_gti.meta['EVTSTACK'] = 'yes'
 
-        return EventListDataset(event_list=total_event_list, good_time_intervals=total_gti)
+        return cls(event_list=total_event_list, good_time_intervals=total_gti)
 
     def write(self, *args, **kwargs):
         """Write to FITS file.

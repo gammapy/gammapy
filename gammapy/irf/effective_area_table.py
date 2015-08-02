@@ -202,37 +202,26 @@ class EffectiveAreaTable(object):
         """
         self.to_fits().writeto(filename, *args, **kwargs)
 
-    @staticmethod
-    def read(filename):
-        """Read FITS format ARF file.
+    @classmethod
+    def read(cls, filename):
+        """Create `EffectiveAreaTable` from ARF-format FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-
-        Returns
-        -------
-        parf : `EnergyDependentARF`
-            ARF object.
         """
         hdu_list = fits.open(filename)
-        return EffectiveAreaTable.from_fits(hdu_list)
+        return cls.from_fits(hdu_list)
 
-    @staticmethod
-    def from_fits(hdu_list):
-        """
-        Create EnergyDependentARF from HDU list.
+    @classmethod
+    def from_fits(cls, hdu_list):
+        """Create `EffectiveAreaTable` from HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``SPECRESP`` extensions.
-
-        Returns
-        -------
-        arf : `EnergyDependentARF`
-            ARF object.
 
         Notes
         -----
@@ -254,7 +243,7 @@ class EffectiveAreaTable(object):
                                       energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
-            return EffectiveAreaTable(energy_lo, energy_hi, effective_area)
+            return cls(energy_lo, energy_hi, effective_area)
 
     def effective_area_at_energy(self, energy):
         """
@@ -331,10 +320,9 @@ class EffectiveAreaTable(object):
 
 
 class EffectiveAreaTable2D(object):
-
     """Offset-dependent radially-symmetric table effective area.
 
-    Two Interpolation methods area available:
+    Two interpolation methods area available:
 
     * `~scipy.interpolate.LinearNDInterpolator` (default)
     * `~scipy.interpolate.RectBivariateSpline`
@@ -433,19 +421,14 @@ class EffectiveAreaTable2D(object):
         # set to linear interpolation by default
         self.interpolation_method = method
 
-    @staticmethod
-    def from_fits(hdu_list):
-        """Create EffectiveAreaTable2D from ``GCTAAeff2D`` format HDU list.
+    @classmethod
+    def from_fits(cls, hdu_list):
+        """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``EFFECTIVE AREA`` extension.
-
-        Returns
-        -------
-        eff_area : `EffectiveAreaTable2D`
-            Offset dependent Effective Area object.
         """
 
         data = hdu_list['EFFECTIVE AREA'].data
@@ -456,22 +439,16 @@ class EffectiveAreaTable2D(object):
         ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
         efrec = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
 
-        return EffectiveAreaTable2D(e_lo, e_hi, o_lo, o_hi, ef, efrec)
+        return cls(e_lo, e_hi, o_lo, o_hi, ef, efrec)
 
-    @staticmethod
-    def read(filename):
-        """Read FITS format effective area file (``GCTAAeff2D`` output).
+    @classmethod
+    def read(cls, filename):
+        """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-
-        Returns
-        -------
-        eff_area : `EffectiveAreaTable2D`
-            Offset dependent Effective Area object.
-
         """
         hdu_list = fits.open(filename)
         return EffectiveAreaTable2D.from_fits(hdu_list)
@@ -488,11 +465,8 @@ class EffectiveAreaTable2D(object):
         ----------
         offset : `~astropy.coordinates.Angle`
             offset
-        energy_lo : `~astropy.units.Quantity`
-            energy lower bounds array
-        energy_hi : `~astropy.units.Quantity`
-            energy upper bounds array
-
+        energy_lo, energy_hi : `~astropy.units.Quantity`
+            Energy lower and upper bounds array
 
         Returns
         -------
@@ -519,7 +493,7 @@ class EffectiveAreaTable2D(object):
         return EffectiveAreaTable(energy_lo, energy_hi, area)
 
     def evaluate(self, offset=None, energy=None):
-        """Evalute effective area for a given energy and offset
+        """Evaluate effective area for a given energy and offset.
 
         If a parameter is not given, the nodes from the FITS table are used.
         2D input arrays are not supported yet.
