@@ -93,6 +93,7 @@ Pull requests
 - Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
 - Consistent random number handling and improve sample_sphere [#283] (Manuel Paz Arribas)
 - Add Feldman Cousins algorithm [#311] (Dirk Lennarz)
+- Simplified attribute docstrings [#301] (Manuel Paz Arribas)
 
 .. _gammapy_0p2_release:
 

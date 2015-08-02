@@ -81,6 +81,7 @@ class SpectralCube(object):
 
     @property
     def _interpolate(self):
+        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
         if self._interpolate_cache is None:
             # Initialise the interpolator
             # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
@@ -199,12 +200,10 @@ class SpectralCube(object):
 
     @property
     def spatial_coordinate_images(self):
-        """Spatial coordinate images.
+        """Spatial coordinate images (2x `~astropy.units.Quantity`)
 
-        Returns
-        -------
-        lon, lat : `~astropy.units.Quantity`
-            Arrays of longitude and latitude pixel coordinates.
+        Returns two separate objects for the arrays of longitude
+        and latitude pixel coordinates.
         """
         n_lon = self.data.shape[2]
         n_lat = self.data.shape[1]
@@ -215,13 +214,7 @@ class SpectralCube(object):
 
     @property
     def solid_angle_image(self):
-        """Solid angle image.
-
-        Returns
-        -------
-        solid_angle_image : `~astropy.units.Quantity`
-            Solid angle image (steradian)
-        """
+        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
         cube_hdu = fits.ImageHDU(self.data, self.wcs.to_header())
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2

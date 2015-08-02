@@ -508,3 +508,25 @@ This pattern was inspired by the way
 We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'global-rng'``,
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
+
+Attributes docstring format
+---------------------------
+
+The convention for class attribute docstrings is a simplified version
+of the typical function docstrings. Class attributes are class
+functions easily identifiable via the ``@property`` decorator.
+Such functions always return exactly one element, which is already
+described in the first line.
+
+In order to avoid unnecessary repetition in the docstring, the
+``Returns`` section should be avoided, and the type of the returned
+element should be placed in parentheses at the end of the first line.
+This format is also more convenient and explicative, when rendered
+for the ``Attributes Summary`` section of the class documentation.
+An example of this format can be found in the
+`~gammapy.data.EventList` class.
+
+In case N (more than one) elements of the same type are returned
+(i.e. for X and Y coordinates), a `Nx` string should preceed the
+type.
+

@@ -37,25 +37,25 @@ class Stats(object):
 
     @property
     def alpha(self):
-        r"""Background exposure ratio.
+        r"""Background exposure ratio (float)
 
-        .. math:: \alpha = a_{on} / a_{off}
+        .. math:: \alpha = a_\mathrm{on} / a_\mathrm{off}
         """
         return self.a_on / self.a_off
 
     @property
     def background(self):
-        r"""Background estimate.
+        r"""Background estimate (float)
 
-        .. math:: \mu_{background} = \alpha\ n_{off}
+        .. math:: \mu_\mathrm{bg} = \alpha\ n_\mathrm{off}
         """
         return self.alpha * self.n_off
 
     @property
     def excess(self):
-        r"""Excess.
+        r"""Excess (float)
 
-        .. math:: n_{excess} = n_{on} - \mu_{background}
+        .. math:: n_\mathrm{ex} = n_\mathrm{on} - \mu_\mathrm{bg}
         """
         return self.n_on - self.background
 

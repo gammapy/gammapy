@@ -71,7 +71,7 @@ class EventList(Table):
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`).
+        """Event times (`~astropy.time.Time`)
 
         Notes
         -----
@@ -95,7 +95,7 @@ class EventList(Table):
 
     @property
     def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)
 
         Note: uses the ``GLON`` and ``GLAT`` columns.
         If only ``RA`` and ``DEC`` are present use the explicit
@@ -131,7 +131,7 @@ class EventList(Table):
 
     @property
     def energy(self):
-        """Event energies (`~astropy.units.Quantity`)."""
+        """Event energies (`~astropy.units.Quantity`)"""
         energy = self['ENERGY']
         return Quantity(energy, self.meta['EUNIT'])
 
@@ -147,7 +147,7 @@ class EventList(Table):
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        """Observation time duration in seconds (`~astropy.units.Quantity`)
 
         The wall time, including dead-time.
         """
@@ -155,7 +155,7 @@ class EventList(Table):
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
+        """Live-time duration in seconds (`~astropy.units.Quantity`)
 
         The dead-time-corrected observation time.
 
@@ -166,7 +166,7 @@ class EventList(Table):
 
     @property
     def observation_dead_time_fraction(self):
-        """Dead-time fraction.
+        """Dead-time fraction (float)
 
         Defined as dead-time over observation time.
 

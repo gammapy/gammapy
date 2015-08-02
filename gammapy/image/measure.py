@@ -116,7 +116,9 @@ class BoundingBox(object):
 
     @property
     def ftcopy_string(self):
-        """Bounding box in ftcopy string format.
+        """Bounding box in ftcopy string format (str)
+
+        The output is given as [x_start:x_stop,y_start:y_stop]
 
         Examples
         --------
@@ -129,7 +131,7 @@ class BoundingBox(object):
 
     @property
     def slice(self):
-        """Bounding box in slice format.
+        """Bounding box in slice format (y, x) (tuple)
 
         Examples
         --------
@@ -142,14 +144,17 @@ class BoundingBox(object):
 
     @property
     def x_slice(self):
+        """Bounding box X component in slice format (slice)"""
         return slice(self.x_start, self.x_stop)
 
     @property
     def y_slice(self):
+        """Bounding box Y component in slice format (slice)"""
         return slice(self.y_start, self.y_stop)
 
     @property
     def is_empty(self):
+        """Check if the bounding box is empty (bool)"""
         x_is_empty = (self.x_start >= self.x_stop)
         y_is_empty = (self.y_start >= self.y_stop)
         return x_is_empty or y_is_empty
