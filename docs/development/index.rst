@@ -509,24 +509,113 @@ We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
 
-Attributes docstring format
----------------------------
+Documentation guidelines
+------------------------
 
-The convention for class attribute docstrings is a simplified version
-of the typical function docstrings. Class attributes are class
-functions easily identifiable via the ``@property`` decorator.
-Such functions always return exactly one element, which is already
-described in the first line.
+Like almost all Python projects, the Gammapy documentation is written in a format called
+`restructured text (RST)`_ and built using `Sphinx`_.
+We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+which are based on the `Numpy docstring standard`_,
+which is what most scientific Python packages use.
 
-In order to avoid unnecessary repetition in the docstring, the
-``Returns`` section should be avoided, and the type of the returned
-element should be placed in parentheses at the end of the first line.
-This format is also more convenient and explicative, when rendered
-for the ``Attributes Summary`` section of the class documentation.
-An example of this format can be found in the
-`~gammapy.data.EventList` class.
+.. _restructured text (RST) : http://sphinx-doc.org/rest.html
+.. _Sphinx: http://sphinx-doc.org/
+.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
-In case N (more than one) elements of the same type are returned
-(i.e. for X and Y coordinates), a `Nx` string should preceed the
-type.
+There's a few details that are not easy to figure out by browsing the Numpy or Astropy
+documentation guidelines, or that we actually do differently in Gammapy.
+These are listed here so that Gammapy developers have a reference.
 
+Usually the quickest way to figure out how something should be done is to browse the Astropy
+or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
+or search the Numpy or Astropy documentation guidelines mentioned above.
+If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
+pull request you're working on on Github, or send an email to the Gammapy mailing list.
+
+Functions or class methods that return a single object
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+For functions or class methods that return a single object, following the
+Numpy docstring standard and adding a *Returns* section usually means
+that you duplicate the one-line description and repeat the function name as
+return variable name.
+See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
+as examples in the Astropy codebase. Here's a simple example:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+
+        Returns
+        -------
+        area : `~astropy.units.Quantity`
+            Circle area
+        """
+        return 3.14 * (radius ** 2)
+
+In these cases, the following shorter format omitting the *Returns* section is recommended:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area (`~astropy.units.Quantity`).
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+        """
+        return 3.14 * (radius ** 2)
+
+Usually the parameter description doesn't fit on the one line, so it's
+recommended to always keep this in the *Parameters* section.
+
+This is just a recommendation, e.g. for `gammapy.data.SpectralCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.data.SpectralCube.flux` we
+decided to stick with the more verbose format, because the return type and units
+didn't fit on the first line.
+
+A common case where the short format is appropriate are class properties,
+because they always return a single object.
+As an example see `gammapy.data.EventList.radec`, which is reproduced here:
+
+.. code-block:: python
+
+    @property
+    def radec(self):
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """
+        lon, lat = self['RA'], self['DEC']
+        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+
+
+Class attributes
+++++++++++++++++
+
+Class attributes (data members) and properties are currently a bit of a mess,
+see `~gammapy.spectral.Spectralcube` as an example.
+Attributes are listed in an *Attributes* section because I've listed them in a class-level
+docstring attributes section as recommended `here`__.
+Properties are listed in separate *Attributes summary* and *Attributes Documentation*
+sections, which is confusing to users ("what's the difference between attributes and properties?").
+
+.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
+
+One solution is to always use properties, but that can get very verbose if we have to write
+so many getters and setters. I don't have a solution for this yet ... for now I'll go read
+`this`__ and meditate.
+
+.. __: http://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
+
+TODO: make a decision on this and describe the issue / solution here.
+
+Constructor parameters
+++++++++++++++++++++++
+
+TODO: should we put the constructor parameters in the class or ``__init__`` docstring?

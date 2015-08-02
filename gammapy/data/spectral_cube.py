@@ -25,7 +25,11 @@ from ..image import coordinates, cube_to_image, solid_angle
 from ..utils.fits import table_to_fits_table 
 
 
-__all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
+__all__ = [
+    'SpectralCube',
+    'compute_npred_cube',
+    'convolve_cube',
+]
 
 
 class SpectralCube(object):
@@ -58,6 +62,17 @@ class SpectralCube(object):
         Word coordinate system transformation
     energy : `~astropy.units.Quantity`
         Energy array
+
+    Attributes
+    ----------
+    data : `~astropy.units.Quantity`
+        Data array (3-dim)
+    wcs : `~astropy.wcs.WCS`
+        Word coordinate system transformation
+    energy : `~astropy.units.Quantity`
+        Energy array
+    energy_axis : `~gammapy.spectrum.LogEnergyAxis`
+        Energy axis
 
     Notes
     -----
@@ -222,7 +237,7 @@ class SpectralCube(object):
         return solid_angle(image_hdu).to('sr')
 
     def flux(self, lon, lat, energy):
-        """Differential flux (linear interpolation).
+        """Differential flux.
 
         Parameters
         ----------
@@ -248,7 +263,7 @@ class SpectralCube(object):
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
     def spectral_index(self, lon, lat, energy, dz=1e-3):
-        """Power law spectral index.
+        """Power law spectral index (`numpy.array`).
 
         A forward finite difference method with step ``dz`` is used along
         the ``z = log10(energy)`` axis.
@@ -260,12 +275,6 @@ class SpectralCube(object):
         lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
-            Energy
-
-        Returns
-        -------
-        spectral_index : `~astropy.units.Quantity`
-            Spectral index
         """
         raise NotImplementedError
         # Compute flux at `z = log(energy)`
