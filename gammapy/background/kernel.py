@@ -219,7 +219,7 @@ class IterativeKernelBackgroundEstimator(object):
 
     @property
     def background_image_hdu(self):
-        """Resulting background estimate (`~astropy.io.fits.ImageHDU`)"""
+        """Background estimate (`~astropy.io.fits.ImageHDU`)"""
 
         header = self.header
         return fits.ImageHDU(data=self._data[-1].background,
@@ -227,7 +227,7 @@ class IterativeKernelBackgroundEstimator(object):
 
     @property
     def significance_image_hdu(self):
-        """Resulting background estimate (`~astropy.io.fits.ImageHDU`)"""
+        """Significance estimate (`~astropy.io.fits.ImageHDU`)"""
 
         header = self.header
         return fits.ImageHDU(data=self._data[-1].significance,

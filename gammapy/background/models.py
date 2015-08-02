@@ -510,8 +510,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.ndarray`
-            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
+        det : `~astropy.coordinates.Angle`
+            array of det (X, Y) pairs to search for
 
         Returns
         -------
@@ -539,8 +539,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.ndarray`
-            array of `~astropy.units.Quantity` energies to search for
+        energy : `~astropy.units.Quantity`
+            array of energies to search for
 
         Returns
         -------
@@ -563,8 +563,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.ndarray`
-            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
+        det : `~astropy.coordinates.Angle`
+            array of det (X, Y) pairs to search for
 
         Returns
         -------
@@ -584,8 +584,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.ndarray`
-            array of `~astropy.units.Quantity` energies to search for
+        energy : `~astropy.units.Quantity`
+            array of energies to search for
 
         Returns
         -------
