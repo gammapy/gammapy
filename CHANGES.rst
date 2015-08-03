@@ -95,7 +95,7 @@ Pull requests
 - Add Feldman Cousins algorithm [#311] (Dirk Lennarz)
 - Simplified attribute docstrings [#301] (Manuel Paz Arribas)
 - Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
-- Select observations [#295] (Manuel Paz Arribas)
+- Observation table subset selection [#295] (Manuel Paz Arribas)
 
 .. _gammapy_0p2_release:
 
