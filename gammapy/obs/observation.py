@@ -92,7 +92,7 @@ class ObservationTable(Table):
         indices = indices.astype('int')
         return self[indices]
 
-    def filter_obs_var_range(self, selection_variable,
+    def select_obs_var_range(self, selection_variable,
                              value_min, value_max, inverted=False):
         """Make an observation table, applying some selection.
 
@@ -100,7 +100,7 @@ class ObservationTable(Table):
         table on any variable that is in the observation table and can
         be casted into a `~astropy.units.Quantity` object.
 
-        If the inverted flag is activated, the filter is applied to
+        If the inverted flag is activated, the selection is applied to
         keep all elements outside the selected range.
 
         Parameters
@@ -136,7 +136,7 @@ class ObservationTable(Table):
         obs_table = obs_table[mask]
         return obs_table
 
-    def filter_obs_time_range(self, selection_variable,
+    def select_obs_time_range(self, selection_variable,
                               time_min, time_max, inverted=False):
         """Make an observation table, applying a time selection.
 
@@ -145,7 +145,7 @@ class ObservationTable(Table):
         It supports both fomats: absolute times in
         `~astropy.time.Time` variables and [MET]_.
 
-        If the inverted flag is activated, the filter is applied to
+        If the inverted flag is activated, the selection is applied to
         keep all elements outside the selected range.
 
         Parameters
@@ -188,7 +188,7 @@ class ObservationTable(Table):
         obs_table = obs_table[mask]
         return obs_table
 
-    def filter_observations(self, selection=None):
+    def select_observations(self, selection=None):
         """Make an observation table, applying some selection.
 
         There are 3 main kinds of selection criteria, according to the
@@ -226,21 +226,21 @@ class ObservationTable(Table):
                 - ``time_box`` is a 1D selection criterion acting on the observation
                   time (`TIME_START` and `TIME_STOP`); the interval is set via the
                   `time_min` and `time_max` keywords; uses
-                  `~gammapy.obs.ObservationTable.filter_obs_time_range`
+                  `~gammapy.obs.ObservationTable.select_obs_time_range`
 
                 - ``par_box`` is a 1D selection criterion acting on any
                   parameter defined in the observation table that can be casted
                   into an `~astropy.units.Quantity` object; the parameter name
                   and interval can be specified using the keywords 'variable',
                   'value_min' and 'value_max' respectively; uses
-                  `~gammapy.obs.ObservationTable.filter_obs_var_range`
+                  `~gammapy.obs.ObservationTable.select_obs_var_range`
 
             In all cases, the selection can be inverted by activating the
-            `inverted` flag, in which case, the filter is applied to keep all
+            `inverted` flag, in which case, the selection is applied to keep all
             elements outside the selected range.
 
         A few examples of selection criteria are given below and more can be
-        found in the tests in `test_filter_observations`.
+        found in the tests in `test_select_observations`.
 
         Parameters
         ----------
@@ -258,29 +258,29 @@ class ObservationTable(Table):
         ...                  lon=Angle([150, 300], 'degree'),
         ...                  lat=Angle([-50, 0], 'degree'),
         ...                  border=Angle(2, 'degree'))
-        >>> filtered_obs_table = obs_table.filter_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='sky_circle', frame='galactic',
         ...                  lon=Angle(0, 'degree'),
         ...                  lat=Angle(0, 'degree'),
         ...                  radius=Angle(5, 'degree'),
         ...                  border=Angle(2, 'degree'))
-        >>> filtered_obs_table = obs_table.filter_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='time_box',
         ...                  time_min=Time('2012-01-01T01:00:00', format='isot', scale='utc'),
         ...                  time_max=Time('2012-01-01T02:00:00', format='isot', scale='utc'))
-        >>> filtered_obs_table = obs_table.filter_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='ALT',
         ...                  value_min=Angle(60., 'degree'),
         ...                  value_max=Angle(70., 'degree'),
-        >>> filtered_obs_table = obs_table.filter_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='OBS_ID',
         ...                  value_min=2,
         ...                  value_max=5)
-        >>> filtered_obs_table = obs_table.filter_observations(selection)
+        >>> selected_obs_table = obs_table.select_observations(selection)
         """
         obs_table = self
 
@@ -313,17 +313,17 @@ class ObservationTable(Table):
 
             elif selection_type == 'time_box':
                 # apply twice the mask: to TIME_START and TIME_STOP
-                obs_table = obs_table.filter_obs_time_range('TIME_START',
+                obs_table = obs_table.select_obs_time_range('TIME_START',
                                                             selection['time_min'],
                                                             selection['time_max'],
                                                             selection['inverted'])
-                obs_table = obs_table.filter_obs_time_range('TIME_STOP',
+                obs_table = obs_table.select_obs_time_range('TIME_STOP',
                                                             selection['time_min'],
                                                             selection['time_max'],
                                                             selection['inverted'])
 
             elif selection_type == 'par_box':
-                obs_table = obs_table.filter_obs_var_range(selection['variable'],
+                obs_table = obs_table.select_obs_var_range(selection['variable'],
                                                            selection['value_min'],
                                                            selection['value_max'],
                                                            selection['inverted'])

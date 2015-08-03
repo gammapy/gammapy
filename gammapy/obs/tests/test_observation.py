@@ -16,8 +16,8 @@ def test_ObservationTable():
     ObservationTable()
 
 
-def common_sky_region_filter_test_routines(obs_table, selection):
-    """Common routines for the tests of sky_box/sky_circle filtering of obs tables"""
+def common_sky_region_select_test_routines(obs_table, selection):
+    """Common routines for the tests of sky_box/sky_circle selection of obs tables"""
     type = selection['type']
     if type not in ['sky_box', 'sky_circle']:
         raise ValueError("Invalid type: {}".format(type))
@@ -41,8 +41,8 @@ def common_sky_region_filter_test_routines(obs_table, selection):
     skycoord = skycoord_from_table(obs_table)
 
     # test on the selection
-    filtered_obs_table = obs_table.filter_observations(selection)
-    skycoord = skycoord_from_table(filtered_obs_table)
+    selected_obs_table = obs_table.select_observations(selection)
+    skycoord = skycoord_from_table(selected_obs_table)
     if type == 'sky_box':
         skycoord = skycoord.transform_to(selection['frame'])
         lon = skycoord.data.lon
@@ -57,8 +57,8 @@ def common_sky_region_filter_test_routines(obs_table, selection):
 
     # test on the inverted selection
     selection['inverted'] = True
-    inv_filtered_obs_table = obs_table.filter_observations(selection)
-    skycoord = skycoord_from_table(inv_filtered_obs_table)
+    inv_selected_obs_table = obs_table.select_observations(selection)
+    skycoord = skycoord_from_table(inv_selected_obs_table)
     if type == 'sky_box':
         skycoord = skycoord.transform_to(selection['frame'])
         lon = skycoord.data.lon
@@ -72,20 +72,20 @@ def common_sky_region_filter_test_routines(obs_table, selection):
         assert (ang_distance >= radius_eff).all()
 
     # the sum of number of entries in both selections should be the total number of entries
-    assert len(filtered_obs_table) + len(inv_filtered_obs_table) == len(obs_table)
+    assert len(selected_obs_table) + len(inv_selected_obs_table) == len(obs_table)
 
 
-def test_filter_parameter_box():
+def test_select_parameter_box():
     # create random observation table
     observatory_name='HESS'
     n_obs = 10
     obs_table = make_test_observation_table(observatory_name, n_obs)
 
     # test no selection: input and output tables should be the same
-    filtered_obs_table = obs_table.filter_observations()
-    assert len(filtered_obs_table) == len(obs_table)
+    selected_obs_table = obs_table.select_observations()
+    assert len(selected_obs_table) == len(obs_table)
 
-    # filter some pars and check the correspoding values in the columns
+    # select some pars and check the correspoding values in the columns
 
     # test box selection in obs_id
     variable = 'OBS_ID'
@@ -93,17 +93,17 @@ def test_filter_parameter_box():
     value_max = 5
     selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    assert (value_min < filtered_obs_table[variable]).all()
-    assert (filtered_obs_table[variable] < value_max).all()
+    selected_obs_table = obs_table.select_observations(selection)
+    assert (value_min < selected_obs_table[variable]).all()
+    assert (selected_obs_table[variable] < value_max).all()
 
     # test box selection in obs_id inverted
     selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max, inverted=True)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    assert len(filtered_obs_table) == 8
-    assert ((value_min >= filtered_obs_table[variable]) |
-            (filtered_obs_table[variable] >= value_max)).all()
+    selected_obs_table = obs_table.select_observations(selection)
+    assert len(selected_obs_table) == 8
+    assert ((value_min >= selected_obs_table[variable]) |
+            (selected_obs_table[variable] >= value_max)).all()
 
     # test box selection in alt
     variable = 'ALT'
@@ -111,12 +111,12 @@ def test_filter_parameter_box():
     value_max = Angle(70., 'degree')
     selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max)
-    filtered_obs_table = obs_table.filter_observations(selection)
-    assert (value_min < Angle(filtered_obs_table[variable])).all()
-    assert (Angle(filtered_obs_table[variable]) < value_max).all()
+    selected_obs_table = obs_table.select_observations(selection)
+    assert (value_min < Angle(selected_obs_table[variable])).all()
+    assert (Angle(selected_obs_table[variable]) < value_max).all()
 
 
-def test_filter_time_box():
+def test_select_time_box():
     # create random observation table with very close (in time)
     # observations (and times in absolute times)
     observatory_name='HESS'
@@ -133,16 +133,16 @@ def test_filter_time_box():
     value_max = Time('2012-01-01T02:00:00', format='isot', scale='utc')
     selection = dict(type='time_box',
                      time_min=value_min, time_max=value_max)
-    filtered_obs_table = obs_table_time.filter_observations(selection)
-    time_start = filtered_obs_table['TIME_START']
-    time_stop = filtered_obs_table['TIME_STOP']
+    selected_obs_table = obs_table_time.select_observations(selection)
+    time_start = selected_obs_table['TIME_START']
+    time_stop = selected_obs_table['TIME_STOP']
     assert (value_min < time_start).all()
     assert (time_start < value_max).all()
     assert (value_min < time_stop).all()
     assert (time_stop < value_max).all()
 
 
-def test_filter_sky_regions():
+def test_select_sky_regions():
 
     # create random observation table with many entries
     observatory_name='HESS'
@@ -158,7 +158,7 @@ def test_filter_sky_regions():
                      lon=lon_range,
                      lat=lat_range,
                      border=border)
-    common_sky_region_filter_test_routines(obs_table, selection)
+    common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky box selection in radec coordinates
     lon_range = Angle([150., 300.], 'degree')
@@ -169,7 +169,7 @@ def test_filter_sky_regions():
                      lon=lon_range,
                      lat=lat_range,
                      border=border)
-    common_sky_region_filter_test_routines(obs_table, selection)
+    common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in gal coordinates
     lon_cen = Angle(0., 'degree')
@@ -180,7 +180,7 @@ def test_filter_sky_regions():
     selection = dict(type='sky_circle', frame=frame,
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
-    common_sky_region_filter_test_routines(obs_table, selection)
+    common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in radec coordinates
     lon_cen = Angle(130., 'degree')
@@ -191,4 +191,4 @@ def test_filter_sky_regions():
     selection = dict(type='sky_circle', frame=frame,
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
-    common_sky_region_filter_test_routines(obs_table, selection)
+    common_sky_region_select_test_routines(obs_table, selection)

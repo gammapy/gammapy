@@ -74,40 +74,33 @@ def find_obs(infile,
              overwrite):
     """Select a subset of observations from a given observation list.
 
-    I still have a few TODO's to work out, but the script does filter
-    a self created dummy observation table and prints the output on
-    screen or saves it to a fits file.
+    WARNING: this is still a PRELIMINARY version of the tool.
+
+    I still have a few TODO's to work out, but the script does select
+    observations froma an observation table fits file and prints the
+    output on screen or saves it to a fits file.
 
     Stringdoc still missing; for now, please have a look at
     https://ms2.physik.hu-berlin.de/~mapaz/gammapy/docs/_build/html/obs/find_observations.html
 
-    For testing, use the following commands in your shell terminal:
+    For testing, download this file from `~gammapy-extra`
 
-    gammapy-find-obs -h
+    https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits
+    
+    And use the following commands in your shell terminal:
 
-    gammapy-find-obs dummy.fits
+    .. code-block:: bash
 
-    gammapy-find-obs dummy.fits out.dummy.fits --overwrite
-
-    gammapy-find-obs dummy.fits --x 130 --y -40 --r 50 --system 'icrs'
-
-    gammapy-find-obs dummy.fits --x 0 --y 0 --r 50 --system 'galactic'
-
-    gammapy-find-obs dummy.fits --x 225 --y -25 --dx 75 --dy 25 --system 'icrs'
-
-    gammapy-find-obs dummy.fits --x -25 --y 0 --dx 75 --dy 25 --system 'galactic'
-
-    gammapy-find-obs dummy.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
-
-    gammapy-find-obs dummy.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
-
-    gammapy-find-obs dummy.fits --par_name 'ALT' --par_min 60 --par_max 70
-
-    TODO: as for now, it doesn't really use the dummy.fits file;
-    the routine creates a random observation table with 100 entries
-    and filters on this. I need to produce a dummy.fits observation
-    table and put it in gammapy-extra. Once this is done, this should
-    be adapted consequently.
+        gammapy-find-obs -h
+        gammapy-find-obs test_observation_table.fits
+        gammapy-find-obs test_observation_table.fits out.test_observation_table.fits --overwrite
+        gammapy-find-obs test_observation_table.fits --x 130 --y -40 --r 50 --system 'icrs'
+        gammapy-find-obs test_observation_table.fits --x 0 --y 0 --r 50 --system 'galactic'
+        gammapy-find-obs test_observation_table.fits --x 225 --y -25 --dx 75 --dy 25 --system 'icrs'
+        gammapy-find-obs test_observation_table.fits --x -25 --y 0 --dx 75 --dy 25 --system 'galactic'
+        gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
+        gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
+        gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
 
     TODO: explain (edit this docstring) + link to gammapy/docs/_build/html/obs/find_observations doc.
 
@@ -117,6 +110,7 @@ def find_obs(infile,
 
     TODO: write tests for this command-line tool!!!
     """
+    print("WARNING: this is still a PRELIMINARY version of the tool.")
     import logging
     logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 
@@ -124,7 +118,7 @@ def find_obs(infile,
         raise NotImplementedError
 
     # open (fits) file and read the observation table
-    #observation_table = ObservationTable.read(infile)
+    observation_table = ObservationTable.read(infile)
     # TODO: I need a test file in gammapy-extra!!!
     #       for now: creating a test obs table REMOVE THIS!!!!
     from ..datasets import make_test_observation_table
@@ -144,7 +138,7 @@ def find_obs(infile,
                          lon=lon_cen, lat=lat_cen,
                          radius=radius, border=Angle(0., 'degree'),
                          inverted=invert)
-        observation_table = observation_table.filter_observations(selection)
+        observation_table = observation_table.select_observations(selection)
     else:
         if r != None:
             raise ValueError("Could not apply sky circle selection.")
@@ -163,7 +157,7 @@ def find_obs(infile,
                          lat=(lat_range[0], lat_range[1]),
                          border=Angle(0., 'degree'),
                          inverted=invert)
-        observation_table = observation_table.filter_observations(selection)
+        observation_table = observation_table.select_observations(selection)
     else:
         if (dx != None) or (dy != None):
             raise ValueError("Could not apply sky box selection.")
@@ -178,7 +172,7 @@ def find_obs(infile,
         selection = dict(type='time_box',
                          time_min=t_start, time_max=t_stop,
                          inverted=invert)
-        observation_table = observation_table.filter_observations(selection)
+        observation_table = observation_table.select_observations(selection)
     else:
         if do_time_box_selection.any():
             raise ValueError("Could not apply time box selection.")
@@ -195,7 +189,7 @@ def find_obs(infile,
         selection = dict(type='par_box', variable=par_name,
                          value_min=par_min, value_max=par_max,
                          inverted=invert)
-        observation_table = observation_table.filter_observations(selection)
+        observation_table = observation_table.select_observations(selection)
     else:
         if do_par_box_selection.any():
             raise ValueError("Could not apply parameter box selection.")
@@ -207,3 +201,5 @@ def find_obs(infile,
         print(observation_table.meta)
         print(observation_table)
         # TODO: output to stdout!!!
+
+    print("WARNING: this is still a PRELIMINARY version of the tool.")

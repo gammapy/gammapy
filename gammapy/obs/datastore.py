@@ -226,7 +226,7 @@ class DataStore(object):
     def make_observation_table(self, selection=None):
         """Make an observation table, applying some selection.
 
-        Wrapper function for `~gammapy.obs.Observationtable.filter_observations`.
+        Wrapper function for `~gammapy.obs.Observationtable.select_observations`.
 
         Parameters
         ----------
@@ -250,7 +250,7 @@ class DataStore(object):
         table = ObservationTable(table)
 
         if selection:
-            table = table.filter_observations(selection)
+            table = table.select_observations(selection)
 
         return table
 

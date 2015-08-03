@@ -291,7 +291,7 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
 
     Examples
     --------
-    >>> filtered_obs_table = select_sky_box(obs_table,
+    >>> selected_obs_table = select_sky_box(obs_table,
     ...                                     lon_lim=Angle([150, 300], 'degree'),
     ...                                     lat_lim=Angle([-50, 0], 'degree'),
     ...                                     frame='icrs')
@@ -349,7 +349,7 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
 
     Examples
     --------
-    >>> filtered_obs_table = select_sky_circle(obs_table,
+    >>> selected_obs_table = select_sky_circle(obs_table,
     ...                                        lon=Angle(0, 'degree'),
     ...                                        lat=Angle(0, 'degree'),
     ...                                        radius=Angle(5, 'degree'),
