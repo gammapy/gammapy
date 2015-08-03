@@ -26,12 +26,12 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     Parameters
     ----------
     coordinate : `~astropy.coordinates.SkyCoord`
-        Source coordinate
+        Source coordinate.
     ra_digits : int (>=2)
-        Number of digits for the Right Ascension part
+        Number of digits for the Right Ascension part.
     dec_digits : int (>=2) or None
         Number of digits for the declination part
-        Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1
+        Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1.
     prefix : str
         Prefix to put before the coordinate string, e.g. "SDSS J".
 
@@ -116,14 +116,14 @@ def ra_iau_format(ra, digits):
     Parameters
     ----------
     ra : `~astropy.coordinates.Longitude`
-        Right ascension
+        Right ascension.
     digits : int (>=2)
-        Number of digits
+        Number of digits.
 
     Returns
     -------
     strrepr : str
-        IAU format string representation of the angle
+        IAU format string representation of the angle.
     """
     if (not isinstance(digits, int)) and (digits >= 2):
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
@@ -185,14 +185,14 @@ def dec_iau_format(dec, digits):
     Parameters
     ----------
     dec : `~astropy.coordinates.Latitude`
-        Declination
+        Declination.
     digits : int (>=2)
-        Number of digits
+        Number of digits.
 
     Returns
     -------
     strrepr : str
-        IAU format string representation of the angle
+        IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and digits >= 2:
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
@@ -274,20 +274,20 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table with sky coordinate columns
+        Table with sky coordinate columns.
     lon_lim, lat_lim : `~astropy.coordinates.Angle`
-        Box limits (each should be a min, max tuple)
+        Box limits (each should be a min, max tuple).
     frame : str, optional
         Frame in which to apply the box cut.
         Built-in Astropy coordinate frames are supported, e.g.
         'icrs', 'fk5' or 'galactic'.
     inverted : bool, optional
-        invert selection: keep all entries outside the selected region
+        Invert selection: keep all entries outside the selected region.
 
     Returns
     -------
     table : `~astropy.table.Table`
-        Copy of input table with box cut applied
+        Copy of input table with box cut applied.
 
     Examples
     --------
@@ -306,14 +306,11 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     if any(l < Angle(0., 'degree') for l in lon_lim):
         lon = lon.wrap_at(Angle(180, 'degree'))
 
-    if not inverted:
-        lon_mask = (lon_lim[0] < lon) & (lon < lon_lim[1])
-        lat_mask = (lat_lim[0] < lat) & (lat < lat_lim[1])
-        mask = lon_mask & lat_mask
-    else:
-        lon_mask = (lon_lim[0] >= lon) | (lon >= lon_lim[1])
-        lat_mask = (lat_lim[0] >= lat) | (lat >= lat_lim[1])        
-        mask = lon_mask | lat_mask
+    lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])
+    lat_mask = (lat_lim[0] <= lat) & (lat < lat_lim[1])
+    mask = lon_mask & lat_mask
+    if inverted:
+        mask = np.invert(mask)
 
     return table[mask]
 
@@ -330,22 +327,22 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table with sky coordinate columns
+        Table with sky coordinate columns.
     lon_cen, lat_cen : `~astropy.coordinates.Angle`
-        Circle center
+        Circle center.
     radius : `~astropy.coordinates.Angle`
-        Circle radius
+        Circle radius.
     frame : str, optional
         Frame in which to apply the box cut.
         Built-in Astropy coordinate frames are supported, e.g.
         'icrs', 'fk5' or 'galactic'.
     inverted : bool, optional
-        invert selection: keep all entries outside the selected region
+        Invert selection: keep all entries outside the selected region.
 
     Returns
     -------
     table : `~astropy.table.Table`
-        Copy of input table with circle cut applied
+        Copy of input table with circle cut applied.
 
     Examples
     --------
@@ -362,10 +359,9 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
     center = SkyCoord(lon_cen, lat_cen, frame=frame)
     ang_distance = skycoord.separation(center)
 
-    if not inverted:
-        mask = ang_distance < radius
-    else:
-        mask = ang_distance >= radius
+    mask = ang_distance < radius
+    if inverted:
+        mask = np.invert(mask)
 
     return table[mask]
 

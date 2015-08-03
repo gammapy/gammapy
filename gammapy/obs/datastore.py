@@ -17,9 +17,9 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
     Parameters
     ----------
     obs_id : int
-        Observation ID
+        Observation ID.
     filetype : {'events', 'effective area', 'psf', 'background'}
-        Type of file
+        Type of file.
 
     Examples
     --------
@@ -123,8 +123,8 @@ class DataStore(object):
 
     Parameters
     ----------
-    dir : `str`
-        Data store directory on user machine
+    dir : str
+        Data store directory on user machine.
     scheme : {'hess'}
         Scheme of organising and naming the files.
     """
@@ -162,9 +162,9 @@ class DataStore(object):
         Parameters
         ----------
         observation_table : `~gammapy.obs.ObservationTable` or None
-            Observation table (``None`` means select all observations)
+            Observation table (``None`` means select all observations).
         filetypes : list of str
-            File types (TODO: document in a central location and reference from here)
+            File types (TODO: document in a central location and reference from here).
 
         Returns
         -------
@@ -200,9 +200,9 @@ class DataStore(object):
         Parameters
         ----------
         obs_id : int
-            Observation ID
+            Observation ID.
         filetype : {'events', 'effective area', 'psf', 'background'}
-            Type of file
+            Type of file.
         abspath : bool
             Absolute path (including data store dir)?
 
@@ -226,23 +226,25 @@ class DataStore(object):
     def make_observation_table(self, selection=None):
         """Make an observation table, applying some selection.
 
-        Wrapper function for `~gammapy.obs.Observationtable.select_observations`.
+        Wrapper function for `~gammapy.obs.ObservationTable.select_observations`.
+        For details, please refer to the doc on the mentioned function.
 
         Parameters
         ----------
-        selection : `~dict`
+        selection : dict
             Dictionary with a few keywords for applying selection cuts.
-            TODO: add doc with allowed selection cuts!!! and link here!!!
 
         Returns
         -------
         table : `~gammapy.obs.ObservationTable`
-            Observation table with observatiosn passing the selection.
+            Observation table after selection.
 
         Examples
         --------
-        >>> selection = dict(shape='box', frame='galactic',
-        ...                  lon=(-100, 50), lat=(-5, 5), border=2)
+        >>> selection = dict(type='sky_box', frame='icrs',
+        ...                  lon=Angle([150, 300], 'degree'),
+        ...                  lat=Angle([-50, 0], 'degree'),
+        ...                  border=Angle(2, 'degree'))
         >>> run_list = data_store.make_observation_table(selection)
         """
         table = self.index_table

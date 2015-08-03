@@ -10,7 +10,21 @@ subset of observations from a given observation list.
 
 It works with `fits` files as input/output.
 
+.. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`__ run selection
+      (`docs <http://ndawe.github.io/goodruns/>`__, `code <https://github.com/ndawe/goodruns>`__)
+      is a nice example for a run selection tool.
+
 Examples:
+---------
+
+The ``gammapy-find-obs`` tool has many options. Only a few examples
+are shown here. For a full list of options, please use:
+
+  .. code-block:: bash
+
+      $ gammapy-find-obs --help
+
+at the command line.
 
 * Find all observations within 5 deg of the Galactic center:
 
@@ -42,7 +56,7 @@ Examples:
   .. code-block:: bash
 
       $ gammapy-find-obs all_obs.fits obs_042_to_100.fits \
-                         --par_name 'OBS_ID' --par_min 41 --par_max 101
+                         --par_name 'OBS_ID' --par_min 42 --par_max 101
 
 * Select all observations in a given altitude range (can of course
   be combined with other selections shown above):
@@ -51,16 +65,3 @@ Examples:
 
       $ gammapy-find-obs all_obs.fits alt_70_to_90_deg_obs.fits \
                          --par_name 'ALT' --par_min 70 --par_max 90
-
-Using ``gammapy-find-obs`` is easy, you don't have to remember all
-the options, just type:
-
-  .. code-block:: bash
-
-      $ gammapy-find-obs --help
-
-at the command line or read the usage help (TODO: add link here).
-
-.. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`__ run selection
-      (`docs <http://ndawe.github.io/goodruns/>`__, `code <https://github.com/ndawe/goodruns>`__)
-      is a nice example for a run selection tool.

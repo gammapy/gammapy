@@ -17,14 +17,16 @@ def test_ObservationTable():
 
 
 def common_sky_region_select_test_routines(obs_table, selection):
-    """Common routines for the tests of sky_box/sky_circle selection of obs tables"""
+    """Common routines for the tests of sky_box/sky_circle selection of obs tables."""
     type = selection['type']
     if type not in ['sky_box', 'sky_circle']:
         raise ValueError("Invalid type: {}".format(type))
 
     if type == 'sky_box':
-        lon_range_eff = (selection['lon'][0] - selection['border'], selection['lon'][1] + selection['border'])
-        lat_range_eff = (selection['lat'][0] - selection['border'], selection['lat'][1] + selection['border'])
+        lon_range_eff = (selection['lon'][0] - selection['border'],
+                         selection['lon'][1] + selection['border'])
+        lat_range_eff = (selection['lat'][0] - selection['border'],
+                         selection['lat'][1] + selection['border'])
     elif type == 'sky_circle':
         lon_cen = selection['lon']
         lat_cen = selection['lat']
@@ -77,9 +79,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
 
 def test_select_parameter_box():
     # create random observation table
-    observatory_name='HESS'
-    n_obs = 10
-    obs_table = make_test_observation_table(observatory_name, n_obs)
+    obs_table = make_test_observation_table(n_obs=10)
 
     # test no selection: input and output tables should be the same
     selected_obs_table = obs_table.select_observations()
@@ -94,15 +94,16 @@ def test_select_parameter_box():
     selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max)
     selected_obs_table = obs_table.select_observations(selection)
-    assert (value_min < selected_obs_table[variable]).all()
+    assert len(selected_obs_table) == 3
+    assert (value_min <= selected_obs_table[variable]).all()
     assert (selected_obs_table[variable] < value_max).all()
 
     # test box selection in obs_id inverted
     selection = dict(type='par_box', variable=variable,
                      value_min=value_min, value_max=value_max, inverted=True)
     selected_obs_table = obs_table.select_observations(selection)
-    assert len(selected_obs_table) == 8
-    assert ((value_min >= selected_obs_table[variable]) |
+    assert len(selected_obs_table) == 7
+    assert ((value_min > selected_obs_table[variable]) |
             (selected_obs_table[variable] >= value_max)).all()
 
     # test box selection in alt
@@ -119,12 +120,12 @@ def test_select_parameter_box():
 def test_select_time_box():
     # create random observation table with very close (in time)
     # observations (and times in absolute times)
-    observatory_name='HESS'
-    n_obs = 10
     datestart = Time('2012-01-01T00:30:00', format='isot', scale='utc')
     dateend = Time('2012-01-01T02:30:00', format='isot', scale='utc')
-    obs_table_time = make_test_observation_table(observatory_name, n_obs,
-                                                 datestart, dateend, True)
+    obs_table_time = make_test_observation_table(n_obs=10,
+                                                 datestart=datestart,
+                                                 dateend=dateend,
+                                                 debug=True)
 
     # test box selection in time: (time_start, time_stop) within (value_min, value_max)
     print()
@@ -145,9 +146,7 @@ def test_select_time_box():
 def test_select_sky_regions():
 
     # create random observation table with many entries
-    observatory_name='HESS'
-    n_obs = 100
-    obs_table = make_test_observation_table(observatory_name, n_obs)
+    obs_table = make_test_observation_table(n_obs=100)
 
     # test sky box selection in gal coordinates
     lon_range = Angle([-100., 50.], 'degree')

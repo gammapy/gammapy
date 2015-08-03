@@ -30,14 +30,14 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     Parameters
     ----------
     energy_bins : int
-        Number of energy bins
+        Number of energy bins.
     theta_bins : int
-        Number of theta bins
+        Number of theta bins.
 
     Returns
     -------
     psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
-        PSF
+        PSF.
     """
     energies_all = np.logspace(-1, 2, energy_bins + 1)
     energies_lo = energies_all[:-1]
@@ -75,7 +75,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     return psf
 
 
-def make_test_observation_table(observatory_name, n_obs,
+def make_test_observation_table(observatory_name='HESS', n_obs=10,
                                 datestart=None, dateend=None,
                                 debug=False,
                                 random_state='random-seed'):
@@ -92,16 +92,16 @@ def make_test_observation_table(observatory_name, n_obs,
     Parameters
     ----------
     observatory_name : str
-        name of the observatory; a list of choices is given in
-        `~gammapy.obs.observatory_locations`
+        Name of the observatory; a list of choices is given in
+        `~gammapy.obs.observatory_locations`.
     n_obs : int
-        number of observations for the obs table
+        Number of observations for the obs table.
     datestart : `~astropy.time.Time`, optional
-        starting date for random generation of observation start time
+        Starting date for random generation of observation start time.
     dateend : `~astropy.time.Time`, optional
-        ending date for random generation of observation start time
+        Ending date for random generation of observation start time.
     debug : bool, optional
-        show UTC times instead of seconds after the reference
+        Show UTC times instead of seconds after the reference.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -109,7 +109,7 @@ def make_test_observation_table(observatory_name, n_obs,
     Returns
     -------
     obs_table : `~gammapy.obs.ObservationTable`
-        observation table
+        Observation table.
     """
     random_state = get_random_state(random_state)
 
@@ -273,29 +273,29 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     Parameters
     ----------
     detx_range : `~astropy.coordinates.Angle`, optional
-        X coordinate range (min, max)
+        X coordinate range (min, max).
     ndetx_bins : int, optional
-        number of (linear) bins in X coordinate
+        Number of (linear) bins in X coordinate.
     dety_range : `~astropy.coordinates.Angle`, optional
-        Y coordinate range (min, max)
+        Y coordinate range (min, max).
     ndety_bins : int, optional
-        number of (linear) bins in Y coordinate
+        Number of (linear) bins in Y coordinate.
     energy_band : `~astropy.units.Quantity`, optional
-        energy range (min, max)
+        Energy range (min, max).
     nenergy_bins : int, optional
-        number of (logarithmic) bins in energy
+        Number of (logarithmic) bins in energy.
     sigma : `~astropy.coordinates.Angle`, optional
-        width of the gaussian model used for the spatial coordinates
+        Width of the gaussian model used for the spatial coordinates.
     spectral_index : double, optional
-        index for the power-law model used for the energy coordinate
+        Index for the power-law model used for the energy coordinate.
     apply_mask : bool, optional
-        if set, 1/4th of the image is masked (for `x > x_center` and
-        `y > y_center`)
+        If set, 1/4th of the image is masked (for `x > x_center` and
+        `y > y_center`).
 
     Returns
     -------
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
-        bg cube model
+        Bacground cube model.
     """
     # spatial bins (linear)
     delta_x = (detx_range[1] - detx_range[0])/ndetx_bins

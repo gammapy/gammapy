@@ -17,10 +17,10 @@ def main(args=None):
     """Main function for argument parsing."""
     parser = get_parser(find_obs)
     parser.add_argument('infile', type=str,
-                        help='Input run list file name (fits format)')
+                        help='Input obseravtion table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
-                        help='Output run list file name (default: stdout)')
+                        help='Output obseravtion table file name (default: stdout)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -119,11 +119,6 @@ def find_obs(infile,
 
     # open (fits) file and read the observation table
     observation_table = ObservationTable.read(infile)
-    # TODO: I need a test file in gammapy-extra!!!
-    #       for now: creating a test obs table REMOVE THIS!!!!
-    from ..datasets import make_test_observation_table
-    #observation_table = make_test_observation_table('HESS', 10)
-    observation_table = make_test_observation_table('HESS', 100)
 
     # sky circle selection
     do_sky_circle_selection = np.array([(x != None), (y != None),
@@ -140,7 +135,7 @@ def find_obs(infile,
                          inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
-        if r != None:
+        if r is not None:
             raise ValueError("Could not apply sky circle selection.")
 
     # sky box selection
@@ -159,7 +154,7 @@ def find_obs(infile,
                          inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
-        if (dx != None) or (dy != None):
+        if (dx is not None) or (dy is not None):
             raise ValueError("Could not apply sky box selection.")
 
     # time box selection
@@ -195,7 +190,7 @@ def find_obs(infile,
             raise ValueError("Could not apply parameter box selection.")
     # TODO: allow multiple var selections!!! (read arrays/lists)
 
-    if outfile != None:
+    if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
         print(observation_table.meta)

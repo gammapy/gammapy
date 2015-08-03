@@ -92,8 +92,8 @@ class ObservationTable(Table):
         indices = indices.astype('int')
         return self[indices]
 
-    def select_obs_var_range(self, selection_variable,
-                             value_min, value_max, inverted=False):
+    def select_range(self, selection_variable,
+                     value_min, value_max, inverted=False):
         """Make an observation table, applying some selection.
 
         Generic function to apply a 1D box selection (min, max) to a
@@ -105,19 +105,19 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection_variable : string
-            name of variable to apply a cut (it should exist on the table)
+        selection_variable : str
+            Name of variable to apply a cut (it should exist on the table).
         value_min : `~astropy.units.Quantity`-like
-            minimum value; type should be consistent with selection_variable
+            Minimum value; type should be consistent with selection_variable.
         value_max : `~astropy.units.Quantity`-like
-            maximum value; type should be consistent with selection_variable
+            Maximum value; type should be consistent with selection_variable.
         inverted : bool, optional
-            invert selection: keep all entries outside the (min, max) range
+            Invert selection: keep all entries outside the (min, max) range.
 
         Returns
         -------
         obs_table : `~gammapy.obs.ObservationTable`
-            observation table with observations passing the selection
+            Observation table after selection.
         """
         obs_table = self
 
@@ -129,14 +129,13 @@ class ObservationTable(Table):
         value = Quantity(obs_table[selection_variable])
 
         # build and apply mask
-        if not inverted:
-            mask = (value_min < value) & (value < value_max)
-        else:
-            mask = (value_min >= value) | (value >= value_max)
+        mask = (value_min <= value) & (value < value_max)
+        if inverted:
+            mask = np.invert(mask)
         obs_table = obs_table[mask]
         return obs_table
 
-    def select_obs_time_range(self, selection_variable,
+    def select_time_range(self, selection_variable,
                               time_min, time_max, inverted=False):
         """Make an observation table, applying a time selection.
 
@@ -150,19 +149,19 @@ class ObservationTable(Table):
 
         Parameters
         ----------
-        selection_variable : string
-            name of variable to apply a cut (it should exist on the table)
+        selection_variable : str
+            Name of variable to apply a cut (it should exist on the table).
         time_min : `~astropy.time.Time`
-            minimum time
+            Minimum time.
         time_max : `~astropy.time.Time`
-            maximum time
+            Maximum time.
         inverted : bool, optional
-            invert selection: keep all entries outside the (min, max) range
+            Invert selection: keep all entries outside the (min, max) range.
 
         Returns
         -------
         obs_table : `~gammapy.obs.ObservationTable`
-            observation table with observations passing the selection
+            Observation table after selection.
         """
         obs_table = self
 
@@ -181,10 +180,9 @@ class ObservationTable(Table):
             time = Quantity(obs_table[selection_variable])
 
         # build and apply mask
-        if not inverted:
-            mask = (time_min < time) & (time < time_max)
-        else:
-            mask = (time_min >= time) | (time >= time_max)
+        mask = (time_min <= time) & (time < time_max)
+        if inverted:
+            mask = np.invert(mask)
         obs_table = obs_table[mask]
         return obs_table
 
@@ -194,63 +192,63 @@ class ObservationTable(Table):
         There are 3 main kinds of selection criteria, according to the
         value of the `type` keyword in the `selection` dictionary:
 
-            - sky regions (boxes or circles)
+        - sky regions (boxes or circles)
 
-            - time intervals (min, max)
+        - time intervals (min, max)
 
-            - intervals (min, max) on any other parameter present in the
-              observation table, that can be casted into an
-              `~astropy.units.Quantity` object
+        - intervals (min, max) on any other parameter present in the
+          observation table, that can be casted into an
+          `~astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
         keywords in the `selection` dictionary:
 
-            - `type`: ``sky_box``, ``sky_circle``, ``'time_box``, ``par_box``
+        - `type`: ``sky_box``, ``sky_circle``, ``'time_box``, ``par_box``
 
-                - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
-                  on sky coordinates
+            - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
+              on sky coordinates
 
-                    - ``sky_box`` is a squared region delimited by the `lon` and
-                      `lat` keywords: both tuples of format (min, max); uses
-                      `~gammapy.catalog.select_sky_box`
+                - ``sky_box`` is a squared region delimited by the `lon` and
+                  `lat` keywords: both tuples of format (min, max); uses
+                  `~gammapy.catalog.select_sky_box`
 
-                    - ``sky_circle`` is a circular region centered in the coordinate
-                      marked by the `lon` and `lat` keywords, and radius `radius`;
-                      uses `~gammapy.catalog.select_sky_circle`
+                - ``sky_circle`` is a circular region centered in the coordinate
+                  marked by the `lon` and `lat` keywords, and radius `radius`;
+                  uses `~gammapy.catalog.select_sky_circle`
 
-                  in each case, the coordinate system can be specified by the `frame`
-                  keyword (built-in Astropy coordinate frames are supported, e.g.
-                  \'icrs\' or \'galactic\'); an aditional border can be defined using
-                  the `border` keyword
+              in each case, the coordinate system can be specified by the `frame`
+              keyword (built-in Astropy coordinate frames are supported, e.g.
+              \'icrs\' or \'galactic\'); an aditional border can be defined using
+              the `border` keyword
 
-                - ``time_box`` is a 1D selection criterion acting on the observation
-                  time (`TIME_START` and `TIME_STOP`); the interval is set via the
-                  `time_min` and `time_max` keywords; uses
-                  `~gammapy.obs.ObservationTable.select_obs_time_range`
+            - ``time_box`` is a 1D selection criterion acting on the observation
+              time (`TIME_START` and `TIME_STOP`); the interval is set via the
+              `time_min` and `time_max` keywords; uses
+              `~gammapy.obs.ObservationTable.select_time_range`
 
-                - ``par_box`` is a 1D selection criterion acting on any
-                  parameter defined in the observation table that can be casted
-                  into an `~astropy.units.Quantity` object; the parameter name
-                  and interval can be specified using the keywords 'variable',
-                  'value_min' and 'value_max' respectively; uses
-                  `~gammapy.obs.ObservationTable.select_obs_var_range`
+            - ``par_box`` is a 1D selection criterion acting on any
+              parameter defined in the observation table that can be casted
+              into an `~astropy.units.Quantity` object; the parameter name
+              and interval can be specified using the keywords 'variable',
+              'value_min' and 'value_max' respectively; uses
+              `~gammapy.obs.ObservationTable.select_range`
 
-            In all cases, the selection can be inverted by activating the
-            `inverted` flag, in which case, the selection is applied to keep all
-            elements outside the selected range.
+        In all cases, the selection can be inverted by activating the
+        `inverted` flag, in which case, the selection is applied to keep all
+        elements outside the selected range.
 
         A few examples of selection criteria are given below and more can be
         found in the tests in `test_select_observations`.
 
         Parameters
         ----------
-        selection : `~dict`
-            dictionary with a few keywords for applying selection cuts
+        selection : dict
+            Dictionary with a few keywords for applying selection cuts.
 
         Returns
         -------
         obs_table : `~gammapy.obs.ObservationTable`
-            observation table with observations passing the selection
+            Observation table after selection.
 
         Examples
         --------
@@ -313,20 +311,20 @@ class ObservationTable(Table):
 
             elif selection_type == 'time_box':
                 # apply twice the mask: to TIME_START and TIME_STOP
-                obs_table = obs_table.select_obs_time_range('TIME_START',
-                                                            selection['time_min'],
-                                                            selection['time_max'],
-                                                            selection['inverted'])
-                obs_table = obs_table.select_obs_time_range('TIME_STOP',
-                                                            selection['time_min'],
-                                                            selection['time_max'],
-                                                            selection['inverted'])
+                obs_table = obs_table.select_time_range('TIME_START',
+                                                        selection['time_min'],
+                                                        selection['time_max'],
+                                                        selection['inverted'])
+                obs_table = obs_table.select_time_range('TIME_STOP',
+                                                        selection['time_min'],
+                                                        selection['time_max'],
+                                                        selection['inverted'])
 
             elif selection_type == 'par_box':
-                obs_table = obs_table.select_obs_var_range(selection['variable'],
-                                                           selection['value_min'],
-                                                           selection['value_max'],
-                                                           selection['inverted'])
+                obs_table = obs_table.select_range(selection['variable'],
+                                                   selection['value_min'],
+                                                   selection['value_max'],
+                                                   selection['inverted'])
 
             else:
                 raise ValueError('Invalid selection type: {}'.format(selection_type))
