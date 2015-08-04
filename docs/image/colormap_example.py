@@ -17,7 +17,7 @@ image = significance(counts, background)
 
 # Plot with the HESS and Milagro colormap
 vmin, vmax, vtransition = -5, 15, 5
-plt.figure(figsize=(8, 4))
+plt.figure(figsize=(12, 6))
 
 normalize = ImageNormalize(vmin=vmin, vmax=vmax, stretch=LinearStretch())
 transition = normalize(vtransition)
@@ -26,14 +26,14 @@ plt.subplot(121)
 cmap = colormap_hess(transition=transition)
 plt.imshow(image, cmap=cmap, norm=normalize)
 plt.axis('off')
-plt.colorbar()
+plt.colorbar(shrink=0.7)
 plt.title('HESS-style colormap')
 
 plt.subplot(122)
 cmap = colormap_milagro(transition=transition)
 plt.imshow(image, cmap=cmap, norm=normalize)
 plt.axis('off')
-plt.colorbar()
+plt.colorbar(shrink=0.7)
 plt.title('MILAGRO-style colormap')
 
 plt.show()

@@ -312,8 +312,8 @@ class EffectiveAreaTable(object):
         plt.xlim(0.1, 100)
         plt.ylim(1E3, 1E7)
         plt.loglog()
-        plt.xlabel('Energy [TeV]')
-        plt.ylabel('Effective Area [m^2]')
+        plt.xlabel('Energy (TeV)')
+        plt.ylabel('Effective Area (m2)')
         if filename is not None:
             plt.savefig(filename)
             log.info('Wrote {0}'.format(filename))
@@ -392,6 +392,9 @@ class EffectiveAreaTable2D(object):
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
         aeff2D.plot_energy_dependence()
+        plt.loglog()
+        plt.xlim(0.8, 100)
+        plt.ylim(2E4, 2E6)
 
     """
 
@@ -566,7 +569,7 @@ class EffectiveAreaTable2D(object):
 
         plt.xlabel('Energy ({0})'.format(self.energy.unit))
         plt.ylabel('Effective Area ({0})'.format(self.eff_area.unit))
-        plt.legend()
+        plt.legend(loc='lower right')
 
         return ax
 

@@ -254,9 +254,9 @@ class EnergyDependentMultiGaussPSF(object):
         # Set up and compute data
         containment = self._containment_radius_array(self.energy_hi, self.theta, fraction)
         # Plotting
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(8, 6))
         plt.imshow(containment.value, origin='lower', interpolation='None',
-                   vmin=0.05, vmax=0.3)
+                   vmin=0.1, vmax=0.2)
 
         if show_save_energy:
             # Log scale transformation for position of energy threshold
@@ -269,14 +269,14 @@ class EnergyDependentMultiGaussPSF(object):
             plt.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
 
         # Axes labels and ticks, colobar
-        plt.xlabel('E [TeV]')
-        xticks = ["{0:3.2g}".format(_) for _ in self.energy_hi.value]
-        plt.xticks(np.arange(len(self.energy_hi)) + 0.5, xticks, size=9)
-        plt.ylabel('Theta [deg]')
+        plt.xlabel('E (TeV)')
+        xticks = ["{0:3.2g}".format(_) for _ in self.energy_hi.value[:-1]]
+        plt.xticks(np.arange(len(self.energy_hi)), xticks, size=9)
+        plt.ylabel('Theta (deg)')
         yticks = ["{0:3.2g}".format(_) for _ in self.theta.value]
         plt.yticks(np.arange(len(self.theta)), yticks, size=9)
         cbar = plt.colorbar(fraction=0.1, pad=0.01)
-        cbar.set_label('Containment radius R{0:.0f} [deg]'.format(100 * fraction),
+        cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
                         labelpad=20)
 
         if filename is not None:
