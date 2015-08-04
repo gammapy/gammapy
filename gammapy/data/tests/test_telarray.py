@@ -12,7 +12,7 @@ filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
 
 def test_TelescopeArray():
     telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
-    assert 'Telescope array info' in telescope_array.info
+    assert 'Telescope array info' in telescope_array.summary
     location = telescope_array.observatory_earth_location.geocentric
     hess_location = observatory_locations.HESS.geocentric
     offset = Quantity(location) - Quantity(hess_location)

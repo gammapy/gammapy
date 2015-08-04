@@ -11,7 +11,7 @@ class TelescopeArray(Table):
     """Telescope array info.
     """
     @property
-    def info(self):
+    def summary(self):
         """Summary info string."""
         s = '---> Telescope array info:\n'
         s += '- number of telescopes: {}\n'.format(len(self))

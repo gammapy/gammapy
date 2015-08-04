@@ -2,8 +2,8 @@
 import os
 import numpy as np
 from astropy.table import Table
-from astropy.coordinates import SkyCoord, Angle
-from ..catalog import select_sky_box, skycoord_from_table
+from astropy.coordinates import SkyCoord
+from ..catalog import skycoord_from_table
 from ..obs import ObservationTable
 
 __all__ = ['DataStore',
@@ -17,9 +17,9 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
     Parameters
     ----------
     obs_id : int
-        Observation ID
+        Observation ID.
     filetype : {'events', 'effective area', 'psf', 'background'}
-        Type of file
+        Type of file.
 
     Examples
     --------
@@ -53,7 +53,7 @@ class DataStoreIndexTable(Table):
     The index table is a FITS file that stores which observations
     are available and what their most important parameters are.
 
-    This makes it possible to select observation of interest and find out
+    This makes it possible to select observations of interest and find out
     what data is available without opening up thousands of FITS files
     that contain the event list and IRFs and have similar information in the
     FITS header.
@@ -94,7 +94,7 @@ class DataStoreIndexTable(Table):
             self['GLON'] = skycoord.l.degree
             self['GLAT'] = skycoord.b.degree
 
-    def info(self):
+    def summary(self):
         ss = 'Data store index table summary:\n'
         ss += 'Number of observations: {}\n'.format(len(self))
         obs_id = self['OBS_ID']
@@ -123,8 +123,8 @@ class DataStore(object):
 
     Parameters
     ----------
-    dir : `str`
-        Data store directory on user machine
+    dir : str
+        Data store directory on user machine.
     scheme : {'hess'}
         Scheme of organising and naming the files.
     """
@@ -162,13 +162,13 @@ class DataStore(object):
         Parameters
         ----------
         observation_table : `~gammapy.obs.ObservationTable` or None
-            Observation table (``None`` means select all observations)
+            Observation table (``None`` means select all observations).
         filetypes : list of str
-            File types (TODO: document in a central location and reference from here)
+            File types (TODO: document in a central location and reference from here).
 
         Returns
         -------
-        table : `~astropy.table.Table`
+        table : `~gammapy.obs.ObservationTable`
             Table summarising info about files.
         """
         if observation_table is None:
@@ -184,7 +184,7 @@ class DataStore(object):
                 row['filename'] = filename
                 data.append(row)
 
-        return Table(data=data, names=['OBS_ID', 'filetype', 'filename'])
+        return ObservationTable(data=data, names=['OBS_ID', 'filetype', 'filename'])
 
     def make_summary_plots(self):
         """Make some plots summarising the available observations.
@@ -200,9 +200,9 @@ class DataStore(object):
         Parameters
         ----------
         obs_id : int
-            Observation ID
+            Observation ID.
         filetype : {'events', 'effective area', 'psf', 'background'}
-            Type of file
+            Type of file.
         abspath : bool
             Absolute path (including data store dir)?
 
@@ -226,45 +226,35 @@ class DataStore(object):
     def make_observation_table(self, selection=None):
         """Make an observation table, applying some selection.
 
-        TODO: implement a more flexible scheme to make box cuts
-        on any fields (including e.g. OBSID or TIME
-        Not sure what a simple yet powerful method to implement this is!?
+        Wrapper function for `~gammapy.obs.ObservationTable.select_observations`.
+        For details, please refer to the doc on the mentioned function.
 
         Parameters
         ----------
-        selection : TODO
-            TODO: describe me
+        selection : dict
+            Dictionary with a few keywords for applying selection cuts.
 
         Returns
         -------
         table : `~gammapy.obs.ObservationTable`
-            Observation table
+            Observation table after selection.
 
         Examples
         --------
-        >>> selection = dict(shape='box', frame='galactic',
-        ...                  lon=(-100, 50), lat=(-5, 5), border=2)
+        >>> selection = dict(type='sky_box', frame='icrs',
+        ...                  lon=Angle([150, 300], 'degree'),
+        ...                  lat=Angle([-50, 0], 'degree'),
+        ...                  border=Angle(2, 'degree'))
         >>> run_list = data_store.make_observation_table(selection)
         """
         table = self.index_table
 
+        table = ObservationTable(table)
+
         if selection:
-            selection_region_shape = selection['shape']
+            table = table.select_observations(selection)
 
-            if selection_region_shape == 'box':
-                lon = selection['lon']
-                lat = selection['lat']
-                border = selection['border']
-                lon = Angle([lon[0] - border, lon[1] + border], 'deg')
-                lat = Angle([lat[0] - border, lat[1] + border], 'deg')
-                # print(lon, lat)
-                table = select_sky_box(table,
-                                       lon_lim=lon, lat_lim=lat,
-                                       frame=selection['frame'])
-            else:
-                raise ValueError('Invalid selection type: {}'.format(selection_region_shape))
-
-        return ObservationTable(table)
+        return table
 
     def check_available_event_lists(self, logger=None):
         """Check if all event lists are available.

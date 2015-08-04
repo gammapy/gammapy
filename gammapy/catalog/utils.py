@@ -11,6 +11,7 @@ __all__ = ['coordinate_iau_format',
            'dec_iau_format',
            'skycoord_from_table',
            'select_sky_box',
+           'select_sky_circle',
            'to_ds9_region',
            'get_source_by_name'
            ]
@@ -25,12 +26,12 @@ def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,
     Parameters
     ----------
     coordinate : `~astropy.coordinates.SkyCoord`
-        Source coordinate
+        Source coordinate.
     ra_digits : int (>=2)
-        Number of digits for the Right Ascension part
+        Number of digits for the Right Ascension part.
     dec_digits : int (>=2) or None
         Number of digits for the declination part
-        Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1
+        Default is ``dec_digits`` = None, meaning ``dec_digits`` = ``ra_digits`` - 1.
     prefix : str
         Prefix to put before the coordinate string, e.g. "SDSS J".
 
@@ -115,14 +116,14 @@ def ra_iau_format(ra, digits):
     Parameters
     ----------
     ra : `~astropy.coordinates.Longitude`
-        Right ascension
+        Right ascension.
     digits : int (>=2)
-        Number of digits
+        Number of digits.
 
     Returns
     -------
     strrepr : str
-        IAU format string representation of the angle
+        IAU format string representation of the angle.
     """
     if (not isinstance(digits, int)) and (digits >= 2):
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
@@ -184,14 +185,14 @@ def dec_iau_format(dec, digits):
     Parameters
     ----------
     dec : `~astropy.coordinates.Latitude`
-        Declination
+        Declination.
     digits : int (>=2)
-        Number of digits
+        Number of digits.
 
     Returns
     -------
     strrepr : str
-        IAU format string representation of the angle
+        IAU format string representation of the angle.
     """
     if not isinstance(digits, int) and digits >= 2:
         raise ValueError('Invalid digits: {0}. Valid options: int >= 2'.format(digits))
@@ -261,10 +262,11 @@ def skycoord_from_table(table):
     return skycoord
 
 
-def select_sky_box(table, lon_lim, lat_lim, frame='icrs'):
+def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     """Select sky positions in a box.
 
-    This function can be applied e.g. to event lists of source catalogs.
+    This function can be applied e.g. to event lists of source catalogs
+    or observation tables.
 
     Note: if useful we can add a function that returns the mask
     or indices instead of applying the selection directly
@@ -272,31 +274,94 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs'):
     Parameters
     ----------
     table : `~astropy.table.Table`
-        Table with sky coordinate columns
+        Table with sky coordinate columns.
     lon_lim, lat_lim : `~astropy.coordinates.Angle`
-        Box limits (each should be a min, max tuple)
-    frame : str
+        Box limits (each should be a min, max tuple).
+    frame : str, optional
         Frame in which to apply the box cut.
         Built-in Astropy coordinate frames are supported, e.g.
         'icrs', 'fk5' or 'galactic'.
+    inverted : bool, optional
+        Invert selection: keep all entries outside the selected region.
 
     Returns
     -------
     table : `~astropy.table.Table`
-        Copy of input table with box cut applied
+        Copy of input table with box cut applied.
 
     Examples
     --------
-    TODO
+    >>> selected_obs_table = select_sky_box(obs_table,
+    ...                                     lon_lim=Angle([150, 300], 'degree'),
+    ...                                     lat_lim=Angle([-50, 0], 'degree'),
+    ...                                     frame='icrs')
     """
     skycoord = skycoord_from_table(table)
     skycoord = skycoord.transform_to(frame)
-    lon = skycoord.data.lon.wrap_at(Angle(180, 'deg'))
+    lon = skycoord.data.lon
     lat = skycoord.data.lat
+    # SkyCoord automatically wraps lon angles at 360 deg, so in case
+    # the lon range is wrapped at 180 deg, lon angles must be wrapped
+    # also at 180 deg for the comparison to work
+    if any(l < Angle(0., 'degree') for l in lon_lim):
+        lon = lon.wrap_at(Angle(180, 'degree'))
 
-    lon_mask = (lon_lim[0] < lon) & (lon < lon_lim[1])
-    lat_mask = (lat_lim[0] < lat) & (lat < lat_lim[1])
+    lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])
+    lat_mask = (lat_lim[0] <= lat) & (lat < lat_lim[1])
     mask = lon_mask & lat_mask
+    if inverted:
+        mask = np.invert(mask)
+
+    return table[mask]
+
+
+def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=False):
+    """Select sky positions in a circle.
+
+    This function can be applied e.g. to event lists of source catalogs
+    or observation tables.
+
+    Note: if useful we can add a function that returns the mask
+    or indices instead of applying the selection directly
+
+    Parameters
+    ----------
+    table : `~astropy.table.Table`
+        Table with sky coordinate columns.
+    lon_cen, lat_cen : `~astropy.coordinates.Angle`
+        Circle center.
+    radius : `~astropy.coordinates.Angle`
+        Circle radius.
+    frame : str, optional
+        Frame in which to apply the box cut.
+        Built-in Astropy coordinate frames are supported, e.g.
+        'icrs', 'fk5' or 'galactic'.
+    inverted : bool, optional
+        Invert selection: keep all entries outside the selected region.
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        Copy of input table with circle cut applied.
+
+    Examples
+    --------
+    >>> selected_obs_table = select_sky_circle(obs_table,
+    ...                                        lon=Angle(0, 'degree'),
+    ...                                        lat=Angle(0, 'degree'),
+    ...                                        radius=Angle(5, 'degree'),
+    ...                                        frame='galactic')
+    """
+    skycoord = skycoord_from_table(table)
+    skycoord = skycoord.transform_to(frame)
+    # no need to wrap lon angleshere, since the SkyCoord separation
+    # method takes care of it
+    center = SkyCoord(lon_cen, lat_cen, frame=frame)
+    ang_distance = skycoord.separation(center)
+
+    mask = ang_distance < radius
+    if inverted:
+        mask = np.invert(mask)
 
     return table[mask]
 
