@@ -3,19 +3,20 @@
 Find observations
 =================
 
-TODO: reference observation list/table format
-
 The ``gammapy-find-obs`` command line tool can be used to select a
-subset of observations from a given observation list.
+subset of observations from a given observation list. The format for
+observation lists is described in :ref:`dataformats_observation_lists`.
 
-It works with `fits` files as input/output.
+This tool works with `fits` files as input/output for now.
+
+For more details, please refer to `~gammapy.scripts.find_obs`.
 
 .. note:: Noel Dawe's ``goodruns`` tool for `ATLAS <http://atlas.ch>`__ run selection
       (`docs <http://ndawe.github.io/goodruns/>`__, `code <https://github.com/ndawe/goodruns>`__)
       is a nice example for a run selection tool.
 
-Examples:
----------
+Examples
+--------
 
 The ``gammapy-find-obs`` tool has many options. Only a few examples
 are shown here. For a full list of options, please use:
@@ -25,6 +26,11 @@ are shown here. For a full list of options, please use:
       $ gammapy-find-obs --help
 
 at the command line.
+
+In order to test the examples below, the test observation list
+file located in the `~gammapy-extra` repository
+(`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_)
+can be used as input observation list.
 
 * Find all observations within 5 deg of the Galactic center:
 
@@ -48,7 +54,7 @@ at the command line.
   .. code-block:: bash
 
       $ gammapy-find-obs all_obs.fits obs_2010-04-26_to_2010-04-29-12h42.fits \
-                         --t_start '2010-04-26' --t_stop '2010-04-29T12:42'
+                         --t_start '2012-04-20' --t_stop '2012-04-30T12:42'
 
 * Select all observations in a given observation ID range (can of
   course be combined with other selections shown above):

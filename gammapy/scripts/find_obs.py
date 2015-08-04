@@ -79,18 +79,26 @@ def find_obs(logLevel,
              overwrite):
     """Select a subset of observations from a given observation list.
 
-    I still have a few TODO's to work out, but the script does select
-    observations froma an observation table fits file and prints the
-    output on screen or saves it to a fits file.
+    This inline tool selects observations from a an input observation
+    table fits file and prints the output on screen or saves it to an
+    output fits file.
 
-    Stringdoc still missing; for now, please have a look at
-    https://ms2.physik.hu-berlin.de/~mapaz/gammapy/docs/_build/html/obs/find_observations.html
+    For a detailed description of the options, please use the help
+    option of this tool by calling:
 
-    For testing, download this file from `~gammapy-extra`
+    .. code-block:: bash
 
-    https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits
-    
-    And use the following commands in your shell terminal:
+        gammapy-find-obs -h
+
+    In order to test the examples below, the test observation list
+    file located in the `~gammapy-extra` repository
+    (`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_)
+    can be used as input observation list.
+
+    More information is available at :ref:`obs_find_observations`.
+
+    Examples
+    --------
 
     .. code-block:: bash
 
@@ -104,14 +112,6 @@ def find_obs(logLevel,
         gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
         gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
-
-    TODO: explain (edit this docstring) + link to gammapy/docs/_build/html/obs/find_observations doc.
-
-    TODO: update docs
-    old: https://gammapy.readthedocs.org/en/latest/obs/findruns.html
-    new: file:///home/mapaz/astropy/development_code/gammapy/docs/_build/html/obs/find_observations.html
-
-    TODO: write tests for this command-line tool!!!
     """
     if (logLevel):
         logging.basicConfig(level=getattr(logging, logLevel), format='%(levelname)s - %(message)s')
@@ -163,12 +163,9 @@ def find_obs(logLevel,
     do_time_box_selection = np.array([(t_start != None), (t_stop != None)])
     if do_time_box_selection.all():
         logging.debug("Applying time box selection.")
-        # cast min, max into Time objects
-        t_start = Time(t_start, format='isot', scale='utc')
-        t_stop = Time(t_stop, format='isot', scale='utc')
-        selection = dict(type='time_box',
-                         time_min=t_start, time_max=t_stop,
-                         inverted=invert)
+        # convert min, max to range and cast into Time object
+        t_range = Time([t_start, t_stop], format='isot', scale='utc')
+        selection = dict(type='time_box', time_range=t_range, inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
         if do_time_box_selection.any():
@@ -179,18 +176,15 @@ def find_obs(logLevel,
                                      (par_min != None), (par_max != None)])
     if do_par_box_selection.all():
         logging.debug("Applying {} selection.".format(par_name))
-        # cast min, max into Quantity objects with units
+        # convert min, max to range and cast into Quantity object with unit
         unit = observation_table[par_name].unit
-        par_min = Quantity(par_min, unit)
-        par_max = Quantity(par_max, unit)
+        par_range = Quantity([par_min, par_max], unit)
         selection = dict(type='par_box', variable=par_name,
-                         value_min=par_min, value_max=par_max,
-                         inverted=invert)
+                         value_range=par_range, inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
         if do_par_box_selection.any():
             raise ValueError("Could not apply parameter box selection.")
-    # TODO: allow multiple var selections!!! (read arrays/lists)
 
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)

@@ -89,32 +89,28 @@ def test_select_parameter_box():
 
     # test box selection in obs_id
     variable = 'OBS_ID'
-    value_min = 2
-    value_max = 5
-    selection = dict(type='par_box', variable=variable,
-                     value_min=value_min, value_max=value_max)
+    value_range = [2, 5]
+    selection = dict(type='par_box', variable=variable, value_range=value_range)
     selected_obs_table = obs_table.select_observations(selection)
     assert len(selected_obs_table) == 3
-    assert (value_min <= selected_obs_table[variable]).all()
-    assert (selected_obs_table[variable] < value_max).all()
+    assert (value_range[0] <= selected_obs_table[variable]).all()
+    assert (selected_obs_table[variable] < value_range[1]).all()
 
     # test box selection in obs_id inverted
     selection = dict(type='par_box', variable=variable,
-                     value_min=value_min, value_max=value_max, inverted=True)
+                     value_range=value_range, inverted=True)
     selected_obs_table = obs_table.select_observations(selection)
     assert len(selected_obs_table) == 7
-    assert ((value_min > selected_obs_table[variable]) |
-            (selected_obs_table[variable] >= value_max)).all()
+    assert ((value_range[0] > selected_obs_table[variable]) |
+            (selected_obs_table[variable] >= value_range[1])).all()
 
     # test box selection in alt
     variable = 'ALT'
-    value_min = Angle(60., 'degree')
-    value_max = Angle(70., 'degree')
-    selection = dict(type='par_box', variable=variable,
-                     value_min=value_min, value_max=value_max)
+    value_range = Angle([60., 70.], 'degree')
+    selection = dict(type='par_box', variable=variable, value_range=value_range)
     selected_obs_table = obs_table.select_observations(selection)
-    assert (value_min < Angle(selected_obs_table[variable])).all()
-    assert (Angle(selected_obs_table[variable]) < value_max).all()
+    assert (value_range[0] < Angle(selected_obs_table[variable])).all()
+    assert (Angle(selected_obs_table[variable]) < value_range[1]).all()
 
 
 def test_select_time_box():
@@ -125,22 +121,21 @@ def test_select_time_box():
     obs_table_time = make_test_observation_table(n_obs=10,
                                                  datestart=datestart,
                                                  dateend=dateend,
-                                                 debug=True)
+                                                 use_abs_time=True)
 
-    # test box selection in time: (time_start, time_stop) within (value_min, value_max)
+    # test box selection in time: (time_start, time_stop) within value_range
     print()
     print("Test box selection in time")
-    value_min = Time('2012-01-01T01:00:00', format='isot', scale='utc')
-    value_max = Time('2012-01-01T02:00:00', format='isot', scale='utc')
-    selection = dict(type='time_box',
-                     time_min=value_min, time_max=value_max)
+    value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'],
+                       format='isot', scale='utc')
+    selection = dict(type='time_box', time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
     time_start = selected_obs_table['TIME_START']
     time_stop = selected_obs_table['TIME_STOP']
-    assert (value_min < time_start).all()
-    assert (time_start < value_max).all()
-    assert (value_min < time_stop).all()
-    assert (time_stop < value_max).all()
+    assert (value_range[0] < time_start).all()
+    assert (time_start < value_range[1]).all()
+    assert (value_range[0] < time_stop).all()
+    assert (time_stop < value_range[1]).all()
 
 
 def test_select_sky_regions():

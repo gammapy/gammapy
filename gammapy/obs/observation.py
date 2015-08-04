@@ -92,8 +92,7 @@ class ObservationTable(Table):
         indices = indices.astype('int')
         return self[indices]
 
-    def select_range(self, selection_variable,
-                     value_min, value_max, inverted=False):
+    def select_range(self, selection_variable, value_range, inverted=False):
         """Make an observation table, applying some selection.
 
         Generic function to apply a 1D box selection (min, max) to a
@@ -107,10 +106,9 @@ class ObservationTable(Table):
         ----------
         selection_variable : str
             Name of variable to apply a cut (it should exist on the table).
-        value_min : `~astropy.units.Quantity`-like
-            Minimum value; type should be consistent with selection_variable.
-        value_max : `~astropy.units.Quantity`-like
-            Maximum value; type should be consistent with selection_variable.
+        value_range : `~astropy.units.Quantity`-like
+            Allowed range of values (min, max). The type should be
+            consistent with the selection_variable.
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
 
@@ -129,14 +127,13 @@ class ObservationTable(Table):
         value = Quantity(obs_table[selection_variable])
 
         # build and apply mask
-        mask = (value_min <= value) & (value < value_max)
+        mask = (value_range[0] <= value) & (value < value_range[1])
         if inverted:
             mask = np.invert(mask)
         obs_table = obs_table[mask]
         return obs_table
 
-    def select_time_range(self, selection_variable,
-                              time_min, time_max, inverted=False):
+    def select_time_range(self, selection_variable, time_range, inverted=False):
         """Make an observation table, applying a time selection.
 
         Apply a 1D box selection (min, max) to a
@@ -151,10 +148,8 @@ class ObservationTable(Table):
         ----------
         selection_variable : str
             Name of variable to apply a cut (it should exist on the table).
-        time_min : `~astropy.time.Time`
-            Minimum time.
-        time_max : `~astropy.time.Time`
-            Maximum time.
+        time_range : `~astropy.time.Time`
+            Allowed time range (min, max).
         inverted : bool, optional
             Invert selection: keep all entries outside the (min, max) range.
 
@@ -174,13 +169,12 @@ class ObservationTable(Table):
             time = Time(obs_table[selection_variable])
         else:
             # transform time to MET
-            time_min = time_relative_to_ref(time_min, obs_table.meta)
-            time_max = time_relative_to_ref(time_max, obs_table.meta)
+            time_range = time_relative_to_ref(time_range, obs_table.meta)
             # read values into a quantity in case units have to be taken into account
             time = Quantity(obs_table[selection_variable])
 
         # build and apply mask
-        mask = (time_min <= time) & (time < time_max)
+        mask = (time_range[0] <= time) & (time < time_range[1])
         if inverted:
             mask = np.invert(mask)
         obs_table = obs_table[mask]
@@ -223,14 +217,14 @@ class ObservationTable(Table):
 
             - ``time_box`` is a 1D selection criterion acting on the observation
               time (`TIME_START` and `TIME_STOP`); the interval is set via the
-              `time_min` and `time_max` keywords; uses
+              `time_range` keyword; uses
               `~gammapy.obs.ObservationTable.select_time_range`
 
             - ``par_box`` is a 1D selection criterion acting on any
               parameter defined in the observation table that can be casted
               into an `~astropy.units.Quantity` object; the parameter name
-              and interval can be specified using the keywords 'variable',
-              'value_min' and 'value_max' respectively; uses
+              and interval can be specified using the keywords 'variable' and
+              'value_range' respectively; uses
               `~gammapy.obs.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
@@ -266,18 +260,16 @@ class ObservationTable(Table):
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='time_box',
-        ...                  time_min=Time('2012-01-01T01:00:00', format='isot', scale='utc'),
-        ...                  time_max=Time('2012-01-01T02:00:00', format='isot', scale='utc'))
+        ...                  time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'],
+        ...                                  format='isot', scale='utc'))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='ALT',
-        ...                  value_min=Angle(60., 'degree'),
-        ...                  value_max=Angle(70., 'degree'),
+        ...                  value_range=Angle([60., 70.], 'degree'))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='OBS_ID',
-        ...                  value_min=2,
-        ...                  value_max=5)
+        ...                  value_range=[2, 5])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
         obs_table = self
@@ -312,18 +304,15 @@ class ObservationTable(Table):
             elif selection_type == 'time_box':
                 # apply twice the mask: to TIME_START and TIME_STOP
                 obs_table = obs_table.select_time_range('TIME_START',
-                                                        selection['time_min'],
-                                                        selection['time_max'],
+                                                        selection['time_range'],
                                                         selection['inverted'])
                 obs_table = obs_table.select_time_range('TIME_STOP',
-                                                        selection['time_min'],
-                                                        selection['time_max'],
+                                                        selection['time_range'],
                                                         selection['inverted'])
 
             elif selection_type == 'par_box':
                 obs_table = obs_table.select_range(selection['variable'],
-                                                   selection['value_min'],
-                                                   selection['value_max'],
+                                                   selection['value_range'],
                                                    selection['inverted'])
 
             else:

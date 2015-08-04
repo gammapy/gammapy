@@ -77,7 +77,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
                                 datestart=None, dateend=None,
-                                debug=False,
+                                use_abs_time=False,
                                 random_state='random-seed'):
     """Make a test observation table.
 
@@ -100,8 +100,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
         Starting date for random generation of observation start time.
     dateend : `~astropy.time.Time`, optional
         Ending date for random generation of observation start time.
-    debug : bool, optional
-        Show UTC times instead of seconds after the reference.
+    use_abs_time : bool, optional
+        Use absolute UTC times instead of [MET]_ seconds after the reference.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -125,7 +125,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table.meta['OBSERVATORY_NAME'] = observatory_name
     obs_table.meta['MJDREFI'] = dateref_mjd_int
     obs_table.meta['MJDREFF'] = dateref_mjd_fra
-    if debug:
+    if use_abs_time:
         # show the observation times in UTC
         obs_table.meta['TIME_FORMAT'] = 'absolute'
     else:
@@ -178,7 +178,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
         # add night hour to integer part of MJD
         time_start += hour_start
 
-    if debug:
+    if use_abs_time:
         # show the observation times in UTC
         time_start = Time(time_start.isot)
     else:
@@ -191,7 +191,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
 
     # stop time
     # calculated as TIME_START + TIME_OBSERVATION
-    if debug:
+    if use_abs_time:
         time_stop = Time(obs_table['TIME_START'])
         time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
     else:
@@ -216,11 +216,11 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     # derive from az, alt taking into account that alt, az represent the values
     # at the middle of the observation, i.e. at time_ref + (TIME_START + TIME_STOP)/2
     # (or better: time_ref + TIME_START + (TIME_OBSERVATION/2))
-    # in debug mode, the time_ref should not be added, since it's already included
+    # in use_abs_time mode, the time_ref should not be added, since it's already included
     # in TIME_START and TIME_STOP
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
-    if debug:
+    if use_abs_time:
         obstime = Time(obs_table['TIME_START'])
         obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     else:
