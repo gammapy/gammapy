@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import sys
 import argparse
+import logging
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
@@ -16,6 +16,10 @@ __all__ = ['find_obs']
 def main(args=None):
     """Main function for argument parsing."""
     parser = get_parser(find_obs)
+    parser.add_argument("-l", "--log", dest="logLevel",
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
+                                 'CRITICAL'],
+                        help="Set the logging level")
     parser.add_argument('infile', type=str,
                         help='Input obseravtion table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
@@ -34,7 +38,7 @@ def main(args=None):
     parser.add_argument('--system', type=str,
                         help='Coordinate system '
                         '(built-in Astropy coordinate frames are supported, '
-                        'e.g. \'icrs\' or \'galactic\'.)')
+                        'e.g. \'icrs\' or \'galactic\')')
     parser.add_argument('--pix', action='store_true',
                         help='Input coordinates are pixels '
                         '(default is world coordinates)')
@@ -56,7 +60,8 @@ def main(args=None):
     find_obs(**vars(args))
 
 
-def find_obs(infile,
+def find_obs(logLevel,
+             infile,
              outfile,
              x,
              y,
@@ -73,8 +78,6 @@ def find_obs(infile,
              invert,
              overwrite):
     """Select a subset of observations from a given observation list.
-
-    WARNING: this is still a PRELIMINARY version of the tool.
 
     I still have a few TODO's to work out, but the script does select
     observations froma an observation table fits file and prints the
@@ -110,9 +113,8 @@ def find_obs(infile,
 
     TODO: write tests for this command-line tool!!!
     """
-    print("WARNING: this is still a PRELIMINARY version of the tool.")
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+    if (logLevel):
+        logging.basicConfig(level=getattr(logging, logLevel), format='%(levelname)s - %(message)s')
 
     if pix:
         raise NotImplementedError
@@ -124,7 +126,7 @@ def find_obs(infile,
     do_sky_circle_selection = np.array([(x != None), (y != None),
                                         (r != None), (system != None)])
     if do_sky_circle_selection.all():
-        print("Applying sky circle selection") # TODO: use logging!!!
+        logging.debug("Applying sky circle selection.")
         # cast x, y, r into Angle objects
         lon_cen = Angle(x, 'degree')
         lat_cen = Angle(y, 'degree')
@@ -143,7 +145,7 @@ def find_obs(infile,
                                      (dx != None), (dy != None),
                                      (system != None)])
     if do_sky_box_selection.all():
-        print("Applying sky box selection") # TODO: use logging!!!
+        logging.debug("Applying sky box selection.")
         # convert x, y, dx, dy to ranges and cast into Angle objects
         lon_range = Angle([x - dx, x + dx], 'degree')
         lat_range = Angle([y - dy, y + dy], 'degree')
@@ -160,7 +162,7 @@ def find_obs(infile,
     # time box selection
     do_time_box_selection = np.array([(t_start != None), (t_stop != None)])
     if do_time_box_selection.all():
-        print("Applying time box selection") # TODO: use logging!!!
+        logging.debug("Applying time box selection.")
         # cast min, max into Time objects
         t_start = Time(t_start, format='isot', scale='utc')
         t_stop = Time(t_stop, format='isot', scale='utc')
@@ -176,7 +178,7 @@ def find_obs(infile,
     do_par_box_selection = np.array([(par_name != None),
                                      (par_min != None), (par_max != None)])
     if do_par_box_selection.all():
-        print("Applying {} selection".format(par_name)) # TODO: use logging!!!
+        logging.debug("Applying {} selection.".format(par_name))
         # cast min, max into Quantity objects with units
         unit = observation_table[par_name].unit
         par_min = Quantity(par_min, unit)
@@ -193,8 +195,5 @@ def find_obs(infile,
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
-        print(observation_table.meta)
-        print(observation_table)
-        # TODO: output to stdout!!!
-
-    print("WARNING: this is still a PRELIMINARY version of the tool.")
+        logging.info(observation_table.meta)
+        logging.info(observation_table)
