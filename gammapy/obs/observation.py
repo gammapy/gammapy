@@ -197,7 +197,7 @@ class ObservationTable(Table):
         Allowed selection criteria are interpreted using the following
         keywords in the `selection` dictionary:
 
-        - `type`: ``sky_box``, ``sky_circle``, ``'time_box``, ``par_box``
+        - `type`: ``sky_box``, ``sky_circle``, ``time_box``, ``par_box``
 
             - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
               on sky coordinates
