@@ -5,16 +5,15 @@ from astropy.units import Quantity
 from gammapy.astro.source import SNR
 
 densities = Quantity([1, 0.1], 'cm^-3')
-colors = ['b', 'g']
 
 t = Quantity(np.logspace(0, 5, 100), 'yr')
 
-for color, density in zip(colors, densities):
+for density in densities:
     snr = SNR(n_ISM=density)
     F = snr.luminosity_tev(t) / (4 * np.pi * Quantity(1, 'kpc') ** 2)
-    plt.plot(t.value, F.to('ph s^-1 cm^-2').value, color=color, label='n_ISM = {0}'.format(density.value))
-    plt.vlines(snr.sedov_taylor_begin.to('yr').value, 1E-13, 1E-10, linestyle='--', color=color)
-    plt.vlines(snr.sedov_taylor_end.to('yr').value, 1E-13, 1E-10, linestyle='--', color=color)
+    plt.plot(t.value, F.to('ph s^-1 cm^-2').value, label='n_ISM = {0}'.format(density.value))
+    plt.vlines(snr.sedov_taylor_begin.to('yr').value, 1E-13, 1E-10, linestyle='--')
+    plt.vlines(snr.sedov_taylor_end.to('yr').value, 1E-13, 1E-10, linestyle='--')
 plt.xlim(1E2, 1E5)
 plt.ylim(1E-13, 1E-10)
 plt.xlabel('time [years]')

@@ -6,16 +6,15 @@ from gammapy.utils.distributions import normalize
 
 max_radius = 20  # kpc
 r = np.linspace(0, max_radius, 100)
-colors = ['b', 'k', 'k', 'b', 'g', 'g']
 
-for color, key in zip(colors, radial_distributions):
+for key in radial_distributions:
     model = radial_distributions[key]()
     if model.evolved:
         linestyle = '-'
     else:
         linestyle = '--'
     label = model.__class__.__name__
-    plt.plot(r, normalize(model, 0, max_radius)(r), color=color, linestyle=linestyle, label=label)
+    plt.plot(r, normalize(model, 0, max_radius)(r), linestyle=linestyle, label=label)
 plt.xlim(0, max_radius)
 plt.ylim(0, 0.28)
 plt.xlabel('Galactocentric Distance [kpc]')

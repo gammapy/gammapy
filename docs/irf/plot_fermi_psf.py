@@ -9,6 +9,8 @@ from gammapy.irf import EnergyDependentTablePSF
 filename = FermiGalacticCenter.filenames()['psf']
 fermi_psf = EnergyDependentTablePSF.read(filename)
 
+plt.figure(figsize=(6, 6))
+
 energies = Quantity([1], 'GeV')
 for energy in energies:
     psf = fermi_psf.table_psf_at_energy(energy=energy)

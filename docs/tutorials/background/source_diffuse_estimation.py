@@ -47,6 +47,7 @@ ibe = IterativeKernelBackgroundEstimator(images=images,
 n_iterations = 4
 
 # *** RUN & PLOT ***
+plt.figure(figsize=(8, 4))
 
 for iteration in range(n_iterations):
     ibe.run_iteration()
@@ -71,4 +72,4 @@ for iteration in range(n_iterations):
     plt.title('Significance Image, Iteration {0}'.format(iteration),
               fontsize='small')
 
-plt.tight_layout()
+plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.05, right=0.95)

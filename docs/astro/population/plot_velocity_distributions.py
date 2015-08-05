@@ -6,12 +6,11 @@ from gammapy.utils.distributions import normalize
 
 v_min, v_max = 10, 3000  # km / s
 v = np.linspace(v_min, v_max, 200)
-colors = ['b', 'k', 'g']
 
-for color, key in zip(colors, velocity_distributions):
+for key in velocity_distributions:
     model = velocity_distributions[key]()
     label = model.__class__.__name__
-    plt.plot(v, normalize(model, v_min, v_max)(v), color=color, linestyle='-', label=label)
+    plt.plot(v, normalize(model, v_min, v_max)(v), linestyle='-', label=label)
 
 plt.xlim(v_min, v_max)
 plt.ylim(0, 0.004)
