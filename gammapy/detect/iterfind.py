@@ -32,7 +32,9 @@ TODO: tons of things, e.g.
 * Introduce FLUX_SCALE = 1e-10 parameter to avoid roundoff error problems?
 """
 from __future__ import print_function, division
+import os
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from .. import stats
@@ -97,31 +99,31 @@ class IterativeSourceDetector(object):
 
     def run(self):
         """Run source detection."""
-        logging.debug('Running source detection')
+        log.debug('Running source detection')
 
         for _ in range(self.max_sources):
-            logging.debug('Starting iteration number {0}'.format(_))
+            log.debug('Starting iteration number {0}'.format(_))
             debug_folder = self.debug_output_folder + '/' + str(_)
             if self.debug_output_folder:
                 try:
                     os.mkdir(debug_folder)
-                    logging.info('mkdir {0}'.format(debug_folder))
+                    log.info('mkdir {0}'.format(debug_folder))
                 except:
-                    logging.debug('Folder exists: {0}'.format(debug_folder))
+                    log.debug('Folder exists: {0}'.format(debug_folder))
 
             self.compute_iter_maps()
             if self.debug_output_folder:
                 # Save per iteration maps
                 for name in ['background']:
                     filename = '{0}/{1}.fits'.format(debug_folder, name)
-                    logging.info('Writing {0}'.format(filename))
+                    log.info('Writing {0}'.format(filename))
                     fits.writeto(filename, self.iter_maps[name], clobber=self.overwrite)
 
                 # Save per iteration and scale maps
                 for name in ['significance']:
                     for scale in self.scales:
                         filename = '{0}/{1}_{2}.fits'.format(debug_folder, name, scale)
-                        logging.info('Writing {0}'.format(filename))
+                        log.info('Writing {0}'.format(filename))
                         fits.writeto(filename, self.iter_maps[name][scale], clobber=self.overwrite)
 
             self.find_peaks()
@@ -138,12 +140,12 @@ class IterativeSourceDetector(object):
             try:
                 self.fit_source_parameters()
             except FitFailedError:
-                logging.warning('Fit failed. Full stop.')
+                log.warning('Fit failed. Full stop.')
                 break
 
     def compute_iter_maps(self):
         """Compute maps for this iteration."""
-        logging.debug('Computing maps for this iteration.')
+        log.debug('Computing maps for this iteration.')
         self.iter_maps = dict()
 
         background = self.maps['background']
@@ -159,21 +161,17 @@ class IterativeSourceDetector(object):
 
     def model_excess(self, sources):
         """Compute model excess image."""
-        # logging.debug('Computing model excess')
         x, y = self.maps['x'], self.maps['y']
         flux = np.zeros_like(x, dtype=np.float64)
         for source in sources:
-            # logging.debug('Adding source: {0}'.format(source))
             source_flux = gauss2d(x, y, **source)
-            # logging.debug('Source flux: {0}'.format(source_flux.sum()))
             flux += source_flux
-            # logging.debug('Total flux: {0}'.format(flux.sum()))
         excess = flux * self.maps['exposure']
         return excess
 
     def find_peaks(self):
         """Find peaks in residual significance image."""
-        logging.debug('Finding peaks.')
+        log.debug('Finding peaks.')
         self.peaks = []
         for scale in self.scales:
             image = self.iter_maps['significance'][scale]
@@ -189,16 +187,16 @@ class IterativeSourceDetector(object):
             peak['xpos'], peak['ypos'] = x, y
             peak['val'], peak['scale'] = val, scale
             self.peaks.append(peak)
-            logging.debug('Peak on scale {scale:5.2f} is at ({xpos:5d}, {ypos:5d}) with value {val:7.2f}'
-                          ''.format(**peak))
+            log.debug('Peak on scale {scale:5.2f} is at ({xpos:5d}, {ypos:5d}) with value {val:7.2f}'
+                      ''.format(**peak))
 
     def stop_iteration(self):
         """Criteria to stop the iteration process."""
         max_significance = max([_['val'] for _ in self.peaks])
         if max_significance < self.significance_threshold:
-            logging.debug('Max peak significance of {0:7.2f} is smaller than detection threshold {1:7.2f}'
-                          ''.format(max_significance, self.significance_threshold))
-            logging.debug('Stopping iteration.')
+            log.debug('Max peak significance of {0:7.2f} is smaller than detection threshold {1:7.2f}'
+                      ''.format(max_significance, self.significance_threshold))
+            log.debug('Stopping iteration.')
             return True
         else:
             return False
@@ -209,7 +207,7 @@ class IterativeSourceDetector(object):
         At the moment take the position and scale of the maximum residual peak
         and compute the excess within a circle around that position.
         """
-        logging.debug('Guessing Gauss source parameters:')
+        log.debug('Guessing Gauss source parameters:')
 
         # Find the scale with the most significant peak
         peak = self.peaks[0]
@@ -222,9 +220,9 @@ class IterativeSourceDetector(object):
         # TODO: introduce rough scale factor disk -> gauss here
         SIGMA_SCALE_FACTOR = 1
         source['sigma'] = SIGMA_SCALE_FACTOR * peak['scale']
-        logging.debug('xpos: {xpos}'.format(**source))
-        logging.debug('ypos: {ypos}'.format(**source))
-        logging.debug('sigma: {sigma}'.format(**source))
+        log.debug('xpos: {xpos}'.format(**source))
+        log.debug('ypos: {ypos}'.format(**source))
+        log.debug('sigma: {sigma}'.format(**source))
         source['flux'] = self.estimate_flux(source)
         self.sources_guess.append(source)
 
@@ -234,7 +232,7 @@ class IterativeSourceDetector(object):
         For this prototype we simply roll our own using iminuit,
         this should probably be changed to astropy or Sherpa.
         """
-        logging.debug('Fitting source parameters')
+        log.debug('Fitting source parameters')
         from iminuit import Minuit
 
         def fit_stat(xpos, ypos, sigma, flux):
@@ -249,7 +247,7 @@ class IterativeSourceDetector(object):
             return cash
 
         source = self.sources_guess[-1]
-        logging.debug('Source parameters before fit: {0}'.format(source))
+        log.debug('Source parameters before fit: {0}'.format(source))
         pars = source.copy()
         pars['error_xpos'] = 0.01
         pars['error_ypos'] = 0.01
@@ -263,7 +261,7 @@ class IterativeSourceDetector(object):
         minuit.migrad(ncall=self.max_ncall)
 
         source = minuit.values
-        logging.debug('Source parameters  after fit: {0}'.format(source))
+        log.debug('Source parameters  after fit: {0}'.format(source))
 
         if not minuit.migrad_ok():
             # If fit doesn't converge we simply abort
@@ -287,7 +285,7 @@ class IterativeSourceDetector(object):
 
               flux = ((counts - background) / exposure).sum()
         """
-        logging.debug('Estimating flux')
+        log.debug('Estimating flux')
         SOURCE_RADIUS_FACTOR = 2
         radius = SOURCE_RADIUS_FACTOR * source['sigma']
         r2 = ((self.maps['x'] - source['xpos']) ** 2 +
@@ -313,23 +311,23 @@ class IterativeSourceDetector(object):
             excess = excess_image[mask].sum()
             flux_image = (self.maps['counts'] - self.iter_maps['background']) / self.maps['exposure']
             flux = flux_image[mask].sum()
-        logging.debug('Flux estimation for source region radius: {0}'.format(radius))
-        logging.debug('npix: {0}'.format(npix))
-        logging.debug('counts: {0}'.format(counts))
-        logging.debug('background: {0}'.format(background))
-        logging.debug('excess: {0}'.format(excess))
-        logging.debug('exposure: {0}'.format(exposure))
-        logging.debug('flux: {0}'.format(flux))
+        log.debug('Flux estimation for source region radius: {0}'.format(radius))
+        log.debug('npix: {0}'.format(npix))
+        log.debug('counts: {0}'.format(counts))
+        log.debug('background: {0}'.format(background))
+        log.debug('excess: {0}'.format(excess))
+        log.debug('exposure: {0}'.format(exposure))
+        log.debug('flux: {0}'.format(flux))
         return flux
 
     def save_fits(self, filename):
         """Save source catalog to FITS file."""
-        logging.info('Writing source detections in FITS format to {0}'.format(filename))
+        log.info('Writing source detections in FITS format to {0}'.format(filename))
         # TODO
 
     def save_regions(self, filename, selection='fit'):
         """Save ds9 region file."""
-        logging.info('Writing source detections in ds9 region format to {0}'.format(filename))
+        log.info('Writing source detections in ds9 region format to {0}'.format(filename))
         if selection == 'fit':
             sources = self.sources
             color = 'green'
@@ -352,7 +350,7 @@ class IterativeSourceDetector(object):
 
     def save_json(self, filename):
         """Save source catalog to JSON file."""
-        logging.info('Writing source detections in JSON format to {0}'.format(filename))
+        log.info('Writing source detections in JSON format to {0}'.format(filename))
         import json
         data = dict(sources=self.sources, sources_guess=self.sources_guess)
         # print data

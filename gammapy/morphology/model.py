@@ -4,7 +4,6 @@
 At the moment you can have any number of Gaussians.
 """
 from __future__ import print_function, division
-import logging
 import numpy as np
 from astropy.io import fits
 from ..utils.const import fwhm_to_sigma
@@ -85,7 +84,7 @@ class MorphModelImageCreator(object):
         for source in cfg.keys():
             # TODO: Add other source models
             if cfg[source]['Type'] != 'NormGaussian':
-                logging.ERROR('So far only normgauss2d models can be handled.')
+                raise ValueError('So far only normgauss2d models can be handled.')
             sigma = fwhm_to_sigma * float(cfg[source]['fwhm'])
             ampl = float(cfg[source]['ampl']) * 1 / (2 * np.pi * sigma ** 2)
             xpos = float(cfg[source]['xpos']) - 1
@@ -198,7 +197,7 @@ class GaussCatalog(dict):
             self.pars = json.load(fh)
             fh.close()
         else:
-            logging.error('Unknown source: {0}'.format(source))
+            raise ValueError('Unknown source: {0}'.format(source))
 
     def set(self):
         ' + '.join(['gauss2d.' + name for name in source_names])

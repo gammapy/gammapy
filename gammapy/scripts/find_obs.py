@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import argparse
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import ObservationTable
 
 __all__ = ['find_obs']
@@ -16,15 +16,11 @@ __all__ = ['find_obs']
 def main(args=None):
     """Main function for argument parsing."""
     parser = get_parser(find_obs)
-    parser.add_argument("-l", "--log", dest="logLevel",
-                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
-                                 'CRITICAL'],
-                        help="Set the logging level")
     parser.add_argument('infile', type=str,
-                        help='Input obseravtion table file name (fits format)')
+                        help='Input observation table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
-                        help='Output obseravtion table file name (default: stdout)')
+                        help='Output observation table file name (default: stdout)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -56,12 +52,17 @@ def main(args=None):
                         help='If true, invert the selection')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     args = parser.parse_args(args)
+
+    set_up_logging_from_args(args)
+
     find_obs(**vars(args))
 
 
-def find_obs(logLevel,
-             infile,
+def find_obs(infile,
              outfile,
              x,
              y,
@@ -113,20 +114,20 @@ def find_obs(logLevel,
         gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
     """
-    if (logLevel):
-        logging.basicConfig(level=getattr(logging, logLevel), format='%(levelname)s - %(message)s')
-
     if pix:
         raise NotImplementedError
 
-    # open (fits) file and read the observation table
-    observation_table = ObservationTable.read(infile)
+    try:
+        observation_table = ObservationTable.read(infile)
+    except FileNotFoundError:
+        log.error('File not found: {}'.format(infile))
+        exit(-1)
 
     # sky circle selection
     do_sky_circle_selection = np.array([(x != None), (y != None),
                                         (r != None), (system != None)])
     if do_sky_circle_selection.all():
-        logging.debug("Applying sky circle selection.")
+        log.debug("Applying sky circle selection.")
         # cast x, y, r into Angle objects
         lon_cen = Angle(x, 'degree')
         lat_cen = Angle(y, 'degree')
@@ -145,7 +146,7 @@ def find_obs(logLevel,
                                      (dx != None), (dy != None),
                                      (system != None)])
     if do_sky_box_selection.all():
-        logging.debug("Applying sky box selection.")
+        log.debug("Applying sky box selection.")
         # convert x, y, dx, dy to ranges and cast into Angle objects
         lon_range = Angle([x - dx, x + dx], 'degree')
         lat_range = Angle([y - dy, y + dy], 'degree')
@@ -162,7 +163,7 @@ def find_obs(logLevel,
     # time box selection
     do_time_box_selection = np.array([(t_start != None), (t_stop != None)])
     if do_time_box_selection.all():
-        logging.debug("Applying time box selection.")
+        log.debug("Applying time box selection.")
         # convert min, max to range and cast into Time object
         t_range = Time([t_start, t_stop], format='isot', scale='utc')
         selection = dict(type='time_box', time_range=t_range, inverted=invert)
@@ -175,7 +176,7 @@ def find_obs(logLevel,
     do_par_box_selection = np.array([(par_name != None),
                                      (par_min != None), (par_max != None)])
     if do_par_box_selection.all():
-        logging.debug("Applying {} selection.".format(par_name))
+        log.debug("Applying {} selection.".format(par_name))
         # convert min, max to range and cast into Quantity object with unit
         unit = observation_table[par_name].unit
         par_range = Quantity([par_min, par_max], unit)
@@ -189,5 +190,5 @@ def find_obs(logLevel,
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
-        logging.info(observation_table.meta)
-        logging.info(observation_table)
+        log.info(observation_table.meta)
+        log.info(observation_table)

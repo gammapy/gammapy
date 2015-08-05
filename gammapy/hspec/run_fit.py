@@ -22,6 +22,11 @@ def main(args=None):
     parser.add_argument('--do-conf', action='store_true',
                         help='Compute confidence values for the fitted parameters')
     args = parser.parse_args(args)
+
+    # TODO: set up logger
+    # logger = logging.getLogger("sherpa")
+    # logger.setLevel(logging.ERROR)
+
     sherpa_spec_fit(**vars(args))
 
 
@@ -33,18 +38,12 @@ def sherpa_spec_fit(in_files,
                     do_conf):
     """Reads a set of pha files and performs a maximum likelihood fit.
     """
-    import logging
-
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-
     # from sherpa.astro.ui import *  # TEST if needed (only when outside sherpa env)
     import sherpa.astro.ui as sau
     from . import load_model
     from . import make_plot
     from .specsource import SpecSource
 
-    logger = logging.getLogger("sherpa")
-    logger.setLevel(logging.ERROR)
 
     # Read and load the data and model:
     list_data = []

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['pfspec']
 
@@ -26,9 +26,11 @@ def main(args=None):
                         help='Write results to FITS files in current directory.')
     parser.add_argument('--graphical_output', action='store_true', default=False,
                         help='Switch off graphical output.')
-    parser.add_argument('-l', '--loglevel', type=str, default='INFO',
-                        help='Amount of logging e.g. DEBUG, INFO, WARNING, ERROR.')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     args = parser.parse_args(args)
+    set_up_logging_from_args(args)
     pfspec(**vars(args))
 
 
@@ -49,8 +51,6 @@ def pfspec(input_file_names,
 
     TODO: document
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from ..utils.pyfact import create_spectrum
 
     create_spectrum(input_file_names=input_file_names,

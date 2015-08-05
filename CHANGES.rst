@@ -53,7 +53,7 @@ Summary
 
 - Released on August 3, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
 - Requires Astropy version 1.0 or later.
-- 8 contributors (5 new)
+- 8 contributors (4 new)
 - 4 months of work (from April 13, 2014 to August 3, 2015)
 - XXX pull requests
 - On-off likelihood spectral analysis was added in ``gammapy.hspec``,
@@ -66,10 +66,10 @@ Contributors
 
 - Manuel Paz Arribas
 - Christoph Deil
+- Axel Donath
 - Jonathan Harris (new)
 - Johannes King (new)
 - Stefan Klepser (new)
-- Dirk Lennarz (new)
 - Ignasi Reichardt (new)
 - Regis Terrier
 
@@ -92,10 +92,10 @@ Pull requests
 - Add cube background model class [#299] (Manuel Paz Arribas)
 - Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
 - Consistent random number handling and improve sample_sphere [#283] (Manuel Paz Arribas)
-- Add Feldman Cousins algorithm [#311] (Dirk Lennarz)
 - Simplified attribute docstrings [#301] (Manuel Paz Arribas)
 - Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
 - Observation table subset selection [#295] (Manuel Paz Arribas)
+- Set up and document logging for Gammapy [#318] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 

@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
+log = logging.getLogger(__name__)
 from collections import OrderedDict
 import numpy as np
 from astropy.extern import six
@@ -83,7 +84,7 @@ def catalog_xmatch_circle(catalog, other_catalog,
 
     # Need to define columns if there's not a single association
     if len(associations) == 0:
-        logging.debug('No associations found.')
+        log.debug('No associations found.')
         table = Table()
         table.add_column(Column([], name='Source_Index', dtype=int))
         table.add_column(Column([], name='Source_Name', dtype=str))
@@ -92,7 +93,7 @@ def catalog_xmatch_circle(catalog, other_catalog,
         table.add_column(Column([], name='Association_Catalog', dtype=str))
         table.add_column(Column([], name='Separation', dtype=float))
     else:
-        logging.debug('Found {} associations.'.format(len(associations)))
+        log.debug('Found {} associations.'.format(len(associations)))
         table = Table(associations, names=associations[0].keys())
 
     return table
@@ -182,7 +183,7 @@ def catalog_xmatch_combine(associations):
     """
     # Add a column to each table with the catalog name
     for name, table in associations.items():
-        logging.debug('{:10s} has {:5d} rows'.format(name, len(table)))
+        log.debug('{:10s} has {:5d} rows'.format(name, len(table)))
         if len(table) != 0:
             table['Association_Catalog'] = name
 
@@ -192,6 +193,6 @@ def catalog_xmatch_combine(associations):
     names = ['Source_Name', 'Association_Catalog', 'Association_Name', 'Separation']
     table = table[names]
 
-    logging.debug('Combined number of associations: {}'.format(len(table)))
+    log.debug('Combined number of associations: {}'.format(len(table)))
 
     return table

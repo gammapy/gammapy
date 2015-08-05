@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['image_decompose_a_trous']
@@ -42,14 +44,12 @@ def image_decompose_a_trous(infile,
     * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-laplacian
     * http://scikit-image.org/docs/dev/api/skimage.transform.html#pyramid-reduce
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from astropy.io import fits
     from gammapy.image.utils import atrous_hdu
 
-    logging.info('Reading {0}'.format(infile))
+    log.info('Reading {0}'.format(infile))
     hdu = fits.open(infile)[0]
     atrous_hdus = atrous_hdu(hdu, n_levels=n_levels)
 
-    logging.info('Writing {0}'.format(outfile))
+    log.info('Writing {0}'.format(outfile))
     atrous_hdus.writeto(outfile, clobber=overwrite)

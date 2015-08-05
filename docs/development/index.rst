@@ -619,3 +619,81 @@ Constructor parameters
 ++++++++++++++++++++++
 
 TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
+
+Logging
+-------
+
+Gammapy is a library. This means that it should never contain print statements, because with
+print statements the library users have no easy way to configure where the print output goes
+(e.g. to ``stdout`` or ``stderr`` or a log file) and what the log level (``warning``, ``info``, ``debug``)
+and format is (e.g. include timestamp and log level?).
+
+So logging is much better than printing. But also logging is only rarely needed.
+Many developers use print or log statements to debug some piece of code while they write it.
+Once it's written and works, it's rare that callers want it to be chatty and log messages all the time.
+Print and log statements should mostly be contained in end-user scripts that use Gammapy,
+not in Gammapy itself.
+
+That said, there are cases where emitting log messages can be useful.
+E.g. a long-running algorithm with many steps can log info or debug statements.
+In a function that reads and writes several files it can make sense to include info log messages
+for normal operation, and warning or error log messages when something goes wrong.
+Also, command line tools that are included in Gammapy **should** contain log messages,
+informing the user about what they are doing.
+
+Gammapy uses the Python standard library `logging` module. This module is extremely flexible,
+but also quite complex. But our logging needs are very modest, so it's actually quite simple ...
+
+Generating log messages
++++++++++++++++++++++++
+
+To generate log messages from any file in Gammapy, include these two lines at the top:
+
+.. code-block:: python
+
+    import logging
+    log = logging.getLogger(__name__)
+
+This creates a module-level `logging.Logger` object called ``log``, and you can then create
+log messages like this from any function or method:
+
+.. code-block:: python
+
+    def process_lots_of_data(infile, outfile):
+
+        log.info('Starting processing data ...')
+
+        # do lots of work
+
+        log.info('Writing {}'.format(outfile))
+
+
+You should never log messages from the module level (i.e. on import) or configure the log
+level or format in Gammapy, that should be left to callers ... except from command line tools ...
+
+There is also the rare case of functions or classes with the main job to check
+and log things. For these you can optionally let the caller pass a logger when
+constructing the class to make it easier to configure the logging.
+See the `~gammapy.data.EventListDatasetChecker` as an example.
+
+Configuring logging from command line tools
++++++++++++++++++++++++++++++++++++++++++++
+
+Every Gammapy command line tool should have a ``--loglevel`` option:
+
+.. code-block:: python
+
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
+
+This option is then processed at the end of ``main`` using this helper function:
+
+.. code-block:: python
+
+    set_up_logging_from_args(args)
+
+This sets up the root logger with the log level and format (the format isn't configurable
+for the command line scripts at the moment).
+
+See ``gammapy/scripts/find_obs.py`` as an example.

@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
+log = logging.getLogger(__name__)
 from collections import OrderedDict
 import os
 import numpy as np
@@ -519,7 +520,7 @@ class EventListDatasetChecker(object):
     event_list_dataset : `~gammapy.data.EventListDataset`
         Event list dataset
     logger : `logging.Logger` or None
-        Logger to use
+        Logger to use (use module-level Gammapy logger by default)
     """
     _AVAILABLE_CHECKS = OrderedDict(
         misc='check_misc',
@@ -538,7 +539,7 @@ class EventListDatasetChecker(object):
         if logger:
             self.logger = logger
         else:
-            self.logger = logging.getLogger('EventListDatasetChecker')
+            self.logger = log
 
     def run(self, checks='all'):
         """Run checks.
@@ -577,7 +578,7 @@ class EventListDatasetChecker(object):
         missing_meta = set(required_meta) - set(self.dset.event_list.meta)
         if missing_meta:
             ok = False
-            logging.error('Missing meta info: {}'.format(missing_meta))
+            self.logger.error('Missing meta info: {}'.format(missing_meta))
 
         # TODO: implement more basic checks that all required info is present.
 
@@ -626,9 +627,9 @@ class EventListDatasetChecker(object):
             dt = (met_ref - telescope_met_refs[telescope])
             if dt > self.accuracy['time']:
                 ok = False
-                logging.error('MET reference is incorrect.')
+                self.logger.error('MET reference is incorrect.')
         else:
-            logging.debug('Skipping MET reference check ... not known for this telescope.')
+            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
 
         # TODO: check latest CTA spec to see which info is required / optional
         # EVENTS header keywords:

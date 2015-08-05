@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['derived_images']
@@ -31,16 +33,14 @@ def derived_images(infile,
 
     TODO: describe
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from astropy.io import fits
     from gammapy.background import Maps
 
-    logging.info('Reading {0}'.format(infile))
+    log.info('Reading {0}'.format(infile))
     hdus = fits.open(infile)
     maps = Maps(hdus, theta=theta,
                 is_off_correlated=is_off_correlated)
-    logging.info('Computing derived maps')
+    log.info('Computing derived maps')
     maps.make_derived_maps()
-    logging.info('Writing {0}'.format(outfile))
+    log.info('Writing {0}'.format(outfile))
     maps.writeto(outfile, clobber=overwrite)

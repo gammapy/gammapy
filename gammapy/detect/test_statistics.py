@@ -5,6 +5,7 @@ Functions to compute TS maps
 """
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import warnings
 from itertools import product
 from functools import partial
@@ -156,9 +157,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     multiscale_result = []
 
     for scale in scales:
-        logging.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
-                     ' morphology.'.format('residual ' if residual else '',
-                                           scale, morphology))
+        log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
+                 ' morphology.'.format('residual ' if residual else '',
+                                       scale, morphology))
 
         # Sample down and require that scale parameters is at least 5 pix
         if downsample == 'auto':
@@ -168,12 +169,12 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         else:
             factor = int(downsample)
         if factor == 1:
-            logging.info('No down sampling used.')
+            log.info('No down sampling used.')
             downsampled = False
         else:
             if morphology == 'Shell2D':
                 factor /= 2
-            logging.info('Using down sampling factor of {0}'.format(factor))
+            log.info('Using down sampling factor of {0}'.format(factor))
             downsampled = True
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
@@ -212,7 +213,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
             background = maps_['background']  # + maps_['diffuse']
         ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
                                     kernel, *args, **kwargs)
-        logging.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
+        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
         ts_results['morphology'] = morphology
         if downsampled:
@@ -332,8 +333,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         from scipy.ndimage import convolve
         radius = _flux_correlation_radius(kernel)
         tophat = Tophat2DKernel(radius, mode='oversample') * np.pi * radius ** 2
-        logging.info('Using correlation radius of {0:.1f} pix to estimate'
-                     ' initial flux.'.format(radius))
+        log.info('Using correlation radius of {0:.1f} pix to estimate'
+                 ' initial flux.'.format(radius))
         with np.errstate(invalid='ignore', divide='ignore'):
             flux = (counts - background) / exposure / FLUX_FACTOR
         flux = convolve(flux, tophat.array) / CONTAINMENT
@@ -355,7 +356,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
                    method=method, optimizer=optimizer, threshold=threshold)
 
     if parallel:
-        logging.info('Using {0} cores to compute TS map.'.format(cpu_count()))
+        log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
         pool = Pool()
         results = pool.map(wrap, positions)
         pool.close()
@@ -437,7 +438,7 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         raise ValueError('Invalid fitting method.')
 
     if niter > MAX_NITER:
-        logging.warn('Exceeded maximum number of function evaluations!')
+        log.warning('Exceeded maximum number of function evaluations!')
         return np.nan, amplitude * FLUX_FACTOR, niter
 
     with np.errstate(invalid='ignore', divide='ignore'):

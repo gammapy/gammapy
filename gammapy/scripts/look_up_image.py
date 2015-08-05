@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['look_up_image']
@@ -31,12 +33,10 @@ def look_up_image(infile,
                   # pix,
                   ):
     """Look up values in a map at given positions."""
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from gammapy.utils.fits import get_hdu
     from gammapy.image import lookup
 
-    logging.debug('Reading {0}'.format(infile))
+    log.debug('Reading {0}'.format(infile))
     hdu = get_hdu(infile)
 
     value = lookup(hdu, x, y)

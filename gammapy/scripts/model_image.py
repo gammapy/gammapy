@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['model_image']
@@ -15,13 +17,16 @@ def main(args=None):
     parser.add_argument('--sources', type=str, default='sources.json',
                         help='Sources JSON file name (contains start '
                         'values for fit of Gaussians)')
-    parser.add_argument('--model_image', type=str, default='model.fits',
+    parser.add_argument('--outfile', type=str, default='model.fits',
                         help='Output model image FITS file name')
     args = parser.parse_args(args)
     model_image(**vars(args))
 
 
-def model_image():
+def model_image(exposure,
+                psf,
+                sources,
+                outfile):
     """Given a catalog of sources, simulate a flux image.
 
     Inputs:
@@ -35,9 +40,7 @@ def model_image():
     * Source model flux image (FITS file)
     * Source model excess image (FITS file)
     """
-    raise NotImplementedError
-    # import logging
-    # logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+    # raise NotImplementedError
     # from astropy.io import fits
     # from ..image import empty_image
     # from ..image import _to_image_bbox as to_image
@@ -45,4 +48,7 @@ def model_image():
     # catalog = fits.open('test_catalog.fits')[1].data
     # image = empty_image(nxpix=600, nypix=600, binsz=0.02, xref=0, yref=0, dtype='float64')
     # to_image(catalog, image)
-    # image.writetofits('test_image.fits', clobber=True)
+    #
+    # log.info('Writing {}'.format(outfile))
+    # image.writetofits(outfile)
+    pass

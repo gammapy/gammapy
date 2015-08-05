@@ -1,6 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
+from astropy.io import fits
+from astropy.table import Table
+from ..image.utils import bin_events_in_cube
 from ..utils.scripts import get_parser
 
 __all__ = ['bin_cube']
@@ -25,12 +30,6 @@ def bin_cube(event_file,
              out_file,
              overwrite):
     """Bin events into a LON-LAT-Energy cube."""
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-    from astropy.io import fits
-    from astropy.table import Table
-    from gammapy.image.utils import bin_events_in_cube
-
     events = Table.read(event_file)
     reference_cube = fits.open(reference_file)
     energies = Table.read(reference_file, 'ENERGIES')

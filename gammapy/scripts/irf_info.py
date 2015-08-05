@@ -2,9 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from __future__ import print_function, division
-import logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 import os
+import logging
+log = logging.getLogger(__name__)
 from astropy.units import Quantity
 from astropy.io import fits
 from ..utils.scripts import get_parser
@@ -83,12 +83,12 @@ def irf_info(infiles,
         hdu_list = fits.open(infile)
         hdu_names = [hdu.name for hdu in hdu_list]
         if 'POINT SPREAD FUNCTION' in hdu_names:
-            logging.info('Auto detected PSF FITS file.')
-            logging.info('Retrieving PSF info for {0}'.format(os.path.split(infile)[1]))
+            log.info('Auto detected PSF FITS file.')
+            log.info('Retrieving PSF info for {0}'.format(os.path.split(infile)[1]))
             retrieve_psf_info(hdu_list, energies, thetas, fractions, plot)
         elif 'SPECRESP' in hdu_names:
-            logging.info('Auto detected ARF FITS file.')
-            logging.info('Retrieving ARF info for {0}'.format(os.path.split(infile)[1]))
+            log.info('Auto detected ARF FITS file.')
+            log.info('Retrieving ARF info for {0}'.format(os.path.split(infile)[1]))
             retrieve_arf_info(hdu_list, energies, plot)
         else:
-            logging.error('No valid FITS file found.')
+            log.error('No valid FITS file found.')

@@ -11,6 +11,7 @@ Other SExtractor Python wrappers (not BSD licensed!):
 """
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import subprocess
 import tempfile
 from astropy.utils.data import get_pkg_data_filename
@@ -84,13 +85,13 @@ def sex(image,
     if parameters_name is None:
         parameters_name = get_pkg_data_filename('sex.param')
 
-    logging.info('Running SExtractor')
-    logging.info('INPUT  image: {0}'.format(image))
-    logging.info('INPUT  image2: {0}'.format(image2))
-    logging.info('INPUT  config_name: {0}'.format(config_name))
-    logging.info('INPUT  parameters_name: {0}'.format(parameters_name))
-    logging.info('OUTPUT catalog_name: {0}'.format(catalog_name))
-    logging.info('OUTPUT checkimage_name: {0}'.format(checkimage_name))
+    log.info('Running SExtractor')
+    log.info('INPUT  image: {0}'.format(image))
+    log.info('INPUT  image2: {0}'.format(image2))
+    log.info('INPUT  config_name: {0}'.format(config_name))
+    log.info('INPUT  parameters_name: {0}'.format(parameters_name))
+    log.info('OUTPUT catalog_name: {0}'.format(catalog_name))
+    log.info('OUTPUT checkimage_name: {0}'.format(checkimage_name))
 
     cmd = ['sex', image, image2,
            '-c', config_name,
@@ -101,13 +102,13 @@ def sex(image,
            '-detect_minarea', str(detect_minarea),
            '-deblend_mincont', str(deblend_mincont)
            ]
-    logging.info('Executing the following command now:\n\n{0}\n'.format(' '.join(cmd)))
+    log.info('Executing the following command now:\n\n{0}\n'.format(' '.join(cmd)))
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
     # Read output files
     catalog = Table.read(catalog_name)
     checkimage = fits.open(checkimage_name)[0]
-    logging.info('Number of objects detected: {0}'.format(len(catalog)))
+    log.info('Number of objects detected: {0}'.format(len(catalog)))
 
     return catalog, checkimage
