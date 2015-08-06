@@ -67,6 +67,28 @@ class Shell2D(Fittable2DModel):
             \\right.
 
     With :math:`r_{out} = r_{in} + \\mathrm{width}`.
+
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        from gammapy.morphology import Shell2D
+        import matplotlib.pyplot as plt
+        
+        x0, y0 = 25, 25
+        r_in, width = 10, 5
+        shell = Shell2D(amplitude=100., x_0=x0, y_0=y0,
+                        r_in=r_in, width=width)
+        y, x = np.mgrid[0:50, 0:50]
+        plt.imshow(shell(x, y), origin='lower', interpolation='none')
+        plt.xlabel('x (pix)')
+        plt.ylabel('y (pix)')
+        plt.colorbar()
+        plt.show()
+
     """
 
     amplitude = Parameter('amplitude')
@@ -171,6 +193,26 @@ class Sphere2D(Fittable2DModel):
                     0 & : r > r_0
                 \\end{array}
             \\right.
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        from gammapy.morphology import Sphere2D
+        import matplotlib.pyplot as plt
+        
+        x0, y0, r_0 = 25, 25, 20
+        sphere = Shell2D(amplitude=100., x_0=x0, y_0=y0,
+                        r_0=r_0)
+        y, x = np.mgrid[0:50, 0:50]
+        plt.imshow(sphere(x, y), origin='lower', interpolation='none')
+        plt.xlabel('x (pix)')
+        plt.ylabel('y (pix)')
+        plt.colorbar()
+        plt.show()
+
     """
 
     amplitude = Parameter('amplitude')

@@ -21,6 +21,9 @@ into source catalogs.
 Getting Started
 ===============
 
+.. image:: fermi_ts_map.png
+   :scale: 100 %
+
 Computation of TS maps
 ----------------------
 

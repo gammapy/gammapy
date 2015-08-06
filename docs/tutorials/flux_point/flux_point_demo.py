@@ -42,24 +42,24 @@ def plot_flux_points(table, x, y, function, energy_min, y_method):
     f, ax = plt.subplots(2, sharex=True)
     lafferty_flux, log_flux = get_flux_tables(table, y_method, function,
                                               SPECTRAL_INDEX)
-    ax[0].loglog(x, (x ** 2) * y)
     ax[0].loglog(lafferty_flux['ENERGY'],
                     ((lafferty_flux['ENERGY'] ** 2) * lafferty_flux['DIFF_FLUX']),
-                    marker='D', color='k', linewidth=0, ms=5,
+                    marker='D', linewidth=0, ms=5,
                     label='Lafferty Method')
     residuals_lafferty = (lafferty_flux['DIFF_FLUX']
                           - function(lafferty_flux['ENERGY'])) / function(lafferty_flux['ENERGY']) * 100
     ax[0].loglog(log_flux['ENERGY'],
                     (log_flux['ENERGY'] ** 2) * log_flux['DIFF_FLUX'],
-                    marker='D', color='r', linewidth=0, ms=5,
+                    marker='D', linewidth=0, ms=5,
                     label='Log Center Method')
     ax[0].legend(loc='lower left', fontsize=10)
     residuals_log = (log_flux['DIFF_FLUX'] -
                      function(log_flux['ENERGY'])) / function(log_flux['ENERGY']) * 100
     ax[1].semilogx(lafferty_flux['ENERGY'], residuals_lafferty, marker='D',
-                      color='k', linewidth=0, ms=5)
+                      linewidth=0, ms=5)
     ax[1].semilogx(log_flux['ENERGY'], residuals_log, marker='D',
-                      color='r', linewidth=0, ms=5)
+                      linewidth=0, ms=5)
+    ax[0].loglog(x, (x ** 2) * y, color='k')
     indices = np.arange(len(energy_min))
     for index in indices:
         ax[0].axvline(energy_min[index], 0, 1e6, color='k',
@@ -100,4 +100,5 @@ def plot_power_law():
     table['INT_FLUX'] = int_flux
     plot_flux_points(table, x, y, spectral_model_function,
                      energy_min, 'power_law')
+    plt.tight_layout()
     plt.legend()

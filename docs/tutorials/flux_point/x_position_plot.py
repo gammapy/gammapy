@@ -36,9 +36,9 @@ def make_x_plot():
                               - np.log(energy_min)) / (np.log(energy_max)-np.log(energy_min)))
         lafferty_array.append(residuals_lafferty[0])
         log_array.append(residuals_log[0])
-    plt.plot(spectral_indices, lafferty_array, color='k',
+    plt.plot(spectral_indices, lafferty_array,
              linewidth=1, ms=0, label='Lafferty Method')
-    plt.plot(spectral_indices, log_array, color='r',
+    plt.plot(spectral_indices, log_array,
              linewidth=1, ms=0, label='Log Center Method')
     plt.legend()
     plt.ylabel('X position in bin')
