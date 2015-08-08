@@ -364,8 +364,6 @@ class CubeBackgroundModel(object):
         table['ENERG_HI'] = a_energy_hi
         table['Bgd'] = a_bg
 
-        table.meta['E_THRES'] = a_energy_lo.flatten()[0].value
-
         table.meta['name'] = 'BACKGROUND'
 
         return table
@@ -399,7 +397,6 @@ class CubeBackgroundModel(object):
         imhdu.header['BG_UNIT'] = '{0.unit:FITS}'.format(self.background)
         imhdu.header['CTYPE3'] = 'ENERGY'
         imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_bins)
-        imhdu.header['E_THRES'] = self.energy_bins[0].value
 
         # get WCS object and write it out as a FITS header
         wcs_header = self.det_wcs.to_header()
