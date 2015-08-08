@@ -11,10 +11,10 @@ The naming of the models in this section follows the convention from
 BACKGROUND_3D
 -------------
 
-`BACKGROUND_3D` is a background rate 3D cube (X, Y, energy) in
-units of per energy, per time, per solid angle. `X` and `Y` are
-given in detector coordinates `(DETX, DETY)`, a.k.a.
-`nominal system`. This is a tangential system to the instrument
+**BACKGROUND_3D** is a background rate 3D cube *(X, Y, energy)* in
+units of per energy, per time, per solid angle. **X** and **Y** are
+given in detector coordinates **(DETX, DETY)**, a.k.a.
+**nominal system**. This is a tangential system to the instrument
 during observations.
 
 The `~gammapy.background.CubeBackgroundModel` is used as container class for this model.
