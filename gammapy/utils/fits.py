@@ -121,3 +121,35 @@ def table_to_fits_table(table):
     # https://github.com/gammapy/gammapy/issues/298
 
     return tbhdu
+
+
+def fits_table_to_table(tbhdu):
+    """Convert astropy table to binary table fits format.
+
+    This is a generic method to convert a `~astropy.io.fits.BinTableHDU`
+    to `~astropy.table.Table`.
+    to a 
+    The name of the table is stored in the Table meta information
+    under the `name` keyword.
+
+    Parameters
+    ----------
+    tbhdu : `~astropy.io.fits.BinTableHDU`
+        fits bin table containing the astropy table columns
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        astropy table containing the desired columns
+    """
+
+    data = tbhdu.data
+    header = tbhdu.header
+
+    table = Table(data, meta=header)
+
+    # Copy over column meta-data
+    for colname in tbhdu.columns.names:
+        table[colname].unit = tbhdu.columns[colname].unit
+
+    return table
