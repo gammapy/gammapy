@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import ndimage
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -21,10 +20,8 @@ __all__ = ['make_bg_cube_models']
 
 # TODO: remove all these global options: if needed, define as arguments to parse!!!
 DEBUG = 2 # 0: no output, 1: output, 2: run fast, 3: more verbose
-GRAPH_DEBUG = 1 # 0: no plots, 1: make plots, 2: wait between steps (bins), 3: draw 3D scatter plots (not implemented)
 SAVE = 1
 
-HESSFITS_MPP = '/home/mapaz/astropy/gammapy_tutorial/HESS_fits_data/pa/Model_Deconvoluted_Prod26/Mpp_Std'
 BG_OBS_TABLE_FILE = 'bg_observation_table.fits'
 
 def main(args=None):
@@ -33,10 +30,8 @@ def main(args=None):
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
                                  'CRITICAL'],
                         help="Set the logging level")
-    parser.add_argument('--fitspath', type=str,
-                        default=HESSFITS_MPP,
-                        help='Dir path to input event list fits files '
-                        '(default is {}).'.format(HESSFITS_MPP))
+    parser.add_argument('fitspath', type=str,
+                        help='Dir path to input event list fits files.')
 ##    parser.add_argument('run_list', type=str,
 ##                        help='Input run list file name')
 ##    parser.add_argument('exclusion_list', type=str,
@@ -101,6 +96,8 @@ def make_bg_cube_models(loglevel,
 # if it works, try to compress current result files
 
 # define observation binning
+# TODO: store it in a file (fits? ascii?) (use an astropy table as help?)!!!
+
 # define a binning in altitude angle
 # TODO: ObservationGroups
 # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
@@ -566,37 +563,6 @@ def stack_observations(fits_path):
                 bg_cube_model.write('{}_table.fits'.format(oufile), format='table', clobber=True)
                 bg_cube_model.write('{}_image.fits'.format(oufile), format='image', clobber=True)
 
-            # check model: do some plots
-            # TODO: move to an extra function?!!!
-            if GRAPH_DEBUG:
-                fig, axes = plt.subplots(nrows=1, ncols=3)
-                fig.set_size_inches(30., 8., forward=True)
-                plt.suptitle('altitude bin {0} azimuth bin {1}'.format(i_alt, i_az))
-
-                # plot images
-                #bg_cube_model.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0])
-                bg_cube_model.plot_image(energy=Quantity(5., 'TeV'), ax=axes[0])
-                bg_cube_model.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1])
-
-                # plot spectra
-                bg_cube_model.plot_spectrum(det=Angle([0., 0.], 'degree'), ax=axes[2],
-                                            style_kwargs=dict(color='blue',
-                                                              label='(0, 0) deg'))
-                bg_cube_model.plot_spectrum(det=Angle([2., 2.], 'degree'), ax=axes[2],
-                                            style_kwargs=dict(color='red',
-                                                              label='(2, 2) deg'))
-                axes[2].set_title('')
-                axes[2].legend()
-
-                #plt.tight_layout()
-                plt.draw()
-
-                if GRAPH_DEBUG > 1:
-                    plt.show() # wait until image is closed
-
     # TODO: use random data (write a random data generator (see bg API))
     #       then write a similar script inside gammapy as example
     #       what about IRFs (i.e. Aeff for the E_THRESH?)?
-
-    if GRAPH_DEBUG:
-        plt.show() # don't leave at the end
