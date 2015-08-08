@@ -100,7 +100,7 @@ no need for explicit time scale transformations in Gammapy
 The "Time Systems in a nutshell" section `here <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html>`__
 gives a good, brief explanation of the differences between the relevant time scales `UT1`, `UTC` and `TT`.
 
-.. _MET:
+.. _MET_definition:
 
 Mission elapsed times (MET)
 ---------------------------
