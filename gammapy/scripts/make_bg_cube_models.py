@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 import numpy as np
-from scipy import ndimage
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.units import Quantity
@@ -125,6 +124,92 @@ def get_cube_shape(nobs):
         nybins += 4*minusbins
         nxbins += 4*minusbins
     return (nebins, nybins, nxbins)
+
+
+def smooth(bg_cube_model, n_counts):
+    """
+    Smooth background cube model.
+
+    Smooth method:
+    1: slice model in energy bins -> 1 image per energy bin
+    2: calculate integral of the image
+    3: determine times to smooth (N) depending on number of entries in the cube
+    4: smooth image N times with root TH2::Smooth
+    default smoothing kernel: k5a
+    Double_t k5a[5][5] =  { { 0, 0, 1, 0, 0 },
+                            { 0, 2, 2, 2, 0 },
+                            { 1, 2, 5, 2, 1 },
+                            { 0, 2, 2, 2, 0 },
+                            { 0, 0, 1, 0, 0 } };
+    ref: https://root.cern.ch/root/html/TH2.html#TH2:Smooth
+    5: scale with the cocient of the old integral div by the new integral
+    6: fill the values of the image back in the cube
+
+    Parameters
+    ----------
+    bg_cube_model : `~CubeBackgroundModel`
+        Cube background model to smooth.
+    n_counts : int
+        Number of events used to fill the cube background model.
+
+    Returns
+    -------
+    bg_cube_model : `~CubeBackgroundModel`
+        Smoothed cube background model.
+    """
+    from scipy import ndimage
+
+    # smooth images
+
+    # integral of original images
+    dummy_delta_energy = np.zeros_like(bg_cube_model.energy_bins[1:])
+    delta_y = bg_cube_model.dety_bins[1:] - bg_cube_model.dety_bins[:-1]
+    delta_x = bg_cube_model.detx_bins[1:] - bg_cube_model.detx_bins[:-1]
+    # define grid of deltas (i.e. bin widths for each 3D bin)
+    dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y, delta_x, indexing='ij')
+    bin_area = (delta_y*delta_x).to('sr')
+    integral_image = bg_cube_model.background*bin_area
+    integral_image = integral_image.sum(axis=(1,2))
+
+    # number of times to smooth
+    if n_counts >= 1.e6:
+        n_smooth = 3
+    elif (n_counts < 1.e6) and (n_counts >= 1.e5):
+        n_smooth = 4
+    else:
+        n_smooth = 5
+
+    # smooth images
+
+    # define smoothing kernel as k5a in root:
+    # https://root.cern.ch/root/html/TH2.html#TH2:Smooth
+    kernel = np.array([[0, 0, 1, 0, 0],
+                       [0, 2, 2, 2, 0],
+                       [1, 2, 5, 2, 1],
+                       [0, 2, 2, 2, 0],
+                       [0, 0, 1, 0, 0]])
+
+    # loop over energy bins (i.e. images)
+    for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
+        # loop over number of times to smooth
+        for i_smooth in np.arange(n_smooth):
+            data = bg_cube_model.background[i_energy]
+            image_smooth = ndimage.convolve(data, kernel)
+
+            # overwrite bg image with smoothed bg image
+            bg_cube_model.background[i_energy] = Quantity(image_smooth, bg_cube_model.background.unit)
+
+    # integral of smooth images
+    integral_image_smooth = bg_cube_model.background*bin_area
+    integral_image_smooth = integral_image_smooth.sum(axis=(1,2))
+
+    # scale images to preserve original integrals
+
+    # loop over energy bins (i.e. images)
+    for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
+        bg_cube_model.background[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
+
+    return bg_cube_model
 
 
 def create_bg_observation_list(fits_path):
@@ -470,12 +555,6 @@ def stack_observations(fits_path):
             #  mi mayer uses: histo.Scale(1.0/duration) (i.e. livetime)
             #  what about units of energy and solid angle?!!! -> he does this AFTER THE SMOOTHING!!! (but why?)
             ev_cube_hist /= livetime
-            delta_energy = ev_cube_edges[0][1:] - ev_cube_edges[0][:-1]
-            delta_y = ev_cube_edges[1][1:] - ev_cube_edges[1][:-1]
-            delta_x = ev_cube_edges[2][1:] - ev_cube_edges[2][:-1]
-            # define grid of deltas (i.e. bin widths for each 3D bin)
-            delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y, delta_x, indexing='ij')
-            bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!!
 
             # store in container class
             bg_cube_model = CubeBackgroundModel(detx_bins=detx_edges,
@@ -483,70 +562,16 @@ def stack_observations(fits_path):
                                                 energy_bins=energy_edges,
                                                 background=ev_cube_hist)
 
-            # smooth method
-            # 1: slice model in energy bins -> 1 image per energy bin
-            # 2: calculate integral of the image
-            # 3: determine times to smooth (N) depending on number of entries in the cube
-            # 4: smooth image N times with root TH2::Smooth function
-            #    https://root.cern.ch/root/html/TH2.html#TH2:Smooth
-            #    default smoothing kernel: k5a
-            #    Double_t k5a[5][5] =  { { 0, 0, 1, 0, 0 },
-            #                            { 0, 2, 2, 2, 0 },
-            #                            { 1, 2, 5, 2, 1 },
-            #                            { 0, 2, 2, 2, 0 },
-            #                            { 0, 0, 1, 0, 0 } };
-            # 5: scale with the cocient of the old integral div by the new integral
-            # 6: fill the values of the image back in the cube
-            # AFTER smoothing (when exporting to fits) he does:
-            # 7: divide by the bin volumes
-            # 8: set the 0 level to smthg very small
+            # smooth
+            bg_cube_model = smooth(bg_cube_model, n_counts)
 
-            # smooth images
-
-            # integral of original images
-            bin_area = (delta_y*delta_x).to('sr')
-            integral_image = bg_cube_model.background*bin_area
-            integral_image = integral_image.sum(axis=(1,2))
-
-            # number of times to smooth
-            if n_counts >= 1.e6:
-                n_smooth = 3
-            elif (n_counts < 1.e6) and (n_counts >= 1.e5):
-                n_smooth = 4
-            else:
-                n_smooth = 5
-
-            # smooth images
-
-            # define smoothing kernel as k5a in root:
-            # https://root.cern.ch/root/html/TH2.html#TH2:Smooth
-            kernel = np.array([[0, 0, 1, 0, 0],
-                               [0, 2, 2, 2, 0],
-                               [1, 2, 5, 2, 1],
-                               [0, 2, 2, 2, 0],
-                               [0, 0, 1, 0, 0]])
-
-            # loop over energy bins (i.e. images)
-            for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
-                # loop over number of times to smooth
-                for i_smooth in np.arange(n_smooth):
-                    data = bg_cube_model.background[i_energy]
-                    image_smooth = ndimage.convolve(data, kernel)
-
-                    # overwrite bg image with smoothed bg image
-                    bg_cube_model.background[i_energy] = Quantity(image_smooth, bg_cube_model.background.unit)
-
-            # integral of smooth images
-            integral_image_smooth = bg_cube_model.background*bin_area
-            integral_image_smooth = integral_image_smooth.sum(axis=(1,2))
-
-            # scale images to preserve original integrals
-
-            # loop over energy bins (i.e. images)
-            for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
-                bg_cube_model.background[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
-
-            # correct by the bin volume and setting level 0 AFTER smoothing
+            # divide by the bin volume and setting level 0 AFTER smoothing
+            delta_energy = bg_cube_model.energy_bins[1:] - bg_cube_model.energy_bins[:-1]
+            delta_y = bg_cube_model.dety_bins[1:] - bg_cube_model.dety_bins[:-1]
+            delta_x = bg_cube_model.detx_bins[1:] - bg_cube_model.detx_bins[:-1]
+            # define grid of deltas (i.e. bin widths for each 3D bin)
+            delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y, delta_x, indexing='ij')
+            bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!!
             bg_cube_model.background /= bin_volume
             zero_level_mask = bg_cube_model.background < Quantity(1.e-10, '1 / (s sr MeV)')
             bg_cube_model.background[zero_level_mask] = Quantity(1.e-10, '1 / (s sr MeV)')
