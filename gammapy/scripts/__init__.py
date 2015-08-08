@@ -5,7 +5,6 @@ TODO: document how this works and how users should write their own
 command line tools.
 """
 
-from .background_cube import *
 from .bin_cube import *
 from .bin_image import *
 from .check import *
@@ -20,6 +19,7 @@ from .irf_info import *
 from .irf_root_to_fits import *
 from .iterative_source_detect import *
 from .look_up_image import *
+from .make_bg_cube_models import *
 from .model_image import *
 from .pfmap import *
 from .pfsim import *
