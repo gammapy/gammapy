@@ -184,7 +184,7 @@ class ObservationTable(Table):
         """Make an observation table, applying some selection.
 
         There are 3 main kinds of selection criteria, according to the
-        value of the `type` keyword in the `selection` dictionary:
+        value of the **type** keyword in the **selection** dictionary:
 
         - sky regions (boxes or circles)
 
@@ -195,40 +195,40 @@ class ObservationTable(Table):
           `~astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
-        keywords in the `selection` dictionary:
+        keywords in the **selection** dictionary:
 
-        - `type`: ``sky_box``, ``sky_circle``, ``time_box``, ``par_box``
+        - **type**: ``sky_box``, ``sky_circle``, ``time_box``, ``par_box``
 
             - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
               on sky coordinates
 
-                - ``sky_box`` is a squared region delimited by the `lon` and
-                  `lat` keywords: both tuples of format (min, max); uses
+                - ``sky_box`` is a squared region delimited by the **lon** and
+                  **lat** keywords: both tuples of format (min, max); uses
                   `~gammapy.catalog.select_sky_box`
 
                 - ``sky_circle`` is a circular region centered in the coordinate
-                  marked by the `lon` and `lat` keywords, and radius `radius`;
+                  marked by the **lon** and **lat** keywords, and radius **radius**;
                   uses `~gammapy.catalog.select_sky_circle`
 
-              in each case, the coordinate system can be specified by the `frame`
+              in each case, the coordinate system can be specified by the **frame**
               keyword (built-in Astropy coordinate frames are supported, e.g.
-              \'icrs\' or \'galactic\'); an aditional border can be defined using
-              the `border` keyword
+              *icrs* or *galactic*); an aditional border can be defined using
+              the **border** keyword
 
             - ``time_box`` is a 1D selection criterion acting on the observation
-              time (`TIME_START` and `TIME_STOP`); the interval is set via the
-              `time_range` keyword; uses
+              time (**TIME_START** and **TIME_STOP**); the interval is set via the
+              **time_range** keyword; uses
               `~gammapy.obs.ObservationTable.select_time_range`
 
             - ``par_box`` is a 1D selection criterion acting on any
               parameter defined in the observation table that can be casted
               into an `~astropy.units.Quantity` object; the parameter name
-              and interval can be specified using the keywords 'variable' and
-              'value_range' respectively; uses
+              and interval can be specified using the keywords **variable** and
+              **value_range** respectively; uses
               `~gammapy.obs.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
-        `inverted` flag, in which case, the selection is applied to keep all
+        **inverted** flag, in which case, the selection is applied to keep all
         elements outside the selected range.
 
         A few examples of selection criteria are given below and more can be
