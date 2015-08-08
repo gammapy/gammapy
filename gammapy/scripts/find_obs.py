@@ -20,7 +20,7 @@ def main(args=None):
                         help='Input observation table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
-                        help='Output observation table file name (default: stdout)')
+                        help='Output observation table file name (default: None, will print the result on screen)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -117,6 +117,7 @@ def find_obs(infile,
     if pix:
         raise NotImplementedError
 
+    # open (fits) file and read the observation table
     try:
         observation_table = ObservationTable.read(infile)
     except FileNotFoundError:
