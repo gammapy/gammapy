@@ -93,14 +93,14 @@ def _make_bin_edges_array(lo, hi):
     Parameters
     ----------
     lo : `~numpy.ndarray`
-        lower boundaries
+        Lower boundaries.
     hi : `~numpy.ndarray`
-        higher boundaries
+        Higher boundaries.
 
     Returns
     -------
     bin_edges : `~numpy.ndarray`
-        array of bin edges as [[low], [high]]
+        Array of bin edges as ``[[low], [high]]``.
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
 
@@ -133,14 +133,14 @@ class CubeBackgroundModel(object):
 
     """Cube background model.
 
-    Container class for cube background model (X, Y, energy).
-    (X, Y) are detector coordinates (a.k.a. nominal system).
+    Container class for cube background model *(X, Y, energy)*.
+    *(X, Y)* are detector coordinates (a.k.a. nominal system).
     The class hass methods for reading a model from a fits file,
     write a model to a fits file and plot the models.
 
-    The order of the axes in the background cube is `(E, y, x)`,
+    The order of the axes in the background cube is **(E, y, x)**,
     so in order to access the data correctly, the call is
-    `bg_cube_model.background[energy_bin, dety_bin, detx_bin]`.
+    ``bg_cube_model.background[energy_bin, dety_bin, detx_bin]``.
 
     Parameters
     ----------
@@ -307,7 +307,7 @@ class CubeBackgroundModel(object):
         """Read cube background model from fits file.
 
         Several input formats are accepted, depending on the value
-        of the `format` parameter:
+        of the **format** parameter:
 
         * table (default and preferred format): `~astropy.io.fits.BinTableHDU`
 
@@ -421,16 +421,16 @@ class CubeBackgroundModel(object):
         """Write cube background model to fits file.
 
         Several output formats are accepted, depending on the value
-        of the `format` parameter:
+        of the **format** parameter:
 
         * table (default and preferred format): `~astropy.io.fits.BinTableHDU`
         * image (alternative format): `~astropy.io.fits.PrimaryHDU`,
           with the energy binning stored as `~astropy.io.fits.BinTableHDU`
 
-        Depending on the value of the `format` parameter, this
+        Depending on the value of the **format** parameter, this
         method calls either `~astropy.io.fits.BinTableHDU.writeto` or
         `~astropy.io.fits.HDUList.writeto`, forwarding the
-        `kwargs` arguments.
+        **kwargs** arguments.
 
         Parameters
         ----------
@@ -452,7 +452,7 @@ class CubeBackgroundModel(object):
     def image_extent(self):
         """Image extent (`~astropy.coordinates.Angle`)
 
-        The output array format is `(x_lo, x_hi, y_lo, y_hi)`.
+        The output array format is ``(x_lo, x_hi, y_lo, y_hi)``.
         """
         bx = self.detx_bins
         by = self.dety_bins
@@ -462,14 +462,14 @@ class CubeBackgroundModel(object):
     def spectrum_extent(self):
         """Spectrum extent (`~astropy.units.Quantity`)
 
-        The output array format is  `(e_lo, e_hi)`.
+        The output array format is  ``(e_lo, e_hi)``.
         """
         b = self.energy_bins
         return Quantity([b[0], b[-1]])
 
     @property
     def image_bin_centers(self):
-        """Image bin centers `(x, y)` (2x `~astropy.coordinates.Angle`)
+        """Image bin centers **(x, y)** (2x `~astropy.coordinates.Angle`)
 
         Returning two separate elements for the X and Y bin centers.
         """
