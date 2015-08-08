@@ -7,7 +7,7 @@ Observation lists specify a list of observations (a.k.a. runs) to be processed b
 
 In the end the tool will usually generate input and output data filenames from
 the information in the observation list. These filenames can either be given directly
-or there can be naming conventions, e.g. the event list for observation ``42`` could be stored
+or there can be naming conventions, e.g. the event list for observation **42** could be stored
 at ``$TEV_DATA/OBS_000042/Events.fits``.
 
 An observation list must have at least a column called ``OBS_ID``::
@@ -19,28 +19,30 @@ An observation list must have at least a column called ``OBS_ID``::
 Usually it has many more columns with information about each observation. A list of
 Gammapy supported columns is:
 
-================  ===========================================================================  =========
-column name       description                                                                  required?
-================  ===========================================================================  =========
-OBS_ID            observation ID as an integer                                                 yes
-RA                pointing position right ascension in equatorial (ICRS) coordinates           yes?
-DEC               pointing position declination in equatorial (ICRS) coordinates               yes?
-AZ                average azimuth angle during the observation                                 no
-ALT               average altitude angle during the observation                                no
-MUON_EFFICIENCY   average muon efficiency of the telescopes                                    yes?
-TIME_START        start time of the observation stored as number of seconds after [MET]_ or    yes?
-                  as absolute times in UTC (see description of header keyword `TIME FORMAT`)
-TIME_STOP         end time of the observation in the same format as TIME_START                 no
-TIME_OBSERVATION  duration of the observation                                                  no
-TIME_LIVE         duration of the observation without dead time                                no
-TRIGGER_RATE      average trigger rate of the system                                           no
-MEAN_TEMPERATURE  average temperature of the atmosphere                                        no
-N_TELS            number of telescopes participating in the observation                        yes?
-TEL_LIST          string with a [CSV]_ list of telescope IDs participating in the observation  yes?
-QUALITY           data quality; recommended: "spectral" or "detection"                         no
-================  ===========================================================================  =========
+================  ============================================================================  =========
+column name       description                                                                   required?
+================  ============================================================================  =========
+OBS_ID            observation ID as an integer                                                  yes
+RA                pointing position right ascension in equatorial (ICRS) coordinates            yes?
+DEC               pointing position declination in equatorial (ICRS) coordinates                yes?
+AZ                average azimuth angle during the observation                                  no
+ALT               average altitude angle during the observation                                 no
+MUON_EFFICIENCY   average muon efficiency of the telescopes                                     yes?
+TIME_START        start time of the observation stored as number of seconds after [MET]_ or     yes?
+                  as absolute times in UTC (see description of header keyword **TIME_FORMAT**)
+TIME_STOP         end time of the observation in the same format as **TIME_START**              no
+TIME_OBSERVATION  duration of the observation                                                   no
+TIME_LIVE         duration of the observation without dead time                                 no
+TRIGGER_RATE      average trigger rate of the system                                            no
+MEAN_TEMPERATURE  average temperature of the atmosphere                                         no
+N_TELS            number of telescopes participating in the observation                         yes?
+TEL_LIST          string with a [CSV]_ list of telescope IDs participating in the observation   yes?
+QUALITY           data quality; recommended: *spectral* or *detection*                          no
+================  ============================================================================  =========
 
-Longitude angles such as right ascension, Galactic longitude, or azimuth should be wrapped at **360 deg**, in other words, they should be defined in the ``[0, 360) deg`` interval.
+Longitude angles such as right ascension, Galactic longitude, or azimuth should
+be wrapped at **360 deg**, in other words, they should be defined in the
+``[0, 360) deg`` interval.
 
 Extra user-defined columns are allowed; Gammapy will ignore them.
 
@@ -49,19 +51,19 @@ In order for the extra columns to have full meaning the following is needed:
  * Extra row right after the column name, specifying the unit of the quantity listed on each column.
  * A header with at least the following keywords:
 
-================  ===========================================================================  =========
-keyword           description                                                                  required?
-================  ===========================================================================  =========
-OBSERVATORY_NAME  name of the observatory where the observations were taken. This is           no
+================  ============================================================================  =========
+keyword           description                                                                   required?
+================  ============================================================================  =========
+OBSERVATORY_NAME  name of the observatory where the observations were taken. This is            no
                   important for instance for coordinate transformations between celestial
                   (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems
-MJDREFI           reference time: integer value in mean julian days; details in                yes?
+MJDREFI           reference time: integer value in mean julian days; details in                 yes?
                   :ref:`time_handling`
-MJDREFF           reference time: fraction of integer value defined in MJDREFI; details in     yes?
-                  :ref:`time_handling`
-TIME_FORMAT       format in which times are stored: `absolute` (UTC) or `relative` ([MET]_);   yes?
+MJDREFF           reference time: fraction of integer value defined in **MJDREFI**; details     yes?
+                  in :ref:`time_handling`
+TIME_FORMAT       format in which times are stored: *absolute* (UTC) or *relative* ([MET]_);    yes?
                   see details for both formats in :ref:`time_handling`
-================  ===========================================================================  =========
+================  ============================================================================  =========
 
 Extra user-defined header entries are allowed; Gammapy will ignore them.
 
