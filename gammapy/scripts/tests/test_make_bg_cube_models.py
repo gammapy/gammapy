@@ -6,6 +6,14 @@ from ...datasets import get_path
 from ..make_bg_cube_models import main as make_bg_cube_models_main
 
 
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+
+@pytest.mark.skipif('not HAS_SCIPY')
 @pytest.mark.xfail
 def test_make_bg_cube_models_main(tmpdir):
     # TODO: implement
