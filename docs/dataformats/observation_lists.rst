@@ -3,14 +3,14 @@
 Observation lists
 =================
 
-Run lists specify a list of observation runs to be processed by a given tool.
+Observation lists specify a list of observations (a.k.a. runs) to be processed by a given tool.
 
 In the end the tool will usually generate input and output data filenames from
-the information in the run list. These filenames can either be given directly
-or there can be naming conventions, e.g. the event list for run ``42`` could be stored
-at ``$TEV_DATA/RUN_000042/Events.fits``.
+the information in the observation list. These filenames can either be given directly
+or there can be naming conventions, e.g. the event list for observation ``42`` could be stored
+at ``$TEV_DATA/OBS_000042/Events.fits``.
 
-A run list must have at least a column called ``OBS_ID``::
+An observation list must have at least a column called ``OBS_ID``::
  
    OBS_ID
    42
@@ -39,6 +39,8 @@ N_TELS            number of telescopes participating in the observation         
 TEL_LIST          string with a [CSV]_ list of telescope IDs participating in the observation  yes?
 QUALITY           data quality; recommended: "spectral" or "detection"                         no
 ================  ===========================================================================  =========
+
+Longitude angles such as right ascension, Galactic longitude, or azimuth should be wrapped at **360 deg**, in other words, they should be defined in the ``[0, 360) deg`` interval.
 
 Extra user-defined columns are allowed; Gammapy will ignore them.
 
