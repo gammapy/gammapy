@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os.path
 import logging
 import numpy as np
 from astropy.io import fits
@@ -18,7 +19,7 @@ __all__ = ['make_bg_cube_models']
 
 
 # TODO: remove all these global options: if needed, define as arguments to parse!!!
-DEBUG = 2 # 0: no output, 1: output, 2: run fast, 3: more verbose
+DEBUG = 1 # 0: no output, 1: output, 2: run fast, 3: more verbose
 SAVE = 1
 
 BG_OBS_TABLE_FILE = 'bg_observation_table.fits'
@@ -283,13 +284,13 @@ def create_bg_observation_list(fits_path):
     # loop over sources
     obs_coords = SkyCoord(observation_table['RA'], observation_table['DEC'])
     for i_source in range(len(catalog)):
-        # TODO: call filer observations!!!
-        # calculate separations (ang distances) of obs to source
-        obs_sep_source = obs_coords.separation(sources_coord[i_source])
-        source_mask = obs_sep_source <= sources_excl_radius[i_source]
-        source_mask = np.invert(source_mask)
-        observation_table = observation_table[source_mask]
-        obs_coords = obs_coords[source_mask]
+        selection = dict(type='sky_circle', frame='icrs',
+                         lon=sources_coord[i_source].ra,
+                         lat=sources_coord[i_source].dec,
+                         radius=sources_excl_radius[i_source],
+                         inverted = True,
+                         border=Angle(0., 'degree'))
+        observation_table = observation_table.select_observations(selection)
 
     # TODO: is there a way to quickly filter out sources in a region of the sky, where H.E.S.S. can't observe????!!!! -> don't loose too much time on this (detail)
 
@@ -343,20 +344,27 @@ def group_observations():
         print("azimuth bin boundaries")
         print(repr(azimuth_edges))
 
-    # get observation altitude and azimuth angles
-    altitude = Angle(observation_table['ALT_PNT'])
-    azimuth = Angle(observation_table['AZ_PNT'])
     # wrap azimuth angles to (-90, 270) deg
     # TODO: needs re-thinking if azimuth angle definitions change!!!
     #       or if user-defined azimuth angle bins are allowed!!!
+    azimuth = Angle(observation_table['AZ_PNT'])
     azimuth = azimuth.wrap_at(Angle(270., 'degree'))
+    observation_table['AZ_PNT'] = azimuth
 
-    if DEBUG:
-        print()
-        print("full list of observation altitude angles")
-        print(repr(altitude))
-        print("full list of observation azimuth angles")
-        print(repr(azimuth))
+#    # get observation altitude and azimuth angles
+#    altitude = Angle(observation_table['ALT_PNT'])
+#    azimuth = Angle(observation_table['AZ_PNT'])
+#    # wrap azimuth angles to (-90, 270) deg
+#    # TODO: needs re-thinking if azimuth angle definitions change!!!
+#    #       or if user-defined azimuth angle bins are allowed!!!
+#    azimuth = azimuth.wrap_at(Angle(270., 'degree'))
+#
+#    if DEBUG:
+#        print()
+#        print("full list of observation altitude angles")
+#        print(repr(altitude))
+#        print("full list of observation azimuth angles")
+#        print(repr(azimuth))
 
     # loop over altitude and azimuth angle bins: remember 1 bin less than bin boundaries
     for i_alt in range(len(altitude_edges) - 1):
@@ -369,20 +377,22 @@ def group_observations():
                 print("bin az", i_az)
 
             # filter observation table
-            # TODO: this could be an extra selection criterion for FindObservations
             observation_table_filtered = observation_table
-            altitude_filtered = altitude
-            azimuth_filtered = azimuth
-            altitude_mask = (altitude_edges[i_alt] <= altitude_filtered) & (altitude_filtered < altitude_edges[i_alt + 1])
-            observation_table_filtered = observation_table_filtered[altitude_mask]
-            altitude_filtered = altitude_filtered[altitude_mask]
-            azimuth_filtered = azimuth_filtered[altitude_mask]
-            azimuth_mask = (azimuth_edges[i_az] <= azimuth_filtered) & (azimuth_filtered < azimuth_edges[i_az + 1])
-            observation_table_filtered = observation_table_filtered[azimuth_mask]
-            altitude_filtered = altitude_filtered[azimuth_mask]
-            azimuth_filtered = azimuth_filtered[azimuth_mask]
+
+            selection = dict(type='par_box', variable='ALT_PNT',
+                             value_range=(altitude_edges[i_alt], altitude_edges[i_alt + 1]))
+            observation_table_filtered = observation_table_filtered.select_observations(selection)
+
+            selection = dict(type='par_box', variable='AZ_PNT',
+                             value_range=(azimuth_edges[i_az], azimuth_edges[i_az + 1]))
+            observation_table_filtered = observation_table_filtered.select_observations(selection)
+
             if DEBUG:
                 print(observation_table_filtered)
+
+            # skip bins with no obs
+            if len(observation_table_filtered) == 0:
+                continue # skip the rest
 
             # save the observation list to a fits file
             if SAVE:
@@ -413,6 +423,11 @@ def stack_observations(fits_path):
 
             filename = 'bg_observation_table_alt{0}_az{1}.fits'.format(i_alt, i_az)
 
+            # skip bins with no obs list file
+            if not os.path.isfile(filename):
+                print("WARNING, file not found: {}".format(filename))
+                continue # skip the rest
+
             # read group observation table from file
             # TODO: clean header from unnecessary info!!! (I only need obs
             #       table specific stuff, no FITS header stuff!!!)
@@ -421,10 +436,6 @@ def stack_observations(fits_path):
 
             if DEBUG:
                 print(observation_table)
-
-            # skip bins with no obs
-            if len(observation_table) == 0:
-                continue # skip the rest
 
             # stack events
             data_store = DataStore(dir=fits_path)
