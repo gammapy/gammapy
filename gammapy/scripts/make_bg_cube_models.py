@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import os.path
+import os
 import logging
 import numpy as np
 from astropy.io import fits
@@ -18,11 +18,8 @@ from ..background import CubeBackgroundModel
 __all__ = ['make_bg_cube_models']
 
 
-# TODO: remove all these global options: if needed, define as arguments to parse!!!
-DEBUG = 1 # 0: no output, 1: output, 2: run fast, 3: more verbose
-SAVE = 1
-
-BG_OBS_TABLE_FILE = 'bg_observation_table.fits'
+DEBUG = 2 # 0: no output, 1: output, 2: run fast, 3: more verbose
+# TODO: remove the DEBUG global variable, when the logger works!!!
 
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
@@ -32,25 +29,10 @@ def main(args=None):
                         help="Set the logging level")
     parser.add_argument('fitspath', type=str,
                         help='Dir path to input event list fits files.')
-##    parser.add_argument('run_list', type=str,
-##                        help='Input run list file name')
-##    parser.add_argument('exclusion_list', type=str,
-##                        help='Input exclusion list file name')
-##    parser.add_argument('reference_file', type=str,
-##                        help='Input FITS reference cube file name')
-##    parser.add_argument('out_file', type=str,
-##                        help='Output FITS counts cube file name')
-##    parser.add_argument('--overwrite', action='store_true',
-##                        help='Overwrite existing output file?')
     args = parser.parse_args(args)
     make_bg_cube_models(**vars(args))
 
 
-##def make_bg_cube_models(run_list,
-##                        exclusion_list,
-##                        reference_file,
-##                        out_file,
-##                        overwrite):
 def make_bg_cube_models(loglevel,
                         fitspath):
     """Create background cube models from off runs.
@@ -71,7 +53,7 @@ def make_bg_cube_models(loglevel,
     - Store the bg models histograms into CubeBackgroundModel objects and save them.
     - Plot the models if requested.
 
-    TODO: SLOW IF DOING ALL MODELS!!! (maybe because of the plots???!!!)
+    It can take about 10 minutes to run.
 
     You can use this script to run certain steps by commenting in or out the functions in main().
 
@@ -295,11 +277,11 @@ def create_bg_observation_list(fits_path):
     # TODO: is there a way to quickly filter out sources in a region of the sky, where H.E.S.S. can't observe????!!!! -> don't loose too much time on this (detail)
 
     # save the bg observation list to a fits file
-    if SAVE:
-        outfile = BG_OBS_TABLE_FILE
-        if DEBUG:
-            print("outfile", outfile)
-        observation_table.write(outfile, overwrite=True)
+    outdir = os.environ['PWD'] + '/'
+    outfile = outdir + 'bg_observation_table.fits.gz'
+    if DEBUG:
+        print("outfile", outfile)
+    observation_table.write(outfile, overwrite=True)
 
 
 def group_observations():
@@ -317,16 +299,11 @@ def group_observations():
         print("###############################")
 
     # read bg observation table from file
-    # TODO: clean header from unnecessary info!!! (I only need obs
-    #       table specific stuff, no FITS header stuff!!!)
-    #       i.e. MJDREFI MJDREFF (observatory missing!!!)
-    observation_table = ObservationTable.read(BG_OBS_TABLE_FILE)
+    indir = os.environ['PWD'] + '/'
+    infile = indir + 'bg_observation_table.fits.gz'
+    observation_table = ObservationTable.read(infile)
 
     # split observation table according to binning
-    # TODO: could be done by FindObservations (i.e. findruns)
-    # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L30
-    # or by observation_selection (like in hgps example)
-    # https://github.com/mapazarr/hess-host-analyses/blob/master/hgps_survey_map/hgps_survey_map.py#L62
 
     # define a binning in altitude angle
     # TODO: ObservationGroups
@@ -347,24 +324,17 @@ def group_observations():
     # wrap azimuth angles to (-90, 270) deg
     # TODO: needs re-thinking if azimuth angle definitions change!!!
     #       or if user-defined azimuth angle bins are allowed!!!
-    azimuth = Angle(observation_table['AZ_PNT'])
-    azimuth = azimuth.wrap_at(Angle(270., 'degree'))
+    azimuth = Angle(observation_table['AZ_PNT']).wrap_at(Angle(270., 'degree'))
     observation_table['AZ_PNT'] = azimuth
 
-#    # get observation altitude and azimuth angles
-#    altitude = Angle(observation_table['ALT_PNT'])
-#    azimuth = Angle(observation_table['AZ_PNT'])
-#    # wrap azimuth angles to (-90, 270) deg
-#    # TODO: needs re-thinking if azimuth angle definitions change!!!
-#    #       or if user-defined azimuth angle bins are allowed!!!
-#    azimuth = azimuth.wrap_at(Angle(270., 'degree'))
-#
-#    if DEBUG:
-#        print()
-#        print("full list of observation altitude angles")
-#        print(repr(altitude))
-#        print("full list of observation azimuth angles")
-#        print(repr(azimuth))
+    # create output folder if not existing
+    outdir = os.environ['PWD'] + '/splitted_obs_list/'
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+    else:
+        # clean folder if available
+        for oldfile in os.listdir(outdir):
+            os.remove(outdir + oldfile)
 
     # loop over altitude and azimuth angle bins: remember 1 bin less than bin boundaries
     for i_alt in range(len(altitude_edges) - 1):
@@ -395,11 +365,11 @@ def group_observations():
                 continue # skip the rest
 
             # save the observation list to a fits file
-            if SAVE:
-                outfile = 'bg_observation_table_alt{0}_az{1}.fits'.format(i_alt, i_az)
-                if DEBUG:
-                    print("outfile", outfile)
-                observation_table_filtered.write(outfile, overwrite=True)
+            outfile = outdir +\
+                     'bg_observation_table_alt{0}_az{1}.fits.gz'.format(i_alt, i_az)
+            if DEBUG:
+                print("outfile", outfile)
+            observation_table_filtered.write(outfile)
 
 
 def stack_observations(fits_path):
@@ -411,6 +381,15 @@ def stack_observations(fits_path):
         print("# Starting stack_observations #")
         print("###############################")
 
+    # create output folder if not existing
+    outdir = os.environ['PWD'] + '/bg_cube_models/'
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+    else:
+        # clean folder if available
+        for oldfile in os.listdir(outdir):
+            os.remove(outdir + oldfile)
+
     # loop over altitude and azimuth angle bins: remember 1 bin less than bin boundaries
     for i_alt in range(len(altitude_edges) - 1):
         if DEBUG:
@@ -421,18 +400,15 @@ def stack_observations(fits_path):
                 print()
                 print("bin az", i_az)
 
-            filename = 'bg_observation_table_alt{0}_az{1}.fits'.format(i_alt, i_az)
-
-            # skip bins with no obs list file
-            if not os.path.isfile(filename):
-                print("WARNING, file not found: {}".format(filename))
-                continue # skip the rest
-
             # read group observation table from file
-            # TODO: clean header from unnecessary info!!! (I only need obs
-            #       table specific stuff, no FITS header stuff!!!)
-            #       i.e. MJDREFI MJDREFF (observatory missing!!!)
-            observation_table = ObservationTable.read(filename)
+            indir = os.environ['PWD'] + '/splitted_obs_list/'
+            infile = indir +\
+                     'bg_observation_table_alt{0}_az{1}.fits.gz'.format(i_alt, i_az)
+            # skip bins with no obs list file
+            if not os.path.isfile(infile):
+                print("WARNING, file not found: {}".format(infile))
+                continue # skip the rest
+            observation_table = ObservationTable.read(infile)
 
             if DEBUG:
                 print(observation_table)
@@ -453,7 +429,7 @@ def stack_observations(fits_path):
             # TODO: this loop is slow: can we accelerate it???!!! (or avoid it?)
             for i_file in event_list_files['filename']:
                 if DEBUG > 2:
-                    print(' filename: {}'.format(i_file))
+                    print(' infile: {}'.format(i_file))
                 ev_list_ds = EventListDataset.read(i_file)
                 livetime += Quantity(ev_list_ds.event_list.meta['LIVETIME'],
                                      ev_list_ds.event_list.meta['TIMEUNIT'])
@@ -478,7 +454,7 @@ def stack_observations(fits_path):
             # TODO: can we avoid the loop???!!! (or combine it with the loop over event files?)!!!
             for i_file in aeff_list_files['filename']:
                 if DEBUG > 2:
-                    print(' filename: {}'.format(i_file))
+                    print(' infile: {}'.format(i_file))
                 aeff_list_ds = EventListDataset.read(i_file)
                 energy_threshold = min(energy_threshold,
                                        aeff_list_ds.event_list.meta['LO_THRES'])
@@ -591,13 +567,13 @@ def stack_observations(fits_path):
             #       (not needed here, but useful for applying the models)
 
             # save model to file
-            if SAVE:
-                oufile = 'bg_cube_model_alt{0}_az{1}'.format(i_alt, i_az)
-                if DEBUG:
-                    print("outfile", '{}_table.fits'.format(oufile))
-                    print("outfile", '{}_image.fits'.format(oufile))
-                bg_cube_model.write('{}_table.fits'.format(oufile), format='table', clobber=True)
-                bg_cube_model.write('{}_image.fits'.format(oufile), format='image', clobber=True)
+            outfile = outdir +\
+                     'bg_cube_model_alt{0}_az{1}'.format(i_alt, i_az)
+            if DEBUG:
+                print("outfile", '{}_table.fits.gz'.format(outfile))
+                print("outfile", '{}_image.fits.gz'.format(outfile))
+            bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table')
+            bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
 
     # TODO: use random data (write a random data generator (see bg API))
     #       then write a similar script inside gammapy as example
