@@ -182,11 +182,6 @@ def group_observations():
 
     The observations are grouped into observation groups (bins) according
     to their altitude and azimuth angle.
-
-    Parameters
-    ----------
-    fits_path : str
-        path to dir containing event list fits files
     """
     if DEBUG:
         print()
