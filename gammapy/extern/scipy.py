@@ -36,6 +36,8 @@ def gmean(a, axis=0, dtype=None):
     arise in the calculations such as Not a Number and infinity because masked
     arrays automatically mask any non-finite values.
     """
+    import numpy as np
+
     if not isinstance(a, np.ndarray):  # if not an ndarray object attempt to convert it
         log_a = np.log(np.array(a, dtype=dtype))
     elif dtype:  # Must change the default dtype allowing array type
