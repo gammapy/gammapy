@@ -226,13 +226,11 @@ class Fermi3FGLObject(object):
 
     fermi_cat = fetch_fermi_catalog('3FGL')
 
-    x_bins_edges = [0.03, 0.1, 0.3, 1, 3, 10, 100]
+    x_bins_edges = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'MeV')
 
-    x_bins_log10 = np.log10(x_bins_edges)
+    x_bins = Quantity(x_bins_edges, 'MeV')
 
-    x_bins = Quantity(x_bins_edges, 'GeV').to('MeV')
-
-    x = energy_bin_centers_log_spacing(x_bins).value
+    x_cens = energy_bin_centers_log_spacing(x_bins)
 
     y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
@@ -261,103 +259,106 @@ class Fermi3FGLObject(object):
 
     def plot_spectrum(self, ax=None):
         import matplotlib.pyplot as plt
+        from gammapy.extern.scipy import gmean
         from astropy.units import Quantity
         from astropy.modeling.models import PowerLaw1D
-        from gammapy.spectrum import energy_bin_centers_log_spacing, compute_differential_flux_points
-
 
         ax = plt.gca() if ax is None else ax
 
-
-
         bin_edges1 = np.zeros(0)
-
         bin_edges2 = np.zeros(0)
 
         x_vals = []
-
         y_vals = np.zeros(0)
 
         y_upper = np.zeros(0)
-        y_lower = np.zeros(0)
 
-
+        valid_indices = []
         for i in range(0, np.size(self.x_bins_edges) - 1):
 
             flux = self.cat_row[self.y_labels[i]]
 
 
-
             # Require both a detection and a lower bound
             if np.isnan(flux) == False:
                 y_err_label = "Unc_" + self.y_labels[i]
-
-                print(self.cat_row[y_err_label])
+                #raw_input(self.cat_row[y_err_label])
                 flux_lower_bound = self.cat_row[y_err_label][0]
+                #raw_input(flux_lower_bound)
                 if np.isnan(flux_lower_bound) == False:
+                    valid_indices.append(i)
+                    #raw_input("=")
 
-                    y_vals = np.append(y_vals, flux)
+        y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
+        #y_err_label = np.array([self.cat_row["Unc_" + _] for _ in self.y_labels[valid_indices]])
+        flux_lower_bound = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
+        y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
+        y_upper = np.array([self.cat_row["Unc_" + i][1] for i in (self.y_labels[j] for j in valid_indices)])
 
-                    #print(y_err_label)
-                    #print(self.cat_row[y_err_label])
+        y_lower = y_vals + y_lower
+        y_upper = y_vals + y_upper
 
-                    y_lower = np.append(y_lower, flux + self.cat_row[y_err_label][0])
+        #log(y_cens) = log(y_upper) - log(y_lower)
+        #y_cens = np.logspace(y_lower[0], y_upper[0], num=3)
+        #y_cens = []
+        #for i in range(0,np.size(y_lower)):
+        #    y_cens += np.logpsace(y_lower[i], y_upper[i], num=3)[1]
 
-                    y_upper = np.append(y_upper, flux + self.cat_row[y_err_label][1])
+        #raw_input(y_lower[0])
+        #raw_input(y_upper[0])
+        #raw_input(y_cens)
 
-                    #y_vals[-1] = np.log10(y_vals[-1])
+        # y_val - new_y_lower = y_lower
+        #y_lower[-1] = -(y_lower[-1] - y_vals[-1])
 
-                    #y_upper[-1] = np.log10(y_upper[-1])
 
-                    #y_lower[-1] = np.log10(y_lower[-1])
+        # y_val + new_y_upper = y_upper
+        #y_upper[-1] = y_upper[-1] - y_vals[-1]
 
-                    # y_val - new_y_lower = y_lower
+        x_vals = [self.x_cens[i].value for i in valid_indices]
+        # x_vals - bin_edge1 = x_bin[i]
+        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
+        # x_vals + bin_edge2 = x_bin[i + 1]
+        bin_edges2 = [(self.x_bins_edges[i+1] - self.x_cens[i]).value for i in valid_indices]
 
-                    y_lower[-1] = -(y_lower[-1] - y_vals[-1])
+        #y_vals = [Quantity(y_vals[i], 'MeV') for i in y_vals]
+        y_vals = [y_vals[i] / x_vals[i] for i in range(0, np.size(y_vals))]
+        y_upper = [y_upper[i] / x_vals[i] for i in range(0, np.size(y_vals))]
+        y_lower = [y_lower[i] / x_vals[i] for i in range(0, np.size(y_vals))]
 
-                    # y_val + new_y_upper = y_upper
+        y_cens = np.array([gmean([y_lower[i], y_upper[i]]) for i in range(0, np.size(y_lower))])
 
-                    y_upper[-1] = y_upper[-1]  - y_vals[-1]
+        y_upper = np.array([y_upper[i] - y_vals[i] for i in range(0, np.size(y_lower))])
+        y_lower = np.array([y_vals[i] - y_lower[i] for i in range(0, np.size(y_lower))])
 
-                    #x_vals = np.append(x_vals,
-                    #                   0.5 * (self.x_bins_edges[i + 1] - self.x_bins_edges[i]) + self.x_bins_edges[i])
 
-                    x_vals = np.append(x_vals, Quantity(self.x[i], 'GeV'))
 
-                    #print(self.x_bins[i])
-                    #print(self.x_bins[i+1])
-                    #print(x_vals[i])
-
-                    # x_vals - bin_edge1 = x_bin[i]
-                    # x_vals + bin_edge2 = x_bin[i + 1]
-                    bin_edges1 = np.append(bin_edges1,
-                                           -(self.x_bins_edges[i]*1e3 - x_vals[-1]))
-
-                    bin_edges2 = np.append(bin_edges2,
-                                           self.x_bins_edges[i + 1]*1e3 - x_vals[-1])
-
-                    #print("")
-                    #print(x_vals[i] - bin_edges1[i])
-                    #print(x_vals[i] + bin_edges2[i])
-                    #raw_input(" ")
-
-        y_vals /= x_vals
-        y_upper /= x_vals
-        y_lower /= x_vals
-        #y_vals /= 1e3
-        #y_upper /= 1e3
-        #y_lower /= 1e3
+        #raw_input("x_vals:" + str(type(x_vals)))
+        #raw_input(x_vals.value)
+        #raw_input("y_vals:" + str(type(y_vals)))
+        #raw_input(x_vals[0])
+        raw_input(y_vals[3])
+        #raw_input(bin_edges1[0])
+        #raw_input((bin_edges2[0]))
+        raw_input(y_lower[3])
+        raw_input((y_upper[3]))
+        raw_input(y_cens[3])
         ax.loglog()
+        #ax.plot(x_vals,y_vals)
+
+        #ax.scatter(x_vals, y_cens)
+
         ax.errorbar(x_vals, y_vals,
-                    xerr=(bin_edges1, bin_edges2),
                     yerr=(y_lower, y_upper),
                     elinewidth=1, linewidth=0, color='black')
-        
 
-        # x_specutrum = energy_bin_centers_log_spacing(self.x_bins_log10).value
+        # Place the x-axis uncertainties in the center of the y-axis uncertainties.
+        ax.errorbar(x_vals, y_cens,
+                    xerr=(bin_edges1, bin_edges2),
+                    elinewidth=1, linewidth=0, color='black')
+
         if self.spec_type == "PowerLaw":
 
-            #x_model = Quantity(np.logspace(-2, 2, 100), 'GeV').to('MeV').value
             x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
 
             y_model = PowerLaw1D(amplitude=self.int_flux,
@@ -365,14 +366,7 @@ class Fermi3FGLObject(object):
                                  alpha=self.spec_index)
             test = y_model(x_model)
 
-            raw_input("_    _")
-            raw_input(x_vals)
-            raw_input(y_vals)
-            raw_input(x_model)
-            raw_input(test)
-
             ax.plot(x_model, test)
-
 
         return ax
 
