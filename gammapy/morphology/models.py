@@ -86,7 +86,8 @@ class Shell2D(Fittable2DModel):
         plt.imshow(shell(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')
         plt.ylabel('y (pix)')
-        plt.colorbar()
+        plt.colorbar(label='Brightness (A.U.)')
+        plt.grid(False)
         plt.show()
 
     """
@@ -194,6 +195,7 @@ class Sphere2D(Fittable2DModel):
                 \\end{array}
             \\right.
 
+
     Examples
     --------
     .. plot::
@@ -204,13 +206,14 @@ class Sphere2D(Fittable2DModel):
         import matplotlib.pyplot as plt
         
         x0, y0, r_0 = 25, 25, 20
-        sphere = Shell2D(amplitude=100., x_0=x0, y_0=y0,
+        sphere = Sphere2D(amplitude=100., x_0=x0, y_0=y0,
                         r_0=r_0)
         y, x = np.mgrid[0:50, 0:50]
         plt.imshow(sphere(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')
         plt.ylabel('y (pix)')
-        plt.colorbar()
+        plt.colorbar(label='Brightness (A.U.)')
+        plt.grid(False)
         plt.show()
 
     """

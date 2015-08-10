@@ -59,13 +59,13 @@ def plot_containment_radii(fraction):
         rad = 'CONT_95'
 
     plt.plot(gtpsf_table_gc['ENERGY'], gtpsf_table_gc[rad],
-             color='red',label='Fermi Tools PSF @ Galactic Center')
+             label='Fermi Tools PSF @ Galactic Center')
     plt.plot(gtpsf_table_vela['ENERGY'], gtpsf_table_vela[rad],
-             color='blue', label='Fermi Tools PSF @ Vela Region')
+             label='Fermi Tools PSF @ Vela Region')
     plt.plot(true_table_rep['energy'], true_table_rep['containment_angle'],
-             color='green', linestyle='--', label='P7REP_SOURCE_V15')
+             linestyle='--', label='P7REP_SOURCE_V15')
     plt.plot(true_table['energy'], true_table['containment_angle'],
-             color='black', linestyle='--', label='P7SOURCEV6')
+             linestyle='--', label='P7SOURCEV6')
 
     plt.xlim([10000, 300000])
 
