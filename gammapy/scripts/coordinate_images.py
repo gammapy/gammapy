@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['coordinate_images']
@@ -35,28 +37,26 @@ def coordinate_images(infile,
     * DIST -- Distance to mask
     * SOLID_ANGLE -- Solid angle
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from astropy.io import fits
     from gammapy.utils.fits import get_hdu
 
-    logging.info('Reading {0}'.format(infile))
+    log.info('Reading {0}'.format(infile))
     hdu = get_hdu(infile)
 
     out_hdus = fits.HDUList()
 
     if make_coordinate_maps:
         from gammapy.image import coordinates
-        logging.info('Computing LON and LAT maps')
+        log.info('Computing LON and LAT maps')
         lon, lat = coordinates(hdu)
         out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))
         out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 
     if make_distance_map:
         from gammapy.image import exclusion_distance
-        logging.info('Computing DIST map')
+        log.info('Computing DIST map')
         dist = exclusion_distance(hdu.data)
         out_hdus.append(fits.ImageHDU(dist, hdu.header, 'DIST'))
 
-    logging.info('Writing {0}'.format(outfile))
+    log.info('Writing {0}'.format(outfile))
     out_hdus.writeto(outfile, clobber=overwrite)

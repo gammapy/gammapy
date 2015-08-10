@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['sherpa_model_image']
@@ -41,27 +43,25 @@ def sherpa_model_image(exposure,
     * Source model flux image (FITS file)
     * Source model excess image (FITS file)
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     import sherpa.astro.ui as sau  # @UnresolvedImport
     from ..morphology.psf import Sherpa
     from ..morphology.utils import read_json
 
-    logging.info('Reading exposure: {0}'.format(exposure))
+    log.info('Reading exposure: {0}'.format(exposure))
     # Note: We don't really need the exposure as data,
     # but this is a simple way to init the dataspace to the correct shape
     sau.load_data(exposure)
     sau.load_table_model('exposure', exposure)
 
-    logging.info('Reading PSF: {0}'.format(psf))
+    log.info('Reading PSF: {0}'.format(psf))
     Sherpa(psf).set()
 
-    logging.info('Reading sources: {0}'.format(sources))
+    log.info('Reading sources: {0}'.format(sources))
     read_json(sources, sau.set_source)
 
     name = sau.get_source().name
     full_model = 'exposure * psf({})'.format(name)
     sau.set_full_model(full_model)
 
-    logging.info('Computing and writing model_image: {0}'.format(model_image))
+    log.info('Computing and writing model_image: {0}'.format(model_image))
     sau.save_model(model_image, clobber=overwrite)

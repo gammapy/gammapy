@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -170,11 +171,11 @@ class CWT(object):
             if iiter > 0:
                 var_ratio = abs((self.residual_var - tmp_var) / self.residual_var)
                 if var_ratio < convergence:
-                    logging.info("Convergence reached at iteration {0}".format(iiter + 1))
+                    log.info("Convergence reached at iteration {0}".format(iiter + 1))
                     return res
             self.residual_var = tmp_var
-        logging.info("Convergence not formally reached at iteration {0}".format(iiter + 1))
-        logging.info("Final convergence parameter {0}. Objective was {1}."
+        log.info("Convergence not formally reached at iteration {0}".format(iiter + 1))
+        log.info("Final convergence parameter {0}. Objective was {1}."
                      "".format(convergence, var_ratio)) 
         return res
 

@@ -27,8 +27,6 @@ def irf_root_to_fits(irf_root_file,
     Read input file from command line
     irf_root_file_name = '/Users/mraue/Stuff/work/cta/2011/fits/irf/cta/SubarrayE_IFAE_50hours_20101102.root'
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from gammapy.utils.pyfact import cta_irf_root_to_fits
 
     cta_irf_root_to_fits(irf_root_file_name=irf_root_file,

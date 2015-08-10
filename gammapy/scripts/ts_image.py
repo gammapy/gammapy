@@ -2,7 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
-
+import json
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['ts_image']
@@ -57,21 +59,17 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
     * 'ExpGammaMap' -- Exposure image
     """
     # Execute script
-    import json
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-
     from astropy.io import fits
     from gammapy.detect import compute_ts_map_multiscale
 
     # Read data
-    logging.info('Reading {}'.format(input_file))
+    log.info('Reading {}'.format(input_file))
     maps = fits.open(input_file)
-    logging.info('Reading {}'.format(psf))
+    log.info('Reading {}'.format(psf))
     psf_parameters = json.load(open(psf))
 
     if residual:
-        logging.info('Reading {}'.format(model))
+        log.info('Reading {}'.format(model))
         data = fits.getdata(model)
         header = fits.getheader(model)
         maps.append(fits.ImageHDU(data, header, 'OnModel'))
@@ -87,8 +85,8 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
     if len(results) > 1:
         for scale, result in zip(scales, results):
             filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
-            logging.info('Writing {}'.format(os.path.join(folder, filename_)))
+            log.info('Writing {}'.format(os.path.join(folder, filename_)))
             result.write(os.path.join(folder, filename_), header, overwrite=overwrite)
     else:
-        logging.info('Writing {}'.format(output_file))
+        log.info('Writing {}'.format(output_file))
         results[0].write(output_file, header, overwrite=overwrite)

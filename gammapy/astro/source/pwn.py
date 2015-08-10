@@ -2,6 +2,7 @@
 """Pulsar wind nebula (PWN) source models"""
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
@@ -247,24 +248,24 @@ class PWNElectronSpectrum(PWN):
             Time step (yr)
         """
         if self.age > age:
-            logging.info('current age = {0} > requested age = {1}'
-                         ''.format(self.age, age))
-            logging.info('Resetting to age 0.')
+            log.debug('current age = {0} > requested age = {1}'
+                      ''.format(self.age, age))
+            log.debug('Resetting to age 0.')
             self.age = 0
             self.electron_spec.y = 0
             self.evolve(age, dt)
         # Make sure we evolve exactly to the requested age
         nsteps = int((age - self.age) / dt)
         dt = (age - self.age) / nsteps
-        logging.info('current age = {0}, requested age = {1},'
-                     ' dt = {2}, nsteps = {3}'
-                     ''.format(self.age, age, dt, nsteps))
+        log.debug('current age = {0}, requested age = {1},'
+                  ' dt = {2}, nsteps = {3}'
+                  ''.format(self.age, age, dt, nsteps))
         # Convenient shortcuts for current electron spectrum
         # Note that these are references, no copying takes place.
         e = self.electron_spec.e
         n = self.electron_spec.n
         de = self._get_diff(e)
-        logging.info('Starting evolution')
+        log.debug('Starting evolution')
         for t in np.linspace(self.age, age, nsteps):
             pn = n * self.p(e, t)
             # See docstring for an explanation why we implement
@@ -273,7 +274,7 @@ class PWNElectronSpectrum(PWN):
             dpn_left = self._get_diff(pn, side='left')
             dpn = np.where(abs(dpn_right) < abs(dpn_left), dpn_right, dpn_left)
             n += dt * (dpn / de + self.q(e, t))
-        logging.info('Evolution finished')
+        log.debug('Evolution finished')
 
     def _get_diff(self, e, side='right'):
         """Implement diff for an array, including handling of end points.

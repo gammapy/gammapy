@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['sherpa_image_like']
@@ -39,8 +41,6 @@ def sherpa_image_like(counts,
     Uses initial parameters from a JSON file (for now only Gaussians).
     """
 
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     import sherpa.astro.ui
     from ..morphology.utils import read_json, write_all
     from ..morphology.psf import Sherpa
@@ -48,28 +48,28 @@ def sherpa_image_like(counts,
     # ---------------------------------------------------------
     # Load images, PSF and sources
     # ---------------------------------------------------------
-    logging.info('Clearing the sherpa session')
+    log.info('Clearing the sherpa session')
     sherpa.astro.ui.clean()
 
-    logging.info('Reading counts: {0}'.format(counts))
+    log.info('Reading counts: {0}'.format(counts))
     sherpa.astro.ui.load_data(counts)
 
-    logging.info('Reading exposure: {0}'.format(exposure))
+    log.info('Reading exposure: {0}'.format(exposure))
     sherpa.astro.ui.load_table_model('exposure', exposure)
 
-    logging.info('Reading background: {0}'.format(background))
+    log.info('Reading background: {0}'.format(background))
     sherpa.astro.ui.load_table_model('background', background)
 
-    logging.info('Reading PSF: {0}'.format(psf))
+    log.info('Reading PSF: {0}'.format(psf))
     Sherpa(psf).set()
 
     if roi:
-        logging.info('Reading ROI: {0}'.format(roi))
+        log.info('Reading ROI: {0}'.format(roi))
         sherpa.astro.ui.notice2d(roi)
     else:
-        logging.info('No ROI selected.')
+        log.info('No ROI selected.')
 
-    logging.info('Reading sources: {0}'.format(sources))
+    log.info('Reading sources: {0}'.format(sources))
     read_json(sources, sherpa.astro.ui.set_source)
 
     # ---------------------------------------------------------
@@ -99,5 +99,5 @@ def sherpa_image_like(counts,
     sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
     # conf() # Computes asymmetric errors (slow)
     # image_fit() # Shows data, model, residuals in ds9
-    logging.info('Writing {}'.format(outfile))
+    log.info('Writing {}'.format(outfile))
     write_all(outfile)

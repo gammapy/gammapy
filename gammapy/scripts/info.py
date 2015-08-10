@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import sys
 import logging
+log = logging.getLogger(__name__)
 import importlib
 from ..utils.scripts import get_parser
 
@@ -31,8 +32,6 @@ def info(version=False, tools=False, dependencies=False):
 
     TODO: explain.
     """
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-
     if version:
         _info_version()
 

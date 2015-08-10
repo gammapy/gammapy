@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['run_cwt']
@@ -50,11 +52,8 @@ def run_cwt(infile,
     """
     import os.path
     import sys
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-
     if os.path.isfile(outfile) and not overwrite:
-        logging.error("Output file exists and overwrite is False")
+        log.error("Output file exists and overwrite is False")
         sys.exit()
 
     from ..detect.cwt import CWT
