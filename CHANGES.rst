@@ -29,7 +29,7 @@ Contributors
 Pull requests
 +++++++++++++
 
-- ...
+- Make background cube models [#319] (Manuel Paz Arribas)
 
 .. _gammapy_0p3_release:
 
