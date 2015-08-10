@@ -31,16 +31,28 @@ __all__ = ['make_bg_cube_model',
 
 
 def define_cube_binning(n_obs, DEBUG):
-    """Define cube binning.
-
-    Define cube binning (E, Y, X).
+    """Define cube binning (E, Y, X).
 
     The shape of the cube (number of bins on each axis) depends on the
     number of observations.
 
-    (And the lower boundary of the cube on the energy threshold??!!!)
+    (TODO: and the lower boundary of the cube on the energy threshold??!!!)
 
-    TODO: more!!!
+    Parameters
+    ----------
+    n_obs : int
+        Number of observations.
+    DEBUG : int
+        Debug level.
+
+    Returns
+    -------
+    energy_edges : `~astropy.units.Quantity`
+        Energy bin edges.
+    dety_edges : `~astropy.coordinates.Angle`
+        Detector Y bin edges.
+    detx_edges : `~astropy.coordinates.Angle`
+        Detector X bin edges.
     """
 
     # define cube binning shape
@@ -63,6 +75,8 @@ def define_cube_binning(n_obs, DEBUG):
     dety_max = Angle(0.07, 'radian').to('degree')
     detx_min = Angle(-0.07, 'radian').to('degree')
     detx_max = Angle(0.07, 'radian').to('degree')
+    # TODO: the bin edges (at least for X and Y) should depend on the
+    #       experiment/observatory.
 
     # energy bins (logarithmic)
     log_delta_energy = (np.log(energy_max.value)
@@ -95,7 +109,29 @@ def define_cube_binning(n_obs, DEBUG):
 def fill_events(observation_table, fits_path, events_cube, livetime_cube, DEBUG):
     """Fill events and compute corresponding livetime.
 
-    TODO: more!!!
+    Get data files corresponding to the observation list, histogram
+    the events and the livetime and fill the corresponding cube
+    containers.
+
+    Parameters
+    ----------
+    observation_table : `~gammapy.obs.ObservationTable`
+        Observation list to use for the histogramming.
+    fits_path : str
+        Path to the data files.
+    events_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube container for the events.
+    livetime_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube container for the livetime.
+    DEBUG : int
+        Debug level.
+
+    Returns
+    -------
+    events_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the events.
+    livetime_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the livetime.
     """
     # stack events
     data_store = DataStore(dir=fits_path)
@@ -190,11 +226,21 @@ def fill_events(observation_table, fits_path, events_cube, livetime_cube, DEBUG)
     events_cube.background = ev_cube_hist
     livetime_cube.background = livetime
 
+    return events_cube, livetime_cube
+
 
 def divide_bin_volume(cube):
     """Divide by the bin volume.
 
-    TODO: more!!!
+    Parameters
+    ----------
+    cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the data to process.
+
+    Returns
+    -------
+    cube : `~gammapy.background.CubeBackgroundModel`
+        Cube divided by the bin volume.
     """
     delta_energy = cube.energy_bins[1:] - cube.energy_bins[:-1]
     delta_y = cube.dety_bins[1:] - cube.dety_bins[:-1]
@@ -210,7 +256,15 @@ def divide_bin_volume(cube):
 def set_zero_level(cube):
     """Setting level 0 to something very small.
 
-    TODO: more!!!
+    Parameters
+    ----------
+    cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the data to process.
+
+    Returns
+    -------
+    cube : `~gammapy.background.CubeBackgroundModel`
+        Cube with 0-level applied.
     """
     zero_level = Quantity(1.e-10, cube.background.unit)
     zero_level_mask = cube.background < zero_level
@@ -245,14 +299,14 @@ def smooth(bg_cube, n_counts):
 
     Parameters
     ----------
-    bg_cube : `~CubeBackgroundModel`
+    bg_cube : `~gammapy.background.CubeBackgroundModel`
         Cube background model to smooth.
     n_counts : int
         Number of events used to fill the cube background model.
 
     Returns
     -------
-    bg_cube : `~CubeBackgroundModel`
+    bg_cube : `~gammapy.background.CubeBackgroundModel`
         Smoothed cube background model.
     """
     from scipy import ndimage
@@ -313,7 +367,35 @@ def smooth(bg_cube, n_counts):
 def make_bg_cube_model(observation_table, fits_path, DEBUG):
     """Create a bg model from an observation table.
 
-    TODO: more!!!
+    Produce a background cube using the data from an observation list.
+    Steps:
+
+    1. define binning
+    2. fill events and livetime correction in cubes
+    3. fill bg cube
+    4. smooth
+    5. correct for bin volume
+    6. set 0 level
+
+    TODO: review steps!!!
+
+    Parameters
+    ----------
+    observation_table : `~gammapy.obs.ObservationTable`
+        Observation list to use for the histogramming.
+    fits_path : str
+        Path to the data files.
+    DEBUG : int
+        Debug level.
+
+    Returns
+    -------
+    events_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the events.
+    livetime_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube containing the livetime.
+    bg_cube : `~gammapy.background.CubeBackgroundModel`
+        Cube background model.
     """
 
     # DEBUG: 0: no output, 1: output, 2: run fast, 3: more verbose
@@ -365,7 +447,9 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     #        run at or near an existing source
     # TODO: move this TODO to its rightful place!!!
 
-    fill_events(observation_table, fits_path, events_cube, livetime_cube, DEBUG)
+    events_cube, livetime_cube = fill_events(observation_table, fits_path,
+                                             events_cube, livetime_cube,
+                                             DEBUG)
 
 
     ################

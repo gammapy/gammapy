@@ -13,7 +13,11 @@ from ..data import EventListDataset
 from ..background import make_bg_cube_model
 # TODO: revise imports!!!
 
-__all__ = ['make_bg_cube_models']
+__all__ = ['make_bg_cube_models',
+           'create_bg_observation_list',
+           'group_observations',
+           'stack_observations',
+           ]
 
 
 DEBUG = 1 # 0: no output, 1: output, 2: run fast, 3: more verbose
@@ -33,35 +37,29 @@ def main(args=None):
 
 def make_bg_cube_models(loglevel,
                         fitspath):
-    """Create background cube models from off runs.
+    """Create background cube models from the complete dataset of an experiment.
 
-    Starting with only gamma-ray event lists, make background templates.
-    (I actually need also Aeff for E_THRES!!!)
+    Starting with gamma-ray event lists and effective area IRFs,
+    make background templates. Steps
 
-    This is an example showcasing some of the Gammapy features and what
-    needs to be implemented. In this case, bg cube templates (X, Y, ENERGY)
-    are created.
+    1. make a global event list from a datastore
+    2. filter the runs keeping only the ones far from known sources
+    3. group the runs according to similar observation conditions (i.e. alt, az)
+    4. create a bg cube model for each group using:
+        * the `~gammapy.background.make_bg_cube_model` method
+        * and `~gammapy.background.CubeBackgroundModel` objects as containers
 
-    With just ~ 100 lines of high-level code we can do this:
-
-    - Make a global event list from a datastore
-    - Filter the runs keeping only the ones far from known sources
-    - Group the runs according to similar observation conditions (i.e. alt, az)
-    - Bin/histogram events into a histogram.
-    - Store the bg models histograms into CubeBackgroundModel objects and save them.
-    - Plot the models if requested.
+    The models are stored into FITS files.
 
     It can take about 10 minutes to run.
 
-    You can use this script to run certain steps by commenting in or out the functions in main().
-
     TODO: revise doc!!!
-
-    Here the steps communicate via FITS files.
 
     Parameters
     ----------
-    fits_path : str
+    loglevel : str
+        Level for the logger.
+    fitspath : str
         path to dir containing event list fits files and a list of them
     """
     if (loglevel):
@@ -180,7 +178,10 @@ def create_bg_observation_list(fits_path):
 
 
 def group_observations():
-    """Group list of runs according to observation properties into observation groups (bins).
+    """Group list of observations runs according to observation properties.
+
+    The observations are grouped into observation groups (bins) according
+    to their altitude and azimuth angle.
 
     Parameters
     ----------
@@ -268,7 +269,14 @@ def group_observations():
 
 
 def stack_observations(fits_path):
-    """Stack events for each observation group (bin).
+    """Stack events for each observation group (bin) and make background model.
+
+    The models are stored into FITS files.
+
+    Parameters
+    ----------
+    fits_path : str
+        path to dir containing list of input fits event files
     """
     if DEBUG:
         print()
@@ -323,5 +331,4 @@ def stack_observations(fits_path):
             bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
 
     # TODO: use random data (write a random data generator (see bg API))
-    #       then write a similar script inside gammapy as example
     #       what about IRFs (i.e. Aeff for the E_THRESH?)?
