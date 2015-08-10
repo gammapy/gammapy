@@ -21,3 +21,4 @@ gammapy_mpl_style['axes.color_cycle'] = [
 gammapy_mpl_style['interactive'] = False
 gammapy_mpl_style['axes.labelcolor'] = '#565656'
 gammapy_mpl_style['image.cmap'] = 'afmhot'
+gammapy_mpl_style['axes.grid'] = False

@@ -3,25 +3,37 @@
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.wcs import WCS
+
+from aplpy import FITSFigure
+
 from npred_general import prepare_images
 
 model, gtmodel, ratio, counts, header = prepare_images()
 
 # Plotting
-fig = plt.figure()
-wcs = WCS(header)
+fig = plt.figure(figsize=(15, 5))
 
-axes_1 = fig.add_axes([0.18, 0.264, 0.18, 0.234], projection=wcs)
-axes_1.imshow(model, origin='lower', vmin=0, vmax=0.3)
+image1 = fits.ImageHDU(data=model, header=header)
+f1 = FITSFigure(image1, figure=fig, subplot=(1, 3, 1), convention='wells')
+f1.show_colorscale(vmin=0, vmax=0.3, cmap='afmhot')
+f1.tick_labels.set_xformat('ddd')
+f1.tick_labels.set_yformat('dd')
 
-axes_2 = fig.add_axes([0.38, 0.25, 0.2, 0.26], projection=wcs)
-axes_2.imshow(gtmodel, origin='lower', vmin=0, vmax=0.3)
+image2 = fits.ImageHDU(data=gtmodel, header=header)
+f2 = FITSFigure(image2, figure=fig, subplot=(1, 3, 2), convention='wells')
+f2.show_colorscale(vmin=0, vmax=0.3, cmap='afmhot')
+f2.tick_labels.set_xformat('ddd')
+f2.tick_labels.set_yformat('dd')
 
-axes_3 = fig.add_axes([0.67, 0.25, 0.2, 0.26], projection=wcs)
-axes_3.imshow(ratio, origin='lower', vmin=0.9, vmax=1.1)
+image3 = fits.ImageHDU(data=ratio, header=header)
+f3 = FITSFigure(image3, figure=fig, subplot=(1, 3, 3), convention='wells')
+f3.show_colorscale(vmin=0.9, vmax=1.1, cmap='RdBu')
+f3.tick_labels.set_xformat('ddd')
+f3.tick_labels.set_yformat('dd')
+f3.add_colorbar(ticks=[0.9, 0.95, 1, 1.05, 1.1])
 
-fig.text(0.19, 0.53, "Gammapy Background", color='black', size='9')
-fig.text(0.39, 0.53, "Fermi Tools Background", color='black', size='9')
-fig.text(0.68, 0.53, "Ratio: \n Gammapy/Fermi Tools", color='black', size='9')
-
+fig.text(0.12, 0.95, "Gammapy Background")
+fig.text(0.45, 0.95, "Fermi Tools Background")
+fig.text(0.75, 0.95, "Ratio: Gammapy/Fermi Tools")
+plt.tight_layout()
 plt.show()

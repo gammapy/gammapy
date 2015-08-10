@@ -29,7 +29,6 @@ ax_cartesian.annotate('Sun', xy=(0, 8),  xycoords='data',
                 xytext=(-15, 15),  arrowprops=dict(arrowstyle="->", color='k'), weight=400)
 
 plt.grid(True)
-from astropy.units import Quantity
 
 ind = [95, 90, 80, 80]
 
