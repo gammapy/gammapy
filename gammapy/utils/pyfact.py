@@ -770,10 +770,10 @@ def get_cam_acc(camdist, rmax=4., nbins=None, exreg=None, fit=False, fitfunc=Non
         # fitfunc = lambda p, x: p[0] * x ** p[1] * (1. + (x / p[2]) ** p[3]) ** ((p[1] + p[4]) / p[3])
         if not fitfunc:
             fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2])
-            # fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2]) + p[4] / (np.exp(p[5] * (x - p[6])) + 1.)            
+            # fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2]) + p[4] / (np.exp(p[5] * (x - p[6])) + 1.)
         if not p0:
             p0 = [n[0] / r_a[0], 1.5, 3., -5.]  # Initial guess for the parameters
-            # p0 = [.5 * n[0] / r_a[0], 1.5, 3., -5., .5 * n[0] / r_a[0], 100., .5] # Initial guess for the parameters            
+            # p0 = [.5 * n[0] / r_a[0], 1.5, 3., -5., .5 * n[0] / r_a[0], 100., .5] # Initial guess for the parameters
         fitter = ChisquareFitter(fitfunc)
         m = (n > 0.) * (nerr > 0.) * (r_a != 0.) * ((1. - ex_a) != 0.)
         if np.sum(m) <= len(p0):
@@ -1891,7 +1891,7 @@ def create_spectrum(input_file_names,
             header['ANCRFILE'] = os.path.basename(arf), 'Ancillary response file (ARF)'
             header['RESPFILE'] = os.path.basename(rmf), 'Redistribution matrix file (RMF)'
             header['BACKFILE'] = run_out_basename + '_bg.pha.fits', 'Bkgr FITS file'
-            header['BACKSCAL'] = alpha_run, 'Background scale factor'            
+            header['BACKSCAL'] = alpha_run, 'Background scale factor'
             header['HDUCLAS2'] = 'TOTAL', 'Extension contains source + bkgd'
             filename = run_out_basename + '_signal.pha.fits'
             log.info('RUN Writing signal PHA file to {0}'.format(filename))

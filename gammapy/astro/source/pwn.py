@@ -67,7 +67,7 @@ class PWN(object):
             Time of collision.
         """
         from scipy.optimize import fsolve
- 
+
         def time_coll(t):
             t = Quantity(t, 'yr')
             return (self._radius_free_expansion(t) - self.snr.radius_reverse_shock(t)).value
@@ -131,7 +131,7 @@ class PWN(object):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
-        return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) / 
+        return np.sqrt(2 * const.mu0 * self.eta_B * self.pulsar.energy_integrated(t) /
                        (4. / 3 * np.pi * self.radius(t) ** 3))
 
     def luminosity_tev(self, t=None, fraction=0.1):

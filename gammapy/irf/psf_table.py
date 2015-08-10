@@ -75,7 +75,7 @@ class TablePSF(object):
     def from_shape(cls, shape, width, offset):
         """Make TablePSF objects with commonly used shapes.
 
-        This function is mostly useful for examples and testing. 
+        This function is mostly useful for examples and testing.
 
         Parameters
         ----------
@@ -378,7 +378,7 @@ class TablePSF(object):
         x, y = self._offset.value, self._dp_domega.value
         self._dp_domega_spline = UnivariateSpline(x, y, **spline_kwargs)
 
-        x, y = self._offset.value, self._dp_dtheta.value 
+        x, y = self._offset.value, self._dp_dtheta.value
         self._dp_dtheta_spline = UnivariateSpline(x, y, **spline_kwargs)
 
         # We use the terminology for scipy.stats distributions
@@ -395,7 +395,7 @@ class TablePSF(object):
         self._ppf_spline = UnivariateSpline(y, x, **spline_kwargs)
 
     def _offset_clip(self, offset):
-        """Clip to offset support range, because spline extrapolation is unstable.""" 
+        """Clip to offset support range, because spline extrapolation is unstable."""
         offset = Angle(offset, 'radian').radian
         offset = np.clip(offset, 0, self._offset[-1].radian)
         return offset

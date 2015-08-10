@@ -118,7 +118,7 @@ def test_cube_sed1():
     counts.data = np.ones_like(counts.data)
 
     lons, lats = spec_cube.spatial_coordinate_images
-    
+
     mask = lon_lat_rectangle_mask(lons.value, lats.value, -8, 8, -4, 4)
 
     sed_table1 = cube_sed(spec_cube, mask, flux_type='differential')

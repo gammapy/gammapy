@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from gammapy.spectrum import energy_bounds_equal_log_spacing 
+from gammapy.spectrum import energy_bounds_equal_log_spacing
 from gammapy.datasets import FermiGalacticCenter, FermiVelaRegion
 from gammapy.datasets import load_lat_psf_performance
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ def get_psf_table(psf, emin, emax, bins):
     # Loop over energies and determine PSF containment radius
     for energy in energy_bounds_equal_log_spacing(Quantity((emin, emax), 'MeV'), bins):
         energy_psf = psf.table_psf_at_energy(energy)
-    
+
         containment_68 = energy_psf.containment_radius(0.68)
         containment_95 = energy_psf.containment_radius(0.95)
 
@@ -36,7 +36,7 @@ def get_psf_table(psf, emin, emax, bins):
     table['ENERGY'].units = energy.unit
     table['CONT_68'].units = containment_68.unit
     table['CONT_95'].units = containment_95.unit
-    
+
     return table
 
 
@@ -48,7 +48,7 @@ def plot_containment_radii(fraction):
 
     psf_vela = FermiVelaRegion.psf()
     gtpsf_table_vela = get_psf_table(psf_vela, 10000, 300000, 15)
-    
+
     if fraction == 68:
         true_table_rep = load_lat_psf_performance('P7REP_SOURCE_V15_68')
         true_table = load_lat_psf_performance('P7SOURCEV6_68')
@@ -57,7 +57,7 @@ def plot_containment_radii(fraction):
         true_table_rep = load_lat_psf_performance('P7REP_SOURCE_V15_95')
         true_table = load_lat_psf_performance('P7SOURCEV6_95')
         rad = 'CONT_95'
-    
+
     plt.plot(gtpsf_table_gc['ENERGY'], gtpsf_table_gc[rad],
              color='red',label='Fermi Tools PSF @ Galactic Center')
     plt.plot(gtpsf_table_vela['ENERGY'], gtpsf_table_vela[rad],

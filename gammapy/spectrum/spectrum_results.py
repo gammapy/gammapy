@@ -313,11 +313,11 @@ class SpectrumResults:
     filename : str
         JSON filename
     """
-    
+
     def __init__(self, filename):
         with open(filename) as fh:
             self.data = json.load(fh)
-        
+
         d = self.data
         self.fit_options = FitOptions.from_dict(d['fit_options'])
         self.spectrum_stats = SpectrumStats.from_dict(d['spectrum_stats'])

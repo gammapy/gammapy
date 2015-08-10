@@ -33,6 +33,6 @@ xmin, ymin = proj.toworld((conf_dict['g1.xpos'][0] + conf_dict['g1.xpos'][1],
                            conf_dict['g1.ypos'][0] + conf_dict['g1.ypos'][1]))
 xmax, ymax = proj.toworld((conf_dict['g1.xpos'][0] + conf_dict['g1.xpos'][2],
                            conf_dict['g1.ypos'][0] + conf_dict['g1.ypos'][2]))
-nompos = positions.str2pos(nomposstr, proj)    
+nompos = positions.str2pos(nomposstr, proj)
 print('{0} ({1}-{2}) vs {3}'.format(x, xmin, xmax, nompos[0][0][0]))
 print('{0} ({1}-{2}) vs {3}'.format(y, ymin, ymax, nompos[0][0][1]))

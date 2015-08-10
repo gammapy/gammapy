@@ -18,7 +18,7 @@ def main(args=None):
 
 def root_to_fits():
     """Convert ROOT files to FITS files (histograms and ntuples).
-    
+
     TODO: explain a bit.
     """
     # TODO: implement

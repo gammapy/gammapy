@@ -91,16 +91,16 @@ class CWT(object):
 
     def set_data(self, image, background):
         """Set input images."""
-        # TODO: check that image and background are consistent 
+        # TODO: check that image and background are consistent
         self.image = image - 0.0
         self.nx, self.ny = self.image.shape
-        self.filter = np.zeros((self.nx, self.ny)) 
+        self.filter = np.zeros((self.nx, self.ny))
         self.background = background - 0.0  # hack because of some bug with old version of fft in numpy
-        self.model = np.zeros((self.nx, self.ny)) 
+        self.model = np.zeros((self.nx, self.ny))
         self.approx = np.zeros((self.nx, self.ny))
 
         self.transform = np.zeros((self.nscale, self.nx, self.ny))
-        self.error = np.zeros((self.nscale, self.nx, self.ny)) 
+        self.error = np.zeros((self.nscale, self.nx, self.ny))
         self.support = np.zeros((self.nscale, self.nx, self.ny))
 
     def set_file(self, filename):
@@ -132,7 +132,7 @@ class CWT(object):
 
         Imposing a minimum significance on a connex region of significant pixels
         (i.e. source detection)
-        """ 
+        """
         from scipy.ndimage import label
         # TODO: check that transform has been performed
         sig = self.transform / self.error
@@ -146,7 +146,7 @@ class CWT(object):
                     if index[0].size == 1:
                         tmp[index] *= 0.0  # Remove isolated pixels from support
                 signif = sig[key][index]
-                if signif.max() < nsigmap:  # Remove significant pixels island from support 
+                if signif.max() < nsigmap:  # Remove significant pixels island from support
                     tmp[index] *= 0.0  # if max does not reach maximal significance
 
             self.support[key] += tmp
@@ -176,7 +176,7 @@ class CWT(object):
             self.residual_var = tmp_var
         log.info("Convergence not formally reached at iteration {0}".format(iiter + 1))
         log.info("Final convergence parameter {0}. Objective was {1}."
-                     "".format(convergence, var_ratio)) 
+                     "".format(convergence, var_ratio))
         return res
 
     def max_scale_image(self):

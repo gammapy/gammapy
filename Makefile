@@ -44,7 +44,7 @@ cython:
 	find $(PROJECT) -name "*.pyx" -exec $(CYTHON) {} \;
 
 trailing-spaces:
-	find $(PROJECT) -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+	find $(PROJECT) examples docs -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
 code-analysis: flake8 pylint
 

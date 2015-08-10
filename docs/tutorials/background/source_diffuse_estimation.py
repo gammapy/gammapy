@@ -62,7 +62,7 @@ for iteration in range(n_iterations):
     plt.axis('off')
     plt.title('Background Estimation, Iteration {0}'.format(iteration),
               fontsize='small')
-    
+
     plt.subplot(n_iterations, 2, 2 * iteration + 2)
     significance_hdu = ibe.significance_image_hdu
     data = significance_hdu.data[:, 1400:2000]

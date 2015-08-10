@@ -91,7 +91,7 @@ def assign_model(model_name, i):
         p1.index = 2.
         p1.ampl = 1.
     elif model_name == 'ic':  # Inverse Compton peak
-        # Weird, it returns the fit results twice (actually, it seems to do everything twice) 
+        # Weird, it returns the fit results twice (actually, it seems to do everything twice)
         # Returns error except if --noplot: TypeError: calc() takes exactly 4 arguments (3 given)
         from naima.sherpamod import InverseCompton
 

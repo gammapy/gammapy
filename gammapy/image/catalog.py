@@ -195,7 +195,7 @@ def catalog_table(catalog, energy_bands=False):
                            GLON=glon, GLAT=glat, flux=flux_bol)
 
         elif catalog == '2FGL':
-            energy = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'GeV') 
+            energy = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'GeV')
 
             if not energy_bands:
                 flux_bol = cat_table['Flux_Density'][source]
