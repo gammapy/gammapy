@@ -4,28 +4,26 @@ from __future__ import (absolute_import, division, print_function,
 import os
 import logging
 import numpy as np
-from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-from astropy.table import Table
+
 from ..utils.scripts import get_parser
 from ..obs import ObservationTable, DataStore
 from .. import datasets
-from ..data import EventListDataset, SpectralCube
-from ..background import CubeBackgroundModel
+from ..data import EventListDataset
+from ..background import make_bg_cube_model
+# TODO: revise imports!!!
 
 __all__ = ['make_bg_cube_models']
 
 
-DEBUG = 2 # 0: no output, 1: output, 2: run fast, 3: more verbose
+DEBUG = 1 # 0: no output, 1: output, 2: run fast, 3: more verbose
 # TODO: remove the DEBUG global variable, when the logger works!!!
 
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument("-l", "--log", dest="loglevel",
-                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR',
-                                 'CRITICAL'],
+                        choices=['debug', 'info', 'warning', 'error',
+                                 'critical'],
                         help="Set the logging level")
     parser.add_argument('fitspath', type=str,
                         help='Dir path to input event list fits files.')
@@ -67,15 +65,12 @@ def make_bg_cube_models(loglevel,
         path to dir containing event list fits files and a list of them
     """
     if (loglevel):
-        logging.basicConfig(level=getattr(logging, loglevel), format='%(levelname)s - %(message)s')
+        logging.basicConfig(level=getattr(logging, loglevel.upper()), format='%(levelname)s - %(message)s')
 
     create_bg_observation_list(fitspath)
     group_observations()
     stack_observations(fitspath)
 
-
-# TODO: can I read/write fits.gz files? (I would save some disk space...)!!! (try/test it)!!!
-# if it works, try to compress current result files
 
 # define observation binning
 # TODO: store it in a file (fits? ascii?) (use an astropy table as help?)!!!
@@ -93,106 +88,6 @@ if DEBUG > 1:
 azimuth_edges = Angle([-90, 90, 270], 'degree')
 if DEBUG > 1:
     azimuth_edges = Angle([90, 270], 'degree')
-
-
-#define cube binning shape
-def get_cube_shape(nobs):
-    """Define shape of bg cube (E, Y, X)."""
-    nebins = 20
-    nybins = 60
-    nxbins = 60
-    if nobs < 100:       
-        minusbins = int(nobs/10) - 10
-        nebins += minusbins
-        nybins += 4*minusbins
-        nxbins += 4*minusbins
-    return (nebins, nybins, nxbins)
-
-
-def smooth(bg_cube_model, n_counts):
-    """
-    Smooth background cube model.
-
-    Smooth method:
-    1: slice model in energy bins -> 1 image per energy bin
-    2: calculate integral of the image
-    3: determine times to smooth (N) depending on number of entries in the cube
-    4: smooth image N times with root TH2::Smooth
-    default smoothing kernel: k5a
-    Double_t k5a[5][5] =  { { 0, 0, 1, 0, 0 },
-                            { 0, 2, 2, 2, 0 },
-                            { 1, 2, 5, 2, 1 },
-                            { 0, 2, 2, 2, 0 },
-                            { 0, 0, 1, 0, 0 } };
-    ref: https://root.cern.ch/root/html/TH2.html#TH2:Smooth
-    5: scale with the cocient of the old integral div by the new integral
-    6: fill the values of the image back in the cube
-
-    Parameters
-    ----------
-    bg_cube_model : `~CubeBackgroundModel`
-        Cube background model to smooth.
-    n_counts : int
-        Number of events used to fill the cube background model.
-
-    Returns
-    -------
-    bg_cube_model : `~CubeBackgroundModel`
-        Smoothed cube background model.
-    """
-    from scipy import ndimage
-
-    # smooth images
-
-    # integral of original images
-    dummy_delta_energy = np.zeros_like(bg_cube_model.energy_bins[1:])
-    delta_y = bg_cube_model.dety_bins[1:] - bg_cube_model.dety_bins[:-1]
-    delta_x = bg_cube_model.detx_bins[1:] - bg_cube_model.detx_bins[:-1]
-    # define grid of deltas (i.e. bin widths for each 3D bin)
-    dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y, delta_x, indexing='ij')
-    bin_area = (delta_y*delta_x).to('sr')
-    integral_image = bg_cube_model.background*bin_area
-    integral_image = integral_image.sum(axis=(1,2))
-
-    # number of times to smooth
-    if n_counts >= 1.e6:
-        n_smooth = 3
-    elif (n_counts < 1.e6) and (n_counts >= 1.e5):
-        n_smooth = 4
-    else:
-        n_smooth = 5
-
-    # smooth images
-
-    # define smoothing kernel as k5a in root:
-    # https://root.cern.ch/root/html/TH2.html#TH2:Smooth
-    kernel = np.array([[0, 0, 1, 0, 0],
-                       [0, 2, 2, 2, 0],
-                       [1, 2, 5, 2, 1],
-                       [0, 2, 2, 2, 0],
-                       [0, 0, 1, 0, 0]])
-
-    # loop over energy bins (i.e. images)
-    for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
-        # loop over number of times to smooth
-        for i_smooth in np.arange(n_smooth):
-            data = bg_cube_model.background[i_energy]
-            image_smooth = ndimage.convolve(data, kernel)
-
-            # overwrite bg image with smoothed bg image
-            bg_cube_model.background[i_energy] = Quantity(image_smooth, bg_cube_model.background.unit)
-
-    # integral of smooth images
-    integral_image_smooth = bg_cube_model.background*bin_area
-    integral_image_smooth = integral_image_smooth.sum(axis=(1,2))
-
-    # scale images to preserve original integrals
-
-    # loop over energy bins (i.e. images)
-    for i_energy in np.arange(len(bg_cube_model.energy_bins) - 1):
-        bg_cube_model.background[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
-
-    return bg_cube_model
 
 
 def create_bg_observation_list(fits_path):
@@ -413,160 +308,12 @@ def stack_observations(fits_path):
             if DEBUG:
                 print(observation_table)
 
-            # stack events
-            data_store = DataStore(dir=fits_path)
-            event_list_files = data_store.make_table_of_files(observation_table, filetypes=['events'])
-            data_set = EventListDataset.vstack_from_files(event_list_files['filename'])
-            # TODO: the stacking can be long, if many runs are read: maybe it would be faster to grab the needed columns and stack them manually?!!!
-            if DEBUG:
-                print(data_set)
-                print(data_set.event_list)
-            print('Total number of events: {}'.format(len(data_set.event_list)))
-            print('Total number of GTIs: {}'.format(len(data_set.good_time_intervals)))
-
-            # loop over event files to get necessary infos from header
-            livetime = Quantity(0. , 'second')
-            # TODO: this loop is slow: can we accelerate it???!!! (or avoid it?)
-            for i_file in event_list_files['filename']:
-                if DEBUG > 2:
-                    print(' infile: {}'.format(i_file))
-                ev_list_ds = EventListDataset.read(i_file)
-                livetime += Quantity(ev_list_ds.event_list.meta['LIVETIME'],
-                                     ev_list_ds.event_list.meta['TIMEUNIT'])
-                # TODO: the best would be to fill the livetime directly into a cube!!!
-                if DEBUG > 2:
-                    print(' livetime {0} {1}'.format(ev_list_ds.event_list.meta['LIVETIME'],
-                                                     ev_list_ds.event_list.meta['TIMEUNIT']))
-            if DEBUG:
-                print('Total livetime = {}'.format(livetime.to('h')))
-
-            # loop over effective area files to get necessary infos from header
-            energy_threshold = 999. # TODO: define as quantity!!!
-            # TODO: I need Aeff for the E_THRES!!!
-            #  mi mayer takes the min E_THRES of all runs in the bin (alt-az, or zen bin, ...)
-            #  and the E_THRES of each run (for PA) is stored in the header of the run-specific Aeff fits file: header["LO_THRES"]
-            # TODO: I think this definition of E_th is not good:
-            #  - some runs might not have events at that energy, but they still contribute to the livetime
-            #  - max of all runs would be more conservative but more correct (if using this, redefine initial value for energy_threshold)
-            #  - best I think: use the E_th of each run, and correct the livetime accordingly: livetime = f(E): fill, for each run, livetime only for bins above its threshold (and for events, fill only events above the corr. threshold)
-            #  - C.Deil says: fill all events of all runs, ignoring the E_th
-            aeff_list_files = data_store.make_table_of_files(observation_table, filetypes=['effective area'])
-            # TODO: can we avoid the loop???!!! (or combine it with the loop over event files?)!!!
-            for i_file in aeff_list_files['filename']:
-                if DEBUG > 2:
-                    print(' infile: {}'.format(i_file))
-                aeff_list_ds = EventListDataset.read(i_file)
-                energy_threshold = min(energy_threshold,
-                                       aeff_list_ds.event_list.meta['LO_THRES'])
-                if DEBUG > 2:
-                    print(' energy threshold {}'.format(aeff_list_ds.event_list.meta['LO_THRES']))
-            energy_threshold = Quantity(energy_threshold, 'TeV') # TODO: units hard coded!!! units are in the fits file, but are not read into the dataset meta infos!!!
-            if DEBUG:
-                print('Total energy threshold = {}'.format(energy_threshold))
-            if (energy_threshold < Quantity(1.e-6, 'TeV')) or (energy_threshold > Quantity(100., 'TeV')):
-                raise ValueError("Enargy threshold sees incorrect: {}".format(energy_threshold))
-
-            # apply mask to filer out events too close to known sources??!!!!
-            # correct livetime accordingly) !!!
-            # For the moment I will restrict only to runs far away from
-            # sources, so no need for this.
-            # THIS SHOULD GO LATER: when building the datacubes for events and livetime
-            # no: earlier, since I loose the RA/Dec info otherwhise... right?
-            # then I might have to define the cubes earlier, and fill run by run, instead of stacking them
-
-            # construct events cube (energy, X, Y)
-            # TODO: UNITS ARE MISSING??!!! -> look in the fits tables!!!
-            # in header there is EUNIT (TeV)!!!
-            # hard coding the units for now !!!
-            ev_DETX = Angle(data_set.event_list['DETX'], 'degree')
-            ev_DETY = Angle(data_set.event_list['DETY'], 'degree')
-            ev_energy = Quantity(data_set.event_list['ENERGY'],
-                                 data_set.event_list.meta['EUNIT'])
-            ev_cube_table = Table([ev_energy, ev_DETY, ev_DETX],
-                                  names=('ENERGY', 'DETY', 'DETX'))
-            if DEBUG:
-                print(ev_cube_table)
-
-            # bin events
-
-            # define cube binning
-            bg_cube_shape = get_cube_shape(len(observation_table))
-            #energy_min = Quantity(0.1, 'TeV') # TODO: this should be overwriten by the energy threshold??!!!!
-            # TODO: should E_min (= energy_edges[0]) be equal to E_THRES??!!!
-            energy_min = energy_threshold
-            energy_max = Quantity(80, 'TeV')
-            dety_min = Angle(-0.07, 'radian').to('degree')
-            dety_max = Angle(0.07, 'radian').to('degree')
-            detx_min = Angle(-0.07, 'radian').to('degree')
-            detx_max = Angle(0.07, 'radian').to('degree')
-
-            # TODO: flag for make_test_bg_cube_model, in order to create an empty bg cube (only the binning, but no content)!!!
-
-            # energy bins (logarithmic)
-            log_delta_energy = (np.log(energy_max.value)
-                                - np.log(energy_min.value))/bg_cube_shape[0]
-            energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1)*log_delta_energy
-                                  + np.log(energy_min.value))
-            energy_edges = Quantity(energy_edges, energy_min.unit)
-            # TODO: this function should be reviewed/re-written, when
-            # the following PR is completed:
-            # https://github.com/gammapy/gammapy/pull/290
-
-            # spatial bins (linear)
-            delta_y = (dety_max - dety_min)/bg_cube_shape[1]
-            dety_edges = np.arange(bg_cube_shape[1] + 1)*delta_y + dety_min
-            delta_x = (detx_max - detx_min)/bg_cube_shape[2]
-            detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
-
-            if DEBUG > 1:
-                energy_edges = Quantity([0.01, 0.1, 1., 10., 100.], 'TeV') # log binning
-                dety_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
-                detx_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
-            ev_cube = np.zeros((len(energy_edges), len(detx_edges), len(dety_edges)))
-            print("ev_cube shape", ev_cube.shape)
-
-            # fill events
-
-            # get correct data cube format for histogramdd
-            ev_cube_array = np.vstack([ev_cube_table['ENERGY'], ev_cube_table['DETY'], ev_cube_table['DETX']]).T
-
-            # fill data cube into histogramdd
-            ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array, [energy_edges, dety_edges, detx_edges])
-            n_counts = ev_cube_hist.sum()
-            ev_cube_hist = Quantity(ev_cube_hist, '') # counts
-            ev_cube_edges[0] = Quantity(ev_cube_edges[0], ev_cube_table['ENERGY'].unit)
-            ev_cube_edges[1] = Angle(ev_cube_edges[1], ev_cube_table['DETY'].unit)
-            ev_cube_edges[2] = Angle(ev_cube_edges[2], ev_cube_table['DETX'].unit)
-            # Weight the counts with something meaningful:
-            # divide by livetime times the cube bin volume
-            #  mi mayer uses: histo.Scale(1.0/duration) (i.e. livetime)
-            #  what about units of energy and solid angle?!!! -> he does this AFTER THE SMOOTHING!!! (but why?)
-            ev_cube_hist /= livetime
-
-            # store in container class
-            bg_cube_model = CubeBackgroundModel(detx_bins=detx_edges,
-                                                dety_bins=dety_edges,
-                                                energy_bins=energy_edges,
-                                                background=ev_cube_hist)
-
-            # smooth
-            bg_cube_model = smooth(bg_cube_model, n_counts)
-
-            # divide by the bin volume and setting level 0 AFTER smoothing
-            delta_energy = bg_cube_model.energy_bins[1:] - bg_cube_model.energy_bins[:-1]
-            delta_y = bg_cube_model.dety_bins[1:] - bg_cube_model.dety_bins[:-1]
-            delta_x = bg_cube_model.detx_bins[1:] - bg_cube_model.detx_bins[:-1]
-            # define grid of deltas (i.e. bin widths for each 3D bin)
-            delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y, delta_x, indexing='ij')
-            bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!!
-            bg_cube_model.background /= bin_volume
-            zero_level_mask = bg_cube_model.background < Quantity(1.e-10, '1 / (s sr MeV)')
-            bg_cube_model.background[zero_level_mask] = Quantity(1.e-10, '1 / (s sr MeV)')
-
-            # TODO: interpolate method!!!
-            #       (not needed here, but useful for applying the models)
+            # create bg cube model
+            events_cube, livetime_cube, bg_cube = make_bg_cube_model(observation_table, fits_path, DEBUG)
 
             # save model to file
+            bg_cube_model = bg_cube
+            # TODO: store also events_cube, livetime_cube !!!
             outfile = outdir +\
                      'bg_cube_model_alt{0}_az{1}'.format(i_alt, i_az)
             if DEBUG:
