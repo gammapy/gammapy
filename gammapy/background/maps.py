@@ -67,8 +67,8 @@ class Maps(fits.HDUList):
         nonexisting_basic_maps = [name for name in BASIC_MAP_NAMES
                                   if name not in hdu_names]
         if not existing_basic_maps:
-            log.error('hdu_names =', hdu_names)
-            log.error('BASIC_MAP_NAMES = ', BASIC_MAP_NAMES)
+            log.error('hdu_names = {}'.format(hdu_names))
+            log.error('BASIC_MAP_NAMES = {}'.format(BASIC_MAP_NAMES))
             raise IndexError('hdus must contain at least one of the BASIC_MAP_NAMES')
         # Declare any one of the existing basic maps the reference map.
         # This HDU will be used as the template when adding other hdus.

@@ -19,7 +19,7 @@ class SpecModel(object):
         """Construct arrays of model count rates."""
 
         sample_model = sau.get_model(data_list[0].name)
-        self.get_binning(sample_model)  # do this only once assuming that true energy         
+        self.get_binning(sample_model)  # do this only once assuming that true energy
         # binning does not change from run to run
         obs_exc = np.zeros_like(self.bcenter)
         obs_err = np.zeros_like(self.bcenter)
@@ -65,7 +65,7 @@ class SpecModel(object):
 
             self.get_mod_val(self.totmodel, self.etrue_center)
 
-            # Add run exposure*area*model for valid true energy bins only 
+            # Add run exposure*area*model for valid true energy bins only
             exp_tot[valid_arf] = exp_tot[valid_arf] + \
                                  arf_vals[valid_arf] * self.mod_val[valid_arf] * exposure
 
@@ -81,7 +81,7 @@ class SpecModel(object):
             print('...may want to convert to upper limit') # NOT YET IMPLEMENTED
             continue
             #makeUL.append(True)
-            if np.isinf(signi) or np.isnan(signi): #isinf when Non = Noff = 0?            
+            if np.isinf(signi) or np.isnan(signi): #isinf when Non = Noff = 0?
             if some_significant: # otherwise we are probably below threshold
             print('WARNING: Energy bin from', round(binmin[i]/1e9,1), 'to', \
             round(binmax[i]/1e9,1), 'TeV contains no events.')
@@ -90,7 +90,7 @@ class SpecModel(object):
             some_significant = True
             '''
 
-        # compute average exposure (time*area) in each measured energy bin 
+        # compute average exposure (time*area) in each measured energy bin
         mean_expo = np.zeros(obs_exc.shape)
         for i in range(obs_exc.shape[0]):
             mean_expo[i] = exp_tot[self.ener_map[i, :]].sum() / \

@@ -260,7 +260,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         with flux_type)
     mask : array_like, optional
         2D mask array, matching spatial dimensions of input cube.
-        A mask value of True indicates a value that should be ignored, 
+        A mask value of True indicates a value that should be ignored,
         while a mask value of False indicates a valid value.
     flux_type : {'differential', 'integral'}
         Specify whether input cube includes differential or integral fluxes.
@@ -328,7 +328,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
                                                  y_method='power_law',
                                                  spectral_index=spectral_index,
                                                  energy_min=emins, energy_max=emaxs,
-                                                 int_flux=values, 
+                                                 int_flux=values,
                                                  int_flux_err=errors * values)
 
     else:

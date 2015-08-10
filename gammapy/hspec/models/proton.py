@@ -8,7 +8,7 @@ class Proton(ArithmeticModel):
     """
 
     def __init__(self, name='proton'):
-        # First precompute some quantities 
+        # First precompute some quantities
         self.Ep_min = 1e-1  # TeV
         self.Ep_max = 1e5  # TeV
         self.nbins = 300
@@ -85,27 +85,27 @@ class Proton(ArithmeticModel):
 
     def point(self, p, x):
         """
-         point version, 
-         
+         point version,
+
         Params
         `p`  list of ordered parameter values.
         `x`  ndarray of bin midpoints.
-        
+
         returns ndarray of calculated function values at
                 bin midpoints
         """
         return self.pflux(p, x)
 
     def integrated(self, p, xlo, xhi):
-        """        
-         integrated form from lower bin edge to upper edge 
-        
+        """
+         integrated form from lower bin edge to upper edge
+
         Params
         `p`   list of ordered parameter values.
         `xlo` ndarray of lower bin edges.
         `xhi` ndarray of upper bin edges.
 
-        returns ndarray of integrated function values over 
+        returns ndarray of integrated function values over
                 lower and upper bin edges.
         """
         val1 = np.zeros(xhi.shape[0] + 1)

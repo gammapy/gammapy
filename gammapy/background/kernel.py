@@ -128,7 +128,7 @@ class IterativeKernelBackgroundEstimator(object):
         for ii in np.arange(max_iterations):
             self.run_iteration()
 
-            if self.save_intermediate_results: 
+            if self.save_intermediate_results:
                 self.save_files(filebase, index=ii)
 
             # Dilate old mask to compare with new mask

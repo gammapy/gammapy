@@ -362,14 +362,14 @@ def load_lat_psf_performance(performance_file):
     * `PSF_P7REP_SOURCE_V15 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/p7rep_v15/lat_Performance_files/cPsfEnergy_P7REP_SOURCE_V15.png>`_
     * `PSF_P7SOURCEV6 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/pass7v6/lat_Performance_files/cPsfEnergy_P7SOURCE_V6.png>`_
 
-    As such, a 10% error in the values should be assumed. 
+    As such, a 10% error in the values should be assumed.
 
     Parameters
     ----------
     performance_file : str
         Specify which PSF performance file to return.
 
-        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment 
+        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment
         * ``P7REP_SOURCE_V15_95`` P7REP_SOURCE_V15, 95% containment
         * ``P7SOURCEV6_68`` P7SOURCEV6, 68% containment
         * ``P7SOURCEV6_95`` P7SOURCEV6, 95% containment

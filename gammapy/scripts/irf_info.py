@@ -15,7 +15,7 @@ __all__ = ['irf_info']
 def retrieve_psf_info(hdu_list, energies, theta, fractions, plot=False):
     """
     Retrieve psf information from psf fits file.
-    
+
     Parameters
     ----------
     hdu_list : `~astropy.io.fits.HDUList`
@@ -28,17 +28,17 @@ def retrieve_psf_info(hdu_list, energies, theta, fractions, plot=False):
     energies = Quantity(energies, 'TeV')
     thetas = Quantity(theta, 'deg')
     print(psf.info(fractions=fractions, energies=energies, thetas=thetas))
-    
+
     if plot:
         for fraction in fractions:
             filename = 'containment_R{0:.0f}_energy_theta.png'.format(100 * fraction)
             psf.plot_containment(fraction, filename)
-        
-    
+
+
 def retrieve_arf_info(hdu_list, energies, plot=False):
     """
     Retrieve effective area information from arf fits file.
-    
+
     Parameters
     ----------
     hdu_list : `~astropy.io.fits.HDUList`
@@ -50,10 +50,10 @@ def retrieve_arf_info(hdu_list, energies, plot=False):
     arf = EffectiveAreaTable.from_fits(hdu_list)
     energies = Quantity(energies, 'TeV')
     print(arf.info(energies=energies))
-    
+
     if plot:
         arf.plot_area_vs_energy('effective_area.png')
-    
+
 
 def main(args=None):
     parser = get_parser(irf_info)

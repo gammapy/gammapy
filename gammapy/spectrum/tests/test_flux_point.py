@@ -25,7 +25,7 @@ indices = [0, 1, 2, 3]
 def test_x_lafferty():
     """Tests Lafferty & Wyatt x-point method.
 
-    Using input function g(x) = 10^4 exp(-6x) against 
+    Using input function g(x) = 10^4 exp(-6x) against
     check values from paper Lafferty & Wyatt. Nucl. Instr. and Meth. in Phys.
     Res. A 355 (1995) 541-547, p. 542 Table 1
     """

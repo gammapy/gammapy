@@ -35,7 +35,7 @@ class Gauss2DPDF(object):
 
     def __call__(self, x, y=0):
         """dp / (dx dy) at position (x, y)
-        
+
         Parameters
         ----------
         x : `~numpy.ndarray`
@@ -156,7 +156,7 @@ class MultiGauss2D(object):
 
     def __call__(self, x, y=0):
         """dp / (dx dy) at position (x, y)
-        
+
         Parameters
         ----------
         x : `~numpy.ndarray`
@@ -242,7 +242,7 @@ class MultiGauss2D(object):
 
     def normalize(self):
         """Normalize function.
-        
+
         Returns
         -------
         norm_multigauss : `~gammapy.morphology.MultiGauss2D`
@@ -486,6 +486,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     # Return values and stddevs separately
     values = [F_sum, x_sum, y_sum, var_x_sum ** 0.5, var_y_sum ** 0.5, (var_x_sum * var_y_sum) ** 0.25]
     nominal_values = [_.nominal_value for _ in values]
-    std_devs = [float(_.std_dev) for _ in values] 
+    std_devs = [float(_.std_dev) for _ in values]
 
     return nominal_values, std_devs

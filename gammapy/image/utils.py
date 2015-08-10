@@ -1107,7 +1107,7 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     block_size : `~numpy.ndarray`
         Array containing down-sampling integer factor along each axis.
     func : callable
-        Function object which is used to calculate the return value for each local block. 
+        Function object which is used to calculate the return value for each local block.
         This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
     cval : float, optional
         Constant padding value if image is not perfectly divisible by the block size. Default 0.

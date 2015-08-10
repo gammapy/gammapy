@@ -24,7 +24,7 @@ def make_x_plot():
     table['ENERGY_MIN'] = energy_min
     table['ENERGY_MAX'] = energy_max
     table['INT_FLUX'] = int_flux
-    lafferty_array = []  
+    lafferty_array = []
     log_array = []
     spectral_indices = np.arange(1.1, 6, 0.01)
     for spectral_index in spectral_indices:

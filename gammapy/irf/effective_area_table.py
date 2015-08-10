@@ -352,7 +352,7 @@ class EffectiveAreaTable2D(object):
     Get effective area vs. energy for a given offset and energy binning:
 
     .. code-block:: python
-    
+
         import numpy as np
         from astropy.coordinates import Angle
         from astropy.units import Quantity
@@ -366,7 +366,7 @@ class EffectiveAreaTable2D(object):
     Create ARF fits file for a given offest and energy binning:
 
     .. code-block:: python
-    
+
         import numpy as np
         from astropy.coordinates import Angle
         from astropy.units import Quantity
@@ -379,7 +379,7 @@ class EffectiveAreaTable2D(object):
         energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV'), nbins)
         energ_lo = energy[:-1]
         energ_hi = energy[1:]
-        arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi) 
+        arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
         arf_table.write('arf.fits')
 
     Plot energy dependence

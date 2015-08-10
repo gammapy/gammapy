@@ -44,6 +44,6 @@ from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
 # For egg_info test builds to pass, put package imports here.
-if not _ASTROPY_SETUP_:
+if not _ASTROPY_SETUP_:  # pylint: disable=undefined-variable
     # put top-level package imports here
     pass

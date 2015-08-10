@@ -22,7 +22,7 @@ from ..spectrum import (LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
-from ..utils.fits import table_to_fits_table 
+from ..utils.fits import table_to_fits_table
 
 
 __all__ = [

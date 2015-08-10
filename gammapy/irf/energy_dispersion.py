@@ -194,7 +194,7 @@ class EnergyDispersion(object):
         Available evalutation methods:
 
         * ``"step"`` -- TODO
-        * ``"interpolate2d"`` -- TODO 
+        * ``"interpolate2d"`` -- TODO
 
         Parameters
         ----------

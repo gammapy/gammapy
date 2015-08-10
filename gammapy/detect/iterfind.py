@@ -356,6 +356,6 @@ class IterativeSourceDetector(object):
         # print data
         # import IPython; IPython.embed(); 1/0
         # TODO: this fails because data contains np.float32 values, which are not JSON serializable:
-        # TypeError: 1.2617354e-10 is not JSON serializable 
+        # TypeError: 1.2617354e-10 is not JSON serializable
         with open(filename, 'w') as outfile:
             json.dump(data, outfile, indent=4)

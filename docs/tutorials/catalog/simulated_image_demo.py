@@ -17,7 +17,7 @@ psf = EnergyDependentTablePSF.read(psf_file)
 # Simulation Parameters
 
 # source density at the sun (sources kpc^-1)
-rho_sun = 3 
+rho_sun = 3
 # number of sources
 n_sources = int(5e2)
 # Spatial distribution using Lorimer (2006) model

@@ -2,7 +2,7 @@
 """Simulate test data (see README.md) with Sherpa"""
 from __future__ import print_function, division
 import numpy as np
-import sherpa.astro.ui as sau 
+import sherpa.astro.ui as sau
 
 # Define width of the source and the PSF
 sigma_psf, sigma_source = 3, 4
