@@ -17,6 +17,8 @@ this page should only mention Gammapy-specific things.
 How to clean up old files
 -------------------------
 
+TODO: Gammapy now has a Makefile ... this section should be expanded to a page about setup.py and make.
+
 Many projects have a ``Makefile`` to build and install the software and do all kinds of other tasks.
 In Astropy and Gammapy and most Python projects, there is no ``Makefile``, but the ``setup.py`` file
 and you're supposed to type ``python setup.py <cmd>`` and use ``--help`` and ``--help-commands`` to

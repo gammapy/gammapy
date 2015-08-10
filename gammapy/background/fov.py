@@ -4,15 +4,14 @@ Field-of-view (FOV) background estimation
 """
 from __future__ import print_function, division
 
-import numpy as np
-
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 
 from ..image.utils import coordinates
 
-__all__ = ['fill_acceptance_image',
-           ]
+__all__ = [
+    'fill_acceptance_image',
+]
 
 
 def fill_acceptance_image(image, center, offset, acceptance):
@@ -40,18 +39,18 @@ def fill_acceptance_image(image, center, offset, acceptance):
     from scipy.interpolate import interp1d
 
     # initialize WCS to the header of the image
-    w = WCS(image.header)
+    wcs = WCS(image.header)
 
     # define grids of pixel coorinates
     xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
 
     # calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)
+    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
     pix_off = coord.separation(center)
 
     # interpolate
-    f = interp1d(offset, acceptance, kind='cubic')
-    pix_acc = f(pix_off)
+    model = interp1d(offset, acceptance, kind='cubic')
+    pix_acc = model(pix_off)
 
     # fill value in image
     image.data = pix_acc
