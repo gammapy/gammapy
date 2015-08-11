@@ -22,7 +22,6 @@ Contributions welcome!
 * Ask questions on the `Gammapy mailing list`_.
 * Request features, report bugs or contribute on the `Gammapy GitHub page`_.
 * Check out the `Gammapy project summary on Open HUB`_.
-* The latest Gammapy release is version **0.2**.
 
 .. _gammapy_news:
 
@@ -34,8 +33,8 @@ To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or f
 
 * May - August 2015 --- Manuel Paz Arribas GSoC 2015 on `gammapy.background`
   (`project description <https://github.com/astropy/astropy/wiki/GSoC-2015-Application-Manuel-Paz-Arribas:-Astropy:-background-modeling-for-Gammapy>`__)
-* April 13, 2015 --- Gammapy 0.2 release. See changelog: :ref:`gammapy_0p2_release`
-* August 25, 2014 --- Gammapy 0.1 release. See changelog: :ref:`gammapy_0p1_release`
+* April 13, 2015 --- Gammapy **0.2** release. See changelog: :ref:`gammapy_0p2_release`
+* August 25, 2014 --- Gammapy **0.1** release. See changelog: :ref:`gammapy_0p1_release`
 
 .. _gammapy_general_docs:
 
@@ -45,9 +44,9 @@ General documentation
 .. toctree::
   :maxdepth: 1
 
+  about
   install
   introduction
-  scripts/index
   tutorials/index
   dataformats/index
   references
@@ -63,6 +62,7 @@ The Gammapy toolbox
 .. toctree::
   :maxdepth: 1
  
+  scripts/index
   astro/index
   background/index
   catalog/index
@@ -78,15 +78,3 @@ The Gammapy toolbox
   time/index
   utils/index
 
-.. gammapy_support:
-
-Support Gammapy
----------------
-
-If you use Gammapy in your work, we would be grateful if you could include an acknowledgment in papers and/or presentations.
-
-Currently there is no academic reference for Gammapy.
-We have submitted a poster for `ICRC 2015 <http://icrc2015.nl/>`__
-and plan to write a paper about it after the Gammapy 1.0 release in fall 2015.
-
-For now, you could mention the URL https://github.com/gammapy/gammapy or include the Gammapy banner.

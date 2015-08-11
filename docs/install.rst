@@ -130,18 +130,23 @@ available in those distributions and versions are updated.
 apt-get
 +++++++
 
+`apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__ is a popular package manager on Linux.
+
 .. code-block:: bash
 
     sudo apt-get install TODO
+    sudo pip install TODO
 
 
 yum
 +++
 
+`yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ is a popular package manager on Linux.
 
 .. code-block:: bash
 
     sudo yum install TODO
+    sudo pip install TODO
 
 
 Macports
@@ -152,7 +157,7 @@ Macports
 .. code-block:: bash
 
     sudo port install py34-astropy py34-pip py34-matplotlib
-    pip install gammapy --user
+    sudo pip install TODO
 
 
 Homebrew
@@ -163,7 +168,7 @@ Homebrew
 .. code-block:: bash
 
     sudo brew install TODO
-    pip install gammapy --user
+    sudo pip install TODO
 
 
 Check if your Gammapy installation is OK
