@@ -91,12 +91,16 @@ if DEBUG > 1:
 def create_bg_observation_list(fits_path):
     """Make total observation list and filter the observations.
 
-    In a first version, all obs taken within 3 deg of a known source will be rejected. If a source is extended, twice the extension is added to the corresponding exclusion region radius of 3 deg.
+    In a first version, all obs taken within 3 deg of a known source
+    will be rejected. If a source is extended, twice the extension is
+    added to the corresponding exclusion region radius of 3 deg.
 
     TODO: on a second version, one could only filter out the runs
           too close to the galacic plane, and afterwards use masks
           to cut out sources, for runs taken on extragalactic objects
           (correcting the livetime accordingly).
+
+    TODO: move function to background/obs module? But where?!!!
 
     Parameters
     ----------

@@ -19,7 +19,7 @@ __all__ = ['make_bg_cube_model',
            ]
 
 # TODO: restructure bg models:
-#       - rename CubeBackgroundModel -> CubeModel
+#       - rename CubeBackgroundModel -> CubeModel or Cube (similar to Maps)
 #       - create a CubeBackgroundModel class that contains:
 #          events_cube, livetime_cube, bg_model_cube
 #          methods to produce the bg cube model:
