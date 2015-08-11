@@ -4,36 +4,52 @@
 # A bash script to quickly install Gammapy from scratch using miniconda.
 #
 # This is a binary install, so the install speed is mostly limited by
-# download speed (typically a few minutes).
+# download speed (typically ~ 1 gigabyte and a few minutes)
+#
+# To download and execute in one command:
 #
 #     bash "$(curl -fsSL https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh)"
 #
 
-export INSTALL_DIR="$PWD/miniconda"
+set -x
 
-# Detect platform: http://stackoverflow.com/a/17072017/498873
+INSTALL_DIR="$PWD/miniconda"
+echo "INSTALL_DIR = $INSTALL_DIR"
+
+# Detect platform: http://stackoverflow.com/a/394247/498873
 if [ "$(uname)" == "Darwin" ]; then
-    export PLATFORM="MacOSX"
+    PLATFORM="MacOSX"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    export PLATFORM="Linux"
+    PLATFORM="Linux"
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
-    export PLATFORM="Windows"
+    PLATFORM="Windows"
 fi
+echo "PLATFORM = $PLATFORM"
 
-export PLATFORM="Linux"
+wget http://repo.continuum.io/miniconda/Miniconda3-latest-$PLATFORM-x86_64.sh -O miniconda.sh
 
-wget http://repo.continuum.io/miniconda/Miniconda3-latest-$(PLATFORM)-x86_64.sh -O miniconda.sh
-
-bash miniconda.sh -b -p $(INSTALL_DIR)
-export PATH="$(INSTALL_DIR)/bin:$PATH"
+bash miniconda.sh -b -p $INSTALL_DIR
+export PATH="$INSTALL_DIR/bin:$PATH"
 conda config --set always_yes yes --set changeps1 no
 
 conda config --add channels astropy
 conda config --add channels sherpa
 
 conda update -q conda
+# Disk space now: 140 MB
 
-conda install pip scipy matplotlib scikit-image scikit-learn astropy h5py pandas ipython-notebook
-conda install reproject aplpy wcsaxes naima astroplan gwcs photutils
-conda install sherpa
+# Finally ... install Gammapy
 conda install gammapy
+# Disk space now: 200 MB
+
+# Nice to have extras
+conda install \
+    scipy matplotlib scikit-image scikit-learn astropy h5py pandas \
+    ipython-notebook aplpy wcsaxes photutils
+# Disk space now: 747 MB
+
+pip install reproject naima
+# TODO: maybe add gwcs and astroplan once there's a release on PyPI.
+
+# This will only work on Python 2:
+conda install sherpa

@@ -36,16 +36,16 @@ and then run these commands:
     conda config --add channels astropy --add channels sherpa
     conda install gammapy
 
-For a super-quick (depending on your download speed, usually a few minutes),
+For a quick (depending on your download and disk speed, usually a few minutes),
 non-interactive install of `Miniconda <http://conda.pydata.org/miniconda.html>`__
-and Gammapy from scratch, you can also download and execute the
-`gammapy-conda-install.sh <https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh>`__
-script like this:
+and Gammapy from scratch, use the commands from this script:
+`gammapy-conda-install.sh <https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh>`__.
+
+Executing it like this should also work:
 
 .. code-block:: bash
 
     bash "$(curl -fsSL https://raw.githubusercontent.com/gammapy/gammapy/master/gammapy-conda-install.sh)"
-
 
 To update to the latest version:
 
