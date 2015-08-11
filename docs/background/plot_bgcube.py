@@ -10,7 +10,7 @@ filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fit
 bg_model = CubeBackgroundModel.read(filename, format='table')
 
 fig, axes = plt.subplots(nrows=1, ncols=3)
-fig.set_size_inches(20, 6., forward=True)
+fig.set_size_inches(16, 5., forward=True)
 
 # plot images
 bg_model.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0], style_kwargs=dict(norm=LogNorm()))
@@ -23,7 +23,6 @@ bg_model.plot_spectrum(det=Angle([2., 2.], 'degree'), ax=axes[2],
                        style_kwargs=dict(label='(2, 2) deg'))
 axes[2].set_title('')
 axes[2].legend()
-axes[2].set_aspect(0.4)
 
 plt.tight_layout()
 plt.show()
