@@ -655,7 +655,7 @@ class CubeBackgroundModel(object):
         #import IPython; IPython.embed()
 
         if not 'cmap' in style_kwargs:
-            style_kwargs['cmap'] = 'gist_heat'
+            style_kwargs['cmap'] = 'afmhot'
 
         image = ax.imshow(data.value,
                           extent=extent.value,

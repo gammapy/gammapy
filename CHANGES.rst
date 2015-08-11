@@ -72,6 +72,7 @@ Contributors
 - Stefan Klepser (new)
 - Ignasi Reichardt (new)
 - Regis Terrier
+- Axel Donath
 
 Pull requests
 +++++++++++++
@@ -96,6 +97,7 @@ Pull requests
 - Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
 - Observation table subset selection [#295] (Manuel Paz Arribas)
 - Set up and document logging for Gammapy [#318] (Christoph Deil)
+- Using consistent plotting style in docs [#317] (Axel Donath) 
 
 .. _gammapy_0p2_release:
 

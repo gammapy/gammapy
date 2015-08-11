@@ -9,19 +9,43 @@ Astrophysical source population models (`gammapy.astro.population`)
 Introduction
 ============
 
-The `gammapy.astro.population` module provides a simple framework for population synthesis of 
-gamma-ray sources. 
+The `gammapy.astro.population` module provides a simple framework for population
+synthesis of gamma-ray sources, which is useful in the context of surveys and
+population studies.
+
 
 Getting Started
 ===============
 
-TODO
+The following example illustrates how to simulate a basic catalog inclusing a
+spiral arm model.
+
+.. code-block:: python
+
+	import astropy.units as u
+	from gammapy.astro.population import make_base_catalog_galactic
+
+	max_age = 1E6 * u.yr
+	SN_rate = 3. / (100. * u.yr)
+	n_sources = max_age * SN_rate
+	table = make_base_catalog_galactic(n_sources=n_sources,
+	                                   rad_dis='L06',
+	                                   vel_dis='F06B',
+	                                   max_age=max_age,
+	                                   spiralarms=True)
+
+The total number of sources is determined assuming a maximum age and a supernova
+rate. The table returned is an instance of `astropy.table.Table` which
+can be used for further processing. The example population with spiral-arms is
+illustrated in the following plot.
+
+.. plot:: astro/population/plot_spiral_arms.py
 
 
 Radial surface density distributions
 ====================================
-Here is a comparison plot of all available radial distribution functions of the surface density of pulsars
-and related objects used in literature:
+Here is a comparison plot of all available radial distribution functions of the
+surface density of pulsars and related objects used in literature:
 
 .. plot:: astro/population/plot_radial_distributions.py
 

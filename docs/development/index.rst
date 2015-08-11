@@ -534,6 +534,28 @@ or search the Numpy or Astropy documentation guidelines mentioned above.
 If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
 pull request you're working on on Github, or send an email to the Gammapy mailing list.
 
+
+Gammapy plotting style
+++++++++++++++++++++++
+
+Figures and plots in the Gammapy docs use the same consistent plotting style,
+that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
+astropy plotting style applying a few minor changes. Here are two examples: 
+
+	* :ref:`Crab MWL SED plot <crab-mwl-sed>`
+	* :ref:`Fermi 1FHL skymap <fermi-1fhl-skymap>` 
+
+For the Gammapy docs the style is used by default and doesn't have to be set
+explicitly. If you would like to use the style outside the Gammapy docs, add
+the following lines to the beginning of your plotting script or notebook:
+
+.. code-block:: python
+
+	import matplotlib.pyplot as plt
+	from gammapy.utils.mpl_style import gammapy_mpl_style
+	plt.style.use(gammapy_mpl_style)
+
+
 Functions or class methods that return a single object
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

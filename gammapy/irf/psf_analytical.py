@@ -275,7 +275,7 @@ class EnergyDependentMultiGaussPSF(object):
         plt.ylabel('Theta (deg)')
         yticks = ["{0:3.2g}".format(_) for _ in self.theta.value]
         plt.yticks(np.arange(len(self.theta)), yticks, size=9)
-        cbar = plt.colorbar(fraction=0.1, pad=0.01)
+        cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9)
         cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
                         labelpad=20)
 
