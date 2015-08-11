@@ -51,7 +51,7 @@ def make_bg_cube_models(loglevel,
 
     The models are stored into FITS files.
 
-    It can take about 10 minutes to run.
+    It can take a few minutes to run.
 
     TODO: revise doc!!!
 
