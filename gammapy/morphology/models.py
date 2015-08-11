@@ -77,11 +77,9 @@ class Shell2D(Fittable2DModel):
         import numpy as np
         from gammapy.morphology import Shell2D
         import matplotlib.pyplot as plt
-        
-        x0, y0 = 25, 25
-        r_in, width = 10, 5
-        shell = Shell2D(amplitude=100., x_0=x0, y_0=y0,
-                        r_in=r_in, width=width)
+
+        shell = Shell2D(amplitude=100., x_0=25., y_0=25.,
+                        r_in=10., width=5.)
         y, x = np.mgrid[0:50, 0:50]
         plt.imshow(shell(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')
@@ -204,10 +202,9 @@ class Sphere2D(Fittable2DModel):
         import numpy as np
         from gammapy.morphology import Sphere2D
         import matplotlib.pyplot as plt
-        
-        x0, y0, r_0 = 25, 25, 20
-        sphere = Sphere2D(amplitude=100., x_0=x0, y_0=y0,
-                        r_0=r_0)
+
+        sphere = Sphere2D(amplitude=100., x_0=25., y_0=25.,
+                        r_0=20.)
         y, x = np.mgrid[0:50, 0:50]
         plt.imshow(sphere(x, y), origin='lower', interpolation='none')
         plt.xlabel('x (pix)')

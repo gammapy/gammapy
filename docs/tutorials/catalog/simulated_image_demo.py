@@ -12,8 +12,6 @@ from gammapy.image import make_empty_image, catalog_image
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.utils.random import sample_powerlaw
 
-np.random.seed(0)
-
 # Create image of defined size
 reference = make_empty_image(nxpix=300, nypix=100, binsz=1)
 
@@ -35,7 +33,7 @@ spiralarms = True
 # Creates table
 table = population.make_base_catalog_galactic(n_sources=n_sources, rad_dis=rad_dis,
                                               vel_dis=vel_dis, max_age=1e6,
-                                              spiralarms=spiralarms)
+                                              spiralarms=spiralarms, random_state=0)
 
 # Minimum source luminosity (ph s^-1)
 luminosity_min = 4e34
@@ -46,7 +44,7 @@ luminosity_index = 1.5
 
 # Assigns luminosities to sources
 luminosity = sample_powerlaw(luminosity_min, luminosity_max, luminosity_index,
-                             n_sources)
+                             n_sources, random_state=0)
 table['luminosity'] = luminosity
 
 # Adds parameters to table: distance, glon, glat, flux, angular_extension
