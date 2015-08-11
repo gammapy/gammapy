@@ -17,6 +17,8 @@ this page should only mention Gammapy-specific things.
 How to clean up old files
 -------------------------
 
+TODO: Gammapy now has a Makefile ... this section should be expanded to a page about setup.py and make.
+
 Many projects have a ``Makefile`` to build and install the software and do all kinds of other tasks.
 In Astropy and Gammapy and most Python projects, there is no ``Makefile``, but the ``setup.py`` file
 and you're supposed to type ``python setup.py <cmd>`` and use ``--help`` and ``--help-commands`` to
@@ -508,3 +510,192 @@ This pattern was inspired by the way
 We have changed the ``None`` option of `sklearn.utils.check_random_state` to ``'global-rng'``,
 because we felt that this meaning for ``None`` was confusing given that `numpy.random.RandomState`
 uses a different meaning (for which we use the option ``'global-rng'``).
+
+Documentation guidelines
+------------------------
+
+Like almost all Python projects, the Gammapy documentation is written in a format called
+`restructured text (RST)`_ and built using `Sphinx`_.
+We mostly follow the :ref:`Astropy documentation guidelines <astropy:documentation-guidelines>`,
+which are based on the `Numpy docstring standard`_,
+which is what most scientific Python packages use.
+
+.. _restructured text (RST) : http://sphinx-doc.org/rest.html
+.. _Sphinx: http://sphinx-doc.org/
+.. _Numpy docstring standard: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
+
+There's a few details that are not easy to figure out by browsing the Numpy or Astropy
+documentation guidelines, or that we actually do differently in Gammapy.
+These are listed here so that Gammapy developers have a reference.
+
+Usually the quickest way to figure out how something should be done is to browse the Astropy
+or Gammapy code a bit (either locally with your editor or online on Github or via the HTML docs),
+or search the Numpy or Astropy documentation guidelines mentioned above.
+If that doesn't quickly turn up something useful, please ask by putting a comment on the issue or
+pull request you're working on on Github, or send an email to the Gammapy mailing list.
+
+Functions or class methods that return a single object
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+For functions or class methods that return a single object, following the
+Numpy docstring standard and adding a *Returns* section usually means
+that you duplicate the one-line description and repeat the function name as
+return variable name.
+See `astropy.cosmology.LambdaCDM.w` or `astropy.time.Time.sidereal_time`
+as examples in the Astropy codebase. Here's a simple example:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area.
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+
+        Returns
+        -------
+        area : `~astropy.units.Quantity`
+            Circle area
+        """
+        return 3.14 * (radius ** 2)
+
+In these cases, the following shorter format omitting the *Returns* section is recommended:
+
+.. code-block:: python
+
+    def circle_area(radius):
+        """Circle area (`~astropy.units.Quantity`).
+
+        Parameters
+        ----------
+        radius : `~astropy.units.Quantity`
+            Circle radius
+        """
+        return 3.14 * (radius ** 2)
+
+Usually the parameter description doesn't fit on the one line, so it's
+recommended to always keep this in the *Parameters* section.
+
+This is just a recommendation, e.g. for `gammapy.data.SpectralCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.data.SpectralCube.flux` we
+decided to stick with the more verbose format, because the return type and units
+didn't fit on the first line.
+
+A common case where the short format is appropriate are class properties,
+because they always return a single object.
+As an example see `gammapy.data.EventList.radec`, which is reproduced here:
+
+.. code-block:: python
+
+    @property
+    def radec(self):
+        """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """
+        lon, lat = self['RA'], self['DEC']
+        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+
+
+Class attributes
+++++++++++++++++
+
+Class attributes (data members) and properties are currently a bit of a mess,
+see `~gammapy.spectral.Spectralcube` as an example.
+Attributes are listed in an *Attributes* section because I've listed them in a class-level
+docstring attributes section as recommended `here`__.
+Properties are listed in separate *Attributes summary* and *Attributes Documentation*
+sections, which is confusing to users ("what's the difference between attributes and properties?").
+
+.. __: https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#class-docstring
+
+One solution is to always use properties, but that can get very verbose if we have to write
+so many getters and setters. I don't have a solution for this yet ... for now I'll go read
+`this`__ and meditate.
+
+.. __: http://nbviewer.ipython.org/urls/gist.github.com/ChrisBeaumont/5758381/raw/descriptor_writeup.ipynb
+
+TODO: make a decision on this and describe the issue / solution here.
+
+Constructor parameters
+++++++++++++++++++++++
+
+TODO: should we put the constructor parameters in the class or ``__init__`` docstring?
+
+Logging
+-------
+
+Gammapy is a library. This means that it should never contain print statements, because with
+print statements the library users have no easy way to configure where the print output goes
+(e.g. to ``stdout`` or ``stderr`` or a log file) and what the log level (``warning``, ``info``, ``debug``)
+and format is (e.g. include timestamp and log level?).
+
+So logging is much better than printing. But also logging is only rarely needed.
+Many developers use print or log statements to debug some piece of code while they write it.
+Once it's written and works, it's rare that callers want it to be chatty and log messages all the time.
+Print and log statements should mostly be contained in end-user scripts that use Gammapy,
+not in Gammapy itself.
+
+That said, there are cases where emitting log messages can be useful.
+E.g. a long-running algorithm with many steps can log info or debug statements.
+In a function that reads and writes several files it can make sense to include info log messages
+for normal operation, and warning or error log messages when something goes wrong.
+Also, command line tools that are included in Gammapy **should** contain log messages,
+informing the user about what they are doing.
+
+Gammapy uses the Python standard library `logging` module. This module is extremely flexible,
+but also quite complex. But our logging needs are very modest, so it's actually quite simple ...
+
+Generating log messages
++++++++++++++++++++++++
+
+To generate log messages from any file in Gammapy, include these two lines at the top:
+
+.. code-block:: python
+
+    import logging
+    log = logging.getLogger(__name__)
+
+This creates a module-level `logging.Logger` object called ``log``, and you can then create
+log messages like this from any function or method:
+
+.. code-block:: python
+
+    def process_lots_of_data(infile, outfile):
+
+        log.info('Starting processing data ...')
+
+        # do lots of work
+
+        log.info('Writing {}'.format(outfile))
+
+
+You should never log messages from the module level (i.e. on import) or configure the log
+level or format in Gammapy, that should be left to callers ... except from command line tools ...
+
+There is also the rare case of functions or classes with the main job to check
+and log things. For these you can optionally let the caller pass a logger when
+constructing the class to make it easier to configure the logging.
+See the `~gammapy.data.EventListDatasetChecker` as an example.
+
+Configuring logging from command line tools
++++++++++++++++++++++++++++++++++++++++++++
+
+Every Gammapy command line tool should have a ``--loglevel`` option:
+
+.. code-block:: python
+
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
+
+This option is then processed at the end of ``main`` using this helper function:
+
+.. code-block:: python
+
+    set_up_logging_from_args(args)
+
+This sets up the root logger with the log level and format (the format isn't configurable
+for the command line scripts at the moment).
+
+See ``gammapy/scripts/find_obs.py`` as an example.

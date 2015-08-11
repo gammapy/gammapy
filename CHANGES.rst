@@ -1,6 +1,9 @@
 1.0 (Fall, 2015)
 ----------------
 
+Summary
++++++++
+
 Gammapy 1.0 will be released in fall 2015.
 
 We aim for October 2015, but are willing to delay a bit if important features are missing
@@ -10,31 +13,65 @@ Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
+Contributors
+++++++++++++
+
+- ...
+
 Pull requests
 +++++++++++++
 
-- No changes yet
+- ...
 
 0.4 (August 24, 2015)
 ---------------------
+
+Summary
++++++++
 
 Gammapy 0.4 will be released on August 24, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
+Contributors
+++++++++++++
+
+- ...
+
 Pull requests
 +++++++++++++
 
-- No changes yet
+- ...
 
 .. _gammapy_0p3_release:
 
-0.3 (July 9 , 2015)
--------------------
+0.3 (August 3, 2015)
+--------------------
 
-Gammapy 0.3 will be released on July 9, 2015.
+Summary
++++++++
 
-For plans and progress see https://github.com/gammapy/gammapy/milestones/0.3
+- Released on August 3, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
+- Requires Astropy version 1.0 or later.
+- 8 contributors (4 new)
+- 4 months of work (from April 13, 2014 to August 3, 2015)
+- XXX pull requests
+- On-off likelihood spectral analysis was added in ``gammapy.hspec``,
+  contributed by Regis Terrier and Ignasi Reichardt.
+  It will be refactored and is thus not part of the public API.
+- The Gammapy 0.3 release is the basis for an `ICRC 2015 poster contribution <https://indico.cern.ch/event/344485/session/142/contribution/695>`__
+
+Contributors
+++++++++++++
+
+- Manuel Paz Arribas
+- Christoph Deil
+- Axel Donath
+- Jonathan Harris (new)
+- Johannes King (new)
+- Stefan Klepser (new)
+- Ignasi Reichardt (new)
+- Regis Terrier
 
 Pull requests
 +++++++++++++
@@ -55,22 +92,34 @@ Pull requests
 - Add cube background model class [#299] (Manuel Paz Arribas)
 - Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
 - Consistent random number handling and improve sample_sphere [#283] (Manuel Paz Arribas)
+- Simplified attribute docstrings [#301] (Manuel Paz Arribas)
+- Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
+- Observation table subset selection [#295] (Manuel Paz Arribas)
+- Set up and document logging for Gammapy [#318] (Christoph Deil)
 
 .. _gammapy_0p2_release:
 
 0.2 (April 13, 2015)
 --------------------
 
-Release notes
-+++++++++++++
+Summary
++++++++
 
 - Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.python.org/pypi/gammapy/0.2>`__)
-- Contributors: Manuel Paz Arribas (new), Axel Donath, Ellis Owen, Christoph Deil
-- 8 months of work (from August 25, 2014 to April 13, 2015)
-- 40 pull requests, 4 authors
 - Requires Astropy version 1.0 or later.
 - Gammapy now uses `Cython <http://cython.org/>`__,
   i.e. requires a C compiler for end-users and in addition Cython for developers.
+- 4 contributors (1 new)
+- 8 months of work (from August 25, 2014 to April 13, 2015)
+- 40 pull requests
+
+Contributors
+++++++++++++
+
+- Manuel Paz Arribas (new)
+- Christoph Deil
+- Axel Donath
+- Ellis Owen
 
 Pull requests
 +++++++++++++
@@ -106,14 +155,23 @@ Pull requests
 0.1 (August 25, 2014)
 ---------------------
 
-Release notes
-+++++++++++++
+Summary
++++++++
 
 - Released on August 25, 2014 (`Gammapy 0.1 on PyPI <https://pypi.python.org/pypi/gammapy/0.1>`__)
-- Contributors: Axel Donath, Ellis Owen, Regis Terrier, Rolf Bühler, Christoph Deil
-- 15 months of work (from May 15, 2013 to August 25, 2014)
-- 82 pull requests, 5 authors
 - Requires Astropy version 0.4 or later.
+- 5 contributors
+- 15 months of work (from May 15, 2013 to August 25, 2014)
+- 82 pull requests
+
+Contributors
+++++++++++++
+
+- Rolf Bühler
+- Christoph Deil
+- Axel Donath
+- Ellis Owen
+- Regis Terrier
 
 Pull requests
 +++++++++++++

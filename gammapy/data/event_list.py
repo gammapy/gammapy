@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
+log = logging.getLogger(__name__)
 from collections import OrderedDict
 import os
 import numpy as np
@@ -48,7 +49,7 @@ class EventList(Table):
     - `galactic` for ``GLON``, ``GLAT``
     """
     @property
-    def info(self):
+    def summary(self):
         """Summary info string."""
         s = '---> Event list info:\n'
         # TODO: Which telescope?
@@ -71,7 +72,7 @@ class EventList(Table):
 
     @property
     def time(self):
-        """Event times (`~astropy.time.Time`).
+        """Event times (`~astropy.time.Time`)
 
         Notes
         -----
@@ -95,7 +96,7 @@ class EventList(Table):
 
     @property
     def galactic(self):
-        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`).
+        """Event Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)
 
         Note: uses the ``GLON`` and ``GLAT`` columns.
         If only ``RA`` and ``DEC`` are present use the explicit
@@ -131,7 +132,7 @@ class EventList(Table):
 
     @property
     def energy(self):
-        """Event energies (`~astropy.units.Quantity`)."""
+        """Event energies (`~astropy.units.Quantity`)"""
         energy = self['ENERGY']
         return Quantity(energy, self.meta['EUNIT'])
 
@@ -147,7 +148,7 @@ class EventList(Table):
 
     @property
     def observation_time_duration(self):
-        """Observation time duration in seconds (`~astropy.units.Quantity`).
+        """Observation time duration in seconds (`~astropy.units.Quantity`)
 
         The wall time, including dead-time.
         """
@@ -155,7 +156,7 @@ class EventList(Table):
 
     @property
     def observation_live_time_duration(self):
-        """Live-time duration in seconds (`~astropy.units.Quantity`).
+        """Live-time duration in seconds (`~astropy.units.Quantity`)
 
         The dead-time-corrected observation time.
 
@@ -166,7 +167,7 @@ class EventList(Table):
 
     @property
     def observation_dead_time_fraction(self):
-        """Dead-time fraction.
+        """Dead-time fraction (float)
 
         Defined as dead-time over observation time.
 
@@ -318,8 +319,8 @@ class EventListDataset(object):
         self.telescope_array = telescope_array
         self.good_time_intervals = good_time_intervals
 
-    @staticmethod
-    def from_hdu_list(hdu_list):
+    @classmethod
+    def from_hdu_list(cls, hdu_list):
         """Create `EventList` from a `~astropy.io.fits.HDUList`.
         """
         # TODO: This doesn't work because FITS / Table is not integrated.
@@ -331,10 +332,10 @@ class EventListDataset(object):
         telescope_array = TelescopeArray.from_hdu(hdu_list['TELARRAY'])
         good_time_intervals = GoodTimeIntervals.from_hdu(hdu_list['GTI'])
 
-        return EventListDataset(event_list, telescope_array, good_time_intervals)
+        return cls(event_list, telescope_array, good_time_intervals)
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """Read event list from FITS file.
         """
         # return EventList.from_hdu_list(fits.open(filename))
@@ -350,10 +351,10 @@ class EventListDataset(object):
         except KeyError:
             good_time_intervals = None
 
-        return EventListDataset(event_list, telescope_array, good_time_intervals)
+        return cls(event_list, telescope_array, good_time_intervals)
 
-    @staticmethod
-    def vstack_from_files(filenames, logger=None):
+    @classmethod
+    def vstack_from_files(cls, filenames, logger=None):
         """Stack event lists vertically (combine events and GTIs).
 
         This function stacks (a.k.a. concatenates) event lists.
@@ -426,7 +427,7 @@ class EventListDataset(object):
         total_event_list.meta['EVTSTACK'] = 'yes'
         total_gti.meta['EVTSTACK'] = 'yes'
 
-        return EventListDataset(event_list=total_event_list, good_time_intervals=total_gti)
+        return cls(event_list=total_event_list, good_time_intervals=total_gti)
 
     def write(self, *args, **kwargs):
         """Write to FITS file.
@@ -469,9 +470,9 @@ class EventListDataset(object):
     def info(self):
         """Summary info string."""
         s = '===> Event list dataset information:\n'
-        s += self.event_list.info
-        s += self.telescope_array.info
-        s += self.good_time_intervals.info
+        s += self.event_list.summary
+        s += self.telescope_array.summary
+        s += self.good_time_intervals.summary
         s += '- telescopes: {}\n'.format(len(self.telescope_array))
         s += '- good time intervals: {}\n'.format(len(self.good_time_intervals))
         return s
@@ -519,7 +520,7 @@ class EventListDatasetChecker(object):
     event_list_dataset : `~gammapy.data.EventListDataset`
         Event list dataset
     logger : `logging.Logger` or None
-        Logger to use
+        Logger to use (use module-level Gammapy logger by default)
     """
     _AVAILABLE_CHECKS = OrderedDict(
         misc='check_misc',
@@ -538,7 +539,7 @@ class EventListDatasetChecker(object):
         if logger:
             self.logger = logger
         else:
-            self.logger = logging.getLogger('EventListDatasetChecker')
+            self.logger = log
 
     def run(self, checks='all'):
         """Run checks.
@@ -577,7 +578,7 @@ class EventListDatasetChecker(object):
         missing_meta = set(required_meta) - set(self.dset.event_list.meta)
         if missing_meta:
             ok = False
-            logging.error('Missing meta info: {}'.format(missing_meta))
+            self.logger.error('Missing meta info: {}'.format(missing_meta))
 
         # TODO: implement more basic checks that all required info is present.
 
@@ -626,9 +627,9 @@ class EventListDatasetChecker(object):
             dt = (met_ref - telescope_met_refs[telescope])
             if dt > self.accuracy['time']:
                 ok = False
-                logging.error('MET reference is incorrect.')
+                self.logger.error('MET reference is incorrect.')
         else:
-            logging.debug('Skipping MET reference check ... not known for this telescope.')
+            self.logger.debug('Skipping MET reference check ... not known for this telescope.')
 
         # TODO: check latest CTA spec to see which info is required / optional
         # EVENTS header keywords:

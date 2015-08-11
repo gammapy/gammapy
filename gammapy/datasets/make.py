@@ -30,14 +30,14 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     Parameters
     ----------
     energy_bins : int
-        Number of energy bins
+        Number of energy bins.
     theta_bins : int
-        Number of theta bins
+        Number of theta bins.
 
     Returns
     -------
     psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
-        PSF
+        PSF.
     """
     energies_all = np.logspace(-1, 2, energy_bins + 1)
     energies_lo = energies_all[:-1]
@@ -75,28 +75,41 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     return psf
 
 
-def make_test_observation_table(observatory_name, n_obs, debug=False,
+def make_test_observation_table(observatory_name='HESS', n_obs=10,
+                                datestart=None, dateend=None,
+                                use_abs_time=False,
                                 random_state='random-seed'):
     """Make a test observation table.
 
     For the moment, only random observation tables are created.
+    If `datestart` and `dateend` are specified, the starting time
+    of the observations will be restricted to the specified interval.
+    These parameters are interpreted as date, the precise hour of the
+    day is ignored, unless the end date is closer than 1 day to the
+    starting date, in which case, the precise time of the day is also
+    considered.
 
     Parameters
     ----------
     observatory_name : str
-        name of the observatory; a list of choices is given in `~gammapy.obs.observatory_locations`
+        Name of the observatory; a list of choices is given in
+        `~gammapy.obs.observatory_locations`.
     n_obs : int
-        number of observations for the obs table
-    debug : bool, optional
-        show UTC times instead of seconds after the reference
-    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
+        Number of observations for the obs table.
+    datestart : `~astropy.time.Time`, optional
+        Starting date for random generation of observation start time.
+    dateend : `~astropy.time.Time`, optional
+        Ending date for random generation of observation start time.
+    use_abs_time : bool, optional
+        Use absolute UTC times instead of [MET]_ seconds after the reference.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
 
     Returns
     -------
     obs_table : `~gammapy.obs.ObservationTable`
-        observation table
+        Observation table.
     """
     random_state = get_random_state(random_state)
 
@@ -105,13 +118,20 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     obs_table = ObservationTable()
 
     # build a time reference as the start of 2010
-    dateref = Time('2010-01-01 00:00:00', format='iso', scale='utc')
+    dateref = Time('2010-01-01T00:00:00', format='isot', scale='utc')
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
-    # header
-    header = {'OBSERVATORY_NAME': observatory_name,
-              'MJDREFI': dateref_mjd_int, 'MJDREFF': dateref_mjd_fra}
-    ObservationTable.meta = header
+    # define table header
+    obs_table.meta['OBSERVATORY_NAME'] = observatory_name
+    obs_table.meta['MJDREFI'] = dateref_mjd_int
+    obs_table.meta['MJDREFF'] = dateref_mjd_fra
+    if use_abs_time:
+        # show the observation times in UTC
+        obs_table.meta['TIME_FORMAT'] = 'absolute'
+    else:
+        # show the observation times in seconds after the reference
+        obs_table.meta['TIME_FORMAT'] = 'relative'
+    header = obs_table.meta
 
     # obs id
     obs_id = np.arange(n_obs_start, n_obs_start + n_obs)
@@ -126,35 +146,41 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     obs_table['TIME_LIVE'] = time_live
 
     # start time
-    # random points between the start of 2010 and the end of 2014
-    # using the start of 2010 as a reference time for the header of the table
-    # observations restrict to night time
-    # considering start of astronomical day at midday: implicit in setting the
-    # start of the night, when generating random night hours
-    datestart = Time('2010-01-01 00:00:00', format='iso', scale='utc')
-    dateend = Time('2015-01-01 00:00:00', format='iso', scale='utc')
+    #  - random points between the start of 2010 and the end of 2014 (unless
+    # otherwise specified)
+    #  - using the start of 2010 as a reference time for the header of the table
+    #  - observations restrict to night time (only if specified time interval is
+    # more than 1 day)
+    #  - considering start of astronomical day at midday: implicit in setting
+    # the start of the night, when generating random night hours
+    if datestart == None:
+        datestart = Time('2010-01-01T00:00:00', format='isot', scale='utc')
+    if dateend == None:
+        dateend = Time('2015-01-01T00:00:00', format='isot', scale='utc')
     time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
     time_start = Time(time_start, format='mjd', scale='utc')
 
-    # keep only the integer part (i.e. the day, not the fraction of the day)
-    time_start_f, time_start_i = np.modf(time_start.mjd)
-    time_start = Time(time_start_i, format='mjd', scale='utc')
+    # check if time interval selected is more than 1 day
+    if (dateend - datestart).jd > 1.:
+        # keep only the integer part (i.e. the day, not the fraction of the day)
+        time_start_f, time_start_i = np.modf(time_start.mjd)
+        time_start = Time(time_start_i, format='mjd', scale='utc')
 
-    # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
-    # time for the last run to finish
-    night_start = Quantity(22., 'hour')
-    night_duration = Quantity(5.5, 'hour')
-    hour_start = random_state.uniform(night_start.value,
-                                      night_start.value + night_duration.value,
-                                      len(obs_id))
-    hour_start = Quantity(hour_start, 'hour')
+        # random generation of night hours: 6 h (from 22 h to 4 h), leaving 1/2 h
+        # time for the last run to finish
+        night_start = Quantity(22., 'hour')
+        night_duration = Quantity(5.5, 'hour')
+        hour_start = random_state.uniform(night_start.value,
+                                 night_start.value + night_duration.value,
+                                 len(obs_id))
+        hour_start = Quantity(hour_start, 'hour')
 
-    # add night hour to integer part of MJD
-    time_start += hour_start
+        # add night hour to integer part of MJD
+        time_start += hour_start
 
-    if debug:
+    if use_abs_time:
         # show the observation times in UTC
-        time_start = time_start.iso
+        time_start = Time(time_start.isot)
     else:
         # show the observation times in seconds after the reference
         time_start = time_relative_to_ref(time_start, header)
@@ -165,7 +191,7 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
 
     # stop time
     # calculated as TIME_START + TIME_OBSERVATION
-    if debug:
+    if use_abs_time:
         time_stop = Time(obs_table['TIME_START'])
         time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
     else:
@@ -190,11 +216,11 @@ def make_test_observation_table(observatory_name, n_obs, debug=False,
     # derive from az, alt taking into account that alt, az represent the values
     # at the middle of the observation, i.e. at time_ref + (TIME_START + TIME_STOP)/2
     # (or better: time_ref + TIME_START + (TIME_OBSERVATION/2))
-    # in debug mode, the time_ref should not be added, since it's already included
+    # in use_abs_time mode, the time_ref should not be added, since it's already included
     # in TIME_START and TIME_STOP
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
-    if debug:
+    if use_abs_time:
         obstime = Time(obs_table['TIME_START'])
         obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
     else:
@@ -247,29 +273,29 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     Parameters
     ----------
     detx_range : `~astropy.coordinates.Angle`, optional
-        X coordinate range (min, max)
+        X coordinate range (min, max).
     ndetx_bins : int, optional
-        number of (linear) bins in X coordinate
+        Number of (linear) bins in X coordinate.
     dety_range : `~astropy.coordinates.Angle`, optional
-        Y coordinate range (min, max)
+        Y coordinate range (min, max).
     ndety_bins : int, optional
-        number of (linear) bins in Y coordinate
+        Number of (linear) bins in Y coordinate.
     energy_band : `~astropy.units.Quantity`, optional
-        energy range (min, max)
+        Energy range (min, max).
     nenergy_bins : int, optional
-        number of (logarithmic) bins in energy
+        Number of (logarithmic) bins in energy.
     sigma : `~astropy.coordinates.Angle`, optional
-        width of the gaussian model used for the spatial coordinates
+        Width of the gaussian model used for the spatial coordinates.
     spectral_index : double, optional
-        index for the power-law model used for the energy coordinate
+        Index for the power-law model used for the energy coordinate.
     apply_mask : bool, optional
-        if set, 1/4th of the image is masked (for `x > x_center` and
-        `y > y_center`)
+        If set, 1/4th of the image is masked (for `x > x_center` and
+        `y > y_center`).
 
     Returns
     -------
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
-        bg cube model
+        Bacground cube model.
     """
     # spatial bins (linear)
     delta_x = (detx_range[1] - detx_range[0])/ndetx_bins

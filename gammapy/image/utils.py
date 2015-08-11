@@ -2,11 +2,11 @@
 """Image utility functions"""
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.table import Table
 
 
 __all__ = ['atrous_hdu',
@@ -331,7 +331,7 @@ def atrous_hdu(hdu, n_levels):
         Wavelet transformed images.
     """
     image = hdu.data
-    logging.info('Computing a trous transform for {0} levels ...'.format(n_levels))
+    log.info('Computing a trous transform for {0} levels ...'.format(n_levels))
     images = atrous_image(image, n_levels)
     hdus = fits.HDUList()
 
@@ -342,8 +342,8 @@ def atrous_hdu(hdu, n_levels):
             name = 'residual'
         scale_pix = 2 ** level
         scale_deg = hdu.header['CDELT2'] * scale_pix
-        logging.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
-                     ''.format(name, scale_pix, scale_deg))
+        log.info('HDU name = {0:10s}: scale = {1:5d} pix = {2:10.5f} deg'
+                 ''.format(name, scale_pix, scale_deg))
         hdus.append(fits.ImageHDU(data=image, header=hdu.header, name=name))
 
     return hdus
@@ -1107,7 +1107,7 @@ def block_reduce_hdu(input_hdu, block_size, func, cval=0):
     block_size : `~numpy.ndarray`
         Array containing down-sampling integer factor along each axis.
     func : callable
-        Function object which is used to calculate the return value for each local block. 
+        Function object which is used to calculate the return value for each local block.
         This function must implement an axis parameter such as `numpy.sum` or `numpy.mean`.
     cval : float, optional
         Constant padding value if image is not perfectly divisible by the block size. Default 0.

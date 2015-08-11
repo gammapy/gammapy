@@ -54,7 +54,7 @@ def plot_flux_points(table, x, y, function, energy_min, y_method):
                     marker='D', color='r', linewidth=0, ms=5,
                     label='Log Center Method')
     ax[0].legend(loc='lower left', fontsize=10)
-    residuals_log = (log_flux['DIFF_FLUX'] - 
+    residuals_log = (log_flux['DIFF_FLUX'] -
                      function(log_flux['ENERGY'])) / function(log_flux['ENERGY']) * 100
     ax[1].semilogx(lafferty_flux['ENERGY'], residuals_lafferty, marker='D',
                       color='k', linewidth=0, ms=5)

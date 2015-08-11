@@ -280,12 +280,11 @@ class PositionDependentMultiGaussPSF(object):
         self.shape = self.hdu_list['SCALE'].data.shape
         self.size = self.hdu_list['SCALE'].data.size
 
-    @staticmethod
-    def read(filename):
-        """Read from FITS file.
-        """
+    @classmethod
+    def read(cls, filename):
+        """Create `PositionDependentMultiGaussPSF` from FITS file."""
         hdu_list = fits.open(filename)
-        return PositionDependentMultiGaussPSF(hdu_list)
+        return cls(hdu_list)
 
     def containment_radius_image(self, fraction):
         """Compute containment radius image.

@@ -13,6 +13,7 @@ from __future__ import print_function, division
 import gc
 import os
 import logging
+log = logging.getLogger(__name__)
 import datetime
 import numpy as np
 from astropy.io import fits
@@ -113,22 +114,22 @@ class ChisquareFitter(object):
     def print_results(self):
         """Prints out results to the command line using the logging module."""
         if self.results is None:
-            logging.warning('No fit results to report since no fit has been performed yet')
+            log.warning('No fit results to report since no fit has been performed yet')
             return
         if self.results[4] < 5:
-            logging.info('Fit was successful!')
+            log.info('Fit was successful!')
         else:
-            logging.warning('Fitting failed!')
-            logging.warning('Message: {0}'.format(self.results[3]))
-        logging.info('Chi^2  : {0:f}'.format(self.chi2))
-        logging.info('d.o.f. : {0:d}'.format(self.dof))
-        logging.info('Prob.  : {0:.4e}'.format(self.prob))
+            log.warning('Fitting failed!')
+            log.warning('Message: {0}'.format(self.results[3]))
+        log.info('Chi^2  : {0:f}'.format(self.chi2))
+        log.info('d.o.f. : {0:d}'.format(self.dof))
+        log.info('Prob.  : {0:.4e}'.format(self.prob))
         for i, v in enumerate(self.results[0]):
             if self.results[1] != None:
-                logging.info('P{0}     : {1:.4e} +/- {2:.4e}'.format(i, v,
+                log.info('P{0}     : {1:.4e} +/- {2:.4e}'.format(i, v,
                                                                      np.sqrt(self.results[1][i][i])))
             else:
-                logging.info('P{0}     : {1:.4e}'.format(i, v))
+                log.info('P{0}     : {1:.4e}'.format(i, v))
 
 
 class SkyCircle:
@@ -321,7 +322,7 @@ def sim_evlist(flux=.1,
 
     #---------------------------------------------------------------------------
 
-    logging.info('Exposure: {0} h'.format(obstime))
+    log.info('Exposure: {0} h'.format(obstime))
     obstime *= 3600.  # observation time in seconds
 
     obj_ra, obj_dec = 0., .5
@@ -333,7 +334,7 @@ def sim_evlist(flux=.1,
     #---------------------------------------------------------------------------
     # Read ARF, RMF, and extra file
 
-    logging.info('ARF: {0}'.format(arf))
+    log.info('ARF: {0}'.format(arf))
     arf_obj = EffectiveAreaTable.read(arf)
     ea = arf_obj.effective_area.value
     ea_erange = np.hstack(arf_obj.energy_lo.value, arf_obj.energy_hi.value[-1])
@@ -343,19 +344,19 @@ def sim_evlist(flux=.1,
     # ea /= irf_data[:,4]
 
     if rmf:
-        logging.info('RMF: {0}'.format(rmf))
+        log.info('RMF: {0}'.format(rmf))
         edisp = EnergyDispersion.read(rmf)
     else:
         edisp = None
 
     if extra:
-        logging.info('Extra file: {0}'.format(extra))
+        log.info('Extra file: {0}'.format(extra))
         extraf = fits.open(extra)
-        logging.info('Using effective area with 80% containment from extra file')
+        log.info('Using effective area with 80% containment from extra file')
         ea = extraf['EA80'].data.field('VAL') / .8  # 100% effective area
         ea_erange = 10. ** np.hstack([extraf['EA80'].data.field('BIN_LO'), extraf['EA80'].data.field('BIN_HI')[-1]])
     else:
-        logging.info('Assuming energy independent 80% cut efficiency for ARF file.')
+        log.info('Assuming energy independent 80% cut efficiency for ARF file.')
         ea /= .80
 
     #---------------------------------------------------------------------------
@@ -365,12 +366,12 @@ def sim_evlist(flux=.1,
     e_cen = 10. ** ((np.log10(ea_erange[1:] * ea_erange[:-1])) / 2.)
 
     ea_loge_step_mean = np.log10(ea_erange[1:] / ea_erange[:-1]).mean().round(4)
-    logging.debug('ea_loge_step_mean = {0}'.format(ea_loge_step_mean))
+    log.debug('ea_loge_step_mean = {0}'.format(ea_loge_step_mean))
 
     # Resample effective area to increase precision
     if ea_loge_step_mean > .1:
         elog10step = .05
-        logging.info('Resampling effective area in log10(EA) vs log10(E) (elog10step = {0})'.format(elog10step))
+        log.info('Resampling effective area in log10(EA) vs log10(E) (elog10step = {0})'.format(elog10step))
         ea_spl = UnivariateSpline(e_cen, np.log10(ea), s=0, k=1)
         e_cen = 10. ** np.arange(np.log10(e_cen[0]), np.log10(e_cen[-1]), step=elog10step)
         ea = 10. ** ea_spl(e_cen)
@@ -404,10 +405,10 @@ def sim_evlist(flux=.1,
     # int_rate_s = int_rate
 
     if rmf:
-        logging.debug('Photon rate before RM = {0}'.format(np.sum(int_rate)))
+        log.debug('Photon rate before RM = {0}'.format(np.sum(int_rate)))
         # Apply energy distribution matrix
         int_rate = edisp.apply(int_rate)
-        logging.debug('Photon rate after RM = {0}'.format(np.sum(int_rate)))
+        log.debug('Photon rate after RM = {0}'.format(np.sum(int_rate)))
 
     # DEBUG plots
     # plt.figure(1)
@@ -434,7 +435,7 @@ def sim_evlist(flux=.1,
         istart = 0
     istop = np.sum(int_rate / int_all > 1. - 1e-4)  # This value dictates the dynamic range at the high energy end
 
-    logging.debug('istart = {0}, istop = {1}'.format(istart, istop))
+    log.debug('istart = {0}, istop = {1}'.format(istart, istop))
 
     # DEBUG plots
     # plt.plot(int_rate[istart:-istop] / int_all, log_e_steps[istart + 1:-istop], '+')
@@ -455,7 +456,7 @@ def sim_evlist(flux=.1,
     # Test event generator function
     n_a_t = 100.
     a_t = ev_gen_f(np.linspace(0., 1., n_a_t))
-    logging.debug('Test ev_gen_f, (v = 0 / #v) = {0}, (v = NaN / #v) = {1}'
+    log.debug('Test ev_gen_f, (v = 0 / #v) = {0}, (v = NaN / #v) = {1}'
                   ''.format(np.sum(a_t == 0.) / n_a_t, np.sum(np.isnan(a_t)) / n_a_t))
 
     if (np.sum(a_t == 0.) / n_a_t > 0.05) or (np.sum(np.isnan(a_t)) / n_a_t > .05):
@@ -465,13 +466,13 @@ def sim_evlist(flux=.1,
     # Calculate total number of photon events
     n_events = int_all * obstime
 
-    logging.debug('Number of photons : {0}'.format(n_events))
+    log.debug('Number of photons : {0}'.format(n_events))
 
     # Generate energy event list
     evlist_e = ev_gen_f(random_state.rand(n_events))
 
     # Sanity
-    logging.debug('Number of photons with E = NaN : {0}'.format(np.sum(np.isnan(evlist_e))))
+    log.debug('Number of photons with E = NaN : {0}'.format(np.sum(np.isnan(evlist_e))))
     evlist_e[np.isnan(evlist_e)] = 0.
 
     # # DEBUG plot
@@ -493,7 +494,7 @@ def sim_evlist(flux=.1,
     else:
         psf_p1 = [1.1, 5.5E-2, .42, .19]  # Fit from SubarrayE_IFAE_50hours_20101102
         evlist_psf = bpl(psf_p1, 10. ** evlist_e)
-        logging.warning('Using dummy PSF extracted from SubarrayE_IFAE_50hours_20101102')
+        log.warning('Using dummy PSF extracted from SubarrayE_IFAE_50hours_20101102')
 
     evlist_dec = obj_dec + random_state.randn(n_events) * evlist_psf
     evlist_ra = obj_ra + random_state.randn(n_events) * evlist_psf / objcosdec
@@ -512,7 +513,7 @@ def sim_evlist(flux=.1,
         log_e_cen = (d.field('BIN_LO') + d.field('BIN_HI')) / 2
         # g = scipy.interpolate.UnivariateSpline((d.field('BIN_LO') + d.field('BIN_HI')) / 2., d.field('VAL'), s=0, k=1)
     else:
-        logging.warning('Using dummy background rate extracted from SubarrayE_IFAE_50hours_20101102')
+        log.warning('Using dummy background rate extracted from SubarrayE_IFAE_50hours_20101102')
         bgrate_p1 = [9., 5.E-4, 1.44, .49]  # Fit from SubarrayE_IFAE_50hours_20101102
         log_e_cen = np.linspace(-1.5, 2., 35.)
         p_rate_area = bpl(bgrate_p1, 10. ** log_e_cen)
@@ -537,7 +538,7 @@ def sim_evlist(flux=.1,
 
     n_events_bg = int(p_rate_total * obstime * int_cam_acc[-1])
 
-    logging.debug('Number of protons : {0}'.format(n_events_bg))
+    log.debug('Number of protons : {0}'.format(n_events_bg))
 
     tplt_multi = 5
     evlist_bg_e = ev_gen_f(random_state.rand(n_events_bg * (tplt_multi + 1)))
@@ -586,8 +587,8 @@ def sim_evlist(flux=.1,
     plt.ylabel('Dec (deg)')
 
     test_r = np.sqrt(evlist_bg_ra ** 2. + evlist_bg_dec ** 2.)
-    logging.debug('Number of BG events in a circle of area 1 deg^2 = {0}'.format(np.sum(test_r[0:n_events_bg] < np.sqrt(1. / np.pi))))
-    logging.debug('Expected number of BG event per area 1 deg^2 = {0}'.format(p_rate_total * obstime))
+    log.debug('Number of BG events in a circle of area 1 deg^2 = {0}'.format(np.sum(test_r[0:n_events_bg] < np.sqrt(1. / np.pi))))
+    log.debug('Expected number of BG event per area 1 deg^2 = {0}'.format(p_rate_total * obstime))
 
     obj_r = np.sqrt(((obj_ra - evlist_ra) / objcosdec) ** 2. + (obj_dec - evlist_dec) ** 2.)
 
@@ -596,7 +597,7 @@ def sim_evlist(flux=.1,
     noff = np.sum(test_r[0:n_events_bg] < thetamax_off)
     alpha = thetamax_on ** 2. / thetamax_off ** 2.
 
-    logging.info('N_ON = {0}, N_OFF = {1}, ALPHA = {2}, SIGN = {3}'.format(
+    log.info('N_ON = {0}, N_OFF = {1}, ALPHA = {2}, SIGN = {3}'.format(
         non, noff, alpha, significance_on_off(non, noff, alpha)))
 
     plt.figure(2)
@@ -611,7 +612,7 @@ def sim_evlist(flux=.1,
     # Output to file
 
     if output_filename_base:
-        logging.info('Writing eventlist to file {0}.eventlist.fits'.format(output_filename_base))
+        log.info('Writing eventlist to file {0}.eventlist.fits'.format(output_filename_base))
 
         newtable = np_to_evt(evlist_t, evlist_bg_t,
                              evlist_ra, evlist_bg_ra,
@@ -625,7 +626,7 @@ def sim_evlist(flux=.1,
         newtable.write('{0}.eventlist.fits'.format(output_filename_base))
 
         if write_pha:
-            logging.info('Writing PHA to file {0}.pha.fits'.format(output_filename_base))
+            log.info('Writing PHA to file {0}.pha.fits'.format(output_filename_base))
             # Prepare data
             dat, t = np.histogram(10. ** evlist_e, bins=edisp.energy_bounds('true'))
             dat = np.array(dat, dtype=float)
@@ -769,20 +770,20 @@ def get_cam_acc(camdist, rmax=4., nbins=None, exreg=None, fit=False, fitfunc=Non
         # fitfunc = lambda p, x: p[0] * x ** p[1] * (1. + (x / p[2]) ** p[3]) ** ((p[1] + p[4]) / p[3])
         if not fitfunc:
             fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2])
-            # fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2]) + p[4] / (np.exp(p[5] * (x - p[6])) + 1.)            
+            # fitfunc = lambda p, x: p[0] * x ** 0. * (1. + (x / p[1]) ** p[2]) ** ((0. + p[3]) / p[2]) + p[4] / (np.exp(p[5] * (x - p[6])) + 1.)
         if not p0:
             p0 = [n[0] / r_a[0], 1.5, 3., -5.]  # Initial guess for the parameters
-            # p0 = [.5 * n[0] / r_a[0], 1.5, 3., -5., .5 * n[0] / r_a[0], 100., .5] # Initial guess for the parameters            
+            # p0 = [.5 * n[0] / r_a[0], 1.5, 3., -5., .5 * n[0] / r_a[0], 100., .5] # Initial guess for the parameters
         fitter = ChisquareFitter(fitfunc)
         m = (n > 0.) * (nerr > 0.) * (r_a != 0.) * ((1. - ex_a) != 0.)
         if np.sum(m) <= len(p0):
-            logging.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
+            log.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
         else:
             # ok, this _should_ be improved !!!
             x, y, yerr = r[m], n[m] / r_a[m] / (1. - ex_a[m]) , nerr[m] / r_a[m] / (1. - ex_a[m])
             m = np.isfinite(x) * np.isfinite(y) * np.isfinite(yerr) * (yerr != 0.)
             if np.sum(m) <= len(p0):
-                logging.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
+                log.error('Could not fit camera acceptance (dof={0}, bins={1})'.format(len(p0), np.sum(m)))
             else:
                 fitter.fit_data(p0, x[m], y[m], yerr[m])
     return (n, bins, nerr, r, r_a, ex_a, fitter)
@@ -936,19 +937,19 @@ def create_sky_map(input_file_name,
     skycenra, skycendec, pntra, pntdec = None, None, None, None
     if skymap_center:
         skycenra, skycendec = eval(skymap_center)
-        logging.info('Skymap center: RA {0}, Dec {1}'.format(skycenra, skycendec))
+        log.info('Skymap center: RA {0}, Dec {1}'.format(skycenra, skycendec))
 
     ring_bg_r_min, ring_bg_r_max = .3, .7
     if ring_bg_radii:
         ring_bg_r_min, ring_bg_r_max = eval(ring_bg_radii)
 
     if r_overs > ring_bg_r_min:
-        logging.warning('Oversampling radius is larger than the inner radius chosen for the ring BG: {0} > {1}'.format(r_overs, ring_bg_r_min))
+        log.warning('Oversampling radius is larger than the inner radius chosen for the ring BG: {0} > {1}'.format(r_overs, ring_bg_r_min))
 
-    logging.info('Skymap size         : {0} deg'.format(skymap_size))
-    logging.info('Skymap bin size     : {0} deg'.format(skymap_bin_size))
-    logging.info('Oversampling radius : {0} deg'.format(r_overs))
-    logging.info('Ring BG radius      : {0} - {1} deg'.format(ring_bg_r_min, ring_bg_r_max))
+    log.info('Skymap size         : {0} deg'.format(skymap_size))
+    log.info('Skymap bin size     : {0} deg'.format(skymap_bin_size))
+    log.info('Oversampling radius : {0} deg'.format(r_overs))
+    log.info('Ring BG radius      : {0} - {1} deg'.format(ring_bg_r_min, ring_bg_r_max))
 
     skymap_nbins, sky_dec_min, sky_dec_max, objcosdec, sky_ra_min, sky_ra_max = 0, 0., 0., 0., 0., 0.
     sky_hist, acc_hist, extent = None, None, None
@@ -962,7 +963,7 @@ def create_sky_map(input_file_name,
     exposure = 0.
 
     # Read in input file, can be individual fits or bankfile
-    logging.info('Opening input file ..')
+    log.info('Opening input file ..')
 
     def get_filelist(input_file_name) :
         # Check if we are dealing with a single file or a bankfile
@@ -973,7 +974,7 @@ def create_sky_map(input_file_name,
             file_list = [input_file_name]
         except:
             # We are dealing with a bankfile
-            logging.info('Reading files from bankfile {0}'.format(input_file_name))
+            log.info('Reading files from bankfile {0}'.format(input_file_name))
             file_list = np.loadtxt(input_file_name, dtype='S', usecols=[0])
         return file_list
 
@@ -985,14 +986,14 @@ def create_sky_map(input_file_name,
     if template_background:
         tpl_file_list = get_filelist(template_background)
         if len(file_list) != len(tpl_file_list):
-            logging.warning('Different number of signal and template background files. '
+            log.warning('Different number of signal and template background files. '
                             'Switching off template background analysis.')
             template_background = None
 
     # Main loop over input files
     for i, file_name in enumerate(file_list):
 
-        logging.info('Processing file {0}'.format(file_name))
+        log.info('Processing file {0}'.format(file_name))
 
         def get_evl(file_name):
             # Open fits file
@@ -1027,13 +1028,13 @@ def create_sky_map(input_file_name,
             # If skymap center is not set, set it to the object position of the first run
             if skycenra is None or skycendec is None:
                 skycenra, skycendec = objra, objdec
-                logging.debug('Setting skymap center to skycenra, skycendec = {0}, {1}'.format(skycenra, skycendec))
+                log.debug('Setting skymap center to skycenra, skycendec = {0}, {1}'.format(skycenra, skycendec))
             if 'TELESCOP' in ex1hdr:
                 telescope = ex1hdr['TELESCOP']
-                logging.debug('Setting TELESCOP to {0}'.format(telescope))
+                log.debug('Setting TELESCOP to {0}'.format(telescope))
             if 'OBJECT' in ex1hdr:
                 object_ = ex1hdr['OBJECT']
-                logging.debug('Setting OBJECT to {0}'.format(object_))
+                log.debug('Setting OBJECT to {0}'.format(object_))
 
         mgit, tpl_mgit = np.ones(len(tbdata), dtype=np.bool), None
         if template_background:
@@ -1047,7 +1048,7 @@ def create_sky_map(input_file_name,
                 if template_background:
                     tpl_mgit *= (tpl_tbdata.field('TIME') >= gti[0]) * (tpl_tbdata.field('TIME') <= gti[1])
         except:
-            logging.warning('File does not contain a GTI extension')
+            log.warning('File does not contain a GTI extension')
 
         #---------------------------------------------------------------------------
         #  Handle exclusion region
@@ -1055,7 +1056,7 @@ def create_sky_map(input_file_name,
         # If no exclusion regions are given, use the object position from the first run
         if sky_ex_reg is None:
             sky_ex_reg = [SkyCircle(SkyCoord(objra, objdec), rexdeg)]
-            logging.info('Setting exclusion region to object position (ra={0}, dec={1}, r={2}'.format(objra, objdec, rexdeg))
+            log.info('Setting exclusion region to object position (ra={0}, dec={1}, r={2}'.format(objra, objdec, rexdeg))
 
         pntra, pntdec = ex1hdr['RA_PNT'], ex1hdr['DEC_PNT']
         obj_cam_dist = SkyCoord(skycenra, skycendec).dist(SkyCoord(pntra, pntdec))
@@ -1063,11 +1064,11 @@ def create_sky_map(input_file_name,
         exposure_run = ex1hdr['LIVETIME']
         exposure += exposure_run
 
-        logging.info('RUN Start date/time : {0} {1}'.format(ex1hdr['DATE_OBS'], ex1hdr['TIME_OBS']))
-        logging.info('RUN Stop date/time  : {0} {1}'.format(ex1hdr['DATE_END'], ex1hdr['TIME_END']))
-        logging.info('RUN Exposure        : {0:.2f} [s]'.format(exposure_run))
-        logging.info('RUN Pointing pos.   : RA {0:.4f} [deg], Dec {1:.4f} [deg]'.format(pntra, pntdec))
-        logging.info('RUN Obj. cam. dist. : {0:.4f} [deg]'.format(obj_cam_dist))
+        log.info('RUN Start date/time : {0} {1}'.format(ex1hdr['DATE_OBS'], ex1hdr['TIME_OBS']))
+        log.info('RUN Stop date/time  : {0} {1}'.format(ex1hdr['DATE_END'], ex1hdr['TIME_END']))
+        log.info('RUN Exposure        : {0:.2f} [s]'.format(exposure_run))
+        log.info('RUN Pointing pos.   : RA {0:.4f} [deg], Dec {1:.4f} [deg]'.format(pntra, pntdec))
+        log.info('RUN Obj. cam. dist. : {0:.4f} [deg]'.format(obj_cam_dist))
 
         # Cut out source region for acceptance fitting
         exmask = None
@@ -1080,7 +1081,7 @@ def create_sky_map(input_file_name,
 
         photbdata = tbdata[exmask * mgit]
         if len(photbdata) < 10 :
-            logging.warning('Less then 10 events found in file {0} after exclusion region cuts'.format(file_name))
+            log.warning('Less then 10 events found in file {0} after exclusion region cuts'.format(file_name))
 
         hadtbdata = None
         if template_background:
@@ -1103,7 +1104,7 @@ def create_sky_map(input_file_name,
             )
 
         # DEBUG
-        if logging.root.level is logging.DEBUG :
+        if logging.root.level == logging.DEBUG:
             fitter.print_results()
             # DEBUG plot
             plt.errorbar(r, n / r_a / (1. - ex_a), nerr / r_a / (1. - ex_a))
@@ -1118,14 +1119,14 @@ def create_sky_map(input_file_name,
                 fit=True
                 )
             had_n, had_fit = had_acc[0], had_acc[6]
-            logging.debug('Camera acceptance hadrons fit probability: {0}'.format(had_fit.prob))
+            log.debug('Camera acceptance hadrons fit probability: {0}'.format(had_fit.prob))
 
         # !!! All photons including the exclusion regions
         photbdata = tbdata[mgit]
         if template_background:
             hadtbdata = tpl_tbdata[tpl_mgit]
         if len(photbdata) < 10:
-            logging.warning('Less then 10 events found in file {0} after GTI cut.'.format(file_name))
+            log.warning('Less then 10 events found in file {0} after GTI cut.'.format(file_name))
 
         tpl_acc_cor_use_interp = True
         tpl_acc_f, tpl_acc = None, None
@@ -1155,9 +1156,9 @@ def create_sky_map(input_file_name,
             objcosdec = np.cos(skycendec * np.pi / 180.)
             sky_ra_min, sky_ra_max = skycenra - skymap_size / 2. / objcosdec, skycenra + skymap_size / 2. / objcosdec
 
-            logging.debug('skymap_nbins = {0}'.format(skymap_nbins))
-            logging.debug('sky_dec_min, sky_dec_max = {0}, {1}'.format(sky_dec_min, sky_dec_max))
-            logging.debug('sky_ra_min, sky_ra_max = {0}, {1}'.format(sky_ra_min, sky_ra_max))
+            log.debug('skymap_nbins = {0}'.format(skymap_nbins))
+            log.debug('sky_dec_min, sky_dec_max = {0}, {1}'.format(sky_dec_min, sky_dec_max))
+            log.debug('sky_ra_min, sky_ra_max = {0}, {1}'.format(sky_ra_min, sky_ra_max))
 
         # Create sky map (i.e. bin events)
         # NOTE: In histogram2d the first axes is the vertical (y, DEC) the 2nd the horizontal axes (x, RA)
@@ -1194,7 +1195,7 @@ def create_sky_map(input_file_name,
         m = rr > 4.
         acc[m] = fitter.fitfunc(p1, 4.) / fitter.fitfunc(p1, .01)
         if not fov_acceptance:
-            logging.debug('Do _not_ apply FoV acceptance correction')
+            log.debug('Do _not_ apply FoV acceptance correction')
             acc = acc * 0. + 1.
 
         # DEBUG plot
@@ -1246,23 +1247,23 @@ def create_sky_map(input_file_name,
     #---------------------------------------------------------------------------
     # Calculate final skymaps
 
-    logging.info('Processing final sky maps')
+    log.info('Processing final sky maps')
 
     # Calculate oversampled skymap, ring background, excess, and significances
     sc = get_sky_mask_circle(r_overs, skymap_bin_size)
     sr = get_sky_mask_ring(ring_bg_r_min, ring_bg_r_max, skymap_bin_size)
     acc_hist /= exposure
 
-    logging.info('Calculating oversampled event map ..')
+    log.info('Calculating oversampled event map ..')
     sky_overs, sky_overs_alpha = oversample_sky_map(sky_hist, sc)
 
-    logging.info('Calculating oversampled ring background map ..')
+    log.info('Calculating oversampled ring background map ..')
     sky_bg_ring, sky_bg_ring_alpha = oversample_sky_map(sky_hist, sr, sky_ex_reg_map)
 
-    logging.info('Calculating oversampled event acceptance map ..')
+    log.info('Calculating oversampled event acceptance map ..')
     acc_overs, acc_overs_alpha = oversample_sky_map(acc_hist, sc)
 
-    logging.info('Calculating oversampled ring background acceptance map ..')
+    log.info('Calculating oversampled ring background acceptance map ..')
     acc_bg_overs, acc_bg_overs_alpha = oversample_sky_map(acc_hist, sr, sky_ex_reg_map)
 
 
@@ -1278,10 +1279,10 @@ def create_sky_map(input_file_name,
 
     if template_background:
 
-        logging.info('Calculating oversampled template background map ..')
+        log.info('Calculating oversampled template background map ..')
         tpl_had_overs, tpl_had_overs_alpha = oversample_sky_map(tpl_had_hist, sc)
 
-        logging.info('Calculating oversampled template acceptance map ..')
+        log.info('Calculating oversampled template acceptance map ..')
         tpl_acc_overs, tpl_acc_overs_alpha = oversample_sky_map(tpl_acc_hist, sc)
 
         tpl_exc_overs = sky_overs - tpl_acc_overs
@@ -1293,7 +1294,7 @@ def create_sky_map(input_file_name,
 
     if write_output:
 
-        logging.info('Writing result to file ..')
+        log.info('Writing result to file ..')
 
         rarange, decrange = (sky_ra_min, sky_ra_max), (sky_dec_min, sky_dec_max)
 
@@ -1335,7 +1336,7 @@ def create_sky_map(input_file_name,
                 image_to_primaryhdu(data, rarange, decrange, author='PyFACT pfmap',
                                      object_=object_, telescope=telescope).writeto(outfile_base_name + ext)
 
-        logging.info('The output files can be found in {0}'.format(os.getcwd()))
+        log.info('The output files can be found in {0}'.format(os.getcwd()))
 
     #---------------------------------------------------------------------------
     # Plot results
@@ -1348,7 +1349,7 @@ def create_sky_map(input_file_name,
 
     if has_matplotlib and do_graphical_output:
 
-        logging.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
+        log.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
 
         plot_skymaps(sky_overs, rng_exc_overs, rng_sig_overs, sky_bg_ring, rng_alpha_overs, 'Ring BG overs.',
                      sky_ra_min, sky_ra_max, sky_dec_min, sky_dec_max, objcosdec, r_overs, extent,
@@ -1603,21 +1604,21 @@ def create_spectrum(input_file_names,
 
     # Exclusion radius [this should be generalized in future versions]
     rexdeg = .3
-    logging.warning('pfspec is currently using a single exclusion region for background extraction set on the analysis position (r = {0})'.format(rexdeg))
-    logging.warning('This should be improved in future versions (tm).')
+    log.warning('pfspec is currently using a single exclusion region for background extraction set on the analysis position (r = {0})'.format(rexdeg))
+    log.warning('This should be improved in future versions (tm).')
 
     # Intialize some variables
     objra, objdec, pntra, pntdec = None, None, None, None
     if analysis_position:
         objra, objdec = eval(analysis_position)
-        logging.info('Analysis position: RA {0}, Dec {1}'.format(objra, objdec))
+        log.info('Analysis position: RA {0}, Dec {1}'.format(objra, objdec))
     else:
-        logging.info('No analysis position given => will use object position from first file')
+        log.info('No analysis position given => will use object position from first file')
 
-    logging.info('Analysis radius: {0} deg'.format(analysis_radius))
+    log.info('Analysis radius: {0} deg'.format(analysis_radius))
 
     if write_output_files:
-        logging.info('The output files can be found in {0}'.format(os.getcwd()))
+        log.info('The output files can be found in {0}'.format(os.getcwd()))
 
     theta2_hist_max, theta2_hist_nbins = .5 ** 2., 50
     theta2_on_hist, theta2_off_hist, theta2_offcor_hist = np.zeros(theta2_hist_nbins), np.zeros(theta2_hist_nbins), np.zeros(theta2_hist_nbins)
@@ -1631,7 +1632,7 @@ def create_spectrum(input_file_names,
     arf_m, arf_m_erange = None, None
 
     if match_rmf:
-        logging.info('Matching total PHA binning to RMF file: {0}'.format(match_rmf))
+        log.info('Matching total PHA binning to RMF file: {0}'.format(match_rmf))
         edisp = EnergyDispersion(match_rmf)
         ebounds = edisp.energy_bounds('reco')
         erange = edisp.energy_bounds('true')
@@ -1654,7 +1655,7 @@ def create_spectrum(input_file_names,
     exposure = 0.  # [s]
 
     # Read in input file, can be individual fits or bankfile
-    logging.info('Opening input file(s) ..')
+    log.info('Opening input file(s) ..')
 
     # This list will hold the individual file names as strings
     file_list = None
@@ -1666,7 +1667,7 @@ def create_spectrum(input_file_names,
         f.close()
         file_list = [input_file_names]
     except:
-        logging.info('Reading files from batchfile {0}'.format(input_file_names[0]))
+        log.info('Reading files from batchfile {0}'.format(input_file_names[0]))
         file_list = np.loadtxt(input_file_names[0], dtype='S')
         if len(file_list.shape) == 1:
             file_list = np.array([file_list])
@@ -1682,7 +1683,7 @@ def create_spectrum(input_file_names,
 
     for files in file_list:
         dataf, arf, rmf = datadir + files[0], datadir + files[1], datadir + files[2]
-        logging.info('==== Processing file {0}'.format(dataf))
+        log.info('==== Processing file {0}'.format(dataf))
 
         # Open fits file
         hdulist = fits.open(dataf)
@@ -1709,7 +1710,7 @@ def create_spectrum(input_file_names,
             # If skymap center is not set, set it to the target position of the first run
             if objra is None or objdec is None:
                 objra, objdec = ex1hdr['RA_OBJ'], ex1hdr['DEC_OBJ']
-                logging.info('Analysis position from header: RA {0}, Dec {1}'.format(objra, objdec))
+                log.info('Analysis position from header: RA {0}, Dec {1}'.format(objra, objdec))
 
         pntra, pntdec = ex1hdr['RA_PNT'], ex1hdr['DEC_PNT']
         obj_cam_dist = SkyCoord(objra, objdec).dist(SkyCoord(pntra, pntdec))
@@ -1721,11 +1722,11 @@ def create_spectrum(input_file_names,
         exposure_run = ex1hdr['LIVETIME']
         exposure += exposure_run
 
-        logging.info('RUN Start date/time : {0} {1}'.format(ex1hdr['DATE_OBS'], ex1hdr['TIME_OBS']))
-        logging.info('RUN Stop date/time  : {0} {1}'.format(ex1hdr['DATE_END'], ex1hdr['TIME_END']))
-        logging.info('RUN Exposure        : {0:.2f} [s]'.format(exposure_run))
-        logging.info('RUN Pointing pos.   : RA {0:.4f} [deg], Dec {1:.4f} [deg]'.format(pntra, pntdec))
-        logging.info('RUN Obj. cam. dist. : {0:.4f} [deg]'.format(obj_cam_dist))
+        log.info('RUN Start date/time : {0} {1}'.format(ex1hdr['DATE_OBS'], ex1hdr['TIME_OBS']))
+        log.info('RUN Stop date/time  : {0} {1}'.format(ex1hdr['DATE_END'], ex1hdr['TIME_END']))
+        log.info('RUN Exposure        : {0:.2f} [s]'.format(exposure_run))
+        log.info('RUN Pointing pos.   : RA {0:.4f} [deg], Dec {1:.4f} [deg]'.format(pntra, pntdec))
+        log.info('RUN Obj. cam. dist. : {0:.4f} [deg]'.format(obj_cam_dist))
 
         run_dstart = datetime.datetime(*[int(x) for x in (ex1hdr['DATE_OBS'].split('-') + ex1hdr['TIME_OBS'].split(':'))])
         run_dstop = datetime.datetime(*[int(x) for x in (ex1hdr['DATE_END'].split('-') + ex1hdr['TIME_END'].split(':'))])
@@ -1762,7 +1763,7 @@ def create_spectrum(input_file_names,
             for gti in hdulist['GTI'].data :
                 mgit *= (tbdata.field('TIME') >= gti[0]) * (tbdata.field('TIME') <= gti[1])
         except:
-            logging.warning('File does not contain a GTI extension')
+            log.warning('File does not contain a GTI extension')
 
         # New table data
         tbdata = newtable.data[mgit]
@@ -1798,8 +1799,8 @@ def create_spectrum(input_file_names,
         # plt.show()
 
         def print_stats(non, noff, alpha, pre='') :
-            logging.info(pre + 'N_ON = {0}, N_OFF = {1}, ALPHA = {2:.4f}'.format(non, noff, alpha))
-            logging.info(pre + 'EXCESS = {0:.2f}, SIGN = {1:.2f}'.format(non - alpha * noff, significance_on_off(non, noff, alpha)))
+            log.info(pre + 'N_ON = {0}, N_OFF = {1}, ALPHA = {2:.4f}'.format(non, noff, alpha))
+            log.info(pre + 'EXCESS = {0:.2f}, SIGN = {1:.2f}'.format(non - alpha * noff, significance_on_off(non, noff, alpha)))
 
         non += non_run
         noff += noff_run
@@ -1831,11 +1832,10 @@ def create_spectrum(input_file_names,
                - (a_tmp[1:] - a_tmp[:-1])
                )
             )
-        # logging.debug('theta2_off_hist_alpha = {0}'.format( theta2_off_hist_alpha))
         theta2_offcor_hist += theta2_off_run_hist * theta2_off_hist_alpha
 
         # Read run ARF file
-        logging.info('RUN Reading ARF from : {0}'.format(arf))
+        log.info('RUN Reading ARF from : {0}'.format(arf))
         arf_obj = EffectiveAreaTable.read(arf)
         ea = arf_obj.effective_area.value
         ea_erange = np.hstack(arf_obj.energy_lo.value, arf_obj.energy_hi.value[-1])
@@ -1846,8 +1846,8 @@ def create_spectrum(input_file_names,
             arf_m_erange = ea_erange
 
         if (len(ea_erange) is not len(arf_m_erange)) or (np.sum(np.fabs(ea_erange - arf_m_erange)) > 1E-5):
-            logging.debug('Average ARF - ARF binning does not match RMF for file: {0}'.format(arf))
-            logging.debug('Average ARF - Resampling ARF to match RMF EBOUNDS binning')
+            log.debug('Average ARF - ARF binning does not match RMF for file: {0}'.format(arf))
+            log.debug('Average ARF - Resampling ARF to match RMF EBOUNDS binning')
             from scipy.interpolate import UnivariateSpline
             ea_spl = UnivariateSpline(np.log10(ea_erange[:-1] * ea_erange[1:]) / 2. , np.log10(ea), s=0, k=1)
             ea = 10. ** ea_spl((np.log10(arf_m_erange[:-1] * arf_m_erange[1:]) / 2.))
@@ -1868,7 +1868,7 @@ def create_spectrum(input_file_names,
             run_out_basename = os.path.basename(dataf[:dataf.find('.fits')])
 
             # Open run RMF file
-            logging.info('RUN Reading RMF from : {0}'.format(rmf))
+            log.info('RUN Reading RMF from : {0}'.format(rmf))
             edisp = EnergyDispersion.read(rmf)
             ebounds = edisp.energy_bounds('reco')
 
@@ -1891,10 +1891,10 @@ def create_spectrum(input_file_names,
             header['ANCRFILE'] = os.path.basename(arf), 'Ancillary response file (ARF)'
             header['RESPFILE'] = os.path.basename(rmf), 'Redistribution matrix file (RMF)'
             header['BACKFILE'] = run_out_basename + '_bg.pha.fits', 'Bkgr FITS file'
-            header['BACKSCAL'] = alpha_run, 'Background scale factor'            
+            header['BACKSCAL'] = alpha_run, 'Background scale factor'
             header['HDUCLAS2'] = 'TOTAL', 'Extension contains source + bkgd'
             filename = run_out_basename + '_signal.pha.fits'
-            logging.info('RUN Writing signal PHA file to {0}'.format(filename))
+            log.info('RUN Writing signal PHA file to {0}'.format(filename))
             hdu.writeto(filename)
 
             # Background PHA
@@ -1905,7 +1905,7 @@ def create_spectrum(input_file_names,
             header['ANCRFILE'] = os.path.basename(arf), 'Ancillary response file (ARF)'
             header['RESPFILE'] = os.path.basename(rmf), 'Redistribution matrix file (RMF)'
             header['HDUCLAS2'] = 'TOTAL', 'Extension contains source + bkgd'
-            logging.info('RUN Writing background PHA file to {0}'.format(run_out_basename + '_bg.pha.fits'))
+            log.info('RUN Writing background PHA file to {0}'.format(run_out_basename + '_bg.pha.fits'))
             hdu.writeto(run_out_basename + '_bg.pha.fits')
 
             # Excess PHA
@@ -1915,7 +1915,7 @@ def create_spectrum(input_file_names,
                             telescope=telescope, instrument=instrument)
             header['ANCRFILE'] = os.path.basename(arf), 'Ancillary response file (ARF)'
             header['RESPFILE'] = os.path.basename(rmf), 'Redistribution matrix file (RMF)'
-            logging.info('RUN Writing excess PHA file to {0}'.format(run_out_basename + '_excess.pha.fits'))
+            log.info('RUN Writing excess PHA file to {0}'.format(run_out_basename + '_excess.pha.fits'))
             hdu.writeto(run_out_basename + '_excess.pha.fits')
 
         hdulist.close()
@@ -1967,7 +1967,7 @@ def create_spectrum(input_file_names,
     if has_matplotlib and do_graphical_output:
 
         import matplotlib
-        logging.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
+        log.info('Plotting results (matplotlib v{0})'.format(matplotlib.__version__))
 
         def set_title_and_axlabel(label):
             plt.xlabel('RA (deg)')
@@ -2132,9 +2132,9 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
 
     irf_file_name_base = irf_root_file_name.rsplit('.', 1)[0].rsplit('/', 1)[1]
 
-    logging.info('Reading IRF data from file {0}'.format(irf_root_file_name))
+    log.info('Reading IRF data from file {0}'.format(irf_root_file_name))
     irf_root_file = TFile(irf_root_file_name)
-    logging.info('File content (f.ls()) :')
+    log.info('File content (f.ls()) :')
     irf_root_file.ls()
 
     #---------------------------------------------------------------------------
@@ -2153,8 +2153,8 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
         rm_erange_log = root_axis_to_array(h.GetYaxis())
         rm_ebounds_log = root_axis_to_array(h.GetXaxis())
     else:
-        logging.info('ROOT file does not contain MigMatrix.')
-        logging.info('Will produce RMF from ERes histogram.')
+        log.info('ROOT file does not contain MigMatrix.')
+        log.info('Will produce RMF from ERes histogram.')
 
         # Read energy resolution
         h = irf_root_file.Get('ERes')
@@ -2193,8 +2193,8 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     # Read EA
     h = irf_root_file.Get('EffectiveAreaEtrue')  # ARF should be in true energy
     if h is None:
-        logging.info('ROOT file does not contain EffectiveAreaEtrue (EA vs E_true)')
-        logging.info('Will use EffectiveArea (EA vs E_reco) for ARF')
+        log.info('ROOT file does not contain EffectiveAreaEtrue (EA vs E_true)')
+        log.info('Will use EffectiveArea (EA vs E_reco) for ARF')
         h = irf_root_file.Get('EffectiveArea')
     ea = root_1dhist_to_array(h)[0]
     # Read EA bin energy ranges
@@ -2203,7 +2203,7 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     resample_ea_to_mrf = True
     # resample_ea_to_mrf = False
     if resample_ea_to_mrf:
-            logging.info('Resampling effective area in log10(EA) vs log10(E) to match RM.')
+            log.info('Resampling effective area in log10(EA) vs log10(E) to match RM.')
             logea = np.log10(ea)
             logea[np.isnan(logea) + np.isinf(logea)] = 0.
             ea_spl = UnivariateSpline((ea_erange_log[1:] + ea_erange_log[:-1]) / 2., logea, s=0, k=1)
@@ -2267,7 +2267,7 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
     aux_tab.append(tbhdu)
 
     h = irf_root_file.Get('EffectiveArea80')
-    if h != None:
+    if h is not None:
         plt.subplot(334)
         plot_th1(h, logy=True)
         tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')
@@ -2275,7 +2275,7 @@ def cta_irf_root_to_fits(irf_root_file_name, write_output=False):
         aux_tab.append(tbhdu)
 
     h = irf_root_file.Get('EffectiveAreaEtrue')
-    if h != None:
+    if h is not None:
         plt.subplot(335)
         plot_th1(h, logy=True)
         tbhdu = root_th1_to_fitstable(h, yunit='m^2', xunit='log(1/TeV)')

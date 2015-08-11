@@ -22,10 +22,14 @@ from ..spectrum import (LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
-from ..utils.fits import table_to_fits_table 
+from ..utils.fits import table_to_fits_table
 
 
-__all__ = ['SpectralCube', 'compute_npred_cube', 'convolve_cube']
+__all__ = [
+    'SpectralCube',
+    'compute_npred_cube',
+    'convolve_cube',
+]
 
 
 class SpectralCube(object):
@@ -59,6 +63,17 @@ class SpectralCube(object):
     energy : `~astropy.units.Quantity`
         Energy array
 
+    Attributes
+    ----------
+    data : `~astropy.units.Quantity`
+        Data array (3-dim)
+    wcs : `~astropy.wcs.WCS`
+        Word coordinate system transformation
+    energy : `~astropy.units.Quantity`
+        Energy array
+    energy_axis : `~gammapy.spectrum.LogEnergyAxis`
+        Energy axis
+
     Notes
     -----
     Diffuse model files in this format are distributed with the Fermi Science tools
@@ -81,6 +96,7 @@ class SpectralCube(object):
 
     @property
     def _interpolate(self):
+        """Interpolated data (`~scipy.interpolate.RegularGridInterpolator`)"""
         if self._interpolate_cache is None:
             # Initialise the interpolator
             # This doesn't do any computations ... I'm not sure if it allocates extra arrays.
@@ -91,8 +107,8 @@ class SpectralCube(object):
 
         return self._interpolate_cache
 
-    @staticmethod
-    def read_hdu(hdu_list):
+    @classmethod
+    def read_hdu(cls, hdu_list):
         """Read spectral cube from HDU.
 
         Parameters
@@ -118,10 +134,10 @@ class SpectralCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        return SpectralCube(data, wcs, energy)
+        return cls(data, wcs, energy)
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """Read spectral cube from FITS file.
 
         Parameters
@@ -143,7 +159,7 @@ class SpectralCube(object):
         energy = Table.read(filename, 'ENERGIES')['Energy']
         energy = Quantity(energy, 'MeV')
 
-        return SpectralCube(data, wcs, energy)
+        return cls(data, wcs, energy)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -199,12 +215,10 @@ class SpectralCube(object):
 
     @property
     def spatial_coordinate_images(self):
-        """Spatial coordinate images.
+        """Spatial coordinate images (2x `~astropy.units.Quantity`)
 
-        Returns
-        -------
-        lon, lat : `~astropy.units.Quantity`
-            Arrays of longitude and latitude pixel coordinates.
+        Returns two separate objects for the arrays of longitude
+        and latitude pixel coordinates.
         """
         n_lon = self.data.shape[2]
         n_lat = self.data.shape[1]
@@ -215,13 +229,7 @@ class SpectralCube(object):
 
     @property
     def solid_angle_image(self):
-        """Solid angle image.
-
-        Returns
-        -------
-        solid_angle_image : `~astropy.units.Quantity`
-            Solid angle image (steradian)
-        """
+        """Solid angle image in steradian (`~astropy.units.Quantity`)"""
         cube_hdu = fits.ImageHDU(self.data, self.wcs.to_header())
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2
@@ -229,7 +237,7 @@ class SpectralCube(object):
         return solid_angle(image_hdu).to('sr')
 
     def flux(self, lon, lat, energy):
-        """Differential flux (linear interpolation).
+        """Differential flux.
 
         Parameters
         ----------
@@ -255,7 +263,7 @@ class SpectralCube(object):
         return Quantity(values, '1 / (cm2 MeV s sr)')
 
     def spectral_index(self, lon, lat, energy, dz=1e-3):
-        """Power law spectral index.
+        """Power law spectral index (`numpy.array`).
 
         A forward finite difference method with step ``dz`` is used along
         the ``z = log10(energy)`` axis.
@@ -267,12 +275,6 @@ class SpectralCube(object):
         lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
-            Energy
-
-        Returns
-        -------
-        spectral_index : `~astropy.units.Quantity`
-            Spectral index
         """
         raise NotImplementedError
         # Compute flux at `z = log(energy)`

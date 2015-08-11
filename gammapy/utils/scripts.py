@@ -2,18 +2,21 @@
 """Utils to create scripts and command-line tools"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import sys
 import argparse
 from collections import OrderedDict
 import importlib
 import os
 import glob
+import logging
 
-__all__ = ['GammapyFormatter',
-           'get_parser',
-           'get_installed_scripts',
-           'get_all_main_functions',
-           ]
-
+__all__ = [
+    'GammapyFormatter',
+    'get_parser',
+    'get_installed_scripts',
+    'get_all_main_functions',
+    'set_up_logging_from_args',
+]
 
 
 class GammapyFormatter(argparse.ArgumentDefaultsHelpFormatter,
@@ -72,3 +75,52 @@ def get_all_main_functions():
         out[name] = module.main
 
     return out
+
+
+def set_up_logging_from_args(args):
+    """Set up logging from command line arguments.
+
+    This is a helper function that should be called from
+    all Gammapy command line tools.
+    It executes the boilerplate that's involved in setting
+    up the root logger the way we like it.
+    """
+    if hasattr(args, 'loglevel'):
+        level = args.loglevel
+        del args.loglevel
+    else:
+        level = 'info'
+    _configure_root_logger(level=level)
+
+
+def _configure_root_logger(level='info', format=None):
+    """Configure root log level and format.
+
+    This is a helper function that can be called form
+    """
+    log = logging.getLogger()  # Get root logger
+
+    # Set log level
+    # level = getattr(logging, level.upper())
+    numeric_level = getattr(logging, level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: {}'.format(level))
+    log.setLevel(level=numeric_level)
+
+    # Format log handler
+    if not format:
+        # format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        format = '%(levelname)-8s %(message)s [%(name)s]'
+    formatter = logging.Formatter(format)
+
+    # Not sure why there sometimes is a handler attached to the root logger,
+    # and sometimes not, i.e. why this is needed:
+    # https://github.com/gammapy/gammapy/pull/318/files#r36453321
+    if len(log.handlers) == 0:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(numeric_level)
+        log.addHandler(handler)
+
+    log.handlers[0].setFormatter(formatter)
+
+    return log

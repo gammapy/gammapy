@@ -95,7 +95,7 @@ def test_EnergyDependentTablePSF():
     offset = Angle(0.1, 'deg')
     energies = Quantity([1, 2], 'GeV').to('TeV')
     offsets = Angle([0.1, 0.2], 'deg')
-    
+
     pixel_size = Angle(0.1, 'deg')
 
     #actual = psf.evaluate(energy=energy, offset=offset)

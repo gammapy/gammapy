@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['pfmap']
 
@@ -31,9 +31,13 @@ def main(args=None):
                         help='Bankfile with template background eventlists.')
     parser.add_argument('--graphical_output', action='store_true', default=False,
                         help='Switch off graphical output.')
-    parser.add_argument('-l', '--loglevel', type=str, default='INFO',
-                        help='Amount of logging e.g. DEBUG, INFO, WARNING, ERROR.')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     args = parser.parse_args(args)
+
+    set_up_logging_from_args(args)
+
     pfmap(**vars(args))
 
 
@@ -52,8 +56,6 @@ def pfmap(infile,
 
     TODO: document
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from ..utils.pyfact import create_sky_map
 
     create_sky_map(input_file_name=infile,

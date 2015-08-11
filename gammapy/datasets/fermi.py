@@ -41,16 +41,14 @@ def _is_galactic(source_class):
     """
     source_class = source_class.lower().strip()
 
-    GAL = ['psr', 'pwn', 'snr', 'spp', 'lbv', 'hmb', 'hpsr', 'sfr', 'glc', 'bin',
-           'nov',
-           ]
-    EGAL = ['agn', 'agu', 'bzb', 'bzq', 'bll', 'gal', 'rdg', 'fsrq',
-            'css', 'sey', 'sbg', 'nlsy1', 'ssrq', 'bcu',
-            ]
+    gal_classes = ['psr', 'pwn', 'snr', 'spp', 'lbv', 'hmb',
+                   'hpsr', 'sfr', 'glc', 'bin', 'nov']
+    egal_classes = ['agn', 'agu', 'bzb', 'bzq', 'bll', 'gal', 'rdg', 'fsrq',
+                    'css', 'sey', 'sbg', 'nlsy1', 'ssrq', 'bcu']
 
-    if source_class in GAL:
+    if source_class in gal_classes:
         return 'galactic'
-    elif source_class in EGAL:
+    elif source_class in egal_classes:
         return 'extra-galactic'
     elif source_class == '':
         return 'unknown'
@@ -168,7 +166,8 @@ def fetch_fermi_extended_sources(catalog):
     --------
     >>> from gammapy.datasets import fetch_fermi_extended_sources
     >>> sources = fetch_fermi_extended_sources('2FGL')
-    >>> len(sources) = 12
+    >>> len(sources)
+    12
     """
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
     if catalog == '3FGL':
@@ -238,37 +237,25 @@ class FermiGalacticCenter(object):
 
     @staticmethod
     def counts():
-        """Counts image as `astropy.io.fits.ImageHDU`."""
+        """Counts image (`astropy.io.fits.ImageHDU`)"""
         filename = FermiGalacticCenter.filenames()['counts']
         return fits.open(filename)[1]
 
     @staticmethod
     def psf():
-        """PSF as `~gammapy.irf.EnergyDependentTablePSF`."""
+        """PSF as `~gammapy.irf.EnergyDependentTablePSF`"""
         filename = FermiGalacticCenter.filenames()['psf']
         return EnergyDependentTablePSF.read(filename)
 
     @staticmethod
     def diffuse_model():
-        """Diffuse model spectral cube.
-
-        Returns
-        -------
-        spectral_cube : `~gammapy.data.SpectralCube`
-            Diffuse model spectral cube
-        """
+        """Diffuse model (`~gammapy.data.SpectralCube`)"""
         filename = FermiGalacticCenter.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
     @staticmethod
     def exposure_cube():
-        """Exposure cube.
-
-        Returns
-        -------
-        spectral_cube : `~gammapy.data.SpectralCube`
-            Exposure cube
-        """
+        """Exposure cube (`~gammapy.data.SpectralCube`)"""
         filename = FermiGalacticCenter.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
@@ -300,104 +287,72 @@ class FermiVelaRegion(object):
 
     @staticmethod
     def counts_cube():
-        """Counts cube.
+        """Counts cube information (`~astropy.io.fits.HDUList`).
 
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`
-            * Counts cube `~astropy.io.fits.PrimaryHDU`.
-            * Energy bins `~astropy.io.fits.BinTableHDU`.
-            * MET bins `~astropy.io.fits.BinTableHDU`.
+        The HDU list contains:
+
+        * Counts cube `~astropy.io.fits.PrimaryHDU`.
+        * Energy bins `~astropy.io.fits.BinTableHDU`.
+        * MET bins `~astropy.io.fits.BinTableHDU`.
         """
         filename = FermiVelaRegion.filenames()['counts_cube']
         return fits.open(filename)
 
     @staticmethod
     def psf():
-        """Fermi PSF for the Vela region.
-
-        Returns
-        -------
-        psf : `~gammapy.irf.EnergyDependentTablePSF`.
-            PSF
-        """
+        """Point spread function (`~gammapy.irf.EnergyDependentTablePSF`)"""
         filename = FermiVelaRegion.filenames()['psf']
         return EnergyDependentTablePSF.read(filename)
 
     @staticmethod
     def diffuse_model():
-        """Diffuse model spectral cube cutout for Vela region.
-
-        Returns
-        -------
-        spectral_cube : `~gammapy.data.SpectralCube`
-            Diffuse model spectral cube
-        """
+        """Diffuse model (`~gammapy.data.SpectralCube`)"""
         filename = FermiVelaRegion.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
     @staticmethod
     def background_image():
-        """Predicted background counts image.
-        Based on the Fermi Diffuse model (see class docstring).
+        """Predicted background counts image (`~astropy.io.fits.PrimaryHDU`).
 
-        Returns
-        -------
-        background_cube : `~astropy.io.fits.PrimaryHDU`
-            Diffuse model image.
+        Based on the Fermi Diffuse model (see class docstring).
         """
         filename = FermiVelaRegion.filenames()['background_image']
         return fits.open(filename)[0]
 
     @staticmethod
     def predicted_image():
-        """Predicted counts spectral image including Vela Pulsar.
-        Based on the Fermi Diffuse model (see class docstring) and
-        Vela Point source model.
+        """Predicted total counts image (`~astropy.io.fits.PrimaryHDU`).
 
-        Returns
-        -------
-        background_cube : `~astropy.io.fits.PrimaryHDU`
-            Predicted model image.
+        Based on the Fermi diffuse model (see class docstring) and
+        Vela Point source model.
         """
         filename = FermiVelaRegion.filenames()['total_image']
         return fits.open(filename)[0]
 
     @staticmethod
     def events():
-        """Fermi Events list for Vela Region.
+        """Events list information (`~astropy.io.fits.HDUList`)
 
-        Returns
-        -------
-        hdu_list : `~astropy.io.fits.HDUList`.
-            Events list.
+        The HDU list contains:
+
+        - ``EVENTS`` table HDU
+        - ``GTI`` table HDU
         """
         filename = FermiVelaRegion.filenames()['events']
         return fits.open(filename)
 
     @staticmethod
     def exposure_cube():
-        """Exposure cube.
-
-        Returns
-        -------
-        exposure_cube : `~gammapy.data.SpectralCube`
-            Exposure cube
-        """
+        """Exposure cube (`~gammapy.data.SpectralCube`)."""
         filename = FermiVelaRegion.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
     @staticmethod
     def livetime_cube():
-        """Livetime cube.
-
-        Returns
-        -------
-        livetime_cube : `~astropy.io.fits.HDUList`
-            Livetime cube hdu_list
-        """
+        """Livetime cube (`~astropy.io.fits.HDUList`)."""
         filename = FermiVelaRegion.filenames()['livetime_cube']
         return fits.open(filename)
+
 
 def load_lat_psf_performance(performance_file):
     """Loads Fermi-LAT TOTAL PSF performance data.
@@ -407,14 +362,14 @@ def load_lat_psf_performance(performance_file):
     * `PSF_P7REP_SOURCE_V15 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/p7rep_v15/lat_Performance_files/cPsfEnergy_P7REP_SOURCE_V15.png>`_
     * `PSF_P7SOURCEV6 <http://www.slac.stanford.edu/exp/glast/groups/canda/archive/pass7v6/lat_Performance_files/cPsfEnergy_P7SOURCE_V6.png>`_
 
-    As such, a 10% error in the values should be assumed. 
+    As such, a 10% error in the values should be assumed.
 
     Parameters
     ----------
     performance_file : str
         Specify which PSF performance file to return.
 
-        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment 
+        * ``P7REP_SOURCE_V15_68`` P7REP_SOURCE_V15, 68% containment
         * ``P7REP_SOURCE_V15_95`` P7REP_SOURCE_V15, 95% containment
         * ``P7SOURCEV6_68`` P7SOURCEV6, 68% containment
         * ``P7SOURCEV6_95`` P7SOURCEV6, 95% containment
@@ -425,7 +380,6 @@ def load_lat_psf_performance(performance_file):
         Table of psf size (deg) for selected containment radius and IRF at
         energies (MeV).
     """
-    from astropy.units import Quantity
     perf_files = dict()
     filename = get_path('fermi/fermi_irf_data.fits')
     hdus = fits.open(filename)

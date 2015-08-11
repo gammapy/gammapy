@@ -22,7 +22,7 @@ class PoissonLikelihoodFitter(Fitter):
         fitparams : `numpy.array`
             Array of fit parameters
         args : (model, x, y, dx, stat)
-            Tuple with auxiliary 
+            Tuple with auxiliary
 
         Returns
         -------

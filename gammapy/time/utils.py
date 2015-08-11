@@ -6,6 +6,7 @@ from astropy.time import Time, TimeDelta
 
 __all__ = ['time_ref_from_dict',
            'time_relative_to_ref',
+           'absolute_time',
            ]
 
 # TODO: implement and document this properly.
@@ -46,8 +47,8 @@ def time_relative_to_ref(time, meta):
 
     Parameters
     ----------
-    time: `~astropy.time.Time`
-        time to be converted.
+    time : `~astropy.time.Time`
+        time to be converted
     meta : dict
         dictionary with the keywords `MJDREFI` and `MJDREFF`
 
@@ -60,3 +61,24 @@ def time_relative_to_ref(time, meta):
     delta_time = TimeDelta(time - time_ref, format='sec')
 
     return delta_time
+
+
+def absolute_time(time_delta, meta):
+    """Convert a MET into human readable date and time.
+
+    Parameters
+    ----------
+    time_delta : `~astropy.time.TimeDelta`
+        time in seconds after the MET reference
+    meta : dict
+        dictionary with the keywords `MJDREFI` and `MJDREFF`
+
+    Returns
+    -------
+    time : `~astropy.time.Time`
+        absolute time with ``format='ISO'`` and ``scale='UTC'``
+    """
+    time = time_ref_from_dict(meta) + time_delta
+    time = Time(time.utc.iso, format='iso', scale='utc')
+
+    return time

@@ -46,7 +46,7 @@ class EnergyDispersion(object):
 
     @property
     def pdf_threshold(self):
-        """PDF matrix zero-suppression threshold."""
+        """PDF matrix zero-suppression threshold (float)"""
         return self._pdf_threshold
 
     @pdf_threshold.setter
@@ -109,9 +109,9 @@ class EnergyDispersion(object):
         ss += 'Reco energy range: {0}\n'.format(self.energy_range('reco'))
         return ss
 
-    @staticmethod
-    def read(filename, format='RMF'):
-        """Read from file.
+    @classmethod
+    def read(cls, filename, format='RMF'):
+        """Create `EnergyDispersion` from FITS file.
 
         Parameters
         ----------
@@ -119,11 +119,6 @@ class EnergyDispersion(object):
             File name
         format : {'RMF'}
             File format
-
-        Returns
-        -------
-        energy_dispersion : `EnergyDispersion`
-            Energy dispersion
         """
         if format == 'RMF':
             return EnergyDispersion._read_rmf(filename)
@@ -132,16 +127,16 @@ class EnergyDispersion(object):
             ss += 'Available formats: RMF'
             raise ValueError(ss)
 
-    @staticmethod
-    def _read_rmf(filename):
+    @classmethod
+    def _read_rmf(cls, filename):
         """Create EnergyDistribution object from RMF data.
         """
         hdu_list = fits.open(filename)
-        return EnergyDispersion.from_hdu_list(hdu_list)
+        return cls.from_hdu_list(hdu_list)
 
-    @staticmethod
-    def from_hdu_list(hdu_list):
-        """Create EnergyDistribution object from `~astropy.io.fits.HDUList`.
+    @classmethod
+    def from_hdu_list(cls, hdu_list):
+        """Create `EnergyDistribution` object from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -168,7 +163,7 @@ class EnergyDispersion(object):
         ebounds = hdu_list['EBOUNDS'].data
         energy_reco_bounds = np.hstack([ebounds['E_MIN'], ebounds['E_MAX'][-1]])
 
-        return EnergyDispersion(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
+        return cls(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
 
     def write(self, filename, format='RMF'):
         """Write to file.
@@ -191,7 +186,7 @@ class EnergyDispersion(object):
 
     def _write_rmf(self, filename):
         """Write to file in RMF format."""
-        pass
+        raise NotImplementedError
 
     def __call__(self, energy_true, energy_reco, method='step'):
         """Compute energy dispersion.
@@ -199,7 +194,7 @@ class EnergyDispersion(object):
         Available evalutation methods:
 
         * ``"step"`` -- TODO
-        * ``"interpolate2d"`` -- TODO 
+        * ``"interpolate2d"`` -- TODO
 
         Parameters
         ----------
@@ -280,7 +275,10 @@ class EnergyDispersion(object):
 
     @property
     def _extent(self):
-        """Extent (x0, x1, y0, y1) for plotting"""
+        """Extent (x0, x1, y0, y1) for plotting (4x float)
+
+        x stands for true energy and y for reconstructed energy
+        """
         x = self.energy_range('true')
         y = self.energy_range('reco')
         return x[0], x[1], y[0], y[1]

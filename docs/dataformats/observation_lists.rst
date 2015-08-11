@@ -28,7 +28,8 @@ DEC               pointing position declination in equatorial (ICRS) coordinates
 AZ                average azimuth angle during the observation                                 no
 ALT               average altitude angle during the observation                                no
 MUON_EFFICIENCY   average muon efficiency of the telescopes                                    yes?
-TIME_START        start time of the observation stored as number of seconds after [MET]_       yes?
+TIME_START        start time of the observation stored as number of seconds after [MET]_ or    yes?
+                  as absolute times in UTC (see description of header keyword `TIME FORMAT`)
 TIME_STOP         end time of the observation in the same format as TIME_START                 no
 TIME_OBSERVATION  duration of the observation                                                  no
 TIME_LIVE         duration of the observation without dead time                                no
@@ -51,11 +52,13 @@ keyword           description                                                   
 ================  ===========================================================================  =========
 OBSERVATORY_NAME  name of the observatory where the observations were taken. This is           no
                   important for instance for coordinate transformations between celestial
-                  (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems.
+                  (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems
 MJDREFI           reference time: integer value in mean julian days; details in                yes?
-                  :ref:`time_handling`.
+                  :ref:`time_handling`
 MJDREFF           reference time: fraction of integer value defined in MJDREFI; details in     yes?
-                  :ref:`time_handling`.
+                  :ref:`time_handling`
+TIME_FORMAT       format in which times are stored: `absolute` (UTC) or `relative` ([MET]_);   yes?
+                  see details for both formats in :ref:`time_handling`
 ================  ===========================================================================  =========
 
 Extra user-defined header entries are allowed; Gammapy will ignore them.
@@ -97,3 +100,7 @@ Table:
 +------+----------------+---------+-------------+-------------+-------------+-------------+-------------+--------------+------+---------------+
 |    10|          1800.0|   1500.0|144207430.361|144209230.361|323.562657045|45.4005803262|324.596045439| 13.6761217326|     3| 0.694201696626|
 +------+----------------+---------+-------------+-------------+-------------+-------------+-------------+--------------+------+---------------+
+
+A test observation list file in fits format is located in the
+`~gammapy-extra` repository
+(`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_).

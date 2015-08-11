@@ -77,37 +77,26 @@ class EnergyDependentMultiGaussPSF(object):
         self._azimuth = azimuth
         self._zenith = zenith
 
-    @staticmethod
-    def read(filename):
-        """Read FITS format PSF file.
+    @classmethod
+    def read(cls, filename):
+        """Create `EnergyDependentMultiGaussPSF` from FITS file.
 
         Parameters
         ----------
         filename : str
             File name
-
-        Returns
-        -------
-        psf : `EnergyDependentMultiGaussPSF`
-            PSF
         """
         hdu_list = fits.open(filename)
-        return EnergyDependentMultiGaussPSF.from_fits(hdu_list)
+        return cls.from_fits(hdu_list)
 
-    @staticmethod
-    def from_fits(hdu_list):
-        """
-        Create EnergyDependentMultiGaussPSF from HDU list.
+    @classmethod
+    def from_fits(cls, hdu_list):
+        """Create `EnergyDependentMultiGaussPSF` from HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with correct extensions.
-
-        Returns
-        -------
-        psf : `EnergyDependentMultiGaussPSF`
-            PSF
         """
         extension = 'POINT SPREAD FUNCTION'
         energy_lo = Quantity(hdu_list[extension].data['ENERG_LO'][0], 'TeV')
@@ -127,11 +116,11 @@ class EnergyDependentMultiGaussPSF(object):
         try:
             energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
             energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
-            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas,
-                                                norms, energy_thresh_lo, energy_thresh_hi)
+            return cls(energy_lo, energy_hi, theta, sigmas,
+                       norms, energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warn('No safe energy thresholds found. Setting to default')
-            return EnergyDependentMultiGaussPSF(energy_lo, energy_hi, theta, sigmas, norms)
+            return cls(energy_lo, energy_hi, theta, sigmas, norms)
 
     def to_fits(self, header=None, **kwargs):
         """
@@ -265,9 +254,9 @@ class EnergyDependentMultiGaussPSF(object):
         # Set up and compute data
         containment = self._containment_radius_array(self.energy_hi, self.theta, fraction)
         # Plotting
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(8, 6))
         plt.imshow(containment.value, origin='lower', interpolation='None',
-                   vmin=0.05, vmax=0.3)
+                   vmin=0.1, vmax=0.2)
 
         if show_save_energy:
             # Log scale transformation for position of energy threshold
@@ -280,14 +269,14 @@ class EnergyDependentMultiGaussPSF(object):
             plt.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
 
         # Axes labels and ticks, colobar
-        plt.xlabel('E [TeV]')
-        xticks = ["{0:3.2g}".format(_) for _ in self.energy_hi.value]
-        plt.xticks(np.arange(len(self.energy_hi)) + 0.5, xticks, size=9)
-        plt.ylabel('Theta [deg]')
+        plt.xlabel('E (TeV)')
+        xticks = ["{0:3.2g}".format(_) for _ in self.energy_hi.value[:-1]]
+        plt.xticks(np.arange(len(self.energy_hi)), xticks, size=9)
+        plt.ylabel('Theta (deg)')
         yticks = ["{0:3.2g}".format(_) for _ in self.theta.value]
         plt.yticks(np.arange(len(self.theta)), yticks, size=9)
         cbar = plt.colorbar(fraction=0.1, pad=0.01)
-        cbar.set_label('Containment radius R{0:.0f} [deg]'.format(100 * fraction),
+        cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
                         labelpad=20)
 
         if filename is not None:

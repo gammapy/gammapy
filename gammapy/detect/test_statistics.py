@@ -5,6 +5,7 @@ Functions to compute TS maps
 """
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import warnings
 from itertools import product
 from functools import partial
@@ -25,8 +26,12 @@ from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N)
 
-__all__ = ['compute_ts_map', 'compute_ts_map_multiscale',
-           'compute_maximum_ts_map', 'TSMapResult']
+__all__ = [
+    'compute_ts_map',
+    'compute_ts_map_multiscale',
+    'compute_maximum_ts_map',
+    'TSMapResult'
+]
 
 
 FLUX_FACTOR = 1E-12
@@ -56,8 +61,8 @@ class TSMapResult(Bunch):
         Source morphology assumption.
     """
 
-    @staticmethod
-    def read(filename):
+    @classmethod
+    def read(cls, filename):
         """
         Read TS map result from file.
         """
@@ -70,13 +75,11 @@ class TSMapResult(Bunch):
         if scale == 'max':
             scale = hdu_list['scale'].data
         morphology = hdu_list[0].header['MORPH']
-        return TSMapResult(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
-                           scale=scale, morphology=morphology)
+        return cls(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
+                   scale=scale, morphology=morphology)
 
     def write(self, filename, header, overwrite=False):
-        """
-        Write TS map results to file.
-        """
+        """Write TS map results to file"""
         hdu_list = fits.HDUList()
         if 'MORPH' not in header and hasattr(self, 'morphology'):
             header['MORPH'] = self.morphology, 'Source morphology assumption.'
@@ -91,6 +94,7 @@ class TSMapResult(Bunch):
             header['EXTNAME'] = key
             header['HDUNAME'] = key
             hdu_list.append(fits.ImageHDU(self[key].astype('float32'), header))
+
         hdu_list.writeto(filename, clobber=overwrite)
 
 
@@ -153,9 +157,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     multiscale_result = []
 
     for scale in scales:
-        logging.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
-                     ' morphology.'.format('residual ' if residual else '',
-                                           scale, morphology))
+        log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
+                 ' morphology.'.format('residual ' if residual else '',
+                                       scale, morphology))
 
         # Sample down and require that scale parameters is at least 5 pix
         if downsample == 'auto':
@@ -165,12 +169,12 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         else:
             factor = int(downsample)
         if factor == 1:
-            logging.info('No down sampling used.')
+            log.info('No down sampling used.')
             downsampled = False
         else:
             if morphology == 'Shell2D':
                 factor /= 2
-            logging.info('Using down sampling factor of {0}'.format(factor))
+            log.info('Using down sampling factor of {0}'.format(factor))
             downsampled = True
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
@@ -209,7 +213,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
             background = maps_['background']  # + maps_['diffuse']
         ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
                                     kernel, *args, **kwargs)
-        logging.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
+        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
         ts_results['morphology'] = morphology
         if downsampled:
@@ -329,8 +333,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         from scipy.ndimage import convolve
         radius = _flux_correlation_radius(kernel)
         tophat = Tophat2DKernel(radius, mode='oversample') * np.pi * radius ** 2
-        logging.info('Using correlation radius of {0:.1f} pix to estimate'
-                     ' initial flux.'.format(radius))
+        log.info('Using correlation radius of {0:.1f} pix to estimate'
+                 ' initial flux.'.format(radius))
         with np.errstate(invalid='ignore', divide='ignore'):
             flux = (counts - background) / exposure / FLUX_FACTOR
         flux = convolve(flux, tophat.array) / CONTAINMENT
@@ -352,7 +356,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
                    method=method, optimizer=optimizer, threshold=threshold)
 
     if parallel:
-        logging.info('Using {0} cores to compute TS map.'.format(cpu_count()))
+        log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
         pool = Pool()
         results = pool.map(wrap, positions)
         pool.close()
@@ -434,7 +438,7 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         raise ValueError('Invalid fitting method.')
 
     if niter > MAX_NITER:
-        logging.warn('Exceeded maximum number of function evaluations!')
+        log.warning('Exceeded maximum number of function evaluations!')
         return np.nan, amplitude * FLUX_FACTOR, niter
 
     with np.errstate(invalid='ignore', divide='ignore'):
@@ -445,8 +449,8 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
 
 
 def _root_amplitude(counts, background, model, flux):
-    """
-    Fit amplitude by finding roots using newton algorithm.
+    """Fit amplitude by finding roots using newton algorithm.
+
     See Appendix A Stewart (2009).
 
     Parameters
@@ -478,8 +482,8 @@ def _root_amplitude(counts, background, model, flux):
 
 
 def _root_amplitude_brentq(counts, background, model):
-    """
-    Fit amplitude by finding roots using Brent algorithm.
+    """Fit amplitude by finding roots using Brent algorithm.
+
     See Appendix A Stewart (2009).
 
     Parameters
@@ -518,8 +522,7 @@ def _root_amplitude_brentq(counts, background, model):
 
 
 def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
-    """
-    Fit amplitude using scipy.optimize.
+    """Fit amplitude using scipy.optimize.
 
     Parameters
     ----------
@@ -552,8 +555,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
 
 
 def _fit_amplitude_minuit(counts, background, model, flux):
-    """
-    Fit amplitude using minuit.
+    """Fit amplitude using minuit.
 
     Parameters
     ----------

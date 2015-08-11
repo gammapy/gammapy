@@ -45,7 +45,7 @@ N_OBSERVED_MIN = 1e-25
 def cash(n_observed, mu_observed):
     r"""Cash statistic, for Poisson data.
 
-    The Cash statistic is defined as: 
+    The Cash statistic is defined as:
 
     .. math::
         C = 2 \left[ n_{observed} - n_{observed} \log \mu_{observed} \right]
@@ -85,7 +85,7 @@ def cash(n_observed, mu_observed):
 def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     r"""C statistic, for Poisson data.
 
-    The C statistic is defined as 
+    The C statistic is defined as
 
     .. math::
         C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}

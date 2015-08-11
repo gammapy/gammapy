@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from ..image import disk_correlate
@@ -66,8 +67,8 @@ class Maps(fits.HDUList):
         nonexisting_basic_maps = [name for name in BASIC_MAP_NAMES
                                   if name not in hdu_names]
         if not existing_basic_maps:
-            logging.error('hdu_names =', hdu_names)
-            logging.error('BASIC_MAP_NAMES = ', BASIC_MAP_NAMES)
+            log.error('hdu_names = {}'.format(hdu_names))
+            log.error('BASIC_MAP_NAMES = {}'.format(BASIC_MAP_NAMES))
             raise IndexError('hdus must contain at least one of the BASIC_MAP_NAMES')
         # Declare any one of the existing basic maps the reference map.
         # This HDU will be used as the template when adding other hdus.
@@ -78,8 +79,8 @@ class Maps(fits.HDUList):
             self.insert(0, fits.PrimaryHDU())
         # Add missing BASIC_MAP_NAMES with default value and
         # same shape and type as existing reference basic map
-        logging.debug('Adding missing basic maps: {0}'
-                      ''.format(nonexisting_basic_maps))
+        log.debug('Adding missing basic maps: {0}'
+                  ''.format(nonexisting_basic_maps))
         for name in nonexisting_basic_maps:
             value = basic_map_defaults[BASIC_MAP_NAMES.index(name)]
             data = np.ones_like(self.ref_hdu.data) * value
@@ -87,13 +88,13 @@ class Maps(fits.HDUList):
             hdu = fits.ImageHDU(data, header, name)
             self.append(hdu)
         self.is_off_correlated = is_off_correlated
-        logging.debug('is_off_correlated: {0}'.format(self.is_off_correlated))
+        log.debug('is_off_correlated: {0}'.format(self.is_off_correlated))
         # Set the correlation radius in pix
         if theta and 'CDELT2' in self.ref_hdu.header:
             self.theta = theta / self.ref_hdu.header['CDELT2']
         else:
             self.theta = theta_pix
-        logging.debug('theta: {0}'.format(self.theta))
+        log.debug('theta: {0}'.format(self.theta))
 
     def get_basic(self, name):
         """Gets the data of a basic map and disk-correlates if required.
@@ -105,7 +106,7 @@ class Maps(fits.HDUList):
 
         Returns
         -------
-        image : `numpy.array`
+        image : `numpy.ndarray`
             Map data
         """
         # Build a list of maps requiring correlation
@@ -115,12 +116,12 @@ class Maps(fits.HDUList):
         data = self[name].data
         if name in requires_correlation:
             # Makes a copy
-            logging.debug('Correlating and returning map: {0}'.format(name))
+            log.debug('Correlating and returning map: {0}'.format(name))
             return disk_correlate(data, self.theta)
         else:
             # Doesn't make a copy, which is ok since
             # we only read from this array
-            logging.debug('Returning map: {0}'.format(name))
+            log.debug('Returning map: {0}'.format(name))
             return data
 
     def get_derived(self, name):
@@ -133,13 +134,13 @@ class Maps(fits.HDUList):
 
         Returns
         -------
-        image : `numpy.array`
+        image : `numpy.ndarray`
             Map data
         """
         try:
             data = self[name].data
-            logging.debug('Returning already existing derived map {0}'
-                          ''.format(name))
+            log.debug('Returning already existing derived map {0}'
+                      ''.format(name))
             return data
         except KeyError:
             return eval('self.{0}.data'.format(name))
@@ -163,7 +164,7 @@ class Maps(fits.HDUList):
 
     @property
     def alpha(self):
-        """Alpha map HDU."""
+        """Alpha map (`~astropy.io.fits.ImageHDU`)"""
         a_on = self.get_basic('a_on')
         a_off = self.get_basic('a_off')
         alpha = a_on / a_off
@@ -172,7 +173,7 @@ class Maps(fits.HDUList):
 
     @property
     def area_factor(self):
-        """Area factor map HDU."""
+        """Area factor map (`~astropy.io.fits.ImageHDU`)"""
         alpha = self.get_derived('alpha')
         area_factor = 1. / alpha
 
@@ -180,7 +181,7 @@ class Maps(fits.HDUList):
 
     @property
     def background(self):
-        """Background map HDU."""
+        """Background map (`~astropy.io.fits.ImageHDU`)"""
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
         background = stats.background(n_off, alpha)
@@ -189,7 +190,7 @@ class Maps(fits.HDUList):
 
     @property
     def make_excess(self):
-        """Excess map HDU."""
+        """Excess map (`~astropy.io.fits.ImageHDU`)"""
         n_on = self.get_basic('n_on')
         background = self.get_derived('background')
         excess = n_on - background
@@ -198,7 +199,7 @@ class Maps(fits.HDUList):
 
     @property
     def significance(self, method='lima', neglect_background_uncertainty=False):
-        """Significance map HDU."""
+        """Significance map (`~astropy.io.fits.ImageHDU`)"""
         n_on = self.get_basic('n_on')
         n_off = self.get_basic('n_off')
         alpha = self.get_derived('alpha')
@@ -209,7 +210,7 @@ class Maps(fits.HDUList):
 
     @property
     def flux(self):
-        """Flux map HDU."""
+        """Flux map (`~astropy.io.fits.ImageHDU`)"""
         exposure = self.get_basic('exposure')
         excess = self.get_derived('excess')
 
@@ -218,7 +219,7 @@ class Maps(fits.HDUList):
 
     def make_derived_maps(self):
         """Make all the derived maps."""
-        logging.debug('Making derived maps.')
+        log.debug('Making derived maps.')
         for name in DERIVED_MAP_NAMES:
             # Compute the derived map
             hdu = eval('self.make_{0}()'.format(name))
@@ -227,10 +228,10 @@ class Maps(fits.HDUList):
             try:
                 index = self.index_of(name)
                 self[index] = hdu
-                logging.info('Replacing existing extension {0}'.format(name))
+                log.info('Replacing existing extension {0}'.format(name))
             except KeyError:
                 self.append(hdu)
-                logging.info('Added extension {0}'.format(name))
+                log.info('Added extension {0}'.format(name))
 
     def make_correlated_basic_maps(self):
         """Make correlated versions of all the basic maps.
@@ -239,7 +240,7 @@ class Maps(fits.HDUList):
         @note All maps are disk-correlated, even e.g. the off map
         if it had been ring-correlated before already.
         """
-        logging.debug('Making correlated basic maps.')
+        log.debug('Making correlated basic maps.')
         for name in BASIC_MAP_NAMES:
             # Compute the derived map
             data = eval('self["{0}"].data'.format(name))

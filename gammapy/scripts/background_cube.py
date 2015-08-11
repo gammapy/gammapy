@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['background_cube']
@@ -31,8 +33,5 @@ def background_cube(run_list,
 
     TODO: explain a bit.
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
-
     # TODO: implement
     raise NotImplementedError

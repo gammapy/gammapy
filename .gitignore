@@ -49,6 +49,7 @@ distribute-*.tar.gz
 htmlcov
 MANIFEST
 
+*.ipynb
 *.ipynb_checkpoints
 
 gammapy/gammapy.cfg

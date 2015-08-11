@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 from ..astro import population
 
@@ -45,8 +47,6 @@ def simulate_source_catalog(outfile,
     Several spatial and velocity distributions are available
     and each source has associated PSR, PWN und SNR parameters.
     """
-    import logging
-    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
     from gammapy.astro.population import simulate
 
     # TODO: Make rad_dis and vel_dis string options
@@ -67,7 +67,9 @@ def simulate_source_catalog(outfile,
     table = simulate.add_par_obs(table)
 
     # TODO: store_options(table, options)
+    log.info('Writing {}'.format(outfile))
     table.write(outfile, overwrite=overwrite)
+
 
 def _make_list(distributions):
     ss = ""

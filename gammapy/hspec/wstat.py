@@ -89,7 +89,7 @@ class w_statistic(object):
         afactor = np.sqrt((self.Ttot * mod - data - backg) ** 2 + 4 * self.Ttot * backg * mod)
         bfactor = 0.5 * (data + backg - self.Ttot * mod + afactor) / self.Ttot
 
-        # Final expected bkg in ON dataset 
+        # Final expected bkg in ON dataset
         modelON = model + bfactor * self.ONexpo
         # Expected bkg in OFF dataset
         modelOFF = bfactor / self.alpha * self.ONexpo
@@ -101,7 +101,7 @@ class w_statistic(object):
         data[data <= 0.0] = trunc_val
         backg[backg <= 0.0] = trunc_val
 
-        # Poisson log-likelihood with background variation using normalization to provide pseudo goodness-of-fit (a la cstat) 
+        # Poisson log-likelihood with background variation using normalization to provide pseudo goodness-of-fit (a la cstat)
         likelihood = data * np.log(modelON) + backg * np.log(modelOFF) + data * (1 - np.log(data)) + backg * (
             1 - np.log(backg)) - modelON - modelOFF
         # reverse sign to minimize log-likelihood!

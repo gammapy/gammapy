@@ -43,7 +43,7 @@ def compute_binning(data, n_bins, method='equal width', eps=1e-10):
         bin_edges = np.linspace(np.nanmin(data), np.nanmax(data), n_bins + 1)
     elif method == 'equal entries':
         # We use np.percentile to achieve equal number of entries per bin
-        # It takes a list of quantiles in the range [0, 100] as input 
+        # It takes a list of quantiles in the range [0, 100] as input
         quantiles = list(np.linspace(0, 100, n_bins + 1))
         bin_edges = np.percentile(data, quantiles)
     else:
@@ -208,12 +208,12 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
     lats : array_like
         Specified as [GLAT_min, GLAT_max], with GLAT_min and GLAT_max
         as floats. A 1x2 array specifying the maximum and minimum latitudes to
-        include in the region of the image for which the profile is formed, 
+        include in the region of the image for which the profile is formed,
         which should be within the spatial bounds of the image.
     lons : array_like
         Specified as [GLON_min, GLON_max], with GLON_min and GLON_max
         as floats. A 1x2 array specifying the maximum and minimum longitudes to
-        include in the region of the image for which the profile is formed, 
+        include in the region of the image for which the profile is formed,
         which should be within the spatial bounds of the image.
     binsz : float
         Latitude bin size of the resulting latitude profile. This should be

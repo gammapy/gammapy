@@ -234,7 +234,7 @@ class SpecSource(object):
             totON += mydat.counts
             totOFF += mydat.get_background().counts
 
-            # here we assume the background rate is the same with in each run so that we average alpha with time 
+            # here we assume the background rate is the same with in each run so that we average alpha with time
             tot_alpha += mydat.exposure / mydat.get_background_scale()
             tot_time += mydat.exposure
 
@@ -250,7 +250,7 @@ class SpecSource(object):
             c_rmf = mydat.get_rmf()
 
             # for now, we assume that n_grp is always equal to 1 which is the case for HESS rmfs generated with START
-            # the channels to be used in the matrix are given by the cumulative sum of n_chan  
+            # the channels to be used in the matrix are given by the cumulative sum of n_chan
             chans = c_rmf.n_chan.cumsum()
 
             # if not created, instantiate tmp_rmf
@@ -293,11 +293,11 @@ class SpecSource(object):
         tmp = np.insert(np.diff(ix), 0, 1)
         new_index = np.where(tmp)[0]
 
-        # Get first channel for a given true energy 
+        # Get first channel for a given true energy
         group_rmf.f_chan *= 0
         group_rmf.f_chan[ix[new_index]] = np.uint32(iy[new_index])
 
-        # Find the number of channels 
+        # Find the number of channels
         group_rmf.n_chan *= 0
         group_rmf.n_chan[ix[new_index]] = np.uint32(np.append(iy[new_index - 1][1:], iy[-1]) - iy[new_index] + 1)
         group_rmf.matrix = tot_rmf[ix, iy]

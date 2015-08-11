@@ -652,7 +652,7 @@ def illustrate_colormap(cmap, **kwargs):
     import matplotlib.pyplot as plt
     cmap = plt.cm.get_cmap(cmap)
     cmap_gray = grayify_colormap(cmap, **kwargs)
-    figure = plt.figure(figsize=(6, 4))
+    figure = plt.figure(figsize=(8, 6))
     v = np.linspace(0, 1, 4 * cmap.N)
 
     # Show colormap
@@ -673,9 +673,9 @@ def illustrate_colormap(cmap, **kwargs):
 
     # Plot RGB profiles
     plot_rgb = figure.add_axes([0.1, 0.1, 0.8, 0.6])
-    plot_rgb.plot(v, [cmap(_)[0] for _ in v], color='r')
-    plot_rgb.plot(v, [cmap(_)[1] for _ in v], color='g')
-    plot_rgb.plot(v, [cmap(_)[2] for _ in v], color='b')
+    plot_rgb.plot(v, [cmap(_)[0] for _ in v], color='#A60628')
+    plot_rgb.plot(v, [cmap(_)[1] for _ in v], color='#467821')
+    plot_rgb.plot(v, [cmap(_)[2] for _ in v], color='#348ABD')
     plot_rgb.plot(v, [cmap_gray(_)[0] for _ in v], color='k', linestyle='--')
     plot_rgb.set_ylabel('Luminance')
     plot_rgb.set_ylim(-0.005, 1.005)

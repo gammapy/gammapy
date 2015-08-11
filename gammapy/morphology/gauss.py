@@ -25,16 +25,28 @@ class Gauss2DPDF(object):
 
     @property
     def _sigma2(self):
+        """Sigma squared (float)"""
         return self.sigma * self.sigma
 
     @property
     def amplitude(self):
-        """PDF amplitude at the center."""
+        """PDF amplitude at the center (float)"""
         return self.__call(0, 0)
 
     def __call__(self, x, y=0):
-        """dp / (dx dy) at position (x, y).
+        """dp / (dx dy) at position (x, y)
 
+        Parameters
+        ----------
+        x : `~numpy.ndarray`
+            x coordinate
+        y : `~numpy.ndarray`, optional
+            y coordinate
+
+        Returns
+        -------
+        dpdxdy : `~numpy.ndarray`
+            dp / (dx dy)
         """
         x = np.asarray(x, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
@@ -45,7 +57,17 @@ class Gauss2DPDF(object):
         return amplitude * np.exp(exponent)
 
     def dpdtheta2(self, theta2):
-        """dp / dtheta2 at position theta2 = theta ^ 2.
+        """dp / dtheta2 at position theta2 = theta ^ 2
+
+        Parameters
+        ----------
+        theta2 : `~numpy.ndarray`
+            Offset squared
+
+        Returns
+        -------
+        dpdtheta2 : `~numpy.ndarray`
+            dp / dtheta2
         """
         theta2 = np.asarray(theta2, dtype=np.float64)
 
@@ -58,8 +80,13 @@ class Gauss2DPDF(object):
 
         Parameters
         ----------
-        theta : array_like
+        theta : `~numpy.ndarray`
             Offset
+
+        Returns
+        -------
+        containment_fraction : `~numpy.ndarray`
+            Containment fraction
         """
         theta = np.asarray(theta, dtype=np.float64)
 
@@ -67,6 +94,16 @@ class Gauss2DPDF(object):
 
     def containment_radius(self, containment_fraction):
         """Containment angle for a given containment fraction.
+
+        Parameters
+        ----------
+        containment_fraction : `~numpy.ndarray`
+            Containment fraction
+
+        Returns
+        -------
+        containment_radius : `~numpy.ndarray`
+            Containment radius
         """
         containment_fraction = np.asarray(containment_fraction, dtype=np.float64)
 
@@ -77,11 +114,13 @@ class Gauss2DPDF(object):
 
         Parameters
         ----------
-        TODO
+        sigma : `~numpy.ndarray` or float
+            Gaussian width of the new Gaussian 2D PDF to covolve with.
 
         Returns
         -------
-        TODO
+        gauss_convolve : `~gammapy.morphology.Gauss2DPDF`
+            Convolution of both Gaussians.
         """
         sigma = np.asarray(sigma, dtype=np.float64)
 
@@ -94,7 +133,10 @@ class MultiGauss2D(object):
 
     Parameters
     ----------
-    TODO
+    sigmas : `~numpy.ndarray`
+            widths of the Gaussians to add
+    norms : `~numpy.ndarray`, optional
+            normalizations of the Gaussians to add
 
     Notes
     -----
@@ -113,7 +155,19 @@ class MultiGauss2D(object):
             self.norms = np.asarray(norms, dtype=np.float64)
 
     def __call__(self, x, y=0):
-        """TODO
+        """dp / (dx dy) at position (x, y)
+
+        Parameters
+        ----------
+        x : `~numpy.ndarray`
+            x coordinate
+        y : `~numpy.ndarray`, optional
+            y coordinate
+
+        Returns
+        -------
+        total : `~numpy.ndarray`
+            dp / (dx dy)
         """
         x = np.asarray(x, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
@@ -125,36 +179,58 @@ class MultiGauss2D(object):
 
     @property
     def n_components(self):
+        """Number of components (int)"""
         return len(self.components)
 
     @property
     def sigmas(self):
+        """Array of Gaussian widths (`~numpy.ndarray`)"""
         return np.array([_.sigma for _ in self.components])
 
     @property
     def integral(self):
+        """Integral as sum of norms (`~numpy.ndarray`)"""
         return np.nansum(self.norms)
 
     @property
     def amplitude(self):
+        """Amplitude at the center (float)"""
         return self.__call__(0, 0)
 
     @property
     def max_sigma(self):
+        """Largest Gaussian width (float)"""
         return self.sigmas.max()
 
     @property
     def eff_sigma(self):
-        """Effective sigma for single-Gauss approximation.
+        r"""Effective Gaussian width for single-Gauss approximation (float)
 
-        TODO: give formula.
+        Notes
+        -----
+        The effective Gaussian width is given by:
+
+        .. math:: \sigma_\mathrm{eff} = \sqrt{\sum_i N_i \sigma_i^2}
+
+        where ``N`` is normalization and ``sigma`` is width.
+
         """
         sigma2s = np.array([component._sigma2 for component
                             in self.components])
         return np.sqrt(np.sum(self.norms * sigma2s))
 
     def dpdtheta2(self, theta2):
-        """TODO: document
+        """dp / dtheta2 at position theta2 = theta ^ 2
+
+        Parameters
+        ----------
+        theta2 : `~numpy.ndarray`
+            Offset squared
+
+        Returns
+        -------
+        dpdtheta2 : `~numpy.ndarray`
+            dp / dtheta2
         """
         # Actually this is only a PDF if sum(norms) == 1
         theta2 = np.asarray(theta2, dtype=np.float64)
@@ -165,7 +241,13 @@ class MultiGauss2D(object):
         return total
 
     def normalize(self):
-        """TODO: document"""
+        """Normalize function.
+
+        Returns
+        -------
+        norm_multigauss : `~gammapy.morphology.MultiGauss2D`
+           normalized function
+        """
         self.norms /= self.integral
         return self
 
@@ -174,8 +256,13 @@ class MultiGauss2D(object):
 
         Parameters
         ----------
-        theta : array_like
-            Containment angle
+        theta : `~numpy.ndarray`
+            Offset
+
+        Returns
+        -------
+        containment_fraction : `~numpy.ndarray`
+            Containment fraction
         """
         theta = np.asarray(theta, dtype=np.float64)
 
@@ -186,12 +273,17 @@ class MultiGauss2D(object):
         return total
 
     def containment_radius(self, containment_fraction):
-        """Containment angle.
+        """Containment angle for a given containment fraction.
 
         Parameters
         ----------
-        fraction : float
+        containment_fraction : `~numpy.ndarray`
             Containment fraction
+
+        Returns
+        -------
+        containment_radius : `~numpy.ndarray`
+            Containment radius
         """
         # I had big problems with fsolve running into negative thetas.
         # So instead I'll find a theta_max myself so that theta
@@ -218,7 +310,18 @@ class MultiGauss2D(object):
 
         Find the sigma of a single-Gaussian distribution that
         approximates this one, such that theta matches for a given
-        containment."""
+        containment.
+
+        Parameters
+        ----------
+        containment_fraction : `~numpy.ndarray`
+            Containment fraction
+
+        Returns
+        -------
+        sigma : `~numpy.ndarray`
+            Equivalent containment radius
+        """
         theta1 = self.containment_radius(containment_fraction)
         theta2 = Gauss2DPDF(sigma=1).containment_radius(containment_fraction)
         return theta1 / theta2
@@ -236,15 +339,15 @@ class MultiGauss2D(object):
 
         Parameters
         ----------
-        sigma : array_like
-            TODO
-        norm : TODO
-            TODO
+        sigma : `~numpy.ndarray` or float
+            Gaussian width of the new Gaussian 2D PDF to covolve with.
+        norm : `~numpy.ndarray` or float
+            Normalization of the new Gaussian 2D PDF to covolve with.
 
         Returns
         -------
-        new_multi_gauss_2d : MultiGauss2D
-            New  MultiGauss2D
+        new_multi_gauss_2d : `~gammapy.morphology.MultiGauss2D`
+            Convolution as new MultiGauss2D
         """
         sigma = np.asarray(sigma, dtype=np.float64)
         norm = np.asarray(norm, dtype=np.float64)
@@ -383,6 +486,6 @@ def gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0.5):
     # Return values and stddevs separately
     values = [F_sum, x_sum, y_sum, var_x_sum ** 0.5, var_y_sum ** 0.5, (var_x_sum * var_y_sum) ** 0.25]
     nominal_values = [_.nominal_value for _ in values]
-    std_devs = [float(_.std_dev) for _ in values] 
+    std_devs = [float(_.std_dev) for _ in values]
 
     return nominal_values, std_devs

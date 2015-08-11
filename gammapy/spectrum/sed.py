@@ -3,8 +3,9 @@
 """
 from __future__ import print_function, division
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
-from astropy.table import Table, Column
+from astropy.table import Table
 from astropy.units import Unit, Quantity
 from ..spectrum import compute_differential_flux_points
 
@@ -41,7 +42,7 @@ class SEDComponent(object):
     def plot_model(self):
         import matplotlib.pyplot as plt
         if self.model is None:
-            logging.warning('{0}: No model available.'.format(self.name))
+            log.warning('{0}: No model available.'.format(self.name))
             return
         x, y = self.model.points(power=2)
         plt.plot(x * MeV_to_GeV, y * MeV_to_erg, label=self.name)
@@ -49,7 +50,7 @@ class SEDComponent(object):
     def plot_points(self, color='black', markerfacecolor='black'):
         import matplotlib.pyplot as plt
         if self.points is None:
-            logging.warning('{0}: No points available.'.format(self.name))
+            log.warning('{0}: No points available.'.format(self.name))
             return
         # @note We plot each point individually because anyway
         # upper limits have to be plotted differently which I
@@ -97,12 +98,12 @@ class SED(list):
                 try:
                     component = catalog.sed_component(name)
                     self.append(component)
-                    logging.info('%s found in %s',
-                                 name, catalog.table.table_name)
+                    log.info('%s found in %s',
+                             name, catalog.table.table_name)
                 except ValueError as e:
-                    logging.warning(e)
-                    logging.warning('%s not found in %s',
-                                    name, catalog.table.table_name)
+                    log.warning(e)
+                    log.warning('%s not found in %s',
+                                name, catalog.table.table_name)
                     pass
 
     def plot(self, filename='sed.png', xlim=(8e-2, 2e5), ylim=(1e-14, 1e-8)):
@@ -111,13 +112,13 @@ class SED(list):
         plt.ylabel(r'E$^2$ dF/DE (erg cm$^{-2}$ s$^{-1}$)')
         plt.xlabel('Energy (GeV)')
         plt.loglog()
-        logging.info('Plotting {0} components in SED'.format(len(self)))
+        log.info('Plotting {0} components in SED'.format(len(self)))
         for component in self:
             component.plot()
         plt.xlim(xlim)
         plt.ylim(ylim)
         plt.legend()
-        logging.info('Writing {0}'.format(filename))
+        log.info('Writing {0}'.format(filename))
         plt.savefig(filename)
 
     def add_component(self, catalog_format, catalog_name,
@@ -259,7 +260,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         with flux_type)
     mask : array_like, optional
         2D mask array, matching spatial dimensions of input cube.
-        A mask value of True indicates a value that should be ignored, 
+        A mask value of True indicates a value that should be ignored,
         while a mask value of False indicates a valid value.
     flux_type : {'differential', 'integral'}
         Specify whether input cube includes differential or integral fluxes.
@@ -327,7 +328,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
                                                  y_method='power_law',
                                                  spectral_index=spectral_index,
                                                  energy_min=emins, energy_max=emaxs,
-                                                 int_flux=values, 
+                                                 int_flux=values,
                                                  int_flux_err=errors * values)
 
     else:

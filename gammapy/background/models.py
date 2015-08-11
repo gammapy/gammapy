@@ -12,7 +12,7 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from ..utils.wcs import (linear_wcs_to_arrays,
                          linear_arrays_to_wcs)
-from ..utils.fits import table_to_fits_table 
+from ..utils.fits import table_to_fits_table
 
 __all__ = ['GaussianBand2D',
            'CubeBackgroundModel',
@@ -92,14 +92,14 @@ def _make_bin_edges_array(lo, hi):
 
     Parameters
     ----------
-    lo : `~numpy.array`
+    lo : `~numpy.ndarray`
         lower boundaries
-    hi : `~numpy.array`
+    hi : `~numpy.ndarray`
         higher boundaries
 
     Returns
     -------
-    bin_edges : `~numpy.array`
+    bin_edges : `~numpy.ndarray`
         array of bin edges as [[low], [high]]
     """
     return np.append(lo.flatten(), hi.flatten()[-1:])
@@ -171,13 +171,13 @@ class CubeBackgroundModel(object):
 
         self.background = background
 
-    @staticmethod
-    def from_fits_table(tbhdu):
+    @classmethod
+    def from_fits_table(cls, hdu):
         """Read cube background model from a fits binary table.
 
         Parameters
         ----------
-        tbhdu : `~astropy.io.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             HDU binary table for the bg cube
 
         Returns
@@ -186,8 +186,8 @@ class CubeBackgroundModel(object):
             bg model cube object
         """
 
-        header = tbhdu.header
-        data = tbhdu.data
+        header = hdu.header
+        data = hdu.data
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
         if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'):
@@ -237,73 +237,73 @@ class CubeBackgroundModel(object):
         background_unit = _parse_bg_units(header['TUNIT7'])
         background = Quantity(background, background_unit)
 
-        return CubeBackgroundModel(detx_bins=detx_bins,
-                                   dety_bins=dety_bins,
-                                   energy_bins=energy_bins,
-                                   background=background)
+        return cls(detx_bins=detx_bins,
+                   dety_bins=dety_bins,
+                   energy_bins=energy_bins,
+                   background=background)
 
-    @staticmethod
-    def from_fits_image(imhdu, enhdu):
+    @classmethod
+    def from_fits_image(cls, image_hdu, energy_hdu):
         """Read cube background model from a fits image.
 
         Parameters
         ----------
-        imhdu : `~astropy.io.fits.PrimaryHDU`
-            image for the bg cube
-        enhdu : `~astropy.io.fits.BinTableHDU`
-             table for the energy binning
+        image_hdu : `~astropy.io.fits.PrimaryHDU`
+            Background cube image HDU
+        energy_hdu : `~astropy.io.fits.BinTableHDU`
+            Energy binning table
 
         Returns
         -------
         bg_cube : `~gammapy.background.CubeBackgroundModel`
-            bg model cube object
+            Background cube
         """
-        im_header = imhdu.header
-        en_header = enhdu.header
+        image_header = image_hdu.header
+        energy_header = energy_hdu.header
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th bg
-        if (im_header['CTYPE1'] != 'DETX'):
+        if (image_header['CTYPE1'] != 'DETX'):
             raise ValueError("Expecting X axis in first place, not ({})"
-                             .format(im_header['CTYPE1']))
-        if (im_header['CTYPE2'] != 'DETY'):
+                             .format(image_header['CTYPE1']))
+        if (image_header['CTYPE2'] != 'DETY'):
             raise ValueError("Expecting Y axis in second place, not ({})"
-                             .format(im_header['CTYPE2']))
-        if (im_header['CTYPE3'] != 'ENERGY'):
+                             .format(image_header['CTYPE2']))
+        if (image_header['CTYPE3'] != 'ENERGY'):
             raise ValueError("Expecting E axis in third place, not ({})"
-                             .format(im_header['CTYPE3']))
+                             .format(image_header['CTYPE3']))
 
         # check units
-        if (im_header['CUNIT1'] != im_header['CUNIT2']):
+        if (image_header['CUNIT1'] != image_header['CUNIT2']):
             ss_error = "This is odd: detector X and Y units not matching"
-            ss_error += "({0}, {1})".format(im_header['CUNIT1'], im_header['CUNIT2'])
+            ss_error += "({0}, {1})".format(image_header['CUNIT1'], image_header['CUNIT2'])
             raise ValueError(ss_error)
-        if (im_header['CUNIT3'] != en_header['TUNIT1']):
+        if (image_header['CUNIT3'] != energy_header['TUNIT1']):
             ss_error = "This is odd: energy units not matching"
-            ss_error += "({0}, {1})".format(im_header['CUNIT3'], en_header['TUNIT1'])
+            ss_error += "({0}, {1})".format(image_header['CUNIT3'], energy_header['TUNIT1'])
             raise ValueError(ss_error)
 
         # get det X, Y binning
-        wcs = WCS(im_header, naxis=2) # select only the (X, Y) axes
+        wcs = WCS(image_header, naxis=2) # select only the (X, Y) axes
         detx_bins, dety_bins = linear_wcs_to_arrays(wcs,
-                                                    im_header['NAXIS1'],
-                                                    im_header['NAXIS2'])
+                                                    image_header['NAXIS1'],
+                                                    image_header['NAXIS2'])
 
         # get energy binning
-        energy_bins = Quantity(enhdu.data['ENERGY'],
-                               en_header['TUNIT1'])
+        energy_bins = Quantity(energy_hdu.data['ENERGY'],
+                               energy_header['TUNIT1'])
 
         # get background data
-        background = imhdu.data
-        background_unit = _parse_bg_units(im_header['BG_UNIT'])
+        background = image_hdu.data
+        background_unit = _parse_bg_units(image_header['BG_UNIT'])
         background = Quantity(background, background_unit)
 
-        return CubeBackgroundModel(detx_bins=detx_bins,
-                                   dety_bins=dety_bins,
-                                   energy_bins=energy_bins,
-                                   background=background)
+        return cls(detx_bins=detx_bins,
+                   dety_bins=dety_bins,
+                   energy_bins=energy_bins,
+                   background=background)
 
-    @staticmethod
-    def read(filename, format='table'):
+    @classmethod
+    def read(cls, filename, format='table'):
         """Read cube background model from fits file.
 
         Several input formats are accepted, depending on the value
@@ -328,9 +328,9 @@ class CubeBackgroundModel(object):
         """
         hdu = fits.open(filename)
         if format == 'table':
-            return CubeBackgroundModel.from_fits_table(hdu['BACKGROUND'])
+            return cls.from_fits_table(hdu['BACKGROUND'])
         elif format == 'image':
-            return CubeBackgroundModel.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
+            return cls.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
         else:
             raise ValueError("Invalid format {}.".format(format))
 
@@ -453,12 +453,9 @@ class CubeBackgroundModel(object):
 
     @property
     def image_extent(self):
-        """Image extent `(x_lo, x_hi, y_lo, y_hi)`.
+        """Image extent (`~astropy.coordinates.Angle`)
 
-        Returns
-        -------
-        im_extent : `~astropy.coordinates.Angle`
-            array of bins with the image extent
+        The output array format is `(x_lo, x_hi, y_lo, y_hi)`.
         """
         bx = self.detx_bins
         by = self.dety_bins
@@ -466,40 +463,26 @@ class CubeBackgroundModel(object):
 
     @property
     def spectrum_extent(self):
-        """Spectrum extent `(e_lo, e_hi)`.
+        """Spectrum extent (`~astropy.units.Quantity`)
 
-        Returns
-        -------
-        spec_extent : `~astropy.units.Quantity`
-            array of bins with the spectrum extent
+        The output array format is  `(e_lo, e_hi)`.
         """
         b = self.energy_bins
         return Quantity([b[0], b[-1]])
 
     @property
     def image_bin_centers(self):
-        """Image bin centers `(x, y)`.
+        """Image bin centers `(x, y)` (2x `~astropy.coordinates.Angle`)
 
-        Returns
-        -------
-        detx_edges_centers : `~astropy.coordinates.Angle`
-            array of image bin centers (X coord)
-        dety_edges_centers : `~astropy.coordinates.Angle`
-            array of image bin centers (Y coord)
+        Returning two separate elements for the X and Y bin centers.
         """
-        detx_edges_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
-        dety_edges_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
-        return detx_edges_centers, dety_edges_centers
+        detx_bin_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
+        dety_bin_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
+        return detx_bin_centers, dety_bin_centers
 
     @property
     def energy_bin_centers(self):
-        """Energy bin centers (logarithmic center).
-
-        Returns
-        -------
-        energy_bin_centers : `~astropy.units.Quantity`
-            array of spectrum bin centers
-        """
+        """Energy bin centers (logarithmic center) (`~astropy.units.Quantity`)"""
         log_bin_edges = np.log(self.energy_bins.value)
         log_bin_centers = 0.5 * (log_bin_edges[:-1] + log_bin_edges[1:])
         energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_bins.unit)
@@ -512,14 +495,9 @@ class CubeBackgroundModel(object):
 
     @property
     def det_wcs(self):
-        """WCS object describing the coordinates of the det (X, Y) bins.
+        """WCS object describing the coordinates of the det (X, Y) bins (`~astropy.wcs.WCS`)
 
         This method gives the correct answer only for linear X, Y binning.
-
-        Returns
-        -------
-        wcs : `~astropy.wcs.WCS`
-            WCS object describing the bin coordinates
         """
         wcs = linear_arrays_to_wcs(name_x="DETX",
                                    name_y="DETY",
@@ -532,12 +510,12 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.array`
-            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
+        det : `~astropy.coordinates.Angle`
+            array of det (X, Y) pairs to search for
 
         Returns
         -------
-        bin_index : `~numpy.array`
+        bin_index : `~numpy.ndarray`
             array of integers with the indices (x, y) of the det
             bin containing the specified det (X, Y) pair
         """
@@ -561,12 +539,12 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.array`
-            array of `~astropy.units.Quantity` energies to search for
+        energy : `~astropy.units.Quantity`
+            array of energies to search for
 
         Returns
         -------
-        bin_index : `~numpy.array`
+        bin_index : `~numpy.ndarray`
             indices of the energy bins containing the specified energies
         """
         # check that the specified energy is within the boundaries of the model
@@ -585,8 +563,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        det : `~numpy.array`
-            array of `~astropy.coordinates.Angle` det (X, Y) pairs to search for
+        det : `~astropy.coordinates.Angle`
+            array of det (X, Y) pairs to search for
 
         Returns
         -------
@@ -606,8 +584,8 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        energy : `~numpy.array`
-            array of `~astropy.units.Quantity` energies to search for
+        energy : `~astropy.units.Quantity`
+            array of energies to search for
 
         Returns
         -------
@@ -677,7 +655,7 @@ class CubeBackgroundModel(object):
         #import IPython; IPython.embed()
 
         if not 'cmap' in style_kwargs:
-            style_kwargs['cmap'] = 'afmhot'
+            style_kwargs['cmap'] = 'gist_heat'
 
         image = ax.imshow(data.value,
                           extent=extent.value,

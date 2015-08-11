@@ -47,6 +47,7 @@ ibe = IterativeKernelBackgroundEstimator(images=images,
 n_iterations = 4
 
 # *** RUN & PLOT ***
+plt.figure(figsize=(8, 4))
 
 for iteration in range(n_iterations):
     ibe.run_iteration()
@@ -61,7 +62,7 @@ for iteration in range(n_iterations):
     plt.axis('off')
     plt.title('Background Estimation, Iteration {0}'.format(iteration),
               fontsize='small')
-    
+
     plt.subplot(n_iterations, 2, 2 * iteration + 2)
     significance_hdu = ibe.significance_image_hdu
     data = significance_hdu.data[:, 1400:2000]
@@ -71,4 +72,4 @@ for iteration in range(n_iterations):
     plt.title('Significance Image, Iteration {0}'.format(iteration),
               fontsize='small')
 
-plt.tight_layout()
+plt.subplots_adjust(wspace=0.05, hspace=0.05, left=0.05, right=0.95)

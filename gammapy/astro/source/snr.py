@@ -147,7 +147,7 @@ class SNR(object):
 
         .. math::
 
-            L_{\\gamma}(\\geq 1TeV) \\approx 10^{34} \\theta 
+            L_{\\gamma}(\\geq 1TeV) \\approx 10^{34} \\theta
             \\left(\\frac{E_{SN}}{10^{51} erg}\\right)
             \\left(\\frac{\\rho_{ISM}}{1.66\\cdot 10^{-24} g/cm^{3}} \\right)
             \\textnormal{ph} s^{-1}
@@ -184,7 +184,7 @@ class SNR(object):
 
         .. math::
 
-            t_{begin} \\approx 200 \\ \\textnormal{} 
+            t_{begin} \\approx 200 \\ \\textnormal{}
             \\left(\\frac{E_{SN}}{10^{51}erg}\\right)^{-1/2}
             \\left(\\frac{M_{ej}}{M_{\\odot}}\\right)^{5/6}
             \\left(\\frac{\\rho_{ISM}}{10^{-24}g/cm^3}\\right)^{-1/3}
@@ -332,7 +332,7 @@ class SNRTrueloveMcKee(SNR):
 
         .. math::
 
-            R_{RS}(t) = \\left[1.49 - 0.16 \\frac{t - t_{core}}{t_{ch}} - 0.46 
+            R_{RS}(t) = \\left[1.49 - 0.16 \\frac{t - t_{core}}{t_{ch}} - 0.46
             \\ln \\left(\\frac{t}{t_{core}}\\right)\\right]\\frac{R_{ch}}{t_{ch}}t
         """
         if t is not None:

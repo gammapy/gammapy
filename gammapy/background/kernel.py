@@ -128,7 +128,7 @@ class IterativeKernelBackgroundEstimator(object):
         for ii in np.arange(max_iterations):
             self.run_iteration()
 
-            if self.save_intermediate_results: 
+            if self.save_intermediate_results:
                 self.save_files(filebase, index=ii)
 
             # Dilate old mask to compare with new mask
@@ -211,7 +211,7 @@ class IterativeKernelBackgroundEstimator(object):
 
     @property
     def mask_image_hdu(self):
-        """Returns mask as `~astropy.io.fits.ImageHDU`."""
+        """Mask (`~astropy.io.fits.ImageHDU`)"""
 
         header = self.header
         return fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
@@ -219,7 +219,7 @@ class IterativeKernelBackgroundEstimator(object):
 
     @property
     def background_image_hdu(self):
-        """Returns resulting background estimate as `~astropy.io.fits.ImageHDU`."""
+        """Background estimate (`~astropy.io.fits.ImageHDU`)"""
 
         header = self.header
         return fits.ImageHDU(data=self._data[-1].background,
@@ -227,7 +227,7 @@ class IterativeKernelBackgroundEstimator(object):
 
     @property
     def significance_image_hdu(self):
-        """Returns resulting background estimate as `~astropy.io.fits.ImageHDU`."""
+        """Significance estimate (`~astropy.io.fits.ImageHDU`)"""
 
         header = self.header
         return fits.ImageHDU(data=self._data[-1].significance,
