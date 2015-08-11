@@ -234,6 +234,9 @@ def divide_bin_volume(cube):
 def set_zero_level(cube):
     """Setting level 0 to something very small.
 
+    Also for NaN values: they are in the 1st few E bins,
+    where no stat is present: (0 events/ 0 livetime = NaN)
+
     Parameters
     ----------
     cube : `~gammapy.background.CubeBackgroundModel`
@@ -247,6 +250,8 @@ def set_zero_level(cube):
     zero_level = Quantity(1.e-10, cube.background.unit)
     zero_level_mask = cube.background < zero_level
     cube.background[zero_level_mask] = zero_level
+    nan_mask = np.isnan(cube.background)
+    cube.background[nan_mask] = zero_level
 
     return cube
 
@@ -351,9 +356,9 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
 
     1. define binning
     2. fill events and livetime correction in cubes
-    3. fill bg cube
+    3. fill events in bg cube
     4. smooth
-    5. correct for bin volume
+    5. correct for livetime and bin volume
     6. set 0 level
 
     TODO: review steps!!!
@@ -438,13 +443,8 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     # fill bg cube #
     ################
 
-    # Weight the counts with something meaningful:
-    # divide by livetime times the cube bin volume.
-    # The bin volume division is done after the smoothing.
-
-    bg_cube.background = events_cube.background/livetime_cube.background
+    bg_cube.background = events_cube.background
     # TODO: rename the datamemeber background to data!!!
-    # TODO: test: 1st smooth events, then divide by livetime, bin vol and then set level 0 !!!
 
 
     ##########
@@ -454,15 +454,13 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     bg_cube = smooth(bg_cube, events_cube.background.sum())
 
 
-    ##########################################
-    # correct for bin volume and set 0 level #
-    ##########################################
+    #######################################################
+    # correct for livetime and bin volume and set 0 level #
+    #######################################################
 
-    # divide by the bin volume and setting level 0 AFTER smoothing
+    bg_cube.background /= livetime_cube.background
     bg_cube = divide_bin_volume(bg_cube)
     bg_cube = set_zero_level(bg_cube)
-    # TODO: what about NAN values?
-    #       they are in the 1st few E bins, where no stat is present!!!
 
 
     ######################
