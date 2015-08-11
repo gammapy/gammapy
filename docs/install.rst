@@ -7,6 +7,12 @@ Installation
 
 Here we provide short installation instructions for Gammapy and its dependencies.
 
+Gammapy works with Python 2 and 3.
+
+More specifically, in the Python 2 series we only support Python 2.7,
+and in the Python 3 series we support version 3.3 or later.
+Gammapy will not work with Python 2.6 or 3.2 (see :ref:`development-python2and3` if you care why).
+
 Due to the large variety of systems, package managers and setups in us it's not
 possible to give a detailed description for every option.
 
@@ -16,8 +22,10 @@ It works on any Linux, Mac or Windows machine and doesn't require root access.
 If you get stuck, have a look at the extensive installation instructions for Astropy
 at http://www.astropy.org/ or ask on the `Gammapy mailing list`_.
 
-Install Gammapy using conda
----------------------------
+The main way to improve the instructions is via your feedback!
+
+Conda
+-----
 
 To install the latest Gammapy **stable** version as well as the most common
 optional dependencies for Gammapy, first install `Anaconda <http://continuum.io/downloads>`__
@@ -49,8 +57,8 @@ To update to the latest version:
 Overall ``conda`` is a great cross-platform package manager, you can quickly learn how to use
 it by reading the docs `here <http://conda.pydata.org/docs/>`__.
 
-Install Gammapy using pip
--------------------------
+pip
+---
 
 To install the latest Gammapy **stable** version (see `Gammapy page on PyPI`_) using `pip`_:
 
@@ -64,8 +72,8 @@ To install the current Gammapy **development** version using `pip`_:
 
    $ pip install git+https://github.com/gammapy/gammapy.git#egg=gammapy
 
-Install Gammapy manually
-------------------------
+setup.py
+--------
 
 To download the latest stable version of Gammapy, download it from
 https://pypi.python.org/pypi/gammapy, if you have the
@@ -104,8 +112,8 @@ If you want to contribute to Gammapy, but are not familiar with Python or
 git or Astropy yet, please have a look at the  
 `Astropy developer documentation <http://docs.astropy.org/en/latest/#developer-documentation>`__.
 
-Install Gammapy dependencies using other package managers
----------------------------------------------------------
+Other package managers
+----------------------
 
 Besides conda, Gammapy and some of the optional dependencies (Sherpa, Astropy-affiliated packages)
 as not yet available in other package managers (such as
@@ -130,34 +138,68 @@ available in those distributions and versions are updated.
 apt-get
 +++++++
 
-`apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__ is a popular package manager on Linux.
+`apt-get <https://en.wikipedia.org/wiki/Advanced_Packaging_Tool>`__ is a popular package manager on Linux,
+e.g. on Debian or Ubuntu.
+
+The following packages are available:
 
 .. code-block:: bash
 
-    sudo apt-get install TODO
-    sudo pip install TODO
+    sudo apt-get install \
+        python3-pip python3-scipy python3-matplotlib python3-skimage python3-sklearn \
+        python3-pandas python3-h5py python3-yaml ipython3-notebook python3-uncertainties \
+        python3-astropy
 
+The following packages have to be installed with pip:
+
+.. code-block:: bash
+
+    pip install --user \
+        gammapy naima photutils reproject wcsaxes gwcs astroplan \
+        iminuit emcee healpy
+
+Sherpa currently doesn't work on Python 3.
+You could try to use Python 2 and pip-installing Sherpa (don't know if that works).
+
+A Debian package for Sherpa is in preparation: https://github.com/sherpa/sherpa/issues/75
+
+A Debian package for Gammapy is in preparation: https://github.com/gammapy/gammapy/issues/324
+
+As far as I can see there's no HEALPIX or healpy package.
 
 yum
 +++
 
-`yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ is a popular package manager on Linux.
+`yum <https://en.wikipedia.org/wiki/Yellowdog_Updater,_Modified>`__ is a popular package manager on Linux,
+e.g. on Scientific linux or Red Hat Linux.
 
-.. code-block:: bash
-
-    sudo yum install TODO
-    sudo pip install TODO
-
+If you are a ``yum`` user, please contribute the equivalent commands
+(see e.g. the Macports section below).
 
 Macports
 ++++++++
 
 `Macports <https://www.macports.org/>`__ is a popular package manager on Mac.
 
+The following packages are available via Macports:
+
 .. code-block:: bash
 
-    sudo port install py34-astropy py34-pip py34-matplotlib
-    sudo pip install TODO
+    export PY=py34
+    sudo port install \
+        $PY-pip $PY-scipy $PY-matplotlib $PY-scikit-image $PY-scikit-learn \
+        $PY-pandas $PY-emcee $PY-h5py $PY-yaml $PY-ipython $PY-uncertainties \
+        $PY-healpy $PY-astropy
+
+
+If you want some other Python version, use a different suffix (e.g. ``py27`` or ``py35``).
+Having multiple Python versions simultaneously works well, but is only really useful for developers.
+
+.. code-block:: bash
+
+    pip install --user \
+        gammapy naima photutils reproject wcsaxes gwcs astroplan \
+        iminuit
 
 
 Homebrew
@@ -165,14 +207,12 @@ Homebrew
 
 `Homebrew <http://brew.sh/>`_ is a popular package manager on Mac.
 
-.. code-block:: bash
-
-    sudo brew install TODO
-    sudo pip install TODO
+If you are a ``brew`` user, please contribute the equivalent commands
+(see e.g. the Macports section above).
 
 
-Check if your Gammapy installation is OK
-----------------------------------------
+Check Gammapy installation
+--------------------------
 
 To check if Gammapy is correctly installed, start up python or ipython,
 import Gammapy and run the unit tests:
@@ -221,13 +261,6 @@ mailing list.
 Dependencies
 ------------
 
-Gammapy works with Python 2 and 3.
-
-More specifically, in the Python 2 series we only support Python 2.7,
-and in the Python 3 series we support version 3.3 or later.
-Gammapy will not work with Python 2.6 or 3.2
-(see :ref:`development-python2and3` if you care why).
-
 .. note:: The philosophy of Gammapy is to build on the existing scientific Python stack.
    This means that you need to install those dependencies to use Gammapy.
 
@@ -269,32 +302,58 @@ Allowed optional dependencies:
 * `uncertainties`_ for Gaussian error propagation
 * `gwcs`_ for generalised world coordinate transformations
 * `astroplan`_ for observation planning and scheduling
-* `iminuit`_ for fitting by optimization (doesn't work with Python 3 yet)
+* `iminuit`_ for fitting by optimization
 * `emcee`_ for fitting by MCMC sampling
 * `h5py`_ for `HDF5 <http://en.wikipedia.org/wiki/Hierarchical_Data_Format>`__ data handling
 * `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling
 * `healpy`_ for `HEALPIX <http://healpix.jpl.nasa.gov/>`__ data handling
 
-Actually at this point we welcome experimentation, so you can use cool new technologies
-to implement some functionality in Gammapy if you like, e.g.
 
-* `Numba <http://numba.pydata.org/>`__
-* `Bokeh <http://bokeh.pydata.org/en/latest/>`__
-* `Blaze <http://blaze.pydata.org/en/latest/>`__
+Fermi ScienceTools
+------------------
 
+The `Fermi ScienceTools <http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/>`__
+ships with it's own Python 2.7 interpreter.
 
-How to make Astropy / Gammapy work with the CIAO Sherpa Python?
----------------------------------------------------------------
+If you want to use Astropy or Gammapy with that Python, you have to install it using
+that Python interpreter, other existing Python interpreters or installed packages
+can't be used (when they have C extensions, like Astropy does).
 
-Note: CIAO 4.7 (released 16 December 2014)
-includes Python 2.7.6, Numpy 1.8.1, IPython 2.0.0 and no PyFITS, Scipy or Matplotlib.
+Fermi ScienceTools version ``v10r0p5`` (released Jun 24, 2015) includes
+Python 2.7.8, Numpy 1.9.1, Scipy 0.14.0, matplotlib 1.1.1, PyFITS 3.1.2.
+Unfortunately pip, ipython or Astropy are not included.
 
-Note: It looks like Sherpa installation is improving ... e.g. it's now available
-as a binary install via Conda:
-http://cxc.harvard.edu/sherpa/contrib.html#pysherpa
+So first in stall `pip`_ (see
+`instructions <https://pip.pypa.io/en/latest/installing.html#install-pip>`__),
+and then
 
-Some parts of Gammapy use the `Sherpa`_ Python modeling / fitting package
-from the `CIAO`_ Chandra satellite X-ray data analysis package. 
+.. code-block:: bash
+
+   $ pip install ipython astropy gammapy
+
+If this doesn't work (which is not uncommon, this is known to fail to compile the C
+extensions of Astropy on some platforms), ask your Python-installation-savvy co-worker
+or on the Astropy or Gammapy mailing list.
+
+CIAO
+----
+
+.. note::
+
+    The main reason to use Gammapy with CIAO was that CIAO was the easiest way to get Sherpa.
+    Since 2015, Sherpa can be easily installed via conda, so we recommend you do that
+    instead of installing Gammapy into CIAO as described in this section.
+
+The `CIAO "Chandra Interactive Analysis of Observations" <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
+package, which includes `Sherpa`_, ships with it's own Python 2.7 interpreter.
+
+If you want to use Astropy or Gammapy with that Python, you have to install it using
+that Python interpreter, other existing Python interpreters or installed packages
+can't be used (when they have C extensions, like Astropy does).
+
+CIAO version 4.7 (released December 16, 2014) includes
+Python 2.7.6, Numpy 1.8.1 and IPython 2.0.0.
+Unfortunately pip, PyFITS, Astropy, Scipy or Matplotlib are not included.
 
 Building Sherpa and all the required libraries from source is very difficult.
 You should install the binary version of CIAO as described
@@ -310,7 +369,7 @@ when e.g. the C extensions in ``astropy.wcs`` or ``astropy.io.fits`` are compile
 
 Here's a few tricks that might help you make it work.
 
-* Execute the  
+* Execute the
   `ciao-python-fix <http://cxc.cfa.harvard.edu/ciao/threads/ciao_install/index.html#ciao_python_fix>`__
   script after installing CIAO:
 
@@ -323,7 +382,7 @@ Here's a few tricks that might help you make it work.
 
 .. code-block:: bash
 
-   $ export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib" 
+   $ export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib"
    $ ciaorun python setup.py install
 
 * Add these folders to your ``PATH`` and ``PYTHONPATH`` so that the right command line tools or
@@ -333,19 +392,3 @@ Here's a few tricks that might help you make it work.
 
    $ export PATH=$CIAO_DIR/ots/bin:$PATH
    $ export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
-
-How to make Astropy / Gammapy work with the Fermi ScienceTools Python?
-----------------------------------------------------------------------
-
-Note: ``ScienceTools-v9r33p0-fssc-20140520`` (v9r33p0, released Jun 03, 2014)
-includes Python 2.7.2, Numpy 1.6.1, Scipy 0.10.1, Matplotlib 1.1.1, PyFITS 3.1.2 and no IPython.
-
-Try installing `pip`_ into that Python and then:
-
-.. code-block:: bash
-
-   $ pip install astropy
-   $ pip install gammapy
-
-If this doesn't work (which is not uncommon, this is known to fail to compile the C extensions of Astropy
-on some platforms), ask your Python-installation-savvy co-worker or on the Astropy or Gammapy mailing list.

@@ -240,6 +240,14 @@ These are unofficial, unmaintained copies on open codes on Github:
 * https://github.com/cdeil/Fermi-ScienceTools-mirror
 * https://github.com/cdeil/kapteyn-mirror
 
+Actually at this point we welcome experimentation, so you can use cool new technologies
+to implement some functionality in Gammapy if you like, e.g.
+
+* `Numba <http://numba.pydata.org/>`__
+* `Bokeh <http://bokeh.pydata.org/en/latest/>`__
+* `Blaze <http://blaze.pydata.org/en/latest/>`__
+
+
 What checks and conversions should I do for inputs?
 ---------------------------------------------------
 
