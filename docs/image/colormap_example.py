@@ -36,4 +36,5 @@ plt.axis('off')
 plt.colorbar(shrink=0.7)
 plt.title('MILAGRO-style colormap')
 
+plt.tight_layout()
 plt.show()

@@ -10,6 +10,8 @@ TODO:
 * describe data and emission components
 * perform fit with ``naima``!
 
+.. _crab-mwl-sed:
+
 .. plot:: tutorials/crab_mwl_sed/crab_mwl_sed.py
    :include-source:
    

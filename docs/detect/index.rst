@@ -21,6 +21,13 @@ into source catalogs.
 Getting Started
 ===============
 
+.. figure:: fermi_ts_map.png
+   :scale: 100 %
+   
+   Test statistics map computed using `~gammapy.detect.compute_ts_map` for an
+   example Fermi dataset.
+   
+
 Computation of TS maps
 ----------------------
 
