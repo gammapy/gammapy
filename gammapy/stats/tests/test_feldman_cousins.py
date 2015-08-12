@@ -6,14 +6,14 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 
 from ...stats import (
-    find_confidence_interval_gauss,
-    find_confidence_interval_poisson,
-    construct_confidence_belt_PDFs,
-    get_upper_and_lower_limit,
-    fix_upper_and_lower_limit,
-    find_limit,
-    find_average_upper_limit,
-    construct_confidence_belt,
+    fc_find_confidence_interval_gauss,
+    fc_find_confidence_interval_poisson,
+    fc_construct_confidence_belt_pdfs,
+    fc_get_upper_and_lower_limit,
+    fc_fix_upper_and_lower_limit,
+    fc_find_limit,
+    fc_find_average_upper_limit,
+    fc_construct_confidence_belt,
 )
 
 def test_significance_to_probability_normal():
@@ -27,9 +27,9 @@ def test_significance_to_probability_normal():
   fNStep  = 1000
   fCL = 0.90
 
-  x_bins  = numpy.linspace(-fNSigma*sigma, fNSigma*sigma, fNStep, endpoint=True)
-  mu_bins = numpy.linspace(fMuMin, fMuMax, fMuStep, endpoint=True)
+  x_bins  = np.linspace(-fNSigma*sigma, fNSigma*sigma, fNStep, endpoint=True)
+  mu_bins = np.linspace(fMuMin, fMuMax, fMuStep, endpoint=True)
 
-  lower_limit, upper_limit = find_confidence_interval_gauss(mu_bins[-1], sigma, x_bins, fCL)
-  assert_allclose(lower_limit, 6.356)
-  assert_allclose(upper_limit, 9.660)
+  lower_limit, upper_limit = fc_find_confidence_interval_gauss(mu_bins[-1], sigma, x_bins, fCL)
+  assert_allclose(lower_limit, 6.356356356356358)
+  assert_allclose(upper_limit, 9.65965965965966)

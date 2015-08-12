@@ -3,23 +3,23 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
-import matplotlib.pylab as plt
-from scipy import stats
+from astropy.extern.six.moves import range
 
 import logging
 log = logging.getLogger(__name__)
 
-__all__ = ['find_confidence_interval_gauss',
-           'find_confidence_interval_poisson'
-           'construct_confidence_belt_PDFs',
-           'get_upper_and_lower_limit',
-           'fix_upper_and_lower_limit',
-           'find_limit',
-           'find_average_upper_limit',
-           'construct_confidence_belt']
+__all__ = ['fc_find_confidence_interval_gauss',
+           'fc_find_confidence_interval_poisson',
+           'fc_construct_confidence_belt_pdfs',
+           'fc_get_upper_and_lower_limit',
+           'fc_fix_upper_and_lower_limit',
+           'fc_find_limit',
+           'fc_find_average_upper_limit',
+           'fc_construct_confidence_belt',
+          ]
 
 
-def find_confidence_interval_gauss(mu, sigma, x_bins, fCL):
+def fc_find_confidence_interval_gauss(mu, sigma, x_bins, cl):
     """Analytically find confidence interval for Gaussian with boundary 
        at the origin
 
@@ -31,16 +31,16 @@ def find_confidence_interval_gauss(mu, sigma, x_bins, fCL):
         Width of the Gaussian
     x_bins : array-like
         Bins in x
-    fCL : double
+    cl : double
         Desired confidence level
 
     Returns
     -------
-    : double
-        Beginning of the confidence interval
-    : double
-        End of the confidence interval
+    (x_min, x_max) : tuple of floats
+        Confidence interval
     """
+
+    from scipy import stats
 
     dist = stats.norm(loc=mu, scale=sigma)
 
@@ -54,29 +54,29 @@ def find_confidence_interval_gauss(mu, sigma, x_bins, fCL):
         # This is the formula from the FC paper
         if mu == 0 and sigma == 1:
             if x < 0:
-                r.append(numpy.exp(x*mu-mu*mu*0.5))
+                r.append(np.exp(x*mu-mu*mu*0.5))
             else:
-                r.append(numpy.exp(-0.5*numpy.power((x-mu),2)))
+                r.append(np.exp(-0.5*np.power((x-mu),2)))
         # This is the more general formula
         else:
             # Implementing the boundary condition at zero
             muBest     = max(0, x)
             probMuBest = stats.norm.pdf(x, loc=muBest, scale=sigma)
             if probMuBest == 0.0:
-              r.append(0.0);
+                r.append(0.0);
             else:
-              r.append(p[-1]/probMuBest)
+                r.append(p[-1]/probMuBest)
 
-    p = numpy.asarray(p)
-    r = numpy.asarray(r)
+    p = np.asarray(p)
+    r = np.asarray(r)
 
-    if sum(p) < fCL:
+    if sum(p) < cl:
         log.info("Bad choice of x-range for this mu!")
         log.info("Not enough probability in x bins to reach confidence level!")
 
     rank = stats.rankdata(-r, method='dense')
 
-    index_array = numpy.arange(x_bins.size)
+    index_array = np.arange(x_bins.size)
 
     rank_sorted, index_array_sorted = zip(*sorted(zip(rank, index_array)))
 
@@ -85,19 +85,19 @@ def find_confidence_interval_gauss(mu, sigma, x_bins, fCL):
 
     p_sum = 0
 
-    for i in xrange(len(rank_sorted)):
+    for i in range(len(rank_sorted)):
         if index_array_sorted[i] < index_min:
             index_min = index_array_sorted[i]
         if index_array_sorted[i] > index_max:
             index_max = index_array_sorted[i]
         p_sum += p[index_array_sorted[i]]
-        if p_sum >= fCL:
+        if p_sum >= cl:
             break
 
     return x_bins[index_min], x_bins[index_max] + x_bin_width
 
 
-def find_confidence_interval_poisson(mu, background, x_bins, fCL):
+def fc_find_confidence_interval_poisson(mu, background, x_bins, cl):
     """Analytically find confidence interval for Poisson process with background
 
     Parameters
@@ -108,16 +108,16 @@ def find_confidence_interval_poisson(mu, background, x_bins, fCL):
         Mean of the background
     x_bins : array-like
         Bins in x
-    fCL : double
+    cl : double
         Desired confidence level
 
     Returns
     -------
-    : double
-        Beginning of the confidence interval
-    : double
-        End of the confidence interval
+    (x_min, x_max) : tuple of floats
+        Confidence interval
     """
+
+    from scipy import stats
 
     dist = stats.poisson(mu=mu+background)
 
@@ -132,20 +132,20 @@ def find_confidence_interval_poisson(mu, background, x_bins, fCL):
         muBest = max(0, x - background)
         probMuBest = stats.poisson.pmf(x, mu=muBest+background)
         if probMuBest == 0.0:
-          r.append(0.0);
+            r.append(0.0);
         else:
-          r.append(p[-1]/probMuBest)
+            r.append(p[-1]/probMuBest)
 
-    p = numpy.asarray(p)
-    r = numpy.asarray(r)
+    p = np.asarray(p)
+    r = np.asarray(r)
 
-    if sum(p) < fCL:
+    if sum(p) < cl:
         log.info("Bad choice of x-range for this mu!")
         log.info("Not enough probability in x bins to reach confidence level!")
 
     rank = stats.rankdata(-r, method='dense')
 
-    index_array = numpy.arange(x_bins.size)
+    index_array = ny.arange(x_bins.size)
 
     rank_sorted, index_array_sorted = zip(*sorted(zip(rank, index_array)))
 
@@ -154,20 +154,20 @@ def find_confidence_interval_poisson(mu, background, x_bins, fCL):
 
     p_sum = 0
 
-    for i in xrange(len(rank_sorted)):
+    for i in range(len(rank_sorted)):
         if index_array_sorted[i] < index_min:
             index_min = index_array_sorted[i]
         if index_array_sorted[i] > index_max:
             index_max = index_array_sorted[i]
         p_sum += p[index_array_sorted[i]]
-        if p_sum >= fCL:
+        if p_sum >= cl:
             break
 
     return x_bins[index_min], x_bins[index_max] + x_bin_width
 
 
-def construct_confidence_belt_PDFs(matrix, alpha):
-    """Numerically choose bins a la Feldman Cousins ordering principel.
+def fc_construct_confidence_belt_pdfs(matrix, alpha):
+    """Numerically choose bins a la Feldman Cousins ordering principle.
 
     Parameters
     ----------
@@ -179,7 +179,7 @@ def construct_confidence_belt_PDFs(matrix, alpha):
     Returns
     -------
     distributions_scaled : ndarray
-        Confidence interval (1 means inside, 0 means outside)
+        Confidence intervals (1 means inside, 0 means outside)
     """
 
     number_mus    = len(matrix)
@@ -206,7 +206,7 @@ def construct_confidence_belt_PDFs(matrix, alpha):
     # For each mu, get the largest entry
     largest_entry = np.argmax(distributions_re_scaled, axis = 1)
     # Set the rank to 1 and add probability
-    for i in xrange(number_mus):
+    for i in range(number_mus):
         distributions_re_scaled[i][largest_entry[i]] = 1
         summed_propability[i]  += np.sum(numpy.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0))
         distributions_scaled[i] = np.where(distributions_re_scaled[i] == 1, 1, distributions_scaled[i])
@@ -222,10 +222,10 @@ def construct_confidence_belt_PDFs(matrix, alpha):
         largest_entry_position = np.argmax(largest_entry, axis = 1)
         # Invalidate indices where there is no maximum (every entry is already a rank)
         largest_entry_position = [largest_entry_position[i] if largest_entry[i][largest_entry_position[i]] != -1 \
-                                                            else -1 for i in xrange(len(largest_entry_position))]
+                                                            else -1 for i in range(len(largest_entry_position))]
         # Replace the largest entry with the highest rank so far plus one
         # Add the probability
-        for i in xrange(number_mus):
+        for i in range(number_mus):
             if largest_entry_position[i] == -1:
                 continue
             distributions_re_scaled[i][largest_entry_position[i]] = largest_rank[i] + 1
@@ -238,7 +238,7 @@ def construct_confidence_belt_PDFs(matrix, alpha):
     return distributions_scaled
 
 
-def get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot = False):
+def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot = False):
     """Find upper and lower limit from confidence interval.
 
     Parameters
@@ -266,11 +266,13 @@ def get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot = Fa
     number_mu     = len(mu_bins)
     number_bins_x = len(x_bins)
 
-    for mu in xrange(number_mu):
+    import matplotlib.pylab as plt
+
+    for mu in range(number_mu):
         x_values = []
         upper_limit.append(-1)
         lower_limit.append(-1)
-        for x in xrange(number_bins_x):
+        for x in range(number_bins_x):
             #This point lies in the confidence interval
             if confidence_interval[mu][x] == 1:
                 x_value = x_bins[x]
@@ -284,12 +286,12 @@ def get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot = Fa
                 else:
                     lower_limit[-1] = x_bins[x + 1]
         if do_plot:
-            plt.plot(x_values, [mu_bins[mu] for i in xrange(len(x_values))], marker='.', ls='',color='black')
+            plt.plot(x_values, [mu_bins[mu] for i in range(len(x_values))], marker='.', ls='',color='black')
 
     return upper_limit, lower_limit
 
 
-def fix_upper_and_lower_limit(upper_limit, lower_limit):
+def fc_fix_upper_and_lower_limit(upper_limit, lower_limit):
     """Push limits outwards as described in the FC paper.
 
     Parameters
@@ -311,17 +313,17 @@ def fix_upper_and_lower_limit(upper_limit, lower_limit):
 
     while not all_fixed:
         all_fixed = True
-        for j in xrange(1,len(upper_limit)):
+        for j in range(1,len(upper_limit)):
             if upper_limit[j] < upper_limit[j-1]:
                 upper_limit[j-1] = upper_limit[j]
                 all_fixed = False
-        for j in xrange(1,len(lower_limit)):
+        for j in range(1,len(lower_limit)):
             if lower_limit[j] < lower_limit[j-1]:
                 lower_limit[j] = lower_limit[j-1]
                 all_fixed = False
 
 
-def find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
+def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
     """Find the upper limit for a given x value.
 
     Parameters
@@ -349,7 +351,7 @@ def find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
         identical = True
         x_values = x_values_input
         y_values = y_values_input
-        for i in xrange(len(x_values)):
+        for i in range(len(x_values)):
             current_x = x_values[i]
             # If the x_value did lie on the bin border, loop until the x value
             # is changing and take the last point (that is the highest point in
@@ -368,7 +370,7 @@ def find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
     else:
         x_values = numpy.flipud(x_values_input)
         y_values = numpy.flipud(y_values_input)
-        for i in xrange(len(x_values)):
+        for i in range(len(x_values)):
             current_x = x_values[i]
             if x_value >= current_x:
                 limit = y_values[i]
@@ -377,7 +379,7 @@ def find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
     return limit
 
 
-def find_average_upper_limit(x_bins, confidence_belt, upper_limit, mu_bins):
+def fc_find_average_upper_limit(x_bins, confidence_belt, upper_limit, mu_bins):
     """Function to calculate the average upper limit for a confidence belt.
 
     Parameters
@@ -398,13 +400,13 @@ def find_average_upper_limit(x_bins, confidence_belt, upper_limit, mu_bins):
     avergage_limit = 0
     number_points = len(distributions_scaled[0])
 
-    for i in xrange(number_points):
+    for i in range(number_points):
         avergage_limit += confidence_belt[0][i]*find_limit(x_bins[i], upper_limit, mu_bins)
 
     return avergage_limit
 
 
-def construct_confidence_belt(distribution_dict, bins, alpha):
+def fc_construct_confidence_belt(distribution_dict, bins, alpha):
     """Convenience function that calculates the PDF for the user.
 
     Parameters
@@ -434,6 +436,6 @@ def construct_confidence_belt(distribution_dict, bins, alpha):
         integral = float(sum(entries))
         distributions_scaled.append(entries/integral)
 
-    confidence_belt = construct_confidence_belt_PDFs(distributions_scaled, alpha)
+    confidence_belt = construct_confidence_belt_pdfs(distributions_scaled, alpha)
 
     return confidence_belt
