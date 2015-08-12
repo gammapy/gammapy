@@ -82,3 +82,10 @@ def test_EnergyBounds():
     actual = energy.nbins
     desired = 10
     assert_equal(actual, desired)
+
+    #Log centers
+    center = energy.log_center
+    actual = type(center).__module__
+    desired = 'gammapy.spectrum.energy'
+    assert_equal(actual, desired)
+    

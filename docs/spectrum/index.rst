@@ -32,44 +32,54 @@ TODO
 Energy handling in Gammapy
 ==========================
 
-.. warning::
-
-   This is  completely experimental
-
 Basics
 ------
 
-Most objects in Astronomy require an energy axis, e.g. counts spectra or effective area tables. In general, this axis can be defined in two ways.
+Most objects in Astronomy require an energy axis, e.g. counts spectra or
+effective area tables. In general, this axis can be defined in two ways.
 
-* As an array of energy bin edges. This is usually stored in EBOUNDS tables, e.g. for Fermi-LAT counts cubes. In Gammalib this is represented by GEbounds.
-* As an array of energy values. E.g. the Fermi-LAT diffuse flux is given at certain energies and those are stored in an ENERGY FITS table extension. In Gammalib this is represented by GEnergy.
+* As an array of energy values. E.g. the Fermi-LAT diffuse flux is given at
+  certain energies and those are stored in an ENERGY FITS table extension.
+  In Gammalib this is represented by GEnergy.
+* As an array of energy bin edges. This is usually stored in EBOUNDS tables,
+  e.g. for Fermi-LAT counts cubes. In Gammalib this is represented by GEbounds.
 
-In Gammapy both use cases are handled by `gammapy.spectrum.utils.EnergyBinning` (to be renamed!). By default, the first case, i.e. an array of energy bin edges is expected in the constructor. 
+In Gammapy both the use cases are handled by two seperate classes: 
+`gammapy.spectrum.energy.Energy` for energy values and
+`gammapy.spectrum.energy.EnergyBounds` for energy bin edges
+
+Energy
+------
+
+The Energy class is a subclass of `~astropy.units.Quantity` and thus has the
+same functionality plus some convenienve functions for fits I/O
 
 .. code-block:: python
     
-    >>> from gammapy.spectrum import EnergyBinning
-    >>> from astropy.units import Quantity
-    >>> binning = Quantity(np.logspace(-1,1,11))
-    >>> e_axis = EnergyBinning(e_axis, 'bin_edges')
+    >>> from gammapy.spectrum import Energy
+    >>> energy = Energy([1,2,3], 'TeV')
+    >>> hdu = energy.to_fits()
+    >>> type(hdu) 
+    <class 'astropy.io.fits.hdu.table.BinTableHDU'>
 
-Note, that the 'bin_edges' flag can be left out. Of course the second way of defining the axis, i.e. by the energy bin centers, is also supported. 
+EnergyBounds
+------
+
+The EnergyBounds class is a subclass of Energy. Additional functions are available
+e.g. to compute the bin centers
 
 .. code-block:: python
     
-    >>> from gammapy.spectrum import EnergyBinning
-    >>> from astropy.units import Quantity
-    >>> binning = Quantity(np.logspace(-1,1,11))
-    >>> centers = np.sqrt(binning[:-1]*binning[1:])
-    >>> e_axis = EnergyBinning(center, 'bin_centers')
-
-The main advantage of the EnergyBinning class with respect to pure numpy arrays or two separate classes handling both use cases is that the transition from energy bin edges to bin centers has to be only done once in constructor. All other class do not need to deal with the energy binning conversions anymore.
-
-FITS I/O
---------
-
-TODO
-
+    >>> from gammapy.spectrum import EnergyBounds
+    >>> ebounds = EnergyBounds.equal_log_spacing(1, 10, 8, 'GeV')
+    >>> ebounds.size
+    9
+    >>> ebounds.nbins
+    8
+    >>> center = ebounds.log_center
+    >>> center
+    <Energy [ 1.15478198, 1.53992653, 2.05352503, 2.73841963, 3.65174127,
+              4.86967525, 6.49381632, 8.65964323] GeV>
 
 Reference/API
 =============
