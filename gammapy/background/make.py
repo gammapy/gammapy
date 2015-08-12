@@ -95,10 +95,10 @@ def define_cube_binning(n_obs, DEBUG):
     delta_x = (detx_max - detx_min)/bg_cube_shape[2]
     detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
 
-    if DEBUG > 1:
-        energy_edges = Quantity([0.01, 0.1, 1., 10., 100.], 'TeV') # log binning
-        dety_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
-        detx_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
+#    if DEBUG > 1:
+#        energy_edges = Quantity([0.01, 0.1, 1., 10., 100.], 'TeV') # log binning
+#        dety_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
+#        detx_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
     if DEBUG:
         print("energy bin edges", energy_edges)
         print("dety bin edges", dety_edges)
@@ -163,6 +163,7 @@ def fill_events(observation_table, fits_path, events_cube, livetime_cube, DEBUG)
         # TODO: UNITS ARE MISSING??!!! -> also in the fits tables!!!
         #       in header there is EUNIT (TeV)!!!
         #       hard coding the units for now !!!
+        # TODO: try to cast units, if it doesn't work, use hard coded ones!!!
         ev_DETX = Angle(data_set['DETX'], 'degree')
         ev_DETY = Angle(data_set['DETY'], 'degree')
         ev_energy = Quantity(data_set['ENERGY'],
@@ -382,7 +383,7 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
         Cube background model.
     """
 
-    # DEBUG: 0: no output, 1: output, 2: run fast, 3: more verbose
+    # DEBUG: 0: no output, 1: output, 2: NOTHING, 3: more verbose
     # TODO: remove the DEBUG variable, when the logger works!!!
     # TODO: I need to pass the logger or at least the log level!!!!
     #       and remove the DEBUG option!!!

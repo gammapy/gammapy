@@ -3,10 +3,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
 import logging
+log = logging.getLogger(__name__)
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import ObservationTable, DataStore
 from .. import datasets
 from ..data import EventListDataset
@@ -20,23 +21,28 @@ __all__ = ['make_bg_cube_models',
            ]
 
 
-DEBUG = 1 # 0: no output, 1: output, 2: run fast, 3: more verbose
+DEBUG = 1 # 0: no output, 1: output, 2: NOTHING, 3: more verbose
 # TODO: remove the DEBUG global variable, when the logger works!!!
 
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
-    parser.add_argument("-l", "--log", dest="loglevel",
-                        choices=['debug', 'info', 'warning', 'error',
-                                 'critical'],
-                        help="Set the logging level")
     parser.add_argument('fitspath', type=str,
                         help='Dir path to input event list fits files.')
+    parser.add_argument('--test', type=bool, default=False,
+                        help='If true, use a subset of observations '
+                        'for testing purposes')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     args = parser.parse_args(args)
+
+    set_up_logging_from_args(args)
+
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(loglevel,
-                        fitspath):
+def make_bg_cube_models(fitspath,
+                        test):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -57,15 +63,15 @@ def make_bg_cube_models(loglevel,
 
     Parameters
     ----------
-    loglevel : str
-        Level for the logger.
     fitspath : str
-        path to dir containing event list fits files and a list of them
+        Path to dir containing event list fits files and a list of them.
     """
-    if (loglevel):
-        logging.basicConfig(level=getattr(logging, loglevel.upper()), format='%(levelname)s - %(message)s')
+    if test:
+        global altitude_edges, azimuth_edges
+        altitude_edges = Angle([0, 45, 90], 'degree')
+        azimuth_edges = Angle([90, 270], 'degree')
 
-    create_bg_observation_list(fitspath)
+    create_bg_observation_list(fitspath, test)
     group_observations()
     stack_observations(fitspath)
 
@@ -77,18 +83,18 @@ def make_bg_cube_models(loglevel,
 # TODO: ObservationGroups
 # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
 altitude_edges = Angle([0, 20, 23, 27, 30, 33, 37, 40, 44, 49, 53, 58, 64, 72, 90], 'degree')
-if DEBUG > 1:
-    altitude_edges = Angle([0, 45, 90], 'degree')
+#if test: # moved to make_bg_cube_models
+#    altitude_edges = Angle([0, 45, 90], 'degree')
 
 # define a binning in azimuth angle
 # TODO: ObservationGroups
 # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
 azimuth_edges = Angle([-90, 90, 270], 'degree')
-if DEBUG > 1:
-    azimuth_edges = Angle([90, 270], 'degree')
+#if test: # moved to make_bg_cube_models
+#    azimuth_edges = Angle([90, 270], 'degree')
 
 
-def create_bg_observation_list(fits_path):
+def create_bg_observation_list(fits_path, test):
     """Make total observation list and filter the observations.
 
     In a first version, all obs taken within 3 deg of a known source
@@ -119,7 +125,7 @@ def create_bg_observation_list(fits_path):
     observation_table = data_store.make_observation_table()
 
     # For testing, only process a small subset of observations
-    if DEBUG > 1:
+    if test:
         observation_table = observation_table.select_linspace_subset(num=100)
     if DEBUG:
         print()
@@ -137,7 +143,7 @@ def create_bg_observation_list(fits_path):
     catalog = datasets.load_catalog_tevcat()
 
     # For testing, only process a small subset of sources
-    if DEBUG > 1:
+    if test:
         catalog = catalog[:10]
     if DEBUG:
         print()
