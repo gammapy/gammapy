@@ -202,11 +202,12 @@ class EnergyBounds(Energy):
         self._unit = getattr(obj, '_unit', None)
 
     @property
-    def log_centers(self):
+    def log_center(self):
         """Log centers of the energy bounds
         """
         
-        return np.sqrt(self[:-1] * self[1:])
+        center = np.sqrt(self[:-1] * self[1:])
+        return Energy(center, self.unit)
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins, unit=None):
