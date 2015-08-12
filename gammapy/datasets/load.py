@@ -169,7 +169,8 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
             out = filename
         else:
             out = fits.getdata(filename)
-
+    if extra_info and not return_filenames:
+        out['header'] = fits.getheader(get_path('poisson_stats_image/counts.fits.gz'))
     return out
 
 
