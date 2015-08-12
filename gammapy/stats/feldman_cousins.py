@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy import stats
 
+import logging
+log = logging.getLogger(__name__)
+
 __all__ = ['find_confidence_interval_gauss',
            'find_confidence_interval_poisson'
            'construct_confidence_belt_PDFs',
@@ -68,8 +71,8 @@ def find_confidence_interval_gauss(mu, sigma, x_bins, fCL):
     r = numpy.asarray(r)
 
     if sum(p) < fCL:
-        print("Bad choice of x-range for this mu!")
-        print("Not enough probability in x bins to reach confidence level!")
+        log.info("Bad choice of x-range for this mu!")
+        log.info("Not enough probability in x bins to reach confidence level!")
 
     rank = stats.rankdata(-r, method='dense')
 
@@ -137,8 +140,8 @@ def find_confidence_interval_poisson(mu, background, x_bins, fCL):
     r = numpy.asarray(r)
 
     if sum(p) < fCL:
-        print("Bad choice of x-range for this mu!")
-        print("Not enough probability in x bins to reach confidence level!")
+        log.info("Bad choice of x-range for this mu!")
+        log.info("Not enough probability in x bins to reach confidence level!")
 
     rank = stats.rankdata(-r, method='dense')
 
