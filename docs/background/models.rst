@@ -6,6 +6,9 @@ Background Models
 The naming of the models in this section follows the convention from
 :ref:`dataformats_overview`.
 
+The documentation on how to produce background models in Gammapy is
+available at :ref:`background_make_models`.
+
 .. _background_3D:
 
 BACKGROUND_3D
