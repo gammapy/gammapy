@@ -45,16 +45,16 @@ Pull requests
 
 .. _gammapy_0p3_release:
 
-0.3 (August 3, 2015)
---------------------
+0.3 (August 13, 2015)
+---------------------
 
 Summary
 +++++++
 
-- Released on August 3, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
+- Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
 - Requires Astropy version 1.0 or later.
-- 8 contributors (4 new)
-- 4 months of work (from April 13, 2014 to August 3, 2015)
+- 9 contributors (5 new)
+- 4 months of work (from April 13, 2014 to August 13, 2015)
 - XXX pull requests
 - On-off likelihood spectral analysis was added in ``gammapy.hspec``,
   contributed by Regis Terrier and Ignasi Reichardt.
@@ -72,7 +72,7 @@ Contributors
 - Stefan Klepser (new)
 - Ignasi Reichardt (new)
 - Regis Terrier
-- Axel Donath
+- Victor Zabalza (new)
 
 Pull requests
 +++++++++++++
@@ -98,6 +98,8 @@ Pull requests
 - Observation table subset selection [#295] (Manuel Paz Arribas)
 - Set up and document logging for Gammapy [#318] (Christoph Deil)
 - Using consistent plotting style in docs [#317] (Axel Donath) 
+- Add an "About Gammapy" page to the docs [#312] (Christoph Deil)
+- Fix Debian install instructions [#326] (Victor Zabalza)
 
 .. _gammapy_0p2_release:
 
