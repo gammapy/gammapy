@@ -55,7 +55,7 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html
 
 .. _GCTAEventCube: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEventCube.html
-.. _GSkyMap: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTASkyMap.html
+.. _GSkyMap: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGSkyMap.html
 .. _GPha: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGPha.html
 
 .. _GCTABackground3D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTABackground3D.html
@@ -72,7 +72,7 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 .. _GCTAAeff2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAAeff2D.html
 .. _GCTAAeffArf: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAAeffArf.html
 
-.. _GCTAEdispRMF: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdispRMF.html
+.. _GCTAEdispRMF: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdispRmf.html
 .. _GCTAEdisp2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdisp2D.html
 
 
