@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from tempfile import NamedTemporaryFile
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 import numpy as np
@@ -18,7 +17,7 @@ except ImportError:
 
 class TestPHA(object):
 
-    def setup_class(self):
+    def test_pha(self, tmpdir):
         """Create test PHA file."""
 
         counts = np.array([0., 0., 5., 10., 20., 15., 10., 5., 2.5, 1., 1., 0.])
@@ -35,14 +34,10 @@ class TestPHA(object):
                         dstart=dstart, dstop=dstop, dbase=dbase,
                         stat_err=stat_err)
 
-        #self.PHA_FILENAME = tmpdir.join('dummy.pha').strpath
-        self.PHA_FILENAME = NamedTemporaryFile(suffix='.pha', delete=False).name
-        self.PHA_SUM = np.sum(counts)
+        filename = str(tmpdir.join('pha_test.pha'))
+        pha.writeto(filename)
 
-        pha.writeto(self.PHA_FILENAME)
-
-    def test_pha(self):
-        pha = Table.read(self.PHA_FILENAME)
+        pha = Table.read(filename)
         assert_allclose(pha['COUNTS'].sum(), 69.5)
 
 

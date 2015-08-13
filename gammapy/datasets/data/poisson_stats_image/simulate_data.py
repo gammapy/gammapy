@@ -38,12 +38,15 @@ data = random_state.poisson(model(x, y))
 # Save data
 header = w.to_header()
 
-fits.PrimaryHDU(data=data, header=header).writeto('counts.fits.gz',
-                                                  clobber=True)
-fits.PrimaryHDU(data=model(x, y), header=header).writeto('model.fits.gz',
-                                                         clobber=True)
-fits.PrimaryHDU(data=background(x, y), header=header).writeto('background.fits.gz',
-                                                              clobber=True)
-fits.PrimaryHDU(data=source(x, y), header=header).writeto('source.fits.gz',
-                                                         clobber=True)
+hdu = fits.PrimaryHDU(data=data.astype('int16'), header=header)
+hdu.writeto('counts.fits.gz', clobber=True)
+
+hdu = fits.PrimaryHDU(data=model(x, y).astype('float32'), header=header)
+hdu.writeto('model.fits.gz', clobber=True)
+
+hdu = fits.PrimaryHDU(data=background(x, y).astype('int16'), header=header)
+hdu.writeto('background.fits.gz', clobber=True)
+
+hdu = fits.PrimaryHDU(data=source(x, y).astype('float32'), header=header)
+hdu.writeto('source.fits.gz', clobber=True)
 
