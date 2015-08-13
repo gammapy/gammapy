@@ -67,19 +67,20 @@ class TSMapResult(Bunch):
         Read TS map result from file.
         """
         hdu_list = fits.open(filename)
-        ts = hdu_list['ts'].data
-        sqrt_ts = hdu_list['sqrt_ts'].data
-        amplitude = hdu_list['amplitude'].data
-        niter = hdu_list['niter'].data
+        ts = hdu_list['ts'].data.astype('float64')
+        sqrt_ts = hdu_list['sqrt_ts'].data.astype('float64')
+        amplitude = hdu_list['amplitude'].data.astype('float64')
+        niter = hdu_list['niter'].data.astype('float64')
         scale = hdu_list[0].header['SCALE']
         if scale == 'max':
             scale = hdu_list['scale'].data
-        morphology = hdu_list[0].header['MORPH']
+        morphology = hdu_list[0].header.get('MORPH')
         return cls(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
                    scale=scale, morphology=morphology)
 
     def write(self, filename, header, overwrite=False):
         """Write TS map results to file"""
+        header = header.copy()
         hdu_list = fits.HDUList()
         if 'MORPH' not in header and hasattr(self, 'morphology'):
             header['MORPH'] = self.morphology, 'Source morphology assumption.'
@@ -87,13 +88,13 @@ class TSMapResult(Bunch):
             header['EXTNAME'] = 'scale'
             header['HDUNAME'] = 'scale'
             header['SCALE'] = 'max',  'Source morphology scale parameter.'
-            hdu_list.append(fits.ImageHDU(self.scale.astype('float32'), header))
+            hdu_list.append(fits.ImageHDU(self.scale.astype('float64'), header))
         else:
             header['SCALE'] = self.scale,  'Source morphology scale parameter.'
         for key in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
             header['EXTNAME'] = key
             header['HDUNAME'] = key
-            hdu_list.append(fits.ImageHDU(self[key].astype('float32'), header))
+            hdu_list.append(fits.ImageHDU(self[key].astype('float64'), header))
 
         hdu_list.writeto(filename, clobber=overwrite)
 
