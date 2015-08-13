@@ -74,7 +74,7 @@ To make a Gammapy release, follow the instructions how to release an Astropy aff
 
 Here's some additional notes / things to check:
 
-#. Update the Gammapy version number on the :ref:`gammapy_welcome` section and the :ref:`install` section.
+#. Update the Gammapy version in the :ref:`install` section.
 #. Mention release in the :ref:`gammapy_news` section.
 #. After making the tag and release, update the Gammapy stable branch to point to the new tag
    as described `here <http://astropy.readthedocs.org/en/latest/development/releasing.html>`__.

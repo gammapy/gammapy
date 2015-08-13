@@ -101,9 +101,9 @@ from the command line:
 
 .. code-block:: bash
 
-   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.2.tar.gz
-   $ tar zxf gammapy-0.2.tar.gz
-   $ cd gammapy-0.2
+   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.3.tar.gz
+   $ tar zxf gammapy-0.3.tar.gz
+   $ cd gammapy-0.3
 
 To download the latest development version of Gammapy:
 
