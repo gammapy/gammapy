@@ -40,9 +40,8 @@ except ImportError:
 
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
-from astropy.extern import six
 
-# Use the gamapy style when building docs
+# Use the Gammapy style when building docs
 from gammapy.utils.mpl_style import gammapy_mpl_style
 
 plot_rcparams = gammapy_mpl_style

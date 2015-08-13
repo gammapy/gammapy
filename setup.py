@@ -141,7 +141,6 @@ setup(name=PACKAGENAME,
                     'reproject', 'gwcs', 'astroplan', 'uncertainties>=2.4', 'naima',
                     'iminuit', 'sherpa']
       ),
-      provides=[PACKAGENAME],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,

@@ -363,7 +363,8 @@ CIAO
     Since 2015, Sherpa can be easily installed via conda, so we recommend you do that
     instead of installing Gammapy into CIAO as described in this section.
 
-The `CIAO "Chandra Interactive Analysis of Observations" <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
+The `CIAO <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
+("Chandra Interactive Analysis of Observations")
 package, which includes `Sherpa`_, ships with it's own Python 2.7 interpreter.
 
 If you want to use Astropy or Gammapy with that Python, you have to install it using
