@@ -154,7 +154,7 @@ The following packages have to be installed with pip:
 
 .. code-block:: bash
 
-    pip install --user \
+    pip3 install --user \
         gammapy naima photutils reproject wcsaxes gwcs astroplan \
         iminuit emcee healpy
 
