@@ -3,7 +3,7 @@
 
 This module contains a few functions and classes from PyFACT:
 
-- http://pyfact.readthedocs.org/
+- https://github.com/mraue/pyfact
 - https://github.com/gammapy/gammapy/pull/68
 
 TODO: This is a short-term solution until we find time to refactor
