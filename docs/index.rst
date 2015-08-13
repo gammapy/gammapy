@@ -27,6 +27,7 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
 
+* August 13, 2015 --- Gammapy **0.3** release. See changelog: :ref:`gammapy_0p3_release`
 * August 2015 --- `Gammapy poster and proceeding at ICRC 2015 <https://indico.cern.ch/event/344485/session/142/contribution/695>`__
 * May - August 2015 --- Manuel Paz Arribas GSoC 2015 on background modeling with Gammapy.
 * April 13, 2015 --- Gammapy **0.2** release. See changelog: :ref:`gammapy_0p2_release`

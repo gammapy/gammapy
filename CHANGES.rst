@@ -55,7 +55,7 @@ Summary
 - Requires Astropy version 1.0 or later.
 - 9 contributors (5 new)
 - 4 months of work (from April 13, 2014 to August 13, 2015)
-- XXX pull requests
+- 24 pull requests
 - On-off likelihood spectral analysis was added in ``gammapy.hspec``,
   contributed by Regis Terrier and Ignasi Reichardt.
   It will be refactored and is thus not part of the public API.

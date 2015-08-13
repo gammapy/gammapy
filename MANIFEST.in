@@ -2,13 +2,13 @@ include README.rst
 include LONG_DESCRIPTION.rst
 include CHANGES.rst
 include gammapy-conda-install.sh
+include gammapy/tests/coveragerc
 
 include ez_setup.py
 include ah_bootstrap.py
 include setup.cfg
 
-recursive-include gammapy
-recursive-include *.pyx *.c *.pxd
+recursive-include gammapy *.pyx *.pxd *.c *.h
 recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *
