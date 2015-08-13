@@ -69,21 +69,18 @@ Pre release
 Make release
 ------------
 
-To make a Gammapy release, follow the instructions how to release an Astropy affiliated package
-`here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
-
-Here's some additional notes / things to check:
+These are the steps you should do on the day of the release:
 
 #. Update the Gammapy version in the :ref:`install` section.
 #. Mention release in the :ref:`gammapy_news` section.
-#. After making the tag and release, update the Gammapy stable branch to point to the new tag
-   as described `here <http://astropy.readthedocs.org/en/latest/development/releasing.html>`__.
+#. Follow the instructions how to release an Astropy affiliated package
+   `here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
-#. Check that the new release shows up OK on readthedocs (TODO: need to add the new tag manually?)
+#. Update the Gammapy stable branch to point to the new tag
+   as described `here <http://astropy.readthedocs.org/en/latest/development/releasing.html>`__.
+#. Add the new version on readthedocs.
 #. Make a pull request that updates the Gammapy version number in this file to trigger a conda package build:
    https://github.com/astropy/conda-builder-affiliated/blob/master/requirements.txt
-
-This step ends with the release tarball to PyPI and the tag on Github.
 
 Post release
 ------------
