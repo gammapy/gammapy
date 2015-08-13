@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from tempfile import NamedTemporaryFile
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
 from astropy.table import Table
-from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
@@ -112,13 +110,13 @@ class TestCubeBackgroundModel():
         assert_allclose(plot_data[:, 1], model_data.value)
 
     @remote_data
-    def test_write_fits_table(self):
+    def test_write_fits_table(self, tmpdir):
 
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                                      location='remote')
         bg_model_1 = CubeBackgroundModel.read(filename, format='table')
 
-        outfile = NamedTemporaryFile(suffix='.fits').name
+        outfile = str(tmpdir.join('cubebackground_table_test.fits'))
         bg_model_1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
@@ -133,13 +131,13 @@ class TestCubeBackgroundModel():
                                  bg_model_1.energy_bins)
 
     @remote_data
-    def test_read_write_fits_image(self):
+    def test_read_write_fits_image(self, tmpdir):
 
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                                      location='remote')
         bg_model_1 = CubeBackgroundModel.read(filename, format='table')
 
-        outfile = NamedTemporaryFile(suffix='.fits').name
+        outfile = str(tmpdir.join('cubebackground_image_test.fits'))
         bg_model_1.write(outfile, format='image')
 
         # test if values are correct in the saved file: compare both files

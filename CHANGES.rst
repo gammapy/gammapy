@@ -100,6 +100,8 @@ Pull requests
 - Using consistent plotting style in docs [#317] (Axel Donath) 
 - Add an "About Gammapy" page to the docs [#312] (Christoph Deil)
 - Fix Debian install instructions [#326] (Victor Zabalza)
+- Fixed writing TS map headers [#273] (Axel Donath)
+- Changed temporary file handling in tests [#273] (Axel Donath)
 
 .. _gammapy_0p2_release:
 

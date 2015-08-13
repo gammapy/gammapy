@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
-from tempfile import NamedTemporaryFile
 
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
@@ -21,7 +20,7 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_compute_ts_map():
+def test_compute_ts_map(tmpdir):
     """Minimal test of compute_ts_map"""
     data = load_poisson_stats_image(extra_info=True)
     kernel = Gaussian2DKernel(2.5)
@@ -41,9 +40,9 @@ def test_compute_ts_map():
     assert_allclose(1.0227934338735763e-09, result.amplitude[99, 99], rtol=1e-3)
 
     # test write method
-    with NamedTemporaryFile(suffix='.fits') as f:
-        result.write(f, header=data['header'])
-        read_result = TSMapResult.read(f.name)
-        for _ in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
-            assert result[_].dtype == read_result[_].dtype
-            assert_equal(result[_], read_result[_])
+    filename = str(tmpdir.join('ts_test.fits'))
+    result.write(filename, header=data['header'])
+    read_result = TSMapResult.read(filename)
+    for _ in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
+        assert result[_].dtype == read_result[_].dtype
+        assert_equal(result[_], read_result[_])

@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import os
+
 import numpy as np
 from astropy.io import fits
-from astropy.wcs import WCS
 import gc
 from ..stats import significance
 from ..image import binary_dilation_circle
@@ -196,16 +197,16 @@ class IterativeKernelBackgroundEstimator(object):
 
         header = self.header
 
-        filename = filebase + '{0:02d}_mask'.format(index) + '.fits'
+        filename = os.path.join(filebase, '{0:02d}_mask.fits'.format(index))
         hdu = fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
                             header=header)
         hdu.writeto(filename, clobber=True)
 
-        filename = filebase + '{0:02d}_background'.format(index) + '.fits'
+        filename = os.path.join(filebase, '{0:02d}_background.fits'.format(index))
         hdu = fits.ImageHDU(data=self._data[-1].background, header=header)
         hdu.writeto(filename, clobber=True)
 
-        filename = filebase + '{0:02d}_significance'.format(index) + '.fits'
+        filename = os.path.join(filebase, '{0:02d}_significance.fits'.format(index))
         hdu = fits.ImageHDU(data=self._data[-1].significance, header=header)
         hdu.writeto(filename, clobber=True)
 
