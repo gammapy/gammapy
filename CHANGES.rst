@@ -1,35 +1,23 @@
-1.0 (Fall, 2015)
-----------------
+1.0 (Fall 2015, unreleased)
+---------------------------
 
 Summary
 +++++++
 
 Gammapy 1.0 will be released in fall 2015.
 
-We aim for October 2015, but are willing to delay a bit if important features are missing
-or the documentation and tests need further work.
-
 Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
-Contributors
-++++++++++++
 
-- ...
-
-Pull requests
-+++++++++++++
-
-- ...
-
-0.4 (August 24, 2015)
----------------------
+0.4 (September 2015, unreleased)
+--------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on August 24, 2015.
+Gammapy 0.4 will be released some time in September 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
