@@ -45,6 +45,15 @@ Pre release
 
    This can be used to take notes and discuss any release-related issues.
 
+#. Follow the instructions `here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#updating-to-the-latest-template-files>`__
+   to check that the astropy-helpers sub-module in Gammapy is pointing to the latest stable astropy-helpers release
+   and whether there have been any fixes / changes to the Astropy
+   `package-template <https://github.com/astropy/package-template/blob/master/TEMPLATE_CHANGES.md>`__
+   since the last Gammapy release that should be copied over.
+   In Gammapy we are using the method that's described in the section "managing the template files manually"
+   that's described.
+   If there are any updates to be done, you should do them via a PR so that travis-ci testing can run.
+
 #. Do these extra checks and clean up any warnings / errors that come up::
 
        make code-analysis
