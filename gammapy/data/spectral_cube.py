@@ -16,9 +16,8 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.coordinates import Angle
-from ..spectrum import (LogEnergyAxis,
-                        energy_bounds_equal_log_spacing,
-                        energy_bin_centers_log_spacing,
+from ..spectrum import (EnergyBounds,
+                        LogEnergyAxis,
                         powerlaw
                         )
 from ..image import coordinates, cube_to_image, solid_angle
@@ -314,10 +313,14 @@ class SpectralCube(object):
             Integral flux image (1 / (cm^2 s sr))
         """
         if isinstance(energy_bins, int):
-            energy_bins = energy_bounds_equal_log_spacing(energy_band, energy_bins)
+            energy_bins = EnergyBounds.equal_log_spacing(
+                energy_band[0], energy_band[1], energy_bins)
+        else:
+            energy_bins = EnergyBounds(energy_band)
 
-        energy1 = energy_bins[:-1].to('MeV')
-        energy2 = energy_bins[1:].to('MeV')
+        energy_bins = energy_bins.to('MeV')
+        energy1 = energy_bins.lower_bounds
+        energy2 = energy_bins.upper_bounds
 
         # Compute differential flux at energy bin edges of all pixels
         xx = np.arange(self.data.shape[2])
@@ -484,7 +487,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                          'flux_cube: {0}\nexposure_cube: {1}'
                          ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
 
-    energy_centers = energy_bin_centers_log_spacing(energy_bins)
+    energy = EnergyBounds(energy_bins)
+    energy_centers = energy.log_centers
     wcs = exposure_cube.wcs
     lon, lat = exposure_cube.spatial_coordinate_images
     solid_angle = exposure_cube.solid_angle_image
