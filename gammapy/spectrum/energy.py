@@ -18,8 +18,7 @@ class Energy(u.Quantity):
 
     Parameters
     ----------
-    energy : `~numpy.array`, scalar, `~astropy.units.Quantity`,
-                        :class:`~gammapy.spectrum.energy.Energy`
+    energy : `~numpy.array`, scalar, `~astropy.units.Quantity`
         Energy
 
     unit : `~astropy.units.UnitBase`, str, optional
@@ -175,8 +174,7 @@ class EnergyBounds(Energy):
     Parameters
     ----------
 
-    energy : `~numpy.array`, scalar, `~astropy.units.Quantity`,
-                        :class:`~gammapy.spectrum.energy.Energy`
+    energy : `~numpy.array`, scalar, `~astropy.units.Quantity`
         EnergyBounds
     unit : `~astropy.units.UnitBase`, str
         The unit of the values specified for the energy.  This may be any
@@ -201,7 +199,7 @@ class EnergyBounds(Energy):
         self._unit = getattr(obj, '_unit', None)
 
     @property
-    def log_center(self):
+    def log_centers(self):
         """Log centers of the energy bounds
         """
         

@@ -76,7 +76,7 @@ e.g. to compute the bin centers
     9
     >>> ebounds.nbins
     8
-    >>> center = ebounds.log_center
+    >>> center = ebounds.log_centers
     >>> center
     <Energy [ 1.15478198, 1.53992653, 2.05352503, 2.73841963, 3.65174127,
               4.86967525, 6.49381632, 8.65964323] GeV>
