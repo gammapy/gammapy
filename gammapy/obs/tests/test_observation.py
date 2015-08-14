@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
 import numpy as np
+from astropy.tests.helper import remote_data
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from ...obs import (ObservationTable, ObservationGroups,
                     ObservationGroupAxis)
+from ... import datasets
 from ...datasets import make_test_observation_table
 from ...time import absolute_time
 from ...catalog import skycoord_from_table
@@ -189,7 +191,9 @@ def test_select_sky_regions():
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
 
-def test_ObservationGroups():
+
+@remote_data
+def test_ObservationGroups(tmpdir):
 
     # test create obs groups
     alt = Angle([0, 30, 60, 90], 'degree')
@@ -199,18 +203,75 @@ def test_ObservationGroups():
                            ObservationGroupAxis('AZ', az, 'bin_edges'),
                            ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
     obs_group = ObservationGroups(list_obs_group_axis)
-    # TODO: asserts!!!
-    # test filter obs list
-    # TODO: !!!
+    assert ((0 <= obs_group.obs_groups_table['GROUP_ID']) &
+            (obs_group.obs_groups_table['GROUP_ID'] < obs_group.n_groups)).all()
 
+    # write
+    obs_group_1 = obs_group
+    outfile = str(tmpdir.join('obs_groups.ecsv'))
+    obs_group_1.write(outfile)
+
+    # read
+    obs_group_2 = ObservationGroups.read(outfile)
+
+    # test that obs groups read from file match the ones defined
+    assert (obs_group_1.obs_groups_table == obs_group_2.obs_groups_table).all()
+
+    # test group obs list
+    # using file in gammapy-extra (I also could create a dummy table)
+    infile = datasets.get_path('../test_datasets/obs/test_observation_table.fits',
+                               location='remote')
+    obs_table = ObservationTable.read(infile)
+
+    # wrap azimuth angles to [-90, 270) deg
+    # to match definition of azimuth grouping axis
+    obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'degree'))
+
+    # group obs list
+    obs_table_grouped = obs_group.group_observation_table(obs_table)
+
+    # assert consistency of the grouping
+    assert len(obs_table) == len(obs_table_grouped)
+    assert ((0 <= obs_table_grouped['GROUP_ID']) &
+            (obs_table_grouped['GROUP_ID'] < obs_group.n_groups)).all()
+    # check grouping for 1 group
+    group_id = 10
+    mask = obs_table_grouped['GROUP_ID'] == group_id
+    obs_table_grouped_10 = obs_table_grouped[mask]
+    alt_min = obs_group.obs_groups_table['ALT_MIN'][group_id]
+    alt_max = obs_group.obs_groups_table['ALT_MAX'][group_id]
+    az_min = obs_group.obs_groups_table['AZ_MIN'][group_id]
+    az_max = obs_group.obs_groups_table['AZ_MAX'][group_id]
+    n_tels = obs_group.obs_groups_table['N_TELS'][group_id]
+    assert ((alt_min <= obs_table_grouped_10['ALT']) &
+            (obs_table_grouped_10['ALT'] < alt_max)).all()
+    assert ((az_min <= obs_table_grouped_10['AZ']) &
+            (obs_table_grouped_10['AZ'] < az_max)).all()
+    assert (n_tels == obs_table_grouped_10['N_TELS']).all()
+    # check on inverse mask (i.e. all other groups)
+    mask = np.invert(mask)
+    obs_table_grouped_not10 = obs_table_grouped[mask]
+    assert (((alt_min > obs_table_grouped_not10['ALT']) |
+            (obs_table_grouped_not10['ALT'] >= alt_max)) |
+            ((az_min > obs_table_grouped_not10['AZ']) |
+             (obs_table_grouped_not10['AZ'] >= az_max)) |
+            (n_tels != obs_table_grouped_not10['N_TELS'])).all()
+    # check sum of selections
+    assert (len(obs_table_grouped_10) + len(obs_table_grouped_not10)
+            == len(obs_table_grouped))
 
 def test_ObservationGroupAxis():
 
-    # test create a few obs group axis
+    # test create a few obs group axis objects
+
     alt = Angle([0, 30, 60, 90], 'degree')
     alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
+    assert alt_obs_group_axis.n_bins == len(alt) - 1
+
     az = Angle([-90, 90, 270], 'degree')
     az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
+    assert az_obs_group_axis.n_bins == len(az) - 1
+
     ntels = np.array([3, 4])
     ntels_obs_group_axis = ObservationGroupAxis('N_TELS', ntels, 'bin_values')
-    # TODO: asserts!!!
+    assert ntels_obs_group_axis.n_bins == len(ntels)

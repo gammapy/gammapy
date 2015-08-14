@@ -114,6 +114,7 @@ def find_obs(infile,
         gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
         gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
+        gammapy-find-obs test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
     """
     if pix:
         raise NotImplementedError
