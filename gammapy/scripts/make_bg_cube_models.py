@@ -8,7 +8,8 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
 from ..utils.scripts import get_parser, set_up_logging_from_args
-from ..obs import ObservationTable, DataStore
+from ..obs import (ObservationTable, DataStore, ObservationGroups,
+                   ObservationGroupAxis)
 from .. import datasets
 from ..data import EventListDataset
 from ..background import make_bg_cube_model
@@ -66,32 +67,9 @@ def make_bg_cube_models(fitspath,
     fitspath : str
         Path to dir containing event list fits files and a list of them.
     """
-    if test:
-        global altitude_edges, azimuth_edges
-        altitude_edges = Angle([0, 45, 90], 'degree')
-        azimuth_edges = Angle([90, 270], 'degree')
-
     create_bg_observation_list(fitspath, test)
-    group_observations()
+    group_observations(test)
     stack_observations(fitspath)
-
-
-# define observation binning
-# TODO: store it in a file (fits? ascii?) (use an astropy table as help?)!!!
-
-# define a binning in altitude angle
-# TODO: ObservationGroups
-# https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
-altitude_edges = Angle([0, 20, 23, 27, 30, 33, 37, 40, 44, 49, 53, 58, 64, 72, 90], 'degree')
-#if test: # moved to make_bg_cube_models
-#    altitude_edges = Angle([0, 45, 90], 'degree')
-
-# define a binning in azimuth angle
-# TODO: ObservationGroups
-# https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
-azimuth_edges = Angle([-90, 90, 270], 'degree')
-#if test: # moved to make_bg_cube_models
-#    azimuth_edges = Angle([90, 270], 'degree')
 
 
 def create_bg_observation_list(fits_path, test):
@@ -124,7 +102,7 @@ def create_bg_observation_list(fits_path, test):
     data_store = DataStore(dir=fits_path)
     observation_table = data_store.make_observation_table()
 
-    # For testing, only process a small subset of observations
+    # for testing, only process a small subset of observations
     if test:
         observation_table = observation_table.select_linspace_subset(num=100)
     if DEBUG:
@@ -142,7 +120,7 @@ def create_bg_observation_list(fits_path, test):
     # there is no HESS catalog function? (only hess_galactic?)
     catalog = datasets.load_catalog_tevcat()
 
-    # For testing, only process a small subset of sources
+    # for testing, only process a small subset of sources
     if test:
         catalog = catalog[:10]
     if DEBUG:
@@ -187,7 +165,7 @@ def create_bg_observation_list(fits_path, test):
     observation_table.write(outfile, overwrite=True)
 
 
-def group_observations():
+def group_observations(test):
     """Group list of observations runs according to observation properties.
 
     The observations are grouped into observation groups (bins) according
@@ -204,73 +182,59 @@ def group_observations():
     infile = indir + 'bg_observation_table.fits.gz'
     observation_table = ObservationTable.read(infile)
 
-    # split observation table according to binning
+    # define observation binning
+    altitude_edges = Angle([0, 20, 23, 27, 30, 33, 37, 40, 44, 49, 53, 58, 64, 72, 90], 'degree')
+    azimuth_edges = Angle([-90, 90, 270], 'degree')
 
-    # define a binning in altitude angle
-    # TODO: ObservationGroups
-    # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
+    # for testing, only process a small subset of bins
+    if test:
+        altitude_edges = Angle([0, 45, 90], 'degree')
+        azimuth_edges = Angle([90, 270], 'degree')
+
+    # define axis for the grouping
+    list_obs_group_axis = [ObservationGroupAxis('ALT_PNT', altitude_edges, 'bin_edges'),
+                           ObservationGroupAxis('AZ_PNT', azimuth_edges, 'bin_edges')]
+    # TODO: I need the format converter!!!
+
+    # create observation groups
+    observation_groups = ObservationGroups(list_obs_group_axis)
     if DEBUG:
         print()
-        print("altitude bin boundaries")
-        print(repr(altitude_edges))
+        print("observation group axes")
+        print(observation_groups.info)
+        print("observation groups table (group definitions)")
+        print(observation_groups.obs_groups_table)
 
-    # define a binning in azimuth angle
-    # TODO: ObservationGroups
-    # https://github.com/mapazarr/gammapy/blob/bg-api/dev/background-api.py#L55
+    # group observations in the obs table according to the obs groups
+    observation_table_grouped = observation_table
+
+    # wrap azimuth angles to [-90, 270) deg because of the definition
+    # of the obs group azimuth axis
+    azimuth = Angle(observation_table_grouped['AZ_PNT']).wrap_at(Angle(270., 'degree'))
+    observation_table_grouped['AZ_PNT'] = azimuth
+
+    # apply grouping
+    observation_table_grouped = observation_groups.group_observation_table(observation_table_grouped)
+
+    # wrap azimuth angles back to [0, 360) deg
+    azimuth = Angle(observation_table_grouped['AZ_PNT']).wrap_at(Angle(360., 'degree'))
+    observation_table_grouped['AZ_PNT'] = azimuth
+
     if DEBUG:
         print()
-        print("azimuth bin boundaries")
-        print(repr(azimuth_edges))
+        print("observation table grouped")
+        print(observation_table_grouped)
 
-    # wrap azimuth angles to (-90, 270) deg
-    # TODO: needs re-thinking if azimuth angle definitions change!!!
-    #       or if user-defined azimuth angle bins are allowed!!!
-    azimuth = Angle(observation_table['AZ_PNT']).wrap_at(Angle(270., 'degree'))
-    observation_table['AZ_PNT'] = azimuth
-
-    # create output folder if not existing
-    outdir = os.environ['PWD'] + '/splitted_obs_list/'
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        # clean folder if available
-        for oldfile in os.listdir(outdir):
-            os.remove(outdir + oldfile)
-
-    # loop over altitude and azimuth angle bins: remember 1 bin less than bin boundaries
-    for i_alt in range(len(altitude_edges) - 1):
-        if DEBUG:
-            print()
-            print("bin alt", i_alt)
-        for i_az in range(len(azimuth_edges) - 1):
-            if DEBUG:
-                print()
-                print("bin az", i_az)
-
-            # filter observation table
-            observation_table_filtered = observation_table
-
-            selection = dict(type='par_box', variable='ALT_PNT',
-                             value_range=(altitude_edges[i_alt], altitude_edges[i_alt + 1]))
-            observation_table_filtered = observation_table_filtered.select_observations(selection)
-
-            selection = dict(type='par_box', variable='AZ_PNT',
-                             value_range=(azimuth_edges[i_az], azimuth_edges[i_az + 1]))
-            observation_table_filtered = observation_table_filtered.select_observations(selection)
-
-            if DEBUG:
-                print(observation_table_filtered)
-
-            # skip bins with no obs
-            if len(observation_table_filtered) == 0:
-                continue # skip the rest
-
-            # save the observation list to a fits file
-            outfile = outdir +\
-                     'bg_observation_table_alt{0}_az{1}.fits.gz'.format(i_alt, i_az)
-            if DEBUG:
-                print("outfile", outfile)
-            observation_table_filtered.write(outfile)
+    # save the observation groups and the grouped bg observation list to file
+    outdir = os.environ['PWD'] + '/'
+    outfile = outdir + 'bg_observation_groups.ecsv'
+    if DEBUG:
+        print("outfile", outfile)
+    observation_groups.write(outfile, overwrite=True)
+    outfile = outdir + 'bg_observation_table_grouped.fits.gz'
+    if DEBUG:
+        print("outfile", outfile)
+    observation_table_grouped.write(outfile, overwrite=True)
 
 
 def stack_observations(fits_path):
@@ -289,6 +253,13 @@ def stack_observations(fits_path):
         print("# Starting stack_observations #")
         print("###############################")
 
+    # read observation grouping and grouped observation table
+    indir = os.environ['PWD'] + '/'
+    infile = indir + 'bg_observation_groups.ecsv'
+    observation_groups = ObservationGroups.read('bg_observation_groups.ecsv')
+    infile = indir + 'bg_observation_table_grouped.fits.gz'
+    observation_table_grouped = ObservationTable.read(infile)
+
     # create output folder if not existing
     outdir = os.environ['PWD'] + '/bg_cube_models/'
     if not os.path.isdir(outdir):
@@ -298,42 +269,46 @@ def stack_observations(fits_path):
         for oldfile in os.listdir(outdir):
             os.remove(outdir + oldfile)
 
-    # loop over altitude and azimuth angle bins: remember 1 bin less than bin boundaries
-    for i_alt in range(len(altitude_edges) - 1):
+    # loop over observation groups
+    groups = observation_groups.list_of_groups
+    if DEBUG:
+        print()
+        print("list of groups", groups)
+
+    for group in groups:
         if DEBUG:
             print()
-            print("bin alt", i_alt)
-        for i_az in range(len(azimuth_edges) - 1):
-            if DEBUG:
-                print()
-                print("bin az", i_az)
+            print("group", group)
 
-            # read group observation table from file
-            indir = os.environ['PWD'] + '/splitted_obs_list/'
-            infile = indir +\
-                     'bg_observation_table_alt{0}_az{1}.fits.gz'.format(i_alt, i_az)
-            # skip bins with no obs list file
-            if not os.path.isfile(infile):
-                print("WARNING, file not found: {}".format(infile))
-                continue # skip the rest
-            observation_table = ObservationTable.read(infile)
+        # get group of observations
+        observation_table = observation_groups.get_group_of_observations(observation_table_grouped, group)
+        if DEBUG:
+            print(observation_table)
 
-            if DEBUG:
-                print(observation_table)
+        # skip bins with no observations
+        if len(observation_table) == 0:
+            print("WARNING, group {} is empty.".format(group))
+            continue # skip the rest
 
-            # create bg cube model
-            events_cube, livetime_cube, bg_cube = make_bg_cube_model(observation_table, fits_path, DEBUG)
+        # create bg cube model
+        events_cube, livetime_cube, bg_cube = make_bg_cube_model(observation_table, fits_path, DEBUG)
 
-            # save model to file
-            bg_cube_model = bg_cube
-            # TODO: store also events_cube, livetime_cube !!!
-            outfile = outdir +\
-                     'bg_cube_model_alt{0}_az{1}'.format(i_alt, i_az)
-            if DEBUG:
-                print("outfile", '{}_table.fits.gz'.format(outfile))
-                print("outfile", '{}_image.fits.gz'.format(outfile))
-            bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table')
-            bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
+        # save model to file
+        bg_cube_model = bg_cube
+        # TODO: store also events_cube, livetime_cube !!!
+        outfile = outdir +\
+                 'bg_cube_model_group{}'.format(group)
+        if DEBUG:
+            print("outfile", '{}_table.fits.gz'.format(outfile))
+            print("outfile", '{}_image.fits.gz'.format(outfile))
+        bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table')
+        bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
+
+        # TODO: bg cube file names won't match the names from michael mayer!!! (also the observation lists: split/unsplit)
+        #       the current naming makes it difficult to compare 2 sets of cubes!!!
+        # TODO: support 2 namings: groupX, or axis1X_axis2Y_etc !!!
+        #       this is still not perfect, since the same var with  different binning produces the same indexing, but it's at least something (and helps comparing to Michi, if the same binning is used)
+        # add flag split obs list in observation_groups.group_observation_table??!!!
 
     # TODO: use random data (write a random data generator (see bg API))
     #       what about IRFs (i.e. Aeff for the E_THRESH?)?

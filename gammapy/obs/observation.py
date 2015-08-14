@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os.path
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
@@ -475,6 +476,11 @@ class ObservationGroups(object):
         """Number of groups (int)"""
         return len(self.obs_groups_table)
 
+    @property
+    def list_of_groups(self):
+        """List of groups (`~numpy.ndarray`)"""
+        return self.obs_groups_table['GROUP_ID'].data
+
     def axes_to_table(self, axes):
         """Fill the observation group axes into a table.
 
@@ -613,7 +619,7 @@ class ObservationGroups(object):
         cls.obs_groups_table = ascii.read(filename)
         return cls(obs_group_axes=cls.table_to_axes(cls, cls.obs_groups_table))
 
-    def write(self, outfile):
+    def write(self, outfile, overwrite=False):
         """
         Write observation group definitions to ECSV file.
 
@@ -623,9 +629,13 @@ class ObservationGroups(object):
         ----------
         outfile : str
             Name of the file.
+        overwrite : bool, optional
+            Flag to control file overwriting.
         """
-        ascii.write(self.obs_groups_table, outfile, format='ecsv',
-                    fast_writer=False)
+        # there is no overwrite option in `~astropy.io.ascii`
+        if not os.path.isfile(outfile) or overwrite:
+            ascii.write(self.obs_groups_table, outfile,
+                        format='ecsv', fast_writer=False)
 
     @property
     def info(self):
@@ -673,9 +683,13 @@ class ObservationGroups(object):
 
         Returns
         -------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table_grouped : `~gammapy.obs.ObservationTable`
             Grouped observation list.
         """
+        if 'GROUP_ID' in obs_table.colnames:
+            raise KeyError(
+                "Catched attempt to overwrite existing grouping in the table.")
+
         # read the obs groups table row by row (i.e. 1 group at
         # a time) and lookup the range/value for each parameter
         n_axes = len(self.obs_group_axes)
@@ -712,6 +726,37 @@ class ObservationGroups(object):
         obs_table_grouped = vstack(list_obs_table_grouped)
 
         return obs_table_grouped
+
+    def get_group_of_observations(self, obs_table, group,
+                                  inverted=False, apply_grouping=False):
+        """Select the runs corresponding to a particular group.
+
+        If the inverted flag is activated, the selection is applied to
+        exclude the indicated group and keep all others.
+
+
+        Parameters
+        ----------
+        obs_table : `~gammapy.obs.ObservationTable`
+            Observation list to select from.
+        group : int
+            Group ID to select.
+        inverted : bool, optional
+            Invert selection: exclude the indicated group and keep the rest.
+        apply_grouping : bool, optional
+            Flag to indicate if the observation grouping should take place.
+
+        Returns
+        -------
+        obs_table_group : `~gammapy.obs.ObservationTable`
+            Observation list of a specific group.
+        """
+        if apply_grouping:
+            obs_table = self.group_observation_table(obs_table)
+
+        selection = dict(type='par_box', variable='GROUP_ID',
+                         value_range=(group, group), inverted=inverted)
+        return obs_table.select_observations(selection)
 
 
 class ObservationGroupAxis(object):

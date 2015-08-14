@@ -236,8 +236,8 @@ def test_ObservationGroups(tmpdir):
             (obs_table_grouped['GROUP_ID'] < obs_group.n_groups)).all()
     # check grouping for 1 group
     group_id = 10
-    mask = obs_table_grouped['GROUP_ID'] == group_id
-    obs_table_grouped_10 = obs_table_grouped[mask]
+    obs_table_grouped_10 = obs_group.get_group_of_observations(obs_table_grouped,
+                                                               group_id)
     alt_min = obs_group.obs_groups_table['ALT_MIN'][group_id]
     alt_max = obs_group.obs_groups_table['ALT_MAX'][group_id]
     az_min = obs_group.obs_groups_table['AZ_MIN'][group_id]
@@ -249,8 +249,9 @@ def test_ObservationGroups(tmpdir):
             (obs_table_grouped_10['AZ'] < az_max)).all()
     assert (n_tels == obs_table_grouped_10['N_TELS']).all()
     # check on inverse mask (i.e. all other groups)
-    mask = np.invert(mask)
-    obs_table_grouped_not10 = obs_table_grouped[mask]
+    obs_table_grouped_not10 = obs_group.get_group_of_observations(obs_table_grouped,
+                                                                  group_id,
+                                                                  inverted=True)
     assert (((alt_min > obs_table_grouped_not10['ALT']) |
             (obs_table_grouped_not10['ALT'] >= alt_max)) |
             ((az_min > obs_table_grouped_not10['AZ']) |
@@ -259,6 +260,7 @@ def test_ObservationGroups(tmpdir):
     # check sum of selections
     assert (len(obs_table_grouped_10) + len(obs_table_grouped_not10)
             == len(obs_table_grouped))
+
 
 def test_ObservationGroupAxis():
 
