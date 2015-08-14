@@ -10,7 +10,6 @@ import numpy as np
 __all__ = ['Energy',
            'EnergyBounds']
 
-
 class Energy(u.Quantity):
 
     """Energy bin centers.
@@ -207,7 +206,22 @@ class EnergyBounds(Energy):
         """
         
         center = np.sqrt(self[:-1] * self[1:])
-        return Energy(center, self.unit)
+        return Energy(center)
+
+    @property
+    def upper_bounds(self):
+        """Upper energy bin edges
+        """
+        upper = self[1:]
+        return EnergyBounds(upper)
+
+    @property
+    def lower_bounds(self):
+        """Lower energy bin edges
+        """
+        
+        lower = self[:-1]
+        return EnergyBounds(lower)
 
     @staticmethod
     def equal_log_spacing(emin, emax, nbins, unit=None):

@@ -371,12 +371,12 @@ class EffectiveAreaTable2D(object):
         from astropy.coordinates import Angle
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.spectrum import energy_bounds_equal_log_spacing
+        from gammapy.spectrum import EnergyBounds
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
         offset = Angle(0.43, 'degree')
         nbins = 50
-        energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV'), nbins)
+        energy = EnergyBounds.equal_log_spacing(1, 10, nbins, 'TeV')
         energ_lo = energy[:-1]
         energ_hi = energy[1:]
         arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)

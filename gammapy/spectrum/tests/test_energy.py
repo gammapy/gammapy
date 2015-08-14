@@ -89,3 +89,11 @@ def test_EnergyBounds():
     desired = 'gammapy.spectrum.energy'
     assert_equal(actual, desired)
     
+    #Upper/lower bounds
+    actual = energy.upper_bounds
+    desired = energy[1:]
+    assert_equal(actual, desired)
+
+    actual = energy.lower_bounds
+    desired = energy[:-1]
+    assert_equal(actual, desired)
