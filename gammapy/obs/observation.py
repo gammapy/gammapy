@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
-from astropy.table import Table, Column
+from astropy.table import Table, Column, vstack
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
@@ -56,7 +56,9 @@ class ObservationTable(Table):
     is described in :ref:`dataformats_observation_lists`.
     """
 
+    @property
     def summary(self):
+        """Info string (str)"""
         ss = 'Observation table:\n'
         obs_name = self.meta['OBSERVATORY_NAME']
         ss += 'Observatory name: {}\n'.format(obs_name)
@@ -105,6 +107,11 @@ class ObservationTable(Table):
         table on any variable that is in the observation table and can
         be casted into a `~astropy.units.Quantity` object.
 
+        If the range length is 0 (min = max), the selection is applied
+        to the exact value indicated by the min value. This is useful
+        for selection of exact values, for instance in discrete
+        variables like the number of telescopes.
+
         If the inverted flag is activated, the selection is applied to
         keep all elements outside the selected range.
 
@@ -134,6 +141,8 @@ class ObservationTable(Table):
 
         # build and apply mask
         mask = (value_range[0] <= value) & (value < value_range[1])
+        if np.allclose(value_range[0], value_range[1]):
+            mask = value_range[0] == value
         if inverted:
             mask = np.invert(mask)
         obs_table = obs_table[mask]
@@ -230,7 +239,8 @@ class ObservationTable(Table):
               parameter defined in the observation table that can be casted
               into an `~astropy.units.Quantity` object; the parameter name
               and interval can be specified using the keywords **variable** and
-              **value_range** respectively; uses
+              **value_range** respectively; min = max selects exact
+              values of the parameter; uses
               `~gammapy.obs.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
@@ -276,6 +286,10 @@ class ObservationTable(Table):
 
         >>> selection = dict(type='par_box', variable='OBS_ID',
         ...                  value_range=[2, 5])
+        >>> selected_obs_table = obs_table.select_observations(selection)
+
+        >>> selection = dict(type='par_box', variable='N_TELS',
+        ...                  value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
         obs_table = self
@@ -375,12 +389,14 @@ class ObservationGroups(object):
     The axis parameters should be either dimensionless or castable
     into `~astropy.units.Quantity` objects.
 
-    TODO: say smthg about group the observations of an observation list
-    (specified as Observation.Table objects) !!!
+    For details on the grouping of observations in a list, please
+    refer to the `~gammapy.obs.ObservationGroups.group_observation_table`
+    method.
 
     TODO: show a grouped obs list and a table of obs groups in the high-level docs
     (and a list of axes)!!!!
-    (do it in the "future" inline command tool for obs groups!!!)
+    (do it in the "future" page for the "future" inline command tool
+    for obs groups!!!)
 
     Parameters
     ----------
@@ -411,8 +427,8 @@ class ObservationGroups(object):
 
     Group the observations of an observation list and print it:
 
-    >>> TODO !!!
-    >>> TODO !!!
+    >>> obs_table_grouped = obs_group.group_observation_table(obs_table)
+    >>> print(obs_table_grouped)
     """
 
     obs_groups_table = Table()
@@ -454,6 +470,11 @@ class ObservationGroups(object):
                                                 data=np.arange(n_groups)),
                                          index=0)
 
+    @property
+    def n_groups(self):
+        """Number of groups (int)"""
+        return len(self.obs_groups_table)
+
     def axes_to_table(self, axes):
         """Fill the observation group axes into a table.
 
@@ -484,14 +505,11 @@ class ObservationGroups(object):
                 column_data_max.append(axes[i_axis].bins[1:])
 
         # define grids of column data
-
         ndim = len(axes)
         s0 = (1,)*ndim
-
         expanding_arrays = [x.reshape(s0[:i] + (-1,) + s0[i + 1::])
                             for i, x in enumerate(column_data_min)]
         column_data_expanded_min = np.broadcast_arrays(*expanding_arrays)
-
         expanding_arrays = [x.reshape(s0[:i] + (-1,) + s0[i + 1::])
                             for i, x in enumerate(column_data_max)]
         column_data_expanded_max = np.broadcast_arrays(*expanding_arrays)
@@ -550,6 +568,8 @@ class ObservationGroups(object):
             axes.append(ObservationGroupAxis(col_name, data,
                                              'bin_values'))
             # format will be reviewed in a further step
+            # TODO: maybe it's better to store/read the parameter
+            #       format in/from the table header?!!!
 
         # detect range variables and eventually merge columns
         for i_col in np.arange(len(axes)):
@@ -627,6 +647,71 @@ class ObservationGroups(object):
         """Print groups info using the logging module."""
         #print(self.obs_groups_table)
         log.info(print(self.obs_groups_table))
+
+    def group_observation_table(self, obs_table):
+        """
+        Group observations in a list according to the defined groups.
+
+        The method returns the same observation table with an extra
+        column in the 1st position indicating the group ID of each
+        observation.
+
+        The algorithm expects the same format (naming and variable
+        definition range) for both the grouping axis definition and
+        the corresponding variable in the table. For instance, if the
+        azimuth axis binning is defined as ``AZ`` with bin edges
+        ``[-90, 90, 270]`` (North and South bins), the input obs table
+        should have an azimuth column defined as ``AZ`` and wrapped
+        at ``270 deg``. This can easily be done by calling:
+
+        >>> obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'degree'))
+
+        Parameters
+        ----------
+        obs_table : `~gammapy.obs.ObservationTable`
+            Observation list to group.
+
+        Returns
+        -------
+        obs_table : `~gammapy.obs.ObservationTable`
+            Grouped observation list.
+        """
+        # read the obs groups table row by row (i.e. 1 group at
+        # a time) and lookup the range/value for each parameter
+        n_axes = len(self.obs_group_axes)
+        list_obs_table_grouped = []
+        for i_row in np.arange(self.n_groups):
+            i_group = self.obs_groups_table['GROUP_ID'][i_row]
+            # loop over obs group axes to find out the names and formats
+            # of the parameters to define the selection criteria
+            obs_table_selected = obs_table
+            for i_axis in np.arange(n_axes):
+                name = self.obs_group_axes[i_axis].name
+                format = self.obs_group_axes[i_axis].format
+
+                if format == 'bin_edges':
+                    min_value = recover_units(self.obs_groups_table[name + '_MIN'][i_row],
+                                              self.obs_groups_table[name + '_MIN'])
+                    max_value = recover_units(self.obs_groups_table[name + '_MAX'][i_row],
+                                              self.obs_groups_table[name + '_MAX'])
+                elif format == 'bin_values':
+                   min_value = recover_units(self.obs_groups_table[name][i_row],
+                                              self.obs_groups_table[name])
+                   max_value = min_value
+                # apply selection to the table
+                selection = dict(type='par_box', variable=name,
+                                 value_range=(min_value, max_value))
+                obs_table_selected = obs_table_selected.select_observations(selection)
+            # define group and fill in list of grouped observation tables
+            group_id_data = i_group*np.ones(len(obs_table_selected), dtype=np.int)
+            obs_table_selected.add_column(Column(name='GROUP_ID', data=group_id_data),
+                                          index=0)
+            list_obs_table_grouped.append(obs_table_selected)
+
+        # stack all groups 
+        obs_table_grouped = vstack(list_obs_table_grouped)
+
+        return obs_table_grouped
 
 
 class ObservationGroupAxis(object):
