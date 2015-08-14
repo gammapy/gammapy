@@ -25,3 +25,4 @@ from .gti import *
 from .telarray import *
 from .event_list import *
 from .spectral_cube import *
+from .counts_spectrum import *
