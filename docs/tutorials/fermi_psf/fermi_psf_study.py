@@ -3,7 +3,7 @@
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from gammapy.spectrum import energy_bounds_equal_log_spacing
+from gammapy.spectrum import EnergyBounds
 from gammapy.datasets import FermiGalacticCenter, FermiVelaRegion
 from gammapy.datasets import load_lat_psf_performance
 import matplotlib.pyplot as plt
@@ -19,7 +19,8 @@ def get_psf_table(psf, emin, emax, bins):
     data = []
 
     # Loop over energies and determine PSF containment radius
-    for energy in energy_bounds_equal_log_spacing(Quantity((emin, emax), 'MeV'), bins):
+    ebounds = EnergyBounds.equal_log_spacing(emin, emax, bins, 'MeV')
+    for energy in ebounds:
         energy_psf = psf.table_psf_at_energy(energy)
 
         containment_68 = energy_psf.containment_radius(0.68)

@@ -6,7 +6,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
-from ...utils.testing import assert_quantity
 from ...spectrum import np_to_pha, LogEnergyAxis
 
 try:

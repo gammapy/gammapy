@@ -84,7 +84,7 @@ def test_EnergyBounds():
     assert_equal(actual, desired)
 
     #Log centers
-    center = energy.log_center
+    center = energy.log_centers
     actual = type(center).__module__
     desired = 'gammapy.spectrum.energy'
     assert_equal(actual, desired)
