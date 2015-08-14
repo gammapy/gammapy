@@ -63,7 +63,7 @@ same functionality plus some convenienve functions for fits I/O
     <class 'astropy.io.fits.hdu.table.BinTableHDU'>
 
 EnergyBounds
-------
+------------
 
 The EnergyBounds class is a subclass of Energy. Additional functions are available
 e.g. to compute the bin centers

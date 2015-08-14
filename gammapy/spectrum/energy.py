@@ -127,7 +127,7 @@ class Energy(u.Quantity):
         """Read ENERGIES fits extension.
 
         Parameters
-        ---------
+        ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``ENERGIES`` extensions.
         unit : `~astropy.units.UnitBase`, str
@@ -241,7 +241,7 @@ class EnergyBounds(Energy):
         """Read EBOUNDS fits extension.
 
         Parameters
-        ---------
+        ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``EBOUNDS`` extensions.
         unit : `~astropy.units.UnitBase`, str
