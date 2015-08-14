@@ -1,17 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import logging
+log = logging.getLogger(__name__)
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
+from astropy.io import ascii
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..catalog import select_sky_box, select_sky_circle
 
 __all__ = [
     # 'Observation',
     'ObservationTable',
+    'ObservationGroups',
+    'ObservationGroupAxis',
 ]
 
 
@@ -56,7 +61,8 @@ class ObservationTable(Table):
         obs_name = self.meta['OBSERVATORY_NAME']
         ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = Quantity(self['TIME_OBSERVATION'].sum(), self['TIME_OBSERVATION'].unit)
+        ontime = Quantity(self['TIME_OBSERVATION'].sum(),
+	                      self['TIME_OBSERVATION'].unit)
         ss += 'Total observation time: {}\n'.format(ontime)
         livetime = Quantity(self['TIME_LIVE'].sum(), self['TIME_LIVE'].unit)
         ss += 'Total live time: {}\n'.format(livetime)
@@ -212,7 +218,7 @@ class ObservationTable(Table):
 
               in each case, the coordinate system can be specified by the **frame**
               keyword (built-in Astropy coordinate frames are supported, e.g.
-              *icrs* or *galactic*); an aditional border can be defined using
+              ``icrs`` or ``galactic``); an aditional border can be defined using
               the **border** keyword
 
             - ``time_box`` is a 1D selection criterion acting on the observation
@@ -319,3 +325,429 @@ class ObservationTable(Table):
                 raise ValueError('Invalid selection type: {}'.format(selection_type))
 
         return obs_table
+
+
+def recover_units(array, as_units):
+    """Utility functin to recover units.
+
+    After some numpy operations, `~astropy.units.Quantity`-like objects
+    loose their units. This function shoul recover them.
+
+    TODO: extend to Time arrays.
+
+    Parameters
+    ----------
+    array : `~numpy.ndarray` or `~astropy.units.Quantity`-like
+        Array without units.
+    as_units : int, float or `~astropy.units.Quantity`-like
+        Structure to imitate the units.
+
+    Returns
+    -------
+    array : int, float or `~astropy.units.Quantity`-like
+        Array with units.
+    """
+    try:
+        return Quantity(np.array(array), as_units.unit)
+    except:
+        # return unmodified
+        return array
+
+
+class ObservationGroups(object):
+
+    """Observation groups.
+
+    Class to define observation groups useful for organizing observation
+    lists into groups of observations with similar properties. The
+    properties and their binning are specified via
+    `~gammapy.obs.ObservationGroupAxis` objects.
+
+    The class takes as input a list of `~gammapy.obs.ObservationGroupAxis`
+    objects and defines 1 group for each possible combination of the
+    bins defined in all axes. The groups are identified by a unique
+    ``GROUP_ID`` int value.
+
+    The definitions of the groups are internally  stored as a
+    `~astropy.table.Table` object, the
+    `~gammapy.obs.ObservationGroups.obs_groups_table` member.
+
+    The axis parameters should be either dimensionless or castable
+    into `~astropy.units.Quantity` objects.
+
+    TODO: say smthg about group the observations of an observation list
+    (specified as Observation.Table objects) !!!
+
+    TODO: show a grouped obs list and a table of obs groups in the high-level docs
+    (and a list of axes)!!!!
+    (do it in the "future" inline command tool for obs groups!!!)
+
+    Parameters
+    ----------
+    obs_group_axes : `~gammapy.obs.ObservationGroupAxis`
+        List of observation group axes.
+
+    Examples
+    --------
+    Define an observation grouping:
+
+    .. code:: python
+
+        alt = Angle([0, 30, 60, 90], 'degree')
+        az = Angle([-90, 90, 270], 'degree')
+        ntels = np.array([3, 4])
+        list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
+                               ObservationGroupAxis('AZ', az, 'bin_edges'),
+                               ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
+        obs_group = ObservationGroups(list_obs_group_axis)
+
+    Print the observation group table (group definitions):
+
+    >>> print(obs_group.obs_groups_table)
+
+    Print the observation group axes:
+
+    >>> print(obs_group.info)
+
+    Group the observations of an observation list and print it:
+
+    >>> TODO !!!
+    >>> TODO !!!
+    """
+
+    obs_groups_table = Table()
+
+    def __init__(self, obs_group_axes):
+        self.obs_group_axes = obs_group_axes
+        if len(self.obs_groups_table) == 0:
+            self.define_groups(self.axes_to_table(self.obs_group_axes))
+
+    def define_groups(self, table):
+        """Define observation groups for a given table of bins.
+
+        Define one group for each possible combination of the
+        observation group axis bins, defined as rows in the
+        input table.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table with observation group axis bins combined.
+        """
+        if len(self.obs_groups_table.columns) is not 0:
+            raise RuntimeError(
+                "Catched attempt to overwrite existing obs groups table.")
+
+        # define number of groups
+        n_groups = 1
+        # loop over observation axes
+        for i_axis in np.arange(len(self.obs_group_axes)):
+            n_groups *= self.obs_group_axes[i_axis].n_bins
+
+        if len(table) is not n_groups:
+            raise ValueError("Invalid table length. Got {0}, expected {1}".format(
+                len(table), n_groups))
+
+        # fill table, with first the obs group IDs, then the axis columns
+        self.obs_groups_table = table
+        self.obs_groups_table.add_column(Column(name='GROUP_ID',
+                                                data=np.arange(n_groups)),
+                                         index=0)
+
+    def axes_to_table(self, axes):
+        """Fill the observation group axes into a table.
+
+        Define one row for each possible combination of the
+        observation group axis bins. Each row will represent
+        an observation group.
+
+        Parameters
+        ----------
+        axes : `~gammapy.obs.ObservationGroupAxis`
+            List of observation group axes.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table containing the observation group definitions.
+        """
+        # define table column data
+        column_data_min = []
+        column_data_max = []
+        # loop over observation axes
+        for i_axis in np.arange(len(axes)):
+            if axes[i_axis].format == 'bin_values':
+                column_data_min.append(axes[i_axis].bins)
+                column_data_max.append(axes[i_axis].bins)
+            elif axes[i_axis].format == 'bin_edges':
+                column_data_min.append(axes[i_axis].bins[:-1])
+                column_data_max.append(axes[i_axis].bins[1:])
+
+        # define grids of column data
+
+        ndim = len(axes)
+        s0 = (1,)*ndim
+
+        expanding_arrays = [x.reshape(s0[:i] + (-1,) + s0[i + 1::])
+                            for i, x in enumerate(column_data_min)]
+        column_data_expanded_min = np.broadcast_arrays(*expanding_arrays)
+
+        expanding_arrays = [x.reshape(s0[:i] + (-1,) + s0[i + 1::])
+                            for i, x in enumerate(column_data_max)]
+        column_data_expanded_max = np.broadcast_arrays(*expanding_arrays)
+
+        # recover units
+        for i_dim in np.arange(ndim):
+            column_data_expanded_min[i_dim] = recover_units(column_data_expanded_min[i_dim],
+                                                            column_data_min[i_dim])
+            column_data_expanded_max[i_dim] = recover_units(column_data_expanded_max[i_dim],
+                                                            column_data_max[i_dim])
+
+        # define table columns
+        columns = []
+        for i_axis in np.arange(len(axes)):
+            if axes[i_axis].format == 'bin_values':
+                columns.append(Column(data=column_data_expanded_min[i_axis].flatten(),
+                                      name=axes[i_axis].name))
+            elif axes[i_axis].format == 'bin_edges':
+                columns.append(Column(data=column_data_expanded_min[i_axis].flatten(),
+                                      name=axes[i_axis].name + "_MIN"))
+                columns.append(Column(data=column_data_expanded_max[i_axis].flatten(),
+                                      name=axes[i_axis].name + "_MAX"))
+
+        # fill table
+        table = Table()
+        for i, col in enumerate(columns):
+            table.add_column(col)
+
+        return table
+
+    def table_to_axes(self, table):
+        """Define observation group axis list from a table.
+
+        Interpret the combinations of bins from a table of groups
+        in order to define the corresponding observation group axes.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+            Table containing the observation group definitions.
+
+        Returns
+        -------
+        axes : `~gammapy.obs.ObservationGroupAxis`
+            List of observation group axes.
+        """
+        # subset table: remove obs groups column
+        if table.colnames[0] == 'GROUP_ID':
+            table = table[table.colnames[1:]]
+
+        axes = []
+        for i_col, col_name in enumerate(table.columns):
+            data = np.unique(table[col_name].data)
+            # recover units
+            data = recover_units(data, table[col_name])
+            axes.append(ObservationGroupAxis(col_name, data,
+                                             'bin_values'))
+            # format will be reviewed in a further step
+
+        # detect range variables and eventually merge columns
+        for i_col in np.arange(len(axes)):
+            try:
+                split_name_min = axes[i_col].name.rsplit("_", 1)
+                split_name_max = axes[i_col + 1].name.rsplit("_", 1)
+                if (split_name_min[-1] == 'MIN'
+                    and split_name_max[-1] == 'MAX'
+                    and split_name_min[0] == split_name_max[0]):
+                    min_values = axes[i_col].bins
+                    max_values = axes[i_col + 1].bins
+                    edges = np.unique(np.append(min_values, max_values))
+                    # recover units
+                    edges = recover_units(edges, min_values)
+
+                    axes[i_col] = ObservationGroupAxis(split_name_min[0], edges,
+                                                       'bin_edges')
+                    axes.pop(i_col + 1) # remove next entry on the list
+            except:
+                pass
+
+        return axes
+
+    @classmethod
+    def read(cls, filename):
+        """
+        Read observation group definitions from ECSV file.
+
+        Using `~astropy.table.Table` and `~astropy.io.ascii`.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the file.
+
+        Returns
+        -------
+        obs_groups : `~gammapy.obs.ObservationGroups`
+            Observation groups object.
+        """
+        cls.obs_groups_table = ascii.read(filename)
+        return cls(obs_group_axes=cls.table_to_axes(cls, cls.obs_groups_table))
+
+    def write(self, outfile):
+        """
+        Write observation group definitions to ECSV file.
+
+        Using `~astropy.table.Table` and `~astropy.io.ascii`.
+
+        Parameters
+        ----------
+        outfile : str
+            Name of the file.
+        """
+        ascii.write(self.obs_groups_table, outfile, format='ecsv',
+                    fast_writer=False)
+
+    @property
+    def info(self):
+        """Info string (str)"""
+        s = ''
+        # loop over observation axes
+        for i_axis in np.arange(len(self.obs_group_axes)):
+            s += self.obs_group_axes[i_axis].info
+            if i_axis < len(self.obs_group_axes) - 1:
+                s += '\n'
+        return s
+
+    def print_axes(self):
+        """Print axes info using the logging module."""
+        #print(self.info)
+        log.info(self.info)
+
+    def print_groups(self):
+        """Print groups info using the logging module."""
+        #print(self.obs_groups_table)
+        log.info(print(self.obs_groups_table))
+
+
+class ObservationGroupAxis(object):
+
+    """Observation group axis.
+
+    Class to define an axis along which to define observation groups.
+    Two kinds of axis are supported, depending on the value of the
+    **format** parameter:
+
+    - **format**: ``bin_edges``, ``bin_values``
+
+        - ``bin_edges`` defines a continuous axis (eg. altitude angle)
+
+        - ``bin_values`` defines a discrete axis (eg. number of telescopes)
+
+    In both cases, both, dimensionless and
+    `~astropy.units.Quantity`-like parameter axes are supported.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameter to bin.
+    bins : int, float or `~astropy.units.Quantity`-like
+        Array of values or bin edges, depending on the **format** parameter.
+    format : str
+        Format of binning specified: ``bin_edges``, ``bin_values``.
+
+    Examples
+    --------
+    Create a few axes:
+
+    .. code:: python
+
+        alt = Angle([0, 30, 60, 90], 'degree')
+        alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
+        az = Angle([-90, 90, 270], 'degree')
+        az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
+        ntels = np.array([3, 4])
+        ntels_obs_group_axis = ObservationGroupAxis('N_TELS', ntels, 'bin_values')
+    """
+
+    def __init__(self, name, bins, format):
+        if format not in ['bin_edges', 'bin_values']:
+            raise ValueError("Invalid bin format {}.".format(self.format))
+        self.name = name
+        self.bins = bins
+        self.format = format
+
+    @property
+    def n_bins(self):
+        """Number of bins (int)"""
+        if self.format == 'bin_edges':
+            return len(self.bins) - 1
+        elif self.format == 'bin_values':
+            return len(self.bins)
+
+    def get_bin(self, bin_id):
+        """Get bin (int, float or `~astropy.units.Quantity`-like)
+
+        Value or tuple of bin edges (depending on the **format** parameter)
+        for the specified bin.
+
+        Parameters
+        ----------
+        bin_id : int
+            ID of the bin to retrieve.
+
+        Returns
+        -------
+        bin : int, float or `~astropy.units.Quantity`-like
+            Value or tuple of bin edges, depending on the **format** parameter.
+        """
+        if self.format == 'bin_edges':
+            return (self.bins[bin_id], self.bins[bin_id + 1])
+        elif self.format == 'bin_values':
+            return self.bins[bin_id]
+
+    @property
+    def get_bins(self):
+        """List of bins (int, float or `~astropy.units.Quantity`-like)
+
+        List of bin edges or values (depending on the **format** parameter)
+        for all bins.
+        """
+        bins = []
+        for i_bin in np.arange(self.n_bins):
+            bins.append(self.get_bin(i_bin))
+        return bins
+
+    @classmethod
+    def from_column(cls, col):
+        """Import from astropy column.
+
+        Parameters
+        ----------
+        col : `~astropy.table.Column`
+            Column with the axis info.
+        """
+        return cls(name=col.name,
+                   bins=col,
+                   format=col.meta['axis_format'])
+
+    def to_column(self):
+        """Convert to astropy column.
+
+        Returns
+        -------
+        col : `~astropy.table.Column`
+            Column with the axis info.
+         """
+        col = Column(data=self.bins, name=self.name)
+        col.meta['axis_format'] = self.format
+        return col
+
+    @property
+    def info(self):
+        """Info string (str)"""
+        return ("{0} {1} {2}".format(self.name, self.format, self.bins))
+
+    def print(self):
+        """Print axis info using the logging module."""
+        #print(self.info)
+        log.info(self.info)

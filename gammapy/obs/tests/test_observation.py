@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import print_function, division
+import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
-from ...obs import ObservationTable
+from ...obs import (ObservationTable, ObservationGroups,
+                    ObservationGroupAxis)
 from ...datasets import make_test_observation_table
 from ...time import absolute_time
 from ...catalog import skycoord_from_table
@@ -186,3 +188,29 @@ def test_select_sky_regions():
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
+
+def test_ObservationGroups():
+
+    # test create obs groups
+    alt = Angle([0, 30, 60, 90], 'degree')
+    az = Angle([-90, 90, 270], 'degree')
+    ntels = np.array([3, 4])
+    list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
+                           ObservationGroupAxis('AZ', az, 'bin_edges'),
+                           ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
+    obs_group = ObservationGroups(list_obs_group_axis)
+    # TODO: asserts!!!
+    # test filter obs list
+    # TODO: !!!
+
+
+def test_ObservationGroupAxis():
+
+    # test create a few obs group axis
+    alt = Angle([0, 30, 60, 90], 'degree')
+    alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
+    az = Angle([-90, 90, 270], 'degree')
+    az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
+    ntels = np.array([3, 4])
+    ntels_obs_group_axis = ObservationGroupAxis('N_TELS', ntels, 'bin_values')
+    # TODO: asserts!!!
