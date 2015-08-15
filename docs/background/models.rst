@@ -26,8 +26,7 @@ It has methods to read, write and operate the 3D cubes.
 For the moment, only I/O and visualization methods are implemented.
 A test file is located in the `~gammapy-extra` repository
 (`bg_cube_model_test.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test.fits>`_).
-The file comes originally from the `~GammaLib` repository but has
-been slightly modified.
+The file has been produced with `~gammapy.datasets.make_test_bg_cube_model`.
 
 An example script of how to read/write the files and perform some
 simple plots is given in the `examples` directory:

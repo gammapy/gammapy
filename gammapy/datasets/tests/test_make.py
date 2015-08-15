@@ -60,8 +60,8 @@ def test_make_test_bg_cube_model():
                                             nenergy_bins=nenergy_bins)
 
     # test shape of cube bg model
-    assert len(bg_cube_model.background.shape) == 3
-    assert bg_cube_model.background.shape == (nenergy_bins, ndety_bins, ndetx_bins)
+    assert len(bg_cube_model.data.shape) == 3
+    assert bg_cube_model.data.shape == (nenergy_bins, ndety_bins, ndetx_bins)
 
     # make masked bg model
     bg_cube_model = make_test_bg_cube_model(apply_mask=True)
@@ -74,7 +74,7 @@ def test_make_test_bg_cube_model():
                                                indexing='ij')
     det_bin_index = bg_cube_model.find_det_bin(Angle([x_points, y_points]))
     e_bin_index = bg_cube_model.find_energy_bin(e_points)
-    bg = bg_cube_model.background[e_bin_index, det_bin_index[1], det_bin_index[0]]
+    bg = bg_cube_model.data[e_bin_index, det_bin_index[1], det_bin_index[0]]
 
     # assert that values are 0
     assert_quantity_allclose(bg, Quantity(0., bg.unit))

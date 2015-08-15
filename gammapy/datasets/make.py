@@ -11,7 +11,7 @@ from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations
 from ..utils.random import sample_sphere, get_random_state
 from ..time import time_ref_from_dict, time_relative_to_ref
-from ..background import CubeBackgroundModel
+from ..background import Cube
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
@@ -294,7 +294,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
 
     Returns
     -------
-    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+    bg_cube_model : `~gammapy.background.Cube`
         Bacground cube model.
     """
     # spatial bins (linear)
@@ -315,10 +315,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # https://github.com/gammapy/gammapy/pull/290
 
     # define empty bg cube model and set bins
-    bg_cube_model = CubeBackgroundModel(detx_bins=detx_bin_edges,
-                                        dety_bins=dety_bin_edges,
-                                        energy_bins=energy_bin_edges,
-                                        background=None)
+    bg_cube_model = Cube(detx_bins=detx_bin_edges,
+                         dety_bins=dety_bin_edges,
+                         energy_bins=energy_bin_edges,
+                         data=None)
 
     # background
 
@@ -356,6 +356,6 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
         mask = (detx_points <= detx_center) & (dety_points <= dety_center)
         background = background*mask
 
-    bg_cube_model.background = Quantity(background, '1 / (s TeV sr)')
+    bg_cube_model.data = Quantity(background, '1 / (s TeV sr)')
 
     return bg_cube_model
