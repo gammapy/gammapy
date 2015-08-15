@@ -11,3 +11,4 @@ from .template import *
 from .kernel import *
 from .models import *
 from .make import *
+from .cube import *

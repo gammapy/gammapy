@@ -28,6 +28,7 @@ __all__ = ['make_bg_cube_model',
 #           'divide_bin_volume',
 #           'set_zero_level',
 #           'smooth'
+#       - revise imports of all files (also TEST files) at the end
 # @ C. Deil: does it make sense?
 
 

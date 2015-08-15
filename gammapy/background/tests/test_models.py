@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
@@ -17,12 +18,6 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
-
-try:
-    import matplotlib
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -57,96 +52,6 @@ class TestGaussianBand2D():
 
 
 class TestCubeBackgroundModel():
-
-    @remote_data
-    def test_read_fits_table(self):
-
-        # test shape of bg cube when reading a file
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                                     location='remote')
-        bg_cube_model = CubeBackgroundModel.read(filename, format='table')
-        assert len(bg_cube_model.background.shape) == 3
-        assert bg_cube_model.background.shape == (len(bg_cube_model.energy_bins) - 1,
-                                                  len(bg_cube_model.dety_bins) - 1,
-                                                  len(bg_cube_model.detx_bins) - 1)
-
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
-    def test_image_plot(self):
-
-        bg_cube_model = make_test_bg_cube_model()
-
-        # test bg rate values plotted for image plot of energy bin
-        # conaining E = 2 TeV
-        energy = Quantity(2., 'TeV')
-        ax_im = bg_cube_model.plot_image(energy)
-        # get plot data (stored in the image)
-        image_im = ax_im.get_images()[0]
-        plot_data = image_im.get_array()
-
-        # get data from bg model object to compare
-        energy_bin = bg_cube_model.find_energy_bin(energy)
-        model_data = bg_cube_model.background[energy_bin]
-
-        # test if both arrays are equal
-        assert_allclose(plot_data, model_data.value)
-
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
-    def test_spectrum_plot(self):
-
-        bg_cube_model = make_test_bg_cube_model()
-
-        # test bg rate values plotted for spectrum plot of detector bin
-        # conaining det (0, 0) deg (center)
-        det = Angle([0., 0.], 'degree')
-        ax_spec = bg_cube_model.plot_spectrum(det)
-        # get plot data (stored in the line)
-        plot_data = ax_spec.get_lines()[0].get_xydata()
-
-        # get data from bg model object to compare
-        det_bin = bg_cube_model.find_det_bin(det)
-        model_data = bg_cube_model.background[:, det_bin[1], det_bin[0]]
-
-        # test if both arrays are equal
-        assert_allclose(plot_data[:, 1], model_data.value)
-
-    @remote_data
-    def test_write_fits_table(self, tmpdir):
-
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                                     location='remote')
-        bg_model_1 = CubeBackgroundModel.read(filename, format='table')
-
-        outfile = str(tmpdir.join('cubebackground_table_test.fits'))
-        bg_model_1.write(outfile, format='table')
-
-        # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read(outfile, format='table')
-        assert_quantity_allclose(bg_model_2.background,
-                                 bg_model_1.background)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
-
-    @remote_data
-    def test_read_write_fits_image(self, tmpdir):
-
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                                     location='remote')
-        bg_model_1 = CubeBackgroundModel.read(filename, format='table')
-
-        outfile = str(tmpdir.join('cubebackground_image_test.fits'))
-        bg_model_1.write(outfile, format='image')
-
-        # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read(outfile, format='image')
-        assert_quantity_allclose(bg_model_2.background,
-                                 bg_model_1.background)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
+    def test_CubeBackgroundModel(self):
+        # TODO: rename test function and implement tests!!! with asserts!!!
+        CubeBackgroundModel()
