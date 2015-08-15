@@ -52,13 +52,15 @@ def make_bg_cube_models(fitspath,
     1. make a global event list from a datastore
     2. filter the runs keeping only the ones far from known sources
     3. group the runs according to similar observation conditions (i.e. alt, az)
+        * using `~gammapy.obs.ObservationGroups`
     4. create a bg cube model for each group using:
         * the `~gammapy.background.make_bg_cube_model` method
         * and `~gammapy.background.CubeBackgroundModel` objects as containers
 
     The models are stored into FITS files.
 
-    It can take a few minutes to run.
+    It can take a few minutes to run. For a quicker test, please activate the
+    **test** flag.
 
     TODO: revise doc!!!
 
@@ -98,8 +100,7 @@ def create_bg_observation_list(fits_path, test):
         print("#######################################")
 
     # get full list of H.E.S.S. observations
-    # TODO: shouldn't observatory='HESS' be a parameter to specify which experiment we are using??!!!
-    data_store = DataStore(dir=fits_path)
+    data_store = DataStore(dir=fits_path, scheme='hess')
     observation_table = data_store.make_observation_table()
 
     # for testing, only process a small subset of observations
@@ -110,14 +111,9 @@ def create_bg_observation_list(fits_path, test):
         print("full observation table")
         print(observation_table)
 
-    # TODO: the column format is not the accepted format in Gammapy!!! -> write converter? or adapt data_store?
-    # https://gammapy.readthedocs.org/en/latest/dataformats/observation_lists.html
-    # TODO: GLON GLAT are missing the units!!!
-
     # filter observations: load catalog and reject obs too close to sources
 
-    # load catalog(s): HESS/TeVCAT (what about unpublished sources?)
-    # there is no HESS catalog function? (only hess_galactic?)
+    # load catalog: TeVCAT (no H.E.S.S. catalog)
     catalog = datasets.load_catalog_tevcat()
 
     # for testing, only process a small subset of sources

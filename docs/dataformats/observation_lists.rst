@@ -54,7 +54,7 @@ In order for the extra columns to have full meaning the following is needed:
 ================  ============================================================================  =========
 keyword           description                                                                   required?
 ================  ============================================================================  =========
-OBSERVATORY_NAME  name of the observatory where the observations were taken. This is            no
+OBSERVATORY_NAME  name of the observatory where the observations were taken; this is            no
                   important for instance for coordinate transformations between celestial
                   (i.e. RA/dec) and terrestrial (i.e. az/alt) coordinate systems
 MJDREFI           reference time: integer value in mean julian days; details in                 yes?
