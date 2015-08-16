@@ -10,7 +10,7 @@ from astropy.coordinates import Angle, SkyCoord
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
-from .. import datasets
+from ..datasets import load_catalog_tevcat
 from ..data import EventListDataset
 from ..background import make_bg_cube_model
 # TODO: revise imports!!!
@@ -114,7 +114,7 @@ def create_bg_observation_list(fits_path, test):
     # filter observations: load catalog and reject obs too close to sources
 
     # load catalog: TeVCAT (no H.E.S.S. catalog)
-    catalog = datasets.load_catalog_tevcat()
+    catalog = load_catalog_tevcat()
 
     # for testing, only process a small subset of sources
     if test:
@@ -188,9 +188,8 @@ def group_observations(test):
         azimuth_edges = Angle([90, 270], 'degree')
 
     # define axis for the grouping
-    list_obs_group_axis = [ObservationGroupAxis('ALT_PNT', altitude_edges, 'bin_edges'),
-                           ObservationGroupAxis('AZ_PNT', azimuth_edges, 'bin_edges')]
-    # TODO: I need the format converter!!!
+    list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, 'bin_edges'),
+                           ObservationGroupAxis('AZ', azimuth_edges, 'bin_edges')]
 
     # create observation groups
     observation_groups = ObservationGroups(list_obs_group_axis)
@@ -206,15 +205,15 @@ def group_observations(test):
 
     # wrap azimuth angles to [-90, 270) deg because of the definition
     # of the obs group azimuth axis
-    azimuth = Angle(observation_table_grouped['AZ_PNT']).wrap_at(Angle(270., 'degree'))
-    observation_table_grouped['AZ_PNT'] = azimuth
+    azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(270., 'degree'))
+    observation_table_grouped['AZ'] = azimuth
 
     # apply grouping
     observation_table_grouped = observation_groups.group_observation_table(observation_table_grouped)
 
     # wrap azimuth angles back to [0, 360) deg
-    azimuth = Angle(observation_table_grouped['AZ_PNT']).wrap_at(Angle(360., 'degree'))
-    observation_table_grouped['AZ_PNT'] = azimuth
+    azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(360., 'degree'))
+    observation_table_grouped['AZ'] = azimuth
 
     if DEBUG:
         print()
