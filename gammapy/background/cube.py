@@ -116,7 +116,7 @@ class Cube(object):
     #       - revise imports of all files (also TEST files) at the end
     # @ C. Deil: does it make sense?
 
-    list of mod files:
+    list of (to) mod files:
     - gammapy/background/__init__.py
     - gammapy/background/make.py
     - gammapy/background/models.py
@@ -126,7 +126,9 @@ class Cube(object):
     - gammapy/background/cube.py
     - gammapy/background/tests/test_cube.py
     - docs/background/plot_bgcube.py
-    - examples/plot_background_model.py -> rename? + update ref in docs!
+    - examples/plot_background_model.py -> plot_bg_cube_model.py (update ref in docs!)
+    - docs/background/models.rst
+    - docs/background/make_models.rst
 
     Examples
     --------

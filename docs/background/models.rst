@@ -31,7 +31,7 @@ The file has been produced with `~gammapy.datasets.make_test_bg_cube_model`.
 An example script of how to read/write the files and perform some
 simple plots is given in the `examples` directory:
 
-.. literalinclude:: ../../examples/plot_background_model.py
+.. literalinclude:: ../../examples/plot_bg_cube_model.py
 
 The data of the cube can be accessed via:
 
