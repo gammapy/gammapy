@@ -4,6 +4,7 @@ Background estimation and modeling methods.
 """
 from .fov import *
 from .maps import *
+from .cube import *
 from .on_off import *
 from .reflected import *
 from .ring import *
@@ -11,4 +12,3 @@ from .template import *
 from .kernel import *
 from .models import *
 from .make import *
-from .cube import *
