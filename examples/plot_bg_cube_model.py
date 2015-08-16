@@ -1,6 +1,6 @@
 """Plot cube background model and store it in fits.
 
-The "image" file can be viewed with ds9.
+The 'image' format file can be viewed with ds9.
 """
 import matplotlib.pyplot as plt
 from astropy.units import Quantity
