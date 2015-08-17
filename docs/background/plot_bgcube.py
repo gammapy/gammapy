@@ -7,7 +7,7 @@ from gammapy import datasets
 
 filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
                              location='remote')
-bg_cube_model = Cube.read(filename, format='table')
+bg_cube_model = Cube.read(filename, format='table', scheme='bg_cube')
 
 fig, axes = plt.subplots(nrows=1, ncols=3)
 fig.set_size_inches(16, 5., forward=True)

@@ -146,18 +146,21 @@ class CubeBackgroundModel(object):
 
         self.events_cube.coordx_edges = detx_edges
         self.events_cube.coordy_edges = dety_edges
-        self.events_cube.energy_bins = energy_edges
+        self.events_cube.energy_edges = energy_edges
         self.events_cube.data = Quantity(empty_cube_data, '') # counts
+        self.events_cube.scheme = 'bg_counts_cube'
 
         self.livetime_cube.coordx_edges = detx_edges
         self.livetime_cube.coordy_edges = dety_edges
-        self.livetime_cube.energy_bins = energy_edges
+        self.livetime_cube.energy_edges = energy_edges
         self.livetime_cube.data = Quantity(empty_cube_data, 'second')
+        self.livetime_cube.scheme = 'bg_livetime_cube'
 
         self.background_cube.coordx_edges = detx_edges
         self.background_cube.coordy_edges = dety_edges
-        self.background_cube.energy_bins = energy_edges
+        self.background_cube.energy_edges = energy_edges
         self.background_cube.data = Quantity(empty_cube_data, '1 / (s TeV sr)')
+        self.background_cube.scheme = 'bg_cube'
 
     @classmethod
     def define_cube_binning(cls, n_obs, DEBUG):
@@ -303,7 +306,7 @@ class CubeBackgroundModel(object):
 
             # fill data cube into histogramdd
             ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                         [self.events_cube.energy_bins,
+                                                         [self.events_cube.energy_edges,
                                                           self.events_cube.coordy_edges,
                                                           self.events_cube.coordx_edges])
             ev_cube_hist = Quantity(ev_cube_hist, '') # counts
@@ -312,7 +315,7 @@ class CubeBackgroundModel(object):
             self.events_cube.data += ev_cube_hist
 
             # fill livetime for bins where E_max > E_thres
-            energy_max = self.events_cube.energy_bins[1:]
+            energy_max = self.events_cube.energy_edges[1:]
             dummy_dety_max = np.zeros_like(self.events_cube.coordy_edges[1:])
             dummy_detx_max = np.zeros_like(self.events_cube.coordx_edges[1:])
             # define grid of max values (i.e. bin max values for each 3D bin)
@@ -354,7 +357,7 @@ class CubeBackgroundModel(object):
         # smooth images
 
         # integral of original images
-        dummy_delta_energy = np.zeros_like(self.background_cube.energy_bins[:-1])
+        dummy_delta_energy = np.zeros_like(self.background_cube.energy_edges[:-1])
         delta_y = self.background_cube.coordy_edges[1:] - self.background_cube.coordy_edges[:-1]
         delta_x = self.background_cube.coordx_edges[1:] - self.background_cube.coordx_edges[:-1]
         # define grid of deltas (i.e. bin widths for each 3D bin)
@@ -384,7 +387,7 @@ class CubeBackgroundModel(object):
                            [0, 0, 1, 0, 0]])
 
         # loop over energy bins (i.e. images)
-        for i_energy in np.arange(len(self.background_cube.energy_bins) - 1):
+        for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
             # loop over number of times to smooth
             for i_smooth in np.arange(n_smooth):
                 data = self.background_cube.data[i_energy]
@@ -400,5 +403,5 @@ class CubeBackgroundModel(object):
         # scale images to preserve original integrals
 
         # loop over energy bins (i.e. images)
-        for i_energy in np.arange(len(self.background_cube.energy_bins) - 1):
+        for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
             self.background_cube.data[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
