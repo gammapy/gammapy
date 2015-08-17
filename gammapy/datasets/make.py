@@ -318,7 +318,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     bg_cube_model = Cube(coordx_edges=detx_bin_edges,
                          coordy_edges=dety_bin_edges,
                          energy_edges=energy_bin_edges,
-                         data=None)
+                         data=None, scheme='bg_cube')
 
     # background
 

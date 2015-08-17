@@ -38,28 +38,26 @@ def _make_bin_edges_array(lo, hi):
     return np.append(lo.flatten(), hi.flatten()[-1:])
 
 
-def _parse_bg_units(background_unit):
+def _parse_data_units(data_unit):
     """
-    Utility function to parse the bg units correctly.
+    Utility function to parse the data units correctly.
     """
     # try 1st to parse them as astropy units
     try:
-        u.Unit(background_unit)
-    # if it fails, try to parse them manually
+        u.Unit(data_unit)
+    # if it fails, try to parse them as fits units
     except ValueError:
-        tev_units = ['1/s/TeV/sr', 's-1 sr-1 TeV-1', '1 / (s sr TeV)',
-                     '1 / (TeV s sr)']
-        mev_units = ['1/s/MeV/sr', 'MeV-1 s-1 sr-1', '1 / (s sr MeV)',
-                     '1 / (MeV s sr)']
-        if background_unit in tev_units:
-            background_unit = '1 / (s TeV sr)'
-        elif background_unit in mev_units:
-            background_unit = '1 / (s MeV sr)'
-        # if it still fails, raise an exception
-        else:
-            raise ValueError("Cannot interpret units ({})".format(background_unit))
+        try:
+            u.Unit(data_unit, format='fits')
+        # if it fails, try to parse them as ogip units (old fits standard)
+        except ValueError:
+            try:
+                u.Unit(data_unit, format='ogip')
+            # if it still fails, raise an exception
+            except ValueError:
+                raise ValueError("Cannot interpret units ({})".format(background_unit))
 
-    return background_unit
+    return data_unit
 
 
 class Cube(object):
@@ -69,17 +67,42 @@ class Cube(object):
     Container class for cubes *(X, Y, energy)*.
     The class has methods for reading a cube from a fits file,
     write a cube to a fits file and plot the cubes among others.
-    TODO: update this par!!!!
 
     The order of the axes in the cube is **(E, y, x)**,
     so in order to access the data correctly, the call is
     ``cube.data[energy_bin, coordy_bin, coordx_bin]``.
+
+    This class is very generic and can be used to contain cubes
+    of different kinds of data. However, for the FITS reading/writing
+    methods, special parameter names have to be defined, following
+    the corresponding specifications.
+
+    This is taken care of by the
+    `~gammapy.background.Cube.define_scheme` method.
+    The user only has to specify the correct **scheme** parameter.
+
+    Currently accepted schemes are:
+
+    * ``bg_cube``: scheme for background cubes; spatial coordinates
+      *(X, Y)* are in detector coordinates (a.k.a. nominal system
+      coordinates).
+    * ``bg_counts_cube``: scheme for count cubes specific for
+      background cube determination
+    * ``bg_livetime_cube``: scheme for livetime cubes specific for
+      background cube determination
+
+    If no scheme is specified, a generic one is applied.
+    New ones can be defined in
+    `~gammapy.background.Cube.define_scheme`.
+    The method also defines useful parameter names for the plots
+    axis/title labels specific to each scheme.
 
     - TODO: rename detx/dety to x/y!!!
     - TODO: review this doc!!!
     - TODO: review this class!!!
     - TODO: review high-level doc!!!
     - TODO: what should I do with the bg units parser???!!! (and read/write methods)!!!
+    -       AND MAKE AN OPTION "UPDATE FILE" instead of overwrite!!!
     - TODO: revise imports of all files (also TEST files) at the end
     - TODO: is this class general enough to use it for other things
     - besides bg cube models? (i.e. for projected bg cube models or
@@ -95,6 +118,8 @@ class Cube(object):
     - TODO: revise examples in the docs (i.e. for new member var 'fits_format' (or 'format', or ??? scheme? fits_scheme?)
     - TODO: revise also example script!!!
     - TODO: revise also indentation overall!!! (with renames, indentation might shift)!!!
+    - TODO: use TeV for bin volume correction!!!
+    - TODO from test_prod_bg_cube_models.py (my script): it would be nice to get a nice string from an obs group!!! and in this case pack it in the figure title; I think this also applies to the script for comparing plots!!!
 
     list of (to) mod files:
 
@@ -113,14 +138,16 @@ class Cube(object):
 
     Parameters
     ----------
-    coordx_edges : `~astropy.coordinates.Angle`
+    coordx_edges : `~astropy.coordinates.Angle`, optional
         Spatial bin edges vector (low and high). X coordinate.
-    coordy_edges : `~astropy.coordinates.Angle`
+    coordy_edges : `~astropy.coordinates.Angle`, optional
         Spatial bin edges vector (low and high). Y coordinate.
-    energy_edges : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`, optional
         Energy bin edges vector (low and high).
-    data : `~astropy.units.Quantity`
+    data : `~astropy.units.Quantity`, optional
         Data cube matrix in (energy, X, Y) format.
+    scheme : str, optional
+        String identifying parameter naming scheme for FITS files and plots.
 
     Examples
     --------
@@ -133,24 +160,102 @@ class Cube(object):
         cube.data[energy_bin, coord_bin[1], coord_bin[0]]
     """
 
-    def __init__(self, coordx_edges=None, coordy_edges=None, energy_edges=None, data=None):
+    scheme = ''
+
+    def __init__(self, coordx_edges=None, coordy_edges=None, energy_edges=None, data=None, scheme=None):
         self.coordx_edges = coordx_edges
         self.coordy_edges = coordy_edges
         self.energy_edges = energy_edges
-        # TODO: add member: coordx_fits_name, coordy_fits_name, energy_fits_name, data_fits_name (for DET, ENERG, Bgd,...)
-        #       no me gusta: el usuario no deberia de tener que saber lo que se ha establecido en la doc
-        #       a lo mejor: format/type, y entonces una funcion interna escoge el set de parametros correctos? (dejar default=None, para no tener que especificar si no se usan las funciones de read/write fits!!!!
 
         self.data = data
 
+        self.scheme = scheme
+
+    @property
+    def scheme_dict(self):
+        """Naming scheme, depending on the kind of cube (dict)"""
+
+        return self.define_scheme(self.scheme)
+
+    def define_scheme(self, scheme=None):
+        """Define naming scheme, depending on the kind of cube.
+
+        Parameters
+        ----------
+        scheme : str, optional
+            String identifying parameter naming scheme for FITS files and plots.
+
+        Returns
+        -------
+        scheme_dict : dict
+            Dictionary containing parameter naming scheme for FITS files and plots.
+        """
+        if self.scheme == '' or self.scheme == None:
+            self.scheme = scheme
+        else:
+            if self.scheme != scheme:
+                s_error = "Catched attempt to overwrite existing "
+                s_error += "cube scheme {}.".format(self.scheme)
+                raise RuntimeError(s_error)
+
+        scheme_dict = dict()
+
+        if self.scheme == None or self.scheme == '':
+            # default values
+            scheme_dict['hdu_fits_name'] = 'DATA'
+            scheme_dict['coordx_fits_name'] = 'X'
+            scheme_dict['coordy_fits_name'] = 'Y'
+            scheme_dict['energy_fits_name'] = 'E'
+            scheme_dict['data_fits_name'] = 'DATA'
+            scheme_dict['coordx_plot_name'] = 'X'
+            scheme_dict['coordy_plot_name'] = 'Y'
+            scheme_dict['energy_plot_name'] = 'E'
+            scheme_dict['data_plot_name'] = 'DATA'
+        elif self.scheme == 'bg_cube':
+            scheme_dict['hdu_fits_name'] = 'BACKGROUND'
+            scheme_dict['coordx_fits_name'] = 'DETX'
+            scheme_dict['coordy_fits_name'] = 'DETY'
+            scheme_dict['energy_fits_name'] = 'ENERG'
+            scheme_dict['data_fits_name'] = 'Bgd'
+            scheme_dict['coordx_plot_name'] = 'DET X'
+            scheme_dict['coordy_plot_name'] = 'DET Y'
+            scheme_dict['energy_plot_name'] = 'E'
+            scheme_dict['data_plot_name'] = 'Bg rate'
+        elif self.scheme == 'bg_counts_cube':
+            scheme_dict['hdu_fits_name'] = 'COUNTS'
+            scheme_dict['coordx_fits_name'] = 'DETX'
+            scheme_dict['coordy_fits_name'] = 'DETY'
+            scheme_dict['energy_fits_name'] = 'ENERG'
+            scheme_dict['data_fits_name'] = 'COUNTS'
+            scheme_dict['coordx_plot_name'] = 'DET X'
+            scheme_dict['coordy_plot_name'] = 'DET Y'
+            scheme_dict['energy_plot_name'] = 'E'
+            scheme_dict['data_plot_name'] = 'Counts'
+        elif self.scheme == 'bg_livetime_cube':
+            scheme_dict['hdu_fits_name'] = 'LIVETIME'
+            scheme_dict['coordx_fits_name'] = 'DETX'
+            scheme_dict['coordy_fits_name'] = 'DETY'
+            scheme_dict['energy_fits_name'] = 'ENERG'
+            scheme_dict['data_fits_name'] = 'LIVETIME'
+            scheme_dict['coordx_plot_name'] = 'DET X'
+            scheme_dict['coordy_plot_name'] = 'DET Y'
+            scheme_dict['energy_plot_name'] = 'E'
+            scheme_dict['data_plot_name'] = 'Livetime'
+        else:
+            raise ValueError("Invalid scheme {}.".format(scheme))
+
+        return scheme_dict
+
     @classmethod
-    def from_fits_table(cls, hdu):
+    def from_fits_table(cls, hdu, scheme=None):
         """Read cube from a fits binary table.
 
         Parameters
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             HDU binary table for the cube.
+        scheme : str, optional
+            String identifying parameter naming scheme for FITS files and plots.
 
         Returns
         -------
@@ -161,23 +266,31 @@ class Cube(object):
         header = hdu.header
         data = hdu.data
 
+        scheme_dict = cls.define_scheme(cls, scheme)
+        x_name_lo = scheme_dict['coordx_fits_name'] + '_LO'
+        x_name_hi = scheme_dict['coordx_fits_name'] + '_HI'
+        y_name_lo = scheme_dict['coordy_fits_name'] + '_LO'
+        y_name_hi = scheme_dict['coordy_fits_name'] + '_HI'
+        e_name_lo = scheme_dict['energy_fits_name'] + '_LO'
+        e_name_hi = scheme_dict['energy_fits_name'] + '_HI'
+
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th data
-        if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        if (header['TTYPE1'] != x_name_lo) or (header['TTYPE2'] != x_name_hi):
             raise ValueError("Expecting X axis in first 2 places, not ({0}, {1})"
                              .format(header['TTYPE1'], header['TTYPE2']))
-        if (header['TTYPE3'] != 'DETY_LO') or (header['TTYPE4'] != 'DETY_HI'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        if (header['TTYPE3'] != y_name_lo) or (header['TTYPE4'] != y_name_hi):
             raise ValueError("Expecting Y axis in second 2 places, not ({0}, {1})"
                              .format(header['TTYPE3'], header['TTYPE4']))
-        if (header['TTYPE5'] != 'ENERG_LO') or (header['TTYPE6'] != 'ENERG_HI'):
+        if (header['TTYPE5'] != e_name_lo) or (header['TTYPE6'] != e_name_hi):
             raise ValueError("Expecting E axis in third 2 places, not ({0}, {1})"
                              .format(header['TTYPE5'], header['TTYPE6']))
-        if (header['TTYPE7'] != 'Bgd'): #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
-            raise ValueError("Expecting data axis in fourth place, not ({})" #TODO: show the type of the data expected (i.e. 'name' variable)!!!
-                             .format(header['TTYPE7']))
+        if (header['TTYPE7'] != scheme_dict['data_fits_name']):
+            raise ValueError("Expecting data axis ({0}) in fourth place, not ({1})"
+                             .format(scheme_dict['data_fits_name'], header['TTYPE7']))
 
         # get coord X, Y binning
-        coordx_edges = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI']) #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-        coordy_edges = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI']) #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        coordx_edges = _make_bin_edges_array(data[x_name_lo], data[x_name_hi])
+        coordy_edges = _make_bin_edges_array(data[y_name_lo], data[y_name_hi])
         if header['TUNIT1'] == header['TUNIT2']:
             coordx_unit = header['TUNIT1']
         else:
@@ -196,7 +309,7 @@ class Cube(object):
         coordy_edges = Angle(coordy_edges, coordy_unit)
 
         # get energy binning
-        energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
+        energy_edges = _make_bin_edges_array(data[e_name_lo], data[e_name_hi])
         if header['TUNIT5'] == header['TUNIT6']:
             energy_unit = header['TUNIT5']
         else:
@@ -205,17 +318,17 @@ class Cube(object):
         energy_edges = Quantity(energy_edges, energy_unit)
 
         # get data
-        data = data['Bgd'][0] #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
-        data_unit = _parse_bg_units(header['TUNIT7']) # TODO: avoid using the parser in this class!!! -> move to new BacgroundCubeModel class!!! (if necessary at all)
+        data = data[scheme_dict['data_fits_name']][0]
+        data_unit = _parse_data_units(header['TUNIT7'])
         data = Quantity(data, data_unit)
 
         return cls(coordx_edges=coordx_edges,
                    coordy_edges=coordy_edges,
                    energy_edges=energy_edges,
-                   data=data)
+                   data=data, scheme=cls.scheme)
 
     @classmethod
-    def from_fits_image(cls, image_hdu, energy_hdu):
+    def from_fits_image(cls, image_hdu, energy_hdu, scheme=None):
         """Read cube from a fits image.
 
         Parameters
@@ -224,6 +337,8 @@ class Cube(object):
             Cube image HDU.
         energy_hdu : `~astropy.io.fits.BinTableHDU`
             Energy binning table.
+        scheme : str, optional
+            String identifying parameter naming scheme for FITS files and plots.
 
         Returns
         -------
@@ -233,14 +348,16 @@ class Cube(object):
         image_header = image_hdu.header
         energy_header = energy_hdu.header
 
+        scheme_dict = cls.define_scheme(cls, scheme)
+
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th data
-        if (image_header['CTYPE1'] != 'DETX'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        if (image_header['CTYPE1'] != scheme_dict['coordx_fits_name']):
             raise ValueError("Expecting X axis in first place, not ({})"
                              .format(image_header['CTYPE1']))
-        if (image_header['CTYPE2'] != 'DETY'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        if (image_header['CTYPE2'] != scheme_dict['coordy_fits_name']):
             raise ValueError("Expecting Y axis in second place, not ({})"
                              .format(image_header['CTYPE2']))
-        if (image_header['CTYPE3'] != 'ENERGY'):
+        if (image_header['CTYPE3'] != scheme_dict['energy_fits_name']):
             raise ValueError("Expecting E axis in third place, not ({})"
                              .format(image_header['CTYPE3']))
 
@@ -266,16 +383,16 @@ class Cube(object):
 
         # get data
         data = image_hdu.data
-        data_unit = _parse_bg_units(image_header['BG_UNIT']) # TODO: avoid using the parser in this class!!! -> move to new BacgroundCubeModel class!!! (if necessary at all)
+        data_unit = _parse_data_units(image_header['CUBE_DATA_UNIT'])
         data = Quantity(data, data_unit)
 
         return cls(coordx_edges=coordx_edges,
                    coordy_edges=coordy_edges,
                    energy_edges=energy_edges,
-                   data=data)
+                   data=data, scheme=cls.scheme)
 
     @classmethod
-    def read(cls, filename, format='table'):
+    def read(cls, filename, format='table', scheme=None):
         """Read cube from fits file.
 
         Several input formats are accepted, depending on the value
@@ -292,17 +409,20 @@ class Cube(object):
             Name of file with the cube.
         format : str, optional
             Format of the cube to read.
+        scheme : str, optional
+            String identifying parameter naming scheme for FITS files and plots.
 
         Returns
         -------
         cube : `~gammapy.background.Cube`
             Cube object.
         """
+        scheme_dict = cls.define_scheme(cls, scheme)
         hdu = fits.open(filename)
         if format == 'table':
-            return cls.from_fits_table(hdu['BACKGROUND']) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
+            return cls.from_fits_table(hdu[scheme_dict['hdu_fits_name']], scheme)
         elif format == 'image':
-            return cls.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'])
+            return cls.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'], scheme)
         else:
             raise ValueError("Invalid format {}.".format(format))
 
@@ -328,15 +448,15 @@ class Cube(object):
 
         # table
         table = Table()
-        table['DETX_LO'] = a_coordx_lo #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-        table['DETX_HI'] = a_coordx_hi #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-        table['DETY_LO'] = a_coordy_lo #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-        table['DETY_HI'] = a_coordy_hi #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-        table['ENERG_LO'] = a_energy_lo
-        table['ENERG_HI'] = a_energy_hi
-        table['Bgd'] = a_data #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
+        table[self.scheme_dict['coordx_fits_name'] + '_LO'] = a_coordx_lo
+        table[self.scheme_dict['coordx_fits_name'] + '_HI'] = a_coordx_hi
+        table[self.scheme_dict['coordy_fits_name'] + '_LO'] = a_coordy_lo
+        table[self.scheme_dict['coordy_fits_name'] + '_HI'] = a_coordy_hi
+        table[self.scheme_dict['energy_fits_name'] + '_LO'] = a_energy_lo
+        table[self.scheme_dict['energy_fits_name'] + '_HI'] = a_energy_hi
+        table[self.scheme_dict['data_fits_name']] = a_data
 
-        table.meta['name'] = 'BACKGROUND' #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
+        table.meta['name'] = self.scheme_dict['hdu_fits_name']
 
         return table
 
@@ -366,8 +486,8 @@ class Cube(object):
         imhdu = fits.PrimaryHDU(data=self.data.value,
                                 header=self.coord_wcs.to_header())
         # add some important header information
-        imhdu.header['BG_UNIT'] = '{0.unit:FITS}'.format(self.data) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
-        imhdu.header['CTYPE3'] = 'ENERGY'
+        imhdu.header['CUBE_DATA_UNIT'] = '{0.unit:FITS}'.format(self.data)
+        imhdu.header['CTYPE3'] = self.scheme_dict['energy_fits_name']
         imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_edges)
 
         # get WCS object and write it out as a FITS header
@@ -468,8 +588,8 @@ class Cube(object):
 
         This method gives the correct answer only for linear X, Y binning.
         """
-        wcs = linear_arrays_to_wcs(name_x="DETX", #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
-                                   name_y="DETY", #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        wcs = linear_arrays_to_wcs(name_x=self.scheme_dict['coordx_fits_name'],
+                                   name_y=self.scheme_dict['coordy_fits_name'],
                                    bin_edges_x=self.coordx_edges,
                                    bin_edges_y=self.coordx_edges)
         return wcs
@@ -621,7 +741,6 @@ class Cube(object):
             style_kwargs = dict()
 
         fig.set_size_inches(8., 8., forward=True)
-        #import IPython; IPython.embed()
 
         if not 'cmap' in style_kwargs:
             style_kwargs['cmap'] = 'afmhot'
@@ -636,13 +755,17 @@ class Cube(object):
         ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value,
                                                               energy_bin_edges[1].value,
                                                               energy_bin_edges.unit))
-        ax.set_xlabel('X / {}'.format(extent.unit))
-        ax.set_ylabel('Y / {}'.format(extent.unit))
+        ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['coordx_plot_name'],
+                                         extent.unit))
+        ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['coordy_plot_name'],
+                                         extent.unit))
 
         # draw color bar
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        fig.colorbar(image, cax=cax, label='Bg rate / {}'.format(data.unit)) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
+        fig.colorbar(image, cax=cax,
+                     label='{0} / {1}'.format(self.scheme_dict['data_plot_name'],
+                                              data.unit))
 
         # eventually close figure to avoid white canvases
         if not do_not_close_fig:
@@ -685,11 +808,11 @@ class Cube(object):
         coord_bin = self.find_coord_bin(coord)
         coord_bin_edges = self.find_coord_bin_edges(coord)
         ss_coordx_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[0].value,
-                                                    coord_bin_edges[1].value,
-                                                    coord_bin_edges.unit)
+                                                      coord_bin_edges[1].value,
+                                                      coord_bin_edges.unit)
         ss_coordy_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[2].value,
-                                                    coord_bin_edges[3].value,
-                                                    coord_bin_edges.unit)
+                                                      coord_bin_edges[3].value,
+                                                      coord_bin_edges.unit)
 
         # get data for the plot
         data = self.data[:, coord_bin[1], coord_bin[0]]
@@ -723,9 +846,10 @@ class Cube(object):
                                                             coord_bin_edges.unit)
 
         ax.set_title('Coord = {0} {1}'.format(ss_coordx_bin_edges, ss_coordy_bin_edges))
-        ax.set_xlabel('E / {}'.format(energy_points.unit))
-        ax.set_ylabel('Bg rate / {}'.format(data.unit)) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
-
+        ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['energy_plot_name'],
+                                         energy_points.unit))
+        ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['data_plot_name'],
+                                         data.unit))
         # eventually close figure to avoid white canvases
         if not do_not_close_fig:
             plt.close(fig)
