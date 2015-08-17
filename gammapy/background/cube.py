@@ -67,14 +67,13 @@ class Cube(object):
     """Cube container class.
 
     Container class for cubes *(X, Y, energy)*.
-    *(X, Y)* are detector coordinates (a.k.a. nominal system).
     The class has methods for reading a cube from a fits file,
     write a cube to a fits file and plot the cubes among others.
     TODO: update this par!!!!
 
     The order of the axes in the cube is **(E, y, x)**,
     so in order to access the data correctly, the call is
-    ``cube.data[energy_bin, dety_bin, detx_bin]``.
+    ``cube.data[energy_bin, coordy_bin, coordx_bin]``.
 
     - TODO: rename detx/dety to x/y!!!
     - TODO: review this doc!!!
@@ -93,6 +92,9 @@ class Cube(object):
     - TODO: review background: make.py models.py
     - TODO: review background/tests: test_models test_cube
     - TODO: revise imports of all files (also TEST files) at the end
+    - TODO: revise examples in the docs (i.e. for new member var 'fits_format' (or 'format', or ??? scheme? fits_scheme?)
+    - TODO: revise also example script!!!
+    - TODO: revise also indentation overall!!! (with renames, indentation might shift)!!!
 
     list of (to) mod files:
 
@@ -111,11 +113,11 @@ class Cube(object):
 
     Parameters
     ----------
-    detx_bins : `~astropy.coordinates.Angle`
+    coordx_edges : `~astropy.coordinates.Angle`
         Spatial bin edges vector (low and high). X coordinate.
-    dety_bins : `~astropy.coordinates.Angle`
+    coordy_edges : `~astropy.coordinates.Angle`
         Spatial bin edges vector (low and high). Y coordinate.
-    energy_bins : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy bin edges vector (low and high).
     data : `~astropy.units.Quantity`
         Data cube matrix in (energy, X, Y) format.
@@ -127,14 +129,17 @@ class Cube(object):
     .. code:: python
 
         energy_bin = cube.find_energy_bin(energy=Quantity(2., 'TeV'))
-        det_bin = cube.find_det_bin(det=Angle([0., 0.], 'degree'))
-        cube.data[energy_bin, det_bin[1], det_bin[0]]
+        coord_bin = cube.find_coord_bin(coord=Angle([0., 0.], 'degree'))
+        cube.data[energy_bin, coord_bin[1], coord_bin[0]]
     """
 
-    def __init__(self, detx_bins=None, dety_bins=None, energy_bins=None, data=None):
-        self.detx_bins = detx_bins
-        self.dety_bins = dety_bins
-        self.energy_bins = energy_bins
+    def __init__(self, coordx_edges=None, coordy_edges=None, energy_edges=None, data=None):
+        self.coordx_edges = coordx_edges
+        self.coordy_edges = coordy_edges
+        self.energy_edges = energy_edges
+        # TODO: add member: coordx_fits_name, coordy_fits_name, energy_fits_name, data_fits_name (for DET, ENERG, Bgd,...)
+        #       no me gusta: el usuario no deberia de tener que saber lo que se ha establecido en la doc
+        #       a lo mejor: format/type, y entonces una funcion interna escoge el set de parametros correctos? (dejar default=None, para no tener que especificar si no se usan las funciones de read/write fits!!!!
 
         self.data = data
 
@@ -157,10 +162,10 @@ class Cube(object):
         data = hdu.data
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th data
-        if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'):
+        if (header['TTYPE1'] != 'DETX_LO') or (header['TTYPE2'] != 'DETX_HI'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
             raise ValueError("Expecting X axis in first 2 places, not ({0}, {1})"
                              .format(header['TTYPE1'], header['TTYPE2']))
-        if (header['TTYPE3'] != 'DETY_LO') or (header['TTYPE4'] != 'DETY_HI'):
+        if (header['TTYPE3'] != 'DETY_LO') or (header['TTYPE4'] != 'DETY_HI'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
             raise ValueError("Expecting Y axis in second 2 places, not ({0}, {1})"
                              .format(header['TTYPE3'], header['TTYPE4']))
         if (header['TTYPE5'] != 'ENERG_LO') or (header['TTYPE6'] != 'ENERG_HI'):
@@ -170,43 +175,43 @@ class Cube(object):
             raise ValueError("Expecting data axis in fourth place, not ({})" #TODO: show the type of the data expected (i.e. 'name' variable)!!!
                              .format(header['TTYPE7']))
 
-        # get det X, Y binning
-        detx_bins = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI'])
-        dety_bins = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI'])
+        # get coord X, Y binning
+        coordx_edges = _make_bin_edges_array(data['DETX_LO'], data['DETX_HI']) #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        coordy_edges = _make_bin_edges_array(data['DETY_LO'], data['DETY_HI']) #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
         if header['TUNIT1'] == header['TUNIT2']:
-            detx_unit = header['TUNIT1']
+            coordx_unit = header['TUNIT1']
         else:
-            raise ValueError("Detector X units not matching ({0}, {1})"
+            raise ValueError("Coordinate X units not matching ({0}, {1})"
                              .format(header['TUNIT1'], header['TUNIT2']))
         if header['TUNIT3'] == header['TUNIT4']:
-            dety_unit = header['TUNIT3']
+            coordy_unit = header['TUNIT3']
         else:
-            raise ValueError("Detector Y units not matching ({0}, {1})"
+            raise ValueError("Coordinate Y units not matching ({0}, {1})"
                              .format(header['TUNIT3'], header['TUNIT4']))
-        if not detx_unit == dety_unit:
-            ss_error = "This is odd: detector X and Y units not matching"
-            ss_error += "({0}, {1})".format(detx_unit, dety_unit)
+        if not coordx_unit == coordy_unit:
+            ss_error = "This is odd: units of X and Y coordinates not matching"
+            ss_error += "({0}, {1})".format(coordx_unit, coordy_unit)
             raise ValueError(ss_error)
-        detx_bins = Angle(detx_bins, detx_unit)
-        dety_bins = Angle(dety_bins, dety_unit)
+        coordx_edges = Angle(coordx_edges, coordx_unit)
+        coordy_edges = Angle(coordy_edges, coordy_unit)
 
         # get energy binning
-        energy_bins = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
+        energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
         if header['TUNIT5'] == header['TUNIT6']:
             energy_unit = header['TUNIT5']
         else:
             raise ValueError("Energy units not matching ({0}, {1})"
                              .format(header['TUNIT5'], header['TUNIT6']))
-        energy_bins = Quantity(energy_bins, energy_unit)
+        energy_edges = Quantity(energy_edges, energy_unit)
 
         # get data
         data = data['Bgd'][0] #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
         data_unit = _parse_bg_units(header['TUNIT7']) # TODO: avoid using the parser in this class!!! -> move to new BacgroundCubeModel class!!! (if necessary at all)
         data = Quantity(data, data_unit)
 
-        return cls(detx_bins=detx_bins,
-                   dety_bins=dety_bins,
-                   energy_bins=energy_bins,
+        return cls(coordx_edges=coordx_edges,
+                   coordy_edges=coordy_edges,
+                   energy_edges=energy_edges,
                    data=data)
 
     @classmethod
@@ -229,10 +234,10 @@ class Cube(object):
         energy_header = energy_hdu.header
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th data
-        if (image_header['CTYPE1'] != 'DETX'):
+        if (image_header['CTYPE1'] != 'DETX'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
             raise ValueError("Expecting X axis in first place, not ({})"
                              .format(image_header['CTYPE1']))
-        if (image_header['CTYPE2'] != 'DETY'):
+        if (image_header['CTYPE2'] != 'DETY'): #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
             raise ValueError("Expecting Y axis in second place, not ({})"
                              .format(image_header['CTYPE2']))
         if (image_header['CTYPE3'] != 'ENERGY'):
@@ -241,7 +246,7 @@ class Cube(object):
 
         # check units
         if (image_header['CUNIT1'] != image_header['CUNIT2']):
-            ss_error = "This is odd: detector X and Y units not matching"
+            ss_error = "This is odd: units of X and Y coordinates not matching"
             ss_error += "({0}, {1})".format(image_header['CUNIT1'], image_header['CUNIT2'])
             raise ValueError(ss_error)
         if (image_header['CUNIT3'] != energy_header['TUNIT1']):
@@ -249,24 +254,24 @@ class Cube(object):
             ss_error += "({0}, {1})".format(image_header['CUNIT3'], energy_header['TUNIT1'])
             raise ValueError(ss_error)
 
-        # get det X, Y binning
+        # get coord X, Y binning
         wcs = WCS(image_header, naxis=2) # select only the (X, Y) axes
-        detx_bins, dety_bins = linear_wcs_to_arrays(wcs,
-                                                    image_header['NAXIS1'],
-                                                    image_header['NAXIS2'])
+        coordx_edges, coordy_edges = linear_wcs_to_arrays(wcs,
+                                                          image_header['NAXIS1'],
+                                                          image_header['NAXIS2'])
 
         # get energy binning
-        energy_bins = Quantity(energy_hdu.data['ENERGY'],
-                               energy_header['TUNIT1'])
+        energy_edges = Quantity(energy_hdu.data['ENERGY'],
+                                energy_header['TUNIT1'])
 
         # get data
         data = image_hdu.data
         data_unit = _parse_bg_units(image_header['BG_UNIT']) # TODO: avoid using the parser in this class!!! -> move to new BacgroundCubeModel class!!! (if necessary at all)
         data = Quantity(data, data_unit)
 
-        return cls(detx_bins=detx_bins,
-                   dety_bins=dety_bins,
-                   energy_bins=energy_bins,
+        return cls(coordx_edges=coordx_edges,
+                   coordy_edges=coordy_edges,
+                   energy_edges=energy_edges,
                    data=data)
 
     @classmethod
@@ -313,20 +318,20 @@ class Cube(object):
             Table containing the cube.
         """
         # data arrays
-        a_detx_lo = Quantity([self.detx_bins[:-1]])
-        a_detx_hi = Quantity([self.detx_bins[1:]])
-        a_dety_lo = Quantity([self.dety_bins[:-1]])
-        a_dety_hi = Quantity([self.dety_bins[1:]])
-        a_energy_lo = Quantity([self.energy_bins[:-1]])
-        a_energy_hi = Quantity([self.energy_bins[1:]])
+        a_coordx_lo = Quantity([self.coordx_edges[:-1]])
+        a_coordx_hi = Quantity([self.coordx_edges[1:]])
+        a_coordy_lo = Quantity([self.coordy_edges[:-1]])
+        a_coordy_hi = Quantity([self.coordy_edges[1:]])
+        a_energy_lo = Quantity([self.energy_edges[:-1]])
+        a_energy_hi = Quantity([self.energy_edges[1:]])
         a_data = Quantity([self.data])
 
         # table
         table = Table()
-        table['DETX_LO'] = a_detx_lo
-        table['DETX_HI'] = a_detx_hi
-        table['DETY_LO'] = a_dety_lo
-        table['DETY_HI'] = a_dety_hi
+        table['DETX_LO'] = a_coordx_lo #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        table['DETX_HI'] = a_coordx_hi #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        table['DETY_LO'] = a_coordy_lo #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+        table['DETY_HI'] = a_coordy_hi #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
         table['ENERG_LO'] = a_energy_lo
         table['ENERG_HI'] = a_energy_hi
         table['Bgd'] = a_data #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
@@ -359,18 +364,18 @@ class Cube(object):
         """
         # data
         imhdu = fits.PrimaryHDU(data=self.data.value,
-                                header=self.det_wcs.to_header())
+                                header=self.coord_wcs.to_header())
         # add some important header information
         imhdu.header['BG_UNIT'] = '{0.unit:FITS}'.format(self.data) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
         imhdu.header['CTYPE3'] = 'ENERGY'
-        imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_bins)
+        imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_edges)
 
         # get WCS object and write it out as a FITS header
-        wcs_header = self.det_wcs.to_header()
+        wcs_header = self.coord_wcs.to_header()
 
         # get energy values as a table HDU, via an astropy table
         energy_table = Table()
-        energy_table['ENERGY'] = self.energy_bins
+        energy_table['ENERGY'] = self.energy_edges
         energy_table.meta['name'] = 'EBOUNDS'
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
@@ -421,8 +426,8 @@ class Cube(object):
 
         The output array format is ``(x_lo, x_hi, y_lo, y_hi)``.
         """
-        bx = self.detx_bins
-        by = self.dety_bins
+        bx = self.coordx_edges
+        by = self.coordy_edges
         return Angle([bx[0], bx[-1], by[0], by[-1]])
 
     @property
@@ -431,7 +436,7 @@ class Cube(object):
 
         The output array format is  ``(e_lo, e_hi)``.
         """
-        b = self.energy_bins
+        b = self.energy_edges
         return Quantity([b[0], b[-1]])
 
     @property
@@ -440,16 +445,16 @@ class Cube(object):
 
         Returning two separate elements for the X and Y bin centers.
         """
-        detx_bin_centers = 0.5 * (self.detx_bins[:-1] + self.detx_bins[1:])
-        dety_bin_centers = 0.5 * (self.dety_bins[:-1] + self.dety_bins[1:])
-        return detx_bin_centers, dety_bin_centers
+        coordx_bin_centers = 0.5 * (self.coordx_edges[:-1] + self.coordx_edges[1:])
+        coordy_bin_centers = 0.5 * (self.coordy_edges[:-1] + self.coordy_edges[1:])
+        return coordx_bin_centers, coordy_bin_centers
 
     @property
     def energy_bin_centers(self):
         """Energy bin centers (logarithmic center) (`~astropy.units.Quantity`)"""
-        log_bin_edges = np.log(self.energy_bins.value)
+        log_bin_edges = np.log(self.energy_edges.value)
         log_bin_centers = 0.5 * (log_bin_edges[:-1] + log_bin_edges[1:])
-        energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_bins.unit)
+        energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_edges.unit)
         # TODO: this function should be reviewed/re-written, when
         # the following PR is completed:
         # https://github.com/gammapy/gammapy/pull/290
@@ -458,43 +463,43 @@ class Cube(object):
         return energy_bin_centers
 
     @property
-    def det_wcs(self):
-        """WCS object describing the coordinates of the det (X, Y) bins (`~astropy.wcs.WCS`)
+    def coord_wcs(self):
+        """WCS object describing the coordinates of the coord (X, Y) bins (`~astropy.wcs.WCS`)
 
         This method gives the correct answer only for linear X, Y binning.
         """
-        wcs = linear_arrays_to_wcs(name_x="DETX",
-                                   name_y="DETY",
-                                   bin_edges_x=self.detx_bins,
-                                   bin_edges_y=self.detx_bins)
+        wcs = linear_arrays_to_wcs(name_x="DETX", #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+                                   name_y="DETY", #TODO: it could be smthg else as DETX/DETY (i.e. RA/DEC, GLON/GLAT,...) pass the name as option!!! (or look it up somewhere!!!)
+                                   bin_edges_x=self.coordx_edges,
+                                   bin_edges_y=self.coordx_edges)
         return wcs
 
-    def find_det_bin(self, det):
-        """Find the bins that contain the specified det (X, Y) pairs.
+    def find_coord_bin(self, coord):
+        """Find the bins that contain the specified coord (X, Y) pairs.
 
         Parameters
         ----------
-        det : `~astropy.coordinates.Angle`
-            Array of det (X, Y) pairs to search for.
+        coord : `~astropy.coordinates.Angle`
+            Array of coord (X, Y) pairs to search for.
 
         Returns
         -------
         bin_index : `~numpy.ndarray`
-            Array of integers with the indices (x, y) of the det
-            bin containing the specified det (X, Y) pair.
+            Array of integers with the indices (x, y) of the coord
+            bin containing the specified coord (X, Y) pair.
         """
-        # check that the specified det is within the boundaries of the cube
-        det_extent = self.image_extent
-        check_x_lo = (det_extent[0] <= det[0]).all()
-        check_x_hi = (det[0] < det_extent[1]).all()
-        check_y_lo = (det_extent[2] <= det[1]).all()
-        check_y_hi = (det[1] < det_extent[3]).all()
+        # check that the specified coord is within the boundaries of the cube
+        coord_extent = self.image_extent
+        check_x_lo = (coord_extent[0] <= coord[0]).all()
+        check_x_hi = (coord[0] < coord_extent[1]).all()
+        check_y_lo = (coord_extent[2] <= coord[1]).all()
+        check_y_hi = (coord[1] < coord_extent[3]).all()
         if not (check_x_lo and check_x_hi) or not (check_y_lo and check_y_hi):
-            raise ValueError("Specified det {0} is outside the boundaries {1}."
-                             .format(det, det_extent))
+            raise ValueError("Specified coord {0} is outside the boundaries {1}."
+                             .format(coord, coord_extent))
 
-        bin_index_x = np.searchsorted(self.detx_bins[1:], det[0])
-        bin_index_y = np.searchsorted(self.dety_bins[1:], det[1])
+        bin_index_x = np.searchsorted(self.coordx_edges[1:], coord[0])
+        bin_index_y = np.searchsorted(self.coordy_edges[1:], coord[1])
 
         return np.array([bin_index_x, bin_index_y])
 
@@ -518,28 +523,28 @@ class Cube(object):
             ss_error += " is outside the boundaries {}.".format(energy_extent)
             raise ValueError(ss_error)
 
-        bin_index = np.searchsorted(self.energy_bins[1:], energy)
+        bin_index = np.searchsorted(self.energy_edges[1:], energy)
 
         return bin_index
 
-    def find_det_bin_edges(self, det):
-        """Find the bin edges of the specified det (X, Y) pairs.
+    def find_coord_bin_edges(self, coord):
+        """Find the bin edges of the specified coord (X, Y) pairs.
 
         Parameters
         ----------
-        det : `~astropy.coordinates.Angle`
-            Array of det (X, Y) pairs to search for.
+        coord : `~astropy.coordinates.Angle`
+            Array of coord (X, Y) pairs to search for.
 
         Returns
         -------
         bin_edges : `~astropy.coordinates.Angle`
-            Det bin edges (x_lo, x_hi, y_lo, y_hi).
+            Coord bin edges (x_lo, x_hi, y_lo, y_hi).
         """
-        bin_index = self.find_det_bin(det)
-        bin_edges = Angle([self.detx_bins[bin_index[0]],
-                           self.detx_bins[bin_index[0] + 1],
-                           self.dety_bins[bin_index[1]],
-                           self.dety_bins[bin_index[1] + 1]])
+        bin_index = self.find_coord_bin(coord)
+        bin_edges = Angle([self.coordx_edges[bin_index[0]],
+                           self.coordx_edges[bin_index[0] + 1],
+                           self.coordy_edges[bin_index[1]],
+                           self.coordy_edges[bin_index[1] + 1]])
 
         return bin_edges
 
@@ -557,8 +562,8 @@ class Cube(object):
             Energy bin edges [E_min, E_max).
         """
         bin_index = self.find_energy_bin(energy)
-        bin_edges = Quantity([self.energy_bins[bin_index],
-                              self.energy_bins[bin_index + 1]])
+        bin_edges = Quantity([self.energy_edges[bin_index],
+                              self.energy_edges[bin_index + 1]])
 
         return bin_edges
 
@@ -644,13 +649,13 @@ class Cube(object):
             plt.close(fig)
         return ax
 
-    def plot_spectrum(self, det, ax=None, style_kwargs=None):
-        """Plot spectra for the det bin containing the specified det (X, Y) pair.
+    def plot_spectrum(self, coord, ax=None, style_kwargs=None):
+        """Plot spectra for the coord bin containing the specified coord (X, Y) pair.
 
         Parameters
         ----------
-        det : `~astropy.units.Quantity`
-            Det (X,Y) pair of cube bin to plot.
+        coord : `~astropy.units.Quantity`
+            Coord (X,Y) pair of cube bin to plot.
         ax : `~matplotlib.axes.Axes`, optional
             Axes of the figure for the plot.
         style_kwargs : dict, optional
@@ -663,33 +668,33 @@ class Cube(object):
         """
         import matplotlib.pyplot as plt
 
-        det = det.flatten() # flatten
-        # check shape of det: only 1 pair is accepted
-        nvalues = len(det.flatten())
+        coord = coord.flatten() # flatten
+        # check shape of coord: only 1 pair is accepted
+        nvalues = len(coord.flatten())
         if nvalues != 2:
-            ss_error = "Expected exactly 2 values for det (X, Y),"
+            ss_error = "Expected exactly 2 values for coord (X, Y),"
             ss_error += "got {}.".format(nvalues)
             raise IndexError(ss_error)
         else:
             do_only_1_plot = True
 
         energy_points = self.energy_bin_centers
-        detx_bin_centers, dety_bin_centers = self.image_bin_centers
+        coordx_bin_centers, coordy_bin_centers = self.image_bin_centers
 
-        # find det bin containing the specified det coordinates
-        det_bin = self.find_det_bin(det)
-        det_bin_edges = self.find_det_bin_edges(det)
-        ss_detx_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[0].value,
-                                                    det_bin_edges[1].value,
-                                                    det_bin_edges.unit)
-        ss_dety_bin_edges = "[{0}, {1}) {2}".format(det_bin_edges[2].value,
-                                                    det_bin_edges[3].value,
-                                                    det_bin_edges.unit)
+        # find coord bin containing the specified coord coordinates
+        coord_bin = self.find_coord_bin(coord)
+        coord_bin_edges = self.find_coord_bin_edges(coord)
+        ss_coordx_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[0].value,
+                                                    coord_bin_edges[1].value,
+                                                    coord_bin_edges.unit)
+        ss_coordy_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[2].value,
+                                                    coord_bin_edges[3].value,
+                                                    coord_bin_edges.unit)
 
         # get data for the plot
-        data = self.data[:, det_bin[1], det_bin[0]]
-        detx_bin_center = detx_bin_centers[det_bin[0]]
-        dety_bin_center = dety_bin_centers[det_bin[1]]
+        data = self.data[:, coord_bin[1], coord_bin[0]]
+        coordx_bin_center = coordx_bin_centers[coord_bin[0]]
+        coordy_bin_center = coordy_bin_centers[coord_bin[1]]
 
         # create plot
         fig = plt.figure()
@@ -710,14 +715,14 @@ class Cube(object):
         ax.loglog() # double log scale # slow!
 
         # set title and axis names
-        ss_detx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[0].value,
-                                                            det_bin_edges[1].value,
-                                                            det_bin_edges.unit)
-        ss_dety_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(det_bin_edges[2].value,
-                                                            det_bin_edges[3].value,
-                                                            det_bin_edges.unit)
+        ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[0].value,
+                                                            coord_bin_edges[1].value,
+                                                            coord_bin_edges.unit)
+        ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[2].value,
+                                                            coord_bin_edges[3].value,
+                                                            coord_bin_edges.unit)
 
-        ax.set_title('Det = {0} {1}'.format(ss_detx_bin_edges, ss_dety_bin_edges))
+        ax.set_title('Coord = {0} {1}'.format(ss_coordx_bin_edges, ss_coordy_bin_edges))
         ax.set_xlabel('E / {}'.format(energy_points.unit))
         ax.set_ylabel('Bg rate / {}'.format(data.unit)) #TODO: it could be anything (events, livetime, bg, (eventually flux for spectral cubes??!!!) pass the name as option!!! (or look it up somewhere!!!)
 
@@ -728,9 +733,9 @@ class Cube(object):
 
     def divide_bin_volume(self):
         """Divide cube by the bin volume."""
-        delta_energy = self.energy_bins[1:] - self.energy_bins[:-1]
-        delta_y = self.dety_bins[1:] - self.dety_bins[:-1]
-        delta_x = self.detx_bins[1:] - self.detx_bins[:-1]
+        delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
+        delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
+        delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')

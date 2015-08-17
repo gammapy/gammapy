@@ -94,6 +94,7 @@ class CubeBackgroundModel(object):
     """Cube background model.
 
     Container class for cube background model *(X, Y, energy)*.
+    *(X, Y)* are detector coordinates (a.k.a. nominal system coordinates).
     This class defines 3 cubes of type `~gammapy.background.Cube`:
 
     - **events_cube**: to store the counts that participate in the
@@ -112,13 +113,13 @@ class CubeBackgroundModel(object):
 
     Parameters
     ----------
-    detx_bins : `~astropy.coordinates.Angle`
+    detx_edges : `~astropy.coordinates.Angle`
         Spatial bin edges vector (low and high) for the cubes.
         X coordinate.
-    dety_bins : `~astropy.coordinates.Angle`
+    dety_edges : `~astropy.coordinates.Angle`
         Spatial bin edges vector (low and high) for the cubes.
         Y coordinate.
-    energy_bins : `~astropy.units.Quantity`
+    energy_edges : `~astropy.units.Quantity`
         Energy bin edges vector (low and high) for the cubes.
 
     Examples
@@ -143,18 +144,18 @@ class CubeBackgroundModel(object):
                                     len(dety_edges) - 1,
                                     len(detx_edges) - 1))
 
-        self.events_cube.detx_bins = detx_edges
-        self.events_cube.dety_bins = dety_edges
+        self.events_cube.coordx_edges = detx_edges
+        self.events_cube.coordy_edges = dety_edges
         self.events_cube.energy_bins = energy_edges
         self.events_cube.data = Quantity(empty_cube_data, '') # counts
 
-        self.livetime_cube.detx_bins = detx_edges
-        self.livetime_cube.dety_bins = dety_edges
+        self.livetime_cube.coordx_edges = detx_edges
+        self.livetime_cube.coordy_edges = dety_edges
         self.livetime_cube.energy_bins = energy_edges
         self.livetime_cube.data = Quantity(empty_cube_data, 'second')
 
-        self.background_cube.detx_bins = detx_edges
-        self.background_cube.dety_bins = dety_edges
+        self.background_cube.coordx_edges = detx_edges
+        self.background_cube.coordy_edges = dety_edges
         self.background_cube.energy_bins = energy_edges
         self.background_cube.data = Quantity(empty_cube_data, '1 / (s TeV sr)')
 
@@ -303,8 +304,8 @@ class CubeBackgroundModel(object):
             # fill data cube into histogramdd
             ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
                                                          [self.events_cube.energy_bins,
-                                                          self.events_cube.dety_bins,
-                                                          self.events_cube.detx_bins])
+                                                          self.events_cube.coordy_edges,
+                                                          self.events_cube.coordx_edges])
             ev_cube_hist = Quantity(ev_cube_hist, '') # counts
 
             # fill cube
@@ -312,8 +313,8 @@ class CubeBackgroundModel(object):
 
             # fill livetime for bins where E_max > E_thres
             energy_max = self.events_cube.energy_bins[1:]
-            dummy_dety_max = np.zeros_like(self.events_cube.dety_bins[1:])
-            dummy_detx_max = np.zeros_like(self.events_cube.detx_bins[1:])
+            dummy_dety_max = np.zeros_like(self.events_cube.coordy_edges[1:])
+            dummy_detx_max = np.zeros_like(self.events_cube.coordx_edges[1:])
             # define grid of max values (i.e. bin max values for each 3D bin)
             energy_max, dummy_dety_max, dummy_detx_max = np.meshgrid(energy_max,
                                                                      dummy_dety_max,
@@ -354,8 +355,8 @@ class CubeBackgroundModel(object):
 
         # integral of original images
         dummy_delta_energy = np.zeros_like(self.background_cube.energy_bins[:-1])
-        delta_y = self.background_cube.dety_bins[1:] - self.background_cube.dety_bins[:-1]
-        delta_x = self.background_cube.detx_bins[1:] - self.background_cube.detx_bins[:-1]
+        delta_y = self.background_cube.coordy_edges[1:] - self.background_cube.coordy_edges[:-1]
+        delta_x = self.background_cube.coordx_edges[1:] - self.background_cube.coordx_edges[:-1]
         # define grid of deltas (i.e. bin widths for each 3D bin)
         dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
                                                            delta_x, indexing='ij')

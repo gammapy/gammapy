@@ -315,9 +315,9 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # https://github.com/gammapy/gammapy/pull/290
 
     # define empty bg cube model and set bins
-    bg_cube_model = Cube(detx_bins=detx_bin_edges,
-                         dety_bins=dety_bin_edges,
-                         energy_bins=energy_bin_edges,
+    bg_cube_model = Cube(coordx_edges=detx_bin_edges,
+                         coordy_edges=dety_bin_edges,
+                         energy_edges=energy_bin_edges,
                          data=None)
 
     # background

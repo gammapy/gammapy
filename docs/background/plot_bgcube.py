@@ -19,9 +19,9 @@ bg_cube_model.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1],
                          style_kwargs=dict(norm=LogNorm()))
 
 # plot spectra
-bg_cube_model.plot_spectrum(det=Angle([0., 0.], 'degree'), ax=axes[2],
+bg_cube_model.plot_spectrum(coord=Angle([0., 0.], 'degree'), ax=axes[2],
                        style_kwargs=dict(label='(0, 0) deg'))
-bg_cube_model.plot_spectrum(det=Angle([2., 2.], 'degree'), ax=axes[2],
+bg_cube_model.plot_spectrum(coord=Angle([2., 2.], 'degree'), ax=axes[2],
                        style_kwargs=dict(label='(2, 2) deg'))
 axes[2].set_title('')
 axes[2].legend()

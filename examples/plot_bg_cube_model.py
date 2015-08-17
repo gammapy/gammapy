@@ -13,7 +13,7 @@ filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fit
 bg_cube_model = Cube.read(filename, format='table')
 
 bg_cube_model.plot_image(energy=Quantity(2., 'TeV'))
-bg_cube_model.plot_spectrum(det=Angle([0., 0.], 'degree'))
+bg_cube_model.plot_spectrum(coord=Angle([0., 0.], 'degree'))
 
 outname = 'cube_background_model'
 bg_cube_model.write('{}_bin_table.fits'.format(outname), format='table', clobber=True)
