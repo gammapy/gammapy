@@ -26,6 +26,9 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
 
     TODO: review steps!!!
 
+    The background cube model contains 3 cubes: events, livetime and background.
+    The latter contains the bg cube model.
+
     Parameters
     ----------
     observation_table : `~gammapy.obs.ObservationTable`
@@ -37,11 +40,7 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
 
     Returns
     -------
-    events_cube : `~gammapy.background.Cube`
-        Cube containing the events.
-    livetime_cube : `~gammapy.background.Cube`
-        Cube containing the livetime.
-    bg_cube : `~gammapy.background.Cube`
+    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Cube background model.
     """
 
@@ -51,38 +50,14 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     #       and remove the DEBUG option!!!
     #       Look how the DataStore does it (when importing a file).
 
-    ##################
-    # define binning #
-    ##################
+    ####################################################################
+    # define cube background model object with binning and empty cubes #
+    ####################################################################
 
-    energy_edges, dety_edges, detx_edges = CubeBackgroundModel.define_cube_binning(len(observation_table), DEBUG)
-
-
-    ####################################################
-    # create empty cubes: events, livetime, background #
-    ####################################################
-
-    empty_cube_data = np.zeros((len(energy_edges) - 1,
-                                len(dety_edges) - 1,
-                                len(detx_edges) - 1))
+    bg_cube_model = CubeBackgroundModel.define_cube_binning(len(observation_table), DEBUG)
 
     if DEBUG:
-        print("cube shape", empty_cube_data.shape)
-
-    events_cube = Cube(detx_bins=detx_edges,
-                       dety_bins=dety_edges,
-                       energy_bins=energy_edges,
-                       data=Quantity(empty_cube_data, '')) # counts
-
-    livetime_cube = Cube(detx_bins=detx_edges,
-                         dety_bins=dety_edges,
-                         energy_bins=energy_edges,
-                         data=Quantity(empty_cube_data, 'second'))
-
-    bg_cube = Cube(detx_bins=detx_edges,
-                   dety_bins=dety_edges,
-                   energy_bins=energy_edges,
-                   data=Quantity(empty_cube_data, '1 / (s TeV sr)'))
+        print("cube shape", bg_cube_model.background_cube.data.shape)
 
 
     ############################
@@ -93,36 +68,34 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     #       for now, the observation table should not contain any
     #       run at or near an existing source
 
-    events_cube, livetime_cube = CubeBackgroundModel.fill_events(observation_table, fits_path,
-                                             events_cube, livetime_cube,
-                                             DEBUG)
+    bg_cube_model.fill_events(observation_table, fits_path, DEBUG)
 
 
     ################
     # fill bg cube #
     ################
 
-    bg_cube.data = events_cube.data
+    bg_cube_model.background_cube.data = bg_cube_model.events_cube.data
 
 
     ##########
     # smooth #
     ##########
 
-    bg_cube = CubeBackgroundModel.smooth(bg_cube, events_cube.data.sum())
+    bg_cube_model.smooth()
 
 
     #######################################################
     # correct for livetime and bin volume and set 0 level #
     #######################################################
 
-    bg_cube.data /= livetime_cube.data
-    bg_cube = CubeBackgroundModel.divide_bin_volume(bg_cube)
-    bg_cube = CubeBackgroundModel.set_zero_level(bg_cube)
+    bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
+    bg_cube_model.background_cube.divide_bin_volume()
+    bg_cube_model.background_cube.set_zero_level()
 
 
-    ######################
-    # return the 3 cubes #
-    ######################
+    ############################
+    # return the bg cube model #
+    ############################
 
-    return events_cube, livetime_cube, bg_cube
+    return bg_cube_model

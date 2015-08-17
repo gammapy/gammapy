@@ -286,18 +286,17 @@ def stack_observations(fits_path):
             continue # skip the rest
 
         # create bg cube model
-        events_cube, livetime_cube, bg_cube = make_bg_cube_model(observation_table, fits_path, DEBUG)
+        bg_cube_model = make_bg_cube_model(observation_table, fits_path, DEBUG)
 
         # save model to file
-        bg_cube_model = bg_cube
         # TODO: store also events_cube, livetime_cube !!!
         outfile = outdir +\
                  'bg_cube_model_group{}'.format(group)
         if DEBUG:
             print("outfile", '{}_table.fits.gz'.format(outfile))
             print("outfile", '{}_image.fits.gz'.format(outfile))
-        bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table')
-        bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
+        bg_cube_model.background_cube.write('{}_table.fits.gz'.format(outfile), format='table')
+        bg_cube_model.background_cube.write('{}_image.fits.gz'.format(outfile), format='image')
 
         # TODO: bg cube file names won't match the names from michael mayer!!! (also the observation lists: split/unsplit)
         #       the current naming makes it difficult to compare 2 sets of cubes!!!
