@@ -72,7 +72,7 @@ def test_make_test_bg_cube_model():
     e_points = bg_cube_model.energy_bin_centers
     x_points, y_points, e_points = np.meshgrid(x_points, y_points, e_points,
                                                indexing='ij')
-    det_bin_index = bg_cube_model.find_det_bin(Angle([x_points, y_points]))
+    det_bin_index = bg_cube_model.find_coord_bin(Angle([x_points, y_points]))
     e_bin_index = bg_cube_model.find_energy_bin(e_points)
     bg = bg_cube_model.data[e_bin_index, det_bin_index[1], det_bin_index[0]]
 

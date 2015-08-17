@@ -27,9 +27,9 @@ class TestCube():
                                      location='remote')
         cube = Cube.read(filename, format='table')
         assert len(cube.data.shape) == 3
-        assert cube.data.shape == (len(cube.energy_bins) - 1,
-                                   len(cube.dety_bins) - 1,
-                                   len(cube.detx_bins) - 1)
+        assert cube.data.shape == (len(cube.energy_edges) - 1,
+                                   len(cube.coordy_edges) - 1,
+                                   len(cube.coordx_edges) - 1)
 
     @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_image_plot(self):
@@ -56,16 +56,16 @@ class TestCube():
 
         cube = make_test_bg_cube_model()
 
-        # test bg rate values plotted for spectrum plot of detector bin
-        # conaining det (0, 0) deg (center)
-        det = Angle([0., 0.], 'degree')
-        ax_spec = cube.plot_spectrum(det)
+        # test bg rate values plotted for spectrum plot of coordinate bin
+        # conaining coord (0, 0) deg (center)
+        coord = Angle([0., 0.], 'degree')
+        ax_spec = cube.plot_spectrum(coord)
         # get plot data (stored in the line)
         plot_data = ax_spec.get_lines()[0].get_xydata()
 
         # get data from bg model object to compare
-        det_bin = cube.find_det_bin(det)
-        model_data = cube.data[:, det_bin[1], det_bin[0]]
+        coord_bin = cube.find_coord_bin(coord)
+        model_data = cube.data[:, coord_bin[1], coord_bin[0]]
 
         # test if both arrays are equal
         assert_allclose(plot_data[:, 1], model_data.value)
@@ -84,12 +84,12 @@ class TestCube():
         bg_model_2 = Cube.read(outfile, format='table')
         assert_quantity_allclose(bg_model_2.data,
                                  bg_model_1.data)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
+        assert_quantity_allclose(bg_model_2.coordx_edges,
+                                 bg_model_1.coordx_edges)
+        assert_quantity_allclose(bg_model_2.coordy_edges,
+                                 bg_model_1.coordy_edges)
+        assert_quantity_allclose(bg_model_2.energy_edges,
+                                 bg_model_1.energy_edges)
 
     @remote_data
     def test_read_write_fits_image(self, tmpdir):
@@ -105,9 +105,9 @@ class TestCube():
         bg_model_2 = Cube.read(outfile, format='image')
         assert_quantity_allclose(bg_model_2.data,
                                  bg_model_1.data)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
+        assert_quantity_allclose(bg_model_2.coordx_edges,
+                                 bg_model_1.coordx_edges)
+        assert_quantity_allclose(bg_model_2.coordy_edges,
+                                 bg_model_1.coordy_edges)
+        assert_quantity_allclose(bg_model_2.energy_edges,
+                                 bg_model_1.energy_edges)
