@@ -29,6 +29,8 @@ Getting Started
 
 TODO
 
+.. _energy_handling_gammapy
+
 Energy handling in Gammapy
 ==========================
 
