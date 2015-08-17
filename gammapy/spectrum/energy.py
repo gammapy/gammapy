@@ -12,24 +12,25 @@ __all__ = ['Energy',
            'EnergyBounds']
 
 class Energy(u.Quantity):
+    """Energy quantity scalar or array.
 
-    """Energy bin centers.
+    This is a `~astropy.units.Quantity` sub-class that adds convenience methods
+    to handle common tasks for energy bin center arrays, like FITS I/O or generating
+    equal-log-spaced grids of energies.
 
-    Stored as "ENERGIES" FITS table extensions.
+    See :ref:`energy_handling_gammapy` for further information.
+
 
     Parameters
     ----------
     energy : `~numpy.array`, scalar, `~astropy.units.Quantity`
         Energy
-
     unit : `~astropy.units.UnitBase`, str, optional
         The unit of the value specified for the energy.  This may be
         any string that `~astropy.units.Unit` understands, but it is
         better to give an actual unit object.
-
     dtype : `~numpy.dtype`, optional
         See `~astropy.units.Quantity`.
-
     copy : bool, optional
         See `~astropy.units.Quantity`.
 
@@ -67,7 +68,7 @@ class Energy(u.Quantity):
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
-        """Create Energy with equal log-spacing.
+        """Create Energy with equal log-spacing (`~gammapy.spectrum.energy.Energy`).
 
         if no unit is given, it will be taken from emax
 
@@ -81,10 +82,6 @@ class Energy(u.Quantity):
             Number of bins
         unit : `~astropy.units.UnitBase`, str
             Energy unit
-
-        Returns
-        -------
-        Energy
         """
 
         if unit is None:
@@ -100,18 +97,14 @@ class Energy(u.Quantity):
 
     @staticmethod
     def from_fits(hdu, unit=None):
-        """Read ENERGIES fits extension.
+        """Read ENERGIES fits extension (`~gammapy.spectrum.energy.Energy`).
 
         Parameters
         ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``ENERGIES`` extensions.
-        unit : `~astropy.units.UnitBase`, str
+        unit : `~astropy.units.UnitBase`, str, None
             Energy unit
-
-        Returns
-        ------
-        Energy
         """
 
         header = hdu.header
@@ -138,8 +131,6 @@ class Energy(u.Quantity):
         -------
         hdu: `~astropy.io.fits.BinTableHDU`
             ENERGIES fits extension
-
-
         """
 
         col1 = fits.Column(name='Energy', format='D', array=self.value)
@@ -153,9 +144,13 @@ class Energy(u.Quantity):
 
 class EnergyBounds(Energy):
 
-    """Energy bin edges
+    """EnergyBounds array.
 
-    Stored as "EBOUNDS" FITS table extensions.
+    This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience 
+    methods to handle common tasks for energy bin edges arrays, like FITS I/O or
+    generating arrays of bin centers.
+
+    See :ref:`energy_handling_gammapy` for further information.
 
     Parameters
     ----------
@@ -166,7 +161,6 @@ class EnergyBounds(Energy):
         The unit of the values specified for the energy.  This may be any
         string that `~astropy.units.Unit` understands, but it is better to
         give an actual unit object.
-
     """
 
     @property
@@ -199,7 +193,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
-        """Create EnergyBounds with equal log-spacing.
+        """EnergyBounds with equal log-spacing (`~gammapy.spectrum.energy.EnergyBounds`).
 
         If no unit is given, it will be taken from emax
 
@@ -213,10 +207,6 @@ class EnergyBounds(Energy):
             Number of bins
         unit : `~astropy.units.UnitBase`, str
             Energy unit
-
-        Returns
-        -------
-        EnergyBounds
         """
 
         return super(EnergyBounds, cls).equal_log_spacing(
@@ -224,18 +214,14 @@ class EnergyBounds(Energy):
 
     @staticmethod
     def from_fits(hdu, unit=None):
-        """Read EBOUNDS fits extension.
+        """Read EBOUNDS fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
 
         Parameters
         ----------
         hdu: `~astropy.io.fits.BinTableHDU`
             ``EBOUNDS`` extensions.
-        unit : `~astropy.units.UnitBase`, str
+        unit : `~astropy.units.UnitBase`, str, None
             Energy unit
-
-        Returns
-        ------
-        Energy
         """
 
         header = hdu.header
@@ -254,8 +240,6 @@ class EnergyBounds(Energy):
         -------
         hdu: `~astropy.io.fits.BinTableHDU`
             EBOUNDS fits extension
-
-
         """
 
         col1 = fits.Column(name='Energy', format='D', array=self.value)
