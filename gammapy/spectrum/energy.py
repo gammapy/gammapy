@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from astropy.units import Quantity
 from astropy.io import fits
 from ..utils.array import array_stats_str
+from astropy import log
 
 import astropy.units as u
 import numpy as np
@@ -38,43 +39,20 @@ class Energy(u.Quantity):
 
         # Techniques to subclass Quantity taken from astropy.coordinates.Angle
         # see: http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
-        if unit is not None:
-            unit = u.Unit(unit)
-            if not unit.is_equivalent(u.eV):
-                raise ValueError("Requested unit {0} is not an"
-                                 " energy unit".format(unit))
-
-        if isinstance(energy, u.Quantity):
-            # also True if energy is of type Energy
-            if unit is not None:
-                energy = energy.to(unit).value
-            else:
-                unit = energy.unit
-                if not unit.is_equivalent(u.eV):
-                    raise ValueError("Given quantity {0} is not an"
-                                     " energy".format(energy))
-                energy = energy.value
-
-        else:
-            if unit is None:
-                raise ValueError("No unit given")
 
         self = super(Energy, cls).__new__(cls, energy, unit,
                                           dtype=dtype, copy=copy)
 
-        # Interesting once  energy bounds are stored
-        self._nbins = self.size
+        if not self.unit.is_equivalent(u.eV):
+            raise ValueError("Given unit {0} is not an"
+                             " energy".format(self.unit.to_string()))
 
         return self
 
     def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self._nbins = self.size
-        self._unit = getattr(obj, '_unit', None)
+        super(Energy, self).__array_finalize__(obj)
 
     def __quantity_subclass__(self, unit):
-        unit = u.Unit(unit)
         if unit.is_equivalent(u.eV):
             return Energy, True
         else:
@@ -85,10 +63,10 @@ class Energy(u.Quantity):
         """
         The number of bins
         """
-        return self._nbins
+        return self.size
 
-    @staticmethod
-    def equal_log_spacing(emin, emax, nbins, unit=None):
+    @classmethod
+    def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """Create Energy with equal log-spacing.
 
         if no unit is given, it will be taken from emax
@@ -112,13 +90,13 @@ class Energy(u.Quantity):
         if unit is None:
             unit = emax.unit
 
-        emin = Quantity(emin, unit)
-        emax = Quantity(emax, unit)
+        emin = Energy(emin, unit)
+        emax = Energy(emax, unit)
 
         x_min, x_max = np.log10([emin.value, emax.value])
         energy = np.logspace(x_min, x_max, nbins)
 
-        return Energy(energy, unit)
+        return cls(energy, unit, copy=False)
 
     @staticmethod
     def from_fits(hdu, unit=None):
@@ -137,13 +115,21 @@ class Energy(u.Quantity):
         """
 
         header = hdu.header
-        unit = header.get('TUNIT1')
-        if unit is None:
-            raise ValueError("No energy unit could be found in the header of."
-                             "{0}. Please specifiy a unit".format(header.name))
+        fitsunit = header.get('TUNIT1')
 
-        energy = Quantity(hdu.data['Energy'], unit)
-        return Energy(energy)
+        if fitsunit is None:
+            if unit is not None:
+                log.warn("No unit found in the FITS header."
+                         " Setting it to {0}".format(unit))
+                fitsunit = unit
+            else:
+                raise ValueError("No unit found in the FITS header."
+                                 " Please specifiy a unit")
+
+        energy = Energy(hdu.data['Energy'], fitsunit)
+
+        return energy.to(unit)
+        
 
     def to_fits(self, **kwargs):
         """Write ENERGIES fits extension
@@ -160,7 +146,7 @@ class Energy(u.Quantity):
         cols = fits.ColDefs([col1])
         hdu = fits.BinTableHDU.from_columns(cols)
         hdu.name = 'ENERGIES'
-        hdu.header['TUNIT1'] = "{0}".format(self.unit)
+        hdu.header['TUNIT1'] = "{0}".format(self.unit.to_string('fits'))
 
         return hdu
 
@@ -183,20 +169,12 @@ class EnergyBounds(Energy):
 
     """
 
-    def __new__(cls, energy, unit=None, dtype=None, copy=True):
-
-        self = super(EnergyBounds, cls).__new__(cls, energy, unit,
-                                                dtype=dtype, copy=copy)
-
-        self._nbins = self.size - 1
-
-        return self
-
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self._nbins = self.size - 1
-        self._unit = getattr(obj, '_unit', None)
+    @property
+    def nbins(self):
+        """
+        The number of bins
+        """
+        return self.size - 1
 
     @property
     def log_centers(self):
@@ -204,25 +182,23 @@ class EnergyBounds(Energy):
         """
         
         center = np.sqrt(self[:-1] * self[1:])
-        return Energy(center)
+        return center.view(Energy)
 
     @property
     def upper_bounds(self):
         """Upper energy bin edges
         """
-        upper = self[1:]
-        return EnergyBounds(upper)
+        return self[1:]
 
     @property
     def lower_bounds(self):
         """Lower energy bin edges
         """
         
-        lower = self[:-1]
-        return EnergyBounds(lower)
+        return self[:-1]
 
-    @staticmethod
-    def equal_log_spacing(emin, emax, nbins, unit=None):
+    @classmethod
+    def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """Create EnergyBounds with equal log-spacing.
 
         If no unit is given, it will be taken from emax
@@ -243,10 +219,8 @@ class EnergyBounds(Energy):
         EnergyBounds
         """
 
-        bounds = super(EnergyBounds, EnergyBounds).equal_log_spacing(
+        return super(EnergyBounds, cls).equal_log_spacing(
             emin, emax, nbins + 1, unit)
-
-        return bounds.view(EnergyBounds)
 
     @staticmethod
     def from_fits(hdu, unit=None):
@@ -288,6 +262,6 @@ class EnergyBounds(Energy):
         cols = fits.ColDefs([col1])
         hdu = fits.BinTableHDU.from_columns(cols)
         hdu.name = 'EBOUNDS'
-        hdu.header['TUNIT1'] = "{0}".format(self.unit)
+        hdu.header['TUNIT1'] = "{0}".format(self.unit.to_str('fits'))
 
         return hdu
