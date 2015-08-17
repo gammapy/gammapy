@@ -69,54 +69,33 @@ class Cube(object):
     Container class for cubes *(X, Y, energy)*.
     *(X, Y)* are detector coordinates (a.k.a. nominal system).
     The class has methods for reading a cube from a fits file,
-    write a cube to a fits file and plot the cubes.
+    write a cube to a fits file and plot the cubes among others.
     TODO: update this par!!!!
 
     The order of the axes in the cube is **(E, y, x)**,
     so in order to access the data correctly, the call is
     ``cube.data[energy_bin, dety_bin, detx_bin]``.
 
-    Parameters
-    ----------
-    detx_bins : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high). X coordinate.
-    dety_bins : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high). Y coordinate.
-    energy_bins : `~astropy.units.Quantity`
-        Energy bin edges vector (low and high).
-    data : `~astropy.units.Quantity`
-        Data cube matrix in (energy, X, Y) format.
-
-    TODO: rename detx/dety to x/y!!!
-    TODO: review this doc!!!
-    TODO: review this class!!!
-    TODO: review high-level doc!!!
-    TODO: revise imports of all files (also TEST files) at the end
-    TODO: is this class general enough to use it for other things
-    besides bg cube models? (i.e. for projected bg cube models or
-    spectral cubes?)
-    TODO: read/write from/to file might need an optional argument
-    to specify the name of the HDU
-    TODO: update also (in datasets) make_test_bg_cube_model and test_make_test_bg_cube_model !!!
-    TODO: think about the naming/definition/purpose of make_test_bg_cube_model (and the test file in gammapy-extra) !!!
-    probably I want to extend it to use the new bg cube model format (3 cubes) or, just leave it as is (and redefine naming/docs)??!!!
-    TODO: review background: make.py models.py
-    TODO: review background/tests: test_models test_cube
-    TODOs from background/make.py:
-    # TODO: restructure bg models:
-    #       - rename CubeBackgroundModel -> CubeModel or Cube (similar to Maps)
-    #       - create a CubeBackgroundModel class that contains:
-    #          events_cube, livetime_cube, bg_model_cube
-    #          methods to produce the bg cube model:
-    #           'define_cube_binning',
-    #           'fill_events',
-    #           'divide_bin_volume',
-    #           'set_zero_level',
-    #           'smooth'
-    #       - revise imports of all files (also TEST files) at the end
-    # @ C. Deil: does it make sense?
+    - TODO: rename detx/dety to x/y!!!
+    - TODO: review this doc!!!
+    - TODO: review this class!!!
+    - TODO: review high-level doc!!!
+    - TODO: what should I do with the bg units parser???!!! (and read/write methods)!!!
+    - TODO: revise imports of all files (also TEST files) at the end
+    - TODO: is this class general enough to use it for other things
+    - besides bg cube models? (i.e. for projected bg cube models or
+    - spectral cubes?)
+    - TODO: read/write from/to file might need an optional argument
+    - to specify the name of the HDU
+    - TODO: update also (in datasets) make_test_bg_cube_model and test_make_test_bg_cube_model !!!
+    - TODO: think about the naming/definition/purpose of make_test_bg_cube_model (and the test file in gammapy-extra) !!!
+    - probably I want to extend it to use the new bg cube model format (3 cubes) or, just leave it as is (and redefine naming/docs)??!!!
+    - TODO: review background: make.py models.py
+    - TODO: review background/tests: test_models test_cube
+    - TODO: revise imports of all files (also TEST files) at the end
 
     list of (to) mod files:
+
     - gammapy/background/__init__.py
     - gammapy/background/make.py
     - gammapy/background/models.py
@@ -130,6 +109,17 @@ class Cube(object):
     - docs/background/models.rst
     - docs/background/make_models.rst
 
+    Parameters
+    ----------
+    detx_bins : `~astropy.coordinates.Angle`
+        Spatial bin edges vector (low and high). X coordinate.
+    dety_bins : `~astropy.coordinates.Angle`
+        Spatial bin edges vector (low and high). Y coordinate.
+    energy_bins : `~astropy.units.Quantity`
+        Energy bin edges vector (low and high).
+    data : `~astropy.units.Quantity`
+        Data cube matrix in (energy, X, Y) format.
+
     Examples
     --------
     Access cube data:
@@ -141,7 +131,7 @@ class Cube(object):
         cube.data[energy_bin, det_bin[1], det_bin[0]]
     """
 
-    def __init__(self, detx_bins, dety_bins, energy_bins, data):
+    def __init__(self, detx_bins=None, dety_bins=None, energy_bins=None, data=None):
         self.detx_bins = detx_bins
         self.dety_bins = dety_bins
         self.energy_bins = energy_bins
@@ -735,3 +725,27 @@ class Cube(object):
         if not do_not_close_fig:
             plt.close(fig)
         return ax
+
+    def divide_bin_volume(self):
+        """Divide cube by the bin volume."""
+        delta_energy = self.energy_bins[1:] - self.energy_bins[:-1]
+        delta_y = self.dety_bins[1:] - self.dety_bins[:-1]
+        delta_x = self.detx_bins[1:] - self.detx_bins[:-1]
+        # define grid of deltas (i.e. bin widths for each 3D bin)
+        delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
+                                                     delta_x, indexing='ij')
+        bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!!
+        self.data /= bin_volume
+
+    def set_zero_level(self):
+        """Setting level 0 of the cube to something very small.
+
+        Also for NaN values: they may appear in the 1st few E bins,
+        where no stat is present: (0 events/ 0 livetime = NaN)
+        """
+        zero_level = Quantity(1.e-10, self.data.unit)
+        zero_level_mask = self.data < zero_level
+        self.data[zero_level_mask] = zero_level
+        nan_mask = np.isnan(self.data)
+        self.data[nan_mask] = zero_level
+

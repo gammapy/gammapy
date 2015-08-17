@@ -94,28 +94,32 @@ class CubeBackgroundModel(object):
     """Cube background model.
 
     Container class for cube background model *(X, Y, energy)*.
-    *(X, Y)* are detector coordinates (a.k.a. nominal system).
-    The class hass methods for reading a model from a fits file,
-    write a model to a fits file and plot the models.
+    This class defines 3 cubes of type `~gammapy.background.Cube`:
 
-    The order of the axes in the background cube is **(E, y, x)**,
-    so in order to access the data correctly, the call is
-    ``bg_cube_model.background[energy_bin, dety_bin, detx_bin]``.
+    - **events_cube**: to store the counts that participate in the
+      model creation.
 
-    TODO: review this doc!!!
-    TODO: review this class!!!
-    TODO: review high-level doc!!!
+    - **livetime_cube**: to store the livetime correction.
+
+    - **background_cube**: to store the background model.
+
+    The class defines methods to define the binning, fill and smooth
+    the cubes.
+
+    - TODO: review this doc!!!
+    - TODO: review this class!!!
+    - TODO: review high-level doc!!!
 
     Parameters
     ----------
     detx_bins : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high). X coordinate.
+        Spatial bin edges vector (low and high) for the cubes.
+        X coordinate.
     dety_bins : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high). Y coordinate.
+        Spatial bin edges vector (low and high) for the cubes.
+        Y coordinate.
     energy_bins : `~astropy.units.Quantity`
-        Energy bin edges vector (low and high).
-    background : `~astropy.units.Quantity`
-        Background cube in (energy, X, Y) format.
+        Energy bin edges vector (low and high) for the cubes.
 
     Examples
     --------
@@ -128,11 +132,34 @@ class CubeBackgroundModel(object):
         bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
     """
 
-    #events_cube = Cube()
-    #livetime_cube = Cube()
-    #background_cube = Cube()
+    events_cube = Cube()
+    livetime_cube = Cube()
+    background_cube = Cube()
 
-    def define_cube_binning(n_obs, DEBUG):
+    def __init__(self, detx_edges, dety_edges, energy_edges):
+        # define cube binning
+
+        empty_cube_data = np.zeros((len(energy_edges) - 1,
+                                    len(dety_edges) - 1,
+                                    len(detx_edges) - 1))
+
+        self.events_cube.detx_bins = detx_edges
+        self.events_cube.dety_bins = dety_edges
+        self.events_cube.energy_bins = energy_edges
+        self.events_cube.data = Quantity(empty_cube_data, '') # counts
+
+        self.livetime_cube.detx_bins = detx_edges
+        self.livetime_cube.dety_bins = dety_edges
+        self.livetime_cube.energy_bins = energy_edges
+        self.livetime_cube.data = Quantity(empty_cube_data, 'second')
+
+        self.background_cube.detx_bins = detx_edges
+        self.background_cube.dety_bins = dety_edges
+        self.background_cube.energy_bins = energy_edges
+        self.background_cube.data = Quantity(empty_cube_data, '1 / (s TeV sr)')
+
+    @classmethod
+    def define_cube_binning(cls, n_obs, DEBUG):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -149,14 +176,9 @@ class CubeBackgroundModel(object):
 
         Returns
         -------
-        energy_edges : `~astropy.units.Quantity`
-            Energy bin edges.
-        dety_edges : `~astropy.coordinates.Angle`
-            Detector Y bin edges.
-        detx_edges : `~astropy.coordinates.Angle`
-            Detector X bin edges.
+        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+            Cube background model object.
         """
-
         # define cube binning shape
         n_ebins = 20
         n_ybins = 60
@@ -179,6 +201,7 @@ class CubeBackgroundModel(object):
         detx_max = Angle(0.07, 'radian').to('degree')
         # TODO: the bin edges (at least for X and Y) should depend on the
         #       experiment/observatory.
+        #       or at least they should be read as parameters
 
         # energy bins (logarithmic)
         log_delta_energy = (np.log(energy_max.value)
@@ -205,9 +228,9 @@ class CubeBackgroundModel(object):
             print("dety bin edges", dety_edges)
             print("detx bin edges", detx_edges)
 
-        return energy_edges, dety_edges, detx_edges
+        return cls(detx_edges, dety_edges, energy_edges)
 
-    def fill_events(observation_table, fits_path, events_cube, livetime_cube, DEBUG):
+    def fill_events(self, observation_table, fits_path, DEBUG):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -220,19 +243,8 @@ class CubeBackgroundModel(object):
             Observation list to use for the histogramming.
         fits_path : str
             Path to the data files.
-        events_cube : `~gammapy.background.Cube`
-            Cube container for the events.
-        livetime_cube : `~gammapy.background.Cube`
-            Cube container for the livetime.
         DEBUG : int
             Debug level.
-
-        Returns
-        -------
-        events_cube : `~gammapy.background.Cube`
-            Cube containing the events.
-        livetime_cube : `~gammapy.background.Cube`
-            Cube containing the livetime.
         """
         # stack events
         data_store = DataStore(dir=fits_path)
@@ -290,18 +302,18 @@ class CubeBackgroundModel(object):
 
             # fill data cube into histogramdd
             ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                         [events_cube.energy_bins,
-                                                          events_cube.dety_bins,
-                                                          events_cube.detx_bins])
+                                                         [self.events_cube.energy_bins,
+                                                          self.events_cube.dety_bins,
+                                                          self.events_cube.detx_bins])
             ev_cube_hist = Quantity(ev_cube_hist, '') # counts
 
             # fill cube
-            events_cube.data += ev_cube_hist
+            self.events_cube.data += ev_cube_hist
 
             # fill livetime for bins where E_max > E_thres
-            energy_max = events_cube.energy_bins[1:]
-            dummy_dety_max = np.zeros_like(events_cube.dety_bins[1:])
-            dummy_detx_max = np.zeros_like(events_cube.detx_bins[1:])
+            energy_max = self.events_cube.energy_bins[1:]
+            dummy_dety_max = np.zeros_like(self.events_cube.dety_bins[1:])
+            dummy_detx_max = np.zeros_like(self.events_cube.detx_bins[1:])
             # define grid of max values (i.e. bin max values for each 3D bin)
             energy_max, dummy_dety_max, dummy_detx_max = np.meshgrid(energy_max,
                                                                      dummy_dety_max,
@@ -310,59 +322,9 @@ class CubeBackgroundModel(object):
             mask = energy_max > energy_threshold
 
             # fill cube
-            livetime_cube.data += livetime*mask
+            self.livetime_cube.data += livetime*mask
 
-        return events_cube, livetime_cube
-
-    def divide_bin_volume(cube):
-        """Divide by the bin volume.
-
-        Parameters
-        ----------
-        cube : `~gammapy.background.Cube`
-            Cube containing the data to process.
-
-        Returns
-        -------
-        cube : `~gammapy.background.Cube`
-            Cube divided by the bin volume.
-        """
-        delta_energy = cube.energy_bins[1:] - cube.energy_bins[:-1]
-        delta_y = cube.dety_bins[1:] - cube.dety_bins[:-1]
-        delta_x = cube.detx_bins[1:] - cube.detx_bins[:-1]
-        # define grid of deltas (i.e. bin widths for each 3D bin)
-        delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
-                                                     delta_x, indexing='ij')
-        bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!!
-        cube.data /= bin_volume
-
-        return cube
-
-    def set_zero_level(cube):
-        """Setting level 0 to something very small.
-
-        Also for NaN values: they are in the 1st few E bins,
-        where no stat is present: (0 events/ 0 livetime = NaN)
-
-        Parameters
-        ----------
-        cube : `~gammapy.background.Cube`
-            Cube containing the data to process.
-
-        Returns
-        -------
-        cube : `~gammapy.background.Cube`
-            Cube with 0-level applied.
-        """
-        zero_level = Quantity(1.e-10, cube.data.unit)
-        zero_level_mask = cube.data < zero_level
-        cube.data[zero_level_mask] = zero_level
-        nan_mask = np.isnan(cube.data)
-        cube.data[nan_mask] = zero_level
-
-        return cube
-
-    def smooth(bg_cube, n_counts):
+    def smooth(self):
         """
         Smooth background cube model.
 
@@ -370,7 +332,7 @@ class CubeBackgroundModel(object):
 
         1. slice model in energy bins: 1 image per energy bin
         2. calculate integral of the image
-        3. determine times to smooth (N) depending on number of entries in the cube
+        3. determine times to smooth (N) depending on number of entries (events) in the cube
         4. smooth image N times with root TH2::Smooth
            default smoothing kernel: **k5a**
 
@@ -385,35 +347,24 @@ class CubeBackgroundModel(object):
            Reference: https://root.cern.ch/root/html/TH2.html#TH2:Smooth
         5. scale with the cocient of the old integral div by the new integral
         6. fill the values of the image back in the cube
-
-        Parameters
-        ----------
-        bg_cube : `~gammapy.background.Cube`
-            Cube background model to smooth.
-        n_counts : int
-            Number of events used to fill the cube background model.
-
-        Returns
-        -------
-        bg_cube : `~gammapy.background.Cube`
-            Smoothed cube background model.
         """
         from scipy import ndimage
 
         # smooth images
 
         # integral of original images
-        dummy_delta_energy = np.zeros_like(bg_cube.energy_bins[:-1])
-        delta_y = bg_cube.dety_bins[1:] - bg_cube.dety_bins[:-1]
-        delta_x = bg_cube.detx_bins[1:] - bg_cube.detx_bins[:-1]
+        dummy_delta_energy = np.zeros_like(self.background_cube.energy_bins[:-1])
+        delta_y = self.background_cube.dety_bins[1:] - self.background_cube.dety_bins[:-1]
+        delta_x = self.background_cube.detx_bins[1:] - self.background_cube.detx_bins[:-1]
         # define grid of deltas (i.e. bin widths for each 3D bin)
         dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
                                                            delta_x, indexing='ij')
         bin_area = (delta_y*delta_x).to('sr')
-        integral_image = bg_cube.data*bin_area
+        integral_image = self.background_cube.data*bin_area
         integral_image = integral_image.sum(axis=(1, 2))
 
         # number of times to smooth
+        n_counts = self.events_cube.data.sum()
         if n_counts >= 1.e6:
             n_smooth = 3
         elif (n_counts < 1.e6) and (n_counts >= 1.e5):
@@ -432,23 +383,21 @@ class CubeBackgroundModel(object):
                            [0, 0, 1, 0, 0]])
 
         # loop over energy bins (i.e. images)
-        for i_energy in np.arange(len(bg_cube.energy_bins) - 1):
+        for i_energy in np.arange(len(self.background_cube.energy_bins) - 1):
             # loop over number of times to smooth
             for i_smooth in np.arange(n_smooth):
-                data = bg_cube.data[i_energy]
+                data = self.background_cube.data[i_energy]
                 image_smooth = ndimage.convolve(data, kernel)
 
                 # overwrite bg image with smoothed bg image
-                bg_cube.data[i_energy] = Quantity(image_smooth, bg_cube.data.unit)
+                self.background_cube.data[i_energy] = Quantity(image_smooth, self.background_cube.data.unit)
 
         # integral of smooth images
-        integral_image_smooth = bg_cube.data*bin_area
+        integral_image_smooth = self.background_cube.data*bin_area
         integral_image_smooth = integral_image_smooth.sum(axis=(1, 2))
 
         # scale images to preserve original integrals
 
         # loop over energy bins (i.e. images)
-        for i_energy in np.arange(len(bg_cube.energy_bins) - 1):
-            bg_cube.data[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
-
-        return bg_cube
+        for i_energy in np.arange(len(self.background_cube.energy_bins) - 1):
+            self.background_cube.data[i_energy] *= (integral_image/integral_image_smooth)[i_energy]

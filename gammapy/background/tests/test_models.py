@@ -54,4 +54,4 @@ class TestGaussianBand2D():
 class TestCubeBackgroundModel():
     def test_CubeBackgroundModel(self):
         # TODO: rename test function and implement tests!!! with asserts!!!
-        CubeBackgroundModel()
+        CubeBackgroundModel([0],[0],[0])
