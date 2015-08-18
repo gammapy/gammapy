@@ -647,6 +647,40 @@ class ObservationGroups(object):
                 s += '\n'
         return s
 
+    def info_group(self, group_id):
+        """Group info string
+
+        Parameters
+        ----------
+        group_id : int
+            ID of the group to gather info on.
+
+        Returns
+        -------
+        s : str
+            Group info string.
+        """
+        s = 'group {}:'.format(group_id)
+        # find group row in obs groups table
+        group_ids = self.obs_groups_table['GROUP_ID'].data
+        groupindex = np.where(group_ids==group_id)
+        row = groupindex[0][0]
+        # loop over observation axes
+        for i_axis in np.arange(len(self.obs_group_axes)):
+            if i_axis != 0:
+                s +=','
+            s += ' ' + self.obs_group_axes[i_axis].name + ' = '
+            if self.obs_group_axes[i_axis].format == 'bin_edges':
+                s += '[' +\
+                     str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MIN'][row]) +\
+                     ', ' +\
+                     str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MAX'][row]) +\
+                     ')'
+            elif self.obs_group_axes[i_axis].format == 'bin_values':
+                s += str(self.obs_groups_table[self.obs_group_axes[i_axis].name][row])
+            s += ' ' + str(self.obs_group_axes[i_axis].bins.unit)
+        return s
+
     def print_axes(self):
         """Print axes info using the logging module."""
         #print(self.info)
