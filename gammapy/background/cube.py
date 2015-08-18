@@ -97,45 +97,6 @@ class Cube(object):
     The method also defines useful parameter names for the plots
     axis/title labels specific to each scheme.
 
-    - TODO: rename detx/dety to x/y!!!
-    - TODO: review this doc!!!
-    - TODO: review this class!!!
-    - TODO: review high-level doc!!!
-    - TODO: what should I do with the bg units parser???!!! (and read/write methods)!!!
-    -       AND MAKE AN OPTION "UPDATE FILE" instead of overwrite!!!
-    - TODO: revise imports of all files (also TEST files) at the end
-    - TODO: is this class general enough to use it for other things
-    - besides bg cube models? (i.e. for projected bg cube models or
-    - spectral cubes?)
-    - TODO: read/write from/to file might need an optional argument
-    - to specify the name of the HDU
-    - TODO: update also (in datasets) make_test_bg_cube_model and test_make_test_bg_cube_model !!!
-    - TODO: think about the naming/definition/purpose of make_test_bg_cube_model (and the test file in gammapy-extra) !!!
-    - probably I want to extend it to use the new bg cube model format (3 cubes) or, just leave it as is (and redefine naming/docs)??!!!
-    - TODO: review background: make.py models.py
-    - TODO: review background/tests: test_models test_cube
-    - TODO: revise imports of all files (also TEST files) at the end
-    - TODO: revise examples in the docs (i.e. for new member var 'fits_format' (or 'format', or ??? scheme? fits_scheme?)
-    - TODO: revise also example script!!!
-    - TODO: revise also indentation overall!!! (with renames, indentation might shift)!!!
-    - TODO: use TeV for bin volume correction!!!
-    - TODO from test_prod_bg_cube_models.py (my script): it would be nice to get a nice string from an obs group!!! and in this case pack it in the figure title; I think this also applies to the script for comparing plots!!!
-
-    list of (to) mod files:
-
-    - gammapy/background/__init__.py
-    - gammapy/background/make.py
-    - gammapy/background/models.py
-    - gammapy/background/tests/test_models.py
-    - gammapy/datasets/make.py
-    - gammapy/datasets/tests/test_make.py
-    - gammapy/background/cube.py
-    - gammapy/background/tests/test_cube.py
-    - docs/background/plot_bgcube.py
-    - examples/plot_background_model.py -> plot_bg_cube_model.py (update ref in docs!)
-    - docs/background/models.rst
-    - docs/background/make_models.rst
-
     Parameters
     ----------
     coordx_edges : `~astropy.coordinates.Angle`, optional
@@ -376,7 +337,7 @@ class Cube(object):
 
         # get data
         data = image_hdu.data
-        data_unit = _parse_data_units(image_header['CUBE_DATA_UNIT'])
+        data_unit = _parse_data_units(image_header['DATAUNIT'])
         data = Quantity(data, data_unit)
 
         return cls(coordx_edges=coordx_edges,
@@ -479,7 +440,7 @@ class Cube(object):
         imhdu = fits.PrimaryHDU(data=self.data.value,
                                 header=self.coord_wcs.to_header())
         # add some important header information
-        imhdu.header['CUBE_DATA_UNIT'] = '{0.unit:FITS}'.format(self.data)
+        imhdu.header['DATAUNIT'] = '{0.unit:FITS}'.format(self.data)
         imhdu.header['CTYPE3'] = self.scheme_dict['energy_fits_name']
         imhdu.header['CUNIT3'] = '{0.unit:FITS}'.format(self.energy_edges)
 
