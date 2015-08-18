@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.time import Time
 from astropy.table import Table
-from ...spectrum import np_to_pha, LogEnergyAxis, energy_bin_centers_log_spacing
+from ...spectrum import np_to_pha, LogEnergyAxis
 
 try:
     import scipy
@@ -58,8 +58,3 @@ def test_LogEnergyAxis():
     assert_quantity_allclose(world, energy)
 
 
-def test_energy_bin_centers_log_spacing():
-    energy_bounds = Quantity([1, 2, 10], 'GeV')
-    actual = energy_bin_centers_log_spacing(energy_bounds)
-    desired = Quantity([1.41421356, 4.47213595], 'GeV')
-    assert_quantity_allclose(actual, desired)

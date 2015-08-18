@@ -11,12 +11,6 @@ class CountsCubeDataset(object):
     """Counts cube dataset."""
     # TODO: implement me
 
-
-class CountsSpectrumDataset(object):
-    """Counts spectrum dataset."""
-    # TODO: implement me
-
-
 class CountsImageDataset(object):
     """Counts image dataset."""
     # TODO: implement me
