@@ -177,7 +177,8 @@ class Cube(object):
 
         return self.define_scheme(self.scheme)
 
-    def define_scheme(self, scheme=None):
+    @staticmethod
+    def define_scheme(scheme=None):
         """Define naming scheme, depending on the kind of cube.
 
         Parameters
@@ -190,17 +191,9 @@ class Cube(object):
         scheme_dict : dict
             Dictionary containing parameter naming scheme for FITS files and plots.
         """
-        if self.scheme == '' or self.scheme == None:
-            self.scheme = scheme
-        else:
-            if self.scheme != scheme:
-                s_error = "Catched attempt to overwrite existing "
-                s_error += "cube scheme {}.".format(self.scheme)
-                raise RuntimeError(s_error)
-
         scheme_dict = dict()
 
-        if self.scheme == None or self.scheme == '':
+        if scheme == None or scheme == '':
             # default values
             scheme_dict['hdu_fits_name'] = 'DATA'
             scheme_dict['coordx_fits_name'] = 'X'
@@ -211,7 +204,7 @@ class Cube(object):
             scheme_dict['coordy_plot_name'] = 'Y'
             scheme_dict['energy_plot_name'] = 'E'
             scheme_dict['data_plot_name'] = 'DATA'
-        elif self.scheme == 'bg_cube':
+        elif scheme == 'bg_cube':
             scheme_dict['hdu_fits_name'] = 'BACKGROUND'
             scheme_dict['coordx_fits_name'] = 'DETX'
             scheme_dict['coordy_fits_name'] = 'DETY'
@@ -221,7 +214,7 @@ class Cube(object):
             scheme_dict['coordy_plot_name'] = 'DET Y'
             scheme_dict['energy_plot_name'] = 'E'
             scheme_dict['data_plot_name'] = 'Bg rate'
-        elif self.scheme == 'bg_counts_cube':
+        elif scheme == 'bg_counts_cube':
             scheme_dict['hdu_fits_name'] = 'COUNTS'
             scheme_dict['coordx_fits_name'] = 'DETX'
             scheme_dict['coordy_fits_name'] = 'DETY'
@@ -231,7 +224,7 @@ class Cube(object):
             scheme_dict['coordy_plot_name'] = 'DET Y'
             scheme_dict['energy_plot_name'] = 'E'
             scheme_dict['data_plot_name'] = 'Counts'
-        elif self.scheme == 'bg_livetime_cube':
+        elif scheme == 'bg_livetime_cube':
             scheme_dict['hdu_fits_name'] = 'LIVETIME'
             scheme_dict['coordx_fits_name'] = 'DETX'
             scheme_dict['coordy_fits_name'] = 'DETY'
@@ -266,7 +259,7 @@ class Cube(object):
         header = hdu.header
         data = hdu.data
 
-        scheme_dict = cls.define_scheme(cls, scheme)
+        scheme_dict = cls.define_scheme(scheme)
         x_name_lo = scheme_dict['coordx_fits_name'] + '_LO'
         x_name_hi = scheme_dict['coordx_fits_name'] + '_HI'
         y_name_lo = scheme_dict['coordy_fits_name'] + '_LO'
@@ -325,7 +318,7 @@ class Cube(object):
         return cls(coordx_edges=coordx_edges,
                    coordy_edges=coordy_edges,
                    energy_edges=energy_edges,
-                   data=data, scheme=cls.scheme)
+                   data=data, scheme=scheme)
 
     @classmethod
     def from_fits_image(cls, image_hdu, energy_hdu, scheme=None):
@@ -348,7 +341,7 @@ class Cube(object):
         image_header = image_hdu.header
         energy_header = energy_hdu.header
 
-        scheme_dict = cls.define_scheme(cls, scheme)
+        scheme_dict = cls.define_scheme(scheme)
 
         # check correct axis order: 1st X, 2nd Y, 3rd energy, 4th data
         if (image_header['CTYPE1'] != scheme_dict['coordx_fits_name']):
@@ -389,7 +382,7 @@ class Cube(object):
         return cls(coordx_edges=coordx_edges,
                    coordy_edges=coordy_edges,
                    energy_edges=energy_edges,
-                   data=data, scheme=cls.scheme)
+                   data=data, scheme=scheme)
 
     @classmethod
     def read(cls, filename, format='table', scheme=None):
@@ -417,7 +410,7 @@ class Cube(object):
         cube : `~gammapy.background.Cube`
             Cube object.
         """
-        scheme_dict = cls.define_scheme(cls, scheme)
+        scheme_dict = cls.define_scheme(scheme)
         hdu = fits.open(filename)
         if format == 'table':
             return cls.from_fits_table(hdu[scheme_dict['hdu_fits_name']], scheme)
