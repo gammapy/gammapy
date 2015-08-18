@@ -95,8 +95,8 @@ class Energy(u.Quantity):
 
         return cls(energy, unit, copy=False)
 
-    @staticmethod
-    def from_fits(hdu, unit=None):
+    @classmethod
+    def from_fits(cls, hdu, unit=None):
         """Read ENERGIES fits extension (`~gammapy.spectrum.energy.Energy`).
 
         Parameters
@@ -119,7 +119,7 @@ class Energy(u.Quantity):
                 raise ValueError("No unit found in the FITS header."
                                  " Please specifiy a unit")
 
-        energy = Energy(hdu.data['Energy'], fitsunit)
+        energy = cls(hdu.data['Energy'], fitsunit)
 
         return energy.to(unit)
         
@@ -212,8 +212,8 @@ class EnergyBounds(Energy):
         return super(EnergyBounds, cls).equal_log_spacing(
             emin, emax, nbins + 1, unit)
 
-    @staticmethod
-    def from_fits(hdu, unit=None):
+    @classmethod
+    def from_fits(cls, hdu, unit=None):
         """Read EBOUNDS fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
 
         Parameters
@@ -223,15 +223,11 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
+        
+        if hdu.name != 'EBOUNDS':
+            log.warn('This does not seem like an EBOUNDS extension. Are you sure?')
 
-        header = hdu.header
-        unit = header.get('TUNIT1')
-        if unit is None:
-            raise ValueError("No energy unit could be found in the header of."
-                             "{0}. Please specifiy a unit".format(header.name))
-
-        energy = Quantity(hdu.data['Energy'], unit)
-        return Energy(energy)
+        return super(EnergyBounds, cls).from_fits(cls, hdu, unit)
 
     def to_fits(self, **kwargs):
         """Write EBOUNDS fits extension
