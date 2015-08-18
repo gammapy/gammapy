@@ -2,8 +2,12 @@
 from __future__ import print_function, division
 import numpy as np
 from astropy.io import fits
+from ..spectrum.energy import *
+from ..irf.utils import *
+from astropy.coordinates import Angle
+from astropy.units import Quantity
 
-__all__ = ['EnergyDispersion', 'np_to_rmf', 'gauss_energy_dispersion_matrix']
+__all__ = ['EnergyDispersion', 'np_to_rmf', 'gauss_energy_dispersion_matrix', 'EnergyDispersion2D']
 
 
 class EnergyDispersion(object):
@@ -544,3 +548,85 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
     #hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
     #                     telescope=telescope, instrument=instrument)
     #return hdu_list
+
+
+
+class EnergyDispersion2D(object):
+    """Offset-dependent energy dispersion matrix.
+    """
+
+    def __init__(self, etrue_lo, etrue_hi, migra_lo, migra_hi, offset_lo,
+                 offset_hi, dispersion):
+
+        if not isinstance(etrue_lo, Quantity) or not isinstance(etrue_hi, Quantity):
+            raise ValueError("Energies must be Quantity objects.")
+        if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
+            raise ValueError("Offsets must be Angle objects.")
+                
+        self.migra_lo = migra_lo
+        self.migra_hi = migra_hi
+        self.offset_lo = offset_lo
+        self.offset_hi = offset_hi
+        self.dispersion = dispersion
+
+        self.energy = EnergyBounds.from_lower_and_upper_bounds(etrue_lo, etrue_hi)
+        self.offset = (offset_hi + offset_lo) / 2
+        self.migra = (migra_hi + migra_lo) / 2
+
+        self._prepare_linear_interpolator()
+
+    @classmethod
+    def from_fits(cls, hdu):
+        """Create `EnergyDispersion2D` from ``GCTAEdisp2D`` format HDU.
+
+        Parameters
+        ----------
+        hdu : `~astropy.io.fits.BinTableHDU`
+            ``ENERGY DISPERSION`` extension.
+        """
+
+        data = hdu.data
+        header = hdu.header
+        e_lo = EnergyBounds(data['ETRUE_LO'].squeeze(), header['TUNIT1'])
+        e_hi = EnergyBounds(data['ETRUE_HI'].squeeze(), header['TUNIT2'])
+        o_lo = Angle(data['THETA_LO'].squeeze(), header['TUNIT5'])
+        o_hi = Angle(data['THETA_HI'].squeeze(), header['TUNIT6'])
+        m_lo = data['MIGRA_LO'].squeeze()
+        m_hi = data['MIGRA_HI'].squeeze()
+        matrix = data['MATRIX'].squeeze()
+
+        return cls(e_lo, e_hi, m_lo, m_hi, o_lo, o_hi, matrix)
+
+    @classmethod
+    def read(cls, filename):
+        """Create `EnergyDispersion2D` from ``GCTAEdisp2D`` format FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        """
+        hdulist = fits.open(filename)
+        return cls.from_fits(hdulist['ENERGY DISPERSION'])
+
+    def to_energy_dispersion(self, offset, energy):
+        """Evaluate at a given offset and return energy dispersion.
+        """
+        pass
+
+    def _eval(self, offset=None, energy=None, migra=None):
+
+        val = self._linear(offset.value, migra, np.log10(energy.value))
+        return Quantity(val, self.eff_area.unit)
+
+    def _prepare_linear_interpolator(self):
+        """Linear interpolation in N dimensions
+        """
+        from scipy.interpolate import RegularGridInterpolator
+
+        x = self.offset
+        y = self.migra
+        z = np.log10(self.energy.log_centers.value)
+        data = self.dispersion
+
+        self._linear = RegularGridInterpolator((x, y, z), data)
