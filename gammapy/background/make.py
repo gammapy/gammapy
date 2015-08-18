@@ -54,7 +54,9 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     # define cube background model object with binning and empty cubes #
     ####################################################################
 
-    bg_cube_model = CubeBackgroundModel.define_cube_binning(len(observation_table), DEBUG)
+    bg_cube_model = CubeBackgroundModel.define_cube_binning(len(observation_table),
+                                                            DEBUG,
+                                                            do_not_fill=False)
 
     if DEBUG:
         print("cube shape", bg_cube_model.background_cube.data.shape)

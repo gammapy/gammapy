@@ -113,57 +113,162 @@ class CubeBackgroundModel(object):
 
     Parameters
     ----------
-    detx_edges : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high) for the cubes.
-        X coordinate.
-    dety_edges : `~astropy.coordinates.Angle`
-        Spatial bin edges vector (low and high) for the cubes.
-        Y coordinate.
-    energy_edges : `~astropy.units.Quantity`
-        Energy bin edges vector (low and high) for the cubes.
-
-    Examples
-    --------
-    Access cube bg model data:
-
-    .. code:: python
-
-        energy_bin = bg_cube_model.find_energy_bin(energy=Quantity(2., 'TeV'))
-        det_bin = bg_cube_model.find_det_bin(det=Angle([0., 0.], 'degree'))
-        bg_cube_model.background[energy_bin, det_bin[1], det_bin[0]]
+    events_cube : `~gammapy.background.Cube`, optional
+        Cube to store counts.
+    livetime_cube : `~gammapy.background.Cube`, optional
+        Cube to store livetime correction.
+    background_cube : `~gammapy.background.Cube`, optional
+        Cube to store background model.
     """
 
-    events_cube = Cube()
-    livetime_cube = Cube()
-    background_cube = Cube()
+    def __init__(self, events_cube=None, livetime_cube=None, background_cube=None):
+        self.events_cube = events_cube
+        self.livetime_cube = livetime_cube
+        self.background_cube = background_cube
 
-    def __init__(self, detx_edges, dety_edges, energy_edges):
-        # define cube binning
+    @classmethod
+    def read(cls, filename, format='table'):
+        """Read cube background model from fits file.
 
+        Several input formats are accepted, depending on the value
+        of the **format** parameter:
+
+        * table (default and preferred format): all 3 cubes as
+          `~astropy.io.fits.HDUList` of `~astropy.io.fits.BinTableHDU`
+        * image (alternative format): bg cube saved as
+          `~astropy.io.fits.PrimaryHDU`, with the energy binning
+          stored as `~astropy.io.fits.BinTableHDU`
+
+        The events and livetime cubes are optional.
+
+        This method calls `~gammapy.background.Cube.read`,
+        forwarding all arguments.
+
+        Parameters
+        ----------
+        filename : str
+            Name of file with the cube.
+        format : str, optional
+            Format of the cube to read.
+
+        Returns
+        -------
+        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+            Cube background model object.
+        """
+        hdu = fits.open(filename)
+        events_scheme_dict = Cube.define_scheme('bg_counts_cube')
+        livetime_scheme_dict = Cube.define_scheme('bg_livetime_cube')
+        background_scheme_dict = Cube.define_scheme('bg_cube')
+
+        try:
+            events_cube = Cube.read(filename, format, scheme='bg_counts_cube')
+            livetime_cube = Cube.read(filename, format, scheme='bg_livetime_cube')
+        except:
+            # no events/livetime cube found: read only bg cube
+            events_cube = Cube()
+            livetime_cube = Cube()
+
+        background_cube = Cube.read(filename, format, scheme='bg_cube')
+
+        return cls(events_cube=events_cube,
+                   livetime_cube=livetime_cube,
+                   background_cube=background_cube)
+
+    def write(self, outfile, format='table', **kwargs):
+        """Write cube to fits file.
+
+        Several output formats are accepted, depending on the value
+        of the **format** parameter:
+
+        * table (default and preferred format): all 3 cubes as
+          `~astropy.io.fits.HDUList` of `~astropy.io.fits.BinTableHDU`
+        * image (alternative format): bg cube saved as
+          `~astropy.io.fits.PrimaryHDU`, with the energy binning
+          stored as `~astropy.io.fits.BinTableHDU`
+
+        The events and livetime cubes are optional.
+
+        This method calls `~astropy.io.fits.HDUList.writeto`,
+        forwarding the **kwargs** arguments.
+
+        Parameters
+        ----------
+        outfile : str
+            Name of file to write.
+        format : str, optional
+            Format of the cube to write.
+        kwargs
+            Extra arguments for the corresponding `io.fits` `writeto` method.
+        """
+        if ((self.events_cube.data.sum() == 0) or
+            (self.livetime_cube.data.sum() == 0)):
+            # empty envets/livetime cube: save only bg cube
+            self.background_cube.write(outfile, format, **kwargs)
+        else:
+            if format == 'table':
+                hdu_list = fits.HDUList([fits.PrimaryHDU(), # empty primary HDU
+                                         self.events_cube.to_fits_table(),
+                                         self.livetime_cube.to_fits_table(),
+                                         self.background_cube.to_fits_table()])
+                hdu_list.writeto(outfile, **kwargs)
+            elif format == 'image':
+                # save only bg cube: DS9 understands only one (primary) HDU
+                self.background_cube.write(outfile, format, **kwargs)
+            else:
+                raise ValueError("Invalid format {}.".format(format))
+
+    @classmethod
+    def set_cube_binning(cls, detx_edges, dety_edges, energy_edges, do_not_fill=False):
+        """
+        Set cube binning from function parameters.
+
+        Parameters
+        ----------
+        detx_edges : `~astropy.coordinates.Angle`
+            Spatial bin edges vector (low and high) for the cubes.
+            X coordinate.
+        dety_edges : `~astropy.coordinates.Angle`
+            Spatial bin edges vector (low and high) for the cubes.
+            Y coordinate.
+        energy_edges : `~astropy.units.Quantity`
+            Energy bin edges vector (low and high) for the cubes.
+        do_not_fill : bool, optional
+            Flag to avoid filling empty data (zeros) in the cubes.
+
+        Returns
+        -------
+        bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+            Cube background model object.
+        """
         empty_cube_data = np.zeros((len(energy_edges) - 1,
                                     len(dety_edges) - 1,
                                     len(detx_edges) - 1))
 
-        self.events_cube.coordx_edges = detx_edges
-        self.events_cube.coordy_edges = dety_edges
-        self.events_cube.energy_edges = energy_edges
-        self.events_cube.data = Quantity(empty_cube_data, '') # counts
-        self.events_cube.scheme = 'bg_counts_cube'
+        events_cube = Cube(coordx_edges = detx_edges,
+                           coordy_edges = dety_edges,
+                           energy_edges = energy_edges,
+                           data = Quantity(empty_cube_data, ''), # counts
+                           scheme = 'bg_counts_cube')
 
-        self.livetime_cube.coordx_edges = detx_edges
-        self.livetime_cube.coordy_edges = dety_edges
-        self.livetime_cube.energy_edges = energy_edges
-        self.livetime_cube.data = Quantity(empty_cube_data, 'second')
-        self.livetime_cube.scheme = 'bg_livetime_cube'
+        livetime_cube = Cube(coordx_edges = detx_edges,
+                             coordy_edges = dety_edges,
+                             energy_edges = energy_edges,
+                             data = Quantity(empty_cube_data, 'second'),
+                             scheme = 'bg_livetime_cube')
 
-        self.background_cube.coordx_edges = detx_edges
-        self.background_cube.coordy_edges = dety_edges
-        self.background_cube.energy_edges = energy_edges
-        self.background_cube.data = Quantity(empty_cube_data, '1 / (s TeV sr)')
-        self.background_cube.scheme = 'bg_cube'
+        background_cube = Cube(coordx_edges = detx_edges,
+                               coordy_edges = dety_edges,
+                               energy_edges = energy_edges,
+                               data = Quantity(empty_cube_data, '1 / (s TeV sr)'),
+                               scheme = 'bg_cube')
+
+        return cls(events_cube=events_cube,
+                   livetime_cube=livetime_cube,
+                   background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, n_obs, DEBUG):
+    def define_cube_binning(cls, n_obs, DEBUG, do_not_fill=False):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -177,6 +282,8 @@ class CubeBackgroundModel(object):
             Number of observations.
         DEBUG : int
             Debug level.
+        do_not_fill : bool, optional
+            Flag to avoid filling empty data (zeros) in the cubes.
 
         Returns
         -------
@@ -232,7 +339,7 @@ class CubeBackgroundModel(object):
             print("dety bin edges", dety_edges)
             print("detx bin edges", detx_edges)
 
-        return cls(detx_edges, dety_edges, energy_edges)
+        return cls.set_cube_binning(detx_edges, dety_edges, energy_edges, do_not_fill)
 
     def fill_events(self, observation_table, fits_path, DEBUG):
         """Fill events and compute corresponding livetime.
