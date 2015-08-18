@@ -191,6 +191,32 @@ class EnergyBounds(Energy):
         
         return self[:-1]
 
+
+    @classmethod
+    def from_lower_and_upper_bounds(cls, lower, upper, unit=None):
+        """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`). 
+
+        If no unit is given, it will be taken from upper
+        
+        Parameters
+        ----------
+        lower : `~astropy.units.Quantity`, float
+            Lowest energy bin
+        upper : `~astropy.units.Quantity`, float
+            Highest energy bin
+        unit : `~astropy.units.UnitBase`, str, None
+            Energy units
+        """
+        
+        #np.append renders Quantities dimensionless
+        #http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
+        
+        lower = cls(lower, unit);
+        upper = cls(upper, unit);
+        unit = upper.unit
+        energy = np.append(lower, upper[-1])
+        return cls(energy.value, unit)
+        
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """EnergyBounds with equal log-spacing (`~gammapy.spectrum.energy.EnergyBounds`).
@@ -205,7 +231,7 @@ class EnergyBounds(Energy):
             Highest energy bin
         bins : int
             Number of bins
-        unit : `~astropy.units.UnitBase`, str
+        unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
 
