@@ -90,14 +90,15 @@ class CountsSpectrum(object):
             Energy bin edges
         """
 
-        if isinstance (event_list,fit.BinTableHDU):
+        if isinstance (event_list,fits.BinTableHDU):
             event_list = EventList.read(event_list)
         elif isinstance(event_list, gammapy.data.EventListDataSet):
             event_list = event_list.event_list
         elif isinstance(event_list, str):
             event_list = EventList.read(event_list, hdu='EVENTS') 
 
-        val = np.histogram(event_list.energy,bins)
+        energy = event_list.energy.to(bins.unit)
+        val = np.histogram(energy,bins)
         livetime = event_list.observation_live_time_duration
 
         return cls(val, energy, livetime)
@@ -127,6 +128,7 @@ class CountsSpectrum(object):
         header = hdu.header
 
         # copied from np_to_pha
+        # I don't know if it should move here or stay a utility function
         header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'
  
         #header['BACKFILE'] = backfile, 'Background FITS file'
