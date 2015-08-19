@@ -663,8 +663,8 @@ class ObservationGroups(object):
         s = 'group {}:'.format(group_id)
         # find group row in obs groups table
         group_ids = self.obs_groups_table['GROUP_ID'].data
-        groupindex = np.where(group_ids==group_id)
-        row = groupindex[0][0]
+        group_index = np.where(group_ids==group_id)
+        row = group_index[0][0]
         # loop over observation axes
         for i_axis in np.arange(len(self.obs_group_axes)):
             if i_axis != 0:
