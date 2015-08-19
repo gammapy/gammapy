@@ -66,7 +66,7 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     # fill events and livetime #
     ############################
 
-    # TODO: filter out possible sources in the data
+    # TODO: filter out (mask) possible sources in the data
     #       for now, the observation table should not contain any
     #       run at or near an existing source
 

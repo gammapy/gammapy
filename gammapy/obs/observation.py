@@ -347,8 +347,6 @@ def recover_units(array, as_units):
     After some numpy operations, `~astropy.units.Quantity`-like objects
     loose their units. This function shoul recover them.
 
-    TODO: extend to Time arrays.
-
     Parameters
     ----------
     array : `~numpy.ndarray` or `~astropy.units.Quantity`-like
@@ -392,11 +390,6 @@ class ObservationGroups(object):
     For details on the grouping of observations in a list, please
     refer to the `~gammapy.obs.ObservationGroups.group_observation_table`
     method.
-
-    TODO: show a grouped obs list and a table of obs groups in the high-level docs
-    (and a list of axes)!!!!
-    (do it in the "future" page for the "future" inline command tool
-    for obs groups!!!)
 
     Parameters
     ----------
@@ -573,8 +566,6 @@ class ObservationGroups(object):
             axes.append(ObservationGroupAxis(col_name, data,
                                              'bin_values'))
             # format will be reviewed in a further step
-            # TODO: maybe it's better to store/read the parameter
-            #       format in/from the table header?!!!
 
         # detect range variables and eventually merge columns
         for i_col in np.arange(len(axes)):

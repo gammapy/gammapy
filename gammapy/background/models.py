@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.modeling.models import Gaussian1D
 import astropy.units as u
-from astropy.units import Quantity
+from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
@@ -108,7 +108,6 @@ class CubeBackgroundModel(object):
     the cubes.
 
     - TODO: review this doc!!!
-    - TODO: review this class!!!
     - TODO: review high-level doc!!!
 
     Parameters
@@ -396,14 +395,19 @@ class CubeBackgroundModel(object):
             data_set = data_set.select_energy((energy_threshold, energy_threshold*1.e6))
 
             # construct events cube (energy, X, Y)
-            # TODO: UNITS ARE MISSING??!!! -> also in the fits tables!!!
-            #       in header there is EUNIT (TeV)!!!
-            #       hard coding the units for now !!!
-            # TODO: try to cast units, if it doesn't work, use hard coded ones!!!
-            ev_DETX = Angle(data_set['DETX'], 'degree')
-            ev_DETY = Angle(data_set['DETY'], 'degree')
-            ev_energy = Quantity(data_set['ENERGY'],
-                                 data_set.meta['EUNIT'])
+            # TODO: units are missing in the H.E.S.S. fits event
+            #       lists; this should be solved in the next (prod03)
+            #       H.E.S.S. fits production
+            # workaround: try to cast units, if it doesn't work, use hard coded ones
+            try:
+                ev_DETX = Angle(data_set['DETX'])
+                ev_DETY = Angle(data_set['DETY'])
+                ev_energy = Quantity(data_set['ENERGY'])
+            except UnitsError:
+                ev_DETX = Angle(data_set['DETX'], 'degree') # hard-coded!!!
+                ev_DETY = Angle(data_set['DETY'], 'degree') # hard-coded!!!
+                ev_energy = Quantity(data_set['ENERGY'],
+                                     data_set.meta['EUNIT']) # half hard-coded!!!
             ev_cube_table = Table([ev_energy, ev_DETY, ev_DETX],
                                   names=('ENERGY', 'DETY', 'DETX'))
             if DEBUG > 2:
@@ -411,7 +415,7 @@ class CubeBackgroundModel(object):
 
             # TODO: filter out possible sources in the data;
             #       for now, the observation table should not contain any
-            #       run at or near an existing source
+            #       observation at or near an existing source
 
             # fill events
 
