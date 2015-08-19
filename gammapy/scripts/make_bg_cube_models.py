@@ -29,9 +29,13 @@ DEBUG = 1 # 0: no output, 1: output, 2: NOTHING, 3: more verbose
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument('fitspath', type=str,
-                        help='Dir path to input event list fits files.')
+                        help='Path to dir containing list of input fits event files.')
     parser.add_argument('scheme', type=str,
                         help='Scheme of file naming.')
+    parser.add_argument('outdir', type=str,
+                        help='Dir path to store the results.')
+    parser.add_argument('--overwrite', action='store_true',
+                        help='Overwrite existing output file?')
     parser.add_argument('--test', type=bool, default=False,
                         help='If true, use a subset of observations '
                         'for testing purposes')
@@ -45,7 +49,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(fitspath, scheme, test):
+def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -69,30 +73,48 @@ def make_bg_cube_models(fitspath, scheme, test):
     Parameters
     ----------
     fitspath : str
-        Path to dir containing event list fits files and a list of them.
+        Path to dir containing list of input fits event files.
     scheme : str
         Scheme of file naming.
+    outdir : str
+        Dir path to store the results.
+    overwrite : bool
+        If true, run fast (not recomended for analysis).
     test : bool
         If true, run fast (not recomended for analysis).
+
+    Examples
+    --------
+    >>> gammapy-make-bg-cube-models -h
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models --test True
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models --test True --overwrite
+
     """
-    create_bg_observation_list(fitspath, scheme, test)
-    group_observations(test)
-    stack_observations(fitspath)
+    # create output folder
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+    else:
+        if overwrite:
+            # delete and create again
+            shutil.rmtree(outdir) # recursively
+            os.mkdir(outdir)
+        else:
+            # do not overwrite, hence exit
+            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
+            raise RuntimeError(s_error)
+
+    create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
+    group_observations(outdir, overwrite, test)
+    stack_observations(fitspath, outdir, overwrite)
 
 
-def create_bg_observation_list(fits_path, scheme, test):
+def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     """Make total observation list and filter the observations.
 
     In a first version, all obs taken within 3 deg of a known source
     will be rejected. If a source is extended, twice the extension is
     added to the corresponding exclusion region radius of 3 deg.
-
-    TODO: on a second version, one could only filter out the runs
-          too close to the galacic plane, and afterwards use masks
-          to cut out sources, for runs taken on extragalactic objects
-          (correcting the livetime accordingly).
-
-    TODO: move function to background/obs module? But where?!!!
 
     Parameters
     ----------
@@ -100,6 +122,10 @@ def create_bg_observation_list(fits_path, scheme, test):
         Path to dir containing list of input fits event files.
     scheme : str
         Scheme of file naming.
+    outdir : str
+        Dir path to store the results.
+    overwrite : bool
+        If true, run fast (not recomended for analysis).
     test : bool
         If true, run fast: skip many runs and catalog sources.
     """
@@ -128,7 +154,7 @@ def create_bg_observation_list(fits_path, scheme, test):
 
     # for testing, only process a small subset of sources
     if test:
-        catalog = catalog[:10]
+        catalog = catalog[:5]
     if DEBUG:
         print()
         print("TeVCAT catalogue")
@@ -164,14 +190,13 @@ def create_bg_observation_list(fits_path, scheme, test):
     # TODO: is there a way to quickly filter out sources in a region of the sky, where H.E.S.S. can't observe????!!!! -> don't loose too much time on this (detail)
 
     # save the bg observation list to a fits file
-    outdir = os.environ['PWD'] + '/'
-    outfile = outdir + 'bg_observation_table.fits.gz'
+    outfile = outdir + '/bg_observation_table.fits.gz'
     if DEBUG:
         print("outfile", outfile)
-    observation_table.write(outfile, overwrite=True)
+    observation_table.write(outfile, overwrite=overwrite)
 
 
-def group_observations(test):
+def group_observations(outdir, overwrite, test):
     """Group list of observations runs according to observation properties.
 
     The observations are grouped into observation groups (bins) according
@@ -179,6 +204,10 @@ def group_observations(test):
 
     Parameters
     ----------
+    outdir : str
+        Dir path to store the results.
+    overwrite : bool
+        If true, run fast (not recomended for analysis).
     test : bool
         If true, run fast: define coarse binning for observation grouping.
     """
@@ -189,8 +218,8 @@ def group_observations(test):
         print("###############################")
 
     # read bg observation table from file
-    indir = os.environ['PWD'] + '/'
-    infile = indir + 'bg_observation_table.fits.gz'
+    indir = outdir
+    infile = indir + '/bg_observation_table.fits.gz'
     observation_table = ObservationTable.read(infile)
 
     # define observation binning
@@ -236,18 +265,17 @@ def group_observations(test):
         print(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
-    outdir = os.environ['PWD'] + '/'
-    outfile = outdir + 'bg_observation_groups.ecsv'
+    outfile = outdir + '/bg_observation_groups.ecsv'
     if DEBUG:
         print("outfile", outfile)
-    observation_groups.write(outfile, overwrite=True)
-    outfile = outdir + 'bg_observation_table_grouped.fits.gz'
+    observation_groups.write(outfile, overwrite=overwrite)
+    outfile = outdir + '/bg_observation_table_grouped.fits.gz'
     if DEBUG:
         print("outfile", outfile)
-    observation_table_grouped.write(outfile, overwrite=True)
+    observation_table_grouped.write(outfile, overwrite=overwrite)
 
 
-def stack_observations(fits_path):
+def stack_observations(fits_path, outdir, overwrite):
     """Stack events for each observation group (bin) and make background model.
 
     The models are stored into FITS files.
@@ -256,6 +284,10 @@ def stack_observations(fits_path):
     ----------
     fits_path : str
         Path to dir containing list of input fits event files.
+    outdir : str
+        Dir path to store the results.
+    overwrite : bool
+        If true, run fast (not recomended for analysis).
     """
     if DEBUG:
         print()
@@ -264,24 +296,11 @@ def stack_observations(fits_path):
         print("###############################")
 
     # read observation grouping and grouped observation table
-    indir = os.environ['PWD'] + '/'
-    infile = indir + 'bg_observation_groups.ecsv'
-    observation_groups = ObservationGroups.read('bg_observation_groups.ecsv')
-    infile = indir + 'bg_observation_table_grouped.fits.gz'
+    indir = outdir
+    infile = indir + '/bg_observation_groups.ecsv'
+    observation_groups = ObservationGroups.read(infile)
+    infile = indir + '/bg_observation_table_grouped.fits.gz'
     observation_table_grouped = ObservationTable.read(infile)
-
-    # create output folder
-    outdir = os.environ['PWD'] + '/bg_cube_models/'
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            raise RuntimeError("Cannot continue: directory exist {}.".format(fits_path))
 
     # loop over observation groups
     groups = observation_groups.list_of_groups
@@ -309,12 +328,12 @@ def stack_observations(fits_path):
 
         # save model to file
         outfile = outdir +\
-                 'bg_cube_model_group{}'.format(group)
+                 '/bg_cube_model_group{}'.format(group)
         if DEBUG:
             print("outfile", '{}_table.fits.gz'.format(outfile))
             print("outfile", '{}_image.fits.gz'.format(outfile))
-        bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table')
-        bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image')
+        bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table', clobber=overwrite)
+        bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image', clobber=overwrite)
 
         # TODO: bg cube file names won't match the names from michael mayer!!! (also the observation lists: split/unsplit)
         #       the current naming makes it difficult to compare 2 sets of cubes!!!

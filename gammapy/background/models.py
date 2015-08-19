@@ -369,12 +369,12 @@ class CubeBackgroundModel(object):
         data_store = DataStore(dir=fits_path, scheme=scheme)
         event_list_files = data_store.make_table_of_files(observation_table,
                                                  	  	  filetypes=['events'])
-        aeff_list_files = data_store.make_table_of_files(observation_table,
-                                                         filetypes=['effective area'])
+        aeff_table_files = data_store.make_table_of_files(observation_table,
+                                                          filetypes=['effective area'])
 
         # loop over observations
         for i_ev_file, i_aeff_file in zip(event_list_files['filename'],
-                                          aeff_list_files['filename']):
+                                          aeff_table_files['filename']):
             if DEBUG > 2:
                 print(' ev infile: {}'.format(i_ev_file))
                 print(' aeff infile: {}'.format(i_aeff_file))
@@ -409,7 +409,7 @@ class CubeBackgroundModel(object):
             if DEBUG > 2:
                 print(ev_cube_table)
 
-            # TODO: filter out possible sources in the data
+            # TODO: filter out possible sources in the data;
             #       for now, the observation table should not contain any
             #       run at or near an existing source
 

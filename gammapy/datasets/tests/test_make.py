@@ -106,3 +106,11 @@ def test_make_test_dataset(tmpdir):
     data_store = DataStore(dir=fits_path, scheme=scheme)
     observation_table = data_store.make_observation_table()
     assert len(observation_table) == n_obs
+
+    # test number of event list and effective area table files created
+    event_list_files = data_store.make_table_of_files(observation_table,
+                                                      filetypes=['events'])
+    aeff_table_files = data_store.make_table_of_files(observation_table,
+                                                      filetypes=['effective area'])
+    assert len(event_list_files) == n_obs
+    assert len(aeff_table_files) == n_obs
