@@ -358,7 +358,15 @@ class CubeBackgroundModel(object):
             Debug level.
         """
         # stack events
-        data_store = DataStore(dir=fits_path) #TODO: this should depend on the observatory name!!!
+        observatory_name = observation_table.meta['OBSERVATORY_NAME']
+        if observatory_name == 'HESS':
+            scheme = 'hess'
+        else:
+            s_error = "Warning! Storage scheme for {}".format(observatory_name)
+            s_error += "not implemented. Only H.E.S.S. scheme is available."
+            raise RuntimeError(s_error)
+
+        data_store = DataStore(dir=fits_path, scheme=scheme)
         event_list_files = data_store.make_table_of_files(observation_table,
                                                  	  	  filetypes=['events'])
         aeff_list_files = data_store.make_table_of_files(observation_table,
@@ -378,6 +386,7 @@ class CubeBackgroundModel(object):
                 energy_threshold_unit = 'TeV'
             energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
                                         energy_threshold_unit)
+            # TODO: please avoid storing important info (like units) in comments!!!
             if DEBUG > 2:
                 print(' livetime {}'.format(livetime))
                 print(' energy threshold {}'.format(energy_threshold))
