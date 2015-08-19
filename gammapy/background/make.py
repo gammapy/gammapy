@@ -11,7 +11,8 @@ from ..background import Cube,CubeBackgroundModel
 __all__ = ['make_bg_cube_model',
            ]
 
-def make_bg_cube_model(observation_table, fits_path, DEBUG):
+
+def make_bg_cube_model(observation_table, fits_path):
     """Create a bg model from an observation table.
 
     Produce a background cube model using the data from an observation list.
@@ -35,31 +36,18 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
         Observation list to use for the histogramming.
     fits_path : str
         Path to the data files.
-    DEBUG : int
-        Debug level.
 
     Returns
     -------
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Cube background model.
     """
-
-    # DEBUG: 0: no output, 1: output, 2: NOTHING, 3: more verbose
-    # TODO: remove the DEBUG variable, when the logger works!!!
-    # TODO: I need to pass the logger or at least the log level!!!!
-    #       and remove the DEBUG option!!!
-    #       Look how the DataStore does it (when importing a file).
-
     ####################################################################
     # define cube background model object with binning and empty cubes #
     ####################################################################
 
     bg_cube_model = CubeBackgroundModel.define_cube_binning(len(observation_table),
-                                                            DEBUG,
                                                             do_not_fill=False)
-
-    if DEBUG:
-        print("cube shape", bg_cube_model.background_cube.data.shape)
 
 
     ############################
@@ -70,7 +58,7 @@ def make_bg_cube_model(observation_table, fits_path, DEBUG):
     #       for now, the observation table should not contain any
     #       run at or near an existing source
 
-    bg_cube_model.fill_events(observation_table, fits_path, DEBUG)
+    bg_cube_model.fill_events(observation_table, fits_path)
 
 
     ################

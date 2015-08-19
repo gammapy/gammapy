@@ -193,5 +193,6 @@ def find_obs(infile,
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
+        log.info("Filtered observation table")
         log.info(observation_table.meta)
-        log.info(observation_table)
+        print(observation_table)
