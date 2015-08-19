@@ -267,7 +267,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, n_obs, DEBUG, do_not_fill=False):
+    def define_cube_binning(cls, n_obs, do_not_fill=False):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -279,8 +279,6 @@ class CubeBackgroundModel(object):
         ----------
         n_obs : int
             Number of observations.
-        DEBUG : int
-            Debug level.
         do_not_fill : bool, optional
             Flag to avoid filling empty data (zeros) in the cubes.
 
@@ -329,18 +327,9 @@ class CubeBackgroundModel(object):
         delta_x = (detx_max - detx_min)/bg_cube_shape[2]
         detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
 
-    #    if DEBUG > 1:
-    #        energy_edges = Quantity([0.01, 0.1, 1., 10., 100.], 'TeV') # log binning
-    #        dety_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
-    #        detx_edges = Angle(np.arange(-5., 6., 1.), 'degree') # stops at 5
-        if DEBUG:
-            print("energy bin edges", energy_edges)
-            print("dety bin edges", dety_edges)
-            print("detx bin edges", detx_edges)
-
         return cls.set_cube_binning(detx_edges, dety_edges, energy_edges, do_not_fill)
 
-    def fill_events(self, observation_table, fits_path, DEBUG):
+    def fill_events(self, observation_table, fits_path):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -353,8 +342,6 @@ class CubeBackgroundModel(object):
             Observation list to use for the histogramming.
         fits_path : str
             Path to the data files.
-        DEBUG : int
-            Debug level.
         """
         # stack events
         observatory_name = observation_table.meta['OBSERVATORY_NAME']
@@ -374,9 +361,6 @@ class CubeBackgroundModel(object):
         # loop over observations
         for i_ev_file, i_aeff_file in zip(event_list_files['filename'],
                                           aeff_table_files['filename']):
-            if DEBUG > 2:
-                print(' ev infile: {}'.format(i_ev_file))
-                print(' aeff infile: {}'.format(i_aeff_file))
             ev_list_ds = EventListDataset.read(i_ev_file)
             livetime = ev_list_ds.event_list.observation_live_time_duration
             aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
@@ -386,9 +370,6 @@ class CubeBackgroundModel(object):
             energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
                                         energy_threshold_unit)
             # TODO: please avoid storing important info (like units) in comments!!!
-            if DEBUG > 2:
-                print(' livetime {}'.format(livetime))
-                print(' energy threshold {}'.format(energy_threshold))
 
             # fill events above energy threshold, correct livetime accordingly
             data_set = ev_list_ds.event_list
@@ -410,8 +391,6 @@ class CubeBackgroundModel(object):
                                      data_set.meta['EUNIT']) # half hard-coded!!!
             ev_cube_table = Table([ev_energy, ev_DETY, ev_DETX],
                                   names=('ENERGY', 'DETY', 'DETX'))
-            if DEBUG > 2:
-                print(ev_cube_table)
 
             # TODO: filter out possible sources in the data;
             #       for now, the observation table should not contain any

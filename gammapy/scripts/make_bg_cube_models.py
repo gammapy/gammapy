@@ -23,9 +23,6 @@ __all__ = ['make_bg_cube_models',
            ]
 
 
-DEBUG = 1 # 0: no output, 1: output, 2: NOTHING, 3: more verbose
-# TODO: remove the DEBUG global variable, when the logger works!!!
-
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument('fitspath', type=str,
@@ -129,11 +126,10 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     test : bool
         If true, run fast: skip many runs and catalog sources.
     """
-    if DEBUG:
-        print()
-        print("#######################################")
-        print("# Starting create_bg_observation_list #")
-        print("#######################################")
+    print()
+    print("#######################################")
+    print("# Starting create_bg_observation_list #")
+    print("#######################################")
 
     # get full list of observations
     data_store = DataStore(dir=fits_path, scheme=scheme)
@@ -142,10 +138,9 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     # for testing, only process a small subset of observations
     if test and len(observation_table) > 100:
         observation_table = observation_table.select_linspace_subset(num=100)
-    if DEBUG:
-        print()
-        print("full observation table")
-        print(observation_table)
+    print()
+    log.info("full observation table")
+    print(observation_table)
 
     # filter observations: load catalog and reject obs too close to sources
 
@@ -155,11 +150,6 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     # for testing, only process a small subset of sources
     if test:
         catalog = catalog[:5]
-    if DEBUG:
-        print()
-        print("TeVCAT catalogue")
-        print(catalog)
-        print("colnames: {}".format(catalog.colnames))
 
     # sources coordinates
     sources_coord = SkyCoord(catalog['coord_ra'], catalog['coord_dec'])
@@ -189,8 +179,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
 
     # save the bg observation list to a fits file
     outfile = outdir + '/bg_observation_table.fits.gz'
-    if DEBUG:
-        print("outfile", outfile)
+    log.info("outfile", outfile)
     observation_table.write(outfile, overwrite=overwrite)
 
 
@@ -209,11 +198,10 @@ def group_observations(outdir, overwrite, test):
     test : bool
         If true, run fast: define coarse binning for observation grouping.
     """
-    if DEBUG:
-        print()
-        print("###############################")
-        print("# Starting group_observations #")
-        print("###############################")
+    print()
+    print("###############################")
+    print("# Starting group_observations #")
+    print("###############################")
 
     # read bg observation table from file
     indir = outdir
@@ -235,12 +223,11 @@ def group_observations(outdir, overwrite, test):
 
     # create observation groups
     observation_groups = ObservationGroups(list_obs_group_axis)
-    if DEBUG:
-        print()
-        print("observation group axes")
-        print(observation_groups.info)
-        print("observation groups table (group definitions)")
-        print(observation_groups.obs_groups_table)
+    print()
+    log.info("observation group axes")
+    print(observation_groups.info)
+    log.info("observation groups table (group definitions)")
+    print(observation_groups.obs_groups_table)
 
     # group observations in the obs table according to the obs groups
     observation_table_grouped = observation_table
@@ -257,19 +244,16 @@ def group_observations(outdir, overwrite, test):
     azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(360., 'degree'))
     observation_table_grouped['AZ'] = azimuth
 
-    if DEBUG:
-        print()
-        print("observation table grouped")
-        print(observation_table_grouped)
+    print()
+    log.debug("observation table grouped")
+    log.debug(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
     outfile = outdir + '/bg_observation_groups.ecsv'
-    if DEBUG:
-        print("outfile", outfile)
+    log.info("outfile", outfile)
     observation_groups.write(outfile, overwrite=overwrite)
     outfile = outdir + '/bg_observation_table_grouped.fits.gz'
-    if DEBUG:
-        print("outfile", outfile)
+    log.info("outfile", outfile)
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
 
@@ -287,11 +271,10 @@ def stack_observations(fits_path, outdir, overwrite):
     overwrite : bool
         If true, run fast (not recomended for analysis).
     """
-    if DEBUG:
-        print()
-        print("###############################")
-        print("# Starting stack_observations #")
-        print("###############################")
+    print()
+    print("###############################")
+    print("# Starting stack_observations #")
+    print("###############################")
 
     # read observation grouping and grouped observation table
     indir = outdir
@@ -302,33 +285,29 @@ def stack_observations(fits_path, outdir, overwrite):
 
     # loop over observation groups
     groups = observation_groups.list_of_groups
-    if DEBUG:
-        print()
-        print("list of groups", groups)
+    print()
+    log.debug("list of groups", groups)
 
     for group in groups:
-        if DEBUG:
-            print()
-            print("group", group)
+        print()
+        log.debug("group", group)
 
         # get group of observations
         observation_table = observation_groups.get_group_of_observations(observation_table_grouped, group)
-        if DEBUG:
-            print(observation_table)
+        log.debug(observation_table)
 
         # skip bins with no observations
         if len(observation_table) == 0:
-            print("WARNING, group {} is empty.".format(group))
+            log.warning("WARNING, group {} is empty.".format(group))
             continue # skip the rest
 
         # create bg cube model
-        bg_cube_model = make_bg_cube_model(observation_table, fits_path, DEBUG)
+        bg_cube_model = make_bg_cube_model(observation_table, fits_path)
 
         # save model to file
         outfile = outdir +\
                  '/bg_cube_model_group{}'.format(group)
-        if DEBUG:
-            print("outfile", '{}_table.fits.gz'.format(outfile))
-            print("outfile", '{}_image.fits.gz'.format(outfile))
+        log.info("outfile", '{}_table.fits.gz'.format(outfile))
+        log.info("outfile", '{}_image.fits.gz'.format(outfile))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table', clobber=overwrite)
         bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image', clobber=overwrite)
