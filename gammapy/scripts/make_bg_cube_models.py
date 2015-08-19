@@ -187,8 +187,6 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
                          border=Angle(0., 'degree'))
         observation_table = observation_table.select_observations(selection)
 
-    # TODO: is there a way to quickly filter out sources in a region of the sky, where H.E.S.S. can't observe????!!!! -> don't loose too much time on this (detail)
-
     # save the bg observation list to a fits file
     outfile = outdir + '/bg_observation_table.fits.gz'
     if DEBUG:
@@ -334,12 +332,3 @@ def stack_observations(fits_path, outdir, overwrite):
             print("outfile", '{}_image.fits.gz'.format(outfile))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table', clobber=overwrite)
         bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image', clobber=overwrite)
-
-        # TODO: bg cube file names won't match the names from michael mayer!!! (also the observation lists: split/unsplit)
-        #       the current naming makes it difficult to compare 2 sets of cubes!!!
-        # TODO: support 2 namings: groupX, or axis1X_axis2Y_etc !!!
-        #       this is still not perfect, since the same var with  different binning produces the same indexing, but it's at least something (and helps comparing to Michi, if the same binning is used)
-        # add flag split obs list in observation_groups.group_observation_table??!!!
-
-    # TODO: use random data (write a random data generator (see bg API))
-    #       what about IRFs (i.e. Aeff for the E_THRESH?)?
