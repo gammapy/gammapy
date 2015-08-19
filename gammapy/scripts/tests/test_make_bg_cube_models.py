@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from astropy.tests.helper import pytest
+import numpy as np
+from astropy.tests.helper import pytest, remote_data
 from ...datasets import get_path
 from ..make_bg_cube_models import main as make_bg_cube_models_main
-
+from ...datasets import make_test_dataset
 
 try:
     import scipy
@@ -14,11 +15,22 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-@pytest.mark.xfail
-def test_make_bg_cube_models_main(tmpdir):
-    # TODO: implement
-    run_list = 'TODO'
-    exclusion_list = 'TODO'
-    reference_file = 'TODO'
-    out_file = str(tmpdir.join('bkg_cube_test.fits'))
-    make_bg_cube_models_main([run_list, exclusion_list, reference_file, out_file])
+@pytest.mark.parametrize("extra_options,something_to_test", [
+    (["--test", "True"], 0),
+    ])
+@remote_data
+def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
+    # create a dataset
+    fitspath = str(tmpdir.join('test_dataset'))
+    outdir = str(tmpdir.join('bg_cube_models'))
+    observatory_name = 'HESS'
+    scheme = 'hess'
+    n_obs = 2
+    random_state = np.random.RandomState(seed=0)
+
+    make_test_dataset(fits_path=fitspath,
+                      observatory_name=observatory_name,
+                      n_obs=n_obs,
+                      random_state=random_state)
+
+    make_bg_cube_models_main([fitspath, scheme, outdir] + extra_options)

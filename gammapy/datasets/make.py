@@ -387,6 +387,8 @@ def make_test_dataset(fits_path, overwrite=False,
     * `~gammapy.obs.DataStore` to handle the file naming scheme;
       currently only the H.E.S.S. naming scheme is supported
 
+    See also :ref:`background_make_models_datasets_for_testing`.
+
     Parameters
     ----------
     fits_path : str
@@ -407,7 +409,7 @@ def make_test_dataset(fits_path, overwrite=False,
         Passed to `~gammapy.utils.random.get_random_state`.
     """
     # create output folder
-    outdir = fits_path + '/'
+    outdir = fits_path
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
     else:
@@ -417,7 +419,9 @@ def make_test_dataset(fits_path, overwrite=False,
             os.mkdir(outdir)
         else:
             # do not overwrite, hence exit
-            raise RuntimeError("Cannot continue: directory exist {}.".format(fits_path))
+            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
+            raise RuntimeError(s_error)
+
 
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,
@@ -427,7 +431,7 @@ def make_test_dataset(fits_path, overwrite=False,
                                                     random_state=random_state)
 
     # save observation list to disk
-    outfile = outdir + "runinfo.fits"
+    outfile = outdir + '/runinfo.fits'
     observation_table.write(outfile)
 
     # create data store for the organization of the files
@@ -484,6 +488,8 @@ def make_test_evenlist(observation_table,
 
     In addition, an effective area table is produced. For the moment
     only the low energy threshold is filled.
+
+    See also :ref:`background_make_models_datasets_for_testing`.
 
     Parameters
     ----------

@@ -21,9 +21,9 @@ Examples
 The ``gammapy-find-obs`` tool has many options. Only a few examples
 are shown here. For a full list of options, please use:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-      $ gammapy-find-obs --help
+    $ gammapy-find-obs --help
 
 at the command line.
 
