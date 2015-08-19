@@ -83,7 +83,8 @@ def common_sky_region_select_test_routines(obs_table, selection):
 
 def test_select_parameter_box():
     # create random observation table
-    obs_table = make_test_observation_table(n_obs=10)
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
 
     # test no selection: input and output tables should be the same
     selected_obs_table = obs_table.select_observations()
@@ -122,10 +123,12 @@ def test_select_time_box():
     # observations (and times in absolute times)
     datestart = Time('2012-01-01T00:30:00', format='isot', scale='utc')
     dateend = Time('2012-01-01T02:30:00', format='isot', scale='utc')
+    random_state = np.random.RandomState(seed=0)
     obs_table_time = make_test_observation_table(n_obs=10,
                                                  datestart=datestart,
                                                  dateend=dateend,
-                                                 use_abs_time=True)
+                                                 use_abs_time=True,
+                                                 random_state=random_state)
 
     # test box selection in time: (time_start, time_stop) within value_range
     print()
@@ -145,7 +148,8 @@ def test_select_time_box():
 def test_select_sky_regions():
 
     # create random observation table with many entries
-    obs_table = make_test_observation_table(n_obs=100)
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
 
     # test sky box selection in gal coordinates
     lon_range = Angle([-100., 50.], 'degree')

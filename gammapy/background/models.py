@@ -358,7 +358,7 @@ class CubeBackgroundModel(object):
             Debug level.
         """
         # stack events
-        data_store = DataStore(dir=fits_path)
+        data_store = DataStore(dir=fits_path) #TODO: this should depend on the observatory name!!!
         event_list_files = data_store.make_table_of_files(observation_table,
                                                  	  	  filetypes=['events'])
         aeff_list_files = data_store.make_table_of_files(observation_table,

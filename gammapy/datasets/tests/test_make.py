@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 from ...datasets import (make_test_psf, make_test_observation_table,
-                         make_test_bg_cube_model)
+                         make_test_bg_cube_model, make_test_dataset)
 from ...obs import ObservationTable
 
 
@@ -23,7 +24,10 @@ def test_make_test_psf_fits_table():
 def test_make_test_observation_table():
     observatory_name = 'HESS'
     n_obs = 10
-    obs_table = make_test_observation_table(observatory_name, n_obs)
+    random_state = np.random.RandomState(seed=0)
+    obs_table = make_test_observation_table(observatory_name=observatory_name,
+                                            n_obs=n_obs,
+                                            random_state=random_state)
 
     # test: assert if the length of the table is n_obs:
     assert len(obs_table) == n_obs
@@ -78,3 +82,21 @@ def test_make_test_bg_cube_model():
 
     # assert that values are 0
     assert_quantity_allclose(bg, Quantity(0., bg.unit))
+
+
+def test_make_test_dataset(tmpdir):
+    # create a dataset
+    fits_path = str(tmpdir.join('test_dataset'))
+    observatory_name = 'HESS'
+    n_obs = 2
+    random_state = np.random.RandomState(seed=0)
+
+    make_test_dataset(fits_path=fits_path,
+                      observatory_name=observatory_name,
+                      n_obs=n_obs,
+                      random_state=random_state)
+
+    # test number of files created
+    n_event_list_files = sum(len([f for f in fs if f.lower().endswith('.fits.gz')])
+                             for _, _, fs in os.walk(fits_path))
+    assert n_event_list_files == n_obs

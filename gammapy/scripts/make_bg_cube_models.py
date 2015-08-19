@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
+import shutil
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
@@ -255,14 +256,18 @@ def stack_observations(fits_path):
     infile = indir + 'bg_observation_table_grouped.fits.gz'
     observation_table_grouped = ObservationTable.read(infile)
 
-    # create output folder if not existing
+    # create output folder
     outdir = os.environ['PWD'] + '/bg_cube_models/'
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
     else:
-        # clean folder if available
-        for oldfile in os.listdir(outdir):
-            os.remove(outdir + oldfile)
+        if overwrite:
+            # delete and create again
+            shutil.rmtree(outdir) # recursively
+            os.mkdir(outdir)
+        else:
+            # do not overwrite, hence exit
+            raise RuntimeError("Cannot continue: directory exist {}.".format(fits_path))
 
     # loop over observation groups
     groups = observation_groups.list_of_groups
