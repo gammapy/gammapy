@@ -9,12 +9,14 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
+from astropy.table import Table
 from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations, DataStore
 from ..utils.random import sample_sphere, get_random_state
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..background import Cube
 from ..data import EventList
+from ..utils.fits import table_to_fits_table
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
@@ -209,9 +211,10 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
 
     # az, alt
     # random points in a sphere above 45 deg altitude
-    az, alt = sample_sphere(len(obs_id),
-                            Angle([0, 360], 'degree'),
-                            Angle([45, 90], 'degree'))
+    az, alt = sample_sphere(size=len(obs_id),
+                            lon_range=Angle([0, 360], 'degree'),
+                            lat_range=Angle([45, 90], 'degree'),
+                            random_state=random_state)
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
     obs_table['AZ'] = az
@@ -378,8 +381,8 @@ def make_test_dataset(fits_path, overwrite=False,
     * `~gammapy.datasets.make_test_observation_table` to generate an
       observation table
 
-    * `~gammapy.datasets.make_test_evenlist` to generate an event list for each
-      observation
+    * `~gammapy.datasets.make_test_evenlist` to generate an event list
+      and effective area table for each observation
 
     * `~gammapy.obs.DataStore` to handle the file naming scheme;
       currently only the H.E.S.S. naming scheme is supported
@@ -423,28 +426,34 @@ def make_test_dataset(fits_path, overwrite=False,
                                                     use_abs_time=False,
                                                     random_state=random_state)
 
-    # save observation list to file
+    # save observation list to disk
     outfile = outdir + "runinfo.fits"
     observation_table.write(outfile)
 
     # create data store for the organization of the files
     # using H.E.S.S.-like dir/file naming scheme
-    if observatory_name != 'HESS':
-        s_warning = "Warning! Storage scheme for {} not implemented.".format(observatory_name)
-        s_warning += " Only H.E.S.S. scheme is available."
-        raise RuntimeWarning(s_warning)
+    if observatory_name == 'HESS':
+        scheme = 'hess'
+    else:
+        s_error = "Warning! Storage scheme for {}".format(observatory_name)
+        s_error += "not implemented. Only H.E.S.S. scheme is available."
+        raise RuntimeError(s_error)
 
-    data_store = DataStore(dir=fits_path, scheme='hess')
+    data_store = DataStore(dir=fits_path, scheme=scheme)
 
     # loop over observations
     for obs_id in observation_table['OBS_ID']:
-        event_list = make_test_evenlist(observation_table=observation_table, obs_id=obs_id, random_state=random_state)
+        event_list, aeff_hdu = make_test_evenlist(observation_table=observation_table,
+                                                  obs_id=obs_id,
+                                                  random_state=random_state)
 
-        # save event list in disk
+        # save event list and effective area table to disk
         outfile = data_store.filename(obs_id, filetype='events')
         outfile_split = outfile.rsplit("/", 1)
         os.makedirs(outfile_split[0]) # recursively
         event_list.write(outfile)
+        outfile = data_store.filename(obs_id, filetype='effective area')
+        aeff_hdu.writeto(outfile)
 
 
 def make_test_evenlist(observation_table,
@@ -473,6 +482,9 @@ def make_test_evenlist(observation_table,
     and on the altitude angle of the observation.
     The model can be tuned via the sigma and spectral_index parameters.
 
+    In addition, an effective area table is produced. For the moment
+    only the low energy threshold is filled.
+
     Parameters
     ----------
     observation_table : `~gammapy.obs.ObservationTable`
@@ -491,6 +503,8 @@ def make_test_evenlist(observation_table,
     -------
     event_list : `~gammapy.data.EventList`
         Event list.
+    aeff_hdu : `~astropy.io.fits.BinTableHDU`
+        Effective area table.
     """
     random_state = get_random_state(random_state)
 
@@ -538,5 +552,19 @@ def make_test_evenlist(observation_table,
 
     # store important info in header
     event_list.meta['LIVETIME'] = livetime.to('second').value
+    event_list.meta['EUNIT'] = str(energy.unit)
 
-    return event_list
+    # effective area table
+    aeff_table = Table()
+
+    # fill threshold, for now, a default 100 GeV will be set
+    # independently of observation parameters
+    energy_threshold = Quantity(0.1, 'TeV')
+    aeff_table.meta['LO_THRES'] = energy_threshold.value
+    aeff_table.meta['name'] = 'EFFECTIVE AREA'
+
+    # convert to BinTableHDU and add necessary comment for the units
+    aeff_hdu = table_to_fits_table(aeff_table)
+    aeff_hdu.header.comments['LO_THRES'] = '[' + str(energy_threshold.unit) + ']'
+
+    return event_list, aeff_hdu

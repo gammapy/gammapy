@@ -30,6 +30,8 @@ def main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument('fitspath', type=str,
                         help='Dir path to input event list fits files.')
+    parser.add_argument('scheme', type=str,
+                        help='Scheme of file naming.')
     parser.add_argument('--test', type=bool, default=False,
                         help='If true, use a subset of observations '
                         'for testing purposes')
@@ -43,8 +45,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(fitspath,
-                        test):
+def make_bg_cube_models(fitspath, scheme, test):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -69,13 +70,17 @@ def make_bg_cube_models(fitspath,
     ----------
     fitspath : str
         Path to dir containing event list fits files and a list of them.
+    scheme : str
+        Scheme of file naming.
+    test : bool
+        If true, run fast (not recomended for analysis).
     """
-    create_bg_observation_list(fitspath, test)
+    create_bg_observation_list(fitspath, scheme, test)
     group_observations(test)
     stack_observations(fitspath)
 
 
-def create_bg_observation_list(fits_path, test):
+def create_bg_observation_list(fits_path, scheme, test):
     """Make total observation list and filter the observations.
 
     In a first version, all obs taken within 3 deg of a known source
@@ -92,7 +97,11 @@ def create_bg_observation_list(fits_path, test):
     Parameters
     ----------
     fits_path : str
-        path to dir containing list of input fits event files
+        Path to dir containing list of input fits event files.
+    scheme : str
+        Scheme of file naming.
+    test : bool
+        If true, run fast: skip many runs and catalog sources.
     """
     if DEBUG:
         print()
@@ -100,12 +109,12 @@ def create_bg_observation_list(fits_path, test):
         print("# Starting create_bg_observation_list #")
         print("#######################################")
 
-    # get full list of H.E.S.S. observations
-    data_store = DataStore(dir=fits_path, scheme='hess')
+    # get full list of observations
+    data_store = DataStore(dir=fits_path, scheme=scheme)
     observation_table = data_store.make_observation_table()
 
     # for testing, only process a small subset of observations
-    if test:
+    if test and len(observation_table) > 100:
         observation_table = observation_table.select_linspace_subset(num=100)
     if DEBUG:
         print()
@@ -167,6 +176,11 @@ def group_observations(test):
 
     The observations are grouped into observation groups (bins) according
     to their altitude and azimuth angle.
+
+    Parameters
+    ----------
+    test : bool
+        If true, run fast: define coarse binning for observation grouping.
     """
     if DEBUG:
         print()
@@ -241,7 +255,7 @@ def stack_observations(fits_path):
     Parameters
     ----------
     fits_path : str
-        path to dir containing list of input fits event files
+        Path to dir containing list of input fits event files.
     """
     if DEBUG:
         print()

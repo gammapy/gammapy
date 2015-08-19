@@ -8,7 +8,7 @@ from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 from ...datasets import (make_test_psf, make_test_observation_table,
                          make_test_bg_cube_model, make_test_dataset)
-from ...obs import ObservationTable
+from ...obs import ObservationTable, DataStore
 
 
 def test_make_test_psf_fits_table():
@@ -88,6 +88,7 @@ def test_make_test_dataset(tmpdir):
     # create a dataset
     fits_path = str(tmpdir.join('test_dataset'))
     observatory_name = 'HESS'
+    scheme = 'hess'
     n_obs = 2
     random_state = np.random.RandomState(seed=0)
 
@@ -99,4 +100,9 @@ def test_make_test_dataset(tmpdir):
     # test number of files created
     n_event_list_files = sum(len([f for f in fs if f.lower().endswith('.fits.gz')])
                              for _, _, fs in os.walk(fits_path))
-    assert n_event_list_files == n_obs
+    assert n_event_list_files == 2*n_obs
+
+    # test length of created observation list table
+    data_store = DataStore(dir=fits_path, scheme=scheme)
+    observation_table = data_store.make_observation_table()
+    assert len(observation_table) == n_obs
