@@ -124,11 +124,11 @@ class DataStore(object):
     ----------
     dir : str
         Data store directory on user machine.
-    scheme : {'hess'}
+    scheme : {'HESS'}
         Scheme of organising and naming the files.
     """
 
-    def __init__(self, dir, scheme='hess'):
+    def __init__(self, dir, scheme='HESS'):
         self.dir = dir
         self.index_table_filename = 'runinfo.fits'
         filename = os.path.join(dir, self.index_table_filename)
@@ -215,7 +215,7 @@ class DataStore(object):
         """
         scheme = self.scheme
 
-        if scheme == 'hess':
+        if scheme == 'HESS':
             filename = _make_filename_hess_scheme(obs_id, filetype)
         else:
             raise ValueError('Invalid scheme: {}'.format(scheme))
@@ -303,7 +303,7 @@ def convert_obs_list_format_to_gammapy(obs_list, scheme):
     obs_table : `~gammapy.obs.ObservationTable`
         Converted observation list.
     """
-    if scheme == 'hess':
+    if scheme == 'HESS':
         return convert_obs_list_hess_to_gammapy(obs_list)
     else:
         raise ValueError('Invalid scheme: {}'.format(scheme))

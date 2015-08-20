@@ -1,12 +1,12 @@
 .. _background_make_models:
 
-Make models
-===========
+Make background models
+======================
 
 Gammapy tools to produce background models.
 
-Make cube models
-----------------
+Make cube background models
+---------------------------
 
 The ``gammapy-make-bg-cube-models`` command line tool can be used to produce
 background cube models from the data files at a given path location.
@@ -26,19 +26,28 @@ at the command line.
 
 Command examples:
 
-* Create background models (can take a few minutes):
+* Create background models using a H.E.S.S. or H.E.S.S.-like dataset
+  (can take a few minutes):
 
   .. code-block:: bash
 
       $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
-                                    hess bg_cube_models
+                                    HESS bg_cube_models
 
 * Run a quick test using only a few runs:
 
   .. code-block:: bash
 
       $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
-                                    hess bg_cube_models --test True
+                                    HESS bg_cube_models --test
+
+* Create background models using the method developped by Michael
+  Mayer (almost equal to the default case for now):
+
+  .. code-block:: bash
+
+      $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
+                                    HESS bg_cube_models --a-la-michi
 
 The output files are created in the output directory:
 
@@ -73,7 +82,7 @@ prepare a dummy dataset have been placed in Gammapy:
   consisting on event lists and effective area tables and store
   everything on disk.
 
-* `~gammapy.datasets.make_test_evenlist`: function called
+* `~gammapy.datasets.make_test_eventlist`: function called
   recursivelly by `~gammapy.datasets.make_test_dataset` to produce
   the data (event lists and effective area table)corresponding to
   one observation.
@@ -98,7 +107,7 @@ class, and eg. print the observation table and the names of the filescreated wit
 
 .. code-block:: python
 
-    scheme = 'hess'
+    scheme = 'HESS'
     data_store = DataStore(dir=fits_path, scheme=scheme)
     observation_table = data_store.make_observation_table()
     print(observation_table)

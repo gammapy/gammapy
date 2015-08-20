@@ -817,7 +817,7 @@ class Cube(object):
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')
-        bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr') # TODO: use TeV!!! (actually: don't specify energy units!!!)
+        bin_volume = delta_energy*(delta_y*delta_x).to('sr')
         self.data /= bin_volume
 
     def set_zero_level(self):

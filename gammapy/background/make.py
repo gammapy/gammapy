@@ -12,7 +12,7 @@ __all__ = ['make_bg_cube_model',
            ]
 
 
-def make_bg_cube_model(observation_table, fits_path):
+def make_bg_cube_model(observation_table, fits_path, a_la_michi=False):
     """Create a bg model from an observation table.
 
     Produce a background cube model using the data from an observation list.
@@ -36,6 +36,10 @@ def make_bg_cube_model(observation_table, fits_path):
         Observation list to use for the histogramming.
     fits_path : str
         Path to the data files.
+    a_la_michi : bool, optional
+        Flag to activate Michael Mayer's bg cube production method.
+        Correct for livetime before applying the smoothing.
+        Use units of *1 / (MeV sr s)* for the bg rate.
 
     Returns
     -------
@@ -46,8 +50,10 @@ def make_bg_cube_model(observation_table, fits_path):
     # define cube background model object with binning and empty cubes #
     ####################################################################
 
-    bg_cube_model = CubeBackgroundModel.define_cube_binning(len(observation_table),
-                                                            do_not_fill=False)
+    bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
+                                                            fits_path,
+                                                            do_not_fill=False,
+                                                            a_la_michi=a_la_michi)
 
 
     ############################
@@ -65,7 +71,10 @@ def make_bg_cube_model(observation_table, fits_path):
     # fill bg cube #
     ################
 
-    bg_cube_model.background_cube.data = bg_cube_model.events_cube.data
+    bg_cube_model.background_cube.data = bg_cube_model.events_cube.data.copy()
+    if a_la_michi:
+        # correct for livetime before smoothing
+        bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
 
 
     ##########
@@ -79,8 +88,14 @@ def make_bg_cube_model(observation_table, fits_path):
     # correct for livetime and bin volume and set 0 level #
     #######################################################
 
-    bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
+    if not a_la_michi:
+        # correct for livetime after smoothing
+        bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
     bg_cube_model.background_cube.divide_bin_volume()
+    if a_la_michi:
+        # use units of 1 / (MeV sr s) for the bg rate
+        bg_rate = bg_cube_model.background_cube.data.to('1 / (MeV sr s)')
+        bg_cube_model.background_cube.data = bg_rate
     bg_cube_model.background_cube.set_zero_level()
 
 

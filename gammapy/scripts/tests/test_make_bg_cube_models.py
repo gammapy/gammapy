@@ -16,7 +16,7 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 @pytest.mark.parametrize("extra_options,something_to_test", [
-    (["--test", "True"], 0),
+    (["--test"], 0),
     ])
 @remote_data
 def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
@@ -24,7 +24,7 @@ def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
     fitspath = str(tmpdir.join('test_dataset'))
     outdir = str(tmpdir.join('bg_cube_models'))
     observatory_name = 'HESS'
-    scheme = 'hess'
+    scheme = 'HESS'
     n_obs = 2
     random_state = np.random.RandomState(seed=0)
 
