@@ -206,20 +206,20 @@ def test_ObservationGroups(tmpdir):
     list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
                            ObservationGroupAxis('AZ', az, 'bin_edges'),
                            ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
-    obs_group = ObservationGroups(list_obs_group_axis)
-    assert ((0 <= obs_group.obs_groups_table['GROUP_ID']) &
-            (obs_group.obs_groups_table['GROUP_ID'] < obs_group.n_groups)).all()
+    obs_groups = ObservationGroups(list_obs_group_axis)
+    assert ((0 <= obs_groups.obs_groups_table['GROUP_ID']) &
+            (obs_groups.obs_groups_table['GROUP_ID'] < obs_groups.n_groups)).all()
 
     # write
-    obs_group_1 = obs_group
+    obs_groups_1 = obs_groups
     outfile = str(tmpdir.join('obs_groups.ecsv'))
-    obs_group_1.write(outfile)
+    obs_groups_1.write(outfile)
 
     # read
-    obs_group_2 = ObservationGroups.read(outfile)
+    obs_groups_2 = ObservationGroups.read(outfile)
 
     # test that obs groups read from file match the ones defined
-    assert (obs_group_1.obs_groups_table == obs_group_2.obs_groups_table).all()
+    assert (obs_groups_1.obs_groups_table == obs_groups_2.obs_groups_table).all()
 
     # test group obs list
     # using file in gammapy-extra (I also could create a dummy table)
@@ -232,28 +232,28 @@ def test_ObservationGroups(tmpdir):
     obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'degree'))
 
     # group obs list
-    obs_table_grouped = obs_group.group_observation_table(obs_table)
+    obs_table_grouped = obs_groups.group_observation_table(obs_table)
 
     # assert consistency of the grouping
     assert len(obs_table) == len(obs_table_grouped)
     assert ((0 <= obs_table_grouped['GROUP_ID']) &
-            (obs_table_grouped['GROUP_ID'] < obs_group.n_groups)).all()
+            (obs_table_grouped['GROUP_ID'] < obs_groups.n_groups)).all()
     # check grouping for 1 group
     group_id = 10
-    obs_table_grouped_10 = obs_group.get_group_of_observations(obs_table_grouped,
+    obs_table_grouped_10 = obs_groups.get_group_of_observations(obs_table_grouped,
                                                                group_id)
-    alt_min = obs_group.obs_groups_table['ALT_MIN'][group_id]
-    alt_max = obs_group.obs_groups_table['ALT_MAX'][group_id]
-    az_min = obs_group.obs_groups_table['AZ_MIN'][group_id]
-    az_max = obs_group.obs_groups_table['AZ_MAX'][group_id]
-    n_tels = obs_group.obs_groups_table['N_TELS'][group_id]
+    alt_min = obs_groups.obs_groups_table['ALT_MIN'][group_id]
+    alt_max = obs_groups.obs_groups_table['ALT_MAX'][group_id]
+    az_min = obs_groups.obs_groups_table['AZ_MIN'][group_id]
+    az_max = obs_groups.obs_groups_table['AZ_MAX'][group_id]
+    n_tels = obs_groups.obs_groups_table['N_TELS'][group_id]
     assert ((alt_min <= obs_table_grouped_10['ALT']) &
             (obs_table_grouped_10['ALT'] < alt_max)).all()
     assert ((az_min <= obs_table_grouped_10['AZ']) &
             (obs_table_grouped_10['AZ'] < az_max)).all()
     assert (n_tels == obs_table_grouped_10['N_TELS']).all()
     # check on inverse mask (i.e. all other groups)
-    obs_table_grouped_not10 = obs_group.get_group_of_observations(obs_table_grouped,
+    obs_table_grouped_not10 = obs_groups.get_group_of_observations(obs_table_grouped,
                                                                   group_id,
                                                                   inverted=True)
     assert (((alt_min > obs_table_grouped_not10['ALT']) |
