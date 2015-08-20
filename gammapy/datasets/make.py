@@ -22,7 +22,7 @@ __all__ = ['make_test_psf',
            'make_test_observation_table',
            'make_test_bg_cube_model',
            'make_test_dataset',
-           'make_test_evenlist',
+           'make_test_eventlist',
            ]
 
 
@@ -381,7 +381,7 @@ def make_test_dataset(fits_path, overwrite=False,
     * `~gammapy.datasets.make_test_observation_table` to generate an
       observation table
 
-    * `~gammapy.datasets.make_test_evenlist` to generate an event list
+    * `~gammapy.datasets.make_test_eventlist` to generate an event list
       and effective area table for each observation
 
     * `~gammapy.obs.DataStore` to handle the file naming scheme;
@@ -437,19 +437,19 @@ def make_test_dataset(fits_path, overwrite=False,
     # create data store for the organization of the files
     # using H.E.S.S.-like dir/file naming scheme
     if observatory_name == 'HESS':
-        scheme = 'hess'
+        scheme = 'HESS'
     else:
         s_error = "Warning! Storage scheme for {}".format(observatory_name)
         s_error += "not implemented. Only H.E.S.S. scheme is available."
-        raise RuntimeError(s_error)
+        raise ValueError(s_error)
 
     data_store = DataStore(dir=fits_path, scheme=scheme)
 
     # loop over observations
     for obs_id in observation_table['OBS_ID']:
-        event_list, aeff_hdu = make_test_evenlist(observation_table=observation_table,
-                                                  obs_id=obs_id,
-                                                  random_state=random_state)
+        event_list, aeff_hdu = make_test_eventlist(observation_table=observation_table,
+                                                   obs_id=obs_id,
+                                                   random_state=random_state)
 
         # save event list and effective area table to disk
         outfile = data_store.filename(obs_id, filetype='events')
@@ -460,11 +460,11 @@ def make_test_dataset(fits_path, overwrite=False,
         aeff_hdu.writeto(outfile)
 
 
-def make_test_evenlist(observation_table,
-                       obs_id,
-                       sigma=Angle(5., 'deg'),
-                       spectral_index=2.7,
-                       random_state='random-seed'):
+def make_test_eventlist(observation_table,
+                        obs_id,
+                        sigma=Angle(5., 'deg'),
+                        spectral_index=2.7,
+                        random_state='random-seed'):
     """
     Make a test event list for a specified observation.
 

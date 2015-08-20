@@ -88,7 +88,7 @@ def test_make_test_dataset(tmpdir):
     # create a dataset
     fits_path = str(tmpdir.join('test_dataset'))
     observatory_name = 'HESS'
-    scheme = 'hess'
+    scheme = 'HESS'
     n_obs = 2
     random_state = np.random.RandomState(seed=0)
 

@@ -33,9 +33,12 @@ def main(args=None):
                         help='Dir path to store the results.')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
-    parser.add_argument('--test', type=bool, default=False,
-                        help='If true, use a subset of observations '
-                        'for testing purposes')
+    parser.add_argument('--test', action='store_true',
+                        help='If activated, use a subset of '
+                        'observations for testing purposes')
+    parser.add_argument('--a-la-michi', action='store_true',
+                        help='If activated, use a subset of '
+                        'observations for testing purposes')
     parser.add_argument("-l", "--loglevel", default='info',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         help="Set the logging level")
@@ -46,7 +49,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test):
+def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, a_la_michi):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -79,13 +82,16 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test):
         If true, run fast (not recomended for analysis).
     test : bool
         If true, run fast (not recomended for analysis).
+    a_la_michi : bool, optional
+        Flag to activate Michael Mayer's bg cube production method.
 
     Examples
     --------
     >>> gammapy-make-bg-cube-models -h
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models --test True
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir hess bg_cube_models --test True --overwrite
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --test
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --test --overwrite
+    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --a-la-michi
 
     """
     # create output folder
@@ -103,7 +109,7 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test):
 
     create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
-    stack_observations(fitspath, outdir, overwrite)
+    stack_observations(fitspath, outdir, overwrite, a_la_michi)
 
 
 def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
@@ -179,7 +185,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
 
     # save the bg observation list to a fits file
     outfile = outdir + '/bg_observation_table.fits.gz'
-    log.info("outfile", outfile)
+    log.info("Writing {}".format(outfile))
     observation_table.write(outfile, overwrite=overwrite)
 
 
@@ -250,14 +256,14 @@ def group_observations(outdir, overwrite, test):
 
     # save the observation groups and the grouped bg observation list to file
     outfile = outdir + '/bg_observation_groups.ecsv'
-    log.info("outfile", outfile)
+    log.info("Writing {}".format(outfile))
     observation_groups.write(outfile, overwrite=overwrite)
     outfile = outdir + '/bg_observation_table_grouped.fits.gz'
-    log.info("outfile", outfile)
+    log.info("Writing {}".format(outfile))
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
 
-def stack_observations(fits_path, outdir, overwrite):
+def stack_observations(fits_path, outdir, overwrite, a_la_michi=False):
     """Stack events for each observation group (bin) and make background model.
 
     The models are stored into FITS files.
@@ -270,6 +276,8 @@ def stack_observations(fits_path, outdir, overwrite):
         Dir path to store the results.
     overwrite : bool
         If true, run fast (not recomended for analysis).
+    a_la_michi : bool, optional
+        Flag to activate Michael Mayer's bg cube production method.
     """
     print()
     print("###############################")
@@ -302,12 +310,12 @@ def stack_observations(fits_path, outdir, overwrite):
             continue # skip the rest
 
         # create bg cube model
-        bg_cube_model = make_bg_cube_model(observation_table, fits_path)
+        bg_cube_model = make_bg_cube_model(observation_table, fits_path, a_la_michi)
 
         # save model to file
         outfile = outdir +\
                  '/bg_cube_model_group{}'.format(group)
-        log.info("outfile", '{}_table.fits.gz'.format(outfile))
-        log.info("outfile", '{}_image.fits.gz'.format(outfile))
+        log.info("Writing {}".format('{}_table.fits.gz'.format(outfile)))
+        log.info("Writing {}".format('{}_image.fits.gz'.format(outfile)))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table', clobber=overwrite)
         bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image', clobber=overwrite)

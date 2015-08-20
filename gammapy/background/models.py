@@ -89,6 +89,50 @@ class GaussianBand2D(object):
         return self._evaluate_y(y, parvals)
 
 
+def _get_min_energy_threshold(observation_table, fits_path):
+    """Get minimum energy threshold from a list of observations.
+
+    TODO: make this a method from ObservationTable or DataStore?
+
+    Parameters
+    ----------
+    observation_table : `~gammapy.obs.ObservationTable`
+        Observation list.
+    fits_path : str
+        Path to the data files.
+
+    Parameters
+    ----------
+    min_energy_threshold : `~astropy.units.Quantity`
+        Minimum energy threshold.
+    """
+    observatory_name = observation_table.meta['OBSERVATORY_NAME']
+    if observatory_name == 'HESS':
+        scheme = 'HESS'
+    else:
+        s_error = "Warning! Storage scheme for {}".format(observatory_name)
+        s_error += "not implemented. Only H.E.S.S. scheme is available."
+        raise ValueError(s_error)
+
+    data_store = DataStore(dir=fits_path, scheme=scheme)
+    aeff_table_files = data_store.make_table_of_files(observation_table,
+                                                      filetypes=['effective area'])
+    min_energy_threshold = Quantity(999., 'TeV')
+    # loop over effective area files to get necessary infos from header
+    for i_aeff_file in aeff_table_files['filename']:
+        aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
+        # TODO: Gammapy needs a class that interprets IRF files!!!
+        if aeff_hdu.header.comments['LO_THRES'] == '[TeV]':
+            energy_threshold_unit = 'TeV'
+        energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
+                                    energy_threshold_unit)
+        # TODO: Aeff FITS files contain some header keywords,
+        # where the units are stored in comments -> hard to parse!!!
+        min_energy_threshold = min(min_energy_threshold, energy_threshold)
+
+    return min_energy_threshold
+
+
 class CubeBackgroundModel(object):
 
     """Cube background model.
@@ -267,20 +311,27 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, n_obs, do_not_fill=False):
+    def define_cube_binning(cls, observation_table, fits_path, do_not_fill=False, a_la_michi=False):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
         number of observations.
-
-        (TODO: and the lower boundary of the cube on the energy threshold??!!!)
+        Eventually, the lower boundary of the cube depends on the
+        energy threshold.
 
         Parameters
         ----------
-        n_obs : int
-            Number of observations.
+        observation_table : `~gammapy.obs.ObservationTable`
+            Observation list to use for the *a_la_michi* binning.
+        fits_path : str
+            Path to the data files.
         do_not_fill : bool, optional
             Flag to avoid filling empty data (zeros) in the cubes.
+        a_la_michi : bool, optional
+            Flag to activate Michael Mayer's bg cube production method.
+            Minimum energy (i.e. lower boundary of cube energy
+            binning) equal to minimum energy threshold of all
+            observations in the group.
 
         Returns
         -------
@@ -291,6 +342,7 @@ class CubeBackgroundModel(object):
         n_ebins = 20
         n_ybins = 60
         n_xbins = 60
+        n_obs = len(observation_table)
         if n_obs < 100:
             minus_bins = int(n_obs/10) - 10
             n_ebins += minus_bins
@@ -299,9 +351,12 @@ class CubeBackgroundModel(object):
         bg_cube_shape = (n_ebins, n_ybins, n_xbins)
 
         # define cube edges
-        energy_min = Quantity(0.1, 'TeV') # TODO: should this be overwriten by the energy threshold??!!!!
-        # TODO: should E_min (= energy_edges[0]) be equal to E_THRES??!!!
-        #energy_min = energy_threshold
+        energy_min = Quantity(0.1, 'TeV')
+        if a_la_michi:
+            # minimum energy equal to minimum energy threshold of all
+            # observations in the group
+            min_energy_threshold = _get_min_energy_threshold(observation_table, fits_path)
+            energy_min = min_energy_threshold
         energy_max = Quantity(80, 'TeV')
         dety_min = Angle(-0.07, 'radian').to('degree')
         dety_max = Angle(0.07, 'radian').to('degree')
@@ -344,13 +399,14 @@ class CubeBackgroundModel(object):
             Path to the data files.
         """
         # stack events
+
         observatory_name = observation_table.meta['OBSERVATORY_NAME']
         if observatory_name == 'HESS':
-            scheme = 'hess'
+            scheme = 'HESS'
         else:
             s_error = "Warning! Storage scheme for {}".format(observatory_name)
             s_error += "not implemented. Only H.E.S.S. scheme is available."
-            raise RuntimeError(s_error)
+            raise ValueError(s_error)
 
         data_store = DataStore(dir=fits_path, scheme=scheme)
         event_list_files = data_store.make_table_of_files(observation_table,
@@ -369,7 +425,8 @@ class CubeBackgroundModel(object):
                 energy_threshold_unit = 'TeV'
             energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
                                         energy_threshold_unit)
-            # TODO: please avoid storing important info (like units) in comments!!!
+            # TODO: Aeff FITS files contain some header keywords,
+            # where the units are stored in comments -> hard to parse!!!
 
             # fill events above energy threshold, correct livetime accordingly
             data_set = ev_list_ds.event_list
@@ -435,7 +492,8 @@ class CubeBackgroundModel(object):
 
         1. slice model in energy bins: 1 image per energy bin
         2. calculate integral of the image
-        3. determine times to smooth (N) depending on number of entries (events) in the cube
+        3. determine times to smooth (N) depending on number of
+           entries (events) used to fill the cube
         4. smooth image N times with root TH2::Smooth
            default smoothing kernel: **k5a**
 
