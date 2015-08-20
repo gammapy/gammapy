@@ -41,8 +41,8 @@ Command examples:
       $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
                                     HESS bg_cube_models --test
 
-* Create background models using the method developped by Michael
-  Mayer (almost equal to the default case for now):
+* Create background models using the method developped in
+  [Mayer2015]_ (almost equal to the default case for now):
 
   .. code-block:: bash
 

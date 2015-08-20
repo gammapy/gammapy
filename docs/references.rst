@@ -64,6 +64,9 @@ Software references:
 .. [FSSC2013] `Fermi LAT Collaboration (2013) <http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/overview.html>`_
    "Science Tools: LAT Data Analysis Tools"
 
+.. [Mayer2015] `Michael Mayer (2015) <https://publishup.uni-potsdam.de/frontdoor/index/index/docId/7150>`_
+   "Pulsar wind nebulae at high energies"
+
 
 .. _glossary:
 

@@ -30,6 +30,7 @@ The file has been produced with `~gammapy.datasets.make_test_bg_cube_model`.
 
 An example script of how to read/write the files and perform some
 simple plots is given in the `examples` directory:
+:download:`plot_bg_cube_model.py <../../examples/plot_bg_cube_model.py>`
 
 .. literalinclude:: ../../examples/plot_bg_cube_model.py
 
@@ -49,3 +50,8 @@ More complex plots can be easily produced with a few lines of code:
 There is also a method in the `~gammapy.datasets` module called
 `~gammapy.datasets.make_test_bg_cube_model` for creating test
 `~gammapy.background.CubeBackgroundModel` objects.
+
+In order to compare 2 sets of background cube models, the following
+script in the `examples` directory can be used:
+:download:`plot_bg_cube_model_comparison.py
+<../../examples/plot_bg_cube_model_comparison.py>`

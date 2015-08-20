@@ -408,19 +408,19 @@ class ObservationGroups(object):
         list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
                                ObservationGroupAxis('AZ', az, 'bin_edges'),
                                ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
-        obs_group = ObservationGroups(list_obs_group_axis)
+        obs_groups = ObservationGroups(list_obs_group_axis)
 
     Print the observation group table (group definitions):
 
-    >>> print(obs_group.obs_groups_table)
+    >>> print(obs_groups.obs_groups_table)
 
     Print the observation group axes:
 
-    >>> print(obs_group.info)
+    >>> print(obs_groups.info)
 
     Group the observations of an observation list and print it:
 
-    >>> obs_table_grouped = obs_group.group_observation_table(obs_table)
+    >>> obs_table_grouped = obs_groups.group_observation_table(obs_table)
     >>> print(obs_table_grouped)
     """
 
