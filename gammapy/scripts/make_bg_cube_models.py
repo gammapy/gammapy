@@ -145,7 +145,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     if test and len(observation_table) > 100:
         observation_table = observation_table.select_linspace_subset(num=100)
     print()
-    log.info("full observation table")
+    log.info("Full observation table:")
     print(observation_table)
 
     # filter observations: load catalog and reject obs too close to sources
@@ -230,9 +230,9 @@ def group_observations(outdir, overwrite, test):
     # create observation groups
     observation_groups = ObservationGroups(list_obs_group_axis)
     print()
-    log.info("observation group axes")
+    log.info("Observation group axes:")
     print(observation_groups.info)
-    log.info("observation groups table (group definitions)")
+    log.info("Observation groups table (group definitions):")
     print(observation_groups.obs_groups_table)
 
     # group observations in the obs table according to the obs groups
@@ -251,8 +251,8 @@ def group_observations(outdir, overwrite, test):
     observation_table_grouped['AZ'] = azimuth
 
     print()
-    log.debug("observation table grouped")
-    log.debug(observation_table_grouped)
+    log.info("Observation table grouped:")
+    print(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
     outfile = outdir + '/bg_observation_groups.ecsv'
@@ -294,19 +294,19 @@ def stack_observations(fits_path, outdir, overwrite, a_la_michi=False):
     # loop over observation groups
     groups = observation_groups.list_of_groups
     print()
-    log.debug("list of groups", groups)
+    log.info("List of groups to process: {}".format(groups))
 
     for group in groups:
         print()
-        log.debug("group", group)
+        log.info("Processing group: {}".format(group))
 
         # get group of observations
         observation_table = observation_groups.get_group_of_observations(observation_table_grouped, group)
-        log.debug(observation_table)
+        print(observation_table)
 
         # skip bins with no observations
         if len(observation_table) == 0:
-            log.warning("WARNING, group {} is empty.".format(group))
+            log.warning("Group {} is empty.".format(group))
             continue # skip the rest
 
         # create bg cube model
