@@ -11,6 +11,7 @@ from astropy.modeling.models import Gaussian1D
 from ...background import GaussianBand2D, CubeBackgroundModel
 from ... import datasets
 from ...datasets.make import make_test_bg_cube_model
+from ...obs import ObservationTable
 
 
 try:
@@ -52,6 +53,84 @@ class TestGaussianBand2D():
 
 
 class TestCubeBackgroundModel():
-    def test_CubeBackgroundModel(self):
-        # TODO: rename test function and implement tests!!! with asserts!!!
-        CubeBackgroundModel([0],[0],[0])
+
+    @remote_data
+    def test_read(self):
+
+        # test shape and scheme of cubes when reading a file
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
+                                     location='remote')
+        bg_cube_model = CubeBackgroundModel.read(filename, format='table')
+        cubes = [bg_cube_model.events_cube,
+                 bg_cube_model.livetime_cube,
+                 bg_cube_model.background_cube]
+        schemes = ['bg_counts_cube', 'bg_livetime_cube', 'bg_cube']
+        for cube, scheme in zip(cubes, schemes):
+            assert len(cube.data.shape) == 3
+            assert cube.data.shape == (len(cube.energy_edges) - 1,
+                                       len(cube.coordy_edges) - 1,
+                                       len(cube.coordx_edges) - 1)
+            assert cube.scheme == scheme
+
+    @remote_data
+    def test_write(self, tmpdir):
+
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
+                                     location='remote')
+        bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
+
+        outfile = str(tmpdir.join('cubebackground_table_test.fits'))
+        bg_cube_model_1.write(outfile, format='table')
+
+        # test if values are correct in the saved file: compare both files
+        bg_cube_model_2 = CubeBackgroundModel.read(outfile, format='table')
+        cubes1 = [bg_cube_model_1.events_cube,
+                  bg_cube_model_1.livetime_cube,
+                  bg_cube_model_1.background_cube]
+        cubes2 = [bg_cube_model_2.events_cube,
+                  bg_cube_model_2.livetime_cube,
+                  bg_cube_model_2.background_cube]
+        for cube1, cube2 in zip(cubes1, cubes2):
+            assert_quantity_allclose(cube2.data,
+                                     cube1.data)
+            assert_quantity_allclose(cube2.coordx_edges,
+                                     cube1.coordx_edges)
+            assert_quantity_allclose(cube2.coordy_edges,
+                                     cube1.coordy_edges)
+            assert_quantity_allclose(cube2.energy_edges,
+                                     cube1.energy_edges)
+
+    def test_define_binning(self):
+
+        obs_table = ObservationTable()
+        obs_table['OBS_ID'] = np.arange(100)
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table=obs_table,
+                                                                fits_path= '/tmp',
+                                                                do_not_fill=False,
+                                                                a_la_michi=False)
+
+        assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
+
+    #def test_fill_events(self):
+    # fill_events is tested (high-level) by
+    # gammapy/scripts/tests/test_make_bg_cube_models.py
+
+    @remote_data
+    def test_smooth(self):
+
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
+                                     location='remote')
+        bg_cube_model1 = CubeBackgroundModel.read(filename, format='table')
+
+        bg_cube_model2 = bg_cube_model1
+
+        # reset background and fill again
+        bg_cube_model2.background_cube.data = np.array([0])
+        bg_cube_model2.background_cube.data = bg_cube_model2.events_cube.data.copy()
+        bg_cube_model2.smooth()
+        bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data 
+        bg_cube_model2.background_cube.divide_bin_volume()
+        bg_cube_model2.background_cube.set_zero_level() 
+
+        # test: the bg should be the same as at the beginning
+        assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()

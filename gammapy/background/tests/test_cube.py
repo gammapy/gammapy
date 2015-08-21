@@ -23,9 +23,9 @@ class TestCube():
     def test_read_fits_table(self):
 
         # test shape and scheme of cube when reading a file
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
-        scheme='bg_cube'
+        scheme = 'bg_cube'
         cube = Cube.read(filename, format='table', scheme=scheme)
         assert len(cube.data.shape) == 3
         assert cube.data.shape == (len(cube.energy_edges) - 1,
@@ -75,41 +75,41 @@ class TestCube():
     @remote_data
     def test_write_fits_table(self, tmpdir):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
-        bg_cube_model_1 = Cube.read(filename, format='table', scheme='bg_cube')
+        cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
-        outfile = str(tmpdir.join('cubebackground_table_test.fits'))
-        bg_cube_model_1.write(outfile, format='table')
+        outfile = str(tmpdir.join('cube_table_test.fits'))
+        cube1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
-        bg_cube_model_2 = Cube.read(outfile, format='table', scheme='bg_cube')
-        assert_quantity_allclose(bg_cube_model_2.data,
-                                 bg_cube_model_1.data)
-        assert_quantity_allclose(bg_cube_model_2.coordx_edges,
-                                 bg_cube_model_1.coordx_edges)
-        assert_quantity_allclose(bg_cube_model_2.coordy_edges,
-                                 bg_cube_model_1.coordy_edges)
-        assert_quantity_allclose(bg_cube_model_2.energy_edges,
-                                 bg_cube_model_1.energy_edges)
+        cube2 = Cube.read(outfile, format='table', scheme='bg_cube')
+        assert_quantity_allclose(cube2.data,
+                                 cube1.data)
+        assert_quantity_allclose(cube2.coordx_edges,
+                                 cube1.coordx_edges)
+        assert_quantity_allclose(cube2.coordy_edges,
+                                 cube1.coordy_edges)
+        assert_quantity_allclose(cube2.energy_edges,
+                                 cube1.energy_edges)
 
     @remote_data
     def test_read_write_fits_image(self, tmpdir):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
-        bg_cube_model_1 = Cube.read(filename, format='table', scheme='bg_cube')
+        cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
-        outfile = str(tmpdir.join('cubebackground_image_test.fits'))
-        bg_cube_model_1.write(outfile, format='image')
+        outfile = str(tmpdir.join('cube_image_test.fits'))
+        cube1.write(outfile, format='image')
 
         # test if values are correct in the saved file: compare both files
-        bg_cube_model_2 = Cube.read(outfile, format='image', scheme='bg_cube')
-        assert_quantity_allclose(bg_cube_model_2.data,
-                                 bg_cube_model_1.data)
-        assert_quantity_allclose(bg_cube_model_2.coordx_edges,
-                                 bg_cube_model_1.coordx_edges)
-        assert_quantity_allclose(bg_cube_model_2.coordy_edges,
-                                 bg_cube_model_1.coordy_edges)
-        assert_quantity_allclose(bg_cube_model_2.energy_edges,
-                                 bg_cube_model_1.energy_edges)
+        cube2 = Cube.read(outfile, format='image', scheme='bg_cube')
+        assert_quantity_allclose(cube2.data,
+                                 cube1.data)
+        assert_quantity_allclose(cube2.coordx_edges,
+                                 cube1.coordx_edges)
+        assert_quantity_allclose(cube2.coordy_edges,
+                                 cube1.coordy_edges)
+        assert_quantity_allclose(cube2.energy_edges,
+                                 cube1.energy_edges)
