@@ -48,61 +48,43 @@ def make_bg_cube_model(observation_table, fits_path, method='default'):
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Cube background model.
     """
-    ####################################################################
-    # define cube background model object with binning and empty cubes #
-    ####################################################################
-
-    bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
-                                                            fits_path,
-                                                            do_not_fill=False,
-                                                            method=method)
-
-
-    ############################
-    # fill events and livetime #
-    ############################
-
-    # TODO: filter out (mask) possible sources in the data
-    #       for now, the observation table should not contain any
-    #       run at or near an existing source
-
-    bg_cube_model.fill_events(observation_table, fits_path)
-
-
-    ################
-    # fill bg cube #
-    ################
-
-    bg_cube_model.background_cube.data = bg_cube_model.events_cube.data.copy()
-    if method == 'michi':
-        # correct for livetime before smoothing
+    if method=='default':
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
+                                                                fits_path,
+                                                                do_not_fill=False,
+                                                                method=method)
+        bg_cube_model.fill_events(observation_table, fits_path)
+        # TODO: filter out (mask) possible sources in the data
+        #       for now, the observation table should not contain any
+        #       run at or near an existing source
+        bg_cube_model.background_cube.data = bg_cube_model.counts_cube.data.copy()
+        bg_cube_model.smooth()
         bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
+        bg_cube_model.background_cube.divide_bin_volume()
+        bg_cube_model.background_cube.set_zero_level()
 
+        return bg_cube_model
 
-    ##########
-    # smooth #
-    ##########
-
-    bg_cube_model.smooth()
-
-
-    #######################################################
-    # correct for livetime and bin volume and set 0 level #
-    #######################################################
-
-    if method == 'default':
+    elif method == 'michi':
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
+                                                                fits_path,
+                                                                do_not_fill=False,
+                                                                method=method)
+        bg_cube_model.fill_events(observation_table, fits_path)
+        # TODO: filter out (mask) possible sources in the data
+        #       for now, the observation table should not contain any
+        #       run at or near an existing source
+        bg_cube_model.background_cube.data = bg_cube_model.counts_cube.data.copy()
+        bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
+        bg_cube_model.smooth()
         # correct for livetime after smoothing
-        bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
-    bg_cube_model.background_cube.divide_bin_volume()
-    if method == 'michi':
+        bg_cube_model.background_cube.divide_bin_volume()
         # use units of 1 / (MeV sr s) for the bg rate
         bg_rate = bg_cube_model.background_cube.data.to('1 / (MeV sr s)')
         bg_cube_model.background_cube.data = bg_rate
-    bg_cube_model.background_cube.set_zero_level()
+        bg_cube_model.background_cube.set_zero_level()
 
+        return bg_cube_model
 
-    ############################
-    # return the bg cube model #
-    ############################
-
-    return bg_cube_model
+    else:
+        raise ValueError("Invalid method {}.".format(method))

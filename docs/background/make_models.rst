@@ -51,7 +51,7 @@ Command examples:
 
 The output files are created in the output directory:
 
-* ``bg_observation_table.fits.gz``: total observatin table used for
+* ``bg_observation_table.fits.gz``: total observation table used for
   the models. The list has been filtered from observations taken at
   or nearby known sources.
 
@@ -65,7 +65,7 @@ The output files are created in the output directory:
   background models for each group **ID** in 2 different **format**
   kinds: *table*, for data analysis and *image* for a quick
   visualization using eg. ``DS9``. The table files contain also a
-  counts (events) and a livetime correction data cubes.
+  counts (a.k.a. events) and a livetime correction data cubes.
 
 In order to compare 2 sets of background cube models, the following
 script in the `examples` directory can be used:

@@ -141,8 +141,8 @@ class CubeBackgroundModel(object):
     *(X, Y)* are detector coordinates (a.k.a. nominal system coordinates).
     This class defines 3 cubes of type `~gammapy.background.Cube`:
 
-    - **events_cube**: to store the counts that participate in the
-      model creation.
+    - **counts_cube**: to store the counts (a.k.a. events) that
+      participate in the model creation.
 
     - **livetime_cube**: to store the livetime correction.
 
@@ -156,7 +156,7 @@ class CubeBackgroundModel(object):
 
     Parameters
     ----------
-    events_cube : `~gammapy.background.Cube`, optional
+    counts_cube : `~gammapy.background.Cube`, optional
         Cube to store counts.
     livetime_cube : `~gammapy.background.Cube`, optional
         Cube to store livetime correction.
@@ -164,8 +164,8 @@ class CubeBackgroundModel(object):
         Cube to store background model.
     """
 
-    def __init__(self, events_cube=None, livetime_cube=None, background_cube=None):
-        self.events_cube = events_cube
+    def __init__(self, counts_cube=None, livetime_cube=None, background_cube=None):
+        self.counts_cube = counts_cube
         self.livetime_cube = livetime_cube
         self.background_cube = background_cube
 
@@ -182,7 +182,7 @@ class CubeBackgroundModel(object):
           `~astropy.io.fits.PrimaryHDU`, with the energy binning
           stored as `~astropy.io.fits.BinTableHDU`
 
-        The events and livetime cubes are optional.
+        The counts and livetime cubes are optional.
 
         This method calls `~gammapy.background.Cube.read`,
         forwarding all arguments.
@@ -200,21 +200,21 @@ class CubeBackgroundModel(object):
             Cube background model object.
         """
         hdu = fits.open(filename)
-        events_scheme_dict = Cube.define_scheme('bg_counts_cube')
+        counts_scheme_dict = Cube.define_scheme('bg_counts_cube')
         livetime_scheme_dict = Cube.define_scheme('bg_livetime_cube')
         background_scheme_dict = Cube.define_scheme('bg_cube')
 
         try:
-            events_cube = Cube.read(filename, format, scheme='bg_counts_cube')
+            counts_cube = Cube.read(filename, format, scheme='bg_counts_cube')
             livetime_cube = Cube.read(filename, format, scheme='bg_livetime_cube')
         except:
-            # no events/livetime cube found: read only bg cube
-            events_cube = Cube()
+            # no counts/livetime cube found: read only bg cube
+            counts_cube = Cube()
             livetime_cube = Cube()
 
         background_cube = Cube.read(filename, format, scheme='bg_cube')
 
-        return cls(events_cube=events_cube,
+        return cls(counts_cube=counts_cube,
                    livetime_cube=livetime_cube,
                    background_cube=background_cube)
 
@@ -230,7 +230,7 @@ class CubeBackgroundModel(object):
           `~astropy.io.fits.PrimaryHDU`, with the energy binning
           stored as `~astropy.io.fits.BinTableHDU`
 
-        The events and livetime cubes are optional.
+        The counts and livetime cubes are optional.
 
         This method calls `~astropy.io.fits.HDUList.writeto`,
         forwarding the **kwargs** arguments.
@@ -244,14 +244,14 @@ class CubeBackgroundModel(object):
         kwargs
             Extra arguments for the corresponding `io.fits` `writeto` method.
         """
-        if ((self.events_cube.data.sum() == 0) or
+        if ((self.counts_cube.data.sum() == 0) or
             (self.livetime_cube.data.sum() == 0)):
             # empty envets/livetime cube: save only bg cube
             self.background_cube.write(outfile, format, **kwargs)
         else:
             if format == 'table':
                 hdu_list = fits.HDUList([fits.PrimaryHDU(), # empty primary HDU
-                                         self.events_cube.to_fits_table(),
+                                         self.counts_cube.to_fits_table(),
                                          self.livetime_cube.to_fits_table(),
                                          self.background_cube.to_fits_table()])
                 hdu_list.writeto(outfile, **kwargs)
@@ -288,7 +288,7 @@ class CubeBackgroundModel(object):
                                     len(dety_edges) - 1,
                                     len(detx_edges) - 1))
 
-        events_cube = Cube(coordx_edges = detx_edges,
+        counts_cube = Cube(coordx_edges = detx_edges,
                            coordy_edges = dety_edges,
                            energy_edges = energy_edges,
                            data = Quantity(empty_cube_data, ''), # counts
@@ -306,7 +306,7 @@ class CubeBackgroundModel(object):
                                data = Quantity(empty_cube_data, '1 / (s TeV sr)'),
                                scheme = 'bg_cube')
 
-        return cls(events_cube=events_cube,
+        return cls(counts_cube=counts_cube,
                    livetime_cube=livetime_cube,
                    background_cube=background_cube)
 
@@ -390,7 +390,7 @@ class CubeBackgroundModel(object):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
-        the events and the livetime and fill the corresponding cube
+        the counts and the livetime and fill the corresponding cube
         containers.
 
         Parameters
@@ -434,7 +434,7 @@ class CubeBackgroundModel(object):
             data_set = ev_list_ds.event_list
             data_set = data_set.select_energy((energy_threshold, energy_threshold*1.e6))
 
-            # construct events cube (energy, X, Y)
+            # construct counts cube (energy, X, Y)
             # TODO: units are missing in the H.E.S.S. fits event
             #       lists; this should be solved in the next (prod03)
             #       H.E.S.S. fits production
@@ -464,18 +464,18 @@ class CubeBackgroundModel(object):
 
             # fill data cube into histogramdd
             ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                         [self.events_cube.energy_edges,
-                                                          self.events_cube.coordy_edges,
-                                                          self.events_cube.coordx_edges])
+                                                         [self.counts_cube.energy_edges,
+                                                          self.counts_cube.coordy_edges,
+                                                          self.counts_cube.coordx_edges])
             ev_cube_hist = Quantity(ev_cube_hist, '') # counts
 
             # fill cube
-            self.events_cube.data += ev_cube_hist
+            self.counts_cube.data += ev_cube_hist
 
             # fill livetime for bins where E_max > E_thres
-            energy_max = self.events_cube.energy_edges[1:]
-            dummy_dety_max = np.zeros_like(self.events_cube.coordy_edges[1:])
-            dummy_detx_max = np.zeros_like(self.events_cube.coordx_edges[1:])
+            energy_max = self.counts_cube.energy_edges[1:]
+            dummy_dety_max = np.zeros_like(self.counts_cube.coordy_edges[1:])
+            dummy_detx_max = np.zeros_like(self.counts_cube.coordx_edges[1:])
             # define grid of max values (i.e. bin max values for each 3D bin)
             energy_max, dummy_dety_max, dummy_detx_max = np.meshgrid(energy_max,
                                                                      dummy_dety_max,
@@ -495,7 +495,7 @@ class CubeBackgroundModel(object):
         1. slice model in energy bins: 1 image per energy bin
         2. calculate integral of the image
         3. determine times to smooth (N) depending on number of
-           entries (events) used to fill the cube
+           entries (counts) used to fill the cube
         4. smooth image N times with root TH2::Smooth
            default smoothing kernel: **k5a**
 
@@ -527,7 +527,7 @@ class CubeBackgroundModel(object):
         integral_image = integral_image.sum(axis=(1, 2))
 
         # number of times to smooth
-        n_counts = self.events_cube.data.sum()
+        n_counts = self.counts_cube.data.sum()
         if n_counts >= 1.e6:
             n_smooth = 3
         elif (n_counts < 1.e6) and (n_counts >= 1.e5):

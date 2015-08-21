@@ -55,7 +55,7 @@ def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
             continue # skip the rest
 
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
-        cubes = [bg_cube_model.events_cube,
+        cubes = [bg_cube_model.counts_cube,
                  bg_cube_model.livetime_cube,
                  bg_cube_model.background_cube]
         schemes = ['bg_counts_cube', 'bg_livetime_cube', 'bg_cube']

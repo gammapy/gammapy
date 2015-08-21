@@ -131,10 +131,10 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     test : bool
         If true, run fast: skip many runs and catalog sources.
     """
-    print()
-    print("#######################################")
-    print("# Starting create_bg_observation_list #")
-    print("#######################################")
+    log.info(' ')
+    log.info("#######################################")
+    log.info("# Starting create_bg_observation_list #")
+    log.info("#######################################")
 
     # get full list of observations
     data_store = DataStore(dir=fits_path, scheme=scheme)
@@ -143,9 +143,9 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     # for testing, only process a small subset of observations
     if test and len(observation_table) > 100:
         observation_table = observation_table.select_linspace_subset(num=100)
-    print()
+    log.info(' ')
     log.info("Full observation table:")
-    print(observation_table)
+    log.info(observation_table)
 
     # filter observations: load catalog and reject obs too close to sources
 
@@ -203,10 +203,10 @@ def group_observations(outdir, overwrite, test):
     test : bool
         If true, run fast: define coarse binning for observation grouping.
     """
-    print()
-    print("###############################")
-    print("# Starting group_observations #")
-    print("###############################")
+    log.info(' ')
+    log.info("###############################")
+    log.info("# Starting group_observations #")
+    log.info("###############################")
 
     # read bg observation table from file
     indir = outdir
@@ -228,11 +228,11 @@ def group_observations(outdir, overwrite, test):
 
     # create observation groups
     observation_groups = ObservationGroups(list_obs_group_axis)
-    print()
+    log.info(' ')
     log.info("Observation group axes:")
-    print(observation_groups.info)
+    log.info(observation_groups.info)
     log.info("Observation groups table (group definitions):")
-    print(observation_groups.obs_groups_table)
+    log.info(observation_groups.obs_groups_table)
 
     # group observations in the obs table according to the obs groups
     observation_table_grouped = observation_table
@@ -249,9 +249,9 @@ def group_observations(outdir, overwrite, test):
     azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(360., 'degree'))
     observation_table_grouped['AZ'] = azimuth
 
-    print()
+    log.info(' ')
     log.info("Observation table grouped:")
-    print(observation_table_grouped)
+    log.info(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
     outfile = outdir + '/bg_observation_groups.ecsv'
@@ -278,10 +278,10 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
     method : {'default', 'michi'}, optional
         Bg cube model calculation method to apply.
     """
-    print()
-    print("###############################")
-    print("# Starting stack_observations #")
-    print("###############################")
+    log.info(' ')
+    log.info("###############################")
+    log.info("# Starting stack_observations #")
+    log.info("###############################")
 
     # read observation grouping and grouped observation table
     indir = outdir
@@ -292,16 +292,16 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
 
     # loop over observation groups
     groups = observation_groups.list_of_groups
-    print()
+    log.info(' ')
     log.info("List of groups to process: {}".format(groups))
 
     for group in groups:
-        print()
+        log.info(' ')
         log.info("Processing group: {}".format(group))
 
         # get group of observations
         observation_table = observation_groups.get_group_of_observations(observation_table_grouped, group)
-        print(observation_table)
+        log.info(observation_table)
 
         # skip bins with no observations
         if len(observation_table) == 0:
