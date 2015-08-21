@@ -6,6 +6,7 @@ from astropy.tests.helper import pytest, remote_data
 from ...datasets import get_path
 from ..make_bg_cube_models import main as make_bg_cube_models_main
 from ...datasets import make_test_dataset
+from ...background import CubeBackgroundModel
 
 try:
     import scipy
@@ -34,3 +35,17 @@ def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
                       random_state=random_state)
 
     make_bg_cube_models_main([fitspath, scheme, outdir] + extra_options)
+
+    # open 1 bg cube model file and check that it makes sense
+    filename = outdir + '/bg_cube_model_group1_table.fits.gz'
+    bg_cube_model = CubeBackgroundModel.read(filename, format='table')
+    cubes = [bg_cube_model.events_cube,
+             bg_cube_model.livetime_cube,
+             bg_cube_model.background_cube]
+    schemes = ['bg_counts_cube', 'bg_livetime_cube', 'bg_cube']
+    for cube, scheme in zip(cubes, schemes):
+        assert len(cube.data.shape) == 3
+        assert cube.data.shape == (len(cube.energy_edges) - 1,
+                                   len(cube.coordy_edges) - 1,
+                                   len(cube.coordx_edges) - 1)
+        assert cube.scheme == scheme

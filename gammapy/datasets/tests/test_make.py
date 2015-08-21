@@ -47,7 +47,7 @@ def test_make_test_observation_table():
     assert (ra_min < obs_table['RA']).all()
     assert (obs_table['RA'] < ra_max).all()
 
-    # test: assert if dec is inthe interval (-90, 90) deg:
+    # test: assert if dec is in the interval (-90, 90) deg:
     dec_min = Angle(-90, 'degree')
     dec_max = Angle(90, 'degree')
     assert (dec_min < obs_table['DEC']).all()
