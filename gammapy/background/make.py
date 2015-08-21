@@ -34,6 +34,10 @@ def make_bg_cube_model(observation_table, fits_path, method='default'):
     The background cube model contains 3 cubes: events, livetime and background.
     The latter contains the bg cube model.
 
+    The reconstructed background cube models produced with this method
+    can be tested against the true (simulated) ones produced with
+    `~gammapy.datasets.make_test_bg_cube_model`.
+
     Parameters
     ----------
     observation_table : `~gammapy.obs.ObservationTable`

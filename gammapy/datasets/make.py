@@ -264,6 +264,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                             ndety_bins=24,
                             energy_band=Quantity([0.01, 100.], 'TeV'),
                             nenergy_bins=14,
+                            altitude=Angle(70., 'degree'),
                             sigma=Angle(5., 'deg'),
                             spectral_index=2.7,
                             apply_mask=False):
@@ -272,11 +273,17 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     The background is created following a 2D symmetric gaussian
     model for the spatial coordinates (X, Y) and a power-law in
     energy.
-    The Gaussian width varies in energy from sigma/2 to sigma.
+    The gaussian width varies in energy from sigma/2 to sigma.
     The power-law slope in log-log representation is given by
     the spectral_index parameter.
+    The norm depends linearly on the livetime
+    and on the altitude angle of the observation.
     It is possible to mask 1/4th of the image (for `x > x_center` and
     `y > y_center`). Useful for testing coordinate rotations.
+
+    This method is useful for instance to produce true (simulated)
+    background cube models to compare to the reconstructed ones
+    produced with `~gammapy.background.make_bg_cube_model.`
 
     Parameters
     ----------
@@ -292,6 +299,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
         Energy range (min, max).
     nenergy_bins : int, optional
         Number of (logarithmic) bins in energy.
+    altitude : `~astropy.coordinates.Angle`, optional
+        observation altitude angle for the model.
     sigma : `~astropy.coordinates.Angle`, optional
         Width of the gaussian model used for the spatial coordinates.
     spectral_index : double, optional
@@ -337,8 +346,20 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                                                           det_bin_centers[1],
                                                           det_bin_centers[0],
                                                           indexing='ij')
-    E_0 = Quantity(1., 'TeV')
-    norm = Quantity(1., '1 / (s TeV sr)')
+
+    E_0 = Quantity(1., 'TeV') # reference energy for the model
+
+    # norm of the model
+    # taking as reference
+    # for now a dummy value of 1 in units of '1 / (s TeV sr)
+    # it is linearly dependent on the zenith angle (90 deg - altitude)
+    # it is norm_max at alt = 90 deg and norm_max/2 at alt = 0 deg
+    norm_max = Quantity(1., '1 / (s TeV sr)')
+    alt_min = Angle(0., 'degree')
+    alt_max = Angle(90., 'degree')
+    slope = (norm_max - norm_max/2)/(alt_max - alt_min)
+    free_term = norm_max/2 - slope*alt_min
+    norm = altitude*slope + free_term
 
     # define E dependent sigma
     # it is defined via a PL, in order to be log-linear
@@ -386,6 +407,9 @@ def make_test_dataset(fits_path, overwrite=False,
 
     * `~gammapy.obs.DataStore` to handle the file naming scheme;
       currently only the H.E.S.S. naming scheme is supported
+
+    This method is useful for instance to produce samples in order
+    to test the machinery for reconstructing background (cube) models.
 
     See also :ref:`datasets_make_datasets_for_testing`.
 
@@ -483,6 +507,7 @@ def make_test_eventlist(observation_table,
     The background is created following a 2D symmetric gaussian
     model for the spatial coordinates (X, Y) and a power-law in
     energy.
+    The gaussian width varies in energy from sigma/2 to sigma.
     The number of events generated depends linearly on the livetime
     and on the altitude angle of the observation.
     The model can be tuned via the sigma and spectral_index parameters.
@@ -536,11 +561,7 @@ def make_test_eventlist(observation_table,
     free_term = n_events_max/2 - slope*alt_min
     n_events = alt*slope + free_term
 
-    # simulate detx, dety, energy
-    detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
-                 'degree')
-    dety = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
-                 'degree')
+    # simulate energy
     # the index of `~numpy.random.RandomState.power` has to be
     # positive defined, so it is necessary to translate the (0, 1)
     # interval of the random variable to (emax, e_min) in order to
@@ -550,6 +571,25 @@ def make_test_eventlist(observation_table,
     e_max = Quantity(100., 'TeV')
     energy = Quantity((e_min.value - e_max.value) *
                       random_state.power(a=index, size=n_events) + e_max.value, 'TeV')
+
+    E_0 = Quantity(1., 'TeV') # reference energy for the model
+
+    # define E dependent sigma
+    # it is defined via a PL, in order to be log-linear
+    # it is equal to the parameter sigma at E max
+    # and sigma/2. at E min
+    sigma_min = sigma/2. # at E min
+    sigma_max = sigma # at E max
+    s_index = np.log(sigma_max/sigma_min)
+    s_index /= np.log(e_max/e_min)
+    s_norm = sigma_min*((e_min/E_0)**-s_index)
+    sigma = s_norm*((energy/E_0)**s_index)
+
+    # simulate detx, dety
+    detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
+                 'degree')
+    dety = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
+                 'degree')
 
     # fill events in an event list
     event_list = EventList()
