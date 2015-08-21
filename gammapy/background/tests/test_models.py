@@ -105,7 +105,7 @@ class TestCubeBackgroundModel():
         obs_table = ObservationTable()
         obs_table['OBS_ID'] = np.arange(100)
         bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table=obs_table,
-                                                                fits_path= '/tmp',
+                                                                fits_path='/tmp',
                                                                 do_not_fill=False,
                                                                 method='default')
 
@@ -128,9 +128,9 @@ class TestCubeBackgroundModel():
         bg_cube_model2.background_cube.data = np.array([0])
         bg_cube_model2.background_cube.data = bg_cube_model2.counts_cube.data.copy()
         bg_cube_model2.smooth()
-        bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data 
+        bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data
         bg_cube_model2.background_cube.divide_bin_volume()
-        bg_cube_model2.background_cube.set_zero_level() 
+        bg_cube_model2.background_cube.set_zero_level()
 
         # test: the bg should be the same as at the beginning
         assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()

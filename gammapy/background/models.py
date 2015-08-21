@@ -280,23 +280,23 @@ class CubeBackgroundModel(object):
                                     len(dety_edges) - 1,
                                     len(detx_edges) - 1))
 
-        counts_cube = Cube(coordx_edges = detx_edges,
-                           coordy_edges = dety_edges,
-                           energy_edges = energy_edges,
-                           data = Quantity(empty_cube_data, ''), # counts
-                           scheme = 'bg_counts_cube')
+        counts_cube = Cube(coordx_edges=detx_edges,
+                           coordy_edges=dety_edges,
+                           energy_edges=energy_edges,
+                           data=Quantity(empty_cube_data, ''), # counts
+                           scheme='bg_counts_cube')
 
-        livetime_cube = Cube(coordx_edges = detx_edges,
-                             coordy_edges = dety_edges,
-                             energy_edges = energy_edges,
-                             data = Quantity(empty_cube_data, 'second'),
-                             scheme = 'bg_livetime_cube')
+        livetime_cube = Cube(coordx_edges=detx_edges,
+                             coordy_edges=dety_edges,
+                             energy_edges=energy_edges,
+                             data=Quantity(empty_cube_data, 'second'),
+                             scheme='bg_livetime_cube')
 
-        background_cube = Cube(coordx_edges = detx_edges,
-                               coordy_edges = dety_edges,
-                               energy_edges = energy_edges,
-                               data = Quantity(empty_cube_data, '1 / (s TeV sr)'),
-                               scheme = 'bg_cube')
+        background_cube = Cube(coordx_edges=detx_edges,
+                               coordy_edges=dety_edges,
+                               energy_edges=energy_edges,
+                               data=Quantity(empty_cube_data, '1 / (s TeV sr)'),
+                               scheme='bg_cube')
 
         return cls(counts_cube=counts_cube,
                    livetime_cube=livetime_cube,
@@ -349,7 +349,8 @@ class CubeBackgroundModel(object):
         if method == 'michi':
             # minimum energy equal to minimum energy threshold of all
             # observations in the group
-            min_energy_threshold = _get_min_energy_threshold(observation_table, fits_path)
+            min_energy_threshold = _get_min_energy_threshold(observation_table,
+                                                             fits_path)
             energy_min = min_energy_threshold
         energy_max = Quantity(80, 'TeV')
         dety_min = Angle(-0.07, 'radian').to('degree')
@@ -405,7 +406,7 @@ class CubeBackgroundModel(object):
 
         data_store = DataStore(dir=fits_path, scheme=scheme)
         event_list_files = data_store.make_table_of_files(observation_table,
-                                                 	  	  filetypes=['events'])
+                                                          filetypes=['events'])
         aeff_table_files = data_store.make_table_of_files(observation_table,
                                                           filetypes=['effective area'])
 
@@ -425,13 +426,15 @@ class CubeBackgroundModel(object):
 
             # fill events above energy threshold, correct livetime accordingly
             data_set = ev_list_ds.event_list
-            data_set = data_set.select_energy((energy_threshold, energy_threshold*1.e6))
+            data_set = data_set.select_energy((energy_threshold,
+                                               energy_threshold*1.e6))
 
             # construct counts cube (energy, X, Y)
             # TODO: units are missing in the H.E.S.S. fits event
             #       lists; this should be solved in the next (prod03)
             #       H.E.S.S. fits production
-            # workaround: try to cast units, if it doesn't work, use hard coded ones
+            # workaround: try to cast units, if it doesn't work, use hard coded
+            # ones
             try:
                 ev_DETX = Angle(data_set['DETX'])
                 ev_DETY = Angle(data_set['DETY'])
@@ -546,7 +549,8 @@ class CubeBackgroundModel(object):
                 image_smooth = ndimage.convolve(data, kernel)
 
                 # overwrite bg image with smoothed bg image
-                self.background_cube.data[i_energy] = Quantity(image_smooth, self.background_cube.data.unit)
+                self.background_cube.data[i_energy] = Quantity(image_smooth,
+                                                               self.background_cube.data.unit)
 
         # integral of smooth images
         integral_image_smooth = self.background_cube.data*bin_area

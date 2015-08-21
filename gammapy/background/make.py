@@ -48,7 +48,7 @@ def make_bg_cube_model(observation_table, fits_path, method='default'):
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Cube background model.
     """
-    if method=='default':
+    if method == 'default':
         bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
                                                                 fits_path,
                                                                 do_not_fill=False,

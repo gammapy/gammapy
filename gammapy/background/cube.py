@@ -831,4 +831,3 @@ class Cube(object):
         self.data[zero_level_mask] = zero_level
         nan_mask = np.isnan(self.data)
         self.data[nan_mask] = zero_level
-

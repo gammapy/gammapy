@@ -424,7 +424,6 @@ def make_test_dataset(fits_path, overwrite=False,
             s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
             raise RuntimeError(s_error)
 
-
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,
                                                     n_obs=n_obs,
@@ -518,7 +517,7 @@ def make_test_eventlist(observation_table,
 
     # find obs row in obs table
     obs_ids = observation_table['OBS_ID'].data
-    obs_index = np.where(obs_ids==obs_id)
+    obs_index = np.where(obs_ids == obs_id)
     row = obs_index[0][0]
 
     # get observation information
@@ -553,7 +552,7 @@ def make_test_eventlist(observation_table,
                       random_state.power(a=index, size=n_events) + e_max.value, 'TeV')
 
     # fill events in an event list
-    event_list=EventList()
+    event_list = EventList()
     event_list['DETX'] = detx
     event_list['DETY'] = dety
     event_list['ENERGY'] = energy

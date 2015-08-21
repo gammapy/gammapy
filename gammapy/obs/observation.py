@@ -65,7 +65,7 @@ class ObservationTable(Table):
         ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
         ontime = Quantity(self['TIME_OBSERVATION'].sum(),
-	                      self['TIME_OBSERVATION'].unit)
+                          self['TIME_OBSERVATION'].unit)
         ss += 'Total observation time: {}\n'.format(ontime)
         livetime = Quantity(self['TIME_LIVE'].sum(), self['TIME_LIVE'].unit)
         ss += 'Total live time: {}\n'.format(livetime)
@@ -668,7 +668,7 @@ class ObservationGroups(object):
         # loop over observation axes
         for i_axis in np.arange(len(self.obs_group_axes)):
             if i_axis != 0:
-                s +=','
+                s += ','
             s += ' ' + self.obs_group_axes[i_axis].name + ' = '
             if self.obs_group_axes[i_axis].format == 'bin_edges':
                 s += '['
@@ -745,7 +745,7 @@ class ObservationGroups(object):
                                           index=0)
             list_obs_table_grouped.append(obs_table_selected)
 
-        # stack all groups 
+        # stack all groups
         obs_table_grouped = vstack(list_obs_table_grouped)
 
         return obs_table_grouped
