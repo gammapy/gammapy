@@ -5,15 +5,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 from astropy.modeling.models import Gaussian1D
-import astropy.units as u
 from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.table import Table
-from astropy.wcs import WCS
-from ..utils.wcs import (linear_wcs_to_arrays,
-                         linear_arrays_to_wcs)
-from ..utils.fits import table_to_fits_table
 from ..background import Cube
 from ..obs import DataStore
 from ..data import EventListDataset
@@ -149,10 +144,7 @@ class CubeBackgroundModel(object):
     - **background_cube**: to store the background model.
 
     The class defines methods to define the binning, fill and smooth
-    the cubes.
-
-    - TODO: review this doc!!!
-    - TODO: review high-level doc!!!
+    of the background cube models.
 
     Parameters
     ----------
@@ -364,9 +356,10 @@ class CubeBackgroundModel(object):
         dety_max = Angle(0.07, 'radian').to('degree')
         detx_min = Angle(-0.07, 'radian').to('degree')
         detx_max = Angle(0.07, 'radian').to('degree')
-        # TODO: the bin edges (at least for X and Y) should depend on the
-        #       experiment/observatory.
+        # TODO: the bin edges (at least for X and Y) should depend on
+        #       the experiment/observatory.
         #       or at least they should be read as parameters
+        #       The values here are good for H.E.S.S.
 
         # energy bins (logarithmic)
         log_delta_energy = (np.log(energy_max.value)

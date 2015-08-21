@@ -391,6 +391,8 @@ class ObservationGroups(object):
     refer to the `~gammapy.obs.ObservationGroups.group_observation_table`
     method.
 
+    See also :ref:`obs_observation_grouping`.
+
     Parameters
     ----------
     obs_group_axes : `~gammapy.obs.ObservationGroupAxis`
@@ -418,10 +420,15 @@ class ObservationGroups(object):
 
     >>> print(obs_groups.info)
 
-    Group the observations of an observation list and print it:
+    Group the observations of an observation list and print them:
 
     >>> obs_table_grouped = obs_groups.group_observation_table(obs_table)
     >>> print(obs_table_grouped)
+
+    Get the observations of a particular group and print them:
+
+    >>> obs_table_group8 = obs_groups.get_group_of_observations(obs_table_grouped, 8)
+    >>> print(obs_table_group8)
     """
 
     obs_groups_table = Table()
@@ -750,7 +757,6 @@ class ObservationGroups(object):
         If the inverted flag is activated, the selection is applied to
         exclude the indicated group and keep all others.
 
-
         Parameters
         ----------
         obs_table : `~gammapy.obs.ObservationTable`
@@ -779,7 +785,8 @@ class ObservationGroupAxis(object):
 
     """Observation group axis.
 
-    Class to define an axis along which to define observation groups.
+    Class to define an axis along which to define bins for creating
+    observation groups.
     Two kinds of axis are supported, depending on the value of the
     **format** parameter:
 
@@ -791,6 +798,8 @@ class ObservationGroupAxis(object):
 
     In both cases, both, dimensionless and
     `~astropy.units.Quantity`-like parameter axes are supported.
+
+    See also :ref:`obs_observation_grouping`.
 
     Parameters
     ----------

@@ -12,9 +12,6 @@ from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..datasets import load_catalog_tevcat
-from ..data import EventListDataset
-from ..background import make_bg_cube_model
-# TODO: revise imports!!!
 
 __all__ = ['make_bg_cube_models',
            'create_bg_observation_list',

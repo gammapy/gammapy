@@ -11,7 +11,6 @@ from ..obs import ObservationTable
 __all__ = ['DataStore',
            'DataStoreIndexTable',
            'convert_obs_list_format_to_gammapy',
-           'convert_obs_list_hess_to_gammapy',
            ]
 
 
@@ -304,12 +303,12 @@ def convert_obs_list_format_to_gammapy(obs_list, scheme):
         Converted observation list.
     """
     if scheme == 'HESS':
-        return convert_obs_list_hess_to_gammapy(obs_list)
+        return _convert_obs_list_hess_to_gammapy(obs_list)
     else:
         raise ValueError('Invalid scheme: {}'.format(scheme))
 
 
-def convert_obs_list_hess_to_gammapy(obs_list):
+def _convert_obs_list_hess_to_gammapy(obs_list):
     """Convert oservation list from H.E.S.S. format to Gammapy format.
 
     The H.E.S.S. observation lists are produced following a different
