@@ -30,6 +30,7 @@ Pull requests
 +++++++++++++
 
 - Make background cube models [#319] (Manuel Paz Arribas)
+-  Production of true/reco bg cube models should use the same model. [#335] (Manuel Paz Arribas)
 
 .. _gammapy_0p3_release:
 
