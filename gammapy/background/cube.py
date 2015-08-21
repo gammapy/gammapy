@@ -55,7 +55,7 @@ def _parse_data_units(data_unit):
                 u.Unit(data_unit, format='ogip')
             # if it still fails, raise an exception
             except ValueError:
-                raise ValueError("Cannot interpret units ({})".format(background_unit))
+                raise ValueError("Invalid unit format {}.".format(background_unit))
 
     return data_unit
 

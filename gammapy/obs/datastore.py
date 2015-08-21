@@ -125,7 +125,7 @@ class DataStore(object):
     dir : str
         Data store directory on user machine.
     scheme : {'HESS'}
-        Scheme of organising and naming the files.
+        Scheme for file naming and organisation.
     """
 
     def __init__(self, dir, scheme='HESS'):
@@ -288,14 +288,14 @@ def convert_obs_list_format_to_gammapy(obs_list, scheme):
     observation lists from different experiments comply to the format
     described in :ref:`dataformats_observation_lists`.
 
-    Curretly only the H.E.S.S. scheme is supported, which follows the
-    guidelines dictated for CTA.
+    Curretly only the H.E.S.S. scheme is supported.
 
     Parameters
     ----------
     obs_list : `~astropy.table.Table`
         Observation list to convert.
-    scheme : str
+    scheme : {'HESS'}
+        Scheme for file naming and organisation.
         Format of the input observation list to convert.
 
     Returns
@@ -310,10 +310,10 @@ def convert_obs_list_format_to_gammapy(obs_list, scheme):
 
 
 def convert_obs_list_hess_to_gammapy(obs_list):
-    """Convert oservation list from H.E.S.S./CTA format to Gammapy format.
+    """Convert oservation list from H.E.S.S. format to Gammapy format.
 
-    The H.E.S.S. observation lists are produced following the
-    guidelines dictated for CTA. This function should convert the
+    The H.E.S.S. observation lists are produced following a different
+    format as Gammapy. This function should convert the
     format to the one described in :ref:`dataformats_observation_lists`.
 
     This script renames the columns and edits the header keywords of

@@ -142,7 +142,7 @@ class ObservationTable(Table):
         # build and apply mask
         mask = (value_range[0] <= value) & (value < value_range[1])
         if np.allclose(value_range[0], value_range[1]):
-            mask = value_range[0] == value
+            mask = (value_range[0] == value)
         if inverted:
             mask = np.invert(mask)
         obs_table = obs_table[mask]
@@ -377,8 +377,8 @@ class ObservationGroups(object):
 
     The class takes as input a list of `~gammapy.obs.ObservationGroupAxis`
     objects and defines 1 group for each possible combination of the
-    bins defined in all axes. The groups are identified by a unique
-    ``GROUP_ID`` int value.
+    bins defined in all axes (cartesion product).
+    The groups are identified by a unique ``GROUP_ID`` int value.
 
     The definitions of the groups are internally  stored as a
     `~astropy.table.Table` object, the
@@ -538,7 +538,8 @@ class ObservationGroups(object):
 
         return table
 
-    def table_to_axes(self, table):
+    @staticmethod
+    def table_to_axes(table):
         """Define observation group axis list from a table.
 
         Interpret the combinations of bins from a table of groups
@@ -607,7 +608,8 @@ class ObservationGroups(object):
             Observation groups object.
         """
         cls.obs_groups_table = ascii.read(filename)
-        return cls(obs_group_axes=cls.table_to_axes(cls, cls.obs_groups_table))
+        obs_group_axes = ObservationGroups.table_to_axes(cls.obs_groups_table)
+        return cls(obs_group_axes=obs_group_axes)
 
     def write(self, outfile, overwrite=False):
         """
@@ -654,7 +656,7 @@ class ObservationGroups(object):
         s = 'group {}:'.format(group_id)
         # find group row in obs groups table
         group_ids = self.obs_groups_table['GROUP_ID'].data
-        group_index = np.where(group_ids==group_id)
+        group_index = np.where(group_ids == group_id)
         row = group_index[0][0]
         # loop over observation axes
         for i_axis in np.arange(len(self.obs_group_axes)):
@@ -662,25 +664,15 @@ class ObservationGroups(object):
                 s +=','
             s += ' ' + self.obs_group_axes[i_axis].name + ' = '
             if self.obs_group_axes[i_axis].format == 'bin_edges':
-                s += '[' +\
-                     str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MIN'][row]) +\
-                     ', ' +\
-                     str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MAX'][row]) +\
-                     ')'
+                s += '['
+                s += str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MIN'][row])
+                s += ', '
+                s += str(self.obs_groups_table[self.obs_group_axes[i_axis].name + '_MAX'][row])
+                s += ')'
             elif self.obs_group_axes[i_axis].format == 'bin_values':
                 s += str(self.obs_groups_table[self.obs_group_axes[i_axis].name][row])
             s += ' ' + str(self.obs_group_axes[i_axis].bins.unit)
         return s
-
-    def print_axes(self):
-        """Print axes info using the logging module."""
-        #print(self.info)
-        log.info(self.info)
-
-    def print_groups(self):
-        """Print groups info using the logging module."""
-        #print(self.obs_groups_table)
-        log.info(print(self.obs_groups_table))
 
     def group_observation_table(self, obs_table):
         """
@@ -733,9 +725,9 @@ class ObservationGroups(object):
                     max_value = recover_units(self.obs_groups_table[name + '_MAX'][i_row],
                                               self.obs_groups_table[name + '_MAX'])
                 elif format == 'bin_values':
-                   min_value = recover_units(self.obs_groups_table[name][i_row],
+                    min_value = recover_units(self.obs_groups_table[name][i_row],
                                               self.obs_groups_table[name])
-                   max_value = min_value
+                    max_value = min_value
                 # apply selection to the table
                 selection = dict(type='par_box', variable=name,
                                  value_range=(min_value, max_value))
@@ -899,9 +891,5 @@ class ObservationGroupAxis(object):
     @property
     def info(self):
         """Info string (str)"""
-        return ("{0} {1} {2}".format(self.name, self.format, self.bins))
-
-    def print(self):
-        """Print axis info using the logging module."""
-        #print(self.info)
-        log.info(self.info)
+        s = "{0} {1} {2}".format(self.name, self.format, self.bins)
+        return s

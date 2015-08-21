@@ -61,7 +61,7 @@ class TestCubeBackgroundModel():
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
                                      location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
-        cubes = [bg_cube_model.events_cube,
+        cubes = [bg_cube_model.counts_cube,
                  bg_cube_model.livetime_cube,
                  bg_cube_model.background_cube]
         schemes = ['bg_counts_cube', 'bg_livetime_cube', 'bg_cube']
@@ -84,10 +84,10 @@ class TestCubeBackgroundModel():
 
         # test if values are correct in the saved file: compare both files
         bg_cube_model_2 = CubeBackgroundModel.read(outfile, format='table')
-        cubes1 = [bg_cube_model_1.events_cube,
+        cubes1 = [bg_cube_model_1.counts_cube,
                   bg_cube_model_1.livetime_cube,
                   bg_cube_model_1.background_cube]
-        cubes2 = [bg_cube_model_2.events_cube,
+        cubes2 = [bg_cube_model_2.counts_cube,
                   bg_cube_model_2.livetime_cube,
                   bg_cube_model_2.background_cube]
         for cube1, cube2 in zip(cubes1, cubes2):
@@ -126,7 +126,7 @@ class TestCubeBackgroundModel():
 
         # reset background and fill again
         bg_cube_model2.background_cube.data = np.array([0])
-        bg_cube_model2.background_cube.data = bg_cube_model2.events_cube.data.copy()
+        bg_cube_model2.background_cube.data = bg_cube_model2.counts_cube.data.copy()
         bg_cube_model2.smooth()
         bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data 
         bg_cube_model2.background_cube.divide_bin_volume()
