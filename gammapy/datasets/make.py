@@ -387,7 +387,7 @@ def make_test_dataset(fits_path, overwrite=False,
     * `~gammapy.obs.DataStore` to handle the file naming scheme;
       currently only the H.E.S.S. naming scheme is supported
 
-    See also :ref:`background_make_models_datasets_for_testing`.
+    See also :ref:`datasets_make_datasets_for_testing`.
 
     Parameters
     ----------
@@ -408,6 +408,8 @@ def make_test_dataset(fits_path, overwrite=False,
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
     """
+    random_state = get_random_state(random_state)
+
     # create output folder
     outdir = fits_path
     if not os.path.isdir(outdir):
@@ -489,7 +491,7 @@ def make_test_eventlist(observation_table,
     In addition, an effective area table is produced. For the moment
     only the low energy threshold is filled.
 
-    See also :ref:`background_make_models_datasets_for_testing`.
+    See also :ref:`datasets_make_datasets_for_testing`.
 
     Parameters
     ----------

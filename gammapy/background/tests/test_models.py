@@ -107,7 +107,7 @@ class TestCubeBackgroundModel():
         bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table=obs_table,
                                                                 fits_path= '/tmp',
                                                                 do_not_fill=False,
-                                                                a_la_michi=False)
+                                                                method='default')
 
         assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
 

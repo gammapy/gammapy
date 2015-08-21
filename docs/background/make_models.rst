@@ -1,4 +1,4 @@
-.. _background_make_models:
+.. _background_make_background_models:
 
 Make background models
 ======================
@@ -67,55 +67,16 @@ The output files are created in the output directory:
   visualization using eg. ``DS9``. The table files contain also a
   counts (events) and a livetime correction data cubes.
 
-.. _background_make_models_datasets_for_testing:
+In order to compare 2 sets of background cube models, the following
+script in the `examples` directory can be used:
+:download:`plot_bg_cube_model_comparison.py
+<../../examples/plot_bg_cube_model_comparison.py>`
 
 Datasets for testing
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
-In order to test the background generation tools, either real data
-from an existing experiment such as H.E.S.S. can be used. Since the
-data of current experiments is not public. Rudimentary tools to
+In order to test the background model generation tools, real
+data from existing experiments such as H.E.S.S. can be used. Since
+the data of current experiments is not public, rudimentary tools to
 prepare a dummy dataset have been placed in Gammapy:
-
-* `~gammapy.datasets.make_test_dataset`: function to produce a dummy
-  observation list and its corresponding dataset
-  consisting on event lists and effective area tables and store
-  everything on disk.
-
-* `~gammapy.datasets.make_test_eventlist`: function called
-  recursivelly by `~gammapy.datasets.make_test_dataset` to produce
-  the data (event lists and effective area table)corresponding to
-  one observation.
-
-They are very easy to use. A H.E.S.S.-like test dataset can be
-produced with a few lines of python code:
-
-.. code-block:: python
-
-    fits_path = '/path/to/fits/event_lists/base/dir'
-    observatory_name = 'HESS'
-    n_obs = 2
-    random_state = np.random.RandomState(seed=0)
-
-    make_test_dataset(fits_path=fits_path,
-                      observatory_name=observatory_name,
-                      n_obs=n_obs,
-                      random_state=random_state)
-
-Then the data can be read back using the `~gammapy.obs.DataStore`
-class, and eg. print the observation table and the names of the filescreated with a few extra lines of python code:
-
-.. code-block:: python
-
-    scheme = 'HESS'
-    data_store = DataStore(dir=fits_path, scheme=scheme)
-    observation_table = data_store.make_observation_table()
-    print(observation_table)
-    event_list_files = data_store.make_table_of_files(observation_table,
-                                                      filetypes=['events'])
-    aeff_table_files = data_store.make_table_of_files(observation_table,
-                                                      filetypes=['effective area'])
-    for i_ev_file, i_aeff_file in zip(event_list_files['filename'],
-                                      aeff_table_files['filename']):
-        print(' ev infile: {}'.format(i_ev_file))
-        print(' aeff infile: {}'.format(i_aeff_file))
+:ref:`datasets_make_datasets_for_testing`.
