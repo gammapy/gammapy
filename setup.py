@@ -79,7 +79,6 @@ package_info['package_data'].setdefault(PACKAGENAME, [])
 # Please keep the list in alphabetical order
 entry_points = {}
 entry_points['console_scripts'] = [
-    'gammapy-background-cube = gammapy.scripts.background_cube:main',
     'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
     'gammapy-bin-image = gammapy.scripts.bin_image:main',
     'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',
@@ -94,6 +93,7 @@ entry_points['console_scripts'] = [
     'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
     'gammapy-look-up-image = gammapy.scripts.look_up_image:main',
     'gammapy-model-image = gammapy.scripts.model_image:main',
+    'gammapy-make-bg-cube-models = gammapy.scripts.make_bg_cube_models:main',
     'gammapy-pfmap = gammapy.scripts.pfmap:main',
     'gammapy-pfsim = gammapy.scripts.pfsim:main',
     'gammapy-pfspec = gammapy.scripts.pfspec:main',

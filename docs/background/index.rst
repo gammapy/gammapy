@@ -42,3 +42,4 @@ Sub-pages
    :maxdepth: 1
 
    models
+   make_models

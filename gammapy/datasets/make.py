@@ -3,19 +3,26 @@
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os
+import shutil
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
+from astropy.table import Table
 from ..irf import EnergyDependentMultiGaussPSF
-from ..obs import ObservationTable, observatory_locations
+from ..obs import ObservationTable, observatory_locations, DataStore
 from ..utils.random import sample_sphere, get_random_state
 from ..time import time_ref_from_dict, time_relative_to_ref
-from ..background import CubeBackgroundModel
+from ..background import Cube
+from ..data import EventList
+from ..utils.fits import table_to_fits_table
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
            'make_test_bg_cube_model',
+           'make_test_dataset',
+           'make_test_eventlist',
            ]
 
 
@@ -204,9 +211,10 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
 
     # az, alt
     # random points in a sphere above 45 deg altitude
-    az, alt = sample_sphere(len(obs_id),
-                            Angle([0, 360], 'degree'),
-                            Angle([45, 90], 'degree'))
+    az, alt = sample_sphere(size=len(obs_id),
+                            lon_range=Angle([0, 360], 'degree'),
+                            lat_range=Angle([45, 90], 'degree'),
+                            random_state=random_state)
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
     obs_table['AZ'] = az
@@ -294,7 +302,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
 
     Returns
     -------
-    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
+    bg_cube_model : `~gammapy.background.Cube`
         Bacground cube model.
     """
     # spatial bins (linear)
@@ -315,10 +323,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # https://github.com/gammapy/gammapy/pull/290
 
     # define empty bg cube model and set bins
-    bg_cube_model = CubeBackgroundModel(detx_bins=detx_bin_edges,
-                                        dety_bins=dety_bin_edges,
-                                        energy_bins=energy_bin_edges,
-                                        background=None)
+    bg_cube_model = Cube(coordx_edges=detx_bin_edges,
+                         coordy_edges=dety_bin_edges,
+                         energy_edges=energy_bin_edges,
+                         data=None, scheme='bg_cube')
 
     # background
 
@@ -356,6 +364,214 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
         mask = (detx_points <= detx_center) & (dety_points <= dety_center)
         background = background*mask
 
-    bg_cube_model.background = Quantity(background, '1 / (s TeV sr)')
+    bg_cube_model.data = Quantity(background, '1 / (s TeV sr)')
 
     return bg_cube_model
+
+
+def make_test_dataset(fits_path, overwrite=False,
+                      observatory_name='HESS', n_obs=10,
+                      datestart=None, dateend=None,
+                      random_state='random-seed'):
+    """
+    Make a test dataset and save it to disk.
+
+    Uses:
+
+    * `~gammapy.datasets.make_test_observation_table` to generate an
+      observation table
+
+    * `~gammapy.datasets.make_test_eventlist` to generate an event list
+      and effective area table for each observation
+
+    * `~gammapy.obs.DataStore` to handle the file naming scheme;
+      currently only the H.E.S.S. naming scheme is supported
+
+    See also :ref:`datasets_make_datasets_for_testing`.
+
+    Parameters
+    ----------
+    fits_path : str
+        Path to store the files.
+    overwrite : bool, optional
+        Flag to remove previous datasets in fits_path (if existing).
+    observatory_name : str, optional
+        Name of the observatory; a list of choices is given in
+        `~gammapy.obs.observatory_locations`.
+    n_obs : int
+        Number of observations for the obs table.
+    datestart : `~astropy.time.Time`, optional
+        Starting date for random generation of observation start time.
+    dateend : `~astropy.time.Time`, optional
+        Ending date for random generation of observation start time.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+    """
+    random_state = get_random_state(random_state)
+
+    # create output folder
+    outdir = fits_path
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+    else:
+        if overwrite:
+            # delete and create again
+            shutil.rmtree(outdir) # recursively
+            os.mkdir(outdir)
+        else:
+            # do not overwrite, hence exit
+            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
+            raise RuntimeError(s_error)
+
+    # generate observation table
+    observation_table = make_test_observation_table(observatory_name=observatory_name,
+                                                    n_obs=n_obs,
+                                                    datestart=datestart, dateend=dateend,
+                                                    use_abs_time=False,
+                                                    random_state=random_state)
+
+    # save observation list to disk
+    outfile = outdir + '/runinfo.fits'
+    observation_table.write(outfile)
+
+    # create data store for the organization of the files
+    # using H.E.S.S.-like dir/file naming scheme
+    if observatory_name == 'HESS':
+        scheme = 'HESS'
+    else:
+        s_error = "Warning! Storage scheme for {}".format(observatory_name)
+        s_error += "not implemented. Only H.E.S.S. scheme is available."
+        raise ValueError(s_error)
+
+    data_store = DataStore(dir=fits_path, scheme=scheme)
+
+    # loop over observations
+    for obs_id in observation_table['OBS_ID']:
+        event_list, aeff_hdu = make_test_eventlist(observation_table=observation_table,
+                                                   obs_id=obs_id,
+                                                   random_state=random_state)
+
+        # save event list and effective area table to disk
+        outfile = data_store.filename(obs_id, filetype='events')
+        outfile_split = outfile.rsplit("/", 1)
+        os.makedirs(outfile_split[0]) # recursively
+        event_list.write(outfile)
+        outfile = data_store.filename(obs_id, filetype='effective area')
+        aeff_hdu.writeto(outfile)
+
+
+def make_test_eventlist(observation_table,
+                        obs_id,
+                        sigma=Angle(5., 'deg'),
+                        spectral_index=2.7,
+                        random_state='random-seed'):
+    """
+    Make a test event list for a specified observation.
+
+    The observation can be specified with an observation table object
+    and the observation ID pointing to the correct observation in the
+    table.
+
+    For now, only a very rudimentary event list is generated, containing
+    only detector X, Y coordinates (a.k.a. nominal system) and energy
+    columns for the events. And the livetime of the observations stored
+    in the header.
+
+    The model used to simulate events is also very simple. Only
+    dummy background is created (no signal).
+    The background is created following a 2D symmetric gaussian
+    model for the spatial coordinates (X, Y) and a power-law in
+    energy.
+    The number of events generated depends linearly on the livetime
+    and on the altitude angle of the observation.
+    The model can be tuned via the sigma and spectral_index parameters.
+
+    In addition, an effective area table is produced. For the moment
+    only the low energy threshold is filled.
+
+    See also :ref:`datasets_make_datasets_for_testing`.
+
+    Parameters
+    ----------
+    observation_table : `~gammapy.obs.ObservationTable`
+        Observation table containing the observation to fake.
+    obs_id : int
+        Observation ID of the observation to fake inside the observation table.
+    sigma : `~astropy.coordinates.Angle`, optional
+        Width of the gaussian model used for the spatial coordinates.
+    spectral_index : double, optional
+        Index for the power-law model used for the energy coordinate.
+    random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
+        Defines random number generator initialisation.
+        Passed to `~gammapy.utils.random.get_random_state`.
+
+    Returns
+    -------
+    event_list : `~gammapy.data.EventList`
+        Event list.
+    aeff_hdu : `~astropy.io.fits.BinTableHDU`
+        Effective area table.
+    """
+    random_state = get_random_state(random_state)
+
+    # find obs row in obs table
+    obs_ids = observation_table['OBS_ID'].data
+    obs_index = np.where(obs_ids == obs_id)
+    row = obs_index[0][0]
+
+    # get observation information
+    alt = Angle(observation_table['ALT'])[row]
+    livetime = Quantity(observation_table['TIME_LIVE'])[row]
+
+    # number of events to simulate
+    # it is linearly dependent on the livetime, taking as reference
+    # a trigger rate of 300 Hz
+    # it is linearly dependent on the zenith angle (90 deg - altitude)
+    # it is n_events_max at alt = 90 deg and n_events_max/2 at alt = 0 deg
+    n_events_max = Quantity(300., 'Hz')*livetime
+    alt_min = Angle(0., 'degree')
+    alt_max = Angle(90., 'degree')
+    slope = (n_events_max - n_events_max/2)/(alt_max - alt_min)
+    free_term = n_events_max/2 - slope*alt_min
+    n_events = alt*slope + free_term
+
+    # simulate detx, dety, energy
+    detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
+                 'degree')
+    dety = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
+                 'degree')
+    # the index of `~numpy.random.RandomState.power` has to be
+    # positive defined, so it is necessary to translate the (0, 1)
+    # interval of the random variable to (emax, e_min) in order to
+    # have a decreasing power-law
+    index = spectral_index + 1
+    e_min = Quantity(0.1, 'TeV')
+    e_max = Quantity(100., 'TeV')
+    energy = Quantity((e_min.value - e_max.value) *
+                      random_state.power(a=index, size=n_events) + e_max.value, 'TeV')
+
+    # fill events in an event list
+    event_list = EventList()
+    event_list['DETX'] = detx
+    event_list['DETY'] = dety
+    event_list['ENERGY'] = energy
+
+    # store important info in header
+    event_list.meta['LIVETIME'] = livetime.to('second').value
+    event_list.meta['EUNIT'] = str(energy.unit)
+
+    # effective area table
+    aeff_table = Table()
+
+    # fill threshold, for now, a default 100 GeV will be set
+    # independently of observation parameters
+    energy_threshold = Quantity(0.1, 'TeV')
+    aeff_table.meta['LO_THRES'] = energy_threshold.value
+    aeff_table.meta['name'] = 'EFFECTIVE AREA'
+
+    # convert to BinTableHDU and add necessary comment for the units
+    aeff_hdu = table_to_fits_table(aeff_table)
+    aeff_hdu.header.comments['LO_THRES'] = '[' + str(energy_threshold.unit) + ']'
+
+    return event_list, aeff_hdu

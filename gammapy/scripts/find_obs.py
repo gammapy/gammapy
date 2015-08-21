@@ -20,7 +20,8 @@ def main(args=None):
                         help='Input observation table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
-                        help='Output observation table file name (default: stdout)')
+                        help='Output observation table file name '
+                        '(default: None, will print the result on screen)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -113,10 +114,12 @@ def find_obs(infile,
         gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
         gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
+        gammapy-find-obs test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
     """
     if pix:
         raise NotImplementedError
 
+    # open (fits) file and read the observation table
     try:
         observation_table = ObservationTable.read(infile)
     except FileNotFoundError:
@@ -190,5 +193,6 @@ def find_obs(infile,
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
+        log.info("Filtered observation table")
         log.info(observation_table.meta)
-        log.info(observation_table)
+        print(observation_table)

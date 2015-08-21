@@ -1,4 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import os
 import numpy as np
 from astropy.table import Table
@@ -8,6 +10,7 @@ from ..obs import ObservationTable
 
 __all__ = ['DataStore',
            'DataStoreIndexTable',
+           'convert_obs_list_format_to_gammapy',
            ]
 
 
@@ -47,7 +50,8 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
     return os.path.join(group_folder, obs_folder, filename)
 
 
-class DataStoreIndexTable(Table):
+class DataStoreIndexTable(ObservationTable):
+
     """Data store index table.
 
     The index table is a FITS file that stores which observations
@@ -73,26 +77,21 @@ class DataStoreIndexTable(Table):
     #     self._fixes()
 
     @classmethod
-    def read(cls, *args, **kwargs):
+    def read(cls, scheme, *args, **kwargs):
         """Read from FITS file. See `~astropy.table.Table.read`."""
         table = Table.read(*args, **kwargs)
+        # convert to the gammapy format
+        table = convert_obs_list_format_to_gammapy(table, scheme)
         table = cls(table)
-        table._init_cleanup()
+        table._init_cleanup(scheme)
         return table
 
-    def _init_cleanup(self):
-        # Rename to canonical column names
-        renames = [('RA_PNT', 'RA'),
-                   ('DEC_PNT', 'DEC')
-                   ]
-        for name, new_name in renames:
-            self.rename_column(name, new_name)
-
+    def _init_cleanup(self, scheme):
         # Add useful extra columns
         if not set(['GLON', 'GLAT']).issubset(self.colnames):
             skycoord = skycoord_from_table(self).galactic
-            self['GLON'] = skycoord.l.degree
-            self['GLAT'] = skycoord.b.degree
+            self['GLON'] = skycoord.l.to('degree')
+            self['GLAT'] = skycoord.b.to('degree')
 
     def summary(self):
         ss = 'Data store index table summary:\n'
@@ -114,6 +113,7 @@ class DataStoreIndexTable(Table):
 
 
 class DataStore(object):
+
     """Data store - convenient way to access and select data.
 
     This is an ad-hoc prototype implementation for HESS of what will be the "archive"
@@ -125,16 +125,16 @@ class DataStore(object):
     ----------
     dir : str
         Data store directory on user machine.
-    scheme : {'hess'}
-        Scheme of organising and naming the files.
+    scheme : {'HESS'}
+        Scheme for file naming and organisation.
     """
 
-    def __init__(self, dir, scheme='hess'):
+    def __init__(self, dir, scheme='HESS'):
         self.dir = dir
         self.index_table_filename = 'runinfo.fits'
         filename = os.path.join(dir, self.index_table_filename)
         print('Reading {}'.format(filename))
-        self.index_table = DataStoreIndexTable.read(filename)
+        self.index_table = DataStoreIndexTable.read(scheme, filename)
         self.scheme = scheme
 
     def info(self):
@@ -168,11 +168,14 @@ class DataStore(object):
 
         Returns
         -------
-        table : `~gammapy.obs.ObservationTable`
+        table : `~astropy.table.Table`
             Table summarising info about files.
         """
         if observation_table is None:
             observation_table = ObservationTable(self.index_table)
+
+        observation_table = convert_obs_list_format_to_gammapy(observation_table,
+                                                               self.scheme)
 
         data = []
         for observation in observation_table:
@@ -184,7 +187,7 @@ class DataStore(object):
                 row['filename'] = filename
                 data.append(row)
 
-        return ObservationTable(data=data, names=['OBS_ID', 'filetype', 'filename'])
+        return Table(data=data, names=['OBS_ID', 'filetype', 'filename'])
 
     def make_summary_plots(self):
         """Make some plots summarising the available observations.
@@ -213,7 +216,7 @@ class DataStore(object):
         """
         scheme = self.scheme
 
-        if scheme == 'hess':
+        if scheme == 'HESS':
             filename = _make_filename_hess_scheme(obs_id, filetype)
         else:
             raise ValueError('Invalid scheme: {}'.format(scheme))
@@ -249,8 +252,6 @@ class DataStore(object):
         """
         table = self.index_table
 
-        table = ObservationTable(table)
-
         if selection:
             table = table.select_observations(selection)
 
@@ -278,3 +279,95 @@ class DataStore(object):
                                    ''.format(obs_id, filename))
 
         return file_available
+
+
+def convert_obs_list_format_to_gammapy(obs_list, scheme):
+    """Convert oservation list from supported formats to Gammapy format.
+
+    This script calls the corresponding format converter, depending
+    on the value of the **scheme** parameter, in order to make
+    observation lists from different experiments comply to the format
+    described in :ref:`dataformats_observation_lists`.
+
+    Curretly only the H.E.S.S. scheme is supported.
+
+    Parameters
+    ----------
+    obs_list : `~astropy.table.Table`
+        Observation list to convert.
+    scheme : {'HESS'}
+        Scheme for file naming and organisation.
+        Format of the input observation list to convert.
+
+    Returns
+    -------
+    obs_table : `~gammapy.obs.ObservationTable`
+        Converted observation list.
+    """
+    if scheme == 'HESS':
+        return _convert_obs_list_hess_to_gammapy(obs_list)
+    else:
+        raise ValueError('Invalid scheme: {}'.format(scheme))
+
+
+def _convert_obs_list_hess_to_gammapy(obs_list):
+    """Convert oservation list from H.E.S.S. format to Gammapy format.
+
+    The H.E.S.S. observation lists are produced following a different
+    format as Gammapy. This function should convert the
+    format to the one described in :ref:`dataformats_observation_lists`.
+
+    This script renames the columns and edits the header keywords of
+    the observation lists. Columns and header keywords not defined in
+    :ref:`dataformats_observation_lists` are left unchanged.
+
+    This function has no tests implemented, since the H.E.S.S. data
+    is private.
+
+    Parameters
+    ----------
+    obs_list : `~astropy.table.Table`
+        Observation list to convert.
+
+    Returns
+    -------
+    obs_table : `~gammapy.obs.ObservationTable`
+        Converted observation list.
+    """
+    try:
+        observatory = obs_list.meta['OBSERVATORY_NAME']
+        if observatory == 'HESS':
+            # already converted
+            return obs_list
+        else:
+            s_error = "Expected OBSERVATORY_NAME = HESS, "
+            s_error += "but got {}".format(obs_list.meta['OBSERVATORY_NAME'])
+            raise ValueError(s_error)
+    except KeyError:
+        # needs conversion
+        pass
+
+    obs_table = ObservationTable(obs_list)
+
+    # rename column names
+    renames = [('RA_PNT', 'RA'),
+               ('DEC_PNT', 'DEC'),
+               ('ALT_PNT', 'ALT'),
+               ('AZ_PNT', 'AZ'),
+               ('MUONEFF', 'MUON_EFFICIENCY'),
+               ('ONTIME', 'TIME_OBSERVATION'),
+               ('LIVETIME', 'TIME_LIVE'),
+               ('TSTART', 'TIME_START '),
+               ('TSTOP', 'TIME_STOP'),
+               ('TRGRATE', 'TRIGGER_RATE'),
+               ('MEANTEMP', 'MEAN_TEMPERATURE'),
+               ('TELLIST', 'TEL_LIST')
+               ]
+    for name, new_name in renames:
+        obs_table.rename_column(name, new_name)
+
+    # add missing header entries
+    obs_table.meta['OBSERVATORY_NAME'] = 'HESS'
+    obs_table.meta['TIME_FORMAT'] = 'relative'
+
+    return obs_table

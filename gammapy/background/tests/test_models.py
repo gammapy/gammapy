@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
@@ -10,6 +11,7 @@ from astropy.modeling.models import Gaussian1D
 from ...background import GaussianBand2D, CubeBackgroundModel
 from ... import datasets
 from ...datasets.make import make_test_bg_cube_model
+from ...obs import ObservationTable
 
 
 try:
@@ -17,12 +19,6 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
-
-try:
-    import matplotlib
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -59,94 +55,82 @@ class TestGaussianBand2D():
 class TestCubeBackgroundModel():
 
     @remote_data
-    def test_read_fits_table(self):
+    def test_read(self):
 
-        # test shape of bg cube when reading a file
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        # test shape and scheme of cubes when reading a file
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
                                      location='remote')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
-        assert len(bg_cube_model.background.shape) == 3
-        assert bg_cube_model.background.shape == (len(bg_cube_model.energy_bins) - 1,
-                                                  len(bg_cube_model.dety_bins) - 1,
-                                                  len(bg_cube_model.detx_bins) - 1)
-
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
-    def test_image_plot(self):
-
-        bg_cube_model = make_test_bg_cube_model()
-
-        # test bg rate values plotted for image plot of energy bin
-        # conaining E = 2 TeV
-        energy = Quantity(2., 'TeV')
-        ax_im = bg_cube_model.plot_image(energy)
-        # get plot data (stored in the image)
-        image_im = ax_im.get_images()[0]
-        plot_data = image_im.get_array()
-
-        # get data from bg model object to compare
-        energy_bin = bg_cube_model.find_energy_bin(energy)
-        model_data = bg_cube_model.background[energy_bin]
-
-        # test if both arrays are equal
-        assert_allclose(plot_data, model_data.value)
-
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
-    def test_spectrum_plot(self):
-
-        bg_cube_model = make_test_bg_cube_model()
-
-        # test bg rate values plotted for spectrum plot of detector bin
-        # conaining det (0, 0) deg (center)
-        det = Angle([0., 0.], 'degree')
-        ax_spec = bg_cube_model.plot_spectrum(det)
-        # get plot data (stored in the line)
-        plot_data = ax_spec.get_lines()[0].get_xydata()
-
-        # get data from bg model object to compare
-        det_bin = bg_cube_model.find_det_bin(det)
-        model_data = bg_cube_model.background[:, det_bin[1], det_bin[0]]
-
-        # test if both arrays are equal
-        assert_allclose(plot_data[:, 1], model_data.value)
+        cubes = [bg_cube_model.counts_cube,
+                 bg_cube_model.livetime_cube,
+                 bg_cube_model.background_cube]
+        schemes = ['bg_counts_cube', 'bg_livetime_cube', 'bg_cube']
+        for cube, scheme in zip(cubes, schemes):
+            assert len(cube.data.shape) == 3
+            assert cube.data.shape == (len(cube.energy_edges) - 1,
+                                       len(cube.coordy_edges) - 1,
+                                       len(cube.coordx_edges) - 1)
+            assert cube.scheme == scheme
 
     @remote_data
-    def test_write_fits_table(self, tmpdir):
+    def test_write(self, tmpdir):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
                                      location='remote')
-        bg_model_1 = CubeBackgroundModel.read(filename, format='table')
+        bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
 
         outfile = str(tmpdir.join('cubebackground_table_test.fits'))
-        bg_model_1.write(outfile, format='table')
+        bg_cube_model_1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read(outfile, format='table')
-        assert_quantity_allclose(bg_model_2.background,
-                                 bg_model_1.background)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
+        bg_cube_model_2 = CubeBackgroundModel.read(outfile, format='table')
+        cubes1 = [bg_cube_model_1.counts_cube,
+                  bg_cube_model_1.livetime_cube,
+                  bg_cube_model_1.background_cube]
+        cubes2 = [bg_cube_model_2.counts_cube,
+                  bg_cube_model_2.livetime_cube,
+                  bg_cube_model_2.background_cube]
+        for cube1, cube2 in zip(cubes1, cubes2):
+            assert_quantity_allclose(cube2.data,
+                                     cube1.data)
+            assert_quantity_allclose(cube2.coordx_edges,
+                                     cube1.coordx_edges)
+            assert_quantity_allclose(cube2.coordy_edges,
+                                     cube1.coordy_edges)
+            assert_quantity_allclose(cube2.energy_edges,
+                                     cube1.energy_edges)
+
+    def test_define_binning(self):
+
+        obs_table = ObservationTable()
+        obs_table['OBS_ID'] = np.arange(100)
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table=obs_table,
+                                                                fits_path='/tmp',
+                                                                do_not_fill=False,
+                                                                method='default')
+
+        assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
+
+    #def test_fill_events(self):
+    # fill_events is tested (high-level) by
+    # gammapy/scripts/tests/test_make_bg_cube_models.py
 
     @remote_data
-    def test_read_write_fits_image(self, tmpdir):
+    def test_smooth(self):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
                                      location='remote')
-        bg_model_1 = CubeBackgroundModel.read(filename, format='table')
+        bg_cube_model1 = CubeBackgroundModel.read(filename, format='table')
 
-        outfile = str(tmpdir.join('cubebackground_image_test.fits'))
-        bg_model_1.write(outfile, format='image')
+        bg_cube_model2 = bg_cube_model1
 
-        # test if values are correct in the saved file: compare both files
-        bg_model_2 = CubeBackgroundModel.read(outfile, format='image')
-        assert_quantity_allclose(bg_model_2.background,
-                                 bg_model_1.background)
-        assert_quantity_allclose(bg_model_2.detx_bins,
-                                 bg_model_1.detx_bins)
-        assert_quantity_allclose(bg_model_2.dety_bins,
-                                 bg_model_1.dety_bins)
-        assert_quantity_allclose(bg_model_2.energy_bins,
-                                 bg_model_1.energy_bins)
+        # reset background and fill again
+        bg_cube_model2.background_cube.data = np.array([0])
+        bg_cube_model2.background_cube.data = bg_cube_model2.counts_cube.data.copy()
+        bg_cube_model2.smooth()
+        bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data
+        bg_cube_model2.background_cube.divide_bin_volume()
+        bg_cube_model2.background_cube.set_zero_level()
+
+        # test: the bg should be the same as at the beginning
+        assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()
