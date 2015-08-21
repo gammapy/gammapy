@@ -77,7 +77,8 @@ def common_sky_region_select_test_routines(obs_table, selection):
         ang_distance = skycoord.separation(center)
         assert (ang_distance >= radius_eff).all()
 
-    # the sum of number of entries in both selections should be the total number of entries
+    # the sum of number of entries in both selections should be the total
+    # number of entries
     assert len(selected_obs_table) + len(inv_selected_obs_table) == len(obs_table)
 
 
@@ -241,7 +242,7 @@ def test_ObservationGroups(tmpdir):
     # check grouping for 1 group
     group_id = 10
     obs_table_grouped_10 = obs_groups.get_group_of_observations(obs_table_grouped,
-                                                               group_id)
+                                                                group_id)
     alt_min = obs_groups.obs_groups_table['ALT_MIN'][group_id]
     alt_max = obs_groups.obs_groups_table['ALT_MAX'][group_id]
     az_min = obs_groups.obs_groups_table['AZ_MIN'][group_id]
@@ -254,10 +255,10 @@ def test_ObservationGroups(tmpdir):
     assert (n_tels == obs_table_grouped_10['N_TELS']).all()
     # check on inverse mask (i.e. all other groups)
     obs_table_grouped_not10 = obs_groups.get_group_of_observations(obs_table_grouped,
-                                                                  group_id,
-                                                                  inverted=True)
+                                                                   group_id,
+                                                                   inverted=True)
     assert (((alt_min > obs_table_grouped_not10['ALT']) |
-            (obs_table_grouped_not10['ALT'] >= alt_max)) |
+             (obs_table_grouped_not10['ALT'] >= alt_max)) |
             ((az_min > obs_table_grouped_not10['AZ']) |
              (obs_table_grouped_not10['AZ'] >= az_max)) |
             (n_tels != obs_table_grouped_not10['N_TELS'])).all()

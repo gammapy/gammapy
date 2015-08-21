@@ -12,6 +12,7 @@ from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..datasets import load_catalog_tevcat
+from ..background import make_bg_cube_model
 
 __all__ = ['make_bg_cube_models',
            'create_bg_observation_list',
@@ -175,7 +176,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
                          lon=sources_coord[i_source].ra,
                          lat=sources_coord[i_source].dec,
                          radius=sources_excl_radius[i_source],
-                         inverted = True,
+                         inverted=True,
                          border=Angle(0., 'degree'))
         observation_table = observation_table.select_observations(selection)
 
@@ -297,7 +298,8 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
         log.info("Processing group: {}".format(group))
 
         # get group of observations
-        observation_table = observation_groups.get_group_of_observations(observation_table_grouped, group)
+        observation_table = observation_groups.get_group_of_observations(observation_table_grouped,
+                                                                         group)
         log.info(observation_table)
 
         # skip bins with no observations
@@ -313,5 +315,7 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
                  '/bg_cube_model_group{}'.format(group)
         log.info("Writing {}".format('{}_table.fits.gz'.format(outfile)))
         log.info("Writing {}".format('{}_image.fits.gz'.format(outfile)))
-        bg_cube_model.write('{}_table.fits.gz'.format(outfile), format='table', clobber=overwrite)
-        bg_cube_model.write('{}_image.fits.gz'.format(outfile), format='image', clobber=overwrite)
+        bg_cube_model.write('{}_table.fits.gz'.format(outfile),
+                            format='table', clobber=overwrite)
+        bg_cube_model.write('{}_image.fits.gz'.format(outfile),
+                            format='image', clobber=overwrite)
