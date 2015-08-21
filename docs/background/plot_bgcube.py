@@ -5,7 +5,7 @@ from astropy.coordinates import Angle
 from gammapy.background import Cube
 from gammapy import datasets
 
-filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
+filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                              location='remote')
 bg_cube_model = Cube.read(filename, format='table', scheme='bg_cube')
 

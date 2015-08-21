@@ -56,3 +56,11 @@ Reference/API
 
 .. automodapi:: gammapy.datasets
     :no-inheritance-diagram:
+
+Sub-pages
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   make_datasets

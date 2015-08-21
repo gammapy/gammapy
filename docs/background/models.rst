@@ -1,13 +1,13 @@
 .. _bg_models:
 
-Background Models
+Background models
 =================
 
 The naming of the models in this section follows the convention from
 :ref:`dataformats_overview`.
 
 The documentation on how to produce background models in Gammapy is
-available at :ref:`background_make_models`.
+available at :ref:`background_make_background_models`.
 
 .. _background_3D:
 
@@ -20,16 +20,44 @@ given in detector coordinates **(DETX, DETY)**, a.k.a.
 **nominal system**. This is a tangential system to the instrument
 during observations.
 
-The `~gammapy.background.CubeBackgroundModel` is used as container class for this model.
-It has methods to read, write and operate the 3D cubes.
+Two classes are used as container for this model:
 
-For the moment, only I/O and visualization methods are implemented.
-A test file is located in the `~gammapy-extra` repository
-(`bg_cube_model_test.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test.fits>`_).
-The file has been produced with `~gammapy.datasets.make_test_bg_cube_model`.
+* The `~gammapy.background.Cube` class is used as base container for
+  cubes. It has generic methods to I/O (read/write) and operate the
+  3D cubes. It also has visualization methods to plot slices/bins of
+  the cubes.
 
-An example script of how to read/write the files and perform some
-simple plots is given in the `examples` directory:
+* The `~gammapy.background.CubeBackgroundModel` class is used to
+  contain and handle cube bacground models.
+  It contais 3 cubes of type `~gammapy.background.Cube`:
+
+    * `~gammapy.background.CubeBackgroundModel.counts_cube`:
+      contains the counts (a.k.a. events) used to fill the model.
+    * `~gammapy.background.CubeBackgroundModel.livetime_cube`:
+      contains the livetime correction used for the model.
+    * `~gammapy.background.CubeBackgroundModel.background_cube`:
+      contains the background model (background rate).
+
+  The class also defines usefull methods to produce the models, such
+  as define binning, fill (histogram) the model or smooth.
+
+Two test files are located in the `~gammapy-extra` repository as
+examples and test benches of these classes:
+
+* `bg_cube_model_test1.fits
+  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test1.fits>`_
+  is a `~gammapy.background.Cube` produced with
+  `~gammapy.datasets.make_test_bg_cube_model`, using a simplified
+  background model.
+
+* `bg_cube_model_test2.fits.gz
+  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test2.fits.gz>`_
+  is a `~gammapy.background.CubeBackgroundModel` produced with
+  `~gammapy.background.make_bg_cube_model`, using dummy data produced
+  with `~gammapy.datasets.make_test_dataset`.
+
+An example script of how to read/write the cubes from file and
+perform some simple plots is given in the `examples` directory:
 :download:`plot_bg_cube_model.py <../../examples/plot_bg_cube_model.py>`
 
 .. literalinclude:: ../../examples/plot_bg_cube_model.py
@@ -46,12 +74,3 @@ More complex plots can be easily produced with a few lines of code:
 
 .. plot:: background/plot_bgcube.py
    :include-source:
-
-There is also a method in the `~gammapy.datasets` module called
-`~gammapy.datasets.make_test_bg_cube_model` for creating test
-`~gammapy.background.CubeBackgroundModel` objects.
-
-In order to compare 2 sets of background cube models, the following
-script in the `examples` directory can be used:
-:download:`plot_bg_cube_model_comparison.py
-<../../examples/plot_bg_cube_model_comparison.py>`

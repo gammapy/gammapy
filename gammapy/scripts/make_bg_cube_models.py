@@ -36,8 +36,9 @@ def main(args=None):
     parser.add_argument('--test', action='store_true',
                         help='If activated, use a subset of '
                         'observations for testing purposes')
-    parser.add_argument('--a-la-michi', action='store_true',
-                        help='If activated, use a subset of '
+    parser.add_argument('--method', type=str, default='default',
+                        choices=['default', 'michi'],
+                        help='Bg cube model calculation method to apply.'
                         'observations for testing purposes')
     parser.add_argument("-l", "--loglevel", default='info',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
@@ -49,7 +50,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, a_la_michi):
+def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, method):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -68,8 +69,6 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, a_la_michi):
     It can take a few minutes to run. For a quicker test, please activate the
     **test** flag.
 
-    TODO: revise doc!!!
-
     Parameters
     ----------
     fitspath : str
@@ -82,8 +81,8 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, a_la_michi):
         If true, run fast (not recomended for analysis).
     test : bool
         If true, run fast (not recomended for analysis).
-    a_la_michi : bool, optional
-        Flag to activate Michael Mayer's bg cube production method.
+    method : {'default', 'michi'}
+        Bg cube model calculation method to apply.
 
     Examples
     --------
@@ -109,7 +108,7 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, a_la_michi):
 
     create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
-    stack_observations(fitspath, outdir, overwrite, a_la_michi)
+    stack_observations(fitspath, outdir, overwrite, method)
 
 
 def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
@@ -263,7 +262,7 @@ def group_observations(outdir, overwrite, test):
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
 
-def stack_observations(fits_path, outdir, overwrite, a_la_michi=False):
+def stack_observations(fits_path, outdir, overwrite, method='default'):
     """Stack events for each observation group (bin) and make background model.
 
     The models are stored into FITS files.
@@ -276,8 +275,8 @@ def stack_observations(fits_path, outdir, overwrite, a_la_michi=False):
         Dir path to store the results.
     overwrite : bool
         If true, run fast (not recomended for analysis).
-    a_la_michi : bool, optional
-        Flag to activate Michael Mayer's bg cube production method.
+    method : {'default', 'michi'}, optional
+        Bg cube model calculation method to apply.
     """
     print()
     print("###############################")
@@ -310,7 +309,7 @@ def stack_observations(fits_path, outdir, overwrite, a_la_michi=False):
             continue # skip the rest
 
         # create bg cube model
-        bg_cube_model = make_bg_cube_model(observation_table, fits_path, a_la_michi)
+        bg_cube_model = make_bg_cube_model(observation_table, fits_path, method)
 
         # save model to file
         outfile = outdir +\

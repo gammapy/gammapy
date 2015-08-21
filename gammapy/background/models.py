@@ -311,27 +311,29 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, observation_table, fits_path, do_not_fill=False, a_la_michi=False):
+    def define_cube_binning(cls, observation_table, fits_path,
+                            do_not_fill=False, method='default'):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
         number of observations.
-        Eventually, the lower boundary of the cube depends on the
-        energy threshold.
+        The binning is slightly altered in case a different method
+        as the *default* one is used. In the *michi* method:
+
+        * Minimum energy (i.e. lower boundary of cube energy
+          binning) is equal to minimum energy threshold of all
+          observations in the group.
 
         Parameters
         ----------
         observation_table : `~gammapy.obs.ObservationTable`
-            Observation list to use for the *a_la_michi* binning.
+            Observation list to use for the *michi* binning.
         fits_path : str
             Path to the data files.
         do_not_fill : bool, optional
             Flag to avoid filling empty data (zeros) in the cubes.
-        a_la_michi : bool, optional
-            Flag to activate Michael Mayer's bg cube production method.
-            Minimum energy (i.e. lower boundary of cube energy
-            binning) equal to minimum energy threshold of all
-            observations in the group.
+        method : {'default', 'michi'}, optional
+            Bg cube model calculation method to apply.
 
         Returns
         -------
@@ -352,7 +354,7 @@ class CubeBackgroundModel(object):
 
         # define cube edges
         energy_min = Quantity(0.1, 'TeV')
-        if a_la_michi:
+        if method == 'michi':
             # minimum energy equal to minimum energy threshold of all
             # observations in the group
             min_energy_threshold = _get_min_energy_threshold(observation_table, fits_path)
