@@ -79,6 +79,8 @@ package_info['package_data'].setdefault(PACKAGENAME, [])
 # Please keep the list in alphabetical order
 entry_points = {}
 entry_points['console_scripts'] = [
+    'gammapy-background-cube = gammapy.scripts.background_cube:main',
+    'gammapy-catalog-query = gammapy.scripts.catalog_query:main',
     'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
     'gammapy-bin-image = gammapy.scripts.bin_image:main',
     'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',

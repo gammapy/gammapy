@@ -222,7 +222,9 @@ class Fermi3FGLObject(object):
     from astropy.units import Quantity
     from gammapy.spectrum import energy_bin_centers_log_spacing
 
-    fermi_cat = fetch_fermi_catalog('3FGL')
+    # Fermi catalog is lazily loaded on first access
+    # and cached at class level (not instance level)
+    fermi_cat = None
 
     x_bins_edges = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'MeV')
 
@@ -234,9 +236,10 @@ class Fermi3FGLObject(object):
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
 
     def __init__(self, source_name):
+        fermi_cat = self.get_fermi_cat()
         self.name_3FGL = source_name
         self.catalog_index = np.where(self.fermi_cat[1].data['Source_Name'] == source_name)[0][0]
-        self.cat_row = self.fermi_cat[1].data[self.catalog_index]
+        self.cat_row = fermi_cat[1].data[self.catalog_index]
         self.ra = self.cat_row['RAJ2000']
         self.dec = self.cat_row['DEJ2000']
         self.glon = self.cat_row['GLON']
@@ -255,23 +258,30 @@ class Fermi3FGLObject(object):
         self.unc_exp_index = self.cat_row['Unc_Exp_Index']
         self.signif = self.cat_row['Signif_Avg']
 
+    @classmethod
+    def get_fermi_cat(cls):
+        if not cls.fermi_cat:
+            cls.fermi_cat = fetch_fermi_catalog('3FGL')
+        return cls.fermi_cat
+
     def plot_spectrum(self, ax=None):
         import matplotlib.pyplot as plt
-        from gammapy.extern.scipy import gmean
-        from astropy.units import Quantity
-        from astropy.modeling.models import PowerLaw1D
+        from gammapy.extern.stats import gmean
+        from astropy.modeling.models import PowerLaw1D, LogParabola1D, ExponentialCutoffPowerLaw1D
 
         ax = plt.gca() if ax is None else ax
 
-        bin_edges1 = np.zeros(0)
-        bin_edges2 = np.zeros(0)
-
-        x_vals = []
-        y_vals = np.zeros(0)
-
-        y_upper = np.zeros(0)
-
         valid_indices = []
+        flux = np.array([self.cat_row[self.y_labels[i]] for i in (range(0,np.size(self.y_labels)))])
+        flux_lower_bound = np.array([self.cat_row["Unc_" + self.y_labels[i]][0] for i in (range(1,np.size(self.y_labels)))])
+        arr1 = np.where(np.isnan(flux) == False)[0]
+        arr2 =np.where(np.isnan(flux_lower_bound) == False)[0]
+        raw_input(arr2)
+
+
+
+        raw_input(flux_lower_bound)
+
         for i in range(0, np.size(self.x_bins_edges) - 1):
 
             flux = self.cat_row[self.y_labels[i]]
@@ -288,34 +298,16 @@ class Fermi3FGLObject(object):
                     #raw_input("=")
 
         y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
-        #y_err_label = np.array([self.cat_row["Unc_" + _] for _ in self.y_labels[valid_indices]])
-        flux_lower_bound = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
         y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
         y_upper = np.array([self.cat_row["Unc_" + i][1] for i in (self.y_labels[j] for j in valid_indices)])
 
         y_lower = y_vals + y_lower
         y_upper = y_vals + y_upper
 
-        #log(y_cens) = log(y_upper) - log(y_lower)
-        #y_cens = np.logspace(y_lower[0], y_upper[0], num=3)
-        #y_cens = []
-        #for i in range(0,np.size(y_lower)):
-        #    y_cens += np.logpsace(y_lower[i], y_upper[i], num=3)[1]
-
-        #raw_input(y_lower[0])
-        #raw_input(y_upper[0])
-        #raw_input(y_cens)
-
-        # y_val - new_y_lower = y_lower
-        #y_lower[-1] = -(y_lower[-1] - y_vals[-1])
-
-
-        # y_val + new_y_upper = y_upper
-        #y_upper[-1] = y_upper[-1] - y_vals[-1]
-
         x_vals = [self.x_cens[i].value for i in valid_indices]
         # x_vals - bin_edge1 = x_bin[i]
-        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
+        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices] #<---------------
+        # bin_edges1 =[(self.x_bins_edges[i]).value for i in valid_indices] #<-----------
         # x_vals + bin_edge2 = x_bin[i + 1]
         bin_edges2 = [(self.x_bins_edges[i+1] - self.x_cens[i]).value for i in valid_indices]
 
@@ -335,16 +327,17 @@ class Fermi3FGLObject(object):
         #raw_input(x_vals.value)
         #raw_input("y_vals:" + str(type(y_vals)))
         #raw_input(x_vals[0])
-        raw_input(y_vals[3])
+        #raw_input(y_vals[3])
         #raw_input(bin_edges1[0])
         #raw_input((bin_edges2[0]))
-        raw_input(y_lower[3])
-        raw_input((y_upper[3]))
-        raw_input(y_cens[3])
+        #raw_input(y_lower[3])
+        #raw_input((y_upper[3]))
+        #raw_input(y_cens[3])
         ax.loglog()
-        #ax.plot(x_vals,y_vals)
 
-        #ax.scatter(x_vals, y_cens)
+        #ax.errorbar(bin_edges1, y_vals,
+        #            yerr=(y_lower, y_upper),
+        #            elinewidth=1, linewidth=0, color='black')
 
         ax.errorbar(x_vals, y_vals,
                     yerr=(y_lower, y_upper),
@@ -355,16 +348,28 @@ class Fermi3FGLObject(object):
                     xerr=(bin_edges1, bin_edges2),
                     elinewidth=1, linewidth=0, color='black')
 
-        if self.spec_type == "PowerLaw":
+        x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
 
-            x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
+        if self.spec_type == "PowerLaw":
 
             y_model = PowerLaw1D(amplitude=self.int_flux,
                                  x_0=self.pivot_en,
                                  alpha=self.spec_index)
-            test = y_model(x_model)
 
-            ax.plot(x_model, test)
+        elif self.spec_type == "LogParabola":
+
+            y_model = LogParabola1D(amplitude=self.int_flux,
+                                    x_0=self.pivot_en,
+                                    alpha=self.spec_index,
+                                    beta = self.beta)
+
+        elif self.spec_type == "PLSuperExpCutoff":
+            y_model = ExponentialCutoffPowerLaw1D(amplitude=self.int_flux,
+                                                  x_0=self.pivot_en,
+                                                  alpha=self.spec_index,
+                                                  x_cutoff = self.cutoff)
+
+        ax.plot(x_model, y_model(x_model))
 
         return ax
 
