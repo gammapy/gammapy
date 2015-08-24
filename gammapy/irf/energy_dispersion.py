@@ -553,6 +553,28 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
 
 class EnergyDispersion2D(object):
     """Offset-dependent energy dispersion matrix.
+
+    Examples
+    --------
+
+    Plot migration histogram for a given offset and true energy
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EnergyDispersion2D
+        from gammapy.datasets import load_edisp2D_fits_table
+        from gammapy.spectrum.energy import Energy 
+        from astropy.coordinates import  Angle
+        edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
+        offset = Angle(0.6, 'deg')
+        energy = Energy(1, 'TeV')
+        edisp2D.plot_migra_hist(offset=offset, energy=energy)
+        plt.xlim(0, 4)
+        plt.ylim(0, 3)
+
+
     """
 
     def __init__(self, etrue_lo, etrue_hi, migra_lo, migra_hi, offset_lo,
@@ -614,10 +636,73 @@ class EnergyDispersion2D(object):
         """
         pass
 
-    def _eval(self, offset=None, energy=None, migra=None):
+    def evaluate(self, offset=None, energy=None, migra=None):
+        """One line docu string
+        """
 
-        val = self._linear(offset.value, migra, np.log10(energy.value))
-        return Quantity(val, self.eff_area.unit)
+        if offset is None:
+            offset = self.offset
+        if energy is None:
+            energy = self.energy
+        if migra is None:
+            migra = self.migra
+
+        if not isinstance(energy, Quantity):
+            raise ValueError("Energy must be a Quantity object.")
+        if not isinstance(offset, Angle):
+            raise ValueError("Offset must be an Angle object.")
+
+        offset = offset.to('degree')
+        energy = energy.to('TeV')
+        
+        val = self._eval(offset=offset, energy=energy, migra=migra)
+
+        return val
+
+    def _eval(self, offset=None, energy=None, migra=None):
+        
+        x = np.asarray(offset.value)
+        y = np.asarray(migra)
+        z = np.asarray(np.log10(energy.value))
+        ax = [x,y,z]
+
+        in_shape = (ax[0].size, ax[1].size, ax[2].size)
+
+        for i,s in enumerate(ax):
+            if ax[i].shape == ():
+                ax[i] = ax[i].reshape(1)
+                
+        pts = [[xx, yy, zz] for xx in ax[0] for yy in ax[1] for zz in ax[2]]
+
+        val_array = self._linear(pts)
+        return val_array.reshape(in_shape).squeeze()
+
+    def plot_migra_hist(self, ax=None, offset=None, energy=None, migra=None, **kwargs):
+        """Plot migration histogram for given offset and true energy.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        if offset is None:
+            val = self.offset
+            offset = Angle(0.5, 'deg')
+
+        if energy is None:
+            energy = Quantity(10, 'TeV')
+            
+        if migra is None:
+            migra = self.migra
+
+        disp = self.evaluate(offset=offset, energy=energy, migra=migra)
+        label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(offset,energy)
+        plt.plot(migra, disp, label=label, **kwargs)
+
+        plt.xlabel('RecoEnergy')
+        plt.ylabel('Probability')
+        plt.legend(loc='upper right')
+        
+        return ax
 
     def _prepare_linear_interpolator(self):
         """Linear interpolation in N dimensions

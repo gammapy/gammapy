@@ -34,6 +34,7 @@ __all__ = ['get_path',
            'load_electron_spectrum',
            'load_arf_fits_table',
            'load_aeff2D_fits_table',
+           'load_edisp2D_fits_table',
            'load_psf_fits_table',
            ]
 
@@ -134,7 +135,6 @@ def load_aeff2D_fits_table():
     """
     filename = get_path('irfs/aeff2D.fits')
     return fits.open(filename)
-
 
 def load_poisson_stats_image(extra_info=False, return_filenames=False):
     """Load Poisson statistics counts image of a Gaussian source on flat background.
