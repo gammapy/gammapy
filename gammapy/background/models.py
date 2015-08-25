@@ -357,7 +357,7 @@ class CubeBackgroundModel(object):
         dety_max = Angle(0.07, 'radian').to('degree')
         detx_min = Angle(-0.07, 'radian').to('degree')
         detx_max = Angle(0.07, 'radian').to('degree')
-        # TODO: the bin edges (at least for X and Y) should depend on
+        # TODO: the bin min/max edges should depend on
         #       the experiment/observatory.
         #       or at least they should be read as parameters
         #       The values here are good for H.E.S.S.
@@ -512,15 +512,7 @@ class CubeBackgroundModel(object):
         # smooth images
 
         # integral of original images
-        dummy_delta_energy = np.zeros_like(self.background_cube.energy_edges[:-1])
-        delta_y = self.background_cube.coordy_edges[1:] - self.background_cube.coordy_edges[:-1]
-        delta_x = self.background_cube.coordx_edges[1:] - self.background_cube.coordx_edges[:-1]
-        # define grid of deltas (i.e. bin widths for each 3D bin)
-        dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
-                                                           delta_x, indexing='ij')
-        bin_area = (delta_y*delta_x).to('sr')
-        integral_image = self.background_cube.data*bin_area
-        integral_image = integral_image.sum(axis=(1, 2))
+        integral_images = self.background_cube.integral_images
 
         # number of times to smooth
         n_counts = self.counts_cube.data.sum()
@@ -553,11 +545,10 @@ class CubeBackgroundModel(object):
                                                                self.background_cube.data.unit)
 
         # integral of smooth images
-        integral_image_smooth = self.background_cube.data*bin_area
-        integral_image_smooth = integral_image_smooth.sum(axis=(1, 2))
+        integral_images_smooth = self.background_cube.integral_images
 
         # scale images to preserve original integrals
 
         # loop over energy bins (i.e. images)
         for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
-            self.background_cube.data[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
+            self.background_cube.data[i_energy] *= (integral_images/integral_images_smooth)[i_energy]

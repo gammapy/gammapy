@@ -17,11 +17,18 @@ from gammapy.obs import ObservationGroups, ObservationGroupAxis
 GRAPH_DEBUG = 0
 SAVE = 0
 
+NORMALIZE = 0 # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
+              # 0: do not normalize
+              # 1: normalize w.r.t. cube integral
+              # 2: normalize w.r.t images integral (normalize each image on its own)
+
 input_dir1 = '/home/mapaz/astropy/working_dir/gammapy_scripts/20150819_ready_to_merge_PR319/bg_cube_models_gammapy_a_la_michi'
 binning_format1 = 'default'
+name1= 'default'
 
 input_dir2 = '/home/mapaz/HESS/fits_data/pa_fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std/background'
 binning_format2 = 'michi'
+name2= 'michi'
 
 # group IDs for comparison
 
@@ -46,7 +53,7 @@ list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, 'bin_edges'),
 obs_groups_michi = ObservationGroups(list_obs_group_axis)
 print("Observation groups 'michi':")
 print(obs_groups_michi.obs_groups_table)
-if SAVE:
+if SAVE and (binning_format1 == 'michi' or binning_format2 == 'michi'):
     outfile = 'bg_observation_groups_michi.ecsv'
     print('Writing {}'.format(outfile))
     obs_groups_michi.write(outfile)
@@ -74,7 +81,7 @@ for alt_id in np.arange(len(altitude_edges) - 1):
 print("lookup table:")
 print(lookup_obs_groups_michi)
 
-if SAVE:
+if SAVE and (binning_format1 == 'michi' or binning_format2 == 'michi'):
     outfile = 'lookup_obs_groups_michi.ecsv'
     print('Writing {}'.format(outfile))
     # `~astropy.io.ascii` always overwrites the file
@@ -140,8 +147,22 @@ def plot_bg_cube_model_comparison():
             *default* format.
             ref: [Mayer2015]_ (section 5.2.4)
 
+    * **name1**, **name2**: name to use for plot labels/legends.
+
     * **group_ids_selection**: groups to compare; if empty: use all
       groups
+
+    * **NORMALIZE**: normalization to use for the models. If
+      activate, model 1 is normalized to match model 2. This can be
+      useful, when comparing reco models w.r.t. true ones. Options:
+          * *0*: do not normalize
+          * *1*: normalize w.r.t. cube integral
+          * *2*: normalize w.r.t images integral; each image (i.e.
+            energy bin/slice) is normalized independently; this
+            option can alter the spectral shape of the bg rate, but
+            is is the way how smoothing method *michi* normalizes the
+            background cube model, hence it is necessary to compare
+            to those models that use that particular smoothing
 
     * **SAVE**: set to 1 (True) to save the output:
           * comparison plots as png
@@ -204,6 +225,19 @@ def plot_bg_cube_model_comparison():
             bg_cube_model2 = CubeBackgroundModel.read(filename2,
                                                       format='table').background_cube
 
+            # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
+            if NORMALIZE == 1:
+                # normalize w.r.t. cube integral
+                integral1 = bg_cube_model1.integral
+                integral2 = bg_cube_model2.integral
+                bg_cube_model1.data *= integral2/integral1
+            elif NORMALIZE == 2:
+                # normalize w.r.t images integral (normalize each image on its own)
+                integral_images1 = bg_cube_model1.integral_images
+                integral_images2 = bg_cube_model2.integral_images
+                for i_energy in np.arange(len(bg_cube_model1.energy_edges) - 1):
+                    bg_cube_model1.data[i_energy] *= (integral_images2/integral_images1)[i_energy]
+
             # compare binning
             print("energy edges 1", bg_cube_model1.energy_edges)
             print("energy edges 2", bg_cube_model2.energy_edges)
@@ -225,14 +259,14 @@ def plot_bg_cube_model_comparison():
             #  cols: same file
             #bg_cube_model1.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 0])
             bg_cube_model1.plot_image(energy=Quantity(5., 'TeV'), ax=axes[0, 0])
-            axes[0, 0].set_title("model 1: {}".format(axes[0, 0].get_title()))
+            axes[0, 0].set_title("{0}: {1}".format(name1, axes[0, 0].get_title()))
             bg_cube_model1.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1, 0])
-            axes[1, 0].set_title("model 1: {}".format(axes[1, 0].get_title()))
+            axes[1, 0].set_title("{0}: {1}".format(name1, axes[1, 0].get_title()))
             #bg_cube_model2.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 1])
             bg_cube_model2.plot_image(energy=Quantity(5., 'TeV'), ax=axes[0, 1])
-            axes[0, 1].set_title("model 2: {}".format(axes[0, 1].get_title()))
+            axes[0, 1].set_title("{0}: {1}".format(name2, axes[0, 1].get_title()))
             bg_cube_model2.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1, 1])
-            axes[1, 1].set_title("model 2: {}".format(axes[1, 1].get_title()))
+            axes[1, 1].set_title("{0}: {1}".format(name2, axes[1, 1].get_title()))
 
             # plot spectra
             #  rows: similar det bin
@@ -240,12 +274,12 @@ def plot_bg_cube_model_comparison():
             bg_cube_model1.plot_spectrum(coord=Angle([0., 0.], 'degree'),
                                          ax=axes[0, 2],
                                          style_kwargs=dict(color='blue',
-                                                           label='model 1'))
+                                                           label=name1))
             spec_title1 = axes[0, 2].get_title()
             bg_cube_model2.plot_spectrum(coord=Angle([0., 0.], 'degree'),
                                          ax=axes[0, 2],
                                          style_kwargs=dict(color='red',
-                                                           label='model 2'))
+                                                           label=name2))
             spec_title2 = axes[0, 2].get_title()
             if spec_title1 != spec_title2:
                 s_error = "Expected same det binning, but got "
@@ -258,12 +292,12 @@ def plot_bg_cube_model_comparison():
             bg_cube_model1.plot_spectrum(coord=Angle([2., 2.], 'degree'),
                                          ax=axes[1, 2],
                                          style_kwargs=dict(color='blue',
-                                                           label='model 1'))
+                                                           label=name1))
             spec_title1 = axes[1, 2].get_title()
             bg_cube_model2.plot_spectrum(coord=Angle([2., 2.], 'degree'),
                                          ax=axes[1, 2],
                                          style_kwargs=dict(color='red',
-                                                           label='model 2'))
+                                                           label=name2))
             spec_title2 = axes[1, 2].get_title()
             if spec_title1 != spec_title2:
                 s_error = "Expected same det binning, but got "
@@ -277,8 +311,7 @@ def plot_bg_cube_model_comparison():
                 plt.show() # wait until image is closed
 
             if SAVE:
-                outfile = "bg_cube_model_comparison_alt{0}_az{1}.png".format(i_alt,
-                                                                             i_az)
+                outfile = "bg_cube_model_comparison_group{}.png".format(group)
                 print('Writing {}'.format(outfile))
                 fig.savefig(outfile)
 

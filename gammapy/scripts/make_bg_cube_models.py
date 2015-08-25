@@ -311,8 +311,7 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
         bg_cube_model = make_bg_cube_model(observation_table, fits_path, method)
 
         # save model to file
-        outfile = outdir +\
-                 '/bg_cube_model_group{}'.format(group)
+        outfile = outdir + '/bg_cube_model_group{}'.format(group)
         log.info("Writing {}".format('{}_table.fits.gz'.format(outfile)))
         log.info("Writing {}".format('{}_image.fits.gz'.format(outfile)))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile),
