@@ -809,6 +809,38 @@ class Cube(object):
             plt.close(fig)
         return ax
 
+    @property
+    def integral(self):
+        """Integral of the cube (`~astropy.units.Quantity`)"""
+        delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
+        delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
+        delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]
+        # define grid of deltas (i.e. bin widths for each 3D bin)
+        delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
+                                                     delta_x, indexing='ij')
+        bin_volume = delta_energy*(delta_y*delta_x).to('sr')
+        integral = self.data*bin_volume
+
+        return integral.sum()
+
+    @property
+    def integral_images(self):
+        """Integral of the cube images (`~astropy.units.Quantity`)
+
+        Calculate the integral of each energy bin (slice) in the
+        cube. Returns an array of integrals.
+        """
+        dummy_delta_energy = np.zeros_like(self.energy_edges[:-1])
+        delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
+        delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]
+        # define grid of deltas (i.e. bin widths for each 3D bin)
+        dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
+                                                           delta_x, indexing='ij')
+        bin_area = (delta_y*delta_x).to('sr')
+        integral_images = self.data*bin_area
+
+        return integral_images.sum(axis=(1, 2))
+
     def divide_bin_volume(self):
         """Divide cube by the bin volume."""
         delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]

@@ -83,32 +83,55 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
-                                datestart=None, dateend=None,
+                                az_range=Angle([0, 360], 'degree'),
+                                alt_range=Angle([45, 90], 'degree'),
+                                date_range=(Time('2010-01-01T00:00:00',
+                                                 format='isot', scale='utc'),
+                                            Time('2015-01-01T00:00:00',
+                                                 format='isot', scale='utc')),
                                 use_abs_time=False,
+                                n_tels_range=(3, 4),
                                 random_state='random-seed'):
     """Make a test observation table.
 
+    Create an observation table following a specific pattern.
+
     For the moment, only random observation tables are created.
-    If `datestart` and `dateend` are specified, the starting time
+
+    The observation table is created according to a specific
+    observatory, and randomizing the observation pointingpositions
+    in a specified az-alt range.
+
+    If a `date_range` is specified, the starting time
     of the observations will be restricted to the specified interval.
     These parameters are interpreted as date, the precise hour of the
     day is ignored, unless the end date is closer than 1 day to the
     starting date, in which case, the precise time of the day is also
     considered.
 
+    In addition, a range can be specified for the number of telescopes.
+
     Parameters
     ----------
-    observatory_name : str
+    observatory_name : str, optional
         Name of the observatory; a list of choices is given in
         `~gammapy.obs.observatory_locations`.
-    n_obs : int
+    n_obs : int, optional
         Number of observations for the obs table.
-    datestart : `~astropy.time.Time`, optional
-        Starting date for random generation of observation start time.
-    dateend : `~astropy.time.Time`, optional
-        Ending date for random generation of observation start time.
+    az_range : `~astropy.coordinatesAngle`, optional
+        Azimuth angle range (start, end) for random generation of
+        observation pointing positions.
+    alt_range : `~astropy.coordinatesAngle`, optional
+        Altitude angle range (start, end) for random generation of
+        observation pointing positions.
+    date_range : `~astropy.time.Time`, optional
+        Date range (start, end) for random generation of observation
+        start time.
     use_abs_time : bool, optional
         Use absolute UTC times instead of [MET]_ seconds after the reference.
+    n_tels_range : int, optional
+        Range (start, end) of number of telescopes participating in
+        the observations.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -160,10 +183,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     # more than 1 day)
     #  - considering start of astronomical day at midday: implicit in setting
     # the start of the night, when generating random night hours
-    if datestart == None:
-        datestart = Time('2010-01-01T00:00:00', format='isot', scale='utc')
-    if dateend == None:
-        dateend = Time('2015-01-01T00:00:00', format='isot', scale='utc')
+    datestart = date_range[0]
+    dateend = date_range[1]
     time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
     time_start = Time(time_start, format='mjd', scale='utc')
 
@@ -210,10 +231,10 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table['TIME_STOP'] = time_stop
 
     # az, alt
-    # random points in a sphere above 45 deg altitude
+    # random points in a portion of sphere; default: above 45 deg altitude
     az, alt = sample_sphere(size=len(obs_id),
-                            lon_range=Angle([0, 360], 'degree'),
-                            lat_range=Angle([45, 90], 'degree'),
+                            lon_range=az_range,
+                            lat_range=alt_range,
                             random_state=random_state)
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
@@ -244,10 +265,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     # positions
 
     # number of telescopes
-    # random integers between 3 and 4
-    n_tels_min = 3
-    n_tels_max = 4
-    n_tels = random_state.randint(n_tels_min, n_tels_max + 1, len(obs_id))
+    # random integers in a specified range; default: between 3 and 4
+    n_tels = random_state.randint(n_tels_range[0], n_tels_range[1] + 1, len(obs_id))
     obs_table['N_TELS'] = n_tels
 
     # muon efficiency
@@ -392,7 +411,13 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
 
 def make_test_dataset(fits_path, overwrite=False,
                       observatory_name='HESS', n_obs=10,
-                      datestart=None, dateend=None,
+                      az_range=Angle([0, 360], 'degree'),
+                      alt_range=Angle([45, 90], 'degree'),
+                      date_range=(Time('2010-01-01T00:00:00',
+                                       format='isot', scale='utc'),
+                                  Time('2015-01-01T00:00:00',
+                                       format='isot', scale='utc')),
+                      n_tels_range=(3, 4),
                       random_state='random-seed'):
     """
     Make a test dataset and save it to disk.
@@ -424,10 +449,18 @@ def make_test_dataset(fits_path, overwrite=False,
         `~gammapy.obs.observatory_locations`.
     n_obs : int
         Number of observations for the obs table.
-    datestart : `~astropy.time.Time`, optional
-        Starting date for random generation of observation start time.
-    dateend : `~astropy.time.Time`, optional
-        Ending date for random generation of observation start time.
+    az_range : `~astropy.coordinatesAngle`, optional
+        Azimuth angle range (start, end) for random generation of
+        observation pointing positions.
+    alt_range : `~astropy.coordinatesAngle`, optional
+        Altitude angle range (start, end) for random generation of
+        observation pointing positions.
+    date_range : `~astropy.time.Time`, optional
+        Date range (start, end) for random generation of observation
+        start time.
+    n_tels_range : int, optional
+        Range (start, end) of number of telescopes participating in
+        the observations.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -451,8 +484,11 @@ def make_test_dataset(fits_path, overwrite=False,
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,
                                                     n_obs=n_obs,
-                                                    datestart=datestart, dateend=dateend,
+                                                    az_range=az_range,
+                                                    alt_range=alt_range,
+                                                    date_range=date_range,
                                                     use_abs_time=False,
+                                                    n_tels_range=n_tels_range,
                                                     random_state=random_state)
 
     # save observation list to disk

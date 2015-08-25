@@ -126,8 +126,7 @@ def test_select_time_box():
     dateend = Time('2012-01-01T02:30:00', format='isot', scale='utc')
     random_state = np.random.RandomState(seed=0)
     obs_table_time = make_test_observation_table(n_obs=10,
-                                                 datestart=datestart,
-                                                 dateend=dateend,
+                                                 date_range=(datestart, dateend),
                                                  use_abs_time=True,
                                                  random_state=random_state)
 
