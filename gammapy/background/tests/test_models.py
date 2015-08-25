@@ -106,7 +106,6 @@ class TestCubeBackgroundModel():
         obs_table['OBS_ID'] = np.arange(100)
         bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table=obs_table,
                                                                 fits_path='/tmp',
-                                                                do_not_fill=False,
                                                                 method='default')
 
         assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
