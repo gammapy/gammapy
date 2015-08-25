@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate test data (see README.md) with Sherpa"""
 from __future__ import print_function, division
+import json
+
 import numpy as np
 
 from astropy.modeling.models import Gaussian2D, Const2D
@@ -17,6 +19,7 @@ amplitude = 1E3 / (2 * np.pi * sigma ** 2)
 source = Gaussian2D(amplitude, 99, 99, sigma, sigma)
 background = Const2D(1)
 model = source + background
+
 
 # Define data shape
 shape = (200, 200)
@@ -49,4 +52,18 @@ hdu.writeto('background.fits.gz', clobber=True)
 
 hdu = fits.PrimaryHDU(data=source(x, y).astype('float32'), header=header)
 hdu.writeto('source.fits.gz', clobber=True)
+
+exposure = 1E12 * np.ones(shape)
+hdu = fits.PrimaryHDU(data=exposure.astype('float32'), header=header)
+hdu.writeto('exposure.fits.gz', clobber=True)
+
+
+# save psf info in json format
+psf = {}
+psf['psf1'] = {'ampl': 1, 'fwhm': sigma_psf * 2 * np.sqrt(2 * np.log(2))}
+psf['psf2'] = {'ampl': 0, 'fwhm': 1E-5}
+psf['psf3'] = {'ampl': 0, 'fwhm': 1E-5}
+
+with open('psf.json', 'w') as f:
+    json.dump(psf, f, indent=4)
 
