@@ -254,7 +254,7 @@ class CubeBackgroundModel(object):
                 raise ValueError("Invalid format {}.".format(format))
 
     @classmethod
-    def set_cube_binning(cls, detx_edges, dety_edges, energy_edges, do_not_fill=False):
+    def set_cube_binning(cls, detx_edges, dety_edges, energy_edges):
         """
         Set cube binning from function parameters.
 
@@ -268,8 +268,6 @@ class CubeBackgroundModel(object):
             Y coordinate.
         energy_edges : `~astropy.units.Quantity`
             Energy bin edges vector (low and high) for the cubes.
-        do_not_fill : bool, optional
-            Flag to avoid filling empty data (zeros) in the cubes.
 
         Returns
         -------
@@ -303,8 +301,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, observation_table, fits_path,
-                            do_not_fill=False, method='default'):
+    def define_cube_binning(cls, observation_table, fits_path, method='default'):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -322,8 +319,6 @@ class CubeBackgroundModel(object):
             Observation list to use for the *michi* binning.
         fits_path : str
             Path to the data files.
-        do_not_fill : bool, optional
-            Flag to avoid filling empty data (zeros) in the cubes.
         method : {'default', 'michi'}, optional
             Bg cube model calculation method to apply.
 
@@ -378,7 +373,7 @@ class CubeBackgroundModel(object):
         delta_x = (detx_max - detx_min)/bg_cube_shape[2]
         detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
 
-        return cls.set_cube_binning(detx_edges, dety_edges, energy_edges, do_not_fill)
+        return cls.set_cube_binning(detx_edges, dety_edges, energy_edges)
 
     def fill_events(self, observation_table, fits_path):
         """Fill events and compute corresponding livetime.
