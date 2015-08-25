@@ -89,3 +89,11 @@ described above, using a simulated dataset using the tools from
 for producing the simulated dataset and the true background cube
 models, the reconstructed ones produced with
 ``gammapy-make-bg-cube-models`` should match the true ones.
+
+The example script :download:`make_bg_cube_models_true-reco_test.py
+<../../examples/make_bg_cube_models_true-reco_test.py>` can be used
+to produce a true cube bg model and a reco cube bg model using the
+same model (except for absolute normalization). The models can be
+used to test the cube bg model production and can be compared to each
+other using the :download:`plot_bg_cube_model_comparison.py
+<../../examples/plot_bg_cube_model_comparison.py>` example script.
