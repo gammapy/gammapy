@@ -1,3 +1,12 @@
+"""
+Script to produce true and reco background cube models.
+
+The script uses the same model (except for absolute normalization) to
+produce a true cube bg model and a reco cube bg model. The models can
+be used to test the cube bg model production and can be compared to
+each other using the plot_bg_cube_model_comparison.py example script.
+"""
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals) # python 2 as python 3
 import os
@@ -166,12 +175,11 @@ def make_reco_model():
     scheme = SCHEME
     data_store = DataStore(dir=fits_path, scheme=scheme)
     observation_table = data_store.make_observation_table()
-
-    # 3. build bg model
     outfile = outdir + '/bg_observation_table_group{}.fits.gz'.format(group_id)
     print("Writing {}".format(outfile))
     observation_table.write(outfile, overwrite=overwrite)
 
+    # 3. build bg model
     method = METHOD
     bg_cube_model = make_bg_cube_model(observation_table=observation_table,
                                        fits_path=fits_path,
@@ -207,4 +215,3 @@ if __name__ == '__main__':
 
     make_true_model()
     make_reco_model()
-    # use plot_bg_cube_model_comparison.py for comparing the models
