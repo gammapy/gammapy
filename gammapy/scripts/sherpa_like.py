@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 log = logging.getLogger(__name__)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['sherpa_image_like']
 
@@ -23,9 +23,13 @@ def main(args=None):
                         'values for fit of Gaussians)')
     parser.add_argument('--roi', type=str, default=None,
                         help='Region of interest (ROI) file name (ds9 reg format)')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     parser.add_argument('outfile', type=str, default='fit_results.json',
                         help='Output JSON file with fit results')
     args = parser.parse_args(args)
+    set_up_logging_from_args(args)
     sherpa_image_like(**vars(args))
 
 
@@ -104,6 +108,6 @@ def sherpa_image_like(counts,
     # Save model image
     sherpa.astro.ui.set_par('background.ampl', 0)
     sherpa.astro.ui.notice2d()
-    logging.info('Writing model.fits')
+    log.info('Writing model.fits')
     sherpa.astro.ui.save_model('model.fits', clobber=True)
 
