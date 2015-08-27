@@ -18,7 +18,7 @@ except ImportError:
     HAS_SHERPA = False
 
 
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('not HAS_SHERPA')
 def test_sherpa_like(tmpdir):
     # load test data
     filenames = load_poisson_stats_image(extra_info=True, return_filenames=True)
