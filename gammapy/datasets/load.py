@@ -156,13 +156,15 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     """
     if extra_info:
         out = dict()
-        for name in ['counts', 'model', 'source', 'background']:
+        for name in ['counts', 'model', 'source', 'background', 'exposure']:
             filename = get_path('poisson_stats_image/{0}.fits.gz'.format(name))
             if return_filenames:
                 out[name] = filename
             else:
                 data = fits.getdata(filename)
                 out[name] = data.astype('float64')
+        if return_filenames:
+            out['psf'] = get_path('poisson_stats_image/psf.json')
     else:
         filename = get_path('poisson_stats_image/counts.fits.gz')
         if return_filenames:

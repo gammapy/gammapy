@@ -62,7 +62,7 @@ class SherpaMultiGaussPSF(object):
         # elif isinstance(source, HESS):
             # Get pars dict by from HESS object
             # self.pars = source.to_sherpa()
-        elif isinstance(source, str):
+        elif isinstance(source, (str, unicode)):
             # Assume it is a JSON filename
             fh = open(source)
             self.pars = json.load(fh)
