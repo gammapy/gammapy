@@ -1,38 +1,57 @@
-1.0 (Fall 2015, unreleased)
----------------------------
+
+.. _gammapy_1p0_release:
+
+1.0 (Fall 2015 or spring 2016, unreleased)
+------------------------------------------
 
 Summary
 +++++++
 
-Gammapy 1.0 will be released in fall 2015.
+Gammapy 1.0 will be released in fall 2015 or spring 2016.
 
 Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
+.. _gammapy_0p5_release:
 
-0.4 (September 2015, unreleased)
---------------------------------
+0.5 (November 2, 2015, unreleased)
+----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released some time in September 2015.
+Gammapy 0.5 will be released on November 2, 2015.
+
+For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
+
+.. _gammapy_0p4_release:
+
+0.4 (October 5, 2015, unreleased)
+---------------------------------
+
+Summary
++++++++
+
+Gammapy 0.4 will be released on October 5, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
 Contributors
 ++++++++++++
 
+- Manuel Paz Arribas
+- Christoph Deil
 - Axel Donath
 
 Pull requests
 +++++++++++++
 
 - Make background cube models [#319] (Manuel Paz Arribas)
-- Production of true/reco bg cube models should use the same model. [#335] (Manuel Paz Arribas)
+- Production of true/reco bg cube models should use the same model [#335] (Manuel Paz Arribas)
 - Fix TS map boundary handling [#332] (Axel Donath)
-- Fix sherpa morphology fitting script [#337] (Axel Donath) 
+- Fix sherpa morphology fitting script [#337] (Axel Donath)
+- Remove PoissonLikelihoodFitter [#339] (Christoph Deil)
 
 .. _gammapy_0p3_release:
 
