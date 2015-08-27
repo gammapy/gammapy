@@ -5,6 +5,5 @@ Statistics utility functions and classes
 from .significance import *
 from .data import *
 from .fit_statistics import *
-from .fitting import *
 from .poisson import *
 from .utils import *
