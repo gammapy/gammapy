@@ -15,7 +15,7 @@ from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
 from ..time import time_ref_from_dict
-#from . import utils
+from . import utils
 
 __all__ = ['EventList',
            'EventListDataset',
