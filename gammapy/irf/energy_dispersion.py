@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import numpy as np
 from astropy.io import fits
 from ..spectrum.energy import *
-from ..irf.utils import *
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 
@@ -11,6 +10,7 @@ __all__ = ['EnergyDispersion', 'np_to_rmf', 'gauss_energy_dispersion_matrix', 'E
 
 
 class EnergyDispersion(object):
+
     """Energy dispersion matrix.
 
     Parameters
@@ -158,7 +158,7 @@ class EnergyDispersion(object):
             if l.field('N_GRP'):
                 m_start = 0
                 for k in range(l.field('N_GRP')):
-                    pdf_matrix[i, l.field('F_CHAN')[k] : l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
+                    pdf_matrix[i, l.field('F_CHAN')[k]: l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
 
         pdf_threshold = header['LO_THRES']
@@ -383,27 +383,27 @@ def np_to_rmf(rm, erange, ebounds, minprob,
     # Create RMF FITS table extension from data
     tbhdu = fits.new_table(
         [fits.Column(name='ENERG_LO',
-                      format='1E',
-                      array=energy_lo,
-                      unit='TeV'),
+                     format='1E',
+                     array=energy_lo,
+                     unit='TeV'),
          fits.Column(name='ENERG_HI',
-                      format='1E',
-                      array=energy_hi,
-                      unit='TeV'),
+                     format='1E',
+                     array=energy_hi,
+                     unit='TeV'),
          fits.Column(name='N_GRP',
-                       format='1I',
-                       array=n_grp),
+                     format='1I',
+                     array=n_grp),
          fits.Column(name='F_CHAN',
-                       format='PI()',
-                       array=f_chan),
+                     format='PI()',
+                     array=f_chan),
          fits.Column(name='N_CHAN',
-                       format='PI()',
-                       array=n_chan),
+                     format='PI()',
+                     array=n_chan),
          fits.Column(name='MATRIX',
-                       format='PE(()',
-                       array=matrix)
+                     format='PE(()',
+                     array=matrix)
          ]
-        )
+    )
 
     # Write FITS extension header
 
@@ -449,18 +449,18 @@ def np_to_rmf(rm, erange, ebounds, minprob,
     # Create EBOUNDS FITS table extension from data
     tbhdu2 = fits.new_table(
         [fits.Column(name='CHANNEL',
-                       format='1I',
-                       array=np.arange(len(ebounds) - 1)),
+                     format='1I',
+                     array=np.arange(len(ebounds) - 1)),
          fits.Column(name='E_MIN',
-                      format='1E',
-                      array=ebounds[:-1],
-                      unit='TeV'),
+                     format='1E',
+                     array=ebounds[:-1],
+                     unit='TeV'),
          fits.Column(name='E_MAX',
-                      format='1E',
-                      array=ebounds[1:],
-                      unit='TeV')
+                     format='1E',
+                     array=ebounds[1:],
+                     unit='TeV')
          ]
-        )
+    )
 
     chan_min, chan_max, chan_n = 0, rm.shape[0] - 1, rm.shape[0]
 
@@ -545,13 +545,13 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
 
     return pdf_matrix
 
-    #hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
+    # hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
     #                     telescope=telescope, instrument=instrument)
-    #return hdu_list
-
+    # return hdu_list
 
 
 class EnergyDispersion2D(object):
+
     """Offset-dependent energy dispersion matrix.
 
     Examples
@@ -565,14 +565,31 @@ class EnergyDispersion2D(object):
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDispersion2D
         from gammapy.datasets import load_edisp2D_fits_table
-        from gammapy.spectrum.energy import Energy 
-        from astropy.coordinates import  Angle
         edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
-        offset = Angle(0.6, 'deg')
-        energy = Energy(1, 'TeV')
-        edisp2D.plot_migra_hist(offset=offset, energy=energy)
+        edisp2D.plot_migration()
         plt.xlim(0, 4)
-        plt.ylim(0, 3)
+
+
+    Plot evolution of bias and resolution as a function of true energy
+    for a given offset
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from gammapy.irf import EnergyDispersion2D
+        from gammapy.datasets import load_edisp2D_fits_table
+        from gammapy.spectrum.energy import Energy
+        from astropy.coordinates import Angle
+        edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
+        migra = np.linspace(0.1,2,80)
+        energy = Energy.equal_log_spacing(0.13,60,60,'TeV')
+        offset = Angle([0.554], 'deg')
+        edisp2D.plot_bias(offset=offset, energy=energy, migra=migra)
+        plt.xscale('log')
+
+    Write RMF fits table
 
 
     """
@@ -584,14 +601,15 @@ class EnergyDispersion2D(object):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
             raise ValueError("Offsets must be Angle objects.")
-                
+
         self.migra_lo = migra_lo
         self.migra_hi = migra_hi
         self.offset_lo = offset_lo
         self.offset_hi = offset_hi
         self.dispersion = dispersion
 
-        self.energy = EnergyBounds.from_lower_and_upper_bounds(etrue_lo, etrue_hi)
+        self.ebounds = EnergyBounds.from_lower_and_upper_bounds(etrue_lo, etrue_hi)
+        self.energy = self.ebounds.log_centers
         self.offset = (offset_hi + offset_lo) / 2
         self.migra = (migra_hi + migra_lo) / 2
 
@@ -605,6 +623,7 @@ class EnergyDispersion2D(object):
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             ``ENERGY DISPERSION`` extension.
+            
         """
 
         data = hdu.data
@@ -631,54 +650,128 @@ class EnergyDispersion2D(object):
         hdulist = fits.open(filename)
         return cls.from_fits(hdulist['ENERGY DISPERSION'])
 
-    def to_energy_dispersion(self, offset, energy):
-        """Evaluate at a given offset and return energy dispersion.
-        """
-        pass
-
-    def evaluate(self, offset=None, energy=None, migra=None):
-        """One line docu string
+    def evaluate(self, offset=None, e_true=None, migra=None):
+        """Probability for a given offset, true energy, and migration
         """
 
         if offset is None:
             offset = self.offset
-        if energy is None:
-            energy = self.energy
+        if e_true is None:
+            e_true = self.energy
         if migra is None:
             migra = self.migra
 
-        if not isinstance(energy, Quantity):
+        if not isinstance(e_true, Quantity):
             raise ValueError("Energy must be a Quantity object.")
         if not isinstance(offset, Angle):
             raise ValueError("Offset must be an Angle object.")
 
         offset = offset.to('degree')
-        energy = energy.to('TeV')
-        
-        val = self._eval(offset=offset, energy=energy, migra=migra)
+        e_true = e_true.to('TeV')
+
+        val = self._eval(offset=offset, e_true=e_true, migra=migra)
 
         return val
 
-    def _eval(self, offset=None, energy=None, migra=None):
-        
+    def _eval(self, offset=None, e_true=None, migra=None):
+
         x = np.asarray(offset.value)
         y = np.asarray(migra)
-        z = np.asarray(np.log10(energy.value))
-        ax = [x,y,z]
+        z = np.asarray(np.log10(e_true.value))
+        ax = [x, y, z]
 
         in_shape = (ax[0].size, ax[1].size, ax[2].size)
 
-        for i,s in enumerate(ax):
+        for i, s in enumerate(ax):
             if ax[i].shape == ():
                 ax[i] = ax[i].reshape(1)
-                
+
+        # There is a bug here that could be investigated
+        # When energy[0] is given to the interpolator is out if bounds
+        # This does not happen when an array (e.g. energy[0:2]) is given
+
         pts = [[xx, yy, zz] for xx in ax[0] for yy in ax[1] for zz in ax[2]]
 
         val_array = self._linear(pts)
         return val_array.reshape(in_shape).squeeze()
 
-    def plot_migra_hist(self, ax=None, offset=None, energy=None, migra=None, **kwargs):
-        """Plot migration histogram for given offset and true energy.
+    def to_energy_dispersion(self, e_true=None, e_reco=None, offset=None):
+        """Detector response R(Delta E_reco, Delta E_true)
+
+        Probability to reconstruct an energy in a given true energy band
+        in a given reconstructed energy band
+
+        Parameters
+        ----------
+        e_true : `~gammapy.spectrum.energy.EnergyBounds`, None
+            True energy axis
+        e_reco : `~gammapy.spectrum.energy.EnergyBounds`
+            Reconstructed energy axis
+        offset : `~astropy.coordonates.Angle`
+            Offset
+
+        Returns
+        -------
+        edisp : `~gammapy.irf.energy_dispersion.EnergyDispersion`
+            Energy disperion matrix
+        """
+
+        if e_reco is None:
+            raise ValueError("Reconstruced energy binning needed")
+
+        if e_true is None:
+            e_true = self.ebounds[1:]
+
+        energy = e_true.log_centers
+
+        rm = []
+
+        for ener in energy:
+            vec = self.get_response(e_true=ener, e_reco=e_reco, offset=offset)
+            rm.append(vec)
+
+        return EnergyDispersion(rm, e_true.value, e_reco.value)
+
+    def get_response(self, offset, e_true, e_reco=None):
+        """Detector response R(Delta E_reco, E_true)
+
+        Probability to reconstruct a given true energy in a given reconstructed
+        energy band
+
+        Parameters
+        ----------
+        e_true : `~gammapy.spectrum.energy.Energy`
+            True energy axis
+        e_reco : `~gammapy.spectrum.energy.EnergyBounds`, None
+            Reconstructed energy axis
+        offset : `~astropy.coordonates.Angle`
+            Offset
+
+        Returns
+        -------
+        rv : `~np.ndarray`
+            Redistribution vector
+        """
+
+        if e_reco is None:
+            e_reco = EnergyBounds.from_lower_and_upper_bounds(
+                self.migra_lo * e_true, self.migra_hi * e_true)
+            migra = self.migra
+
+        else:
+            center = e_reco.log_centers
+            migra = center / e_true
+
+        band = e_reco.bands
+
+        val = self.evaluate(offset=offset, energy=e_true, migra=migra)
+        rv = (val / e_true) * band
+
+        return rv.value
+
+    def plot_migration(self, ax=None, offset=None, energy=None,
+                       migra=None, **kwargs):
+        """Plot energy dispersion for given offset and true energy.
         """
         import matplotlib.pyplot as plt
 
@@ -686,32 +779,57 @@ class EnergyDispersion2D(object):
 
         if offset is None:
             val = self.offset
-            offset = Angle(0.5, 'deg')
-
+            offset = Angle([1], 'deg')
         if energy is None:
-            energy = Quantity(10, 'TeV')
-            
+            energy = Quantity([0.2, 10], 'TeV')
         if migra is None:
             migra = self.migra
 
-        disp = self.evaluate(offset=offset, energy=energy, migra=migra)
-        label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(offset,energy)
-        plt.plot(migra, disp, label=label, **kwargs)
+        for ener in energy:
+            for off in offset:
+                disp = self.evaluate(offset=off, energy=ener, migra=migra)
+                label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
+                plt.plot(migra, disp, label=label, **kwargs)
 
-        plt.xlabel('RecoEnergy')
+        plt.xlabel('E_Reco / E_True')
         plt.ylabel('Probability')
         plt.legend(loc='upper right')
-        
+
+        return ax
+
+    def plot_bias(self, ax=None, offset=None, energy=None,
+                  migra=None, **kwargs):
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        if offset is None:
+            offset = Angle([1], 'deg')
+        if energy is None:
+            energy = self.energy
+        if migra is None:
+            migra = self.migra
+
+        z = self.evaluate(offset=offset, energy=energy, migra=migra)
+        x = energy.value
+        y = migra
+
+        plt.pcolor(x, y, z)
+
         return ax
 
     def _prepare_linear_interpolator(self):
         """Linear interpolation in N dimensions
+
+        Values outside the bounds are set to 0
         """
         from scipy.interpolate import RegularGridInterpolator
 
         x = self.offset
         y = self.migra
-        z = np.log10(self.energy.log_centers.value)
+        z = np.log10(self.energy.value)
         data = self.dispersion
 
-        self._linear = RegularGridInterpolator((x, y, z), data)
+        self._linear = RegularGridInterpolator(
+            (x, y, z), data, bounds_error=False, fill_value=0)
