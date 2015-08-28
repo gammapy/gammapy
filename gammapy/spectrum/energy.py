@@ -209,10 +209,8 @@ class EnergyBounds(Energy):
         
         Parameters
         ----------
-        lower : `~astropy.units.Quantity`, float
-            Lowest energy bin
-        upper : `~astropy.units.Quantity`, float
-            Highest energy bin
+        lower,upper : `~astropy.units.Quantity`, float
+            Lowest and highest energy bin
         unit : `~astropy.units.UnitBase`, str, None
             Energy units
         """

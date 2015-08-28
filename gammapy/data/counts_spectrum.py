@@ -3,7 +3,7 @@ from __future__ import (print_function)
 
 import numpy as np
 from astropy import log
-from ..spectrum.energy import *
+from ..spectrum.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
 
@@ -15,18 +15,20 @@ class CountsSpectrum(object):
     Parameters
     ----------
 
-    counts: `~numpy.array`, list
+    counts : `~numpy.array`, list
         Counts
-    energy: `~gammapy.spectrum.Energy`, `~gammapy.spectrum.EnergyBounds`.
+    energy : `~gammapy.spectrum.Energy`, `~gammapy.spectrum.EnergyBounds`.
         Energy axis
+    livetime : float
+        Livetime of the dataset
 
     Examples
     --------
 
     .. code-block:: python
     
-        from gammapy.spectrum import *
-        from gammapy.data import *
+        from gammapy.spectrum import Energy, EnergyBounds
+        from gammapy.data import CountsSpectrum
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV') 
         counts = [6,3,8,4,9,5,9,5,5,1]
         spec = CountsSpectrum(counts, ebounds)
@@ -69,7 +71,7 @@ class CountsSpectrum(object):
 
         Parameters
         ----------
-        hdu: `~astropy.io.fits.BinTableHDU`
+        hdu : `~astropy.io.fits.BinTableHDU`
             ``SPECTRUM`` extensions.
         """
         pass
@@ -83,10 +85,9 @@ class CountsSpectrum(object):
 
         Parameters
         ----------
-        event_list: 
-            `~astropy.io.fits.BinTableHDU, `gammapy.data.EventListDataSet`,
-            `gammapy.data.EventList`, str (filename)
-        bins: `gammapy.spectrum.energy.EnergyBounds`
+        event_list : `~astropy.io.fits.BinTableHDU, `gammapy.data.EventListDataSet`,
+                     `gammapy.data.EventList`, str (filename)
+        bins : `gammapy.spectrum.energy.EnergyBounds`
             Energy bin edges
         """
 
@@ -104,7 +105,7 @@ class CountsSpectrum(object):
         return cls(val, energy, livetime)
 
 
-    def to_pha(self, **kwargs):
+    def to_pha(self):
         """Output OGIP pha file
         
         Returns
