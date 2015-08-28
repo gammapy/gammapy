@@ -191,6 +191,15 @@ class EnergyBounds(Energy):
         
         return self[:-1]
 
+    @property
+    def bands(self):
+        """Width of the energy bins
+        """
+        
+        upper = self.upper_bounds
+        lower = self.lower_bounds
+        return upper-lower
+
 
     @classmethod
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None):

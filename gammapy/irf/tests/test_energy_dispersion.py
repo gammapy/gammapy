@@ -23,7 +23,7 @@ def test_EnergyDispersion2D():
     off_node = 3
     m_node = 5
     offset = edisp.offset[off_node]
-    energy = edisp.energy.log_centers[e_node]
+    energy = edisp.energy[e_node]
     migra = edisp.migra[m_node]
     actual = edisp.evaluate(offset, energy, migra)
     desired = edisp.dispersion[off_node, m_node, e_node]
@@ -32,7 +32,7 @@ def test_EnergyDispersion2D():
 
     # Check that values between node make sense
     #THINK ABOUT WHAT MAKES SENSE
-    energy2 = edisp.energy.log_centers[e_node + 1]
+    energy2 = edisp.energy[e_node + 1]
     upper = edisp.evaluate(offset, energy, migra)
     lower = edisp.evaluate(offset, energy2, migra)
     e_val = (energy + energy2) / 2
