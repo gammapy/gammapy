@@ -145,7 +145,7 @@ def fc_find_confidence_interval_poisson(mu, background, x_bins, cl):
 
     rank = stats.rankdata(-r, method='dense')
 
-    index_array = ny.arange(x_bins.size)
+    index_array = np.arange(x_bins.size)
 
     rank_sorted, index_array_sorted = zip(*sorted(zip(rank, index_array)))
 
