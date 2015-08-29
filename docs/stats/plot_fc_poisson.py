@@ -27,13 +27,16 @@ DistributionsScaled = []
 
 for mu in MuBins:
     dist = stats.poisson(mu+fBackground)
-    distributions_scaled.append(dist.pmf(XBins))
+    DistributionsScaled.append(dist.pmf(XBins))
 
 ConfidenceBelt = fc_construct_confidence_belt_pdf(DistributionsScaled, fCL)
 
 LowerLimitNum, UpperLimitNum = fc_get_upper_and_lower_limit(MuBins, XBins, ConfidenceBelt)
 
 fc_fix_upper_and_lower_limit(UpperLimitNum, LowerLimitNum)
+
+fig = plt.figure()
+ax  = fig.add_subplot(111)
 
 plt.plot(UpperLimitNum, MuBins, marker='.', ls='-',color='red')
 plt.plot(LowerLimitNum, MuBins, marker='.', ls='-',color='red')
@@ -44,7 +47,7 @@ plt.xticks(range(15))
 plt.yticks(range(15))
 ax.set_xlabel(r'Measured n')
 ax.set_ylabel(r'Signal Mean $\mu$')
-plz.axis([0, 15, 0, 15])
+plt.axis([0, 15, 0, 15])
 
 plt.savefig("fc_poisson_numerical.png")
 plt.close()
@@ -59,8 +62,8 @@ for mu in mu_bins:
 
 fc_find_confidence_interval_poisson(UpperLimitAna, LowerLimitAna)
 
-fig = pylab.figure()
-ax = fig.add_subplot(111)
+fig = plt.figure()
+ax  = fig.add_subplot(111)
 
 plt.plot(UpperLimitAna, MuBins, marker='.', ls='-',color='red')
 plt.plot(LowerLimitAna, MuBins, marker='.', ls='-',color='red')
@@ -71,7 +74,7 @@ plt.xticks(range(15))
 plt.yticks(range(15))
 ax.set_xlabel(r'Measured n')
 ax.set_ylabel(r'Signal Mean $\mu$')
-plz.axis([0, 15, 0, 15])
+plt.axis([0, 15, 0, 15])
 
 plt.savefig("fc_poisson_analytical.png")
 plt.close()
