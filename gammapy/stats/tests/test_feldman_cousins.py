@@ -26,7 +26,7 @@ from ...stats import (
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_confidence_interval_gauss():
 
-    fSigma = 1
+    fSigma  = 1
     fMuMin  = 0
     fMuMax  = 8
     fMuStep = 100
@@ -58,3 +58,35 @@ def test_confidence_interval_poisson():
     LowerLimit, UpperLimit = fc_find_confidence_interval_poisson(MuBins[-1], fBackground, XBins, fCL)
     assert_allclose(LowerLimit, 42)
     assert_allclose(UpperLimit, 66)
+
+
+@pytest.mark.skipif('not HAS_SCIPY')
+def test_numerical_confidence_interval():
+
+    from scipy import stats
+
+    fBackground  = 3.0
+    fStepWidthMu = 0.005
+    fMuMin       = 0
+    fMuMax       = 50
+    fNBinsX      = 100
+    fCL          = 0.90
+
+    XBins  = np.arange(0, fNBinsX)
+    MuBins = np.linspace(fMuMin, fMuMax, fMuMax/fStepWidthMu + 1, endpoint=True)
+
+    DistributionsScaled = []
+
+    for mu in MuBins:
+        dist = stats.poisson(mu+fBackground)
+        DistributionsScaled.append(dist.pmf(XBins))
+
+    ConfidenceBelt = fc_construct_confidence_belt_pdfs(DistributionsScaled, fCL)
+
+    LowerLimit, UpperLimit, _ = fc_get_upper_and_lower_limit(MuBins, XBins, ConfidenceBelt)
+
+    fc_fix_upper_and_lower_limit(UpperLimit, LowerLimit)
+
+    MeasuredX = 3
+
+    #assert_allclose(fc_find_limit(MeasuredX, UpperLimit, MuBins), 2.30)

@@ -32,7 +32,7 @@ for mu in MuBins:
 
 ConfidenceBelt = fc_construct_confidence_belt_pdfs(DistributionsScaled, fCL)
 
-LowerLimitNum, UpperLimitNum = fc_get_upper_and_lower_limit(MuBins, XBins, ConfidenceBelt)
+LowerLimitNum, UpperLimitNum, _ = fc_get_upper_and_lower_limit(MuBins, XBins, ConfidenceBelt)
 
 fc_fix_upper_and_lower_limit(UpperLimitNum, LowerLimitNum)
 

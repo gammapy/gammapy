@@ -208,12 +208,12 @@ def fc_construct_confidence_belt_pdfs(matrix, alpha):
     # Set the rank to 1 and add probability
     for i in range(number_mus):
         distributions_re_scaled[i][largest_entry[i]] = 1
-        summed_propability[i]  += np.sum(numpy.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0))
+        summed_propability[i]  += np.sum(np.where(distributions_re_scaled[i] == 1, distributions_scaled[i], 0))
         distributions_scaled[i] = np.where(distributions_re_scaled[i] == 1, 1, distributions_scaled[i])
 
     # Identify next largest entry not yet ranked. While there are entries
     # smaller than 1, some bins don't have a rank yet.
-    while numpy.amin(distributions_re_scaled) < 1:
+    while np.amin(distributions_re_scaled) < 1:
         # For each mu, this is the largest rank attributed so far.
         largest_rank = np.amax(distributions_re_scaled, axis=1)
         # For each mu, this is the largest entry that is not yet a rank.
@@ -336,14 +336,14 @@ def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True)
 
     Returns
     -------
-    limit : array-like
+    limit : double
         The Feldman Cousins upper limit
     """
 
     limit = 0
 
     if do_upper_edge:
-        previous_x = numpy.nan
+        previous_x = np.nan
         next_value = False
         identical = True
         x_values = x_values_input
@@ -365,8 +365,8 @@ def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True)
                 next_value = True
             previous_x = current_x
     else:
-        x_values = numpy.flipud(x_values_input)
-        y_values = numpy.flipud(y_values_input)
+        x_values = np.flipud(x_values_input)
+        y_values = np.flipud(y_values_input)
         for i in range(len(x_values)):
             current_x = x_values[i]
             if x_value >= current_x:
@@ -425,11 +425,11 @@ def fc_construct_confidence_belt(distribution_dict, bins, alpha):
 
     # Histogram gets rid of the last bin, so add one extra
     bin_width = bins[1] - bins[0]
-    new_bins = numpy.concatenate((bins, numpy.array([bins[-1]+bin_width])), axis=0)
+    new_bins = np.concatenate((bins, np.array([bins[-1]+bin_width])), axis=0)
 
     # Histogram and normalise each distribution so it is a real PDF
     for mu, distribution in iter(sorted(distribution_dict.iteritems())):
-        entries = numpy.histogram(distribution, bins=new_bins)[0]
+        entries = np.histogram(distribution, bins=new_bins)[0]
         integral = float(sum(entries))
         distributions_scaled.append(entries/integral)
 
