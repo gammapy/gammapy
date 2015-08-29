@@ -30,7 +30,7 @@ for mu in MuBins:
     dist = dist.pdf(XBins)
     DistributionsScaled.append(dist/sum(dist))
 
-ConfidenceBelt = fc_construct_confidence_belt_pdf(DistributionsScaled, fCL)
+ConfidenceBelt = fc_construct_confidence_belt_pdfs(DistributionsScaled, fCL)
 
 LowerLimitNum, UpperLimitNum = fc_get_upper_and_lower_limit(MuBins, XBins, ConfidenceBelt)
 
