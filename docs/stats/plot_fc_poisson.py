@@ -57,7 +57,7 @@ for mu in mu_bins:
    UpperLimitAna.append(goodChoice[0])
    LowerLimitAna.append(goodChoice[1])
 
-fc_find_confidence_interval_poissonUpperLimitAna, LowerLimitAna)
+fc_find_confidence_interval_poisson(UpperLimitAna, LowerLimitAna)
 
 fig = pylab.figure()
 ax = fig.add_subplot(111)

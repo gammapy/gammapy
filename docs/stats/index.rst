@@ -79,6 +79,14 @@ with the Li \& Ma formula:
 
 TODO: More examples.
 
+Using `gammapy.stats`
+=====================
+
+.. toctree::
+   :maxdepth: 1
+
+   feldman_cousins
+
 Reference/API
 =============
 
