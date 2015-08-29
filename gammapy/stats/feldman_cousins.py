@@ -238,7 +238,7 @@ def fc_construct_confidence_belt_pdfs(matrix, alpha):
     return distributions_scaled
 
 
-def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot = False):
+def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval):
     """Find upper and lower limit from confidence interval.
 
     Parameters
@@ -249,8 +249,6 @@ def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot =
         The bins of the x distribution
     confidence_interval : array-like
         The output of construct_confidence_belt_PDFs.
-    do_plot : bool
-        Draws the x values into the current canvas
 
     Returns
     -------
@@ -258,25 +256,26 @@ def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot =
         Feldman Cousins upper limit
     lower_limit : array-like
         Feldman Cousins lower limit
+    x_values: array-like
+        All the points that are inside the confidence interval
     """
 
     upper_limit = []
     lower_limit = []
+    x_values    = []
 
     number_mu     = len(mu_bins)
     number_bins_x = len(x_bins)
 
-    import matplotlib.pylab as plt
-
     for mu in range(number_mu):
-        x_values = []
         upper_limit.append(-1)
         lower_limit.append(-1)
+        x_values.append([])
         for x in range(number_bins_x):
             #This point lies in the confidence interval
             if confidence_interval[mu][x] == 1:
                 x_value = x_bins[x]
-                x_values.append(x_value)
+                x_values[-1].append(x_value)
                 # Upper limit is the first point where this condition is true
                 if upper_limit[-1] == -1:
                     upper_limit[-1] = x_value
@@ -285,10 +284,8 @@ def fc_get_upper_and_lower_limit(mu_bins, x_bins, confidence_interval, do_plot =
                     lower_limit[-1] = x_value
                 else:
                     lower_limit[-1] = x_bins[x + 1]
-        if do_plot:
-            plt.plot(x_values, [mu_bins[mu] for i in range(len(x_values))], marker='.', ls='',color='black')
 
-    return upper_limit, lower_limit
+    return upper_limit, lower_limit, x_values
 
 
 def fc_fix_upper_and_lower_limit(upper_limit, lower_limit):
