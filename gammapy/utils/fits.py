@@ -9,6 +9,7 @@ __all__ = ['get_hdu',
            'get_table_hdu',
            'fits_table_to_pandas',
            'table_to_fits_table',
+           'fits_table_to_table',
            ]
 
 
