@@ -14,6 +14,7 @@ def main(args=None):
     parser.add_argument('querytype',
                         choices=['info', 'lightcurve', 'spectrum'],
                         help='The query type: info, lightcurve, or spectrum')
+    args = parser.parse_args(args)
     catalog_query(**vars(args))
 
 def catalog_query(catalog, source, querytype):
