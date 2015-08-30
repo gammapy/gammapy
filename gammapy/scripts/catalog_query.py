@@ -21,10 +21,12 @@ def catalog_query(catalog, source, querytype):
 
     TODO: explain.
     """
-    from gammapy.datasets import fermi
+    #from gammapy.datasets import fermi
 
     if (catalog=='3FGL'):
-        catalog_object = fermi.Fermi3FGLObject(source)
+        #catalog_object = fermi.Fermi3FGLObject(source)
+        raise NotImplementedError
+
 
     if querytype == 'info':
         #print(source)
