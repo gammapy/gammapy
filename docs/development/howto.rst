@@ -122,7 +122,7 @@ class.
 Python 2 and 3 support
 ----------------------
 
-We support Python 2.7 and 3.3 or later using a single code base.
+We support Python 2.7 and 3.4 or later using a single code base.
 This is the strategy adopted by most scientific Python projects and a good starting point to learn about it is
 `here <http://python3porting.com/noconv.html>`__ and
 `here <http://astropy.readthedocs.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
@@ -137,6 +137,9 @@ The decision to drop Python 2.6 and 3.2 support was made in August 2014 just bef
 based on a few scientific Python user surveys on the web that show that only a small minority are still
 using such an old version, so that it's not worth the developer and maintainer effort to test
 these old versions and to find workarounds for their missing features or bugs.
+
+Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
+weren't available for testing on travis-ci.
 
 .. _development-wipe_readthedocs:
 

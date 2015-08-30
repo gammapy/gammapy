@@ -1,137 +1,105 @@
-language: python
+#
+# This travis-ci build matrix config is a modified copy of the one from Astropy
+#
 
-python:
-    - 2.7
-    - 3.3
-    - 3.4
-    # This is just for "egg_info".  All other builds are explicitly given in the matrix
+
+# We can't use `language: python` here because it's not supported on Mac.
+# But that's OK ... the language here is irrelevant because we use conda
+# to install our own Python.
+language: c
+
+os:
+    - linux
+
+# This is a signal to travis-ci to use the new build infrastructure
+sudo: false
+
+addons:
+  apt:
+    packages: &default_apt
+      - graphviz
+      - texlive-latex-extra
+      - dvipng
+
 env:
     global:
-        # The following versions are the 'default' for tests, unless
-        # overidden underneath. They are defined here in order to save having
-        # to repeat them for all configurations.
+        # Set defaults to avoid repeating in most cases
         - NUMPY_VERSION=1.9
-        - ASTROPY_VERSION=stable
-        - CONDA_INSTALL='conda install -c astropy-ci-extras --yes'
-        - PIP_INSTALL='pip install'
-        - INSTALL_OPTIONAL=true
+        - ASTROPY_VERSION=1.0
+#        TODO: test against stable Sherpa once 4.8 is released
+#        - SHERPA_VERSION=stable
+        - OPTIONAL_DEPS=true
+        - MAIN_CMD='python setup.py'
+
     matrix:
-        - SETUP_CMD='egg_info'
+        - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
+        - PYTHON_VERSION=3.3 SETUP_CMD='egg_info'
+        - PYTHON_VERSION=3.4 SETUP_CMD='egg_info'
+
 
 matrix:
+
+    # Don't wait for allowed failures
+    fast_finish: true
+
     include:
 
-        # Do a coverage test in Python 2 with Numpy 1.8,
-        # because that's the only build where Sherpa is available
-        - python: 2.7
-          env: NUMPY_VERSION=1.8 SETUP_CMD='test --coverage'
+        # Try MacOS X
+        - os: osx
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test' OPTIONAL_DEPS=false
 
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - python: 2.7
-          env: SETUP_CMD='build_sphinx -w'
+        # Run tests
+        # Coverage is measured on Python 2 (where Sherpa is available)
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V --coverage'
+        - os: linux
+          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
 
-        # Try Astropy development version
-        - python: 2.7
-          env: ASTROPY_VERSION=development SETUP_CMD='test'
-        - python: 3.3
-          env: ASTROPY_VERSION=development SETUP_CMD='test'
+        # Build docs
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
+        - os: linux
+          env: PYTHON_VERSION=3.4 SETUP_CMD='build_sphinx -w'
 
-        # Try all python versions with the latest numpy
-        - python: 2.7
-          env: SETUP_CMD='test'
-        - python: 3.3
-          env: SETUP_CMD='test'
-        - python: 3.4
-          env: SETUP_CMD='test'
+        # Test with Astropy dev version
+        - os: linux
+          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
+        - os: linux
+          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
 
-        # Try with optional dependencies disabled
-        - python: 2.7
-          env: SETUP_CMD='test' INSTALL_OPTIONAL=false
-        - python: 3.4
-          env: SETUP_CMD='test' INSTALL_OPTIONAL=false
+        # Test with with optional dependencies disabled
+        - os: linux
+          env: PYTHON_VERSION=2.7 OPTIONAL_DEPS=false SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=3.4 OPTIONAL_DEPS=false SETUP_CMD='test -V'
 
-        # Try older numpy versions
-        - python: 2.7
-          env: NUMPY_VERSION=1.8 SETUP_CMD='test'
-        - python: 2.7
-          env: NUMPY_VERSION=1.7 SETUP_CMD='test'
-        - python: 2.7
-          env: NUMPY_VERSION=1.6 SETUP_CMD='test'
+        # Test with old numpy versions
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.6 SETUP_CMD='test -V'
 
-before_install:
-
-    # Use utf8 encoding. Should be default, but this is insurance against
-    # future changes
-    - export PYTHONIOENCODING=UTF8
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b
-    - export PATH=/home/travis/miniconda/bin:$PATH
-    - conda update --yes conda
-
-    # UPDATE APT-GET LISTINGS
-    - sudo apt-get update
-
-    # DOCUMENTATION DEPENDENCIES
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
-
-    # Make sure that interactive matplotlib backends work
-    - export DISPLAY=:99.0
-    - sh -e /etc/init.d/xvfb start
-
-    # Make sure matplotlib uses PyQT not PySide
-    - export QT_API=pyqt
+    # You can move builds that temporarily fail because of some non-Gammapy issue here
+    # Please add a link to a GH issue that tracks the upstream issue.
+    allow_failures:
+      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=dev SETUP_CMD='test'
+      # Tests for old Numpy versions currently don't work:
+      # https://github.com/astropy/conda-builder-affiliated/issues/40
+      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
+      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
+      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.6 SETUP_CMD='test -V'
 
 install:
-
-    # CONDA
-    - conda create --yes -n test -c astropy-ci-extras python=$TRAVIS_PYTHON_VERSION
-    - source activate test
-
-    # CORE DEPENDENCIES
-    - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION pytest pip Cython jinja2; fi
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL pytest-xdist; fi
-
-    # ASTROPY
-    - if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == development ]]; then $PIP_INSTALL git+http://github.com/astropy/astropy.git#egg=astropy; fi
-    - if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == stable ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION astropy; fi
-
-    # OPTIONAL DEPENDENCIES
-    # Here you can add any dependencies your package may have. You can use
-    # conda for packages available through conda, or pip for any other
-    # packages. You should leave the `numpy=$NUMPY_VERSION` in the `conda`
-    # install since this ensures Numpy does not get automatically upgraded.
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $CONDA_INSTALL scipy h5py scikit-image scikit-learn pandas; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL uncertainties; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL photutils; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL wcsaxes; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL aplpy; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL pyregion; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL naima; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/astrofrog/reproject.git#egg=reproject; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/astroplanners/astroplan.git#egg=astroplan; fi
-    - if [[ $SETUP_CMD != egg_info ]] && $INSTALL_OPTIONAL; then $PIP_INSTALL git+http://github.com/spacetelescope/gwcs.git#egg=gwcs; fi
-    # For Sherpa conda package, see https://github.com/sherpa/sherpa/pull/31
-    - if $OPTIONAL_DEPS && [[ $SETUP_CMD != egg_info ]] && [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] && [[ $NUMPY_VERSION == 1.8 ]]; then $CONDA_INSTALL -c https://conda.binstar.org/cxc sherpa; fi
-    # For iminuit conda package, see https://github.com/iminuit/iminuit/issues/127#issuecomment-100921747
-    - if $OPTIONAL_DEPS && [[ $SETUP_CMD != egg_info ]] && [[ $TRAVIS_PYTHON_VERSION == 2.7 ]] && [[ $NUMPY_VERSION == 1.8 ]]; then $CONDA_INSTALL -c https://conda.binstar.org/fabianrost iminuit; fi
-
-
-    # DOCUMENTATION DEPENDENCIES
-    # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that
-    # this matplotlib will *not* work with py 3.x, but our sphinx build is
-    # currently 2.7, so that's fine
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION Sphinx matplotlib scipy; fi
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_INSTALL linkchecker; fi
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_INSTALL aplpy; fi
-
-    # COVERAGE DEPENDENCIES
-    - if [[ $SETUP_CMD == 'test --coverage' ]]; then $PIP_INSTALL coverage coveralls; fi
+    - source .continuous-integration/travis/setup_environment_$TRAVIS_OS_NAME.sh
 
 script:
-    - python setup.py $SETUP_CMD
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then linkchecker docs/_build/html; fi
+    - $MAIN_CMD $SETUP_CMD
 
 after_success:
-    - if [[ $SETUP_CMD == 'test --coverage' ]]; then coveralls --rcfile='gammapy/tests/coveragerc'; fi
+    - if [[ $SETUP_CMD == 'test -V --coverage' ]]; then coveralls --rcfile='gammapy/tests/coveragerc'; fi
