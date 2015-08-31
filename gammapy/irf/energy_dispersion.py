@@ -173,25 +173,13 @@ class EnergyDispersion(object):
 
         return cls(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
 
-    def write(self, filename, format='RMF'):
-        """Write to file.
+    def write(self, filename, *args, **kwargs):
+        """Write RMF to FITS file.
 
-        Parameters
-        ----------
-        filename : str
-            File name
-        format : {'RMF'}
-            File format
-        pdf_threshold : float
-            Zero suppression threshold for energy distribution matrix
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        if format == 'RMF':
-            self._write_rmf(filename)
-        else:
-            ss = 'Invalid format: {0}.\n'.format(format)
-            ss += 'Available formats: RMF'
-            raise ValueError(ss)
-
+        self.to_fits().writeto(filename, *args, **kwargs)
+        
     def to_fits(self, header=None, energy_unit='TeV'):
         """
         Convert RM to FITS HDU list format.
