@@ -137,6 +137,18 @@ class EventList(Table):
         return Quantity(energy, self.meta['EUNIT'])
 
     @property
+    def target_radec(self):
+        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        lon, lat = self.meta['RA_OBJ'], self.meta['DEC_OBJ']
+        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+
+    @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        lon, lat = self.meta['RA_PNT'], self.meta['DEC_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+
+    @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)"""
         return utils._earth_location_from_dict(self.meta)
@@ -232,8 +244,53 @@ class EventList(Table):
         """
         position = self.radec
         separation = center.separation(position)
-        mask = separation > radius
+        mask = separation < radius
         return self[mask]
+
+    def select_sky_ring(self, center, inner_radius = None, outer_radius = None,
+                        thickness = None):
+        """Select events in sky circle.
+
+        Parameters
+        ----------
+        center : `~astropy.coordinates.SkyCoord`
+            Sky ring center
+        inner_radius : `~astropy.coordinates.Angle`
+            Sky ring inner radius
+        outer_radius : `~astropy.coordinates.Angle`, None
+            Sky ring outer radius
+        inner_radius : `~astropy.coordinates.Angle`
+            Sky ring thinkness
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        
+        if outer_radius is None:
+            if thickness is None or inner_radius is None:
+                raise ValueError("Not enough information specified")
+            else:
+                outer_radius = inner_radius + thickness
+            
+        else:
+            if inner_radius is None:
+                if thickness is None:
+                    raise ValueError("Not enough information specified")
+                else:
+                    inner_radius = outer_radius + thickness
+
+            else:
+                thickness = outer_radius - inner_radius
+
+        position = self.radec
+        separation = center.separation(position)
+        mask1 = inner_radius > separation
+        mask2 = outer_radius < separation
+        mask = mask1 * mask2
+        return self[mask]
+
 
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
         """Select events in sky box.

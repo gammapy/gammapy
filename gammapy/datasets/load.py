@@ -135,7 +135,6 @@ def load_aeff2D_fits_table():
     filename = get_path('irfs/aeff2D.fits')
     return fits.open(filename)
 
-
 def load_poisson_stats_image(extra_info=False, return_filenames=False):
     """Load Poisson statistics counts image of a Gaussian source on flat background.
 

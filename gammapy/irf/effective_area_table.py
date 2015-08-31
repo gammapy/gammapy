@@ -414,7 +414,6 @@ class EffectiveAreaTable2D(object):
         self.eff_area = eff_area.to('m^2')
         self.eff_area_reco = eff_area_reco.to('m^2')
 
-        # actually offset_hi = offset_lo
         self.offset = (offset_hi + offset_lo) / 2
         self.energy = np.sqrt(energ_lo * energ_hi)
 
@@ -433,6 +432,8 @@ class EffectiveAreaTable2D(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``EFFECTIVE AREA`` extension.
         """
+
+        #TODO: READ THRESHOLD
 
         data = hdu_list['EFFECTIVE AREA'].data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
@@ -601,6 +602,8 @@ class EffectiveAreaTable2D(object):
     def _prepare_linear_interpolator(self):
         """Could be generalized for non-radial symmetric input files (N>2)
         """
+        # TODO Replace by scipy.interpolate.RegularGridInterpolator
+        # As in EDISP
 
         from scipy.interpolate import LinearNDInterpolator
 
@@ -614,6 +617,8 @@ class EffectiveAreaTable2D(object):
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)
         """
+
+        #TODO Replace by scipy.ndimage.interpolation.map_coordinates
 
         from scipy.interpolate import RectBivariateSpline
 

@@ -97,3 +97,9 @@ def test_EnergyBounds():
     actual = energy.lower_bounds
     desired = energy[:-1]
     assert_equal(actual, desired)
+
+    lower = [1,3,4,5]
+    upper = [3,4,5,8]
+    actual = EnergyBounds.from_lower_and_upper_bounds(lower, upper, 'TeV')
+    desired = EnergyBounds([1,3,4,5,8], 'TeV')
+    assert_equal(actual, desired)
