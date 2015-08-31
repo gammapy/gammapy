@@ -274,30 +274,18 @@ class Fermi3FGLObject(object):
         ax = plt.gca() if ax is None else ax
 
         valid_indices = []
-        flux = np.array([self.cat_row[self.y_labels[i]] for i in (range(0,np.size(self.y_labels)))])
-        flux_lower_bound = np.array([self.cat_row["Unc_" + self.y_labels[i]][0] for i in (range(1,np.size(self.y_labels)))])
-        arr1 = np.where(np.isnan(flux) == False)[0]
-        arr2 =np.where(np.isnan(flux_lower_bound) == False)[0]
-        raw_input(arr2)
-
-
-
-        raw_input(flux_lower_bound)
 
         for i in range(0, np.size(self.x_bins_edges) - 1):
 
             flux = self.cat_row[self.y_labels[i]]
-
-
+            
             # Require both a detection and a lower bound
             if np.isnan(flux) == False:
+
                 y_err_label = "Unc_" + self.y_labels[i]
-                #raw_input(self.cat_row[y_err_label])
                 flux_lower_bound = self.cat_row[y_err_label][0]
-                #raw_input(flux_lower_bound)
                 if np.isnan(flux_lower_bound) == False:
                     valid_indices.append(i)
-                    #raw_input("=")
 
         y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
         y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
@@ -307,13 +295,9 @@ class Fermi3FGLObject(object):
         y_upper = y_vals + y_upper
 
         x_vals = [self.x_cens[i].value for i in valid_indices]
-        # x_vals - bin_edge1 = x_bin[i]
-        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices] #<---------------
-        # bin_edges1 =[(self.x_bins_edges[i]).value for i in valid_indices] #<-----------
-        # x_vals + bin_edge2 = x_bin[i + 1]
+        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
         bin_edges2 = [(self.x_bins_edges[i+1] - self.x_cens[i]).value for i in valid_indices]
 
-        #y_vals = [Quantity(y_vals[i], 'MeV') for i in y_vals]
         y_vals = [y_vals[i] / x_vals[i] for i in range(0, np.size(y_vals))]
         y_upper = [y_upper[i] / x_vals[i] for i in range(0, np.size(y_vals))]
         y_lower = [y_lower[i] / x_vals[i] for i in range(0, np.size(y_vals))]
@@ -323,23 +307,7 @@ class Fermi3FGLObject(object):
         y_upper = np.array([y_upper[i] - y_vals[i] for i in range(0, np.size(y_lower))])
         y_lower = np.array([y_vals[i] - y_lower[i] for i in range(0, np.size(y_lower))])
 
-
-
-        #raw_input("x_vals:" + str(type(x_vals)))
-        #raw_input(x_vals.value)
-        #raw_input("y_vals:" + str(type(y_vals)))
-        #raw_input(x_vals[0])
-        #raw_input(y_vals[3])
-        #raw_input(bin_edges1[0])
-        #raw_input((bin_edges2[0]))
-        #raw_input(y_lower[3])
-        #raw_input((y_upper[3]))
-        #raw_input(y_cens[3])
         ax.loglog()
-
-        #ax.errorbar(bin_edges1, y_vals,
-        #            yerr=(y_lower, y_upper),
-        #            elinewidth=1, linewidth=0, color='black')
 
         ax.errorbar(x_vals, y_vals,
                     yerr=(y_lower, y_upper),
