@@ -725,3 +725,19 @@ the following lines to the beginning of your plotting script or notebook:
 	import matplotlib.pyplot as plt
 	from gammapy.utils.mpl_style import gammapy_mpl_style
 	plt.style.use(gammapy_mpl_style)
+
+Changelog
+---------
+
+In Gammapy we keep a :ref:`changelog` with a list of pull requests.
+
+As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
+there are (at least) two approaches for adding to the changelog, each with pros
+and cons.
+
+We've had some pain due to merge conflicts in the changelog and having to wait
+until the contributor rebases (and having to explain git rebase to new contributors).
+
+So our recommendation is that changelog entries are not added in pull requests,
+but that the core developer adds a changelog entry after right after having
+merged a pull request (you can add ``[skip ci]`` on this commit).

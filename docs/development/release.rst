@@ -66,6 +66,9 @@ Pre release
 
    Links are at https://github.com/gammapy/gammapy#status-shields
 
+#. Check that the changelog is complete, by going through the list of Github issues for the
+   release milestone.
+
 Make release
 ------------
 
