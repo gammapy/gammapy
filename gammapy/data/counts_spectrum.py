@@ -6,6 +6,7 @@ from astropy import log
 from ..spectrum.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
+from gammapy.data import EventList, EventListDataset
 
 __all__ = ['CountsSpectrum']
 
@@ -32,7 +33,7 @@ class CountsSpectrum(object):
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV') 
         counts = [6,3,8,4,9,5,9,5,5,1]
         spec = CountsSpectrum(counts, ebounds)
-        hdu = spec.to_pha() 
+        hdu = spec.to_fits() 
     """
 
     def __init__(self, counts, energy, livetime=None):
@@ -52,6 +53,7 @@ class CountsSpectrum(object):
             self.energy = energy
 
         self._livetime = livetime
+        self.channels = np.arange(1,self.energy.nbins+1,1)
 
     @property
     def entries(self):
@@ -93,19 +95,27 @@ class CountsSpectrum(object):
 
         if isinstance (event_list,fits.BinTableHDU):
             event_list = EventList.read(event_list)
-        elif isinstance(event_list, gammapy.data.EventListDataSet):
+        elif isinstance(event_list, EventListDataset):
             event_list = event_list.event_list
         elif isinstance(event_list, str):
             event_list = EventList.read(event_list, hdu='EVENTS') 
 
-        energy = event_list.energy.to(bins.unit)
-        val = np.histogram(energy,bins)
+        energy = Energy(event_list.energy).to(bins.unit)
+        val, dummy = np.histogram(energy,bins.value)
         livetime = event_list.observation_live_time_duration
 
-        return cls(val, energy, livetime)
+        return cls(val, bins, livetime)
 
+    def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
+              *args, **kwargs):
+        """Write PHA to FITS file.
 
-    def to_pha(self):
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf).writeto(
+            filename, *args, **kwargs)
+
+    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None ):
         """Output OGIP pha file
         
         Returns
@@ -119,23 +129,27 @@ class CountsSpectrum(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/
         ogip_92_007_summary.html
         """
-        col1 = fits.Column(name="CHANNEL", array=self.energy.value,
-                          format = 'E', unit = '{0}'.format(self.energy.unit))
-        col2 = fits.Column(name="COUNTS", array=self.counts, format='E')
+        col1 = fits.Column(name="CHANNEL", array=self.channels,
+                           format = 'I')
+        col2 = fits.Column(name="COUNTS", array=self.counts,
+                           format='J', unit='count')
         
         cols = fits.ColDefs([col1, col2])
 
         hdu = fits.BinTableHDU.from_columns(cols)
         header = hdu.header
 
-        # copied from np_to_pha
-        # I don't know if it should move here or stay a utility function
+        #TODO: option to store meta info in the class
         header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'
- 
-        #header['BACKFILE'] = backfile, 'Background FITS file'
-        #header['CORRFILE'] = corrfile, 'Correlation FITS file'
-        #header['RESPFILE'] = respfile, 'Redistribution matrix file (RMF)'
-        #header['ANCRFILE'] = ancrfile, 'Ancillary response file (ARF)'
+        header['TELESCOP'] = 'DUMMY', 'Telescope (mission) name'
+        header['INSTRUME'] = 'DUMMY', 'Instrument name'
+        header['FILTER'] = 'NONE', 'Instrument filter in use'
+        header['EXPOSURE'] = self.livetime.to('second').value, 'Exposure time'
+
+        header['BACKFILE'] = bkg, 'Background FITS file'
+        header['CORRFILE'] = corr, 'Correlation FITS file'
+        header['RESPFILE'] = rmf, 'Redistribution matrix file (RMF)'
+        header['ANCRFILE'] = arf, 'Ancillary response file (ARF)'
         
         header['HDUCLASS'] = 'OGIP', 'Format conforms to OGIP/GSFC spectral standards'
         header['HDUCLAS1'] = 'SPECTRUM', 'Extension contains a spectrum'
@@ -143,8 +157,8 @@ class CountsSpectrum(object):
 
         header['CHANTYPE'] = 'PHA', 'Channels assigned by detector electronics'
         header['DETCHANS'] = self.energy.nbins, 'Total number of detector channels available'
-        header['TLMIN1'] = self.energy[0].value, 'Lowest Legal channel number'
-        header['TLMAX1'] = self.energy[-1].value, 'Highest Legal channel number'
+        header['TLMIN1'] = 1, 'Lowest Legal channel number'
+        header['TLMAX1'] = self.energy.nbins, 'Highest Legal channel number'
 
         header['XFLT0001'] = 'none', 'XSPEC selection filter description'
 
@@ -152,9 +166,10 @@ class CountsSpectrum(object):
         header['HDUCLAS3'] = 'COUNT', 'Extension contains counts'
         header['HDUCLAS4'] = 'TYPE:I', 'Single PHA file contained'
         header['HDUVERS1'] = '1.2.1', 'Obsolete - included for backwards compatibility'
-        
+
+        header['POISSERR'] = True, 'Are Poisson Distribution errors assumed'
+        header['STAT_ERR'] = 0, 'No statisitcal error was specified'
         header['SYS_ERR'] = 0, 'No systematic error was specified'
-        
         header['GROUPING'] = 0, 'No grouping data has been specified'
         
         header['QUALITY '] = 0, 'No data quality information specified'
