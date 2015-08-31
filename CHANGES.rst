@@ -43,6 +43,7 @@ Contributors
 - Manuel Paz Arribas
 - Christoph Deil
 - Axel Donath
+- Johannes King
 
 Pull requests
 +++++++++++++
@@ -52,6 +53,7 @@ Pull requests
 - Fix TS map boundary handling [#332] (Axel Donath)
 - Fix sherpa morphology fitting script [#337] (Axel Donath)
 - Remove PoissonLikelihoodFitter [#339] (Christoph Deil)
+- Add EnergyDispersion and CountsSpectrum [#330] (Johannes King)
 
 .. _gammapy_0p3_release:
 
