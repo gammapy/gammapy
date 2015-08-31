@@ -220,7 +220,7 @@ class Fermi3FGLObject(object):
     """
 
     from astropy.units import Quantity
-    from gammapy.spectrum import energy_bin_centers_log_spacing
+    from ..spectrum import EnergyBounds
 
     # Fermi catalog is lazily loaded on first access
     # and cached at class level (not instance level)
@@ -230,7 +230,7 @@ class Fermi3FGLObject(object):
 
     x_bins = Quantity(x_bins_edges, 'MeV')
 
-    x_cens = energy_bin_centers_log_spacing(x_bins)
+    x_cens = EnergyBounds(x_bins).log_centers
 
     y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
@@ -373,7 +373,20 @@ class Fermi3FGLObject(object):
 
         return ax
 
+    def info(self):
+        info_array = []
+        info_array.append(" ")
+        info_array.append(self.name_3FGL)
+        info_array.append(" ")
+        info_array.append("RA (J2000) " + str(self.ra))
+        info_array.append("Dec (J2000) " + str(self.dec))
+        info_array.append("l " + str(self.glon))
+        info_array.append("b " + str(self.glat))
+        info_array.append("Flux " + str(self.int_flux) + " +/- " + str(self.unc_int_flux)
+                          + " ph /cm2 /MeV /s")
+        info_array.append("Detection significance: " + str(self.signif) + " sigma")
 
+        return info_array
 
 
 class FermiGalacticCenter(object):
