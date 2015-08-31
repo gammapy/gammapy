@@ -6,12 +6,22 @@ from astropy.tests.helper import pytest
 from ...irf import EnergyDispersion, EnergyDispersion2D
 from ...datasets import load_edisp2D_fits_table
 
+
+try:
+    import scipy
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+
+
 @pytest.mark.xfail
 def test_EnergyDispersion():
     edisp = EnergyDispersion()
     pdf = edisp(3, 4)
     assert_allclose(pdf, 42)
 
+@pytest.mark.skipif('not HAS_SCIPY')
 def test_EnergyDispersion2D():
 
     # Read test effective area file
