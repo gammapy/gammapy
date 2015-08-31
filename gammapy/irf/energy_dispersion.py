@@ -581,8 +581,10 @@ class EnergyDispersion2D(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.datasets import load_edisp2D_fits_table
-        edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
+        from gammapy.datasets import get_path
+        filename = get_path("../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
+        location='remote')
+        edisp2D = EnergyDispersion2D.read(filename)
         edisp2D.plot_migration()
         plt.xlim(0, 4)
 
@@ -596,10 +598,12 @@ class EnergyDispersion2D(object):
         import matplotlib.pyplot as plt
         import numpy as np
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.datasets import load_edisp2D_fits_table
         from gammapy.spectrum.energy import Energy
         from astropy.coordinates import Angle
-        edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
+        from gammapy.datasets import get_path
+        filename = get_path("../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
+        location='remote')
+        edisp2D = EnergyDispersion2D.read(filename)
         migra = np.linspace(0.1,2,80)
         e_true = Energy.equal_log_spacing(0.13,60,60,'TeV')
         offset = Angle([0.554], 'deg')
@@ -810,7 +814,7 @@ class EnergyDispersion2D(object):
 
         for ener in energy:
             for off in offset:
-                disp = self.evaluate(offset=off, energy=ener, migra=migra)
+                disp = self.evaluate(offset=off, e_true=ener, migra=migra)
                 label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
                 plt.plot(migra, disp, label=label, **kwargs)
 
@@ -831,13 +835,13 @@ class EnergyDispersion2D(object):
 
         if offset is None:
             offset = Angle([1], 'deg')
-        if energy is None:
-            energy = self.energy
+        if e_true is None:
+            e_true = self.energy
         if migra is None:
             migra = self.migra
 
         z = self.evaluate(offset=offset, e_true=e_true, migra=migra)
-        x = energy.value
+        x = e_true.value
         y = migra
 
         plt.pcolor(x, y, z)

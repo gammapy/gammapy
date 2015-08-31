@@ -34,7 +34,6 @@ __all__ = ['get_path',
            'load_electron_spectrum',
            'load_arf_fits_table',
            'load_aeff2D_fits_table',
-           'load_edisp2D_fits_table',
            'load_psf_fits_table',
            ]
 

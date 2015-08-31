@@ -2,9 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, remote_data
 from ...irf import EnergyDispersion, EnergyDispersion2D
-from ...datasets import load_edisp2D_fits_table
+from ...datasets import get_path
 
 
 try:
@@ -22,11 +22,14 @@ def test_EnergyDispersion():
     assert_allclose(pdf, 42)
 
 @pytest.mark.skipif('not HAS_SCIPY')
+@remote_data
 def test_EnergyDispersion2D():
 
+    filename = get_path("../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
+                        location='remote')
+
     # Read test effective area file
-    edisp = EnergyDispersion2D.from_fits(
-        load_edisp2D_fits_table())
+    edisp = EnergyDispersion2D.read(filename)
 
     # Check that nodes are evaluated correctly
     e_node = 12
