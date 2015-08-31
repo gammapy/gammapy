@@ -1,7 +1,45 @@
-.. _datasets_make_datasets_for_testing:
+.. include:: ../references.txt
 
-Make datasets for testing
-=========================
+.. _datasets_obssim:
+
+Simulate event lists
+====================
+
+Here we describe how to simulate event lists for a given
+observation list, source model and instrument.
+
+Gammapy is mostly an analysis package for binned analysis,
+and so far we haven't implemented general tools to sample
+arbitrary spatial and spectral density distributions.
+
+An excellent tool `ctobssim`_ is available within the ctools
+package, so here we'll describe how to use that first and then
+mention the existing functionality in Gammapy.
+
+.. _datasets_obssim_ctobssim:
+
+Using ctobssim
+++++++++++++++
+
+Using HESS IRFs and a real event list as input (for header info),
+it's possible to simulate event lists according to any source and background model you like.
+
+See https://github.com/gammapy/gammapy-extra/blob/master/datasets/hess_crab/make2.py
+as an example, which was used to generated the
+https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/irf/hess/pa/hess_events_023523.fits.gz
+example file.
+
+TODO: we should extend this to a Gammapy command line tool that:
+
+- can simulate simple IRF files for HESS or CTA (so that we don't have to use real HESS IRFs)
+- can process an observation list, i.e. it's not necessary to have real observations.
+
+For now this one simulated HESS observation can be used for testing in Gammapy.
+
+.. _datasets_obssim_gammapy:
+
+Using Gammapy
++++++++++++++
 
 In order to test some of the tools from Gammapy, such as the
 background generation tools
@@ -27,7 +65,7 @@ addition, the effective area files produced, are empty except fot
 the low energy threshold header entry.
 
 The tools are very easy to use. A H.E.S.S.-like test dataset can be
-produced with a few lines of python code:
+produced with a few lines of Python code:
 
 .. code-block:: python
 
@@ -42,7 +80,8 @@ produced with a few lines of python code:
                       random_state=random_state)
 
 Then the data can be read back using the `~gammapy.obs.DataStore`
-class, and eg. print the observation table and the names of the filescreated with a few extra lines of python code:
+class, and eg. print the observation table and the names of the files
+created with a few extra lines of Python code:
 
 .. code-block:: python
 
