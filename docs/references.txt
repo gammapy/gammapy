@@ -63,3 +63,5 @@
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
 
 .. _scientific Python stack: http://www.scipy.org/about.html
+
+.. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
