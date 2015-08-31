@@ -601,9 +601,9 @@ class EnergyDispersion2D(object):
         from astropy.coordinates import Angle
         edisp2D = EnergyDispersion2D.from_fits(load_edisp2D_fits_table())
         migra = np.linspace(0.1,2,80)
-        energy = Energy.equal_log_spacing(0.13,60,60,'TeV')
+        e_true = Energy.equal_log_spacing(0.13,60,60,'TeV')
         offset = Angle([0.554], 'deg')
-        edisp2D.plot_bias(offset=offset, energy=energy, migra=migra)
+        edisp2D.plot_bias(offset=offset, e_true=e_true, migra=migra)
         plt.xscale('log')
 
     Write RMF fits table
@@ -820,7 +820,7 @@ class EnergyDispersion2D(object):
 
         return ax
 
-    def plot_bias(self, ax=None, offset=None, energy=None,
+    def plot_bias(self, ax=None, offset=None, e_true=None,
                   migra=None, **kwargs):
         """Plot migration as a function of true energy for a given offset
         """
@@ -836,7 +836,7 @@ class EnergyDispersion2D(object):
         if migra is None:
             migra = self.migra
 
-        z = self.evaluate(offset=offset, energy=energy, migra=migra)
+        z = self.evaluate(offset=offset, e_true=e_true, migra=migra)
         x = energy.value
         y = migra
 
