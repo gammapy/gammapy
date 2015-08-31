@@ -411,7 +411,7 @@ def make_test_dataset(fits_path, overwrite=False,
     This method is useful for instance to produce samples in order
     to test the machinery for reconstructing background (cube) models.
 
-    See also :ref:`datasets_make_datasets_for_testing`.
+    See also :ref:`datasets_obssim`.
 
     Parameters
     ----------
@@ -515,7 +515,7 @@ def make_test_eventlist(observation_table,
     In addition, an effective area table is produced. For the moment
     only the low energy threshold is filled.
 
-    See also :ref:`datasets_make_datasets_for_testing`.
+    See also :ref:`datasets_obssim`.
 
     Parameters
     ----------

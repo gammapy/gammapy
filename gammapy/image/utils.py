@@ -651,7 +651,8 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     bins = np.arange(shape[0] + 1) - 0.5, np.arange(shape[1] + 1) - 0.5
     data = np.histogramdd([yy, xx], bins, weights=weights)[0]
 
-    return fits.ImageHDU(data, header, name='COUNTS')
+    # return fits.ImageHDU(data, header, name='COUNTS')
+    return fits.PrimaryHDU(data, header)
 
 
 def bin_events_in_image(events, reference_image):

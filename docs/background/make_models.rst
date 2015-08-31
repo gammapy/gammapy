@@ -76,17 +76,16 @@ Datasets for testing
 ~~~~~~~~~~~~~~~~~~~~
 
 In order to test the background model generation tools, real
-data from existing experiments such as H.E.S.S. can be used. Since
-the data of current experiments is not public, tools to
-prepare a dummy dataset have been placed in Gammapy:
-:ref:`datasets_make_datasets_for_testing`.
+data from existing experiments such as H.E.S.S. can be used.
+Since the data of current experiments is not public, tools to
+simulate datasets are described in :ref:`datasets_obssim`.
 
 There is also a tool in Gammapy to simulate background cube models:
 `~gammapy.datasets.make_test_bg_cube_model`.
 It can be used to produce true background cube models to use to
 compare to the reconstructed ones produced with the machinery
 described above, using a simulated dataset using the tools from
-:ref:`datasets_make_datasets_for_testing`. If using the same model
+:ref:`datasets_obssim`. If using the same model
 for producing the simulated dataset and the true background cube
 models, the reconstructed ones produced with
 ``gammapy-make-bg-cube-models`` should match the true ones.
