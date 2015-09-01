@@ -47,7 +47,7 @@ Command examples:
   .. code-block:: bash
 
       $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
-                                    HESS bg_cube_models --a-la-michi
+                                    HESS bg_cube_models --method michi
 
 The output files are created in the output directory:
 

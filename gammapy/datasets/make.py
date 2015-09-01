@@ -17,6 +17,7 @@ from ..time import time_ref_from_dict, time_relative_to_ref
 from ..background import Cube
 from ..data import EventList
 from ..utils.fits import table_to_fits_table
+from ..utils.random import sample_powerlaw
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
@@ -418,6 +419,8 @@ def make_test_dataset(fits_path, overwrite=False,
                                   Time('2015-01-01T00:00:00',
                                        format='isot', scale='utc')),
                       n_tels_range=(3, 4),
+                      sigma=Angle(5., 'deg'),
+                      spectral_index=2.7,
                       random_state='random-seed'):
     """
     Make a test dataset and save it to disk.
@@ -461,6 +464,10 @@ def make_test_dataset(fits_path, overwrite=False,
     n_tels_range : int, optional
         Range (start, end) of number of telescopes participating in
         the observations.
+    sigma : `~astropy.coordinates.Angle`, optional
+        Width of the gaussian model used for the spatial coordinates.
+    spectral_index : double, optional
+        Index for the power-law model used for the energy coordinate.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -510,6 +517,8 @@ def make_test_dataset(fits_path, overwrite=False,
     for obs_id in observation_table['OBS_ID']:
         event_list, aeff_hdu = make_test_eventlist(observation_table=observation_table,
                                                    obs_id=obs_id,
+                                                   sigma=sigma,
+                                                   spectral_index=spectral_index,
                                                    random_state=random_state)
 
         # save event list and effective area table to disk
@@ -602,11 +611,16 @@ def make_test_eventlist(observation_table,
     # positive defined, so it is necessary to translate the (0, 1)
     # interval of the random variable to (emax, e_min) in order to
     # have a decreasing power-law
-    index = spectral_index + 1
     e_min = Quantity(0.1, 'TeV')
     e_max = Quantity(100., 'TeV')
-    energy = Quantity((e_min.value - e_max.value) *
-                      random_state.power(a=index, size=n_events) + e_max.value, 'TeV')
+    energy = Quantity(sample_powerlaw(e_min.value, e_max.value,
+                                      spectral_index + 1, # TODO: need to add 1
+                                                          # to the index because
+                                                          # sample_powerlaw
+                                                          # subtracts it, why??!!!
+                                      size=n_events,
+                                      random_state=random_state),
+                      'TeV')
 
     E_0 = Quantity(1., 'TeV') # reference energy for the model
 

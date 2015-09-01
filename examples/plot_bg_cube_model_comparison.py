@@ -22,13 +22,13 @@ NORMALIZE = 0 # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
               # 1: normalize w.r.t. cube integral
               # 2: normalize w.r.t images integral (normalize each image on its own)
 
-input_dir1 = '/home/mapaz/astropy/working_dir/gammapy_scripts/20150819_ready_to_merge_PR319/bg_cube_models_gammapy_a_la_michi'
+input_dir1 = '/home/mapaz/astropy/working_dir/bg_cube_models_gammapy_a_la_michi'
 binning_format1 = 'default'
-name1= 'default'
+name1 = 'gammapy'
 
 input_dir2 = '/home/mapaz/HESS/fits_data/pa_fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std/background'
 binning_format2 = 'michi'
-name2= 'michi'
+name2 = 'michi'
 
 # group IDs for comparison
 

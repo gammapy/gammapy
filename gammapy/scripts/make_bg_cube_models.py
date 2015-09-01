@@ -36,8 +36,7 @@ def main(args=None):
                         'observations for testing purposes')
     parser.add_argument('--method', type=str, default='default',
                         choices=['default', 'michi'],
-                        help='Bg cube model calculation method to apply.'
-                        'observations for testing purposes')
+                        help='Bg cube model calculation method to apply.')
     parser.add_argument("-l", "--loglevel", default='info',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         help="Set the logging level")
