@@ -24,10 +24,18 @@ from gammapy.background import make_bg_cube_model
 TEST = False # create a large dataset (slow)
 
 
-# using values from scripts.group_observations
+# define model parameters
+SIGMA = Angle(5., 'deg')
+#INDEX = 2.7
+#INDEX = 2.0
+INDEX = 1.5
+
+# define obs group bin
+# using half hard-coded values from scripts.group_observations
 AZ_RANGE = Angle([90, 270], 'degree')
 ALT_RANGE = Angle([72, 90], 'degree')
 GROUP_ID = 27
+
 OUTDIR = 'bg_cube_models'
 OVERWRITE = False
 
@@ -90,9 +98,8 @@ def make_true_model():
     # average altitude
     altitude = (ALT_RANGE[0]+ ALT_RANGE[1])/2.
 
-    # using default from make_test_eventlist
-    sigma = Angle(5., 'deg'),
-    spectral_index = 2.7,
+    sigma = SIGMA
+    spectral_index = INDEX
 
     bg_cube_model = make_test_bg_cube_model(detx_range=detx_range,
                                             ndetx_bins=ndetx_bins,
@@ -101,6 +108,8 @@ def make_true_model():
                                             energy_band=energy_band,
                                             nenergy_bins=nenergy_bins,
                                             altitude= altitude,
+                                            sigma=sigma,
+                                            spectral_index=spectral_index,
                                             apply_mask=False)
 
     # save
@@ -160,6 +169,9 @@ def make_reco_model():
     alt_range = ALT_RANGE
     random_state = np.random.RandomState(seed=0)
 
+    sigma = SIGMA
+    spectral_index = INDEX
+
     make_test_dataset(fits_path=fits_path, overwrite=overwrite,
                       observatory_name='HESS', n_obs=n_obs,
                       az_range=az_range,
@@ -169,6 +181,8 @@ def make_reco_model():
                                   Time('2015-01-01T00:00:00',
                                        format='isot', scale='utc')),
                       n_tels_range=(3, 4),
+                      sigma=sigma,
+                      spectral_index=spectral_index,
                       random_state=random_state)
 
     # 2. get observation table
