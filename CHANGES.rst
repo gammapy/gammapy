@@ -52,7 +52,7 @@ Pull requests
 - Production of true/reco bg cube models should use the same model [#335] (Manuel Paz Arribas)
 - Fix TS map boundary handling [#332] (Axel Donath)
 - Fix sherpa morphology fitting script [#337] (Axel Donath)
-- Added example script to produce true and reco bg cube model. [#338] (Manuel Paz Arribas)
+- Added example script to produce true and reco bg cube model [#338] (Manuel Paz Arribas)
 - Remove PoissonLikelihoodFitter [#339] (Christoph Deil)
 - Add EnergyDispersion and CountsSpectrum [#330] (Johannes King)
 
