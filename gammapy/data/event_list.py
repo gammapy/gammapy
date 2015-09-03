@@ -672,8 +672,8 @@ class EventListDatasetChecker(object):
 
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01 00:00:00', scale='utc'),
-            HESS=Time('2000-01-01 12:00:00.000', scale='utc'),
+            FERMI=Time('2001-01-01T00:00:00'),
+            HESS=Time('2000-01-01T12:00:00.000'),
             # TODO: Once CTA has specified their MET reference add check here
         )
 

@@ -26,9 +26,9 @@ class TestPHA(object):
 
         exposure = 3600.
 
-        dstart = Time('2011-01-01 00:00:00', scale='utc')
-        dstop = Time('2011-01-31 00:00:00', scale='utc')
-        dbase = Time('2011-01-01 00:00:00', scale='utc')
+        dstart = Time('2011-01-01T00:00:00')
+        dstop = Time('2011-01-31T00:00:00')
+        dbase = Time('2011-01-01T00:00:00')
 
         pha = np_to_pha(channel=channel, counts=counts, exposure=exposure,
                         dstart=dstart, dstop=dstop, dbase=dbase,

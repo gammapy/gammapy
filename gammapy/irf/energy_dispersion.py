@@ -309,7 +309,7 @@ class EnergyDispersion(object):
         header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software'
         header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
         
-    # UTC date when this calibration should be first used (yyy-mm-dd)
+    # UTC date when this calibration should be first used (yyyy-mm-dd)
         header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
 
     # UTC time on the dat when this calibration should be first used (hh:mm:ss)
@@ -363,7 +363,7 @@ class EnergyDispersion(object):
         header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software.'
         header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
         
-        # UTC date when this calibration should be first used (yyy-mm-dd)
+        # UTC date when this calibration should be first used (yyyy-mm-dd)
         header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
 
         # UTC time on the dat when this calibration should be first used (hh:mm:ss)

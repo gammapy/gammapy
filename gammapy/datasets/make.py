@@ -86,10 +86,8 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
                                 az_range=Angle([0, 360], 'degree'),
                                 alt_range=Angle([45, 90], 'degree'),
-                                date_range=(Time('2010-01-01T00:00:00',
-                                                 format='isot', scale='utc'),
-                                            Time('2015-01-01T00:00:00',
-                                                 format='isot', scale='utc')),
+                                date_range=(Time('2010-01-01T00:00:00'),
+                                            Time('2015-01-01T00:00:00')),
                                 use_abs_time=False,
                                 n_tels_range=(3, 4),
                                 random_state='random-seed'):
@@ -149,7 +147,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table = ObservationTable()
 
     # build a time reference as the start of 2010
-    dateref = Time('2010-01-01T00:00:00', format='isot', scale='utc')
+    dateref = Time('2010-01-01T00:00:00')
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
     # define table header
@@ -442,10 +440,8 @@ def make_test_dataset(fits_path, overwrite=False,
                       observatory_name='HESS', n_obs=10,
                       az_range=Angle([0, 360], 'degree'),
                       alt_range=Angle([45, 90], 'degree'),
-                      date_range=(Time('2010-01-01T00:00:00',
-                                       format='isot', scale='utc'),
-                                  Time('2015-01-01T00:00:00',
-                                       format='isot', scale='utc')),
+                      date_range=(Time('2010-01-01T00:00:00'),
+                                  Time('2015-01-01T00:00:00')),
                       n_tels_range=(3, 4),
                       sigma=Angle(5., 'deg'),
                       spectral_index=2.7,
