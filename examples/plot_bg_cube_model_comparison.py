@@ -4,6 +4,7 @@ Script to produce plots comparing 2 sets of background cube models.
 Details in stringdoc of the plot_bg_cube_model_comparison function.
 """
 
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.units import Quantity
@@ -22,13 +23,13 @@ NORMALIZE = 0 # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
               # 1: normalize w.r.t. cube integral
               # 2: normalize w.r.t images integral (normalize each image on its own)
 
-input_dir1 = '/home/mapaz/astropy/working_dir/bg_cube_models_gammapy_a_la_michi'
-binning_format1 = 'default'
-name1 = 'gammapy'
+INPUT_DIR1 = '/home/mapaz/astropy/working_dir/bg_cube_models_gammapy_a_la_michi'
+BINNING_FORMAT1 = 'default'
+NAME1 = 'gammapy'
 
-input_dir2 = '/home/mapaz/HESS/fits_data/pa_fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std/background'
-binning_format2 = 'michi'
-name2 = 'michi'
+INPUT_DIR2 = '/home/mapaz/HESS/fits_data/pa_fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std/background'
+BINNING_FORMAT2 = 'michi'
+NAME2 = 'michi'
 
 # group IDs for comparison
 
@@ -114,7 +115,9 @@ def look_obs_groups_michi(group_id):
     return i_alt, i_az
 
 
-def plot_bg_cube_model_comparison():
+
+def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
+                                  input_dir2, binning_format2, name2):
     """
     Plot background cube model comparison.
 
@@ -133,21 +136,6 @@ def plot_bg_cube_model_comparison():
         * cols: compare both bg cube model sets
 
     The script can be customized by setting a few global variables:
-
-    * **input_dir1**, **input_dir2**: directory where the
-      corresponding set of bg cube models is stored.
-
-    * **binning_format1**, **binning_format2**: binning format;
-      accepted values are:
-          * *default* for the Gammapy format from
-            `~gammapy.obs.ObservationGroups`; an observation groups
-            ECVS file is expected in the bg cube models dir.
-          * *michi* for the binning used by Michale Mayer;
-            this script has methods to convert it to the
-            *default* format.
-            ref: [Mayer2015]_ (section 5.2.4)
-
-    * **name1**, **name2**: name to use for plot labels/legends.
 
     * **group_ids_selection**: groups to compare; if empty: use all
       groups
@@ -170,6 +158,24 @@ def plot_bg_cube_model_comparison():
 
     * **GRAPH_DEBUG**: if set to 1 (True) the program waits between
       each observation group iteration until the image is closed
+
+    Parameters
+    ----------
+    input_dir1, input_dir2 : str
+        Directory where the corresponding set of bg cube models is stored.
+    binning_format1, binning_format2 : {'default', 'michi'}
+        String specifying the binning format; accepted values are:
+
+        * *default* for the Gammapy format from
+          `~gammapy.obs.ObservationGroups`; an observation groups
+          ECVS file is expected in the bg cube models dir.
+        * *michi* for the binning used by Michale Mayer;
+          this script has methods to convert it to the
+          *default* format.
+          ref: [Mayer2015]_ (section 5.2.4)
+
+    name1, name2 : str
+        Name to use for plot labels/legends.
     """
     # check binning
     accepted_binnings = ['default', 'michi']
@@ -319,4 +325,45 @@ def plot_bg_cube_model_comparison():
 
 
 if __name__ == '__main__':
-    plot_bg_cube_model_comparison()
+    """Main function: parse arguments and launch the whole analysis chain.
+    """
+    parser = argparse.ArgumentParser(description='Compare 2 sets of bg cube models.')
+
+    parser.add_argument('--input-dir1', type=str,
+                        default=INPUT_DIR1,
+                        help='Directory where the corresponding set '
+                        'of bg cube models is stored. '
+                        '(default is {}).'.format(INPUT_DIR1))
+
+    parser.add_argument('--binning-format1', type=str,
+                        default=BINNING_FORMAT1,
+                        choices=['default', 'michi'],
+                        help='String specifying the binning format. '
+                        '(default is {}).'.format(BINNING_FORMAT1))
+
+    parser.add_argument('--name1', type=str,
+                        default=NAME1,
+                        help='Name to use for plot labels/legends. '
+                        '(default is {}).'.format(NAME1))
+
+    parser.add_argument('--input-dir2', type=str,
+                        default=INPUT_DIR2,
+                        help='Directory where the corresponding set '
+                        'of bg cube models is stored. '
+                        '(default is {}).'.format(INPUT_DIR2))
+
+    parser.add_argument('--binning-format2', type=str,
+                        default=BINNING_FORMAT2,
+                        choices=['default', 'michi'],
+                        help='String specifying the binning format. '
+                        '(default is {}).'.format(BINNING_FORMAT2))
+
+    parser.add_argument('--name2', type=str,
+                        default=NAME2,
+                        help='Name to use for plot labels/legends. '
+                        '(default is {}).'.format(NAME2))
+
+    args = parser.parse_args()
+
+    plot_bg_cube_model_comparison(args.input_dir1, args.binning_format1, args.name1,
+                                  args.input_dir2, args.binning_format2, args.name2)
