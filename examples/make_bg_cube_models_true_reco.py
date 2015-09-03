@@ -18,6 +18,7 @@ from gammapy.datasets import make_test_bg_cube_model, make_test_dataset
 from gammapy.obs import (DataStore, ObservationGroups,
                          ObservationGroupAxis)
 from gammapy.background import make_bg_cube_model
+from gammapy.utils.scripts import _create_dir
 
 
 #TEST = True # create a small dataset
@@ -40,21 +41,33 @@ OUTDIR = 'bg_cube_models'
 OVERWRITE = False
 
 
+def make_bg_cube_models_true_reco():
+    """Produce true and reco background cube models and store them to file.
+    """
+    outdir = OUTDIR
+    overwrite = OVERWRITE
+
+    # create output folder
+    _create_dir(outdir, overwrite)
+
+    make_true_model()
+    make_reco_model()
+
+
 def create_dummy_observation_grouping():
-    """Define dummy observation grouping."""
+    """Define dummy observation grouping.
 
-    altitude_edges = ALT_RANGE
-    azimuth_edges = AZ_RANGE
-    group_id = GROUP_ID
+    Define an observation grouping with only one group.
 
-    list_obs_group_axis = [ObservationGroupAxis('ALT',
-                                                altitude_edges,
-                                                'bin_edges'),
-                           ObservationGroupAxis('AZ',
-                                                azimuth_edges,
-                                                'bin_edges')]
-    obs_groups = ObservationGroups(list_obs_group_axis)
-    obs_groups.obs_groups_table['GROUP_ID'][0] = group_id
+    Returns
+    -------
+    obs_groups : `~gammapy.obsObservationGroups`
+        Observation grouping.
+    """
+    alt_axis = ObservationGroupAxis('ALT', ALT_RANGE, 'bin_edges')
+    az_axis = ObservationGroupAxis('AZ', AZ_RANGE, 'bin_edges')
+    obs_groups = ObservationGroups([alt_axis, az_axis])
+    obs_groups.obs_groups_table['GROUP_ID'][0] = GROUP_ID
 
     return obs_groups
 
@@ -65,33 +78,20 @@ def make_true_model():
     overwrite = OVERWRITE
 
     # create output folder
-    outdir = OUTDIR + '/true'
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    outdir = os.path.join(OUTDIR, 'true')
+    _create_dir(outdir, overwrite)
 
     # create dummy observation grouping
     obs_groups = create_dummy_observation_grouping()
     # save
-    outfile = outdir + '/bg_observation_groups.ecsv'
+    outfile = os.path.join(outdir, 'bg_observation_groups.ecsv')
     print('Writing {}'.format(outfile, overwrite=overwrite))
     obs_groups.write(outfile)
 
     # use binning from CubeBackgroundModel.define_cube_binning
-    detx_range = (Angle(-0.07, 'radian').to('degree'),
-                  Angle(0.07, 'radian').to('degree'))
-    ndetx_bins = 60
-    dety_range = (Angle(-0.07, 'radian').to('degree'),
-                  Angle(0.07, 'radian').to('degree'))
-    ndety_bins = 60
+    det_range = (Angle(-0.07, 'radian').to('degree'),
+                 Angle(0.07, 'radian').to('degree'))
+    ndet_bins = 60
     energy_band = Quantity([0.1, 80.], 'TeV')
     nenergy_bins = 20
 
@@ -101,10 +101,10 @@ def make_true_model():
     sigma = SIGMA
     spectral_index = INDEX
 
-    bg_cube_model = make_test_bg_cube_model(detx_range=detx_range,
-                                            ndetx_bins=ndetx_bins,
-                                            dety_range=dety_range,
-                                            ndety_bins=ndety_bins,
+    bg_cube_model = make_test_bg_cube_model(detx_range=det_range,
+                                            ndetx_bins=ndet_bins,
+                                            dety_range=det_range,
+                                            ndety_bins=ndet_bins,
                                             energy_band=energy_band,
                                             nenergy_bins=nenergy_bins,
                                             altitude= altitude,
@@ -115,7 +115,7 @@ def make_true_model():
 
     # save
     group_id = GROUP_ID
-    outfile = outdir + '/bg_cube_model_group{}'.format(group_id)
+    outfile = os.path.join(outdir, 'bg_cube_model_group{}'.format(group_id))
     print("Writing {}".format('{}_table.fits.gz'.format(outfile)))
     print("Writing {}".format('{}_image.fits.gz'.format(outfile)))
     bg_cube_model.write('{}_table.fits.gz'.format(outfile),
@@ -136,23 +136,13 @@ def make_reco_model():
     group_id = GROUP_ID
 
     # create output folder
-    outdir = OUTDIR + '/reco'
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    outdir = os.path.join(OUTDIR, 'reco')
+    _create_dir(outdir, overwrite)
 
     # 0. create dummy observation grouping
     obs_groups = create_dummy_observation_grouping()
     # save
-    outfile = outdir + '/bg_observation_groups.ecsv'
+    outfile = os.path.join(outdir, 'bg_observation_groups.ecsv')
     print('Writing {}'.format(outfile, overwrite=overwrite))
     obs_groups.write(outfile)
 
@@ -190,7 +180,7 @@ def make_reco_model():
     scheme = SCHEME
     data_store = DataStore(dir=fits_path, scheme=scheme)
     observation_table = data_store.make_observation_table()
-    outfile = outdir + '/bg_observation_table_group{}.fits.gz'.format(group_id)
+    outfile = os.path.join(outdir, 'bg_observation_table_group{}.fits.gz'.format(group_id))
     print("Writing {}".format(outfile))
     observation_table.write(outfile, overwrite=overwrite)
 
@@ -202,7 +192,7 @@ def make_reco_model():
                                        do_not_force_mev_units=True)
 
     # save
-    outfile = outdir + '/bg_cube_model_group{}'.format(group_id)
+    outfile = os.path.join(outdir, 'bg_cube_model_group{}'.format(group_id))
     print("Writing {}".format('{}_table.fits.gz'.format(outfile)))
     print("Writing {}".format('{}_image.fits.gz'.format(outfile)))
     bg_cube_model.write('{}_table.fits.gz'.format(outfile),
@@ -212,22 +202,6 @@ def make_reco_model():
 
 
 if __name__ == '__main__':
-
-    outdir = OUTDIR
-    overwrite = OVERWRITE
-
-    # create output folder
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
-
-    make_true_model()
-    make_reco_model()
+    """Main function: launch the whole analysis chain.
+    """
+    make_bg_cube_models_true_reco()
