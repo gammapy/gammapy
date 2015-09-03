@@ -110,7 +110,8 @@ def make_true_model():
                                             altitude= altitude,
                                             sigma=sigma,
                                             spectral_index=spectral_index,
-                                            apply_mask=False)
+                                            apply_mask=False,
+                                            do_not_force_mev_units=True)
 
     # save
     group_id = GROUP_ID
@@ -197,7 +198,8 @@ def make_reco_model():
     method = METHOD
     bg_cube_model = make_bg_cube_model(observation_table=observation_table,
                                        fits_path=fits_path,
-                                       method=method)
+                                       method=method,
+                                       do_not_force_mev_units=True)
 
     # save
     outfile = outdir + '/bg_cube_model_group{}'.format(group_id)
