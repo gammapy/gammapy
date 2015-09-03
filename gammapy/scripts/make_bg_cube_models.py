@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import os
-import shutil
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
@@ -13,6 +11,7 @@ from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..datasets import load_catalog_tevcat
 from ..background import make_bg_cube_model
+from ..utils.scripts import _create_dir
 
 __all__ = ['make_bg_cube_models',
            'create_bg_observation_list',
@@ -91,17 +90,7 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, method):
 
     """
     # create output folder
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    _create_dir(outdir, overwrite)
 
     create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
