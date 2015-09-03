@@ -287,7 +287,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                             altitude=Angle(70., 'degree'),
                             sigma=Angle(5., 'deg'),
                             spectral_index=2.7,
-                            apply_mask=False):
+                            apply_mask=False,
+                            do_not_force_mev_units=False):
     """Make a test bg cube model.
 
     The background counts cube is created following a 2D symmetric
@@ -301,9 +302,14 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     It is possible to mask 1/4th of the image (for `x > x_center` and
     `y > y_center`). Useful for testing coordinate rotations.
 
+    Per default units of *1 / (MeV sr s)* for the bg rate are
+    enforced, unless `do_not_force_mev_units` is set.
+    This is in agreement to the convention applied in
+    `~gammapy.background.make_bg_cube_model.`
+
     This method is useful for instance to produce true (simulated)
     background cube models to compare to the reconstructed ones
-    produced with `~gammapy.background.make_bg_cube_model.`
+    produced with `~gammapy.background.make_bg_cube_model`.
     For details on how to do this, please refer to
     :ref:`background_make_background_models_datasets_for_testing`.
 
@@ -330,6 +336,9 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     apply_mask : bool, optional
         If set, 1/4th of the image is masked (for `x > x_center` and
         `y > y_center`).
+    do_not_force_mev_units : bool, optional
+        Set to `True` to use the same energy units as the energy
+        binning for the bg rate.
 
     Returns
     -------
@@ -410,6 +419,11 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
     bg_cube_model.background_cube.divide_bin_volume()
     bg_cube_model.background_cube.set_zero_level()
+
+    if not do_not_force_mev_units:
+        # use units of 1 / (MeV sr s) for the bg rate
+        bg_rate = bg_cube_model.background_cube.data.to('1 / (MeV sr s)')
+        bg_cube_model.background_cube.data = bg_rate
 
     # apply mask if requested
     if apply_mask:
