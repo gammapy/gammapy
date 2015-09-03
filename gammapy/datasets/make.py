@@ -4,7 +4,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
-import shutil
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
@@ -18,6 +17,7 @@ from ..background import CubeBackgroundModel
 from ..data import EventList
 from ..utils.fits import table_to_fits_table
 from ..utils.random import sample_powerlaw
+from ..utils.scripts import _create_dir
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
@@ -504,17 +504,7 @@ def make_test_dataset(fits_path, overwrite=False,
 
     # create output folder
     outdir = fits_path
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    _create_dir(outdir, overwrite)
 
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,

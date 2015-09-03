@@ -5,7 +5,7 @@ import os
 import json
 import logging
 log = logging.getLogger(__name__)
-from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..utils.scripts import get_parser, set_up_logging_from_args, _create_dir
 
 __all__ = ['ts_image']
 
@@ -81,8 +81,7 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
                                         residual, morphology, width)
 
     folder, filename = os.path.split(output_file)
-    if not os.path.exists(folder) and folder != '':
-        os.mkdir(folder)
+    _create_dir(folder, overwrite=False)
 
     # Write results to file
     header = maps[0].header
