@@ -36,7 +36,7 @@ class TestCube():
     @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_image_plot(self):
 
-        cube = make_test_bg_cube_model()
+        cube = make_test_bg_cube_model().background_cube
 
         # test bg rate values plotted for image plot of energy bin
         # conaining E = 2 TeV
@@ -56,7 +56,7 @@ class TestCube():
     @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_spectrum_plot(self):
 
-        cube = make_test_bg_cube_model()
+        cube = make_test_bg_cube_model().background_cube
 
         # test bg rate values plotted for spectrum plot of coordinate bin
         # conaining coord (0, 0) deg (center)

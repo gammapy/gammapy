@@ -46,9 +46,10 @@ examples and test benches of these classes:
 
 * `bg_cube_model_test1.fits
   <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test1.fits>`_
-  is a `~gammapy.background.Cube` produced with
+  is a `~gammapy.background.Cube` produced with an older version of
   `~gammapy.datasets.make_test_bg_cube_model`, using a simplified
-  background model.
+  background model. The current version of the mehod produces a
+  `~gammapy.background.CubeBackgroundModel` object.
 
 * `bg_cube_model_test2.fits.gz
   <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test2.fits.gz>`_

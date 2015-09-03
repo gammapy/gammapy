@@ -2,7 +2,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
-import shutil
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
@@ -13,6 +12,7 @@ from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..datasets import load_catalog_tevcat
 from ..background import make_bg_cube_model
+from ..utils.scripts import _create_dir
 
 __all__ = ['make_bg_cube_models',
            'create_bg_observation_list',
@@ -36,8 +36,7 @@ def main(args=None):
                         'observations for testing purposes')
     parser.add_argument('--method', type=str, default='default',
                         choices=['default', 'michi'],
-                        help='Bg cube model calculation method to apply.'
-                        'observations for testing purposes')
+                        help='Bg cube model calculation method to apply.')
     parser.add_argument("-l", "--loglevel", default='info',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         help="Set the logging level")
@@ -92,17 +91,7 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, method):
 
     """
     # create output folder
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    _create_dir(outdir, overwrite)
 
     create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
@@ -181,7 +170,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
         observation_table = observation_table.select_observations(selection)
 
     # save the bg observation list to a fits file
-    outfile = outdir + '/bg_observation_table.fits.gz'
+    outfile = os.path.join(outdir, 'bg_observation_table.fits.gz')
     log.info("Writing {}".format(outfile))
     observation_table.write(outfile, overwrite=overwrite)
 
@@ -208,7 +197,7 @@ def group_observations(outdir, overwrite, test):
 
     # read bg observation table from file
     indir = outdir
-    infile = indir + '/bg_observation_table.fits.gz'
+    infile = os.path.join(indir, 'bg_observation_table.fits.gz')
     observation_table = ObservationTable.read(infile)
 
     # define observation binning
@@ -252,10 +241,10 @@ def group_observations(outdir, overwrite, test):
     log.info(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
-    outfile = outdir + '/bg_observation_groups.ecsv'
+    outfile = os.path.join(outdir, 'bg_observation_groups.ecsv')
     log.info("Writing {}".format(outfile))
     observation_groups.write(outfile, overwrite=overwrite)
-    outfile = outdir + '/bg_observation_table_grouped.fits.gz'
+    outfile = os.path.join(outdir, 'bg_observation_table_grouped.fits.gz')
     log.info("Writing {}".format(outfile))
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
@@ -283,9 +272,9 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
 
     # read observation grouping and grouped observation table
     indir = outdir
-    infile = indir + '/bg_observation_groups.ecsv'
+    infile = os.path.join(indir, 'bg_observation_groups.ecsv')
     observation_groups = ObservationGroups.read(infile)
-    infile = indir + '/bg_observation_table_grouped.fits.gz'
+    infile = os.path.join(indir, 'bg_observation_table_grouped.fits.gz')
     observation_table_grouped = ObservationTable.read(infile)
 
     # loop over observation groups
@@ -311,8 +300,7 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
         bg_cube_model = make_bg_cube_model(observation_table, fits_path, method)
 
         # save model to file
-        outfile = outdir +\
-                 '/bg_cube_model_group{}'.format(group)
+        outfile = os.path.join(outdir, 'bg_cube_model_group{}'.format(group))
         log.info("Writing {}".format('{}_table.fits.gz'.format(outfile)))
         log.info("Writing {}".format('{}_image.fits.gz'.format(outfile)))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile),

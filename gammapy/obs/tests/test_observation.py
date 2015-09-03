@@ -122,20 +122,18 @@ def test_select_parameter_box():
 def test_select_time_box():
     # create random observation table with very close (in time)
     # observations (and times in absolute times)
-    datestart = Time('2012-01-01T00:30:00', format='isot', scale='utc')
-    dateend = Time('2012-01-01T02:30:00', format='isot', scale='utc')
+    datestart = Time('2012-01-01T00:30:00')
+    dateend = Time('2012-01-01T02:30:00')
     random_state = np.random.RandomState(seed=0)
     obs_table_time = make_test_observation_table(n_obs=10,
-                                                 datestart=datestart,
-                                                 dateend=dateend,
+                                                 date_range=(datestart, dateend),
                                                  use_abs_time=True,
                                                  random_state=random_state)
 
     # test box selection in time: (time_start, time_stop) within value_range
     print()
     print("Test box selection in time")
-    value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'],
-                       format='isot', scale='utc')
+    value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
     selection = dict(type='time_box', time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
     time_start = selected_obs_table['TIME_START']

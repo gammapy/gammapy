@@ -47,7 +47,7 @@ Command examples:
   .. code-block:: bash
 
       $ gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir \
-                                    HESS bg_cube_models --a-la-michi
+                                    HESS bg_cube_models --method michi
 
 The output files are created in the output directory:
 
@@ -72,6 +72,8 @@ script in the `examples` directory can be used:
 :download:`plot_bg_cube_model_comparison.py
 <../../examples/plot_bg_cube_model_comparison.py>`
 
+.. _background_make_background_models_datasets_for_testing:
+
 Datasets for testing
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -89,3 +91,11 @@ described above, using a simulated dataset using the tools from
 for producing the simulated dataset and the true background cube
 models, the reconstructed ones produced with
 ``gammapy-make-bg-cube-models`` should match the true ones.
+
+The example script :download:`make_bg_cube_models_true_reco.py
+<../../examples/make_bg_cube_models_true_reco.py>` can be used
+to produce a true cube bg model and a reco cube bg model using the
+same model (except for absolute normalization). The models can be
+used to test the cube bg model production and can be compared to each
+other using the :download:`plot_bg_cube_model_comparison.py
+<../../examples/plot_bg_cube_model_comparison.py>` example script.

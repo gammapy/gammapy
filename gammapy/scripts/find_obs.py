@@ -168,7 +168,7 @@ def find_obs(infile,
     if do_time_box_selection.all():
         log.debug("Applying time box selection.")
         # convert min, max to range and cast into Time object
-        t_range = Time([t_start, t_stop], format='isot', scale='utc')
+        t_range = Time([t_start, t_stop])
         selection = dict(type='time_box', time_range=t_range, inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:

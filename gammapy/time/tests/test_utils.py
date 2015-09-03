@@ -29,4 +29,4 @@ def test_absolute_time():
     delta_time_1sec = TimeDelta(1., format='sec')
     time = time_ref + delta_time_1sec
     abs_time = absolute_time(delta_time_1sec, time_ref_dict)
-    assert abs_time.value == time.utc.iso
+    assert abs_time.value == time.utc.isot

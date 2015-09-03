@@ -254,7 +254,7 @@ class CubeBackgroundModel(object):
                 raise ValueError("Invalid format {}.".format(format))
 
     @classmethod
-    def set_cube_binning(cls, detx_edges, dety_edges, energy_edges, do_not_fill=False):
+    def set_cube_binning(cls, detx_edges, dety_edges, energy_edges):
         """
         Set cube binning from function parameters.
 
@@ -268,8 +268,6 @@ class CubeBackgroundModel(object):
             Y coordinate.
         energy_edges : `~astropy.units.Quantity`
             Energy bin edges vector (low and high) for the cubes.
-        do_not_fill : bool, optional
-            Flag to avoid filling empty data (zeros) in the cubes.
 
         Returns
         -------
@@ -303,8 +301,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, observation_table, fits_path,
-                            do_not_fill=False, method='default'):
+    def define_cube_binning(cls, observation_table, fits_path, method='default'):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -322,8 +319,6 @@ class CubeBackgroundModel(object):
             Observation list to use for the *michi* binning.
         fits_path : str
             Path to the data files.
-        do_not_fill : bool, optional
-            Flag to avoid filling empty data (zeros) in the cubes.
         method : {'default', 'michi'}, optional
             Bg cube model calculation method to apply.
 
@@ -357,7 +352,7 @@ class CubeBackgroundModel(object):
         dety_max = Angle(0.07, 'radian').to('degree')
         detx_min = Angle(-0.07, 'radian').to('degree')
         detx_max = Angle(0.07, 'radian').to('degree')
-        # TODO: the bin edges (at least for X and Y) should depend on
+        # TODO: the bin min/max edges should depend on
         #       the experiment/observatory.
         #       or at least they should be read as parameters
         #       The values here are good for H.E.S.S.
@@ -378,7 +373,7 @@ class CubeBackgroundModel(object):
         delta_x = (detx_max - detx_min)/bg_cube_shape[2]
         detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
 
-        return cls.set_cube_binning(detx_edges, dety_edges, energy_edges, do_not_fill)
+        return cls.set_cube_binning(detx_edges, dety_edges, energy_edges)
 
     def fill_events(self, observation_table, fits_path):
         """Fill events and compute corresponding livetime.
@@ -512,15 +507,7 @@ class CubeBackgroundModel(object):
         # smooth images
 
         # integral of original images
-        dummy_delta_energy = np.zeros_like(self.background_cube.energy_edges[:-1])
-        delta_y = self.background_cube.coordy_edges[1:] - self.background_cube.coordy_edges[:-1]
-        delta_x = self.background_cube.coordx_edges[1:] - self.background_cube.coordx_edges[:-1]
-        # define grid of deltas (i.e. bin widths for each 3D bin)
-        dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
-                                                           delta_x, indexing='ij')
-        bin_area = (delta_y*delta_x).to('sr')
-        integral_image = self.background_cube.data*bin_area
-        integral_image = integral_image.sum(axis=(1, 2))
+        integral_images = self.background_cube.integral_images
 
         # number of times to smooth
         n_counts = self.counts_cube.data.sum()
@@ -553,11 +540,10 @@ class CubeBackgroundModel(object):
                                                                self.background_cube.data.unit)
 
         # integral of smooth images
-        integral_image_smooth = self.background_cube.data*bin_area
-        integral_image_smooth = integral_image_smooth.sum(axis=(1, 2))
+        integral_images_smooth = self.background_cube.integral_images
 
         # scale images to preserve original integrals
 
         # loop over energy bins (i.e. images)
         for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
-            self.background_cube.data[i_energy] *= (integral_image/integral_image_smooth)[i_energy]
+            self.background_cube.data[i_energy] *= (integral_images/integral_images_smooth)[i_energy]

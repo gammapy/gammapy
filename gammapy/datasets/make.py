@@ -4,7 +4,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
-import shutil
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
@@ -14,9 +13,11 @@ from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations, DataStore
 from ..utils.random import sample_sphere, get_random_state
 from ..time import time_ref_from_dict, time_relative_to_ref
-from ..background import Cube
+from ..background import CubeBackgroundModel
 from ..data import EventList
 from ..utils.fits import table_to_fits_table
+from ..utils.random import sample_powerlaw
+from ..utils.scripts import _create_dir
 
 __all__ = ['make_test_psf',
            'make_test_observation_table',
@@ -83,32 +84,53 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
-                                datestart=None, dateend=None,
+                                az_range=Angle([0, 360], 'degree'),
+                                alt_range=Angle([45, 90], 'degree'),
+                                date_range=(Time('2010-01-01T00:00:00'),
+                                            Time('2015-01-01T00:00:00')),
                                 use_abs_time=False,
+                                n_tels_range=(3, 4),
                                 random_state='random-seed'):
     """Make a test observation table.
 
+    Create an observation table following a specific pattern.
+
     For the moment, only random observation tables are created.
-    If `datestart` and `dateend` are specified, the starting time
+
+    The observation table is created according to a specific
+    observatory, and randomizing the observation pointingpositions
+    in a specified az-alt range.
+
+    If a *date_range* is specified, the starting time
     of the observations will be restricted to the specified interval.
     These parameters are interpreted as date, the precise hour of the
     day is ignored, unless the end date is closer than 1 day to the
     starting date, in which case, the precise time of the day is also
     considered.
 
+    In addition, a range can be specified for the number of telescopes.
+
     Parameters
     ----------
-    observatory_name : str
+    observatory_name : str, optional
         Name of the observatory; a list of choices is given in
         `~gammapy.obs.observatory_locations`.
-    n_obs : int
+    n_obs : int, optional
         Number of observations for the obs table.
-    datestart : `~astropy.time.Time`, optional
-        Starting date for random generation of observation start time.
-    dateend : `~astropy.time.Time`, optional
-        Ending date for random generation of observation start time.
+    az_range : `~astropy.coordinates.Angle`, optional
+        Azimuth angle range (start, end) for random generation of
+        observation pointing positions.
+    alt_range : `~astropy.coordinates.Angle`, optional
+        Altitude angle range (start, end) for random generation of
+        observation pointing positions.
+    date_range : `~astropy.time.Time`, optional
+        Date range (start, end) for random generation of observation
+        start time.
     use_abs_time : bool, optional
         Use absolute UTC times instead of [MET]_ seconds after the reference.
+    n_tels_range : int, optional
+        Range (start, end) of number of telescopes participating in
+        the observations.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -125,7 +147,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table = ObservationTable()
 
     # build a time reference as the start of 2010
-    dateref = Time('2010-01-01T00:00:00', format='isot', scale='utc')
+    dateref = Time('2010-01-01T00:00:00')
     dateref_mjd_fra, dateref_mjd_int = np.modf(dateref.mjd)
 
     # define table header
@@ -160,10 +182,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     # more than 1 day)
     #  - considering start of astronomical day at midday: implicit in setting
     # the start of the night, when generating random night hours
-    if datestart == None:
-        datestart = Time('2010-01-01T00:00:00', format='isot', scale='utc')
-    if dateend == None:
-        dateend = Time('2015-01-01T00:00:00', format='isot', scale='utc')
+    datestart = date_range[0]
+    dateend = date_range[1]
     time_start = random_state.uniform(datestart.mjd, dateend.mjd, len(obs_id))
     time_start = Time(time_start, format='mjd', scale='utc')
 
@@ -210,10 +230,10 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table['TIME_STOP'] = time_stop
 
     # az, alt
-    # random points in a sphere above 45 deg altitude
+    # random points in a portion of sphere; default: above 45 deg altitude
     az, alt = sample_sphere(size=len(obs_id),
-                            lon_range=Angle([0, 360], 'degree'),
-                            lat_range=Angle([45, 90], 'degree'),
+                            lon_range=az_range,
+                            lat_range=alt_range,
                             random_state=random_state)
     az = Angle(az, 'degree')
     alt = Angle(alt, 'degree')
@@ -244,10 +264,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     # positions
 
     # number of telescopes
-    # random integers between 3 and 4
-    n_tels_min = 3
-    n_tels_max = 4
-    n_tels = random_state.randint(n_tels_min, n_tels_max + 1, len(obs_id))
+    # random integers in a specified range; default: between 3 and 4
+    n_tels = random_state.randint(n_tels_range[0], n_tels_range[1] + 1, len(obs_id))
     obs_table['N_TELS'] = n_tels
 
     # muon efficiency
@@ -267,23 +285,31 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                             altitude=Angle(70., 'degree'),
                             sigma=Angle(5., 'deg'),
                             spectral_index=2.7,
-                            apply_mask=False):
+                            apply_mask=False,
+                            do_not_force_mev_units=False):
     """Make a test bg cube model.
 
-    The background is created following a 2D symmetric gaussian
-    model for the spatial coordinates (X, Y) and a power-law in
-    energy.
+    The background counts cube is created following a 2D symmetric
+    gaussian model for the spatial coordinates (X, Y) and a power-law
+    in energy.
     The gaussian width varies in energy from sigma/2 to sigma.
     The power-law slope in log-log representation is given by
     the spectral_index parameter.
     The norm depends linearly on the livetime
     and on the altitude angle of the observation.
-    It is possible to mask 1/4th of the image (for `x > x_center` and
-    `y > y_center`). Useful for testing coordinate rotations.
+    It is possible to mask 1/4th of the image (for **x > x_center**
+    and **y > y_center**). Useful for testing coordinate rotations.
+
+    Per default units of *1 / (MeV sr s)* for the bg rate are
+    enforced, unless *do_not_force_mev_units* is set.
+    This is in agreement to the convention applied in
+    `~gammapy.background.make_bg_cube_model.`
 
     This method is useful for instance to produce true (simulated)
     background cube models to compare to the reconstructed ones
-    produced with `~gammapy.background.make_bg_cube_model.`
+    produced with `~gammapy.background.make_bg_cube_model`.
+    For details on how to do this, please refer to
+    :ref:`background_make_background_models_datasets_for_testing`.
 
     Parameters
     ----------
@@ -306,12 +332,15 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     spectral_index : double, optional
         Index for the power-law model used for the energy coordinate.
     apply_mask : bool, optional
-        If set, 1/4th of the image is masked (for `x > x_center` and
-        `y > y_center`).
+        If set, 1/4th of the image is masked (for **x > x_center**
+        and **y > y_center**).
+    do_not_force_mev_units : bool, optional
+        Set to ``True`` to use the same energy units as the energy
+        binning for the bg rate.
 
     Returns
     -------
-    bg_cube_model : `~gammapy.background.Cube`
+    bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Bacground cube model.
     """
     # spatial bins (linear)
@@ -332,16 +361,16 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # https://github.com/gammapy/gammapy/pull/290
 
     # define empty bg cube model and set bins
-    bg_cube_model = Cube(coordx_edges=detx_bin_edges,
-                         coordy_edges=dety_bin_edges,
-                         energy_edges=energy_bin_edges,
-                         data=None, scheme='bg_cube')
 
-    # background
+    bg_cube_model = CubeBackgroundModel.set_cube_binning(detx_edges=detx_bin_edges,
+                                                         dety_edges=dety_bin_edges,
+                                                         energy_edges=energy_bin_edges)
+
+    # counts
 
     # define coordinate grids for the calculations
-    det_bin_centers = bg_cube_model.image_bin_centers
-    energy_bin_centers = bg_cube_model.energy_bin_centers
+    det_bin_centers = bg_cube_model.counts_cube.image_bin_centers
+    energy_bin_centers = bg_cube_model.counts_cube.energy_bin_centers
     energy_points, dety_points, detx_points = np.meshgrid(energy_bin_centers,
                                                           det_bin_centers[1],
                                                           det_bin_centers[0],
@@ -350,11 +379,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     E_0 = Quantity(1., 'TeV') # reference energy for the model
 
     # norm of the model
-    # taking as reference
-    # for now a dummy value of 1 in units of '1 / (s TeV sr)
+    # taking as reference for now a dummy value of 1
     # it is linearly dependent on the zenith angle (90 deg - altitude)
     # it is norm_max at alt = 90 deg and norm_max/2 at alt = 0 deg
-    norm_max = Quantity(1., '1 / (s TeV sr)')
+    norm_max = Quantity(1, '')
     alt_min = Angle(0., 'degree')
     alt_max = Angle(90., 'degree')
     slope = (norm_max - norm_max/2)/(alt_max - alt_min)
@@ -372,10 +400,28 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     s_norm = sigma_min*((energy_bin_edges[0]/E_0)**-s_index)
     sigma = s_norm*((energy_points/E_0)**s_index)
 
-    # calculate bg
+    # calculate counts
     gaussian = np.exp(-((detx_points)**2 + (dety_points)**2)/sigma**2)
     powerlaw = (energy_points/E_0)**-spectral_index
-    background = norm*gaussian*powerlaw
+    counts = norm*gaussian*powerlaw
+
+    bg_cube_model.counts_cube.data = Quantity(counts, '')
+
+    # livetime
+    # taking as reference for now a dummy value of 1 s
+    livetime = Quantity(1., 'second')
+    bg_cube_model.livetime_cube.data += livetime
+
+    # background
+    bg_cube_model.background_cube.data = bg_cube_model.counts_cube.data.copy()
+    bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
+    bg_cube_model.background_cube.divide_bin_volume()
+    bg_cube_model.background_cube.set_zero_level()
+
+    if not do_not_force_mev_units:
+        # use units of 1 / (MeV sr s) for the bg rate
+        bg_rate = bg_cube_model.background_cube.data.to('1 / (MeV sr s)')
+        bg_cube_model.background_cube.data = bg_rate
 
     # apply mask if requested
     if apply_mask:
@@ -383,16 +429,22 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
         detx_center = (detx_range[1] + detx_range[0])/2.
         dety_center = (dety_range[1] + dety_range[0])/2.
         mask = (detx_points <= detx_center) & (dety_points <= dety_center)
-        background = background*mask
-
-    bg_cube_model.data = Quantity(background, '1 / (s TeV sr)')
+        bg_cube_model.counts_cube.data *= mask
+        bg_cube_model.livetime_cube.data *= mask
+        bg_cube_model.background_cube.data *= mask
 
     return bg_cube_model
 
 
 def make_test_dataset(fits_path, overwrite=False,
                       observatory_name='HESS', n_obs=10,
-                      datestart=None, dateend=None,
+                      az_range=Angle([0, 360], 'degree'),
+                      alt_range=Angle([45, 90], 'degree'),
+                      date_range=(Time('2010-01-01T00:00:00'),
+                                  Time('2015-01-01T00:00:00')),
+                      n_tels_range=(3, 4),
+                      sigma=Angle(5., 'deg'),
+                      spectral_index=2.7,
                       random_state='random-seed'):
     """
     Make a test dataset and save it to disk.
@@ -424,10 +476,22 @@ def make_test_dataset(fits_path, overwrite=False,
         `~gammapy.obs.observatory_locations`.
     n_obs : int
         Number of observations for the obs table.
-    datestart : `~astropy.time.Time`, optional
-        Starting date for random generation of observation start time.
-    dateend : `~astropy.time.Time`, optional
-        Ending date for random generation of observation start time.
+    az_range : `~astropy.coordinates.Angle`, optional
+        Azimuth angle range (start, end) for random generation of
+        observation pointing positions.
+    alt_range : `~astropy.coordinates.Angle`, optional
+        Altitude angle range (start, end) for random generation of
+        observation pointing positions.
+    date_range : `~astropy.time.Time`, optional
+        Date range (start, end) for random generation of observation
+        start time.
+    n_tels_range : int, optional
+        Range (start, end) of number of telescopes participating in
+        the observations.
+    sigma : `~astropy.coordinates.Angle`, optional
+        Width of the gaussian model used for the spatial coordinates.
+    spectral_index : double, optional
+        Index for the power-law model used for the energy coordinate.
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}, optional
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -436,27 +500,20 @@ def make_test_dataset(fits_path, overwrite=False,
 
     # create output folder
     outdir = fits_path
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(outdir) # recursively
-            os.mkdir(outdir)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(outdir)
-            raise RuntimeError(s_error)
+    _create_dir(outdir, overwrite)
 
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,
                                                     n_obs=n_obs,
-                                                    datestart=datestart, dateend=dateend,
+                                                    az_range=az_range,
+                                                    alt_range=alt_range,
+                                                    date_range=date_range,
                                                     use_abs_time=False,
+                                                    n_tels_range=n_tels_range,
                                                     random_state=random_state)
 
     # save observation list to disk
-    outfile = outdir + '/runinfo.fits'
+    outfile = os.path.join(outdir, 'runinfo.fits')
     observation_table.write(outfile)
 
     # create data store for the organization of the files
@@ -474,6 +531,8 @@ def make_test_dataset(fits_path, overwrite=False,
     for obs_id in observation_table['OBS_ID']:
         event_list, aeff_hdu = make_test_eventlist(observation_table=observation_table,
                                                    obs_id=obs_id,
+                                                   sigma=sigma,
+                                                   spectral_index=spectral_index,
                                                    random_state=random_state)
 
         # save event list and effective area table to disk
@@ -566,11 +625,11 @@ def make_test_eventlist(observation_table,
     # positive defined, so it is necessary to translate the (0, 1)
     # interval of the random variable to (emax, e_min) in order to
     # have a decreasing power-law
-    index = spectral_index + 1
     e_min = Quantity(0.1, 'TeV')
     e_max = Quantity(100., 'TeV')
-    energy = Quantity((e_min.value - e_max.value) *
-                      random_state.power(a=index, size=n_events) + e_max.value, 'TeV')
+    energy = sample_powerlaw(e_min.value, e_max.value, spectral_index,
+                             size=n_events, random_state=random_state)
+    energy = Quantity(energy, 'TeV')
 
     E_0 = Quantity(1., 'TeV') # reference energy for the model
 
