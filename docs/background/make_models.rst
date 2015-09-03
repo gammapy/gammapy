@@ -72,6 +72,8 @@ script in the `examples` directory can be used:
 :download:`plot_bg_cube_model_comparison.py
 <../../examples/plot_bg_cube_model_comparison.py>`
 
+.. _background_make_background_models_datasets_for_testing:
+
 Datasets for testing
 ~~~~~~~~~~~~~~~~~~~~
 

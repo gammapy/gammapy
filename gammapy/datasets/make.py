@@ -304,6 +304,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     This method is useful for instance to produce true (simulated)
     background cube models to compare to the reconstructed ones
     produced with `~gammapy.background.make_bg_cube_model.`
+    For details on how to do this, please refer to
+    :ref:`background_make_background_models_datasets_for_testing`.
 
     Parameters
     ----------
