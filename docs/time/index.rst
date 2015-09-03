@@ -60,8 +60,8 @@ In Gammapy, `astropy.time.Time` objects are used to represent times:
     >>> Time(['1999-01-01T00:00:00.123456789', '2010-01-01T00:00:00'])
     <Time object: scale='utc' format='isot' value=['1999-01-01T00:00:00.123' '2010-01-01T00:00:00.000']>
 
-Note that Astropy chose ``format='isot'`` and ``scale='utc'`` and in Gammapy these are also the
-recommended format and time scale.
+Note that Astropy chose ``format='isot'`` and ``scale='utc'`` as default and in
+Gammapy these are also the recommended format and time scale.
 
 .. warning::
 

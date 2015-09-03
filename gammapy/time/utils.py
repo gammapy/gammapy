@@ -76,9 +76,9 @@ def absolute_time(time_delta, meta):
     Returns
     -------
     time : `~astropy.time.Time`
-        absolute time with ``format='ISO'`` and ``scale='UTC'``
+        absolute time with ``format='ISOT'`` and ``scale='UTC'``
     """
     time = time_ref_from_dict(meta) + time_delta
-    time = Time(time.utc.iso, format='iso', scale='utc')
+    time = Time(time.utc.isot)
 
     return time

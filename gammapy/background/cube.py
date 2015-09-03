@@ -811,7 +811,11 @@ class Cube(object):
 
     @property
     def integral(self):
-        """Integral of the cube (`~astropy.units.Quantity`)"""
+        """Integral of the cube (`~astropy.units.Quantity`)
+
+        The returned quantity has dimension of the data in the cube
+        times solid angle times energy.
+        """
         delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
         delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
         delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]

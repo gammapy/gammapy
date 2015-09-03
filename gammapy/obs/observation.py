@@ -276,8 +276,7 @@ class ObservationTable(Table):
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='time_box',
-        ...                  time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'],
-        ...                                  format='isot', scale='utc'))
+        ...                  time_range=Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00']))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='ALT',
