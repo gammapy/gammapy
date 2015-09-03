@@ -833,6 +833,9 @@ class Cube(object):
 
         Calculate the integral of each energy bin (slice) in the
         cube. Returns an array of integrals.
+
+        The returned quantities have dimensions of the data in the cube
+        times solid angle.
         """
         dummy_delta_energy = np.zeros_like(self.energy_edges[:-1])
         delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]

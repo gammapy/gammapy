@@ -117,10 +117,10 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
         `~gammapy.obs.observatory_locations`.
     n_obs : int, optional
         Number of observations for the obs table.
-    az_range : `~astropy.coordinatesAngle`, optional
+    az_range : `~astropy.coordinates.Angle`, optional
         Azimuth angle range (start, end) for random generation of
         observation pointing positions.
-    alt_range : `~astropy.coordinatesAngle`, optional
+    alt_range : `~astropy.coordinates.Angle`, optional
         Altitude angle range (start, end) for random generation of
         observation pointing positions.
     date_range : `~astropy.time.Time`, optional
@@ -476,10 +476,10 @@ def make_test_dataset(fits_path, overwrite=False,
         `~gammapy.obs.observatory_locations`.
     n_obs : int
         Number of observations for the obs table.
-    az_range : `~astropy.coordinatesAngle`, optional
+    az_range : `~astropy.coordinates.Angle`, optional
         Azimuth angle range (start, end) for random generation of
         observation pointing positions.
-    alt_range : `~astropy.coordinatesAngle`, optional
+    alt_range : `~astropy.coordinates.Angle`, optional
         Altitude angle range (start, end) for random generation of
         observation pointing positions.
     date_range : `~astropy.time.Time`, optional
@@ -513,7 +513,7 @@ def make_test_dataset(fits_path, overwrite=False,
                                                     random_state=random_state)
 
     # save observation list to disk
-    outfile = outdir + '/runinfo.fits'
+    outfile = os.path.join(outdir, 'runinfo.fits')
     observation_table.write(outfile)
 
     # create data store for the organization of the files

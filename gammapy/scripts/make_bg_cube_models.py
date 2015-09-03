@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+import os
 import logging
 log = logging.getLogger(__name__)
 import numpy as np
@@ -169,7 +170,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
         observation_table = observation_table.select_observations(selection)
 
     # save the bg observation list to a fits file
-    outfile = outdir + '/bg_observation_table.fits.gz'
+    outfile = os.path.join(outdir, 'bg_observation_table.fits.gz')
     log.info("Writing {}".format(outfile))
     observation_table.write(outfile, overwrite=overwrite)
 
@@ -196,7 +197,7 @@ def group_observations(outdir, overwrite, test):
 
     # read bg observation table from file
     indir = outdir
-    infile = indir + '/bg_observation_table.fits.gz'
+    infile = os.path.join(indir, 'bg_observation_table.fits.gz')
     observation_table = ObservationTable.read(infile)
 
     # define observation binning
@@ -240,10 +241,10 @@ def group_observations(outdir, overwrite, test):
     log.info(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
-    outfile = outdir + '/bg_observation_groups.ecsv'
+    outfile = os.path.join(outdir, 'bg_observation_groups.ecsv')
     log.info("Writing {}".format(outfile))
     observation_groups.write(outfile, overwrite=overwrite)
-    outfile = outdir + '/bg_observation_table_grouped.fits.gz'
+    outfile = os.path.join(outdir, 'bg_observation_table_grouped.fits.gz')
     log.info("Writing {}".format(outfile))
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
@@ -271,9 +272,9 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
 
     # read observation grouping and grouped observation table
     indir = outdir
-    infile = indir + '/bg_observation_groups.ecsv'
+    infile = os.path.join(indir, 'bg_observation_groups.ecsv')
     observation_groups = ObservationGroups.read(infile)
-    infile = indir + '/bg_observation_table_grouped.fits.gz'
+    infile = os.path.join(indir, 'bg_observation_table_grouped.fits.gz')
     observation_table_grouped = ObservationTable.read(infile)
 
     # loop over observation groups
@@ -299,7 +300,7 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
         bg_cube_model = make_bg_cube_model(observation_table, fits_path, method)
 
         # save model to file
-        outfile = outdir + '/bg_cube_model_group{}'.format(group)
+        outfile = os.path.join(outdir, 'bg_cube_model_group{}'.format(group))
         log.info("Writing {}".format('{}_table.fits.gz'.format(outfile)))
         log.info("Writing {}".format('{}_image.fits.gz'.format(outfile)))
         bg_cube_model.write('{}_table.fits.gz'.format(outfile),

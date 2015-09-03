@@ -40,7 +40,7 @@ def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
 
     # read groups, then open bg cube model files and check that they
     # make sense
-    filename = outdir + '/bg_observation_groups.ecsv'
+    filename = os.path.join(outdir, 'bg_observation_groups.ecsv')
     observation_groups = ObservationGroups.read(filename)
 
     # loop over observation groups
@@ -49,7 +49,7 @@ def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
     for group in groups:
 
         # read bg cube model from file
-        filename = outdir + '/bg_cube_model_group{}_table.fits.gz'.format(group)
+        filename = os.path.join(outdir, 'bg_cube_model_group{}_table.fits.gz'.format(group))
         # skip bins with no bg cube model file
         if not os.path.isfile(filename):
             continue # skip the rest
