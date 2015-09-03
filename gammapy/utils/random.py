@@ -99,6 +99,8 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
 
     f(x) = x ** (-gamma) in the range x_min to x_max
 
+    It is assumed that *gamma* is the **differential** spectral index.
+
     Reference: http://mathworld.wolfram.com/RandomNumber.html
 
     Parameters
@@ -124,7 +126,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
 
     size = int(size)
 
-    exp = 1. - gamma
+    exp = -gamma
     base = random_state.uniform(x_min ** exp, x_max ** exp, size)
     x = base ** (1 / exp)
 

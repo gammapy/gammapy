@@ -101,7 +101,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     observatory, and randomizing the observation pointingpositions
     in a specified az-alt range.
 
-    If a `date_range` is specified, the starting time
+    If a *date_range* is specified, the starting time
     of the observations will be restricted to the specified interval.
     These parameters are interpreted as date, the precise hour of the
     day is ignored, unless the end date is closer than 1 day to the
@@ -297,11 +297,11 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     the spectral_index parameter.
     The norm depends linearly on the livetime
     and on the altitude angle of the observation.
-    It is possible to mask 1/4th of the image (for `x > x_center` and
-    `y > y_center`). Useful for testing coordinate rotations.
+    It is possible to mask 1/4th of the image (for **x > x_center**
+    and **y > y_center**). Useful for testing coordinate rotations.
 
     Per default units of *1 / (MeV sr s)* for the bg rate are
-    enforced, unless `do_not_force_mev_units` is set.
+    enforced, unless *do_not_force_mev_units* is set.
     This is in agreement to the convention applied in
     `~gammapy.background.make_bg_cube_model.`
 
@@ -332,10 +332,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     spectral_index : double, optional
         Index for the power-law model used for the energy coordinate.
     apply_mask : bool, optional
-        If set, 1/4th of the image is masked (for `x > x_center` and
-        `y > y_center`).
+        If set, 1/4th of the image is masked (for **x > x_center**
+        and **y > y_center**).
     do_not_force_mev_units : bool, optional
-        Set to `True` to use the same energy units as the energy
+        Set to ``True`` to use the same energy units as the energy
         binning for the bg rate.
 
     Returns
@@ -627,14 +627,9 @@ def make_test_eventlist(observation_table,
     # have a decreasing power-law
     e_min = Quantity(0.1, 'TeV')
     e_max = Quantity(100., 'TeV')
-    energy = Quantity(sample_powerlaw(e_min.value, e_max.value,
-                                      spectral_index + 1, # TODO: need to add 1
-                                                          # to the index because
-                                                          # sample_powerlaw
-                                                          # subtracts it, why??!!!
-                                      size=n_events,
-                                      random_state=random_state),
-                      'TeV')
+    energy = sample_powerlaw(e_min.value, e_max.value, spectral_index,
+                             size=n_events, random_state=random_state)
+    energy = Quantity(energy, 'TeV')
 
     E_0 = Quantity(1., 'TeV') # reference energy for the model
 
