@@ -64,8 +64,10 @@ def test_make_test_bg_cube_model():
                                             nenergy_bins=nenergy_bins)
 
     # test shape of cube bg model
-    assert len(bg_cube_model.data.shape) == 3
-    assert bg_cube_model.data.shape == (nenergy_bins, ndety_bins, ndetx_bins)
+    assert len(bg_cube_model.background_cube.data.shape) == 3
+    assert bg_cube_model.background_cube.data.shape == (nenergy_bins,
+                                                        ndety_bins,
+                                                        ndetx_bins)
 
     # make masked bg model
     bg_cube_model = make_test_bg_cube_model(apply_mask=True)
@@ -73,12 +75,15 @@ def test_make_test_bg_cube_model():
     # test that values with (x, y) > (0, 0) are zero
     x_points = Angle(np.arange(5) + 0.01, 'degree')
     y_points = Angle(np.arange(5) + 0.01, 'degree')
-    e_points = bg_cube_model.energy_bin_centers
+    e_points = bg_cube_model.background_cube.energy_bin_centers
     x_points, y_points, e_points = np.meshgrid(x_points, y_points, e_points,
                                                indexing='ij')
-    det_bin_index = bg_cube_model.find_coord_bin(Angle([x_points, y_points]))
-    e_bin_index = bg_cube_model.find_energy_bin(e_points)
-    bg = bg_cube_model.data[e_bin_index, det_bin_index[1], det_bin_index[0]]
+    det_bin_index = bg_cube_model.background_cube.find_coord_bin(Angle([x_points,
+                                                                        y_points]))
+    e_bin_index = bg_cube_model.background_cube.find_energy_bin(e_points)
+    bg = bg_cube_model.background_cube.data[e_bin_index,
+                                            det_bin_index[1],
+                                            det_bin_index[0]]
 
     # assert that values are 0
     assert_quantity_allclose(bg, Quantity(0., bg.unit))
