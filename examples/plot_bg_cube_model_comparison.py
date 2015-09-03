@@ -41,48 +41,51 @@ NAME2 = 'michi'
 #  - az_bin_ids_selection = [0, 1]
 group_ids_selection = [14, 15, 20, 21, 26, 27]
 
-# observation groups binning definition "michi"
+def convert_obs_groups_binning_def_michi_to_default():
+    """Convert observation groups binning definition "michi" to "default".
+    """
+    # observation groups binning definition "michi"
 
-# alt az bin edges definitions
-altitude_edges = Angle([0, 20, 23, 27, 30, 33, 37, 40, 44, 49, 53, 58, 64, 72, 90], 'degree')
-azimuth_edges = Angle([-90, 90, 270], 'degree')
+    # alt az bin edges definitions
+    altitude_edges = Angle([0, 20, 23, 27, 30, 33, 37, 40, 44, 49, 53, 58, 64, 72, 90], 'degree')
+    azimuth_edges = Angle([-90, 90, 270], 'degree')
 
-# convert observation groups binning definition "michi" to "default"
+    # convert observation groups binning definition "michi" to "default"
 
-list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, 'bin_edges'),
-                       ObservationGroupAxis('AZ', azimuth_edges, 'bin_edges')]
-obs_groups_michi = ObservationGroups(list_obs_group_axis)
-print("Observation groups 'michi':")
-print(obs_groups_michi.obs_groups_table)
-if SAVE and (binning_format1 == 'michi' or binning_format2 == 'michi'):
+    list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, 'bin_edges'),
+                           ObservationGroupAxis('AZ', azimuth_edges, 'bin_edges')]
+    obs_groups_michi = ObservationGroups(list_obs_group_axis)
+    print("Observation groups 'michi':")
+    print(obs_groups_michi.obs_groups_table)
+    # save
     outfile = 'bg_observation_groups_michi.ecsv'
     print('Writing {}'.format(outfile))
     obs_groups_michi.write(outfile)
 
-# lookup table: equivalences in group/file naming "defualt" <-> "michi"
-# 3 columns: GROUP_ID, ALT_ID, AZ_ID
-# 28 rows: 1 per GROUP_ID
+    # lookup table: equivalences in group/file naming "defualt" <-> "michi"
+    # 3 columns: GROUP_ID, ALT_ID, AZ_ID
+    # 28 rows: 1 per GROUP_ID
 
-lookup_obs_groups_michi = Table()
-n_cols = 1 + len(list_obs_group_axis)
-n_rows = obs_groups_michi.n_groups
-lookup_obs_groups_michi['GROUP_ID'] = np.zeros(n_rows, dtype=np.int)
-lookup_obs_groups_michi['ALT_ID'] = np.zeros(n_rows, dtype=np.int)
-lookup_obs_groups_michi['AZ_ID'] = np.zeros(n_rows, dtype=np.int)
+    lookup_obs_groups_michi = Table()
+    n_cols = 1 + len(list_obs_group_axis)
+    n_rows = obs_groups_michi.n_groups
+    lookup_obs_groups_michi['GROUP_ID'] = np.zeros(n_rows, dtype=np.int)
+    lookup_obs_groups_michi['ALT_ID'] = np.zeros(n_rows, dtype=np.int)
+    lookup_obs_groups_michi['AZ_ID'] = np.zeros(n_rows, dtype=np.int)
 
-# loop over each observation group axis
-count_groups = 0
-for alt_id in np.arange(len(altitude_edges) - 1):
-    for az_id in np.arange(len(azimuth_edges) - 1):
-        lookup_obs_groups_michi['GROUP_ID'][count_groups] = count_groups
-        lookup_obs_groups_michi['ALT_ID'][count_groups] = alt_id
-        lookup_obs_groups_michi['AZ_ID'][count_groups] = az_id
-        count_groups += 1
+    # loop over each observation group axis
+    count_groups = 0
+    for alt_id in np.arange(len(altitude_edges) - 1):
+        for az_id in np.arange(len(azimuth_edges) - 1):
+            lookup_obs_groups_michi['GROUP_ID'][count_groups] = count_groups
+            lookup_obs_groups_michi['ALT_ID'][count_groups] = alt_id
+            lookup_obs_groups_michi['AZ_ID'][count_groups] = az_id
+            count_groups += 1
 
-print("lookup table:")
-print(lookup_obs_groups_michi)
+    print("lookup table:")
+    print(lookup_obs_groups_michi)
 
-if SAVE and (binning_format1 == 'michi' or binning_format2 == 'michi'):
+    # save
     outfile = 'lookup_obs_groups_michi.ecsv'
     print('Writing {}'.format(outfile))
     # `~astropy.io.ascii` always overwrites the file
@@ -106,6 +109,10 @@ def look_obs_groups_michi(group_id):
     i_az : int
         Azimuth bin index corresponding to the requested group ID.
     """
+    #read lookup
+    filename = 'lookup_obs_groups_michi.ecsv'
+    lookup_obs_groups_michi = ascii.read(filename)
+
     # find group row in lookup table
     group_ids = lookup_obs_groups_michi['GROUP_ID'].data
     group_index = np.where(group_ids == group_id)
@@ -184,6 +191,10 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
         (binning_format2 not in accepted_binnings)):
         raise ValueError("Invalid binning format: {0} or {1}".format(binning_format1,
                                                                      binning_format2))
+
+    # convert binning, if necessary
+    if binning_format1 == 'michi' or binning_format2 == 'michi':
+        convert_obs_groups_binning_def_michi_to_default()
 
     # loop over observation groups: use binning of the 1st set to compare
     if binning_format1 == 'michi':
