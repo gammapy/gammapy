@@ -841,25 +841,15 @@ class Cube(object):
 
         return integral_images.sum(axis=(1, 2))
 
-    def divide_bin_volume(self, do_not_force_mev_units=False):
-        """Divide cube by the bin volume.
-
-        Parameters
-        ----------
-        do_not_force_mev_units : bool, optional
-            Set to `True` to use the same energy units as the energy
-            binning.
-        """
+    def divide_bin_volume(self):
+        """Divide cube by the bin volume."""
         delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
         delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
         delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')
-        if do_not_force_mev_units:
-            bin_volume = delta_energy*(delta_y*delta_x).to('sr')
-        else:
-            bin_volume = delta_energy.to('MeV')*(delta_y*delta_x).to('sr')
+        bin_volume = delta_energy*(delta_y*delta_x).to('sr')
         self.data /= bin_volume
 
     def set_zero_level(self):
