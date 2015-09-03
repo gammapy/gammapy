@@ -26,7 +26,7 @@ def make_bg_cube_model(observation_table, fits_path, method='default', do_not_fo
     6. set 0 level
 
     Per default units of *1 / (MeV sr s)* for the bg rate are
-    enforced, unless `do_not_force_mev_units` is set.
+    enforced, unless *do_not_force_mev_units* is set.
 
     The steps are slightly altered in case a different method as the
     *default* one is used. In the *michi* method:
@@ -52,9 +52,9 @@ def make_bg_cube_model(observation_table, fits_path, method='default', do_not_fo
     method : {'default', 'michi'}, optional
         Bg cube model calculation method to apply.
     do_not_force_mev_units : bool, optional
-        Set to `True` to use the same energy units as the energy
+        Set to ``True`` to use the same energy units as the energy
         binning for the bg rate. (Only applicable to the *default*
-        method; the *michi* always enforces `MeV` in the bg rate
+        method; the *michi* always enforces ``MeV`` in the bg rate
         units.)
 
     Returns
