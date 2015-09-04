@@ -278,7 +278,7 @@ class Fermi3FGLObject(object):
         for i in range(0, np.size(self.x_bins_edges) - 1):
 
             flux = self.cat_row[self.y_labels[i]]
-            
+
             # Require both a detection and a lower bound
             if np.isnan(flux) == False:
 
@@ -333,11 +333,13 @@ class Fermi3FGLObject(object):
                                     alpha=self.spec_index,
                                     beta = self.beta)
 
-        elif self.spec_type == "PLSuperExpCutoff":
+        elif self.spec_type == "PLExpCutoff":
             y_model = ExponentialCutoffPowerLaw1D(amplitude=self.int_flux,
                                                   x_0=self.pivot_en,
                                                   alpha=self.spec_index,
                                                   x_cutoff = self.cutoff)
+        elif self.spec_type == "PLSuperExpCutoff":
+	    raise NotImplementedError
 
         ax.plot(x_model, y_model(x_model))
 
