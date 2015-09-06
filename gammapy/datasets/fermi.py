@@ -264,6 +264,12 @@ class Fermi3FGLObject(object):
             cls.fermi_cat = fetch_fermi_catalog('3FGL')
         return cls.fermi_cat
 
+    def plot_lightcurve(self, ax=None):
+        from gammapy.time import plot_fermi_3fgl_light_curve
+
+        ax = plot_fermi_3fgl_light_curve(self.name_3FGL)
+        return ax
+
     def plot_spectrum(self, ax=None):
         import matplotlib.pyplot as plt
         from gammapy.extern.stats import gmean
