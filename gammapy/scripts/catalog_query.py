@@ -34,11 +34,12 @@ def catalog_query(catalog, source, querytype):
             print(val)
 
     elif querytype == 'lightcurve':
-        from gammapy.time import plot_fermi_3fgl_light_curve
         import matplotlib.pyplot as plt
 
-        plot_fermi_3fgl_light_curve(catalog_object.name_3FGL)
+        ax = catalog_object.plot_lightcurve()
+        ax.plot()
         plt.show()
+
 
     elif querytype == 'spectrum':
         raise NotImplementedError
