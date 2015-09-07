@@ -20,10 +20,8 @@ from gammapy.obs import (DataStore, ObservationGroups,
 from gammapy.background import make_bg_cube_model
 from gammapy.utils.scripts import _create_dir
 
-
 #TEST = True # create a small dataset
 TEST = False # create a large dataset (slow)
-
 
 # define model parameters
 SIGMA = Angle(5., 'deg')
