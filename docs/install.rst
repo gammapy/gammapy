@@ -45,9 +45,9 @@ functionality available:
 
     conda install \
         scikit-image scikit-learn h5py pandas \
-        aplpy wcsaxes photutils
+        aplpy wcsaxes photutils reproject
 
-    pip install reproject iminuit
+    pip install iminuit
 
 Sherpa is the only Gammapy dependency that's not yet available on Python 3, so if you want
 to use Sherpa for modeling / fitting, install Anaconda Python 2 and
