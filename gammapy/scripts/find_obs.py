@@ -89,9 +89,10 @@ def find_obs(infile,
         gammapy-find-obs -h
 
     In order to test the examples below, the test observation list
-    file located in the `~gammapy-extra` repository
-    (`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_)
+    file located in the ``gammapy-extra`` repository `test_observation_table.fits`_
     can be used as input observation list.
+
+    .. _test_observation_table.fits: https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits
 
     More information is available at :ref:`obs_find_observations`.
 

@@ -145,8 +145,8 @@ def fetch_catalog_snrcat(cache=False):
     -------
     data : `~gammapy.extern.bunch.Bunch`
         Dictionary-like object with attributes:
-          * `snr_table` (`~astropy.table.Table`) -- SNR info table
-          * `obs_table` (`~astropy.table.Table`) -- High-energy observation info table
+          * ``snr_table`` (`~astropy.table.Table`) -- SNR info table
+          * ``obs_table`` (`~astropy.table.Table`) -- High-energy observation info table
 
         Each table has a ``version`` string containing the download date in the ``table.meta`` dictionary.
     """

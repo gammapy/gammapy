@@ -198,4 +198,4 @@ if eval(setup_cfg.get('edit_on_github')):
 
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
 
-nitpicky = True
+# nitpicky = True

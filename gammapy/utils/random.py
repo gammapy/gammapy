@@ -31,12 +31,12 @@ def get_random_state(init):
           (calls `~numpy.random.RandomState` with ``seed=init``)
         * ``'random-seed'`` -- new RandomState instance seeded in a random way
           (calls `~numpy.random.RandomState` with ``seed=None``)
-        * ``'global-rng'``, return the RandomState singleton used by `numpy.random`.
+        * ``'global-rng'``, return the RandomState singleton used by ``numpy.random``.
         * `~numpy.random.RandomState` -- do nothing, return the input.
 
     Returns
     -------
-    random_state : `np.random.RandomState`
+    random_state : `~numpy.random.RandomState`
         RandomState instance.
     """
     if isinstance(init, (numbers.Integral, np.integer)):
@@ -71,7 +71,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
 
     Returns
     -------
-    lon, lat: `~astropy.units.Angle`
+    lon, lat: `~astropy.coordinates.Angle`
         Longitude and latitude coordinate arrays
     """
     random_state = get_random_state(random_state)

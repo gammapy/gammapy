@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _dataformats:
 
 ************
@@ -64,7 +66,6 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 
 .. _GCTACubeExposure: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTACubeExposure.html
 
-.. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
 .. _GCTAPsf2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsf2D.html
 .. _GCTAPsfVector: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsfVector.html
 .. _GCTACubePsf: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTACubePsf.html

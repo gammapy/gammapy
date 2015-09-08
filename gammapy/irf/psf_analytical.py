@@ -134,7 +134,7 @@ class EnergyDependentMultiGaussPSF(object):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
 
         Returns

@@ -23,13 +23,13 @@ def convert_likelihood(to, probability=None, significance=None,
                        ts=None, chi2=None, df=None):
     """Convert between various equivalent likelihood measures.
 
-    TODO: don't use `chi2` with this function at the moment ...
+    TODO: don't use ``chi2`` with this function at the moment ...
     I forgot that one also needs the number of data points to
-    compute `ts`:
+    compute ``ts``:
     http://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test#Calculating_the_test-statistic
     Probably it's best to split this out into a separate function
-    or just document how users should compute `ts` before calling this
-    function if they have `chi2`.
+    or just document how users should compute ``ts`` before calling this
+    function if they have ``chi2``.
 
 
     This function uses the ``sf`` and ``isf`` methods of the
@@ -47,9 +47,9 @@ def convert_likelihood(to, probability=None, significance=None,
     - probability <--- chi2 distribution with df ---> ts
     - ts = chi2 / df
 
-    So supporting both `ts` and `chi2` in this function is redundant,
-    it's kept as a convenience for users that have a `ts` value from
-    a Poisson likelihood fit and users that have a `chi2` value from
+    So supporting both ``ts`` and ``chi2`` in this function is redundant,
+    it's kept as a convenience for users that have a ``ts`` value from
+    a Poisson likelihood fit and users that have a ``chi2`` value from
     a chi-square fit.
 
     Parameters
@@ -65,7 +65,7 @@ def convert_likelihood(to, probability=None, significance=None,
     Returns
     -------
     value : `numpy.ndarray`
-        Output value as requested by the input `to` parameter.
+        Output value as requested by the input ``to`` parameter.
 
     Notes
     -----
@@ -94,7 +94,7 @@ def convert_likelihood(to, probability=None, significance=None,
 
     TODO: check if this gives correct coverage for cases with hard physical limits,
     e.g. when fitting TS of extended sources vs. point source and in half of the
-    cases `TS=0` ... I suspect coverage might not be OK and we need to add an
+    cases ``TS=0`` ... I suspect coverage might not be OK and we need to add an
     option to this function to handle those cases!
 
     Examples

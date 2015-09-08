@@ -103,11 +103,11 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
     - gray: non-significant features are not well visible
     - color: significant features at the detection threshold ``transition``
 
-    Note that this colormap is often critizised for over-exaggerating small differences
+    Note that this colormap is often criticised for over-exaggerating small differences
     in significance below and above the gray - color transition threshold.
 
     The transition parameter is defined between 0 and 1. To calculate the value
-    from data units an `~astropy.visualization.ImageNormalize` instance should be
+    from data units an `~astropy.visualization.mpl_normalize.ImageNormalize` instance should be
     used (see example below).
 
     Parameters
@@ -121,7 +121,7 @@ def colormap_milagro(transition=0.5, width=0.0001, huestart=0.6):
 
     Returns
     -------
-    colormap : `matplotlib.colors.LinearSegmentedColormap`
+    colormap : `~matplotlib.colors.LinearSegmentedColormap`
         Colormap
 
     Examples
