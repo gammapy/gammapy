@@ -3,10 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.io import fits
+from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
+from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'abramowski_effective_area',
@@ -114,6 +116,17 @@ class EffectiveAreaTable(object):
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+        """
+        table = Table()
+
+        table['ENERG_LO'] = self.energy_lo
+        table['ENERGY_HI'] = self.energy_hi
+        table['SPECRESP'] = self.effective_area
+
+        return table
+
     def to_fits(self, header=None, energy_unit='TeV', effarea_unit='m2', **kwargs):
         """
         Convert ARF to FITS HDU list format.
@@ -146,21 +159,8 @@ class EffectiveAreaTable(object):
         self.energy_hi = self.energy_hi.to(energy_unit)
         self.effective_area = self.effective_area.to(effarea_unit)
 
-        hdu = fits.new_table(
-            [fits.Column(name='ENERG_LO',
-                         format='1E',
-                         array=self.energy_lo.value,
-                         unit=str(self.energy_lo.unit)),
-             fits.Column(name='ENERG_HI',
-                         format='1E',
-                         array=self.energy_hi.value,
-                         unit=str(self.energy_hi.unit)),
-             fits.Column(name='SPECRESP',
-                         format='1E',
-                         array=self.effective_area.value,
-                         unit=str(self.effective_area.unit))
-             ]
-        )
+
+        hdu = table_to_fits_table(self.to_table())
 
         if header is None:
             from ..datasets import load_arf_fits_table

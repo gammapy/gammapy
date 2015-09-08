@@ -43,12 +43,9 @@ def test_EffectiveAreaTable():
 
 
 def test_EffectiveAreaTable_write(tmpdir):
-    # Read test psf file
-    psf = EffectiveAreaTable.from_fits(load_arf_fits_table())
-
+    irf = EffectiveAreaTable.from_fits(load_arf_fits_table())
     filename = str(tmpdir.join('effarea_test.fits'))
-    # Write it back to disk
-    psf.write(filename)
+    irf.write(filename)
 
     # Verify checksum
     hdu_list = fits.open(filename)
