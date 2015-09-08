@@ -2,6 +2,7 @@
 """Define observers and convenience functions to convert celestial
 SkyCoords to the horizontal altitude-azimuth system.
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.coordinates import Angle, EarthLocation
 from gammapy.extern.bunch import Bunch

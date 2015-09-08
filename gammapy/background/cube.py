@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Cube container.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
@@ -14,8 +13,9 @@ from ..utils.wcs import (linear_wcs_to_arrays,
                          linear_arrays_to_wcs)
 from ..utils.fits import table_to_fits_table
 
-__all__ = ['Cube',
-           ]
+__all__ = [
+    'Cube',
+]
 
 
 def _make_bin_edges_array(lo, hi):
@@ -61,7 +61,6 @@ def _parse_data_units(data_unit):
 
 
 class Cube(object):
-
     """Cube container class.
 
     Container class for cubes *(X, Y, energy)*.
@@ -326,7 +325,7 @@ class Cube(object):
             raise ValueError(ss_error)
 
         # get coord X, Y binning
-        wcs = WCS(image_header, naxis=2) # select only the (X, Y) axes
+        wcs = WCS(image_header, naxis=2)  # select only the (X, Y) axes
         coordx_edges, coordy_edges = linear_wcs_to_arrays(wcs,
                                                           image_header['NAXIS1'],
                                                           image_header['NAXIS2'])
@@ -485,7 +484,7 @@ class Cube(object):
         format : str, optional
             Format of the cube to write.
         kwargs
-            Extra arguments for the corresponding `io.fits` `writeto` method.
+            Extra arguments for the corresponding `astropy.io.fits` ``writeto`` method.
         """
         if format == 'table':
             self.to_fits_table().writeto(outfile, **kwargs)
@@ -701,7 +700,7 @@ class Cube(object):
 
         image = ax.imshow(data.value,
                           extent=extent.value,
-                          origin='lower', # do not invert image
+                          origin='lower',  # do not invert image
                           interpolation='nearest',
                           **style_kwargs)
 
@@ -745,7 +744,7 @@ class Cube(object):
         """
         import matplotlib.pyplot as plt
 
-        coord = coord.flatten() # flatten
+        coord = coord.flatten()  # flatten
         # check shape of coord: only 1 pair is accepted
         nvalues = len(coord.flatten())
         if nvalues != 2:
@@ -787,17 +786,17 @@ class Cube(object):
 
         image = ax.plot(energy_points.to('TeV'),
                         data,
-                        drawstyle='default', # connect points with lines
+                        drawstyle='default',  # connect points with lines
                         **style_kwargs)
-        ax.loglog() # double log scale # slow!
+        ax.loglog()  # double log scale # slow!
 
         # set title and axis names
         ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[0].value,
-                                                            coord_bin_edges[1].value,
-                                                            coord_bin_edges.unit)
+                                                              coord_bin_edges[1].value,
+                                                              coord_bin_edges.unit)
         ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[2].value,
-                                                            coord_bin_edges[3].value,
-                                                            coord_bin_edges.unit)
+                                                              coord_bin_edges[3].value,
+                                                              coord_bin_edges.unit)
 
         ax.set_title('Coord = {0} {1}'.format(ss_coordx_bin_edges, ss_coordy_bin_edges))
         ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['energy_plot_name'],
@@ -822,8 +821,8 @@ class Cube(object):
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')
-        bin_volume = delta_energy*(delta_y*delta_x).to('sr')
-        integral = self.data*bin_volume
+        bin_volume = delta_energy * (delta_y * delta_x).to('sr')
+        integral = self.data * bin_volume
 
         return integral.sum()
 
@@ -843,8 +842,8 @@ class Cube(object):
         # define grid of deltas (i.e. bin widths for each 3D bin)
         dummy_delta_energy, delta_y, delta_x = np.meshgrid(dummy_delta_energy, delta_y,
                                                            delta_x, indexing='ij')
-        bin_area = (delta_y*delta_x).to('sr')
-        integral_images = self.data*bin_area
+        bin_area = (delta_y * delta_x).to('sr')
+        integral_images = self.data * bin_area
 
         return integral_images.sum(axis=(1, 2))
 
@@ -856,7 +855,7 @@ class Cube(object):
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')
-        bin_volume = delta_energy*(delta_y*delta_x).to('sr')
+        bin_volume = delta_energy * (delta_y * delta_x).to('sr')
         self.data /= bin_volume
 
     def set_zero_level(self):

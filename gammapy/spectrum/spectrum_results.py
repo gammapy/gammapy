@@ -15,9 +15,8 @@ TODO;
 - [ ] Plot spectrum
 - [ ] Compute butterfly from covariance matrix here
 - [ ] Interface these classes to Sherpa results ... make it easy to compare, i.e. cross-check `hspec` against `FitSpectrum`
-
-
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import sys
 from collections import OrderedDict
@@ -87,6 +86,7 @@ class SpectrumStats(DictWithInfo):
 
 class Spectrum(Table):
     """Spectrum info (counts, exposure, ...)"""
+
     @classmethod
     def from_json(cls, data):
         table = cls(data=data['bin_values'], masked=True)
@@ -134,6 +134,7 @@ class Spectrum(Table):
 
 class FluxPoints(Table, SpectrumAsciiTableMixin):
     """Flux points (energy, flux, ...)."""
+
     @classmethod
     def from_json(cls, data):
         table = cls(data=data['bin_values'], masked=True)
@@ -178,9 +179,9 @@ class SpectralModel:
         """Factory function."""
         # Store model-dependent info
         if data['type'] == 'PowerLaw':
-            model = SpectralModelPowerLaw() #.from_json(data)
+            model = SpectralModelPowerLaw()  # .from_json(data)
         elif data['type'] == 'ExpCutoffPL3':
-            model = SpectralModelExponentialCutoffPowerLaw() # .from_json(data)
+            model = SpectralModelExponentialCutoffPowerLaw()  # .from_json(data)
         else:
             raise ValueError('Invalid `type`: {}'.format(data['type']))
 
@@ -242,6 +243,7 @@ class SpectralModel:
 class SpectralModelPowerLaw(SpectralModel):
     """Power-law spectral model.
     """
+
     def flux(self, energy):
         pars = self.meta['parameters']
         f0 = pars['f0']
@@ -253,6 +255,7 @@ class SpectralModelPowerLaw(SpectralModel):
 class SpectralModelExponentialCutoffPowerLaw(SpectralModel):
     """Exponential cutoff power-law spectral model.
     """
+
     def flux(self, energy):
         pars = self.meta['parameters']
         f0 = pars['f0']
@@ -267,6 +270,7 @@ class SpectralModels(list):
 
     Has some convenience methods to compare the different models.
     """
+
     @classmethod
     def from_json(cls, data):
         models = cls()
@@ -346,6 +350,7 @@ def main():
     results = SpectrumResults(filename)
     # results.info()
     print('ts = ', results.spectral_models.test_statistic())
+
 
 if __name__ == '__main__':
     main()

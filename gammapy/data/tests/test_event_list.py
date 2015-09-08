@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import get_path
-
 
 filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
 

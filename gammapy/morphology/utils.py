@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Morphology utility functions (mostly I/O)."""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 
 __all__ = ['read_ascii', 'read_json', 'write_all', 'write_ascii', 'write_json']
@@ -93,7 +93,7 @@ def write_all(filename='results.json'):
 
     try:
         fit_attrs = ('methodname', 'statname', 'succeeded', 'statval', 'numpoints', 'dof',
-               'rstat', 'qval', 'nfev', 'message', 'parnames', 'parvals')
+                     'rstat', 'qval', 'nfev', 'message', 'parnames', 'parvals')
         fit = sau.get_fit_results()
         out['fit'] = dict((attr, getattr(fit, attr)) for attr in fit_attrs)
     except Exception as err:
@@ -109,7 +109,7 @@ def write_all(filename='results.json'):
 
     try:
         covar_attrs = ('datasets', 'methodname', 'fitname', 'statname', 'sigma', 'percent',
-                      'parnames', 'parvals', 'parmins', 'parmaxes', 'nfits')
+                       'parnames', 'parvals', 'parmins', 'parmaxes', 'nfits')
         covar = sau.get_covar_results()
         out['covar'] = dict((attr, getattr(covar, attr)) for attr in covar_attrs)
     except Exception as err:

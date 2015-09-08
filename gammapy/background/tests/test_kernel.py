@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-import os
 from astropy.io import fits
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
@@ -11,7 +10,6 @@ from ...background import GammaImages, IterativeKernelBackgroundEstimator
 from ...image import make_empty_image
 from ...stats import significance
 from ...datasets import FermiGalacticCenter
-
 
 try:
     import scipy
@@ -49,6 +47,7 @@ def test_GammaImages():
 class TestIterativeKernelBackgroundEstimator(object):
     """Tests methods in the IterativeKernelBackgroundEstimator.
     """
+
     def setup_class(self):
         """Prepares appropriate input and defines inputs for test cases.
         """
@@ -86,28 +85,28 @@ class TestIterativeKernelBackgroundEstimator(object):
         # Loads prepared inputs into estimator
 
         self.ibe = IterativeKernelBackgroundEstimator(
-                                                 images,
-                                                 source_kernel,
-                                                 background_kernel,
-                                                 significance_threshold,
-                                                 mask_dilation_radius
-                                                 )
+            images,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
         self.ibe2 = IterativeKernelBackgroundEstimator(
-                                                 images,
-                                                 source_kernel,
-                                                 background_kernel,
-                                                 significance_threshold,
-                                                 mask_dilation_radius
-                                                 )
+            images,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
         self.ibe_blob = IterativeKernelBackgroundEstimator(
-                                                      images_blob,
-                                                      source_kernel,
-                                                      background_kernel,
-                                                      significance_threshold,
-                                                      mask_dilation_radius
-                                                      )
+            images_blob,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
     def test_run_iteration_point(self):
         """Asserts that mask and background are as expected according to input."""

@@ -65,3 +65,4 @@
 .. _scientific Python stack: http://www.scipy.org/about.html
 
 .. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
+.. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt

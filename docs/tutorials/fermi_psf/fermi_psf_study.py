@@ -1,12 +1,10 @@
 """Produces table to study the size of the Fermi-LAT PSF with Energy.
 """
-import numpy as np
-from astropy.units import Quantity
+import matplotlib.pyplot as plt
 from astropy.table import Table
 from gammapy.spectrum import EnergyBounds
 from gammapy.datasets import FermiGalacticCenter, FermiVelaRegion
 from gammapy.datasets import load_lat_psf_performance
-import matplotlib.pyplot as plt
 
 __all__ = ['get_psf_table', 'plot_containment_radii']
 
@@ -45,7 +43,7 @@ def plot_containment_radii(fraction):
     """Plotting script for 68% and 95% containment radii."""
 
     psf_gc = FermiGalacticCenter.psf()
-    gtpsf_table_gc = get_psf_table(psf_gc,  10000, 300000, 15)
+    gtpsf_table_gc = get_psf_table(psf_gc, 10000, 300000, 15)
 
     psf_vela = FermiVelaRegion.psf()
     gtpsf_table_vela = get_psf_table(psf_vela, 10000, 300000, 15)

@@ -2,10 +2,8 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-
 import astropy.units as u
 from aplpy import FITSFigure
-
 from gammapy.astro import population
 from gammapy.datasets import FermiGalacticCenter
 from gammapy.image import make_empty_image, catalog_image

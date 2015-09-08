@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import log
 from astropy.io import fits
+from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..irf import HESSMultiGaussPSF
+from ..utils.fits import table_to_fits_table
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
@@ -54,6 +56,7 @@ class EnergyDependentMultiGaussPSF(object):
         plt.show()
 
     """
+
     def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV'),
@@ -131,7 +134,7 @@ class EnergyDependentMultiGaussPSF(object):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
 
         Returns
@@ -153,26 +156,23 @@ class EnergyDependentMultiGaussPSF(object):
         names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI', 'AZIMUTH_LO',
                  'AZIMUTH_HI', 'ZENITH_LO', 'ZENITH_HI', 'SCALE', 'SIGMA_1',
                  'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
-        formats = ['15E', '15E', '12E', '12E', '1E', '1E', '1E', '1E', '180E',
-                   '180E', '180E', '180E', '180E', '180E']
+        units = ['TeV', 'TeV', 'deg', 'deg', 'deg', 'deg', 'deg', 'deg',
+                 '', 'deg', '', 'deg', '', 'deg']
         data = [self.energy_lo, self.energy_hi, self.theta, self.theta,
                 self._azimuth, self._azimuth, self._zenith, self._zenith,
                 self.norms[0].flatten(), self.sigmas[0].flatten(),
                 self.norms[1].flatten(), self.sigmas[1].flatten(),
                 self.norms[2].flatten(), self.sigmas[2].flatten()]
-        units = ['TeV', 'TeV', 'deg', 'deg', 'deg', 'deg', 'deg', 'deg',
-                 '', 'deg', '', 'deg', '', 'deg']
 
-        # Set up columns
-        columns = []
-        for name_, format_, data_, unit_ in zip(names, formats, data, units):
-            if isinstance(data_, Quantity):
-                data_ = data_.value
-            columns.append(fits.Column(name=name_, format=format_,
-                                       array=[data_], unit=unit_))
+        table = Table()
+        for name_, data_, unit_ in zip(names, data, units):
+            table[name_] = [data_]
+
+        # TODO: add units!?
+
         # Create hdu and hdu list
         prim_hdu = fits.PrimaryHDU()
-        hdu = fits.BinTableHDU.from_columns(columns)
+        hdu = table_to_fits_table(table)
         hdu.header = header
         hdu.add_checksum()
         hdu.add_datasum()
@@ -277,7 +277,7 @@ class EnergyDependentMultiGaussPSF(object):
         plt.yticks(np.arange(len(self.theta)), yticks, size=9)
         cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9)
         cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
-                        labelpad=20)
+                       labelpad=20)
 
         if filename is not None:
             log.info('Wrote {0}'.format(filename))

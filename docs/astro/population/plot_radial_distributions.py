@@ -4,6 +4,7 @@ import numpy as np
 from gammapy.astro.population import radial_distributions
 from gammapy.utils.distributions import normalize
 
+# TODO: use Quantity
 max_radius = 20  # kpc
 r = np.linspace(0, max_radius, 100)
 

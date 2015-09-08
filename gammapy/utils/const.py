@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Thin wrapper and some additions to the astropy const and units packages."""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Unit, Quantity
 
@@ -21,6 +21,7 @@ def conversion_factor(old, new):
     """
     return Unit(old).to(Unit(new))
 
+
 """ Astronomical constants """
 d_sun_to_galactic_center = Quantity(8.5, 'kpc')  # Distance Sun to Galactic center (kpc)
 
@@ -32,7 +33,7 @@ fwhm_to_sigma = 1 / sigma_to_fwhm
 # See https://gist.github.com/cdeil/5990465
 # how they were computed and what units they are in
 # TODO: use astropy constants and units throughout
-#__all__ += ['c', 'h', 'h_eV', 'hbar', 'k_B', 'k_B_eV', 'm_H', 'm_e', 'm_e_eV',
+# __all__ += ['c', 'h', 'h_eV', 'hbar', 'k_B', 'k_B_eV', 'm_H', 'm_e', 'm_e_eV',
 #            'm_sun', 'sigma_T']
 
 # from astropy import constants as const

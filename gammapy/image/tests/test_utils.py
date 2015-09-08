@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
@@ -49,7 +49,6 @@ def test_binary_ring():
 
 
 class TestImageCoordinates(object):
-
     def setup_class(self):
         self.image = make_empty_image(nxpix=3, nypix=2,
                                       binsz=10, proj='CAR')
@@ -130,7 +129,6 @@ def test_process_image_pixels():
 
 @pytest.mark.skipif('not HAS_SKIMAGE')
 class TestBlockReduceHDU():
-
     def setup_class(self):
         # Arbitrarily choose CAR projection as independent from tests
         projection = 'CAR'
@@ -192,7 +190,6 @@ def test_cube_to_image():
 
 
 def test_wcs_histogram2d():
-
     # A simple test case that can by checked by hand:
     header = make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
     # GLON pixel edges: (+10, 0, -10)
@@ -200,12 +197,12 @@ def test_wcs_histogram2d():
 
     EPS = 0.1
     data = [
-            ( 5,  5,  1),        # in image[0, 0]
-            ( 0,  0 + EPS,  2),  # in image[1, 0]
-            ( 5, -5 + EPS,  3),  # in image[0, 0]
-            ( 5,  5 + EPS, 99),  # outside image
-            (10 + EPS, 0, 99),   # outside image
-            ]
+        (5, 5, 1),  # in image[0, 0]
+        (0, 0 + EPS, 2),  # in image[1, 0]
+        (5, -5 + EPS, 3),  # in image[0, 0]
+        (5, 5 + EPS, 99),  # outside image
+        (10 + EPS, 0, 99),  # outside image
+    ]
     lon, lat, weights = np.array(data).T
     image = wcs_histogram2d(header, lon, lat, weights)
 

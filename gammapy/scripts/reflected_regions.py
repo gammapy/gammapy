@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['reflected_regions']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -26,7 +26,7 @@ def main(args=None):
                         help='Exclusion region mask FITS file name')
     parser.add_argument('--outfile', type=str,
                         help='Output file name (ds9 region format) '
-                        '[default=%(default)s]')
+                             '[default=%(default)s]')
     parser.add_argument('--min_on_distance', type=float, default=0.1,
                         help='Minimum distance to the on region (deg)')
     parser.add_argument("-l", "--loglevel", default='info',

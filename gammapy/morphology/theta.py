@@ -5,14 +5,15 @@ e.g. the PSF or a source or a PSF-convolved source.
 @todo: ThetaCalculator2D and ModelThetaCalculator are not
 finished and need tests!
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['ModelThetaCalculator',
-           'ThetaCalculator',
-           'ThetaCalculator2D',
-           'ThetaCalculatorScipy',
-           ]
+__all__ = [
+    'ModelThetaCalculator',
+    'ThetaCalculator',
+    'ThetaCalculator2D',
+    'ThetaCalculatorScipy',
+]
 
 
 class ThetaCalculator(object):
@@ -36,6 +37,7 @@ class ThetaCalculator(object):
     normalize : bool
         Normalize discretized distribution to 1?
     """
+
     def __init__(self, dist, theta_max, n_bins, normalize=False):
         theta2 = np.linspace(0, theta_max ** 2, n_bins)
         dtheta2 = theta2[1] - theta2[0]
@@ -77,6 +79,7 @@ class ThetaCalculatorScipy(object):
     normalize : bool
         Normalize discretized distribution to 1?
     """
+
     def __init__(self, dist, theta_max, normalize=False):
         self.dist = dist
         self.theta_max = theta_max
@@ -97,6 +100,7 @@ class ThetaCalculatorScipy(object):
 
         def f(theta):
             return self.containment_fraction(theta) - containment_fraction
+
         return brentq(f, 0, self.theta_max)
 
 
@@ -129,6 +133,7 @@ class ThetaCalculator2D(ThetaCalculatorScipy):
     x : 2-dimensional array
         Pixel ``x`` coordinate array. Must match share of ``dist``.
     """
+
     def __init__(self, dist, x, y):
         self.dist = dist / dist.sum()
         self.theta2 = x ** 2 + y ** 2
@@ -155,6 +160,7 @@ class ModelThetaCalculator(ThetaCalculator):
     The source is supposed to be contained in the FOV
     even after PSF convolution.
     """
+
     def __init__(self, source, psf, fov, binsz, call2d=False):
         from scipy.ndimage import convolve
         # Compute source and psf 2D images

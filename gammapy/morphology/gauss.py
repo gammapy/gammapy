@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['Gauss2DPDF',
-           'MultiGauss2D',
-           'gaussian_sum_moments',
-           ]
+__all__ = [
+    'Gauss2DPDF',
+    'MultiGauss2D',
+    'gaussian_sum_moments',
+]
 
 __doctest_requires__ = {('gaussian_sum_moments'): ['uncertainties']}
 
@@ -20,6 +21,7 @@ class Gauss2DPDF(object):
     sigma : float
         Gaussian width.
     """
+
     def __init__(self, sigma=1):
         self.sigma = np.asarray(sigma, np.float64)
 
@@ -144,6 +146,7 @@ class MultiGauss2D(object):
     * The "norm" of each component represents the 2D integral,
       not the amplitude at the origin.
     """
+
     def __init__(self, sigmas, norms=None):
         # If no norms are given, you have a PDF.
         sigmas = np.asarray(sigmas, dtype=np.float64)
@@ -296,6 +299,7 @@ class MultiGauss2D(object):
         def f(theta):
             # positive if theta too large
             return self.containment_fraction(theta) - containment_fraction
+
         # @todo: if it is an array we have to loop by hand!
         # containment = np.asarray(containment, dtype=np.float64)
         # Inital guess for theta

@@ -1,19 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import datetime
 import numpy as np
 from astropy.units import Quantity
-from astropy.io import fits
-from ..utils.array import array_stats_str
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
 
-
-__all__ = ['LogEnergyAxis',
-           'np_to_pha',
-           ]
+__all__ = [
+    'LogEnergyAxis',
+    'np_to_pha',
+]
 
 
 class LogEnergyAxis(object):
-
     """Log10 energy axis.
 
     Defines a transformation between:
@@ -36,7 +35,6 @@ class LogEnergyAxis(object):
     """
 
     def __init__(self, energy):
-
         self.energy = energy
         self.x = np.log10(energy.value)
         self.pix = np.arange(len(self.x))
@@ -98,14 +96,13 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-# MOVE TO DATA.COUNTSPECTRUM
+# TODO: MOVE TO DATA.COUNTSPECTRUM
 
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
               version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
               backfile='none', corrfile='none', respfile='none', ancrfile='none'):
-
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters
@@ -141,34 +138,20 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     For more info on the PHA FITS file format see:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_007_summary.html
     """
-    # Create PHA FITS table extension from data
-    cols = [fits.Column(name='CHANNEL',
-                        format='I',
-                        array=channel,
-                        unit='channel'),
-            fits.Column(name='COUNTS',
-                        format='1E',
-                        array=counts,
-                        unit='count')
-            ]
+    table = Table()
+    table['CHANNEL'] = channel
+    table['COUNTS'] = counts
 
     if stat_err is not None:
-        cols.append(fits.Column(name='STAT_ERR',
-                                format='1E',
-                                array=stat_err,
-                                unit='count'))
+        table['STAT_ERR'] = stat_err
 
     if syserr is not None:
-        cols.append(fits.Column(name='SYS_ERR',
-                                format='E',
-                                array=syserr))
+        table['SYS_ERR'] = syserr
 
     if quality is not None:
-        cols.append(fits.Column(name='QUALITY',
-                                format='I',
-                                array=quality))
+        table['QUALITY'] = quality
 
-    hdu = fits.new_table(cols)
+    hdu = table_to_fits_table(table)
     header = hdu.header
 
     header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'

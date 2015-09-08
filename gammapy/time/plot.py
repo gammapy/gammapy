@@ -1,13 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.time import Time, TimeDelta
 from .utils import TIME_REF_FERMI
 
-
-__all__ = ['plot_fermi_3fgl_light_curve',
-           ]
+__all__ = [
+    'plot_fermi_3fgl_light_curve',
+]
 
 
 def plot_time_difference_distribution(time, ax=None):

@@ -1,3 +1,4 @@
+"""Plot Milky Way spiral arms."""
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.units import Quantity
@@ -12,7 +13,7 @@ spiral = FaucherSpiral()
 
 fig = plt.figure(figsize=(6, 6))
 rect = [0.12, 0.12, 0.85, 0.85]
-ax_cartesian  = fig.add_axes(rect)
+ax_cartesian = fig.add_axes(rect)
 ax_cartesian.set_aspect('equal')
 ax_polar = fig.add_axes(rect, polar=True, frameon=False)
 ax_polar.axes.get_xaxis().set_ticklabels([])
@@ -25,8 +26,8 @@ ax_cartesian.set_ylim(-20, 20)
 ax_cartesian.set_xlabel('x [kpc]', labelpad=2)
 ax_cartesian.set_ylabel('y [kpc]', labelpad=-4)
 ax_cartesian.plot(0, 8, color='k', markersize=10, fillstyle='none', marker='*', linewidth=2)
-ax_cartesian.annotate('Sun', xy=(0, 8),  xycoords='data',
-                xytext=(-15, 15),  arrowprops=dict(arrowstyle="->", color='k'), weight=400)
+ax_cartesian.annotate('Sun', xy=(0, 8), xycoords='data',
+                      xytext=(-15, 15), arrowprops=dict(arrowstyle="->", color='k'), weight=400)
 
 plt.grid(True)
 
@@ -41,5 +42,5 @@ for i in range(4):
     x_pos, y_pos = cartesian(rad + Quantity(1, 'kpc'), phi)
     rotation = theta[ind[i] * 0.97].to('deg').value
     ax_cartesian.text(x_pos.value, y_pos.value, spiral.spiralarms[i],
-             ha='center', va='center', rotation=rotation - 90, weight=400)  
+                      ha='center', va='center', rotation=rotation - 90, weight=400)
 plt.show()

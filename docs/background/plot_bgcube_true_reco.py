@@ -8,23 +8,20 @@ Inspired on the Gammapy examples/plot_bg_cube_model_comparison.py script.
 The resulting image should be similar to:
 https://github.com/gammapy/gammapy-extra/blob/master/figures/bg_cube_model_true_reco.png
 """
-
-import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from astropy.table import Table
-from astropy.io import ascii
 from gammapy.background import CubeBackgroundModel
 from gammapy.spectrum import power_law_evaluate, power_law_integral_flux
 from gammapy import datasets
 
-E_REF = Quantity(1., 'TeV') # reference energy
+E_REF = Quantity(1., 'TeV')
 NORM = 1
 INDEX = 1.5
 
-def get_normed_PL(plot_data, E_0, norm, index):
+
+def get_normed_pl(plot_data, E_0, norm, index):
     """Define a power-law (PL) function normalized to the specified data.
 
     Parameters
@@ -38,17 +35,17 @@ def get_normed_PL(plot_data, E_0, norm, index):
     index : float
         PL spectral index.
     """
-    plot_data_x = plot_data.get_xydata()[:,0]
-    plot_data_y = plot_data.get_xydata()[:,1]
+    plot_data_x = plot_data.get_xydata()[:, 0]
+    plot_data_y = plot_data.get_xydata()[:, 1]
     plot_data_int = np.trapz(y=plot_data_y, x=plot_data_x)
     energy_band = np.array([plot_data_x[0], plot_data_x[-1]])
     model_int = power_law_integral_flux(f=norm, g=index, e=E_0,
                                         e1=energy_band[0], e2=energy_band[1])
-    normed_PL = plot_data_int/model_int*power_law_evaluate(energy=plot_data_x,
-                                                           norm=norm, gamma=index,
-                                                           energy_ref=E_0)
+    normed_pl = plot_data_int / model_int * power_law_evaluate(energy=plot_data_x,
+                                                               norm=norm, gamma=index,
+                                                               energy_ref=E_0)
 
-    return plot_data_x, normed_PL
+    return plot_data_x, normed_pl
 
 
 def plot_bg_cube_model_comparison(input_file1, name1,
@@ -86,7 +83,7 @@ def plot_bg_cube_model_comparison(input_file1, name1,
     # normalize w.r.t. cube integral
     integral1 = bg_cube_model1.integral
     integral2 = bg_cube_model2.integral
-    bg_cube_model1.data *= integral2/integral1
+    bg_cube_model1.data *= integral2 / integral1
 
     # make sure that both cubes use the same units for the plots
     bg_cube_model2.data = bg_cube_model2.data.to(bg_cube_model1.data.unit)
@@ -130,14 +127,14 @@ def plot_bg_cube_model_comparison(input_file1, name1,
         axes[0, 2].set_title(spec_title1)
 
     # plot normalized models on top
-    plot_data_x, normed_PL = get_normed_PL(plot_data=axes[0, 2].get_lines()[0],
+    plot_data_x, normed_pl = get_normed_pl(plot_data=axes[0, 2].get_lines()[0],
                                            E_0=E_REF, norm=NORM, index=INDEX)
-    axes[0, 2].plot(plot_data_x, normed_PL, color='blue',
+    axes[0, 2].plot(plot_data_x, normed_pl, color='blue',
                     linestyle='dotted', linewidth=2,
                     label='model index = {}'.format(INDEX))
-    plot_data_x, normed_PL = get_normed_PL(plot_data=axes[0, 2].get_lines()[0],
+    plot_data_x, normed_pl = get_normed_pl(plot_data=axes[0, 2].get_lines()[0],
                                            E_0=E_REF, norm=NORM, index=INDEX + 1)
-    axes[0, 2].plot(plot_data_x, normed_PL, color='blue',
+    axes[0, 2].plot(plot_data_x, normed_pl, color='blue',
                     linestyle='dashed', linewidth=2,
                     label='model index = {}'.format(INDEX + 1))
 
@@ -161,14 +158,14 @@ def plot_bg_cube_model_comparison(input_file1, name1,
         axes[1, 2].set_title(spec_title1)
 
     # plot normalized models on top
-    plot_data_x, normed_PL = get_normed_PL(plot_data=axes[1, 2].get_lines()[0],
+    plot_data_x, normed_pl = get_normed_pl(plot_data=axes[1, 2].get_lines()[0],
                                            E_0=E_REF, norm=NORM, index=INDEX)
-    axes[1, 2].plot(plot_data_x, normed_PL, color='blue',
+    axes[1, 2].plot(plot_data_x, normed_pl, color='blue',
                     linestyle='dotted', linewidth=2,
                     label='model index = {}'.format(INDEX))
-    plot_data_x, normed_PL = get_normed_PL(plot_data=axes[1, 2].get_lines()[0],
+    plot_data_x, normed_pl = get_normed_pl(plot_data=axes[1, 2].get_lines()[0],
                                            E_0=E_REF, norm=NORM, index=INDEX + 1)
-    axes[1, 2].plot(plot_data_x, normed_PL, color='blue',
+    axes[1, 2].plot(plot_data_x, normed_pl, color='blue',
                     linestyle='dashed', linewidth=2,
                     label='model index = {}'.format(INDEX + 1))
 

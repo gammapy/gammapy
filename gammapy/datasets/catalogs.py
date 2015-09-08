@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """A selection of source catalogs of interest for gamma-ray astronomers.
 """
-
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.extern import six
 from astropy.utils.data import download_file
@@ -12,13 +10,14 @@ from astropy.table import Table, Column
 from ..extern.bunch import Bunch
 from ..datasets import get_path
 
-__all__ = ['load_catalog_atnf',
-           'load_catalog_hess_galactic',
-           # 'load_catalog_hgps',
-           'load_catalog_green',
-           'fetch_catalog_snrcat',
-           'load_catalog_tevcat',
-           ]
+__all__ = [
+    'load_catalog_atnf',
+    'load_catalog_hess_galactic',
+    # 'load_catalog_hgps',
+    'load_catalog_green',
+    'fetch_catalog_snrcat',
+    'load_catalog_tevcat',
+]
 
 
 def load_catalog_atnf():
@@ -146,8 +145,8 @@ def fetch_catalog_snrcat(cache=False):
     -------
     data : `~gammapy.extern.bunch.Bunch`
         Dictionary-like object with attributes:
-          * `snr_table` (`~astropy.table.Table`) -- SNR info table
-          * `obs_table` (`~astropy.table.Table`) -- High-energy observation info table
+          * ``snr_table`` (`~astropy.table.Table`) -- SNR info table
+          * ``obs_table`` (`~astropy.table.Table`) -- High-energy observation info table
 
         Each table has a ``version`` string containing the download date in the ``table.meta`` dictionary.
     """

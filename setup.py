@@ -89,7 +89,6 @@ entry_points['console_scripts'] = [
     'gammapy-image-decompose-a-trous = gammapy.scripts.image_decompose_a_trous:main',
     'gammapy-info = gammapy.scripts.info:main',
     'gammapy-irf-info = gammapy.scripts.irf_info:main',
-    'gammapy-irf-root-to-fits = gammapy.scripts.irf_root_to_fits:main',
     'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
     'gammapy-look-up-image = gammapy.scripts.look_up_image:main',
     'gammapy-model-image = gammapy.scripts.model_image:main',
@@ -99,7 +98,6 @@ entry_points['console_scripts'] = [
     'gammapy-pfspec = gammapy.scripts.pfspec:main',
     'gammapy-reflected-regions = gammapy.scripts.reflected_regions:main',
     'gammapy-residual-images = gammapy.scripts.residual_images:main',
-    'gammapy-root-to-fits = gammapy.scripts.root_to_fits:main',
     'gammapy-sherpa-like = gammapy.scripts.sherpa_like:main',
     'gammapy-sherpa-hspec = gammapy.hspec.run_fit:main',
     'gammapy-sherpa-model-image = gammapy.scripts.sherpa_model_image:main',
@@ -107,7 +105,6 @@ entry_points['console_scripts'] = [
     'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
     'gammapy-test = gammapy.scripts.check:main',
     'gammapy-ts-image = gammapy.scripts.ts_image:main',
-    'gammapy-xspec = gammapy.scripts.xspec:main',
 ]
 
 # Note: usually the `affiliated_package/data` folder is used for data files.

@@ -1,17 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar velocity distribution models"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from astropy.units import Quantity
 
-__all__ = ['FaucherKaspi2006VelocityMaxwellian',
-           'FaucherKaspi2006VelocityBimodal',
-           'Paczynski1990Velocity',
-           'velocity_distributions',
-           'VMIN', 'VMAX',
-           ]
+__all__ = [
+    'FaucherKaspi2006VelocityMaxwellian',
+    'FaucherKaspi2006VelocityBimodal',
+    'Paczynski1990Velocity',
+    'velocity_distributions',
+    'VMIN', 'VMAX',
+]
 
 # Simulation range used for random number drawing
 VMIN, VMAX = Quantity(0, 'kpc'), Quantity(4000, 'kpc')  # km/s

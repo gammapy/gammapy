@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose
@@ -75,10 +75,9 @@ class TestHESS(unittest.TestCase):
 
 
 def test_multi_gauss_psf_kernel():
-
     psf_data = {'psf1': {'ampl': 1, 'fwhm': 2.5496814916215014},
-     'psf2': {'ampl': 0.062025099992752075, 'fwhm': 11.149272133127273},
-     'psf3': {'ampl': 0.47460201382637024, 'fwhm': 5.164014607542117}}
+                'psf2': {'ampl': 0.062025099992752075, 'fwhm': 11.149272133127273},
+                'psf3': {'ampl': 0.47460201382637024, 'fwhm': 5.164014607542117}}
     psf_kernel = multi_gauss_psf_kernel(psf_data, x_size=51)
 
     assert_allclose(psf_kernel.array[25, 25], 0.05047558713797154)

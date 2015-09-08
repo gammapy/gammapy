@@ -16,26 +16,26 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.utils.data import get_pkg_data_filename, download_file
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from ..data import SpectralCube
 
-__all__ = ['get_path',
-           #'list_datasets',
-           #'download_datasets',
-           'load_poisson_stats_image',
-           'load_tev_spectrum',
-           'load_crab_flux_points',
-           'load_diffuse_gamma_spectrum',
-           'load_electron_spectrum',
-           'load_arf_fits_table',
-           'load_aeff2D_fits_table',
-           'load_psf_fits_table',
-           ]
+__all__ = [
+    'get_path',
+    # 'list_datasets',
+    # 'download_datasets',
+    'load_poisson_stats_image',
+    'load_tev_spectrum',
+    'load_crab_flux_points',
+    'load_diffuse_gamma_spectrum',
+    'load_electron_spectrum',
+    'load_arf_fits_table',
+    'load_aeff2D_fits_table',
+    'load_psf_fits_table',
+]
 
 
 # TODO: implement or remove
@@ -71,9 +71,9 @@ def get_path(filename, location='local', cache=True):
         ``'local'`` means bundled with ``gammapy``.
         ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
     cache : bool
-        if `True` and using `location=remote`, the file is searched
+        if `True` and using ``location='remote'``, the file is searched
         first within the local astropy cache and only downloaded if
-        it does not exist
+        it does not exist.
 
     Returns
     -------
@@ -134,6 +134,7 @@ def load_aeff2D_fits_table():
     """
     filename = get_path('irfs/aeff2D.fits')
     return fits.open(filename)
+
 
 def load_poisson_stats_image(extra_info=False, return_filenames=False):
     """Load Poisson statistics counts image of a Gaussian source on flat background.

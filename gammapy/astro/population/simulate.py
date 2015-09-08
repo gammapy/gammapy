@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Simulate source catalogs.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import degrees, pi, arctan, exp
 from astropy.table import Table, Column
@@ -18,16 +18,16 @@ from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
 from ..population import VMIN, VMAX, velocity_distributions
 
-
-__all__ = ['make_catalog_random_positions_cube',
-           'make_catalog_random_positions_sphere',
-           'make_base_catalog_galactic',
-           'add_snr_parameters',
-           'add_pulsar_parameters',
-           'add_pwn_parameters',
-           'add_observed_source_parameters',
-           'add_observed_parameters',
-           ]
+__all__ = [
+    'make_catalog_random_positions_cube',
+    'make_catalog_random_positions_sphere',
+    'make_base_catalog_galactic',
+    'add_snr_parameters',
+    'add_pulsar_parameters',
+    'add_pwn_parameters',
+    'add_observed_source_parameters',
+    'add_observed_parameters',
+]
 
 
 def make_catalog_random_positions_cube(size=100, dimension=3, dmax=10,

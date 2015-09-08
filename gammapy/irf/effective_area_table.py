@@ -1,16 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
-from astropy import log
 from astropy.io import fits
-from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
+from astropy.units import Quantity
+from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
+from ..utils.fits import table_to_fits_table
 
-__all__ = ['abramowski_effective_area', 'EffectiveAreaTable',
-           'EffectiveAreaTable2D']
+__all__ = [
+    'abramowski_effective_area',
+    'EffectiveAreaTable',
+    'EffectiveAreaTable2D',
+]
+
+log = logging.getLogger(__name__)
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -59,7 +65,6 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 
 class EffectiveAreaTable(object):
-
     """
     Effective area table class.
 
@@ -111,13 +116,24 @@ class EffectiveAreaTable(object):
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+        """
+        table = Table()
+
+        table['ENERG_LO'] = self.energy_lo
+        table['ENERGY_HI'] = self.energy_hi
+        table['SPECRESP'] = self.effective_area
+
+        return table
+
     def to_fits(self, header=None, energy_unit='TeV', effarea_unit='m2', **kwargs):
         """
         Convert ARF to FITS HDU list format.
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
         energy_unit : str
             Unit in which the energy is written in the fits file
@@ -143,21 +159,8 @@ class EffectiveAreaTable(object):
         self.energy_hi = self.energy_hi.to(energy_unit)
         self.effective_area = self.effective_area.to(effarea_unit)
 
-        hdu = fits.new_table(
-            [fits.Column(name='ENERG_LO',
-                         format='1E',
-                         array=self.energy_lo.value,
-                         unit=str(self.energy_lo.unit)),
-             fits.Column(name='ENERG_HI',
-                         format='1E',
-                         array=self.energy_hi.value,
-                         unit=str(self.energy_hi.unit)),
-             fits.Column(name='SPECRESP',
-                         format='1E',
-                         array=self.effective_area.value,
-                         unit=str(self.effective_area.unit))
-             ]
-        )
+
+        hdu = table_to_fits_table(self.to_table())
 
         if header is None:
             from ..datasets import load_arf_fits_table
@@ -433,7 +436,7 @@ class EffectiveAreaTable2D(object):
             HDU list with ``EFFECTIVE AREA`` extension.
         """
 
-        #TODO: READ THRESHOLD
+        # TODO: READ THRESHOLD
 
         data = hdu_list['EFFECTIVE AREA'].data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
@@ -541,7 +544,7 @@ class EffectiveAreaTable2D(object):
 
     def _eval(self, offset=None, energy=None):
         method = self.interpolation_method
-        if(method == 'linear'):
+        if (method == 'linear'):
             val = self._linear(offset.value, np.log10(energy.value))
         elif (method == 'spline'):
             val = self._spline(offset.value, np.log10(energy.value)).squeeze()
@@ -618,7 +621,7 @@ class EffectiveAreaTable2D(object):
         """Only works for radial symmetric input files (N=2)
         """
 
-        #TODO Replace by scipy.ndimage.interpolation.map_coordinates
+        # TODO Replace by scipy.ndimage.interpolation.map_coordinates
 
         from scipy.interpolate import RectBivariateSpline
 

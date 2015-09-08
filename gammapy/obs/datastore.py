@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import numpy as np
 from astropy.table import Table
@@ -51,7 +50,6 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
 
 
 class DataStoreIndexTable(ObservationTable):
-
     """Data store index table.
 
     The index table is a FITS file that stores which observations
@@ -113,7 +111,6 @@ class DataStoreIndexTable(ObservationTable):
 
 
 class DataStore(object):
-
     """Data store - convenient way to access and select data.
 
     This is an ad-hoc prototype implementation for HESS of what will be the "archive"
@@ -154,7 +151,7 @@ class DataStore(object):
         if np.any(~available):
             logger.warning('Number of missing event list files: {}'.format(np.invert(available).sum()))
 
-        # TODO: implement better, more complete integrity checks.
+            # TODO: implement better, more complete integrity checks.
 
     def make_table_of_files(self, observation_table=None, filetypes=['events']):
         """Make list of files in the datastore directory.

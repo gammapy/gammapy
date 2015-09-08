@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Matched filter source detection methods"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..image import process_image_pixels
 from ..stats import probability_to_significance_normal
 
-__all__ = ['probability_center',
-           'probability_image',
-           'significance_center',
-           'significance_image',
-           ]
+__all__ = [
+    'probability_center',
+    'probability_image',
+    'significance_center',
+    'significance_image',
+]
 
 
 def probability_center(images, kernel):

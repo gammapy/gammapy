@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
-from ..utils.array import array_stats_str
 from astropy import log
 
-import astropy.units as u
-import numpy as np
+__all__ = [
+    'Energy',
+    'EnergyBounds',
+]
 
-__all__ = ['Energy',
-           'EnergyBounds']
 
-class Energy(u.Quantity):
+class Energy(Quantity):
     """Energy quantity scalar or array.
 
     This is a `~astropy.units.Quantity` sub-class that adds convenience methods
@@ -44,7 +44,7 @@ class Energy(u.Quantity):
         self = super(Energy, cls).__new__(cls, energy, unit,
                                           dtype=dtype, copy=copy)
 
-        if not self.unit.is_equivalent(u.eV):
+        if not self.unit.is_equivalent('eV'):
             raise ValueError("Given unit {0} is not an"
                              " energy".format(self.unit.to_string()))
 
@@ -54,7 +54,7 @@ class Energy(u.Quantity):
         super(Energy, self).__array_finalize__(obj)
 
     def __quantity_subclass__(self, unit):
-        if unit.is_equivalent(u.eV):
+        if unit.is_equivalent('eV'):
             return Energy, True
         else:
             return super(Energy, self).__quantity_subclass__(unit)[0], False
@@ -122,7 +122,6 @@ class Energy(u.Quantity):
         energy = cls(hdu.data['Energy'], fitsunit)
 
         return energy.to(unit)
-        
 
     def to_fits(self, **kwargs):
         """Write ENERGIES fits extension
@@ -143,7 +142,6 @@ class Energy(u.Quantity):
 
 
 class EnergyBounds(Energy):
-
     """EnergyBounds array.
 
     This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience 
@@ -174,7 +172,7 @@ class EnergyBounds(Energy):
     def log_centers(self):
         """Log centers of the energy bounds
         """
-        
+
         center = np.sqrt(self[:-1] * self[1:])
         return center.view(Energy)
 
@@ -188,18 +186,17 @@ class EnergyBounds(Energy):
     def lower_bounds(self):
         """Lower energy bin edges
         """
-        
+
         return self[:-1]
 
     @property
     def bands(self):
         """Width of the energy bins
         """
-        
+
         upper = self.upper_bounds
         lower = self.lower_bounds
-        return upper-lower
-
+        return upper - lower
 
     @classmethod
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None):
@@ -214,16 +211,16 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy units
         """
-        
-        #np.append renders Quantities dimensionless
-        #http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
-        
+
+        # np.append renders Quantities dimensionless
+        # http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
+
         lower = cls(lower, unit);
         upper = cls(upper, unit);
         unit = upper.unit
         energy = np.append(lower, upper[-1])
         return cls(energy.value, unit)
-        
+
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """EnergyBounds with equal log-spacing (`~gammapy.spectrum.energy.EnergyBounds`).
@@ -256,7 +253,7 @@ class EnergyBounds(Energy):
         unit : `~astropy.units.UnitBase`, str, None
             Energy unit
         """
-        
+
         if hdu.name != 'EBOUNDS':
             log.warn('This does not seem like an EBOUNDS extension. Are you sure?')
 

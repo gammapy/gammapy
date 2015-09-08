@@ -1,15 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-import numpy as np
-from astropy.units import Quantity
-from astropy.coordinates import Angle
-from astropy.table import Table
-from astropy.io import fits
-from ..background import Cube, CubeBackgroundModel
+from __future__ import absolute_import, division, print_function, unicode_literals
+from ..background import CubeBackgroundModel
 
-__all__ = ['make_bg_cube_model',
-           ]
+__all__ = [
+    'make_bg_cube_model',
+]
 
 
 def make_bg_cube_model(observation_table, fits_path, method='default', do_not_force_mev_units=False):

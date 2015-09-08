@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import os
-import pytest
-
+from numpy.testing.utils import assert_allclose
+from astropy.tests.helper import pytest
 from astropy.io import fits
-
 from ...datasets import load_poisson_stats_image
 from ..sherpa_like import sherpa_image_like
-from numpy.testing.utils import assert_allclose
 
 try:
     import sherpa
@@ -18,6 +15,9 @@ except ImportError:
     HAS_SHERPA = False
 
 
+# TODO: fix and reactivate this test.
+# See https://github.com/gammapy/gammapy/issues/349
+@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_SHERPA')
 def test_sherpa_like(tmpdir):
     # load test data

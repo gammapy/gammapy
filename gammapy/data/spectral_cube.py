@@ -7,8 +7,7 @@ TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-clas
 * ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
 * ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -16,13 +15,9 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.coordinates import Angle
-from ..spectrum import (EnergyBounds,
-                        LogEnergyAxis,
-                        powerlaw
-                        )
-from ..image import coordinates, cube_to_image, solid_angle
+from ..spectrum import EnergyBounds, LogEnergyAxis, powerlaw
+from ..image import cube_to_image, solid_angle
 from ..utils.fits import table_to_fits_table
-
 
 __all__ = [
     'SpectralCube',
@@ -82,6 +77,7 @@ class SpectralCube(object):
     E.g. the 2-year diffuse model that was used in the 2FGL catalog production is at
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
+
     def __init__(self, data, wcs, energy):
         # TODO: check validity of inputs
         self.data = data
@@ -414,7 +410,7 @@ class SpectralCube(object):
         return SpectralCube(new_cube, wcs_out, energy)
 
     def to_fits(self):
-        """Writes SpectralCube to fits hdu_list.
+        """Writes SpectralCube to FITS hdu_list.
 
         Returns
         -------
@@ -425,7 +421,7 @@ class SpectralCube(object):
                 Table of energies
         """
         image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
-        image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
+        image.header['SPECUNIT'] = '{0.unit:FITS}'.format(self.data)
 
         # for BinTableHDU's the data must be added via a Table object
         energy_table = Table()
@@ -439,7 +435,7 @@ class SpectralCube(object):
         return hdu_list
 
     def writeto(self, filename, **kwargs):
-        """Writes SpectralCube to fits file.
+        """Writes SpectralCube to FITS file.
 
         Parameters
         ----------
@@ -455,9 +451,12 @@ class SpectralCube(object):
             s += ":\n"
         else:
             s += " and unit={0}:\n".format(self.data.unit)
-        s += " n_x: {0:5d}  type_x: {1:15s}  unit_x: {2}\n".format(self.data.shape[2], self.wcs.wcs.ctype[0], self.wcs.wcs.cunit[0])
-        s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
-        s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2], self.wcs.wcs.cunit[2])
+        s += " n_x: {0:5d}  type_x: {1:15s}  unit_x: {2}\n".format(self.data.shape[2], self.wcs.wcs.ctype[0],
+                                                                   self.wcs.wcs.cunit[0])
+        s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1],
+                                                                   self.wcs.wcs.cunit[1])
+        s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2],
+                                                                 self.wcs.wcs.cunit[2])
         return s
 
 

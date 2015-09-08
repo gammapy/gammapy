@@ -1,17 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar wind nebula (PWN) source models"""
-from __future__ import print_function, division
-import logging
-log = logging.getLogger(__name__)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.utils import lazyproperty
 import astropy.constants as const
 from ...extern.validator import validate_physical_type
-from ..source import SNRTrueloveMcKee
-from ..source import Pulsar
+from ..source import Pulsar, SNRTrueloveMcKee
 
-__all__ = ['PWN']
+__all__ = [
+    'PWN',
+]
 
 
 class PWN(object):
@@ -33,6 +32,7 @@ class PWN(object):
     morphology : str
         Morphology model of the PWN
     """
+
     def __init__(self, pulsar=Pulsar(), snr=SNRTrueloveMcKee(),
                  eta_e=0.999, eta_B=0.001, morphology='Gaussian2D',
                  age=None):
@@ -71,6 +71,7 @@ class PWN(object):
         def time_coll(t):
             t = Quantity(t, 'yr')
             return (self._radius_free_expansion(t) - self.snr.radius_reverse_shock(t)).value
+
         # 4e3 years is a typical value that works for fsolve
         return Quantity(fsolve(time_coll, 4e3), 'yr')
 
@@ -151,7 +152,7 @@ class PWN(object):
 
 # TODO: The following PWN model should be adapted to use naima classes.
 class PWNElectronSpectrum(PWN):
-    def __init__(self,  q_type='constant', r_type='constant', B_type='constant',
+    def __init__(self, q_type='constant', r_type='constant', B_type='constant',
                  *args, **kwargs):
         super(PWNElectronSpectrum, self).__init__(*args, **kwargs)
         # Spectrum is not needed for now
@@ -197,6 +198,7 @@ class PWNElectronSpectrum(PWN):
             """Energy loss rate (TeV s^-1) at a given
             energy (TeV) and time (s)"""
             return b * e ** 2
+
         return p
 
     def evolve(self, age=1e3, dt=1):
@@ -248,24 +250,17 @@ class PWNElectronSpectrum(PWN):
             Time step (yr)
         """
         if self.age > age:
-            log.debug('current age = {0} > requested age = {1}'
-                      ''.format(self.age, age))
-            log.debug('Resetting to age 0.')
             self.age = 0
             self.electron_spec.y = 0
             self.evolve(age, dt)
         # Make sure we evolve exactly to the requested age
         nsteps = int((age - self.age) / dt)
         dt = (age - self.age) / nsteps
-        log.debug('current age = {0}, requested age = {1},'
-                  ' dt = {2}, nsteps = {3}'
-                  ''.format(self.age, age, dt, nsteps))
         # Convenient shortcuts for current electron spectrum
         # Note that these are references, no copying takes place.
         e = self.electron_spec.e
         n = self.electron_spec.n
         de = self._get_diff(e)
-        log.debug('Starting evolution')
         for t in np.linspace(self.age, age, nsteps):
             pn = n * self.p(e, t)
             # See docstring for an explanation why we implement
@@ -274,7 +269,6 @@ class PWNElectronSpectrum(PWN):
             dpn_left = self._get_diff(pn, side='left')
             dpn = np.where(abs(dpn_right) < abs(dpn_left), dpn_right, dpn_left)
             n += dt * (dpn / de + self.q(e, t))
-        log.debug('Evolution finished')
 
     def _get_diff(self, e, side='right'):
         """Implement diff for an array, including handling of end points.
@@ -288,16 +282,19 @@ class PWNElectronSpectrum(PWN):
     def B_constant(self, B):
         def B_constant(e, t):
             return B
+
         return B_constant
 
     def B_spindown(self, L0, tau0, n, eta_B):
         def B_spindown(e, t):
             return self.L(t) / self.eta_B
+
         return B_spindown
 
     def L_constant(self, L0):
         def f(t):
             return L0
+
         return f
 
     def luminosity_spindown(self, L0, tau0, n=3):
@@ -316,4 +313,5 @@ class PWNElectronSpectrum(PWN):
 
         def f(t):
             return L0 * (1 + t / tau0) ** beta
+
         return f

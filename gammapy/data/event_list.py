@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from collections import OrderedDict
 import os
 import numpy as np
@@ -15,13 +13,16 @@ from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
 from ..time import time_ref_from_dict
-from . import utils
+from .utils import _earth_location_from_dict
 
-__all__ = ['EventList',
-           'EventListDataset',
-           'EventListDatasetChecker',
-           'event_lists_to_counts_image',
-           ]
+__all__ = [
+    'EventList',
+    'EventListDataset',
+    'EventListDatasetChecker',
+    'event_lists_to_counts_image',
+]
+
+log = logging.getLogger(__name__)
 
 
 class EventList(Table):
@@ -48,6 +49,7 @@ class EventList(Table):
     - `energy` for ``ENERGY``
     - `galactic` for ``GLON``, ``GLAT``
     """
+
     @property
     def summary(self):
         """Summary info string."""
@@ -151,7 +153,7 @@ class EventList(Table):
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)"""
-        return utils._earth_location_from_dict(self.meta)
+        return _earth_location_from_dict(self.meta)
 
     # TODO: I'm not sure how to best exposure header data
     # as quantities ... maybe expose them on `meta` or
@@ -247,8 +249,8 @@ class EventList(Table):
         mask = separation < radius
         return self[mask]
 
-    def select_sky_ring(self, center, inner_radius = None, outer_radius = None,
-                        thickness = None):
+    def select_sky_ring(self, center, inner_radius=None, outer_radius=None,
+                        thickness=None):
         """Select events in sky circle.
 
         Parameters
@@ -267,13 +269,13 @@ class EventList(Table):
         event_list : `EventList`
             Copy of event list with selection applied.
         """
-        
+
         if outer_radius is None:
             if thickness is None or inner_radius is None:
                 raise ValueError("Not enough information specified")
             else:
                 outer_radius = inner_radius + thickness
-            
+
         else:
             if inner_radius is None:
                 if thickness is None:
@@ -291,11 +293,10 @@ class EventList(Table):
         mask = mask1 * mask2
         return self[mask]
 
-
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
         """Select events in sky box.
 
-        TODO: move `gammapy.catalog.select_sky_box` to `gammapy.utils`.
+        TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
         """
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
@@ -354,6 +355,7 @@ class EventList(Table):
 
         return lon, lat
 
+
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
 
@@ -369,6 +371,7 @@ class EventListDataset(object):
     good_time_intervals : `~gammapy.data.GoodTimeIntervals`
         Observation time interval info
     """
+
     def __init__(self, event_list,
                  telescope_array=None,
                  good_time_intervals=None):
@@ -820,6 +823,6 @@ def event_lists_to_counts_image(header, table_of_files, logger=None):
         if logger:
             logger.info('Processing OBS_ID = {:06d} with {:6d} events.'
                         ''.format(row['OBS_ID'], len(ds.event_list)))
-        # TODO: fill events in image.
+            # TODO: fill events in image.
 
     return fits.ImageHDU(data=data, header=header)

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
 from astropy.units import Quantity
@@ -8,7 +7,6 @@ from astropy.coordinates import Angle
 from ...background import Cube
 from ... import datasets
 from ...datasets import make_test_bg_cube_model
-
 
 try:
     import matplotlib
@@ -18,10 +16,8 @@ except ImportError:
 
 
 class TestCube():
-
     @remote_data
     def test_read_fits_table(self):
-
         # test shape and scheme of cube when reading a file
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
@@ -35,7 +31,6 @@ class TestCube():
 
     @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_image_plot(self):
-
         cube = make_test_bg_cube_model().background_cube
 
         # test bg rate values plotted for image plot of energy bin
@@ -55,7 +50,6 @@ class TestCube():
 
     @pytest.mark.skipif('not HAS_MATPLOTLIB')
     def test_spectrum_plot(self):
-
         cube = make_test_bg_cube_model().background_cube
 
         # test bg rate values plotted for spectrum plot of coordinate bin
@@ -74,7 +68,6 @@ class TestCube():
 
     @remote_data
     def test_write_fits_table(self, tmpdir):
-
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')
@@ -95,7 +88,6 @@ class TestCube():
 
     @remote_data
     def test_read_write_fits_image(self, tmpdir):
-
         filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
                                      location='remote')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')

@@ -197,3 +197,5 @@ if eval(setup_cfg.get('edit_on_github')):
     edit_on_github_doc_root = "docs"
 
 github_issues_url = 'https://github.com/gammapy/gammapy/issues/'
+
+# nitpicky = True

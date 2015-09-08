@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Background models.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.modeling.models import Gaussian1D
 from astropy.units import Quantity, UnitsError
@@ -13,15 +12,15 @@ from ..background import Cube
 from ..obs import DataStore
 from ..data import EventListDataset
 
-__all__ = ['GaussianBand2D',
-           'CubeBackgroundModel',
-           ]
+__all__ = [
+    'GaussianBand2D',
+    'CubeBackgroundModel',
+]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 class GaussianBand2D(object):
-
     """Gaussian band model.
 
     This 2-dimensional model is Gaussian in ``y`` for a given ``x``,
@@ -129,7 +128,6 @@ def _get_min_energy_threshold(observation_table, fits_path):
 
 
 class CubeBackgroundModel(object):
-
     """Cube background model.
 
     Container class for cube background model *(X, Y, energy)*.
@@ -211,7 +209,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     def write(self, outfile, format='table', **kwargs):
-        """Write cube to fits file.
+        """Write cube to FITS file.
 
         Several output formats are accepted, depending on the value
         of the **format** parameter:
@@ -234,15 +232,15 @@ class CubeBackgroundModel(object):
         format : str, optional
             Format of the cube to write.
         kwargs
-            Extra arguments for the corresponding `io.fits` `writeto` method.
+            Extra arguments for the corresponding `astropy.io.fits` ``writeto`` method.
         """
         if ((self.counts_cube.data.sum() == 0) or
-            (self.livetime_cube.data.sum() == 0)):
+                (self.livetime_cube.data.sum() == 0)):
             # empty envets/livetime cube: save only bg cube
             self.background_cube.write(outfile, format, **kwargs)
         else:
             if format == 'table':
-                hdu_list = fits.HDUList([fits.PrimaryHDU(), # empty primary HDU
+                hdu_list = fits.HDUList([fits.PrimaryHDU(),  # empty primary HDU
                                          self.counts_cube.to_fits_table(),
                                          self.livetime_cube.to_fits_table(),
                                          self.background_cube.to_fits_table()])
@@ -281,7 +279,7 @@ class CubeBackgroundModel(object):
         counts_cube = Cube(coordx_edges=detx_edges,
                            coordy_edges=dety_edges,
                            energy_edges=energy_edges,
-                           data=Quantity(empty_cube_data, ''), # counts
+                           data=Quantity(empty_cube_data, ''),  # counts
                            scheme='bg_counts_cube')
 
         livetime_cube = Cube(coordx_edges=detx_edges,
@@ -333,10 +331,10 @@ class CubeBackgroundModel(object):
         n_xbins = 60
         n_obs = len(observation_table)
         if n_obs < 100:
-            minus_bins = int(n_obs/10) - 10
+            minus_bins = int(n_obs / 10) - 10
             n_ebins += minus_bins
-            n_ybins += 4*minus_bins
-            n_xbins += 4*minus_bins
+            n_ybins += 4 * minus_bins
+            n_xbins += 4 * minus_bins
         bg_cube_shape = (n_ebins, n_ybins, n_xbins)
 
         # define cube edges
@@ -359,8 +357,8 @@ class CubeBackgroundModel(object):
 
         # energy bins (logarithmic)
         log_delta_energy = (np.log(energy_max.value)
-                            - np.log(energy_min.value))/bg_cube_shape[0]
-        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1)*log_delta_energy
+                            - np.log(energy_min.value)) / bg_cube_shape[0]
+        energy_edges = np.exp(np.arange(bg_cube_shape[0] + 1) * log_delta_energy
                               + np.log(energy_min.value))
         energy_edges = Quantity(energy_edges, energy_min.unit)
         # TODO: this function should be reviewed/re-written, when
@@ -368,10 +366,10 @@ class CubeBackgroundModel(object):
         # https://github.com/gammapy/gammapy/pull/290
 
         # spatial bins (linear)
-        delta_y = (dety_max - dety_min)/bg_cube_shape[1]
-        dety_edges = np.arange(bg_cube_shape[1] + 1)*delta_y + dety_min
-        delta_x = (detx_max - detx_min)/bg_cube_shape[2]
-        detx_edges = np.arange(bg_cube_shape[2] + 1)*delta_x + detx_min
+        delta_y = (dety_max - dety_min) / bg_cube_shape[1]
+        dety_edges = np.arange(bg_cube_shape[1] + 1) * delta_y + dety_min
+        delta_x = (detx_max - detx_min) / bg_cube_shape[2]
+        detx_edges = np.arange(bg_cube_shape[2] + 1) * delta_x + detx_min
 
         return cls.set_cube_binning(detx_edges, dety_edges, energy_edges)
 
@@ -422,24 +420,24 @@ class CubeBackgroundModel(object):
             # fill events above energy threshold, correct livetime accordingly
             data_set = ev_list_ds.event_list
             data_set = data_set.select_energy((energy_threshold,
-                                               energy_threshold*1.e6))
+                                               energy_threshold * 1.e6))
 
             # construct counts cube (energy, X, Y)
-            # TODO: units are missing in the H.E.S.S. fits event
+            # TODO: units are missing in the H.E.S.S. FITS event
             #       lists; this should be solved in the next (prod03)
             #       H.E.S.S. fits production
             # workaround: try to cast units, if it doesn't work, use hard coded
             # ones
             try:
-                ev_DETX = Angle(data_set['DETX'])
-                ev_DETY = Angle(data_set['DETY'])
+                ev_detx = Angle(data_set['DETX'])
+                ev_dety = Angle(data_set['DETY'])
                 ev_energy = Quantity(data_set['ENERGY'])
             except UnitsError:
-                ev_DETX = Angle(data_set['DETX'], 'degree') # hard-coded!!!
-                ev_DETY = Angle(data_set['DETY'], 'degree') # hard-coded!!!
+                ev_detx = Angle(data_set['DETX'], 'degree')
+                ev_dety = Angle(data_set['DETY'], 'degree')
                 ev_energy = Quantity(data_set['ENERGY'],
-                                     data_set.meta['EUNIT']) # half hard-coded!!!
-            ev_cube_table = Table([ev_energy, ev_DETY, ev_DETX],
+                                     data_set.meta['EUNIT'])
+            ev_cube_table = Table([ev_energy, ev_dety, ev_detx],
                                   names=('ENERGY', 'DETY', 'DETX'))
 
             # TODO: filter out possible sources in the data;
@@ -458,7 +456,7 @@ class CubeBackgroundModel(object):
                                                          [self.counts_cube.energy_edges,
                                                           self.counts_cube.coordy_edges,
                                                           self.counts_cube.coordx_edges])
-            ev_cube_hist = Quantity(ev_cube_hist, '') # counts
+            ev_cube_hist = Quantity(ev_cube_hist, '')
 
             # fill cube
             self.counts_cube.data += ev_cube_hist
@@ -475,7 +473,7 @@ class CubeBackgroundModel(object):
             mask = energy_max > energy_threshold
 
             # fill cube
-            self.livetime_cube.data += livetime*mask
+            self.livetime_cube.data += livetime * mask
 
     def smooth(self):
         """
@@ -546,4 +544,4 @@ class CubeBackgroundModel(object):
 
         # loop over energy bins (i.e. images)
         for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
-            self.background_cube.data[i_energy] *= (integral_images/integral_images_smooth)[i_energy]
+            self.background_cube.data[i_energy] *= (integral_images / integral_images_smooth)[i_energy]

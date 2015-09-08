@@ -1,13 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
-
 from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
-
-
 from ...detect import compute_ts_map, TSMapResult
 from ...datasets import load_poisson_stats_image
 from ...image.utils import upsample_2N, downsample_2N

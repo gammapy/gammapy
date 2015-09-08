@@ -3,16 +3,17 @@
 
 TODO: Unusable at the moment. Refactor into classes and clean up.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..utils.random import get_random_state
 
-__all__ = ['generate_MC_data',
-           'plot_chi2',
-           'plot_fit',
-           'plot_model',
-           'plot_points',
-           ]
+__all__ = [
+    'generate_MC_data',
+    'plot_chi2',
+    'plot_fit',
+    'plot_model',
+    'plot_points',
+]
 
 
 def set_off_diagonal_to_zero(matrix):
@@ -202,12 +203,12 @@ def plot_chi2(model, data, fit_result=None, limits=None,
     plt.colorbar()
     # Add marker at the minimum
     plt.plot(fit_result[0][0], fit_result[0][1],
-            marker='*', markersize=12, color='r')
+             marker='*', markersize=12, color='r')
 
     # Add contour of real likelihood
     contour_levels = np.arange(1, stddev_max + 1) ** 2
     x2_cont = plt.contour(P1, P2, x2, contour_levels,
-                         colors='r', linewidths=linewidth)
+                          colors='r', linewidths=linewidth)
     plt.clabel(x2_cont, inline=1, fontsize=10,
                linewidths=linewidth, fmt=fmt)
 

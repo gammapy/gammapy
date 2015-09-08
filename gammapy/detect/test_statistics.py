@@ -3,20 +3,17 @@
 Functions to compute TS maps
 
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import warnings
 from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
-
 import numpy as np
 from astropy.convolution import Tophat2DKernel, Model2DKernel, Gaussian2DKernel
 from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.nddata.utils import extract_array
 from astropy.io import fits
-
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython)
 from ..irf import multi_gauss_psf_kernel
@@ -30,9 +27,10 @@ __all__ = [
     'compute_ts_map',
     'compute_ts_map_multiscale',
     'compute_maximum_ts_map',
-    'TSMapResult'
+    'TSMapResult',
 ]
 
+log = logging.getLogger(__name__)
 
 FLUX_FACTOR = 1E-12
 MAX_NITER = 20
@@ -87,10 +85,10 @@ class TSMapResult(Bunch):
         if not np.isscalar(self.scale):
             header['EXTNAME'] = 'scale'
             header['HDUNAME'] = 'scale'
-            header['SCALE'] = 'max',  'Source morphology scale parameter.'
+            header['SCALE'] = 'max', 'Source morphology scale parameter.'
             hdu_list.append(fits.ImageHDU(self.scale.astype('float64'), header))
         else:
-            header['SCALE'] = self.scale,  'Source morphology scale parameter.'
+            header['SCALE'] = self.scale, 'Source morphology scale parameter.'
         for key in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
             header['EXTNAME'] = key
             header['HDUNAME'] = key
@@ -332,7 +330,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     # in some maps there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation
     # to fail, this is a temporary fix
-    mask_ = np.logical_and(background == 0,  exposure > 0)
+    mask_ = np.logical_and(background == 0, exposure > 0)
     if mask_.any():
         log.warn('There are pixels in the data, that have exposure, but zero '
                  'background, which can cause the ts computation to fail. '
@@ -589,6 +587,7 @@ def _fit_amplitude_minuit(counts, background, model, flux):
 
     def stat(x):
         return f_cash(x, counts, background, model)
+
     minuit = Minuit(f_cash, x=flux, pedantic=False, print_level=0)
     minuit.migrad()
     return minuit.values['x'], minuit.ncalls

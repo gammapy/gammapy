@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['sherpa_image_like']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -20,7 +20,7 @@ def main(args=None):
                         help='PSF JSON file name')
     parser.add_argument('--sources', type=str, default='sources.json',
                         help='Sources JSON file name (contains start '
-                        'values for fit of Gaussians)')
+                             'values for fit of Gaussians)')
     parser.add_argument('--roi', type=str, default=None,
                         help='Region of interest (ROI) file name (ds9 reg format)')
     parser.add_argument("-l", "--loglevel", default='info',
@@ -97,9 +97,9 @@ def sherpa_image_like(counts,
     # ---------------------------------------------------------
     # Fit and save information we care about
     # ---------------------------------------------------------
-    #sherpa.astro.ui.show_all() # Prints info about data and model
+    # sherpa.astro.ui.show_all() # Prints info about data and model
     sherpa.astro.ui.fit()  # Does the fit
-    #sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
+    # sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
     # conf() # Computes asymmetric errors (slow)
     # image_fit() # Shows data, model, residuals in ds9
     log.info('Writing {}'.format(outfile))
@@ -110,4 +110,3 @@ def sherpa_image_like(counts,
     sherpa.astro.ui.notice2d()
     log.info('Writing model.fits')
     sherpa.astro.ui.save_model('model.fits', clobber=True)
-

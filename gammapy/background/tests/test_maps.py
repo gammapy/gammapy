@@ -2,7 +2,7 @@
 """
 TODO: add tests for different cases of theta and is_off_correlated
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 import unittest
 import numpy as np
@@ -19,7 +19,7 @@ except ImportError:
 @pytest.mark.xfail
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestMaps(unittest.TestCase):
-    # TODO: use astropy temp file utils
+    # TODO: use `tmpdir` fixture
     dir = '/tmp/'
     filename_basic = dir + 'maps_basic.fits'
     filename_derived = dir + 'maps_derived.fits'

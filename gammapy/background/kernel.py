@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
-
 import numpy as np
 from astropy.io import fits
 import gc
 from ..stats import significance
 from ..image import binary_dilation_circle
 
-
-__all__ = ['GammaImages', 'IterativeKernelBackgroundEstimator']
+__all__ = [
+    'GammaImages',
+    'IterativeKernelBackgroundEstimator',
+]
 
 
 class GammaImages(object):

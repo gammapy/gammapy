@@ -1,12 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from ..spectrum.energy import *
 from astropy.coordinates import Angle
 from astropy.units import Quantity
+from ..spectrum.energy import EnergyBounds
 
-__all__ = ['EnergyDispersion', 'gauss_energy_dispersion_matrix', 'EnergyDispersion2D']
+__all__ = [
+    'EnergyDispersion',
+    'gauss_energy_dispersion_matrix',
+    'EnergyDispersion2D',
+]
 
 
 class EnergyDispersion(object):
@@ -133,14 +137,14 @@ class EnergyDispersion(object):
 
     @classmethod
     def _read_rmf(cls, filename):
-        """Create EnergyDistribution object from RMF data.
+        """Create `EnergyDispersion` object from RMF data.
         """
         hdu_list = fits.open(filename)
         return cls.from_hdu_list(hdu_list)
 
     @classmethod
     def from_hdu_list(cls, hdu_list):
-        """Create `EnergyDistribution` object from `~astropy.io.fits.HDUList`.
+        """Create `EnergyDispersion` object from `~astropy.io.fits.HDUList`.
 
         Parameters
         ----------
@@ -194,7 +198,7 @@ class EnergyDispersion(object):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
         energy_unit : str
             Unit in which the energy is written in the HDU list
@@ -556,19 +560,19 @@ class EnergyDispersion2D(object):
 
     Parameters
     ----------
-    etrue_lo : `~np.ndarray`, list
+    etrue_lo : `~numpy.ndarray`, list
         True energy lower bounds
-    etrue_hi : `~np.ndarray`, list
+    etrue_hi : `~numpy.ndarray`, list
         True energy upper bounds
-    migra_lo : `~np.ndarray`, list
+    migra_lo : `~numpy.ndarray`, list
         Migration lower bounds
-    migra_hi : `~np.ndarray`, list
+    migra_hi : `~numpy.ndarray`, list
         Migration upper bounds
-    offset_lo : `~np.ndarray`, list
+    offset_lo : `~numpy.ndarray`, list
         Offset lower bounds
-    offset_hi : `~np.ndarray`, list
+    offset_hi : `~numpy.ndarray`, list
         Offset lower bounds
-    dispersion : `~np.ndarray`
+    dispersion : `~numpy.ndarray`
         PDF matrix
 
     Examples
@@ -676,11 +680,11 @@ class EnergyDispersion2D(object):
         
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.energy.EnergyBounds`, None
+        e_true : `~gammapy.spectrum.EnergyBounds`, None
             True energy axis
-        migra : `~np.ndarray`
+        migra : `~numpy.ndarray`
             Energy migration e_reco/e_true
-        offset : `~astropy.coordonates.Angle`
+        offset : `~astropy.coordinates.Angle`
             Offset
         """
 
@@ -767,16 +771,16 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.energy.Energy`
+        e_true : `~gammapy.spectrum.Energy`
             True energy axis
-        e_reco : `~gammapy.spectrum.energy.EnergyBounds`, None
+        e_reco : `~gammapy.spectrum.EnergyBounds`, None
             Reconstructed energy axis
-        offset : `~astropy.coordonates.Angle`
+        offset : `~astropy.coordinates.Angle`
             Offset
 
         Returns
         -------
-        rv : `~np.ndarray`
+        rv : `~numpy.ndarray`
             Redistribution vector
         """
 
@@ -844,7 +848,7 @@ class EnergyDispersion2D(object):
         x = e_true.value
         y = migra
 
-        plt.pcolor(x, y, z)
+        plt.pcolor(x, y, z, **kwargs)
 
         return ax
 

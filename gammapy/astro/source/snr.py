@@ -1,13 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Supernova remnant (SNR) source models"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 import astropy.constants as const
 from astropy.utils import lazyproperty
 from ...extern.validator import validate_physical_type
 
-__all__ = ['SNR', 'SNRTrueloveMcKee']
+__all__ = [
+    'SNR',
+    'SNRTrueloveMcKee',
+]
 
 
 class SNR(object):
@@ -32,6 +35,7 @@ class SNR(object):
         Post-shock temperature where gamma-ray emission stops.
 
     """
+
     def __init__(self, e_sn=Quantity(1e51, 'erg'), theta=Quantity(0.1),
                  n_ISM=Quantity(1, 'cm^-3'), m_ejecta=const.M_sun,
                  t_stop=Quantity(1e6, 'K'), age=None, morphology='Shell2D',
@@ -127,7 +131,7 @@ class SNR(object):
 
     def luminosity_tev(self, t=None, energy_min=Quantity(1, 'TeV')):
         """
-        Gamma-ray luminosity above `energy_min` at age t .
+        Gamma-ray luminosity above ``energy_min`` at age ``t``.
 
         The luminosity is assumed constant in a given age interval and zero
         before and after. The assumed spectral index is 2.1.
@@ -225,6 +229,7 @@ class SNRTrueloveMcKee(SNR):
     Reference: http://adsabs.harvard.edu/abs/1999ApJS..120..299T
 
     """
+
     def __init__(self, *args, **kwargs):
         super(SNRTrueloveMcKee, self).__init__(*args, **kwargs)
 

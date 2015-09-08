@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import unittest
 from astropy.tests.helper import pytest
 import numpy as np
@@ -25,6 +25,7 @@ class TestRingBgMaker(unittest.TestCase):
         image[5, 5] = 1
         r = RingBgMaker(3, 6, 1)
         image = r.correlate(image)
+        # TODO: add assert
 
     def test_correlate_maps(self):
         n_on = np.ones((200, 200))
@@ -35,7 +36,6 @@ class TestRingBgMaker(unittest.TestCase):
         r.correlate_maps(maps)
 
 
-class TestHelperFuntions(unittest.TestCase):
-    def test_compute_r_o(self):
-        actual = ring_r_out(1, 0, 1)
-        assert_allclose(actual, 1)
+def test_ring_r_out():
+    actual = ring_r_out(1, 0, 1)
+    assert_allclose(actual, 1)

@@ -1,12 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 
-__all__ = ['CWT']
+__all__ = [
+    'CWT',
+]
+
+log = logging.getLogger(__name__)
 
 
 def gauss_kernel(radius, n_sigmas=8):
@@ -66,6 +69,7 @@ class CWT(object):
     scale_step : float
         base scaling factor
     """
+
     def __init__(self, min_scale, nscales, scale_step):
         self.kernbase = dict()
         self.scales = dict()
@@ -82,9 +86,9 @@ class CWT(object):
         max_scale = min_scale * scale_step ** nscales
         self.kern_approx = gauss_kernel(max_scale)
 
-#        self.transform = dict()
-#        self.error = dict()
-#        self.support = dict()
+        #        self.transform = dict()
+        #        self.error = dict()
+        #        self.support = dict()
 
         self.header = None
         self.wcs = None
@@ -176,7 +180,7 @@ class CWT(object):
             self.residual_var = tmp_var
         log.info("Convergence not formally reached at iteration {0}".format(iiter + 1))
         log.info("Final convergence parameter {0}. Objective was {1}."
-                     "".format(convergence, var_ratio))
+                 "".format(convergence, var_ratio))
         return res
 
     def max_scale_image(self):

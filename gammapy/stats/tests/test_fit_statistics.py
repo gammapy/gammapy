@@ -1,13 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ...stats import (cash,
-                      cstat,
-                      chi2datavar,
-                      )
+from ...stats import cash, cstat, chi2datavar
+
 
 # TODO: test against Sherpa results
 # see scripts here: https://github.com/gammapy/gammapy/tree/master/dev/sherpa/stats
