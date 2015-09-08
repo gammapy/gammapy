@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
@@ -9,10 +8,9 @@ from astropy.units import Quantity
 from astropy.wcs import WCS
 from ...datasets import FermiGalacticCenter
 from ...data import SpectralCube, compute_npred_cube, convolve_cube
-from ...image import solid_angle, make_header, make_empty_image
+from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
-
 
 try:
     # The scipy.interpolation.RegularGridInterpolator class was added in Scipy version 0.14
@@ -30,7 +28,6 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestSpectralCube(object):
-
     def setup(self):
         self.spectral_cube = FermiGalacticCenter.diffuse_model()
         assert self.spectral_cube.data.shape == (30, 21, 61)

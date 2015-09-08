@@ -2,7 +2,7 @@
 """
 TODO: add tests for different cases of theta and is_off_correlated
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 import unittest
 import numpy as np

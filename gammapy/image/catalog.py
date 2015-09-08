@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """ Make an image from a source catalog, or simulated catalog, e.g 1FHL 2FGL etc
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.wcs import WCS
@@ -8,7 +9,10 @@ from astropy.units import Quantity
 from astropy.table import Table
 from . import coordinates
 
-__all__ = ['catalog_image', 'catalog_table']
+__all__ = [
+    'catalog_image',
+    'catalog_table',
+]
 
 
 def _extended_image(catalog, reference_cube):

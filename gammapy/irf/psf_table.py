@@ -1,17 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
-#from astropy.convolution import discretize_model
 from astropy.convolution.utils import discretize_oversample_2D
 from ..morphology import Gauss2DPDF
 from ..utils.array import array_stats_str
 
-__all__ = ['TablePSF',
-           'EnergyDependentTablePSF',
-           ]
+__all__ = [
+    'TablePSF',
+    'EnergyDependentTablePSF',
+]
 
 # Default PSF spline keyword arguments
 # TODO: test and document
@@ -53,6 +53,7 @@ class TablePSF(object):
     * TODO: ``__call__`` doesn't show up in the html API docs, but it should:
       https://github.com/astropy/astropy/pull/2135
     """
+
     def __init__(self, offset, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
         if not isinstance(offset, Angle):
@@ -194,16 +195,16 @@ class TablePSF(object):
         # FIXME: Using `discretize_model` is currently very cumbersome due to these issue:
         # https://github.com/astropy/astropy/issues/2274
         # https://github.com/astropy/astropy/issues/1763#issuecomment-39552900
-        #from astropy.modeling import Fittable2DModel
+        # from astropy.modeling import Fittable2DModel
         #
-        #class TempModel(Fittable2DModel):
+        # class TempModel(Fittable2DModel):
         #    @staticmethod
         #    def evaluate(x, y):
         #        return 42 temp_model_function(x, y)
         #
-        #temp_model = TempModel()
+        # temp_model = TempModel()
 
-        #import IPython; IPython.embed()
+        # import IPython; IPython.embed()
         array = discretize_oversample_2D(_model,
                                          x_range=pix_range, y_range=pix_range,
                                          **discretize_model_kwargs)
@@ -417,6 +418,7 @@ class EnergyDependentTablePSF(object):
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
     """
+
     def __init__(self, energy, offset, exposure, psf_value):
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
@@ -607,7 +609,7 @@ class EnergyDependentTablePSF(object):
         ss += array_stats_str(self.energy, 'energy')
         ss += array_stats_str(self.exposure, 'exposure')
 
-        #ss += 'integral = {0}\n'.format(self.integral())
+        # ss += 'integral = {0}\n'.format(self.integral())
 
         # Print some example containment radii
         fractions = [0.68, 0.95]

@@ -1,6 +1,7 @@
 """Fit gamma-ray images with Sherpa."""
 import sherpa.astro.ui as ui
 from kapteyn import wcs, positions
+
 try:
     from astropy.io import fits
 except:
@@ -26,8 +27,8 @@ ui.fit()
 ui.image_fit()
 ui.covar()
 conf = ui.get_covar_results()
-conf_dict = dict([(n,(v, l, h)) for n,v,l,h in
-                   zip(conf.parnames, conf.parvals, conf.parmins, conf.parmaxes)])
+conf_dict = dict([(n, (v, l, h)) for n, v, l, h in
+                  zip(conf.parnames, conf.parvals, conf.parmins, conf.parmaxes)])
 x, y = proj.toworld((conf_dict['g1.xpos'][0], conf_dict['g1.ypos'][0]))
 xmin, ymin = proj.toworld((conf_dict['g1.xpos'][0] + conf_dict['g1.xpos'][1],
                            conf_dict['g1.ypos'][0] + conf_dict['g1.ypos'][1]))

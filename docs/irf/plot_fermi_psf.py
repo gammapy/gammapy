@@ -17,9 +17,9 @@ for energy in energies:
     psf.normalize()
     kernel = psf.kernel(pixel_size=Angle(0.1, 'deg'))
     plt.imshow(np.log(kernel.value))
-    #psf.plot_psf_vs_theta()
+    # psf.plot_psf_vs_theta()
 
-#plt.xlim(1e-2, 10)
-#plt.gca().set_xscale('linear')
-#plt.gca().set_yscale('linear')
+# plt.xlim(1e-2, 10)
+# plt.gca().set_xscale('linear')
+# plt.gca().set_yscale('linear')
 plt.show()

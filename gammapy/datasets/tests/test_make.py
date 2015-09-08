@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import numpy as np
 from astropy.coordinates import Angle
@@ -8,7 +7,7 @@ from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 from ...datasets import (make_test_psf, make_test_observation_table,
                          make_test_bg_cube_model, make_test_dataset)
-from ...obs import ObservationTable, DataStore
+from ...obs import DataStore
 
 
 def test_make_test_psf_fits_table():
@@ -105,7 +104,7 @@ def test_make_test_dataset(tmpdir):
     # test number of files created
     n_event_list_files = sum(len([f for f in fs if f.lower().endswith('.fits.gz')])
                              for _, _, fs in os.walk(fits_path))
-    assert n_event_list_files == 2*n_obs
+    assert n_event_list_files == 2 * n_obs
 
     # test length of created observation list table
     data_store = DataStore(dir=fits_path, scheme=scheme)

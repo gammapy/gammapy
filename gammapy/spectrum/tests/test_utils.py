@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 import numpy as np
@@ -16,7 +16,6 @@ except ImportError:
 
 
 class TestPHA(object):
-
     def test_pha(self, tmpdir):
         """Create test PHA file."""
 
@@ -56,5 +55,3 @@ def test_LogEnergyAxis():
 
     world = energy_axis.pix2world(pix)
     assert_quantity_allclose(world, energy)
-
-

@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numbers
 import numpy as np
 from astropy.coordinates import Angle
 
-__all__ = ['get_random_state',
-           'sample_sphere',
-           'sample_sphere_distance',
-           'sample_powerlaw',
-           ]
+__all__ = [
+    'get_random_state',
+    'sample_sphere',
+    'sample_sphere_distance',
+    'sample_powerlaw',
+]
 
 
 def get_random_state(init):

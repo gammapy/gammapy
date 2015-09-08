@@ -1,19 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import datetime
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
-from ..utils.array import array_stats_str
 
-
-__all__ = ['LogEnergyAxis',
-           'np_to_pha',
-           ]
+__all__ = [
+    'LogEnergyAxis',
+    'np_to_pha',
+]
 
 
 class LogEnergyAxis(object):
-
     """Log10 energy axis.
 
     Defines a transformation between:
@@ -36,7 +34,6 @@ class LogEnergyAxis(object):
     """
 
     def __init__(self, energy):
-
         self.energy = energy
         self.x = np.log10(energy.value)
         self.pix = np.arange(len(self.x))
@@ -105,7 +102,6 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
               version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
               backfile='none', corrfile='none', respfile='none', ancrfile='none'):
-
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters

@@ -1,15 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Pulsar source models"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from ...extern.validator import validate_physical_type
 
-__all__ = ['Pulsar', 'SimplePulsar']
+__all__ = [
+    'Pulsar',
+    'SimplePulsar',
+]
 
-DEFAULT_I = Quantity(1e45, 'g cm^2')  # moment of inertia
-DEFAULT_R = Quantity(1e6, 'cm')   # radius of the neutron star
-B_CONST = Quantity(3.2e19, 'gauss s^(-1/2)')   # magnetic field constant
+DEFAULT_I = Quantity(1e45, 'g cm^2')
+"""Pulsar default moment of inertia"""
+
+DEFAULT_R = Quantity(1e6, 'cm')
+"""Pulsar default radius of the neutron star"""
+
+B_CONST = Quantity(3.2e19, 'gauss s^(-1/2)')
+"""Pulsar default magnetic field constant"""
 
 
 class SimplePulsar(object):

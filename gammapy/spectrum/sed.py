@@ -1,19 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Interface to the Fermi and HESS catalogs.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.table import Table
 from astropy.units import Unit, Quantity
 from ..spectrum import compute_differential_flux_points
 
-__all__ = ['SEDComponent',
-           'SED',
-           'cube_sed',
-           'add_spec',
-           ]
+__all__ = [
+    'SEDComponent',
+    'SED',
+    'cube_sed',
+    'add_spec',
+]
+
+log = logging.getLogger(__name__)
 
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
 MeV_to_erg = Unit('MeV').to(Unit('erg'))
@@ -22,6 +24,7 @@ MeV_to_erg = Unit('MeV').to(Unit('erg'))
 class SEDComponent(object):
     """Uniform interface to SED components for the SED class
     """
+
     def __init__(self, name='', model=None, points=None):
         """
         @param name: str
@@ -92,6 +95,7 @@ class SED(list):
         component = catalog.sed_component(name)
         self.append(component)
     """
+
     def add(self, names, catalogs):
         for name in names:
             for catalog in catalogs:
@@ -201,7 +205,7 @@ class SED(list):
         self.plot_points = self.get_flux_points_fermi(i)
         # Add text label
         fmt = '%s\n%s, %s\n' + \
-            r'S = %3.1f, C = %3.1f, $\Gamma = %1.2f \pm %1.2f$'
+              r'S = %3.1f, C = %3.1f, $\Gamma = %1.2f \pm %1.2f$'
         values = (self.object_name,
                   self.catalog.field('class1')[i],
                   self.catalog.field('assoc1')[i],

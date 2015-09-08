@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import sys
 import argparse
 from collections import OrderedDict
@@ -126,6 +125,7 @@ def _configure_root_logger(level='info', format=None):
 
     return log
 
+
 def _create_dir(dirname, overwrite=False):
     """Create directory in file system.
 
@@ -139,15 +139,15 @@ def _create_dir(dirname, overwrite=False):
         Flag to remove previous directory with the same name (if existing).
     """
     if dirname == '':
-            s_error = "Cannot continue: directory name \'{}\' empty.".format(dirname)
-            raise ValueError(s_error)
+        s_error = "Cannot continue: directory name \'{}\' empty.".format(dirname)
+        raise ValueError(s_error)
 
     if not os.path.isdir(dirname):
         os.mkdir(dirname)
     else:
         if overwrite:
             # delete and create again
-            shutil.rmtree(dirname) # recursively
+            shutil.rmtree(dirname)  # recursively
             os.mkdir(dirname)
         else:
             # do not overwrite, hence exit

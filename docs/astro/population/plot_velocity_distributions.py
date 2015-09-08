@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from gammapy.astro.population import velocity_distributions
 from gammapy.utils.distributions import normalize
 
+# TODO: use Quantity
 v_min, v_max = 10, 3000  # km / s
 v = np.linspace(v_min, v_max, 200)
 

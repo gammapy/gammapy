@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ...morphology import Gauss2DPDF, MultiGauss2D
 from ...irf import HESSMultiGaussPSF
@@ -66,10 +65,10 @@ def plot_HESS_PSF_convolution(containment=0.8):
     sigmas = np.linspace(0, 0.3, 100)
     # First compute the correct theta
     thetas = [m.convolve(sigma).theta(containment)
-            for sigma in sigmas]
+              for sigma in sigmas]
     # Now an approximate one using match_sigma
     thetas_approx = [m_approx.convolve(sigma).theta(containment)
-                   for sigma in sigmas]
+                     for sigma in sigmas]
     plt.figure()
     plt.plot(sigmas, thetas, label='correct')
     plt.plot(sigmas, thetas_approx, label='approx')

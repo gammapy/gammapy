@@ -14,7 +14,7 @@ Otherwise your PSF will be cut off and your results nonsense!
 You can simply set the PSF in the middle of your image
 by issueing center_psf()
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
@@ -24,12 +24,13 @@ from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
 from ..morphology import read_json
 from ..morphology import Gauss2DPDF, MultiGauss2D
 
-__all__ = ['GaussPSF',
-           'HESSMultiGaussPSF',
-           'SherpaMultiGaussPSF',
-           'PositionDependentMultiGaussPSF',
-           'multi_gauss_psf_kernel'
-           ]
+__all__ = [
+    'GaussPSF',
+    'HESSMultiGaussPSF',
+    'SherpaMultiGaussPSF',
+    'PositionDependentMultiGaussPSF',
+    'multi_gauss_psf_kernel',
+]
 
 
 class GaussPSF(Gauss2DPDF):
@@ -55,11 +56,12 @@ class SherpaMultiGaussPSF(object):
     f = 2.7725887 = 4log2 relates the full-width
     at half-maximum F to the Gaussian sigma
     """
+
     def __init__(self, source):
         if isinstance(source, dict):
             # Assume source is a dict with correct format
             self.pars = source
-        # elif isinstance(source, HESS):
+            # elif isinstance(source, HESS):
             # Get pars dict by from HESS object
             # self.pars = source.to_sherpa()
         elif isinstance(source, (str, unicode)):
@@ -143,6 +145,7 @@ class HESSMultiGaussPSF(object):
     @param npoints: Number of points in numerical computations
     @param eps: Allowed tolerance on normalization of total P to 1
     """
+
     def __init__(self, source):
         if isinstance(source, dict):
             # Assume source is a dict with correct format

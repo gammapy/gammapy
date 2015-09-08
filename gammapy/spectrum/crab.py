@@ -13,13 +13,17 @@ to several publications:
 * 'Meyer' :  http://adsabs.harvard.edu/abs/2010A%26A...523A...2M, Appendix D
 
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Unit
 
-__all__ = ['crab_flux', 'crab_integral_flux', 'crab_spectral_index',
-           'CRAB_DEFAULT_REFERENCE', 'CRAB_REFERENCES'
-           ]
+__all__ = [
+    'crab_flux',
+    'crab_integral_flux',
+    'crab_spectral_index',
+    'CRAB_DEFAULT_REFERENCE',
+    'CRAB_REFERENCES',
+]
 
 # HESS publication: 2006A&A...457..899A
 hess_pl = {'diff_flux': 3.45e-11,

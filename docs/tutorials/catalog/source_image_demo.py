@@ -2,9 +2,7 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-
 from aplpy import FITSFigure
-
 from gammapy.datasets import FermiGalacticCenter
 from gammapy.image import make_empty_image, catalog_image
 from gammapy.irf import EnergyDependentTablePSF
@@ -28,4 +26,3 @@ fig.add_colorbar(ticks=ticks, axis_label_text='Flux (ph s^-1 cm^-2 TeV^-1)')
 fig.colorbar._colorbar_axes.set_yticklabels(['{:.0e}'.format(_) for _ in ticks])
 plt.tight_layout()
 plt.show()
-

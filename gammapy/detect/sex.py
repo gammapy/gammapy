@@ -9,9 +9,8 @@ Other SExtractor Python wrappers (not BSD licensed!):
 * https://pypi.python.org/pypi/pysex/
 * http://gitorious.org/pysextractor/pysextractor/trees/master/pysextractor
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import subprocess
 import tempfile
 from astropy.utils.data import get_pkg_data_filename
@@ -19,6 +18,8 @@ from astropy.io import fits
 from astropy.table import Table
 
 __all__ = ['sex']
+
+log = logging.getLogger(__name__)
 
 
 def sex(image,

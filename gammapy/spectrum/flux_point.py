@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Differential and integral flux point computations."""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table
 from ..spectrum.powerlaw import power_law_flux
@@ -57,12 +57,12 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
     # Use input values if not initially provided with a table
     # and broadcast quantities to arrays if required
     if table is None:
-        spectral_index = np.array(spectral_index).reshape(np.array(spectral_index).size,)
-        energy_min = np.array(energy_min).reshape(np.array(energy_min).size,)
-        energy_max = np.array(energy_max).reshape(np.array(energy_max).size,)
-        int_flux = np.array(int_flux).reshape(np.array(int_flux).size,)
+        spectral_index = np.array(spectral_index).reshape(np.array(spectral_index).size, )
+        energy_min = np.array(energy_min).reshape(np.array(energy_min).size, )
+        energy_max = np.array(energy_max).reshape(np.array(energy_max).size, )
+        int_flux = np.array(int_flux).reshape(np.array(int_flux).size, )
         try:
-            int_flux_err = np.array(int_flux_err).reshape(np.array(int_flux_err).size,)
+            int_flux_err = np.array(int_flux_err).reshape(np.array(int_flux_err).size, )
         except:
             pass
         # TODO: Can a better implementation be found here?

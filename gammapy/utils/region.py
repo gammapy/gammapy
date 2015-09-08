@@ -6,13 +6,13 @@ References:
 * https://pypi.python.org/pypi/pyregion
 * http://ds9.si.edu/doc/ref/region.html
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-
-__all__ = ['make_ds9_region',
-           'Circle',
-           'SkyCircle',
-           ]
+__all__ = [
+    'make_ds9_region',
+    'Circle',
+    'SkyCircle',
+]
 
 
 class Circle(object):

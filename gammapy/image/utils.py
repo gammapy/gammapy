@@ -1,47 +1,48 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Image utility functions"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
 
+__all__ = [
+    'atrous_hdu',
+    'atrous_image',
+    'bin_events_in_cube',
+    'bin_events_in_image',
+    'binary_dilation_circle',
+    'binary_disk',
+    'binary_opening_circle',
+    'binary_ring',
+    'block_reduce_hdu',
+    'contains',
+    'coordinates',
+    'cube_to_image',
+    'cube_to_spec',
+    'crop_image',
+    'dict_to_hdulist',
+    'disk_correlate',
+    'downsample_2N',
+    'exclusion_distance',
+    'image_groupby',
+    'images_to_cube',
+    'lon_lat_rectangle_mask',
+    'make_empty_image',
+    'make_header',
+    'paste_cutout_into_image',
+    'process_image_pixels',
+    'ring_correlate',
+    'separation',
+    'shape_2N',
+    'solid_angle',
+    'threshold',
+    'upsample_2N',
+    'wcs_histogram2d',
+]
 
-__all__ = ['atrous_hdu',
-           'atrous_image',
-           'bin_events_in_cube',
-           'bin_events_in_image',
-           'binary_dilation_circle',
-           'binary_disk',
-           'binary_opening_circle',
-           'binary_ring',
-           'block_reduce_hdu',
-           'contains',
-           'coordinates',
-           'cube_to_image',
-           'cube_to_spec',
-           'crop_image',
-           'dict_to_hdulist',
-           'disk_correlate',
-           'downsample_2N',
-           'exclusion_distance',
-           'image_groupby',
-           'images_to_cube',
-           'lon_lat_rectangle_mask',
-           'make_empty_image',
-           'make_header',
-           'paste_cutout_into_image',
-           'process_image_pixels',
-           'ring_correlate',
-           'separation',
-           'shape_2N',
-           'solid_angle',
-           'threshold',
-           'upsample_2N',
-           'wcs_histogram2d',
-           ]
+log = logging.getLogger(__name__)
 
 
 def _get_structure_indices(radius):
@@ -529,14 +530,14 @@ def process_image_pixels(images, kernel, out, pixel_function):
             for name, image in images.items():
                 # hi + 1 because with Python slicing the hi edge is not included
                 part = image[i0 - i0_lo: i0 + i0_hi + 1,
-                             i1 - i1_lo: i1 + i1_hi + 1]
+                       i1 - i1_lo: i1 + i1_hi + 1]
                 image_parts[name] = part
 
             # Cut out relevant part of the kernel array
             # This only applies when close to the edge
             # hi + 1 because with Python slicing the hi edge is not included
             kernel_part = kernel[k0 - i0_lo: k0 + i0_hi + 1,
-                                 k1 - i1_lo: k1 + i1_hi + 1]
+                          k1 - i1_lo: k1 + i1_hi + 1]
 
             # Call pixel_function for this one part
             out_part = pixel_function(image_parts, kernel_part)
@@ -1185,4 +1186,3 @@ def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
     lat_mask = mask_lat_min & mask_lat_max
 
     return lon_mask & lat_mask
-

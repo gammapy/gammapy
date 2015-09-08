@@ -30,10 +30,9 @@ def make_x_plot():
     for spectral_index in spectral_indices:
         lafferty_flux, log_flux = get_flux_tables(table, 'power_law', None,
                                                   spectral_index)
-        residuals_lafferty = ((np.log(lafferty_flux['ENERGY'])
-                              - np.log(energy_min)) / (np.log(energy_max)-np.log(energy_min)))
-        residuals_log = ((np.log(log_flux['ENERGY'])
-                              - np.log(energy_min)) / (np.log(energy_max)-np.log(energy_min)))
+        dlog_energy = np.log(energy_max) - np.log(energy_min)
+        residuals_lafferty = np.log(lafferty_flux['ENERGY'] - np.log(energy_min)) / dlog_energy
+        residuals_log = np.log(log_flux['ENERGY'] - np.log(energy_min)) / dlog_energy
         lafferty_array.append(residuals_lafferty[0])
         log_array.append(residuals_log[0])
     plt.plot(spectral_indices, lafferty_array,
