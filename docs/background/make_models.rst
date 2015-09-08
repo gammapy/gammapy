@@ -99,3 +99,39 @@ same model (except for absolute normalization). The models can be
 used to test the cube bg model production and can be compared to each
 other using the :download:`plot_bg_cube_model_comparison.py
 <../../examples/plot_bg_cube_model_comparison.py>` example script.
+
+Comparing true-reco models
+**************************
+
+Two model files located in the `~gammapy-extra` repository have been
+produced using the example script :download:`make_bg_cube_models_true_reco.py
+<../../examples/make_bg_cube_models_true_reco.py>`:
+
+* `bg_cube_model_true.fits.gz
+  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_true.fits.gz>`_
+  is a true bg cube model produced with
+  `~gammapy.datasets.make_test_bg_cube_model`.
+* `bg_cube_model_reco.fits.gz
+  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_reco.fits.gz>`_
+  is a reco bg cube model produced with
+  `~gammapy.background.make_bg_cube_model`, using dummy data produced
+  with `~gammapy.datasets.make_test_dataset`.
+
+The following plots are produced with a modified version of the
+:download:`plot_bg_cube_model_comparison.py
+<../../examples/plot_bg_cube_model_comparison.py>` example script:
+
+.. plot:: background/plot_bgcube_true_reco.py
+
+The input counts spectrum is a power-law with an index of 1.5, in
+order to have some counts at high energies with a reasonable amount
+of simulated data. In reality the background spectrum has a spectral
+index close to 2.7.
+
+The bg rate appears as a spectrum of **index + 1** (2.5 in this
+example).
+The reason being that, in order to produce the bg model, the
+contents of the cube (counts per unit time) have to be divided by the
+bin volume (delta x * delta y * delta E). When computing
+counts/delta E, the index of the bg rate increases by 1 w.r.t. the
+index of the power-law spectrum used to sample (or model) the counts.

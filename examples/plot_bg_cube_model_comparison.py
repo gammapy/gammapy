@@ -12,11 +12,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.io import ascii
 from gammapy.background import CubeBackgroundModel
-
 from gammapy.obs import ObservationGroups, ObservationGroupAxis
-
-GRAPH_DEBUG = 0
-SAVE = 0
 
 NORMALIZE = 0 # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
               # 0: do not normalize
@@ -40,6 +36,7 @@ NAME2 = 'michi'
 #  - alt_bin_ids_selection = [7, 10, 13]
 #  - az_bin_ids_selection = [0, 1]
 group_ids_selection = [14, 15, 20, 21, 26, 27]
+
 
 def convert_obs_groups_binning_def_michi_to_default():
     """Convert observation groups binning definition "michi" to "default".
@@ -122,7 +119,6 @@ def look_obs_groups_michi(group_id):
     return i_alt, i_az
 
 
-
 def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
                                   input_dir2, binning_format2, name2):
     """
@@ -158,13 +154,6 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
             is is the way how smoothing method *michi* normalizes the
             background cube model, hence it is necessary to compare
             to those models that use that particular smoothing
-
-    * **SAVE**: set to 1 (True) to save the output:
-          * comparison plots as png
-          * *michi* binning groups and lookup as ECVS files
-
-    * **GRAPH_DEBUG**: if set to 1 (True) the program waits between
-      each observation group iteration until the image is closed
 
     Parameters
     ----------
@@ -324,11 +313,10 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
                 axes[1, 2].set_title(spec_title1)
             axes[1, 2].legend()
 
-            if GRAPH_DEBUG:
-                plt.show() # wait until image is closed
+            plt.draw()
 
-            if SAVE:
-                outfile = "bg_cube_model_comparison_group{}.png".format(group)
+            # save
+            outfile = "bg_cube_model_comparison_group{}.png".format(group)
                 print('Writing {}'.format(outfile))
                 fig.savefig(outfile)
 
