@@ -32,7 +32,7 @@ def residual_images(model_file,
                     overwrite):
     """Compute source model residual images.
 
-    The input `data_file` must contain the following HDU extensions:
+    The input ``data_file`` must contain the following HDU extensions:
 
     * 'On' -- Counts image
     * 'Background' -- Background image

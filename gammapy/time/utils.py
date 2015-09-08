@@ -23,7 +23,7 @@ def time_ref_from_dict(meta):
     Parameters
     ----------
     meta : `dict`
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------
@@ -51,7 +51,7 @@ def time_relative_to_ref(time, meta):
     time : `~astropy.time.Time`
         time to be converted
     meta : dict
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------
@@ -72,7 +72,7 @@ def absolute_time(time_delta, meta):
     time_delta : `~astropy.time.TimeDelta`
         time in seconds after the MET reference
     meta : dict
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------

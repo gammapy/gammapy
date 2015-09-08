@@ -296,7 +296,7 @@ class EventList(Table):
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):
         """Select events in sky box.
 
-        TODO: move `gammapy.catalog.select_sky_box` to `gammapy.utils`.
+        TODO: move `gammapy.catalog.select_sky_box` to gammapy.utils.
         """
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)

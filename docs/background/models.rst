@@ -28,7 +28,7 @@ Two classes are used as container for this model:
   the cubes.
 
 * The `~gammapy.background.CubeBackgroundModel` class is used to
-  contain and handle cube bacground models.
+  contain and handle cube background models.
   It contains 3 cubes of type `~gammapy.background.Cube`:
 
     * ``counts_cube`` - counts (a.k.a. events) used to fill the model.
@@ -51,7 +51,7 @@ examples and test benches of these classes:
   with `~gammapy.datasets.make_test_dataset`.
 
 An example script of how to read/write the cubes from file and
-perform some simple plots is given in the `examples` directory:
+perform some simple plots is given in the ``examples`` directory:
 :download:`plot_bg_cube_model.py <../../examples/plot_bg_cube_model.py>`
 
 .. literalinclude:: ../../examples/plot_bg_cube_model.py

@@ -51,11 +51,11 @@ def main(args=None):
 
 
 def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
-             morphology, width, overwrite, threshold):
+             morphology, width, overwrite):
     """
     Compute source model residual images.
 
-    The input `data` fits file must contain the following HDU extensions:
+    The input ``data`` FITS file must contain the following HDU extensions:
 
     * 'On' -- Counts image
     * 'Background' -- Background image

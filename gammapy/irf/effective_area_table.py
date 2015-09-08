@@ -133,7 +133,7 @@ class EffectiveAreaTable(object):
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
         energy_unit : str
             Unit in which the energy is written in the fits file

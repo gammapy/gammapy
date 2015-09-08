@@ -75,7 +75,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
 
     Parameters
     ----------
-    reference : `~fits.ImageHDU`
+    reference : `~astropy.io.fits.ImageHDU`
         Reference Image HDU. The output takes the shape and resolution of this.
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Energy dependent Table PSF object for image convolution.
@@ -88,7 +88,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     total_flux : bool
         Specify whether to conserve total flux.
     sim_table : `~astropy.table.Table`
-        Table of simulated point sources. Only required if catalog = 'simulation'
+        Table of simulated point sources. Only required if ``catalog='simulation'``
 
     Returns
     -------

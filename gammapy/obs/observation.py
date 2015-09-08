@@ -245,8 +245,7 @@ class ObservationTable(Table):
         **inverted** flag, in which case, the selection is applied to keep all
         elements outside the selected range.
 
-        A few examples of selection criteria are given below and more can be
-        found in the tests in `test_select_observations`.
+        A few examples of selection criteria are given below.
 
         Parameters
         ----------

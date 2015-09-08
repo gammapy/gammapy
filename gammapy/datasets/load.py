@@ -71,9 +71,9 @@ def get_path(filename, location='local', cache=True):
         ``'local'`` means bundled with ``gammapy``.
         ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
     cache : bool
-        if `True` and using `location=remote`, the file is searched
+        if `True` and using ``location='remote'``, the file is searched
         first within the local astropy cache and only downloaded if
-        it does not exist
+        it does not exist.
 
     Returns
     -------

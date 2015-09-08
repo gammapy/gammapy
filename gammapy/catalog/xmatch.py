@@ -42,7 +42,7 @@ def catalog_xmatch_circle(catalog, other_catalog,
         Other source catalog of potential associations
     radius, other_radius : `~astropy.coordinates.Angle` or `str`
         Main source catalog association radius.
-        For `str` this must be a column name (in `deg` if without units)
+        For `str` this must be a column name (in degrees if without units)
 
     Returns
     -------
@@ -143,10 +143,10 @@ def table_xmatch(table1, table2, xmatch_criterion, return_indices=True):
         Input tables
     xmatch_criterion : callable
         Callable that takes two `~astropy.table.Row` objects as input
-        and returns `True` / `False` when they match / don't match.
+        and returns True / False when they match / don't match.
     return_indices : bool
         If `True` this function returns a Table with match indices
-        `idx1` and `idx2`, if `False` it stacks the matches in a table using
+        ``idx1`` and ``idx2``, if False it stacks the matches in a table using
         `~astropy.table.hstack`.
 
     Returns

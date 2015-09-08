@@ -303,7 +303,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     Per default units of *1 / (MeV sr s)* for the bg rate are
     enforced, unless *do_not_force_mev_units* is set.
     This is in agreement to the convention applied in
-    `~gammapy.background.make_bg_cube_model.`
+    `~gammapy.background.make_bg_cube_model`.
 
     This method is useful for instance to produce true (simulated)
     background cube models to compare to the reconstructed ones
