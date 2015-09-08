@@ -587,7 +587,7 @@ Class attributes
 ++++++++++++++++
 
 Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.spectral.Spectralcube` as an example.
+see `~gammapy.data.SpectralCube` as an example.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*

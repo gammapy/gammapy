@@ -106,5 +106,6 @@ Table:
 +------+----------------+---------+-------------+-------------+-------------+-------------+-------------+--------------+------+---------------+
 
 A test observation list file in fits format is located in the
-`~gammapy-extra` repository
-(`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_).
+``gammapy-extra`` repository (`test_observation_table.fits`_).
+
+.. _test_observation_table.fits: https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits

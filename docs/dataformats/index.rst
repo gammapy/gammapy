@@ -32,7 +32,7 @@ Events            EVENTS               `~gammapy.data.EventList`                
 ----------------- -------------------- ----------------------------------------- ----------------------------
 Counts            3D                   `~gammapy.data.SpectralCube`              `GCTAEventCube`_
 Counts            Image                no class?                                 `GSkyMap`_
-Counts            PHA                  `~gammapy.data.CountsSpectrumDataset`     `GPha`_
+Counts            PHA                  `~gammapy.data.CountsSpectrum`            `GPha`_
 ----------------- -------------------- ----------------------------------------- ----------------------------
 Exposure          EXPOSURE_3D          `~gammapy.data.SpectralCube`?             `GCTACubeExposure`_
 ----------------- -------------------- ----------------------------------------- ----------------------------

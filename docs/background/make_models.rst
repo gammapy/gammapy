@@ -68,7 +68,7 @@ The output files are created in the output directory:
   counts (a.k.a. events) and a livetime correction data cubes.
 
 In order to compare 2 sets of background cube models, the following
-script in the `examples` directory can be used:
+script in the ``examples`` directory can be used:
 :download:`plot_bg_cube_model_comparison.py
 <../../examples/plot_bg_cube_model_comparison.py>`
 
@@ -103,7 +103,7 @@ other using the :download:`plot_bg_cube_model_comparison.py
 Comparing true-reco models
 **************************
 
-Two model files located in the `~gammapy-extra` repository have been
+Two model files located in the ``gammapy-extra`` repository have been
 produced using the example script :download:`make_bg_cube_models_true_reco.py
 <../../examples/make_bg_cube_models_true_reco.py>`:
 

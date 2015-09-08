@@ -1,6 +1,6 @@
 # TODO: this can probably be removed as soon as this is merged
 # https://github.com/aplpy/aplpy/pull/189
-py:obj aplpy.FITSFigure
+# py:obj aplpy.FITSFigure
 
 # This is needed for `astropy.io.fits.HDUList` sub-classes
 # TODO: resolve correctly
