@@ -66,7 +66,7 @@ Gammapy these are also the recommended format and time scale.
 .. warning::
 
    Actually what's written here is not true.
-   In CTA it hasn't been decided if times will be in `utc` or `tt` (terrestial time) format.
+   In CTA it hasn't been decided if times will be in ``utc`` or ``tt`` (terrestial time) format.
 
    Here's a reminder that this needs to be settled / updated:
    https://github.com/gammapy/gammapy/issues/284
@@ -93,12 +93,12 @@ Converting to other time scales is also easy, see the
 E.g. when converting celestial (RA/DEC) to horizontal (ALT/AZ) coordinates, the
 `sidereal time <https://en.wikipedia.org/wiki/Sidereal_time>`__ is needed.
 This is done automatically by `astropy.coordinates.AltAz` when the
-`astropy.coordinates.AltAz.obstime` is set with a `astropy.time.Time` object in any scale,
+`astropy.coordinates.AltAz.obstime` is set with a `~astropy.time.Time` object in any scale,
 no need for explicit time scale transformations in Gammapy
 (although if you do want to explicitly compute it, it's easy, see `here <http://astropy.readthedocs.org/en/latest/time/index.html#sidereal-time>`__).
 
 The "Time Systems in a nutshell" section `here <http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html>`__
-gives a good, brief explanation of the differences between the relevant time scales `UT1`, `UTC` and `TT`.
+gives a good, brief explanation of the differences between the relevant time scales ``UT1``, ``UTC`` and ``TT``.
 
 .. _MET_definition:
 
@@ -123,7 +123,7 @@ objects via the reference times stored in FITS headers.
 Time differences
 ----------------
 
-TODO: discuss when to use `astropy.time.TimeDelta` or `astropy.units.Quantity` or [MET]_ floats and
+TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity` or [MET]_ floats and
 where one needs to convert between those and what to watch out for.
 
 Reference/API

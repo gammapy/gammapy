@@ -29,31 +29,24 @@ Two classes are used as container for this model:
 
 * The `~gammapy.background.CubeBackgroundModel` class is used to
   contain and handle cube bacground models.
-  It contais 3 cubes of type `~gammapy.background.Cube`:
+  It contains 3 cubes of type `~gammapy.background.Cube`:
 
-    * `~gammapy.background.CubeBackgroundModel.counts_cube`:
-      contains the counts (a.k.a. events) used to fill the model.
-    * `~gammapy.background.CubeBackgroundModel.livetime_cube`:
-      contains the livetime correction used for the model.
-    * `~gammapy.background.CubeBackgroundModel.background_cube`:
-      contains the background model (background rate).
+    * ``counts_cube`` - counts (a.k.a. events) used to fill the model.
+    * ``livetime_cube``- livetime correction used for the model.
+    * ``background_cube`` - background model (rate)
 
   The class also defines usefull methods to produce the models, such
   as define binning, fill (histogram) the model or smooth.
 
-Two test files are located in the `~gammapy-extra` repository as
+Two test files are located in the ``gammapy-extra`` repository as
 examples and test benches of these classes:
 
-* `bg_cube_model_test1.fits
-  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test1.fits>`_
-  is a `~gammapy.background.Cube` produced with an older version of
+* `bg_cube_model_test1.fits`_ is a `~gammapy.background.Cube` produced with an older version of
   `~gammapy.datasets.make_test_bg_cube_model`, using a simplified
   background model. The current version of the mehod produces a
   `~gammapy.background.CubeBackgroundModel` object.
 
-* `bg_cube_model_test2.fits.gz
-  <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test2.fits.gz>`_
-  is a `~gammapy.background.CubeBackgroundModel` produced with
+* `bg_cube_model_test2.fits.gz`_ is a `~gammapy.background.CubeBackgroundModel` produced with
   `~gammapy.background.make_bg_cube_model`, using dummy data produced
   with `~gammapy.datasets.make_test_dataset`.
 
@@ -75,3 +68,7 @@ More complex plots can be easily produced with a few lines of code:
 
 .. plot:: background/plot_bgcube.py
    :include-source:
+
+
+.. _bg_cube_model_test1.fits: https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test1.fits
+.. _bg_cube_model_test2.fits.gz: https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_test2.fits.gz

@@ -86,7 +86,7 @@ for multi-mission gamma-ray likelihood analysis:
 
 - `Gammalib`_/`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
   that uses the same input file formats as Gammapy.
-- `3ML` is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
+- 3ML is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
   to deal with the data and IRFs and compute the likelihood for a given model.
 
 So there is some overlap of Gammapy with other efforts, but as mentioned in  :ref:`about-overview` the scope
