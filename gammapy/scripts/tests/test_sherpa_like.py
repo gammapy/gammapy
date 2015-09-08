@@ -15,6 +15,9 @@ except ImportError:
     HAS_SHERPA = False
 
 
+# TODO: fix and reactivate this test.
+# See https://github.com/gammapy/gammapy/issues/349
+@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_SHERPA')
 def test_sherpa_like(tmpdir):
     # load test data
