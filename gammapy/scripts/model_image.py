@@ -2,10 +2,11 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['model_image']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -16,7 +17,7 @@ def main(args=None):
                         help='PSF JSON file name')
     parser.add_argument('--sources', type=str, default='sources.json',
                         help='Sources JSON file name (contains start '
-                        'values for fit of Gaussians)')
+                             'values for fit of Gaussians)')
     parser.add_argument('--outfile', type=str, default='model.fits',
                         help='Output model image FITS file name')
     args = parser.parse_args(args)

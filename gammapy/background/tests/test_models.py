@@ -5,14 +5,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
 from astropy.table import Table
-from astropy.units import Quantity
-from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from ...background import GaussianBand2D, CubeBackgroundModel
 from ... import datasets
-from ...datasets.make import make_test_bg_cube_model
 from ...obs import ObservationTable
-
 
 try:
     import scipy
@@ -22,8 +18,7 @@ except ImportError:
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-class TestGaussianBand2D():
-
+class TestGaussianBand2D:
     def setup(self):
         table = Table()
         table['x'] = [-30, -10, 10, 20]
@@ -52,8 +47,7 @@ class TestGaussianBand2D():
         assert_allclose(model.parameters, [0, -1, 0.4])
 
 
-class TestCubeBackgroundModel():
-
+class TestCubeBackgroundModel:
     @remote_data
     def test_read(self):
 
@@ -110,7 +104,8 @@ class TestCubeBackgroundModel():
 
         assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
 
-    #def test_fill_events(self):
+    # TODO: implement this test of remove this
+    # def test_fill_events(self):
     # fill_events is tested (high-level) by
     # gammapy/scripts/tests/test_make_bg_cube_models.py
 

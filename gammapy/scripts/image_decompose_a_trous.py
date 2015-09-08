@@ -2,10 +2,12 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['image_decompose_a_trous']
+
+log = logging.getLogger(__name__)
+
 
 # TODO: add option to copy over input file
 # TODO: add option to select input HDU name or number

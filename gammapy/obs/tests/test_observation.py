@@ -8,16 +8,12 @@ from ...obs import (ObservationTable, ObservationGroups,
                     ObservationGroupAxis)
 from ... import datasets
 from ...datasets import make_test_observation_table
-from ...time import absolute_time
 from ...catalog import skycoord_from_table
 
 
-# def test_Observation():
-#     Observation(GLON=42, GLAT=43)
-
-
 def test_ObservationTable():
-    ObservationTable()
+    obs_table = ObservationTable()
+    # TODO: implement some useful test with asserts
 
 
 def common_sky_region_select_test_routines(obs_table, selection):
@@ -40,7 +36,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
     do_wrapping = False
     # not needed in the case of sky_circle
     if (type == 'sky_box' and
-        any(l < Angle(0., 'degree') for l in lon_range_eff)):
+            any(l < Angle(0., 'degree') for l in lon_range_eff)):
         do_wrapping = True
 
     # observation table
@@ -131,8 +127,6 @@ def test_select_time_box():
                                                  random_state=random_state)
 
     # test box selection in time: (time_start, time_stop) within value_range
-    print()
-    print("Test box selection in time")
     value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
     selection = dict(type='time_box', time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
@@ -145,7 +139,6 @@ def test_select_time_box():
 
 
 def test_select_sky_regions():
-
     # create random observation table with many entries
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
@@ -197,8 +190,7 @@ def test_select_sky_regions():
 
 @remote_data
 def test_ObservationGroups(tmpdir):
-
-    # test create obs groups
+    """Test create obs groups"""
     alt = Angle([0, 30, 60, 90], 'degree')
     az = Angle([-90, 90, 270], 'degree')
     ntels = np.array([3, 4])
@@ -266,8 +258,7 @@ def test_ObservationGroups(tmpdir):
 
 
 def test_ObservationGroupAxis():
-
-    # test create a few obs group axis objects
+    """Test create a few obs group axis objects"""
 
     alt = Angle([0, 30, 60, 90], 'degree')
     alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')

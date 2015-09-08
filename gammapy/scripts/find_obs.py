@@ -2,7 +2,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
@@ -11,6 +10,8 @@ from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import ObservationTable
 
 __all__ = ['find_obs']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -21,7 +22,7 @@ def main(args=None):
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
                         help='Output observation table file name '
-                        '(default: None, will print the result on screen)')
+                             '(default: None, will print the result on screen)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -34,11 +35,8 @@ def main(args=None):
                         help='box semi-length y coordinate (deg)')
     parser.add_argument('--system', type=str,
                         help='Coordinate system '
-                        '(built-in Astropy coordinate frames are supported, '
-                        'e.g. \'icrs\' or \'galactic\')')
-    parser.add_argument('--pix', action='store_true',
-                        help='Input coordinates are pixels '
-                        '(default is world coordinates)')
+                             '(built-in Astropy coordinate frames are supported, '
+                             'e.g. \'icrs\' or \'galactic\')')
     parser.add_argument('--t_start', type=str, default=None,
                         help='UTC start time (string: yyyy-mm-ddThh:mm:ss.sssssssss)')
     parser.add_argument('--t_stop', type=str, default=None,
@@ -71,7 +69,6 @@ def find_obs(infile,
              dx,
              dy,
              system,
-             pix,
              t_start,
              t_stop,
              par_name,
@@ -116,9 +113,6 @@ def find_obs(infile,
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
         gammapy-find-obs test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
     """
-    if pix:
-        raise NotImplementedError
-
     # open (fits) file and read the observation table
     try:
         observation_table = ObservationTable.read(infile)
