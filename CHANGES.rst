@@ -55,6 +55,7 @@ Pull requests
 - Add example script to produce true and reco bg cube model [#338] (Manuel Paz Arribas)
 - Remove PoissonLikelihoodFitter [#339] (Christoph Deil)
 - Add EnergyDispersion and CountsSpectrum [#330] (Johannes King)
+- Add nice true-reco bg cube model comparison plot script to the high-level docs [#347] (Manuel Paz Arribas)
 
 .. _gammapy_0p3_release:
 
