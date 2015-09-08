@@ -127,7 +127,7 @@ class SNR(object):
 
     def luminosity_tev(self, t=None, energy_min=Quantity(1, 'TeV')):
         """
-        Gamma-ray luminosity above `energy_min` at age t .
+        Gamma-ray luminosity above ``energy_min`` at age ``t``.
 
         The luminosity is assumed constant in a given age interval and zero
         before and after. The assumed spectral index is 2.1.

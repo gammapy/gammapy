@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
@@ -20,6 +19,8 @@ __all__ = ['make_bg_cube_models',
            'stack_observations',
            ]
 
+log = logging.getLogger(__name__)
+
 
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
@@ -33,7 +34,7 @@ def main(args=None):
                         help='Overwrite existing output file?')
     parser.add_argument('--test', action='store_true',
                         help='If activated, use a subset of '
-                        'observations for testing purposes')
+                             'observations for testing purposes')
     parser.add_argument('--method', type=str, default='default',
                         choices=['default', 'michi'],
                         help='Bg cube model calculation method to apply.')
@@ -47,7 +48,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, method):
+def make_bg_cube_models(indir, scheme, outdir, overwrite, test, method):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -68,37 +69,37 @@ def make_bg_cube_models(fitspath, scheme, outdir, overwrite, test, method):
 
     Parameters
     ----------
-    fitspath : str
-        Path to dir containing list of input fits event files.
+    indir : str
+        Input directory (that contains the event lists)
     scheme : str
         Scheme of file naming.
     outdir : str
         Dir path to store the results.
     overwrite : bool
-        If true, run fast (not recomended for analysis).
+        If true, run fast (not recommended for analysis).
     test : bool
-        If true, run fast (not recomended for analysis).
+        If true, run fast (not recommended for analysis).
     method : {'default', 'michi'}
         Bg cube model calculation method to apply.
 
     Examples
     --------
-    >>> gammapy-make-bg-cube-models -h
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --test
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --test --overwrite
-    >>> gammapy-make-bg-cube-models /path/to/fits/event_lists/base/dir HESS bg_cube_models --a-la-michi
+    $ gammapy-make-bg-cube-models -h
+    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models
+    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --test
+    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --test --overwrite
+    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --a-la-michi
 
     """
     # create output folder
     _create_dir(outdir, overwrite)
 
-    create_bg_observation_list(fitspath, scheme, outdir, overwrite, test)
+    create_bg_observation_list(indir, scheme, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
-    stack_observations(fitspath, outdir, overwrite, method)
+    stack_observations(indir, outdir, overwrite, method)
 
 
-def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
+def create_bg_observation_list(indir, scheme, outdir, overwrite, test):
     """Make total observation list and filter the observations.
 
     In a first version, all obs taken within 3 deg of a known source
@@ -107,14 +108,14 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
 
     Parameters
     ----------
-    fits_path : str
-        Path to dir containing list of input fits event files.
+    indir : str
+        Input directory (that contains the event lists)
     scheme : str
         Scheme of file naming.
     outdir : str
         Dir path to store the results.
     overwrite : bool
-        If true, run fast (not recomended for analysis).
+        If true, run fast (not recommended for analysis).
     test : bool
         If true, run fast: skip many runs and catalog sources.
     """
@@ -124,7 +125,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     log.info("#######################################")
 
     # get full list of observations
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=indir, scheme=scheme)
     observation_table = data_store.make_observation_table()
 
     # for testing, only process a small subset of observations
@@ -155,7 +156,7 @@ def create_bg_observation_list(fits_path, scheme, outdir, overwrite, test):
     sources_max_size = np.amax(sources_size, axis=1)
 
     # sources exclusion radius = 2x max size + 3 deg (fov + 0.5 deg?)
-    sources_excl_radius = 2*sources_max_size + Angle(3., 'degree')
+    sources_excl_radius = 2 * sources_max_size + Angle(3., 'degree')
 
     # mask all obs taken within the excl radius of any of the sources
     # loop over sources
@@ -186,7 +187,7 @@ def group_observations(outdir, overwrite, test):
     outdir : str
         Dir path to store the results.
     overwrite : bool
-        If true, run fast (not recomended for analysis).
+        If true, run fast (not recommended for analysis).
     test : bool
         If true, run fast: define coarse binning for observation grouping.
     """
@@ -196,8 +197,7 @@ def group_observations(outdir, overwrite, test):
     log.info("###############################")
 
     # read bg observation table from file
-    indir = outdir
-    infile = os.path.join(indir, 'bg_observation_table.fits.gz')
+    infile = os.path.join(outdir, 'bg_observation_table.fits.gz')
     observation_table = ObservationTable.read(infile)
 
     # define observation binning
@@ -249,19 +249,19 @@ def group_observations(outdir, overwrite, test):
     observation_table_grouped.write(outfile, overwrite=overwrite)
 
 
-def stack_observations(fits_path, outdir, overwrite, method='default'):
+def stack_observations(indir, outdir, overwrite, method='default'):
     """Stack events for each observation group (bin) and make background model.
 
     The models are stored into FITS files.
 
     Parameters
     ----------
-    fits_path : str
-        Path to dir containing list of input fits event files.
+    indir : str
+        Input directory (that contains the event lists)
     outdir : str
         Dir path to store the results.
     overwrite : bool
-        If true, run fast (not recomended for analysis).
+        If true, run fast (not recommended for analysis).
     method : {'default', 'michi'}, optional
         Bg cube model calculation method to apply.
     """
@@ -271,10 +271,9 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
     log.info("###############################")
 
     # read observation grouping and grouped observation table
-    indir = outdir
-    infile = os.path.join(indir, 'bg_observation_groups.ecsv')
+    infile = os.path.join(outdir, 'bg_observation_groups.ecsv')
     observation_groups = ObservationGroups.read(infile)
-    infile = os.path.join(indir, 'bg_observation_table_grouped.fits.gz')
+    infile = os.path.join(outdir, 'bg_observation_table_grouped.fits.gz')
     observation_table_grouped = ObservationTable.read(infile)
 
     # loop over observation groups
@@ -294,10 +293,10 @@ def stack_observations(fits_path, outdir, overwrite, method='default'):
         # skip bins with no observations
         if len(observation_table) == 0:
             log.warning("Group {} is empty.".format(group))
-            continue # skip the rest
+            continue  # skip the rest
 
         # create bg cube model
-        bg_cube_model = make_bg_cube_model(observation_table, fits_path, method)
+        bg_cube_model = make_bg_cube_model(observation_table, indir, method)
 
         # save model to file
         outfile = os.path.join(outdir, 'bg_cube_model_group{}'.format(group))

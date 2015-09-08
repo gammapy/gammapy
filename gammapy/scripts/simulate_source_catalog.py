@@ -2,11 +2,12 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 from ..astro import population
 
 __all__ = ['simulate_source_catalog']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -77,6 +78,7 @@ def _make_list(distributions):
         description = distributions[name].__doc__.splitlines()[0]
         ss += "{0:10s} : {1}\n".format(name, description)
     return ss
+
 
 radial_distributions_list = _make_list(population.radial_distributions)
 velocity_distributions_list = _make_list(population.velocity_distributions)

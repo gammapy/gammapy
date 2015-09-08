@@ -414,7 +414,7 @@ class SpectralCube(object):
         return SpectralCube(new_cube, wcs_out, energy)
 
     def to_fits(self):
-        """Writes SpectralCube to fits hdu_list.
+        """Writes SpectralCube to FITS hdu_list.
 
         Returns
         -------
@@ -425,7 +425,7 @@ class SpectralCube(object):
                 Table of energies
         """
         image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
-        image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
+        image.header['SPECUNIT'] = '{0.unit:FITS}'.format(self.data)
 
         # for BinTableHDU's the data must be added via a Table object
         energy_table = Table()
@@ -439,7 +439,7 @@ class SpectralCube(object):
         return hdu_list
 
     def writeto(self, filename, **kwargs):
-        """Writes SpectralCube to fits file.
+        """Writes SpectralCube to FITS file.
 
         Parameters
         ----------

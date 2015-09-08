@@ -2,13 +2,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-log = logging.getLogger(__name__)
 from astropy.io import fits
 from astropy.table import Table
 from ..image.utils import bin_events_in_cube
 from ..utils.scripts import get_parser
 
 __all__ = ['bin_cube']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):

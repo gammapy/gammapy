@@ -6,7 +6,10 @@ import numpy as np
 from numpy import sin, cos, arctan2, sqrt
 from ..image import exclusion_distance, lookup
 
-__all__ = ['ReflectedRegionMaker', 'ReflectedBgMaker']
+__all__ = [
+    'ReflectedRegionMaker',
+    'ReflectedBgMaker',
+]
 
 
 class ReflectedRegionMaker(object):

@@ -8,8 +8,10 @@ import gc
 from ..stats import significance
 from ..image import binary_dilation_circle
 
-
-__all__ = ['GammaImages', 'IterativeKernelBackgroundEstimator']
+__all__ = [
+    'GammaImages',
+    'IterativeKernelBackgroundEstimator',
+]
 
 
 class GammaImages(object):

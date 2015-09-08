@@ -47,8 +47,7 @@ def test_fill_acceptance_image():
     # define radial acceptance and offset angles
     # using bin_size for the offset step makes the test comparison easier
     offset = Angle(np.arange(0., 30., bin_size.degree), 'deg')
-    # acceptance = np.zeros_like(offset)
-    sigma = Angle(1.0, 'degree')  # gaussian width
+    sigma = Angle(1.0, 'degree')
     amplitude = 1.
     mean = 0.
     stddev = sigma.radian
@@ -78,11 +77,7 @@ def test_fill_acceptance_image():
     # cut offset and acceptance arrays to match image size
     # this is only valid if the offset step matches the pixel size
     n = pix_off_x_axis.size
-    # offset_cut = offset[0:n]
     acceptance_cut = acceptance[0:n]
 
     # check acceptance of the image:
-    decimal = 4
-    s_error = "image acceptance not compatible with defined radial acceptance"
-    np.testing.assert_almost_equal(image.data_x_axis, acceptance_cut,
-                                   decimal, s_error)
+    np.testing.assert_almost_equal(image.data_x_axis, acceptance_cut, decimal=4)

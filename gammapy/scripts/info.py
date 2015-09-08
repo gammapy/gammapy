@@ -3,11 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import sys
 import logging
-log = logging.getLogger(__name__)
 import importlib
 from ..utils.scripts import get_parser
 
 __all__ = ['info']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):

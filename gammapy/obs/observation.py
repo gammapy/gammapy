@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os.path
 import logging
+
 log = logging.getLogger(__name__)
 import numpy as np
 from astropy.table import Table, Column, vstack
@@ -22,7 +23,6 @@ __all__ = [
 
 
 class Observation(object):
-
     """Observation.
 
     An observation is a.k.a. run.
@@ -49,7 +49,6 @@ class Observation(object):
 
 
 class ObservationTable(Table):
-
     """Observation table (a.k.a. run list).
 
     This is an `~astropy.table.Table` sub-class, with a few
@@ -366,7 +365,6 @@ def recover_units(array, as_units):
 
 
 class ObservationGroups(object):
-
     """Observation groups.
 
     Class to define observation groups useful for organizing observation
@@ -510,7 +508,7 @@ class ObservationGroups(object):
 
         # define grids of column data
         ndim = len(axes)
-        s0 = (1,)*ndim
+        s0 = (1,) * ndim
         expanding_arrays = [x.reshape(s0[:i] + (-1,) + s0[i + 1::])
                             for i, x in enumerate(column_data_min)]
         column_data_expanded_min = np.broadcast_arrays(*expanding_arrays)
@@ -590,7 +588,7 @@ class ObservationGroups(object):
 
                     axes[i_col] = ObservationGroupAxis(split_name_min[0], edges,
                                                        'bin_edges')
-                    axes.pop(i_col + 1) # remove next entry on the list
+                    axes.pop(i_col + 1)  # remove next entry on the list
             except:
                 pass
 
@@ -739,7 +737,7 @@ class ObservationGroups(object):
                                  value_range=(min_value, max_value))
                 obs_table_selected = obs_table_selected.select_observations(selection)
             # define group and fill in list of grouped observation tables
-            group_id_data = i_group*np.ones(len(obs_table_selected), dtype=np.int)
+            group_id_data = i_group * np.ones(len(obs_table_selected), dtype=np.int)
             obs_table_selected.add_column(Column(name='GROUP_ID', data=group_id_data),
                                           index=0)
             list_obs_table_grouped.append(obs_table_selected)
@@ -781,7 +779,6 @@ class ObservationGroups(object):
 
 
 class ObservationGroupAxis(object):
-
     """Observation group axis.
 
     Class to define an axis along which to define bins for creating
