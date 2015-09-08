@@ -4,7 +4,7 @@
 For measurements, the "Database of Charged Cosmic Rays (CRDB)" is a great resource:
 http://lpsc.in2p3.fr/cosmic-rays-db/
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 

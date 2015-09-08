@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Make example datasets.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import numpy as np
 from astropy.units import Quantity
@@ -19,12 +18,13 @@ from ..utils.fits import table_to_fits_table
 from ..utils.random import sample_powerlaw
 from ..utils.scripts import _create_dir
 
-__all__ = ['make_test_psf',
-           'make_test_observation_table',
-           'make_test_bg_cube_model',
-           'make_test_dataset',
-           'make_test_eventlist',
-           ]
+__all__ = [
+    'make_test_psf',
+    'make_test_observation_table',
+    'make_test_bg_cube_model',
+    'make_test_dataset',
+    'make_test_eventlist',
+]
 
 
 def make_test_psf(energy_bins=15, theta_bins=12):
@@ -198,8 +198,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
         night_start = Quantity(22., 'hour')
         night_duration = Quantity(5.5, 'hour')
         hour_start = random_state.uniform(night_start.value,
-                                 night_start.value + night_duration.value,
-                                 len(obs_id))
+                                          night_start.value + night_duration.value,
+                                          len(obs_id))
         hour_start = Quantity(hour_start, 'hour')
 
         # add night hour to integer part of MJD
@@ -344,16 +344,16 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
         Bacground cube model.
     """
     # spatial bins (linear)
-    delta_x = (detx_range[1] - detx_range[0])/ndetx_bins
-    detx_bin_edges = np.arange(ndetx_bins + 1)*delta_x + detx_range[0]
+    delta_x = (detx_range[1] - detx_range[0]) / ndetx_bins
+    detx_bin_edges = np.arange(ndetx_bins + 1) * delta_x + detx_range[0]
 
-    delta_y = (dety_range[1] - dety_range[0])/ndety_bins
-    dety_bin_edges = np.arange(ndety_bins + 1)*delta_y + dety_range[0]
+    delta_y = (dety_range[1] - dety_range[0]) / ndety_bins
+    dety_bin_edges = np.arange(ndety_bins + 1) * delta_y + dety_range[0]
 
     # energy bins (logarithmic)
     log_delta_energy = (np.log(energy_band[1].value)
-                        - np.log(energy_band[0].value))/nenergy_bins
-    energy_bin_edges = np.exp(np.arange(nenergy_bins + 1)*log_delta_energy
+                        - np.log(energy_band[0].value)) / nenergy_bins
+    energy_bin_edges = np.exp(np.arange(nenergy_bins + 1) * log_delta_energy
                               + np.log(energy_band[0].value))
     energy_bin_edges = Quantity(energy_bin_edges, energy_band[0].unit)
     # TODO: this function should be reviewed/re-written, when
@@ -376,7 +376,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
                                                           det_bin_centers[0],
                                                           indexing='ij')
 
-    E_0 = Quantity(1., 'TeV') # reference energy for the model
+    E_0 = Quantity(1., 'TeV')  # reference energy for the model
 
     # norm of the model
     # taking as reference for now a dummy value of 1
@@ -385,25 +385,25 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     norm_max = Quantity(1, '')
     alt_min = Angle(0., 'degree')
     alt_max = Angle(90., 'degree')
-    slope = (norm_max - norm_max/2)/(alt_max - alt_min)
-    free_term = norm_max/2 - slope*alt_min
-    norm = altitude*slope + free_term
+    slope = (norm_max - norm_max / 2) / (alt_max - alt_min)
+    free_term = norm_max / 2 - slope * alt_min
+    norm = altitude * slope + free_term
 
     # define E dependent sigma
     # it is defined via a PL, in order to be log-linear
     # it is equal to the parameter sigma at E max
     # and sigma/2. at E min
-    sigma_min = sigma/2. # at E min
-    sigma_max = sigma # at E max
-    s_index = np.log(sigma_max/sigma_min)
-    s_index /= np.log(energy_bin_edges[-1]/energy_bin_edges[0])
-    s_norm = sigma_min*((energy_bin_edges[0]/E_0)**-s_index)
-    sigma = s_norm*((energy_points/E_0)**s_index)
+    sigma_min = sigma / 2.  # at E min
+    sigma_max = sigma  # at E max
+    s_index = np.log(sigma_max / sigma_min)
+    s_index /= np.log(energy_bin_edges[-1] / energy_bin_edges[0])
+    s_norm = sigma_min * ((energy_bin_edges[0] / E_0) ** -s_index)
+    sigma = s_norm * ((energy_points / E_0) ** s_index)
 
     # calculate counts
-    gaussian = np.exp(-((detx_points)**2 + (dety_points)**2)/sigma**2)
-    powerlaw = (energy_points/E_0)**-spectral_index
-    counts = norm*gaussian*powerlaw
+    gaussian = np.exp(-((detx_points) ** 2 + (dety_points) ** 2) / sigma ** 2)
+    powerlaw = (energy_points / E_0) ** -spectral_index
+    counts = norm * gaussian * powerlaw
 
     bg_cube_model.counts_cube.data = Quantity(counts, '')
 
@@ -426,8 +426,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # apply mask if requested
     if apply_mask:
         # find central coordinate
-        detx_center = (detx_range[1] + detx_range[0])/2.
-        dety_center = (dety_range[1] + dety_range[0])/2.
+        detx_center = (detx_range[1] + detx_range[0]) / 2.
+        dety_center = (dety_range[1] + dety_range[0]) / 2.
         mask = (detx_points <= detx_center) & (dety_points <= dety_center)
         bg_cube_model.counts_cube.data *= mask
         bg_cube_model.livetime_cube.data *= mask
@@ -538,7 +538,7 @@ def make_test_dataset(fits_path, overwrite=False,
         # save event list and effective area table to disk
         outfile = data_store.filename(obs_id, filetype='events')
         outfile_split = outfile.rsplit("/", 1)
-        os.makedirs(outfile_split[0]) # recursively
+        os.makedirs(outfile_split[0])  # recursively
         event_list.write(outfile)
         outfile = data_store.filename(obs_id, filetype='effective area')
         aeff_hdu.writeto(outfile)
@@ -613,12 +613,12 @@ def make_test_eventlist(observation_table,
     # a trigger rate of 300 Hz
     # it is linearly dependent on the zenith angle (90 deg - altitude)
     # it is n_events_max at alt = 90 deg and n_events_max/2 at alt = 0 deg
-    n_events_max = Quantity(300., 'Hz')*livetime
+    n_events_max = Quantity(300., 'Hz') * livetime
     alt_min = Angle(0., 'degree')
     alt_max = Angle(90., 'degree')
-    slope = (n_events_max - n_events_max/2)/(alt_max - alt_min)
-    free_term = n_events_max/2 - slope*alt_min
-    n_events = alt*slope + free_term
+    slope = (n_events_max - n_events_max / 2) / (alt_max - alt_min)
+    free_term = n_events_max / 2 - slope * alt_min
+    n_events = alt * slope + free_term
 
     # simulate energy
     # the index of `~numpy.random.RandomState.power` has to be
@@ -631,18 +631,18 @@ def make_test_eventlist(observation_table,
                              size=n_events, random_state=random_state)
     energy = Quantity(energy, 'TeV')
 
-    E_0 = Quantity(1., 'TeV') # reference energy for the model
+    E_0 = Quantity(1., 'TeV')  # reference energy for the model
 
     # define E dependent sigma
     # it is defined via a PL, in order to be log-linear
     # it is equal to the parameter sigma at E max
     # and sigma/2. at E min
-    sigma_min = sigma/2. # at E min
-    sigma_max = sigma # at E max
-    s_index = np.log(sigma_max/sigma_min)
-    s_index /= np.log(e_max/e_min)
-    s_norm = sigma_min*((e_min/E_0)**-s_index)
-    sigma = s_norm*((energy/E_0)**s_index)
+    sigma_min = sigma / 2.  # at E min
+    sigma_max = sigma  # at E max
+    s_index = np.log(sigma_max / sigma_min)
+    s_index /= np.log(e_max / e_min)
+    s_norm = sigma_min * ((e_min / E_0) ** -s_index)
+    sigma = s_norm * ((energy / E_0) ** s_index)
 
     # simulate detx, dety
     detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),

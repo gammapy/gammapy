@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import log
 from astropy.io import fits
@@ -54,6 +54,7 @@ class EnergyDependentMultiGaussPSF(object):
         plt.show()
 
     """
+
     def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV'),
@@ -277,7 +278,7 @@ class EnergyDependentMultiGaussPSF(object):
         plt.yticks(np.arange(len(self.theta)), yticks, size=9)
         cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9)
         cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
-                        labelpad=20)
+                       labelpad=20)
 
         if filename is not None:
             log.info('Wrote {0}'.format(filename))

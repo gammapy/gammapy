@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import subprocess
 from astropy.tests.helper import pytest
 from astropy.io import fits
@@ -7,7 +7,7 @@ from ...datasets import load_poisson_stats_image
 from ...detect import sex
 
 try:
-    #subprocess.call('sex')
+    # subprocess.call('sex')
     process = subprocess.Popen('sex', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     process.communicate()
     HAS_SEX = True

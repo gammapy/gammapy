@@ -4,8 +4,7 @@
 This file is called `check` instead of `test` to prevent confusion
 for developers and the test runner from including it in test collection.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import warnings
 from ..utils.scripts import get_parser, set_up_logging_from_args

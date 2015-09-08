@@ -1,12 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from ..spectrum.energy import *
 from astropy.coordinates import Angle
 from astropy.units import Quantity
+from ..spectrum.energy import EnergyBounds
 
-__all__ = ['EnergyDispersion', 'gauss_energy_dispersion_matrix', 'EnergyDispersion2D']
+__all__ = [
+    'EnergyDispersion',
+    'gauss_energy_dispersion_matrix',
+    'EnergyDispersion2D',
+]
 
 
 class EnergyDispersion(object):

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Celestial coordinate utility functions.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import (cos, sin, arccos, arcsin,
                    arctan2, radians, degrees, pi)

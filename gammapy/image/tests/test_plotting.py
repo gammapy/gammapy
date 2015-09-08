@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ...image import (colormap_hess,
-                      colormap_milagro,
-                      GalacticPlaneSurveyPanelPlot,
-                      )
+from ...image import (
+    colormap_hess,
+    colormap_milagro,
+    GalacticPlaneSurveyPanelPlot,
+)
 
 try:
     import matplotlib
@@ -35,7 +36,7 @@ def test_colormap_hess():
             (0.5, (1.0, 0.0058823529411764722, 0.0)),
             (0.75, (1.0, 0.75882352941176501, 0.0)),
             (1, (1.0, 1.0, 1.0)),
-           ]
+            ]
     _check_cmap_rgb_vals(vals, cmap)
 
 
@@ -54,6 +55,5 @@ def test_colormap_milagro():
 
 @pytest.mark.skipif('not HAS_MATPLOTLIB')
 def test_GalacticPlaneSurveyPanelPlot():
-
     plot = GalacticPlaneSurveyPanelPlot(npanels=3)
     assert_allclose(plot.panel_parameters['npanels'], 3)

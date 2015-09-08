@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from ..image import disk_correlate
@@ -13,6 +11,8 @@ __all__ = [
     'BASIC_MAP_NAMES',
     'DERIVED_MAP_NAMES',
 ]
+
+log = logging.getLogger(__name__)
 
 BASIC_MAP_NAMES = ['n_on', 'a_on', 'n_off', 'a_off',
                    'exclusion', 'exposure']

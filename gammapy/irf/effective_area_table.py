@@ -1,16 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
-from astropy import log
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
-from astropy.table import Table
+from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 
-__all__ = ['abramowski_effective_area', 'EffectiveAreaTable',
-           'EffectiveAreaTable2D']
+__all__ = [
+    'abramowski_effective_area',
+    'EffectiveAreaTable',
+    'EffectiveAreaTable2D',
+]
+
+log = logging.getLogger(__name__)
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -59,7 +63,6 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 
 class EffectiveAreaTable(object):
-
     """
     Effective area table class.
 
@@ -433,7 +436,7 @@ class EffectiveAreaTable2D(object):
             HDU list with ``EFFECTIVE AREA`` extension.
         """
 
-        #TODO: READ THRESHOLD
+        # TODO: READ THRESHOLD
 
         data = hdu_list['EFFECTIVE AREA'].data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
@@ -541,7 +544,7 @@ class EffectiveAreaTable2D(object):
 
     def _eval(self, offset=None, energy=None):
         method = self.interpolation_method
-        if(method == 'linear'):
+        if (method == 'linear'):
             val = self._linear(offset.value, np.log10(energy.value))
         elif (method == 'spline'):
             val = self._spline(offset.value, np.log10(energy.value)).squeeze()
@@ -618,7 +621,7 @@ class EffectiveAreaTable2D(object):
         """Only works for radial symmetric input files (N=2)
         """
 
-        #TODO Replace by scipy.ndimage.interpolation.map_coordinates
+        # TODO Replace by scipy.ndimage.interpolation.map_coordinates
 
         from scipy.interpolate import RectBivariateSpline
 

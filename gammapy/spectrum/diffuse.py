@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Diffuse emission spectra.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 
 __all__ = ['diffuse_gamma_ray_flux']
@@ -35,7 +35,7 @@ def diffuse_gamma_ray_flux(energy, component='isotropic'):
     flux : `~astropy.units.Quantity`
         Gamma-ray flux in unit ``m^-2 s^-1 TeV^-1 sr^-1``
     """
-    #flux = Quantity(1, 'm^-2 s^-1 TeV^-1 sr^-1')
+    # flux = Quantity(1, 'm^-2 s^-1 TeV^-1 sr^-1')
     if component == 'isotropic':
         # Reference: abstract from this Fermi paper:
         # http://adsabs.harvard.edu/abs/2010PhRvL.104j1101A

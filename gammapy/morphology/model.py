@@ -3,18 +3,18 @@
 
 At the moment you can have any number of Gaussians.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
 from ..utils.const import fwhm_to_sigma
 from ..utils.random import get_random_state
 
-
-__all__ = ['GaussCatalog',
-           'make_test_model',
-           'read_json',
-           'MorphModelImageCreator',
-           ]
+__all__ = [
+    'GaussCatalog',
+    'make_test_model',
+    'read_json',
+    'MorphModelImageCreator',
+]
 
 __doctest_skip__ = ['MorphModelImageCreator']
 
@@ -53,6 +53,7 @@ class MorphModelImageCreator(object):
     >>> model_image_creator.evaluate_model(mode='center')
     >>> model_image_creator.save('model_image.fits')
     """
+
     def __init__(self, cfg_file, exposure, psf_file=None, apply_psf=True,
                  background=None, flux_factor=1E-12, compute_excess=True):
         self.cfg_file = cfg_file
@@ -103,7 +104,7 @@ class MorphModelImageCreator(object):
 
         for source_model in self.source_models:
             source_model_image = utils.discretize_model(source_model,
-                                            (0, width), (0, height), **kwargs)
+                                                        (0, width), (0, height), **kwargs)
             self.model_image += source_model_image
 
         if self._compute_excess:

@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal, assert_almost_equal
 from astropy.io import fits
 from astropy.tests.helper import remote_data

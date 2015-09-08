@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Tools to create profiles (i.e. 1D "slices" from 2D images)"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from ..image import coordinates
 
-__all__ = ['compute_binning',
-           'FluxProfile',
-           'image_profile',
-           ]
+__all__ = [
+    'compute_binning',
+    'FluxProfile',
+    'image_profile',
+]
 
 
 def compute_binning(data, n_bins, method='equal width', eps=1e-10):
@@ -159,7 +160,7 @@ class FluxProfile(object):
         p['n_entries'] = g['x'].aggregate(len)
         for name in ['counts', 'background', 'exposure']:
             p['{0}'.format(name)] = g[name].sum()
-            #p['{0}_mean'.format(name)] = p['{0}_sum'.format(name)] / p['n_entries']
+            # p['{0}_mean'.format(name)] = p['{0}_sum'.format(name)] / p['n_entries']
         p['excess'] = p['counts'] - p['background']
         p['flux'] = p['excess'] / p['exposure']
 
@@ -183,7 +184,7 @@ class FluxProfile(object):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.grid()
-        #plt.ylim(-10, 20)
+        # plt.ylim(-10, 20)
 
     def save(self, filename):
         """Save all profiles to a FITS file.

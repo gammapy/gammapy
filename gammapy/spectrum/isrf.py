@@ -1,10 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic interstellar radiation field (ISRF) models"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from os.path import join
 from astropy.io import fits
 
-__all__ = ['Galprop', 'Schlickeiser']
+__all__ = [
+    'Galprop',
+    'Schlickeiser',
+]
 
 
 class Schlickeiser(object):

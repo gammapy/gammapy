@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ...datasets import FermiGalacticCenter
-from ...image import (coordinates,
-                      compute_binning,
-                      image_profile,
-                      )
+from ...image import (
+    coordinates,
+    compute_binning,
+    image_profile,
+)
 
 try:
     import pandas
+
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
@@ -24,7 +26,7 @@ def test_compute_binning():
 
     bin_edges = compute_binning(data, n_bins=3, method='equal entries')
     # TODO: create test-cases that have been verified by hand here!
-    assert_allclose(bin_edges, [1,  2,  2.66666667,  4])
+    assert_allclose(bin_edges, [1, 2, 2.66666667, 4])
 
 
 def test_image_lat_profile():

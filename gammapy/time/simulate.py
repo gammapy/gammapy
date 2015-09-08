@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.time import TimeDelta
 from ..utils.random import get_random_state
 
-__all__ = ['make_random_times_poisson_process',
-           ]
+__all__ = [
+    'make_random_times_poisson_process',
+]
 
 
 def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format='sec'),

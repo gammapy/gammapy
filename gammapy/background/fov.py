@@ -2,11 +2,9 @@
 """
 Field-of-view (FOV) background estimation
 """
-from __future__ import print_function, division
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
-
 from ..image.utils import coordinates
 
 __all__ = [

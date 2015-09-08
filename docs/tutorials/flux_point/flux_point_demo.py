@@ -43,29 +43,29 @@ def plot_flux_points(table, x, y, function, energy_min, y_method):
     lafferty_flux, log_flux = get_flux_tables(table, y_method, function,
                                               SPECTRAL_INDEX)
     ax[0].loglog(lafferty_flux['ENERGY'],
-                    ((lafferty_flux['ENERGY'] ** 2) * lafferty_flux['DIFF_FLUX']),
-                    marker='D', linewidth=0, ms=5,
-                    label='Lafferty Method')
+                 ((lafferty_flux['ENERGY'] ** 2) * lafferty_flux['DIFF_FLUX']),
+                 marker='D', linewidth=0, ms=5,
+                 label='Lafferty Method')
     residuals_lafferty = (lafferty_flux['DIFF_FLUX']
                           - function(lafferty_flux['ENERGY'])) / function(lafferty_flux['ENERGY']) * 100
     ax[0].loglog(log_flux['ENERGY'],
-                    (log_flux['ENERGY'] ** 2) * log_flux['DIFF_FLUX'],
-                    marker='D', linewidth=0, ms=5,
-                    label='Log Center Method')
+                 (log_flux['ENERGY'] ** 2) * log_flux['DIFF_FLUX'],
+                 marker='D', linewidth=0, ms=5,
+                 label='Log Center Method')
     ax[0].legend(loc='lower left', fontsize=10)
     residuals_log = (log_flux['DIFF_FLUX'] -
                      function(log_flux['ENERGY'])) / function(log_flux['ENERGY']) * 100
     ax[1].semilogx(lafferty_flux['ENERGY'], residuals_lafferty, marker='D',
-                      linewidth=0, ms=5)
+                   linewidth=0, ms=5)
     ax[1].semilogx(log_flux['ENERGY'], residuals_log, marker='D',
-                      linewidth=0, ms=5)
+                   linewidth=0, ms=5)
     ax[0].loglog(x, (x ** 2) * y, color='k')
     indices = np.arange(len(energy_min))
     for index in indices:
         ax[0].axvline(energy_min[index], 0, 1e6, color='k',
-                         linestyle=':')
+                      linestyle=':')
         ax[1].axvline(energy_min[index], 0, 1e6, color='k',
-                         linestyle=':')
+                      linestyle=':')
     ax[1].axhline(0, 0, 10, color='k')
     ax[0].set_ylabel('E^2 * Differential Flux')
     ax[1].set_ylabel('Residuals/%')

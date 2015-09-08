@@ -1,23 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Measure image properties.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-
 from gammapy.image.utils import coordinates
 
-__all__ = ['BoundingBox',
-           'bbox',
-           'find_max',
-           'lookup',
-           'lookup_max',
-           'measure_containment_fraction',
-           'measure_containment_radius',
-           'measure_image_moments',
-           'measure_labeled_regions',
-           'measure_containment',
-           'measure_curve_of_growth'
-           ]
+__all__ = [
+    'BoundingBox',
+    'bbox',
+    'find_max',
+    'lookup',
+    'lookup_max',
+    'measure_containment_fraction',
+    'measure_containment_radius',
+    'measure_image_moments',
+    'measure_labeled_regions',
+    'measure_containment',
+    'measure_curve_of_growth'
+]
 
 
 class BoundingBox(object):
@@ -32,6 +32,7 @@ class BoundingBox(object):
     x_stop, y_stop : float
         Stop pixel coordinates (0-based indexing, exclusive)
     """
+
     def __init__(self, x_start, y_start, x_stop, y_stop):
         self.x_start = x_start
         self.y_start = y_start

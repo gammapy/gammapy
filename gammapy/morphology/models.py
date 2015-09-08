@@ -2,13 +2,17 @@
 """
 Morphological models for astrophysical gamma-ray sources.
 """
-
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.modeling import Parameter, ModelDefinitionError, Fittable2DModel
 from astropy.modeling.models import Gaussian2D
 
-__all__ = ['morph_types', 'Shell2D', 'Sphere2D', 'Delta2D']
+__all__ = [
+    'morph_types',
+    'Shell2D',
+    'Sphere2D',
+    'Delta2D',
+]
 
 
 class Shell2D(Fittable2DModel):
@@ -303,6 +307,7 @@ class Delta2D(Fittable2DModel):
         x_mask = np.logical_and(dx > -0.5, dx <= 0.5)
         y_mask = np.logical_and(dy > -0.5, dy <= 0.5)
         return np.select([np.logical_and(x_mask, y_mask)], [amplitude])
+
 
 # Available morphology types
 morph_types = {'delta2d': Delta2D,

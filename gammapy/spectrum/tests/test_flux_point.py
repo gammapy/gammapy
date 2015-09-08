@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
 import numpy as np
 from numpy.testing import assert_allclose
@@ -63,6 +63,7 @@ def test_integration():
 def test_ydiff_excess_equals_expected():
     """Tests y-value normalization adjustment method.
     """
+
     def model(x):
         return x ** 2
 

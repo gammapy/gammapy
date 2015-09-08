@@ -23,7 +23,7 @@ for iteration in range(3):
     print('Iteration: {0}'.format(iteration))
     ring_correlate_off_maps(maps, r_in=0.5, r_out=0.8)
     significance = maps.significance.data
-    #exclusion = threshold(significance, threshold=5)
+    # exclusion = threshold(significance, threshold=5)
     exclusion = np.where(significance > 4, 0, 1).astype(int)
     exclusion = binary_dilation_circle(exclusion, radius=0.4 * binsz)
     maps['exclusion'].data = exclusion.astype(np.uint8)

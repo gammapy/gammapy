@@ -1,15 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions and functions for plotting gamma-ray images.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['colormap_hess', 'colormap_milagro',
-           'fits_to_png',
-           'GalacticPlaneSurveyPanelPlot',
-           'fitsfigure_add_psf_inset',
-           'illustrate_colormap',
-           'grayify_colormap']
+__all__ = [
+    'colormap_hess',
+    'colormap_milagro',
+    'fits_to_png',
+    'GalacticPlaneSurveyPanelPlot',
+    'fitsfigure_add_psf_inset',
+    'illustrate_colormap',
+    'grayify_colormap',
+]
 
 __doctest_requires__ = {('colormap_hess', 'colormap_milagro'): ['matplotlib']}
 
@@ -296,7 +299,7 @@ class GalacticPlaneSurveyPanelPlot(object):
         for panel in panels:
             self.draw_panel(panel, format=format)
 
-        # self.figure.canvas.draw()
+            # self.figure.canvas.draw()
 
     def draw_panel(self, panel=0, format=True):
         """Draw panel.
@@ -629,9 +632,9 @@ def grayify_colormap(cmap, mode='hsp'):
         luminance = rgb2gray(np.array([colors]))
         colors[:, :3] = luminance[0][:, np.newaxis]
     elif mode == 'hsp':
-            RGB_weight = [0.299, 0.587, 0.114]
-            luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
-            colors[:, :3] = luminance[:, np.newaxis]
+        RGB_weight = [0.299, 0.587, 0.114]
+        luminance = np.sqrt(np.dot(colors[:, :3] ** 2, RGB_weight))
+        colors[:, :3] = luminance[:, np.newaxis]
     else:
         raise ValueError('Not a valid grayscale conversion mode.')
 
