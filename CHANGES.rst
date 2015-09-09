@@ -48,14 +48,18 @@ Contributors
 Pull requests
 +++++++++++++
 
+- Improve energy handling [#290] (Johannes King)
 - Make background cube models [#319] (Manuel Paz Arribas)
-- Production of true/reco bg cube models should use the same model [#335] (Manuel Paz Arribas)
+- Improve background model simulation [#335] (Manuel Paz Arribas)
 - Fix TS map boundary handling [#332] (Axel Donath)
 - Fix sherpa morphology fitting script [#337] (Axel Donath)
 - Add example script to produce true and reco bg cube model [#338] (Manuel Paz Arribas)
 - Remove PoissonLikelihoodFitter [#339] (Christoph Deil)
 - Add EnergyDispersion and CountsSpectrum [#330] (Johannes King)
 - Add nice true-reco bg cube model comparison plot script to the high-level docs [#347] (Manuel Paz Arribas)
+- Add gammapy-bin-image test [#342] (Christoph Deil)
+- Add background cube model comparison plot script [#347] (Manuel Paz Arribas)
+- Misc code cleanup [#348] (Christoph Deil)
 
 .. _gammapy_0p3_release:
 
