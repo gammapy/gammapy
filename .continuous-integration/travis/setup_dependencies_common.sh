@@ -72,3 +72,8 @@ then
   pip install cpp-coveralls;
   pip install coverage coveralls;
 fi
+
+if [[ $SETUP_CMD == 'test-notebooks' ]]
+then
+  pip install runipy
+fi
