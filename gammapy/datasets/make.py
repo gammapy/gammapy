@@ -436,7 +436,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     return bg_cube_model
 
 
-def make_test_dataset(fits_path, overwrite=False,
+def make_test_dataset(outdir, overwrite=False,
                       observatory_name='HESS', n_obs=10,
                       az_range=Angle([0, 360], 'degree'),
                       alt_range=Angle([45, 90], 'degree'),
@@ -467,10 +467,10 @@ def make_test_dataset(fits_path, overwrite=False,
 
     Parameters
     ----------
-    fits_path : str
+    outdir : str
         Path to store the files.
     overwrite : bool, optional
-        Flag to remove previous datasets in fits_path (if existing).
+        Flag to remove previous datasets in ``outdir`` (if existing).
     observatory_name : str, optional
         Name of the observatory; a list of choices is given in
         `~gammapy.obs.observatory_locations`.
@@ -499,7 +499,6 @@ def make_test_dataset(fits_path, overwrite=False,
     random_state = get_random_state(random_state)
 
     # create output folder
-    outdir = fits_path
     _create_dir(outdir, overwrite)
 
     # generate observation table
@@ -525,7 +524,7 @@ def make_test_dataset(fits_path, overwrite=False,
         s_error += "not implemented. Only H.E.S.S. scheme is available."
         raise ValueError(s_error)
 
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=outdir, scheme=scheme)
 
     # loop over observations
     for obs_id in observation_table['OBS_ID']:

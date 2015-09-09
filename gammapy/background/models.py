@@ -83,7 +83,7 @@ class GaussianBand2D(object):
         return self._evaluate_y(y, parvals)
 
 
-def _get_min_energy_threshold(observation_table, fits_path):
+def _get_min_energy_threshold(observation_table, data_dir):
     """Get minimum energy threshold from a list of observations.
 
     TODO: make this a method from ObservationTable or DataStore?
@@ -92,7 +92,7 @@ def _get_min_energy_threshold(observation_table, fits_path):
     ----------
     observation_table : `~gammapy.obs.ObservationTable`
         Observation list.
-    fits_path : str
+    data_dir : str
         Path to the data files.
 
     Parameters
@@ -108,10 +108,11 @@ def _get_min_energy_threshold(observation_table, fits_path):
         s_error += "not implemented. Only H.E.S.S. scheme is available."
         raise ValueError(s_error)
 
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=data_dir, scheme=scheme)
     aeff_table_files = data_store.make_table_of_files(observation_table,
                                                       filetypes=['effective area'])
     min_energy_threshold = Quantity(999., 'TeV')
+
     # loop over effective area files to get necessary infos from header
     for i_aeff_file in aeff_table_files['filename']:
         aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
@@ -299,7 +300,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, observation_table, fits_path, method='default'):
+    def define_cube_binning(cls, observation_table, data_dir, method='default'):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -315,8 +316,8 @@ class CubeBackgroundModel(object):
         ----------
         observation_table : `~gammapy.obs.ObservationTable`
             Observation list to use for the *michi* binning.
-        fits_path : str
-            Path to the data files.
+        data_dir : str
+            Data directory
         method : {'default', 'michi'}, optional
             Bg cube model calculation method to apply.
 
@@ -343,7 +344,7 @@ class CubeBackgroundModel(object):
             # minimum energy equal to minimum energy threshold of all
             # observations in the group
             min_energy_threshold = _get_min_energy_threshold(observation_table,
-                                                             fits_path)
+                                                             data_dir)
             energy_min = min_energy_threshold
         energy_max = Quantity(80, 'TeV')
         dety_min = Angle(-0.07, 'radian').to('degree')
@@ -373,7 +374,7 @@ class CubeBackgroundModel(object):
 
         return cls.set_cube_binning(detx_edges, dety_edges, energy_edges)
 
-    def fill_events(self, observation_table, fits_path):
+    def fill_events(self, observation_table, data_dir):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -384,8 +385,8 @@ class CubeBackgroundModel(object):
         ----------
         observation_table : `~gammapy.obs.ObservationTable`
             Observation list to use for the histogramming.
-        fits_path : str
-            Path to the data files.
+        data_dir : str
+            Data directory
         """
         # stack events
 
@@ -397,7 +398,7 @@ class CubeBackgroundModel(object):
             s_error += "not implemented. Only H.E.S.S. scheme is available."
             raise ValueError(s_error)
 
-        data_store = DataStore(dir=fits_path, scheme=scheme)
+        data_store = DataStore(dir=data_dir, scheme=scheme)
         event_list_files = data_store.make_table_of_files(observation_table,
                                                           filetypes=['events'])
         aeff_table_files = data_store.make_table_of_files(observation_table,

@@ -23,19 +23,19 @@ except ImportError:
 @remote_data # a routine needs to get an online catalog
 def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
     # create a dataset
-    fitspath = str(tmpdir.join('test_dataset'))
+    dataset_dir = str(tmpdir.join('test_dataset'))
     outdir = str(tmpdir.join('bg_cube_models'))
     observatory_name = 'HESS'
     scheme = 'HESS'
     n_obs = 2
     random_state = np.random.RandomState(seed=0)
 
-    make_test_dataset(fits_path=fitspath,
+    make_test_dataset(outdir=dataset_dir,
                       observatory_name=observatory_name,
                       n_obs=n_obs,
                       random_state=random_state)
 
-    make_bg_cube_models_main([fitspath, scheme, outdir] + extra_options)
+    make_bg_cube_models_main([dataset_dir, scheme, outdir] + extra_options)
 
     # read groups, then open bg cube model files and check that they
     # make sense
