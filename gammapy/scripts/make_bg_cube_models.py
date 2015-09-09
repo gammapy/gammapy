@@ -23,8 +23,8 @@ log = logging.getLogger(__name__)
 
 def main(args=None):
     parser = get_parser(make_bg_cube_models)
-    parser.add_argument('fitspath', type=str,
-                        help='Path to dir containing list of input fits event files.')
+    parser.add_argument('indir', type=str,
+                        help='Input directory (that contains the event lists)')
     parser.add_argument('scheme', type=str,
                         help='Scheme of file naming.')
     parser.add_argument('outdir', type=str,
@@ -84,10 +84,10 @@ def make_bg_cube_models(indir, scheme, outdir, overwrite, test, method):
     Examples
     --------
     $ gammapy-make-bg-cube-models -h
-    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models
-    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --test
-    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --test --overwrite
-    $ gammapy-make-bg-cube-models <fitspath> HESS bg_cube_models --a-la-michi
+    $ gammapy-make-bg-cube-models <indir> HESS bg_cube_models
+    $ gammapy-make-bg-cube-models <indir> HESS bg_cube_models --test
+    $ gammapy-make-bg-cube-models <indir> HESS bg_cube_models --test --overwrite
+    $ gammapy-make-bg-cube-models <indir> HESS bg_cube_models --method michi
 
     """
     # create output folder

@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 
-def make_bg_cube_model(observation_table, fits_path, method='default', do_not_force_mev_units=False):
+def make_bg_cube_model(observation_table, data_dir, method='default', do_not_force_mev_units=False):
     """Create a bg model from an observation table.
 
     Produce a background cube model using the data from an observation list.
@@ -42,8 +42,8 @@ def make_bg_cube_model(observation_table, fits_path, method='default', do_not_fo
     ----------
     observation_table : `~gammapy.obs.ObservationTable`
         Observation list to use for the histogramming.
-    fits_path : str
-        Path to the data files.
+    data_dir : str
+        Data directory
     method : {'default', 'michi'}, optional
         Bg cube model calculation method to apply.
     do_not_force_mev_units : bool, optional
@@ -58,10 +58,9 @@ def make_bg_cube_model(observation_table, fits_path, method='default', do_not_fo
         Cube background model.
     """
     if method == 'default':
-        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
-                                                                fits_path,
-                                                                method=method)
-        bg_cube_model.fill_events(observation_table, fits_path)
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(
+            observation_table, data_dir, method=method)
+        bg_cube_model.fill_events(observation_table, data_dir)
         # TODO: filter out (mask) possible sources in the data
         #       for now, the observation table should not contain any
         #       run at or near an existing source
@@ -79,10 +78,9 @@ def make_bg_cube_model(observation_table, fits_path, method='default', do_not_fo
         return bg_cube_model
 
     elif method == 'michi':
-        bg_cube_model = CubeBackgroundModel.define_cube_binning(observation_table,
-                                                                fits_path,
-                                                                method=method)
-        bg_cube_model.fill_events(observation_table, fits_path)
+        bg_cube_model = CubeBackgroundModel.define_cube_binning(
+            observation_table, data_dir, method=method)
+        bg_cube_model.fill_events(observation_table, data_dir)
         # TODO: filter out (mask) possible sources in the data
         #       for now, the observation table should not contain any
         #       run at or near an existing source

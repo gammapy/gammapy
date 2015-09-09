@@ -90,24 +90,23 @@ def test_make_test_bg_cube_model():
 
 def test_make_test_dataset(tmpdir):
     # create a dataset
-    fits_path = str(tmpdir.join('test_dataset'))
+    data_dir = str(tmpdir.join('test_dataset'))
     observatory_name = 'HESS'
     scheme = 'HESS'
     n_obs = 2
-    random_state = np.random.RandomState(seed=0)
 
-    make_test_dataset(fits_path=fits_path,
+    make_test_dataset(outdir=data_dir,
                       observatory_name=observatory_name,
                       n_obs=n_obs,
-                      random_state=random_state)
+                      random_state=0)
 
     # test number of files created
     n_event_list_files = sum(len([f for f in fs if f.lower().endswith('.fits.gz')])
-                             for _, _, fs in os.walk(fits_path))
+                             for _, _, fs in os.walk(data_dir))
     assert n_event_list_files == 2 * n_obs
 
     # test length of created observation list table
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=data_dir, scheme=scheme)
     observation_table = data_store.make_observation_table()
     assert len(observation_table) == n_obs
 

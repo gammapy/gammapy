@@ -69,15 +69,11 @@ produced with a few lines of Python code:
 
 .. code-block:: python
 
-    fits_path = '/path/to/fits/event_lists/base/dir'
-    observatory_name = 'HESS'
-    n_obs = 2
-    random_state = np.random.RandomState(seed=0)
-
-    make_test_dataset(fits_path=fits_path,
-                      observatory_name=observatory_name,
-                      n_obs=n_obs,
-                      random_state=random_state)
+    workdir = gammapy/scripts/tests/test_make_bg_cube_models.py
+    make_test_dataset(outdir=workdir,
+                      observatory_name='HESS,
+                      n_obs=2,
+                      random_state=0)
 
 Then the data can be read back using the `~gammapy.obs.DataStore`
 class, and eg. print the observation table and the names of the files
@@ -85,8 +81,7 @@ created with a few extra lines of Python code:
 
 .. code-block:: python
 
-    scheme = 'HESS'
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=workdir, scheme='HESS')
     observation_table = data_store.make_observation_table()
     print(observation_table)
     event_list_files = data_store.make_table_of_files(observation_table,

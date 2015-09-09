@@ -128,7 +128,7 @@ def make_reco_model():
     SCHEME = 'HESS'
     METHOD = 'default'
 
-    fits_path = 'test_dataset'
+    data_dir = 'test_dataset'
     overwrite = OVERWRITE
     test = TEST
     group_id = GROUP_ID
@@ -161,7 +161,7 @@ def make_reco_model():
     sigma = SIGMA
     spectral_index = INDEX
 
-    make_test_dataset(fits_path=fits_path, overwrite=overwrite,
+    make_test_dataset(outdir=data_dir, overwrite=overwrite,
                       observatory_name='HESS', n_obs=n_obs,
                       az_range=az_range,
                       alt_range=alt_range,
@@ -176,7 +176,7 @@ def make_reco_model():
 
     # 2. get observation table
     scheme = SCHEME
-    data_store = DataStore(dir=fits_path, scheme=scheme)
+    data_store = DataStore(dir=data_dir, scheme=scheme)
     observation_table = data_store.make_observation_table()
     outfile = os.path.join(outdir, 'bg_observation_table_group{}.fits.gz'.format(group_id))
     print("Writing {}".format(outfile))
@@ -185,7 +185,7 @@ def make_reco_model():
     # 3. build bg model
     method = METHOD
     bg_cube_model = make_bg_cube_model(observation_table=observation_table,
-                                       fits_path=fits_path,
+                                       data_dir=data_dir,
                                        method=method,
                                        do_not_force_mev_units=True)
 
