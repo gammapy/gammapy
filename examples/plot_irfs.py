@@ -1,68 +1,57 @@
-"""Make plots illustrating exposure in the FOV.
+"""Make plots of the IRFs we support.
+
+This is not very useful for end-users,
+more to check that all the plotting functions work,
+until we implement proper tests for them.
 """
+import matplotlib.pyplot as plt
+from gammapy.datasets import get_path
+from gammapy import irf
+from gammapy.utils.mpl_style import gammapy_mpl_style
+
+# TODO: Update once this issue is resolved:
+# https://github.com/astropy/astropy/issues/4140
+# plt.style.use(gammapy_mpl_style)
+plt.rcParams.update(gammapy_mpl_style)
+
+fig, axes = plt.subplots(2, 4, figsize=(20, 8))
+axes = axes.flat
+
+# TODO: event list summary plots not implemented yet:
+# https://github.com/gammapy/gammapy/issues/297
+# hess_events_023523.fits.gz
+
+filename = get_path('../test_datasets/irf/hess/pa/hess_aeff_2d_023523.fits.gz', location='remote')
+aeff2d = irf.EffectiveAreaTable2D.read(filename)
+aeff2d.plot_energy_dependence(ax=next(axes))
+aeff2d.plot_offset_dependence(ax=next(axes))
+
+aeff = aeff2d.to_effective_area_table(offset='1 deg')
+aeff.plot_area_vs_energy(ax=next(axes))
 
 
-def plot_exposure_image(filename):
-    """Plot FOV image of exposure for one given energy slice"""
-    from astropy.io import fits
-    from aplpy import FITSFigure
-    fig = FITSFigure(filename, dimensions=(0, 1), slices=[10], figsize=(5, 5))
-    header = fits.getheader(filename)
-    fig.show_grayscale()
-    fig.add_colorbar()
-    ra, dec = header['CRVAL1'], header['CRVAL2']
+filename = get_path('../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz', location='remote')
+edisp2d = irf.EnergyDispersion2D.read(filename)
+edisp2d.plot_bias(ax=next(axes))
+edisp2d.plot_migration(ax=next(axes))
 
-    # Bug: Marker doesn't show up at the center of the run
-    # Bug: aplpy show_circles doesn't show a circle in degress.
-    fig.show_markers(ra, dec)
-    fig.show_circles(ra, dec, 1.)
+edisp = edisp2d.to_energy_dispersion(offset='1 deg')
+edisp.plot(type='matrix', ax=next(axes))
+# TODO: bias plot not implemented yet
+# edisp.plot(type='bias', ax=next(axes))
 
-    fig.tick_labels.set_xformat('dd')
-    fig.tick_labels.set_yformat('dd')
-    fig.ticks.set_xspacing(1)
-    fig.ticks.set_yspacing(1)
-    fig.colorbar.set_axis_label_text('Effective Area (cm^2)')
+# TODO: This PSF type isn't implemented yet.
+# filename = get_path("../test_datasets/irf/hess/pa/hess_psf_king_023523.fits.gz", location='remote')
+# psf = irf.EnergyDependentMultiGaussPSF.read(filename)
+# psf.plot_containment(ax=next(axes))
 
-    fig.save('exposure_image.png')
+filename = get_path('irfs/psf.fits')
+psf = irf.EnergyDependentMultiGaussPSF.read(filename)
+psf.plot_containment(0.68, show_safe_energy=False, ax=next(axes))
 
 
-def plot_exposure_curve(filename):
-    from astropy.io import fits
-    import matplotlib.pyplot as plt
-    energy = fits.getdata(filename, 'ENERGIES')['Energy']
-    cube = fits.getdata(filename, 0)
-    exposure_1 = cube[:, 25, 25]
-    exposure_2 = cube[:, 10, 25]
-    plt.figure(figsize=(5, 4))
-    plt.plot(energy, exposure_1, lw=2)
-    plt.plot(energy, exposure_2, lw=2)
-    plt.xlabel('Energy (TeV)')
-    plt.ylabel('Effective Area (cm^2)')
-    plt.xlim(0.1, 100)
-    plt.ylim(1e6, 1e10)
-    plt.loglog()
-    plt.tight_layout()
-    plt.savefig('exposure_curve.png')
+# TODO: hess_bkg_offruns_023523.fits.gz
 
 
-def plot_psf_image(filename):
-    from astropy.io import fits
-    from aplpy import FITSFigure
-    pass
 
-
-def plot_psf_curve(filename):
-    from astropy.io import fits
-    import matplotlib.pyplot as plt
-    pass
-
-
-if __name__ == '__main__':
-    DIR = '/Users/deil/work/host/data_formats/'
-    exposure_filename = DIR + 'Aeff_23544.fits'
-    psf_filename = DIR + 'psf_23544.fits'
-
-    plot_exposure_image(exposure_filename)
-    # plot_exposure_curve(exposure_filename)
-    #plot_psf_image(psf_filename)
-    #plt_psf_curve(psf_filename)
+plt.show()

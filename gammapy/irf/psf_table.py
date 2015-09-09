@@ -204,7 +204,6 @@ class TablePSF(object):
         #
         # temp_model = TempModel()
 
-        # import IPython; IPython.embed()
         array = discretize_oversample_2D(_model,
                                          x_range=pix_range, y_range=pix_range,
                                          **discretize_model_kwargs)

@@ -254,7 +254,6 @@ class IterativeSourceDetector(object):
         pars['error_sigma'] = 0.1 * source['sigma']
         SIGMA_LIMITS = (0.01, 1e6)
         pars['limit_sigma'] = SIGMA_LIMITS
-        # import IPython; IPython.embed(); 1 / 0
         minuit = Minuit(fit_stat, pedantic=False, print_level=1, **pars)
         # minuit.print_initial_param()
         minuit.migrad(ncall=self.max_ncall)
@@ -352,8 +351,6 @@ class IterativeSourceDetector(object):
         log.info('Writing source detections in JSON format to {0}'.format(filename))
         import json
         data = dict(sources=self.sources, sources_guess=self.sources_guess)
-        # print data
-        # import IPython; IPython.embed(); 1/0
         # TODO: this fails because data contains np.float32 values, which are not JSON serializable:
         # TypeError: 1.2617354e-10 is not JSON serializable
         with open(filename, 'w') as outfile:

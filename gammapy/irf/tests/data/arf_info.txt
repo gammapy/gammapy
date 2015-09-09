@@ -6,5 +6,3 @@ Energy hi      : size =    60, min =  0.331 TeV, max = 75.858 TeV
 Effective area : size =    60, min = 2995.981 m2, max = 542050.938 m2
 Safe energy threshold lo:  0.100 TeV
 Safe energy threshold hi: 100.000 TeV
-Effective area at E =  1.0 TeV:     153926 m2
-Effective area at E = 10.0 TeV:     455304 m2

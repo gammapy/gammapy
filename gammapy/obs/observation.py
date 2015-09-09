@@ -134,12 +134,15 @@ class ObservationTable(Table):
         if selection_variable not in obs_table.keys():
             raise KeyError('Key not present in table: {}'.format(selection_variable))
 
+        value_range = Quantity(value_range)
+
         # read values into a quantity in case units have to be taken into account
         value = Quantity(obs_table[selection_variable])
 
         # build and apply mask
         mask = (value_range[0] <= value) & (value < value_range[1])
-        if np.allclose(value_range[0], value_range[1]):
+
+        if np.allclose(value_range[0].value, value_range[1].value):
             mask = (value_range[0] == value)
         if inverted:
             mask = np.invert(mask)

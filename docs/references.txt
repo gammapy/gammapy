@@ -35,6 +35,8 @@
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _Enrico: https://github.com/gammapy/enrico/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
+.. _click: http://click.pocoo.org/
+.. _flask: http://flask.pocoo.org/
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
@@ -67,3 +69,4 @@
 
 .. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
 .. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
+.. _rsync: https://en.wikipedia.org/wiki/Rsync
