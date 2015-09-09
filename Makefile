@@ -73,7 +73,14 @@ pylint:
 	       --msg-template='{C}: {path}:{line}:{column}: {msg} ({symbol})'
 
 # TODO: add test and code quality checks for `examples`
-# TODO: add test for IPython notebooks in gammapy-extra
+
+gammapy-extra: 
+	git clone git@github.com:gammapy/gammapy-extra.git
 
 doc-show:
 	open docs/_build/html/index.html
+
+test-notebooks: gammapy-extra
+	# For now just run one example ... should run all
+	runipy gammapy-extra/notebooks/Index.ipynb 
+	runipy gammapy-extra/notebooks/source_catalogs.ipynb
