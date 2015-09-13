@@ -18,9 +18,9 @@ def main(args=None):
     catalog_query(**vars(args))
 
 def catalog_query(catalog, source, querytype):
-    """Query a catalog
-
-    TODO: explain.
+    """Query the requested catalog for the requested source.
+    Based on the requested querytype return information on the object,
+    plot the object's light curve or plot the object's spectrum.
     """
     from gammapy.datasets import fermi
 
@@ -40,7 +40,9 @@ def catalog_query(catalog, source, querytype):
         ax.plot()
         plt.show()
 
-
     elif querytype == 'spectrum':
-        raise NotImplementedError
+        import matplotlib.pyplot as plt
 
+        ax = catalog_object.plot_spectrum()
+        ax.plot()
+        plt.show()
