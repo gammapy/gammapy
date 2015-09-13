@@ -277,19 +277,14 @@ class Fermi3FGLObject(object):
 
         ax = plt.gca() if ax is None else ax
 
+        # Only work with indices where we have a valid detection and a lower bound
+        flux_bounds = [self.cat_row[ "Unc_" + self.y_labels[i]] for i in range(0,np.size(self.y_labels))]
+
         valid_indices = []
 
-        for i in range(0, np.size(self.x_bins_edges) - 1):
-
-            flux = self.cat_row[self.y_labels[i]]
-
-            # Require both a detection and a lower bound
-            if np.isnan(flux) == False:
-
-                y_err_label = "Unc_" + self.y_labels[i]
-                flux_lower_bound = self.cat_row[y_err_label][0]
-                if np.isnan(flux_lower_bound) == False:
-                    valid_indices.append(i)
+        for i in range(0, len(flux_bounds)):
+            if np.size(flux_bounds[i]) == 2 and not np.isnan(flux_bounds[i][0]):
+                valid_indices.append(i)
 
         y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
         y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
@@ -338,12 +333,13 @@ class Fermi3FGLObject(object):
                                     beta = self.beta)
 
         elif self.spec_type == "PLExpCutoff":
+
             y_model = ExponentialCutoffPowerLaw1D(amplitude=self.int_flux,
                                                   x_0=self.pivot_en,
                                                   alpha=self.spec_index,
                                                   x_cutoff = self.cutoff)
         elif self.spec_type == "PLSuperExpCutoff":
-	    raise NotImplementedError
+	        raise NotImplementedError
 
         ax.plot(x_model, y_model(x_model))
 
