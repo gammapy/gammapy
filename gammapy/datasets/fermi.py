@@ -216,7 +216,8 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
     return filename
 
 class Fermi3FGLObject(object):
-    """TODO: Doccomments
+    """
+    Class representing an object in the Fermi 3FGL catalog.
     """
 
     from astropy.units import Quantity
@@ -260,17 +261,20 @@ class Fermi3FGLObject(object):
 
     @classmethod
     def get_fermi_cat(cls):
+        """Load the 3FGL catalog if not already loaded."""
         if not cls.fermi_cat:
             cls.fermi_cat = fetch_fermi_catalog('3FGL')
         return cls.fermi_cat
 
     def plot_lightcurve(self, ax=None):
+        """Plot the light curve of the object across the entire available time span."""
         from gammapy.time import plot_fermi_3fgl_light_curve
 
         ax = plot_fermi_3fgl_light_curve(self.name_3FGL)
         return ax
 
     def plot_spectrum(self, ax=None):
+        """Plot the flux points in the Fermi 3FGL catalog along with the model fitted to it."""
         import matplotlib.pyplot as plt
         from gammapy.extern.stats import gmean
         from astropy.modeling.models import PowerLaw1D, LogParabola1D, ExponentialCutoffPowerLaw1D
@@ -337,15 +341,18 @@ class Fermi3FGLObject(object):
             y_model = ExponentialCutoffPowerLaw1D(amplitude=self.int_flux,
                                                   x_0=self.pivot_en,
                                                   alpha=self.spec_index,
-                                                  x_cutoff = self.cutoff)
+                                                  x_cutoff=self.cutoff)
         elif self.spec_type == "PLSuperExpCutoff":
-	        raise NotImplementedError
+            raise NotImplementedError
 
+        ax.set_xlabel('Energy (MeV)')
+        ax.set_ylabel('Flux (ph/cm^2/s/MeV)')
         ax.plot(x_model, y_model(x_model))
 
         return ax
 
     def info(self):
+        """Print the object name, position, flux, and detection signifiance."""
         info_array = []
         info_array.append(" ")
         info_array.append(self.name_3FGL)
