@@ -484,8 +484,8 @@ class EffectiveAreaTable2D(object):
         """
 
         if energy_lo is None and energy_hi is None:
-            energy_lo = self.energy_lo
-            energy_hi = self.energy_hi
+            energy_lo = self.energ_lo
+            energy_hi = self.energ_hi
         elif energy_lo is None or energy_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):

@@ -141,3 +141,6 @@ def test_EffectiveAreaTable2D(method):
     actual = effareafrom2d.effective_area_at_energy(test_energy)
     desired = effarea1d.effective_area_at_energy(test_energy)
     assert_equal(actual, desired)
+
+    #Test ARF export #2
+    effareafrom2dv2 = effarea.to_effective_area_table(offset)
