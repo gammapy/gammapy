@@ -48,11 +48,11 @@ class EnergyDispersion(object):
             raise ValueError("Energies must be Energy objects")
 
         self._pdf_matrix = np.asarray(pdf_matrix)
-        self.e_true = e_true
+        self._e_true = e_true
         if e_reco is None:
-            self.e_reco = np.asarray(e_true)
+            self._e_reco = np.asarray(e_true)
         else:
-            self.e_reco = e_reco
+            self._e_reco = e_reco
 
         self._pdf_threshold = pdf_threshold
         self._interpolate2d_func = None
@@ -75,43 +75,16 @@ class EnergyDispersion(object):
         m = self._pdf_matrix
         m[m < value] = 0
 
-    def energy_bounds(self, axis='true'):
-        """Energy bounds array.
-
-        Parameters
-        ----------
-        axis : {'true', 'reco'}
-            Which axis?
-
-        Returns
-        -------
-        energy_bounds : array
-            Energy bounds array.
+    @property
+    def reco_energy(self):
+        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
-        if axis == 'true':
-            return self.e_true
-        elif axis == 'reco':
-            return self.e_reco
-        else:
-            ss = 'Invalid axis: {0}\n'.format(axis)
-            ss += 'Valid options: true, reco'
-            raise ValueError(ss)
+        return self._e_reco
 
-    def energy_range(self, axis='true'):
-        """Energy axis range.
-
-        Parameters
-        ----------
-        axis : {'true', 'reco'}
-            Which axis?
-
-        Returns
-        -------
-        (emin, emax) : tuple of float
-            Energy axis range.
+    def true_energy(self):
+        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
-        ebounds = self.energy_bounds(axis)
-        return ebounds[0], ebounds[-1]
+        return self._e_true
 
     def __str__(self):
         ss = 'Energy dispersion information:\n'
@@ -212,8 +185,8 @@ class EnergyDispersion(object):
         filter='NONE'
         minprob = 0.001
         rm = self._pdf_matrix
-        erange = self.e_true
-        ebounds = self.e_reco
+        erange = self._e_true
+        ebounds = self._e_reco
 
         # Intialize the arrays to be used to construct the RM extension
         n_rows = len(rm)
