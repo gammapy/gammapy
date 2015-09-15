@@ -80,7 +80,7 @@ class EnergyDispersion(object):
         """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
         return self._e_reco
-
+    @property
     def true_energy(self):
         """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
