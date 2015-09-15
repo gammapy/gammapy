@@ -66,6 +66,14 @@ class Energy(Quantity):
         """
         return self.size
 
+    @property
+    def range(self):
+        """
+        The covered energy range (tuple)
+        """
+        return self[0], self[-1]
+
+
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
         """Create Energy with equal log-spacing (`~gammapy.spectrum.energy.Energy`).

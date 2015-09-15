@@ -106,6 +106,15 @@ def test_EnergyBounds():
     desired = EnergyBounds([1, 3, 4, 5, 8], 'TeV')
     assert_equal(actual, desired)
 
+    # Range
+    erange = energy.range
+    actual = erange[0]
+    desired = energy[0]
+    assert_equal(actual, desired)
+    actual = erange[1]
+    desired = energy[-1]
+    assert_equal(actual, desired)
+
     #read EBOUNDS extension
     filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
                         location='remote')
