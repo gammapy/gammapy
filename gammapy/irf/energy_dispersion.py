@@ -22,10 +22,10 @@ class EnergyDispersion(object):
     pdf_matrix : array_like
         2-dim energy dispersion matrix (probability density).
         First index for true energy, second index for reco energy.
-    energy_true_bounds : array_like
-        1-dim true energy binning array (TeV)
-    energy_reco_bounds : array_like
-        1-dim reco energy binning array (TeV)
+    e_true : `~gammapy.spectrum.EnergyBounds`
+        True energy binning
+    e_reco : `~gammapy.spectrum.EnergyBounds`
+        Reco energy binning
 
     Notes
     -----
@@ -40,14 +40,19 @@ class EnergyDispersion(object):
     """
     DEFAULT_PDF_THRESHOLD = 1e-6
 
-    def __init__(self, pdf_matrix, energy_true_bounds, energy_reco_bounds=None,
+    def __init__(self, pdf_matrix, e_true, e_reco=None,
                  pdf_threshold=DEFAULT_PDF_THRESHOLD):
+        
+        if not isinstance(e_true, EnergyBounds) or not isinstance(
+            e_reco, EnergyBounds):
+            raise ValueError("Energies must be Energy objects")
+
         self._pdf_matrix = np.asarray(pdf_matrix)
-        self._energy_true_bounds = np.asarray(energy_true_bounds)
-        if energy_reco_bounds is None:
-            self._energy_reco_bounds = np.asarray(energy_true_bounds)
+        self.e_true = e_true
+        if e_reco is None:
+            self.e_reco = np.asarray(e_true)
         else:
-            self._energy_reco_bounds = np.asarray(energy_reco_bounds)
+            self.e_reco = e_reco
 
         self._pdf_threshold = pdf_threshold
         self._interpolate2d_func = None
@@ -59,14 +64,14 @@ class EnergyDispersion(object):
 
     @pdf_threshold.setter
     def pdf_threshold(self, value):
-        if self._pdf_threshold < value:
+        if self._pdf_threshold > value:
             ss = 'Lowering the PDF matrix zero-suppression threshold can lead to incorrect results.\n'
-            ss += 'Old PDF threshold: {0}'.format(self._pdf_threshold)
+            ss += 'Old PDF threshold: {0}\n'.format(self._pdf_threshold)
             ss += 'New PDF threshold: {0}'.format(value)
             raise Exception(ss)
 
         self._pdf_threshold = value
-        # Apply new threshold to the matrix
+
         m = self._pdf_matrix
         m[m < value] = 0
 
@@ -84,9 +89,9 @@ class EnergyDispersion(object):
             Energy bounds array.
         """
         if axis == 'true':
-            return self._energy_true_bounds
+            return self.e_true
         elif axis == 'reco':
-            return self._energy_reco_bounds
+            return self.e_reco
         else:
             ss = 'Invalid axis: {0}\n'.format(axis)
             ss += 'Valid options: true, reco'
@@ -154,8 +159,6 @@ class EnergyDispersion(object):
         data = hdu_list['MATRIX'].data
         header = hdu_list['MATRIX'].header
 
-        energy_true_bounds = np.hstack([data['ENERG_LO'], data['ENERG_HI'][-1]])
-
         pdf_matrix = np.zeros([len(data), header['DETCHANS']], dtype=np.float64)
 
         for i, l in enumerate(data):
@@ -165,13 +168,12 @@ class EnergyDispersion(object):
                     pdf_matrix[i, l.field('F_CHAN')[k]: l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
 
-        pdf_threshold = header['LO_THRES']
+        pdf_threshold = float(header['LO_THRES'])
 
-        # The reco energy bounds are stored in the 'EBOUNDS' table HDU
-        ebounds = hdu_list['EBOUNDS'].data
-        energy_reco_bounds = np.hstack([ebounds['E_MIN'], ebounds['E_MAX'][-1]])
+        e_reco = EnergyBounds.from_ebounds(hdu_list['EBOUNDS'])
+        e_true = EnergyBounds.from_rmf_matrix(hdu_list['MATRIX'])
 
-        return cls(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
+        return cls(pdf_matrix, e_true, e_reco, pdf_threshold)
 
     def write(self, filename, *args, **kwargs):
         """Write RMF to FITS file.
@@ -210,8 +212,8 @@ class EnergyDispersion(object):
         filter='NONE'
         minprob = 0.001
         rm = self._pdf_matrix
-        erange = self._energy_true_bounds
-        ebounds = self._energy_reco_bounds
+        erange = self.e_true
+        ebounds = self.e_reco
 
         # Intialize the arrays to be used to construct the RM extension
         n_rows = len(rm)
@@ -717,7 +719,7 @@ class EnergyDispersion2D(object):
         val_array = self._linear(pts)
         return val_array.reshape(in_shape).squeeze()
 
-    def to_energy_dispersion(self, e_reco, e_true=None, offset=None):
+    def to_energy_dispersion(self, e_reco, offset, e_true=None):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
@@ -725,12 +727,12 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.EnergyBounds`, None
-            True energy axis
         e_reco : `~gammapy.spectrum.EnergyBounds`
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
+        e_true : `~gammapy.spectrum.EnergyBounds`, None
+            True energy axis
 
         Returns
         -------
@@ -739,17 +741,17 @@ class EnergyDispersion2D(object):
         """
 
         if e_true is None:
-            e_true = self.ebounds[1:]
+            e_true = self.ebounds
 
         energy = e_true.log_centers
 
         rm = []
 
         for ener in energy:
-            vec = self.get_response(e_true=ener, e_reco=e_reco, offset=offset)
+            vec = self.get_response(offset, ener, e_reco=e_reco)
             rm.append(vec)
 
-        return EnergyDispersion(rm, e_true.value, e_reco.value)
+        return EnergyDispersion(rm, e_true, e_reco)
 
     def get_response(self, offset, e_true, e_reco=None):
         """Detector response R(Delta E_reco, E_true)

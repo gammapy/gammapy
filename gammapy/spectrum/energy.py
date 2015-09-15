@@ -218,7 +218,7 @@ class EnergyBounds(Energy):
         lower = cls(lower, unit);
         upper = cls(upper, unit);
         unit = upper.unit
-        energy = np.append(lower, upper[-1])
+        energy = np.hstack((lower, upper[-1]))
         return cls(energy.value, unit)
 
     @classmethod
@@ -243,7 +243,7 @@ class EnergyBounds(Energy):
             emin, emax, nbins + 1, unit)
 
     @classmethod
-    def from_fits(cls, hdu, unit=None):
+    def from_ebounds(cls, hdu, unit=None):
         """Read EBOUNDS fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
 
         Parameters
@@ -257,9 +257,34 @@ class EnergyBounds(Energy):
         if hdu.name != 'EBOUNDS':
             log.warn('This does not seem like an EBOUNDS extension. Are you sure?')
 
-        return super(EnergyBounds, cls).from_fits(cls, hdu, unit)
+        header = hdu.header
+        unit = header.get('TUNIT2')
+        low = hdu.data['E_MIN']
+        high = hdu.data['E_MAX']
+        return cls.from_lower_and_upper_bounds(low, high, unit)
 
-    def to_fits(self, **kwargs):
+    @classmethod
+    def from_rmf_matrix(cls, hdu, unit=None):
+        """Read MATRIX fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
+
+        Parameters
+        ----------
+        hdu: `~astropy.io.fits.BinTableHDU`
+            ``MATRIX`` extensions.
+        unit : `~astropy.units.UnitBase`, str, None
+            Energy unit
+        """
+
+        if hdu.name != 'MATRIX':
+            log.warn('This does not seem like a MATRIX extension. Are you sure?')
+
+        header = hdu.header
+        unit = header.get('TUNIT1')
+        low = hdu.data['ENERG_LO']
+        high = hdu.data['ENERG_HI']
+        return cls.from_lower_and_upper_bounds(low, high, unit)
+
+    def to_ebounds(self, **kwargs):
         """Write EBOUNDS fits extension
 
         Returns
