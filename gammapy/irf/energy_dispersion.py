@@ -235,8 +235,10 @@ class EnergyDispersion(object):
         hdu.add_checksum()
         hdu.add_datasum()
 
+        hdu2 = self._e_reco.to_ebounds()
+
         prim_hdu = fits.PrimaryHDU()
-        return fits.HDUList([prim_hdu, hdu])
+        return fits.HDUList([prim_hdu, hdu, hdu2])
 
         return hdu_list
 
