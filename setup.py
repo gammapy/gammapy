@@ -87,6 +87,7 @@ entry_points['console_scripts'] = [
     'gammapy-detect = gammapy.scripts.detect:main',
     'gammapy-find-obs = gammapy.scripts.find_obs:main',
     'gammapy-image-decompose-a-trous = gammapy.scripts.image_decompose_a_trous:main',
+    'gammapy-image-pipe = gammapy.scripts.image_pipe:main',
     'gammapy-info = gammapy.scripts.info:main',
     'gammapy-irf-info = gammapy.scripts.irf_info:main',
     'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
