@@ -30,7 +30,8 @@ def test_EnergyDispersion():
     actual = np.sum(c)
     desired = edisp._pdf_matrix.flatten().shape[0]
     assert_equal(actual, desired)
-    
+
+    #Write RMF
 
 @pytest.mark.skipif('not HAS_SCIPY')
 @remote_data

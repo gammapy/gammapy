@@ -5,6 +5,8 @@ from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ..spectrum.energy import EnergyBounds
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'EnergyDispersion',
@@ -54,7 +56,8 @@ class EnergyDispersion(object):
         else:
             self._e_reco = e_reco
 
-        self._pdf_threshold = pdf_threshold
+        self._pdf_threshold = 0
+        self.pdf_threshold = pdf_threshold
         self._interpolate2d_func = None
 
     @property
@@ -155,7 +158,7 @@ class EnergyDispersion(object):
         """
         self.to_fits().writeto(filename, *args, **kwargs)
         
-    def to_fits(self, header=None, energy_unit='TeV'):
+    def to_fits(self, header=None, energy_unit='TeV', **kwargs):
         """
         Convert RM to FITS HDU list format.
 
@@ -177,181 +180,106 @@ class EnergyDispersion(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         """
-
-        #Quick hack around np_to_rmf
-        #not tested at all
-        telescope='DUMMY'
-        instrument='DUMMY'
-        filter='NONE'
-        minprob = 0.001
-        rm = self._pdf_matrix
-        erange = self._e_true
-        ebounds = self._e_reco
-
-        # Intialize the arrays to be used to construct the RM extension
-        n_rows = len(rm)
-        energy_lo = np.zeros(n_rows)  # Low energy bounds
-        energy_hi = np.zeros(n_rows)  # High energy bounds
-        n_grp = []  # Number of channel subsets
-        f_chan = []  # First channels in each subset
-        n_chan = []  # Number of channels in each subset
-        matrix = []  # Matrix elements
-
-        # Loop over the matrix and fill the arrays
-        for i, r in enumerate(rm):
-            energy_lo[i] = erange[i]
-            energy_hi[i] = erange[i + 1]
-            # Create mask for all matrix row values above the minimal probability
-            m = r > minprob
-            # Intialize variables & arrays for the row
-            n_grp_row, n_chan_row_c = 0, 0
-            f_chan_row, n_chan_row, matrix_row = [], [], []
-            new_subset = True
-            # Loop over row entries and fill arrays appropriately
-            for j, v in enumerate(r):
-                if m[j]:
-                    if new_subset:
-                        n_grp_row += 1
-                        f_chan_row.append(j)
-                        new_subset = False
-                    matrix_row.append(v)
-                    n_chan_row_c += 1
-                else:
-                    if not new_subset:
-                        n_chan_row.append(n_chan_row_c)
-                        n_chan_row_c = 0
-                        new_subset = True
-        if not new_subset:
-            n_chan_row.append(n_chan_row_c)
-        n_grp.append(n_grp_row)
-        f_chan.append(f_chan_row)
-        n_chan.append(n_chan_row)
-        matrix.append(matrix_row)
-
-            # Create RMF FITS table extension from data
-        tbhdu = fits.new_table(
-            [fits.Column(name='ENERG_LO',
-                         format='1E',
-                         array=energy_lo,
-                         unit='TeV'),
-             fits.Column(name='ENERG_HI',
-                         format='1E',
-                         array=energy_hi,
-                         unit='TeV'),
-             fits.Column(name='N_GRP',
-                         format='1I',
-                         array=n_grp),
-             fits.Column(name='F_CHAN',
-                         format='PI()',
-                         array=f_chan),
-             fits.Column(name='N_CHAN',
-                         format='PI()',
-                         array=n_chan),
-             fits.Column(name='MATRIX',
-                         format='PE(()',
-                         array=matrix)
-             ]
-            )
-
-    # Write FITS extension header
-
-        chan_min, chan_max, chan_n = 0, rm.shape[1] - 1, rm.shape[1]
-
-        header = tbhdu.header
-        header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
-        header['TLMIN4'] = chan_min, 'First legal channel number'
-        header['TLMAX4'] = chan_max, 'Highest legal channel number'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter, 'Filter information'
-        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
-        header['LO_THRES'] = minprob, 'Lower probability density threshold for matrix'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'RSP_MATRIX', 'Keyword information for Caltools Software.'
-        header['HDUVERS '] = '1.3.0', 'Version of file format'
-        header['HDUCLAS3'] = 'DETECTOR', 'Keyword information for Caltools Software.'
-        header['CCNM0001'] = 'MATRIX', 'Keyword information for Caltools Software.'
-        header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software'
-        header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
+        #Cannot use table_to_fits here due to variable length array
+        #http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
+        table = self.to_table()
+        cols = table.columns
+ 
+        c0 = fits.Column(name=cols[0].name, format='E', array=cols[0])
+        c1 = fits.Column(name=cols[1].name, format='E', array=cols[1])
+        c2 = fits.Column(name=cols[2].name, format='J', array=cols[2])
+        c3 = fits.Column(name=cols[3].name, format='PJ', array=cols[3])
+        c4 = fits.Column(name=cols[4].name, format='PJ()', array=cols[4])
+        c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
         
-    # UTC date when this calibration should be first used (yyyy-mm-dd)
-        header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
+        hdu = fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5])
 
-    # UTC time on the dat when this calibration should be first used (hh:mm:ss)
-        header['CVST0001'] = '00:00:00', 'Keyword information for Caltools Software.'
-        
-    # String giving a brief summary of this data set
-        header['CDES0001'] = 'dummy data', 'Keyword information for Caltools Software.'
+        if header is None:
+            from gammapy.datasets import get_path
+            filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
+                                location='remote')
+            header = fits.open(filename)[1].header
+            
+        if header == 'pyfact':
+            header = hdu.header
 
-    # Optional, but maybe useful (taken from the example in the RMF/ARF document)
-        header['CBD10001'] = 'CHAN({0}- {1})'.format(chan_min, chan_max), 'Keyword information for Caltools Software.'
-        header['CBD20001'] = 'ENER({0}-{1})TeV'.format(erange[0], erange[-1]), 'Keyword information for Caltools Software.'
+            header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
+            header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+            header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+            header['FILTER'] = 'NONE', 'Filter information'
+            header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
+            header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
+            header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
+            header['HDUCLAS2'] = 'RSP_MATRIX', 'Keyword information for Caltools Software.'
+            header['HDUVERS '] = '1.3.0', 'Version of file format'
 
-    # Obsolet RMF headers, included for the benefit of old software
-        header['RMFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.1.0', 'Obsolete'
-        header['HDUVERS2'] = '1.2.0', 'Obsolete'
+            # Obsolet RMF headers, included for the benefit of old software
+            header['RMFVERSN'] = '1992a', 'Obsolete'
+            header['HDUVERS1'] = '1.1.0', 'Obsolete'
+            header['HDUVERS2'] = '1.2.0', 'Obsolete'
 
-    # Create EBOUNDS FITS table extension from data
-        tbhdu2 = fits.new_table(
-            [fits.Column(name='CHANNEL',
-                         format='1I',
-                         array=np.arange(len(ebounds) - 1)),
-             fits.Column(name='E_MIN',
-                         format='1E',
-                         array=ebounds[:-1],
-                         unit='TeV'),
-             fits.Column(name='E_MAX',
-                         format='1E',
-                         array=ebounds[1:],
-                         unit='TeV')
-             ]
-            )
+        for key, value in kwargs.items():
+            header[key] = value
 
-        chan_min, chan_max, chan_n = 0, rm.shape[0] - 1, rm.shape[0]
+        header['DETCHANS'] = self._e_reco.nbins, 'Total number of detector PHA channels'
+        header['TLMIN4'] = 0, 'First legal channel number'
+        header['TLMAX4'] = hdu.data[3].__len__(), 'Highest legal channel number'
+        numgrp, numelt = 0, 0
+        for val, val2 in zip(hdu.data['N_GRP'], hdu.data['N_CHAN']):
+            numgrp += np.sum(val)
+            numelt += np.sum(val2)
+        header['NUMGRP'] = numgrp, 'Total number of channel subsets'
+        header['NUMELT'] = numelt, 'Total number of response elements'
+        header['LO_THRES'] = self.pdf_threshold, 'Lower probability density threshold for matrix'
+        hdu.header = header
+        hdu.add_checksum()
+        hdu.add_datasum()
 
-        header = tbhdu2.header
-        header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter, 'Filter information'
-        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
-        header['TLMIN1'] = chan_min, 'First legal channel number'
-        header['TLMAX1'] = chan_max, 'Highest legal channel number'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
-        header['HDUVERS'] = '1.2.0', 'Version of file format'
-        header['HDUCLAS3'] = 'DETECTOR', 'Keyword information for Caltools Software.'
-        header['CCNM0001'] = 'EBOUNDS', 'Keyword information for Caltools Software.'
-        header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software.'
-        header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
-        
-        # UTC date when this calibration should be first used (yyyy-mm-dd)
-        header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
-
-        # UTC time on the dat when this calibration should be first used (hh:mm:ss)
-        header['CVST0001'] = '00:00:00', 'Keyword information for Caltools Software.'
-
-        # Optional - name of the PHA file for which this file was produced
-    #header('PHAFILE', '', 'Keyword information for Caltools Software.')
-
-        # String giving a brief summary of this data set
-        header['CDES0001'] = 'dummy description', 'Keyword information for Caltools Software.'
-
-    # Obsolet EBOUNDS headers, included for the benefit of old software
-        header['RMFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.0.0', 'Obsolete'
-        header['HDUVERS2'] = '1.1.0', 'Obsolete'
-
-        # Create primary HDU and HDU list to be stored in the output file
-        # TODO: can remove PrimaryHDU here?
-        hdu_list = fits.HDUList([fits.PrimaryHDU(), tbhdu, tbhdu2])
+        prim_hdu = fits.PrimaryHDU()
+        return fits.HDUList([prim_hdu, hdu])
 
         return hdu_list
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+
+        The ouput table is in the OGIP RMF format
+        """
+        table = Table()
+
+        rows = self._pdf_matrix.__len__()
+        n_grp  = [] 
+        f_chan = np.ndarray(dtype=np.object, shape=rows)
+        n_chan = np.ndarray(dtype=np.object, shape=rows)
+        matrix = np.ndarray(dtype=np.object, shape=rows)
+
+        #Make RMF type matrix
+        for i, row in enumerate(self._pdf_matrix):
+            subsets = 1
+            pos = np.nonzero(row)[0]
+            borders = np.where(np.diff(pos) != 1)[0]
+            groups = np.asarray(np.split(pos, borders))
+            n_grp_temp = groups.size if groups.size > 0 else 1
+            n_chan_temp = np.asarray([val.size for val in groups])
+            try:
+                f_chan_temp = np.asarray([val[0] for val in groups])
+            except(IndexError):
+                f_chan_temp = np.zeros(1)
+
+            n_grp.append(n_grp_temp)
+            f_chan[i] = f_chan_temp
+            n_chan[i] = n_chan_temp
+            matrix[i] = row[pos]
+
+        table['ENERG_LO'] = self._e_true.lower_bounds
+        table['ENERG_HI'] = self._e_true.upper_bounds
+        table['N_GRP'] = np.asarray(n_grp)
+        table['F_CHAN'] = f_chan
+        table['N_CHAN'] = n_chan
+        table['MATRIX'] = matrix
+        
+        return table
+
 
     def __call__(self, energy_true, energy_reco, method='step'):
         """Compute energy dispersion.
