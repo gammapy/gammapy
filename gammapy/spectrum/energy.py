@@ -4,6 +4,9 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy import log
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
+
 
 __all__ = [
     'Energy',
@@ -292,7 +295,19 @@ class EnergyBounds(Energy):
         high = hdu.data['ENERG_HI']
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
-    def to_ebounds(self, **kwargs):
+    def to_table(self, unit='TeV'):
+        """Convert to `~astropy.table.Table`.
+        """
+
+        table = Table()
+
+        table['CHANNEL'] = np.arange(self.nbins)
+        table['E_MIN'] = self.lower_bounds.to(unit)
+        table['E_MAX'] = self.upper_bounds.to(unit)
+
+        return table
+
+    def to_ebounds(self, unit='TeV', **kwargs):
         """Write EBOUNDS fits extension
 
         Returns
@@ -301,68 +316,23 @@ class EnergyBounds(Energy):
             EBOUNDS fits extension
         """
 
-        col1 = fits.Column(name='Energy', format='D', array=self.value)
-        cols = fits.ColDefs([col1])
-        hdu = fits.BinTableHDU.from_columns(cols)
-        hdu.name = 'EBOUNDS'
-        hdu.header['TUNIT1'] = "{0}".format(self.unit.to_str('fits'))
-
-            # Create EBOUNDS FITS table extension from data
-        tbhdu2 = fits.new_table(
-            [fits.Column(name='CHANNEL',
-                         format='1I',
-                         array=np.arange(len(ebounds) - 1)),
-             fits.Column(name='E_MIN',
-                         format='1E',
-                         array=ebounds[:-1],
-                         unit='TeV'),
-             fits.Column(name='E_MAX',
-                         format='1E',
-                         array=ebounds[1:],
-                         unit='TeV')
-             ]
-            )
-
-        chan_min, chan_max, chan_n = 0, rm.shape[0] - 1, rm.shape[0]
-
-        header = tbhdu2.header
+        hdu = table_to_fits_table(self.to_table(unit))
+        
+        header = hdu.header
         header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter, 'Filter information'
+        header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+        header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+        header['FILTER'] = 'NONE', 'Filter information'
         header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
-        header['TLMIN1'] = chan_min, 'First legal channel number'
-        header['TLMAX1'] = chan_max, 'Highest legal channel number'
+        header['DETCHANS'] = self.nbins, 'Total number of detector PHA channels'
         header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
         header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
         header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
         header['HDUVERS'] = '1.2.0', 'Version of file format'
-        header['HDUCLAS3'] = 'DETECTOR', 'Keyword information for Caltools Software.'
-        header['CCNM0001'] = 'EBOUNDS', 'Keyword information for Caltools Software.'
-        header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software.'
-        header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
         
-        # UTC date when this calibration should be first used (yyyy-mm-dd)
-        header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
-
-        # UTC time on the dat when this calibration should be first used (hh:mm:ss)
-        header['CVST0001'] = '00:00:00', 'Keyword information for Caltools Software.'
-
-        # Optional - name of the PHA file for which this file was produced
-    #header('PHAFILE', '', 'Keyword information for Caltools Software.')
-
-        # String giving a brief summary of this data set
-        header['CDES0001'] = 'dummy description', 'Keyword information for Caltools Software.'
-
-    # Obsolet EBOUNDS headers, included for the benefit of old software
+        # Obsolet EBOUNDS headers, included for the benefit of old software
         header['RMFVERSN'] = '1992a', 'Obsolete'
         header['HDUVERS1'] = '1.0.0', 'Obsolete'
         header['HDUVERS2'] = '1.1.0', 'Obsolete'
-
-        # Create primary HDU and HDU list to be stored in the output file
-        # TODO: can remove PrimaryHDU here?
-
-
 
         return hdu
