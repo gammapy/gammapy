@@ -730,6 +730,7 @@ Changelog
 ---------
 
 In Gammapy we keep a :ref:`changelog` with a list of pull requests.
+We sort by release and within the release by PR number (largest first).
 
 As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
 there are (at least) two approaches for adding to the changelog, each with pros
