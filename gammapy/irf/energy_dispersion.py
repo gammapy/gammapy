@@ -10,7 +10,6 @@ from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'EnergyDispersion',
-    'gauss_energy_dispersion_matrix',
     'EnergyDispersion2D',
 ]
 
@@ -102,6 +101,41 @@ class EnergyDispersion(object):
         ss += 'True energy range: {0}\n'.format(self.energy_range('true'))
         ss += 'Reco energy range: {0}\n'.format(self.energy_range('reco'))
         return ss
+
+    @classmethod
+    def from_gauss(cls, ebounds, sigma=0.2):
+        """Create gaussian `EnergyDispersion` matrix.
+
+        TODO: Debug
+        TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
+        TODO: give formula: Gaussian in log(e_reco)
+        TODO: add option to add poisson noise
+        TODO: extend to have a vector of bias and resolution for various true energies.
+        
+        Parameters
+        ----------
+        e_reco : `~gammapy.spectrum.EnergyBounds`
+            Reco and true energy binning
+        sigma : float
+            RMS width of Gaussian energy dispersion.
+        """
+        from scipy.special import erf
+
+        e_bounds = ebounds.value
+
+        nbins = len(e_bounds) - 1
+        logerange = np.log10(e_bounds)
+
+        logemingrid = logerange[:-1] * np.ones([nbins, nbins])
+        logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
+        logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
+
+        # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.) * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
+        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
+        
+        pdf_matrix = gauss_int([1., 10. ** logecentergrid, sigma * 10. ** logecentergrid], 10. ** logemingrid, 10. ** logemaxgrid)
+
+        return cls(pdf_matrix, ebounds)
 
     @classmethod
     def read(cls, filename, format='RMF'):
@@ -404,51 +438,6 @@ class EnergyDispersion(object):
     def _plot_pdf(self, energy, axis):
         raise NotImplementedError
 
-def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
-    """Create Gaussian energy dispersion matrix.
-
-    TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
-
-    TODO: give formula: Gaussian in log(e_reco)
-
-    TODO: add option to add poisson noise
-
-    TODO: extend to have a vector of bias and resolution for various true energies.
-
-    Parameters
-    ----------
-    ebounds : array_like
-        1-dim energy binning array (TeV)
-    sigma : float
-        RMS width of Gaussian energy dispersion.
-
-    Returns
-    -------
-    pdf_matrix : array
-        PDF matrix
-    """
-    from scipy.special import erf
-
-    #Quick hack to make it work with new Edisp class
-    e_bounds = ebounds.value
-
-    nbins = len(e_bounds) - 1
-    logerange = np.log10(e_bounds)
-
-    logemingrid = logerange[:-1] * np.ones([nbins, nbins])
-    logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
-    logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
-
-    # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.) * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
-    gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-
-    pdf_matrix = gauss_int([1., 10. ** logecentergrid, sigma * 10. ** logecentergrid], 10. ** logemingrid, 10. ** logemaxgrid)
-
-    return pdf_matrix
-
-    # hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
-    #                     telescope=telescope, instrument=instrument)
-    # return hdu_list
 
 
 class EnergyDispersion2D(object):
