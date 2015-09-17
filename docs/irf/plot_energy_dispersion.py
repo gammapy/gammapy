@@ -2,8 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from gammapy import irf
+from gammapy.spectrum import EnergyBounds
 
-ebounds = np.logspace(-1, 2, 100)
+ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
 pdf_matrix = irf.gauss_energy_dispersion_matrix(ebounds, sigma=0.2)
 energy_dispersion = irf.EnergyDispersion(pdf_matrix, ebounds)
 
