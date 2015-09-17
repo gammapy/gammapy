@@ -15,6 +15,7 @@ __all__ = [
 
 
 class Energy(Quantity):
+
     """Energy quantity scalar or array.
 
     This is a `~astropy.units.Quantity` sub-class that adds convenience methods
@@ -74,8 +75,7 @@ class Energy(Quantity):
         """
         The covered energy range (tuple)
         """
-        return self[0:self.size:self.size-1]
-
+        return self[0:self.size:self.size - 1]
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
@@ -153,6 +153,7 @@ class Energy(Quantity):
 
 
 class EnergyBounds(Energy):
+
     """EnergyBounds array.
 
     This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience 
@@ -214,7 +215,7 @@ class EnergyBounds(Energy):
         """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`). 
 
         If no unit is given, it will be taken from upper
-        
+
         Parameters
         ----------
         lower,upper : `~astropy.units.Quantity`, float
@@ -226,8 +227,8 @@ class EnergyBounds(Energy):
         # np.append renders Quantities dimensionless
         # http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
 
-        lower = cls(lower, unit);
-        upper = cls(upper, unit);
+        lower = cls(lower, unit)
+        upper = cls(upper, unit)
         unit = upper.unit
         energy = np.hstack((lower, upper[-1]))
         return cls(energy.value, unit)
@@ -317,7 +318,7 @@ class EnergyBounds(Energy):
         """
 
         hdu = table_to_fits_table(self.to_table(unit))
-        
+
         header = hdu.header
         header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
         header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
@@ -329,7 +330,7 @@ class EnergyBounds(Energy):
         header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
         header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
         header['HDUVERS'] = '1.2.0', 'Version of file format'
-        
+
         # Obsolet EBOUNDS headers, included for the benefit of old software
         header['RMFVERSN'] = '1992a', 'Obsolete'
         header['HDUVERS1'] = '1.0.0', 'Obsolete'

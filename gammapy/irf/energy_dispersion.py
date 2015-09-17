@@ -43,12 +43,12 @@ class EnergyDispersion(object):
 
     def __init__(self, pdf_matrix, e_true, e_reco=None,
                  pdf_threshold=DEFAULT_PDF_THRESHOLD):
-        
+
         if e_reco is None:
             e_reco = e_true
 
         if not isinstance(e_true, EnergyBounds) or not isinstance(
-            e_reco, EnergyBounds):
+                e_reco, EnergyBounds):
             raise ValueError("Energies must be Energy objects")
 
         self._pdf_matrix = np.asarray(pdf_matrix)
@@ -72,7 +72,8 @@ class EnergyDispersion(object):
     @pdf_threshold.setter
     def pdf_threshold(self, value):
         if self._pdf_threshold > value:
-            ss = 'Lowering the PDF matrix zero-suppression threshold can lead to incorrect results.\n'
+            ss = 'Lowering the PDF matrix zero-suppression threshold'
+            ' can lead to incorrect results.\n'
             ss += 'Old PDF threshold: {0}\n'.format(self._pdf_threshold)
             ss += 'New PDF threshold: {0}'.format(value)
             raise Exception(ss)
@@ -87,6 +88,7 @@ class EnergyDispersion(object):
         """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
         return self._e_reco
+
     @property
     def true_energy(self):
         """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
@@ -111,7 +113,7 @@ class EnergyDispersion(object):
         TODO: give formula: Gaussian in log(e_reco)
         TODO: add option to add poisson noise
         TODO: extend to have a vector of bias and resolution for various true energies.
-        
+
         Parameters
         ----------
         e_reco : `~gammapy.spectrum.EnergyBounds`
@@ -128,12 +130,18 @@ class EnergyDispersion(object):
 
         logemingrid = logerange[:-1] * np.ones([nbins, nbins])
         logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
-        logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
+        val = logerange[:-1] + logerange[1:]
+        logecentergrid = np.transpose(((val) / 2.) * np.ones([nbins, nbins]))
 
-        # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.) * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
-        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-        
-        pdf_matrix = gauss_int([1., 10. ** logecentergrid, sigma * 10. ** logecentergrid], 10. ** logemingrid, 10. ** logemaxgrid)
+        # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.)
+        # * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
+        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(
+            2. * p[2] ** 2.)) - erf(
+            (x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
+
+        pdf_matrix = gauss_int(
+            [1., 10. ** logecentergrid, sigma * 10. ** logecentergrid],
+            10. ** logemingrid, 10. ** logemaxgrid)
 
         return cls(pdf_matrix, ebounds)
 
@@ -180,7 +188,9 @@ class EnergyDispersion(object):
             if l.field('N_GRP'):
                 m_start = 0
                 for k in range(l.field('N_GRP')):
-                    pdf_matrix[i, l.field('F_CHAN')[k]: l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
+                    pdf_matrix[i, l.field('F_CHAN')[k]: l.field(
+                        'F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field(
+                        'MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
 
         pdf_threshold = float(header['LO_THRES'])
@@ -196,7 +206,7 @@ class EnergyDispersion(object):
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
         self.to_fits().writeto(filename, *args, **kwargs)
-        
+
     def to_fits(self, header=None, energy_unit='TeV', **kwargs):
         """
         Convert RM to FITS HDU list format.
@@ -219,11 +229,11 @@ class EnergyDispersion(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         """
-        #Cannot use table_to_fits here due to variable length array
-        #http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
+        # Cannot use table_to_fits here due to variable length array
+        # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
         table = self.to_table()
         cols = table.columns
- 
+
         c0 = fits.Column(name=cols[0].name, format='E', array=cols[0],
                          unit='{}'.format(cols[0].unit))
         c1 = fits.Column(name=cols[1].name, format='E', array=cols[1],
@@ -232,11 +242,11 @@ class EnergyDispersion(object):
         c3 = fits.Column(name=cols[3].name, format='PI()', array=cols[3])
         c4 = fits.Column(name=cols[4].name, format='PI()', array=cols[4])
         c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
-        
+
         hdu = fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5])
 
         if header is None:
-            header=hdu.header
+            header = hdu.header
 
             header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
             header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
@@ -285,12 +295,12 @@ class EnergyDispersion(object):
         table = Table()
 
         rows = self._pdf_matrix.__len__()
-        n_grp  = [] 
+        n_grp = []
         f_chan = np.ndarray(dtype=np.object, shape=rows)
         n_chan = np.ndarray(dtype=np.object, shape=rows)
         matrix = np.ndarray(dtype=np.object, shape=rows)
 
-        #Make RMF type matrix
+        # Make RMF type matrix
         for i, row in enumerate(self._pdf_matrix):
             subsets = 1
             pos = np.nonzero(row)[0]
@@ -314,9 +324,8 @@ class EnergyDispersion(object):
         table['F_CHAN'] = f_chan
         table['N_CHAN'] = n_chan
         table['MATRIX'] = matrix
-        
-        return table
 
+        return table
 
     def __call__(self, energy_true, energy_reco, method='step'):
         """Compute energy dispersion.
@@ -439,7 +448,6 @@ class EnergyDispersion(object):
         raise NotImplementedError
 
 
-
 class EnergyDispersion2D(object):
 
     """Offset-dependent energy dispersion matrix.
@@ -463,7 +471,7 @@ class EnergyDispersion2D(object):
 
     Examples
     --------
-    
+
     Plot migration histogram for a given offset and true energy
 
     .. plot::
@@ -534,7 +542,7 @@ class EnergyDispersion2D(object):
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             ``ENERGY DISPERSION`` extension.
-            
+
         """
 
         data = hdu.data
@@ -563,7 +571,7 @@ class EnergyDispersion2D(object):
 
     def evaluate(self, offset=None, e_true=None, migra=None):
         """Probability for a given offset, true energy, and migration
-        
+
         Parameters
         ----------
         e_true : `~gammapy.spectrum.EnergyBounds`, None
@@ -718,7 +726,7 @@ class EnergyDispersion2D(object):
                   migra=None, **kwargs):
         """Plot migration as a function of true energy for a given offset
         """
-        
+
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
