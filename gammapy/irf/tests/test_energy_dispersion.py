@@ -24,11 +24,11 @@ def test_EnergyDispersion():
     #Set PDF threshold
     threshold = 1e-2
     edisp.pdf_threshold = threshold
-    a = edisp._pdf_matrix > threshold
-    b = edisp._pdf_matrix == 0
+    a = edisp.pdf_matrix > threshold
+    b = edisp.pdf_matrix == 0
     c = a+b
     actual = np.sum(c)
-    desired = edisp._pdf_matrix.flatten().shape[0]
+    desired = edisp.pdf_matrix.flatten().shape[0]
     assert_equal(actual, desired)
 
 @remote_data
@@ -38,11 +38,11 @@ def test_EnergyDispersion_write(tmpdir):
 
     edisp = EnergyDispersion.read(filename)
     indices = np.array([[1,3,6],[3,3,2]])
-    desired = edisp._pdf_matrix[indices]
+    desired = edisp.pdf_matrix[indices]
     writename = str(tmpdir.join('rmf_test.fits'))
     edisp.write(writename)
     edisp2 = EnergyDispersion.read(writename)
-    actual = edisp2._pdf_matrix[indices]
+    actual = edisp2.pdf_matrix[indices]
     rtol = edisp2.pdf_threshold
     assert_allclose(actual, desired, rtol=rtol)
 
@@ -81,6 +81,6 @@ def test_EnergyDispersion2D():
     e_reco = EnergyBounds.equal_log_spacing(1,10,5,'TeV')
     rmf = edisp.to_energy_dispersion(e_reco, offset)
 
-    actual = rmf._pdf_matrix[5]
+    actual = rmf.pdf_matrix[5]
     desired = edisp.get_response(offset, edisp.energy[5], e_reco=e_reco)
     assert_equal(actual, desired)
