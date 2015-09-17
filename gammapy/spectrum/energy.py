@@ -74,7 +74,7 @@ class Energy(Quantity):
         """
         The covered energy range (tuple)
         """
-        return self[0], self[-1]
+        return self[0:self.size:self.size-1]
 
 
     @classmethod

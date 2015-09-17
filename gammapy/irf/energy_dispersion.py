@@ -45,16 +45,16 @@ class EnergyDispersion(object):
     def __init__(self, pdf_matrix, e_true, e_reco=None,
                  pdf_threshold=DEFAULT_PDF_THRESHOLD):
         
+        if e_reco is None:
+            e_reco = e_true
+
         if not isinstance(e_true, EnergyBounds) or not isinstance(
             e_reco, EnergyBounds):
             raise ValueError("Energies must be Energy objects")
 
         self._pdf_matrix = np.asarray(pdf_matrix)
         self._e_true = e_true
-        if e_reco is None:
-            self._e_reco = np.asarray(e_true)
-        else:
-            self._e_reco = e_reco
+        self._e_reco = e_reco
 
         self._pdf_threshold = 0
         self.pdf_threshold = pdf_threshold
@@ -375,8 +375,8 @@ class EnergyDispersion(object):
 
         x stands for true energy and y for reconstructed energy
         """
-        x = self.energy_range('true')
-        y = self.energy_range('reco')
+        x = self.true_energy.range.value
+        y = self.reco_energy.range.value
         return x[0], x[1], y[0], y[1]
 
     def _plot_matrix(self):
@@ -429,8 +429,11 @@ def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
     """
     from scipy.special import erf
 
-    nbins = len(ebounds) - 1
-    logerange = np.log10(ebounds)
+    #Quick hack to make it work with new Edisp class
+    e_bounds = ebounds.value
+
+    nbins = len(e_bounds) - 1
+    logerange = np.log10(e_bounds)
 
     logemingrid = logerange[:-1] * np.ones([nbins, nbins])
     logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
