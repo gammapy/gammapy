@@ -1,6 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose, assert_equal
+from numpy.testing import assert_allclose, assert_equal, assert_raises
 from astropy.tests.helper import pytest, remote_data
 from ...irf import EnergyDispersion, EnergyDispersion2D
 from ...datasets import get_path
@@ -29,6 +29,17 @@ def test_EnergyDispersion():
     c = a+b
     actual = np.sum(c)
     desired = edisp.pdf_matrix.flatten().shape[0]
+    assert_equal(actual, desired)
+
+    #lower pdf threshold
+    #assert_raises did not work
+    actual = 0
+    threshold = 1e-3
+    try:
+        edisp.pdf_threshold = threshold
+    except(Exception):
+        actual = 1
+    desired = 1
     assert_equal(actual, desired)
 
 @remote_data
