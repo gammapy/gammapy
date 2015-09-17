@@ -61,6 +61,11 @@ class EnergyDispersion(object):
         self._interpolate2d_func = None
 
     @property
+    def pdf_matrix(self):
+        """PDF matrix ~numpy.ndarray"""
+        return self._pdf_matrix
+
+    @property
     def pdf_threshold(self):
         """PDF matrix zero-suppression threshold (float)"""
         return self._pdf_threshold
