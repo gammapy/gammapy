@@ -31,7 +31,20 @@ def test_EnergyDispersion():
     desired = edisp._pdf_matrix.flatten().shape[0]
     assert_equal(actual, desired)
 
-    #Write RMF
+@remote_data
+def test_EnergyDispersion_write(tmpdir):
+    filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
+                        location='remote')
+
+    edisp = EnergyDispersion.read(filename)
+    indices = np.array([[1,3,6],[3,3,2]])
+    desired = edisp._pdf_matrix[indices]
+    writename = str(tmpdir.join('rmf_test.fits'))
+    edisp.write(writename)
+    edisp2 = EnergyDispersion.read(writename)
+    actual = edisp2._pdf_matrix[indices]
+    rtol = edisp2.pdf_threshold
+    assert_allclose(actual, desired, rtol=rtol)
 
 @pytest.mark.skipif('not HAS_SCIPY')
 @remote_data

@@ -185,23 +185,19 @@ class EnergyDispersion(object):
         table = self.to_table()
         cols = table.columns
  
-        c0 = fits.Column(name=cols[0].name, format='E', array=cols[0])
-        c1 = fits.Column(name=cols[1].name, format='E', array=cols[1])
+        c0 = fits.Column(name=cols[0].name, format='E', array=cols[0],
+                         unit='{}'.format(cols[0].unit))
+        c1 = fits.Column(name=cols[1].name, format='E', array=cols[1],
+                         unit='{}'.format(cols[1].unit))
         c2 = fits.Column(name=cols[2].name, format='J', array=cols[2])
-        c3 = fits.Column(name=cols[3].name, format='PJ', array=cols[3])
-        c4 = fits.Column(name=cols[4].name, format='PJ()', array=cols[4])
+        c3 = fits.Column(name=cols[3].name, format='PI()', array=cols[3])
+        c4 = fits.Column(name=cols[4].name, format='PI()', array=cols[4])
         c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
         
         hdu = fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5])
 
         if header is None:
-            from gammapy.datasets import get_path
-            filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
-                                location='remote')
-            header = fits.open(filename)[1].header
-            
-        if header == 'pyfact':
-            header = hdu.header
+            header=hdu.header
 
             header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
             header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
@@ -261,7 +257,7 @@ class EnergyDispersion(object):
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
             groups = np.asarray(np.split(pos, borders))
-            n_grp_temp = groups.size if groups.size > 0 else 1
+            n_grp_temp = groups.shape[0] if groups.size > 0 else 1
             n_chan_temp = np.asarray([val.size for val in groups])
             try:
                 f_chan_temp = np.asarray([val[0] for val in groups])
