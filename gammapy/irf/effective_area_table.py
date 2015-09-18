@@ -122,7 +122,7 @@ class EffectiveAreaTable(object):
         table = Table()
 
         table['ENERG_LO'] = self.energy_lo
-        table['ENERGY_HI'] = self.energy_hi
+        table['ENERG_HI'] = self.energy_hi
         table['SPECRESP'] = self.effective_area
 
         return table
@@ -163,10 +163,10 @@ class EffectiveAreaTable(object):
         hdu = table_to_fits_table(self.to_table())
 
         if header is None:
-            from ..datasets import load_arf_fits_table
-            header = load_arf_fits_table()[1].header
+            #from ..datasets import load_arf_fits_table
+            #header = load_arf_fits_table()[1].header
 
-        if header == 'pyfact':
+        #if header == 'pyfact':
             header = hdu.header
 
             # Write FITS extension header
