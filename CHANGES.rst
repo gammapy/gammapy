@@ -47,6 +47,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#351] Rewrite most parts of EnergyDispersion class (Johannes King)
 - [#353] Add some scripts and examples (Christoph Deil)
 - [#348] Misc code cleanup (Christoph Deil)
 - [#347] Add background cube model comparison plot script (Manuel Paz Arribas)
