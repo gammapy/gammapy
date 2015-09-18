@@ -4,6 +4,9 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy import log
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
+
 
 __all__ = [
     'Energy',
@@ -12,6 +15,7 @@ __all__ = [
 
 
 class Energy(Quantity):
+
     """Energy quantity scalar or array.
 
     This is a `~astropy.units.Quantity` sub-class that adds convenience methods
@@ -65,6 +69,13 @@ class Energy(Quantity):
         The number of bins
         """
         return self.size
+
+    @property
+    def range(self):
+        """
+        The covered energy range (tuple)
+        """
+        return self[0:self.size:self.size - 1]
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
@@ -142,6 +153,7 @@ class Energy(Quantity):
 
 
 class EnergyBounds(Energy):
+
     """EnergyBounds array.
 
     This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience 
@@ -203,7 +215,7 @@ class EnergyBounds(Energy):
         """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`). 
 
         If no unit is given, it will be taken from upper
-        
+
         Parameters
         ----------
         lower,upper : `~astropy.units.Quantity`, float
@@ -215,10 +227,10 @@ class EnergyBounds(Energy):
         # np.append renders Quantities dimensionless
         # http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
 
-        lower = cls(lower, unit);
-        upper = cls(upper, unit);
+        lower = cls(lower, unit)
+        upper = cls(upper, unit)
         unit = upper.unit
-        energy = np.append(lower, upper[-1])
+        energy = np.hstack((lower, upper[-1]))
         return cls(energy.value, unit)
 
     @classmethod
@@ -243,7 +255,7 @@ class EnergyBounds(Energy):
             emin, emax, nbins + 1, unit)
 
     @classmethod
-    def from_fits(cls, hdu, unit=None):
+    def from_ebounds(cls, hdu, unit=None):
         """Read EBOUNDS fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
 
         Parameters
@@ -257,9 +269,46 @@ class EnergyBounds(Energy):
         if hdu.name != 'EBOUNDS':
             log.warn('This does not seem like an EBOUNDS extension. Are you sure?')
 
-        return super(EnergyBounds, cls).from_fits(cls, hdu, unit)
+        header = hdu.header
+        unit = header.get('TUNIT2')
+        low = hdu.data['E_MIN']
+        high = hdu.data['E_MAX']
+        return cls.from_lower_and_upper_bounds(low, high, unit)
 
-    def to_fits(self, **kwargs):
+    @classmethod
+    def from_rmf_matrix(cls, hdu, unit=None):
+        """Read MATRIX fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
+
+        Parameters
+        ----------
+        hdu: `~astropy.io.fits.BinTableHDU`
+            ``MATRIX`` extensions.
+        unit : `~astropy.units.UnitBase`, str, None
+            Energy unit
+        """
+
+        if hdu.name != 'MATRIX':
+            log.warn('This does not seem like a MATRIX extension. Are you sure?')
+
+        header = hdu.header
+        unit = header.get('TUNIT1')
+        low = hdu.data['ENERG_LO']
+        high = hdu.data['ENERG_HI']
+        return cls.from_lower_and_upper_bounds(low, high, unit)
+
+    def to_table(self, unit='TeV'):
+        """Convert to `~astropy.table.Table`.
+        """
+
+        table = Table()
+
+        table['CHANNEL'] = np.arange(self.nbins)
+        table['E_MIN'] = self.lower_bounds.to(unit)
+        table['E_MAX'] = self.upper_bounds.to(unit)
+
+        return table
+
+    def to_ebounds(self, unit='TeV', **kwargs):
         """Write EBOUNDS fits extension
 
         Returns
@@ -268,10 +317,23 @@ class EnergyBounds(Energy):
             EBOUNDS fits extension
         """
 
-        col1 = fits.Column(name='Energy', format='D', array=self.value)
-        cols = fits.ColDefs([col1])
-        hdu = fits.BinTableHDU.from_columns(cols)
-        hdu.name = 'EBOUNDS'
-        hdu.header['TUNIT1'] = "{0}".format(self.unit.to_str('fits'))
+        hdu = table_to_fits_table(self.to_table(unit))
+
+        header = hdu.header
+        header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
+        header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+        header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+        header['FILTER'] = 'NONE', 'Filter information'
+        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
+        header['DETCHANS'] = self.nbins, 'Total number of detector PHA channels'
+        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
+        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
+        header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
+        header['HDUVERS'] = '1.2.0', 'Version of file format'
+
+        # Obsolet EBOUNDS headers, included for the benefit of old software
+        header['RMFVERSN'] = '1992a', 'Obsolete'
+        header['HDUVERS1'] = '1.0.0', 'Obsolete'
+        header['HDUVERS2'] = '1.1.0', 'Obsolete'
 
         return hdu

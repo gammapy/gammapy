@@ -198,12 +198,14 @@ class EffectiveAreaTable(object):
         hdu.add_datasum()
         return fits.HDUList([prim_hdu, hdu])
 
-    def write(self, filename, *args, **kwargs):
+    def write(self, filename, energy_unit='TeV', effarea_unit='m2',
+              *args, **kwargs):
         """Write ARF to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits(energy_unit=energy_unit, effarea_unit=effarea_unit).writeto(
+            filename, *args, **kwargs)
 
     @classmethod
     def read(cls, filename):
@@ -482,8 +484,8 @@ class EffectiveAreaTable2D(object):
         """
 
         if energy_lo is None and energy_hi is None:
-            energy_lo = self.energy_lo
-            energy_hi = self.energy_hi
+            energy_lo = self.energ_lo
+            energy_hi = self.energ_hi
         elif energy_lo is None or energy_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):

@@ -249,8 +249,7 @@ class EventList(Table):
         mask = separation < radius
         return self[mask]
 
-    def select_sky_ring(self, center, inner_radius=None, outer_radius=None,
-                        thickness=None):
+    def select_sky_ring(self, center, inner_radius, outer_radius):
         """Select events in sky circle.
 
         Parameters
@@ -259,10 +258,8 @@ class EventList(Table):
             Sky ring center
         inner_radius : `~astropy.coordinates.Angle`
             Sky ring inner radius
-        outer_radius : `~astropy.coordinates.Angle`, None
+        outer_radius : `~astropy.coordinates.Angle`
             Sky ring outer radius
-        inner_radius : `~astropy.coordinates.Angle`
-            Sky ring thinkness
 
         Returns
         -------
@@ -270,27 +267,12 @@ class EventList(Table):
             Copy of event list with selection applied.
         """
 
-        if outer_radius is None:
-            if thickness is None or inner_radius is None:
-                raise ValueError("Not enough information specified")
-            else:
-                outer_radius = inner_radius + thickness
-
-        else:
-            if inner_radius is None:
-                if thickness is None:
-                    raise ValueError("Not enough information specified")
-                else:
-                    inner_radius = outer_radius + thickness
-
-            else:
-                thickness = outer_radius - inner_radius
-
         position = self.radec
         separation = center.separation(position)
-        mask1 = inner_radius > separation
-        mask2 = outer_radius < separation
+        mask1 = inner_radius < separation
+        mask2 = separation < outer_radius
         mask = mask1 * mask2
+
         return self[mask]
 
     def select_sky_box(self, lon_lim, lat_lim, frame='icrs'):

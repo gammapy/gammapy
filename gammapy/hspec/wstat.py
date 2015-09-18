@@ -10,6 +10,7 @@ class spectral_data(object):
     """
 
     def __init__(self, data, bkg):
+
         self.bkg = bkg
         self.data = data
         self.ONexpo = data.exposure
@@ -61,6 +62,7 @@ class w_statistic(object):
         for dataid in dataids:
             spec = spectral_data(sau.get_data(dataid), sau.get_bkg(dataid))
             self.datasets.append(spec)
+            
         self.bkg = np.concatenate([a.fit_bkg for a in self.datasets])
         self.alpha = np.concatenate([a.fit_alpha for a in self.datasets])
         self.Ttot = np.concatenate([a.fit_Ttot for a in self.datasets])

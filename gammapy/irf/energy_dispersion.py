@@ -5,10 +5,11 @@ from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ..spectrum.energy import EnergyBounds
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'EnergyDispersion',
-    'gauss_energy_dispersion_matrix',
     'EnergyDispersion2D',
 ]
 
@@ -22,10 +23,10 @@ class EnergyDispersion(object):
     pdf_matrix : array_like
         2-dim energy dispersion matrix (probability density).
         First index for true energy, second index for reco energy.
-    energy_true_bounds : array_like
-        1-dim true energy binning array (TeV)
-    energy_reco_bounds : array_like
-        1-dim reco energy binning array (TeV)
+    e_true : `~gammapy.spectrum.EnergyBounds`
+        True energy binning
+    e_reco : `~gammapy.spectrum.EnergyBounds`
+        Reco energy binning
 
     Notes
     -----
@@ -40,17 +41,28 @@ class EnergyDispersion(object):
     """
     DEFAULT_PDF_THRESHOLD = 1e-6
 
-    def __init__(self, pdf_matrix, energy_true_bounds, energy_reco_bounds=None,
+    def __init__(self, pdf_matrix, e_true, e_reco=None,
                  pdf_threshold=DEFAULT_PDF_THRESHOLD):
-        self._pdf_matrix = np.asarray(pdf_matrix)
-        self._energy_true_bounds = np.asarray(energy_true_bounds)
-        if energy_reco_bounds is None:
-            self._energy_reco_bounds = np.asarray(energy_true_bounds)
-        else:
-            self._energy_reco_bounds = np.asarray(energy_reco_bounds)
 
-        self._pdf_threshold = pdf_threshold
+        if e_reco is None:
+            e_reco = e_true
+
+        if not isinstance(e_true, EnergyBounds) or not isinstance(
+                e_reco, EnergyBounds):
+            raise ValueError("Energies must be Energy objects")
+
+        self._pdf_matrix = np.asarray(pdf_matrix)
+        self._e_true = e_true
+        self._e_reco = e_reco
+
+        self._pdf_threshold = 0
+        self.pdf_threshold = pdf_threshold
         self._interpolate2d_func = None
+
+    @property
+    def pdf_matrix(self):
+        """PDF matrix ~numpy.ndarray"""
+        return self._pdf_matrix
 
     @property
     def pdf_threshold(self):
@@ -59,54 +71,29 @@ class EnergyDispersion(object):
 
     @pdf_threshold.setter
     def pdf_threshold(self, value):
-        if self._pdf_threshold < value:
-            ss = 'Lowering the PDF matrix zero-suppression threshold can lead to incorrect results.\n'
-            ss += 'Old PDF threshold: {0}'.format(self._pdf_threshold)
+        if self._pdf_threshold > value:
+            ss = 'Lowering the PDF matrix zero-suppression threshold'
+            ' can lead to incorrect results.\n'
+            ss += 'Old PDF threshold: {0}\n'.format(self._pdf_threshold)
             ss += 'New PDF threshold: {0}'.format(value)
             raise Exception(ss)
 
         self._pdf_threshold = value
-        # Apply new threshold to the matrix
+
         m = self._pdf_matrix
         m[m < value] = 0
 
-    def energy_bounds(self, axis='true'):
-        """Energy bounds array.
-
-        Parameters
-        ----------
-        axis : {'true', 'reco'}
-            Which axis?
-
-        Returns
-        -------
-        energy_bounds : array
-            Energy bounds array.
+    @property
+    def reco_energy(self):
+        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
-        if axis == 'true':
-            return self._energy_true_bounds
-        elif axis == 'reco':
-            return self._energy_reco_bounds
-        else:
-            ss = 'Invalid axis: {0}\n'.format(axis)
-            ss += 'Valid options: true, reco'
-            raise ValueError(ss)
+        return self._e_reco
 
-    def energy_range(self, axis='true'):
-        """Energy axis range.
-
-        Parameters
-        ----------
-        axis : {'true', 'reco'}
-            Which axis?
-
-        Returns
-        -------
-        (emin, emax) : tuple of float
-            Energy axis range.
+    @property
+    def true_energy(self):
+        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
         """
-        ebounds = self.energy_bounds(axis)
-        return ebounds[0], ebounds[-1]
+        return self._e_true
 
     def __str__(self):
         ss = 'Energy dispersion information:\n'
@@ -116,6 +103,47 @@ class EnergyDispersion(object):
         ss += 'True energy range: {0}\n'.format(self.energy_range('true'))
         ss += 'Reco energy range: {0}\n'.format(self.energy_range('reco'))
         return ss
+
+    @classmethod
+    def from_gauss(cls, ebounds, sigma=0.2):
+        """Create gaussian `EnergyDispersion` matrix.
+
+        TODO: Debug
+        TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
+        TODO: give formula: Gaussian in log(e_reco)
+        TODO: add option to add poisson noise
+        TODO: extend to have a vector of bias and resolution for various true energies.
+
+        Parameters
+        ----------
+        e_reco : `~gammapy.spectrum.EnergyBounds`
+            Reco and true energy binning
+        sigma : float
+            RMS width of Gaussian energy dispersion.
+        """
+        from scipy.special import erf
+
+        e_bounds = ebounds.value
+
+        nbins = len(e_bounds) - 1
+        logerange = np.log10(e_bounds)
+
+        logemingrid = logerange[:-1] * np.ones([nbins, nbins])
+        logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
+        val = logerange[:-1] + logerange[1:]
+        logecentergrid = np.transpose(((val) / 2.) * np.ones([nbins, nbins]))
+
+        # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.)
+        # * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
+        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(
+            2. * p[2] ** 2.)) - erf(
+            (x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
+
+        pdf_matrix = gauss_int(
+            [1., 10. ** logecentergrid, sigma * 10. ** logecentergrid],
+            10. ** logemingrid, 10. ** logemaxgrid)
+
+        return cls(pdf_matrix, ebounds)
 
     @classmethod
     def read(cls, filename, format='RMF'):
@@ -154,45 +182,32 @@ class EnergyDispersion(object):
         data = hdu_list['MATRIX'].data
         header = hdu_list['MATRIX'].header
 
-        energy_true_bounds = np.hstack([data['ENERG_LO'], data['ENERG_HI'][-1]])
-
         pdf_matrix = np.zeros([len(data), header['DETCHANS']], dtype=np.float64)
 
         for i, l in enumerate(data):
             if l.field('N_GRP'):
                 m_start = 0
                 for k in range(l.field('N_GRP')):
-                    pdf_matrix[i, l.field('F_CHAN')[k]: l.field('F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field('MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
+                    pdf_matrix[i, l.field('F_CHAN')[k]: l.field(
+                        'F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field(
+                        'MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
 
-        pdf_threshold = header['LO_THRES']
+        pdf_threshold = float(header['LO_THRES'])
 
-        # The reco energy bounds are stored in the 'EBOUNDS' table HDU
-        ebounds = hdu_list['EBOUNDS'].data
-        energy_reco_bounds = np.hstack([ebounds['E_MIN'], ebounds['E_MAX'][-1]])
+        e_reco = EnergyBounds.from_ebounds(hdu_list['EBOUNDS'])
+        e_true = EnergyBounds.from_rmf_matrix(hdu_list['MATRIX'])
 
-        return cls(pdf_matrix, energy_true_bounds, energy_reco_bounds, pdf_threshold)
+        return cls(pdf_matrix, e_true, e_reco, pdf_threshold)
 
-    def write(self, filename, format='RMF'):
-        """Write to file.
+    def write(self, filename, *args, **kwargs):
+        """Write RMF to FITS file.
 
-        Parameters
-        ----------
-        filename : str
-            File name
-        format : {'RMF'}
-            File format
-        pdf_threshold : float
-            Zero suppression threshold for energy distribution matrix
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        if format == 'RMF':
-            self._write_rmf(filename)
-        else:
-            ss = 'Invalid format: {0}.\n'.format(format)
-            ss += 'Available formats: RMF'
-            raise ValueError(ss)
+        self.to_fits().writeto(filename, *args, **kwargs)
 
-    def to_fits(self, header=None, energy_unit='TeV'):
+    def to_fits(self, header=None, energy_unit='TeV', **kwargs):
         """
         Convert RM to FITS HDU list format.
 
@@ -214,181 +229,103 @@ class EnergyDispersion(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         """
+        # Cannot use table_to_fits here due to variable length array
+        # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
+        table = self.to_table()
+        cols = table.columns
 
-        #Quick hack around np_to_rmf
-        #not tested at all
-        telescope='DUMMY'
-        instrument='DUMMY'
-        filter='NONE'
-        minprob = 0.001
-        rm = self._pdf_matrix
-        erange = self._energy_true_bounds
-        ebounds = self._energy_reco_bounds
+        c0 = fits.Column(name=cols[0].name, format='E', array=cols[0],
+                         unit='{}'.format(cols[0].unit))
+        c1 = fits.Column(name=cols[1].name, format='E', array=cols[1],
+                         unit='{}'.format(cols[1].unit))
+        c2 = fits.Column(name=cols[2].name, format='J', array=cols[2])
+        c3 = fits.Column(name=cols[3].name, format='PI()', array=cols[3])
+        c4 = fits.Column(name=cols[4].name, format='PI()', array=cols[4])
+        c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
 
-        # Intialize the arrays to be used to construct the RM extension
-        n_rows = len(rm)
-        energy_lo = np.zeros(n_rows)  # Low energy bounds
-        energy_hi = np.zeros(n_rows)  # High energy bounds
-        n_grp = []  # Number of channel subsets
-        f_chan = []  # First channels in each subset
-        n_chan = []  # Number of channels in each subset
-        matrix = []  # Matrix elements
+        hdu = fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5])
 
-        # Loop over the matrix and fill the arrays
-        for i, r in enumerate(rm):
-            energy_lo[i] = erange[i]
-            energy_hi[i] = erange[i + 1]
-            # Create mask for all matrix row values above the minimal probability
-            m = r > minprob
-            # Intialize variables & arrays for the row
-            n_grp_row, n_chan_row_c = 0, 0
-            f_chan_row, n_chan_row, matrix_row = [], [], []
-            new_subset = True
-            # Loop over row entries and fill arrays appropriately
-            for j, v in enumerate(r):
-                if m[j]:
-                    if new_subset:
-                        n_grp_row += 1
-                        f_chan_row.append(j)
-                        new_subset = False
-                    matrix_row.append(v)
-                    n_chan_row_c += 1
-                else:
-                    if not new_subset:
-                        n_chan_row.append(n_chan_row_c)
-                        n_chan_row_c = 0
-                        new_subset = True
-        if not new_subset:
-            n_chan_row.append(n_chan_row_c)
-        n_grp.append(n_grp_row)
-        f_chan.append(f_chan_row)
-        n_chan.append(n_chan_row)
-        matrix.append(matrix_row)
+        if header is None:
+            header = hdu.header
 
-            # Create RMF FITS table extension from data
-        tbhdu = fits.new_table(
-            [fits.Column(name='ENERG_LO',
-                         format='1E',
-                         array=energy_lo,
-                         unit='TeV'),
-             fits.Column(name='ENERG_HI',
-                         format='1E',
-                         array=energy_hi,
-                         unit='TeV'),
-             fits.Column(name='N_GRP',
-                         format='1I',
-                         array=n_grp),
-             fits.Column(name='F_CHAN',
-                         format='PI()',
-                         array=f_chan),
-             fits.Column(name='N_CHAN',
-                         format='PI()',
-                         array=n_chan),
-             fits.Column(name='MATRIX',
-                         format='PE(()',
-                         array=matrix)
-             ]
-            )
+            header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
+            header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+            header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+            header['FILTER'] = 'NONE', 'Filter information'
+            header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
+            header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
+            header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
+            header['HDUCLAS2'] = 'RSP_MATRIX', 'Keyword information for Caltools Software.'
+            header['HDUVERS '] = '1.3.0', 'Version of file format'
 
-    # Write FITS extension header
+            # Obsolet RMF headers, included for the benefit of old software
+            header['RMFVERSN'] = '1992a', 'Obsolete'
+            header['HDUVERS1'] = '1.1.0', 'Obsolete'
+            header['HDUVERS2'] = '1.2.0', 'Obsolete'
 
-        chan_min, chan_max, chan_n = 0, rm.shape[1] - 1, rm.shape[1]
+        for key, value in kwargs.items():
+            header[key] = value
 
-        header = tbhdu.header
-        header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
-        header['TLMIN4'] = chan_min, 'First legal channel number'
-        header['TLMAX4'] = chan_max, 'Highest legal channel number'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter, 'Filter information'
-        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
-        header['LO_THRES'] = minprob, 'Lower probability density threshold for matrix'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'RSP_MATRIX', 'Keyword information for Caltools Software.'
-        header['HDUVERS '] = '1.3.0', 'Version of file format'
-        header['HDUCLAS3'] = 'DETECTOR', 'Keyword information for Caltools Software.'
-        header['CCNM0001'] = 'MATRIX', 'Keyword information for Caltools Software.'
-        header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software'
-        header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
-        
-    # UTC date when this calibration should be first used (yyyy-mm-dd)
-        header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
+        header['DETCHANS'] = self._e_reco.nbins, 'Total number of detector PHA channels'
+        header['TLMIN4'] = 0, 'First legal channel number'
+        header['TLMAX4'] = hdu.data[3].__len__(), 'Highest legal channel number'
+        numgrp, numelt = 0, 0
+        for val, val2 in zip(hdu.data['N_GRP'], hdu.data['N_CHAN']):
+            numgrp += np.sum(val)
+            numelt += np.sum(val2)
+        header['NUMGRP'] = numgrp, 'Total number of channel subsets'
+        header['NUMELT'] = numelt, 'Total number of response elements'
+        header['LO_THRES'] = self.pdf_threshold, 'Lower probability density threshold for matrix'
+        hdu.header = header
+        hdu.add_checksum()
+        hdu.add_datasum()
 
-    # UTC time on the dat when this calibration should be first used (hh:mm:ss)
-        header['CVST0001'] = '00:00:00', 'Keyword information for Caltools Software.'
-        
-    # String giving a brief summary of this data set
-        header['CDES0001'] = 'dummy data', 'Keyword information for Caltools Software.'
+        hdu2 = self._e_reco.to_ebounds()
 
-    # Optional, but maybe useful (taken from the example in the RMF/ARF document)
-        header['CBD10001'] = 'CHAN({0}- {1})'.format(chan_min, chan_max), 'Keyword information for Caltools Software.'
-        header['CBD20001'] = 'ENER({0}-{1})TeV'.format(erange[0], erange[-1]), 'Keyword information for Caltools Software.'
-
-    # Obsolet RMF headers, included for the benefit of old software
-        header['RMFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.1.0', 'Obsolete'
-        header['HDUVERS2'] = '1.2.0', 'Obsolete'
-
-    # Create EBOUNDS FITS table extension from data
-        tbhdu2 = fits.new_table(
-            [fits.Column(name='CHANNEL',
-                         format='1I',
-                         array=np.arange(len(ebounds) - 1)),
-             fits.Column(name='E_MIN',
-                         format='1E',
-                         array=ebounds[:-1],
-                         unit='TeV'),
-             fits.Column(name='E_MAX',
-                         format='1E',
-                         array=ebounds[1:],
-                         unit='TeV')
-             ]
-            )
-
-        chan_min, chan_max, chan_n = 0, rm.shape[0] - 1, rm.shape[0]
-
-        header = tbhdu2.header
-        header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
-        header['TELESCOP'] = telescope, 'Mission/satellite name'
-        header['INSTRUME'] = instrument, 'Instrument/detector'
-        header['FILTER'] = filter, 'Filter information'
-        header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
-        header['DETCHANS'] = chan_n, 'Total number of detector PHA channels'
-        header['TLMIN1'] = chan_min, 'First legal channel number'
-        header['TLMAX1'] = chan_max, 'Highest legal channel number'
-        header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
-        header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
-        header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
-        header['HDUVERS'] = '1.2.0', 'Version of file format'
-        header['HDUCLAS3'] = 'DETECTOR', 'Keyword information for Caltools Software.'
-        header['CCNM0001'] = 'EBOUNDS', 'Keyword information for Caltools Software.'
-        header['CCLS0001'] = 'CPF', 'Keyword information for Caltools Software.'
-        header['CDTP0001'] = 'DATA', 'Keyword information for Caltools Software.'
-        
-        # UTC date when this calibration should be first used (yyyy-mm-dd)
-        header['CVSD0001'] = '2011-01-01 ', 'Keyword information for Caltools Software.'
-
-        # UTC time on the dat when this calibration should be first used (hh:mm:ss)
-        header['CVST0001'] = '00:00:00', 'Keyword information for Caltools Software.'
-
-        # Optional - name of the PHA file for which this file was produced
-    #header('PHAFILE', '', 'Keyword information for Caltools Software.')
-
-        # String giving a brief summary of this data set
-        header['CDES0001'] = 'dummy description', 'Keyword information for Caltools Software.'
-
-    # Obsolet EBOUNDS headers, included for the benefit of old software
-        header['RMFVERSN'] = '1992a', 'Obsolete'
-        header['HDUVERS1'] = '1.0.0', 'Obsolete'
-        header['HDUVERS2'] = '1.1.0', 'Obsolete'
-
-        # Create primary HDU and HDU list to be stored in the output file
-        # TODO: can remove PrimaryHDU here?
-        hdu_list = fits.HDUList([fits.PrimaryHDU(), tbhdu, tbhdu2])
+        prim_hdu = fits.PrimaryHDU()
+        return fits.HDUList([prim_hdu, hdu, hdu2])
 
         return hdu_list
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+
+        The ouput table is in the OGIP RMF format
+        """
+        table = Table()
+
+        rows = self._pdf_matrix.__len__()
+        n_grp = []
+        f_chan = np.ndarray(dtype=np.object, shape=rows)
+        n_chan = np.ndarray(dtype=np.object, shape=rows)
+        matrix = np.ndarray(dtype=np.object, shape=rows)
+
+        # Make RMF type matrix
+        for i, row in enumerate(self._pdf_matrix):
+            subsets = 1
+            pos = np.nonzero(row)[0]
+            borders = np.where(np.diff(pos) != 1)[0]
+            groups = np.asarray(np.split(pos, borders))
+            n_grp_temp = groups.shape[0] if groups.size > 0 else 1
+            n_chan_temp = np.asarray([val.size for val in groups])
+            try:
+                f_chan_temp = np.asarray([val[0] for val in groups])
+            except(IndexError):
+                f_chan_temp = np.zeros(1)
+
+            n_grp.append(n_grp_temp)
+            f_chan[i] = f_chan_temp
+            n_chan[i] = n_chan_temp
+            matrix[i] = row[pos]
+
+        table['ENERG_LO'] = self._e_true.lower_bounds
+        table['ENERG_HI'] = self._e_true.upper_bounds
+        table['N_GRP'] = np.asarray(n_grp)
+        table['F_CHAN'] = f_chan
+        table['N_CHAN'] = n_chan
+        table['MATRIX'] = matrix
+
+        return table
 
     def __call__(self, energy_true, energy_reco, method='step'):
         """Compute energy dispersion.
@@ -481,8 +418,8 @@ class EnergyDispersion(object):
 
         x stands for true energy and y for reconstructed energy
         """
-        x = self.energy_range('true')
-        y = self.energy_range('reco')
+        x = self.true_energy.range.value
+        y = self.reco_energy.range.value
         return x[0], x[1], y[0], y[1]
 
     def _plot_matrix(self):
@@ -510,49 +447,6 @@ class EnergyDispersion(object):
     def _plot_pdf(self, energy, axis):
         raise NotImplementedError
 
-def gauss_energy_dispersion_matrix(ebounds, sigma=0.2):
-    """Create Gaussian energy dispersion matrix.
-
-    TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
-
-    TODO: give formula: Gaussian in log(e_reco)
-
-    TODO: add option to add poisson noise
-
-    TODO: extend to have a vector of bias and resolution for various true energies.
-
-    Parameters
-    ----------
-    ebounds : array_like
-        1-dim energy binning array (TeV)
-    sigma : float
-        RMS width of Gaussian energy dispersion.
-
-    Returns
-    -------
-    pdf_matrix : array
-        PDF matrix
-    """
-    from scipy.special import erf
-
-    nbins = len(ebounds) - 1
-    logerange = np.log10(ebounds)
-
-    logemingrid = logerange[:-1] * np.ones([nbins, nbins])
-    logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
-    logecentergrid = np.transpose(((logerange[:-1] + logerange[1:]) / 2.) * np.ones([nbins, nbins]))
-
-    # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.) * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
-    gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(2. * p[2] ** 2.)) - erf((x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-
-    pdf_matrix = gauss_int([1., 10. ** logecentergrid, sigma * 10. ** logecentergrid], 10. ** logemingrid, 10. ** logemaxgrid)
-
-    return pdf_matrix
-
-    # hdu_list = np_to_rmf(rm, ea_erange, ea_erange, 1E-5,
-    #                     telescope=telescope, instrument=instrument)
-    # return hdu_list
-
 
 class EnergyDispersion2D(object):
 
@@ -577,7 +471,7 @@ class EnergyDispersion2D(object):
 
     Examples
     --------
-    
+
     Plot migration histogram for a given offset and true energy
 
     .. plot::
@@ -648,7 +542,7 @@ class EnergyDispersion2D(object):
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             ``ENERGY DISPERSION`` extension.
-            
+
         """
 
         data = hdu.data
@@ -677,7 +571,7 @@ class EnergyDispersion2D(object):
 
     def evaluate(self, offset=None, e_true=None, migra=None):
         """Probability for a given offset, true energy, and migration
-        
+
         Parameters
         ----------
         e_true : `~gammapy.spectrum.EnergyBounds`, None
@@ -729,7 +623,7 @@ class EnergyDispersion2D(object):
         val_array = self._linear(pts)
         return val_array.reshape(in_shape).squeeze()
 
-    def to_energy_dispersion(self, e_reco, e_true=None, offset=None):
+    def to_energy_dispersion(self, e_reco, offset, e_true=None):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
@@ -737,12 +631,12 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.EnergyBounds`, None
-            True energy axis
         e_reco : `~gammapy.spectrum.EnergyBounds`
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
+        e_true : `~gammapy.spectrum.EnergyBounds`, None
+            True energy axis
 
         Returns
         -------
@@ -751,17 +645,17 @@ class EnergyDispersion2D(object):
         """
 
         if e_true is None:
-            e_true = self.ebounds[1:]
+            e_true = self.ebounds
 
         energy = e_true.log_centers
 
         rm = []
 
         for ener in energy:
-            vec = self.get_response(e_true=ener, e_reco=e_reco, offset=offset)
+            vec = self.get_response(offset, ener, e_reco=e_reco)
             rm.append(vec)
 
-        return EnergyDispersion(rm, e_true.value, e_reco.value)
+        return EnergyDispersion(rm, e_true, e_reco)
 
     def get_response(self, offset, e_true, e_reco=None):
         """Detector response R(Delta E_reco, E_true)
@@ -832,7 +726,7 @@ class EnergyDispersion2D(object):
                   migra=None, **kwargs):
         """Plot migration as a function of true energy for a given offset
         """
-        
+
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax

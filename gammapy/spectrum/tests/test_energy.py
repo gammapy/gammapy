@@ -3,7 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import astropy.units as u
 from numpy.testing import assert_equal
 from ...spectrum import Energy, EnergyBounds
-
+from astropy.tests.helper import remote_data
+from ...datasets import get_path
+from astropy.io import fits
+import numpy as np
 
 def test_Energy():
     # Explicit constructor call
@@ -49,7 +52,14 @@ def test_Energy():
     desired = 3
     assert_equal(actual, desired)
 
+    #range + nbins
+    erange = energy.range.value
+    bins = energy.nbins
+    actual = np.logspace(np.log10(erange[0]),np.log10(erange[1]),bins)
+    desired = energy.value
+    assert_equal(actual, desired)
 
+@remote_data
 def test_EnergyBounds():
     val = u.Quantity([1, 2, 3, 4, 5], 'TeV')
     actual = EnergyBounds(val, 'GeV')
@@ -102,4 +112,48 @@ def test_EnergyBounds():
     upper = [3, 4, 5, 8]
     actual = EnergyBounds.from_lower_and_upper_bounds(lower, upper, 'TeV')
     desired = EnergyBounds([1, 3, 4, 5, 8], 'TeV')
+    assert_equal(actual, desired)
+
+    # Range
+    erange = energy.range
+    actual = erange[0]
+    desired = energy[0]
+    assert_equal(actual, desired)
+    actual = erange[1]
+    desired = energy[-1]
+    assert_equal(actual, desired)
+
+    # Bands
+    bands = energy.bands
+    actual = bands[0]
+    desired = energy[1] - energy[0]
+    assert_equal(actual, desired)
+
+    #read EBOUNDS extension
+    filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
+                        location='remote')
+
+    hdulist = fits.open(filename);
+    ebounds = EnergyBounds.from_ebounds(hdulist['EBOUNDS'])
+    desired = hdulist['EBOUNDS'].data['E_MAX'][-1]
+    actual = ebounds[-1].value
+    assert_equal(actual, desired)
+
+    #read MATRIX extension
+    ebounds = EnergyBounds.from_rmf_matrix(hdulist['MATRIX'])
+    desired = hdulist['MATRIX'].data['ENERG_LO'][3]
+    actual = ebounds[3].value
+    assert_equal(actual, desired)
+
+def test_EnergyBounds_write(tmpdir):
+    ebounds = EnergyBounds.equal_log_spacing(1 * u.TeV, 10 * u.TeV, 10)
+    writename = str(tmpdir.join('ebounds_test.fits'))
+    hdu = ebounds.to_ebounds()
+    prim_hdu = fits.PrimaryHDU()
+    hdulist = fits.HDUList([prim_hdu, hdu])
+    hdulist.writeto(writename)
+
+    ebounds2 = EnergyBounds.from_ebounds(hdulist[1])
+    actual = ebounds2
+    desired = ebounds
     assert_equal(actual, desired)
