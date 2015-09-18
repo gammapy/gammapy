@@ -467,7 +467,7 @@ class EffectiveAreaTable2D(object):
 
         The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
-        the final energy binning should be given here, since the
+        the final true energy binning should be given here, since the
         effective area table class does no interpolation.
 
         Parameters
