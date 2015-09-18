@@ -200,12 +200,12 @@ class EnergyDispersion(object):
 
         return cls(pdf_matrix, e_true, e_reco, pdf_threshold)
 
-    def write(self, filename, *args, **kwargs):
+    def write(self, filename, energy_unit='TeV', *args, **kwargs):
         """Write RMF to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits(energy_unit=energy_unit).writeto(filename, *args, **kwargs)
 
     def to_fits(self, header=None, energy_unit='TeV', **kwargs):
         """
@@ -229,6 +229,10 @@ class EnergyDispersion(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         """
+
+        self._e_reco = self._e_reco.to(energy_unit)
+        self._e_true = self._e_true.to(energy_unit)
+
         # Cannot use table_to_fits here due to variable length array
         # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
         table = self.to_table()
