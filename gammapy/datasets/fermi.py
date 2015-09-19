@@ -13,7 +13,8 @@ from ..data import SpectralCube
 from ..datasets import get_path
 
 
-__all__ = ['FermiGalacticCenter',
+__all__ = ['Fermi3FGLObject',
+           'FermiGalacticCenter',
            'FermiVelaRegion',
            'fetch_fermi_catalog',
            'fetch_fermi_extended_sources',
