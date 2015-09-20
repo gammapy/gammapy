@@ -122,7 +122,7 @@ class EffectiveAreaTable(object):
         table = Table()
 
         table['ENERG_LO'] = self.energy_lo
-        table['ENERGY_HI'] = self.energy_hi
+        table['ENERG_HI'] = self.energy_hi
         table['SPECRESP'] = self.effective_area
 
         return table
@@ -163,10 +163,7 @@ class EffectiveAreaTable(object):
         hdu = table_to_fits_table(self.to_table())
 
         if header is None:
-            from ..datasets import load_arf_fits_table
-            header = load_arf_fits_table()[1].header
 
-        if header == 'pyfact':
             header = hdu.header
 
             # Write FITS extension header
@@ -467,7 +464,7 @@ class EffectiveAreaTable2D(object):
 
         The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
-        the final energy binning should be given here, since the
+        the final true energy binning should be given here, since the
         effective area table class does no interpolation.
 
         Parameters

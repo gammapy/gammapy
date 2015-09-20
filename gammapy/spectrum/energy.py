@@ -296,9 +296,11 @@ class EnergyBounds(Energy):
         high = hdu.data['ENERG_HI']
         return cls.from_lower_and_upper_bounds(low, high, unit)
 
-    def to_table(self, unit='TeV'):
+    def to_table(self, unit=None):
         """Convert to `~astropy.table.Table`.
         """
+        if unit is None:
+            unit = self.unit
 
         table = Table()
 
@@ -308,7 +310,7 @@ class EnergyBounds(Energy):
 
         return table
 
-    def to_ebounds(self, unit='TeV', **kwargs):
+    def to_ebounds(self, unit=None, **kwargs):
         """Write EBOUNDS fits extension
 
         Returns
