@@ -36,7 +36,7 @@ and then run these commands:
 
     conda config --add channels astropy --add channels sherpa
     conda install gammapy naima \
-        scipy matplotlib ipython-notebook
+        scipy matplotlib ipython-notebook cython
 
 We strongly recommend that you install the optional dependencies of Gammapy to have the full
 functionality available:
