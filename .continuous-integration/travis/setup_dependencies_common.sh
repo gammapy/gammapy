@@ -69,6 +69,10 @@ fi
 # the script installed by 'coveralls', unless it's installed first.
 if [[ $SETUP_CMD == 'test -V --coverage' ]]
 then
+  # TODO can use latest version of coverage (4.0) once
+  # https://github.com/astropy/astropy/issues/4175 is addressed in
+  # astropy release version.
+  pip install coverage==3.7.1;
   pip install cpp-coveralls;
-  pip install coverage coveralls;
+  pip install coveralls;
 fi
