@@ -116,7 +116,7 @@ def find_obs(infile,
     # open (fits) file and read the observation table
     try:
         observation_table = ObservationTable.read(infile)
-    except FileNotFoundError:
+    except IOError:
         log.error('File not found: {}'.format(infile))
         exit(-1)
 
