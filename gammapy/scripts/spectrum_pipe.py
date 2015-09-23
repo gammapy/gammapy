@@ -59,7 +59,7 @@ class GammapySpectrumAnalysis(object):
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
- 
+
     def _process_config(self):
         storedir = self.config['general']['datastore']
         self.store = DataStore(dir=storedir)
@@ -76,6 +76,7 @@ class GammapySpectrumAnalysis(object):
         else:
             if sec[binning] is None:
                 raise ValueError("No binning specified")
+        log.debug('Binning: {}'.format(self.ebounds))
 
     def get_fits_data(self):
         """Find FITS files according to observations specified in the config file
@@ -104,7 +105,7 @@ class GammapySpectrumAnalysis(object):
 
         for list in self.event_list:
             on_list = list.select_sky_cone(self.target, radius)
-            on_vec = CountsSpectrum.from_eventlists(on_list, self.ebounds)
+            on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
             self.pha.append(on_vec)
 
     def make_off_vector(self):
@@ -119,7 +120,7 @@ class GammapySpectrumAnalysis(object):
 
         for list in self.event_list:
             off_list = list.select_sky_ring(self.target, irad, orad)
-            off_vec = CountsSpectrum.from_eventlists(off_list, self.ebounds)
+            off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
             self.bkg.append(off_vec)
     
     def make_arf(self):
@@ -137,13 +138,17 @@ class GammapySpectrumAnalysis(object):
         for list, edisp2D in zip(self.event_list, self.edisp2D_table):
             pointing = list.pointing_radec
             offset = self.target.separation(pointing)
-            self.rmf.append(edisp2D.to_energy_dispersion(offset))
+            self.rmf.append(edisp2D.to_energy_dispersion(self.ebounds, offset))
 
     def write_ogip(self):
         """Write OGIP files needed for the sherpa fit
         """
-        pass
-        
+        for obs in self.config['general']['observations']:
+            arffile = "arf_run"+obs+".fits"
+            rmffile = "rmf_run"+obs+".fits"
+            phafile = "pha_run"+obs+".pha"
+            bkgfile = "bkg_run"+obs+".pha"
+            
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
         """
