@@ -4,6 +4,13 @@ general:
   datastore: /home/kingj/Work/HESSData
   observations : [23526, 23559]
 
+binning:
+  equal_log_spacing: true
+  emin: 0.1
+  emax: 20
+  unit: TeV 
+  nbins: 30
+
 on_region:
   type: circle
   center_x: 83.633083

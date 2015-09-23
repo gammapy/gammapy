@@ -6,6 +6,7 @@ from ..obs import DataStore, ObservationTable
 from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
+from ..spectrum import EnergyBounds
 from astropy.coordinates import Angle, SkyCoord
 
 __all__ = ['GammapySpectrumAnalysis']
@@ -56,6 +57,8 @@ class GammapySpectrumAnalysis(object):
         self.get_fits_data()
         self.make_on_vector()
         self.make_off_vector()
+        self.make_arf()
+        self.make_rmf()
  
     def _process_config(self):
         storedir = self.config['general']['datastore']
@@ -65,6 +68,14 @@ class GammapySpectrumAnalysis(object):
         y = Angle(self.config['on_region']['center_y'], unit)
         frame = self.config['on_region']['system']
         self.target = SkyCoord(x,y,frame = frame)
+        
+        sec = self.config['binning']
+        if sec['equal_log_spacing']:
+            self.ebounds = EnergyBounds.equal_log_spacing(
+                sec['emin'],sec['emax'],sec['nbins'],sec['unit'])
+        else:
+            if sec[binning] is None:
+                raise ValueError("No binning specified")
 
     def get_fits_data(self):
         """Find FITS files according to observations specified in the config file
@@ -92,7 +103,8 @@ class GammapySpectrumAnalysis(object):
                  'Center: {0}\nRadius: {1}'.format(self.target,radius))
 
         for list in self.event_list:
-            on_vec = list.select_sky_cone(self.target, radius)
+            on_list = list.select_sky_cone(self.target, radius)
+            on_vec = CountsSpectrum.from_eventlists(on_list, self.ebounds)
             self.pha.append(on_vec)
 
     def make_off_vector(self):
@@ -106,20 +118,26 @@ class GammapySpectrumAnalysis(object):
                  ' Radius: {2}'.format('Ring',irad,orad))
 
         for list in self.event_list:
-            off_vec = list.select_sky_ring(self.target, irad, orad)
+            off_list = list.select_sky_ring(self.target, irad, orad)
+            off_vec = CountsSpectrum.from_eventlists(off_list, self.ebounds)
             self.bkg.append(off_vec)
     
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
-
-        pass
+        for list, aeff2D in zip(self.event_list, self.aeff2D_table):
+            pointing = list.pointing_radec
+            offset = self.target.separation(pointing)
+            self.arf.append(aeff2D.to_effective_area_table(offset))
 
     def make_rmf(self):
         """Make `~gammapy.irf.EnergyDispersion`
         """
 
-        pass
+        for list, edisp2D in zip(self.event_list, self.edisp2D_table):
+            pointing = list.pointing_radec
+            offset = self.target.separation(pointing)
+            self.rmf.append(edisp2D.to_energy_dispersion(offset))
 
     def write_ogip(self):
         """Write OGIP files needed for the sherpa fit
