@@ -54,7 +54,7 @@ class GammapySpectrumAnalysis(object):
         for obs in self.config['general']['observations']:
             self.event_list.append(self.store.filename(obs, 'events'))
             self.aeff2d_table.append(self.store.filename(obs, 'effective area'))
-            self.edisp2d_table.append(self.store.filename(obs, 'edisp'))
+            self.edisp2d_table.append(self.store.filename(obs, 'energy dispersion'))
             
         
     def make_on_vector(self):

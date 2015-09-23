@@ -1,14 +1,13 @@
 # Example Gammapy spectrum analysis pipeline config file
 
 general:
-  outdir: crab
-  clobber: false
   datastore: /home/kingj/Work/HESSData
   observations : [23526, 23559]
-
-
 
 source:
   lon: 83.6332124
   lat: 22.0144601
   system: icrs
+
+ogip:
+  clobber: false
