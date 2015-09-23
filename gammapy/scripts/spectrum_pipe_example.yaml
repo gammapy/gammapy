@@ -4,10 +4,18 @@ general:
   datastore: /home/kingj/Work/HESSData
   observations : [23526, 23559]
 
-source:
-  lon: 83.6332124
-  lat: 22.0144601
+on_region:
+  type: circle
+  center_x: 83.633083
+  center_y: 22.014500
+  unit: deg
   system: icrs
+  radius: 0.2
+
+off_region:
+  type: ring
+  inner_radius: 0.3
+  outer_radius: 0.4
 
 ogip:
   clobber: false

@@ -3,6 +3,10 @@ from __future__ import (print_function)
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import DataStore, ObservationTable
+from ..irf import EnergyDispersion, EnergyDispersion2D
+from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
+from ..data import CountsSpectrum, EventList
+from astropy.coordinates import Angle, SkyCoord
 
 __all__ = ['GammapySpectrumAnalysis']
 
@@ -28,10 +32,14 @@ class GammapySpectrumAnalysis(object):
 
     def __init__(self, config):
         self.config = config
-        self.store = DataStore(dir=config['general']['datastore'])
+        self._process_config()
         self.event_list = []
-        self.aeff2d_table = []
-        self.edisp2d_table = []
+        self.aeff2D_table = []
+        self.edisp2D_table = []
+        self.pha = []
+        self.bkg = []
+        self.arf = []
+        self.rmf = []
 
     @classmethod
     def from_yaml(cls, filename):
@@ -45,28 +53,61 @@ class GammapySpectrumAnalysis(object):
     def run(self):
         """Run analysis chain."""
         log.info('Running analysis ...')
-        self.get_fits_files()
-        
-    def get_fits_files(self):
+        self.get_fits_data()
+        self.make_on_vector()
+        self.make_off_vector()
+ 
+    def _process_config(self):
+        storedir = self.config['general']['datastore']
+        self.store = DataStore(dir=storedir)
+        unit = self.config['on_region']['unit']
+        x = Angle(self.config['on_region']['center_x'], unit)
+        y = Angle(self.config['on_region']['center_y'], unit)
+        frame = self.config['on_region']['system']
+        self.target = SkyCoord(x,y,frame = frame)
+
+    def get_fits_data(self):
         """Find FITS files according to observations specified in the config file
         """
-        log.info('Retrieving data from datastore ...')
+        log.info('Retrieving data from datastore.')
         for obs in self.config['general']['observations']:
-            self.event_list.append(self.store.filename(obs, 'events'))
-            self.aeff2d_table.append(self.store.filename(obs, 'effective area'))
-            self.edisp2d_table.append(self.store.filename(obs, 'energy dispersion'))
+            event_list_file = self.store.filename(obs, 'events')
+            event_list = EventList.read(event_list_file, hdu=1)
+            self.event_list.append(event_list)
             
-        
+            aeff2D_table_file = self.store.filename(obs, 'effective area')
+            aeff2D_table = EffectiveAreaTable2D.read(aeff2D_table_file)
+            self.aeff2D_table.append(aeff2D_table)
+            
+            edisp2D_table_file = self.store.filename(obs, 'energy dispersion')
+            edisp2D_table = EnergyDispersion2D.read(edisp2D_table_file)
+            self.edisp2D_table.append(edisp2D_table)
+            
     def make_on_vector(self):
         """Make ON `~gammapy.data.CountsSpectrum`
         """
+        val = self.config['on_region']['radius']
+        radius = Angle(val, 'deg')
+        log.info('Creating circular ON region\n'
+                 'Center: {0}\nRadius: {1}'.format(self.target,radius))
 
-        pass
+        for list in self.event_list:
+            on_vec = list.select_sky_cone(self.target, radius)
+            self.pha.append(on_vec)
 
     def make_off_vector(self):
-        """Make ON `~gammapy.data.CountsSpectrum`
+        """Make OFF `~gammapy.data.CountsSpectrum`
         """
-        pass
+        ival = self.config['off_region']['inner_radius']
+        oval = self.config['off_region']['outer_radius']
+        irad = Angle(ival, 'deg')
+        orad = Angle(oval, 'deg')
+        log.info('Creating OFF region\nType: {0}\nInner Radius: {1}\nOuter'
+                 ' Radius: {2}'.format('Ring',irad,orad))
+
+        for list in self.event_list:
+            off_vec = list.select_sky_ring(self.target, irad, orad)
+            self.bkg.append(off_vec)
     
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
