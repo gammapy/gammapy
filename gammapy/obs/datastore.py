@@ -20,7 +20,7 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
     ----------
     obs_id : int
         Observation ID.
-    filetype : {'events', 'effective area', 'psf', 'background'}
+    filetype : {'events', 'effective area', 'energy dispersion', 'psf', 'background'}
         Type of file.
 
     Examples
@@ -41,6 +41,9 @@ def _make_filename_hess_scheme(obs_id, filetype='events'):
         label = 'aeff_2d'
     elif filetype == 'background':
         label = 'bkg_offruns'
+    elif filetype == 'energy dispersion':
+        label = 'edisp_2d'
+
     else:
         raise ValueError('Unknown filetype: {}'.format(filetype))
 
@@ -201,7 +204,7 @@ class DataStore(object):
         ----------
         obs_id : int
             Observation ID.
-        filetype : {'events', 'effective area', 'psf', 'background'}
+        filetype : {'events', 'effective area', 'energy dispersion', 'psf', 'background'}
             Type of file.
         abspath : bool
             Absolute path (including data store dir)?
