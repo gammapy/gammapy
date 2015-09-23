@@ -2,6 +2,7 @@
 from __future__ import (print_function)
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..obs import DataStore, ObservationTable
 
 __all__ = ['GammapySpectrumAnalysis']
 
@@ -27,6 +28,10 @@ class GammapySpectrumAnalysis(object):
 
     def __init__(self, config):
         self.config = config
+        self.store = DataStore(dir=config['general']['datastore'])
+        self.event_list = []
+        self.aeff2d_table = []
+        self.edisp2d_table = []
 
     @classmethod
     def from_yaml(cls, filename):
@@ -40,5 +45,57 @@ class GammapySpectrumAnalysis(object):
     def run(self):
         """Run analysis chain."""
         log.info('Running analysis ...')
-        print(self.config['general']['outdir'])
+        self.get_fits_files()
+        
+    def get_fits_files(self):
+        """Find FITS files according to observations specified in the config file
+        """
+        log.info('Retrieving data from datastore ...')
+        for obs in self.config['general']['observations']:
+            self.event_list.append(self.store.filename(obs, 'events'))
+            self.aeff2d_table.append(self.store.filename(obs, 'effective area'))
+            self.edisp2d_table.append(self.store.filename(obs, 'edisp'))
+            
+        
+    def make_on_vector(self):
+        """Make ON `~gammapy.data.CountsSpectrum`
+        """
 
+        pass
+
+    def make_off_vector(self):
+        """Make ON `~gammapy.data.CountsSpectrum`
+        """
+        pass
+    
+    def make_arf(self):
+        """Make `~gammapy.irf.EffectiveAreaTable`
+        """
+
+        pass
+
+    def make_rmf(self):
+        """Make `~gammapy.irf.EnergyDispersion`
+        """
+
+        pass
+
+    def write_ogip(self):
+        """Write OGIP files needed for the sherpa fit
+        """
+        pass
+        
+    def _check_binning(self):
+        """Check that ARF and RMF binnings are compatible
+        """
+        pass
+
+    def set_model(self):
+        """Specify the fit model
+        """
+        pass
+
+    def run_hspec(self):
+        """Run HSPEC analysis
+        """
+        pass
