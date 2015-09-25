@@ -25,4 +25,9 @@ off_region:
   outer_radius: 0.4
 
 ogip:
-  clobber: false
+  clobber: true
+
+model:
+   type: PWL
+
+   
