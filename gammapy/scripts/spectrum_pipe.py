@@ -9,7 +9,7 @@ from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds
 from astropy.coordinates import Angle, SkyCoord
 
-__all__ = ['GammapySpectrumAnalysis']
+__all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
 
 log = logging.getLogger(__name__)
 
@@ -24,23 +24,22 @@ def main(args=None):
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
     analysis = GammapySpectrumAnalysis.from_yaml(args.config_file)
-    analysis.run()
-
+    #optional
+    analysis.make_ogip()
+    #analysis.run_fait()
 
 class GammapySpectrumAnalysis(object):
-    """Gammapy 1D region based spectral analysis.
+    """Entrance points for gammapy-spectrum-pipe
     """
-
     def __init__(self, config):
         self.config = config
-        self._process_config()
-        self.event_list = []
-        self.aeff2D_table = []
-        self.edisp2D_table = []
-        self.pha = []
-        self.bkg = []
-        self.arf = []
-        self.rmf = []
+        self.obs = config['general']['observations'][0]
+        _process_config(self)
+        self.info()
+        self.observations = []
+        for obs in config['general']['observations']:
+            val = GammapySpectrumObservation(obs, config)
+            self.observations.append(val)
 
     @classmethod
     def from_yaml(cls, filename):
@@ -51,103 +50,79 @@ class GammapySpectrumAnalysis(object):
             config = yaml.safe_load(fh)
         return cls(config)
 
-    def run(self):
+    def info(self):
+        log.info(self.store.info())
+        log.info('ON region\nCenter: {0}\nRadius: {1}'.format(
+            self.target,self.radius))
+        log.info('OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
+            'Ring',self.irad,self.orad))
+
+    def make_ogip(self):
+        for obs in self.observations:
+            log.info('Creating OGIP data for run{}'.format(obs.obs))
+            obs.make_ogip()
+
+    def run_fit(self):
+        pass
+
+
+class GammapySpectrumObservation(object):
+    """Gammapy 1D region based spectral analysis.
+    """
+
+    def __init__(self, obs, config):
+        self.config = config
+        self.obs = obs
+        _process_config(self)
+
+    def make_ogip(self):
         """Run analysis chain."""
-        log.info('Running analysis ...')
-        self.get_fits_data()
+        self._prepare_ogip()
+
+    def _prepare_ogip(self):
+        """Dummy function to process IRFs and event list
+        """
         self.make_on_vector()
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
-
-    def _process_config(self):
-        storedir = self.config['general']['datastore']
-        self.store = DataStore(dir=storedir)
-        unit = self.config['on_region']['unit']
-        x = Angle(self.config['on_region']['center_x'], unit)
-        y = Angle(self.config['on_region']['center_y'], unit)
-        frame = self.config['on_region']['system']
-        self.target = SkyCoord(x,y,frame = frame)
         
-        sec = self.config['binning']
-        if sec['equal_log_spacing']:
-            self.ebounds = EnergyBounds.equal_log_spacing(
-                sec['emin'],sec['emax'],sec['nbins'],sec['unit'])
-        else:
-            if sec[binning] is None:
-                raise ValueError("No binning specified")
-        log.debug('Binning: {}'.format(self.ebounds))
-
-    def get_fits_data(self):
-        """Find FITS files according to observations specified in the config file
-        """
-        log.info('Retrieving data from datastore.')
-        for obs in self.config['general']['observations']:
-            event_list_file = self.store.filename(obs, 'events')
-            event_list = EventList.read(event_list_file, hdu=1)
-            self.event_list.append(event_list)
-            
-            aeff2D_table_file = self.store.filename(obs, 'effective area')
-            aeff2D_table = EffectiveAreaTable2D.read(aeff2D_table_file)
-            self.aeff2D_table.append(aeff2D_table)
-            
-            edisp2D_table_file = self.store.filename(obs, 'energy dispersion')
-            edisp2D_table = EnergyDispersion2D.read(edisp2D_table_file)
-            self.edisp2D_table.append(edisp2D_table)
-            
     def make_on_vector(self):
         """Make ON `~gammapy.data.CountsSpectrum`
         """
-        val = self.config['on_region']['radius']
-        radius = Angle(val, 'deg')
-        log.info('Creating circular ON region\n'
-                 'Center: {0}\nRadius: {1}'.format(self.target,radius))
-
-        for list in self.event_list:
-            on_list = list.select_sky_cone(self.target, radius)
-            on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
-            self.pha.append(on_vec)
+        on_list = self.event_list.select_sky_cone(self.target, self.radius)
+        on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
+        self.pha = on_vec
 
     def make_off_vector(self):
         """Make OFF `~gammapy.data.CountsSpectrum`
         """
-        ival = self.config['off_region']['inner_radius']
-        oval = self.config['off_region']['outer_radius']
-        irad = Angle(ival, 'deg')
-        orad = Angle(oval, 'deg')
-        log.info('Creating OFF region\nType: {0}\nInner Radius: {1}\nOuter'
-                 ' Radius: {2}'.format('Ring',irad,orad))
-
-        for list in self.event_list:
-            off_list = list.select_sky_ring(self.target, irad, orad)
-            off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
-            self.bkg.append(off_vec)
+        off_list = self.event_list.select_sky_ring(self.target, self.irad, self.orad)
+        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        self.bkg = off_vec
     
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
-        for list, aeff2D in zip(self.event_list, self.aeff2D_table):
-            pointing = list.pointing_radec
-            offset = self.target.separation(pointing)
-            self.arf.append(aeff2D.to_effective_area_table(offset))
+        aeff2D_file = self.store.filename(self.obs, 'effective area')
+        aeff2D = EffectiveAreaTable2D.read(aeff2D_file)
+        self.arf = aeff2D.to_effective_area_table(self.offset)
 
     def make_rmf(self):
         """Make `~gammapy.irf.EnergyDispersion`
         """
-
-        for list, edisp2D in zip(self.event_list, self.edisp2D_table):
-            pointing = list.pointing_radec
-            offset = self.target.separation(pointing)
-            self.rmf.append(edisp2D.to_energy_dispersion(self.ebounds, offset))
+        edisp2D_file = self.store.filename(self.obs, 'energy dispersion')
+        edisp2D = EnergyDispersion2D.read(edisp2D_file)
+        self.rmf = edisp2D.to_energy_dispersion(self.ebounds, self.offset)
 
     def write_ogip(self):
         """Write OGIP files needed for the sherpa fit
         """
-        for obs in self.config['general']['observations']:
-            arffile = "arf_run"+obs+".fits"
-            rmffile = "rmf_run"+obs+".fits"
-            phafile = "pha_run"+obs+".pha"
-            bkgfile = "bkg_run"+obs+".pha"
+        
+        arffile = "arf_run"+self.obs+".fits"
+        rmffile = "rmf_run"+self.obs+".fits"
+        phafile = "pha_run"+self.obs+".pha"
+        bkgfile = "bkg_run"+self.obs+".pha"
             
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
@@ -163,3 +138,39 @@ class GammapySpectrumAnalysis(object):
         """Run HSPEC analysis
         """
         pass
+
+
+def _process_config(object):
+    """Helper function to process the config file
+    """
+
+    storedir = object.config['general']['datastore']
+    object.store = DataStore(dir=storedir)
+    unit = object.config['on_region']['unit']
+    x = Angle(object.config['on_region']['center_x'], unit)
+    y = Angle(object.config['on_region']['center_y'], unit)
+    frame = object.config['on_region']['system']
+    object.target = SkyCoord(x,y,frame = frame)
+        
+    sec = object.config['binning']
+    if sec['equal_log_spacing']:
+        object.ebounds = EnergyBounds.equal_log_spacing(
+            sec['emin'],sec['emax'],sec['nbins'],sec['unit'])
+    else:
+        if sec[binning] is None:
+            raise ValueError("No binning specified")
+    log.debug('Binning: {}'.format(object.ebounds))
+            
+    event_list_file = object.store.filename(object.obs, 'events')
+    event_list = EventList.read(event_list_file, hdu=1)
+    object.event_list = event_list
+    object.pointing = object.event_list.pointing_radec
+    object.offset = object.target.separation(object.pointing)
+
+    val = object.config['on_region']['radius']
+    object.radius = Angle(val, 'deg')
+
+    ival = object.config['off_region']['inner_radius']
+    oval = object.config['off_region']['outer_radius']
+    object.irad = Angle(ival, 'deg')
+    object.orad = Angle(oval, 'deg')

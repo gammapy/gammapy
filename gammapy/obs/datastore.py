@@ -133,7 +133,7 @@ class DataStore(object):
         self.dir = dir
         self.index_table_filename = 'runinfo.fits'
         filename = os.path.join(dir, self.index_table_filename)
-        print('Reading {}'.format(filename))
+        #print('Reading {}'.format(filename))
         self.index_table = DataStoreIndexTable.read(scheme, filename)
         self.scheme = scheme
 
@@ -143,7 +143,8 @@ class DataStore(object):
         ss += 'Directory: {}\n'.format(self.dir)
         ss += 'Index table: {}\n'.format(self.index_table_filename)
         ss += 'Scheme: {}\n'.format(self.scheme)
-        ss += self.index_table.info()
+        #Does not exist
+        #ss += self.index_table.info()
         return ss
 
     def check_integrity(self, logger):
