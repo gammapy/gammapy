@@ -8,6 +8,11 @@ from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds
 from astropy.coordinates import Angle, SkyCoord
+import sherpa.astro.ui as sau
+from gammapy.hspec import wstat
+from sherpa.models import PowLaw1D
+import glob 
+
 
 __all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
 
@@ -24,9 +29,8 @@ def main(args=None):
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
     analysis = GammapySpectrumAnalysis.from_yaml(args.config_file)
-    #optional
     analysis.make_ogip()
-    #analysis.run_fait()
+    analysis.run_fit()
 
 class GammapySpectrumAnalysis(object):
     """Entrance points for gammapy-spectrum-pipe
@@ -63,8 +67,30 @@ class GammapySpectrumAnalysis(object):
             obs.make_ogip()
 
     def run_fit(self):
-        pass
+        log.info("Starting HSPEC")
 
+        if (self.model == 'PWL'):
+            p1 = PowLaw1D('p1')
+            p1.gamma = 2.2
+            p1.ref = 1e9
+            p1.ampl = 6e-19
+        else:
+            log.error('Desired Model is not defined')
+
+        sau.freeze(p1.ref)
+        sau.set_conf_opt("max_rstat", 100)
+        threshold = 1e8
+        emax = 1e10
+
+        list_data = []
+        for obs in self.observations:
+            runfile = obs.phafile
+            datid=runfile[7:12]
+            sau.load_data(datid, runfile)
+            sau.notice_id(datid, threshold, emax)
+            sau.set_source(datid, p1)
+            list_data.append(datid)
+        wstat.wfit(list_data)
 
 class GammapySpectrumObservation(object):
     """Gammapy 1D region based spectral analysis.
@@ -76,8 +102,23 @@ class GammapySpectrumObservation(object):
         _process_config(self)
 
     def make_ogip(self):
-        """Run analysis chain."""
+        """Write OGIP files needed for the sherpa fit
+        """
         self._prepare_ogip()
+        clobber = self.config['ogip']['clobber']
+        try:
+            self.pha.write(self.phafile, bkg=self.bkgfile, arf=self.arffile,
+                           rmf=self.rmffile, clobber=clobber)
+            self.bkg.write(self.bkgfile, clobber=clobber)
+            self.arf.write(self.arffile, energy_unit='keV', effarea_unit='cm2',
+                           clobber=True)
+            self.rmf.write(self.rmffile, energy_unit='keV', clobber=clobber)
+        except(IOError):
+            if not clobber:
+                log.error('Trying to overwrite OGIP files,'
+                          ' but clobber is set to false')
+            else:
+                log.error('Error writing OGIP files')
 
     def _prepare_ogip(self):
         """Dummy function to process IRFs and event list
@@ -115,30 +156,10 @@ class GammapySpectrumObservation(object):
         edisp2D = EnergyDispersion2D.read(edisp2D_file)
         self.rmf = edisp2D.to_energy_dispersion(self.ebounds, self.offset)
 
-    def write_ogip(self):
-        """Write OGIP files needed for the sherpa fit
-        """
-        
-        arffile = "arf_run"+self.obs+".fits"
-        rmffile = "rmf_run"+self.obs+".fits"
-        phafile = "pha_run"+self.obs+".pha"
-        bkgfile = "bkg_run"+self.obs+".pha"
-            
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
         """
         pass
-
-    def set_model(self):
-        """Specify the fit model
-        """
-        pass
-
-    def run_hspec(self):
-        """Run HSPEC analysis
-        """
-        pass
-
 
 def _process_config(object):
     """Helper function to process the config file
@@ -174,3 +195,10 @@ def _process_config(object):
     oval = object.config['off_region']['outer_radius']
     object.irad = Angle(ival, 'deg')
     object.orad = Angle(oval, 'deg')
+
+    object.arffile = "arf_run"+str(object.obs)+".fits"
+    object.rmffile = "rmf_run"+str(object.obs)+".fits"
+    object.phafile = "pha_run"+str(object.obs)+".pha"
+    object.bkgfile = "bkg_run"+str(object.obs)+".pha"
+        
+    object.model = object.config['model']['type']
