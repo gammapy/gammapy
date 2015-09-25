@@ -6,13 +6,12 @@ from ..obs import DataStore, ObservationTable
 from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
-from ..spectrum import EnergyBounds
+from ..spectrum import EnergyBounds, Energy
 from astropy.coordinates import Angle, SkyCoord
 import sherpa.astro.ui as sau
 from gammapy.hspec import wstat
 from sherpa.models import PowLaw1D
-import glob 
-
+from gammapy.background import ring_area_factor
 
 __all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
 
@@ -79,15 +78,13 @@ class GammapySpectrumAnalysis(object):
 
         sau.freeze(p1.ref)
         sau.set_conf_opt("max_rstat", 100)
-        threshold = 1e8
-        emax = 1e10
 
         list_data = []
         for obs in self.observations:
             runfile = obs.phafile
             datid=runfile[7:12]
             sau.load_data(datid, runfile)
-            sau.notice_id(datid, threshold, emax)
+            sau.notice_id(datid, self.thres, self.emax)
             sau.set_source(datid, p1)
             list_data.append(datid)
         wstat.wfit(list_data)
@@ -165,14 +162,30 @@ def _process_config(object):
     """Helper function to process the config file
     """
 
+    #Data
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
+    object.arffile = "arf_run"+str(object.obs)+".fits"
+    object.rmffile = "rmf_run"+str(object.obs)+".fits"
+    object.phafile = "pha_run"+str(object.obs)+".pha"
+    object.bkgfile = "bkg_run"+str(object.obs)+".pha"
+
+
+    #Target
     unit = object.config['on_region']['unit']
     x = Angle(object.config['on_region']['center_x'], unit)
     y = Angle(object.config['on_region']['center_y'], unit)
     frame = object.config['on_region']['system']
     object.target = SkyCoord(x,y,frame = frame)
+
+    #Pointing
+    event_list_file = object.store.filename(object.obs, 'events')
+    event_list = EventList.read(event_list_file, hdu=1)
+    object.event_list = event_list
+    object.pointing = object.event_list.pointing_radec
+    object.offset = object.target.separation(object.pointing)
         
+    #Binning
     sec = object.config['binning']
     if sec['equal_log_spacing']:
         object.ebounds = EnergyBounds.equal_log_spacing(
@@ -181,24 +194,23 @@ def _process_config(object):
         if sec[binning] is None:
             raise ValueError("No binning specified")
     log.debug('Binning: {}'.format(object.ebounds))
-            
-    event_list_file = object.store.filename(object.obs, 'events')
-    event_list = EventList.read(event_list_file, hdu=1)
-    object.event_list = event_list
-    object.pointing = object.event_list.pointing_radec
-    object.offset = object.target.separation(object.pointing)
 
+    #ON/OFF Region
     val = object.config['on_region']['radius']
     object.radius = Angle(val, 'deg')
-
     ival = object.config['off_region']['inner_radius']
     oval = object.config['off_region']['outer_radius']
     object.irad = Angle(ival, 'deg')
     object.orad = Angle(oval, 'deg')
+    object.alpha = ring_area_factor(object.radius, object.irad, object.orad)
 
-    object.arffile = "arf_run"+str(object.obs)+".fits"
-    object.rmffile = "rmf_run"+str(object.obs)+".fits"
-    object.phafile = "pha_run"+str(object.obs)+".pha"
-    object.bkgfile = "bkg_run"+str(object.obs)+".pha"
-        
+    #Spectral fit
     object.model = object.config['model']['type']
+    val = object.config['model']['threshold_low']
+    val2 = object.config['model']['threshold_high']
+    unit = object.config['model']['unit']
+    threshold = Energy(val, unit)
+    threshold2 = Energy(val2, unit)
+    object.thres = threshold.to('keV').value
+    object.emax = threshold2.to('keV').value
+

@@ -7,7 +7,7 @@ general:
 binning:
   equal_log_spacing: true
   emin: 0.1
-  emax: 20
+  emax: 10
   unit: TeV 
   nbins: 30
 
@@ -17,11 +17,11 @@ on_region:
   center_y: 22.014500
   unit: deg
   system: icrs
-  radius: 0.2
+  radius: 0.1
 
 off_region:
   type: ring
-  inner_radius: 0.3
+  inner_radius: 0.2
   outer_radius: 0.4
 
 ogip:
@@ -29,5 +29,7 @@ ogip:
 
 model:
    type: PWL
-
+   threshold_low: 0.1
+   threshold_high: 10
+   unit: TeV
    
