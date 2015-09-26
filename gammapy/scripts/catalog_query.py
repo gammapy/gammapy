@@ -28,10 +28,7 @@ def catalog_query(catalog, source, querytype):
         catalog_object = fermi.Fermi3FGLObject(source)
 
     if querytype == 'info':
-        info_array = catalog_object.info()
-
-        for val in info_array:
-            print(val)
+        print(catalog_object.info())
 
     elif querytype == 'lightcurve':
         import matplotlib.pyplot as plt
