@@ -74,6 +74,11 @@ def fetch_fermi_catalog(catalog, extension=None):
         * ``ExtendedSources`` Extended Source Catalog Table.
     * 1FGL Catalog : LAT 1-year Point Source Catalog
         * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
+    * 2FHL Catalog : Second Fermi-LAT Catalog of High-Energy Sources
+        * ``Count Map`` AIT projection 2D count image
+        * ``2FHL Source Catalog`` Main catalog
+        * ``Extended Sources`` Extended Source Catalog Table
+        * ``ROIs`` Regions of interest
     * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
         * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
         * ``ExtendedSources`` Extended Source Catalog Table.
@@ -84,7 +89,7 @@ def fetch_fermi_catalog(catalog, extension=None):
 
     Parameters
     ----------
-    catalog : {'3FGL', '2FGL', '1FGL', '1FHL', '2PC'}
+    catalog : {'3FGL', '2FGL', '1FGL', '1FHL', '2FHL', '2PC'}
        Specifies which catalog to display.
     extension : str
         Specifies which catalog HDU to provide as a table (optional).
@@ -118,9 +123,11 @@ def fetch_fermi_catalog(catalog, extension=None):
     elif catalog == '2FGL':
         url = BASE_URL + '2yr_catalog/gll_psc_v08.fit'
     elif catalog == '1FGL':
-        url = BASE_URL + '/1yr_catalog/gll_psc_v03.fit'
+        url = BASE_URL + '1yr_catalog/gll_psc_v03.fit'
     elif catalog == '1FHL':
-        url = BASE_URL + '/1FHL/gll_psch_v07.fit'
+        url = BASE_URL + '1FHL/gll_psch_v07.fit'
+    elif catalog == '2FHL':
+        url = 'https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v08.fit.gz'
     elif catalog == '2PC':
         url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
     else:
@@ -134,6 +141,11 @@ def fetch_fermi_catalog(catalog, extension=None):
     if extension is None:
         return hdu_list
 
+    # TODO: 2FHL doesn't have a 'CLASS1' column, just 'CLASS'
+    # It's probably better if we make a `SourceCatalog` class
+    # and then sub-class `FermiSourceCatalog` and `Fermi2FHLSourceCatalog`
+    # and handle catalog-specific stuff in these classes,
+    # trying to provide an as-uniform as possible API to the common catalogs.
     table = Table(hdu_list[extension].data)
     table['IS_GALACTIC'] = [_is_galactic(_) for _ in table['CLASS1']]
 
