@@ -8,9 +8,11 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
+from astropy.units import Quantity
 from ..irf import EnergyDependentTablePSF
 from ..data import SpectralCube
 from ..datasets import get_path
+from ..spectrum import EnergyBounds
 
 
 __all__ = ['Fermi3FGLObject',
@@ -223,9 +225,6 @@ class Fermi3FGLObject(object):
     Class representing an object in the Fermi 3FGL catalog.
     """
 
-    from astropy.units import Quantity
-    from ..spectrum import EnergyBounds
-
     # Fermi catalog is lazily loaded on first access
     # and cached at class level (not instance level)
     fermi_cat = None
@@ -240,16 +239,16 @@ class Fermi3FGLObject(object):
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
 
     def __init__(self, source_name):
-        fermi_cat = self.get_fermi_cat()
+        _fermi_cat = self._get_fermi_cat()
         self.name_3FGL = source_name
         self.catalog_index = np.where(self.fermi_cat[1].data['Source_Name'] == source_name)[0][0]
-        self.cat_row = fermi_cat[1].data[self.catalog_index]
+        _fermi_cat[1].data[self.catalog_index]
         self.ra = self.cat_row['RAJ2000']
         self.dec = self.cat_row['DEJ2000']
         self.glon = self.cat_row['GLON']
         self.glat = self.cat_row['GLAT']
-        self.int_flux = self.cat_row['Flux_Density']
-        self.unc_int_flux = self.cat_row['Unc_Flux_Density']
+        self.flux_density = self.cat_row['Flux_Density']
+        self.unc_flux_density  = self.cat_row['Unc_Flux_Density']
         self.spec_type = self.cat_row['SpectrumType']
         self.pivot_en = self.cat_row['PIVOT_ENERGY']
         self.spec_index = self.cat_row['Spectral_Index']
@@ -263,7 +262,7 @@ class Fermi3FGLObject(object):
         self.signif = self.cat_row['Signif_Avg']
 
     @classmethod
-    def get_fermi_cat(cls):
+    def _get_fermi_cat(cls):
         """Load the 3FGL catalog if not already loaded."""
         if not cls.fermi_cat:
             cls.fermi_cat = fetch_fermi_catalog('3FGL')
@@ -328,20 +327,20 @@ class Fermi3FGLObject(object):
 
         if self.spec_type == "PowerLaw":
 
-            y_model = PowerLaw1D(amplitude=self.int_flux,
+            y_model = PowerLaw1D(amplitude=self.flux_density,
                                  x_0=self.pivot_en,
                                  alpha=self.spec_index)
 
         elif self.spec_type == "LogParabola":
 
-            y_model = LogParabola1D(amplitude=self.int_flux,
+            y_model = LogParabola1D(amplitude=self.flux_density,
                                     x_0=self.pivot_en,
                                     alpha=self.spec_index,
                                     beta = self.beta)
 
         elif self.spec_type == "PLExpCutoff":
 
-            y_model = ExponentialCutoffPowerLaw1D(amplitude=self.int_flux,
+            y_model = ExponentialCutoffPowerLaw1D(amplitude=self.flux_density,
                                                   x_0=self.pivot_en,
                                                   alpha=self.spec_index,
                                                   x_cutoff=self.cutoff)
@@ -355,20 +354,20 @@ class Fermi3FGLObject(object):
         return ax
 
     def info(self):
-        """Print the object name, position, flux, and detection signifiance."""
-        info_array = []
-        info_array.append(" ")
-        info_array.append(self.name_3FGL)
-        info_array.append(" ")
-        info_array.append("RA (J2000) " + str(self.ra))
-        info_array.append("Dec (J2000) " + str(self.dec))
-        info_array.append("l " + str(self.glon))
-        info_array.append("b " + str(self.glat))
-        info_array.append("Flux " + str(self.int_flux) + " +/- " + str(self.unc_int_flux)
-                          + " ph /cm2 /MeV /s")
-        info_array.append("Detection significance: " + str(self.signif) + " sigma")
 
-        return info_array
+        """Print the object name, position, flux, and detection signifiance."""
+        info = "\n"
+        info += self.name_3FGL + "\n"
+        info += "\n"
+        info += "RA (J2000) " + str(self.ra) + "\n"
+        info += "Dec (J2000) " + str(self.dec) + "\n"
+        info += "l " + str(self.glon) + "\n"
+        info += "b " + str(self.glat) + "\n"
+        info += "Integrated Flux 100 MeV - 100 GeV: " + str(self.energy_flux) + \
+                " +/- " + str(self.unc_energy_flux) + " erg /cm2 /s\n"
+        info += "Detection significance: " + str(self.signif) + " sigma\n"
+
+        return info
 
 
 class FermiGalacticCenter(object):

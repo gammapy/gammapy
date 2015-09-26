@@ -5,7 +5,8 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.tests.helper import remote_data
-from ...datasets import (FermiGalacticCenter,
+from ...datasets import (Fermi3FGLObject,
+                         FermiGalacticCenter,
                          FermiVelaRegion,
                          fetch_fermi_catalog,
                          fetch_fermi_extended_sources,
@@ -18,6 +19,22 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
+
+
+class TestFermi3FGLObject():
+
+    #Can be updated once pytest-mpl is implemented.
+    def test_plot_lightcurve(self):
+        lightcurve = Fermi3FGLObject('3FGL J0000.1+6545').plot_lightcurve()
+
+    #Can be updated once pytest-mpl is implemented.
+    def test_plot_spectrum(self):
+        spectrum = Fermi3FGLObject('3FGL J0000.1+6545').plot_spectrum()
+
+    def test_info(self):
+        info = Fermi3FGLObject('3FGL J0000.1+6545').info()
+
+        assert '3FGL J0000.1+6545' in info
 
 
 class TestFermiGalacticCenter():
@@ -150,3 +167,4 @@ def test_load_lat_psf_performance():
     table_p7_95 = load_lat_psf_performance('P7SOURCEV6_95')
     assert table_p7_95['energy'][0] == 31.6227766017
     assert table_p7_95['containment_angle'][0] == 38.3847234362
+    
