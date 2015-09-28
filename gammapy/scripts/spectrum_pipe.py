@@ -12,6 +12,7 @@ import sherpa.astro.ui as sau
 from gammapy.hspec import wstat
 from sherpa.models import PowLaw1D
 from gammapy.background import ring_area_factor
+import numpy as np
 
 __all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
 
@@ -36,11 +37,14 @@ class GammapySpectrumAnalysis(object):
     """
     def __init__(self, config):
         self.config = config
-        self.obs = config['general']['observations'][0]
+        vals = config['general']['observations']
+        if isinstance (vals, basestring):
+            vals = np.loadtxt(vals, dtype=np.int)
+        self.obs = vals[0]
         _process_config(self)
         self.info()
         self.observations = []
-        for obs in config['general']['observations']:
+        for obs in vals:
             val = GammapySpectrumObservation(obs, config)
             self.observations.append(val)
 
