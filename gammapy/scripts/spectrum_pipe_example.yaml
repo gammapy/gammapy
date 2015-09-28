@@ -2,7 +2,8 @@
 
 general:
   datastore: /home/kingj/Work/HESSData
-  observations : [23526, 23559]
+#  observations : [23526, 23559]
+  observations : crab_4tel.lis
 
 binning:
   equal_log_spacing: true
@@ -21,8 +22,8 @@ on_region:
 
 off_region:
   type: ring
-  inner_radius: 0.2
-  outer_radius: 0.4
+  inner_radius: 0.5
+  outer_radius: 0.6
 
 ogip:
   clobber: true
