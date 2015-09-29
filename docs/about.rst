@@ -33,7 +33,7 @@ A 1.0 release and a paper are planned for fall 2015.
 
 For now, please see the Gammapy
 `poster <https://indico.cern.ch/event/344485/session/142/contribution/695/attachments/1136524/1626432/gammapy-icrc2015-poster.pdf>`_
-and `proceeding <https://indico.cern.ch/event/344485/session/142/contribution/695/attachments/1136524/1626431/gammapy-icrc2015.pdf>`__
+and `proceeding <http://arxiv.org/abs/1509.07408>`__
 from `ICRC 2015 <https://indico.cern.ch/event/344485/session/142/contribution/695>`__.
 
 .. _about-support:
@@ -53,9 +53,8 @@ For a publication, we recommend the following line be added to the conclusion or
     This research has made use of Gammapy, a community-developed, open-source
     Python package for gamma-ray astronomy (citation).
 
-For now, the citation is to the Gammapy ICRC 2015 conference proceeding
-(`PDF <https://indico.cern.ch/event/344485/session/142/contribution/695/attachments/1136524/1626431/gammapy-icrc2015.pdf>`_,
-:download:`bibtex <gammapy-icrc2015.bib>`).
+For now, the citation is to the `Gammapy ICRC 2015 <http://labs.adsabs.harvard.edu/adsabsadsabs/abs/2015arXiv150907408D/>`__
+conference proceeding.
 
 If the journal allows please also include a link to https://github.com/gammapy/gammapy .
 
