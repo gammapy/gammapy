@@ -45,6 +45,10 @@ class Energy(Quantity):
         # Techniques to subclass Quantity taken from astropy.coordinates.Angle
         # see: http://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 
+        if isinstance(energy, basestring):
+            val, unit = energy.split()
+            energy = float(val)
+
         self = super(Energy, cls).__new__(cls, energy, unit,
                                           dtype=dtype, copy=copy)
 
@@ -156,7 +160,7 @@ class EnergyBounds(Energy):
 
     """EnergyBounds array.
 
-    This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience 
+    This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience
     methods to handle common tasks for energy bin edges arrays, like FITS I/O or
     generating arrays of bin centers.
 
@@ -212,7 +216,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None):
-        """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`). 
+        """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`).
 
         If no unit is given, it will be taken from upper
 

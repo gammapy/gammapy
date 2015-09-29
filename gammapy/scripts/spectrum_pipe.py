@@ -1,17 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
-import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import DataStore, ObservationTable
 from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds, Energy
+from ..background import ring_area_factor
 from astropy.coordinates import Angle, SkyCoord
-import sherpa.astro.ui as sau
-from gammapy.hspec import wstat
-from sherpa.models import PowLaw1D
-from gammapy.background import ring_area_factor
+import logging
 import numpy as np
 
 __all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
@@ -26,19 +23,22 @@ def main(args=None):
     parser.add_argument("-l", "--loglevel", default='info',
                         choices=['debug', 'info', 'warning', 'error', 'critical'],
                         help="Set the logging level")
+
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
     analysis = GammapySpectrumAnalysis.from_yaml(args.config_file)
     analysis.make_ogip()
     analysis.run_fit()
 
+
 class GammapySpectrumAnalysis(object):
-    """Entrance points for gammapy-spectrum-pipe
+    """Command line tool to perform a 1D spectrum fit
     """
+
     def __init__(self, config):
         self.config = config
         vals = config['general']['observations']
-        if isinstance (vals, basestring):
+        if isinstance(vals, basestring):
             vals = np.loadtxt(vals, dtype=np.int)
         self.obs = vals[0]
         _process_config(self)
@@ -60,9 +60,9 @@ class GammapySpectrumAnalysis(object):
     def info(self):
         log.info(self.store.info())
         log.info('ON region\nCenter: {0}\nRadius: {1}'.format(
-            self.target,self.radius))
+            self.target, self.radius))
         log.info('OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
-            'Ring',self.irad,self.orad))
+            'Ring', self.irad, self.orad))
 
     def make_ogip(self):
         for obs in self.observations:
@@ -71,14 +71,17 @@ class GammapySpectrumAnalysis(object):
 
     def run_fit(self):
         log.info("Starting HSPEC")
+        import sherpa.astro.ui as sau
+        from ..hspec import wstat
+        from sherpa.models import PowLaw1D
 
-        if (self.model == 'PWL'):
+        if (self.model == 'PL'):
             p1 = PowLaw1D('p1')
             p1.gamma = 2.2
             p1.ref = 1e9
             p1.ampl = 6e-19
         else:
-            log.error('Desired Model is not defined')
+            raise ValueError('Desired Model is not defined')
 
         sau.freeze(p1.ref)
         sau.set_conf_opt("max_rstat", 100)
@@ -86,12 +89,13 @@ class GammapySpectrumAnalysis(object):
         list_data = []
         for obs in self.observations:
             runfile = obs.phafile
-            datid=runfile[7:12]
+            datid = runfile[7:12]
             sau.load_data(datid, runfile)
             sau.notice_id(datid, self.thres, self.emax)
             sau.set_source(datid, p1)
             list_data.append(datid)
         wstat.wfit(list_data)
+
 
 class GammapySpectrumObservation(object):
     """Gammapy 1D region based spectral analysis.
@@ -128,7 +132,7 @@ class GammapySpectrumObservation(object):
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
-        
+
     def make_on_vector(self):
         """Make ON `~gammapy.data.CountsSpectrum`
         """
@@ -142,7 +146,7 @@ class GammapySpectrumObservation(object):
         off_list = self.event_list.select_sky_ring(self.target, self.irad, self.orad)
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         self.bkg = off_vec
-    
+
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
@@ -162,59 +166,59 @@ class GammapySpectrumObservation(object):
         """
         pass
 
+
 def _process_config(object):
     """Helper function to process the config file
     """
 
-    #Data
+    # Data
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
-    object.arffile = "arf_run"+str(object.obs)+".fits"
-    object.rmffile = "rmf_run"+str(object.obs)+".fits"
-    object.phafile = "pha_run"+str(object.obs)+".pha"
-    object.bkgfile = "bkg_run"+str(object.obs)+".pha"
+    object.arffile = "arf_run" + str(object.obs) + ".fits"
+    object.rmffile = "rmf_run" + str(object.obs) + ".fits"
+    object.phafile = "pha_run" + str(object.obs) + ".pha"
+    object.bkgfile = "bkg_run" + str(object.obs) + ".pha"
 
-
-    #Target
-    unit = object.config['on_region']['unit']
-    x = Angle(object.config['on_region']['center_x'], unit)
-    y = Angle(object.config['on_region']['center_y'], unit)
+    # Target
+    x = Angle(object.config['on_region']['center_x'])
+    y = Angle(object.config['on_region']['center_y'])
     frame = object.config['on_region']['system']
-    object.target = SkyCoord(x,y,frame = frame)
+    object.target = SkyCoord(x, y, frame=frame)
 
-    #Pointing
+    # Pointing
     event_list_file = object.store.filename(object.obs, 'events')
     event_list = EventList.read(event_list_file, hdu=1)
     object.event_list = event_list
     object.pointing = object.event_list.pointing_radec
     object.offset = object.target.separation(object.pointing)
-        
-    #Binning
+
+    # Binning
     sec = object.config['binning']
     if sec['equal_log_spacing']:
+        emin = Energy(sec['emin'])
+        emax = Energy(sec['emax'])
+        nbins = sec['nbins']
         object.ebounds = EnergyBounds.equal_log_spacing(
-            sec['emin'],sec['emax'],sec['nbins'],sec['unit'])
+            emin, emax, nbins)
     else:
         if sec[binning] is None:
             raise ValueError("No binning specified")
     log.debug('Binning: {}'.format(object.ebounds))
 
-    #ON/OFF Region
+    # ON/OFF Region
     val = object.config['on_region']['radius']
-    object.radius = Angle(val, 'deg')
+    object.radius = Angle(val)
     ival = object.config['off_region']['inner_radius']
     oval = object.config['off_region']['outer_radius']
-    object.irad = Angle(ival, 'deg')
-    object.orad = Angle(oval, 'deg')
+    object.irad = Angle(ival)
+    object.orad = Angle(oval)
     object.alpha = ring_area_factor(object.radius, object.irad, object.orad)
 
-    #Spectral fit
+    # Spectral fit
     object.model = object.config['model']['type']
     val = object.config['model']['threshold_low']
     val2 = object.config['model']['threshold_high']
-    unit = object.config['model']['unit']
-    threshold = Energy(val, unit)
-    threshold2 = Energy(val2, unit)
+    threshold = Energy(val)
+    threshold2 = Energy(val2)
     object.thres = threshold.to('keV').value
     object.emax = threshold2.to('keV').value
-
