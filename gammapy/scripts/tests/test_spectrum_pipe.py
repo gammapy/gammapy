@@ -6,8 +6,12 @@ from gammapy.scripts import GammapySpectrumAnalysis
 from ...datasets import get_path
 import yaml
 
+
+@remote_data
 def test_spectrum_pipe(tmpdir):
 
-    #Change to remote file in the end
-    configfile = "~/Software/gammapy/gammapy/scripts/spectrum_pipe_example.yaml"
-    analysis = GammapySpectrumAnalysis(configfile)
+    configfile = get_path('../test_datasets/scripts/spectrum_pipe_example.yaml',
+                          location='remote')
+    analysis = GammapySpectrumAnalysis.from_yaml(configfile)
+
+    # TODO: test more stuff once the DataStore class can be accessed remotely
