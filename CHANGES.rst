@@ -47,6 +47,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#359] Add 1D spectrum analysis tool based on gammapy.hspec (Johannes King)
 - [#351] Rewrite most parts of EnergyDispersion class (Johannes King)
 - [#353] Add some scripts and examples (Christoph Deil)
 - [#348] Misc code cleanup (Christoph Deil)
