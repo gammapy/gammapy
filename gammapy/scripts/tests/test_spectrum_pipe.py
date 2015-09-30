@@ -2,7 +2,8 @@
 from numpy.testing import assert_equal, assert_almost_equal
 from astropy.io import fits
 from astropy.tests.helper import remote_data
-from gammapy.scripts import GammapySpectrumAnalysis
+from astropy.tests.helper import pytest
+from ...scripts import GammapySpectrumAnalysis
 from ...datasets import get_path
 
 try:
