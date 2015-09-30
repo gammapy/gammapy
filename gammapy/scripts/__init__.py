@@ -29,4 +29,5 @@ from .sherpa_like import *
 from .sherpa_model_image import *
 from .significance_image import *
 from .simulate_source_catalog import *
+from .spectrum_pipe import *
 from .ts_image import *
