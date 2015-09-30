@@ -66,6 +66,11 @@ def test_Energy():
     desired = Energy(10, 'TeV')
     assert_equal(actual, desired)
 
+    e_string = u'10 TeV'
+    actual = Energy(e_string)
+    desired = Energy(10, 'TeV')
+    assert_equal(actual, desired)
+
 
 @remote_data
 def test_EnergyBounds():
