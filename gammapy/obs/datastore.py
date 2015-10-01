@@ -88,6 +88,13 @@ class DataStoreIndexTable(ObservationTable):
         return table
 
     def _init_cleanup(self, scheme):
+        # TODO: for now we force default units here, because the
+        # HAP runinfo.fits file doesn't store units...
+        self['RA'].unit = 'deg'
+        self['DEC'].unit = 'deg'
+        self['ALT'].unit = 'deg'
+        self['AZ'].unit = 'deg'
+
         # Add useful extra columns
         if not set(['GLON', 'GLAT']).issubset(self.colnames):
             skycoord = skycoord_from_table(self).galactic
