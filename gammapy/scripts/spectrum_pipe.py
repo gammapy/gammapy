@@ -30,7 +30,7 @@ def main(args=None):
     analysis = GammapySpectrumAnalysis.from_yaml(args.config_file)
     analysis.make_ogip()
     analysis.run_fit()
-
+    print(analysis.alpha)
 
 class GammapySpectrumAnalysis(object):
     """Command line tool to perform a 1D spectrum fit
@@ -147,6 +147,7 @@ class GammapySpectrumObservation(object):
         """
         off_list = self.event_list.select_sky_ring(self.target, self.irad, self.orad)
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        off_vec.backscal = self.alpha
         self.bkg = off_vec
 
     def make_arf(self):
@@ -217,7 +218,7 @@ def _process_config(object):
     oval = object.config['off_region']['outer_radius']
     object.irad = Angle(ival)
     object.orad = Angle(oval)
-    object.alpha = ring_area_factor(object.radius, object.irad, object.orad)
+    object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
 
     # Spectral fit
     object.model = object.config['model']['type']
