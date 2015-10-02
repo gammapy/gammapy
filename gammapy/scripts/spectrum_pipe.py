@@ -10,6 +10,7 @@ from ..background import ring_area_factor
 from astropy.coordinates import Angle, SkyCoord
 import logging
 import numpy as np
+import os
 
 __all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
 
@@ -66,9 +67,9 @@ class GammapySpectrumAnalysis(object):
 
     def make_ogip(self):
         for obs in self.observations:
-            log.info('Creating OGIP data for run{}'.format(obs.obs))
-            obs.make_ogip()
-
+            if obs.handle_output():
+                log.info('Creating OGIP data for run{}'.format(obs.obs))
+                        
     def run_fit(self):
         log.info("Starting HSPEC")
         import sherpa.astro.ui as sau
@@ -89,7 +90,7 @@ class GammapySpectrumAnalysis(object):
         list_data = []
         for obs in self.observations:
             runfile = obs.phafile
-            datid = runfile[7:12]
+            datid = runfile.split('/')[1][7:12]
             sau.load_data(datid, runfile)
             sau.notice_id(datid, self.thres, self.emax)
             sau.set_source(datid, p1)
@@ -106,24 +107,25 @@ class GammapySpectrumObservation(object):
         self.obs = obs
         _process_config(self)
 
-    def make_ogip(self):
+    def handle_output(self):
+        clobber = self.config['ogip']['clobber']
+        if clobber or not os.path.isfile(self.phafile):
+            self.write_ogip()
+            return True
+
+    def write_ogip(self):
         """Write OGIP files needed for the sherpa fit
+
+        The 'clobber' kwarg is set to true in this function
         """
         self._prepare_ogip()
-        clobber = self.config['ogip']['clobber']
-        try:
-            self.pha.write(self.phafile, bkg=self.bkgfile, arf=self.arffile,
-                           rmf=self.rmffile, clobber=clobber)
-            self.bkg.write(self.bkgfile, clobber=clobber)
-            self.arf.write(self.arffile, energy_unit='keV', effarea_unit='cm2',
-                           clobber=True)
-            self.rmf.write(self.rmffile, energy_unit='keV', clobber=clobber)
-        except(IOError):
-            if not clobber:
-                log.error('Trying to overwrite OGIP files,'
-                          ' but clobber is set to false')
-            else:
-                log.error('Error writing OGIP files')
+        clobber = True
+        self.pha.write(self.phafile, bkg=self.bkgfile, arf=self.arffile,
+                       rmf=self.rmffile, clobber=clobber)
+        self.bkg.write(self.bkgfile, clobber=clobber)
+        self.arf.write(self.arffile, energy_unit='keV',
+                       effarea_unit='cm2',          clobber=clobber)
+        self.rmf.write(self.rmffile, energy_unit='keV', clobber=clobber)
 
     def _prepare_ogip(self):
         """Dummy function to process IRFs and event list
@@ -174,10 +176,13 @@ def _process_config(object):
     # Data
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
-    object.arffile = "arf_run" + str(object.obs) + ".fits"
-    object.rmffile = "rmf_run" + str(object.obs) + ".fits"
-    object.phafile = "pha_run" + str(object.obs) + ".pha"
-    object.bkgfile = "bkg_run" + str(object.obs) + ".pha"
+    outdir = object.config['ogip']['outdir']
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
+    object.arffile = outdir + "/arf_run" + str(object.obs) + ".fits"
+    object.rmffile = outdir + "/rmf_run" + str(object.obs) + ".fits"
+    object.phafile = outdir + "/pha_run" + str(object.obs) + ".pha"
+    object.bkgfile = outdir + "/bkg_run" + str(object.obs) + ".pha"
 
     # Target
     x = Angle(object.config['on_region']['center_x'])
