@@ -66,11 +66,13 @@ class GammapySpectrumAnalysis(object):
             'Ring', self.irad, self.orad))
 
     def make_ogip(self):
+        """Create OGIP files"""
         for obs in self.observations:
             if obs.handle_output():
                 log.info('Creating OGIP data for run{}'.format(obs.obs))
                         
     def run_fit(self):
+        """Run the gammapy.hspec fit"""
         log.info("Starting HSPEC")
         import sherpa.astro.ui as sau
         from ..hspec import wstat
@@ -99,7 +101,9 @@ class GammapySpectrumAnalysis(object):
 
 
 class GammapySpectrumObservation(object):
-    """Gammapy 1D region based spectral analysis.
+    """Gammapy 1D region based spectral analysis observation.
+
+    This class handles the spectrum fit for one observation/run
     """
 
     def __init__(self, obs, config):
@@ -108,6 +112,7 @@ class GammapySpectrumObservation(object):
         _process_config(self)
 
     def handle_output(self):
+        """Check if OGIP files need to be rewritten"""
         clobber = self.config['ogip']['clobber']
         if clobber or not os.path.isfile(self.phafile):
             self.write_ogip()
