@@ -68,7 +68,8 @@ class SpectrumAnalysis(object):
         if self.config['general']['create_ogip']:
             self.make_ogip()
         if self.config['general']['run_fit']:
-            self.run_fit()
+            fit = self.run_fit()
+            print(fit)
 
     def make_ogip(self):
         """Create OGIP files"""
@@ -103,7 +104,10 @@ class SpectrumAnalysis(object):
             sau.set_source(datid, p1)
             list_data.append(datid)
         wstat.wfit(list_data)
-
+        fit_val = sau.get_fit_results()
+        fit_attrs = ('parnames', 'parvals')
+        fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
+        return fit
 
 class SpectrumObservation(object):
     """1D region based spectral analysis observation.
