@@ -107,6 +107,7 @@ entry_points['console_scripts'] = [
     'gammapy-test = gammapy.scripts.check:main',
     'gammapy-ts-image = gammapy.scripts.ts_image:main',
     'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
+    'gammapy-spectrum = gammapy.spectrum.spectrum_analysis:main',
 ]
 
 # Note: usually the `affiliated_package/data` folder is used for data files.

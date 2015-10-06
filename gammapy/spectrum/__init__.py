@@ -15,3 +15,4 @@ from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
 from .energy import *
+from .spectrum_analysis import *

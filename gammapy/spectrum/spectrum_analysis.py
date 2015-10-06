@@ -12,13 +12,13 @@ import logging
 import numpy as np
 import os
 
-__all__ = ['GammapySpectrumAnalysis', 'GammapySpectrumObservation']
+__all__ = ['SpectrumAnalysis', 'SpectrumObservation']
 
 log = logging.getLogger(__name__)
 
 
 def main(args=None):
-    parser = get_parser(GammapySpectrumAnalysis)
+    parser = get_parser(SpectrumAnalysis)
     parser.add_argument('config_file', type=str,
                         help='Config file in YAML format')
     parser.add_argument("-l", "--loglevel", default='info',
@@ -27,13 +27,11 @@ def main(args=None):
 
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    analysis = GammapySpectrumAnalysis.from_yaml(args.config_file)
-    analysis.make_ogip()
-    analysis.run_fit()
-    print(analysis.alpha)
+    analysis = SpectrumAnalysis.from_yaml(args.config_file)
+    analysis.run()
 
-class GammapySpectrumAnalysis(object):
-    """Command line tool to perform a 1D spectrum fit
+class SpectrumAnalysis(object):
+    """Perform a 1D spectrum fit
     """
 
     def __init__(self, config):
@@ -46,7 +44,7 @@ class GammapySpectrumAnalysis(object):
         self.info()
         self.observations = []
         for obs in vals:
-            val = GammapySpectrumObservation(obs, config)
+            val = SpectrumObservation(obs, config)
             self.observations.append(val)
 
     @classmethod
@@ -64,6 +62,13 @@ class GammapySpectrumAnalysis(object):
             self.target, self.radius))
         log.info('OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
             'Ring', self.irad, self.orad))
+
+    def run(self):
+        """Run analysis as specified in the config"""
+        if config['general']['create_ogip']:
+            analysis.make_ogip()
+        if config['general']['run_fit']:
+            analysis.run_fit()
 
     def make_ogip(self):
         """Create OGIP files"""
@@ -100,8 +105,8 @@ class GammapySpectrumAnalysis(object):
         wstat.wfit(list_data)
 
 
-class GammapySpectrumObservation(object):
-    """Gammapy 1D region based spectral analysis observation.
+class SpectrumObservation(object):
+    """1D region based spectral analysis observation.
 
     This class handles the spectrum fit for one observation/run
     """
@@ -182,7 +187,7 @@ def _process_config(object):
     # Data
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
-    outdir = object.config['ogip']['outdir']
+    outdir = object.config['general']['outdir']
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
     object.arffile = outdir + "/arf_run" + str(object.obs) + ".fits"
