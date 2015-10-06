@@ -3,7 +3,7 @@ from numpy.testing import assert_equal, assert_almost_equal
 from astropy.io import fits
 from astropy.tests.helper import remote_data
 from astropy.tests.helper import pytest
-from ...spectrum import SpectrumAnalysis
+from ...spectrum.spectrum_analysis import SpectrumAnalysis
 from ...datasets import get_path
 
 try:

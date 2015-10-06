@@ -2,6 +2,7 @@
 """
 Spectrum estimation and modeling methods.
 """
+#from .spectrum_analysis import *
 from .cosmic_ray import *
 from .crab import *
 from .diffuse import *
@@ -15,4 +16,4 @@ from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
 from .energy import *
-from .spectrum_analysis import *
+
