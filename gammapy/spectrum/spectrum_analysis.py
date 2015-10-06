@@ -65,16 +65,16 @@ class SpectrumAnalysis(object):
 
     def run(self):
         """Run analysis as specified in the config"""
-        if config['general']['create_ogip']:
-            analysis.make_ogip()
-        if config['general']['run_fit']:
-            analysis.run_fit()
+        if self.config['general']['create_ogip']:
+            self.make_ogip()
+        if self.config['general']['run_fit']:
+            self.run_fit()
 
     def make_ogip(self):
         """Create OGIP files"""
         for obs in self.observations:
-            if obs.handle_output():
-                log.info('Creating OGIP data for run{}'.format(obs.obs))
+            obs.make_ogip()
+            log.info('Creating OGIP data for run{}'.format(obs.obs))
                         
     def run_fit(self):
         """Run the gammapy.hspec fit"""
@@ -116,14 +116,7 @@ class SpectrumObservation(object):
         self.obs = obs
         _process_config(self)
 
-    def handle_output(self):
-        """Check if OGIP files need to be rewritten"""
-        clobber = self.config['ogip']['clobber']
-        if clobber or not os.path.isfile(self.phafile):
-            self.write_ogip()
-            return True
-
-    def write_ogip(self):
+    def make_ogip(self):
         """Write OGIP files needed for the sherpa fit
 
         The 'clobber' kwarg is set to true in this function
