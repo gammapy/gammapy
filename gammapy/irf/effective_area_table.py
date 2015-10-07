@@ -373,7 +373,7 @@ class EffectiveAreaTable2D(object):
         from astropy.coordinates import Angle
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.spectrum import EnergyBounds
+        from gammapy.spectrum.energy import EnergyBounds
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
         offset = Angle(0.43, 'degree')

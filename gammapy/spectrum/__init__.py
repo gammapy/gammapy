@@ -14,4 +14,3 @@ from .powerlaw import *
 from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
-from .energy import *
