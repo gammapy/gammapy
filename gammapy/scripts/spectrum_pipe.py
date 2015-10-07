@@ -5,7 +5,7 @@ from ..obs import DataStore, ObservationTable
 from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
-from ..spectrum import EnergyBounds, Energy
+from ..spectrum.energy import EnergyBounds, Energy
 from ..background import ring_area_factor
 from astropy.coordinates import Angle, SkyCoord
 import logging

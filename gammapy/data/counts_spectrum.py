@@ -28,7 +28,7 @@ class CountsSpectrum(object):
 
     .. code-block:: python
     
-        from gammapy.spectrum import Energy, EnergyBounds
+        from gammapy.spectrum.energy import Energy, EnergyBounds
         from gammapy.data import CountsSpectrum
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV') 
         counts = [6,3,8,4,9,5,9,5,5,1]

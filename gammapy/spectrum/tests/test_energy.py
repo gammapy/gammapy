@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 from numpy.testing import assert_equal
-from ...spectrum import Energy, EnergyBounds
+from ..energy import Energy, EnergyBounds
 from astropy.tests.helper import remote_data
 from ...datasets import get_path
 from astropy.io import fits

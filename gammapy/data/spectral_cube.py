@@ -15,7 +15,8 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.coordinates import Angle
-from ..spectrum import EnergyBounds, LogEnergyAxis, powerlaw
+from ..spectrum.energy import EnergyBounds
+from ..spectrum import LogEnergyAxis, powerlaw
 from ..image import cube_to_image, solid_angle
 from ..utils.fits import table_to_fits_table
 
