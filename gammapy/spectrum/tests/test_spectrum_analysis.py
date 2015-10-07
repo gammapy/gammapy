@@ -16,7 +16,7 @@ except ImportError:
 @pytest.mark.skipif('not HAS_YAML')
 def test_spectrum_analysis(tmpdir):
 
-    configfile = get_path('../test_datasets/scripts/spectrum_analysis_example.yaml',
+    configfile = get_path('../test_datasets/spectrum/spectrum_analysis_example.yaml',
                           location='remote', cache=False)
     analysis = SpectrumAnalysis.from_yaml(configfile)
 

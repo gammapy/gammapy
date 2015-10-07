@@ -36,16 +36,19 @@ class SpectrumAnalysis(object):
 
     def __init__(self, config):
         self.config = config
-        vals = config['general']['observations']
+        vals = config['general']['runlist']
         if isinstance(vals, basestring):
             vals = np.loadtxt(vals, dtype=np.int)
         self.obs = vals[0]
         _process_config(self)
-        self.info()
         self.observations = []
-        for obs in vals:
+        nruns = self.config['general']['nruns'] - 1
+        for i, obs in enumerate(vals):
             val = SpectrumObservation(obs, config)
             self.observations.append(val)
+            if i == nruns:
+                break
+        log.info('Creating analysis '+self.outdir)
 
     @classmethod
     def from_yaml(cls, filename):
@@ -69,7 +72,7 @@ class SpectrumAnalysis(object):
             self.make_ogip()
         if self.config['general']['run_fit']:
             fit = self.run_fit()
-            print(fit)
+            return fit
 
     def make_ogip(self):
         """Create OGIP files"""
@@ -107,6 +110,7 @@ class SpectrumAnalysis(object):
         fit_val = sau.get_fit_results()
         fit_attrs = ('parnames', 'parvals')
         fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
+        sau.clean()
         return fit
 
 class SpectrumObservation(object):
@@ -184,13 +188,13 @@ def _process_config(object):
     # Data
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
-    outdir = object.config['general']['outdir']
-    if not os.path.isdir(outdir):
-        os.mkdir(outdir)
-    object.arffile = outdir + "/arf_run" + str(object.obs) + ".fits"
-    object.rmffile = outdir + "/rmf_run" + str(object.obs) + ".fits"
-    object.phafile = outdir + "/pha_run" + str(object.obs) + ".pha"
-    object.bkgfile = outdir + "/bkg_run" + str(object.obs) + ".pha"
+    object.outdir = object.config['general']['outdir']
+    if not os.path.isdir(object.outdir):
+        os.mkdir(object.outdir)
+    object.arffile = object.outdir + "/arf_run" + str(object.obs) + ".fits"
+    object.rmffile = object.outdir + "/rmf_run" + str(object.obs) + ".fits"
+    object.phafile = object.outdir + "/pha_run" + str(object.obs) + ".pha"
+    object.bkgfile = object.outdir + "/bkg_run" + str(object.obs) + ".pha"
 
     # Target
     x = Angle(object.config['on_region']['center_x'])
