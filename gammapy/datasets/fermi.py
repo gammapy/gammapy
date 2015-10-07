@@ -13,16 +13,15 @@ from ..data import SpectralCube
 from ..datasets import get_path
 from ..spectrum import EnergyBounds
 
-
-__all__ = ['Fermi3FGLObject',
-           'FermiGalacticCenter',
-           'FermiVelaRegion',
-           'fetch_fermi_catalog',
-           'fetch_fermi_extended_sources',
-           'fetch_fermi_diffuse_background_model',
-           'load_lat_psf_performance',
-           ]
-
+__all__ = [
+    'Fermi3FGLObject',
+    'FermiGalacticCenter',
+    'FermiVelaRegion',
+    'fetch_fermi_catalog',
+    'fetch_fermi_extended_sources',
+    'fetch_fermi_diffuse_background_model',
+    'load_lat_psf_performance',
+]
 
 FERMI_CATALOGS = '3FGL 2FGL 1FGL 1FHL 2PC'.split()
 
@@ -218,6 +217,7 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
 
     return filename
 
+
 class Fermi3FGLObject(object):
     """
     Class representing an object in the Fermi 3FGL catalog.
@@ -246,7 +246,7 @@ class Fermi3FGLObject(object):
         self.glon = self.cat_row['GLON']
         self.glat = self.cat_row['GLAT']
         self.flux_density = self.cat_row['Flux_Density']
-        self.unc_flux_density  = self.cat_row['Unc_Flux_Density']
+        self.unc_flux_density = self.cat_row['Unc_Flux_Density']
         self.spec_type = self.cat_row['SpectrumType']
         self.pivot_en = self.cat_row['PIVOT_ENERGY']
         self.spec_index = self.cat_row['Spectral_Index']
@@ -282,7 +282,7 @@ class Fermi3FGLObject(object):
         ax = plt.gca() if ax is None else ax
 
         # Only work with indices where we have a valid detection and a lower bound
-        flux_bounds = [self.cat_row[ "Unc_" + self.y_labels[i]] for i in range(0,np.size(self.y_labels))]
+        flux_bounds = [self.cat_row["Unc_" + self.y_labels[i]] for i in range(0, np.size(self.y_labels))]
 
         valid_indices = []
 
@@ -298,8 +298,8 @@ class Fermi3FGLObject(object):
         y_upper = y_vals + y_upper
 
         x_vals = [self.x_cens[i].value for i in valid_indices]
-        bin_edges1 =[-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
-        bin_edges2 = [(self.x_bins_edges[i+1] - self.x_cens[i]).value for i in valid_indices]
+        bin_edges1 = [-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
+        bin_edges2 = [(self.x_bins_edges[i + 1] - self.x_cens[i]).value for i in valid_indices]
 
         y_vals = [y_vals[i] / x_vals[i] for i in range(0, np.size(y_vals))]
         y_upper = [y_upper[i] / x_vals[i] for i in range(0, np.size(y_vals))]
@@ -334,7 +334,7 @@ class Fermi3FGLObject(object):
             y_model = LogParabola1D(amplitude=self.flux_density,
                                     x_0=self.pivot_en,
                                     alpha=self.spec_index,
-                                    beta = self.beta)
+                                    beta=self.beta)
 
         elif self.spec_type == "PLExpCutoff":
 
@@ -423,6 +423,7 @@ class FermiVelaRegion(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
+
         def get(filename):
             return get_path('vela_region/' + filename, location='remote')
 

@@ -1,8 +1,12 @@
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 from ..utils.scripts import get_parser
 
 __all__ = ['catalog_query']
+
+log = logging.getLogger(__name__)
+
 
 def main(args=None):
     parser = get_parser(catalog_query)
@@ -17,14 +21,16 @@ def main(args=None):
     args = parser.parse_args(args)
     catalog_query(**vars(args))
 
+
 def catalog_query(catalog, source, querytype):
     """Query the requested catalog for the requested source.
+
     Based on the requested querytype return information on the object,
     plot the object's light curve or plot the object's spectrum.
     """
     from gammapy.datasets import fermi
 
-    if (catalog=='3FGL'):
+    if catalog == '3FGL':
         catalog_object = fermi.Fermi3FGLObject(source)
 
     if querytype == 'info':

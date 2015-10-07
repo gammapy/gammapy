@@ -1,5 +1,6 @@
 # This code is taken from scipy.stats
 
+
 def gmean(a, axis=0, dtype=None):
     """
     Compute the geometric mean along the specified axis.

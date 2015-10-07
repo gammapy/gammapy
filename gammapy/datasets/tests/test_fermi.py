@@ -4,14 +4,14 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.tests.helper import remote_data
-from ...datasets import (Fermi3FGLObject,
-                         FermiGalacticCenter,
-                         FermiVelaRegion,
-                         fetch_fermi_catalog,
-                         fetch_fermi_extended_sources,
-                         fetch_fermi_diffuse_background_model,
-                         load_lat_psf_performance,
-                         )
+from ...datasets import (
+    Fermi3FGLObject,
+    FermiGalacticCenter,
+    FermiVelaRegion,
+    fetch_fermi_catalog,
+    fetch_fermi_extended_sources,
+    load_lat_psf_performance,
+)
 
 try:
     import scipy
@@ -20,23 +20,26 @@ except ImportError:
     HAS_SCIPY = False
 
 
-class TestFermi3FGLObject():
+@remote_data
+class TestFermi3FGLObject:
 
-    #Can be updated once pytest-mpl is implemented.
+    test_source = '3FGL J0000.1+6545'
+
     def test_plot_lightcurve(self):
-        lightcurve = Fermi3FGLObject('3FGL J0000.1+6545').plot_lightcurve()
+        source = Fermi3FGLObject(self.test_source)
+        source.plot_lightcurve()
 
-    #Can be updated once pytest-mpl is implemented.
     def test_plot_spectrum(self):
-        spectrum = Fermi3FGLObject('3FGL J0000.1+6545').plot_spectrum()
+        source = Fermi3FGLObject(self.test_source)
+        source.plot_spectrum()
 
     def test_info(self):
-        info = Fermi3FGLObject('3FGL J0000.1+6545').info()
+        source = Fermi3FGLObject(self.test_source)
+        info = source.info()
+        assert self.test_source in info
 
-        assert '3FGL J0000.1+6545' in info
 
-
-class TestFermiGalacticCenter():
+class TestFermiGalacticCenter:
     def test_filenames(self):
         filenames = FermiGalacticCenter.filenames()
         assert isinstance(filenames, dict)
@@ -164,4 +167,3 @@ def test_load_lat_psf_performance():
     table_p7_95 = load_lat_psf_performance('P7SOURCEV6_95')
     assert table_p7_95['energy'][0] == 31.6227766017
     assert table_p7_95['containment_angle'][0] == 38.3847234362
-    
