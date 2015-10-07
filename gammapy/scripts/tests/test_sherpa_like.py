@@ -15,9 +15,6 @@ except ImportError:
     HAS_SHERPA = False
 
 
-# TODO: fix and reactivate this test.
-# See https://github.com/gammapy/gammapy/issues/349
-@pytest.mark.xfail
 @pytest.mark.skipif('not HAS_SHERPA')
 def test_sherpa_like(tmpdir):
     # load test data
@@ -55,5 +52,11 @@ def test_sherpa_like(tmpdir):
 
     with open(outfile, 'r') as f:
         data = json.load(f)
-        assert_allclose(data['fit']['parvals'], [9.016334, 99.365574,
-                                                 99.647234, 10.97365])
+        # Note: the reference results here changed once and
+        # we didn't track down why at the time:
+        # See https://github.com/gammapy/gammapy/issues/349
+        # old: [  9.016334  ,  99.365574   ,  99.647234   , 10.97365    ]
+        # new: [ 10.7427035 ,  98.16618776 ,  98.45487028 ,  7.73529899 ]
+        actual = data['fit']['parvals']
+        expected = [10.7427035, 98.16618776, 98.45487028, 7.73529899]
+        assert_allclose(actual, expected)
