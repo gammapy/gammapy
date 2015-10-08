@@ -37,6 +37,10 @@ class SpectrumPipe(object):
             fit_config['general']['runlist'] = vals['runlist']
             fit_config['on_region']['center_x'] = vals['target_ra']
             fit_config['on_region']['center_y'] = vals['target_dec']
+            try:
+                fit_config['on_region']['radius'] = vals['on_radius']
+            except KeyError:
+                pass
             analysis = SpectrumAnalysis(fit_config)
             write_yaml(fit_config, target+"/"+target)
             self.analysis.append(analysis)
