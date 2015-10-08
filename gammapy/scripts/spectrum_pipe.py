@@ -3,7 +3,7 @@ from __future__ import (print_function)
 from gammapy.spectrum.spectrum_analysis import SpectrumAnalysis
 from ..utils.scripts import get_parser, set_up_logging_from_args
 import logging
-
+import numpy as np
 __all__ = ['SpectrumPipe']
 
 log = logging.getLogger(__name__)
@@ -58,10 +58,16 @@ class SpectrumPipe(object):
 
     def print_result(self):
         """Print Fit Results"""
+        print('\n------------------------------')
         for res, ana in zip(self.result, self.analysis):
+            gamma = res['parvals'][0]
+            gamma_err = res['parmaxes'][0]
+            norm = res['parvals'][1]*1e9
+            norm_err = res['parmaxes'][1]*1e9
+            print('\n')            
             print(ana.outdir)
-            print([res[k][0] for k in res.keys()])
-            print([res[k][1] for k in res.keys()])
+            print('Gamma     : {0:.3f} +/- {1:.3f}'.format(gamma, gamma_err))
+            print('Flux@1TeV : {0:.3e} +/- {1:.3e}'.format(norm, norm_err))
 
 # TODO -> utils
 def read_yaml(filename):
