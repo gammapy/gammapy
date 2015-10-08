@@ -255,7 +255,8 @@ class GalacticPlaneSurveyPanelPlot(object):
     """
 
     def __init__(self, npanels=4, center=(0, 0), fov=(10, 1),
-                 xsize=10, ysize=None, xborder=0.5, yborder=0.5, yspacing=0.5):
+                 xsize=10, ysize=None, xborder=0.5, yborder=0.5,
+                 yspacing=0.5, xoverlap=0):
         """Compute panel parameters and make a matplotlib Figure.
         """
         import matplotlib.pyplot as plt
@@ -267,7 +268,8 @@ class GalacticPlaneSurveyPanelPlot(object):
                                                   ysize=ysize,
                                                   xborder=xborder,
                                                   yborder=yborder,
-                                                  yspacing=yspacing)
+                                                  yspacing=yspacing,
+                                                  xoverlap=xoverlap)
 
         self.figure = plt.figure(figsize=self.panel_parameters['figsize'])
 
