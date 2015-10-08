@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from ..utils.scripts import get_parser
+from ..datasets import fermi
 
 __all__ = ['catalog_query']
 
@@ -10,7 +11,7 @@ log = logging.getLogger(__name__)
 
 def main(args=None):
     parser = get_parser(catalog_query)
-    parser.add_argument('--catalog',
+    parser.add_argument('--catalog', default='3FGL',
                         choices=['3FGL'],
                         help='Catalog for the source e.g. 3FGL')
     parser.add_argument('--source',
@@ -28,24 +29,28 @@ def catalog_query(catalog, source, querytype):
     Based on the requested querytype return information on the object,
     plot the object's light curve or plot the object's spectrum.
     """
-    from gammapy.datasets import fermi
-
     if catalog == '3FGL':
         catalog_object = fermi.Fermi3FGLObject(source)
+    else:
+        raise ValueError('Invalid catalog: {}'.format(catalog))
 
     if querytype == 'info':
         print(catalog_object.info())
 
     elif querytype == 'lightcurve':
         import matplotlib.pyplot as plt
+        plt.style.use('fivethirtyeight')
 
         ax = catalog_object.plot_lightcurve()
         ax.plot()
+        plt.tight_layout()
         plt.show()
 
     elif querytype == 'spectrum':
         import matplotlib.pyplot as plt
+        plt.style.use('fivethirtyeight')
 
         ax = catalog_object.plot_spectrum()
         ax.plot()
+        plt.tight_layout()
         plt.show()

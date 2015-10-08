@@ -252,24 +252,25 @@ class Fermi3FGLObject(object):
         _fermi_cat = self._get_fermi_cat()
         self.name_3FGL = source_name
         self.catalog_index = np.where(self.fermi_cat[1].data['Source_Name'] == source_name)[0][0]
-        _fermi_cat[1].data[self.catalog_index]
-        self.ra = self.cat_row['RAJ2000']
-        self.dec = self.cat_row['DEJ2000']
-        self.glon = self.cat_row['GLON']
-        self.glat = self.cat_row['GLAT']
-        self.flux_density = self.cat_row['Flux_Density']
-        self.unc_flux_density = self.cat_row['Unc_Flux_Density']
-        self.spec_type = self.cat_row['SpectrumType']
-        self.pivot_en = self.cat_row['PIVOT_ENERGY']
-        self.spec_index = self.cat_row['Spectral_Index']
-        self.unc_spec_index = self.cat_row['Unc_Spectral_Index']
-        self.beta = self.cat_row['beta']
-        self.unc_beta = self.cat_row['unc_beta']
-        self.cutoff = self.cat_row['Cutoff']
-        self.unc_cutoff = self.cat_row['Unc_Cutoff']
-        self.exp_index = self.cat_row['Exp_Index']
-        self.unc_exp_index = self.cat_row['Unc_Exp_Index']
-        self.signif = self.cat_row['Signif_Avg']
+        cat_row = _fermi_cat[1].data[self.catalog_index]
+        self.cat_row = cat_row
+        self.ra = cat_row['RAJ2000']
+        self.dec = cat_row['DEJ2000']
+        self.glon = cat_row['GLON']
+        self.glat = cat_row['GLAT']
+        self.flux_density = cat_row['Flux_Density']
+        self.unc_flux_density = cat_row['Unc_Flux_Density']
+        self.spec_type = cat_row['SpectrumType']
+        self.pivot_en = cat_row['PIVOT_ENERGY']
+        self.spec_index = cat_row['Spectral_Index']
+        self.unc_spec_index = cat_row['Unc_Spectral_Index']
+        self.beta = cat_row['beta']
+        self.unc_beta = cat_row['unc_beta']
+        self.cutoff = cat_row['Cutoff']
+        self.unc_cutoff = cat_row['Unc_Cutoff']
+        self.exp_index = cat_row['Exp_Index']
+        self.unc_exp_index = cat_row['Unc_Exp_Index']
+        self.signif = cat_row['Signif_Avg']
 
     @classmethod
     def _get_fermi_cat(cls):
@@ -279,14 +280,16 @@ class Fermi3FGLObject(object):
         return cls.fermi_cat
 
     def plot_lightcurve(self, ax=None):
-        """Plot the light curve of the object across the entire available time span."""
+        """Plot lightcurve.
+        """
         from gammapy.time import plot_fermi_3fgl_light_curve
 
-        ax = plot_fermi_3fgl_light_curve(self.name_3FGL)
+        ax = plot_fermi_3fgl_light_curve(self.name_3FGL, ax=ax)
         return ax
 
     def plot_spectrum(self, ax=None):
-        """Plot the flux points in the Fermi 3FGL catalog along with the model fitted to it."""
+        """Plot spectrum.
+        """
         import matplotlib.pyplot as plt
         from gammapy.extern.stats import gmean
         from astropy.modeling.models import PowerLaw1D, LogParabola1D, ExponentialCutoffPowerLaw1D
@@ -324,14 +327,11 @@ class Fermi3FGLObject(object):
 
         ax.loglog()
 
-        ax.errorbar(x_vals, y_vals,
-                    yerr=(y_lower, y_upper),
-                    elinewidth=1, linewidth=0, color='black')
+        fmt = dict(elinewidth=1, linewidth=0, color='black')
+        ax.errorbar(x_vals, y_vals, yerr=(y_lower, y_upper), **fmt)
 
         # Place the x-axis uncertainties in the center of the y-axis uncertainties.
-        ax.errorbar(x_vals, y_cens,
-                    xerr=(bin_edges1, bin_edges2),
-                    elinewidth=1, linewidth=0, color='black')
+        ax.errorbar(x_vals, y_cens, xerr=(bin_edges1, bin_edges2), **fmt)
 
         x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
 
@@ -356,6 +356,8 @@ class Fermi3FGLObject(object):
                                                   x_cutoff=self.cutoff)
         elif self.spec_type == "PLSuperExpCutoff":
             raise NotImplementedError
+        else:
+            raise NotImplementedError
 
         ax.set_xlabel('Energy (MeV)')
         ax.set_ylabel('Flux (ph/cm^2/s/MeV)')
@@ -364,8 +366,7 @@ class Fermi3FGLObject(object):
         return ax
 
     def info(self):
-
-        """Print the object name, position, flux, and detection signifiance."""
+        """Print summary info."""
         info = "\n"
         info += self.name_3FGL + "\n"
         info += "\n"
@@ -373,8 +374,9 @@ class Fermi3FGLObject(object):
         info += "Dec (J2000) " + str(self.dec) + "\n"
         info += "l " + str(self.glon) + "\n"
         info += "b " + str(self.glat) + "\n"
-        info += "Integrated Flux 100 MeV - 100 GeV: " + str(self.energy_flux) + \
-                " +/- " + str(self.unc_energy_flux) + " erg /cm2 /s\n"
+        # TODO: fix error: no attribute `energy_flux`
+        # info += "Integrated Flux 100 MeV - 100 GeV: " + str(self.energy_flux) + \
+        #         " +/- " + str(self.unc_energy_flux) + " erg /cm2 /s\n"
         info += "Detection significance: " + str(self.signif) + " sigma\n"
 
         return info
