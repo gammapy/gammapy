@@ -58,9 +58,10 @@ class SpectrumPipe(object):
 
     def print_result(self):
         """Print Fit Results"""
-        for res in self.result:
-            print(res)
-
+        for res, ana in zip(self.result, self.analysis):
+            print(ana.outdir)
+            print([res[k][0] for k in res.keys()])
+            print([res[k][1] for k in res.keys()])
 
 # TODO -> utils
 def read_yaml(filename):
@@ -78,4 +79,8 @@ def write_yaml(config, filename):
     log.info('Writing {}'.format(filename))
     with open(filename, 'w') as outfile:
         outfile.write( yaml.dump(config, default_flow_style=False))
+    
+def to_json(data):
+    import json
+
     

@@ -8,6 +8,7 @@ from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds, Energy
 from ..background import ring_area_factor
 from astropy.coordinates import Angle, SkyCoord
+from astropy.extern import six
 import logging
 import numpy as np
 import os
@@ -37,18 +38,27 @@ class SpectrumAnalysis(object):
     def __init__(self, config):
         self.config = config
         vals = config['general']['runlist']
-        if isinstance(vals, basestring):
+        if isinstance(vals, six.string_types):
             vals = np.loadtxt(vals, dtype=np.int)
-        self.obs = vals[0]
-        _process_config(self)
+        try:
+            self.obs = vals[0]
+            _process_config(self)
+        except IOError:
+            self.obs = vals[1]
+            _process_config(self)
+
+        log.info('Creating analysis '+self.outdir)
         self.observations = []
         nruns = self.config['general']['nruns'] - 1
         for i, obs in enumerate(vals):
-            val = SpectrumObservation(obs, config)
+            try:
+                val = SpectrumObservation(obs, config)
+            except IOError:
+                continue
             self.observations.append(val)
             if i == nruns:
                 break
-        log.info('Creating analysis '+self.outdir)
+
 
     @classmethod
     def from_yaml(cls, filename):
@@ -101,7 +111,7 @@ class SpectrumAnalysis(object):
         list_data = []
         for obs in self.observations:
             runfile = obs.phafile
-            datid = runfile.split('/')[1][7:12]
+            datid = runfile.split('/')[2][7:12]
             sau.load_data(datid, runfile)
             sau.notice_id(datid, self.thres, self.emax)
             sau.set_source(datid, p1)
@@ -189,12 +199,14 @@ def _process_config(object):
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
     object.outdir = object.config['general']['outdir']
+    basename =  object.outdir+"/ogip_data"
     if not os.path.isdir(object.outdir):
         os.mkdir(object.outdir)
-    object.arffile = object.outdir + "/arf_run" + str(object.obs) + ".fits"
-    object.rmffile = object.outdir + "/rmf_run" + str(object.obs) + ".fits"
-    object.phafile = object.outdir + "/pha_run" + str(object.obs) + ".pha"
-    object.bkgfile = object.outdir + "/bkg_run" + str(object.obs) + ".pha"
+        os.mkdir(basename)
+    object.arffile = basename + "/arf_run" + str(object.obs) + ".fits"
+    object.rmffile = basename + "/rmf_run" + str(object.obs) + ".fits"
+    object.phafile = basename + "/pha_run" + str(object.obs) + ".pha"
+    object.bkgfile = basename + "/bkg_run" + str(object.obs) + ".pha"
 
     # Target
     x = Angle(object.config['on_region']['center_x'])
