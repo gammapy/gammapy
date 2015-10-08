@@ -66,8 +66,9 @@ class SpectrumPipe(object):
             norm_err = res['parmaxes'][1]*1e9
             print('\n')            
             print(ana.outdir)
-            print('Gamma     : {0:.3f} +/- {1:.3f}'.format(gamma, gamma_err))
-            print('Flux@1TeV : {0:.3e} +/- {1:.3e}'.format(norm, norm_err))
+            print('Gamma      : {0:.3f} +/- {1:.3f}'.format(gamma, gamma_err))
+            print('Flux@1TeV  : {0:.3e} +/- {1:.3e}'.format(norm, norm_err))
+            print('Containment: {0:.1%}'.format(res['containment']))
 
 # TODO -> utils
 def read_yaml(filename):

@@ -54,6 +54,8 @@ class SpectrumAnalysis(object):
             try:
                 val = SpectrumObservation(obs, config)
             except IOError:
+                log.warn('Run '+str(obs)+' does not exist - skipping')
+                nruns = nruns + 1
                 continue
             self.observations.append(val)
             if i == nruns:
@@ -117,11 +119,25 @@ class SpectrumAnalysis(object):
             sau.set_source(datid, p1)
             list_data.append(datid)
         wstat.wfit(list_data)
-        fit_val = sau.get_fit_results()
-        fit_attrs = ('parnames', 'parvals')
+        sau.covar()
+        fit_val = sau.get_covar_results()
+        fit_attrs = ('parnames', 'parvals', 'parmins', 'parmaxes')
         fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
+        fit = self.apply_containment(fit)
         sau.clean()
         return fit
+
+    def apply_containment(self, fit):
+        """Apply correction factor for PSF containment in ON region"""
+        cont = self.get_containment()
+        fit['containment'] = cont
+        fit['parvals'] = list(fit['parvals'])
+        fit['parvals'][1] = fit['parvals'][1] * cont
+        return fit
+        
+    def get_containment(self):
+        """Calculate PSF correction factor for containment in ON region"""
+        return 1
 
 class SpectrumObservation(object):
     """1D region based spectral analysis observation.
