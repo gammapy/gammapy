@@ -25,6 +25,10 @@ If you'd like to try out Gammapy, head over to the :ref:`install` and :ref:`tuto
 News
 ----
 
+Coming up:
+
+* November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
+
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
 
 * August 13, 2015 --- Gammapy **0.3** release. See changelog: :ref:`gammapy_0p3_release`
@@ -73,4 +77,3 @@ The Gammapy toolbox
   stats/index
   time/index
   utils/index
-
