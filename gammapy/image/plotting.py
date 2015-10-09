@@ -401,7 +401,7 @@ def _panel_parameters(npanels, center, fov, xborder, yborder,
     yspacing = float(yspacing)
 
     # Width and height in deg of a slice
-    width = fov[0] / npanels + xoverlap
+    width = fov[0] / npanels
     height = fov[1]
     # Aspect ratio y:x of a slice
     aspectratio = fov[1] / (fov[0] / npanels)
@@ -436,7 +436,7 @@ def _panel_parameters(npanels, center, fov, xborder, yborder,
     pp['npanels'] = npanels
     pp['centers'] = subplot_centers
     pp['subplots'] = subplots
-    pp['width'] = width
+    pp['width'] = width + xoverlap
     pp['height'] = height
 
     return pp
