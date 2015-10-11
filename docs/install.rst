@@ -36,7 +36,8 @@ and then run these commands:
 
     conda config --add channels astropy --add channels sherpa
     conda install gammapy naima \
-        scipy matplotlib ipython-notebook cython
+        scipy matplotlib ipython-notebook \
+        cython click
 
 We strongly recommend that you install the optional dependencies of Gammapy to have the full
 functionality available:
@@ -168,7 +169,7 @@ The following packages are available:
     sudo apt-get install \
         python3-pip python3-scipy python3-matplotlib python3-skimage python3-sklearn \
         python3-pandas python3-h5py python3-yaml ipython3-notebook python3-uncertainties \
-        python3-astropy
+        python3-astropy python3-click
 
 The following packages have to be installed with pip:
 
@@ -209,7 +210,7 @@ The following packages are available via Macports:
     sudo port install \
         $PY-pip $PY-scipy $PY-matplotlib $PY-scikit-image $PY-scikit-learn \
         $PY-pandas $PY-emcee $PY-h5py $PY-yaml $PY-ipython $PY-uncertainties \
-        $PY-healpy $PY-astropy
+        $PY-healpy $PY-astropy $PY-click $PY-cython
 
 
 If you want some other Python version, use a different suffix (e.g. ``py27`` or ``py35``).
@@ -300,6 +301,13 @@ The required core dependencies of Gammapy are:
 * `Numpy`_ - the fundamental package for scientific computing with Python
 * `Astropy`_ - the core package for Astronomy in Python
 
+We're currently using
+
+* `click`_ for making command line tools
+* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling (config and results files
+* `flask`_ and some Flask plugins for Gammapy web apps
+
+
 Currently optional dependencies that are being considered as core dependencies:
 
 * `Sherpa`_ for modeling / fitting (doesn't work with Python 3 yet)
@@ -325,7 +333,6 @@ Allowed optional dependencies:
 * `iminuit`_ for fitting by optimization
 * `emcee`_ for fitting by MCMC sampling
 * `h5py`_ for `HDF5 <http://en.wikipedia.org/wiki/Hierarchical_Data_Format>`__ data handling
-* `PyYAML`_ for `YAML <http://en.wikipedia.org/wiki/YAML>`__ data handling
 * `healpy`_ for `HEALPIX <http://healpix.jpl.nasa.gov/>`__ data handling
 
 

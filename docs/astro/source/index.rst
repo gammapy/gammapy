@@ -14,6 +14,7 @@ The `gammapy.astro.source` module contains classes of source models, which can b
 
 Source Models
 =============
+
 The following source models are available:
 
 .. toctree::

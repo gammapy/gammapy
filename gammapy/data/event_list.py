@@ -337,6 +337,17 @@ class EventList(Table):
 
         return lon, lat
 
+    def peek(self):
+        """Summary plots."""
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
+        self.plot_image(ax=axes[0])
+        self.plot_energy_dependence(ax=axes[1])
+        self.plot_offset_dependence(ax=axes[2])
+        plt.tight_layout()
+        plt.show()
+
+
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).

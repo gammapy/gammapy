@@ -8,6 +8,7 @@ from astropy.table import Table
 __all__ = ['get_hdu',
            'get_image_hdu',
            'get_table_hdu',
+           'get_hdu_with_valid_name',
            'fits_table_to_pandas',
            'table_to_fits_table',
            'fits_table_to_table',
@@ -154,3 +155,20 @@ def fits_table_to_table(tbhdu):
         table[colname].unit = tbhdu.columns[colname].unit
 
     return table
+
+
+def get_hdu_with_valid_name(hdu_list, valid_extnames):
+    """Get HDU with valid extension name.
+    """
+    hdu = None
+    for _ in hdu_list:
+        if _.name in valid_extnames:
+            hdu = _
+
+    if hdu is None:
+        msg = 'No HDU with a valid extension name found. '
+        msg += 'Valid names: {}. '.format(valid_extnames)
+        msg += 'Present names: {}. '.format([_.name for _ in hdu_list])
+        raise KeyError(msg)
+
+    return hdu

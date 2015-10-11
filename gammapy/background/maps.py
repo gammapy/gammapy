@@ -58,7 +58,6 @@ class Maps(fits.HDUList):
                  is_off_correlated=True, theta=None, theta_pix=0):
         super(Maps, self).__init__(hdus, file)
 
-        # import IPython; IPython.embed()
         # if rename_hdus is not None:
         #    for name, number in rename_hdus.items():
         #        self[number].name = name

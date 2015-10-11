@@ -39,6 +39,7 @@ def test_EffectiveAreaTable():
     filename = get_pkg_data_filename('data/arf_info.txt')
     info_str = open(filename, 'r').read()
     arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
+    print(arf.info())
     assert arf.info() == info_str
 
 
@@ -128,14 +129,14 @@ def test_EffectiveAreaTable2D(method):
     # Test ARF export
     offset = Angle(0.236, 'degree')
     e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
-    energ_lo = e_axis[:-1]
-    energ_hi = e_axis[1:]
+    energy_lo = e_axis[:-1]
+    energy_hi = e_axis[1:]
 
-    effareafrom2d = effarea.to_effective_area_table(offset, energ_lo, energ_hi)
+    effareafrom2d = effarea.to_effective_area_table(offset, energy_lo, energy_hi)
 
-    energy = Quantity(np.sqrt(energ_lo.value * energ_hi.value), 'TeV')
+    energy = Quantity(np.sqrt(energy_lo.value * energy_hi.value), 'TeV')
     area = effarea.evaluate(offset, energy)
-    effarea1d = EffectiveAreaTable(energ_lo, energ_hi, area)
+    effarea1d = EffectiveAreaTable(energy_lo, energy_hi, area)
 
     test_energy = Quantity(2.34, 'TeV')
     actual = effareafrom2d.effective_area_at_energy(test_energy)

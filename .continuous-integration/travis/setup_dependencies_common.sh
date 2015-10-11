@@ -20,6 +20,10 @@ fi
 # CORE DEPENDENCIES
 conda install --yes pytest Cython jinja2 psutil
 
+# These dependencies are just needed for some functionality, they are not core.
+# But the pytest runner fails with an ImportError if we don't put it here
+conda install --yes click
+
 # NUMPY
 if [[ $NUMPY_VERSION == dev ]]
 then

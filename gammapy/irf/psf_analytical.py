@@ -8,7 +8,9 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
+from ..utils.fits import get_hdu_with_valid_name
 from ..irf import HESSMultiGaussPSF
+from ..spectrum import Energy
 from ..utils.fits import table_to_fits_table
 
 __all__ = ['EnergyDependentMultiGaussPSF']
@@ -52,15 +54,14 @@ class EnergyDependentMultiGaussPSF(object):
         from gammapy.irf import EnergyDependentMultiGaussPSF
         from gammapy.datasets import load_psf_fits_table
         psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
-        psf.plot_containment(0.68, show_save_energy=False)
+        psf.plot_containment(0.68, show_safe_energy=False)
         plt.show()
-
     """
 
     def __init__(self, energy_lo, energy_hi, theta, sigmas, norms,
                  energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV'),
-                 azimuth=Quantity([0], 'deg'), zenith=Quantity([0], 'deg')):
+                 ):
 
         # Validate input
         validate_physical_type('energy_lo', energy_lo, 'energy')
@@ -77,8 +78,6 @@ class EnergyDependentMultiGaussPSF(object):
         self.norms = norms
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
-        self._azimuth = azimuth
-        self._zenith = zenith
 
     @classmethod
     def read(cls, filename):
@@ -101,24 +100,26 @@ class EnergyDependentMultiGaussPSF(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with correct extensions.
         """
-        extension = 'POINT SPREAD FUNCTION'
-        energy_lo = Quantity(hdu_list[extension].data['ENERG_LO'][0], 'TeV')
-        energy_hi = Quantity(hdu_list[extension].data['ENERG_HI'][0], 'TeV')
-        theta = Angle(hdu_list[extension].data['THETA_LO'][0], 'degree')
+        valid_extnames = ['POINT SPREAD FUNCTION', 'PSF_2D']
+        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames)
+
+        energy_lo = Quantity(hdu.data['ENERG_LO'][0], 'TeV')
+        energy_hi = Quantity(hdu.data['ENERG_HI'][0], 'TeV')
+        theta = Angle(hdu.data['THETA_LO'][0], 'degree')
 
         # Get sigmas
         shape = (len(theta), len(energy_hi))
         sigmas = []
         for key in ['SIGMA_1', 'SIGMA_2', 'SIGMA_3']:
-            sigmas.append(hdu_list[extension].data[key].reshape(shape))
+            sigmas.append(hdu.data[key].reshape(shape))
 
         # Get amplitudes
         norms = []
         for key in ['SCALE', 'AMPL_2', 'AMPL_3']:
-            norms.append(hdu_list[extension].data[key].reshape(shape))
+            norms.append(hdu.data[key].reshape(shape))
         try:
-            energy_thresh_lo = Quantity(hdu_list[extension].header['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(hdu_list[extension].header['HI_THRES'], 'TeV')
+            energy_thresh_lo = Quantity(hdu.header['LO_THRES'], 'TeV')
+            energy_thresh_hi = Quantity(hdu.header['HI_THRES'], 'TeV')
             return cls(energy_lo, energy_hi, theta, sigmas,
                        norms, energy_thresh_lo, energy_thresh_hi)
         except KeyError:
@@ -153,13 +154,11 @@ class EnergyDependentMultiGaussPSF(object):
             header[key] = value
 
         # Set up data
-        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI', 'AZIMUTH_LO',
-                 'AZIMUTH_HI', 'ZENITH_LO', 'ZENITH_HI', 'SCALE', 'SIGMA_1',
-                 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
-        units = ['TeV', 'TeV', 'deg', 'deg', 'deg', 'deg', 'deg', 'deg',
+        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
+                 'SCALE', 'SIGMA_1', 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
+        units = ['TeV', 'TeV', 'deg', 'deg',
                  '', 'deg', '', 'deg', '', 'deg']
         data = [self.energy_lo, self.energy_hi, self.theta, self.theta,
-                self._azimuth, self._azimuth, self._zenith, self._zenith,
                 self.norms[0].flatten(), self.sigmas[0].flatten(),
                 self.norms[1].flatten(), self.sigmas[1].flatten(),
                 self.norms[2].flatten(), self.sigmas[2].flatten()]
@@ -174,8 +173,6 @@ class EnergyDependentMultiGaussPSF(object):
         prim_hdu = fits.PrimaryHDU()
         hdu = table_to_fits_table(table)
         hdu.header = header
-        hdu.add_checksum()
-        hdu.add_datasum()
         return fits.HDUList([prim_hdu, hdu])
 
     def write(self, filename, *args, **kwargs):
@@ -203,8 +200,8 @@ class EnergyDependentMultiGaussPSF(object):
         psf : `~gammapy.morphology.MultiGauss2D`
             Multigauss PSF object.
         """
-        validate_physical_type('energy', energy, 'energy')
-        # TODO: validate `theta`
+        energy = Energy(energy)
+        theta = Angle(theta)
 
         # Find nearest energy value
         i = np.argmin(np.abs(self.energy_hi - energy))
@@ -223,22 +220,26 @@ class EnergyDependentMultiGaussPSF(object):
         psf = HESSMultiGaussPSF(pars)
         return psf.to_MultiGauss2D(normalize=True)
 
-    def _containment_radius_array(self, energies, thetas, fraction):
+    def containment_radius(self, energy, theta, fraction=0.68):
         """Compute containment for all energy and theta values"""
-        containment = np.empty((len(thetas), len(energies)))
-        for j, energy in enumerate(energies):
-            for i, theta in enumerate(thetas):
-                psf = self.psf_at_energy_and_theta(energy, theta)
+        energy = Energy(energy).flatten()
+        theta = Angle(theta).flatten()
+        radius = np.empty((theta.size, energy.size))
+        for idx_energy in range(len(energy)):
+            for idx_theta in range(len(theta)):
                 try:
-                    containment[i, j] = psf.containment_radius(fraction)
+                    psf = self.psf_at_energy_and_theta(energy[idx_energy], theta[idx_theta])
+                    radius[idx_theta, idx_energy] = psf.containment_radius(fraction)
                 except ValueError:
                     log.debug("Computing containment failed for E = {0:.2f}"
-                              " and Theta={1:.2f}".format(energy, theta))
+                              " and Theta={1:.2f}".format(energy[idx_energy], theta[idx_theta]))
                     log.debug("Sigmas: {0} Norms: {1}".format(psf.sigmas, psf.norms))
-                    containment[i, j] = np.nan
-        return Quantity(containment, 'deg')
+                    radius[idx_theta, idx_energy] = np.nan
 
-    def plot_containment(self, fraction, filename=None, show_save_energy=True):
+        return Angle(radius, 'deg')
+
+    def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
+                         add_cbar=True, **kwargs):
         """
         Plot containment image with energy and theta axes.
 
@@ -246,42 +247,90 @@ class EnergyDependentMultiGaussPSF(object):
         ----------
         fraction : float
             Containment fraction between 0 and 1.
-        filename : string
-            Filename under which the plot is saved.
+        add_cbar : bool
+            Add a colorbar
         """
+        from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
+        kwargs.setdefault('origin', 'lower')
+        kwargs.setdefault('interpolation', 'nearest')
+        # kwargs.setdefault('vmin', 0.1)
+        # kwargs.setdefault('vmax', 0.2)
 
         # Set up and compute data
-        containment = self._containment_radius_array(self.energy_hi, self.theta, fraction)
-        # Plotting
-        plt.figure(figsize=(8, 6))
-        plt.imshow(containment.value, origin='lower', interpolation='None',
-                   vmin=0.1, vmax=0.2)
+        containment = self.containment_radius(self.energy_hi, self.theta, fraction)
 
-        if show_save_energy:
+        extent = [
+            self.theta[0].value, self.theta[-1].value,
+            self.energy_lo[0].value, self.energy_hi[-1].value,
+        ]
+
+        # Plotting
+        ax.imshow(containment.T.value, extent=extent, **kwargs)
+
+        if show_safe_energy:
             # Log scale transformation for position of energy threshold
             e_min = self.energy_hi.value.min()
             e_max = self.energy_hi.value.max()
             e = (self.energy_thresh_lo.value - e_min) / (e_max - e_min)
             x = (np.log10(e * (e_max / e_min - 1) + 1) / np.log10(e_max / e_min)
                  * (len(self.energy_hi) + 1))
-            plt.vlines(x, -0.5, len(self.theta) - 0.5)
-            plt.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
+            ax.vlines(x, -0.5, len(self.theta) - 0.5)
+            ax.text(x + 0.5, 0, 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
 
         # Axes labels and ticks, colobar
-        plt.xlabel('E (TeV)')
-        xticks = ["{0:3.2g}".format(_) for _ in self.energy_hi.value[:-1]]
-        plt.xticks(np.arange(len(self.energy_hi)), xticks, size=9)
-        plt.ylabel('Theta (deg)')
-        yticks = ["{0:3.2g}".format(_) for _ in self.theta.value]
-        plt.yticks(np.arange(len(self.theta)), yticks, size=9)
-        cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9)
-        cbar.set_label('Containment radius R{0:.0f} (deg)'.format(100 * fraction),
-                       labelpad=20)
+        ax.semilogy()
+        ax.set_xlabel('Offset (deg)')
+        ax.set_ylabel('Energy (TeV)')
 
-        if filename is not None:
-            log.info('Wrote {0}'.format(filename))
-            plt.savefig(filename)
+        if add_cbar:
+            ax_cbar = plt.colorbar(fraction=0.1, pad=0.01, shrink=0.9,
+                                   mappable=ax.images[0], ax=ax)
+            label = 'Containment radius R{0:.0f} (deg)'.format(100 * fraction)
+            ax_cbar.set_label(label)
+
+        return ax
+
+    def plot_containment_vs_energy(self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
+        """Plot containment fraction as a function of energy.
+        """
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        energy = Energy.equal_log_spacing(
+            self.energy_lo[0], self.energy_hi[-1], 100)
+
+        for theta in thetas:
+            for fraction in fractions:
+                radius = self.containment_radius(energy, theta, fraction).squeeze()
+                label = '{} deg, {:.1f}%'.format(theta, 100 * fraction)
+                ax.plot(energy.value, radius.value, label=label)
+
+        ax.semilogx()
+        ax.legend(loc='best')
+        ax.set_xlabel('Energy (TeV)')
+        ax.set_ylabel('Containment radius (deg)')
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+
+        self.plot_containment(fraction=0.68, ax=axes[0])
+        self.plot_containment(fraction=0.95, ax=axes[1])
+        self.plot_containment_vs_energy(ax=axes[2])
+
+        # TODO: implement this plot
+        # psf = self.psf_at_energy_and_theta(energy='1 TeV', theta='1 deg')
+        # psf.plot_components(ax=axes[2])
+
+        plt.tight_layout()
+        plt.show()
 
     def info(self, fractions=[0.68, 0.95], energies=Quantity([1., 10.], 'TeV'),
              thetas=Quantity([0.], 'deg')):
@@ -315,7 +364,7 @@ class EnergyDependentMultiGaussPSF(object):
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
         for fraction in fractions:
-            containment = self._containment_radius_array(energies, thetas, fraction)
+            containment = self.containment_radius(energies, thetas, fraction)
             for i, energy in enumerate(energies):
                 for j, theta in enumerate(thetas):
                     radius = containment[j, i]

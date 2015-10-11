@@ -57,6 +57,8 @@ def get_installed_scripts():
 
 def get_all_main_functions():
     """Get a dict with all scripts (used for testing).
+
+    TODO: this is brittle ... find a better solution to collect the scripts.
     """
     # Could this work?
     # http://stackoverflow.com/questions/1707709/list-all-the-modules-that-are-part-of-a-python-package
@@ -66,8 +68,10 @@ def get_all_main_functions():
     path = os.path.join(os.path.dirname(__file__), '../scripts')
     names = glob.glob1(path, '*.py')
     names = [_.replace('.py', '') for _ in names]
-    for name in ['__init__']:
+    for name in ['__init__', 'setup_package']:
         names.remove(name)
+
+    # names += ['data_browser']
 
     out = OrderedDict()
     for name in names:

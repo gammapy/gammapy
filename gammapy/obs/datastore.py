@@ -12,6 +12,13 @@ __all__ = ['DataStore',
            'convert_obs_list_format_to_gammapy',
            ]
 
+def update_data():
+    """Update data from server (using rsync)"""
+    raise NotImplementedError
+    # TODO: extract this from the `datastore-config.yaml` config file:
+    cmd = ('rsync -uvrl {username}@{server}:{server_path} {local_path}'
+           ''.format(locals()))
+
 
 def _make_filename_hess_scheme(obs_id, filetype='events'):
     """Make filename string for the HESS storage scheme.
@@ -119,6 +126,21 @@ class DataStoreIndexTable(ObservationTable):
         """Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)"""
         return SkyCoord(self['GLON'], self['GLAT'], unit='deg', frame='galactic')
 
+    def get_obs_idx(self, obs_id):
+        """Get observation table row index for given ID.
+
+        Raises ValueError if the observation isn't available.
+        """
+        # TODO: maybe searchsorted is faster?
+        return list(self['OBS_ID']).index(obs_id)
+
+    def get_obs_row(self, obs_id):
+        """Get observation table row for given ID.
+
+        Raises ValueError if the observation isn't available.
+        """
+        return self[self.get_obs_idx(obs_id)]
+
 
 class DataStore(object):
     """Data store - convenient way to access and select data.
@@ -150,8 +172,9 @@ class DataStore(object):
         ss += 'Directory: {}\n'.format(self.dir)
         ss += 'Index table: {}\n'.format(self.index_table_filename)
         ss += 'Scheme: {}\n'.format(self.scheme)
-        #Does not exist
-        #ss += self.index_table.info()
+
+        # TODO: make this work:
+        # ss += self.index_table.info()
         return ss
 
     def check_integrity(self, logger):
@@ -365,7 +388,7 @@ def _convert_obs_list_hess_to_gammapy(obs_list):
                ('MUONEFF', 'MUON_EFFICIENCY'),
                ('ONTIME', 'TIME_OBSERVATION'),
                ('LIVETIME', 'TIME_LIVE'),
-               ('TSTART', 'TIME_START '),
+               ('TSTART', 'TIME_START'),
                ('TSTOP', 'TIME_STOP'),
                ('TRGRATE', 'TRIGGER_RATE'),
                ('MEANTEMP', 'MEAN_TEMPERATURE'),

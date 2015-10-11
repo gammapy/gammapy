@@ -29,17 +29,19 @@ TODO
 
 Hello World.
 
-Reference/API
-=============
+Using `gammapy.background`
+--------------------------
 
-.. automodapi:: gammapy.background
-    :no-inheritance-diagram:
-
-Sub-pages
----------
+If you'd like to learn more about using `gammapy.background`, read the following sub-pages:
 
 .. toctree::
    :maxdepth: 1
 
    models
    make_models
+
+Reference/API
+=============
+
+.. automodapi:: gammapy.background
+    :no-inheritance-diagram:
