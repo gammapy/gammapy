@@ -167,7 +167,6 @@ def make_source_catalog():
 
     hdu = fits.open(TS_IMAGES)['sqrt_ts']
     header = fits.getheader(REF_IMAGE)
-    # import IPython; IPython.embed()
     wcs = WCS(header)
 
     print('Running find_peaks ...')

@@ -51,8 +51,6 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     energies_lo = energies_all[:-1]
     energies_hi = energies_all[1:]
     theta_lo = theta_hi = np.linspace(0, 2.2, theta_bins)
-    azimuth_lo = azimuth_hi = 0
-    zenith_lo = zenith_hi = 0
 
     def sigma_energy_theta(energy, theta, sigma):
         # log-linear dependency of sigma with energy
@@ -77,8 +75,8 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     psf = EnergyDependentMultiGaussPSF(Quantity(energies_lo, 'TeV'),
                                        Quantity(energies_hi, 'TeV'),
                                        Quantity(theta_lo, 'deg'),
-                                       sigmas, norms, azimuth=azimuth_hi,
-                                       zenith=zenith_hi)
+                                       sigmas, norms
+                                       )
 
     return psf
 

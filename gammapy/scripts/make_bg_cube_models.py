@@ -47,7 +47,7 @@ def main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(indir, scheme, outdir, overwrite, test, method):
+def make_bg_cube_models(indir, scheme, outdir, overwrite=False, test=False, method='default'):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -130,9 +130,9 @@ def create_bg_observation_list(indir, scheme, outdir, overwrite, test):
     # for testing, only process a small subset of observations
     if test and len(observation_table) > 100:
         observation_table = observation_table.select_linspace_subset(num=100)
-    log.info(' ')
-    log.info("Full observation table:")
-    log.info(observation_table)
+    log.debug(' ')
+    log.debug("Full observation table:")
+    log.debug(observation_table)
 
     # filter observations: load catalog and reject obs too close to sources
 
@@ -217,8 +217,8 @@ def group_observations(outdir, overwrite, test):
     log.info(' ')
     log.info("Observation group axes:")
     log.info(observation_groups.info)
-    log.info("Observation groups table (group definitions):")
-    log.info(observation_groups.obs_groups_table)
+    log.debug("Observation groups table (group definitions):")
+    log.debug(observation_groups.obs_groups_table)
 
     # group observations in the obs table according to the obs groups
     observation_table_grouped = observation_table
@@ -235,9 +235,9 @@ def group_observations(outdir, overwrite, test):
     azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(360., 'degree'))
     observation_table_grouped['AZ'] = azimuth
 
-    log.info(' ')
-    log.info("Observation table grouped:")
-    log.info(observation_table_grouped)
+    log.debug(' ')
+    log.debug("Observation table grouped:")
+    log.debug(observation_table_grouped)
 
     # save the observation groups and the grouped bg observation list to file
     outfile = os.path.join(outdir, 'bg_observation_groups.ecsv')
@@ -287,7 +287,7 @@ def stack_observations(indir, outdir, overwrite, method='default'):
         # get group of observations
         observation_table = observation_groups.get_group_of_observations(observation_table_grouped,
                                                                          group)
-        log.info(observation_table)
+        log.debug(observation_table)
 
         # skip bins with no observations
         if len(observation_table) == 0:

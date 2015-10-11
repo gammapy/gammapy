@@ -131,7 +131,6 @@ def fetch_fermi_catalog(catalog, extension=None):
         return hdu_list
 
     table = Table(hdu_list[extension].data)
-    # import IPython; IPython.embed(); 1/0
     table['IS_GALACTIC'] = [_is_galactic(_) for _ in table['CLASS1']]
 
     return table
