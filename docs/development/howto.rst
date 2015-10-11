@@ -122,7 +122,7 @@ class.
 Python 2 and 3 support
 ----------------------
 
-We support Python 2.7 and 3.3 or later using a single code base.
+We support Python 2.7 and 3.4 or later using a single code base.
 This is the strategy adopted by most scientific Python projects and a good starting point to learn about it is
 `here <http://python3porting.com/noconv.html>`__ and
 `here <http://astropy.readthedocs.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
@@ -137,6 +137,9 @@ The decision to drop Python 2.6 and 3.2 support was made in August 2014 just bef
 based on a few scientific Python user surveys on the web that show that only a small minority are still
 using such an old version, so that it's not worth the developer and maintainer effort to test
 these old versions and to find workarounds for their missing features or bugs.
+
+Python 3.3 support was dropped in August 2015 because conda packages for some of the affiliated packages
+weren't available for testing on travis-ci.
 
 .. _development-wipe_readthedocs:
 
@@ -584,7 +587,7 @@ Class attributes
 ++++++++++++++++
 
 Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.spectral.Spectralcube` as an example.
+see `~gammapy.data.SpectralCube` as an example.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
@@ -704,7 +707,7 @@ Note that if you distribute Gammapy together with one of the GPL dependencies,
 the whole distribution then falls under the GPL license.
 
 Gammapy plotting style
-++++++++++++++++++++++
+----------------------
 
 Figures and plots in the Gammapy docs use the same consistent plotting style,
 that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
@@ -722,3 +725,20 @@ the following lines to the beginning of your plotting script or notebook:
 	import matplotlib.pyplot as plt
 	from gammapy.utils.mpl_style import gammapy_mpl_style
 	plt.style.use(gammapy_mpl_style)
+
+Changelog
+---------
+
+In Gammapy we keep a :ref:`changelog` with a list of pull requests.
+We sort by release and within the release by PR number (largest first).
+
+As explained in the :ref:`astropy:changelog-format` section in the Astropy docs,
+there are (at least) two approaches for adding to the changelog, each with pros
+and cons.
+
+We've had some pain due to merge conflicts in the changelog and having to wait
+until the contributor rebases (and having to explain git rebase to new contributors).
+
+So our recommendation is that changelog entries are not added in pull requests,
+but that the core developer adds a changelog entry after right after having
+merged a pull request (you can add ``[skip ci]`` on this commit).

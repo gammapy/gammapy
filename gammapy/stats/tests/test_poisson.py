@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ...stats import (background,
-                      background_error,
-                      excess,
-                      excess_error,
-                      significance_on_off,
-                      significance,
-                      )
+from ...stats import (
+    background,
+    background_error,
+    excess,
+    excess_error,
+    significance_on_off,
+    significance,
+    sensitivity,
+    sensitivity_on_off,
+)
 
 
 def test_docstring_examples():
@@ -60,5 +62,5 @@ def test_sensitivity():
                     significance = significance_on_off(n_on, n_off, alpha, method=method)
                     excess = sensitivity_on_off(n_off, alpha, significance, method=method)
                     n_on2 = excess + alpha * n_off
-                    #print(n_on, n_off, alpha, significance, excess, n_on2)
+                    # print(n_on, n_off, alpha, significance, excess, n_on2)
                     assert_allclose(n_on, n_on2, decimal=3)

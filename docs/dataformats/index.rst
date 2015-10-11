@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _dataformats:
 
 ************
@@ -32,7 +34,7 @@ Events            EVENTS               `~gammapy.data.EventList`                
 ----------------- -------------------- ----------------------------------------- ----------------------------
 Counts            3D                   `~gammapy.data.SpectralCube`              `GCTAEventCube`_
 Counts            Image                no class?                                 `GSkyMap`_
-Counts            PHA                  `~gammapy.data.CountsSpectrumDataset`     `GPha`_
+Counts            PHA                  `~gammapy.data.CountsSpectrum`            `GPha`_
 ----------------- -------------------- ----------------------------------------- ----------------------------
 Exposure          EXPOSURE_3D          `~gammapy.data.SpectralCube`?             `GCTACubeExposure`_
 ----------------- -------------------- ----------------------------------------- ----------------------------
@@ -55,7 +57,7 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html
 
 .. _GCTAEventCube: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEventCube.html
-.. _GSkyMap: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTASkyMap.html
+.. _GSkyMap: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGSkyMap.html
 .. _GPha: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGPha.html
 
 .. _GCTABackground3D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTABackground3D.html
@@ -64,7 +66,6 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 
 .. _GCTACubeExposure: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTACubeExposure.html
 
-.. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
 .. _GCTAPsf2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsf2D.html
 .. _GCTAPsfVector: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsfVector.html
 .. _GCTACubePsf: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTACubePsf.html
@@ -72,7 +73,7 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 .. _GCTAAeff2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAAeff2D.html
 .. _GCTAAeffArf: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAAeffArf.html
 
-.. _GCTAEdispRMF: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdispRMF.html
+.. _GCTAEdispRMF: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdispRmf.html
 .. _GCTAEdisp2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAEdisp2D.html
 
 

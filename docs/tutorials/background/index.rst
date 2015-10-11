@@ -1,3 +1,5 @@
+.. _tutorials-background:
+
 Background Estimation
 =====================
 

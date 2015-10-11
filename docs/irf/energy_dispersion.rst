@@ -3,10 +3,10 @@
 Energy dispersion
 =================
 
-`~gammapy.irf.EnergyDispersion`
+TODO: describe / illustrate the existing classes:
 
-`~gammapy.irf.gauss_energy_dispersion_matrix`
-
-`~gammapy.irf.np_to_rmf`
+* `~gammapy.irf.EnergyDispersion`
+* `~gammapy.irf.EnergyDispersion2D`
+* `~gammapy.irf.gauss_energy_dispersion_matrix`
 
 .. plot:: irf/plot_energy_dispersion.py

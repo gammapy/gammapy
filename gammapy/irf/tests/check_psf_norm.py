@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 
 
+# TODO: implement this test without executing ROOT
+# That can be done in a separate `print_psf_norm`
+# function that's not executed as part of the tests.
 @pytest.mark.xfail
 def test_psf_norm():
     from ROOT import TF1

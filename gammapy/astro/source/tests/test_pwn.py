@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
@@ -11,7 +11,6 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
-
 
 t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], 'yr')
 pwn = PWN()

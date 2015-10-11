@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
@@ -12,6 +10,8 @@ from ..obs import ObservationTable
 
 __all__ = ['find_obs']
 
+log = logging.getLogger(__name__)
+
 
 def main(args=None):
     """Main function for argument parsing."""
@@ -20,7 +20,8 @@ def main(args=None):
                         help='Input observation table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
                         default=None,
-                        help='Output observation table file name (default: stdout)')
+                        help='Output observation table file name '
+                             '(default: None, will print the result on screen)')
     parser.add_argument('--x', type=float, default=None,
                         help='x coordinate (deg)')
     parser.add_argument('--y', type=float, default=None,
@@ -33,11 +34,8 @@ def main(args=None):
                         help='box semi-length y coordinate (deg)')
     parser.add_argument('--system', type=str,
                         help='Coordinate system '
-                        '(built-in Astropy coordinate frames are supported, '
-                        'e.g. \'icrs\' or \'galactic\')')
-    parser.add_argument('--pix', action='store_true',
-                        help='Input coordinates are pixels '
-                        '(default is world coordinates)')
+                             '(built-in Astropy coordinate frames are supported, '
+                             'e.g. \'icrs\' or \'galactic\')')
     parser.add_argument('--t_start', type=str, default=None,
                         help='UTC start time (string: yyyy-mm-ddThh:mm:ss.sssssssss)')
     parser.add_argument('--t_stop', type=str, default=None,
@@ -70,7 +68,6 @@ def find_obs(infile,
              dx,
              dy,
              system,
-             pix,
              t_start,
              t_stop,
              par_name,
@@ -92,9 +89,10 @@ def find_obs(infile,
         gammapy-find-obs -h
 
     In order to test the examples below, the test observation list
-    file located in the `~gammapy-extra` repository
-    (`test_observation_table.fits <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits>`_)
+    file located in the ``gammapy-extra`` repository `test_observation_table.fits`_
     can be used as input observation list.
+
+    .. _test_observation_table.fits: https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/obs/test_observation_table.fits
 
     More information is available at :ref:`obs_find_observations`.
 
@@ -113,13 +111,12 @@ def find_obs(infile,
         gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
         gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
         gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
+        gammapy-find-obs test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
     """
-    if pix:
-        raise NotImplementedError
-
+    # open (fits) file and read the observation table
     try:
         observation_table = ObservationTable.read(infile)
-    except FileNotFoundError:
+    except IOError:
         log.error('File not found: {}'.format(infile))
         exit(-1)
 
@@ -165,7 +162,7 @@ def find_obs(infile,
     if do_time_box_selection.all():
         log.debug("Applying time box selection.")
         # convert min, max to range and cast into Time object
-        t_range = Time([t_start, t_stop], format='isot', scale='utc')
+        t_range = Time([t_start, t_stop])
         selection = dict(type='time_box', time_range=t_range, inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
@@ -190,5 +187,6 @@ def find_obs(infile,
     if outfile is not None:
         observation_table.write(outfile, overwrite=overwrite)
     else:
+        log.info("Filtered observation table")
         log.info(observation_table.meta)
-        log.info(observation_table)
+        print(observation_table)

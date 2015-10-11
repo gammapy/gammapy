@@ -11,12 +11,6 @@ class CountsCubeDataset(object):
     """Counts cube dataset."""
     # TODO: implement me
 
-
-class CountsSpectrumDataset(object):
-    """Counts spectrum dataset."""
-    # TODO: implement me
-
-
 class CountsImageDataset(object):
     """Counts image dataset."""
     # TODO: implement me
@@ -31,3 +25,4 @@ from .gti import *
 from .telarray import *
 from .event_list import *
 from .spectral_cube import *
+from .counts_spectrum import *

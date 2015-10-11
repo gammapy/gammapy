@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.table import Table
 from ..time import time_ref_from_dict
 
-__all__ = ['GoodTimeIntervals']
+__all__ = [
+    'GoodTimeIntervals',
+]
 
 
 class GoodTimeIntervals(Table):
@@ -15,6 +16,7 @@ class GoodTimeIntervals(Table):
     EVENTS header ... the GTI header just deals with
     observation times.
     """
+
     def __init__(self, *args, **kwargs):
         super(GoodTimeIntervals, self).__init__(*args, **kwargs)
 

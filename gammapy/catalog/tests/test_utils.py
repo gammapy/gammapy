@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from ...catalog import coordinate_iau_format, ra_iau_format, dec_iau_format
 

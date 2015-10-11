@@ -1,20 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog utility functions / classes."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 
-
-__all__ = ['coordinate_iau_format',
-           'ra_iau_format',
-           'dec_iau_format',
-           'skycoord_from_table',
-           'select_sky_box',
-           'select_sky_circle',
-           'to_ds9_region',
-           'get_source_by_name'
-           ]
+__all__ = [
+    'coordinate_iau_format',
+    'ra_iau_format',
+    'dec_iau_format',
+    'skycoord_from_table',
+    'select_sky_box',
+    'select_sky_circle',
+    'to_ds9_region',
+    'get_source_by_name'
+]
 
 
 def coordinate_iau_format(coordinate, ra_digits, dec_digits=None,

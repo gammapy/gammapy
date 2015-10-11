@@ -31,17 +31,19 @@ TODO: tons of things, e.g.
 * Use photutils aperture photometry for estimate_flux?
 * Introduce FLUX_SCALE = 1e-10 parameter to avoid roundoff error problems?
 """
-from __future__ import print_function, division
-import os
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from .. import stats
 from ..image import disk_correlate
+from ..utils.scripts import _create_dir
 
-__all__ = ['IterativeSourceDetector',
-           ]
+__all__ = [
+    'IterativeSourceDetector',
+]
+
+log = logging.getLogger(__name__)
 
 
 class FitFailedError(object):
@@ -105,11 +107,8 @@ class IterativeSourceDetector(object):
             log.debug('Starting iteration number {0}'.format(_))
             debug_folder = self.debug_output_folder + '/' + str(_)
             if self.debug_output_folder:
-                try:
-                    os.mkdir(debug_folder)
-                    log.info('mkdir {0}'.format(debug_folder))
-                except:
-                    log.debug('Folder exists: {0}'.format(debug_folder))
+                _create_dir(debug_folder, overwrite=False)
+                log.info('mkdir {0}'.format(debug_folder))
 
             self.compute_iter_maps()
             if self.debug_output_folder:

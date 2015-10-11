@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_almost_equal
-from astropy.time import Time, TimeDelta
+from astropy.time import TimeDelta
 from ..utils import time_ref_from_dict, time_relative_to_ref, absolute_time
 
 
@@ -29,4 +28,4 @@ def test_absolute_time():
     delta_time_1sec = TimeDelta(1., format='sec')
     time = time_ref + delta_time_1sec
     abs_time = absolute_time(delta_time_1sec, time_ref_dict)
-    assert abs_time.value == time.utc.iso
+    assert abs_time.value == time.utc.isot

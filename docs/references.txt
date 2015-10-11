@@ -5,8 +5,10 @@
 .. _scipy: http://scipy.org/scipylib/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
+.. _3ML: https://threeml.stanford.edu/
 .. _Numpy: http://www.numpy.org/
 .. _Astropy: http://astropy.org
+.. _affiliated package: http://www.astropy.org/affiliated/index.html
 .. _reproject: http://reproject.readthedocs.org
 .. _photutils: http://photutils.readthedocs.org
 .. _astroplan: http://astroplan.readthedocs.org
@@ -20,18 +22,38 @@
 .. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
 .. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
 .. _CIAO: http://cxc.cfa.harvard.edu/ciao/
+.. _Chandra X-ray observatory (CXC): http://cxc.harvard.edu/
 .. _imfun: http://code.google.com/p/image-funcut/
 .. _aplpy: http://aplpy.github.io
 .. _matplotlib: http://matplotlib.org
 .. _pandas: http://pandas.pydata.org
 .. _pip: https://pip.pypa.io/en/stable/
 .. _conda: http://conda.pydata.org/
-.. _PyFACT: http://pyfact.readthedocs.org/en/latest/
+.. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
 .. _healpy: https://healpy.readthedocs.org/en/latest/
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _Enrico: https://github.com/gammapy/enrico/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
+
+.. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
+.. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
+
+.. _CTA: https://www.cta-observatory.org/
+.. _H.E.S.S.: http://www.mpi-hd.mpg.de/hfm/HESS/
+.. _HAWC: http://www.hawc-observatory.org/
+.. _VERITAS: http://veritas.sao.arizona.edu/
+.. _MAGIC: https://magic.mpp.mpg.de/
+.. _Fermi-LAT: http://fermi.gsfc.nasa.gov/
+
+.. _Werner Hofmann: https://en.wikipedia.org/wiki/Werner_Hofmann_(physicist)
+.. _Jim Hinton: https://www.mpi-hd.mpg.de/mpi/en/hinton/home/
+.. _Martin Raue: https://twitter.com/_rmrtn
+.. _Christoph Deil: https://github.com/cdeil
+
+.. _GSoC 2015: https://www.google-melange.com/gsoc/homepage/google/gsoc2015
+.. _Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling: http://mapaz-gsoc2015-blog.blogspot.de/
+.. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy on Twitter: https://twitter.com/Gammapy
@@ -40,3 +62,8 @@
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy 
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
+
+.. _scientific Python stack: http://www.scipy.org/about.html
+
+.. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
+.. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt

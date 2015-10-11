@@ -1,13 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose, assert_almost_equal
-
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.modeling.models import Gaussian2D
-
 from ...image import (measure_labeled_regions,
                       make_empty_image, lookup,
                       measure_containment_radius,
@@ -108,7 +105,6 @@ def test_measure_curve_of_growth():
 
 
 class _TestImageCoordinates(object):
-
     def setUp(self):
         self.image = make_empty_image(nxpix=3, nypix=2,
                                       binsz=10, proj='CAR')

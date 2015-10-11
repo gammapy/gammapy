@@ -32,7 +32,7 @@ observation together:
   `~gammapy.data.EventListDataset` into one of:
 
   - `~gammapy.data.CountsCubeDataset` (lon, lat, energy)
-  - `~gammapy.data.CountsSpectrumDataset` (energy)
+  - `~gammapy.data.CountsSpectrum` (energy)
   - `~gammapy.data.CountsImageDataset` (lon, lat)
   - `~gammapy.data.CountsLightCurveDataset` (time)
 
@@ -47,8 +47,8 @@ observation together:
 Energy binning
 --------------
 
-* `~gammapy.spectrum.EnergyBinCenters` and FITS "ENERGIES" extensions.
-* `~gammapy.spectrum.EnergyBinEdges` and FITS "EBOUNDS" extensions.
+* `~gammapy.spectrum.Energy` and FITS "ENERGIES" extensions.
+* `~gammapy.spectrum.EnergyBounds` and FITS "EBOUNDS" extensions.
 
 Spatial binning
 ---------------

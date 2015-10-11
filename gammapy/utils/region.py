@@ -6,13 +6,14 @@ References:
 * https://pypi.python.org/pypi/pyregion
 * http://ds9.si.edu/doc/ref/region.html
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+from astropy.extern import six
 
-
-__all__ = ['make_ds9_region',
-           'Circle',
-           'SkyCircle',
-           ]
+__all__ = [
+    'make_ds9_region',
+    'Circle',
+    'SkyCircle',
+]
 
 
 class Circle(object):
@@ -131,7 +132,7 @@ def _region_string(shape, pars, attrs, system='galactic'):
     if attrs:
         string += ' #'
         for key, val in attrs.items():
-            if isinstance(val, str):  # and ' ' in val:
+            if isinstance(val, six.string_types):
                 val = '{{%s}}' % val
             string += ' {0}={1}'.format(key, val)
     string += '\n'
