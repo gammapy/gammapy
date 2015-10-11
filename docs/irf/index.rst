@@ -62,8 +62,10 @@ Getting Started
 TODO: document
 
 
-Using `gammapy.image`
-=====================
+Using `gammapy.irf`
+===================
+
+If you'd like to learn more about using `gammapy.irf`, read the following sub-pages:
 
 .. toctree::
    :maxdepth: 1

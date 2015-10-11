@@ -14,4 +14,4 @@ def test_TelescopeArray():
     location = telescope_array.observatory_earth_location.geocentric
     hess_location = observatory_locations.HESS.geocentric
     offset = Quantity(location) - Quantity(hess_location)
-    assert_allclose(offset, 0, atol=1e-3)  # meter
+    assert_allclose(offset.value, 0, atol=1e-3)

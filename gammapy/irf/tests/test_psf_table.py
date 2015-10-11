@@ -37,12 +37,12 @@ def test_TablePSF_disk():
     # Check psf.evaluate by checking if probabilities sum to 1
     psf_value = psf.evaluate(offset, quantity='dp_dtheta')
     integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
-    assert_allclose(integral, 1, rtol=1e-3)
+    assert_allclose(integral.value, 1, rtol=1e-3)
 
     psf_value = psf.evaluate(offset, quantity='dp_domega')
     psf_value = (2 * np.pi * offset * psf_value).to('radian^-1')
     integral = np.sum(np.diff(offset.radian) * psf_value[:-1])
-    assert_allclose(integral, 1, rtol=1e-3)
+    assert_allclose(integral.value, 1, rtol=1e-3)
 
     assert_allclose(psf.integral(), 1, rtol=1e-3)
     assert_allclose(psf.integral(*Angle([0, 10], 'deg')), 1, rtol=1e-3)

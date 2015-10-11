@@ -34,6 +34,8 @@ as input and output:
 Using `gammapy.image`
 =====================
 
+If you'd like to learn more about using `gammapy.image`, read the following sub-pages:
+
 .. toctree::
    :maxdepth: 1
 

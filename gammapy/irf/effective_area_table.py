@@ -8,7 +8,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
-from ..utils.fits import table_to_fits_table
+from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
 
 __all__ = [
     'abramowski_effective_area',
@@ -94,7 +94,7 @@ class EffectiveAreaTable(object):
         from gammapy.irf import EffectiveAreaTable
         from gammapy.datasets import load_arf_fits_table
         arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
-        arf.plot_area_vs_energy(show_save_energy=False)
+        arf.plot_area_vs_energy(show_safe_energy=False)
         plt.show()
     """
 
@@ -159,11 +159,9 @@ class EffectiveAreaTable(object):
         self.energy_hi = self.energy_hi.to(energy_unit)
         self.effective_area = self.effective_area.to(effarea_unit)
 
-
         hdu = table_to_fits_table(self.to_table())
 
         if header is None:
-
             header = hdu.header
 
             # Write FITS extension header
@@ -191,8 +189,6 @@ class EffectiveAreaTable(object):
 
         prim_hdu = fits.PrimaryHDU()
         hdu.header = header
-        hdu.add_checksum()
-        hdu.add_datasum()
         return fits.HDUList([prim_hdu, hdu])
 
     def write(self, filename, energy_unit='TeV', effarea_unit='m2',
@@ -270,14 +266,8 @@ class EffectiveAreaTable(object):
         i = np.argmin(np.abs(self.energy_hi - energy))
         return self.effective_area[i]
 
-    def info(self, energies=Quantity([1, 10], 'TeV')):
-        """
-        Print some ARF info.
-
-        Parameters
-        ----------
-        energies : `~astropy.units.Quantity`
-            Energies for which to print effective areas.
+    def info(self):
+        """Print some basic info.
         """
         ss = "\nSummary ARF info\n"
         ss += "----------------\n"
@@ -288,37 +278,30 @@ class EffectiveAreaTable(object):
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
-        for energy in energies:
-            eff_area = self.effective_area_at_energy(energy)
-            ss += ("Effective area at E = {0:4.1f}: {1:10.0f}\n".format(energy, eff_area))
         return ss
 
-    def plot_area_vs_energy(self, filename=None, show_save_energy=True):
+    def plot_area_vs_energy(self, ax=None, show_safe_energy=True):
         """
         Plot effective area vs. energy.
         """
         import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
 
         energy_hi = self.energy_hi.value
         effective_area = self.effective_area.value
-        plt.plot(energy_hi, effective_area)
-        if show_save_energy:
-            plt.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
-            plt.text(self.energy_thresh_hi.value - 1, 3E6,
-                     'Safe energy threshold: {0:3.2f}'.format(
-                         self.energy_thresh_hi),
-                     ha='right')
-            plt.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
-            plt.text(self.energy_thresh_lo.value + 0.1, 3E3,
-                     'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo))
-        plt.xlim(0.1, 100)
-        plt.ylim(1E3, 1E7)
-        plt.loglog()
-        plt.xlabel('Energy (TeV)')
-        plt.ylabel('Effective Area (m2)')
-        if filename is not None:
-            plt.savefig(filename)
-            log.info('Wrote {0}'.format(filename))
+        ax.plot(energy_hi, effective_area)
+        if show_safe_energy:
+            ax.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
+            text = 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi)
+            ax.text(self.energy_thresh_hi.value - 1, 3E6, text, ha='right')
+            ax.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
+            text = 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo)
+            ax.text(self.energy_thresh_lo.value + 0.1, 3E3, text)
+        ax.set_xlim(0.1, 100)
+        ax.set_ylim(1E3, 1E7)
+        ax.set_xlabel('Energy (TeV)')
+        ax.set_ylabel('Effective Area (m2)')
+        ax.loglog()
 
 
 class EffectiveAreaTable2D(object):
@@ -333,14 +316,10 @@ class EffectiveAreaTable2D(object):
 
     Parameters
     ----------
-    energ_lo : `~astropy.units.Quantity`
-        Lower energy bin edges vector
-    energ_hi : `~astropy.units.Quantity`
-        Upper energy bin edges vector
-    offset_lo : `~astropy.coordinates.Angle`
-        Lower offset bin edges vector
-    offset_hi : `~astropy.coordinates.Angle`
-        Upper offset bin edges  vector
+    energy_lo, energy_hi : `~astropy.units.Quantity`
+        Lower / upper energy bin edges vector
+    offset_lo, offset_hi : `~astropy.coordinates.Angle`
+        Lower / upper offset bin edges vector
     eff_area : `~astropy.units.Quantity`
         Effective area vector (true energy)
     eff_area_reco : `~astropy.units.Quantity`
@@ -379,9 +358,9 @@ class EffectiveAreaTable2D(object):
         offset = Angle(0.43, 'degree')
         nbins = 50
         energy = EnergyBounds.equal_log_spacing(1, 10, nbins, 'TeV')
-        energ_lo = energy[:-1]
-        energ_hi = energy[1:]
-        arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
+        energy_lo = energy[:-1]
+        energy_hi = energy[1:]
+        arf_table = aeff2D.to_effective_area_table(offset, energy_lo, energy_hi)
         arf_table.write('arf.fits')
 
     Plot energy dependence
@@ -400,24 +379,24 @@ class EffectiveAreaTable2D(object):
 
     """
 
-    def __init__(self, energ_lo, energ_hi, offset_lo,
+    def __init__(self, energy_lo, energy_hi, offset_lo,
                  offset_hi, eff_area, eff_area_reco, method='linear'):
-        if not isinstance(energ_lo, Quantity) or not isinstance(energ_hi, Quantity):
+        if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
             raise ValueError("Offsets must be Angle objects.")
         if not isinstance(eff_area, Quantity) or not isinstance(eff_area_reco, Quantity):
             raise ValueError("Effective areas must be Quantity objects.")
 
-        self.energ_lo = energ_lo.to('TeV')
-        self.energ_hi = energ_hi.to('TeV')
+        self.energy_lo = energy_lo.to('TeV')
+        self.energy_hi = energy_hi.to('TeV')
         self.offset_lo = offset_lo.to('degree')
         self.offset_hi = offset_hi.to('degree')
         self.eff_area = eff_area.to('m^2')
         self.eff_area_reco = eff_area_reco.to('m^2')
 
         self.offset = (offset_hi + offset_lo) / 2
-        self.energy = np.sqrt(energ_lo * energ_hi)
+        self.energy = np.sqrt(energy_lo * energy_hi)
 
         self._prepare_linear_interpolator()
         self._prepare_spline_interpolator()
@@ -434,10 +413,14 @@ class EffectiveAreaTable2D(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``EFFECTIVE AREA`` extension.
         """
+        # Locate an HDU with the right name or raise and error
+        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames=['AEFF_2D', 'EFFECTIVE AREA'])
 
-        # TODO: READ THRESHOLD
+        # TODO: Read and store energy threshold info
+        # TODO: where should it be used?
+        # LO_THRES, HI_THRESH header keys
 
-        data = hdu_list['EFFECTIVE AREA'].data
+        data = hdu.data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
         e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
         o_lo = Angle(data['THETA_LO'].squeeze(), 'degree')
@@ -479,19 +462,17 @@ class EffectiveAreaTable2D(object):
         eff_area_table : `EffectiveAreaTable`
              Effective area table
         """
+        offset = Angle(offset)
 
         if energy_lo is None and energy_hi is None:
-            energy_lo = self.energ_lo
-            energy_hi = self.energ_hi
+            energy_lo = self.energy_lo
+            energy_hi = self.energy_hi
         elif energy_lo is None or energy_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
             raise ValueError("Energy must be a Quantity object.")
         if len(energy_lo) != len(energy_hi):
             raise ValueError("Energy Vectors must have same length")
-
-        if not isinstance(offset, Angle):
-            raise ValueError("Offset must be an angle object.")
 
         energy = np.sqrt(energy_lo * energy_hi)
         area = self.evaluate(offset, energy)
@@ -559,8 +540,7 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            val = self.offset
-            offset = np.linspace(np.min(val), np.max(val), 5)
+            offset = Angle(np.linspace(0, 2.5, 6), 'deg')
 
         if energy is None:
             energy = self.energy
@@ -568,11 +548,13 @@ class EffectiveAreaTable2D(object):
         for off in offset:
             area = self.evaluate(off, energy)
             label = 'offset = {:.1f}'.format(off)
-            plt.plot(energy, area.value, label=label, **kwargs)
+            ax.plot(energy, area.value, label=label, **kwargs)
 
-        plt.xlabel('Energy ({0})'.format(self.energy.unit))
-        plt.ylabel('Effective Area ({0})'.format(self.eff_area.unit))
-        plt.legend(loc='lower right')
+        ax.loglog()
+        ax.set_ylim(1e2, 1e7)
+        ax.set_xlabel('Energy ({0})'.format(self.energy.unit))
+        ax.set_ylabel('Effective Area ({0})'.format(self.eff_area.unit))
+        ax.legend(loc='lower right')
 
         return ax
 
@@ -584,22 +566,73 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            val = self.energy
-            energy = np.linspace(np.min(val), np.max(val), 4)
+            energy = Quantity(np.logspace(-1, 2, 8), 'TeV')
 
         if offset is None:
-            offset = self.offset
+            offset = Angle(np.linspace(0, 2.5, 100), 'deg')
 
-        for ener in energy:
-            area = self.evaluate(offset, ener)
-            label = 'energy = {:.1f}'.format(ener)
-            plt.plot(offset, area.value, label=label, **kwargs)
+        for ee in energy:
+            area = self.evaluate(offset, ee)
+            area /= np.nanmax(area)
+            if np.isnan(area).all():
+                continue
+            label = 'energy = {:.1f}'.format(ee)
+            ax.plot(offset, area, label=label, **kwargs)
 
-        plt.xlabel('Offset ({0})'.format(self.offset.unit))
-        plt.ylabel('Effective Area ({0})'.format(self.eff_area.unit))
-        plt.legend()
+        ax.set_ylim(0, 1.1)
+        ax.set_xlabel('Offset ({0})'.format(self.offset.unit))
+        ax.set_ylabel('Relative Effective Area')
+        ax.legend(loc='best')
 
         return ax
+
+    def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
+        """Plot effective area image (x=offset, y=energy).
+        """
+        import matplotlib.pyplot as plt
+
+        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault('origin', 'bottom')
+        kwargs.setdefault('interpolation', 'nearest')
+
+        ax = plt.gca() if ax is None else ax
+
+        if offset is None:
+            vals = self.offset.value
+            offset = np.linspace(vals.min(), vals.max(), 100)
+            offset = Angle(offset, self.offset.unit)
+
+        if energy is None:
+            vals = self.energy.value
+            energy = np.logspace(np.log10(vals.min()), np.log10(vals.max()), 100)
+            energy = Quantity(energy, self.energy.unit)
+
+        aeff = self.evaluate(offset, energy).T
+        extent = [
+            offset.value.min(), offset.value.max(),
+            energy.value.min(), energy.value.max(),
+        ]
+        ax.imshow(aeff.value, extent=extent, **kwargs)
+        # ax.set_xlim(offset.value.min(), offset.value.max())
+        # ax.set_ylim(energy.value.min(), energy.value.max())
+
+        ax.semilogy()
+        ax.set_xlabel('Offset ({0})'.format(offset.unit))
+        ax.set_ylabel('Energy ({0})'.format(energy.unit))
+        ax.set_title('Effective Area ({0})'.format(aeff.unit))
+        ax.legend()
+
+        return ax
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        self.plot_image(ax=axes[0])
+        self.plot_energy_dependence(ax=axes[1])
+        self.plot_offset_dependence(ax=axes[2])
+        plt.tight_layout()
+        plt.show()
 
     def _prepare_linear_interpolator(self):
         """Could be generalized for non-radial symmetric input files (N>2)

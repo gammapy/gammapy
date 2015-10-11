@@ -6,7 +6,8 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ..spectrum.energy import EnergyBounds
 from astropy.table import Table
-from ..utils.fits import table_to_fits_table
+from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
+from ..utils.array import array_stats_str
 
 __all__ = [
     'EnergyDispersion',
@@ -15,7 +16,6 @@ __all__ = [
 
 
 class EnergyDispersion(object):
-
     """Energy dispersion matrix.
 
     Parameters
@@ -229,7 +229,6 @@ class EnergyDispersion(object):
         http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
 
         """
-
         self._e_reco = self._e_reco.to(energy_unit)
         self._e_true = self._e_true.to(energy_unit)
 
@@ -281,8 +280,6 @@ class EnergyDispersion(object):
         header['NUMELT'] = numelt, 'Total number of response elements'
         header['LO_THRES'] = self.pdf_threshold, 'Lower probability density threshold for matrix'
         hdu.header = header
-        hdu.add_checksum()
-        hdu.add_datasum()
 
         hdu2 = self._e_reco.to_ebounds()
 
@@ -388,7 +385,7 @@ class EnergyDispersion(object):
         """
         return np.dot(data, self._pdf_matrix)
 
-    def plot(self, type='matrix', energy=None):
+    def plot(self, type='matrix', energy=None, ax=None):
         """Create energy dispersion plot.
 
         Parameters
@@ -404,13 +401,13 @@ class EnergyDispersion(object):
         TODO
         """
         if type == 'matrix':
-            self._plot_matrix()
+            self._plot_matrix(ax=ax)
         elif type == 'bias':
-            self._plot_bias()
+            self._plot_bias(ax=ax)
         elif type == 'pdf_energy_true':
-            self._plot_pdf(energy, 'true')
+            self._plot_pdf(energy, 'true', ax=ax)
         elif type == 'pdf_energy_reco':
-            self._plot_pdf(energy, 'reco')
+            self._plot_pdf(energy, 'reco', ax=ax)
         else:
             ss = 'Invalid type: {0}\n'.format(type)
             ss += 'Available types: matrix, bias'
@@ -426,34 +423,41 @@ class EnergyDispersion(object):
         y = self.reco_energy.range.value
         return x[0], x[1], y[0], y[1]
 
-    def _plot_matrix(self):
+    def _plot_matrix(self, ax=None, **kwargs):
         import matplotlib.pyplot as plt
-        from matplotlib.colors import LogNorm
+        from matplotlib.colors import PowerNorm
+
+        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault('origin', 'bottom')
+        kwargs.setdefault('interpolation', 'nearest')
+        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
+
+        ax = plt.gca() if ax is None else ax
 
         image = self._pdf_matrix
-        plt.imshow(image, extent=self._extent, interpolation='none',
-                   origin='lower', norm=LogNorm())
-        plt.xlabel('True energy (TeV)')
-        plt.ylabel('Reco energy (TeV)')
-        plt.loglog()
+        ax.imshow(image, extent=self._extent, **kwargs)
+        ax.set_xlabel('True energy (TeV)')
+        ax.set_ylabel('Reco energy (TeV)')
+        ax.loglog()
 
         # TODO: better colorbar formatting
-        plt.colorbar()
+        # plt.colorbar()
+        # plt.tight_layout()
 
-        plt.tight_layout()
-
-    def _plot_bias(self):
+    def _plot_bias(self, ax=None):
+        raise NotImplementedError
         import matplotlib.pyplot as plt
-        plt.figure(figsize=(5, 5))
-        plt.xlabel('True energy (TeV)')
-        plt.ylabel('Reco energy (TeV)')
 
-    def _plot_pdf(self, energy, axis):
+        ax = plt.gca() if ax is None else ax
+
+        ax.set_xlabel('True energy (TeV)')
+        ax.set_ylabel('Reco energy (TeV)')
+
+    def _plot_pdf(self, energy, ax=None):
         raise NotImplementedError
 
 
 class EnergyDispersion2D(object):
-
     """Offset-dependent energy dispersion matrix.
 
     Parameters
@@ -548,7 +552,6 @@ class EnergyDispersion2D(object):
             ``ENERGY DISPERSION`` extension.
 
         """
-
         data = hdu.data
         header = hdu.header
         e_lo = EnergyBounds(data['ETRUE_LO'].squeeze(), header['TUNIT1'])
@@ -571,7 +574,9 @@ class EnergyDispersion2D(object):
             File name
         """
         hdulist = fits.open(filename)
-        return cls.from_fits(hdulist['ENERGY DISPERSION'])
+        valid_extnames = ['ENERGY DISPERSION', 'EDISP_2D']
+        hdu = get_hdu_with_valid_name(hdulist, valid_extnames)
+        return cls.from_fits(hdu)
 
     def evaluate(self, offset=None, e_true=None, migra=None):
         """Probability for a given offset, true energy, and migration
@@ -627,7 +632,7 @@ class EnergyDispersion2D(object):
         val_array = self._linear(pts)
         return val_array.reshape(in_shape).squeeze()
 
-    def to_energy_dispersion(self, e_reco, offset, e_true=None):
+    def to_energy_dispersion(self, offset, e_true=None, e_reco=None):
         """Detector response R(Delta E_reco, Delta E_true)
 
         Probability to reconstruct an energy in a given true energy band
@@ -635,28 +640,30 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_reco : `~gammapy.spectrum.EnergyBounds`
-            Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset
         e_true : `~gammapy.spectrum.EnergyBounds`, None
             True energy axis
+        e_reco : `~gammapy.spectrum.EnergyBounds`
+            Reconstructed energy axis
 
         Returns
         -------
         edisp : `~gammapy.irf.EnergyDispersion`
             Energy disperion matrix
         """
+        offset = Angle(offset)
 
         if e_true is None:
             e_true = self.ebounds
 
-        energy = e_true.log_centers
+        if e_reco is None:
+            e_reco = self.ebounds[1:]
 
         rm = []
 
-        for ener in energy:
-            vec = self.get_response(offset, ener, e_reco=e_reco)
+        for energy in e_true.log_centers:
+            vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
             rm.append(vec)
 
         return EnergyDispersion(rm, e_true, e_reco)
@@ -707,10 +714,9 @@ class EnergyDispersion2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            val = self.offset
             offset = Angle([1], 'deg')
         if energy is None:
-            energy = Quantity([0.2, 10], 'TeV')
+            energy = Quantity([1, 10], 'TeV')
         if migra is None:
             migra = self.migra
 
@@ -718,11 +724,12 @@ class EnergyDispersion2D(object):
             for off in offset:
                 disp = self.evaluate(offset=off, e_true=ener, migra=migra)
                 label = 'offset = {0:.1f}\nenergy = {1:.1f}'.format(off, ener)
-                plt.plot(migra, disp, label=label, **kwargs)
+                ax.plot(migra, disp, label=label, **kwargs)
 
-        plt.xlabel('E_Reco / E_True')
-        plt.ylabel('Probability')
-        plt.legend(loc='upper right')
+        # ax.set_xlim(None, 5)
+        ax.set_xlabel('E_Reco / E_True')
+        ax.set_ylabel('Probability density')
+        ax.legend(loc='upper right')
 
         return ax
 
@@ -730,8 +737,11 @@ class EnergyDispersion2D(object):
                   migra=None, **kwargs):
         """Plot migration as a function of true energy for a given offset
         """
-
+        from matplotlib.colors import PowerNorm
         import matplotlib.pyplot as plt
+
+        kwargs.setdefault('cmap', 'afmhot')
+        kwargs.setdefault('norm', PowerNorm(gamma=0.5))
 
         ax = plt.gca() if ax is None else ax
 
@@ -746,9 +756,25 @@ class EnergyDispersion2D(object):
         x = e_true.value
         y = migra
 
-        plt.pcolor(x, y, z, **kwargs)
+        ax.pcolor(x, y, z, **kwargs)
+        ax.semilogx()
+        # ax.set_ylim(None, 3)
+        ax.set_xlabel('Energy (TeV)')
+        ax.set_ylabel('Ratio (reco energy) / (true energy)')
 
         return ax
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=figsize)
+        self.plot_bias(ax=axes[0])
+        self.plot_migration(ax=axes[1])
+        edisp = self.to_energy_dispersion(offset='1 deg')
+        edisp.plot('matrix', ax=axes[2])
+
+        plt.tight_layout()
+        plt.show()
 
     def _prepare_linear_interpolator(self):
         """Linear interpolation in N dimensions
@@ -764,3 +790,16 @@ class EnergyDispersion2D(object):
 
         self._linear = RegularGridInterpolator(
             (x, y, z), data, bounds_error=False, fill_value=0)
+
+    def info(self):
+        """Print some basic info.
+        """
+        ss = "\nSummary EnergyDispersion2D info\n"
+        ss += "----------------\n"
+        # Summarise data members
+        ss += array_stats_str(self.energy, 'energy')
+        ss += array_stats_str(self.offset, 'offset')
+        ss += array_stats_str(self.migra, 'migra')
+        ss += array_stats_str(self.dispersion, 'dispersion')
+
+        return ss
