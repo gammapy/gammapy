@@ -183,7 +183,6 @@ def fc_construct_confidence_belt_pdfs(matrix, alpha):
     """
 
     number_mus    = len(matrix)
-    number_x_bins = len(matrix[0])
 
     distributions_scaled    = np.asarray(matrix)
     distributions_re_scaled = np.asarray(matrix)
@@ -345,7 +344,6 @@ def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True)
     if do_upper_edge:
         previous_x = np.nan
         next_value = False
-        identical = True
         x_values = x_values_input
         y_values = y_values_input
         for i in range(len(x_values)):
@@ -395,10 +393,10 @@ def fc_find_average_upper_limit(x_bins, confidence_belt, upper_limit, mu_bins):
     """
 
     avergage_limit = 0
-    number_points = len(distributions_scaled[0])
+    number_points = len(confidence_belt[0])
 
     for i in range(number_points):
-        avergage_limit += confidence_belt[0][i]*find_limit(x_bins[i], upper_limit, mu_bins)
+        avergage_limit += confidence_belt[0][i]*fc_find_limit(x_bins[i], upper_limit, mu_bins)
 
     return avergage_limit
 
@@ -433,6 +431,6 @@ def fc_construct_confidence_belt(distribution_dict, bins, alpha):
         integral = float(sum(entries))
         distributions_scaled.append(entries/integral)
 
-    confidence_belt = construct_confidence_belt_pdfs(distributions_scaled, alpha)
+    confidence_belt = fc_construct_confidence_belt_pdfs(distributions_scaled, alpha)
 
     return confidence_belt
