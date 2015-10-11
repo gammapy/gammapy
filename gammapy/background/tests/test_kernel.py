@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-import os
-import tempfile
+from numpy.testing import assert_allclose
 from astropy.io import fits
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
@@ -12,8 +10,6 @@ from ...background import GammaImages, IterativeKernelBackgroundEstimator
 from ...image import make_empty_image
 from ...stats import significance
 from ...datasets import FermiGalacticCenter
-from ...irf import EnergyDependentTablePSF
-
 
 try:
     import scipy
@@ -51,6 +47,7 @@ def test_GammaImages():
 class TestIterativeKernelBackgroundEstimator(object):
     """Tests methods in the IterativeKernelBackgroundEstimator.
     """
+
     def setup_class(self):
         """Prepares appropriate input and defines inputs for test cases.
         """
@@ -88,28 +85,28 @@ class TestIterativeKernelBackgroundEstimator(object):
         # Loads prepared inputs into estimator
 
         self.ibe = IterativeKernelBackgroundEstimator(
-                                                 images,
-                                                 source_kernel,
-                                                 background_kernel,
-                                                 significance_threshold,
-                                                 mask_dilation_radius
-                                                 )
+            images,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
         self.ibe2 = IterativeKernelBackgroundEstimator(
-                                                 images,
-                                                 source_kernel,
-                                                 background_kernel,
-                                                 significance_threshold,
-                                                 mask_dilation_radius
-                                                 )
+            images,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
         self.ibe_blob = IterativeKernelBackgroundEstimator(
-                                                      images_blob,
-                                                      source_kernel,
-                                                      background_kernel,
-                                                      significance_threshold,
-                                                      mask_dilation_radius
-                                                      )
+            images_blob,
+            source_kernel,
+            background_kernel,
+            significance_threshold,
+            mask_dilation_radius
+        )
 
     def test_run_iteration_point(self):
         """Asserts that mask and background are as expected according to input."""
@@ -138,7 +135,6 @@ class TestIterativeKernelBackgroundEstimator(object):
         self.ibe_blob.run_iteration()
         # Should be run twice to update the mask
         self.ibe_blob.run_iteration()
-        mask = self.ibe_blob.mask_image_hdu.data
         background = self.ibe_blob.background_image_hdu.data
         # Check background, should be 42 uniformly within 10%
         assert_allclose(background, 42 * np.ones((10, 10)), rtol=0.15)
@@ -150,16 +146,15 @@ class TestIterativeKernelBackgroundEstimator(object):
         assert_allclose(mask.sum(), 97)
         assert_allclose(background, 42 * np.ones((10, 10)))
 
-    def test_save_files(self):
+    def test_save_files(self, tmpdir):
         """Tests that files are saves, and checks values within them."""
         # Create temporary file to write output into
-        dir = tempfile.mkdtemp()
         self.ibe.run_iteration(1)
-        self.ibe.save_files(filebase=dir, index=0)
+        self.ibe.save_files(filebase=str(tmpdir), index=0)
 
-        mask_filename = dir + '00_mask.fits'
-        significance_filename = dir + '00_significance.fits'
-        background_filename = dir + '00_background.fits'
+        mask_filename = str(tmpdir.join('00_mask.fits'))
+        significance_filename = str(tmpdir.join('00_significance.fits'))
+        background_filename = str(tmpdir.join('00_background.fits'))
 
         mask_data = fits.open(mask_filename)[1].data
         significance_data = fits.open(significance_filename)[1].data
@@ -169,5 +164,3 @@ class TestIterativeKernelBackgroundEstimator(object):
         assert_allclose(mask_data.sum(), 97)
         assert_allclose(significance_data.sum(), 157.316195729298)
         assert_allclose(background_data.sum(), 4200)
-
-        os.removedirs(dir)

@@ -1,61 +1,80 @@
-1.0 (Fall, 2015)
-----------------
+.. _gammapy_1p0_release:
+
+1.0 (Fall 2015 or spring 2016, unreleased)
+------------------------------------------
 
 Summary
 +++++++
 
-Gammapy 1.0 will be released in fall 2015.
-
-We aim for October 2015, but are willing to delay a bit if important features are missing
-or the documentation and tests need further work.
+Gammapy 1.0 will be released in fall 2015 or spring 2016.
 
 Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
-Contributors
-++++++++++++
+.. _gammapy_0p5_release:
 
-- ...
-
-Pull requests
-+++++++++++++
-
-- ...
-
-0.4 (August 24, 2015)
----------------------
+0.5 (November 2, 2015, unreleased)
+----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on August 24, 2015.
+Gammapy 0.5 will be released on November 2, 2015.
+
+For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
+
+.. _gammapy_0p4_release:
+
+0.4 (October 5, 2015, unreleased)
+---------------------------------
+
+Summary
++++++++
+
+Gammapy 0.4 will be released on October 5, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
 Contributors
 ++++++++++++
 
-- ...
+- Manuel Paz Arribas
+- Christoph Deil
+- Axel Donath
+- Johannes King
 
 Pull requests
 +++++++++++++
 
-- ...
+- [#359] Add 1D spectrum analysis tool based on gammapy.hspec (Johannes King)
+- [#351] Rewrite most parts of EnergyDispersion class (Johannes King)
+- [#353] Add some scripts and examples (Christoph Deil)
+- [#348] Misc code cleanup (Christoph Deil)
+- [#347] Add background cube model comparison plot script (Manuel Paz Arribas)
+- [#342] Add gammapy-bin-image test (Christoph Deil)
+- [#339] Remove PoissonLikelihoodFitter (Christoph Deil)
+- [#338] Add example script for cube background models (Manuel Paz Arribas)
+- [#337] Fix sherpa morphology fitting script (Axel Donath)
+- [#335] Improve background model simulation (Manuel Paz Arribas)
+- [#332] Fix TS map boundary handling (Axel Donath)
+- [#330] Add EnergyDispersion and CountsSpectrum (Johannes King)
+- [#319] Make background cube models (Manuel Paz Arribas)
+- [#290] Improve energy handling (Johannes King)
 
 .. _gammapy_0p3_release:
 
-0.3 (August 3, 2015)
---------------------
+0.3 (August 13, 2015)
+---------------------
 
 Summary
 +++++++
 
-- Released on August 3, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
+- Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
 - Requires Astropy version 1.0 or later.
-- 8 contributors (4 new)
-- 4 months of work (from April 13, 2014 to August 3, 2015)
-- XXX pull requests
+- 9 contributors (5 new)
+- 4 months of work (from April 13, 2014 to August 13, 2015)
+- 24 pull requests
 - On-off likelihood spectral analysis was added in ``gammapy.hspec``,
   contributed by Regis Terrier and Ignasi Reichardt.
   It will be refactored and is thus not part of the public API.
@@ -72,32 +91,35 @@ Contributors
 - Stefan Klepser (new)
 - Ignasi Reichardt (new)
 - Regis Terrier
-- Axel Donath
+- Victor Zabalza (new)
 
 Pull requests
 +++++++++++++
 
-- EventList class fixes and new features [#256] (Christoph Deil)
-- Add offset-dependent effective area IRF class [#260] (Johannes King)
-- Fix spiral arm model bar radius [#261] (Stefan Klepser)
-- Add SNRCat dataset access function [#262] (Christoph Deil)
-- Add hspec - spectral analysis using Sherpa [#264] (Regis Terrier, Ignasi Reichardt, Christoph Deil)
-- Improve SNRcat dataset [#279] (Christoph Deil)
-- Add new subpackage: gammapy.time [#280] (Christoph Deil)
-- Document observation tables and improve ``gammapy.obs`` [#278] (Manuel Paz Arribas)
-- Add infos how to handle times in Gammapy [#285] (Christoph Deil)
-- Function to plot Fermi 3FGL light curves [#286] (Jonathan Harris)
-- Add EffectiveAreaTable exporter to EffectiveAreaTable2D [#276] (Johannes King)
-- Add interface to HESS FitSpectrum JSON output [#296] (Christoph Deil)
-- Remove gammapy.shower package [#291] (Christoph Deil)
-- Add cube background model class [#299] (Manuel Paz Arribas)
-- Use assert_quantity_allclose from Astropy [#306] (Manuel Paz Arribas)
-- Consistent random number handling and improve sample_sphere [#283] (Manuel Paz Arribas)
-- Simplified attribute docstrings [#301] (Manuel Paz Arribas)
-- Add a simple Makefile for Gammapy. [#289] (Manuel Paz Arribas)
-- Observation table subset selection [#295] (Manuel Paz Arribas)
-- Set up and document logging for Gammapy [#318] (Christoph Deil)
-- Using consistent plotting style in docs [#317] (Axel Donath) 
+- [#326] Fix Debian install instructions (Victor Zabalza)
+- [#318] Set up and document logging for Gammapy (Christoph Deil)
+- [#317] Using consistent plotting style in docs (Axel Donath)
+- [#312] Add an "About Gammapy" page to the docs (Christoph Deil)
+- [#306] Use assert_quantity_allclose from Astropy (Manuel Paz Arribas)
+- [#301] Simplified attribute docstrings (Manuel Paz Arribas)
+- [#299] Add cube background model class (Manuel Paz Arribas)
+- [#296] Add interface to HESS FitSpectrum JSON output (Christoph Deil)
+- [#295] Observation table subset selection (Manuel Paz Arribas)
+- [#291] Remove gammapy.shower package (Christoph Deil)
+- [#289] Add a simple Makefile for Gammapy. (Manuel Paz Arribas)
+- [#286] Function to plot Fermi 3FGL light curves (Jonathan Harris)
+- [#285] Add infos how to handle times in Gammapy (Christoph Deil)
+- [#283] Consistent random number handling and improve sample_sphere (Manuel Paz Arribas)
+- [#280] Add new subpackage: gammapy.time (Christoph Deil)
+- [#279] Improve SNRcat dataset (Christoph Deil)
+- [#278] Document observation tables and improve gammapy.obs (Manuel Paz Arribas)
+- [#276] Add EffectiveAreaTable exporter to EffectiveAreaTable2D (Johannes King)
+- [#273] Fix TS map header writing and temp file handling (Axel Donath)
+- [#264] Add hspec - spectral analysis using Sherpa (Regis Terrier, Ignasi Reichardt, Christoph Deil)
+- [#262] Add SNRCat dataset access function (Christoph Deil)
+- [#261] Fix spiral arm model bar radius (Stefan Klepser)
+- [#260] Add offset-dependent effective area IRF class (Johannes King)
+- [#256] EventList class fixes and new features (Christoph Deil)
 
 .. _gammapy_0p2_release:
 
@@ -126,31 +148,31 @@ Contributors
 Pull requests
 +++++++++++++
 
-- Add iterative kernel background estimator [#186] (Ellis Owen)
-- Fix bugs in spectral cube class [#187] (Ellis Owen)
-- Add tests for spectral_cube.integral_flux_image [#188] (Ellis Owen)
-- Add Fermi PSF dataset and example [#191] (Ellis Owen)
-- Bundle TeVCat in gammapy.datasets [#194] (Christoph Deil)
-- Fix quantity errors from astro source models [#200] (Christoph Deil)
-- Remove healpix_to_image function (moved to reproject repo) [#205] (Christoph Deil)
-- Restructure image measurement functions [#210] (Axel Donath)
-- Bundle xmltodict.py in gammapy/extern [#212] (Christoph Deil)
-- Restructure TS map computation [#215] (Axel Donath)
-- TS map calculation update and docs [#221] (Axel Donath)
-- Misc cleanup [#225] (Christoph Deil)
-- Use setuptools entry_points for scripts [#230] (Christoph Deil)
-- Add observatory and data classes [#231] (Christoph Deil)
-- Add multi-scale TS image computation [#234] (Axel Donath)
-- Add some catalog utilities [#235] (Christoph Deil)
-- Add likelihood converter function [#236] (Christoph Deil)
-- Add 3FGL to dataset fetch functions [#244] (Manuel Paz Arribas)
-- Add colormap and PSF inset plotting functions [#245] (Axel Donath)
-- Add catalog and plotting utils [#246] (Axel Donath)
-- Various fixes to image utils docstrings [#247] (Manuel Paz Arribas)
-- Add function to fill acceptance image from curve [#248] (Manuel Paz Arribas)
-- Add data store and observation table classes, improve event list classes [#249] (Christoph Deil)
-- Implement TS map computation in Cython [#252] (Axel Donath)
-- Add changelog for Gammapy [#254] (Christoph Deil)
+- [#254] Add changelog for Gammapy (Christoph Deil)
+- [#252] Implement TS map computation in Cython (Axel Donath)
+- [#249] Add data store and observation table classes, improve event list classes (Christoph Deil)
+- [#248] Add function to fill acceptance image from curve (Manuel Paz Arribas)
+- [#247] Various fixes to image utils docstrings (Manuel Paz Arribas)
+- [#246] Add catalog and plotting utils (Axel Donath)
+- [#245] Add colormap and PSF inset plotting functions (Axel Donath)
+- [#244] Add 3FGL to dataset fetch functions (Manuel Paz Arribas)
+- [#236] Add likelihood converter function (Christoph Deil)
+- [#235] Add some catalog utilities (Christoph Deil)
+- [#234] Add multi-scale TS image computation (Axel Donath)
+- [#231] Add observatory and data classes (Christoph Deil)
+- [#230] Use setuptools entry_points for scripts (Christoph Deil)
+- [#225] Misc cleanup (Christoph Deil)
+- [#221] TS map calculation update and docs (Axel Donath)
+- [#215] Restructure TS map computation (Axel Donath)
+- [#212] Bundle xmltodict.py in gammapy/extern (Christoph Deil)
+- [#210] Restructure image measurement functions (Axel Donath)
+- [#205] Remove healpix_to_image function (moved to reproject repo) (Christoph Deil)
+- [#200] Fix quantity errors from astro source models (Christoph Deil)
+- [#194] Bundle TeVCat in gammapy.datasets (Christoph Deil)
+- [#191] Add Fermi PSF dataset and example (Ellis Owen)
+- [#188] Add tests for spectral_cube.integral_flux_image (Ellis Owen)
+- [#187] Fix bugs in spectral cube class (Ellis Owen)
+- [#186] Add iterative kernel background estimator (Ellis Owen)
 
 .. _gammapy_0p1_release:
 
@@ -181,40 +203,40 @@ Pull requests
 Note that Gammapy development started out directly in the master branch,
 i.e. for some things there is no pull request we can list here.
 
-- Start tevpy repo with `commit 11af4c <https://github.com/gammapy/gammapy/commit/11af4c7436bb79f8e2cae8d0441693232eebe1ba>`__ (Christoph Deil)
-- Rename tevpy to Gammapy in `commit 7e955f <https://github.com/cdeil/gammapy/commit/7e955ffae71353f7b10c9de4a69b977e7c036c6d>`__ on Aug 19, 2013 (Christoph Deil)
-- Add blob detection [#11] (Axel Donath)
-- Add coverage reports to continuous integration on coveralls [#12] (Christoph Deil)
-- Add continuous wavelet transform class [#25] (Regis Terrier)
-- Rename tevpy to gammapy [#34] (Christoph Deil)
-- Add sphere and power-law sampling functions [#48] (Christoph Deil)
-- Add per-pixel solid angle function in image utils [#58] (Ellis Owen)
-- Add coordinate string IAU designation format [#64] (Christoph Deil)
-- Add model image and image measurement functionality [#65] (Axel Donath)
-- Add plotting module and HESS colormap [#66] (Axel Donath)
-- Add image measure methods [#67] (Christoph Deil)
-- Integrate PyFACT functionality in Gammapy [#68] (Christoph Deil)
-- Add TablePSF and Fermi PSF [#84] (Christoph Deil)
-- Add block reduce function for HDUs [#88] (Ellis Owen)
-- Add wstat likelihood function for spectra and images [#96] (Christoph Deil)
-- Add image plotting routines [#100] (Christoph Deil)
-- Add datasets functions to fetch Fermi catalogs [#103] (Ellis Owen)
-- Python 2 / 3 compatibility with a single codebase [#109] (Christoph Deil)
-- Add Galactic source catalog simulation methods [#116] (Christoph Deil)
-- Improve synthetic Milky Way modeling [#117] (Christoph Deil)
-- Add morphology models as Astropy models [#122] (Axel Donath)
-- Add flux point computation using Lafferty & Wyatt (1995) [#128] (Ellis Owen)
-- Add Crab flux point dataset [#138] (Rolf Bühler)
-- Add EffectiveAreaTable and EnergyDependentMultiGaussPSF classes [#142] (Axel Donath)
-- Add npred cube computation [#150] (Christoph Deil and Ellis Owen)
-- Improve npred cube functionality [#151] (Ellis Owen)
-- Add Fermi PSF convolution method [#154] (Ellis Owen)
-- Add PSF convolve function [#155] (Ellis Owen)
-- Add Fermi Vela dataset [#156] (Ellis Owen)
-- Re-write Galaxy modelling code [#157] (Axel Donath)
-- Add code to make model images from a source catalog [#160] (Ellis Owen)
-- Add SED from Cube function [#166] (Ellis Owen)
-- Add image profile function [#167] (Ellis Owen)
-- Add new gammapy.data sub-package [#176] (Christoph Deil)
-- Misc code and docs cleanup [#177] (Christoph Deil)
-- Clean up datasets code and docs [#180] (Christoph Deil)
+- [#180] Clean up datasets code and docs (Christoph Deil)
+- [#177] Misc code and docs cleanup (Christoph Deil)
+- [#176] Add new gammapy.data sub-package (Christoph Deil)
+- [#167] Add image profile function (Ellis Owen)
+- [#166] Add SED from Cube function (Ellis Owen)
+- [#160] Add code to make model images from a source catalog (Ellis Owen)
+- [#157] Re-write Galaxy modelling code (Axel Donath)
+- [#156] Add Fermi Vela dataset (Ellis Owen)
+- [#155] Add PSF convolve function (Ellis Owen)
+- [#154] Add Fermi PSF convolution method (Ellis Owen)
+- [#151] Improve npred cube functionality (Ellis Owen)
+- [#150] Add npred cube computation (Christoph Deil and Ellis Owen)
+- [#142] Add EffectiveAreaTable and EnergyDependentMultiGaussPSF classes (Axel Donath)
+- [#138] Add Crab flux point dataset (Rolf Bühler)
+- [#128] Add flux point computation using Lafferty & Wyatt (1995) (Ellis Owen)
+- [#122] Add morphology models as Astropy models (Axel Donath)
+- [#117] Improve synthetic Milky Way modeling (Christoph Deil)
+- [#116] Add Galactic source catalog simulation methods (Christoph Deil)
+- [#109] Python 2 / 3 compatibility with a single codebase (Christoph Deil)
+- [#103] Add datasets functions to fetch Fermi catalogs (Ellis Owen)
+- [#100] Add image plotting routines (Christoph Deil)
+- [#96] Add wstat likelihood function for spectra and images (Christoph Deil)
+- [#88] Add block reduce function for HDUs (Ellis Owen)
+- [#84] Add TablePSF and Fermi PSF (Christoph Deil)
+- [#68] Integrate PyFACT functionality in Gammapy (Christoph Deil)
+- [#67] Add image measure methods (Christoph Deil)
+- [#66] Add plotting module and HESS colormap (Axel Donath)
+- [#65] Add model image and image measurement functionality (Axel Donath)
+- [#64] Add coordinate string IAU designation format (Christoph Deil)
+- [#58] Add per-pixel solid angle function in image utils (Ellis Owen)
+- [#48] Add sphere and power-law sampling functions (Christoph Deil)
+- [#34] Rename tevpy to gammapy (Christoph Deil)
+- [#25] Add continuous wavelet transform class (Regis Terrier)
+- [#12] Add coverage reports to continuous integration on coveralls (Christoph Deil)
+- [#11] Add blob detection (Axel Donath)
+- Rename tevpy to gammapy in `commit 7e955f <https://github.com/cdeil/gammapy/commit/7e955ffae71353f7b10c9de4a69b977e7c036c6d>`__ on Aug 19, 2013 (Christoph Deil)
+- Start tevpy repo with `commit 11af4c <https://github.com/gammapy/gammapy/commit/11af4c7436bb79f8e2cae8d0441693232eebe1ba>`__ on May 15, 2013 (Christoph Deil)

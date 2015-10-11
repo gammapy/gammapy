@@ -46,7 +46,7 @@ builtins._ASTROPY_PACKAGE_NAME_ = PACKAGENAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 # We use the format is `x.y` or `x.y.z` or `x.y.dev`
-VERSION = '0.3.dev'
+VERSION = '0.4.dev'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -79,7 +79,6 @@ package_info['package_data'].setdefault(PACKAGENAME, [])
 # Please keep the list in alphabetical order
 entry_points = {}
 entry_points['console_scripts'] = [
-    'gammapy-background-cube = gammapy.scripts.background_cube:main',
     'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
     'gammapy-bin-image = gammapy.scripts.bin_image:main',
     'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',
@@ -88,18 +87,18 @@ entry_points['console_scripts'] = [
     'gammapy-detect = gammapy.scripts.detect:main',
     'gammapy-find-obs = gammapy.scripts.find_obs:main',
     'gammapy-image-decompose-a-trous = gammapy.scripts.image_decompose_a_trous:main',
+    'gammapy-image-pipe = gammapy.scripts.image_pipe:main',
     'gammapy-info = gammapy.scripts.info:main',
     'gammapy-irf-info = gammapy.scripts.irf_info:main',
-    'gammapy-irf-root-to-fits = gammapy.scripts.irf_root_to_fits:main',
     'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
     'gammapy-look-up-image = gammapy.scripts.look_up_image:main',
     'gammapy-model-image = gammapy.scripts.model_image:main',
+    'gammapy-make-bg-cube-models = gammapy.scripts.make_bg_cube_models:main',
     'gammapy-pfmap = gammapy.scripts.pfmap:main',
     'gammapy-pfsim = gammapy.scripts.pfsim:main',
     'gammapy-pfspec = gammapy.scripts.pfspec:main',
     'gammapy-reflected-regions = gammapy.scripts.reflected_regions:main',
     'gammapy-residual-images = gammapy.scripts.residual_images:main',
-    'gammapy-root-to-fits = gammapy.scripts.root_to_fits:main',
     'gammapy-sherpa-like = gammapy.scripts.sherpa_like:main',
     'gammapy-sherpa-hspec = gammapy.hspec.run_fit:main',
     'gammapy-sherpa-model-image = gammapy.scripts.sherpa_model_image:main',
@@ -107,7 +106,7 @@ entry_points['console_scripts'] = [
     'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
     'gammapy-test = gammapy.scripts.check:main',
     'gammapy-ts-image = gammapy.scripts.ts_image:main',
-    'gammapy-xspec = gammapy.scripts.xspec:main',
+    'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
 ]
 
 # Note: usually the `affiliated_package/data` folder is used for data files.
@@ -141,7 +140,6 @@ setup(name=PACKAGENAME,
                     'reproject', 'gwcs', 'astroplan', 'uncertainties>=2.4', 'naima',
                     'iminuit', 'sherpa']
       ),
-      provides=[PACKAGENAME],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
@@ -156,11 +154,11 @@ setup(name=PACKAGENAME,
           'Programming Language :: Python :: 2',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.3',
           'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: Implementation :: CPython',
           'Topic :: Scientific/Engineering :: Astronomy',
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 3 - Beta',
       ],
       cmdclass=cmdclassd,
       zip_safe=False,

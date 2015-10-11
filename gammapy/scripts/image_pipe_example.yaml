@@ -1,0 +1,19 @@
+# Example Gammapy image analysis pipeline config file
+
+general:
+  outdir: crab
+  clobber: false
+
+source:
+  lon: 83.6332124
+  lat: 22.0144601
+  system: icrs
+
+image:
+  binsize: 0.02
+  fov: 2.0
+
+background:
+  method: ring
+  inner_radius: 0.5
+  outer_radius: 1.0

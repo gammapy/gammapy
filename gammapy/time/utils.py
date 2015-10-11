@@ -1,17 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Time related utility functions."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.time import Time, TimeDelta
 
-__all__ = ['time_ref_from_dict',
-           'time_relative_to_ref',
-           'absolute_time',
-           ]
+__all__ = [
+    'time_ref_from_dict',
+    'time_relative_to_ref',
+    'absolute_time',
+]
 
 # TODO: implement and document this properly.
 # see https://github.com/gammapy/gammapy/issues/284
 TIME_REF_FERMI = Time('2001-01-01T00:00:00')
+
 
 def time_ref_from_dict(meta):
     """Calculate the time reference from metadata.
@@ -22,7 +23,7 @@ def time_ref_from_dict(meta):
     Parameters
     ----------
     meta : `dict`
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------
@@ -50,7 +51,7 @@ def time_relative_to_ref(time, meta):
     time : `~astropy.time.Time`
         time to be converted
     meta : dict
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------
@@ -71,14 +72,14 @@ def absolute_time(time_delta, meta):
     time_delta : `~astropy.time.TimeDelta`
         time in seconds after the MET reference
     meta : dict
-        dictionary with the keywords `MJDREFI` and `MJDREFF`
+        dictionary with the keywords ``MJDREFI`` and ``MJDREFF``
 
     Returns
     -------
     time : `~astropy.time.Time`
-        absolute time with ``format='ISO'`` and ``scale='UTC'``
+        absolute time with ``format='ISOT'`` and ``scale='UTC'``
     """
     time = time_ref_from_dict(meta) + time_delta
-    time = Time(time.utc.iso, format='iso', scale='utc')
+    time = Time(time.utc.isot)
 
     return time

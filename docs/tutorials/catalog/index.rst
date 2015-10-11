@@ -34,5 +34,6 @@ Caveats & Future Developments
 -----------------------------
 
 It should be noted that the current implementation does not support:
- * The inclusion of extended sources
- * Production of images in more than one energy band
+
+* The inclusion of extended sources
+* Production of images in more than one energy band

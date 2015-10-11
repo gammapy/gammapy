@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from tempfile import NamedTemporaryFile
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
@@ -10,10 +8,9 @@ from astropy.units import Quantity
 from astropy.wcs import WCS
 from ...datasets import FermiGalacticCenter
 from ...data import SpectralCube, compute_npred_cube, convolve_cube
-from ...image import solid_angle, make_header, make_empty_image
+from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
-
 
 try:
     # The scipy.interpolation.RegularGridInterpolator class was added in Scipy version 0.14
@@ -31,7 +28,6 @@ except ImportError:
 
 @pytest.mark.skipif('not HAS_SCIPY')
 class TestSpectralCube(object):
-
     def setup(self):
         self.spectral_cube = FermiGalacticCenter.diffuse_model()
         assert self.spectral_cube.data.shape == (30, 21, 61)
@@ -44,13 +40,13 @@ class TestSpectralCube(object):
         spectral_cube = SpectralCube(data, wcs, energy)
         assert spectral_cube.data.shape == (30, 21, 61)
 
-    def test_read_write(self):
+    def test_read_write(self, tmpdir):
         data = self.spectral_cube.data
         wcs = self.spectral_cube.wcs
         energy = self.spectral_cube.energy
 
         spectral_cube = SpectralCube(data, wcs, energy)
-        outfile = NamedTemporaryFile(suffix='.fits').name
+        outfile = str(tmpdir.join('spectral_cube_test.fits'))
         spectral_cube.writeto(outfile)
 
         spectral_cube.read(outfile)
@@ -225,8 +221,6 @@ def make_test_cubes(energies, nxpix, nypix, binsz):
     spectral_cube : `~gammapy.spectral_cube.SpectralCube`
         Cube of differential fluxes in units of cm^-2 s^-1 GeV^-1 sr^-1
     """
-    hdu = make_empty_image(nxpix, nypix, binsz)
-    solid_angle_array = solid_angle(hdu)
     header = make_header(nxpix, nypix, binsz)
     header['NAXIS'] = 3
     header['NAXIS3'] = len(energies)

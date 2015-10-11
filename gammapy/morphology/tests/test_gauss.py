@@ -1,16 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import unittest
-
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
-
 from astropy.tests.helper import pytest
 from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
 from astropy.io import fits
 from astropy.wcs import WCS
-
 from ...image.tests.test_measure import set_header, BINSZ
 from ...image import measure_image_moments
 from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
@@ -32,6 +29,7 @@ except ImportError:
 class TestGauss2DPDF(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
+
     def setUp(self):
         self.gs = [Gauss2DPDF(0.1), Gauss2DPDF(1), Gauss2DPDF(1)]
 
@@ -75,6 +73,7 @@ class TestGauss2DPDF(unittest.TestCase):
 class TestMultiGauss2D(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
+
     def test_call(self):
         from scipy.integrate import dblquad
         m = MultiGauss2D(sigmas=[1, 2], norms=[3, 4])
@@ -166,4 +165,3 @@ def test_gaussian_sum_moments():
     moments_ana, uncertainties = gaussian_sum_moments(F, sigma, x, y, cov_matrix, shift=0)
     assert_allclose(moments_ana, moments_num, 1e-6)
     assert_allclose(uncertainties, 0)
-

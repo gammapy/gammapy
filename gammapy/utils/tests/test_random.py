@@ -1,11 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from astropy.tests.helper import assert_quantity_allclose
-from ..random import (sample_sphere, sample_powerlaw,
-                      sample_sphere_distance, get_random_state)
+from ..random import sample_sphere, sample_powerlaw, sample_sphere_distance
 
 
 def test_sample_sphere():
@@ -42,13 +41,13 @@ def test_sample_sphere():
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
     # test if values are distributed along the whole range
     nbins = 4
-    lon_delta = (lon_range[1] - lon_range[0])/nbins
-    lat_delta = (lat_range[1] - lat_range[0])/nbins
+    lon_delta = (lon_range[1] - lon_range[0]) / nbins
+    lat_delta = (lat_range[1] - lat_range[0]) / nbins
     for i in np.arange(nbins):
-        assert ((lon_range[0] + i*lon_delta <= lon) &
-                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
-        assert ((lat_range[0] + i*lat_delta <= lat) &
-                (lat < lat_range[0] + (i + 1)*lat_delta)).any()
+        assert ((lon_range[0] + i * lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1) * lon_delta)).any()
+        assert ((lat_range[0] + i * lat_delta <= lat) &
+                (lat < lat_range[0] + (i + 1) * lat_delta)).any()
 
     # test lon range explicitly (-180, 180) deg
     lon_range = Angle([-180., 180.], 'degree')
@@ -59,40 +58,40 @@ def test_sample_sphere():
     assert ((lat_range[0] <= lat) & (lat < lat_range[1])).all()
     # test if values are distributed along the whole range
     nbins = 4
-    lon_delta = (lon_range[1] - lon_range[0])/nbins
-    lat_delta = (lat_range[1] - lat_range[0])/nbins
+    lon_delta = (lon_range[1] - lon_range[0]) / nbins
+    lat_delta = (lat_range[1] - lat_range[0]) / nbins
     for i in np.arange(nbins):
-        assert ((lon_range[0] + i*lon_delta <= lon) &
-                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
-        assert ((lat_range[0] + i*lat_delta <= lat) &
-                (lat < lat_range[0] + (i + 1)*lat_delta)).any()
+        assert ((lon_range[0] + i * lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1) * lon_delta)).any()
+        assert ((lat_range[0] + i * lat_delta <= lat) &
+                (lat < lat_range[0] + (i + 1) * lat_delta)).any()
 
     # test box around Galactic center
     lon_range = Angle([-5., 5.], 'degree')
     lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=random_state)
     # test if values are distributed along the whole range
     nbins = 2
-    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    lon_delta = (lon_range[1] - lon_range[0]) / nbins
     for i in np.arange(nbins):
-        assert ((lon_range[0] + i*lon_delta <= lon) &
-                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
+        assert ((lon_range[0] + i * lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1) * lon_delta)).any()
 
     # test box around Galactic anticenter
     lon_range = Angle([175., 185.], 'degree')
     lon, lat = sample_sphere(size=10, lon_range=lon_range, random_state=random_state)
     # test if values are distributed along the whole range
     nbins = 2
-    lon_delta = (lon_range[1] - lon_range[0])/nbins
+    lon_delta = (lon_range[1] - lon_range[0]) / nbins
     for i in np.arange(nbins):
-        assert ((lon_range[0] + i*lon_delta <= lon) &
-                (lon < lon_range[0] + (i + 1)*lon_delta)).any()
+        assert ((lon_range[0] + i * lon_delta <= lon) &
+                (lon < lon_range[0] + (i + 1) * lon_delta)).any()
 
 
 def test_sample_powerlaw():
     random_state = np.random.RandomState(seed=0)
 
     x = sample_powerlaw(x_min=0.1, x_max=10, gamma=2, size=2, random_state=random_state)
-    assert_allclose(x, [0.21897428, 0.34250971])
+    assert_allclose(x, [0.14886601, 0.1873559])
 
 
 def test_sample_sphere_distance():

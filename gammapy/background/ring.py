@@ -1,12 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Ring background estimation.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..image import ring_correlate
 
-__all__ = ['ring_correlate_off_maps', 'RingBgMaker',
-           'ring_r_out', 'ring_area_factor', 'ring_alpha']
+__all__ = [
+    'ring_correlate_off_maps',
+    'RingBgMaker',
+    'ring_r_out',
+    'ring_area_factor',
+    'ring_alpha',
+]
 
 
 class RingBgMaker(object):
@@ -27,6 +32,7 @@ class RingBgMaker(object):
     pixscale : float
         degrees per pixel
     """
+
     def __init__(self, r_in, r_out, pixscale=0.01):
         self.pixscale = float(pixscale)
         # Note: internally all computations are in pixels,

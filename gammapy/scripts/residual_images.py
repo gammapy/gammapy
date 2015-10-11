@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['residual_images']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -32,7 +32,7 @@ def residual_images(model_file,
                     overwrite):
     """Compute source model residual images.
 
-    The input `data_file` must contain the following HDU extensions:
+    The input ``data_file`` must contain the following HDU extensions:
 
     * 'On' -- Counts image
     * 'Background' -- Background image

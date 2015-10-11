@@ -45,28 +45,28 @@ def residuals_image():
     extent = [0.5, 6.5, 0.5, 6.5]
     vmin, vmax = -3, 3
     axes_1 = fig.add_subplot(131)
-    im = axes_1.imshow(np.array(flux_error_lafferty),
-                             interpolation='nearest', extent=extent,
-                             origin="lower", vmin=vmin, vmax=vmax,
-                             cmap='RdBu')
+    axes_1.imshow(np.array(flux_error_lafferty),
+                  interpolation='nearest', extent=extent,
+                  origin="lower", vmin=vmin, vmax=vmax,
+                  cmap='RdBu')
     axes_1.set_ylabel('Assumed Spectral Index', fontsize=14)
     axes_1.set_title('Lafferty Method', fontsize=12)
-    
+
     axes_2 = fig.add_subplot(132)
-    im = axes_2.imshow(np.array(flux_error_log_center),
-                             interpolation='nearest', extent=extent,
-                             origin="lower", vmin=vmin, vmax=vmax,
-                             cmap='RdBu')
+    axes_2.imshow(np.array(flux_error_log_center),
+                  interpolation='nearest', extent=extent,
+                  origin="lower", vmin=vmin, vmax=vmax,
+                  cmap='RdBu')
     axes_2.set_xlabel('True Spectral Index', fontsize=14)
     axes_2.set_title('Log-Center Method', fontsize=12)
-    
+
     axes_3 = fig.add_subplot(133)
     im = axes_3.imshow(np.array(flux_error_ratio),
-                             interpolation='nearest', extent=extent,
-                             origin="lower", vmin=vmin, vmax=vmax,
-                             cmap='RdBu')
+                       interpolation='nearest', extent=extent,
+                       origin="lower", vmin=vmin, vmax=vmax,
+                       cmap='RdBu')
     axes_3.set_title('Residual Log Ratio: \n Log(Lafferty/Log Center)',
-                           fontsize=12)
+                     fontsize=12)
     plt.tight_layout()
     fig.subplots_adjust(right=0.9)
     cbar_ax = fig.add_axes([0.92, 0.11, 0.025, 0.78])

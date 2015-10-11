@@ -1,5 +1,6 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Helper functions to work with distributions."""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from ...utils.distributions import GeneralRandom
 
 __all__ = ['normalize', 'density', 'draw', 'pdf']

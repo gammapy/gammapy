@@ -16,26 +16,26 @@ To download all datasets into a local cache::
     from gammapy import datasets
     datasets.download_datasets()
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.utils.data import get_pkg_data_filename, download_file
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from ..data import SpectralCube
 
-__all__ = ['get_path',
-           #'list_datasets',
-           #'download_datasets',
-           'load_poisson_stats_image',
-           'load_tev_spectrum',
-           'load_crab_flux_points',
-           'load_diffuse_gamma_spectrum',
-           'load_electron_spectrum',
-           'load_arf_fits_table',
-           'load_aeff2D_fits_table',
-           'load_psf_fits_table',
-           ]
+__all__ = [
+    'get_path',
+    # 'list_datasets',
+    # 'download_datasets',
+    'load_poisson_stats_image',
+    'load_tev_spectrum',
+    'load_crab_flux_points',
+    'load_diffuse_gamma_spectrum',
+    'load_electron_spectrum',
+    'load_arf_fits_table',
+    'load_aeff2D_fits_table',
+    'load_psf_fits_table',
+]
 
 
 # TODO: implement or remove
@@ -71,9 +71,9 @@ def get_path(filename, location='local', cache=True):
         ``'local'`` means bundled with ``gammapy``.
         ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
     cache : bool
-        if `True` and using `location=remote`, the file is searched
+        if `True` and using ``location='remote'``, the file is searched
         first within the local astropy cache and only downloaded if
-        it does not exist
+        it does not exist.
 
     Returns
     -------
@@ -156,20 +156,23 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     """
     if extra_info:
         out = dict()
-        for name in ['counts', 'model', 'source', 'background']:
+        for name in ['counts', 'model', 'source', 'background', 'exposure']:
             filename = get_path('poisson_stats_image/{0}.fits.gz'.format(name))
             if return_filenames:
                 out[name] = filename
             else:
                 data = fits.getdata(filename)
-                out[name] = data
+                out[name] = data.astype('float64')
+        if return_filenames:
+            out['psf'] = get_path('poisson_stats_image/psf.json')
     else:
         filename = get_path('poisson_stats_image/counts.fits.gz')
         if return_filenames:
             out = filename
         else:
-            out = fits.getdata(filename)
-
+            out = fits.getdata(filename).astype('float64')
+    if extra_info and not return_filenames:
+        out['header'] = fits.getheader(get_path('poisson_stats_image/counts.fits.gz'))
     return out
 
 

@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['sherpa_image_like']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -20,12 +20,16 @@ def main(args=None):
                         help='PSF JSON file name')
     parser.add_argument('--sources', type=str, default='sources.json',
                         help='Sources JSON file name (contains start '
-                        'values for fit of Gaussians)')
-    parser.add_argument('--roi', type=str, default='roi.reg',
+                             'values for fit of Gaussians)')
+    parser.add_argument('--roi', type=str, default=None,
                         help='Region of interest (ROI) file name (ds9 reg format)')
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
     parser.add_argument('outfile', type=str, default='fit_results.json',
                         help='Output JSON file with fit results')
     args = parser.parse_args(args)
+    set_up_logging_from_args(args)
     sherpa_image_like(**vars(args))
 
 
@@ -43,7 +47,7 @@ def sherpa_image_like(counts,
 
     import sherpa.astro.ui
     from ..morphology.utils import read_json, write_all
-    from ..morphology.psf import Sherpa
+    from ..irf import SherpaMultiGaussPSF
 
     # ---------------------------------------------------------
     # Load images, PSF and sources
@@ -61,7 +65,7 @@ def sherpa_image_like(counts,
     sherpa.astro.ui.load_table_model('background', background)
 
     log.info('Reading PSF: {0}'.format(psf))
-    Sherpa(psf).set()
+    SherpaMultiGaussPSF(psf).set()
 
     if roi:
         log.info('Reading ROI: {0}'.format(roi))
@@ -77,14 +81,14 @@ def sherpa_image_like(counts,
     # ---------------------------------------------------------
     # Scale exposure by 1e-10 to get ampl or order unity and avoid some fitting problems
     name = sherpa.astro.ui.get_source().name
-    full_model = 'background + 1e-10 * exposure * psf ({})'.format(name)
+    full_model = 'background + 1e-12 * exposure * psf ({})'.format(name)
     sherpa.astro.ui.set_full_model(full_model)
-    sherpa.astro.ui.freeze(background, exposure, psf)
+    sherpa.astro.ui.freeze('background', 'exposure', 'psf')
 
     # ---------------------------------------------------------
     # Set up the fit
     # ---------------------------------------------------------
-    sherpa.astro.ui.set_coord('physical')
+    sherpa.astro.ui.set_coord('image')
     sherpa.astro.ui.set_stat('cash')
     sherpa.astro.ui.set_method('levmar')  # levmar, neldermead, moncar
     sherpa.astro.ui.set_method_opt('maxfev', int(1e3))
@@ -93,11 +97,16 @@ def sherpa_image_like(counts,
     # ---------------------------------------------------------
     # Fit and save information we care about
     # ---------------------------------------------------------
-
-    # show_all() # Prints info about data and model
+    # sherpa.astro.ui.show_all() # Prints info about data and model
     sherpa.astro.ui.fit()  # Does the fit
-    sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
+    # sherpa.astro.ui.covar()  # Computes symmetric errors (fast)
     # conf() # Computes asymmetric errors (slow)
     # image_fit() # Shows data, model, residuals in ds9
     log.info('Writing {}'.format(outfile))
     write_all(outfile)
+
+    # Save model image
+    sherpa.astro.ui.set_par('background.ampl', 0)
+    sherpa.astro.ui.notice2d()
+    log.info('Writing model.fits')
+    sherpa.astro.ui.save_model('model.fits', clobber=True)

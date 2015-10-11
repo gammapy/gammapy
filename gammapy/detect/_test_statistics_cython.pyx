@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -34,8 +33,9 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     sum = 0
     for j in range(nj):
         for i in range(ni):
-            sum += (model[j, i] * (counts[j, i] / (x * FLUX_FACTOR * model[j, i]
-                                                   + background[j, i]) - 1))
+            if model[j, i] > 0:
+                sum += (model[j, i] * (counts[j, i] / (x * FLUX_FACTOR * model[j, i]
+                                                       + background[j, i]) - 1))
     return sum
 
 
@@ -57,8 +57,8 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
         Source template (multiplied with exposure).
     """
 
-    cdef float s_model = 0, s_counts = 0, sn, sn_min = 1E14, c_min
-    cdef float b_min, b_max
+    cdef np.float_t s_model = 0, s_counts = 0, sn, sn_min = 1E14, c_min = 1
+    cdef np.float_t b_min, b_max
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
@@ -67,7 +67,7 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
             s_model += model[j, i]
             if counts[j, i] > 0:
                 s_counts += counts[j, i]
-                if model[j, i] != 0:
+                if model[j, i] > 0:
                     sn = background[j, i] / model[j, i]
                     if sn < sn_min:
                         sn_min = sn

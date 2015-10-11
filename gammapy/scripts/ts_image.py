@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import json
 import logging
-log = logging.getLogger(__name__)
-from ..utils.scripts import get_parser
+from ..utils.scripts import get_parser, set_up_logging_from_args, _create_dir
 
 __all__ = ['ts_image']
+
+log = logging.getLogger(__name__)
 
 
 def main(args=None):
@@ -20,38 +20,42 @@ def main(args=None):
                         help='JSON file containing PSF information. ')
     parser.add_argument('--morphology', type=str, default='Gaussian2D',
                         help="Which source morphology to use for TS calculation."
-                        "Either 'Gaussian2D' or 'Shell2D'.")
+                             "Either 'Gaussian2D' or 'Shell2D'.")
     parser.add_argument('--width', type=float, default=None,
                         help="Width of the shell, measured as fraction of the"
-                        " inner radius.")
+                             " inner radius.")
     parser.add_argument('--scales', type=float, default=[0], nargs='+',
                         help='List of scales to compute TS maps for in deg.')
     parser.add_argument('--downsample', type=str, default='auto',
                         help="Downsample factor of the data to obtain optimal"
-                        " performance."
-                        "Must be power of 2. Can be 'auto' to choose the downsample"
-                        "factor automatically depending on the scale.")
+                             " performance."
+                             "Must be power of 2. Can be 'auto' to choose the downsample"
+                             "factor automatically depending on the scale.")
     parser.add_argument('--residual', action='store_true',
                         help="Whether to compute a residual TS image. If a residual"
-                        "TS image is computed an excess model has to be provided"
-                        "using the '--model' parameter.")
+                             "TS image is computed an excess model has to be provided"
+                             "using the '--model' parameter.")
     parser.add_argument('--model', type=str,
                         help='Input excess model FITS file name')
     parser.add_argument('--threshold', type=float, default=None,
                         help="Minimal required initial (before fitting) TS value,"
-                        " that the fit is done at all.")
+                             " that the fit is done at all.")
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite output files.')
-    args = parser.parse_args()
+    parser.add_argument("-l", "--loglevel", default='info',
+                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        help="Set the logging level")
+    args = parser.parse_args(args)
+    set_up_logging_from_args(args)
     ts_image(**vars(args))
 
 
 def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
-             morphology, width, overwrite, threshold):
+             morphology, width, overwrite):
     """
     Compute source model residual images.
 
-    The input `data` fits file must contain the following HDU extensions:
+    The input ``data`` FITS file must contain the following HDU extensions:
 
     * 'On' -- Counts image
     * 'Background' -- Background image
@@ -77,8 +81,7 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
                                         residual, morphology, width)
 
     folder, filename = os.path.split(output_file)
-    if not os.path.exists(folder) and folder != '':
-        os.mkdir(folder)
+    _create_dir(folder, overwrite=False)
 
     # Write results to file
     header = maps[0].header

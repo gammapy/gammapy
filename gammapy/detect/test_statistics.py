@@ -3,20 +3,17 @@
 Functions to compute TS maps
 
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import warnings
 from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
-
 import numpy as np
 from astropy.convolution import Tophat2DKernel, Model2DKernel, Gaussian2DKernel
 from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.nddata.utils import extract_array
 from astropy.io import fits
-
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython)
 from ..irf import multi_gauss_psf_kernel
@@ -30,9 +27,10 @@ __all__ = [
     'compute_ts_map',
     'compute_ts_map_multiscale',
     'compute_maximum_ts_map',
-    'TSMapResult'
+    'TSMapResult',
 ]
 
+log = logging.getLogger(__name__)
 
 FLUX_FACTOR = 1E-12
 MAX_NITER = 20
@@ -67,33 +65,34 @@ class TSMapResult(Bunch):
         Read TS map result from file.
         """
         hdu_list = fits.open(filename)
-        ts = hdu_list['ts'].data
-        sqrt_ts = hdu_list['sqrt_ts'].data
-        amplitude = hdu_list['amplitude'].data
-        niter = hdu_list['niter'].data
+        ts = hdu_list['ts'].data.astype('float64')
+        sqrt_ts = hdu_list['sqrt_ts'].data.astype('float64')
+        amplitude = hdu_list['amplitude'].data.astype('float64')
+        niter = hdu_list['niter'].data.astype('float64')
         scale = hdu_list[0].header['SCALE']
         if scale == 'max':
             scale = hdu_list['scale'].data
-        morphology = hdu_list[0].header['MORPH']
+        morphology = hdu_list[0].header.get('MORPH')
         return cls(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
                    scale=scale, morphology=morphology)
 
     def write(self, filename, header, overwrite=False):
         """Write TS map results to file"""
+        header = header.copy()
         hdu_list = fits.HDUList()
         if 'MORPH' not in header and hasattr(self, 'morphology'):
             header['MORPH'] = self.morphology, 'Source morphology assumption.'
         if not np.isscalar(self.scale):
             header['EXTNAME'] = 'scale'
             header['HDUNAME'] = 'scale'
-            header['SCALE'] = 'max',  'Source morphology scale parameter.'
-            hdu_list.append(fits.ImageHDU(self.scale.astype('float32'), header))
+            header['SCALE'] = 'max', 'Source morphology scale parameter.'
+            hdu_list.append(fits.ImageHDU(self.scale.astype('float64'), header))
         else:
-            header['SCALE'] = self.scale,  'Source morphology scale parameter.'
+            header['SCALE'] = self.scale, 'Source morphology scale parameter.'
         for key in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
             header['EXTNAME'] = key
             header['HDUNAME'] = key
-            hdu_list.append(fits.ImageHDU(self[key].astype('float32'), header))
+            hdu_list.append(fits.ImageHDU(self[key].astype('float64'), header))
 
         hdu_list.writeto(filename, clobber=overwrite)
 
@@ -165,7 +164,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         if downsample == 'auto':
             factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
                                     scale < 20 * BINSZ, scale < 40 * BINSZ],
-                                   [1, 2, 4, 8], 16))
+                                   [1, 2, 4, 4], 8))
         else:
             factor = int(downsample)
         if factor == 1:
@@ -322,12 +321,21 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     ----------
     [Stewart2009]_
     """
-    from scipy.ndimage.morphology import binary_erosion
     from time import time
     t_0 = time()
 
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
+
+    # in some maps there are pixels, which have exposure, but zero
+    # background, which doesn't make sense and causes the TS computation
+    # to fail, this is a temporary fix
+    mask_ = np.logical_and(background == 0, exposure > 0)
+    if mask_.any():
+        log.warn('There are pixels in the data, that have exposure, but zero '
+                 'background, which can cause the ts computation to fail. '
+                 'Setting exposure of this pixels to zero.')
+        exposure[mask_] = 0
 
     if (flux is None and method != 'root brentq') or threshold is not None:
         from scipy.ndimage import convolve
@@ -348,7 +356,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     # Positions where exposure == 0 are not processed
     if mask is None:
-        mask = binary_erosion(exposure > 0, np.ones(np.array(kernel.shape) + 2))
+        mask = exposure > 0
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
     wrap = partial(_ts_value, counts=counts, exposure=exposure,
@@ -579,6 +587,7 @@ def _fit_amplitude_minuit(counts, background, model, flux):
 
     def stat(x):
         return f_cash(x, counts, background, model)
+
     minuit = Minuit(f_cash, x=flux, pedantic=False, print_level=0)
     minuit.migrad()
     return minuit.values['x'], minuit.ncalls

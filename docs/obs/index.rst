@@ -36,6 +36,7 @@ Using `gammapy.obs`
    :maxdepth: 1
 
    find_observations
+   observation_grouping
 
 Reference/API
 =============

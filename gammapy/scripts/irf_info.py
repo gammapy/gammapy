@@ -1,15 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import logging
-log = logging.getLogger(__name__)
 from astropy.units import Quantity
 from astropy.io import fits
 from ..utils.scripts import get_parser
 
 __all__ = ['irf_info']
+
+log = logging.getLogger(__name__)
 
 
 def retrieve_psf_info(hdu_list, energies, theta, fractions, plot=False):
@@ -61,7 +60,7 @@ def main(args=None):
                         help='Input FITS file name')
     parser.add_argument('--plot', action='store_true',
                         help='Make info plot. Containment vs. theta and '
-                        'energy for PSF or effective area vs. energy for ARF.')
+                             'energy for PSF or effective area vs. energy for ARF.')
     parser.add_argument('--thetas', type=float, default=[0.], nargs='+',
                         help='Thetas where to evaluate PSF info.')
     parser.add_argument('--energies', type=float, default=[1., 10.], nargs='+',

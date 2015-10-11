@@ -1,10 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Catalog analysis methods."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['FluxDistribution']
+__all__ = [
+    'FluxDistribution',
+]
 
 
 class FluxDistribution(object):
@@ -46,8 +47,8 @@ class FluxDistribution(object):
         plt.xlabel('Flux (%Crab)')
         plt.ylabel('Integral Count (>Flux)')
         plt.loglog()
-        #plt.ylim(N_min, 1.2 * len(S))
-        #plt.legend()
+        # plt.ylim(N_min, 1.2 * len(S))
+        # plt.legend()
 
     def plot_differential_count(self):
         raise NotImplementedError

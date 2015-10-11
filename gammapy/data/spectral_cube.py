@@ -7,8 +7,7 @@ TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-clas
 * ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
 * ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -16,14 +15,9 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.coordinates import Angle
-from ..spectrum import (LogEnergyAxis,
-                        energy_bounds_equal_log_spacing,
-                        energy_bin_centers_log_spacing,
-                        powerlaw
-                        )
-from ..image import coordinates, cube_to_image, solid_angle
+from ..spectrum import EnergyBounds, LogEnergyAxis, powerlaw
+from ..image import cube_to_image, solid_angle
 from ..utils.fits import table_to_fits_table
-
 
 __all__ = [
     'SpectralCube',
@@ -83,6 +77,7 @@ class SpectralCube(object):
     E.g. the 2-year diffuse model that was used in the 2FGL catalog production is at
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
+
     def __init__(self, data, wcs, energy):
         # TODO: check validity of inputs
         self.data = data
@@ -314,10 +309,14 @@ class SpectralCube(object):
             Integral flux image (1 / (cm^2 s sr))
         """
         if isinstance(energy_bins, int):
-            energy_bins = energy_bounds_equal_log_spacing(energy_band, energy_bins)
+            energy_bins = EnergyBounds.equal_log_spacing(
+                energy_band[0], energy_band[1], energy_bins)
+        else:
+            energy_bins = EnergyBounds(energy_band)
 
-        energy1 = energy_bins[:-1].to('MeV')
-        energy2 = energy_bins[1:].to('MeV')
+        energy_bins = energy_bins.to('MeV')
+        energy1 = energy_bins.lower_bounds
+        energy2 = energy_bins.upper_bounds
 
         # Compute differential flux at energy bin edges of all pixels
         xx = np.arange(self.data.shape[2])
@@ -411,7 +410,7 @@ class SpectralCube(object):
         return SpectralCube(new_cube, wcs_out, energy)
 
     def to_fits(self):
-        """Writes SpectralCube to fits hdu_list.
+        """Writes SpectralCube to FITS hdu_list.
 
         Returns
         -------
@@ -422,7 +421,7 @@ class SpectralCube(object):
                 Table of energies
         """
         image = fits.PrimaryHDU(self.data.value, self.wcs.to_header())
-        image.header['SPEC_UNIT'] = '{0.unit:FITS}'.format(self.data)
+        image.header['SPECUNIT'] = '{0.unit:FITS}'.format(self.data)
 
         # for BinTableHDU's the data must be added via a Table object
         energy_table = Table()
@@ -436,7 +435,7 @@ class SpectralCube(object):
         return hdu_list
 
     def writeto(self, filename, **kwargs):
-        """Writes SpectralCube to fits file.
+        """Writes SpectralCube to FITS file.
 
         Parameters
         ----------
@@ -452,9 +451,12 @@ class SpectralCube(object):
             s += ":\n"
         else:
             s += " and unit={0}:\n".format(self.data.unit)
-        s += " n_x: {0:5d}  type_x: {1:15s}  unit_x: {2}\n".format(self.data.shape[2], self.wcs.wcs.ctype[0], self.wcs.wcs.cunit[0])
-        s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
-        s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2], self.wcs.wcs.cunit[2])
+        s += " n_x: {0:5d}  type_x: {1:15s}  unit_x: {2}\n".format(self.data.shape[2], self.wcs.wcs.ctype[0],
+                                                                   self.wcs.wcs.cunit[0])
+        s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1],
+                                                                   self.wcs.wcs.cunit[1])
+        s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2],
+                                                                 self.wcs.wcs.cunit[2])
         return s
 
 
@@ -484,7 +486,8 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                          'flux_cube: {0}\nexposure_cube: {1}'
                          ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
 
-    energy_centers = energy_bin_centers_log_spacing(energy_bins)
+    energy = EnergyBounds(energy_bins)
+    energy_centers = energy.log_centers
     wcs = exposure_cube.wcs
     lon, lat = exposure_cube.spatial_coordinate_images
     solid_angle = exposure_cube.solid_angle_image

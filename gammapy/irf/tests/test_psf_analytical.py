@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from tempfile import NamedTemporaryFile
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
@@ -23,16 +21,16 @@ def test_EnergyDependentMultiGaussPSF():
     assert psf.info() == info_str
 
 
-def test_EnergyDependentMultiGaussPSF_write():
+def test_EnergyDependentMultiGaussPSF_write(tmpdir):
     # Read test psf file
     psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
 
     # Write it back to disk
-    psf_file = NamedTemporaryFile(suffix='.fits').name
-    psf.write(psf_file)
+    filename = str(tmpdir.join('multigauss_psf_test.fits'))
+    psf.write(filename)
 
     # Verify checksum
-    hdu_list = fits.open(psf_file)
+    hdu_list = fits.open(filename)
 
     # TODO: replace this assert with something else.
     # For unknown reasons this verify_checksum fails non-deterministically

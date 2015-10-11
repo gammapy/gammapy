@@ -1,16 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
-from astropy import log
 from astropy.io import fits
-from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table
+from astropy.units import Quantity
+from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
+from ..utils.fits import table_to_fits_table
 
-__all__ = ['abramowski_effective_area', 'EffectiveAreaTable',
-           'EffectiveAreaTable2D']
+__all__ = [
+    'abramowski_effective_area',
+    'EffectiveAreaTable',
+    'EffectiveAreaTable2D',
+]
+
+log = logging.getLogger(__name__)
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -59,7 +65,6 @@ def abramowski_effective_area(energy, instrument='HESS'):
 
 
 class EffectiveAreaTable(object):
-
     """
     Effective area table class.
 
@@ -111,13 +116,24 @@ class EffectiveAreaTable(object):
         self.energy_thresh_lo = energy_thresh_lo.to('TeV')
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
+    def to_table(self):
+        """Convert to `~astropy.table.Table`.
+        """
+        table = Table()
+
+        table['ENERG_LO'] = self.energy_lo
+        table['ENERG_HI'] = self.energy_hi
+        table['SPECRESP'] = self.effective_area
+
+        return table
+
     def to_fits(self, header=None, energy_unit='TeV', effarea_unit='m2', **kwargs):
         """
         Convert ARF to FITS HDU list format.
 
         Parameters
         ----------
-        header : `~astropy.io.fits.header.Header`
+        header : `~astropy.io.fits.Header`
             Header to be written in the fits file.
         energy_unit : str
             Unit in which the energy is written in the fits file
@@ -143,27 +159,11 @@ class EffectiveAreaTable(object):
         self.energy_hi = self.energy_hi.to(energy_unit)
         self.effective_area = self.effective_area.to(effarea_unit)
 
-        hdu = fits.new_table(
-            [fits.Column(name='ENERG_LO',
-                         format='1E',
-                         array=self.energy_lo.value,
-                         unit=str(self.energy_lo.unit)),
-             fits.Column(name='ENERG_HI',
-                         format='1E',
-                         array=self.energy_hi.value,
-                         unit=str(self.energy_hi.unit)),
-             fits.Column(name='SPECRESP',
-                         format='1E',
-                         array=self.effective_area.value,
-                         unit=str(self.effective_area.unit))
-             ]
-        )
+
+        hdu = table_to_fits_table(self.to_table())
 
         if header is None:
-            from ..datasets import load_arf_fits_table
-            header = load_arf_fits_table()[1].header
 
-        if header == 'pyfact':
             header = hdu.header
 
             # Write FITS extension header
@@ -195,12 +195,14 @@ class EffectiveAreaTable(object):
         hdu.add_datasum()
         return fits.HDUList([prim_hdu, hdu])
 
-    def write(self, filename, *args, **kwargs):
+    def write(self, filename, energy_unit='TeV', effarea_unit='m2',
+              *args, **kwargs):
         """Write ARF to FITS file.
 
         Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits().writeto(filename, *args, **kwargs)
+        self.to_fits(energy_unit=energy_unit, effarea_unit=effarea_unit).writeto(
+            filename, *args, **kwargs)
 
     @classmethod
     def read(cls, filename):
@@ -371,12 +373,12 @@ class EffectiveAreaTable2D(object):
         from astropy.coordinates import Angle
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.spectrum import energy_bounds_equal_log_spacing
+        from gammapy.spectrum import EnergyBounds
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
         offset = Angle(0.43, 'degree')
         nbins = 50
-        energy = energy_bounds_equal_log_spacing(Quantity((1,10), 'TeV'), nbins)
+        energy = EnergyBounds.equal_log_spacing(1, 10, nbins, 'TeV')
         energ_lo = energy[:-1]
         energ_hi = energy[1:]
         arf_table = aeff2D.to_effective_area_table(offset, energ_lo, energ_hi)
@@ -414,7 +416,6 @@ class EffectiveAreaTable2D(object):
         self.eff_area = eff_area.to('m^2')
         self.eff_area_reco = eff_area_reco.to('m^2')
 
-        # actually offset_hi = offset_lo
         self.offset = (offset_hi + offset_lo) / 2
         self.energy = np.sqrt(energ_lo * energ_hi)
 
@@ -433,6 +434,8 @@ class EffectiveAreaTable2D(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``EFFECTIVE AREA`` extension.
         """
+
+        # TODO: READ THRESHOLD
 
         data = hdu_list['EFFECTIVE AREA'].data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
@@ -461,7 +464,7 @@ class EffectiveAreaTable2D(object):
 
         The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
-        the final energy binning should be given here, since the
+        the final true energy binning should be given here, since the
         effective area table class does no interpolation.
 
         Parameters
@@ -478,8 +481,8 @@ class EffectiveAreaTable2D(object):
         """
 
         if energy_lo is None and energy_hi is None:
-            energy_lo = self.energy_lo
-            energy_hi = self.energy_hi
+            energy_lo = self.energ_lo
+            energy_hi = self.energ_hi
         elif energy_lo is None or energy_hi is None:
             raise ValueError("Only 1 energy vector given, need 2")
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
@@ -540,7 +543,7 @@ class EffectiveAreaTable2D(object):
 
     def _eval(self, offset=None, energy=None):
         method = self.interpolation_method
-        if(method == 'linear'):
+        if (method == 'linear'):
             val = self._linear(offset.value, np.log10(energy.value))
         elif (method == 'spline'):
             val = self._spline(offset.value, np.log10(energy.value)).squeeze()
@@ -601,6 +604,8 @@ class EffectiveAreaTable2D(object):
     def _prepare_linear_interpolator(self):
         """Could be generalized for non-radial symmetric input files (N>2)
         """
+        # TODO Replace by scipy.interpolate.RegularGridInterpolator
+        # As in EDISP
 
         from scipy.interpolate import LinearNDInterpolator
 
@@ -614,6 +619,8 @@ class EffectiveAreaTable2D(object):
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)
         """
+
+        # TODO Replace by scipy.ndimage.interpolation.map_coordinates
 
         from scipy.interpolate import RectBivariateSpline
 

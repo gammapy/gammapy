@@ -1,14 +1,14 @@
-numpy
 Cython
-# pip-install scipy>=0.14 fails on readthedocs, so we don't
-# even try. We'll just have to wait for them to update the
-# system-installed version until the plots that need it work.
-#scipy>=0.14
+numpy
+astropy
+scipy
 scikit-image
--e git+http://github.com/astropy/astropy.git#egg=astropy
 -e git+http://github.com/astrofrog/reproject.git#egg=reproject
--e git+http://github.com/astroplanners/astroplan.git#egg=astroplan
--e git+http://github.com/zblz/naima.git#egg=naima
+#-e git+http://github.com/astroplanners/astroplan.git#egg=astroplan
+
+# https://github.com/zblz/naima/issues/88
+#-e git+http://github.com/zblz/naima.git#egg=naima
+
 -e git+http://github.com/astrofrog/wcsaxes.git#egg=wcsaxes
 -e git+http://github.com/aplpy/aplpy.git#egg=aplpy
--e git+http://github.com/spacetelescope/gwcs.git#egg=gwcs
+# -e git+http://github.com/spacetelescope/gwcs.git#egg=gwcs

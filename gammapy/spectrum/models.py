@@ -5,14 +5,23 @@ A Model can be either a TableModel, which is represented
 as arrays of energies and fluxes. Or a AnalyticModel, which
 is represented by an analytic function flux(energy).
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import pi, exp, log, log10
 from astropy import constants as const
 from astropy.units import Unit
 
-__all__ = ['AnalyticModel', 'BlackBody', 'BrokenPowerLaw', 'CompositeModel',
-           'LogParabola', 'Model', 'PLExpCutoff', 'PowerLaw', 'TableModel']
+__all__ = [
+    'AnalyticModel',
+    'BlackBody',
+    'BrokenPowerLaw',
+    'CompositeModel',
+    'LogParabola',
+    'Model',
+    'PLExpCutoff',
+    'PowerLaw',
+    'TableModel',
+]
 
 # Define some constatns
 MeV_to_GeV = Unit('MeV').to(Unit('GeV'))
@@ -97,6 +106,7 @@ class Model(object):
 
 class CompositeModel(Model):
     """Model that is the binary composition of two other spectra."""
+
     def __init__(self, spec1, spec2, op):
         self.spec1 = spec1
         self.spec2 = spec2
@@ -117,6 +127,7 @@ class TableModel(Model):
     Internally all calculations are done on log10(x) and log10(y)
     for numerical stability and accuracy.
     """
+
     def __init__(self, e, y, emin=None, emax=None):
         from scipy.interpolate import interp1d
         self.emin = emin if emin else e.min()
@@ -297,6 +308,7 @@ class BrokenPowerLaw(AnalyticModel):
                          for par in self.pars]
         return LogParabola._formula(E, N0, g, g2, Eb)
 
+
 '''
 @uncertainties.wrap
 def I(e1, e2, e0, f0, g, ec = numpy.nan):
@@ -328,6 +340,7 @@ class BlackBody(AnalyticModel):
     W : float
         Energy density (eV cm^-3)
     """
+
     def __init__(self, T=2.7, W=None, emin=None, emax=None):
         self.emin = emin
         self.emax = emax
@@ -365,4 +378,4 @@ class BlackBody(AnalyticModel):
         """
         # Convert (k_B * T) to eV
         return ((15 * self.W / (np.pi ** 4 * (k_B_eV * self.T) ** 4) *
-                E ** 2 / (exp(E / (k_B_eV * self.T)) - 1)))
+                 E ** 2 / (exp(E / (k_B_eV * self.T)) - 1)))

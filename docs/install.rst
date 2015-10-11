@@ -9,9 +9,10 @@ Here we provide short installation instructions for Gammapy and its dependencies
 
 Gammapy works with Python 2 and 3.
 
-More specifically, in the Python 2 series we only support Python 2.7,
-and in the Python 3 series we support version 3.3 or later.
+More specifically, in the Python 2 series we only support (i.e. test in continuous integration)
+Python 2.7, and in the Python 3 series we support version 3.4 or later.
 Gammapy will not work with Python 2.6 or 3.2 (see :ref:`development-python2and3` if you care why).
+It will probably work with Python 3.3, but we don't test for that.
 
 Due to the large variety of systems, package managers and setups in us it's not
 possible to give a detailed description for every option.
@@ -34,7 +35,26 @@ and then run these commands:
 .. code-block:: bash
 
     conda config --add channels astropy --add channels sherpa
-    conda install gammapy
+    conda install gammapy naima \
+        scipy matplotlib ipython-notebook cython
+
+We strongly recommend that you install the optional dependencies of Gammapy to have the full
+functionality available:
+
+.. code-block:: bash
+
+    conda install \
+        scikit-image scikit-learn h5py pandas \
+        aplpy wcsaxes photutils reproject
+
+    pip install iminuit
+
+Sherpa is the only Gammapy dependency that's not yet available on Python 3, so if you want
+to use Sherpa for modeling / fitting, install Anaconda Python 2 and
+
+.. code-block:: bash
+
+    conda install sherpa
 
 For a quick (depending on your download and disk speed, usually a few minutes),
 non-interactive install of `Miniconda <http://conda.pydata.org/miniconda.html>`__
@@ -82,9 +102,9 @@ from the command line:
 
 .. code-block:: bash
 
-   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.2.tar.gz
-   $ tar zxf gammapy-0.2.tar.gz
-   $ cd gammapy-0.2
+   $ wget https://pypi.python.org/packages/source/g/gammapy/gammapy-0.3.tar.gz
+   $ tar zxf gammapy-0.3.tar.gz
+   $ cd gammapy-0.3
 
 To download the latest development version of Gammapy:
 
@@ -154,7 +174,7 @@ The following packages have to be installed with pip:
 
 .. code-block:: bash
 
-    pip install --user \
+    pip3 install --user \
         gammapy naima photutils reproject wcsaxes gwcs astroplan \
         iminuit emcee healpy
 
@@ -344,7 +364,8 @@ CIAO
     Since 2015, Sherpa can be easily installed via conda, so we recommend you do that
     instead of installing Gammapy into CIAO as described in this section.
 
-The `CIAO "Chandra Interactive Analysis of Observations" <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
+The `CIAO <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
+("Chandra Interactive Analysis of Observations")
 package, which includes `Sherpa`_, ships with it's own Python 2.7 interpreter.
 
 If you want to use Astropy or Gammapy with that Python, you have to install it using

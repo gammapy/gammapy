@@ -1,14 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """FITS utility functions.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.io import fits
+from astropy.table import Table
 
 __all__ = ['get_hdu',
            'get_image_hdu',
            'get_table_hdu',
            'fits_table_to_pandas',
            'table_to_fits_table',
+           'fits_table_to_table',
            ]
 
 
@@ -77,12 +79,12 @@ def fits_table_to_pandas(filename, index_columns):
 
 
 def table_to_fits_table(table):
-    """Convert astropy table to binary table fits format.
+    """Convert astropy table to binary table FITS format.
 
     This is a generic method to convert a `~astropy.table.Table`
     to a `~astropy.io.fits.BinTableHDU`.
     The name of the table can be stored in the Table meta information
-    under the `name` keyword.
+    under the ``name`` keyword.
 
     Parameters
     ----------
@@ -91,8 +93,8 @@ def table_to_fits_table(table):
 
     Returns
     -------
-    tbhdu : `~astropy.io.fits.BinTableHDU`
-        fits bin table containing the astropy table columns
+    hdu : `~astropy.io.fits.BinTableHDU`
+        FITS bin table containing the astropy table columns
     """
     # read name and drop it from the meta information, otherwise
     # it would be stored as a header keyword in the BinTableHDU
@@ -121,3 +123,34 @@ def table_to_fits_table(table):
     # https://github.com/gammapy/gammapy/issues/298
 
     return tbhdu
+
+
+def fits_table_to_table(tbhdu):
+    """Convert astropy table to binary table FITS format.
+
+    This is a generic method to convert a `~astropy.io.fits.BinTableHDU`
+    to `~astropy.table.Table`.
+    The name of the table is stored in the Table meta information
+    under the ``name`` keyword.
+
+    Parameters
+    ----------
+    hdu : `~astropy.io.fits.BinTableHDU`
+        FITS bin table containing the astropy table columns
+
+    Returns
+    -------
+    table : `~astropy.table.Table`
+        astropy table containing the desired columns
+    """
+
+    data = tbhdu.data
+    header = tbhdu.header
+
+    table = Table(data, meta=header)
+
+    # Copy over column meta-data
+    for colname in tbhdu.columns.names:
+        table[colname].unit = tbhdu.columns[colname].unit
+
+    return table

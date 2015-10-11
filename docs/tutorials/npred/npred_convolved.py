@@ -2,10 +2,7 @@
 """
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from astropy.wcs import WCS
-
 from aplpy import FITSFigure
-
 from npred_general import prepare_images
 
 model, gtmodel, ratio, counts, header = prepare_images()

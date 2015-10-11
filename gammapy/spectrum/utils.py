@@ -1,113 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import datetime
 import numpy as np
 from astropy.units import Quantity
-from astropy.io import fits
+from astropy.table import Table
+from ..utils.fits import table_to_fits_table
 
-__all__ = ['LogEnergyAxis',
-           'energy_bounds_equal_log_spacing',
-           'energy_bin_centers_log_spacing',
-           'EnergyBinCenters',
-           'EnergyBinEdges',
-           'np_to_pha',
-           ]
-
-# TODO: remove functions now that we have classes!
-
-
-def energy_bin_centers_log_spacing(energy_bounds):
-    """Compute energy log bin centers.
-
-    TODO: give formula here.
-
-    Parameters
-    ----------
-    energy_bounds : `~astropy.units.Quantity`
-        Array of energy bin edges.
-
-    Returns
-    -------
-    energy_center : `~astropy.units.Quantity`
-        Array of energy bin centers
-    """
-    e_bounds = energy_bounds.value
-    e_center = np.sqrt(e_bounds[:-1] * e_bounds[1:])
-    return Quantity(e_center, energy_bounds.unit)
-
-
-def energy_bounds_equal_log_spacing(energy_band, bins=10):
-    """Make energy bounds array with equal-log spacing.
-
-    Parameters
-    ----------
-    energy_band : `~astropy.units.Quantity`
-        Tuple ``(energy_min, energy_max)``
-    bins : int
-        Number of bins
-
-    Returns
-    -------
-    energy_bounds : `~astropy.units.Quantity`
-        Energy bounds array (1-dim with length ``bins + 1``).
-    """
-    x_min, x_max = np.log10(energy_band.value)
-    energy_bounds = np.logspace(x_min, x_max, bins + 1)
-    energy_bounds = Quantity(energy_bounds, energy_band.unit)
-
-    return energy_bounds
-
-
-class EnergyBinCenters(object):
-    """Energy bin centers.
-
-    Stored as "ENERGIES" FITS table extensions.
-    """
-    # TODO: implement FITS I/O to E
-    # TODO: implement info()
-
-    def info(self):
-        s = 'Energy bin centers:'
-        s += 'TODO'
-        return s
-
-    def log_edges(self):
-        """Log energy bin edges.
-
-        Chooses log center between two points.
-        The left and right edge is chosen so that the points
-        are at the log center, i.e. the log internal is reflected
-        to get the outermost bin edges.
-
-        Returns
-        -------
-        edges : `EnergyBinEdges`
-            Energy bin edges
-        """
-        raise NotImplementedError
-
-
-class EnergyBinEdges(object):
-    """Energy bin edges.
-
-    Stored as "EBOUNDS" FITS table extensions.
-    """
-    # TODO: implement FITS I/O
-
-    def info(self):
-        s = 'Energy bin edges:'
-        s += 'TODO'
-        return s
-
-    def log_centers(self):
-        """Log energy bin centers.
-
-        Returns
-        -------
-        centers : `EnergyBinCenters`
-            Energy bin centers
-        """
-        raise NotImplementedError
+__all__ = [
+    'LogEnergyAxis',
+    'np_to_pha',
+]
 
 
 class LogEnergyAxis(object):
@@ -131,8 +33,8 @@ class LogEnergyAxis(object):
     energy : `~astropy.units.Quantity`
         Energy array
     """
-    def __init__(self, energy):
 
+    def __init__(self, energy):
         self.energy = energy
         self.x = np.log10(energy.value)
         self.pix = np.arange(len(self.x))
@@ -194,12 +96,13 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
+# TODO: MOVE TO DATA.COUNTSPECTRUM
+
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
               version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
               backfile='none', corrfile='none', respfile='none', ancrfile='none'):
-
     """Create PHA FITS table extension from numpy arrays.
 
     Parameters
@@ -235,34 +138,20 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     For more info on the PHA FITS file format see:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_007_summary.html
     """
-    # Create PHA FITS table extension from data
-    cols = [fits.Column(name='CHANNEL',
-                          format='I',
-                          array=channel,
-                          unit='channel'),
-            fits.Column(name='COUNTS',
-                          format='1E',
-                          array=counts,
-                          unit='count')
-            ]
+    table = Table()
+    table['CHANNEL'] = channel
+    table['COUNTS'] = counts
 
     if stat_err is not None:
-        cols.append(fits.Column(name='STAT_ERR',
-                                  format='1E',
-                                  array=stat_err,
-                                  unit='count'))
+        table['STAT_ERR'] = stat_err
 
     if syserr is not None:
-        cols.append(fits.Column(name='SYS_ERR',
-                                  format='E',
-                                  array=syserr))
+        table['SYS_ERR'] = syserr
 
     if quality is not None:
-        cols.append(fits.Column(name='QUALITY',
-                                  format='I',
-                                  array=quality))
+        table['QUALITY'] = quality
 
-    hdu = fits.new_table(cols)
+    hdu = table_to_fits_table(table)
     header = hdu.header
 
     header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'

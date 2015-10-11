@@ -38,18 +38,19 @@ conda config --add channels sherpa
 conda update -q conda
 # Disk space now: 140 MB
 
-# Finally ... install Gammapy
-conda install gammapy
+# Finally ... install Gammapy and the most useful dependencies
+conda install gammapy naima \
+    scipy matplotlib ipython-notebook
 # Disk space now: 200 MB
 
 # Nice to have extras
 conda install \
-    scipy matplotlib scikit-image scikit-learn astropy h5py pandas \
-    ipython-notebook aplpy wcsaxes photutils
+    scikit-image scikit-learn h5py pandas \
+    aplpy wcsaxes photutils
 # Disk space now: 747 MB
 
-pip install reproject naima
-# TODO: maybe add gwcs and astroplan once there's a release on PyPI.
+pip install reproject
+pip install iminuit
 
 # This will only work on Python 2:
 conda install sherpa

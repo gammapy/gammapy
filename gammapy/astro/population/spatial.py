@@ -8,7 +8,7 @@ radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
 
     Useful for automatic processing.
 """
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
@@ -18,12 +18,21 @@ from ...utils.coordinates import cartesian, polar
 from ...utils.const import d_sun_to_galactic_center
 from ...utils.random import get_random_state
 
-__all__ = ['CaseBattacharya1998', 'FaucherKaspi2006', 'Lorimer2006',
-           'Paczynski1990', 'YusifovKucuk2004', 'YusifovKucuk2004B',
-           'Exponential', 'LogSpiral', 'FaucherSpiral', 'ValleeSpiral',
-           'radial_distributions',
-           'RMIN', 'RMAX', 'ZMIN', 'ZMAX',
-           ]
+__all__ = [
+    'CaseBattacharya1998',
+    'FaucherKaspi2006',
+    'Lorimer2006',
+    'Paczynski1990',
+    'YusifovKucuk2004',
+    'YusifovKucuk2004B',
+    'Exponential',
+    'LogSpiral',
+    'FaucherSpiral',
+    'ValleeSpiral',
+    'radial_distributions',
+    'RMIN', 'RMAX',
+    'ZMIN', 'ZMAX',
+]
 
 R_SUN_GALACTIC = d_sun_to_galactic_center.value
 
@@ -502,7 +511,7 @@ class ValleeSpiral(LogSpiral):
     r_sun = 7.6  # distance sun to Galactic center in kpc
     r_0 = 2.1  # spiral inner radius in kpc
     theta_0 = -20  # Norma spiral arm start angle
-    bar_radius = 3.0 # Radius of the galactic bar (not equal r_0!)
+    bar_radius = 3.0  # Radius of the galactic bar (not equal r_0!)
 
     spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
 
@@ -515,6 +524,7 @@ class ValleeSpiral(LogSpiral):
         x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)
         x_1, y_1 = self.xy_position(radius=self.bar_radius, spiralarm_index=2)
         self.bar = dict(x=np.array([x_0, x_1]), y=np.array([y_0, y_1]))
+
 
 # TODO: this is not picked up in the HTML docs ... don't know why.
 # http://sphinx-doc.org/latest/ext/example_numpy.html

@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
@@ -74,8 +74,8 @@ def test_2():
     cat_dir = "/Users/deil/work/gev_tev_connection/christoph/_catalogs/"
     hess_cat_name = cat_dir + "hess_cat_full.fits"
     fermi_cat_name = cat_dir + "fermi_cat_full.fit"
-#    hess_object_name = 'HESS J1713-381'
-#    fermi_object_name = '1FGL J0534.5+2200'
+    #    hess_object_name = 'HESS J1713-381'
+    #    fermi_object_name = '1FGL J0534.5+2200'
     hess_object_name = 'HESS J0534+220'
     fermi_object_name = '1FGL J0534.5+2200'
 
@@ -85,8 +85,8 @@ def test_2():
     # Plot the Crab SED by looking up parameters from catalogs
     sed.add_component('hess', hess_cat_name, hess_object_name,
                       color='b')
-#    sed.add_component('fermi',fermi_cat_name, fermi_object_name,
-#                      color = 'g')
+    #    sed.add_component('fermi',fermi_cat_name, fermi_object_name,
+    #                      color = 'g')
 
     # Save plot in file
     sed.save('../_temp/test_2.pdf')
@@ -108,6 +108,7 @@ def test_42():
     # sed.add(['2FGL J0534.5+2201']) # Crab
     sed.plot('sed.png')
 
+
 def test_cube_sed1():
     """Tests against known results with differential cube of 1s.
     """
@@ -122,16 +123,17 @@ def test_cube_sed1():
     mask = lon_lat_rectangle_mask(lons.value, lats.value, -8, 8, -4, 4)
 
     sed_table1 = cube_sed(spec_cube, mask, flux_type='differential')
-    assert_allclose(sed_table1['DIFF_FLUX'].data, 2560)# * np.ones(30))
+    assert_allclose(sed_table1['DIFF_FLUX'].data, 2560)  # * np.ones(30))
     assert_allclose(sed_table1['DIFF_FLUX_ERR'].data, 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='differential',
-                          errors=True, standard_error = 0.1)
+                          errors=True, standard_error=0.1)
     assert_allclose(sed_table2['DIFF_FLUX_ERR'].data, 256)
 
     sed_table3 = cube_sed(spec_cube, mask, flux_type='differential',
-                          errors=True, counts = counts)
-    assert_allclose(sed_table3['DIFF_FLUX_ERR'].data, 2560 * np.sqrt(1./256))
+                          errors=True, counts=counts)
+    assert_allclose(sed_table3['DIFF_FLUX_ERR'].data, 2560 * np.sqrt(1. / 256))
+
 
 def test_cube_sed2():
     """Tests against known results with integral cube of 1s.
@@ -153,13 +155,13 @@ def test_cube_sed2():
     assert_allclose(sed_table1['DIFF_FLUX_ERR'], 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='integral',
-                          errors=True, standard_error = 0.1)
+                          errors=True, standard_error=0.1)
 
     assert_allclose(sed_table2['DIFF_FLUX_ERR'][0],
                     0.1 * sed_table2['DIFF_FLUX'][0])
 
     sed_table3 = cube_sed(spec_cube, mask, flux_type='integral',
-                          errors=True, counts = counts)
+                          errors=True, counts=counts)
 
     assert_allclose(sed_table3['DIFF_FLUX_ERR'][0],
-                    np.sqrt(1./256) * sed_table3['DIFF_FLUX'][0])
+                    np.sqrt(1. / 256) * sed_table3['DIFF_FLUX'][0])

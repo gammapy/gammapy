@@ -1,13 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 import numpy as np
 from astropy.io import fits
 from ..image import disk_correlate
 from .. import stats
 
-__all__ = ['Maps', 'BASIC_MAP_NAMES', 'DERIVED_MAP_NAMES']
+__all__ = [
+    'Maps',
+    'BASIC_MAP_NAMES',
+    'DERIVED_MAP_NAMES',
+]
+
+log = logging.getLogger(__name__)
 
 BASIC_MAP_NAMES = ['n_on', 'a_on', 'n_off', 'a_off',
                    'exclusion', 'exposure']
@@ -48,12 +53,13 @@ class Maps(fits.HDUList):
     theta_pix : float
         Correlation radius (pix)
     """
+
     def __init__(self, hdus=[], file=None, rename_hdus=None,
                  is_off_correlated=True, theta=None, theta_pix=0):
         super(Maps, self).__init__(hdus, file)
 
-        #import IPython; IPython.embed()
-        #if rename_hdus is not None:
+        # import IPython; IPython.embed()
+        # if rename_hdus is not None:
         #    for name, number in rename_hdus.items():
         #        self[number].name = name
 

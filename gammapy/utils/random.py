@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Random sampling for some common distributions"""
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numbers
 import numpy as np
 from astropy.coordinates import Angle
 
-__all__ = ['get_random_state',
-           'sample_sphere',
-           'sample_sphere_distance',
-           'sample_powerlaw',
-           ]
+__all__ = [
+    'get_random_state',
+    'sample_sphere',
+    'sample_sphere_distance',
+    'sample_powerlaw',
+]
 
 
 def get_random_state(init):
@@ -30,12 +31,12 @@ def get_random_state(init):
           (calls `~numpy.random.RandomState` with ``seed=init``)
         * ``'random-seed'`` -- new RandomState instance seeded in a random way
           (calls `~numpy.random.RandomState` with ``seed=None``)
-        * ``'global-rng'``, return the RandomState singleton used by `numpy.random`.
+        * ``'global-rng'``, return the RandomState singleton used by ``numpy.random``.
         * `~numpy.random.RandomState` -- do nothing, return the input.
 
     Returns
     -------
-    random_state : `np.random.RandomState`
+    random_state : `~numpy.random.RandomState`
         RandomState instance.
     """
     if isinstance(init, (numbers.Integral, np.integer)):
@@ -70,7 +71,7 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
 
     Returns
     -------
-    lon, lat: `~astropy.units.Angle`
+    lon, lat: `~astropy.coordinates.Angle`
         Longitude and latitude coordinate arrays
     """
     random_state = get_random_state(random_state)
@@ -99,6 +100,8 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
 
     f(x) = x ** (-gamma) in the range x_min to x_max
 
+    It is assumed that *gamma* is the **differential** spectral index.
+
     Reference: http://mathworld.wolfram.com/RandomNumber.html
 
     Parameters
@@ -124,7 +127,7 @@ def sample_powerlaw(x_min, x_max, gamma, size=None, random_state='random-seed'):
 
     size = int(size)
 
-    exp = 1. - gamma
+    exp = -gamma
     base = random_state.uniform(x_min ** exp, x_max ** exp, size)
     x = base ** (1 / exp)
 

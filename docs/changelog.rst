@@ -13,4 +13,6 @@ are not of interest to users and are not listed here.
 
 After the 1.0 release we will keep a more detailed changelog for users.
 
+A complete list of Gammapy contributors is at :ref:`about-contributors`.
+
 .. include:: ../CHANGES.rst

@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from ..utils.scripts import get_parser
 
 __all__ = ['look_up_image']
+
+log = logging.getLogger(__name__)
+
 
 # TODO: support coordinate parsing
 # TODO: support multiple input images

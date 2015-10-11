@@ -3,36 +3,37 @@
 .. image:: _static/gammapy_banner.png
     :width: 400px
 
+|
+
 .. _gammapy_welcome:
 
 What is Gammapy?
 ----------------
 
-**Gammapy** is an open source (BSD licensed) gamma-ray astronomy Python package.
-
-It is an in-development `affiliated package <http://www.astropy.org/affiliated/index.html>`__ of `Astropy <http://www.astropy.org>`__
-that builds on the core `scientific Python stack <http://www.scipy.org/about.html>`__ to provide tools to simulate and analyse
-the gamma-ray sky for telescopes such as `CTA <https://www.cta-observatory.org/>`__, `H.E.S.S. <http://www.mpi-hd.mpg.de/hfm/HESS/>`__,
-and `Fermi <http://fermi.gsfc.nasa.gov/>`__.
-
-Gammapy is a place for Python-coding gamma-ray astronomers to share their code and collaborate.
-Contributions welcome!
+Gammapy is a community-developed, open-source Python package for gamma-ray astronomy.
 
 * Read the `Gammapy documentation`_.
 * Ask questions on the `Gammapy mailing list`_.
 * Request features, report bugs or contribute on the `Gammapy GitHub page`_.
-* Check out the `Gammapy project summary on Open HUB`_.
+
+If you're new to Gammapy, have a look at the :ref:`about` and :ref:`introduction` pages.
+
+If you'd like to try out Gammapy, head over to the :ref:`install` and :ref:`tutorials`.
 
 .. _gammapy_news:
 
 News
 ----
 
+Coming up:
+
+* November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
+
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
 
-
-* May - August 2015 --- Manuel Paz Arribas GSoC 2015 on `gammapy.background`
-  (`project description <https://github.com/astropy/astropy/wiki/GSoC-2015-Application-Manuel-Paz-Arribas:-Astropy:-background-modeling-for-Gammapy>`__)
+* August 13, 2015 --- Gammapy **0.3** release. See changelog: :ref:`gammapy_0p3_release`
+* August 2015 --- `Gammapy poster and proceeding at ICRC 2015`_
+* May - August 2015 --- `Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling`_
 * April 13, 2015 --- Gammapy **0.2** release. See changelog: :ref:`gammapy_0p2_release`
 * August 25, 2014 --- Gammapy **0.1** release. See changelog: :ref:`gammapy_0p1_release`
 
@@ -50,7 +51,6 @@ General documentation
   tutorials/index
   dataformats/index
   references
-  credit
   development/index
   changelog
 
@@ -77,4 +77,3 @@ The Gammapy toolbox
   stats/index
   time/index
   utils/index
-

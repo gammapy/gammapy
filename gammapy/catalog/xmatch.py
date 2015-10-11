@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-log = logging.getLogger(__name__)
 from collections import OrderedDict
 import numpy as np
 from astropy.extern import six
@@ -13,11 +11,14 @@ from astropy.table import hstack as table_hstack
 from astropy.coordinates import SkyCoord
 from .utils import skycoord_from_table
 
-__all__ = ['catalog_xmatch_circle',
-           'catalog_xmatch_combine',
-           'table_xmatch_circle_criterion',
-           'table_xmatch',
-           ]
+__all__ = [
+    'catalog_xmatch_circle',
+    'catalog_xmatch_combine',
+    'table_xmatch_circle_criterion',
+    'table_xmatch',
+]
+
+log = logging.getLogger(__name__)
 
 
 def catalog_xmatch_circle(catalog, other_catalog,
@@ -41,7 +42,7 @@ def catalog_xmatch_circle(catalog, other_catalog,
         Other source catalog of potential associations
     radius, other_radius : `~astropy.coordinates.Angle` or `str`
         Main source catalog association radius.
-        For `str` this must be a column name (in `deg` if without units)
+        For `str` this must be a column name (in degrees if without units)
 
     Returns
     -------
@@ -114,6 +115,7 @@ def table_xmatch_circle_criterion(max_separation):
     xmatch : function
         Cross-match function to be passed to `table_xmatch`.
     """
+
     def xmatch(row1, row2):
         skycoord1 = SkyCoord(row1['RAJ2000'], row1['DEJ2000'], unit='deg')
         skycoord2 = SkyCoord(row2['RAJ2000'], row2['DEJ2000'], unit='deg')
@@ -141,10 +143,10 @@ def table_xmatch(table1, table2, xmatch_criterion, return_indices=True):
         Input tables
     xmatch_criterion : callable
         Callable that takes two `~astropy.table.Row` objects as input
-        and returns `True` / `False` when they match / don't match.
+        and returns True / False when they match / don't match.
     return_indices : bool
         If `True` this function returns a Table with match indices
-        `idx1` and `idx2`, if `False` it stacks the matches in a table using
+        ``idx1`` and ``idx2``, if False it stacks the matches in a table using
         `~astropy.table.hstack`.
 
     Returns
@@ -158,8 +160,7 @@ def table_xmatch(table1, table2, xmatch_criterion, return_indices=True):
             if xmatch_criterion(row1, row2):
                 matches.add_row([row1.index, row2.index])
 
-
-    if return_indices == True:
+    if return_indices:
         return matches
     else:
         raise NotImplementedError

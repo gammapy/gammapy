@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import print_function, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
@@ -30,7 +30,6 @@ def test_TablePSF_gauss():
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF_disk():
-
     width = Angle(2, 'deg')
     offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
     psf = TablePSF.from_shape(shape='disk', width=width, offset=offset)
@@ -51,14 +50,13 @@ def test_TablePSF_disk():
     assert_allclose(psf.integral(*Angle([1, 2], 'deg')), 0.75, rtol=1e-2)
 
     # TODO
-    #actual = psf.containment_radius([0.01, 0.25, 0.99])
-    #desired = Angle([0, 1, 2], 'deg')
-    #assert_quantity_allclose(actual, desired, rtol=1e-3)
+    # actual = psf.containment_radius([0.01, 0.25, 0.99])
+    # desired = Angle([0, 1, 2], 'deg')
+    # assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_TablePSF():
-
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
     offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
@@ -84,7 +82,6 @@ def test_TablePSF():
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_EnergyDependentTablePSF():
-
     # TODO: test __init__
 
     filename = FermiGalacticCenter.filenames()['psf']
@@ -98,18 +95,18 @@ def test_EnergyDependentTablePSF():
 
     pixel_size = Angle(0.1, 'deg')
 
-    #actual = psf.evaluate(energy=energy, offset=offset)
-    #desired = Quantity(17760.814249206363, 'sr^-1')
-    #assert_quantity_allclose(actual, desired)
+    # actual = psf.evaluate(energy=energy, offset=offset)
+    # desired = Quantity(17760.814249206363, 'sr^-1')
+    # assert_quantity_allclose(actual, desired)
 
-    #actual = psf.evaluate(energy=energies, offset=offsets)
-    #desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
-    #assert_quantity_allclose(actual, desired)
+    # actual = psf.evaluate(energy=energies, offset=offsets)
+    # desired = Quantity([17760.81424921, 5134.17706619], 'sr^-1')
+    # assert_quantity_allclose(actual, desired)
 
     psf1 = psf.table_psf_at_energy(energy)
 
     # TODO: test average_psf
-    #psf2 = psf.psf_in_energy_band(energy_band, spectrum)
+    # psf2 = psf.psf_in_energy_band(energy_band, spectrum)
 
     # TODO: test containment_radius
     # TODO: test containment_fraction

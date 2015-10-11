@@ -25,19 +25,6 @@ def make_test_arf():
     logging.info('Writing {0}'.format(filename))
     arf.writeto(filename, clobber=True)
 
-
-def make_test_rmf():
-    from gammapy.irf import gauss_energy_dispersion_matrix
-    from gammapy.irf import np_to_rmf
-
-    pdf_matrix = gauss_energy_dispersion_matrix(EBOUNDS)
-    rmf = np_to_rmf(pdf_matrix, EBOUNDS, EBOUNDS, minprob=1e-6)
-
-    filename = 'xspec_test_rmf.fits'
-    logging.info('Writing {0}'.format(filename))
-    rmf.writeto(filename, clobber=True)
-
-
 def plot_rmf():
     import matplotlib.pyplot as plt
     from gammapy.irf import EnergyDispersion
