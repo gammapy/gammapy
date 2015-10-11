@@ -56,7 +56,7 @@ UpperLimitAna = []
 LowerLimitAna = []
 
 for mu in MuBins:
-   goodChoice = fc_find_confidence_interval_poisson(mu, background, x_bins, fCL)
+   goodChoice = fc_find_confidence_interval_poisson(mu, fBackground, XBins, fCL)
    UpperLimitAna.append(goodChoice[0])
    LowerLimitAna.append(goodChoice[1])
 

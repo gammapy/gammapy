@@ -26,7 +26,7 @@ MuBins = np.linspace(fMuMin, fMuMax, fMuStep, endpoint=True)
 DistributionsScaled = []
 
 for mu in MuBins:
-    dist = stats.norm(loc=mu, scale=sigma)
+    dist = stats.norm(loc=mu, scale=fSigma)
     dist = dist.pdf(XBins)
     DistributionsScaled.append(dist/sum(dist))
 
