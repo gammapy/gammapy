@@ -4,7 +4,6 @@ from gammapy.spectrum.spectrum_analysis import SpectrumAnalysis
 from ..utils.scripts import get_parser, set_up_logging_from_args, write_yaml, read_yaml
 import logging
 import numpy as np
-from IPython import embed
 
 
 __all__ = ['SpectrumPipe']
