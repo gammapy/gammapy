@@ -36,7 +36,7 @@ class CountsSpectrum(object):
         hdu = spec.to_fits() 
     """
 
-    def __init__(self, counts, energy, livetime=None):
+    def __init__(self, counts, energy, livetime=None, backscal=1):
         
         if np.asarray(counts).size != energy.nbins:
             raise ValueError("Dimension of {0} and {1} do not"
@@ -53,6 +53,7 @@ class CountsSpectrum(object):
             self.energy = energy
 
         self._livetime = livetime
+        self._backscal = backscal
         self.channels = np.arange(1,self.energy.nbins+1,1)
 
     @property
@@ -66,6 +67,16 @@ class CountsSpectrum(object):
         """Live time of the dataset
         """
         return self._livetime
+
+    @property
+    def backscal(self):
+        """Area scaling factor
+        """
+        return self._backscal
+
+    @backscal.setter
+    def backscal(self, value):
+        self._backscal = value
 
     @classmethod
     def from_fits(cls, hdu):
@@ -175,7 +186,7 @@ class CountsSpectrum(object):
         header['QUALITY '] = 0, 'No data quality information specified'
         
         header['AREASCAL'] = 1., 'Nominal effective area'
-        header['BACKSCAL'] = 1., 'Background scale factor'
+        header['BACKSCAL'] = self.backscal, 'Background scale factor'
         header['CORRSCAL'] = 0., 'Correlation scale factor'
         
         header['FILENAME'] = 'several', 'Spectrum was produced from more than one file'

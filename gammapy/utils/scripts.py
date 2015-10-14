@@ -157,3 +157,26 @@ def _create_dir(dirname, overwrite=False):
             # do not overwrite, hence exit
             s_error = "Cannot continue: directory \'{}\' exists.".format(dirname)
             raise RuntimeError(s_error)
+
+
+def read_yaml(filename, logger=None):
+    """Read config from YAML file."""
+    import yaml
+    if logger is not None:
+        logger.info('Reading {}'.format(filename))
+    with open(filename) as fh:
+        config = yaml.safe_load(fh)
+    return config
+
+def write_yaml(config, filename, logger=None):
+    """Write YAML config file
+
+    This function can be used by scripts that alter the users config file.
+    """
+    import yaml
+    filename = filename+'.yaml'
+    if logger is not None:
+        logger.info('Writing {}'.format(filename))
+    with open(filename, 'w') as outfile:
+        outfile.write( yaml.dump(config, default_flow_style=False))
+
