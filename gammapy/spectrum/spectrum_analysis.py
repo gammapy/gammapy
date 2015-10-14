@@ -31,6 +31,7 @@ def main(args=None):
     analysis = SpectrumAnalysis.from_yaml(args.config_file)
     analysis.run()
 
+
 class SpectrumAnalysis(object):
     """Perform a 1D spectrum fit
     """
@@ -40,6 +41,7 @@ class SpectrumAnalysis(object):
         vals = config['general']['runlist']
         if isinstance(vals, six.string_types):
             vals = np.loadtxt(vals, dtype=np.int)
+        # TODO: add while loop
         try:
             self.obs = vals[0]
             _process_config(self)
@@ -47,20 +49,19 @@ class SpectrumAnalysis(object):
             self.obs = vals[1]
             _process_config(self)
 
-        log.info('Creating analysis '+self.outdir)
+        log.info('Creating analysis ' + self.outdir)
         self.observations = []
         nruns = self.config['general']['nruns'] - 1
         for i, obs in enumerate(vals):
             try:
                 val = SpectrumObservation(obs, config)
             except IOError:
-                log.warn('Run '+str(obs)+' does not exist - skipping')
+                log.warn('Run ' + str(obs) + ' does not exist - skipping')
                 nruns = nruns + 1
                 continue
             self.observations.append(val)
             if i == nruns:
                 break
-
 
     @classmethod
     def from_yaml(cls, filename):
@@ -91,7 +92,7 @@ class SpectrumAnalysis(object):
         for obs in self.observations:
             obs.make_ogip()
             log.info('Creating OGIP data for run{}'.format(obs.obs))
-                        
+
     def run_fit(self):
         """Run the gammapy.hspec fit"""
         log.info("Starting HSPEC")
@@ -134,10 +135,11 @@ class SpectrumAnalysis(object):
         fit['parvals'] = list(fit['parvals'])
         fit['parvals'][1] = fit['parvals'][1] * cont
         return fit
-        
+
     def get_containment(self):
         """Calculate PSF correction factor for containment in ON region"""
         return 1
+
 
 class SpectrumObservation(object):
     """1D region based spectral analysis observation.
@@ -161,7 +163,7 @@ class SpectrumObservation(object):
                        rmf=self.rmffile, clobber=clobber)
         self.bkg.write(self.bkgfile, clobber=clobber)
         self.arf.write(self.arffile, energy_unit='keV',
-                       effarea_unit='cm2',          clobber=clobber)
+                       effarea_unit='cm2', clobber=clobber)
         self.rmf.write(self.rmffile, energy_unit='keV', clobber=clobber)
 
     def _prepare_ogip(self):
@@ -215,7 +217,7 @@ def _process_config(object):
     storedir = object.config['general']['datastore']
     object.store = DataStore(dir=storedir)
     object.outdir = object.config['general']['outdir']
-    basename =  object.outdir+"/ogip_data"
+    basename = object.outdir + "/ogip_data"
     if not os.path.isdir(object.outdir):
         os.mkdir(object.outdir)
         os.mkdir(basename)
