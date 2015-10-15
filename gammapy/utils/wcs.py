@@ -102,14 +102,6 @@ def linear_arrays_to_wcs(name_x, name_y, bin_edges_x, bin_edges_y):
         ss_error += " Is this expected?"
         raise ValueError(ss_error)
 
-    # check that bins are linear (edges equally spaced)
-    bin_widths_x = np.diff(bin_edges_x)
-    if not np.allclose(bin_widths_x, bin_widths_x[0]):
-        raise ValueError("The X bins are not linear! Diff = {}".format(np.diff(bin_edges_x.value)))
-    bin_widths_y = np.diff(bin_edges_y)
-    if not np.allclose(bin_widths_y, bin_widths_y[0]):
-        raise ValueError("The Y bins are not linear! Diff = {}".format(np.diff(bin_edges_y.value)))
-
     # Create a new WCS object. The number of axes must be set from the start
     wcs = WCS(naxis=2)
 
