@@ -77,7 +77,9 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.4 OPTIONAL_DEPS=false SETUP_CMD='test -V'
 
-        # Test with old numpy versions
+        # Test with other numpy versions
+        - os: linux
+          env: PYTHON_VERSION=3.4 NUMPY_VERSION=dev SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
         - os: linux
@@ -88,12 +90,12 @@ matrix:
     # You can move builds that temporarily fail because of some non-Gammapy issue here
     # Please add a link to a GH issue that tracks the upstream issue.
     allow_failures:
-      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=dev SETUP_CMD='test'
+      - env: PYTHON_VERSION=3.4 NUMPY_VERSION=dev SETUP_CMD='test -V'
       # Tests for old Numpy versions currently don't work:
       # https://github.com/astropy/conda-builder-affiliated/issues/40
-      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
+      # - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
       - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
-      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.6 SETUP_CMD='test -V'
+      # - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.6 SETUP_CMD='test -V'
 
 install:
     - source .continuous-integration/travis/setup_environment_$TRAVIS_OS_NAME.sh
