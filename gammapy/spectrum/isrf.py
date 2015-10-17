@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Galactic interstellar radiation field (ISRF) models"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-from os.path import join
 from astropy.io import fits
+from ..extern.pathlib import Path
 
 __all__ = [
     'Galprop',
@@ -88,11 +88,11 @@ class Galprop(object):
         # TODO: use astropy, not kapteyn here
         from kapteyn.maputils import FITSimage
         dirname = '/Users/deil/work/workspace/galpop/data/GALPROP'
-        filename = join(dirname, 'MilkyWay_DR0.5_DZ0.1_DPHI10_RMAX20_ZMAX5_galprop_format.fits')
+        filename = Path(dirname) / 'MilkyWay_DR0.5_DZ0.1_DPHI10_RMAX20_ZMAX5_galprop_format.fits'
         # The FITS header is missing the CRPIX keywords, so FITSimage would complain.
         # That's why we read it with pyfits, add the keywords, and then create the FITSimage.
-        data = fits.getdata(filename)
-        header = fits.getheader(filename)
+        data = fits.getdata(str(filename))
+        header = fits.getheader(str(filename))
         for axis in [1, 2, 3, 4]:
             header['CRPIX{0}'.format(axis)] = 1
         self.lookup = FITSimage(externaldata=data, externalheader=header)

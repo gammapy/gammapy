@@ -4,16 +4,14 @@ import numpy as np
 from astropy.tests.helper import remote_data
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
-from ...obs import (ObservationTable, ObservationGroups,
-                    ObservationGroupAxis)
+from ...obs import (
+    ObservationTable,
+    ObservationGroups,
+    ObservationGroupAxis
+)
 from ... import datasets
 from ...datasets import make_test_observation_table
 from ...catalog import skycoord_from_table
-
-
-def test_ObservationTable():
-    obs_table = ObservationTable()
-    # TODO: implement some useful test with asserts
 
 
 def common_sky_region_select_test_routines(obs_table, selection):
@@ -36,7 +34,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
     do_wrapping = False
     # not needed in the case of sky_circle
     if (type == 'sky_box' and
-            any(l < Angle(0., 'degree') for l in lon_range_eff)):
+            any(l < Angle(0., 'deg') for l in lon_range_eff)):
         do_wrapping = True
 
     # observation table
@@ -50,7 +48,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
         lon = skycoord.data.lon
         lat = skycoord.data.lat
         if do_wrapping:
-            lon = lon.wrap_at(Angle(180, 'degree'))
+            lon = lon.wrap_at(Angle(180, 'deg'))
         assert ((lon_range_eff[0] < lon) & (lon < lon_range_eff[1]) &
                 (lat_range_eff[0] < lat) & (lat < lat_range_eff[1])).all()
     elif type == 'sky_circle':
@@ -66,7 +64,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
         lon = skycoord.data.lon
         lat = skycoord.data.lat
         if do_wrapping:
-            lon = lon.wrap_at(Angle(180, 'degree'))
+            lon = lon.wrap_at(Angle(180, 'deg'))
         assert ((lon_range_eff[0] >= lon) | (lon >= lon_range_eff[1]) |
                 (lat_range_eff[0] >= lat) | (lat >= lat_range_eff[1])).all()
     elif type == 'sky_circle':
@@ -108,7 +106,7 @@ def test_select_parameter_box():
 
     # test box selection in alt
     variable = 'ALT'
-    value_range = Angle([60., 70.], 'degree')
+    value_range = Angle([60., 70.], 'deg')
     selection = dict(type='par_box', variable=variable, value_range=value_range)
     selected_obs_table = obs_table.select_observations(selection)
     assert (value_range[0] < Angle(selected_obs_table[variable])).all()
@@ -130,8 +128,8 @@ def test_select_time_box():
     value_range = Time(['2012-01-01T01:00:00', '2012-01-01T02:00:00'])
     selection = dict(type='time_box', time_range=value_range)
     selected_obs_table = obs_table_time.select_observations(selection)
-    time_start = selected_obs_table['TIME_START']
-    time_stop = selected_obs_table['TIME_STOP']
+    time_start = selected_obs_table['TSTART']
+    time_stop = selected_obs_table['TSTOP']
     assert (value_range[0] < time_start).all()
     assert (time_start < value_range[1]).all()
     assert (value_range[0] < time_stop).all()
@@ -144,10 +142,10 @@ def test_select_sky_regions():
     obs_table = make_test_observation_table(n_obs=100, random_state=random_state)
 
     # test sky box selection in gal coordinates
-    lon_range = Angle([-100., 50.], 'degree')
-    lat_range = Angle([-25., 25.], 'degree')
+    lon_range = Angle([-100., 50.], 'deg')
+    lat_range = Angle([-25., 25.], 'deg')
     frame = 'galactic'
-    border = Angle(2., 'degree')
+    border = Angle(2., 'deg')
     selection = dict(type='sky_box', frame=frame,
                      lon=lon_range,
                      lat=lat_range,
@@ -155,10 +153,10 @@ def test_select_sky_regions():
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky box selection in radec coordinates
-    lon_range = Angle([150., 300.], 'degree')
-    lat_range = Angle([-50., 0.], 'degree')
+    lon_range = Angle([150., 300.], 'deg')
+    lat_range = Angle([-50., 0.], 'deg')
     frame = 'icrs'
-    border = Angle(2., 'degree')
+    border = Angle(2., 'deg')
     selection = dict(type='sky_box', frame=frame,
                      lon=lon_range,
                      lat=lat_range,
@@ -166,22 +164,22 @@ def test_select_sky_regions():
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in gal coordinates
-    lon_cen = Angle(0., 'degree')
-    lat_cen = Angle(0., 'degree')
-    radius = Angle(50., 'degree')
+    lon_cen = Angle(0., 'deg')
+    lat_cen = Angle(0., 'deg')
+    radius = Angle(50., 'deg')
     frame = 'galactic'
-    border = Angle(2., 'degree')
+    border = Angle(2., 'deg')
     selection = dict(type='sky_circle', frame=frame,
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
 
     # test sky circle selection in radec coordinates
-    lon_cen = Angle(130., 'degree')
-    lat_cen = Angle(-40., 'degree')
-    radius = Angle(50., 'degree')
+    lon_cen = Angle(130., 'deg')
+    lat_cen = Angle(-40., 'deg')
+    radius = Angle(50., 'deg')
     frame = 'icrs'
-    border = Angle(2., 'degree')
+    border = Angle(2., 'deg')
     selection = dict(type='sky_circle', frame=frame,
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
@@ -191,8 +189,8 @@ def test_select_sky_regions():
 @remote_data
 def test_ObservationGroups(tmpdir):
     """Test create obs groups"""
-    alt = Angle([0, 30, 60, 90], 'degree')
-    az = Angle([-90, 90, 270], 'degree')
+    alt = Angle([0, 30, 60, 90], 'deg')
+    az = Angle([-90, 90, 270], 'deg')
     ntels = np.array([3, 4])
     list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
                            ObservationGroupAxis('AZ', az, 'bin_edges'),
@@ -203,7 +201,7 @@ def test_ObservationGroups(tmpdir):
 
     # write
     obs_groups_1 = obs_groups
-    outfile = str(tmpdir.join('obs_groups.ecsv'))
+    outfile = str(tmpdir / 'obs_groups.ecsv')
     obs_groups_1.write(outfile)
 
     # read
@@ -220,7 +218,7 @@ def test_ObservationGroups(tmpdir):
 
     # wrap azimuth angles to [-90, 270) deg
     # to match definition of azimuth grouping axis
-    obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'degree'))
+    obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'deg'))
 
     # group obs list
     obs_table_grouped = obs_groups.group_observation_table(obs_table)
@@ -260,11 +258,11 @@ def test_ObservationGroups(tmpdir):
 def test_ObservationGroupAxis():
     """Test create a few obs group axis objects"""
 
-    alt = Angle([0, 30, 60, 90], 'degree')
+    alt = Angle([0, 30, 60, 90], 'deg')
     alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
     assert alt_obs_group_axis.n_bins == len(alt) - 1
 
-    az = Angle([-90, 90, 270], 'degree')
+    az = Angle([-90, 90, 270], 'deg')
     az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
     assert az_obs_group_axis.n_bins == len(az) - 1
 

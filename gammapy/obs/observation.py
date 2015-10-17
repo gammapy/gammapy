@@ -1,15 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os.path
 import logging
 import numpy as np
 from astropy.table import Table, Column, vstack
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from astropy.io import ascii
+from ..extern.pathlib import Path
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..catalog import select_sky_box, select_sky_circle
+from ..catalog import skycoord_from_table
 
 __all__ = [
     # 'Observation',
@@ -54,6 +55,64 @@ class ObservationTable(Table):
     convenience methods. The format of the observation table
     is described in :ref:`dataformats_observation_lists`.
     """
+    # For now I've decided to not do the cleanup in `__init__`,
+    # but instead in `read`.
+    # See https://groups.google.com/d/msg/astropy-dev/0EaOw9peWSk/MSjH7q_7htoJ
+    # def __init__(self, *args, **kwargs):
+    #     super(DataStoreIndexTable, self).__init__(*args, **kwargs)
+    #     self._fixes()
+
+    # @classmethod
+    # def read(cls, filename, *args, **kwargs):
+    #     """Read from FITS file. See `~astropy.table.Table.read`."""
+    #     table = Table.read(filename, *args, **kwargs)
+    #     table = cls(table)
+    #     table._init_cleanup()
+    #     return table
+    #
+    # def _init_cleanup(self):
+    #     # TODO: for now we force default units here, because the
+    #     # HAP runinfo.fits file doesn't store units...
+    #
+    #
+    #     self['RA'].unit = 'deg'
+    #     self['DEC'].unit = 'deg'
+    #     self['ALT'].unit = 'deg'
+    #     self['AZ'].unit = 'deg'
+    #
+    #
+    # def summary(self):
+    #     ss = 'Data store index table summary:\n'
+    #     ss += 'Number of observations: {}\n'.format(len(self))
+    #     obs_id = self['OBS_ID']
+    #     ss += 'Observation IDs: {} to {}\n'.format(obs_id.min(), obs_id.max())
+    #     ss += 'Dates: {} to {}\n'.format('TODO', 'TODO')
+    #     return ss
+
+    @property
+    def radec(self):
+        """ICRS sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        return SkyCoord(self['RA'], self['DEC'], unit='deg', frame='icrs')
+
+    @property
+    def galactic(self):
+        """Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        return SkyCoord(self['GLON'], self['GLAT'], unit='deg', frame='galactic')
+
+    def get_obs_idx(self, obs_id):
+        """Get observation table row index for given ID.
+
+        Raises ValueError if the observation isn't available.
+        """
+        # TODO: maybe searchsorted is faster?
+        return list(self['OBS_ID']).index(obs_id)
+
+    def get_obs_row(self, obs_id):
+        """Get observation table row for given ID.
+
+        Raises ValueError if the observation isn't available.
+        """
+        return self[self.get_obs_idx(obs_id)]
 
     @property
     def summary(self):
@@ -62,10 +121,10 @@ class ObservationTable(Table):
         obs_name = self.meta['OBSERVATORY_NAME']
         ss += 'Observatory name: {}\n'.format(obs_name)
         ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = Quantity(self['TIME_OBSERVATION'].sum(),
-                          self['TIME_OBSERVATION'].unit)
+        ontime = Quantity(self['ONTIME'].sum(),
+                          self['ONTIME'].unit)
         ss += 'Total observation time: {}\n'.format(ontime)
-        livetime = Quantity(self['TIME_LIVE'].sum(), self['TIME_LIVE'].unit)
+        livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
         ss += 'Total live time: {}\n'.format(livetime)
         dtf = 100. * (1 - livetime / ontime)
         ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
@@ -232,7 +291,7 @@ class ObservationTable(Table):
               the **border** keyword
 
             - ``time_box`` is a 1D selection criterion acting on the observation
-              time (**TIME_START** and **TIME_STOP**); the interval is set via the
+              time (**TSTART** and **TSTOP**); the interval is set via the
               **time_range** keyword; uses
               `~gammapy.obs.ObservationTable.select_time_range`
 
@@ -263,16 +322,16 @@ class ObservationTable(Table):
         Examples
         --------
         >>> selection = dict(type='sky_box', frame='icrs',
-        ...                  lon=Angle([150, 300], 'degree'),
-        ...                  lat=Angle([-50, 0], 'degree'),
-        ...                  border=Angle(2, 'degree'))
+        ...                  lon=Angle([150, 300], 'deg'),
+        ...                  lat=Angle([-50, 0], 'deg'),
+        ...                  border=Angle(2, 'deg'))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='sky_circle', frame='galactic',
-        ...                  lon=Angle(0, 'degree'),
-        ...                  lat=Angle(0, 'degree'),
-        ...                  radius=Angle(5, 'degree'),
-        ...                  border=Angle(2, 'degree'))
+        ...                  lon=Angle(0, 'deg'),
+        ...                  lat=Angle(0, 'deg'),
+        ...                  radius=Angle(5, 'deg'),
+        ...                  border=Angle(2, 'deg'))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='time_box',
@@ -280,7 +339,7 @@ class ObservationTable(Table):
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='ALT',
-        ...                  value_range=Angle([60., 70.], 'degree'))
+        ...                  value_range=Angle([60., 70.], 'deg'))
         >>> selected_obs_table = obs_table.select_observations(selection)
 
         >>> selection = dict(type='par_box', variable='OBS_ID',
@@ -322,10 +381,10 @@ class ObservationTable(Table):
 
             elif selection_type == 'time_box':
                 # apply twice the mask: to TIME_START and TIME_STOP
-                obs_table = obs_table.select_time_range('TIME_START',
+                obs_table = obs_table.select_time_range('TSTART',
                                                         selection['time_range'],
                                                         selection['inverted'])
-                obs_table = obs_table.select_time_range('TIME_STOP',
+                obs_table = obs_table.select_time_range('TSTOP',
                                                         selection['time_range'],
                                                         selection['inverted'])
 
@@ -402,8 +461,8 @@ class ObservationGroups(object):
 
     .. code:: python
 
-        alt = Angle([0, 30, 60, 90], 'degree')
-        az = Angle([-90, 90, 270], 'degree')
+        alt = Angle([0, 30, 60, 90], 'deg')
+        az = Angle([-90, 90, 270], 'deg')
         ntels = np.array([3, 4])
         list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
                                ObservationGroupAxis('AZ', az, 'bin_edges'),
@@ -630,7 +689,7 @@ class ObservationGroups(object):
             Flag to control file overwriting.
         """
         # there is no overwrite option in `~astropy.io.ascii`
-        if not os.path.isfile(outfile) or overwrite:
+        if not Path(outfile).is_file() or overwrite:
             ascii.write(self.obs_groups_table, outfile,
                         format='ecsv', fast_writer=False)
 
@@ -695,7 +754,7 @@ class ObservationGroups(object):
         should have an azimuth column defined as ``AZ`` and wrapped
         at ``270 deg``. This can easily be done by calling:
 
-        >>> obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'degree'))
+        >>> obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'deg'))
 
         Parameters
         ----------
@@ -813,9 +872,9 @@ class ObservationGroupAxis(object):
 
     .. code:: python
 
-        alt = Angle([0, 30, 60, 90], 'degree')
+        alt = Angle([0, 30, 60, 90], 'deg')
         alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
-        az = Angle([-90, 90, 270], 'degree')
+        az = Angle([-90, 90, 270], 'deg')
         az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
         ntels = np.array([3, 4])
         ntels_obs_group_axis = ObservationGroupAxis('N_TELS', ntels, 'bin_values')

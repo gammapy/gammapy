@@ -35,9 +35,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.io import fits
+from ..extern.pathlib import Path
 from .. import stats
 from ..image import disk_correlate
-from ..utils.scripts import _create_dir
 
 __all__ = [
     'IterativeSourceDetector',
@@ -107,7 +107,7 @@ class IterativeSourceDetector(object):
             log.debug('Starting iteration number {0}'.format(_))
             debug_folder = self.debug_output_folder + '/' + str(_)
             if self.debug_output_folder:
-                _create_dir(debug_folder, overwrite=False)
+                Path(debug_folder).mkdir()
                 log.info('mkdir {0}'.format(debug_folder))
 
             self.compute_iter_maps()

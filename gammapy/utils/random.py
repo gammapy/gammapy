@@ -77,10 +77,10 @@ def sample_sphere(size, lon_range=None, lat_range=None, random_state='random-see
     random_state = get_random_state(random_state)
 
     if lon_range is None:
-        lon_range = Angle([0., 360.], 'degree')
+        lon_range = Angle([0., 360.], 'deg')
 
     if lat_range is None:
-        lat_range = Angle([-90., 90.], 'degree')
+        lat_range = Angle([-90., 90.], 'deg')
 
     # Sample random longitude
     u = random_state.uniform(size=size)

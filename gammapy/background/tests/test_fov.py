@@ -23,7 +23,7 @@ def test_fill_acceptance_image():
     # odd number of pixels needed for having the center in its own pixel
     n_pix_x = 101
     n_pix_y = 101
-    bin_size = Angle(0.1, 'degree')
+    bin_size = Angle(0.1, 'deg')
     image = make_empty_image(n_pix_x, n_pix_y, bin_size.degree,
                              xref=0, yref=0, fill=0,
                              proj='CAR', coordsys='GAL',
@@ -47,7 +47,7 @@ def test_fill_acceptance_image():
     # define radial acceptance and offset angles
     # using bin_size for the offset step makes the test comparison easier
     offset = Angle(np.arange(0., 30., bin_size.degree), 'deg')
-    sigma = Angle(1.0, 'degree')
+    sigma = Angle(1.0, 'deg')
     amplitude = 1.
     mean = 0.
     stddev = sigma.radian

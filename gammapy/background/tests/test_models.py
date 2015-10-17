@@ -72,7 +72,7 @@ class TestCubeBackgroundModel:
                                      location='remote')
         bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
 
-        outfile = str(tmpdir.join('cubebackground_table_test.fits'))
+        outfile = str(tmpdir / 'cubebackground_table_test.fits')
         bg_cube_model_1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files

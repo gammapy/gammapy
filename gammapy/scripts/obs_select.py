@@ -86,7 +86,7 @@ def find_obs(infile,
 
     .. code-block:: bash
 
-        gammapy-find-obs -h
+        gammapy-obs-select -h
 
     In order to test the examples below, the test observation list
     file located in the ``gammapy-extra`` repository `test_observation_table.fits`_
@@ -101,17 +101,17 @@ def find_obs(infile,
 
     .. code-block:: bash
 
-        gammapy-find-obs -h
-        gammapy-find-obs test_observation_table.fits
-        gammapy-find-obs test_observation_table.fits out.test_observation_table.fits --overwrite
-        gammapy-find-obs test_observation_table.fits --x 130 --y -40 --r 50 --system 'icrs'
-        gammapy-find-obs test_observation_table.fits --x 0 --y 0 --r 50 --system 'galactic'
-        gammapy-find-obs test_observation_table.fits --x 225 --y -25 --dx 75 --dy 25 --system 'icrs'
-        gammapy-find-obs test_observation_table.fits --x -25 --y 0 --dx 75 --dy 25 --system 'galactic'
-        gammapy-find-obs test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
-        gammapy-find-obs test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
-        gammapy-find-obs test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
-        gammapy-find-obs test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
+        gammapy-obs-select -h
+        gammapy-obs-select test_observation_table.fits
+        gammapy-obs-select test_observation_table.fits out.test_observation_table.fits --overwrite
+        gammapy-obs-select test_observation_table.fits --x 130 --y -40 --r 50 --system 'icrs'
+        gammapy-obs-select test_observation_table.fits --x 0 --y 0 --r 50 --system 'galactic'
+        gammapy-obs-select test_observation_table.fits --x 225 --y -25 --dx 75 --dy 25 --system 'icrs'
+        gammapy-obs-select test_observation_table.fits --x -25 --y 0 --dx 75 --dy 25 --system 'galactic'
+        gammapy-obs-select test_observation_table.fits --t_start '2012-01-01T00:00:00' --t_stop '2014-01-01T00:00:00'
+        gammapy-obs-select test_observation_table.fits --par_name 'OBS_ID' --par_min 2 --par_max 6
+        gammapy-obs-select test_observation_table.fits --par_name 'ALT' --par_min 60 --par_max 70
+        gammapy-obs-select test_observation_table.fits --par_name 'N_TELS' --par_min 4 --par_max 4
     """
     # open (fits) file and read the observation table
     try:
@@ -126,12 +126,12 @@ def find_obs(infile,
     if do_sky_circle_selection.all():
         log.debug("Applying sky circle selection.")
         # cast x, y, r into Angle objects
-        lon_cen = Angle(x, 'degree')
-        lat_cen = Angle(y, 'degree')
-        radius = Angle(r, 'degree')
+        lon_cen = Angle(x, 'deg')
+        lat_cen = Angle(y, 'deg')
+        radius = Angle(r, 'deg')
         selection = dict(type='sky_circle', frame=system,
                          lon=lon_cen, lat=lat_cen,
-                         radius=radius, border=Angle(0., 'degree'),
+                         radius=radius, border=Angle(0., 'deg'),
                          inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:
@@ -139,18 +139,18 @@ def find_obs(infile,
             raise ValueError("Could not apply sky circle selection.")
 
     # sky box selection
-    do_sky_box_selection = np.array([(x != None), (y != None),
-                                     (dx != None), (dy != None),
-                                     (system != None)])
+    do_sky_box_selection = np.array(
+        [(x is not None), (y is not None), (dx is not None), (dy is not None), (system is not None)]
+    )
     if do_sky_box_selection.all():
         log.debug("Applying sky box selection.")
         # convert x, y, dx, dy to ranges and cast into Angle objects
-        lon_range = Angle([x - dx, x + dx], 'degree')
-        lat_range = Angle([y - dy, y + dy], 'degree')
+        lon_range = Angle([x - dx, x + dx], 'deg')
+        lat_range = Angle([y - dy, y + dy], 'deg')
         selection = dict(type='sky_box', frame=system,
                          lon=(lon_range[0], lon_range[1]),
                          lat=(lat_range[0], lat_range[1]),
-                         border=Angle(0., 'degree'),
+                         border=Angle(0., 'deg'),
                          inverted=invert)
         observation_table = observation_table.select_observations(selection)
     else:

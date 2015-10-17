@@ -12,8 +12,8 @@ TODO:
 - add methods to compare with HESS data
 - Check out where the following warning occurs:
 Warning: divide by zero encountered in log"""
-from os.path import join
 import logging
+from gammapy.extern.pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
@@ -96,8 +96,9 @@ def prepare(galprop_dir, tag='orig', clobber=True):
         return '_'.join(dirname.split('_')[1:3])
 
     # Copy and fix all the components
-    infiles = [join(galprop_dir, component + '_mapcube_' +
-                    map_id() + '.gz') for component in components]
+    infiles = []
+    for component in components:
+        Path(galprop_dir) / (component + '_mapcube_' + map_id() + '.gz')
     outfiles = [filename(tag, ii) for ii in range(len(components))]
     for ii in [1, 2, 3]:  # Total component doesn't exist yet
         logging.info('Fixing {0}'.format(components[ii]))
@@ -345,14 +346,13 @@ def main():
     ################################
     base_dir = '/nfs/d22/hfm/hillert/data-files/galprop'
     run = 'results_54_0353000q_zdguc6ruot1bue7f'
-    galprop_dir = join(base_dir, run)
-    results_dir = join(galprop_dir, 'results')
-    ref_file = join(base_dir, 'hess_exclusion_0.3_part.fits')
+    galprop_dir = Path(base_dir) / run
+    results_dir = galprop_dir / 'results'
+    ref_file = Path(base_dir) / 'hess_exclusion_0.3_part.fits'
 
     # Create and set result dir
-    if not os.path.isdir(results_dir):
-        os.makedirs(results_dir)
-    os.chdir(results_dir)
+    results_dir.mkdir(exist_ok=True)
+    results_dir.chdir()
 
     ################################
     # Prepare data

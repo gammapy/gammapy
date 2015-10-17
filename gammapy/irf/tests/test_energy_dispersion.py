@@ -50,7 +50,7 @@ def test_EnergyDispersion_write(tmpdir):
     edisp = EnergyDispersion.read(filename)
     indices = np.array([[1,3,6],[3,3,2]])
     desired = edisp.pdf_matrix[indices]
-    writename = str(tmpdir.join('rmf_test.fits'))
+    writename = str(tmpdir / 'rmf_test.fits')
     edisp.write(writename)
     edisp2 = EnergyDispersion.read(writename)
     actual = edisp2.pdf_matrix[indices]

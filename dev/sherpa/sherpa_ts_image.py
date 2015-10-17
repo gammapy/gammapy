@@ -47,7 +47,7 @@ parser.add_argument('--overwrite', action='store_true',
 args = parser.parse_args()
 
 import logging
-from os.path import isfile
+from gammapy.extern.pathlib import Path
 from time import time
 import numpy as np
 from sherpa.astro.ui import *
@@ -66,7 +66,7 @@ logging.basicConfig(level=logging.INFO)
 # time computing the significance image but not being able to save it
 # ---------------------------------------------------------
 
-if (args.overwrite == False and isfile(args.significance_image)):
+if (args.overwrite == False and Path(args.significance_image).is_file()):
     logging.error('Output file exists: {0}'.format(args.significance_image))
     from sys import exit
     exit(-1)

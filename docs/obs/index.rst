@@ -26,7 +26,7 @@ This allows you to be up and running quickly and to focus on analysis.
 
 * ``gammapy-data-manage`` -- Manage data locally and on servers
 * ``gammapy-data-browse`` -- A web app to browse local data (stats and quick look plots)
-* ``gammapy-obs-select`` -- Select observations of interest for a given analysis (TODO: rename, currently called ``gammapy-find-obs``)
+* ``gammapy-obs-select`` -- Select observations of interest for a given analysis
 * ``gammapy-obs-group`` -- Group observations (TODO: implement)
 
 Download data
@@ -107,6 +107,7 @@ If you'd like to learn more about using `gammapy.obs`, read the following sub-pa
 .. toctree::
    :maxdepth: 1
 
+   dm
    find_observations
    observation_grouping
    server

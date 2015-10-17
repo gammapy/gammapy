@@ -36,7 +36,7 @@ def test_compute_ts_map(tmpdir):
     assert_allclose(1.0227934338735763e-09, result.amplitude[99, 99], rtol=1e-3)
 
     # test write method
-    filename = str(tmpdir.join('ts_test.fits'))
+    filename = str(tmpdir / 'ts_test.fits')
     result.write(filename, header=data['header'])
     read_result = TSMapResult.read(filename)
     for _ in ['ts', 'sqrt_ts', 'amplitude', 'niter']:

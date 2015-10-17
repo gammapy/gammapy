@@ -2,13 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from collections import OrderedDict
-import os
 import numpy as np
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
@@ -451,7 +451,7 @@ class EventListDataset(object):
         """
         total_filesize = 0
         for filename in filenames:
-            total_filesize += os.path.getsize(filename)
+            total_filesize += Path(filename).stat().st_size
 
         if logger:
             logger.info('Number of files to stack: {}'.format(len(filenames)))

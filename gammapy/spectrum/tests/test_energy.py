@@ -161,7 +161,7 @@ def test_EnergyBounds():
 
 def test_EnergyBounds_write(tmpdir):
     ebounds = EnergyBounds.equal_log_spacing(1 * u.TeV, 10 * u.TeV, 10)
-    writename = str(tmpdir.join('ebounds_test.fits'))
+    writename = str(tmpdir / 'ebounds_test.fits')
     hdu = ebounds.to_ebounds()
     prim_hdu = fits.PrimaryHDU()
     hdulist = fits.HDUList([prim_hdu, hdu])

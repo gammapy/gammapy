@@ -81,7 +81,7 @@ created with a few extra lines of Python code:
 
 .. code-block:: python
 
-    data_store = DataStore(dir=workdir, scheme='HESS')
+    data_store = DataStore.from_dir(dir=workdir)
     observation_table = data_store.make_observation_table()
     print(observation_table)
     event_list_files = data_store.make_table_of_files(observation_table,

@@ -18,9 +18,6 @@ try:
     PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
     PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
     PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
-    # ROOT doesn't have a __version__ attribute
-    # PYTEST_HEADER_MODULES['ROOT'] = 'ROOT'
-    # PYTEST_HEADER_MODULES['rootpy'] = 'rootpy'
 
     PYTEST_HEADER_MODULES['astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
@@ -32,8 +29,7 @@ try:
     PYTEST_HEADER_MODULES['wcsaxes'] = 'wcsaxes'
     PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
     PYTEST_HEADER_MODULES['pyregion'] = 'pyregion'
-    # Commented out for git issue 15
-    # PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
+    PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
     # `ginga` doesn't have a __version__ attribute yet, so this won't work:
     #PYTEST_HEADER_MODULES['ginga'] = 'ginga'

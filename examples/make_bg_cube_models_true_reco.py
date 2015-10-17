@@ -7,26 +7,24 @@ be used to test the cube bg model production and can be compared to
 each other using the plot_bg_cube_model_comparison.py example script.
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals) # python 2 as python 3
-import os
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
+from gammapy.extern.pathlib import Path
 from gammapy.datasets import make_test_bg_cube_model, make_test_dataset
 from gammapy.obs import (DataStore, ObservationGroups,
                          ObservationGroupAxis)
 from gammapy.background import make_bg_cube_model
-from gammapy.utils.scripts import _create_dir
 
-#TEST = True # create a small dataset
-TEST = False # create a large dataset (slow)
+# TEST = True # create a small dataset
+TEST = False  # create a large dataset (slow)
 
 # define model parameters
 SIGMA = Angle(5., 'deg')
-#INDEX = 2.7
-#INDEX = 2.0
+# INDEX = 2.7
+# INDEX = 2.0
 INDEX = 1.5
 
 # define obs group bin
@@ -94,7 +92,7 @@ def make_true_model():
     nenergy_bins = 20
 
     # average altitude
-    altitude = (ALT_RANGE[0]+ ALT_RANGE[1])/2.
+    altitude = (ALT_RANGE[0] + ALT_RANGE[1]) / 2.
 
     sigma = SIGMA
     spectral_index = INDEX
@@ -105,7 +103,7 @@ def make_true_model():
                                             ndety_bins=ndet_bins,
                                             energy_band=energy_band,
                                             nenergy_bins=nenergy_bins,
-                                            altitude= altitude,
+                                            altitude=altitude,
                                             sigma=sigma,
                                             spectral_index=spectral_index,
                                             apply_mask=False,
@@ -125,7 +123,6 @@ def make_true_model():
 def make_reco_model():
     """Make a reco bg cube model."""
 
-    SCHEME = 'HESS'
     METHOD = 'default'
 
     data_dir = 'test_dataset'
@@ -145,8 +142,6 @@ def make_reco_model():
     obs_groups.write(outfile)
 
     # 1. create dummy dataset
-
-    observatory_name = SCHEME
 
     # use enough stats so that rebinning (and resmoothing?) doesn't take place
     n_obs = 100
@@ -175,8 +170,7 @@ def make_reco_model():
                       random_state=random_state)
 
     # 2. get observation table
-    scheme = SCHEME
-    data_store = DataStore(dir=data_dir, scheme=scheme)
+    data_store = DataStore.from_dir(dir=data_dir)
     observation_table = data_store.make_observation_table()
     outfile = os.path.join(outdir, 'bg_observation_table_group{}.fits.gz'.format(group_id))
     print("Writing {}".format(outfile))

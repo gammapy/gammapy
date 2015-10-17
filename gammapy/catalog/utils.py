@@ -291,8 +291,8 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     Examples
     --------
     >>> selected_obs_table = select_sky_box(obs_table,
-    ...                                     lon_lim=Angle([150, 300], 'degree'),
-    ...                                     lat_lim=Angle([-50, 0], 'degree'),
+    ...                                     lon_lim=Angle([150, 300], 'deg'),
+    ...                                     lat_lim=Angle([-50, 0], 'deg'),
     ...                                     frame='icrs')
     """
     skycoord = skycoord_from_table(table)
@@ -302,8 +302,8 @@ def select_sky_box(table, lon_lim, lat_lim, frame='icrs', inverted=False):
     # SkyCoord automatically wraps lon angles at 360 deg, so in case
     # the lon range is wrapped at 180 deg, lon angles must be wrapped
     # also at 180 deg for the comparison to work
-    if any(l < Angle(0., 'degree') for l in lon_lim):
-        lon = lon.wrap_at(Angle(180, 'degree'))
+    if any(l < Angle(0., 'deg') for l in lon_lim):
+        lon = lon.wrap_at(Angle(180, 'deg'))
 
     lon_mask = (lon_lim[0] <= lon) & (lon < lon_lim[1])
     lat_mask = (lat_lim[0] <= lat) & (lat < lat_lim[1])
@@ -346,9 +346,9 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
     Examples
     --------
     >>> selected_obs_table = select_sky_circle(obs_table,
-    ...                                        lon=Angle(0, 'degree'),
-    ...                                        lat=Angle(0, 'degree'),
-    ...                                        radius=Angle(5, 'degree'),
+    ...                                        lon=Angle(0, 'deg'),
+    ...                                        lat=Angle(0, 'deg'),
+    ...                                        radius=Angle(5, 'deg'),
     ...                                        frame='galactic')
     """
     skycoord = skycoord_from_table(table)

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest, remote_data
 from ... import datasets
-from ..find_obs import main as find_obs_main
+from ..obs_select import main as obs_select_main
 from ...obs import ObservationTable
 
 
@@ -17,7 +17,7 @@ from ...obs import ObservationTable
 def test_find_obs_main(extra_options, n_selected_obs, tmpdir):
     infile = datasets.get_path('../test_datasets/obs/test_observation_table.fits',
                                  location='remote')
-    outfile = str(tmpdir.join('find_obs_test.fits'))
-    find_obs_main([infile, outfile] + extra_options)
+    outfile = str(tmpdir / 'find_obs_test.fits')
+    obs_select_main([infile, outfile] + extra_options)
     observation_table = ObservationTable.read(outfile)
     assert len(observation_table) == n_selected_obs

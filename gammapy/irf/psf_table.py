@@ -97,8 +97,8 @@ class TablePSF(object):
         >>> import numpy as np
         >>> from astropy.coordinates import Angle
         >>> from gammapy.irf import make_table_psf
-        >>> make_table_psf(shape='gauss', width=Angle(0.2, 'degree'),
-        ...                offset=Angle(np.linspace(0, 0.7, 100), 'degree'))
+        >>> make_table_psf(shape='gauss', width=Angle(0.2, 'deg'),
+        ...                offset=Angle(np.linspace(0, 0.7, 100), 'deg'))
         """
         if not isinstance(width, Angle):
             raise ValueError("width must be an Angle object.")
@@ -301,7 +301,7 @@ class TablePSF(object):
             Containment radius angle
         """
         radius = self._ppf_spline(fraction)
-        return Angle(radius, 'radian').to('degree')
+        return Angle(radius, 'radian').to('deg')
 
     def normalize(self):
         """Normalize PSF to unit integral.
@@ -354,7 +354,7 @@ class TablePSF(object):
         """
         import matplotlib.pyplot as plt
 
-        x = self._offset.to('degree')
+        x = self._offset.to('deg')
         y = self.evaluate(self._offset, quantity)
 
         plt.plot(x.value, y.value, lw=2)
@@ -445,7 +445,7 @@ class EnergyDependentTablePSF(object):
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``THETA`` and ``PSF`` extensions.
         """
-        offset = Angle(hdu_list['THETA'].data['Theta'], 'degree')
+        offset = Angle(hdu_list['THETA'].data['Theta'], 'deg')
         energy = Quantity(hdu_list['PSF'].data['Energy'], 'MeV')
         exposure = Quantity(hdu_list['PSF'].data['Exposure'], 'cm^2 s')
         psf_value = Quantity(hdu_list['PSF'].data['PSF'], 'sr^-1')
@@ -604,7 +604,7 @@ class EnergyDependentTablePSF(object):
     def info(self):
         """Print basic info."""
         # Summarise data members
-        ss = array_stats_str(self.offset.to('degree'), 'offset')
+        ss = array_stats_str(self.offset.to('deg'), 'offset')
         ss += array_stats_str(self.energy, 'energy')
         ss += array_stats_str(self.exposure, 'exposure')
 

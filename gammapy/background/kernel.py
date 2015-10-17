@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 import numpy as np
 from astropy.io import fits
 import gc
+from ..extern.pathlib import Path
 from ..stats import significance
 from ..image import binary_dilation_circle
 
@@ -74,14 +74,14 @@ class IterativeKernelBackgroundEstimator(object):
     save_intermediate_results : bool
         Specify whether to save intermediate results as FITS files to disk.
         Default False.
-    filebase : str (optional)
+    base_dir : str (optional)
         Base of filenames if save_intermediate_results = True. Default 'temp'.
     """
 
     def __init__(self, images, source_kernel, background_kernel,
                  significance_threshold, mask_dilation_radius,
                  delete_intermediate_results=True,
-                 save_intermediate_results=False, filebase='temp'):
+                 save_intermediate_results=False, base_dir='temp'):
 
         self.source_kernel = source_kernel
         self.background_kernel = background_kernel
@@ -102,12 +102,12 @@ class IterativeKernelBackgroundEstimator(object):
         self._data[-1].compute_correlated_maps(self.source_kernel)
         gc.collect()
 
-    def run(self, filebase=None, max_iterations=10):
+    def run(self, base_dir=None, max_iterations=10):
         """Run iterations until mask does not change (stopping condition).
 
         Parameters
         ----------
-        filebase : str
+        base_dir : str
             Base string for filenames if iterations are saved to disk.
             Default None.
         max_iterations : int
@@ -125,13 +125,13 @@ class IterativeKernelBackgroundEstimator(object):
         """
 
         if self.save_intermediate_results:
-            self.save_files(filebase, index=0)
+            self.save_files(base_dir, index=0)
 
         for ii in np.arange(max_iterations):
             self.run_iteration()
 
             if self.save_intermediate_results:
-                self.save_files(filebase, index=ii)
+                self.save_files(base_dir, index=ii)
 
             # Dilate old mask to compare with new mask
             old_mask = self._data[0].mask
@@ -193,23 +193,24 @@ class IterativeKernelBackgroundEstimator(object):
         images.compute_correlated_maps(self.source_kernel)
         self._data.append(images)
 
-    def save_files(self, filebase, index):
+    def save_files(self, base_dir, index):
         """Saves files to fits."""
+        base_dir = Path(base_dir)
 
         header = self.header
 
-        filename = os.path.join(filebase, '{0:02d}_mask.fits'.format(index))
+        filename = base_dir / '{0:02d}_mask.fits'.format(index)
         hdu = fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
                             header=header)
-        hdu.writeto(filename, clobber=True)
+        hdu.writeto(str(filename), clobber=True)
 
-        filename = os.path.join(filebase, '{0:02d}_background.fits'.format(index))
+        filename = base_dir / '{0:02d}_background.fits'.format(index)
         hdu = fits.ImageHDU(data=self._data[-1].background, header=header)
-        hdu.writeto(filename, clobber=True)
+        hdu.writeto(str(filename), clobber=True)
 
-        filename = os.path.join(filebase, '{0:02d}_significance.fits'.format(index))
+        filename = base_dir / '{0:02d}_significance.fits'.format(index)
         hdu = fits.ImageHDU(data=self._data[-1].significance, header=header)
-        hdu.writeto(filename, clobber=True)
+        hdu.writeto(str(filename), clobber=True)
 
     @property
     def mask_image_hdu(self):

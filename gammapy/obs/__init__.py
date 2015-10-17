@@ -4,4 +4,5 @@ Observation utility functions and classes
 """
 from .observers import *
 from .observation import *
-from .datastore import *
+from .data_store import *
+from .data_manager import *

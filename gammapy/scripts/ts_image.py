@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import json
 import logging
-from ..utils.scripts import get_parser, set_up_logging_from_args, _create_dir
+from ..extern.pathlib import Path
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['ts_image']
 
@@ -77,19 +78,24 @@ def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
         data = fits.getdata(model)
         header = fits.getheader(model)
         maps.append(fits.ImageHDU(data, header, 'OnModel'))
+
     results = compute_ts_map_multiscale(maps, psf_parameters, scales, downsample,
                                         residual, morphology, width)
 
-    folder, filename = os.path.split(output_file)
-    _create_dir(folder, overwrite=False)
+    # TODO: changed to `Path` ... untested!
+    folder, filename = Path(output_file).split()
+    Path(folder).mkdir(exist_ok=False)
 
     # Write results to file
     header = maps[0].header
     if len(results) > 1:
         for scale, result in zip(scales, results):
+            # TODO: this is unnecessarily complex
+            # Simplify, e.g. by letting the user specify a `base_dir`.
             filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
-            log.info('Writing {}'.format(os.path.join(folder, filename_)))
-            result.write(os.path.join(folder, filename_), header, overwrite=overwrite)
+            fn = Path(folder) / filename_
+            log.info('Writing {}'.format(fn))
+            result.write(str(fn), header, overwrite=overwrite)
     else:
         log.info('Writing {}'.format(output_file))
         results[0].write(output_file, header, overwrite=overwrite)

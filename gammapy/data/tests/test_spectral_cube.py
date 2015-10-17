@@ -46,7 +46,7 @@ class TestSpectralCube(object):
         energy = self.spectral_cube.energy
 
         spectral_cube = SpectralCube(data, wcs, energy)
-        outfile = str(tmpdir.join('spectral_cube_test.fits'))
+        outfile = str(tmpdir / 'spectral_cube_test.fits')
         spectral_cube.writeto(outfile)
 
         spectral_cube.read(outfile)

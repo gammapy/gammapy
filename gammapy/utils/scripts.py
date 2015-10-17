@@ -65,6 +65,7 @@ def get_all_main_functions():
     # import pkgutil
     # pkgutil.iter_modules(path=None, prefix='')
 
+    # TODO: use Path here
     path = os.path.join(os.path.dirname(__file__), '../scripts')
     names = glob.glob1(path, '*.py')
     names = [_.replace('.py', '') for _ in names]
@@ -130,35 +131,6 @@ def _configure_root_logger(level='info', format=None):
     return log
 
 
-def _create_dir(dirname, overwrite=False):
-    """Create directory in file system.
-
-    This is usefull for instance for creating output directories.
-
-    Parameters
-    ----------
-    dirname : str
-        Directory name to create. It can be full or relative path.
-    overwrite : bool, optional
-        Flag to remove previous directory with the same name (if existing).
-    """
-    if dirname == '':
-        s_error = "Cannot continue: directory name \'{}\' empty.".format(dirname)
-        raise ValueError(s_error)
-
-    if not os.path.isdir(dirname):
-        os.mkdir(dirname)
-    else:
-        if overwrite:
-            # delete and create again
-            shutil.rmtree(dirname)  # recursively
-            os.mkdir(dirname)
-        else:
-            # do not overwrite, hence exit
-            s_error = "Cannot continue: directory \'{}\' exists.".format(dirname)
-            raise RuntimeError(s_error)
-
-
 def read_yaml(filename, logger=None):
     """Read config from YAML file."""
     import yaml
@@ -168,15 +140,15 @@ def read_yaml(filename, logger=None):
         config = yaml.safe_load(fh)
     return config
 
+
 def write_yaml(config, filename, logger=None):
     """Write YAML config file
 
     This function can be used by scripts that alter the users config file.
     """
     import yaml
-    filename = filename+'.yaml'
+    filename = filename + '.yaml'
     if logger is not None:
         logger.info('Writing {}'.format(filename))
     with open(filename, 'w') as outfile:
-        outfile.write( yaml.dump(config, default_flow_style=False))
-
+        outfile.write(yaml.dump(config, default_flow_style=False))

@@ -105,7 +105,7 @@ class EnergyDependentMultiGaussPSF(object):
 
         energy_lo = Quantity(hdu.data['ENERG_LO'][0], 'TeV')
         energy_hi = Quantity(hdu.data['ENERG_HI'][0], 'TeV')
-        theta = Angle(hdu.data['THETA_LO'][0], 'degree')
+        theta = Angle(hdu.data['THETA_LO'][0], 'deg')
 
         # Get sigmas
         shape = (len(theta), len(energy_hi))
@@ -357,7 +357,7 @@ class EnergyDependentMultiGaussPSF(object):
         ss = "\nSummary PSF info\n"
         ss += "----------------\n"
         # Summarise data members
-        ss += array_stats_str(self.theta.to('degree'), 'Theta')
+        ss += array_stats_str(self.theta.to('deg'), 'Theta')
         ss += array_stats_str(self.energy_hi, 'Energy hi')
         ss += array_stats_str(self.energy_lo, 'Energy lo')
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)

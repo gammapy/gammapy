@@ -150,17 +150,18 @@ class TestIterativeKernelBackgroundEstimator(object):
         """Tests that files are saves, and checks values within them."""
         # Create temporary file to write output into
         self.ibe.run_iteration(1)
-        self.ibe.save_files(filebase=str(tmpdir), index=0)
+        self.ibe.save_files(base_dir=str(tmpdir), index=0)
 
-        mask_filename = str(tmpdir.join('00_mask.fits'))
-        significance_filename = str(tmpdir.join('00_significance.fits'))
-        background_filename = str(tmpdir.join('00_background.fits'))
+        filename = tmpdir / '00_mask.fits'
+        mask = fits.open(str(filename))[1].data
 
-        mask_data = fits.open(mask_filename)[1].data
-        significance_data = fits.open(significance_filename)[1].data
-        background_data = fits.open(background_filename)[1].data
+        filename = tmpdir / '00_significance.fits'
+        significance = fits.open(str(filename))[1].data
+
+        filename = tmpdir / '00_background.fits'
+        background = fits.open(str(filename))[1].data
 
         # Checks values in files against known results for one iteration.
-        assert_allclose(mask_data.sum(), 97)
-        assert_allclose(significance_data.sum(), 157.316195729298)
-        assert_allclose(background_data.sum(), 4200)
+        assert_allclose(mask.sum(), 97)
+        assert_allclose(significance.sum(), 157.316195729298)
+        assert_allclose(background.sum(), 4200)
