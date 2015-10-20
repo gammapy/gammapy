@@ -7,33 +7,35 @@ from scipy.stats import poisson
 
 from gammapy.stats import (
     fc_construct_acceptance_intervals_pdfs,
-    fc_get_upper_and_lower_limit,
-    fc_fix_upper_and_lower_limit,
+    fc_get_limits,
+    fc_fix_limits,
 )
 
-fBackground  = 3.0
-fStepWidthMu = 0.005
-fMuMin       = 0
-fMuMax       = 50
-fNBinsX      = 100
-fCL          = 0.90
+background    = 3.0
 
-XBins  = np.arange(0, fNBinsX)
-MuBins = np.linspace(fMuMin, fMuMax, fMuMax/fStepWidthMu + 1, endpoint=True)
+n_bins_x      = 100
+step_width_mu = 0.005
+mu_min        = 0
+mu_max        = 50
+cl            = 0.90
 
-Matrix = [poisson(mu+fBackground).pmf(XBins) for mu in MuBins]
+x_bins  = np.arange(0, n_bins_x)
+mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
 
-AcceptanceIntervals = fc_construct_acceptance_intervals_pdfs(Matrix, fCL)
+matrix = [poisson(mu+background).pmf(x_bins) for mu in mu_bins]
 
-UpperLimitNum, LowerLimitNum, _ = fc_get_upper_and_lower_limit(MuBins, XBins, AcceptanceIntervals)
+acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-fc_fix_upper_and_lower_limit(UpperLimitNum, LowerLimitNum)
+LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
+                                                acceptance_intervals)
+
+fc_fix_limits(LowerLimitNum, UpperLimitNum)
 
 fig = plt.figure()
 ax  = fig.add_subplot(111)
 
-plt.plot(UpperLimitNum, MuBins, ls='-',color='red')
-plt.plot(LowerLimitNum, MuBins, ls='-',color='red')
+plt.plot(UpperLimitNum, mu_bins, ls='-', color='red')
+plt.plot(LowerLimitNum, mu_bins, ls='-', color='red')
 
 plt.grid(True)
 ax.yaxis.set_label_coords(-0.08, 0.5)

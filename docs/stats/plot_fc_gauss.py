@@ -7,34 +7,35 @@ from scipy.stats import norm
 
 from gammapy.stats import (
     fc_construct_acceptance_intervals_pdfs,
-    fc_get_upper_and_lower_limit,
-    fc_fix_upper_and_lower_limit,
+    fc_get_limits,
+    fc_fix_limits,
 )
 
-fSigma       = 1
-fStepWidthMu = 0.005
-fMuMin       = 0
-fMuMax       = 8
-fNSigma      = 10
-fNStep       = 1000
-fCL          = 0.90
+sigma         = 1
+n_sigma       = 10
+n_bins_x      = 1000
+step_width_mu = 0.005
+mu_min        = 0
+mu_max        = 8
+cl            = 0.90
 
-XBins  = np.linspace(-fNSigma*fSigma, fNSigma*fSigma, fNStep, endpoint=True)
-MuBins = np.linspace(fMuMin, fMuMax, fMuMax/fStepWidthMu + 1, endpoint=True)
+x_bins  = np.linspace(-n_sigma*sigma, n_sigma*sigma, n_bins_x, endpoint=True)
+mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
 
-Matrix = [dist/sum(dist) for dist in (norm(loc=mu, scale=fSigma).pdf(XBins) for mu in MuBins)]
+matrix = [dist/sum(dist) for dist in (norm(loc=mu, scale=sigma).pdf(x_bins) for mu in mu_bins)]
 
-AcceptanceIntervals = fc_construct_acceptance_intervals_pdfs(Matrix, fCL)
+acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-UpperLimitNum, LowerLimitNum, _ = fc_get_upper_and_lower_limit(MuBins, XBins, AcceptanceIntervals)
+LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
+                                                acceptance_intervals)
 
-fc_fix_upper_and_lower_limit(UpperLimitNum, LowerLimitNum)
+fc_fix_limits(LowerLimitNum, UpperLimitNum)
 
 fig = plt.figure()
 ax  = fig.add_subplot(111)
 
-plt.plot(UpperLimitNum, MuBins, ls='-',color='red')
-plt.plot(LowerLimitNum, MuBins, ls='-',color='red')
+plt.plot(UpperLimitNum, mu_bins, ls='-', color='red')
+plt.plot(LowerLimitNum, mu_bins, ls='-', color='red')
 
 plt.grid(True)
 ax.xaxis.set_ticks(np.arange(-10, 10, 1))

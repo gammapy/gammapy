@@ -12,17 +12,21 @@ log = logging.getLogger(__name__)
 __all__ = ['fc_find_acceptance_region_gauss',
            'fc_find_acceptance_region_poisson',
            'fc_construct_acceptance_intervals_pdfs',
-           'fc_get_upper_and_lower_limit',
-           'fc_fix_upper_and_lower_limit',
+           'fc_get_limits',
+           'fc_fix_limits',
            'fc_find_limit',
            'fc_find_average_upper_limit',
            'fc_construct_acceptance_intervals',
-          ]
+           ]
 
 
 def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
-    """Analytically find the acceptance region (x_min, x_max) for Gaussian with
-       boundary at the origin, such that int_x_min^x_max P(x|mu)dx = alpha
+    r"""
+    Analytical acceptance interval for Gaussian with boundary at the origin
+
+    .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
@@ -57,14 +61,15 @@ def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
             if x < 0:
                 r.append(np.exp(mu*(x-mu*0.5)))
             else:
-                r.append(np.exp(-0.5*np.power((x-mu),2)))
+                r.append(np.exp(-0.5*np.power((x-mu), 2)))
         # This is the more general formula
         else:
             # Implementing the boundary condition at zero
             muBest     = max(0, x)
             probMuBest = stats.norm.pdf(x, loc=muBest, scale=sigma)
+            # probMuBest should never be zero. Check it just in case.
             if probMuBest == 0.0:
-                r.append(0.0);
+                r.append(0.0)
             else:
                 r.append(p[-1]/probMuBest)
 
@@ -72,8 +77,8 @@ def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        log.info("Bad choice of x-range for this mu!")
-        log.info("Not enough probability in x bins to reach confidence level!")
+        raise ValueError("X bins don't contain enough probability to reach "
+                         "desired confidence level for this mu!")
 
     rank = stats.rankdata(-r, method='dense')
 
@@ -99,8 +104,12 @@ def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
 
 
 def fc_find_acceptance_region_poisson(mu, background, x_bins, alpha):
-    """Analytically find the acceptance region (x_min, x_max) for Poisson
-       process with background, such that int_x_min^x_max P(x|mu)dx = alpha
+    r"""
+    Analytical acceptance interval for Poisson process with background
+
+    .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
@@ -133,8 +142,9 @@ def fc_find_acceptance_region_poisson(mu, background, x_bins, alpha):
         # Implementing the boundary condition at zero
         muBest = max(0, x - background)
         probMuBest = stats.poisson.pmf(x, mu=muBest+background)
+        # probMuBest should never be zero. Check it just in case.
         if probMuBest == 0.0:
-            r.append(0.0);
+            r.append(0.0)
         else:
             r.append(p[-1]/probMuBest)
 
@@ -142,8 +152,8 @@ def fc_find_acceptance_region_poisson(mu, background, x_bins, alpha):
     r = np.asarray(r)
 
     if sum(p) < alpha:
-        log.info("Bad choice of x-range for this mu!")
-        log.info("Not enough probability in x bins to reach confidence level!")
+        raise ValueError("X bins don't contain enough probability to reach "
+                         "desired confidence level for this mu!")
 
     rank = stats.rankdata(-r, method='dense')
 
@@ -169,7 +179,10 @@ def fc_find_acceptance_region_poisson(mu, background, x_bins, alpha):
 
 
 def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
-    """Numerically choose bins a la Feldman Cousins ordering principle.
+    r"""
+    Numerically choose bins a la Feldman Cousins ordering principle
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
@@ -239,8 +252,11 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
     return distributions_scaled
 
 
-def fc_get_upper_and_lower_limit(mu_bins, x_bins, acceptance_intervals):
-    """Find upper and lower limit from acceptance_intervals.
+def fc_get_limits(mu_bins, x_bins, acceptance_intervals):
+    r"""
+    Find lower and upper limit from acceptance intervals
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
@@ -253,11 +269,11 @@ def fc_get_upper_and_lower_limit(mu_bins, x_bins, acceptance_intervals):
 
     Returns
     -------
-    upper_limit : array-like
-        Feldman Cousins upper limit x-coordinates
     lower_limit : array-like
         Feldman Cousins lower limit x-coordinates
-    x_values: array-like
+    upper_limit : array-like
+        Feldman Cousins upper limit x-coordinates
+    x_values : array-like
         All the points that are inside the acceptance intervals
     """
 
@@ -274,67 +290,64 @@ def fc_get_upper_and_lower_limit(mu_bins, x_bins, acceptance_intervals):
         x_values.append([])
         acceptance_interval = acceptance_intervals[mu]
         for x in range(number_bins_x):
-            #This point lies in the acceptance interval
+            # This point lies in the acceptance interval
             if acceptance_interval[x] == 1:
                 x_value = x_bins[x]
                 x_values[-1].append(x_value)
-                # Upper limit is the first point where this condition is true
+                # Upper limit is first point where this condition is true
                 if upper_limit[-1] == -1:
                     upper_limit[-1] = x_value
-                # Lower limit is the first point after this condition is not true
+                # Lower limit is first point after this condition is not true
                 if x == number_bins_x - 1:
                     lower_limit[-1] = x_value
                 else:
                     lower_limit[-1] = x_bins[x + 1]
 
-    return upper_limit, lower_limit, x_values
+    return lower_limit, upper_limit, x_values
 
 
-def fc_fix_upper_and_lower_limit(upper_limit, lower_limit):
-    """Push limits outwards as described in the FC paper.
+def fc_fix_limits(lower_limit, upper_limit):
+    r"""
+    Push limits outwards as described in the FC paper
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
-    upper_limit : array-like
-        Feldman Cousins upper limit x-coordinates
     lower_limit : array-like
         Feldman Cousins lower limit x-coordinates
-
-    Returns
-    -------
     upper_limit : array-like
-        Feldman Cousins upper limit x-coordinates (fixed)
-    lower_limit : array-like
-        Feldman Cousins lower limit x-coordinates (fixed)
+        Feldman Cousins upper limit x-coordinates
     """
 
     all_fixed = False
 
     while not all_fixed:
         all_fixed = True
-        for j in range(1,len(upper_limit)):
+        for j in range(1, len(upper_limit)):
             if upper_limit[j] < upper_limit[j-1]:
                 upper_limit[j-1] = upper_limit[j]
                 all_fixed = False
-        for j in range(1,len(lower_limit)):
+        for j in range(1, len(lower_limit)):
             if lower_limit[j] < lower_limit[j-1]:
                 lower_limit[j] = lower_limit[j-1]
                 all_fixed = False
 
 
-def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True):
-    """Find the limit for a given x value.
+def fc_find_limit(x_value, x_values, y_values):
+    r"""
+    Find the limit for a given x measurment
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
     x_value : double
         The measured x value for which the upper limit is wanted.
-    x_values_input : array-like
+    x_values : array-like
         The x coordinates of the confidence belt.
-    y_values_input : array-like
+    y_values : array-like
         The y coordinates of the confidence belt.
-    do_upper_edge : bool
-        If x_value lies on a bin border, use the upper edge of the belt.
 
     Returns
     -------
@@ -342,43 +355,28 @@ def fc_find_limit(x_value, x_values_input, y_values_input, do_upper_edge = True)
         The Feldman Cousins limit
     """
 
-    limit = 0
+    if x_value > max(x_values):
+        raise ValueError("Measured x outside of confidence belt!")
 
-    if do_upper_edge:
-        previous_x = np.nan
-        next_value = False
-        x_values = x_values_input
-        y_values = y_values_input
-        for i in range(len(x_values)):
-            current_x = x_values[i]
-            # If the x_value did lie on the bin border, loop until the x value
-            # is changing and take the last point (that is the highest point in
-            # case points lie on top of each other.
-            if next_value == True and current_x != previous_x:
-                limit = y_values[i-1]
-                break
-            if x_value <= current_x:
-                # If the x_value does not lie on the bin border, this should be
-                # the upper limit
-                if x_value != current_x:
-                    limit = y_values[i]
-                    break
-                next_value = True
-            previous_x = current_x
-    else:
-        x_values = np.flipud(x_values_input)
-        y_values = np.flipud(y_values_input)
-        for i in range(len(x_values)):
-            current_x = x_values[i]
-            if x_value >= current_x:
-                limit = y_values[i]
-                break
-
-    return limit
+    # Loop through the x-values in reverse order
+    for i in reversed(range(len(x_values))):
+        current_x = x_values[i]
+        # The measured value sits on a bin edge. In this case we want the upper
+        # most point to be conservative, so it's the first point where this
+        # condition is true.
+        if x_value == current_x:
+            return y_values[i]
+        # If the current value lies between two bins, take the higher y-value
+        # in order to be conservative.
+        if x_value > current_x:
+            return y_values[i+1]
 
 
 def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
-    """Function to calculate the average upper limit for a confidence belt.
+    r"""
+    Function to calculate the average upper limit for a confidence belt
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------
@@ -399,16 +397,20 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
     """
 
     avergage_limit = 0
-    number_points = len(matrix[0])
+    number_points = len(x_bins)
 
     for i in range(number_points):
-        avergage_limit += matrix[0][i]*fc_find_limit(x_bins[i], upper_limit, mu_bins)
+        limit = fc_find_limit(x_bins[i], upper_limit, mu_bins)
+        avergage_limit += matrix[0][i]*limit
 
     return avergage_limit
 
 
 def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
-    """Convenience function that calculates the PDF for the user.
+    r"""
+    Convenience function that calculates the PDF for the user
+
+    For more information see :ref:`documentation <feldman_cousins>`
 
     Parameters
     ----------

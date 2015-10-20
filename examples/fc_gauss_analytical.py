@@ -4,40 +4,42 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
+from astropy.utils.console import ProgressBar
 
 from gammapy.stats import (
     fc_find_acceptance_region_gauss,
-    fc_fix_upper_and_lower_limit,
+    fc_fix_limits,
 )
 
-fSigma       = 1
-fStepWidthMu = 0.005
-fMuMin       = 0
-fMuMax       = 8
-fNSigma      = 10
-fNStep       = 1000
-fCL          = 0.90
+sigma         = 1
+n_sigma       = 10
+n_bins_x      = 1000
+step_width_mu = 0.005
+mu_min        = 0
+mu_max        = 8
+cl            = 0.90
 
-XBins  = np.linspace(-fNSigma*fSigma, fNSigma*fSigma, fNStep, endpoint=True)
-MuBins = np.linspace(fMuMin, fMuMax, fMuMax/fStepWidthMu + 1, endpoint=True)
+x_bins  = np.linspace(-n_sigma*sigma, n_sigma*sigma, n_bins_x, endpoint=True)
+mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
 
-matrix = [dist/sum(dist) for dist in (stats.norm(loc=mu, scale=fSigma).pdf(XBins) for mu in MuBins)]
+print("Generating Feldman Cousins confidence belt for " + str(len(mu_bins)) +
+      " values of mu.")
 
 UpperLimitAna = []
 LowerLimitAna = []
 
-for mu in MuBins:
-   goodChoice = fc_find_acceptance_region_gauss(mu, fSigma, XBins, fCL)
-   UpperLimitAna.append(goodChoice[0])
-   LowerLimitAna.append(goodChoice[1])
+for mu in ProgressBar(mu_bins):
+    goodChoice = fc_find_acceptance_region_gauss(mu, sigma, x_bins, cl)
+    UpperLimitAna.append(goodChoice[0])
+    LowerLimitAna.append(goodChoice[1])
 
-fc_fix_upper_and_lower_limit(UpperLimitAna, LowerLimitAna)
+fc_fix_limits(LowerLimitAna, UpperLimitAna)
 
 fig = plt.figure()
 ax  = fig.add_subplot(111)
 
-plt.plot(UpperLimitAna, MuBins, ls='-',color='red')
-plt.plot(LowerLimitAna, MuBins, ls='-',color='red')
+plt.plot(LowerLimitAna, mu_bins, ls='-', color='red')
+plt.plot(UpperLimitAna, mu_bins, ls='-', color='red')
 
 plt.grid(True)
 ax.xaxis.set_ticks(np.arange(-10, 10, 1))
