@@ -336,7 +336,7 @@ def fc_fix_limits(lower_limit, upper_limit):
 
 def fc_find_limit(x_value, x_values, y_values):
     r"""
-    Find the limit for a given x measurment
+    Find the limit for a given x measurement
 
     For more information see :ref:`documentation <feldman_cousins>`
 
