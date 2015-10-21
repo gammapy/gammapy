@@ -26,7 +26,7 @@ def test_EnergyDependentMultiGaussPSF_write(tmpdir):
     psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
 
     # Write it back to disk
-    filename = str(tmpdir.join('multigauss_psf_test.fits'))
+    filename = str(tmpdir / 'multigauss_psf_test.fits')
     psf.write(filename)
 
     # Verify checksum

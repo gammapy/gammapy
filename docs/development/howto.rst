@@ -742,3 +742,34 @@ until the contributor rebases (and having to explain git rebase to new contribut
 So our recommendation is that changelog entries are not added in pull requests,
 but that the core developer adds a changelog entry after right after having
 merged a pull request (you can add ``[skip ci]`` on this commit).
+
+File and directory path handling
+--------------------------------
+
+In Gammapy use ``Path`` objects to handle file and directory paths.
+
+.. code-block:: python
+
+    from gammapy.extern.pathlib import Path
+
+    dir = Path('folder/subfolder')
+    filename = dir / 'filename.fits'
+    dir.mkdir(exist_ok=True)
+    table.write(str(filename))
+
+Note how the ``/`` operator makes it easy to construct paths
+(as opposed to repeated calls to the string-handling function ``os.path.join``)
+and how methods on ``Path`` objects provide a nicer interface to most
+of the functionality from ``os.path`` (``mkdir`` in this example).
+
+One gotcha is that many functions (such as ``table.write`` in this example)
+expect ``str`` objects and refuse to work with ``Path`` objects, so you have
+to explicitly convert to ``str(path)``.
+
+Note that pathlib was added to the Python standard library in 3.4
+(see `here <https://docs.python.org/3/library/pathlib.html>`__),
+but since we support Python 2.7 and the Python devs keep improving the
+version in the standard library (by adding new methods and new options
+for existing methods), we decided to bundle the latest version
+(from `here <https://pypi.python.org/pypi/pathlib2/>`__) in
+``gammapy/extern/pathlib.py`` and that should always be used.

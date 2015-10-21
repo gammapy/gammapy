@@ -116,7 +116,7 @@ class Cube(object):
     .. code:: python
 
         energy_bin = cube.find_energy_bin(energy=Quantity(2., 'TeV'))
-        coord_bin = cube.find_coord_bin(coord=Angle([0., 0.], 'degree'))
+        coord_bin = cube.find_coord_bin(coord=Angle([0., 0.], 'deg'))
         cube.data[energy_bin, coord_bin[1], coord_bin[0]]
     """
 

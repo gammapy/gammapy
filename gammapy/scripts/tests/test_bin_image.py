@@ -13,7 +13,7 @@ def test_bin_image_main(tmpdir):
     """
     event_file = get_path('../test_datasets/irf/hess/pa/hess_events_023523.fits.gz', location='remote')
     reference_file = get_path('../test_datasets/irf/hess/pa/ctskymap.fits.gz', location='remote')
-    out_file = str(tmpdir.join('gammapy_ctskymap.fits.gz'))
+    out_file = str(tmpdir / 'gammapy_ctskymap.fits.gz')
     bin_image_main([event_file, reference_file, out_file])
 
     gammapy_hdu = fits.open(out_file)[0]

@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import sys
+from ..extern.pathlib import Path
 from ..utils.scripts import get_parser
 
 __all__ = ['run_cwt']
@@ -50,9 +52,7 @@ def run_cwt(infile,
 
     TODO: add example and explain output.
     """
-    import os.path
-    import sys
-    if os.path.isfile(outfile) and not overwrite:
+    if Path(outfile).is_file() and not overwrite:
         log.error("Output file exists and overwrite is False")
         sys.exit()
 

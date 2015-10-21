@@ -11,6 +11,7 @@ from astropy.table import Table
 from ..background import Cube
 from ..obs import DataStore
 from ..data import EventListDataset
+from ..obs.data_store import _get_min_energy_threshold
 
 __all__ = [
     'GaussianBand2D',
@@ -81,51 +82,6 @@ class GaussianBand2D(object):
         y = np.asanyarray(y, dtype=float)
         parvals = self.parvals(x)
         return self._evaluate_y(y, parvals)
-
-
-def _get_min_energy_threshold(observation_table, data_dir):
-    """Get minimum energy threshold from a list of observations.
-
-    TODO: make this a method from ObservationTable or DataStore?
-
-    Parameters
-    ----------
-    observation_table : `~gammapy.obs.ObservationTable`
-        Observation list.
-    data_dir : str
-        Path to the data files.
-
-    Parameters
-    ----------
-    min_energy_threshold : `~astropy.units.Quantity`
-        Minimum energy threshold.
-    """
-    observatory_name = observation_table.meta['OBSERVATORY_NAME']
-    if observatory_name == 'HESS':
-        scheme = 'HESS'
-    else:
-        s_error = "Warning! Storage scheme for {}".format(observatory_name)
-        s_error += "not implemented. Only H.E.S.S. scheme is available."
-        raise ValueError(s_error)
-
-    data_store = DataStore(dir=data_dir, scheme=scheme)
-    aeff_table_files = data_store.make_table_of_files(observation_table,
-                                                      filetypes=['effective area'])
-    min_energy_threshold = Quantity(999., 'TeV')
-
-    # loop over effective area files to get necessary infos from header
-    for i_aeff_file in aeff_table_files['filename']:
-        aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
-        # TODO: Gammapy needs a class that interprets IRF files!!!
-        if aeff_hdu.header.comments['LO_THRES'] == '[TeV]':
-            energy_threshold_unit = 'TeV'
-        energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
-                                    energy_threshold_unit)
-        # TODO: Aeff FITS files contain some header keywords,
-        # where the units are stored in comments -> hard to parse!!!
-        min_energy_threshold = min(min_energy_threshold, energy_threshold)
-
-    return min_energy_threshold
 
 
 class CubeBackgroundModel(object):
@@ -347,10 +303,10 @@ class CubeBackgroundModel(object):
                                                              data_dir)
             energy_min = min_energy_threshold
         energy_max = Quantity(80, 'TeV')
-        dety_min = Angle(-0.07, 'radian').to('degree')
-        dety_max = Angle(0.07, 'radian').to('degree')
-        detx_min = Angle(-0.07, 'radian').to('degree')
-        detx_max = Angle(0.07, 'radian').to('degree')
+        dety_min = Angle(-0.07, 'radian').to('deg')
+        dety_max = Angle(0.07, 'radian').to('deg')
+        detx_min = Angle(-0.07, 'radian').to('deg')
+        detx_max = Angle(0.07, 'radian').to('deg')
         # TODO: the bin min/max edges should depend on
         #       the experiment/observatory.
         #       or at least they should be read as parameters
@@ -434,8 +390,8 @@ class CubeBackgroundModel(object):
                 ev_dety = Angle(data_set['DETY'])
                 ev_energy = Quantity(data_set['ENERGY'])
             except UnitsError:
-                ev_detx = Angle(data_set['DETX'], 'degree')
-                ev_dety = Angle(data_set['DETY'], 'degree')
+                ev_detx = Angle(data_set['DETX'], 'deg')
+                ev_dety = Angle(data_set['DETY'], 'deg')
                 ev_energy = Quantity(data_set['ENERGY'],
                                      data_set.meta['EUNIT'])
             ev_cube_table = Table([ev_energy, ev_dety, ev_detx],

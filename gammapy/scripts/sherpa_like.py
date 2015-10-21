@@ -53,10 +53,10 @@ def sherpa_image_like(counts,
     # Load images, PSF and sources
     # ---------------------------------------------------------
     log.info('Clearing the sherpa session')
-    sherpa.astro.ui.clean()
+    # sherpa.astro.ui.clean()
 
     log.info('Reading counts: {0}'.format(counts))
-    sherpa.astro.ui.load_data(counts)
+    sherpa.astro.ui.load_image(counts)
 
     log.info('Reading exposure: {0}'.format(exposure))
     sherpa.astro.ui.load_table_model('exposure', exposure)

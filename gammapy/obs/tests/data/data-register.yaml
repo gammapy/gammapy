@@ -1,0 +1,20 @@
+# Example data register config file for Gammapy
+
+stores:
+
+  - name: hess-hap-hd-prod01-std_zeta_fullEnclosure
+    base_dir: /Users/deil/work/_Data/hess/fits/hap-hd/fits_prod01/std_zeta_fullEnclosure
+    obs_table: observations.fits.gz
+    file_table: files.fits.gz
+
+  - name: hess-paris-prod02
+    base_dir: /Users/deil/work/_Data/hess/fits/parisanalysis/fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std
+    obs_table: observations.fits.gz
+    file_table: files.fits.gz
+
+
+#remotes:
+#  - MPIK:
+#    username: deil
+#    server: lfs1.mpi-hd.mpg.de
+#    dir: /lfs/l2/hess/fits'

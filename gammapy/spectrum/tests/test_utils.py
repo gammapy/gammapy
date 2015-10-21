@@ -33,7 +33,7 @@ class TestPHA(object):
                         dstart=dstart, dstop=dstop, dbase=dbase,
                         stat_err=stat_err)
 
-        filename = str(tmpdir.join('pha_test.pha'))
+        filename = str(tmpdir / 'pha_test.pha')
         pha.writeto(filename)
 
         pha = Table.read(filename)

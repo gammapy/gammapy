@@ -340,7 +340,7 @@ class EffectiveAreaTable2D(object):
         from gammapy.irf import EffectiveAreaTable2D
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
-        offset = Angle(0.6, 'degree')
+        offset = Angle(0.6, 'deg')
         energy = Quantity(np.logspace(0, 1, 60), 'TeV')
         eff_area = aeff2D.evaluate(offset, energy)
 
@@ -355,7 +355,7 @@ class EffectiveAreaTable2D(object):
         from gammapy.spectrum import EnergyBounds
         from gammapy.datasets import load_aeff2D_fits_table
         aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
-        offset = Angle(0.43, 'degree')
+        offset = Angle(0.43, 'deg')
         nbins = 50
         energy = EnergyBounds.equal_log_spacing(1, 10, nbins, 'TeV')
         energy_lo = energy[:-1]
@@ -390,8 +390,8 @@ class EffectiveAreaTable2D(object):
 
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
-        self.offset_lo = offset_lo.to('degree')
-        self.offset_hi = offset_hi.to('degree')
+        self.offset_lo = offset_lo.to('deg')
+        self.offset_hi = offset_hi.to('deg')
         self.eff_area = eff_area.to('m^2')
         self.eff_area_reco = eff_area_reco.to('m^2')
 
@@ -423,8 +423,8 @@ class EffectiveAreaTable2D(object):
         data = hdu.data
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
         e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
-        o_lo = Angle(data['THETA_LO'].squeeze(), 'degree')
-        o_hi = Angle(data['THETA_HI'].squeeze(), 'degree')
+        o_lo = Angle(data['THETA_LO'].squeeze(), 'deg')
+        o_hi = Angle(data['THETA_HI'].squeeze(), 'deg')
         ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
         efrec = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
 
@@ -508,7 +508,7 @@ class EffectiveAreaTable2D(object):
         if not isinstance(offset, Angle):
             raise ValueError("Offset must be an Angle object.")
 
-        offset = offset.to('degree')
+        offset = offset.to('deg')
         energy = energy.to('TeV')
 
         # support energy=1Darray & offset=1Darray
@@ -524,9 +524,9 @@ class EffectiveAreaTable2D(object):
 
     def _eval(self, offset=None, energy=None):
         method = self.interpolation_method
-        if (method == 'linear'):
+        if method == 'linear':
             val = self._linear(offset.value, np.log10(energy.value))
-        elif (method == 'spline'):
+        elif method == 'spline':
             val = self._spline(offset.value, np.log10(energy.value)).squeeze()
         else:
             raise ValueError('Invalid interpolation method: {}'.format(method))

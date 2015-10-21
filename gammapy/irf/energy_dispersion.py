@@ -603,7 +603,7 @@ class EnergyDispersion2D(object):
         if not isinstance(offset, Angle):
             raise ValueError("Offset must be an Angle object.")
 
-        offset = offset.to('degree')
+        offset = offset.to('deg')
         e_true = e_true.to('TeV')
 
         val = self._eval(offset=offset, e_true=e_true, migra=migra)

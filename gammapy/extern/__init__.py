@@ -11,4 +11,8 @@ The following Python packages were bundled with Gammapy.
   Origin: https://github.com/martinblech/xmltodict/blob/master/xmltodict.py
 * ``validator.py`` for `~astropy.units.Quantity` validation helper functions.
   Origin: https://github.com/astrofrog/sedfitter/blob/master/sedfitter/utils/validator.py
+* ``pathlib.py`` is a copy pathlib2 from github on 2015-10-20
+  Origin https://raw.githubusercontent.com/mcmtroffaes/pathlib2/develop/pathlib2.py
+  One line was patched: `import six` -> `from astropy.extern import six`
+  See also: https://pypi.python.org/pypi/pathlib2/
 """

@@ -45,7 +45,7 @@ def test_EffectiveAreaTable():
 
 def test_EffectiveAreaTable_write(tmpdir):
     irf = EffectiveAreaTable.from_fits(load_arf_fits_table())
-    filename = str(tmpdir.join('effarea_test.fits'))
+    filename = str(tmpdir / 'effarea_test.fits')
     irf.write(filename)
 
     # Verify checksum
@@ -90,13 +90,13 @@ def test_EffectiveAreaTable2D(method):
     # Case 0; offset = scalar, energy = scalar, done
 
     # Case 1: offset = scalar, energy = None
-    offset = Angle(0.234, 'degree')
+    offset = Angle(0.234, 'deg')
     actual = effarea.evaluate(offset=offset).shape
     desired = effarea.energy.shape
     assert_equal(actual, desired)
 
     # Case 2: offset = scalar, energy = 1Darray
-    offset = Angle(0.564, 'degree')
+    offset = Angle(0.564, 'deg')
     nbins = 42
     energy = Quantity(np.logspace(3, 4, nbins), 'GeV')
     actual = effarea.evaluate(offset=offset, energy=energy).shape
@@ -112,7 +112,7 @@ def test_EffectiveAreaTable2D(method):
     # Case 4: offset = 1Darray, energy = scalar
     energy = Quantity(1.5, 'TeV')
     nbins = 4
-    offset = Angle(np.linspace(0, 1, nbins), 'degree')
+    offset = Angle(np.linspace(0, 1, nbins), 'deg')
     actual = effarea.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros(nbins).shape
     assert_equal(actual, desired)
@@ -120,14 +120,14 @@ def test_EffectiveAreaTable2D(method):
     # case 5: offset = 1Darray, energy = 1Darray
     nbinse = 50
     nbinso = 10
-    offset = Angle(np.linspace(0, 1, nbinso), 'degree')
+    offset = Angle(np.linspace(0, 1, nbinso), 'deg')
     energy = Quantity(np.logspace(0, 1, nbinse), 'TeV')
     actual = effarea.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros([nbinso, nbinse]).shape
     assert_equal(actual, desired)
 
     # Test ARF export
-    offset = Angle(0.236, 'degree')
+    offset = Angle(0.236, 'deg')
     e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
     energy_lo = e_axis[:-1]
     energy_hi = e_axis[1:]

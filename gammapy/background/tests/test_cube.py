@@ -54,7 +54,7 @@ class TestCube():
 
         # test bg rate values plotted for spectrum plot of coordinate bin
         # conaining coord (0, 0) deg (center)
-        coord = Angle([0., 0.], 'degree')
+        coord = Angle([0., 0.], 'deg')
         ax_spec = cube.plot_spectrum(coord)
         # get plot data (stored in the line)
         plot_data = ax_spec.get_lines()[0].get_xydata()
@@ -72,7 +72,7 @@ class TestCube():
                                      location='remote')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
-        outfile = str(tmpdir.join('cube_table_test.fits'))
+        outfile = str(tmpdir / 'cube_table_test.fits')
         cube1.write(outfile, format='table')
 
         # test if values are correct in the saved file: compare both files
@@ -92,7 +92,7 @@ class TestCube():
                                      location='remote')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
-        outfile = str(tmpdir.join('cube_image_test.fits'))
+        outfile = str(tmpdir / 'cube_image_test.fits')
         cube1.write(outfile, format='image')
 
         # test if values are correct in the saved file: compare both files

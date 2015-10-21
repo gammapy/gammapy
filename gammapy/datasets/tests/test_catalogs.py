@@ -10,7 +10,7 @@ def test_load_catalog_atnf(tmpdir):
     assert len(catalog) == 2399
 
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('atnf_test.fits'))
+    filename = str(tmpdir / 'atnf_test.fits')
     catalog.write(filename)
 
 
@@ -21,7 +21,7 @@ def _test_load_catalog_hess_galactic(tmpdir):
     assert len(catalog) == 42
 
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('hess_test.fits'))
+    filename = str(tmpdir / 'hess_test.fits')
     catalog.write(filename)
 
 
@@ -31,7 +31,7 @@ def test_load_catalog_green(tmpdir):
     assert len(catalog) == 294
 
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('green_test.fits'))
+    filename = str(tmpdir / 'green_test.fits')
     catalog.write(filename)
 
 
@@ -45,7 +45,7 @@ def test_load_catalog_snrcat(tmpdir):
     expected_colnames = ['Source_Name', 'RAJ2000']
     assert set(expected_colnames).issubset(table.colnames)
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('snrcat_test.fits'))
+    filename = str(tmpdir / 'snrcat_test.fits')
     table.write(filename)
 
     # Check OBS table
@@ -55,7 +55,7 @@ def test_load_catalog_snrcat(tmpdir):
     expected_colnames = ['SNR_id', 'source_id']
     assert set(expected_colnames).issubset(table.colnames)
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('obs_test.fits'))
+    filename = str(tmpdir / 'obs_test.fits')
     table.write(filename)
 
 
@@ -65,5 +65,5 @@ def test_load_catalog_tevcat(tmpdir):
     assert len(catalog) == 173
 
     # Check if catalog can be serialised to FITS
-    filename = str(tmpdir.join('tevcat_test.fits'))
+    filename = str(tmpdir / 'tevcat_test.fits')
     catalog.write(filename)

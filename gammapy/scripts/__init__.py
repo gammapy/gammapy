@@ -13,13 +13,13 @@ from .cwt import *
 from .data_browser import *
 from .derived_images import *
 from .detect import *
-from .find_obs import *
 from .image_decompose_a_trous import *
 from .info import *
 from .iterative_source_detect import *
 from .look_up_image import *
 from .make_bg_cube_models import *
 from .model_image import *
+from .obs_select import *
 from .pfmap import *
 from .pfsim import *
 from .pfspec import *

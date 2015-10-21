@@ -218,6 +218,8 @@ def _process_config(object):
     object.store = DataStore(dir=storedir)
     object.outdir = object.config['general']['outdir']
     basename = object.outdir + "/ogip_data"
+
+    # TODO: use Path here (see Developer HOWTO entry why / how).
     if not os.path.isdir(object.outdir):
         os.mkdir(object.outdir)
         os.mkdir(basename)

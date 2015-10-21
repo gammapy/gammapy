@@ -6,8 +6,9 @@ import os
 import numpy as np
 from astropy.units import Quantity
 from astropy.time import Time, TimeDelta
-from astropy.coordinates import SkyCoord, AltAz, FK5, Angle
+from astropy.coordinates import SkyCoord, AltAz, Angle
 from astropy.table import Table
+from ..extern.pathlib import Path
 from ..irf import EnergyDependentMultiGaussPSF
 from ..obs import ObservationTable, observatory_locations, DataStore
 from ..utils.random import sample_sphere, get_random_state
@@ -16,7 +17,6 @@ from ..background import CubeBackgroundModel
 from ..data import EventList
 from ..utils.fits import table_to_fits_table
 from ..utils.random import sample_powerlaw
-from ..utils.scripts import _create_dir
 
 __all__ = [
     'make_test_psf',
@@ -82,10 +82,10 @@ def make_test_psf(energy_bins=15, theta_bins=12):
 
 
 def make_test_observation_table(observatory_name='HESS', n_obs=10,
-                                az_range=Angle([0, 360], 'degree'),
-                                alt_range=Angle([45, 90], 'degree'),
-                                date_range=(Time('2010-01-01T00:00:00'),
-                                            Time('2015-01-01T00:00:00')),
+                                az_range=Angle([0, 360], 'deg'),
+                                alt_range=Angle([45, 90], 'deg'),
+                                date_range=(Time('2010-01-01'),
+                                            Time('2015-01-01')),
                                 use_abs_time=False,
                                 n_tels_range=(3, 4),
                                 random_state='random-seed'):
@@ -165,12 +165,12 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table['OBS_ID'] = obs_id
 
     # obs time: 30 min
-    time_observation = Quantity(30. * np.ones_like(obs_id), 'minute').to('second')
-    obs_table['TIME_OBSERVATION'] = time_observation
+    ontime = Quantity(30. * np.ones_like(obs_id), 'minute').to('second')
+    obs_table['ONTIME'] = ontime
 
     # livetime: 25 min
     time_live = Quantity(25. * np.ones_like(obs_id), 'minute').to('second')
-    obs_table['TIME_LIVE'] = time_live
+    obs_table['LIVETIME'] = time_live
 
     # start time
     #  - random points between the start of 2010 and the end of 2014 (unless
@@ -212,20 +212,20 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
         # converting to quantity (better treatment of units)
         time_start = Quantity(time_start.sec, 'second')
 
-    obs_table['TIME_START'] = time_start
+    obs_table['TSTART'] = time_start
 
     # stop time
-    # calculated as TIME_START + TIME_OBSERVATION
+    # calculated as TSTART + ONTIME
     if use_abs_time:
-        time_stop = Time(obs_table['TIME_START'])
-        time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
+        time_stop = Time(obs_table['TSTART'])
+        time_stop += TimeDelta(obs_table['ONTIME'])
     else:
-        time_stop = TimeDelta(obs_table['TIME_START'])
-        time_stop += TimeDelta(obs_table['TIME_OBSERVATION'])
+        time_stop = TimeDelta(obs_table['TSTART'])
+        time_stop += TimeDelta(obs_table['ONTIME'])
         # converting to quantity (better treatment of units)
         time_stop = Quantity(time_stop.sec, 'second')
 
-    obs_table['TIME_STOP'] = time_stop
+    obs_table['TSTOP'] = time_stop
 
     # az, alt
     # random points in a portion of sphere; default: above 45 deg altitude
@@ -233,8 +233,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
                             lon_range=az_range,
                             lat_range=alt_range,
                             random_state=random_state)
-    az = Angle(az, 'degree')
-    alt = Angle(alt, 'degree')
+    az = Angle(az, 'deg')
+    alt = Angle(alt, 'deg')
     obs_table['AZ'] = az
     obs_table['ALT'] = alt
 
@@ -247,15 +247,16 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     az = Angle(obs_table['AZ'])
     alt = Angle(obs_table['ALT'])
     if use_abs_time:
-        obstime = Time(obs_table['TIME_START'])
-        obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
+        obstime = Time(obs_table['TSTART'])
+        obstime += TimeDelta(obs_table['ONTIME']) / 2.
     else:
         obstime = time_ref_from_dict(obs_table.meta)
-        obstime += TimeDelta(obs_table['TIME_START'])
-        obstime += TimeDelta(obs_table['TIME_OBSERVATION']) / 2.
+        obstime += TimeDelta(obs_table['TSTART'])
+        obstime += TimeDelta(obs_table['ONTIME']) / 2.
     location = observatory_locations[observatory_name]
-    alt_az_coord = AltAz(az=az, alt=alt, obstime=obstime, location=location)
-    sky_coord = alt_az_coord.transform_to(FK5)
+    altaz_frame = AltAz(obstime=obstime, location=location)
+    alt_az_coord = SkyCoord(az, alt, frame=altaz_frame)
+    sky_coord = alt_az_coord.transform_to('icrs')
     obs_table['RA'] = sky_coord.ra
     obs_table['DEC'] = sky_coord.dec
 
@@ -268,19 +269,19 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
 
     # muon efficiency
     # random between 0.6 and 1.0
-    muon_efficiency = random_state.uniform(low=0.6, high=1.0, size=len(obs_id))
-    obs_table['MUON_EFFICIENCY'] = muon_efficiency
+    muoneff = random_state.uniform(low=0.6, high=1.0, size=len(obs_id))
+    obs_table['MUONEFF'] = muoneff
 
     return obs_table
 
 
-def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
+def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
                             ndetx_bins=24,
-                            dety_range=Angle([-10., 10.], 'degree'),
+                            dety_range=Angle([-10., 10.], 'deg'),
                             ndety_bins=24,
                             energy_band=Quantity([0.01, 100.], 'TeV'),
                             nenergy_bins=14,
-                            altitude=Angle(70., 'degree'),
+                            altitude=Angle(70., 'deg'),
                             sigma=Angle(5., 'deg'),
                             spectral_index=2.7,
                             apply_mask=False,
@@ -381,8 +382,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
     # it is linearly dependent on the zenith angle (90 deg - altitude)
     # it is norm_max at alt = 90 deg and norm_max/2 at alt = 0 deg
     norm_max = Quantity(1, '')
-    alt_min = Angle(0., 'degree')
-    alt_max = Angle(90., 'degree')
+    alt_min = Angle(0., 'deg')
+    alt_max = Angle(90., 'deg')
     slope = (norm_max - norm_max / 2) / (alt_max - alt_min)
     free_term = norm_max / 2 - slope * alt_min
     norm = altitude * slope + free_term
@@ -436,10 +437,10 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'degree'),
 
 def make_test_dataset(outdir, overwrite=False,
                       observatory_name='HESS', n_obs=10,
-                      az_range=Angle([0, 360], 'degree'),
-                      alt_range=Angle([45, 90], 'degree'),
-                      date_range=(Time('2010-01-01T00:00:00'),
-                                  Time('2015-01-01T00:00:00')),
+                      az_range=Angle([0, 360], 'deg'),
+                      alt_range=Angle([45, 90], 'deg'),
+                      date_range=(Time('2010-01-01'),
+                                  Time('2015-01-01')),
                       n_tels_range=(3, 4),
                       sigma=Angle(5., 'deg'),
                       spectral_index=2.7,
@@ -497,7 +498,7 @@ def make_test_dataset(outdir, overwrite=False,
     random_state = get_random_state(random_state)
 
     # create output folder
-    _create_dir(outdir, overwrite)
+    Path(outdir).mkdir(exist_ok=overwrite)
 
     # generate observation table
     observation_table = make_test_observation_table(observatory_name=observatory_name,
@@ -510,8 +511,8 @@ def make_test_dataset(outdir, overwrite=False,
                                                     random_state=random_state)
 
     # save observation list to disk
-    outfile = os.path.join(outdir, 'runinfo.fits')
-    observation_table.write(outfile)
+    outfile = Path(outdir) / 'runinfo.fits'
+    observation_table.write(str(outfile))
 
     # create data store for the organization of the files
     # using H.E.S.S.-like dir/file naming scheme
@@ -603,7 +604,7 @@ def make_test_eventlist(observation_table,
 
     # get observation information
     alt = Angle(observation_table['ALT'])[row]
-    livetime = Quantity(observation_table['TIME_LIVE'])[row]
+    livetime = Quantity(observation_table['LIVETIME'])[row]
 
     # number of events to simulate
     # it is linearly dependent on the livetime, taking as reference
@@ -611,8 +612,8 @@ def make_test_eventlist(observation_table,
     # it is linearly dependent on the zenith angle (90 deg - altitude)
     # it is n_events_max at alt = 90 deg and n_events_max/2 at alt = 0 deg
     n_events_max = Quantity(300., 'Hz') * livetime
-    alt_min = Angle(0., 'degree')
-    alt_max = Angle(90., 'degree')
+    alt_min = Angle(0., 'deg')
+    alt_max = Angle(90., 'deg')
     slope = (n_events_max - n_events_max / 2) / (alt_max - alt_min)
     free_term = n_events_max / 2 - slope * alt_min
     n_events = alt * slope + free_term
@@ -642,10 +643,8 @@ def make_test_eventlist(observation_table,
     sigma = s_norm * ((energy / E_0) ** s_index)
 
     # simulate detx, dety
-    detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
-                 'degree')
-    dety = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events),
-                 'degree')
+    detx = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events), 'deg')
+    dety = Angle(random_state.normal(loc=0, scale=sigma.deg, size=n_events), 'deg')
 
     # fill events in an event list
     event_list = EventList()

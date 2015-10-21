@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+FILETYPES = ['events', 'aeff', 'edisp', 'psf']
+
 @click.command()
 @click.argument('filename')
 @click.argument('filetype')
@@ -30,14 +32,16 @@ def main(filename, filetype, do_plot):
 
     if filetype == 'events':
         show_events(filename, do_plot)
-    elif filetype == 'aeff2d':
+    elif filetype == 'aeff':
         show_aeff2d(filename, do_plot)
-    elif filetype == 'edisp2d':
+    elif filetype == 'edisp':
         show_edisp2d(filename, do_plot)
-    elif filetype == 'psf2d':
+    elif filetype == 'psf':
         show_psf2d(filename, do_plot)
     else:
-        raise ValueError('Invalid filetype: {}'.format(filetype))
+        msg = 'Invalid filetype: {} '.format(filetype)
+        msg += 'Valid filetypes are: {}'.format(FILETYPES)
+        raise ValueError(msg)
 
 
 def show_events(filename, do_plot=False):

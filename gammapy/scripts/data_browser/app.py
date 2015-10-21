@@ -76,9 +76,9 @@ def view_about():
 def view_data():
     table = datastore.index_table
     # TODO: this should be computed on table construction or be a cached attribute
-    table['DEAD_FRAC'] = 100. * (1 - table['TIME_LIVE'] / table['TIME_OBSERVATION'])
+    table['DEAD_FRAC'] = 100. * (1 - table['LIVETIME'] / table['ONTIME'])
     table['DEAD_FRAC'].unit = '%'
-    cols = 'OBS_ID TIME_START TIME_OBSERVATION DEAD_FRAC RA DEC GLON GLAT ALT AZ N_TELS TEL_LIST QUALITY'
+    cols = 'OBS_ID TSTART ONTIME DEAD_FRAC RA DEC GLON GLAT ALT AZ N_TELS TEL_LIST QUALITY'
     for col in ['RA', 'DEC', 'GLON', 'GLAT', 'ALT', 'AZ']:
         table[col].format = '.3f'
     kwargs = dict(html=True, max_lines=-1, max_width=-1)
