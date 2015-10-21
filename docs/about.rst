@@ -75,18 +75,19 @@ There's also a smaller logo and variants with white text instead of black availa
 Contributors
 ------------
 
-The following people have contributed to Gammapy (alphabetical order):
+The following people have contributed to Gammapy (first name alphabetical order):
 
-- Manuel Paz Arribas (`@mapazarr <https://github.com/mapazarr>`__)
-- Rolf Bühler (`@rbuehler <https://github.com/rbuehler>`__)
-- Christoph Deil (`@cdeil <https://github.com/cdeil>`__)
 - Axel Donath (`@adonath <https://github.com/adonath>`__)
-- Jonathan Harris (`@JonathanDHarris <https://github.com/JonathanDHarris>`__)
-- Johannes King (`@kingj90 <https://github.com/kingj90>`__)
-- Stefan Klepser (`@klepser <https://github.com/klepser>`__)
+- Christoph Deil (`@cdeil <https://github.com/cdeil>`__)
+- Dirk Lennarz (`@dlennarz <https://github.com/dlennarz>`__)
 - Ellis Owen (`@ellisowen <https://github.com/ellisowen>`__)
 - Ignasi Reichardt (`@ignasi-reichardt <https://github.com/ignasi-reichardt>`__)
+- Johannes King (`@kingj90 <https://github.com/kingj90>`__)
+- Jonathan Harris (`@JonathanDHarris <https://github.com/JonathanDHarris>`__)
+- Manuel Paz Arribas (`@mapazarr <https://github.com/mapazarr>`__)
 - Regis Terrier (`@registerrier <https://github.com/registerrier>`__)
+- Rolf Bühler (`@rbuehler <https://github.com/rbuehler>`__)
+- Stefan Klepser (`@klepser <https://github.com/klepser>`__)
 - Victor Zabalza (`@zblz <https://github.com/zblz>`__)
 
 A detailed listing of contributions is here: :ref:`changelog`.
