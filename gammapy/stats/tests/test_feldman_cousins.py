@@ -2,7 +2,8 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
-from numpy.testing import assert_allclose, assert_raises
+from numpy.testing import assert_allclose
+import pytest
 from astropy.tests.helper import pytest
 
 try:
@@ -49,7 +50,8 @@ def test_acceptance_region_gauss():
 
     # Pass too few x_bins to reach confidence level.
     x_bins = np.linspace(-sigma, sigma, n_step, endpoint=True)
-    assert_raises(ValueError, fc_find_acceptance_region_gauss, 0, 1, x_bins, cl)
+    with pytest.raises(ValueError):
+        fc_find_acceptance_region_gauss(0, 1, x_bins, cl)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -71,9 +73,9 @@ def test_acceptance_region_poisson():
     (x_min, x_max) = fc_find_acceptance_region_poisson(16.00, background, x_bins, cl)
     assert_allclose(x_min, 10)
 
-    # Pass too few x_bins to reach confidence level. In this case the acceptance
-    # range should be the whole x_bins range
-    assert_raises(ValueError, fc_find_acceptance_region_poisson, 0, 7, x_bins[0:10], cl)
+    # Pass too few x_bins to reach confidence level.
+    with pytest.raises(ValueError):
+        fc_find_acceptance_region_poisson(0, 7, x_bins[0:10], cl)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
@@ -108,7 +110,8 @@ def test_numerical_confidence_interval_pdfs():
     assert_allclose(lower_limit, 0.15, 1e-07, 0.01)
 
     # A value which is not inside the x axis range should raise an exception
-    assert_raises(ValueError, fc_find_limit, 51, UpperLimitNum, mu_bins)
+    with pytest.raises(ValueError):
+        fc_find_limit(51, UpperLimitNum, mu_bins)
 
     # Calculate the average upper limit. The upper limit calculated here is
     # only defined for a small x range, so limit the x bins here so the
