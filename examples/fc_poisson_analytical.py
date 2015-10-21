@@ -3,7 +3,6 @@
    paper."""
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats
 from astropy.utils.console import ProgressBar
 
 from gammapy.stats import (
