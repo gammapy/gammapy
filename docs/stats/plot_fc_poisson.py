@@ -11,18 +11,18 @@ from gammapy.stats import (
     fc_fix_limits,
 )
 
-background    = 3.0
+background = 3.0
 
-n_bins_x      = 100
+n_bins_x = 100
 step_width_mu = 0.005
-mu_min        = 0
-mu_max        = 50
-cl            = 0.90
+mu_min = 0
+mu_max = 50
+cl = 0.90
 
-x_bins  = np.arange(0, n_bins_x)
-mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
+x_bins = np.arange(0, n_bins_x)
+mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-matrix = [poisson(mu+background).pmf(x_bins) for mu in mu_bins]
+matrix = [poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 
 acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
@@ -32,7 +32,7 @@ LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins,
 fc_fix_limits(LowerLimitNum, UpperLimitNum)
 
 fig = plt.figure()
-ax  = fig.add_subplot(111)
+ax = fig.add_subplot(111)
 
 plt.plot(UpperLimitNum, mu_bins, ls='-', color='red')
 plt.plot(LowerLimitNum, mu_bins, ls='-', color='red')

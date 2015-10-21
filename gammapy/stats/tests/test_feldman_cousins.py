@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-import pytest
 from astropy.tests.helper import pytest
 
 try:
@@ -26,13 +24,12 @@ from ...stats import (
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_acceptance_interval_gauss():
-
-    sigma   = 1
+    sigma = 1
     n_sigma = 10
-    n_step  = 1000
-    cl      = 0.90
+    n_step = 1000
+    cl = 0.90
 
-    x_bins  = np.linspace(-n_sigma*sigma, n_sigma*sigma, n_step, endpoint=True)
+    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_step, endpoint=True)
 
     # The test reverses a result from the Feldman and Cousins paper. According
     # to Table X, for a measured value of 2.6 the 90% confidence interval should
@@ -46,7 +43,7 @@ def test_acceptance_interval_gauss():
 
     # At mu=0, confidence interval should start at the negative x_bins range.
     (x_min, x_max) = fc_find_acceptance_interval_gauss(0, sigma, x_bins, cl)
-    assert_allclose(x_min, -n_sigma*sigma)
+    assert_allclose(x_min, -n_sigma * sigma)
 
     # Pass too few x_bins to reach confidence level.
     x_bins = np.linspace(-sigma, sigma, n_step, endpoint=True)
@@ -56,12 +53,11 @@ def test_acceptance_interval_gauss():
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_acceptance_interval_poisson():
+    background = 0.5
+    n_bins_x = 100
+    cl = 0.90
 
-    background  = 0.5
-    n_bins_x    = 100
-    cl          = 0.90
-
-    x_bins      = np.arange(0, n_bins_x)
+    x_bins = np.arange(0, n_bins_x)
 
     # The test reverses a result from the Feldman and Cousins paper. According
     # to Table IV, for a measured value of 10 the 90% confidence interval should
@@ -80,20 +76,19 @@ def test_acceptance_interval_poisson():
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_numerical_confidence_interval_pdfs():
-
     from scipy import stats
 
-    background    = 3.0
+    background = 3.0
     step_width_mu = 0.005
-    mu_min        = 0
-    mu_max        = 15
-    n_bins_x      = 50
-    cl            = 0.90
+    mu_min = 0
+    mu_max = 15
+    n_bins_x = 50
+    cl = 0.90
 
-    x_bins  = np.arange(0, n_bins_x)
-    mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
+    x_bins = np.arange(0, n_bins_x)
+    mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-    matrix = [stats.poisson(mu+background).pmf(x_bins) for mu in mu_bins]
+    matrix = [stats.poisson(mu + background).pmf(x_bins) for mu in mu_bins]
 
     acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
@@ -127,19 +122,18 @@ def test_numerical_confidence_interval_pdfs():
 
 @pytest.mark.skipif('not HAS_SCIPY')
 def test_numerical_confidence_interval_values():
-
     from scipy import stats
 
-    sigma         = 1
-    n_sigma       = 10
-    n_bins_x      = 100
+    sigma = 1
+    n_sigma = 10
+    n_bins_x = 100
     step_width_mu = 0.05
-    mu_min        = 0
-    mu_max        = 8
-    cl            = 0.90
+    mu_min = 0
+    mu_max = 8
+    cl = 0.90
 
-    x_bins  = np.linspace(-n_sigma*sigma, n_sigma*sigma, n_bins_x, endpoint=True)
-    mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
+    x_bins = np.linspace(-n_sigma * sigma, n_sigma * sigma, n_bins_x, endpoint=True)
+    mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
     distribution_dict = dict((mu, [stats.norm.rvs(loc=mu, scale=sigma, size=5000)]) for mu in mu_bins)
 

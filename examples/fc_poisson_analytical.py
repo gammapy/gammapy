@@ -4,22 +4,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.utils.console import ProgressBar
-
 from gammapy.stats import (
     fc_find_acceptance_interval_poisson,
     fc_fix_limits,
 )
 
-background    = 3.0
+background = 3.0
 
-n_bins_x      = 100
+n_bins_x = 100
 step_width_mu = 0.005
-mu_min        = 0
-mu_max        = 50
-cl            = 0.90
+mu_min = 0
+mu_max = 50
+cl = 0.90
 
-x_bins  = np.arange(0, n_bins_x)
-mu_bins = np.linspace(mu_min, mu_max, mu_max/step_width_mu + 1, endpoint=True)
+x_bins = np.arange(0, n_bins_x)
+mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
 print("Generating Feldman Cousins confidence belt for " + str(len(mu_bins)) +
       " values of mu.")
@@ -35,7 +34,7 @@ for mu in ProgressBar(mu_bins):
 fc_fix_limits(LowerLimitAna, UpperLimitAna)
 
 fig = plt.figure()
-ax  = fig.add_subplot(111)
+ax = fig.add_subplot(111)
 
 plt.plot(LowerLimitAna, mu_bins, ls='-', color='red')
 plt.plot(UpperLimitAna, mu_bins, ls='-', color='red')

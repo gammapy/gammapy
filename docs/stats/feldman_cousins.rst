@@ -2,6 +2,7 @@
 
 Feldman and Cousins Confidence Intervals
 ========================================
+
 Feldman and Cousins solved the problem on how to choose confidence intervals
 in a unified way (that is without basing the choice on the data)
 [Feldman1998]_. The functions ``gammapy.stats.fc_*`` give you access to a
@@ -22,28 +23,28 @@ intersection (`~gammapy.stats.fc_find_limit`).
 
 Examples
 --------
+
 Assume you have a Poisson background with known mean 3.0. We generate the
 matrix of :math:`P(X|\\mu)` like this
 
 .. code-block:: python
 
-   >>> import gammapy.stats as gstats
-   >>> import numpy as np
-   >>> from scipy import stats
-   >>>
-   >>> x_bins  = np.arange(0, 50)
-   >>> mu_bins = np.linspace(0, 15, 15/0.005 + 1, endpoint=True)
-   >>>
-   >>> matrix = [stats.poisson(mu+3.0).pmf(x_bins) for mu in mu_bins]
+   import gammapy.stats as gstats
+   import numpy as np
+   from scipy import stats
+
+   x_bins = np.arange(0, 50)
+   mu_bins = np.linspace(0, 15, 15 / 0.005 + 1, endpoint=True)
+   matrix = [stats.poisson(mu + 3.0).pmf(x_bins) for mu in mu_bins]
 
 Now we generate the 90% acceptance intervals and construct the lower and upper
 limit from them:
 
 .. code-block:: python
 
-   >>> acceptance_intervals = gstats.fc_construct_acceptance_intervals_pdfs(matrix, 0.9)
-   >>>
-   >>> LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+   acceptance_intervals = gstats.fc_construct_acceptance_intervals_pdfs(matrix, 0.9)
+
+   LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
 Let's say you measured x = 1, then the 90% upper limit would be:
 
@@ -71,6 +72,7 @@ from [Feldman1998]_.
 
 Acceptance Interval Fixing
 --------------------------
+
 Feldman and Cousins point out that sometimes the set of intersected horizontal
 lines is not simply connected. These artefacts are corrected with
 `~gammapy.stats.fc_fix_limits`.
@@ -96,6 +98,7 @@ upper limit according to the procedure described in [Feldman1998]_ should be
 
 Sensitivity
 -----------
+
 [Feldman1998]_ also defines experimental sensitivity as the average upper limit
 that would be obtained by an ensemble of experiments with the expected
 background and no true signal. It can be calculated using `~gammapy.stats.fc_find_average_upper_limit`.
@@ -107,6 +110,7 @@ background and no true signal. It can be calculated using `~gammapy.stats.fc_fin
 
 General Case
 ------------
+
 In the more general case, one may not know the underlying PDF of :math:`P(X|\\mu)`. One
 way would be to generate :math:`P(X|\\mu)` from Monte Carlo simulation. With a dictionary
 of mu values and lists of X values from Monte Carlo one can use `~gammapy.stats.fc_construct_acceptance_intervals`
@@ -117,25 +121,27 @@ fixed here, so the result is known):
 
 .. code-block:: python
 
-   >>> import gammapy.stats as gstats
-   >>> import numpy as np
-   >>> from scipy import stats
-   >>>
-   >>> x_bins  = np.linspace(-10, 10, 100, endpoint=True)
-   >>> mu_bins = np.linspace(0, 8, 8/0.05 + 1, endpoint=True)
-   >>>
-   >>> np.random.seed(seed=1)
-   >>>
-   >>> distribution_dict = dict((mu, [stats.norm.rvs(loc=mu, scale=1, size=5000)]) for mu in mu_bins)
-   >>>
-   >>> acceptance_intervals = gstats.fc_construct_acceptance_intervals(distribution_dict, x_bins, 0.6827)
-   >>>
-   >>> LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
-   >>> gstats.fc_find_limit(1.7, UpperLimitNum, mu_bins)
-   2.7
+   import gammapy.stats as gstats
+   import numpy as np
+   from scipy import stats
+
+   x_bins = np.linspace(-10, 10, 100, endpoint=True)
+   mu_bins = np.linspace(0, 8, 8 / 0.05 + 1, endpoint=True)
+
+   np.random.seed(seed=1)
+
+   distribution_dict = dict((mu, [stats.norm.rvs(loc=mu, scale=1, size=5000)]) for mu in mu_bins)
+
+   acceptance_intervals = gstats.fc_construct_acceptance_intervals(distribution_dict, x_bins, 0.6827)
+
+   LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+
+   mu_upper_limit = gstats.fc_find_limit(1.7, UpperLimitNum, mu_bins)
+   # mu_upper_limit == 2.7
 
 Verification
 ------------
+
 To verify that the numerical solution is working, the example plots can also be
 produced using the analytical solution. They look consistent. The scripts for
 the analytical solution are given in the ``examples`` directory:
