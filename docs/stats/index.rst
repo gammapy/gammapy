@@ -63,12 +63,15 @@ Here's some references describing the available methods:
 Getting Started
 ===============
 
-As an example, assume you have measured :math:`n_{on} = 18` counts in a
-region where you suspect a source might be present and :math:`n_{off} = 97`
-counts in a background control region where you assume no source is present
-and that is :math:`a_{off}/a_{on}=10` times larger than the on-region.
+Li \& Ma Significance
+---------------------
 
-Here's how you compute the statistical significance of your detection 
+As an example, assume you measured :math:`n_{on} = 18` counts in a region where
+you suspect a source might be present and :math:`n_{off} = 97` counts in a
+background control region where you assume no source is present and that is
+:math:`a_{off}/a_{on}=10` times larger than the on-region.
+
+Here's how you compute the statistical significance of your detection
 with the Li \& Ma formula:
 
 .. code-block:: python
@@ -77,7 +80,36 @@ with the Li \& Ma formula:
    >>> significance_on_off(n_on=18, n_off=97, alpha=1. / 10, method='lima')
    2.2421704424844875
 
-TODO: More examples.
+Confidence Intervals
+--------------------
+
+Assume you measured 6 counts in a Poissonian counting experiment with an
+expected background :math:`b = 3`. Here's how you compute the 90% upper limit
+on the signal strength :math:`\\mu`:
+
+.. code-block:: python
+
+   import numpy as np
+   from scipy import stats
+   import gammapy.stats as gstats
+
+   x_bins = np.arange(0, 100)
+   mu_bins = np.linspace(0, 50, 50 / 0.005 + 1, endpoint=True)
+
+   matrix = [stats.poisson(mu + 3).pmf(x_bins) for mu in mu_bins]
+   acceptance_intervals = gstats.fc_construct_acceptance_intervals_pdfs(matrix, 0.9)
+   LowerLimitNum, UpperLimitNum, _ = gstats.fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+   mu_upper_limit = gstats.fc_find_limit(6, UpperLimitNum, mu_bins)
+
+The result is ``mu_upper_limit == 8.465``.
+
+Using `gammapy.stats`
+=====================
+
+.. toctree::
+   :maxdepth: 1
+
+   feldman_cousins
 
 Reference/API
 =============

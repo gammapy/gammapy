@@ -39,14 +39,16 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 Contributors
 ++++++++++++
 
-- Manuel Paz Arribas
-- Christoph Deil
 - Axel Donath
+- Christoph Deil
+- Dirk Lennarz (new)
 - Johannes King
+- Manuel Paz Arribas
 
 Pull requests
 +++++++++++++
 
+- [#367] Add Feldman Cousins algorithm (Dirk Lennarz)
 - [#359] Add 1D spectrum analysis tool based on gammapy.hspec (Johannes King)
 - [#351] Rewrite most parts of EnergyDispersion class (Johannes King)
 - [#353] Add some scripts and examples (Christoph Deil)
