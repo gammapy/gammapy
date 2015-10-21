@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from astropy.utils.console import ProgressBar
 
 from gammapy.stats import (
-    fc_find_acceptance_region_poisson,
+    fc_find_acceptance_interval_poisson,
     fc_fix_limits,
 )
 
@@ -28,7 +28,7 @@ UpperLimitAna = []
 LowerLimitAna = []
 
 for mu in ProgressBar(mu_bins):
-    goodChoice = fc_find_acceptance_region_poisson(mu, background, x_bins, cl)
+    goodChoice = fc_find_acceptance_interval_poisson(mu, background, x_bins, cl)
     UpperLimitAna.append(goodChoice[0])
     LowerLimitAna.append(goodChoice[1])
 

@@ -13,8 +13,8 @@ except ImportError:
     HAS_SCIPY = False
 
 from ...stats import (
-    fc_find_acceptance_region_gauss,
-    fc_find_acceptance_region_poisson,
+    fc_find_acceptance_interval_gauss,
+    fc_find_acceptance_interval_poisson,
     fc_construct_acceptance_intervals_pdfs,
     fc_get_limits,
     fc_fix_limits,
@@ -25,7 +25,7 @@ from ...stats import (
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_acceptance_region_gauss():
+def test_acceptance_interval_gauss():
 
     sigma   = 1
     n_sigma = 10
@@ -38,24 +38,24 @@ def test_acceptance_region_gauss():
     # to Table X, for a measured value of 2.6 the 90% confidence interval should
     # be 1.02 and 4.24. Reversed that means that for mu=1.02, the acceptance
     # interval should end at 2.6 and for mu=4.24 should start at 2.6.
-    (x_min, x_max) = fc_find_acceptance_region_gauss(1.02, sigma, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_gauss(1.02, sigma, x_bins, cl)
     assert_allclose(x_max, 2.6, 1e-07, 0.1)
 
-    (x_min, x_max) = fc_find_acceptance_region_gauss(4.24, sigma, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_gauss(4.24, sigma, x_bins, cl)
     assert_allclose(x_min, 2.6, 1e-07, 0.1)
 
     # At mu=0, confidence interval should start at the negative x_bins range.
-    (x_min, x_max) = fc_find_acceptance_region_gauss(0, sigma, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_gauss(0, sigma, x_bins, cl)
     assert_allclose(x_min, -n_sigma*sigma)
 
     # Pass too few x_bins to reach confidence level.
     x_bins = np.linspace(-sigma, sigma, n_step, endpoint=True)
     with pytest.raises(ValueError):
-        fc_find_acceptance_region_gauss(0, 1, x_bins, cl)
+        fc_find_acceptance_interval_gauss(0, 1, x_bins, cl)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')
-def test_acceptance_region_poisson():
+def test_acceptance_interval_poisson():
 
     background  = 0.5
     n_bins_x    = 100
@@ -67,15 +67,15 @@ def test_acceptance_region_poisson():
     # to Table IV, for a measured value of 10 the 90% confidence interval should
     # be 5.00 and 16.00. Reversed that means that for mu=5.0, the acceptance
     # interval should end at 10 and for mu=16.00 should start at 10.
-    (x_min, x_max) = fc_find_acceptance_region_poisson(5.00, background, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_poisson(5.00, background, x_bins, cl)
     assert_allclose(x_max, 10)
 
-    (x_min, x_max) = fc_find_acceptance_region_poisson(16.00, background, x_bins, cl)
+    (x_min, x_max) = fc_find_acceptance_interval_poisson(16.00, background, x_bins, cl)
     assert_allclose(x_min, 10)
 
     # Pass too few x_bins to reach confidence level.
     with pytest.raises(ValueError):
-        fc_find_acceptance_region_poisson(0, 7, x_bins[0:10], cl)
+        fc_find_acceptance_interval_poisson(0, 7, x_bins[0:10], cl)
 
 
 @pytest.mark.skipif('not HAS_SCIPY')

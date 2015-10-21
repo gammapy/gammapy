@@ -9,8 +9,8 @@ from astropy.extern.six import iteritems
 import logging
 log = logging.getLogger(__name__)
 
-__all__ = ['fc_find_acceptance_region_gauss',
-           'fc_find_acceptance_region_poisson',
+__all__ = ['fc_find_acceptance_interval_gauss',
+           'fc_find_acceptance_interval_poisson',
            'fc_construct_acceptance_intervals_pdfs',
            'fc_get_limits',
            'fc_fix_limits',
@@ -20,7 +20,7 @@ __all__ = ['fc_find_acceptance_region_gauss',
            ]
 
 
-def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
+def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     r"""
     Analytical acceptance interval for Gaussian with boundary at the origin
 
@@ -103,7 +103,7 @@ def fc_find_acceptance_region_gauss(mu, sigma, x_bins, alpha):
     return x_bins[index_min], x_bins[index_max] + x_bin_width
 
 
-def fc_find_acceptance_region_poisson(mu, background, x_bins, alpha):
+def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     r"""
     Analytical acceptance interval for Poisson process with background
 
