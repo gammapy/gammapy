@@ -28,7 +28,7 @@ UpperLimitAna = []
 LowerLimitAna = []
 
 for mu in ProgressBar(mu_bins):
-    goodChoice = fc_find_acceptance_region_poisson(mu, background, x_bins, fCL)
+    goodChoice = fc_find_acceptance_region_poisson(mu, background, x_bins, cl)
     UpperLimitAna.append(goodChoice[0])
     LowerLimitAna.append(goodChoice[1])
 
