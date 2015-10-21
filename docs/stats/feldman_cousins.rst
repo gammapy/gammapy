@@ -16,7 +16,7 @@ the signal strength :math:`\\mu`. The other parameter is the desired confidence 
 (C.L.). The function will return another matrix of acceptance intervals where 1
 means the point is part of the acceptance interval and 0 means it is outside.
 This can be easily converted to upper and lower limits (`~gammapy.stats.fc_get_limits`),
-which simply connect the outside 1s for different :math:`\\mu`s. An upper or lower limit
+which simply connect the outside 1s for different :math:`\\mu` values. An upper or lower limit
 is obtained by drawing a vertical line at the measured value and calculating the
 intersection (`~gammapy.stats.fc_find_limit`).
 
