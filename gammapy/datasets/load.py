@@ -1,32 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Example and test datasets.
-
-Example how to load a dataset from file::
-
-    from gammapy import datasets
-    image = datasets.poisson_stats_image()
-
-To get a summary table of available datasets::
-
-    from gammapy import datasets
-    datasets.list_datasets()
-
-To download all datasets into a local cache::
-
-    from gammapy import datasets
-    datasets.download_datasets()
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.utils.data import get_pkg_data_filename, download_file
+from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
-from ..data import SpectralCube
+from .manage import get_path
 
 __all__ = [
-    'get_path',
-    # 'list_datasets',
-    # 'download_datasets',
     'load_poisson_stats_image',
     'load_tev_spectrum',
     'load_crab_flux_points',
@@ -36,68 +18,6 @@ __all__ = [
     'load_aeff2D_fits_table',
     'load_psf_fits_table',
 ]
-
-
-# TODO: implement or remove
-def list_datasets():
-    """List available datasets."""
-    for name in datasets:
-        docstring = eval('{0}.__doc__'.format(name))
-        summary = docstring.split('\n')[0]
-        print('{0:>25s} : {1}'.format(name, summary))
-
-
-# TODO: implement or remove
-def download_datasets(names='all'):
-    """Download all datasets in to a local cache.
-
-    TODO: set this up and test
-    """
-    for name in remote_datasets:
-        raise NotImplementedError
-        # Check if available in cache
-        # if not download to cache
-
-
-def get_path(filename, location='local', cache=True):
-    """Get path (location on your disk) for a given file.
-
-    Parameters
-    ----------
-    filename : str
-        File name in the local or remote data folder
-    location : {'local', 'remote'}
-        File location.
-        ``'local'`` means bundled with ``gammapy``.
-        ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
-    cache : bool
-        if `True` and using ``location='remote'``, the file is searched
-        first within the local astropy cache and only downloaded if
-        it does not exist.
-
-    Returns
-    -------
-    path : str
-        Path (location on your disk) of the file.
-
-    Examples
-    --------
-    >>> from gammapy import datasets
-    >>> datasets.get_path('fermi/fermi_counts.fits.gz')
-    '/Users/deil/code/gammapy/gammapy/datasets/data/fermi/fermi_counts.fits.gz'
-    >>> datasets.get_path('vela_region/counts_vela.fits', location='remote')
-    '/Users/deil/.astropy/cache/download/ce2456b0c9d1476bfd342eb4148144dd'
-    """
-    if location == 'local':
-        path = get_pkg_data_filename('data/' + filename)
-    elif location == 'remote':
-        url = ('https://github.com/gammapy/gammapy-extra/blob/master/datasets/'
-               '{0}?raw=true'.format(filename))
-        path = download_file(url, cache)
-    else:
-        raise ValueError('Invalid location: {0}'.format(location))
-
-    return path
 
 
 def load_arf_fits_table():

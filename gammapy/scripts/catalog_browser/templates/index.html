@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<h1>Form selection</h1>
+
+<ol>
+    <li>catalog_name: {{ session.get('catalog_name') }}</li>
+    <li>source_name: {{ session.get('source_name') }}</li>
+    <li>info_display: {{ session.get('info_display') }}</li>
+</ol>
+
+{% endblock %}

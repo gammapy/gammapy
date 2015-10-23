@@ -2,7 +2,7 @@
 
 
 def get_package_data():
-    files = ['README.rst',
+    files = ['datasets.yaml',
              'data/README.rst',
              'data/fermi/*',
              'data/fermi_vela/*',

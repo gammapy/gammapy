@@ -3,18 +3,14 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tarfile
-import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
-from astropy.units import Quantity
 from ..irf import EnergyDependentTablePSF
 from ..data import SpectralCube
 from ..datasets import get_path
-from ..spectrum import EnergyBounds
 
 __all__ = [
-    'Fermi3FGLObject',
     'FermiGalacticCenter',
     'FermiVelaRegion',
     'fetch_fermi_catalog',
@@ -228,158 +224,6 @@ def fetch_fermi_diffuse_background_model(filename='gll_iem_v02.fit'):
     filename = download_file(url, cache=True)
 
     return filename
-
-
-class Fermi3FGLObject(object):
-    """
-    Class representing an object in the Fermi 3FGL catalog.
-    """
-
-    # Fermi catalog is lazily loaded on first access
-    # and cached at class level (not instance level)
-    fermi_cat = None
-
-    x_bins_edges = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'MeV')
-
-    x_bins = Quantity(x_bins_edges, 'MeV')
-
-    x_cens = EnergyBounds(x_bins).log_centers
-
-    y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
-                'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
-
-    def __init__(self, source_name):
-        _fermi_cat = self._get_fermi_cat()
-        self.name_3FGL = source_name
-        self.catalog_index = np.where(self.fermi_cat[1].data['Source_Name'] == source_name)[0][0]
-        cat_row = _fermi_cat[1].data[self.catalog_index]
-        self.cat_row = cat_row
-        self.ra = cat_row['RAJ2000']
-        self.dec = cat_row['DEJ2000']
-        self.glon = cat_row['GLON']
-        self.glat = cat_row['GLAT']
-        self.flux_density = cat_row['Flux_Density']
-        self.unc_flux_density = cat_row['Unc_Flux_Density']
-        self.spec_type = cat_row['SpectrumType']
-        self.pivot_en = cat_row['PIVOT_ENERGY']
-        self.spec_index = cat_row['Spectral_Index']
-        self.unc_spec_index = cat_row['Unc_Spectral_Index']
-        self.beta = cat_row['beta']
-        self.unc_beta = cat_row['unc_beta']
-        self.cutoff = cat_row['Cutoff']
-        self.unc_cutoff = cat_row['Unc_Cutoff']
-        self.exp_index = cat_row['Exp_Index']
-        self.unc_exp_index = cat_row['Unc_Exp_Index']
-        self.signif = cat_row['Signif_Avg']
-
-    @classmethod
-    def _get_fermi_cat(cls):
-        """Load the 3FGL catalog if not already loaded."""
-        if not cls.fermi_cat:
-            cls.fermi_cat = fetch_fermi_catalog('3FGL')
-        return cls.fermi_cat
-
-    def plot_lightcurve(self, ax=None):
-        """Plot lightcurve.
-        """
-        from gammapy.time import plot_fermi_3fgl_light_curve
-
-        ax = plot_fermi_3fgl_light_curve(self.name_3FGL, ax=ax)
-        return ax
-
-    def plot_spectrum(self, ax=None):
-        """Plot spectrum.
-        """
-        import matplotlib.pyplot as plt
-        from gammapy.extern.stats import gmean
-        from astropy.modeling.models import PowerLaw1D, LogParabola1D, ExponentialCutoffPowerLaw1D
-
-        ax = plt.gca() if ax is None else ax
-
-        # Only work with indices where we have a valid detection and a lower bound
-        flux_bounds = [self.cat_row["Unc_" + self.y_labels[i]] for i in range(0, np.size(self.y_labels))]
-
-        valid_indices = []
-
-        for i in range(0, len(flux_bounds)):
-            if np.size(flux_bounds[i]) == 2 and not np.isnan(flux_bounds[i][0]):
-                valid_indices.append(i)
-
-        y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
-        y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
-        y_upper = np.array([self.cat_row["Unc_" + i][1] for i in (self.y_labels[j] for j in valid_indices)])
-
-        y_lower = y_vals + y_lower
-        y_upper = y_vals + y_upper
-
-        x_vals = [self.x_cens[i].value for i in valid_indices]
-        bin_edges1 = [-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
-        bin_edges2 = [(self.x_bins_edges[i + 1] - self.x_cens[i]).value for i in valid_indices]
-
-        y_vals = [y_vals[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-        y_upper = [y_upper[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-        y_lower = [y_lower[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-
-        y_cens = np.array([gmean([y_lower[i], y_upper[i]]) for i in range(0, np.size(y_lower))])
-
-        y_upper = np.array([y_upper[i] - y_vals[i] for i in range(0, np.size(y_lower))])
-        y_lower = np.array([y_vals[i] - y_lower[i] for i in range(0, np.size(y_lower))])
-
-        ax.loglog()
-
-        fmt = dict(elinewidth=1, linewidth=0, color='black')
-        ax.errorbar(x_vals, y_vals, yerr=(y_lower, y_upper), **fmt)
-
-        # Place the x-axis uncertainties in the center of the y-axis uncertainties.
-        ax.errorbar(x_vals, y_cens, xerr=(bin_edges1, bin_edges2), **fmt)
-
-        x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
-
-        if self.spec_type == "PowerLaw":
-
-            y_model = PowerLaw1D(amplitude=self.flux_density,
-                                 x_0=self.pivot_en,
-                                 alpha=self.spec_index)
-
-        elif self.spec_type == "LogParabola":
-
-            y_model = LogParabola1D(amplitude=self.flux_density,
-                                    x_0=self.pivot_en,
-                                    alpha=self.spec_index,
-                                    beta=self.beta)
-
-        elif self.spec_type == "PLExpCutoff":
-
-            y_model = ExponentialCutoffPowerLaw1D(amplitude=self.flux_density,
-                                                  x_0=self.pivot_en,
-                                                  alpha=self.spec_index,
-                                                  x_cutoff=self.cutoff)
-        elif self.spec_type == "PLSuperExpCutoff":
-            raise NotImplementedError
-        else:
-            raise NotImplementedError
-
-        ax.set_xlabel('Energy (MeV)')
-        ax.set_ylabel('Flux (ph/cm^2/s/MeV)')
-        ax.plot(x_model, y_model(x_model))
-
-        return ax
-
-    def info(self):
-        """Print summary info."""
-        info = "\n"
-        info += self.name_3FGL + "\n"
-        info += "\n"
-        info += "RA (J2000) " + str(self.ra) + "\n"
-        info += "Dec (J2000) " + str(self.dec) + "\n"
-        info += "l " + str(self.glon) + "\n"
-        info += "b " + str(self.glat) + "\n"
-        # TODO: fix error: no attribute `energy_flux`
-        # info += "Integrated Flux 100 MeV - 100 GeV: " + str(self.energy_flux) + \
-        #         " +/- " + str(self.unc_energy_flux) + " erg /cm2 /s\n"
-        info += "Detection significance: " + str(self.signif) + " sigma\n"
-
-        return info
 
 
 class FermiGalacticCenter(object):

@@ -5,3 +5,4 @@
 from .analysis import *
 from .utils import *
 from .xmatch import *
+from .registry import *

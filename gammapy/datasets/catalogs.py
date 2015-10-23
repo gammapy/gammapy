@@ -8,12 +8,11 @@ from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
 from ..extern.bunch import Bunch
-from ..datasets import get_path
+from .manage import get_path
 
 __all__ = [
     'load_catalog_atnf',
     'load_catalog_hess_galactic',
-    # 'load_catalog_hgps',
     'load_catalog_green',
     'fetch_catalog_snrcat',
     'load_catalog_tevcat',
@@ -64,17 +63,6 @@ def load_catalog_hess_galactic():
     """
     filename = get_path('catalogs/hess_galactic_catalog.fits.gz', location='remote')
     return Table.read(filename)
-
-
-def load_catalog_hgps():
-    """Load the HESS Galactic plane survey (HGPS) catalog.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
-    """
-    raise NotImplementedError
 
 
 def load_catalog_green():

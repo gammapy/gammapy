@@ -5,7 +5,6 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.tests.helper import remote_data
 from ...datasets import (
-    Fermi3FGLObject,
     FermiGalacticCenter,
     FermiVelaRegion,
     fetch_fermi_catalog,
@@ -18,25 +17,6 @@ try:
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
-
-
-@remote_data
-class TestFermi3FGLObject:
-
-    test_source = '3FGL J0000.1+6545'
-
-    def test_plot_lightcurve(self):
-        source = Fermi3FGLObject(self.test_source)
-        source.plot_lightcurve()
-
-    def test_plot_spectrum(self):
-        source = Fermi3FGLObject(self.test_source)
-        source.plot_spectrum()
-
-    def test_info(self):
-        source = Fermi3FGLObject(self.test_source)
-        info = source.info()
-        assert self.test_source in info
 
 
 class TestFermiGalacticCenter:

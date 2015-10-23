@@ -1,0 +1,19 @@
+# Information about datasets used in Gammapy
+#
+# This info is used to download files to a local cache.
+# The default local dir is ~/.gammapy/datasets
+
+
+- name: catalog-atnf
+  filename: catalogs/ATNF_v1.51.fits.gz
+  url: https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/ATNF_v1.51.fits.gz
+  tags: catalog
+  description: ATNF catalog version 1.51
+
+- name: catalog-snrcat
+  filename: catalogs/snrcat.fits.gz
+  url: https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/snrcat.fits.gz
+  tags: catalog
+  description: SNRCat
+
+
