@@ -6,7 +6,7 @@ from astropy.utils.data import get_pkg_data_filename
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
-from .manage import get_path
+from .core import gammapy_extra
 
 __all__ = [
     'load_poisson_stats_image',
@@ -14,46 +14,7 @@ __all__ = [
     'load_crab_flux_points',
     'load_diffuse_gamma_spectrum',
     'load_electron_spectrum',
-    'load_arf_fits_table',
-    'load_aeff2D_fits_table',
-    'load_psf_fits_table',
 ]
-
-
-def load_arf_fits_table():
-    """Load an example ARF FITS table.
-
-    Returns
-    -------
-    hdu_list : `~astropy.io.fits.HDUList`
-        ARF file contents.
-    """
-    filename = get_path('irfs/arf.fits')
-    return fits.open(filename)
-
-
-def load_psf_fits_table():
-    """Load an example PSF FITS file..
-
-    Returns
-    -------
-    hdu_list : `~astropy.io.fits.HDUList`
-        ARF file contents.
-    """
-    filename = get_path('irfs/psf.fits')
-    return fits.open(filename)
-
-
-def load_aeff2D_fits_table():
-    """Load an example aeff2D FITS file..
-
-    Returns
-    -------
-    hdu_list : `~astropy.io.fits.HDUList`
-        aeff2D file contents.
-    """
-    filename = get_path('irfs/aeff2D.fits')
-    return fits.open(filename)
 
 
 def load_poisson_stats_image(extra_info=False, return_filenames=False):
@@ -74,25 +35,30 @@ def load_poisson_stats_image(extra_info=False, return_filenames=False):
     data : numpy array or dict of arrays or filenames
         Depending on the ``extra_info`` and ``return_filenames`` options.
     """
+    path = gammapy_extra.dir / 'test_datasets/unbundled/poisson_stats_image'
+
     if extra_info:
         out = dict()
         for name in ['counts', 'model', 'source', 'background', 'exposure']:
-            filename = get_path('poisson_stats_image/{0}.fits.gz'.format(name))
+            filename = str(path / '{0}.fits.gz'.format(name))
             if return_filenames:
                 out[name] = filename
             else:
                 data = fits.getdata(filename)
                 out[name] = data.astype('float64')
         if return_filenames:
-            out['psf'] = get_path('poisson_stats_image/psf.json')
+            out['psf'] = str(path / 'psf.json')
     else:
-        filename = get_path('poisson_stats_image/counts.fits.gz')
+        filename = str(path / 'counts.fits.gz')
         if return_filenames:
             out = filename
         else:
             out = fits.getdata(filename).astype('float64')
+
     if extra_info and not return_filenames:
-        out['header'] = fits.getheader(get_path('poisson_stats_image/counts.fits.gz'))
+        filename = str(path / 'counts.fits.gz')
+        out['header'] = fits.getheader(filename)
+
     return out
 
 
@@ -164,8 +130,7 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
 
     """
-    filename = 'data/tev_spectra/crab_mwl.fits.gz'
-    filename = get_pkg_data_filename(filename)
+    filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
     table = Table.read(filename)
 
     if component == 'pulsar':

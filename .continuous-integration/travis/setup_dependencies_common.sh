@@ -80,3 +80,10 @@ then
   pip install cpp-coveralls;
   pip install coveralls;
 fi
+
+if $FETCH_GAMMAPY_EXTRA
+then
+  git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra
+  # Note: exporting GAMMAPY_EXTRA here doesn't work, it'll not be available
+  # when running the tests ...
+fi

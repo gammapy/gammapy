@@ -1,13 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
+from ...utils.testing import requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
-from ...datasets import get_path
-
-filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
+from ...datasets import gammapy_extra
 
 
+@requires_data('gammapy-extra')
 def test_EventList():
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     event_list = EventList.read(filename, hdu='EVENTS')
 
     assert len(event_list) == 49
@@ -28,7 +30,9 @@ def test_EventList():
     assert_allclose(event_list.observation_dead_time_fraction, 0.03576320037245795)
 
 
+@requires_data('gammapy-extra')
 def test_EventListDataset():
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     dset = EventListDataset.read(filename)
 
     assert len(dset.event_list) == 49
@@ -37,7 +41,9 @@ def test_EventListDataset():
     # even without running the following test.
 
 
+@requires_data('gammapy-extra')
 def test_EventListDatasetChecker():
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     dset = EventListDataset.read(filename)
     checker = EventListDatasetChecker(dset)
     checker.run('all')

@@ -2,20 +2,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
-from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
+from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, TSMapResult
 from ...datasets import load_poisson_stats_image
 from ...image.utils import upsample_2N, downsample_2N
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_compute_ts_map(tmpdir):
     """Minimal test of compute_ts_map"""
     data = load_poisson_stats_image(extra_info=True)

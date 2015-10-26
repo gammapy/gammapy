@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
     coordinates,
@@ -10,15 +10,8 @@ from ...image import (
     image_profile,
 )
 
-try:
-    import pandas
 
-    HAS_PANDAS = True
-except ImportError:
-    HAS_PANDAS = False
-
-
-@pytest.mark.skipif('not HAS_PANDAS')
+@requires_dependency('pandas')
 def test_compute_binning():
     data = [1, 3, 2, 2, 4]
     bin_edges = compute_binning(data, n_bins=3, method='equal width')
@@ -29,6 +22,7 @@ def test_compute_binning():
     assert_allclose(bin_edges, [1, 2, 2.66666667, 4])
 
 
+@requires_data('gammapy-extra')
 def test_image_lat_profile():
     """Tests GLAT profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()
@@ -66,6 +60,7 @@ def test_image_lat_profile():
     assert_allclose(lat_profile3['BIN_VALUE'].data, np.zeros(39))
 
 
+@requires_data('gammapy-extra')
 def test_image_lon_profile():
     """Tests GLON profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()

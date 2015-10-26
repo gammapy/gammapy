@@ -1,26 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+from ...utils.testing import requires_dependency, requires_data
 from ...background import Cube
-from ... import datasets
-from ...datasets import make_test_bg_cube_model
-
-try:
-    import matplotlib
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
+from ...datasets import gammapy_extra, make_test_bg_cube_model
 
 
-class TestCube():
-    @remote_data
+class TestCube:
+
+    @requires_data('gammapy-extra')
     def test_read_fits_table(self):
         # test shape and scheme of cube when reading a file
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
-                                     location='remote')
+        filename = gammapy_extra.filename(
+            'test_datasets/background/bg_cube_model_test1.fits')
         scheme = 'bg_cube'
         cube = Cube.read(filename, format='table', scheme=scheme)
         assert len(cube.data.shape) == 3
@@ -29,7 +24,7 @@ class TestCube():
                                    len(cube.coordx_edges) - 1)
         assert cube.scheme == scheme
 
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
+    @requires_dependency('matplotlib')
     def test_image_plot(self):
         cube = make_test_bg_cube_model().background_cube
 
@@ -48,7 +43,7 @@ class TestCube():
         # test if both arrays are equal
         assert_allclose(plot_data, model_data.value)
 
-    @pytest.mark.skipif('not HAS_MATPLOTLIB')
+    @requires_dependency('matplotlib')
     def test_spectrum_plot(self):
         cube = make_test_bg_cube_model().background_cube
 
@@ -66,10 +61,9 @@ class TestCube():
         # test if both arrays are equal
         assert_allclose(plot_data[:, 1], model_data.value)
 
-    @remote_data
+    @requires_data('gammapy-extra')
     def test_write_fits_table(self, tmpdir):
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
-                                     location='remote')
+        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test1.fits')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
         outfile = str(tmpdir / 'cube_table_test.fits')
@@ -86,10 +80,10 @@ class TestCube():
         assert_quantity_allclose(cube2.energy_edges,
                                  cube1.energy_edges)
 
-    @remote_data
+    @requires_data('gammapy-extra')
     def test_read_write_fits_image(self, tmpdir):
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test1.fits',
-                                     location='remote')
+        filename = gammapy_extra.filename(
+            'test_datasets/background/bg_cube_model_test1.fits')
         cube1 = Cube.read(filename, format='table', scheme='bg_cube')
 
         outfile = str(tmpdir / 'cube_image_test.fits')

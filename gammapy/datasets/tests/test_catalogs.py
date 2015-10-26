@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import remote_data
+from astropy.tests.helper import pytest
+from ...utils.testing import requires_data
 from ... import datasets
 
 
-@remote_data
+@pytest.mark.xfail
+@requires_data('gammapy-extra')
 def test_load_catalog_atnf(tmpdir):
     catalog = datasets.load_catalog_atnf()
     assert len(catalog) == 2399
@@ -14,8 +16,7 @@ def test_load_catalog_atnf(tmpdir):
     catalog.write(filename)
 
 
-# TODO: activate test when available
-@remote_data
+@requires_data('gammapy-extra')
 def _test_load_catalog_hess_galactic(tmpdir):
     catalog = datasets.load_catalog_hess_galactic()
     assert len(catalog) == 42
@@ -25,7 +26,7 @@ def _test_load_catalog_hess_galactic(tmpdir):
     catalog.write(filename)
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_load_catalog_green(tmpdir):
     catalog = datasets.load_catalog_green()
     assert len(catalog) == 294
@@ -35,7 +36,7 @@ def test_load_catalog_green(tmpdir):
     catalog.write(filename)
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_load_catalog_snrcat(tmpdir):
     snrcat = datasets.fetch_catalog_snrcat()
 
@@ -59,7 +60,7 @@ def test_load_catalog_snrcat(tmpdir):
     table.write(filename)
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_load_catalog_tevcat(tmpdir):
     catalog = datasets.load_catalog_tevcat()
     assert len(catalog) == 173

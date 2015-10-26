@@ -9,14 +9,8 @@ from astropy.time import Time, TimeDelta
 from astropy.coordinates import SkyCoord, AltAz, Angle
 from astropy.table import Table
 from ..extern.pathlib import Path
-from ..irf import EnergyDependentMultiGaussPSF
-from ..obs import ObservationTable, observatory_locations, DataStore
-from ..utils.random import sample_sphere, get_random_state
-from ..time import time_ref_from_dict, time_relative_to_ref
-from ..background import CubeBackgroundModel
-from ..data import EventList
+from ..utils.random import sample_sphere, sample_powerlaw, get_random_state
 from ..utils.fits import table_to_fits_table
-from ..utils.random import sample_powerlaw
 
 __all__ = [
     'make_test_psf',
@@ -47,6 +41,7 @@ def make_test_psf(energy_bins=15, theta_bins=12):
     psf : `~gammapy.irf.EnergyDependentMultiGaussPSF`
         PSF.
     """
+    from ..irf import EnergyDependentMultiGaussPSF
     energies_all = np.logspace(-1, 2, energy_bins + 1)
     energies_lo = energies_all[:-1]
     energies_hi = energies_all[1:]
@@ -138,6 +133,8 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     obs_table : `~gammapy.obs.ObservationTable`
         Observation table.
     """
+    from ..time import time_ref_from_dict, time_relative_to_ref
+    from ..obs import ObservationTable, observatory_locations
     random_state = get_random_state(random_state)
 
     n_obs_start = 1
@@ -342,6 +339,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
     bg_cube_model : `~gammapy.background.CubeBackgroundModel`
         Bacground cube model.
     """
+    from ..background import CubeBackgroundModel
+
     # spatial bins (linear)
     delta_x = (detx_range[1] - detx_range[0]) / ndetx_bins
     detx_bin_edges = np.arange(ndetx_bins + 1) * delta_x + detx_range[0]
@@ -495,6 +494,7 @@ def make_test_dataset(outdir, overwrite=False,
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
     """
+    from ..obs import DataStore
     random_state = get_random_state(random_state)
 
     # create output folder
@@ -595,6 +595,7 @@ def make_test_eventlist(observation_table,
     aeff_hdu : `~astropy.io.fits.BinTableHDU`
         Effective area table.
     """
+    from ..data import EventList
     random_state = get_random_state(random_state)
 
     # find obs row in obs table

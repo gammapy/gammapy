@@ -18,8 +18,8 @@ MASK_DILATION_RADIUS = 10  # Pixels
 psf_file = datasets.FermiGalacticCenter.psf()
 
 # Load/create example model images.
-filename = datasets.get_path('source_diffuse_separation/galactic_simulations/fermi_counts.fits',
-                             location='remote')
+filename = datasets.gammapy_extra.filename(
+    'datasets/source_diffuse_separation/galactic_simulations/fermi_counts.fits')
 
 # *** LOADING INPUT ***
 

@@ -11,6 +11,7 @@ from ..extern.pathlib import Path
 
 __all__ = [
     'Datasets',
+    'gammapy_extra',
 ]
 
 log = logging.getLogger(__name__)
@@ -187,42 +188,54 @@ class Datasets(object):
                 dataset.fetch()
 
 
-# def get_path(filename, location='local', cache=True):
-#     """Get path (location on your disk) for a given file.
-#
-#     Parameters
-#     ----------
-#     filename : str
-#         File name in the local or remote data folder
-#     location : {'local', 'remote'}
-#         File location.
-#         ``'local'`` means bundled with ``gammapy``.
-#         ``'remote'`` means in the ``gammapy-extra`` repo in the ``datasets`` folder.
-#     cache : bool
-#         if `True` and using ``location='remote'``, the file is searched
-#         first within the local astropy cache and only downloaded if
-#         it does not exist.
-#
-#     Returns
-#     -------
-#     path : str
-#         Path (location on your disk) of the file.
-#
-#     Examples
-#     --------
-#     >>> from gammapy import datasets
-#     >>> datasets.get_path('fermi/fermi_counts.fits.gz')
-#     '/Users/deil/code/gammapy/gammapy/datasets/data/fermi/fermi_counts.fits.gz'
-#     >>> datasets.get_path('vela_region/counts_vela.fits', location='remote')
-#     '/Users/deil/.astropy/cache/download/ce2456b0c9d1476bfd342eb4148144dd'
-#     """
-#     if location == 'local':
-#         path = astropy.utils.data.get_pkg_data_filename('data/' + filename)
-#     elif location == 'remote':
-#         url = ('https://github.com/gammapy/gammapy-extra/blob/master/datasets/'
-#                '{0}?raw=true'.format(filename))
-#         path = download_file(url, cache)
-#     else:
-#         raise ValueError('Invalid location: {0}'.format(location))
-#
-#     return path
+class GammapyExtraNotFoundError(OSError):
+    """The gammapy-extra repo is not available.
+
+    You have to set the GAMMAPY_EXTRA environment variable so that it's found.
+    """
+    pass
+
+
+class _GammapyExtra(object):
+    """Access files from gammapy-extra repo.
+
+    You have to set the `GAMMAPY_EXTRA` environment variable
+    so that it's found.
+    """
+
+    @property
+    def is_available(self):
+        """Is the gammapy-extra repo available?"""
+        if 'GAMMAPY_EXTRA' in os.environ:
+            # Make sure this is really pointing to a gammapy-extra folder
+            filename = Path(os.environ['GAMMAPY_EXTRA']) / 'logo/gammapy_logo.pdf'
+            if filename.is_file():
+                return True
+
+        return False
+
+    @property
+    def dir(self):
+        """Path to the gammapy-extra repo.
+
+        Raises `GammapyExtraNotFoundError` if gammapy-extra isn't found.
+        """
+        if self.is_available:
+            return Path(os.environ['GAMMAPY_EXTRA'])
+        else:
+            msg = 'The gammapy-extra repo is not available. '
+            msg += 'You have to set the GAMMAPY_EXTRA environment variable '
+            msg += 'to point to the location for it to be found.'
+            raise GammapyExtraNotFoundError(msg)
+
+    def filename(self, filename):
+        """Filename in gammapy-extra as string.
+        """
+        return str(self.dir / filename)
+
+
+gammapy_extra = _GammapyExtra()
+"""Module-level variable to access gammapy-extra.
+
+TODO: usage examples
+"""

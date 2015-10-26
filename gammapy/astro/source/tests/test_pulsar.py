@@ -4,15 +4,9 @@ from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
+from ....utils.testing import requires_dependency
 from ...source import Pulsar, SimplePulsar
-
-try:
-    import scipy
-
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 pulsar = Pulsar()
 time = Quantity([1E2, 1E4, 1E6, 1E8], 'yr')
@@ -64,7 +58,7 @@ def test_Pulsar_luminosity_spindown():
     assert_allclose(pulsar.luminosity_spindown(time).value, reference)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_Pulsar_energy_integrated():
     """Test against numerical integration"""
     energies = []

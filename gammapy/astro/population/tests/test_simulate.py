@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
+from ....utils.testing import requires_dependency
 from ...population import (
     make_base_catalog_galactic,
     make_catalog_random_positions_cube,
@@ -11,12 +12,6 @@ from ...population import (
     add_observed_parameters,
     add_observed_source_parameters,
 )
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 
 @pytest.fixture
@@ -74,7 +69,7 @@ def test_add_pulsar_parameters(example_table):
     assert has_columns(table, ['P0'])
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_add_pwn_parameters(example_table):
     # To compute PWN parameters we need PSR and SNR parameters first
     table = add_snr_parameters(example_table)
@@ -84,7 +79,7 @@ def test_add_pwn_parameters(example_table):
     assert has_columns(table, ['r_out_PWN'])
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_add_par_obs(example_table):
     table = add_snr_parameters(example_table)
     table = add_pulsar_parameters(table)

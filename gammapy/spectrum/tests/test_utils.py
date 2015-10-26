@@ -1,18 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.units import Quantity
-from astropy.tests.helper import pytest, assert_quantity_allclose
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.units import Quantity
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.table import Table
+from ...utils.testing import requires_dependency
 from ...spectrum import np_to_pha, LogEnergyAxis
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 
 class TestPHA(object):
@@ -40,7 +35,7 @@ class TestPHA(object):
         assert_allclose(pha['COUNTS'].sum(), 69.5)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_LogEnergyAxis():
     from scipy.stats import gmean
     energy = Quantity([1, 10, 100], 'TeV')

@@ -1,23 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import unittest
-from astropy.tests.helper import pytest
 import numpy as np
 from numpy.testing import assert_almost_equal
+from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency
 from ...morphology import (Gauss2DPDF,
                            MultiGauss2D,
                            ThetaCalculator,
                            ThetaCalculatorScipy,
                            )
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestThetaCalculator(unittest.TestCase):
     """We use a Gaussian, because it has known analytical
     solutions for theta and containment."""
@@ -62,7 +57,8 @@ class TestThetaCalculator(unittest.TestCase):
 
 
 # FIXME: This test is slow and fails with an IndexError.
-def _test_ModelThetaCalculator():
+@pytest.mark.xfail
+def test_ModelThetaCalculator():
     """Check that Gaussian widths add in quadrature
     i.e. sigma_psf = 3, sigma_source = 4 ===> sigma_model = 5"""
     source, psf = Gauss2DPDF(3), Gauss2DPDF(4)

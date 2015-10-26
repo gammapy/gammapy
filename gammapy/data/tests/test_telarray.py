@@ -2,13 +2,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
-from ...datasets import get_path
+from ...utils.testing import requires_data
+from ...datasets import gammapy_extra
 from ...data import TelescopeArray
 from ...obs import observatory_locations
 
 
+@requires_data('gammapy-extra')
 def test_TelescopeArray():
-    filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
     assert 'Telescope array info' in telescope_array.summary
     location = telescope_array.observatory_earth_location.geocentric

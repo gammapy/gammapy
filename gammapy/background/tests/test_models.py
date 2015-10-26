@@ -2,21 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, remote_data, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 from astropy.modeling.models import Gaussian1D
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel
-from ... import datasets
 from ...obs import ObservationTable
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestGaussianBand2D:
     def setup(self):
         table = Table()
@@ -46,13 +41,12 @@ class TestGaussianBand2D:
         assert_allclose(model.parameters, [0, -1, 0.4])
 
 
+@requires_data('gammapy-extra')
 class TestCubeBackgroundModel:
-    @remote_data
     def test_read(self):
 
         # test shape and scheme of cubes when reading a file
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
-                                     location='remote')
+        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
         bg_cube_model = CubeBackgroundModel.read(filename, format='table')
         cubes = [bg_cube_model.counts_cube,
                  bg_cube_model.livetime_cube,
@@ -65,11 +59,9 @@ class TestCubeBackgroundModel:
                                        len(cube.coordx_edges) - 1)
             assert cube.scheme == scheme
 
-    @remote_data
     def test_write(self, tmpdir):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
-                                     location='remote')
+        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
         bg_cube_model_1 = CubeBackgroundModel.read(filename, format='table')
 
         outfile = str(tmpdir / 'cubebackground_table_test.fits')
@@ -108,11 +100,9 @@ class TestCubeBackgroundModel:
     # fill_events is tested (high-level) by
     # gammapy/scripts/tests/test_make_bg_cube_models.py
 
-    @remote_data
     def test_smooth(self):
 
-        filename = datasets.get_path('../test_datasets/background/bg_cube_model_test2.fits.gz',
-                                     location='remote')
+        filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
         bg_cube_model1 = CubeBackgroundModel.read(filename, format='table')
 
         bg_cube_model2 = bg_cube_model1

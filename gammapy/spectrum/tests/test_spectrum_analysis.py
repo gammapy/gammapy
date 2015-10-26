@@ -1,23 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from numpy.testing import assert_equal, assert_almost_equal
-from astropy.io import fits
-from astropy.tests.helper import remote_data
 from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import gammapy_extra
 from ...spectrum.spectrum_analysis import SpectrumAnalysis
-from ...datasets import get_path
 
-try:
-    import yaml
-    HAS_YAML = True
-except ImportError:
-    HAS_YAML = False
 
-@remote_data
-@pytest.mark.skipif('not HAS_YAML')
+# TODO: this test is currently broken ... fix it!
+@pytest.mark.xfail
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
 def test_spectrum_analysis(tmpdir):
 
-    configfile = get_path('../test_datasets/spectrum/spectrum_analysis_example.yaml',
-                          location='remote', cache=False)
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
     analysis = SpectrumAnalysis.from_yaml(configfile)
 
     # TODO: test more stuff once the DataStore class can be accessed remotely

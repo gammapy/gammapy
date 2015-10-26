@@ -14,7 +14,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from gammapy.background import CubeBackgroundModel
 from gammapy.spectrum import power_law_evaluate, power_law_integral_flux
-from gammapy import datasets
+from gammapy.datasets import gammapy_extra
 
 E_REF = Quantity(1., 'TeV')
 NORM = 1
@@ -177,12 +177,10 @@ def plot_bg_cube_model_comparison(input_file1, name1,
 if __name__ == '__main__':
     """Main function: define arguments and launch the whole analysis chain.
     """
-    input_file1 = '../test_datasets/background/bg_cube_model_true.fits.gz'
-    input_file1 = datasets.get_path(input_file1, location='remote')
+    input_file1 = gammapy_extra.filename('test_datasets/background/bg_cube_model_true.fits.gz')
     name1 = 'true'
 
-    input_file2 = '../test_datasets/background/bg_cube_model_reco.fits.gz'
-    input_file2 = datasets.get_path(input_file2, location='remote')
+    input_file2 = gammapy_extra.filename('test_datasets/background/bg_cube_model_reco.fits.gz')
     name2 = 'reco'
 
     plot_bg_cube_model_comparison(input_file1, name1,

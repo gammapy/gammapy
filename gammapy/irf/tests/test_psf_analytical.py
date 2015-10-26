@@ -1,29 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
+from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDependentMultiGaussPSF
-from ...datasets import load_psf_fits_table
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+from ...datasets import gammapy_extra
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_EnergyDependentMultiGaussPSF():
     filename = get_pkg_data_filename('data/psf_info.txt')
     info_str = open(filename, 'r').read()
-    psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
+
+    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
+    psf = EnergyDependentMultiGaussPSF.read(filename)
     assert psf.info() == info_str
 
 
+@requires_data('gammapy-extra')
 def test_EnergyDependentMultiGaussPSF_write(tmpdir):
-    # Read test psf file
-    psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
+    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
+    psf = EnergyDependentMultiGaussPSF.read(filename)
 
     # Write it back to disk
     filename = str(tmpdir / 'multigauss_psf_test.fits')

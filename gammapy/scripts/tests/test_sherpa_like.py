@@ -2,18 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 from numpy.testing.utils import assert_allclose
-from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency, requires_data
 from ...datasets import load_poisson_stats_image
 from ..sherpa_like import sherpa_image_like
 
-try:
-    import sherpa
-    HAS_SHERPA = True
-except ImportError:
-    HAS_SHERPA = False
 
-
-@pytest.mark.skipif('not HAS_SHERPA')
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
 def test_sherpa_like(tmpdir):
     # load test data
     filenames = load_poisson_stats_image(extra_info=True, return_filenames=True)

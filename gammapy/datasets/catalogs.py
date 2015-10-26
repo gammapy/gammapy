@@ -8,39 +8,14 @@ from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
 from ..extern.bunch import Bunch
-from .manage import get_path
+from .core import gammapy_extra
 
 __all__ = [
-    'load_catalog_atnf',
     'load_catalog_hess_galactic',
     'load_catalog_green',
     'fetch_catalog_snrcat',
     'load_catalog_tevcat',
 ]
-
-
-def load_catalog_atnf():
-    """Load ATNF pulsar catalog.
-
-    The `ATNF pulsar catalog <http://www.atnf.csiro.au/people/pulsar/psrcat/>`__
-    is **the** collection of information on all pulsars.
-
-    Unfortunately it's only available in a database format that can only
-    be read with their software.
-
-    This function loads a FITS copy of version 1.51 of the ATNF catalog:
-    http://www.atnf.csiro.au/research/pulsar/psrcat/catalogueHistory.html
-
-    The ``ATNF_v1.51.fits.gz`` file and ``make_atnf.py`` script are available
-    `here <https://github.com/gammapy/gammapy-extra/blob/master/datasets/catalogs/>`__.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
-    """
-    filename = get_path('catalogs/ATNF_v1.51.fits.gz', location='remote')
-    return Table.read(filename)
 
 
 def load_catalog_hess_galactic():
@@ -61,7 +36,9 @@ def load_catalog_hess_galactic():
     catalog : `~astropy.table.Table`
         Source catalog
     """
-    filename = get_path('catalogs/hess_galactic_catalog.fits.gz', location='remote')
+    # TODO: implement
+    raise NotImplementedError
+    filename = gammapy_extra.filename('datasets/catalogs/hess_galactic_catalog.fits.gz')
     return Table.read(filename)
 
 
@@ -84,7 +61,7 @@ def load_catalog_green():
     catalog : `~astropy.table.Table`
         Source catalog
     """
-    filename = get_path('catalogs/Green_2014-05.fits.gz', location='remote')
+    filename = gammapy_extra.filename('datasets/catalogs/Green_2014-05.fits.gz')
     return Table.read(filename)
 
 
@@ -105,7 +82,7 @@ def load_catalog_tevcat():
     catalog : `~astropy.table.Table`
         Source catalog
     """
-    filename = get_path('catalogs/tevcat.fits.gz', location='remote')
+    filename = gammapy_extra.filename('datasets/catalogs/tevcat.fits.gz')
     return Table.read(filename)
 
 

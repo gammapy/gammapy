@@ -6,27 +6,15 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
+from ...utils.testing import requires_dependency
 from ...datasets import FermiGalacticCenter
 from ...data import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
 
-try:
-    # The scipy.interpolation.RegularGridInterpolator class was added in Scipy version 0.14
-    from scipy.interpolate import RegularGridInterpolator
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-try:
-    from reproject import reproject
-    HAS_REPROJECT = True
-except ImportError:
-    HAS_REPROJECT = False
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy.interpolate.RegularGridInterpolator')
 class TestSpectralCube(object):
     def setup(self):
         self.spectral_cube = FermiGalacticCenter.diffuse_model()
@@ -169,8 +157,8 @@ class TestSpectralCube(object):
 
 
 @pytest.mark.xfail
-@pytest.mark.skipif('not HAS_SCIPY')
-@pytest.mark.skipif('not HAS_REPROJECT')
+@requires_dependency('scipy.interpolate.RegularGridInterpolator')
+@requires_dependency('reproject')
 def test_compute_npred_cube():
     # A quickly implemented check - should be improved
     filenames = FermiGalacticCenter.filenames()
@@ -242,8 +230,8 @@ def make_test_cubes(energies, nxpix, nypix, binsz):
     return exposure_cube, spectral_cube
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
-@pytest.mark.skipif('not HAS_REPROJECT')
+@requires_dependency('scipy.interpolate.RegularGridInterpolator')
+@requires_dependency('reproject')
 def test_analytical_npred_cube():
     # Analytical check: g=2, N=1 gives int. flux 0.25 between 1 and 2
     # (arbitrary units of energy).
@@ -265,8 +253,8 @@ def test_analytical_npred_cube():
     assert_allclose(actual, expected)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
-@pytest.mark.skipif('not HAS_REPROJECT')
+@requires_dependency('scipy.interpolate.RegularGridInterpolator')
+@requires_dependency('reproject')
 def test_convolve_cube():
     filenames = FermiGalacticCenter.filenames()
     spectral_cube = SpectralCube.read(filenames['diffuse_model'])
@@ -288,8 +276,8 @@ def test_convolve_cube():
 
 
 @pytest.mark.xfail
-@pytest.mark.skipif('not HAS_SCIPY')
-@pytest.mark.skipif('not HAS_REPROJECT')
+@requires_dependency('scipy.interpolate.RegularGridInterpolator')
+@requires_dependency('reproject')
 def test_reproject_cube():
     # TODO: a better test can probably be implemented here to avoid
     # repeating code

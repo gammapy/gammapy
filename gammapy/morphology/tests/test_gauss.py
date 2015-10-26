@@ -8,24 +8,13 @@ from astropy.modeling.models import Gaussian2D
 from astropy.convolution import discretize_model
 from astropy.io import fits
 from astropy.wcs import WCS
+from ...utils.testing import requires_dependency
 from ...image.tests.test_measure import set_header, BINSZ
 from ...image import measure_image_moments
 from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-try:
-    import uncertainties
-    HAS_UNCERTAINTIES = True
-except ImportError:
-    HAS_UNCERTAINTIES = False
-
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestGauss2DPDF(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
@@ -69,7 +58,7 @@ class TestGauss2DPDF(unittest.TestCase):
         assert_equal(g.sigma, 5)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestMultiGauss2D(unittest.TestCase):
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
@@ -125,7 +114,7 @@ class TestMultiGauss2D(unittest.TestCase):
 
 
 @pytest.mark.xfail
-@pytest.mark.skipif('not HAS_UNCERTAINTIES')
+@requires_dependency('uncertainties')
 def test_gaussian_sum_moments():
     """Check analytical against numerical solution.
     """

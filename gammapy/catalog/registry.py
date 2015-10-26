@@ -15,9 +15,17 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
 from ..spectrum import EnergyBounds
+from ..datasets import gammapy_extra
+from ..datasets import fetch_fermi_catalog
 
 __all__ = [
     'get_source_catalog',
+    # TODO: I'm not sure if it's useful to make those part of the API docs:
+    'SourceCatalog',
+    'SourceCatalog2FHL',
+    'SourceCatalog3FGL',
+    'SourceCatalogATNF',
+    'SourceCatalogObject2FHL',
     'SourceCatalogObject3FGL',
 ]
 
@@ -224,7 +232,6 @@ class SourceCatalog3FGL(SourceCatalog):
     def __init__(self, filename=None):
         # if not filename:
         #     filename =
-        from ..datasets import fetch_fermi_catalog
         self.hdu_list = fetch_fermi_catalog(catalog='3FGL')
         self.table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
 
@@ -238,3 +245,26 @@ class SourceCatalog2FHL(SourceCatalog):
     def __init__(self):
         self.hdu_list = fetch_fermi_catalog(catalog='2FGL')
         self.table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+
+
+class SourceCatalogATNF(SourceCatalog):
+    """ATNF pulsar catalog.
+
+    The `ATNF pulsar catalog <http://www.atnf.csiro.au/people/pulsar/psrcat/>`__
+    is **the** collection of information on all pulsars.
+
+    Unfortunately it's only available in a database format that can only
+    be read with their software.
+
+    This function loads a FITS copy of version 1.51 of the ATNF catalog:
+    http://www.atnf.csiro.au/research/pulsar/psrcat/catalogueHistory.html
+
+    The ``ATNF_v1.51.fits.gz`` file and ``make_atnf.py`` script are available
+    `here <https://github.com/gammapy/gammapy-extra/blob/master/datasets/catalogs/>`__.
+    """
+    name = 'ATNF'
+
+    def __init__(self, filename=None):
+        if not filename:
+            filename = gammapy_extra.filename('datasets/catalogs/ATNF_v1.51.fits.gz')
+            self.table = Table.read(filename)

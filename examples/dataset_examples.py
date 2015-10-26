@@ -1,6 +1,5 @@
 """Examples of downloading / accessing datasets in Gammapy.
 """
-from pprint import pprint
 import logging
 from gammapy.datasets import Datasets
 
@@ -26,9 +25,7 @@ def test_access():
     # Datasets().load('catalog-atnf')
 
 
-
 if __name__ == '__main__':
     # test_info()
     # test_fetch()
-    test_access()
-
+    # test_access()

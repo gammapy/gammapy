@@ -6,10 +6,9 @@ import matplotlib.pyplot as plt
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from gammapy.background import Cube
-from gammapy import datasets
+from gammapy.datasets import gammapy_extra
 
-filename = datasets.get_path('../test_datasets/background/bg_cube_model_test.fits',
-                             location='remote')
+filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test1.fits')
 bg_cube_model = Cube.read(filename, format='table', scheme='bg_cube')
 
 bg_cube_model.plot_image(energy=Quantity(2., 'TeV'))

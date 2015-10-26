@@ -5,23 +5,18 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.table import Table
+from ...utils.testing import requires_dependency
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
                           _energy_lafferty_power_law)
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 x_methods = ['table', 'lafferty', 'log_center']
 y_methods = ['power_law', 'model']
 indices = [0, 1, 2, 3]
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_x_lafferty():
     """Tests Lafferty & Wyatt x-point method.
 
@@ -59,7 +54,7 @@ def test_integration():
     assert_allclose(actual, desired, rtol=1e-2)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_ydiff_excess_equals_expected():
     """Tests y-value normalization adjustment method.
     """
@@ -83,7 +78,7 @@ def test_ydiff_excess_equals_expected():
     assert_allclose(actual, desired, rtol=1e-6)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 @pytest.mark.parametrize('index, x_method, y_method',
                          itertools.product(indices, ['lafferty', 'log_center'],
                                            y_methods))
@@ -122,7 +117,7 @@ def test_array_broadcasting(index, x_method, y_method):
     assert_allclose(actual, desired)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 @pytest.mark.parametrize('x_method,y_method', itertools.product(x_methods,
                                                                 y_methods))
 def test_compute_differential_flux_points(x_method, y_method):

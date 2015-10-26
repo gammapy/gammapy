@@ -52,8 +52,9 @@ class EnergyDependentMultiGaussPSF(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.datasets import load_psf_fits_table
-        psf = EnergyDependentMultiGaussPSF.from_fits(load_psf_fits_table())
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
+        psf = EnergyDependentMultiGaussPSF.read(filename)
         psf.plot_containment(0.68, show_safe_energy=False)
         plt.show()
     """
@@ -126,33 +127,15 @@ class EnergyDependentMultiGaussPSF(object):
             log.warn('No safe energy thresholds found. Setting to default')
             return cls(energy_lo, energy_hi, theta, sigmas, norms)
 
-    def to_fits(self, header=None, **kwargs):
+    def to_fits(self):
         """
         Convert psf table data to FITS hdu list.
-
-        Any FITS header keyword can be passed to the function and will be
-        changed in the header.
-
-        Parameters
-        ----------
-        header : `~astropy.io.fits.Header`
-            Header to be written in the fits file.
 
         Returns
         -------
         hdu_list : `~astropy.io.fits.HDUList`
             PSF in HDU list format.
         """
-        # Set up header
-        if header is None:
-            from ..datasets import load_psf_fits_table
-            header = load_psf_fits_table()[1].header
-        header['LO_THRES'] = self.energy_thresh_lo.value
-        header['HI_THRES'] = self.energy_thresh_hi.value
-
-        for key, value in kwargs.items():
-            header[key] = value
-
         # Set up data
         names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
                  'SCALE', 'SIGMA_1', 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
@@ -170,10 +153,11 @@ class EnergyDependentMultiGaussPSF(object):
         # TODO: add units!?
 
         # Create hdu and hdu list
-        prim_hdu = fits.PrimaryHDU()
         hdu = table_to_fits_table(table)
-        hdu.header = header
-        return fits.HDUList([prim_hdu, hdu])
+        hdu.header['LO_THRES'] = self.energy_thresh_lo.value
+        hdu.header['HI_THRES'] = self.energy_thresh_hi.value
+
+        return fits.HDUList([fits.PrimaryHDU(), hdu])
 
     def write(self, filename, *args, **kwargs):
         """Write PSF to FITS file.
