@@ -99,6 +99,18 @@ class OneFileDataset(object):
 class Datasets(object):
     """Download and access for all built-in datasets.
 
+    TODO: this isn't used much at the moment and not documented.
+    I added this before I decided to add `gammapy_extra`,
+    and then this class wasn't needed to access datasets for tests.
+
+    We still need something like this to manage files that aren't
+    in gammapy-extra, e.g. large files from the web that we don't
+    want to stick in gammapy-extra.
+
+    This class has overlap with the `gammapy.obs.DataManager` class ...
+    maybe it should be merged or maybe it's better to keep that one
+    focused on HESS (and Fermi?) data management?
+
     Parameters
     ----------
     config : `~collections.OrderedDict`
