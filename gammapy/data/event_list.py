@@ -283,6 +283,29 @@ class EventList(Table):
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
 
+    def select_reflected_regions(self, exclusion, angle_increment=0.1):
+        """Select events from reflected regions.
+
+        More info on the reflected regions background estimation methond
+        can be found in [Berge2007]_
+
+        Parameters
+        ----------
+        exclusion : ImageHDU
+            Excluded regions mask
+        angle_increment : float (optional)
+            Angle between two reflected regions
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+        
+        point = self.pointing_radec
+        fov = dict(x=point.ra.value, y=point.dec.value)
+        rr_maker = ReflectedRegionMaker(exclusion, fov, angle_increment)
+        
     def fill_counts_image(self, image):
         """Fill events in counts image.
 

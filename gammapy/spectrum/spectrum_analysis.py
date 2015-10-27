@@ -184,7 +184,13 @@ class SpectrumObservation(object):
     def make_off_vector(self):
         """Make OFF `~gammapy.data.CountsSpectrum`
         """
-        off_list = self.event_list.select_sky_ring(self.target, self.irad, self.orad)
+        if self.off_type == "ring":
+            off_list = self.event_list.select_sky_ring(
+                self.target, self.irad, self.orad)
+        else if self off_type == "reflected":
+            off_list = self.event_list.select_reflected_regions(
+                self.exclusion)
+            
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         off_vec.backscal = self.alpha
         self.bkg = off_vec
@@ -241,6 +247,10 @@ def _process_config(object):
     object.pointing = object.event_list.pointing_radec
     object.offset = object.target.separation(object.pointing)
 
+    # Excluded regions
+    exlusion_file = object.config['exclusion_regions']['file']
+    object.exclusion = fits.open(exclusion)[0]
+
     # Binning
     sec = object.config['binning']
     if sec['equal_log_spacing']:
@@ -257,12 +267,17 @@ def _process_config(object):
     # ON/OFF Region
     val = object.config['on_region']['radius']
     object.radius = Angle(val)
-    ival = object.config['off_region']['inner_radius']
-    oval = object.config['off_region']['outer_radius']
-    object.irad = Angle(ival)
-    object.orad = Angle(oval)
-    object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
 
+    object.off_type = object.config['off_region']['type']
+    if object.off_type == 'ring':
+        ival = object.config['off_region']['inner_radius']
+        oval = object.config['off_region']['outer_radius']
+        object.irad = Angle(ival)
+        object.orad = Angle(oval)
+        object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
+    else if object.off_type == 'reflected':
+        pass
+    
     # Spectral fit
     object.model = object.config['model']['type']
     val = object.config['model']['threshold_low']

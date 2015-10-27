@@ -16,8 +16,16 @@ class ReflectedRegionMaker(object):
     """Finds reflected regions.
 
     TODO: At the moment only works for circular regions!
-
     TODO: should work with world or pixel coordinates internally!???
+
+    Parameters
+    ----------
+    exclusion : ImageHDU
+        Excluded regions mask
+    fov : dict
+        FOV definition, required keys: x, y, r (center x, center y, radius)
+    angle_increment : float (optional)
+        Angle between two reflected regions
     """
 
     def __init__(self, exclusion, fov, min_on_distance=0.1, angle_increment=0.1):
