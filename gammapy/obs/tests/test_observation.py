@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import pytest
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
-from ...utils.testing import requires_data
+from ...utils.testing import requires_dependency, requires_data
 from ...datasets import make_test_observation_table, gammapy_extra
 from ...catalog import skycoord_from_table
 from ...obs import (
@@ -186,6 +185,7 @@ def test_select_sky_regions():
     common_sky_region_select_test_routines(obs_table, selection)
 
 
+@requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_ObservationGroups(tmpdir):
     """Test create obs groups"""

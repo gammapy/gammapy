@@ -100,6 +100,7 @@ class TestCubeBackgroundModel:
     # fill_events is tested (high-level) by
     # gammapy/scripts/tests/test_make_bg_cube_models.py
 
+    @requires_dependency('scipy')
     def test_smooth(self):
 
         filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test2.fits.gz')
