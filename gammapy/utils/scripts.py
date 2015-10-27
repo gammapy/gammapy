@@ -77,7 +77,8 @@ def get_all_main_functions():
     out = OrderedDict()
     for name in names:
         module = importlib.import_module('gammapy.scripts.{}'.format(name))
-        out[name] = module.main
+        if hasattr(module, 'main'):
+            out[name] = module.main
 
     return out
 

@@ -2,9 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose, assert_almost_equal
-from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.modeling.models import Gaussian2D
+from ...utils.testing import requires_dependency
 from ...image import (measure_labeled_regions,
                       make_empty_image, lookup,
                       measure_containment_radius,
@@ -14,12 +14,6 @@ from ...image import (measure_labeled_regions,
                       coordinates)
 
 BINSZ = 0.02
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 
 def generate_example_image():
@@ -64,7 +58,7 @@ def generate_gaussian_image():
     return image
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_measure():
     image = generate_example_image()
     labels = np.zeros_like(image, dtype=int)
@@ -87,7 +81,7 @@ def test_measure_containment():
     assert_allclose(frac, 0.8, rtol=0.01)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_measure_containment_radius():
     """Test measure_containment_radius function"""
     image = generate_gaussian_image()

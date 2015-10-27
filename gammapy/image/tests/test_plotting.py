@@ -1,19 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency
 from ...image import (
     colormap_hess,
     colormap_milagro,
     GalacticPlaneSurveyPanelPlot,
 )
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-    HAS_MATPLOTLIB = True
-except ImportError:
-    HAS_MATPLOTLIB = False
 
 
 def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
@@ -27,7 +20,7 @@ def _check_cmap_rgb_vals(vals, cmap, vmin=0, vmax=1):
         assert_allclose(rgb_actual, rgb_expected, atol=1e-5)
 
 
-@pytest.mark.skipif('not HAS_MATPLOTLIB')
+@requires_dependency('matplotlib')
 def test_colormap_hess():
     transition = 0.5
     cmap = colormap_hess(transition=transition)
@@ -40,7 +33,7 @@ def test_colormap_hess():
     _check_cmap_rgb_vals(vals, cmap)
 
 
-@pytest.mark.skipif('not HAS_MATPLOTLIB')
+@requires_dependency('matplotlib')
 def test_colormap_milagro():
     transition = 0.5
     cmap = colormap_milagro(transition=transition)
@@ -53,7 +46,7 @@ def test_colormap_milagro():
     _check_cmap_rgb_vals(vals, cmap)
 
 
-@pytest.mark.skipif('not HAS_MATPLOTLIB')
+@requires_dependency('matplotlib')
 def test_GalacticPlaneSurveyPanelPlot():
     plot = GalacticPlaneSurveyPanelPlot(npanels=3)
     assert_allclose(plot.panel_parameters['npanels'], 3)

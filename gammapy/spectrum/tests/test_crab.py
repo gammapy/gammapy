@@ -2,18 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
 from astropy.units import Unit
+from ...utils.testing import requires_dependency
 from ...spectrum import crab
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_evaluate():
     e, e1, e2 = 2, 1, 1e3
 
@@ -32,6 +26,7 @@ def test_evaluate():
         assert_allclose([f, I, g], vals[reference])
 
 
+# TODO: move this to the docs (this is not a test)
 def plot_spectra(what="flux"):
     import matplotlib.pyplot as plt
     plt.clf()

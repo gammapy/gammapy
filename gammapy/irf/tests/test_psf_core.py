@@ -3,18 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose
-from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
+from ...utils.testing import requires_dependency
 from ...irf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestHESS(unittest.TestCase):
     def test_dpdtheta2(self):
         """Check that the amplitudes and sigmas were converted correctly in

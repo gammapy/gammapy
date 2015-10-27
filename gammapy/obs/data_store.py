@@ -4,6 +4,8 @@ import sys
 import logging
 import numpy as np
 from astropy.table import Table
+from astropy.units import Quantity
+from astropy.io import fits
 from ..extern.pathlib import Path
 from ..obs import ObservationTable
 
@@ -251,7 +253,7 @@ def _find_file(filename, dir):
 
     - First tries Path(filename)
     - Second tris Path(dir) / filename
-    - Raises FileNotFoundError if both don't exist.
+    - Raises OSError if both don't exist.
     """
     path1 = Path(filename)
     path2 = Path(dir) / filename
@@ -260,7 +262,7 @@ def _find_file(filename, dir):
     elif path2.is_file():
         filename = path2
     else:
-        raise FileNotFoundError('File not found at {} or {}'.format(path1, path2))
+        raise OSError('File not found at {} or {}'.format(path1, path2))
     return filename
 
 

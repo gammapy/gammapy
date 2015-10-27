@@ -2,15 +2,7 @@
 
 
 def get_package_data():
-    files = ['README.rst',
-             'data/README.rst',
-             'data/fermi/*',
-             'data/fermi_vela/*',
-             'data/hess/*',
-             'data/poisson_stats_image/*',
-             'data/tev_spectra/*',
-             'data/tev_catalogs/*',
-             'data/irfs/*',
-             'data/atnf/*'
-             ]
+    files = [
+        'datasets.yaml',
+    ]
     return {'gammapy.datasets': files}

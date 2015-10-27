@@ -2,21 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from astropy.utils.data import get_pkg_data_filename
-from ...irf import TablePSF, EnergyDependentTablePSF
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import gammapy_extra
 from ...datasets import FermiGalacticCenter
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+from ...irf import TablePSF, EnergyDependentTablePSF
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_TablePSF_gauss():
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
@@ -28,7 +23,7 @@ def test_TablePSF_gauss():
     assert_allclose(psf.integral(), 1, rtol=1e-3)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_TablePSF_disk():
     width = Angle(2, 'deg')
     offset = Angle(np.linspace(0, 2.3, 1000), 'deg')
@@ -55,7 +50,7 @@ def test_TablePSF_disk():
     # assert_quantity_allclose(actual, desired, rtol=1e-3)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_TablePSF():
     # Make an example PSF for testing
     width = Angle(0.3, 'deg')
@@ -80,7 +75,8 @@ def test_TablePSF():
     assert_allclose(actual, desired)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_EnergyDependentTablePSF():
     # TODO: test __init__
 
@@ -121,8 +117,11 @@ def test_EnergyDependentTablePSF():
     assert_allclose(actual, desired)
 
 
-def interactive_test():
-    filename = get_pkg_data_filename('../../datasets/fermi/psf.fits')
+# TODO: fix this test (move the code from examples/plot_irfs.py here)
+@pytest.mark.xfail
+@requires_data('gammapy-extra')
+def test_plot():
+    filename = gammapy_extra.filename('test_datasets/unbundled/fermi/psf.fits')
     psf = EnergyDependentTablePSF.read(filename)
     # psf.plot_containment('fermi_psf_containment.pdf')
     # psf.plot_exposure('fermi_psf_exposure.pdf')

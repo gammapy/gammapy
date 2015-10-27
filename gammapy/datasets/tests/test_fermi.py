@@ -1,30 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from astropy.tests.helper import remote_data
-from ...datasets import (FermiGalacticCenter,
-                         FermiVelaRegion,
-                         fetch_fermi_catalog,
-                         fetch_fermi_extended_sources,
-                         fetch_fermi_diffuse_background_model,
-                         load_lat_psf_performance,
-                         )
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import (
+    FermiGalacticCenter,
+    FermiVelaRegion,
+    fetch_fermi_catalog,
+    fetch_fermi_extended_sources,
+    load_lat_psf_performance,
+)
 
 
-class TestFermiGalacticCenter():
+@requires_data('gammapy-extra')
+class TestFermiGalacticCenter:
     def test_filenames(self):
         filenames = FermiGalacticCenter.filenames()
         assert isinstance(filenames, dict)
 
-    @pytest.mark.skipif('not HAS_SCIPY')
+    @requires_dependency('scipy')
     def test_psf(self):
         psf = FermiGalacticCenter.psf()
         energy = Quantity(100, 'GeV')
@@ -48,20 +43,18 @@ class TestFermiGalacticCenter():
         assert_quantity_allclose(exposure_cube.energy[0], Quantity(50, 'MeV'))
 
 
-class TestFermiVelaRegion():
-    @remote_data
+@requires_data('gammapy-extra')
+class TestFermiVelaRegion:
     def test_filenames(self):
         filenames = FermiVelaRegion.filenames()
         assert isinstance(filenames, dict)
 
-    @remote_data
     def test_counts_cube(self):
         counts = FermiVelaRegion.counts_cube()[0]
         assert counts.data.shape == (20, 50, 50)
         assert counts.data.sum() == 1551
 
-    @remote_data
-    @pytest.mark.skipif('not HAS_SCIPY')
+    @requires_dependency('scipy')
     def test_psf(self):
         psf = FermiVelaRegion.psf()
         energy = Quantity(100, 'GeV')
@@ -69,36 +62,30 @@ class TestFermiVelaRegion():
         angle = psf.containment_radius(energy, fraction)
         assert_quantity_allclose(angle, Angle(0.13185321269896136, 'deg'))
 
-    @remote_data
     def test_diffuse_model(self):
         diffuse_model = FermiVelaRegion.diffuse_model()
         assert diffuse_model.data.shape == (30, 161, 161)
 
-    @remote_data
     def test_background_image(self):
         background = FermiVelaRegion.background_image()
         assert background.data.shape == (50, 50)
         assert background.data.sum(), 264.54391
 
-    @remote_data
     def test_predicted_image(self):
         background = FermiVelaRegion.predicted_image()
         assert background.data.shape == (50, 50)
         assert background.data.sum(), 322.12299
 
-    @remote_data
     def test_events(self):
         events_list = FermiVelaRegion.events()
         assert events_list['EVENTS'].data.shape == (2042,)
 
-    @remote_data
     def test_exposure_cube(self):
         exposure_cube = FermiVelaRegion.exposure_cube()
         assert exposure_cube.data.shape == (21, 50, 50)
         assert exposure_cube.data.value.sum(), 4.978616e+15
         assert_quantity_allclose(exposure_cube.energy[0], Quantity(10000, 'MeV'))
 
-    @remote_data
     def test_livetime(self):
         livetime_list = FermiVelaRegion.livetime_cube()
         assert livetime_list[1].data.shape == (12288,)
@@ -107,7 +94,7 @@ class TestFermiVelaRegion():
         assert livetime_list[4].data.shape == (17276,)
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_fetch_fermi_catalog():
     n_hdu = len(fetch_fermi_catalog('3FGL'))
     assert n_hdu == 6
@@ -122,13 +109,14 @@ def test_fetch_fermi_catalog():
     assert n_sources == 1873
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_fetch_fermi_extended_sources():
     assert len(fetch_fermi_extended_sources('3FGL')) == 26
     assert len(fetch_fermi_extended_sources('2FGL')) == 12
     assert len(fetch_fermi_extended_sources('1FHL')) == 23
 
 
+@requires_data('gammapy-extra')
 def test_load_lat_psf_performance():
     """Tests loading of each file by asserting first value is correct."""
 

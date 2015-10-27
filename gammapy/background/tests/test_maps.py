@@ -7,17 +7,12 @@ from astropy.tests.helper import pytest
 import unittest
 import numpy as np
 from astropy.io import fits
+from ...utils.testing import requires_dependency
 from ..maps import Maps
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 
 @pytest.mark.xfail
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestMaps(unittest.TestCase):
     # TODO: use `tmpdir` fixture
     dir = '/tmp/'

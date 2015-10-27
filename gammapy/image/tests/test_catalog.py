@@ -2,20 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.tests.helper import remote_data
-from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from astropy.wcs import WCS
+from ...utils.testing import requires_dependency, requires_data
 from .. import catalog
 from ...image import make_empty_image
 from ...irf import EnergyDependentTablePSF
 from ...data import SpectralCube
 from ...datasets import FermiGalacticCenter
-
-try:
-    from scipy.ndimage import convolve
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 
 def test_extended_image():
@@ -23,7 +17,7 @@ def test_extended_image():
     pass
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_source_image():
     reference_hdu = make_empty_image(10, 10, 1)
     reference_wcs = WCS(reference_hdu.header)
@@ -44,8 +38,8 @@ def test_source_image():
     assert_allclose(actual, expected)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
-@remote_data
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_catalog_image():
     reference_hdu = make_empty_image(10, 10, 1)
     reference_wcs = WCS(reference_hdu.header)
@@ -65,7 +59,7 @@ def test_catalog_image():
     assert_allclose(actual, expected, rtol=0.01)
 
 
-@remote_data
+@requires_data('gammapy-extra')
 def test_catalog_table():
     # Checks catalogs are loaded correctly
 

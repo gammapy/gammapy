@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import sherpa.astro.ui as sau
 
+
 def model_io():
     while 1:
         model = raw_input(" - Please choose a model or a combination of them (Enter ? to see options) ")
@@ -74,13 +75,13 @@ def assign_model(model_name, i):
         sau.freeze(p1.Eo)
     elif model_name == 'Finke':  # EBL model from Finke et al. 2010
         # enable_table_model()
-        from ..datasets import get_path
-        filename = get_path('ebl/frd_abs.fits.gz', location='remote')
+        from ..datasets import gammapy_extra
+        filename = gammapy_extra.filename('datasets/ebl/frd_abs.fits.gz')
         sau.load_table_model('p1', filename)
     elif model_name == 'Franceschini':  # EBL model from Franceschini et al. 2012
         # enable_table_model()
-        from ..datasets import get_path
-        filename = get_path('ebl/ebl_franceschini.fits.gz', location='remote')
+        from ..datasets import gammapy_extra
+        filename = gammapy_extra.filename('datasets/ebl/ebl_franceschini.fits.gz')
         sau.load_table_model('p1', filename)
     elif model_name == 'synchro':
         # print('Synchrotron model not available yet, sorry.')
@@ -144,7 +145,6 @@ def set_manual_model(model, par_array=None):
                     break
         else:  # all parameters at once
             para.val = par_array[i]
-
 
 # TODO: import * is evil in general.
 # Specifically in Python 3 it is only possible at the top level.

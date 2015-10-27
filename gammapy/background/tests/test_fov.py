@@ -1,23 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.modeling import models
+from ...utils.testing import requires_dependency
 from ...background import fill_acceptance_image
 from ...image import make_empty_image
 from ...image.utils import coordinates
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_fill_acceptance_image():
     # create empty image
     # odd number of pixels needed for having the center in its own pixel

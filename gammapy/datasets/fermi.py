@@ -6,18 +6,16 @@ import tarfile
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
-from ..irf import EnergyDependentTablePSF
-from ..data import SpectralCube
-from ..datasets import get_path
+from .core import gammapy_extra
 
-__all__ = ['FermiGalacticCenter',
-           'FermiVelaRegion',
-           'fetch_fermi_catalog',
-           'fetch_fermi_extended_sources',
-           'fetch_fermi_diffuse_background_model',
-           'load_lat_psf_performance',
-           ]
-
+__all__ = [
+    'FermiGalacticCenter',
+    'FermiVelaRegion',
+    'fetch_fermi_catalog',
+    'fetch_fermi_extended_sources',
+    'fetch_fermi_diffuse_background_model',
+    'load_lat_psf_performance',
+]
 
 FERMI_CATALOGS = '3FGL 2FGL 1FGL 1FHL 2PC'.split()
 
@@ -70,6 +68,11 @@ def fetch_fermi_catalog(catalog, extension=None):
         * ``ExtendedSources`` Extended Source Catalog Table.
     * 1FGL Catalog : LAT 1-year Point Source Catalog
         * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
+    * 2FHL Catalog : Second Fermi-LAT Catalog of High-Energy Sources
+        * ``Count Map`` AIT projection 2D count image
+        * ``2FHL Source Catalog`` Main catalog
+        * ``Extended Sources`` Extended Source Catalog Table
+        * ``ROIs`` Regions of interest
     * 1FHL Catalog : First Fermi-LAT Catalog of Sources above 10 GeV
         * ``LAT_Point_Source_Catalog`` Point Source Catalog Table.
         * ``ExtendedSources`` Extended Source Catalog Table.
@@ -80,7 +83,7 @@ def fetch_fermi_catalog(catalog, extension=None):
 
     Parameters
     ----------
-    catalog : {'3FGL', '2FGL', '1FGL', '1FHL', '2PC'}
+    catalog : {'3FGL', '2FGL', '1FGL', '1FHL', '2FHL', '2PC'}
        Specifies which catalog to display.
     extension : str
         Specifies which catalog HDU to provide as a table (optional).
@@ -96,7 +99,7 @@ def fetch_fermi_catalog(catalog, extension=None):
     Examples
     --------
     >>> from gammapy.datasets import fetch_fermi_catalog
-    >>> fetch_fermi_catalog('2FGL')  # doctest: +REMOTE_DATA
+    >>> fetch_fermi_catalog('2FGL')
         [<astropy.io.fits.hdu.image.PrimaryHDU at 0x3330790>,
          <astropy.io.fits.hdu.table.BinTableHDU at 0x338b990>,
          <astropy.io.fits.hdu.table.BinTableHDU at 0x3396450>,
@@ -104,7 +107,7 @@ def fetch_fermi_catalog(catalog, extension=None):
          <astropy.io.fits.hdu.table.BinTableHDU at 0x339ff10>]
 
     >>> from gammapy.datasets import fetch_fermi_catalog
-    >>> fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')  # doctest: +REMOTE_DATA
+    >>> fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog')
         <Table rows=1873 names= ... >
     """
     BASE_URL = 'http://fermi.gsfc.nasa.gov/ssc/data/access/lat/'
@@ -114,9 +117,11 @@ def fetch_fermi_catalog(catalog, extension=None):
     elif catalog == '2FGL':
         url = BASE_URL + '2yr_catalog/gll_psc_v08.fit'
     elif catalog == '1FGL':
-        url = BASE_URL + '/1yr_catalog/gll_psc_v03.fit'
+        url = BASE_URL + '1yr_catalog/gll_psc_v03.fit'
     elif catalog == '1FHL':
-        url = BASE_URL + '/1FHL/gll_psch_v07.fit'
+        url = BASE_URL + '1FHL/gll_psch_v07.fit'
+    elif catalog == '2FHL':
+        url = 'https://github.com/gammapy/gammapy-extra/raw/master/datasets/catalogs/fermi/gll_psch_v08.fit.gz'
     elif catalog == '2PC':
         url = BASE_URL + '2nd_PSR_catalog/2PC_catalog_v03.fits'
     else:
@@ -130,6 +135,11 @@ def fetch_fermi_catalog(catalog, extension=None):
     if extension is None:
         return hdu_list
 
+    # TODO: 2FHL doesn't have a 'CLASS1' column, just 'CLASS'
+    # It's probably better if we make a `SourceCatalog` class
+    # and then sub-class `FermiSourceCatalog` and `Fermi2FHLSourceCatalog`
+    # and handle catalog-specific stuff in these classes,
+    # trying to provide an as-uniform as possible API to the common catalogs.
     table = Table(hdu_list[extension].data)
     table['IS_GALACTIC'] = [_is_galactic(_) for _ in table['CLASS1']]
 
@@ -225,11 +235,12 @@ class FermiGalacticCenter(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
+        base_dir = gammapy_extra.dir / 'test_datasets/unbundled/fermi'
         result = dict()
-        result['psf'] = get_path('fermi/psf.fits')
-        result['counts'] = get_path('fermi/fermi_counts.fits.gz')
-        result['diffuse_model'] = get_path('fermi/gll_iem_v02_cutout.fits')
-        result['exposure_cube'] = get_path('fermi/fermi_exposure.fits.gz')
+        result['psf'] = str(base_dir / 'psf.fits')
+        result['counts'] = str(base_dir / 'fermi_counts.fits.gz')
+        result['diffuse_model'] = str(base_dir / 'gll_iem_v02_cutout.fits')
+        result['exposure_cube'] = str(base_dir / 'fermi_exposure.fits.gz')
 
         return result
 
@@ -242,18 +253,21 @@ class FermiGalacticCenter(object):
     @staticmethod
     def psf():
         """PSF as `~gammapy.irf.EnergyDependentTablePSF`"""
+        from ..irf import EnergyDependentTablePSF
         filename = FermiGalacticCenter.filenames()['psf']
         return EnergyDependentTablePSF.read(filename)
 
     @staticmethod
     def diffuse_model():
         """Diffuse model (`~gammapy.data.SpectralCube`)"""
+        from ..data import SpectralCube
         filename = FermiGalacticCenter.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
     @staticmethod
     def exposure_cube():
         """Exposure cube (`~gammapy.data.SpectralCube`)"""
+        from ..data import SpectralCube
         filename = FermiGalacticCenter.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
@@ -269,18 +283,18 @@ class FermiVelaRegion(object):
     @staticmethod
     def filenames():
         """Dictionary of available file names."""
-        def get(filename):
-            return get_path('vela_region/' + filename, location='remote')
+
+        base_dir = gammapy_extra.dir / 'datasets/vela_region'
 
         result = dict()
-        result['counts_cube'] = get('counts_vela.fits')
-        result['exposure_cube'] = get('exposure_vela.fits')
-        result['background_image'] = get('background_vela.fits')
-        result['total_image'] = get('total_vela.fits')
-        result['diffuse_model'] = get('gll_iem_v05_rev1_cutout.fits')
-        result['events'] = get('events_vela.fits')
-        result['psf'] = get('psf_vela.fits')
-        result['livetime_cube'] = get('livetime_vela.fits')
+        result['counts_cube'] = str(base_dir / 'counts_vela.fits')
+        result['exposure_cube'] = str(base_dir / 'exposure_vela.fits')
+        result['background_image'] = str(base_dir / 'background_vela.fits')
+        result['total_image'] = str(base_dir / 'total_vela.fits')
+        result['diffuse_model'] = str(base_dir / 'gll_iem_v05_rev1_cutout.fits')
+        result['events'] = str(base_dir / 'events_vela.fits')
+        result['psf'] = str(base_dir / 'psf_vela.fits')
+        result['livetime_cube'] = str(base_dir / 'livetime_vela.fits')
         return result
 
     @staticmethod
@@ -299,12 +313,14 @@ class FermiVelaRegion(object):
     @staticmethod
     def psf():
         """Point spread function (`~gammapy.irf.EnergyDependentTablePSF`)"""
+        from ..irf import EnergyDependentTablePSF
         filename = FermiVelaRegion.filenames()['psf']
         return EnergyDependentTablePSF.read(filename)
 
     @staticmethod
     def diffuse_model():
         """Diffuse model (`~gammapy.data.SpectralCube`)"""
+        from ..data import SpectralCube
         filename = FermiVelaRegion.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
@@ -342,6 +358,7 @@ class FermiVelaRegion(object):
     @staticmethod
     def exposure_cube():
         """Exposure cube (`~gammapy.data.SpectralCube`)."""
+        from ..data import SpectralCube
         filename = FermiVelaRegion.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
@@ -378,9 +395,10 @@ def load_lat_psf_performance(performance_file):
         Table of psf size (deg) for selected containment radius and IRF at
         energies (MeV).
     """
-    perf_files = dict()
-    filename = get_path('fermi/fermi_irf_data.fits')
+    filename = gammapy_extra.filename('test_datasets/unbundled/fermi//fermi_irf_data.fits')
     hdus = fits.open(filename)
+
+    perf_files = dict()
     perf_files['P7REP_SOURCE_V15_68'] = hdus[1]
     perf_files['P7REP_SOURCE_V15_95'] = hdus[4]
     perf_files['P7SOURCEV6_68'] = hdus[3]

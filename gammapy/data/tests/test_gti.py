@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...datasets import get_path
+from ...utils.testing import requires_data
+from ...datasets import gammapy_extra
 from ...data import GoodTimeIntervals
 
 
+@requires_data('gammapy-extra')
 def test_GoodTimeIntervals():
-    filename = get_path('hess/run_0023037_hard_eventlist.fits.gz')
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     gtis = GoodTimeIntervals.read(filename, hdu='GTI')
 
     assert len(gtis) == 1

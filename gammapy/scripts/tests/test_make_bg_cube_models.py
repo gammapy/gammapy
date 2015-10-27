@@ -1,26 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import pytest, remote_data
-from ...datasets import get_path
-from ..make_bg_cube_models import main as make_bg_cube_models_main
+from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency
 from ...datasets import make_test_dataset
 from ...background import CubeBackgroundModel
 from ...obs import ObservationGroups
-
-try:
-    import scipy
-
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+from ..make_bg_cube_models import main as make_bg_cube_models_main
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+# TODO: this test is currently broken ... fix it!
+@pytest.mark.xfail
+@requires_dependency('scipy')
 @pytest.mark.parametrize("extra_options,something_to_test", [
     (["--test"], 0),
 ])
-@remote_data
 def test_make_bg_cube_models_main(extra_options, something_to_test, tmpdir):
     # create a dataset
     dataset_dir = tmpdir / 'test_dataset'

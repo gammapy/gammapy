@@ -92,8 +92,9 @@ class EffectiveAreaTable(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EffectiveAreaTable
-        from gammapy.datasets import load_arf_fits_table
-        arf = EffectiveAreaTable.from_fits(load_arf_fits_table())
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/arf.fits')
+        arf = EffectiveAreaTable.read(filename)
         arf.plot_area_vs_energy(show_safe_energy=False)
         plt.show()
     """
@@ -338,13 +339,14 @@ class EffectiveAreaTable2D(object):
         from astropy.coordinates import Angle
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.datasets import load_aeff2D_fits_table
-        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/aeff2D.fits')
+        aeff2D = EffectiveAreaTable2D.read(filename)
         offset = Angle(0.6, 'deg')
         energy = Quantity(np.logspace(0, 1, 60), 'TeV')
         eff_area = aeff2D.evaluate(offset, energy)
 
-    Create ARF fits file for a given offest and energy binning:
+    Create ARF fits file for a given offset and energy binning:
 
     .. code-block:: python
 
@@ -353,8 +355,9 @@ class EffectiveAreaTable2D(object):
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
         from gammapy.spectrum import EnergyBounds
-        from gammapy.datasets import load_aeff2D_fits_table
-        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/aeff2D.fits')
+        aeff2D = EffectiveAreaTable2D.read(filename)
         offset = Angle(0.43, 'deg')
         nbins = 50
         energy = EnergyBounds.equal_log_spacing(1, 10, nbins, 'TeV')
@@ -370,8 +373,9 @@ class EffectiveAreaTable2D(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.datasets import load_aeff2D_fits_table
-        aeff2D = EffectiveAreaTable2D.from_fits(load_aeff2D_fits_table())
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/aeff2D.fits')
+        aeff2D = EffectiveAreaTable2D.read(filename)
         aeff2D.plot_energy_dependence()
         plt.loglog()
         plt.xlim(0.8, 100)

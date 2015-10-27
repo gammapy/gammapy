@@ -29,6 +29,7 @@ env:
 #        TODO: test against stable Sherpa once 4.8 is released
 #        - SHERPA_VERSION=stable
         - OPTIONAL_DEPS=true
+        - FETCH_GAMMAPY_EXTRA=true
         - MAIN_CMD='python setup.py'
 
     matrix:
@@ -60,6 +61,10 @@ matrix:
           env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
         - os: linux
           env: PYTHON_VERSION=3.4 SETUP_CMD='build_sphinx -w'
+
+        # Run tests without GAMMAPY_EXTRA available
+        - os: linux
+          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.4 SETUP_CMD='test -V'
 
         # Test with Astropy dev version
         - os: linux
@@ -101,6 +106,7 @@ install:
     - source .continuous-integration/travis/setup_environment_$TRAVIS_OS_NAME.sh
 
 script:
+    - export GAMMAPY_EXTRA=${HOME}/gammapy-extra
     - $MAIN_CMD $SETUP_CMD
 
 after_success:

@@ -3,20 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 import numpy as np
 from astropy.units import Quantity
-from astropy.tests.helper import pytest
+from ....utils.testing import requires_dependency
 from ...source import PWN
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
 t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], 'yr')
 pwn = PWN()
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_PWN_radius():
     """Test SNR luminosity"""
     reference = [0.00000000e+00, 1.33404629e+14, 2.11432089e+15,
@@ -24,7 +19,7 @@ def test_PWN_radius():
     assert_allclose(pwn.radius(t).value, reference)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_magnetic_field():
     """Test SNR luminosity"""
     reference = [np.nan, 1.75348134e-03, 8.78822460e-05, 4.40454585e-06,

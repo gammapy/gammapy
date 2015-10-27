@@ -487,9 +487,8 @@ class EnergyDispersion2D(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.datasets import get_path
-        filename = get_path("../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
-        location='remote')
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
         edisp2D = EnergyDispersion2D.read(filename)
         edisp2D.plot_migration()
         plt.xlim(0, 4)
@@ -506,9 +505,8 @@ class EnergyDispersion2D(object):
         from gammapy.irf import EnergyDispersion2D
         from gammapy.spectrum.energy import Energy
         from astropy.coordinates import Angle
-        from gammapy.datasets import get_path
-        filename = get_path("../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz",
-        location='remote')
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
         edisp2D = EnergyDispersion2D.read(filename)
         migra = np.linspace(0.1,2,80)
         e_true = Energy.equal_log_spacing(0.13,60,60,'TeV')

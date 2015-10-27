@@ -36,6 +36,7 @@ clean:
 	rm -rf build docs/_build docs/api htmlcov
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name "*.so" -exec rm {} \;
+	find . -name __pycache__ | xargs rm -fr
 
 clean-repo:
 	@git clean -f -x -d

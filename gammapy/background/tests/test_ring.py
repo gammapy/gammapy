@@ -1,20 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import unittest
-from astropy.tests.helper import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from ...background import Maps, RingBgMaker, ring_r_out
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
+from ...utils.testing import requires_dependency
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 class TestRingBgMaker(unittest.TestCase):
     def test_construction(self):
         r = RingBgMaker(0.3, 0.5)

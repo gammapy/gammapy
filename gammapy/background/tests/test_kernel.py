@@ -3,22 +3,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from astropy.coordinates.angles import Angle
+from ...utils.testing import requires_dependency, requires_data
 from ...background import GammaImages, IterativeKernelBackgroundEstimator
 from ...image import make_empty_image
 from ...stats import significance
 from ...datasets import FermiGalacticCenter
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_GammaImages():
     """Tests compute correlated maps in GammaImages.
     This is the only method in GammaImages that actually calculates anything.
@@ -43,7 +37,8 @@ def test_GammaImages():
     assert_allclose(actual, expected)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 class TestIterativeKernelBackgroundEstimator(object):
     """Tests methods in the IterativeKernelBackgroundEstimator.
     """

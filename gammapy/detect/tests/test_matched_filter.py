@@ -4,16 +4,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.convolution import Gaussian2DKernel
+from ...utils.testing import requires_dependency
 from ...detect import matched_filter
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_center():
     # Test dataset parameters
     x_size, y_size = (11, 11)
@@ -37,7 +32,7 @@ def test_center():
 
 
 @pytest.mark.xfail
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_image():
     # Test dataset parameters
     x_size_kernel, y_size_kernel = (11, 11)

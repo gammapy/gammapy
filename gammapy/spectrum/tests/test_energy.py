@@ -1,12 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import astropy.units as u
-from numpy.testing import assert_equal
-from ...spectrum import Energy, EnergyBounds
-from astropy.tests.helper import remote_data
-from ...datasets import get_path
-from astropy.io import fits
 import numpy as np
+from numpy.testing import assert_equal
+import astropy.units as u
+from astropy.io import fits
+from ...utils.testing import requires_data
+from ...datasets import gammapy_extra
+from ...spectrum import Energy, EnergyBounds
 
 
 def test_Energy():
@@ -72,7 +72,6 @@ def test_Energy():
     assert_equal(actual, desired)
 
 
-@remote_data
 def test_EnergyBounds():
     val = u.Quantity([1, 2, 3, 4, 5], 'TeV')
     actual = EnergyBounds(val, 'GeV')
@@ -142,9 +141,11 @@ def test_EnergyBounds():
     desired = energy[1] - energy[0]
     assert_equal(actual, desired)
 
+
+@requires_data('gammapy-extra')
+def test_EnergyBounds_read():
     # read EBOUNDS extension
-    filename = get_path("../test_datasets/irf/hess/ogip/run_rmf60741.fits",
-                        location='remote')
+    filename = gammapy_extra.filename('test_datasets/irf/hess/ogip/run_rmf60741.fits')
 
     hdulist = fits.open(filename)
     ebounds = EnergyBounds.from_ebounds(hdulist['EBOUNDS'])

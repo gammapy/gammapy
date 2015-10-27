@@ -3,13 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
-
+from ...utils.testing import requires_dependency
 from ...stats import (
     fc_find_acceptance_interval_gauss,
     fc_find_acceptance_interval_poisson,
@@ -22,7 +16,7 @@ from ...stats import (
 )
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_acceptance_interval_gauss():
     sigma = 1
     n_sigma = 10
@@ -51,7 +45,7 @@ def test_acceptance_interval_gauss():
         fc_find_acceptance_interval_gauss(0, 1, x_bins, cl)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_acceptance_interval_poisson():
     background = 0.5
     n_bins_x = 100
@@ -74,7 +68,7 @@ def test_acceptance_interval_poisson():
         fc_find_acceptance_interval_poisson(0, 7, x_bins[0:10], cl)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_numerical_confidence_interval_pdfs():
     from scipy import stats
 
@@ -120,7 +114,7 @@ def test_numerical_confidence_interval_pdfs():
     assert_allclose(average_upper_limit, 4.42, 1e-07, 0.1)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_numerical_confidence_interval_values():
     from scipy import stats
 

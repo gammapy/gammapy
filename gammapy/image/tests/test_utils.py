@@ -5,6 +5,7 @@ from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
+from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
     coordinates,
@@ -22,12 +23,6 @@ from ...image import (
     lookup,
     lon_lat_rectangle_mask,
 )
-
-try:
-    import skimage
-    HAS_SKIMAGE = True
-except ImportError:
-    HAS_SKIMAGE = False
 
 
 def test_binary_disk():
@@ -127,7 +122,7 @@ def test_process_image_pixels():
     assert_allclose(actual, desired)
 
 
-@pytest.mark.skipif('not HAS_SKIMAGE')
+@requires_dependency('skimage')
 class TestBlockReduceHDU():
     def setup_class(self):
         # Arbitrarily choose CAR projection as independent from tests
@@ -167,7 +162,7 @@ class TestBlockReduceHDU():
             assert_allclose(image_1.data, ref1)
 
 
-@pytest.mark.skipif('not HAS_SKIMAGE')
+@requires_dependency('skimage')
 def test_ref_pixel():
     image = make_empty_image(101, 101, proj='CAR')
     footprint = WCS(image.header).calc_footprint(center=False)
@@ -210,6 +205,7 @@ def test_wcs_histogram2d():
     assert lookup(image, 1, 0, world=False) == 2
 
 
+@requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
     counts = FermiGalacticCenter.counts()
     lons, lats = coordinates(counts)

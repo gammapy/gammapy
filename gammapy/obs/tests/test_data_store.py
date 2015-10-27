@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...data import EventList
 from ...obs import DataStore
-from . import _HAS_TEST_DATA, data_manager
+from ...utils.testing import requires_data, data_manager
 
 
-@pytest.mark.skipif('not _HAS_TEST_DATA')
+@requires_data('hess')
 def test_DataStore_construction(data_manager):
     """Construct DataStore objects in various ways"""
     data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']
@@ -19,7 +19,7 @@ def test_DataStore_construction(data_manager):
     data_store = DataStore.from_dir(base_dir)
 
 
-@pytest.mark.skipif('not _HAS_TEST_DATA')
+@requires_data('hess')
 def test_DataStore_filenames(data_manager):
     """Check if filenames are constructed correctly"""
     data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']
@@ -47,7 +47,7 @@ def test_DataStore_filenames(data_manager):
     assert filename == 'run023000-023199/run023037/hess_aeff_2d_023037.fits.gz'
 
 
-@pytest.mark.skipif('not _HAS_TEST_DATA')
+@requires_data('hess')
 def test_DataStore_load(data_manager):
     """Test loading data and IRF files via the DataStore"""
     data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']
@@ -55,7 +55,7 @@ def test_DataStore_load(data_manager):
     events = data_store.load(obs_id=23037, filetype='events')
     assert isinstance(events, EventList)
 
-@pytest.mark.skipif('not _HAS_TEST_DATA')
+@requires_data('hess')
 def test_DataStore_other(data_manager):
     """Misc tests"""
     data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']

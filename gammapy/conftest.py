@@ -4,35 +4,44 @@
 
 from astropy.tests.pytest_plugins import *
 
-## Uncomment the following line to treat all DeprecationWarnings as
-## exceptions
-# enable_deprecations_as_exceptions()
+# Treat all DeprecationWarnings as exceptions
+enable_deprecations_as_exceptions()
 
-## Uncomment and customize the following lines to add/remove entries
-## from the list of packages for which version numbers are displayed
-## when running the tests ... this was added in Astropy 1.0
-try:
-    PYTEST_HEADER_MODULES['cython'] = 'cython'
-    PYTEST_HEADER_MODULES['pandas'] = 'pandas'
-    PYTEST_HEADER_MODULES['skimage'] = 'skimage'
-    PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
-    PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
-    PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
+# Declare for which packages version numbers should be displayed
+# when running the tests
+PYTEST_HEADER_MODULES['cython'] = 'cython'
+PYTEST_HEADER_MODULES['pandas'] = 'pandas'
+PYTEST_HEADER_MODULES['skimage'] = 'skimage'
+PYTEST_HEADER_MODULES['sklearn'] = 'sklearn'
+PYTEST_HEADER_MODULES['uncertainties'] = 'uncertainties'
+PYTEST_HEADER_MODULES['iminuit'] = 'iminuit'
+PYTEST_HEADER_MODULES['astropy'] = 'astropy'
+PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
+PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
+PYTEST_HEADER_MODULES['naima'] = 'naima'
+PYTEST_HEADER_MODULES['reproject'] = 'reproject'
+PYTEST_HEADER_MODULES['photutils'] = 'photutils'
+PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
+PYTEST_HEADER_MODULES['wcsaxes'] = 'wcsaxes'
+PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
+PYTEST_HEADER_MODULES['pyregion'] = 'pyregion'
+PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
-    PYTEST_HEADER_MODULES['astropy'] = 'astropy'
-    PYTEST_HEADER_MODULES['sherpa'] = 'sherpa'
-    PYTEST_HEADER_MODULES['gammapy'] = 'gammapy'
-    PYTEST_HEADER_MODULES['naima'] = 'naima'
-    PYTEST_HEADER_MODULES['reproject'] = 'reproject'
-    PYTEST_HEADER_MODULES['photutils'] = 'photutils'
-    PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
-    PYTEST_HEADER_MODULES['wcsaxes'] = 'wcsaxes'
-    PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
-    PYTEST_HEADER_MODULES['pyregion'] = 'pyregion'
-    PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
-    # `ginga` doesn't have a __version__ attribute yet, so this won't work:
-    #PYTEST_HEADER_MODULES['ginga'] = 'ginga'
+def pytest_configure(config):
+    """Print some info ..."""
+    from .utils.testing import has_data
+    print('')
+    print('Gammapy test data availability:')
 
-except NameError:  # astropy < 1.0
-    pass
+    has_it = 'yes' if has_data('gammapy-extra') else 'no'
+    print('gammapy-extra ... {}'.format(has_it))
+
+    has_it = 'yes' if has_data('hess') else 'no'
+    print('hess ............ {}'.format(has_it))
+    print('')
+
+    print('Gammapy environment variables:')
+
+    var = os.environ.get('GAMMAPY_EXTRA', 'not set')
+    print('GAMMAPY_EXTRA = {}'.format(var))

@@ -81,9 +81,12 @@ entry_points = {}
 entry_points['console_scripts'] = [
     'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
     'gammapy-bin-image = gammapy.scripts.bin_image:main',
+    'gammapy-catalog-browse = gammapy.scripts.catalog_browser:main',
+    'gammapy-catalog-query = gammapy.scripts.catalog_query:main',
     'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',
     'gammapy-cwt = gammapy.scripts.cwt:main',
-    'gammapy-data-manage = gammapy.obs.data_manager:main',
+    # TODO: add a command line tool to manage data (mostly download, but also generate test data).
+    # 'gammapy-data-manage = gammapy.obs.data_manager:main',
     'gammapy-data-browse = gammapy.scripts.data_browser:main',
     'gammapy-data-show = gammapy.scripts.data_show:main',
     'gammapy-derived-images = gammapy.scripts.derived_images:main',

@@ -5,7 +5,7 @@ more to check that all the plotting functions work,
 until we implement proper tests for them.
 """
 import matplotlib.pyplot as plt
-from gammapy.datasets import get_path
+from gammapy.datasets import gammapy_extra
 from gammapy import irf
 from gammapy.utils.mpl_style import gammapy_mpl_style
 
@@ -21,7 +21,7 @@ axes = axes.flat
 # https://github.com/gammapy/gammapy/issues/297
 # hess_events_023523.fits.gz
 
-filename = get_path('../test_datasets/irf/hess/pa/hess_aeff_2d_023523.fits.gz', location='remote')
+filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_aeff_2d_023523.fits.gz')
 aeff2d = irf.EffectiveAreaTable2D.read(filename)
 aeff2d.plot_energy_dependence(ax=next(axes))
 aeff2d.plot_offset_dependence(ax=next(axes))
@@ -30,7 +30,7 @@ aeff = aeff2d.to_effective_area_table(offset='1 deg')
 aeff.plot_area_vs_energy(ax=next(axes))
 
 
-filename = get_path('../test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz', location='remote')
+filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
 edisp2d = irf.EnergyDispersion2D.read(filename)
 edisp2d.plot_bias(ax=next(axes))
 edisp2d.plot_migration(ax=next(axes))
@@ -41,11 +41,11 @@ edisp.plot(type='matrix', ax=next(axes))
 # edisp.plot(type='bias', ax=next(axes))
 
 # TODO: This PSF type isn't implemented yet.
-# filename = get_path("../test_datasets/irf/hess/pa/hess_psf_king_023523.fits.gz", location='remote')
+# filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_psf_king_023523.fits.gz')
 # psf = irf.EnergyDependentMultiGaussPSF.read(filename)
 # psf.plot_containment(ax=next(axes))
 
-filename = get_path('irfs/psf.fits')
+filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
 psf = irf.EnergyDependentMultiGaussPSF.read(filename)
 psf.plot_containment(0.68, show_safe_energy=False, ax=next(axes))
 

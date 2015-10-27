@@ -1,17 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import remote_data
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import make_test_observation_table, gammapy_extra
+from ...catalog import skycoord_from_table
 from ...obs import (
     ObservationTable,
     ObservationGroups,
     ObservationGroupAxis
 )
-from ... import datasets
-from ...datasets import make_test_observation_table
-from ...catalog import skycoord_from_table
 
 
 def common_sky_region_select_test_routines(obs_table, selection):
@@ -186,7 +185,8 @@ def test_select_sky_regions():
     common_sky_region_select_test_routines(obs_table, selection)
 
 
-@remote_data
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
 def test_ObservationGroups(tmpdir):
     """Test create obs groups"""
     alt = Angle([0, 30, 60, 90], 'deg')
@@ -211,9 +211,7 @@ def test_ObservationGroups(tmpdir):
     assert (obs_groups_1.obs_groups_table == obs_groups_2.obs_groups_table).all()
 
     # test group obs list
-    # using file in gammapy-extra (I also could create a dummy table)
-    infile = datasets.get_path('../test_datasets/obs/test_observation_table.fits',
-                               location='remote')
+    infile = gammapy_extra.filename('test_datasets/obs/test_observation_table.fits')
     obs_table = ObservationTable.read(infile)
 
     # wrap azimuth angles to [-90, 270) deg

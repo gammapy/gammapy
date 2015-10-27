@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
+from ...utils.testing import requires_dependency
 from ...stats import (
     convert_likelihood,
     significance_to_probability_normal,
@@ -11,14 +12,8 @@ from ...stats import (
     significance_to_probability_normal_limit,
 )
 
-try:
-    import scipy
-    HAS_SCIPY = True
-except ImportError:
-    HAS_SCIPY = False
 
-
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_significance_to_probability_normal():
     significance = 5
     p = significance_to_probability_normal(significance)
@@ -28,7 +23,7 @@ def test_significance_to_probability_normal():
     assert_allclose(s, significance)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_significance_to_probability_normal_limit():
     significance = 5
     p = significance_to_probability_normal_limit(significance)
@@ -38,7 +33,7 @@ def test_significance_to_probability_normal_limit():
     assert_allclose(s, significance)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_convert_likelihood_examples():
     """Check a few example values and conversions."""
     assert_allclose(convert_likelihood(to='probability', significance=3), 0.0013498980316300933)
@@ -65,7 +60,7 @@ def test_convert_likelihood_examples():
     assert_allclose(significance_actual, significance_expected, rtol=1e-2)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_convert_likelihood_invalid_input():
     """Check that invalid input raises an exception."""
     with pytest.raises(ValueError) as err:
@@ -85,7 +80,7 @@ def test_convert_likelihood_invalid_input():
     assert 'You have to specify the number of degrees of freedom via the `df` parameter.' in str(err)
 
 
-@pytest.mark.skipif('not HAS_SCIPY')
+@requires_dependency('scipy')
 def test_convert_likelihood_roundtrip():
     """Check that round-tripping works for each pair of quantities."""
     significance = [1, 3, 5, 10]
