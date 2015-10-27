@@ -68,7 +68,7 @@ def plot_fermi_3fgl_light_curve(source_name, time_start=None, time_end=None, ax=
         import matplotlib.pyplot as plt
         plt.show()
     """
-    from ..datasets import fetch_fermi_catalog
+    from ..catalog import fetch_fermi_catalog
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
 

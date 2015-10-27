@@ -435,7 +435,7 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
     This example reads Greens catalog from `gammapy.datasets` and writes it to a
     ds9 region file.
 
-    >>> from gammapy.datasets import load_catalog_green
+    >>> from gammapy.catalog import load_catalog_green
     >>> green = load_catalog_green()
     >>> green['MeanDiam'] /= 120.
     >>> green_str = to_ds9_region(green, radius='MeanDiam',

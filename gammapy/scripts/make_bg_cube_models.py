@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 import logging
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
@@ -8,7 +7,7 @@ from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
-from ..datasets import load_catalog_tevcat
+from ..catalog import load_catalog_tevcat
 from ..background import make_bg_cube_model
 
 __all__ = ['make_bg_cube_models',

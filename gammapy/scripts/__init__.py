@@ -7,6 +7,8 @@ command line tools.
 
 from .bin_cube import *
 from .bin_image import *
+from .catalog_browser import *
+from .catalog_query import *
 from .check import *
 from .coordinate_images import *
 from .cwt import *
