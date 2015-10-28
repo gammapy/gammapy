@@ -20,7 +20,7 @@ def _extended_image(catalog, reference_cube):
     """
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
-    from ..datasets import fetch_fermi_extended_sources
+    from ..catalog import fetch_fermi_extended_sources
     from ..data import SpectralCube
 
     # Note that the first extended source fits file is unreadable...
@@ -172,7 +172,7 @@ def catalog_table(catalog, energy_bands=False):
     """
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
-    from ..datasets import fetch_fermi_catalog
+    from ..catalog import fetch_fermi_catalog
 
     data = []
     cat_table = fetch_fermi_catalog(catalog, 'LAT_Point_Source_Catalog')
@@ -190,8 +190,8 @@ def catalog_table(catalog, energy_bands=False):
                 Flux_30_100 = cat_table['Flux30_100GeV'][source]
                 Flux_100_500 = cat_table['Flux100_500GeV'][source]
                 row = dict(Source_Type='PointSource',
-                           GLON=glon, GLAT=glat, Flux10_30=Flux10_30,
-                           Flux30_100=Flux30_100, Flux100_500=Flux100_500)
+                           GLON=glon, GLAT=glat, Flux10_30=Flux_10_30,
+                           Flux30_100=Flux_30_100, Flux100_500=Flux_100_500)
 
             else:
                 flux_bol = cat_table['Flux'][source]
@@ -216,7 +216,7 @@ def catalog_table(catalog, energy_bands=False):
                 Flux_3000_10000 = cat_table['Flux3000_10000'][source]
                 Flux_10000_100000 = cat_table['Flux10000_100000'][source]
                 row = dict(Source_Type='PointSource',
-                           Source_Name=source_name,
+                           Source_Name=source,
                            GLON=glon,
                            GLAT=glat,
                            Flux_30_100=Flux_30_100,

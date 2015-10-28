@@ -68,6 +68,8 @@ def has_data(name):
         return gammapy_extra.is_available
     elif name == 'hess':
         return has_hess_test_data()
+    elif name == 'hgps':
+        return ('HGPS_DATA' in os.environ) and ('HGPS_ANALYSIS' in os.environ)
     else:
         raise ValueError('Invalid name: {}'.format(name))
 

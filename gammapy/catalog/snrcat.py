@@ -1,93 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""A selection of source catalogs of interest for gamma-ray astronomers.
-"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.extern import six
 from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
-from ..extern.bunch import Bunch
-from .core import gammapy_extra
+from ..datasets.core import gammapy_extra
+from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
-    'load_catalog_hess_galactic',
-    'load_catalog_green',
-    'fetch_catalog_snrcat',
-    'load_catalog_tevcat',
+    'SourceCatalogSNRcat',
+    'SourceCatalogObjectSNRcat',
 ]
 
 
-def load_catalog_hess_galactic():
-    """Load catalog with info on HESS Galactic sources from individual publications.
-
-    Note that this is different from the
-    `official "H.E.S.S. source catalog" <http://www.mpi-hd.mpg.de/hfm/HESS/pages/home/sources/>`__.
-
-    The main difference is that we only include Galactic sources (and the ones
-    from the large Magellanic cloud) and that we collect more information
-    (morphological and spectral parameters, associations, paper links to ADS),
-    using the latest publication for each source.
-
-    Please drop us an email if you have any questions or find something incorrect or outdated.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
+class SourceCatalogObjectSNRcat(SourceCatalogObject):
+    """One source from the SNRcat catalog.
     """
-    # TODO: implement
-    raise NotImplementedError
-    filename = gammapy_extra.filename('datasets/catalogs/hess_galactic_catalog.fits.gz')
-    return Table.read(filename)
+    pass
 
 
-def load_catalog_green():
-    """Load Green's supernova remnant catalog.
-
-    This is the May 2014 version of the catalog, which contains 294 sources.
-
-    References:
-
-    - http://www.mrao.cam.ac.uk/surveys/snrs/
-    - http://vizier.u-strasbg.fr/viz-bin/VizieR?-source=VII/272
-    - http://adsabs.harvard.edu/abs/2014BASI...42...47G
-
-    The ``Green_2014-05.fits.gz`` file and ``make_green.py`` script are available
-    `here <https://github.com/gammapy/gammapy-extra/blob/master/datasets/catalogs/>`__.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
-    """
-    filename = gammapy_extra.filename('datasets/catalogs/Green_2014-05.fits.gz')
-    return Table.read(filename)
-
-
-def load_catalog_tevcat():
-    """Load TeVCat source catalog.
-
-    `TeVCat <http://tevcat.uchicago.edu/>`__ is an online catalog
-    for TeV astronomy.
-
-    Unfortunately the TeVCat is not available in electronic format.
-
-    This is a dump of TeVCat as of 2014-09-24 created by scraping their
-    web page using the script available
-    `here <https://github.com/astropy/astroquery/pull/41>`__.
-
-    Returns
-    -------
-    catalog : `~astropy.table.Table`
-        Source catalog
-    """
-    filename = gammapy_extra.filename('datasets/catalogs/tevcat.fits.gz')
-    return Table.read(filename)
-
-
-def fetch_catalog_snrcat(cache=False):
-    """Fetch SNRcat supernova remnant catalog.
+class SourceCatalogSNRcat(SourceCatalog):
+    """SNRcat supernova remnant catalog.
 
     `SNRcat <http://www.physics.umanitoba.ca/snr/SNRcat/>`__
     is a census of high-energy observations of Galactic supernova remnants.
@@ -101,24 +35,22 @@ def fetch_catalog_snrcat(cache=False):
     This only represents a subset of the information available in SNRcat,
     to get at the rest we would have to scrape their web pages.
 
-    Parameters
-    ----------
-    cache : bool, optional
-        Use cached version?
+    * ``table`` (`~astropy.table.Table`) -- SNR info table
+    * ``obs_table`` (`~astropy.table.Table`) -- High-energy observation info table
 
-    Returns
-    -------
-    data : `~gammapy.extern.bunch.Bunch`
-        Dictionary-like object with attributes:
-          * ``snr_table`` (`~astropy.table.Table`) -- SNR info table
-          * ``obs_table`` (`~astropy.table.Table`) -- High-energy observation info table
-
-        Each table has a ``version`` string containing the download date in the ``table.meta`` dictionary.
+    Each table has a ``version`` string containing the download date in the ``table.meta`` dictionary.
     """
-    snr_table = _fetch_catalog_snrcat_snr_table(cache=cache)
-    obs_table = _fetch_catalog_snrcat_obs_table(cache=cache)
+    name = 'snrcat'
+    description = 'SNRcat supernova remnant catalog.'
+    source_object_class = SourceCatalogObjectSNRcat
 
-    return Bunch(snr_table=snr_table, obs_table=obs_table)
+    def __init__(self, cache=False):
+        # TODO: load from gammapy-extra?
+        # At least optionally?
+        self.snr_table = _fetch_catalog_snrcat_snr_table(cache=cache)
+        self.obs_table = _fetch_catalog_snrcat_obs_table(cache=cache)
+
+        super(SourceCatalogSNRcat, self).__init__(table=self.snr_table)
 
 
 def _fetch_catalog_snrcat_snr_table(cache):

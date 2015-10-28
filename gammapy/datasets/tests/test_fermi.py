@@ -7,8 +7,6 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import (
     FermiGalacticCenter,
     FermiVelaRegion,
-    fetch_fermi_catalog,
-    fetch_fermi_extended_sources,
     load_lat_psf_performance,
 )
 
@@ -92,28 +90,6 @@ class TestFermiVelaRegion:
         assert livetime_list[2].data.shape == (12288,)
         assert livetime_list[3].data.shape == (4,)
         assert livetime_list[4].data.shape == (17276,)
-
-
-@requires_data('gammapy-extra')
-def test_fetch_fermi_catalog():
-    n_hdu = len(fetch_fermi_catalog('3FGL'))
-    assert n_hdu == 6
-
-    n_sources = len(fetch_fermi_catalog('3FGL', 'LAT_Point_Source_Catalog'))
-    assert n_sources == 3034
-
-    n_hdu = len(fetch_fermi_catalog('2FGL'))
-    assert n_hdu == 5
-
-    n_sources = len(fetch_fermi_catalog('2FGL', 'LAT_Point_Source_Catalog'))
-    assert n_sources == 1873
-
-
-@requires_data('gammapy-extra')
-def test_fetch_fermi_extended_sources():
-    assert len(fetch_fermi_extended_sources('3FGL')) == 26
-    assert len(fetch_fermi_extended_sources('2FGL')) == 12
-    assert len(fetch_fermi_extended_sources('1FHL')) == 23
 
 
 @requires_data('gammapy-extra')

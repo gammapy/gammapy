@@ -12,7 +12,6 @@ __all__ = [
     'select_sky_box',
     'select_sky_circle',
     'to_ds9_region',
-    'get_source_by_name'
 ]
 
 
@@ -365,31 +364,6 @@ def select_sky_circle(table, lon_cen, lat_cen, radius, frame='icrs', inverted=Fa
     return table[mask]
 
 
-def get_source_by_name(source, catalog, id_column='Source_Name'):
-    """
-    Get source catalog entry by source name.
-
-    Parameters
-    ----------
-    source : string
-        Source name.
-    catalog : `~astropy.table.Table`
-        Catalog table.
-    id_column : str (default = 'Source_Name')
-        Column name of the source names.
-
-    Returns
-    -------
-    source : `~astropy.table.Row`
-        Entry for the given source.
-    """
-    index = np.where(catalog[id_column] == source)[0]
-    if len(index) == 0:
-        raise ValueError('Source {0} not found in catalog!'.format(source))
-    else:
-        return catalog[index[0]]
-
-
 def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=None,
                   glat='GLAT', unc_glat=None, label=None, label_position='top',
                   label_additional_info=None, label_distance=1.2, marker='diamond',
@@ -435,7 +409,7 @@ def to_ds9_region(catalog, radius=None, color='green', glon='GLON', unc_glon=Non
     This example reads Greens catalog from `gammapy.datasets` and writes it to a
     ds9 region file.
 
-    >>> from gammapy.datasets import load_catalog_green
+    >>> from gammapy.catalog import load_catalog_green
     >>> green = load_catalog_green()
     >>> green['MeanDiam'] /= 120.
     >>> green_str = to_ds9_region(green, radius='MeanDiam',

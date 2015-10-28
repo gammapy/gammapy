@@ -1,37 +1,46 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
-from ..registry import get_source_catalog
+from ..registry import source_catalogs, SourceCatalogRegistry
+from .test_core import make_test_catalog
 
 
-@requires_data('gammapy-extra')
-def test_get_source_catalog():
-    cat = get_source_catalog('3FGL')
+class TestSourceCatalogs:
+    """Test SourceCatalogRegistry directly (one instance per test),
+    not the global `source_catalogs` registry.
+    """
 
-    # source = cat['3FGL J0000.1+6545']
-    # assert source.name == '3FGL J0000.1+6545'
-    # assert_allclose(source.significance, 3.5)
-    # assert_allclose(source.row_index, 42)
-    #
-    # source = cat.source_index(42)
-    # assert source.name == '3FGL J0000.1+6545'
-    # assert_allclose(source.significance, 3.5)
+    def setup(self):
+        self.source_catalogs = SourceCatalogRegistry.builtins()
 
-# @requires_data('gammapy-extra')
-# class TestFermi3FGLObject:
-#
-#     test_source = '3FGL J0000.1+6545'
-#
-#     def test_plot_lightcurve(self):
-#         source = Fermi3FGLObject(self.test_source)
-#         source.plot_lightcurve()
-#
-#     def test_plot_spectrum(self):
-#         source = Fermi3FGLObject(self.test_source)
-#         source.plot_spectrum()
-#
-#     def test_info(self):
-#         source = Fermi3FGLObject(self.test_source)
-#         info = source.info()
-#         assert self.test_source in info
+    def test_info_table(self):
+        table = self.source_catalogs.info_table
+        assert table.colnames == ['Name', 'Description', 'Loaded']
+
+    def test_info(self):
+        # TODO: assert output somehow
+        self.source_catalogs.info()
+
+    @requires_data('gammapy-extra')
+    def test_getitem(self):
+        cat = self.source_catalogs['2fhl']
+
+        with pytest.raises(KeyError):
+            source_catalogs['2FHL']
+
+    def test_register(self):
+        # catalog = make_test_catalog()
+        self.source_catalogs.register(name='testcat', factory=make_test_catalog)
+
+        assert 'testcat' in self.source_catalogs.catalog_names
+        cat = self.source_catalogs['testcat']
+        assert cat['bb'].name == 'bb'
+
+
+def test_source_catalogs():
+    """Test the global registry instance"""
+
+    names = source_catalogs.catalog_names
+    assert names == ['3fgl', '2fhl']
