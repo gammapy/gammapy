@@ -46,6 +46,16 @@ class ReflectedRegionMaker(object):
         self.exclusion_distance = ImageHDU(distance, header)
 
     def compute(self, x_on, y_on, r_on):
+        """Computes reflected regions for a given (circular) ON region
+
+        Parameters
+        ----------
+        x_on, y_on : float
+            Center of the ON region [deg]
+        r_on : float
+            Radius of the ON region
+        """
+
         self.regions = []
         self.on_region = dict(x=x_on, y=y_on, r=r_on)
         angle_on = self._compute_angle(x_on, y_on)

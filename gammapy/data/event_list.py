@@ -283,7 +283,8 @@ class EventList(Table):
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
 
-    def select_reflected_regions(self, exclusion, angle_increment=0.1):
+    def select_reflected_regions(self, on_center, on_radius, exclusion,
+                                 angle_increment=0.1):
         """Select events from reflected regions.
 
         More info on the reflected regions background estimation methond
@@ -291,6 +292,10 @@ class EventList(Table):
 
         Parameters
         ----------
+        on_center : `~astropy.coordinates.SkyCoord`
+            ON region center
+        on_radius : `~astropy.coordinates.Angle`
+            ON region radius
         exclusion : ImageHDU
             Excluded regions mask
         angle_increment : float (optional)
@@ -305,7 +310,12 @@ class EventList(Table):
         point = self.pointing_radec
         fov = dict(x=point.ra.value, y=point.dec.value)
         rr_maker = ReflectedRegionMaker(exclusion, fov, angle_increment)
+        x_on = on_center.rad.value
+        y_on = on_center.dec.value
+        r_on = on_radius.value
+        rr_maker.compute(x_on, y_on, r_on)
         
+
     def fill_counts_image(self, image):
         """Fill events in counts image.
 

@@ -29,6 +29,8 @@ __all__ = [
     'image_groupby',
     'images_to_cube',
     'lon_lat_rectangle_mask',
+    'lon_lat_circle_mask',
+    'lon_lat_circle_mask_from_table',
     'make_empty_image',
     'make_header',
     'paste_cutout_into_image',
@@ -1186,3 +1188,55 @@ def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
     lat_mask = mask_lat_min & mask_lat_max
 
     return lon_mask & lat_mask
+
+
+def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
+    """Produces a circular boolean mask array.
+
+    Parameters
+    ----------
+    lons : `~numpy.ndarray`
+        Array of longitude values.
+    lats : `~numpy.ndarray`
+        Array of latitude values.
+    center_lon : float
+        Longitude of center of circular mask.
+    center_lat : float
+        Latitude of center of circular mask.
+    radius : float
+        Radius of circular mask.
+
+    Returns
+    -------
+    mask : `~numpy.ndarray`
+        Boolean mask array for a circular sub-region 
+    """
+    
+    mask = (lons - center_lon) ** 2 + (lats - center_lat) ** 2 < radius ** 2 
+    return mask
+
+def lon_lat_circle_mask_from_table(lons, lats, table):
+    """Produces a boolean mask for as set circles specified in an astropy table.
+
+    Parameters
+    ----------
+    lons : `~numpy.ndarray`
+        Array of longitude values.
+    lats : `~numpy.ndarray`
+        Array of latitude values.
+    table : `astropy.table`
+        Table containing 3 columns: center_lon, center_lat, radius
+
+    Returns
+    -------
+    mask : `~numpy.ndarray`
+        Boolean mask array for a set of circular sub-regions
+    """
+    
+    mask = np.zeros(lons.shape, dtype=bool) 
+    for row in table:
+        center_lon, center_lat, radius = row
+        val = lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius)
+        mask = np.logical_or(mask, val)
+        
+    return mask

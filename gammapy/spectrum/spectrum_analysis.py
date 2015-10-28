@@ -9,6 +9,7 @@ from ..spectrum import EnergyBounds, Energy
 from ..background import ring_area_factor
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
+from astropy.io import fits
 import logging
 import numpy as np
 import os
@@ -187,7 +188,7 @@ class SpectrumObservation(object):
         if self.off_type == "ring":
             off_list = self.event_list.select_sky_ring(
                 self.target, self.irad, self.orad)
-        else if self off_type == "reflected":
+        elif self.off_type == "reflected":
             off_list = self.event_list.select_reflected_regions(
                 self.exclusion)
             
@@ -220,8 +221,8 @@ def _process_config(object):
     """
 
     # Data
-    storedir = object.config['general']['datastore']
-    object.store = DataStore(dir=storedir)
+    storename = object.config['general']['datastore']
+    object.store = DataStore.from_name(storename)
     object.outdir = object.config['general']['outdir']
     basename = object.outdir + "/ogip_data"
 
@@ -241,15 +242,14 @@ def _process_config(object):
     object.target = SkyCoord(x, y, frame=frame)
 
     # Pointing
-    event_list_file = object.store.filename(object.obs, 'events')
-    event_list = EventList.read(event_list_file, hdu=1)
+    event_list = object.store.load(obs_id = object.obs, filetype ='events')
     object.event_list = event_list
     object.pointing = object.event_list.pointing_radec
     object.offset = object.target.separation(object.pointing)
 
     # Excluded regions
-    exlusion_file = object.config['exclusion_regions']['file']
-    object.exclusion = fits.open(exclusion)[0]
+    excl_file = object.config['excluded_regions']['file']
+    object.exclusion = fits.open(excl_file)[0]
 
     # Binning
     sec = object.config['binning']
@@ -275,7 +275,7 @@ def _process_config(object):
         object.irad = Angle(ival)
         object.orad = Angle(oval)
         object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
-    else if object.off_type == 'reflected':
+    elif object.off_type == 'reflected':
         pass
     
     # Spectral fit
