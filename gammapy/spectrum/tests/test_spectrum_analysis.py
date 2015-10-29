@@ -10,8 +10,12 @@ from ...spectrum.spectrum_analysis import SpectrumAnalysis
 @requires_data('hess')
 def test_spectrum_analysis(data_manager):
 
-    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example_ring.yaml')
 
+    analysis = SpectrumAnalysis.from_yaml(configfile)
+    analysis.run()
+    
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example_reflected.yaml')
     analysis = SpectrumAnalysis.from_yaml(configfile)
     analysis.run()
     

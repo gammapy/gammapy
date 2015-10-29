@@ -13,6 +13,7 @@ from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
 from ..time import time_ref_from_dict
+from ..background.reflected import ReflectedRegionMaker
 from .utils import _earth_location_from_dict
 
 __all__ = [
@@ -314,6 +315,7 @@ class EventList(Table):
         y_on = on_center.dec.value
         r_on = on_radius.value
         rr_maker.compute(x_on, y_on, r_on)
+        from IPython import embed; embed()
         
 
     def fill_counts_image(self, image):

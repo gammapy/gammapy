@@ -190,7 +190,9 @@ class SpectrumObservation(object):
                 self.target, self.irad, self.orad)
         elif self.off_type == "reflected":
             off_list = self.event_list.select_reflected_regions(
-                self.exclusion)
+                self.target, self.radius, self.exclusion)
+        else:
+            raise ValueError("Undefined background method: {}".format(self.off_type))
             
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         off_vec.backscal = self.alpha
@@ -199,16 +201,16 @@ class SpectrumObservation(object):
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
-        aeff2D_file = self.store.filename(self.obs, 'effective area')
+        aeff2D_file = self.store.filename(self.obs, 'aeff')
         aeff2D = EffectiveAreaTable2D.read(aeff2D_file)
         self.arf = aeff2D.to_effective_area_table(self.offset)
 
     def make_rmf(self):
         """Make `~gammapy.irf.EnergyDispersion`
         """
-        edisp2D_file = self.store.filename(self.obs, 'energy dispersion')
+        edisp2D_file = self.store.filename(self.obs, 'edisp')
         edisp2D = EnergyDispersion2D.read(edisp2D_file)
-        self.rmf = edisp2D.to_energy_dispersion(self.ebounds, self.offset)
+        self.rmf = edisp2D.to_energy_dispersion(self.offset, e_reco=self.ebounds)
 
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
