@@ -1,12 +1,12 @@
 .. _gammapy_1p0_release:
 
-1.0 (Fall 2015 or spring 2016, unreleased)
-------------------------------------------
+1.0 (Spring 2016, unreleased)
+-----------------------------
 
 Summary
 +++++++
 
-Gammapy 1.0 will be released in fall 2015 or spring 2016.
+Gammapy 1.0 will be released in spring 2016.
 
 Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
@@ -48,6 +48,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)
 - [#369] Improve the data management toolbox (Christoph Deil)
 - [#367] Add Feldman Cousins algorithm (Dirk Lennarz)
