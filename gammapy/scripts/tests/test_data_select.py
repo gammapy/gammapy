@@ -8,7 +8,7 @@ from .. import data_select_main
 
 
 # TODO: Fix this test: obs table format changed a bit -> KeyErrror on TSTART
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @pytest.mark.parametrize("extra_options,n_selected_obs", [
     (["--x", "0", "--y", "0", "--r", "50", "--system", "galactic"], 31),
     (["--x", "0", "--y", "0", "--dx", "20", "--dy", "3", "--system", "galactic"], 1),
@@ -17,9 +17,9 @@ from .. import data_select_main
     (["--par_name", "ALT", "--par_min", "70", "--par_max", "90"], 13),
     ])
 @requires_data('gammapy-extra')
-def test_find_obs_main(extra_options, n_selected_obs, tmpdir):
+def test_data_select_main(extra_options, n_selected_obs, tmpdir):
     infile = gammapy_extra.filename('test_datasets/obs/test_observation_table.fits')
-    outfile = str(tmpdir / 'find_obs_test.fits')
+    outfile = str(tmpdir / 'test_data_select_main.fits')
     data_select_main([infile, outfile] + extra_options)
     observation_table = ObservationTable.read(outfile)
     assert len(observation_table) == n_selected_obs
