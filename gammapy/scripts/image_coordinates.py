@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['coordinate_images']
+__all__ = ['image_coordinates']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(coordinate_images)
+def image_coordinates_main(args=None):
+    parser = get_parser(image_coordinates)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('outfile', type=str,
@@ -21,10 +21,10 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    coordinate_images(**vars(args))
+    image_coordinates(**vars(args))
 
 
-def coordinate_images(infile,
+def image_coordinates(infile,
                       outfile,
                       make_coordinate_maps,
                       make_distance_map,

@@ -2,18 +2,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
-__all__ = ['pfspec']
+__all__ = ['spectrum_pfspec']
 
 
-def main(args=None):
-    parser = get_parser(pfspec)
+def spectrum_pfspec_main(args=None):
+    parser = get_parser(spectrum_pfspec)
     # TODO: fix next argument
     parser.add_argument('input_file_names', type=str,
                         help='Input file names.')
     parser.add_argument('-p', '--analysis_position', type=str, default=None,
                         help='Center of the skymap in RA and Dec (J2000) in degrees. '
-                        'Format: \'(RA, Dec)\', including the quotation marks. '
-                        'If no center is given, the source position from the first input file is used.')
+                             'Format: \'(RA, Dec)\', including the quotation marks. '
+                             'If no center is given, the source position from the first input file is used.')
     parser.add_argument('-r', '--analysis_radius', type=float, default=0.125,
                         help='Aperture for the analysis in degrees.')
     parser.add_argument('-m', '--match_rmf', type=str, default=None,
@@ -30,17 +30,17 @@ def main(args=None):
                         help="Set the logging level")
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    pfspec(**vars(args))
+    spectrum_pfspec(**vars(args))
 
 
-def pfspec(input_file_names,
-           analysis_position,
-           analysis_radius,
-           match_rmf,
-           data_dir,
-           write_output,
-           graphical_output,
-           loglevel):
+def spectrum_pfspec(input_file_names,
+                    analysis_position,
+                    analysis_radius,
+                    match_rmf,
+                    data_dir,
+                    write_output,
+                    graphical_output,
+                    loglevel):
     """Create spectra from VHE event lists in FITS format.
 
     prog [options] FILE [ARF RMF]

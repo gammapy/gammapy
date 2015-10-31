@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
-from ..catalog_query import main as catalog_query_main
+from ..catalog_query import catalog_query_main
 
 
 @pytest.mark.parametrize('args', [

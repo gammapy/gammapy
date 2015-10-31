@@ -5,13 +5,13 @@ import sys
 from ..extern.pathlib import Path
 from ..utils.scripts import get_parser
 
-__all__ = ['run_cwt']
+__all__ = ['image_cwt']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(run_cwt)
+def image_cwt_main(args=None):
+    parser = get_parser(image_cwt)
     parser.add_argument('infile', action="store",
                         help='Input FITS file name')
     parser.add_argument('outfile', action="store",
@@ -35,19 +35,19 @@ def main(args=None):
     parser.add_argument('--convergence', default=1e-5, type=float,
                         help='Convergence parameter')
     args = parser.parse_args(args)
-    run_cwt(**vars(args))
+    image_cwt(**vars(args))
 
 
-def run_cwt(infile,
-            outfile,
-            overwrite,
-            min_scale,
-            nscales,
-            scale_step,
-            thresh,
-            detect,
-            niter,
-            convergence):
+def image_cwt(infile,
+              outfile,
+              overwrite,
+              min_scale,
+              nscales,
+              scale_step,
+              thresh,
+              detect,
+              niter,
+              convergence):
     """Compute filtered image using Continuous Wavelet Transform (CWT).
 
     TODO: add example and explain output.

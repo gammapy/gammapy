@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['significance_image']
+__all__ = ['image_significance']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(significance_image)
+def image_significance_main(args=None):
+    parser = get_parser(image_significance)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('outfile', type=str,
@@ -19,10 +19,10 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    significance_image(**vars(args))
+    image_significance(**vars(args))
 
 
-def significance_image(infile,
+def image_significance(infile,
                        outfile,
                        theta,
                        overwrite):

@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
-__all__ = ['reflected_regions']
+__all__ = ['spectrum_regions']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(reflected_regions)
+def spectrum_regions_main(args=None):
+    parser = get_parser(spectrum_regions)
     parser.add_argument('--x_on', type=float,
                         help='On-region X position (deg)')
     parser.add_argument('--y_on', type=float,
@@ -34,18 +34,18 @@ def main(args=None):
                         help="Set the logging level")
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    reflected_regions(**vars(args))
+    spectrum_regions(**vars(args))
 
 
-def reflected_regions(x_on,
-                      y_on,
-                      r_on,
-                      x_fov,
-                      y_fov,
-                      r_fov,
-                      exclusion,
-                      outfile,
-                      min_on_distance):
+def spectrum_regions(x_on,
+                     y_on,
+                     r_on,
+                     x_fov,
+                     y_fov,
+                     r_fov,
+                     exclusion,
+                     outfile,
+                     min_on_distance):
     """Find off regions for a given on region and exclusion mask.
 
     TODO: explain a bit.

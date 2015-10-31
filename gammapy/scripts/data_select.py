@@ -8,14 +8,14 @@ from astropy.time import Time
 from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..obs import ObservationTable
 
-__all__ = ['find_obs']
+__all__ = ['data_select_main']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def data_select_main(args=None):
     """Main function for argument parsing."""
-    parser = get_parser(find_obs)
+    parser = get_parser(data_select)
     parser.add_argument('infile', type=str,
                         help='Input observation table file name (fits format)')
     parser.add_argument('outfile', nargs='?', type=str,
@@ -57,24 +57,24 @@ def main(args=None):
 
     set_up_logging_from_args(args)
 
-    find_obs(**vars(args))
+    data_select(**vars(args))
 
 
-def find_obs(infile,
-             outfile,
-             x,
-             y,
-             r,
-             dx,
-             dy,
-             system,
-             t_start,
-             t_stop,
-             par_name,
-             par_min,
-             par_max,
-             invert,
-             overwrite):
+def data_select(infile,
+                outfile,
+                x,
+                y,
+                r,
+                dx,
+                dy,
+                system,
+                t_start,
+                t_stop,
+                par_name,
+                par_min,
+                par_max,
+                invert,
+                overwrite):
     """Select a subset of observations from a given observation list.
 
     This inline tool selects observations from a an input observation

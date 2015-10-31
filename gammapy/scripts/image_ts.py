@@ -1,18 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 import json
 import logging
 from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
-__all__ = ['ts_image']
+__all__ = ['image_ts']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(ts_image)
+def image_ts_main(args=None):
+    parser = get_parser(image_ts)
     parser.add_argument('input_file', type=str,
                         help='Input data FITS file name')
     parser.add_argument('output_file', type=str,
@@ -48,10 +47,10 @@ def main(args=None):
                         help="Set the logging level")
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    ts_image(**vars(args))
+    image_ts(**vars(args))
 
 
-def ts_image(input_file, output_file, psf, model, scales, downsample, residual,
+def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
              morphology, width, overwrite):
     """
     Compute source model residual images.

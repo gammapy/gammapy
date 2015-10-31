@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['model_image']
+__all__ = ['image_model']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(model_image)
+def image_model_main(args=None):
+    parser = get_parser(image_model)
     parser.add_argument('--exposure', type=str, default='exposure.fits',
                         help='Exposure FITS file name')
     parser.add_argument('--psf', type=str, default='psf.json',
@@ -20,10 +20,10 @@ def main(args=None):
     parser.add_argument('--outfile', type=str, default='model.fits',
                         help='Output model image FITS file name')
     args = parser.parse_args(args)
-    model_image(**vars(args))
+    image_model(**vars(args))
 
 
-def model_image(exposure,
+def image_model(exposure,
                 psf,
                 sources,
                 outfile):

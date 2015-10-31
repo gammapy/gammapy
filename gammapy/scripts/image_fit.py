@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
-__all__ = ['sherpa_image_like']
+__all__ = ['image_fit']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(sherpa_image_like)
+def image_fit_main(args=None):
+    parser = get_parser(image_fit)
     parser.add_argument('--counts', type=str, default='counts.fits',
                         help='Counts FITS file name')
     parser.add_argument('--exposure', type=str, default='exposure.fits',
@@ -30,16 +30,16 @@ def main(args=None):
                         help='Output JSON file with fit results')
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    sherpa_image_like(**vars(args))
+    image_fit(**vars(args))
 
 
-def sherpa_image_like(counts,
-                      exposure,
-                      background,
-                      psf,
-                      sources,
-                      roi,
-                      outfile):
+def image_fit(counts,
+              exposure,
+              background,
+              psf,
+              sources,
+              roi,
+              outfile):
     """Fit the morphology of a number of sources.
 
     Uses initial parameters from a JSON file (for now only Gaussians).

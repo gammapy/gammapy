@@ -76,43 +76,47 @@ package_info = get_package_info()
 package_info['package_data'].setdefault(PACKAGENAME, [])
 
 # Command-line scripts
-# Please keep the list in alphabetical order
 entry_points = {}
 entry_points['console_scripts'] = [
-    'gammapy-bin-cube = gammapy.scripts.bin_cube:main',
-    'gammapy-bin-image = gammapy.scripts.bin_image:main',
-    'gammapy-catalog-browse = gammapy.scripts.catalog_browser:main',
-    'gammapy-catalog-query = gammapy.scripts.catalog_query:main',
-    'gammapy-coordinate-images = gammapy.scripts.coordinate_images:main',
-    'gammapy-cwt = gammapy.scripts.cwt:main',
-    # TODO: add a command line tool to manage data (mostly download, but also generate test data).
-    # 'gammapy-data-manage = gammapy.obs.data_manager:main',
+
+    'gammapy-info = gammapy.scripts.info:info_main',
+    'gammapy-test = gammapy.scripts.check:check_main',
+
     'gammapy-data-browse = gammapy.scripts.data_browser:main',
-    'gammapy-data-show = gammapy.scripts.data_show:main',
-    'gammapy-derived-images = gammapy.scripts.derived_images:main',
-    'gammapy-detect = gammapy.scripts.detect:main',
-    'gammapy-image-decompose-a-trous = gammapy.scripts.image_decompose_a_trous:main',
-    'gammapy-image-pipe = gammapy.scripts.image_pipe:main',
-    'gammapy-info = gammapy.scripts.info:main',
-    'gammapy-iterative-source-detect = gammapy.scripts.iterative_source_detect:main',
-    'gammapy-look-up-image = gammapy.scripts.look_up_image:main',
-    'gammapy-model-image = gammapy.scripts.model_image:main',
-    'gammapy-make-bg-cube-models = gammapy.scripts.make_bg_cube_models:main',
-    'gammapy-obs-select = gammapy.scripts.obs_select:main',
-    'gammapy-pfmap = gammapy.scripts.pfmap:main',
-    'gammapy-pfsim = gammapy.scripts.pfsim:main',
-    'gammapy-pfspec = gammapy.scripts.pfspec:main',
-    'gammapy-reflected-regions = gammapy.scripts.reflected_regions:main',
-    'gammapy-residual-images = gammapy.scripts.residual_images:main',
-    'gammapy-sherpa-like = gammapy.scripts.sherpa_like:main',
-    'gammapy-sherpa-hspec = gammapy.hspec.run_fit:main',
-    'gammapy-sherpa-model-image = gammapy.scripts.sherpa_model_image:main',
-    'gammapy-significance-image = gammapy.scripts.significance_image:main',
-    'gammapy-simulate-source-catalog = gammapy.scripts.simulate_source_catalog:main',
-    'gammapy-test = gammapy.scripts.check:main',
-    'gammapy-ts-image = gammapy.scripts.ts_image:main',
+    'gammapy-data-manage = gammapy.scripts.data_manage:data_manage',
+    'gammapy-data-select = gammapy.scripts.data_select:data_select_main',
+    'gammapy-data-show = gammapy.scripts.data_show:data_show_main',
+
     'gammapy-spectrum = gammapy.spectrum.spectrum_analysis:main',
     'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
+    'gammapy-spectrum-hspec = gammapy.hspec.run_fit:main',
+    'gammapy-spectrum-pfspec = gammapy.scripts.spectrum_pfspec:spectrum_pfspec_main',
+    'gammapy-spectrum-pfsim = gammapy.scripts.spectrum_pfsim:spectrum_pfsim_main',
+    'gammapy-spectrum-regions = gammapy.scripts.spectrum_regions:spectrum_regions_main',
+
+    'gammapy-image-bin = gammapy.scripts.image_bin:image_bin_main',
+    'gammapy-image-coordinates = gammapy.scripts.image_coordinates:image_coordinates_main',
+    'gammapy-image-cwt = gammapy.scripts.image_cwt:image_cwt_main',
+    'gammapy-image-derived = gammapy.scripts.image_derived:image_derived_main',
+    'gammapy-image-fit = gammapy.scripts.image_fit:image_fit_main',
+    'gammapy-image-lookup = gammapy.scripts.image_lookup:image_lookup_main',
+    'gammapy-image-model = gammapy.scripts.image_model:image_model_main',
+    'gammapy-image-model-sherpa = gammapy.scripts.image_model_sherpa:image_model_sherpa_main',
+    'gammapy-image-pipe = gammapy.scripts.image_pipe:image_pipe_main',
+    'gammapy-image-pfmap = gammapy.scripts.image_pfmap:image_pfmap_main',
+    'gammapy-image-residual = gammapy.scripts.image_residual:image_residual_main',
+    'gammapy-image-significance = gammapy.scripts.image_significance:image_significance_main',
+    'gammapy-image-ts = gammapy.scripts.image_ts:image_ts_main',
+
+    'gammapy-cube-background = gammapy.scripts.cube_background:make_bg_cube_models_main',
+    'gammapy-cube-bin = gammapy.scripts.cube_bin:cube_bin_main',
+
+    'gammapy-detect = gammapy.scripts.detect:detect_main',
+    'gammapy-detect-iterative = gammapy.scripts.detect_iterative:detect_iterative_main',
+
+    'gammapy-catalog-browse = gammapy.scripts.catalog_browser:main',
+    'gammapy-catalog-query = gammapy.scripts.catalog_query:catalog_query_main',
+    'gammapy-catalog-simulate = gammapy.scripts.catalog_simulate:catalog_simulate_main',
 ]
 
 # Note: usually the `affiliated_package/data` folder is used for data files.

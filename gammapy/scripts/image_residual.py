@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['residual_images']
+__all__ = ['image_residual']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(residual_images)
+def image_residual_main(args=None):
+    parser = get_parser(image_residual)
     parser.add_argument('model_file', type=str,
                         help='Input excess model FITS file name')
     parser.add_argument('data_file', type=str,
@@ -22,14 +22,14 @@ def main(args=None):
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
     args.thetas = [float(theta) for theta in args.thetas.split(',')]
-    residual_images(**vars(args))
+    image_residual(**vars(args))
 
 
-def residual_images(model_file,
-                    data_file,
-                    out_file,
-                    thetas,
-                    overwrite):
+def image_residual(model_file,
+                   data_file,
+                   out_file,
+                   thetas,
+                   overwrite):
     """Compute source model residual images.
 
     The input ``data_file`` must contain the following HDU extensions:

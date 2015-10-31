@@ -17,7 +17,7 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def check_main(args=None):
     parser = get_parser(run_tests)
     parser.description = 'Check various things about the Gammapy installation'
     subparsers = parser.add_subparsers(help='commands', dest='subparser_name')

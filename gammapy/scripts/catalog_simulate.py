@@ -4,13 +4,13 @@ import logging
 from ..utils.scripts import get_parser
 from ..astro import population
 
-__all__ = ['simulate_source_catalog']
+__all__ = ['catalog_simulate']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(simulate_source_catalog)
+def catalog_simulate_main(args=None):
+    parser = get_parser(catalog_simulate)
     parser.add_argument('outfile', type=str,
                         help='Output filename')
     parser.add_argument('nsources', type=float,
@@ -30,18 +30,18 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    simulate_source_catalog(**vars(args))
+    catalog_simulate(**vars(args))
 
 
-def simulate_source_catalog(outfile,
-                            nsources,
-                            max_age,
-                            ism_density,
-                            supernova_energy,
-                            radial_distribution,
-                            velocity_distribution,
-                            spiral_arms,
-                            overwrite):
+def catalog_simulate(outfile,
+                     nsources,
+                     max_age,
+                     ism_density,
+                     supernova_energy,
+                     radial_distribution,
+                     velocity_distribution,
+                     spiral_arms,
+                     overwrite):
     """Simulate a catalog of Galactic sources.
 
     Several spatial and velocity distributions are available
@@ -91,4 +91,4 @@ Available velocity distributions:
 
 """.format(radial_distributions_list, velocity_distributions_list)
 
-simulate_source_catalog.__doc__ += _doc_lists
+catalog_simulate.__doc__ += _doc_lists

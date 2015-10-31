@@ -10,7 +10,7 @@ __all__ = ['info']
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def info_main(args=None):
     parser = get_parser(info)
     parser.add_argument('--version', action='store_true',
                         help='Print Gammapy version number')

@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['iterative_source_detect']
+__all__ = ['detect_iterative']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(iterative_source_detect)
+def detect_iterative_main(args=None):
+    parser = get_parser(detect_iterative)
     parser.add_argument('scales', type=float, nargs='*', default=[0.1, 0.2, 0.4],
                         help='List of spatial scales (deg) to search for sources')
     parser.add_argument('--counts', type=str, default='counts.fits',
@@ -27,17 +27,17 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    iterative_source_detect(**vars(args))
+    detect_iterative(**vars(args))
 
 
-def iterative_source_detect(scales,
-                            counts,
-                            background,
-                            exposure,
-                            output_fits,
-                            output_regions,
-                            debug_output_folder,
-                            overwrite):
+def detect_iterative(scales,
+                     counts,
+                     background,
+                     exposure,
+                     output_fits,
+                     output_regions,
+                     debug_output_folder,
+                     overwrite):
     """Run an iterative multi-scale source detection.
     """
     from collections import OrderedDict

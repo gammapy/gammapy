@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['look_up_image']
+__all__ = ['image_lookup']
 
 log = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 # TODO: implement world coordinates option (`pix` option)
 
 
-def main(args=None):
-    parser = get_parser(look_up_image)
+def image_lookup_main(args=None):
+    parser = get_parser(image_lookup)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('x', type=float,
@@ -25,14 +25,14 @@ def main(args=None):
     # parser.add_argument('--pix', action='store_true',
     #                    help='Input coordinates are in pixels? (world coordinates if false)')
     args = parser.parse_args(args)
-    look_up_image(**vars(args))
+    image_lookup(**vars(args))
 
 
-def look_up_image(infile,
-                  x,
-                  y,
-                  # pix,
-                  ):
+def image_lookup(infile,
+                 x,
+                 y,
+                 # pix,
+                 ):
     """Look up values in a map at given positions."""
     from gammapy.utils.fits import get_hdu
     from gammapy.image import lookup

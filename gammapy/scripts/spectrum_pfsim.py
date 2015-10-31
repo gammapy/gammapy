@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
-__all__ = ['pfsim']
+__all__ = ['spectrum_pfsim']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(pfsim)
+def spectrum_pfsim_main(args=None):
+    parser = get_parser(spectrum_pfsim)
     parser.add_argument('arf', type=str,
                         help='Input ARF file.')
     parser.add_argument('-t', '--exposure_time', type=float, default=.5,
@@ -33,18 +33,18 @@ def main(args=None):
 
     set_up_logging_from_args(args)
 
-    pfsim(**vars(args))
+    spectrum_pfsim(**vars(args))
 
 
-def pfsim(arf,
-          exposure_time,
-          flux,
-          rmf_file,
-          extra_file,
-          output_filename_base,
-          write_pha,
-          graphical_output,
-          loglevel):
+def spectrum_pfsim(arf,
+                   exposure_time,
+                   flux,
+                   rmf_file,
+                   extra_file,
+                   output_filename_base,
+                   write_pha,
+                   graphical_output,
+                   loglevel):
     """Simulates IACT eventlist using an ARF file.
 
     TODO: document

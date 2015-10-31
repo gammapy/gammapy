@@ -19,7 +19,7 @@ __all__ = ['make_bg_cube_models',
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def make_bg_cube_models_main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument('indir', type=str,
                         help='Input directory (that contains the event lists)')

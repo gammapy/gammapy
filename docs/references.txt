@@ -3,6 +3,8 @@
 .. _scikit-learn: http://scikit-learn.org/stable/
 .. _scipy library: http://scipy.org/scipylib/
 .. _scipy: http://scipy.org/scipylib/
+.. _Scipy Lecture Notes: http://www.scipy-lectures.org/
+.. _Practical Python for Astronomers Tutorial: http://python4astronomers.github.io/
 .. _GammaLib: http://gammalib.sourceforge.net
 .. _ctools: http://cta.irap.omp.eu/ctools
 .. _3ML: https://threeml.stanford.edu/

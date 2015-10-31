@@ -6,7 +6,7 @@ from ...utils.testing import requires_dependency
 from ...datasets import make_test_dataset
 from ...background import CubeBackgroundModel
 from ...obs import ObservationGroups
-from ..make_bg_cube_models import main as make_bg_cube_models_main
+from ..cube_background import make_bg_cube_models_main
 
 
 # TODO: this test is currently broken ... fix it!

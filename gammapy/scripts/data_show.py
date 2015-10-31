@@ -11,17 +11,19 @@ import click
 from .. import irf
 from ..data import EventList
 
+__all__ = ['data_show_main']
+
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-
 FILETYPES = ['events', 'aeff', 'edisp', 'psf']
+
 
 @click.command()
 @click.argument('filename')
 @click.argument('filetype')
 @click.option('--plot', '-p', 'do_plot', is_flag=True, help='Show plots?')
-def main(filename, filetype, do_plot):
+def data_show_main(filename, filetype, do_plot):
     """A quick look command line tool to check a single data or IRF file.
 
     Use the `gammapy-data-browser` to browse / check lots of files.

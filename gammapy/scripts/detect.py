@@ -8,7 +8,7 @@ __all__ = ['detect']
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def detect_main(args=None):
     parser = get_parser(detect)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')

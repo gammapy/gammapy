@@ -4,7 +4,7 @@ import json
 from numpy.testing.utils import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import load_poisson_stats_image
-from ..sherpa_like import sherpa_image_like
+from ..image_fit import image_fit
 
 
 @requires_dependency('sherpa')
@@ -33,7 +33,7 @@ def test_sherpa_like(tmpdir):
             'sources': str(filename),
             'roi': None,
             'outfile': str(outfile)}
-    sherpa_image_like(**args)
+    image_fit(**args)
 
     with outfile.open() as fh:
         data = json.load(fh)

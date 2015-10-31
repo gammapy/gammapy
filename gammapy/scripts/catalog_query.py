@@ -9,7 +9,7 @@ __all__ = ['catalog_query']
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
+def catalog_query_main(args=None):
     parser = get_parser(catalog_query)
     # TODO: get available catalogs from the registry and add
     # an option to print them here.

@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from ..utils.scripts import get_parser
 
-__all__ = ['derived_images']
+__all__ = ['image_derived']
 
 log = logging.getLogger(__name__)
 
 
-def main(args=None):
-    parser = get_parser(derived_images)
+def image_derived_main(args=None):
+    parser = get_parser(image_derived)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
     parser.add_argument('outfile', type=str,
@@ -21,14 +21,14 @@ def main(args=None):
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
-    derived_images(**vars(args))
+    image_derived(**vars(args))
 
 
-def derived_images(infile,
-                   outfile,
-                   theta,
-                   is_off_correlated,
-                   overwrite):
+def image_derived(infile,
+                  outfile,
+                  theta,
+                  is_off_correlated,
+                  overwrite):
     """Make derived maps for a given set of basic maps.
 
     TODO: describe

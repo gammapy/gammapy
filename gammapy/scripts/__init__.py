@@ -1,35 +1,41 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""Gammapy command line tools.
-
-TODO: document how this works and how users should write their own
-command line tools.
+"""Gammapy command line and GUI tools.
 """
 
-from .bin_cube import *
-from .bin_image import *
+from .check import *
+from .info import *
+
+from .data_browser import *
+from .data_manage import *
+from .data_select import *
+from .data_show import *
+
+from .spectrum_pipe import *
+from .spectrum_pfspec import *
+from .spectrum_pfsim import *
+from .spectrum_regions import *
+
+from .image_bin import *
+from .image_coordinates import *
+from .image_cwt import *
+from .image_derived import *
+from .image_fit import *
+from .image_lookup import *
+from .image_model import *
+from .image_model_sherpa import *
+from .image_pipe import *
+from .image_residual import *
+from .image_significance import *
+from .image_ts import *
+from .image_pfmap import *
+
+from .cube_background import *
+from .cube_bin import *
+
+from .detect import *
+from .detect_iterative import *
+
 from .catalog_browser import *
 from .catalog_query import *
-from .check import *
-from .coordinate_images import *
-from .cwt import *
-from .data_browser import *
-from .derived_images import *
-from .detect import *
-from .image_decompose_a_trous import *
-from .info import *
-from .iterative_source_detect import *
-from .look_up_image import *
-from .make_bg_cube_models import *
-from .model_image import *
-from .obs_select import *
-from .pfmap import *
-from .pfsim import *
-from .pfspec import *
-from .reflected_regions import *
-from .residual_images import *
-from .sherpa_like import *
-from .sherpa_model_image import *
-from .significance_image import *
-from .simulate_source_catalog import *
-from .spectrum_pipe import *
-from .ts_image import *
+from .catalog_simulate import *
+

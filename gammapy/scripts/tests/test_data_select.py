@@ -3,8 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
 from ...datasets import gammapy_extra
-from ..obs_select import main as obs_select_main
 from ...obs import ObservationTable
+from .. import data_select_main
 
 
 # TODO: Fix this test: obs table format changed a bit -> KeyErrror on TSTART
@@ -20,6 +20,6 @@ from ...obs import ObservationTable
 def test_find_obs_main(extra_options, n_selected_obs, tmpdir):
     infile = gammapy_extra.filename('test_datasets/obs/test_observation_table.fits')
     outfile = str(tmpdir / 'find_obs_test.fits')
-    obs_select_main([infile, outfile] + extra_options)
+    data_select_main([infile, outfile] + extra_options)
     observation_table = ObservationTable.read(outfile)
     assert len(observation_table) == n_selected_obs
