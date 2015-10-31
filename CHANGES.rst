@@ -14,25 +14,25 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
 .. _gammapy_0p5_release:
 
-0.5 (November 2, 2015, unreleased)
-----------------------------------
+0.5 (December 21, 2015, unreleased)
+-----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.5 will be released on November 2, 2015.
+Gammapy 0.5 will be released on December 21, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
 .. _gammapy_0p4_release:
 
-0.4 (October 5, 2015, unreleased)
----------------------------------
+0.4 (November 11, 2015, unreleased)
+-----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on October 5, 2015.
+Gammapy 0.4 will be released on November 11, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
@@ -48,11 +48,15 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#371] Improve catalog utils (Christoph Deil)
+- [#369] Improve the data management toolbox (Christoph Deil)
 - [#367] Add Feldman Cousins algorithm (Dirk Lennarz)
+- [#364] Improve catalog classes and gammapy-extra data handling (Jonathan Harris, Christoph Deil)
+- [#361] Add gammapy-spectrum-pipe (Johannes King)
 - [#359] Add 1D spectrum analysis tool based on gammapy.hspec (Johannes King)
-- [#351] Rewrite most parts of EnergyDispersion class (Johannes King)
 - [#353] Add some scripts and examples (Christoph Deil)
 - [#352] Add data management tools (Christoph Deil)
+- [#351] Rewrite EnergyDispersion class (Johannes King)
 - [#348] Misc code cleanup (Christoph Deil)
 - [#347] Add background cube model comparison plot script (Manuel Paz Arribas)
 - [#342] Add gammapy-bin-image test (Christoph Deil)
