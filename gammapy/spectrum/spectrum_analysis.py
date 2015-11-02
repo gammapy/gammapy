@@ -6,7 +6,8 @@ from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds, Energy
-from ..background import ring_area_factor
+from ..background import ring_area_factor, ReflectedRegionMaker
+from ..background import find_reflected_regions_for_event_list
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.io import fits
@@ -189,8 +190,10 @@ class SpectrumObservation(object):
             off_list = self.event_list.select_sky_ring(
                 self.target, self.irad, self.orad)
         elif self.off_type == "reflected":
-            off_list = self.event_list.select_reflected_regions(
-                self.target, self.radius, self.exclusion)
+            regions = find_reflected_regions_for_event_list(
+                self.event_list, self.exclusion, self.radius)
+            off_list = self.event_list.select_circular_regions(regions)
+            self.alpha = 1./len(regions)
         else:
             raise ValueError("Undefined background method: {}".format(self.off_type))
             

@@ -283,6 +283,23 @@ class EventList(Table):
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
 
+    def select_circular_regions(self, regions):
+        """Select event in circular regions
+
+        Parameters
+        ----------
+        regions : `~gammapy.background.CircularOffRegions
+            Regions table
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+
+        mask = self.filter_circular_regions(regions)
+        return self[mask]
+
     def filter_circular_regions(self, regions):
         """Create selection mask for event in circular regions
 
