@@ -1,17 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
-from ...background import Maps, ReflectedRegionMaker
+from astropy.io import fits
+from .. import ReflectedRegionMaker
+from ...utils.testing import requires_data
+from ...datasets import gammapy_extra
 
-
-@pytest.mark.xfail
-def test_TestReflectedBgMaker():
-    runs = 'TODO'
-    maps = Maps('maps.fits')
-    reflected_bg_maker = ReflectedRegionMaker(runs, maps, psi=2, theta=0.1)
-    total_maps = Maps('total_maps.fits')
-    for run in runs:
-        run_map = total_maps.cutout(run)
-        reflected_bg_maker.make_n_reflected_map(run, run_map)
-        total_maps.add(run_map)
-    total_maps.save('n_reflected.fits')
+@requires_data('gammapy-extra')
+def test_ReflectedRegionMaker():
+    exclfile = gammapy_extra.filename('test_datasets/spectrum/dummy_exclusion.fits')
+    exclusion = fits.open(exclfile, hdu = 0)[0]
+    fov = {'x' : 82.87, 'y' : 23.24, 'r' : 10}
+    maker = ReflectedRegionMaker(exclusion, fov)
+    x_on, y_on, r_on = 80.2, 23.5, 0.3
+    regions = maker.compute(x_on, y_on, r_on)

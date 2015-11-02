@@ -5,11 +5,48 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy import sin, cos, arctan2, sqrt
 from ..image import exclusion_distance, lookup
+from astropy.table import Table
 
 __all__ = [
     'ReflectedRegionMaker',
-    'ReflectedBgMaker',
+    'CircularOffRegions'
 ]
+
+
+class CircularOffRegions(Table):
+    """List of circular OFF regions
+
+    Parameters
+    ----------
+    data_rows : `~np.array`
+        Array containing the circle definitions: x, y, radius
+    """
+
+    def __init__(self, **kwargs):
+        meta = {'system' : 'galactic'}
+        super(CircularOffRegions, self).__init__(meta=meta, **kwargs)
+
+    @property
+    def number_of_regions(self):
+        """Number of OFF regions"""
+        return len(self)
+    
+    def info(self):
+        """Summary info string."""
+        s = super(CircularOffRegions, self).__repr__()
+        return s
+
+    def to_ds9(self, filename):
+        """Write ds9 regions file"""
+
+        fmt = 'fk5; circle({x},{y},{r})\n'
+        with open(filename, 'w') as fh:
+            for row in self:
+                x = row['x']
+                y = row['y']
+                r = row['r']
+                line = fmt.format(x=x,y=y,r=r)
+                fh.write(line)
 
 
 class ReflectedRegionMaker(object):
@@ -41,12 +78,13 @@ class ReflectedRegionMaker(object):
         # up the distance of the corresponding pixel in this map.
         header = exclusion.header
         CDELT = exclusion.header['CDELT2']
-        distance = CDELT * exclusion_distance(exclusion.data)
+        excl_mask = np.array(exclusion.data, dtype = 'int')
+        distance = CDELT * exclusion_distance(excl_mask)
         from astropy.io.fits import ImageHDU
         self.exclusion_distance = ImageHDU(distance, header)
 
     def compute(self, x_on, y_on, r_on):
-        """Computes reflected regions for a given (circular) ON region
+        """Computes reflected regions for a given (circular) On region
 
         Parameters
         ----------
@@ -54,6 +92,11 @@ class ReflectedRegionMaker(object):
             Center of the ON region [deg]
         r_on : float
             Radius of the ON region
+
+        Returns
+        -------
+        off_regions : `~gammapy.background.CircularOffRegions`
+            Table containing the Off regions
         """
 
         self.regions = []
@@ -66,6 +109,8 @@ class ReflectedRegionMaker(object):
             if self._is_position_ok(x, y, r_on):
                 region = dict(x=x, y=y, r=r_on)
                 self.regions.append(region)
+
+        return CircularOffRegions(rows=self.regions)
 
     def _is_position_ok(self, x, y, r):
         if self._is_exclusion_ok(x, y, r):
@@ -107,14 +152,5 @@ class ReflectedRegionMaker(object):
         y = self.fov['y'] + dy
         return x, y
 
-    def write_off_regions(self, filename):
-        fmt = 'galactic; circle({x},{y},{r})\n'
-        with open(filename, 'w') as fh:
-            for region in self.regions:
-                line = fmt.format(**region)
-                fh.write(line)
 
 
-class ReflectedBgMaker(object):
-    """Compute background using the reflected background method"""
-    pass
