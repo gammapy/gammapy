@@ -5,7 +5,7 @@ from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import gammapy_extra
-
+import numpy as np
 
 @requires_data('gammapy-extra')
 def test_EventList():
@@ -31,6 +31,18 @@ def test_EventList():
 
 
 @requires_data('gammapy-extra')
+def test_EventList_region():
+    from gammapy.background import CircularOffRegions
+
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
+    event_list = EventList.read(filename, hdu='EVENTS')
+
+    regions_file = gammapy_extra.filename('test_datasets/background/example_off_regions.dat')
+    off = CircularOffRegions.read(regions_file, format='ascii.ecsv')
+    filter = event_list.filter_circular_regions(off)
+    assert len(filter) == 5
+
+@requires_data('gammapy-extra')
 def test_EventListDataset():
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     dset = EventListDataset.read(filename)
@@ -47,3 +59,4 @@ def test_EventListDatasetChecker():
     dset = EventListDataset.read(filename)
     checker = EventListDatasetChecker(dset)
     checker.run('all')
+

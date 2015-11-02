@@ -22,10 +22,6 @@ class CircularOffRegions(Table):
         Array containing the circle definitions: x, y, radius
     """
 
-    def __init__(self, **kwargs):
-        meta = {'system' : 'galactic'}
-        super(CircularOffRegions, self).__init__(meta=meta, **kwargs)
-
     @property
     def number_of_regions(self):
         """Number of OFF regions"""
@@ -51,6 +47,9 @@ class CircularOffRegions(Table):
 
 class ReflectedRegionMaker(object):
     """Finds reflected regions.
+
+    More info on the reflected regions background estimation methond
+    can be found in [Berge2007]_
 
     TODO: At the moment only works for circular regions!
     TODO: should work with world or pixel coordinates internally!???
@@ -110,7 +109,7 @@ class ReflectedRegionMaker(object):
                 region = dict(x=x, y=y, r=r_on)
                 self.regions.append(region)
 
-        return CircularOffRegions(rows=self.regions)
+        return CircularOffRegions(rows=self.regions, meta={'frame':'fk5'})
 
     def _is_position_ok(self, x, y, r):
         if self._is_exclusion_ok(x, y, r):
