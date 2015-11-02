@@ -13,7 +13,6 @@ from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
 from ..data import InvalidDataError
 from ..time import time_ref_from_dict
-from ..background.reflected import ReflectedRegionMaker
 from .utils import _earth_location_from_dict
 
 __all__ = [

@@ -4,7 +4,7 @@ from ...utils.testing import requires_dependency, requires_data, data_manager
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_analysis import SpectrumAnalysis
 
-
+@pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 @requires_data('hess')

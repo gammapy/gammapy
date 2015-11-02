@@ -5,7 +5,7 @@ from ...data import EventList
 from ...obs import DataStore
 from ...utils.testing import requires_data, data_manager
 
-
+@pytest.mark.xfail
 @requires_data('hess')
 def test_DataStore_construction(data_manager):
     """Construct DataStore objects in various ways"""
@@ -18,7 +18,7 @@ def test_DataStore_construction(data_manager):
     base_dir = '/Users/deil/work/_Data/hess/fits/parisanalysis/fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std'
     data_store = DataStore.from_dir(base_dir)
 
-
+@pytest.mark.xfail
 @requires_data('hess')
 def test_DataStore_filenames(data_manager):
     """Check if filenames are constructed correctly"""
