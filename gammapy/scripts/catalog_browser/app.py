@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 from flask import Flask, Blueprint, render_template, redirect, url_for, session
 from flask_bootstrap import Bootstrap
@@ -16,7 +18,10 @@ def view_index():
 
     if form.validate_on_submit():
         session['catalog_name'] = form.catalog_name.data
+        cat = source_catalogs[form.catalog_name.data]
+        source = cat[form.source_name.data]
         session['source_name'] = form.source_name.data
+        session['source_id'] = source.index
         session['info_display'] = form.info_display.data
         redirect(url_for('catalog_browser.view_index'))
     else:
@@ -37,6 +42,12 @@ def view_test():
 
 
 def create_catalog_browser(config):
+    try:
+        import matplotlib
+        matplotlib.use('agg')
+    except ImportError:
+        log.warning('Matplotlib not available.')
+
     app = Flask(__name__)
     app.register_blueprint(catalog_browser)
     app.secret_key = 'development key'
@@ -44,3 +55,6 @@ def create_catalog_browser(config):
     app.config['BOOTSTRAP_SERVE_LOCAL'] = True
 
     return app
+
+
+from .api import *

@@ -43,4 +43,4 @@ def test_source_catalogs():
     """Test the global registry instance"""
 
     names = source_catalogs.catalog_names
-    assert names == ['3fgl', '2fhl']
+    assert names == ['3fgl', '2fhl', 'hgps']

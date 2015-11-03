@@ -1,3 +1,5 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 from flask_wtf import Form
 from wtforms import SelectField, StringField
 from wtforms.validators import InputRequired
@@ -6,8 +8,9 @@ __all__ = ['CatalogBrowserForm']
 
 
 catalog_name_choices = [
-    ('3FGL', '3FGL'),
-    ('2FHL', '2FHL'),
+    ('3fgl', '3fgl'),
+    ('2fhl', '2fhl'),
+    ('hgps', 'hgps'),
 ]
 
 info_display_choices = [
@@ -20,7 +23,7 @@ info_display_choices = [
 class CatalogBrowserForm(Form):
     catalog_name = SelectField(
         label='Catalog Name',
-        default='3FGL',
+        default='3fgl',
         choices=catalog_name_choices,
         validators=[InputRequired()]
     )

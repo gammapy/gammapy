@@ -1,11 +1,13 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 """A web app to browse catalogs relevant for gamma-ray astronomy.
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
 
 log = logging.getLogger(__name__)
 
-__all__ = ['main']
+__all__ = []
 
 
 @click.command()
