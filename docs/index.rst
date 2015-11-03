@@ -75,6 +75,7 @@ The Gammapy toolbox
   irf/index
   morphology/index
   obs/index
+  region/index
   spectrum/index
   stats/index
   time/index
