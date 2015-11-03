@@ -62,7 +62,7 @@ class PixRegion(Region):
         """
         raise NotImplementedError("")
 
-    def to_pixel(self, wcs, mode='local', tolerance=None):
+    def to_sky(self, wcs, mode='local', tolerance=None):
         """
         Returns a region defined in sky coordinates.
 
