@@ -6,9 +6,11 @@ from ..irf import EnergyDispersion, EnergyDispersion2D
 from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
 from ..data import CountsSpectrum, EventList
 from ..spectrum import EnergyBounds, Energy
-from ..background import ring_area_factor
+from ..background import ring_area_factor, ReflectedRegionMaker
+from ..background import find_reflected_regions_for_event_list
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
+from astropy.io import fits
 import logging
 import numpy as np
 import os
@@ -184,7 +186,17 @@ class SpectrumObservation(object):
     def make_off_vector(self):
         """Make OFF `~gammapy.data.CountsSpectrum`
         """
-        off_list = self.event_list.select_sky_ring(self.target, self.irad, self.orad)
+        if self.off_type == "ring":
+            off_list = self.event_list.select_sky_ring(
+                self.target, self.irad, self.orad)
+        elif self.off_type == "reflected":
+            regions = find_reflected_regions_for_event_list(
+                self.event_list, self.exclusion, self.radius)
+            off_list = self.event_list.select_circular_regions(regions)
+            self.alpha = 1./len(regions)
+        else:
+            raise ValueError("Undefined background method: {}".format(self.off_type))
+            
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         off_vec.backscal = self.alpha
         self.bkg = off_vec
@@ -192,16 +204,16 @@ class SpectrumObservation(object):
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
-        aeff2D_file = self.store.filename(self.obs, 'effective area')
+        aeff2D_file = self.store.filename(self.obs, 'aeff')
         aeff2D = EffectiveAreaTable2D.read(aeff2D_file)
         self.arf = aeff2D.to_effective_area_table(self.offset)
 
     def make_rmf(self):
         """Make `~gammapy.irf.EnergyDispersion`
         """
-        edisp2D_file = self.store.filename(self.obs, 'energy dispersion')
+        edisp2D_file = self.store.filename(self.obs, 'edisp')
         edisp2D = EnergyDispersion2D.read(edisp2D_file)
-        self.rmf = edisp2D.to_energy_dispersion(self.ebounds, self.offset)
+        self.rmf = edisp2D.to_energy_dispersion(self.offset, e_reco=self.ebounds)
 
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
@@ -214,8 +226,8 @@ def _process_config(object):
     """
 
     # Data
-    storedir = object.config['general']['datastore']
-    object.store = DataStore(dir=storedir)
+    storename = object.config['general']['datastore']
+    object.store = DataStore.from_name(storename)
     object.outdir = object.config['general']['outdir']
     basename = object.outdir + "/ogip_data"
 
@@ -235,11 +247,14 @@ def _process_config(object):
     object.target = SkyCoord(x, y, frame=frame)
 
     # Pointing
-    event_list_file = object.store.filename(object.obs, 'events')
-    event_list = EventList.read(event_list_file, hdu=1)
+    event_list = object.store.load(obs_id = object.obs, filetype ='events')
     object.event_list = event_list
     object.pointing = object.event_list.pointing_radec
     object.offset = object.target.separation(object.pointing)
+
+    # Excluded regions
+    excl_file = object.config['excluded_regions']['file']
+    object.exclusion = fits.open(excl_file)[0]
 
     # Binning
     sec = object.config['binning']
@@ -257,12 +272,17 @@ def _process_config(object):
     # ON/OFF Region
     val = object.config['on_region']['radius']
     object.radius = Angle(val)
-    ival = object.config['off_region']['inner_radius']
-    oval = object.config['off_region']['outer_radius']
-    object.irad = Angle(ival)
-    object.orad = Angle(oval)
-    object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
 
+    object.off_type = object.config['off_region']['type']
+    if object.off_type == 'ring':
+        ival = object.config['off_region']['inner_radius']
+        oval = object.config['off_region']['outer_radius']
+        object.irad = Angle(ival)
+        object.orad = Angle(oval)
+        object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
+    elif object.off_type == 'reflected':
+        pass
+    
     # Spectral fit
     object.model = object.config['model']['type']
     val = object.config['model']['threshold_low']

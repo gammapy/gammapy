@@ -142,8 +142,8 @@ class SpectrumPipe(object):
         plt.sca(axarr[1])
         axarr[1].errorbar(x, f_diff, yerr=f_diff_err, fmt='g.')
         plt.ylabel('Flux @ 1 TeV / Reference Value')
-        plt.ylim(-1, 1)
-        plt.errorbar(np.linspace(min, max, 10000), np.zeros(10000),
+        plt.ylim(0, 2)
+        plt.errorbar(np.linspace(min, max, 10000), np.ones(10000),
                      yerr=0.2, fmt='r-', ecolor='lightgray')
 
         val = filename.split('.')[0]

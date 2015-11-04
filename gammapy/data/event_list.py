@@ -283,6 +283,48 @@ class EventList(Table):
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
 
+    def select_circular_regions(self, regions):
+        """Select event in circular regions
+
+        Parameters
+        ----------
+        regions : `~gammapy.background.CircularOffRegions
+            Regions table
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+
+        mask = self.filter_circular_regions(regions)
+        return self[mask]
+
+    def filter_circular_regions(self, regions):
+        """Create selection mask for event in circular regions
+
+        Parameters
+        ----------
+        regions : `~gammapy.background.CircularOffRegions
+            Regions table
+
+        Returns
+        -------
+        index_array : `np.array`
+            Index array of seleced events
+        """
+        
+        frame = regions.meta['frame']
+        position = self.radec
+        mask = np.array([], dtype=int)
+        for reg in regions:
+            center =  SkyCoord(reg['x'], reg['y'], unit='deg', frame=frame)
+            radius = Angle(reg['r'], 'deg')
+            separation = center.separation(position)
+            temp = np.where(separation < radius)[0]
+            mask = np.union1d(mask, temp)
+        return mask
+            
     def fill_counts_image(self, image):
         """Fill events in counts image.
 

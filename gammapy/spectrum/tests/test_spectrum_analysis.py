@@ -1,17 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, data_manager
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_analysis import SpectrumAnalysis
 
-
-# TODO: this test is currently broken ... fix it!
-@pytest.mark.xfail
+#@pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
-def test_spectrum_analysis(tmpdir):
+@requires_data('hess')
+def test_spectrum_analysis(data_manager):
 
-    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example_ring.yaml')
+
     analysis = SpectrumAnalysis.from_yaml(configfile)
-
-    # TODO: test more stuff once the DataStore class can be accessed remotely
+    analysis.run()
+    
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example_reflected.yaml')
+    analysis = SpectrumAnalysis.from_yaml(configfile)
+    analysis.run()
+    
