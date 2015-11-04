@@ -1,12 +1,10 @@
 #!/bin/bash
 
 # Install conda
+# http://conda.pydata.org/docs/travis.html#the-travis-yml-file
 wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-chmod +x miniconda.sh
-./miniconda.sh -b
-export PATH=/home/travis/miniconda/bin:$PATH
-export PATH=/Users/travis/miniconda2/bin:$PATH
-conda update --yes conda
+bash miniconda.sh -b -p $HOME/miniconda
+export PATH="$HOME/miniconda/bin:$PATH"
 
 # Install Python dependencies
 source "$( dirname "${BASH_SOURCE[0]}" )"/setup_dependencies_common.sh
