@@ -190,3 +190,42 @@ class SkyRegion(Region):
 
 class RegionList(list):
     """List of regions"""
+
+    def write(self, filename, format='ds9'):
+        """Write list of regions to file
+
+        Parameters
+        ----------
+        filename : str
+            Name of file to write
+        format : str
+            File format, available: ds9
+        """
+        with open(filename, 'w') as fh:
+            for region in self:
+                if (format=='ds9'):
+                    line = region.to_ds9()
+                else:
+                    raise ValueError('Format {} not definded'.format(format))
+                fh.write(line)
+
+    def to_sky(self, wcs, frame='galactic'):
+        """Convert to SkyRegions
+
+        Returns
+        -------
+        sky_list : `~gammapy.region.RegionList`
+            List of SkyRegions
+
+        Raises `ValueError` if PixelRegion is contained in original list
+        """
+        val = RegionList()
+        for region in self:
+            try:
+                sky = region.to_sky(wcs, frame=frame)
+            except(AttributeError):
+                raise ValueError('This list contains not only PixRegions')
+            val.append(sky)
+
+        return val
+            

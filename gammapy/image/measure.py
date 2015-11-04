@@ -304,8 +304,7 @@ def lookup(image, x, y, world=True):
     if world:
         return _lookup_world(image, x, y)
     else:
-        return _lookup_pix(image.data, x, y)
-
+        return _lookup_pix(image, x, y)
 
 def lookup_max(image, GLON, GLAT, theta):
     """Look up the max image values within a circle of radius theta

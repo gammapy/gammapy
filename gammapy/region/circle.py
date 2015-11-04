@@ -2,12 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
+import matplotlib.patches as mpatches
 from astropy.coordinates import SkyCoord
 from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
 from photutils.utils.wcs_helpers import (
     skycoord_to_pixel_scale_angle,
 )
 from .core import SkyRegion, PixRegion
+
 
 __all__ = [
     'PixCircleRegion',
@@ -21,7 +23,7 @@ class PixCircleRegion(PixRegion):
     Circular aperture(s), defined in pixel coordinates.
     Parameters
     ----------
-    pos : tuple
+    pos : tuple, list, array
         Pixel coordinates of the circle center
     radius : float
         Circle radius, in pixels
@@ -29,7 +31,7 @@ class PixCircleRegion(PixRegion):
 
     def __init__(self, pos, radius):
 
-        self.pos = pos
+        self.pos = (pos[0], pos[1])
         self.radius = radius
 
     def to_sky(self, wcs, frame='galactic'):
@@ -51,6 +53,72 @@ class PixCircleRegion(PixRegion):
         val = (self.radius * u.pix / scale).to(u.deg)
         sky_radius = np.round(val,4)
         return SkyCircleRegion(sky_position, sky_radius)        
+
+    def offset(self, pos):
+        """
+        Compute offset wrt to a certain pixel position
+
+        Parameters
+        ----------
+        pos : tuple
+            Position to which offset is computed
+    
+        Returns
+        -------
+        offset : float
+            Offset in pix
+
+        """
+        x2 = (self.pos[0] - pos[0]) ** 2
+        y2 = (self.pos[1] - pos[1]) ** 2
+        offset = np.sqrt(x2 + y2) 
+        return offset
+
+    def angle(self, pos):
+        """
+        Compute angle [rad] wrt to a certain pixel position
+
+        Parameters
+        ----------
+        pos : tuple
+            Position to which angle is computed
+
+        Returns
+        -------
+        angle : float
+            Angle in rad
+        """
+        dx = self.pos[0] - pos[0]
+        dy = self.pos[1] - pos[1]
+        angle = np.arctan2(dx, dy)
+        return angle
+
+    def is_inside_exclusion(self, exclusion_mask):
+        """
+        Check if region overlaps with a given exclusion mask
+
+        Parameters
+        ----------
+        exclusion_mask : `~gammapy.region.ExclusionMask`
+            Exclusion mask
+
+        Returns
+        -------
+        bool
+        """
+        from ..image import lookup
+        x,y = self.pos
+        excl_dist = exclusion_mask.distance_image
+        val = lookup(excl_dist, x, y, world=False)
+        return val < self.radius
+
+    def to_mpl_artist(self, **kwargs):
+        """Convert to mpl patch.
+        """
+        xc, yc = self.pos
+        major = self.radius
+        patch = mpatches.Ellipse((xc, yc), 2*major, 2*major, angle=0, **kwargs)
+        return patch
 
 
 class SkyCircleRegion(SkyRegion):
@@ -88,3 +156,15 @@ class SkyCircleRegion(SkyRegion):
         pix_position = np.array([x, y]).transpose()
 
         return PixCircleRegion(pix_position, pix_radius)
+
+    def to_ds9(self):
+        """ds9 region string.
+        """
+        l = self.pos.l.value
+        b = self.pos.b.value
+        r = self.radius.value
+        sys = self.pos.name
+
+        ss = '{sys}; circle({l},{b},{r})\n'.format(**locals())
+        return ss
+
