@@ -1,5 +1,11 @@
 #!/bin/bash -x
 
+
+hash -r
+conda config --set always_yes yes --set changeps1 no
+conda update -q conda
+conda info -a
+
 # CONDA
 conda create --yes -n test -c astropy-ci-extras python=$PYTHON_VERSION pip
 source activate test
@@ -18,7 +24,7 @@ then
 fi
 
 # CORE DEPENDENCIES
-conda install --yes pytest Cython jinja2 psutil
+conda install --yes setuptools pytest Cython jinja2 psutil
 
 # These dependencies are just needed for some functionality, they are not core.
 # But the pytest runner fails with an ImportError if we don't put it here
