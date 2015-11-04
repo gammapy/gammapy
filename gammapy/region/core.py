@@ -7,8 +7,9 @@ from astropy.extern import six
 __all__ = [
     'Region',
     'PixRegion',
+    'PixRegionList',
     'SkyRegion',
-    'RegionList',
+    'SkyRegionList',
 ]
 
 @six.add_metaclass(abc.ABCMeta)
@@ -187,9 +188,8 @@ class SkyRegion(Region):
         """
         raise NotImplementedError("")
 
-
-class RegionList(list):
-    """List of regions"""
+class SkyRegionList(list):
+    """List of sky regions"""
 
     def write(self, filename, format='ds9'):
         """Write list of regions to file
@@ -209,23 +209,21 @@ class RegionList(list):
                     raise ValueError('Format {} not definded'.format(format))
                 fh.write(line)
 
+
+class PixRegionList(list):
+    """List of pix regions"""
+
     def to_sky(self, wcs, frame='galactic'):
         """Convert to SkyRegions
 
         Returns
         -------
-        sky_list : `~gammapy.region.RegionList`
+        sky_list : `~gammapy.region.SkyRegionList`
             List of SkyRegions
 
-        Raises `ValueError` if PixelRegion is contained in original list
         """
-        val = RegionList()
+        val = SkyRegionList()
         for region in self:
-            try:
-                sky = region.to_sky(wcs, frame=frame)
-            except(AttributeError):
-                raise ValueError('This list contains not only PixRegions')
+            sky = region.to_sky(wcs, frame=frame)
             val.append(sky)
-
         return val
-            

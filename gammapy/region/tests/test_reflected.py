@@ -19,5 +19,4 @@ def test_find_reflected_regions():
     region = SkyCircleRegion(pos=pos, radius=radius)
     center = SkyCoord(80, 24, unit='deg', frame='icrs')
     regions = find_reflected_regions(region, center, mask)
-    print(regions)
-    1/0
+    

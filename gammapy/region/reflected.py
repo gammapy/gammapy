@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from . import RegionList, PixCircleRegion
+from . import SkyRegionList, PixRegionList, PixCircleRegion
 
 __all__ = [
     'find_reflected_regions',
@@ -29,11 +29,11 @@ def find_reflected_regions(region, center, exclusion_mask,
 
     Returns
     -------
-    regions : `~gammapy.region.RegionList`
+    regions : `~gammapy.region.SkyRegionList`
         Reflected regions list
     """
     
-    reflected_regions_pix = RegionList()
+    reflected_regions_pix = PixRegionList()
     wcs = exclusion_mask.wcs
     pix_region = region.to_pixel(wcs)
     val = center.to_pixel(wcs, origin=1)
