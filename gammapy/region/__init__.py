@@ -4,5 +4,4 @@
 
 from .core import *
 from .circle import *
-from .mask import *
 from .reflected import *

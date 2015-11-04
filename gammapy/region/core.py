@@ -63,7 +63,7 @@ class PixRegion(Region):
         """
         raise NotImplementedError("")
 
-    def to_sky(self, wcs, mode='local', tolerance=None):
+    def to_sky(self, wcs):
         """
         Returns a region defined in sky coordinates.
 
@@ -72,28 +72,6 @@ class PixRegion(Region):
 
         wcs : `~astropy.wcs.WCS` instance
             The world coordinate system transformation to assume
-
-        mode : str
-            Convering to sky coordinates can be done with various degrees of
-            approximation, which can be set with this option. Possible values
-            are:
-
-            * `'local'`: assume that the field of view is small and that
-              pixels are square, so that e.g. a circle in sky coordinates
-              would be a circle in pixel coordinates. This is the fastest and
-              most commonly used for e.g. photometry.
-
-            * `'affine'`: approximate any deviations from the 'local'
-              assumption by an affine transformation, e.g. a circle would
-              become a rotated ellipse.
-
-            * `'full'`: return an arbitrarily complex polygon in sky
-              coordinates that represents the full level of distortion due to
-              the conversion from pixel to world coordinates. The degree of
-              exactness can be controlled by the ``tolerance`` argument.
-
-        tolerance : `~astropy.units.Quantity`
-            The tolerance for the ``'full'`` mode described above.
         """
         raise NotImplementedError("")
 
@@ -124,12 +102,6 @@ class PixRegion(Region):
         """
         raise NotImplementedError("")
 
-    def to_shapely(self):
-        """
-        Convert this region to a Shapely object.
-        """
-        raise NotImplementedError("")
-
 
 @six.add_metaclass(abc.ABCMeta)
 class SkyRegion(Region):
@@ -154,7 +126,7 @@ class SkyRegion(Region):
         """
         raise NotImplementedError("")
 
-    def to_pixel(self, wcs, mode='local', tolerance=None):
+    def to_pixel(self, wcs):
         """
         Returns a region defined in pixel coordinates.
 
@@ -163,33 +135,19 @@ class SkyRegion(Region):
 
         wcs : `~astropy.wcs.WCS` instance
             The world coordinate system transformation to assume
-
-        mode : str
-            Convering to pixel coordinates can be done with various degrees
-            of approximation, which can be set with this option. Possible
-            values are:
-
-            * `'local'`: assume that the field of view is small and that
-              pixels are square, so that e.g. a circle in sky coordinates
-              would be a circle in pixel coordinates. This is the fastest and
-              most commonly used for e.g. photometry.
-
-            * `'affine'`: approximate any deviations from the 'local'
-              assumption by an affine transformation, e.g. a circle would
-              become a rotated ellipse.
-
-            * `'full'`: return an arbitrarily complex polygon in pixel
-              coordinates that represents the full level of distortion due to
-              the conversion from world to pixel coordinates. The degree of
-              exactness can be controlled by the ``tolerance`` argument.
-
-        tolerance : `~astropy.units.Quantity`
-            The tolerance for the ``'full'`` mode described above.
         """
         raise NotImplementedError("")
 
 class SkyRegionList(list):
     """List of sky regions"""
+
+    def to_ds9(self):
+        """Convert to ds9 region string
+        """
+        ss = ''
+        for region in self:
+            ss += region.to_ds9()
+        return ss
 
     def write(self, filename, format='ds9'):
         """Write list of regions to file
@@ -198,16 +156,17 @@ class SkyRegionList(list):
         ----------
         filename : str
             Name of file to write
-        format : str
-            File format, available: ds9
+        format : str {"ds9"}
+            File format
         """
+
+        if(format=='ds9'):
+            ss = self.to_ds9()
+        else:
+            raise ValueError('Format {} not definded'.format(format))
+            
         with open(filename, 'w') as fh:
-            for region in self:
-                if (format=='ds9'):
-                    line = region.to_ds9()
-                else:
-                    raise ValueError('Format {} not definded'.format(format))
-                fh.write(line)
+            fh.write(ss)
 
 
 class PixRegionList(list):

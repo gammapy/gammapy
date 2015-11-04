@@ -15,8 +15,10 @@ def test_find_reflected_regions():
     hdu = fits.open(testfile)[0]
     mask = ExclusionMask.from_hdu(hdu)
     pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
-    radius = Angle(1, 'deg')
+    radius = Angle(0.4, 'deg')
     region = SkyCircleRegion(pos=pos, radius=radius)
-    center = SkyCoord(80, 24, unit='deg', frame='icrs')
+    center = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
     regions = find_reflected_regions(region, center, mask)
+
+    assert len(regions) == 15
     

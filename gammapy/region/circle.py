@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 import matplotlib.patches as mpatches
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
 from photutils.utils.wcs_helpers import (
     skycoord_to_pixel_scale_angle,
@@ -76,7 +76,7 @@ class PixCircleRegion(PixRegion):
 
     def angle(self, pos):
         """
-        Compute angle [rad] wrt to a certain pixel position
+        Compute angle wrt to a certain pixel position
 
         Parameters
         ----------
@@ -85,13 +85,13 @@ class PixCircleRegion(PixRegion):
 
         Returns
         -------
-        angle : float
-            Angle in rad
+        angle : `~astropy.units.Quantity
+            Angle
         """
         dx = self.pos[0] - pos[0]
         dy = self.pos[1] - pos[1]
         angle = np.arctan2(dx, dy)
-        return angle
+        return Angle(angle, 'rad')
 
     def is_inside_exclusion(self, exclusion_mask):
         """
@@ -158,7 +158,7 @@ class SkyCircleRegion(SkyRegion):
         return PixCircleRegion(pix_position, pix_radius)
 
     def to_ds9(self):
-        """ds9 region string.
+        """Convert to ds9 region string
         """
         l = self.pos.l.value
         b = self.pos.b.value
