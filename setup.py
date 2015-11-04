@@ -144,6 +144,7 @@ setup(name=PACKAGENAME,
       # Older versions could work, but are unsupported.
       # To find out if everything works run the Gammapy tests.
       install_requires=[
+          'setuptools',
           'numpy>=1.6',
           'astropy>=1.0',
       ],
