@@ -5,6 +5,7 @@ wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O mini
 chmod +x miniconda.sh
 ./miniconda.sh -b
 export PATH=/home/travis/miniconda/bin:$PATH
+export PATH=/Users/travis/miniconda2/bin:$PATH
 conda update --yes conda
 
 # Install Python dependencies
