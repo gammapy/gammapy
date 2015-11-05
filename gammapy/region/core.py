@@ -12,6 +12,7 @@ __all__ = [
     'SkyRegionList',
 ]
 
+
 @six.add_metaclass(abc.ABCMeta)
 class Region(object):
     """
@@ -96,7 +97,7 @@ class PixRegion(Region):
         -------
         mask : `~numpy.ndarray`
             A mask indicating whether each pixel is contained in the region.
-        slice_x, slice_y : `slice`
+            slice_x, slice_y : `slice`
             Slices for x and y which can be used on an array to extract the
             same region as the mask.
         """
@@ -138,6 +139,7 @@ class SkyRegion(Region):
         """
         raise NotImplementedError("")
 
+
 class SkyRegionList(list):
     """List of sky regions"""
 
@@ -160,11 +162,11 @@ class SkyRegionList(list):
             File format
         """
 
-        if(format=='ds9'):
+        if(format == 'ds9'):
             ss = self.to_ds9()
         else:
             raise ValueError('Format {} not definded'.format(format))
-            
+
         with open(filename, 'w') as fh:
             fh.write(ss)
 

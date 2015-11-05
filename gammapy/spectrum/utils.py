@@ -9,7 +9,17 @@ from ..utils.fits import table_to_fits_table
 __all__ = [
     'LogEnergyAxis',
     'np_to_pha',
+    'make_off_vector_reflected',
+    'make_off_vector_ring',
 ]
+
+
+def make_off_vector_reflected():
+    pass
+
+
+def make_off_vector_ring():
+    pass
 
 
 class LogEnergyAxis(object):
@@ -96,14 +106,14 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-# TODO: MOVE TO DATA.COUNTSPECTRUM
-
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
               version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
               backfile='none', corrfile='none', respfile='none', ancrfile='none'):
     """Create PHA FITS table extension from numpy arrays.
+
+    Outdated. Use gammapy.data.CountsSpectrum.to_fits()
 
     Parameters
     ----------

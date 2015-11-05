@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _spectrum:
+.. _region:
 
 **************************
 Regions (`gammapy.region`)
@@ -42,6 +42,14 @@ Read / write
 
 Reflected Regions
 -----------------
+
+Details on the reflected regions method can be found in [Berge2007]_
+
+The following example illustrates how to create reflected regions
+for a given ImageHDU
+
+.. plot:: region/make_reflected_regions.py
+   :include-source:
 
 Reference/API
 =============

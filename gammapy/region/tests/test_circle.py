@@ -6,6 +6,7 @@ from ...image import make_empty_image
 from ..circle import SkyCircleRegion, PixCircleRegion
 from numpy.testing import assert_allclose
 
+
 class TestSkyCircle:
 
     def setup(self):
@@ -22,17 +23,17 @@ class TestSkyCircle:
         assert_allclose(pix.pos[1], 61)
 
     def test_sky_to_pix2(self):
-        hdu = make_empty_image(nxpix=801, nypix=601, binsz=0.01, 
+        hdu = make_empty_image(nxpix=801, nypix=601, binsz=0.01,
                                coordsys='CEL', xref=83.2, yref=22.7)
-        
+
         pos = SkyCoord(182.2, -5.75, unit='deg', frame='galactic')
         radius = Angle(0.4, 'deg')
         sky = SkyCircleRegion(pos=pos, radius=radius)
         pix = sky.to_pixel(WCS(hdu.header))
         assert_allclose(pix.radius, 40)
-        
+
     def test_pix_to_sky(self):
-        pos = (61,31)
+        pos = (61, 31)
         radius = 5
         pix = PixCircleRegion(pos=pos, radius=radius)
         sky = pix.to_sky(self.wcs, frame='galactic')

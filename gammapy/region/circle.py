@@ -2,12 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import astropy.units as u
-import matplotlib.patches as mpatches
 from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
-from photutils.utils.wcs_helpers import (
-    skycoord_to_pixel_scale_angle,
-)
 from .core import SkyRegion, PixRegion
 
 
@@ -17,10 +13,10 @@ __all__ = [
 ]
 
 
-
 class PixCircleRegion(PixRegion):
     """
-    Circular aperture(s), defined in pixel coordinates.
+    Circular region, defined in pixel coordinates.
+
     Parameters
     ----------
     pos : tuple, list, array
@@ -48,11 +44,10 @@ class PixCircleRegion(PixRegion):
             sky_position = val.galactic
         elif frame == 'icrs':
             sky_position = val.icrs
-        
-        xc, yc, scale, angle = skycoord_to_pixel_scale_angle(sky_position, wcs)
-        val = (self.radius * u.pix / scale).to(u.deg)
-        sky_radius = np.round(val,4)
-        return SkyCircleRegion(sky_position, sky_radius)        
+
+        sky_radius = Angle(self.radius * np.abs(wcs.wcs.cdelt[0]), 'deg')
+
+        return SkyCircleRegion(sky_position, sky_radius)
 
     def offset(self, pos):
         """
@@ -62,7 +57,7 @@ class PixCircleRegion(PixRegion):
         ----------
         pos : tuple
             Position to which offset is computed
-    
+
         Returns
         -------
         offset : float
@@ -71,7 +66,7 @@ class PixCircleRegion(PixRegion):
         """
         x2 = (self.pos[0] - pos[0]) ** 2
         y2 = (self.pos[1] - pos[1]) ** 2
-        offset = np.sqrt(x2 + y2) 
+        offset = np.sqrt(x2 + y2)
         return offset
 
     def angle(self, pos):
@@ -85,7 +80,7 @@ class PixCircleRegion(PixRegion):
 
         Returns
         -------
-        angle : `~astropy.units.Quantity
+        angle : `~astropy.units.Quantity`
             Angle
         """
         dx = self.pos[0] - pos[0]
@@ -107,7 +102,7 @@ class PixCircleRegion(PixRegion):
         bool
         """
         from ..image import lookup
-        x,y = self.pos
+        x, y = self.pos
         excl_dist = exclusion_mask.distance_image
         val = lookup(excl_dist, x, y, world=False)
         return val < self.radius
@@ -115,6 +110,8 @@ class PixCircleRegion(PixRegion):
     def to_mpl_artist(self, **kwargs):
         """Convert to mpl patch.
         """
+        import matplotlib.patches as mpatches
+
         patch = mpatches.Circle(self.pos, self.radius.value, **kwargs)
         return patch
 
@@ -148,14 +145,15 @@ class SkyCircleRegion(SkyRegion):
         x, y = skycoord_to_pixel(self.pos, wcs, mode='wcs', origin=1)
         pix_radius = self.radius.deg / np.abs(wcs.wcs.cdelt[0])
 
-        #TODO understand what is going on here
-        #central_pos = SkyCoord([wcs.wcs.crval], frame=self.pos.name, unit=wcs.wcs.cunit)
-        #xc, yc, scale, angle = skycoord_to_pixel_scale_angle(central_pos, wcs)
-        #val = (scale * self.radius).to(u.pixel).value
-        #pix_radius = np.round(val[0],4)
-        #pix_position = np.array([x, y]).transpose()
+        # TODO understand what is going on here
+        # from photutils.utils.wcs_helpers import skycoord_to_pixel_scale_angle
+        # central_pos = SkyCoord([wcs.wcs.crval], frame=self.pos.name, unit=wcs.wcs.cunit)
+        # xc, yc, scale, angle = skycoord_to_pixel_scale_angle(central_pos, wcs)
+        # val = (scale * self.radius).to(u.pixel).value
+        # pix_radius = np.round(val[0],4)
+        # pix_position = np.array([x, y]).transpose()
 
-        return PixCircleRegion((x,y), pix_radius)
+        return PixCircleRegion((x, y), pix_radius)
 
     def plot(self, ax):
         """Convert to mpl patch for wcs axis
@@ -163,14 +161,16 @@ class SkyCircleRegion(SkyRegion):
         Parameters
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`
-            WCS axis object 
+            WCS axis object
 
         Returns
         -------
         patch : `~matplotlib.mpatches.Circle`
             Matplotlib patch object
         """
-        
+
+        import matplotlib.patches as mpatches
+
         val = self.pos.galactic
         center = (val.l.value, val.b.value)
         patch = mpatches.Circle(center, self.radius.value,
@@ -189,4 +189,3 @@ class SkyCircleRegion(SkyRegion):
 
         ss = '{sys}; circle({l},{b},{r})\n'.format(**locals())
         return ss
-

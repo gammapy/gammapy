@@ -129,14 +129,14 @@ def disk_correlate(image, radius, mode='constant'):
     radius : float
         Disk radius in pixels.
     mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
-	the mode parameter determines how the array borders are handled.
+        the mode parameter determines how the array borders are handled.
         For 'constant' mode, values beyond borders are set to be cval.
         Default is 'constant'.
 
     Returns
     -------
     convolve : `~numpy.ndarray`
-	The result of convolution of image with disk of given radius.
+        The result of convolution of image with disk of given radius.
 
     """
     from scipy.ndimage import convolve
@@ -156,14 +156,14 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     r_out : float
         Ring outer radius in pixels.
     mode : {'reflect','constant','nearest','mirror', 'wrap'}, optional
-	the mode parameter determines how the array borders are handled.
+        the mode parameter determines how the array borders are handled.
         For 'constant' mode, values beyond borders are set to be cval.
         Default is 'constant'.
 
     Returns
     -------
     convolve : `~numpy.ndarray`
-	The result of convolution of image with ring of given inner and outer radii.
+        The result of convolution of image with ring of given inner and outer radii.
     """
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
@@ -283,12 +283,12 @@ def exclusion_distance(exclusion):
     Parameters
     ----------
     exclusion : `~numpy.ndarray`
-	Exclusion regions as mask.
+        Exclusion regions as mask.
 
     Returns
     -------
     distance : `~numpy.ndarray`
-	Map of distance to nearest exclusion region.
+        Map of distance to nearest exclusion region.
     """
     from scipy.ndimage import distance_transform_edt
     distance_outside = distance_transform_edt(exclusion)
@@ -366,7 +366,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
     lon_sym : bool, optional
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
     radians : bool, optional
-	Return coordinates in radians or degrees?
+        Return coordinates in radians or degrees?
 
     Returns
     -------
@@ -436,7 +436,7 @@ def separation(image, center, world=True, radians=False):
     world : bool, optional
         Use world coordinates (or pixel coordinates)?
     radians : bool, optional
-	Return distance in radians or degrees?
+        Return distance in radians or degrees?
         (only applicable for world coordinates).
 
     Returns
@@ -531,14 +531,14 @@ def process_image_pixels(images, kernel, out, pixel_function):
             for name, image in images.items():
                 # hi + 1 because with Python slicing the hi edge is not included
                 part = image[i0 - i0_lo: i0 + i0_hi + 1,
-                       i1 - i1_lo: i1 + i1_hi + 1]
+                             i1 - i1_lo: i1 + i1_hi + 1]
                 image_parts[name] = part
 
             # Cut out relevant part of the kernel array
             # This only applies when close to the edge
             # hi + 1 because with Python slicing the hi edge is not included
             kernel_part = kernel[k0 - i0_lo: k0 + i0_hi + 1,
-                          k1 - i1_lo: k1 + i1_hi + 1]
+                                 k1 - i1_lo: k1 + i1_hi + 1]
 
             # Call pixel_function for this one part
             out_part = pixel_function(image_parts, kernel_part)
@@ -560,14 +560,14 @@ def image_groupby(images, labels):
     Parameters
     ----------
     images : list of `~numpy.ndarray`
-	List of image objects.
+        List of image objects.
     labels : `~numpy.ndarray`
-	Labels for pixel grouping.
+        Labels for pixel grouping.
 
     Returns
     -------
     groups : list of `~numpy.ndarray`
-	Grouped pixels acording to the labels.
+        Grouped pixels acording to the labels.
     """
     for image in images:
         assert image.shape == labels.shape
@@ -741,7 +741,7 @@ def threshold(array, threshold=5):
     Returns
     -------
     data : `~numpy.ndarray`
-	Copy of input array with pixels below threshold set to zero.
+        Copy of input array with pixels below threshold set to zero.
     """
     # TODO: np.clip is simpler, no?
     from scipy import stats
@@ -769,7 +769,7 @@ def binary_dilation_circle(input, radius):
     Returns
     -------
     binary_dilation : `~numpy.ndarray` of bools
-	Dilation of the input array by a disk of the given radius.
+        Dilation of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_dilation
     structure = binary_disk(radius)
@@ -792,7 +792,7 @@ def binary_opening_circle(input, radius):
     Returns
     -------
     binary_opening : `~numpy.ndarray` of bools
-	Opening of the input array by a disk of the given radius.
+        Opening of the input array by a disk of the given radius.
     """
     from scipy.ndimage import binary_opening
     structure = binary_disk(radius)
@@ -841,19 +841,19 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     Parameters
     ----------
     nxpix : int, optional
-	Number of pixels in x axis. Default is 100.
+        Number of pixels in x axis. Default is 100.
     nypix : int, optional
-	Number of pixels in y axis. Default is 100.
+        Number of pixels in y axis. Default is 100.
     binsz : float, optional
-	Bin size for x and y axes in units of degrees. Default is 0.1.
+        Bin size for x and y axes in units of degrees. Default is 0.1.
     xref : float, optional
         Coordinate system value at reference pixel for x axis. Default is 0.
     yref : float, optional
         Coordinate system value at reference pixel for y axis. Default is 0.
     proj : string, optional
-	Projection type. Default is 'CAR' (cartesian).
+        Projection type. Default is 'CAR' (cartesian).
     coordsys : {'CEL', 'GAL'}, optional
-	Coordinate system. Default is 'GAL' (Galactic).
+        Coordinate system. Default is 'GAL' (Galactic).
     xrefpix : float, optional
         Coordinate system reference pixel for x axis. Default is None.
     yrefpix: float, optional
@@ -905,11 +905,11 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
     Parameters
     ----------
     nxpix : int, optional
-	Number of pixels in x axis. Default is 100.
+        Number of pixels in x axis. Default is 100.
     nypix : int, optional
-	Number of pixels in y axis. Default is 100.
+        Number of pixels in y axis. Default is 100.
     binsz : float, optional
-	Bin size for x and y axes in units of degrees. Default is 0.1.
+        Bin size for x and y axes in units of degrees. Default is 0.1.
     xref : float, optional
         Coordinate system value at reference pixel for x axis. Default is 0.
     yref : float, optional
@@ -917,9 +917,9 @@ def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
     fill : float or 'checkerboard', optional
         Creates checkerboard image or uniform image of any float
     proj : string, optional
-	Projection type. Default is 'CAR' (cartesian).
+        Projection type. Default is 'CAR' (cartesian).
     coordsys : {'CEL', 'GAL'}, optional
-	Coordinate system. Default is 'GAL' (Galactic).
+        Coordinate system. Default is 'GAL' (Galactic).
     xrefpix : float, optional
         Coordinate system reference pixel for x axis. Default is None.
     yrefpix: float, optional
@@ -1040,9 +1040,9 @@ def contains(image, x, y, world=True):
     image : `~astropy.io.fits.ImageHDU`
         2-dim FITS image
     x : float
-	x coordinate in the image
+        x coordinate in the image
     y : float
-	y coordinate in the image
+        y coordinate in the image
     world : bool, optional
         Are x and y in world coordinates (or pixel coordinates)?
 
@@ -1188,6 +1188,7 @@ def lon_lat_rectangle_mask(lons, lats, lon_min=None, lon_max=None,
 
     return lon_mask & lat_mask
 
+
 def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
     """Produces a circular boolean mask array.
 
@@ -1207,8 +1208,8 @@ def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
     Returns
     -------
     mask : `~numpy.ndarray`
-        Boolean mask array for a circular sub-region 
+        Boolean mask array for a circular sub-region
     """
-    
-    mask = (lons - center_lon) ** 2 + (lats - center_lat) ** 2 < radius ** 2 
+
+    mask = (lons - center_lon) ** 2 + (lats - center_lat) ** 2 < radius ** 2
     return mask

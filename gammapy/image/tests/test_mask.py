@@ -6,9 +6,10 @@ from astropy.io import fits
 from astropy.tests.helper import pytest
 from .. import ExclusionMask, make_empty_image
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 import numpy as np
 
+@requires_dependency('scipy')
 def test_random_creation():
     hdu = make_empty_image(nxpix=300, nypix=100)
     mask = ExclusionMask.create_random(hdu, n=6, max_rad=10)

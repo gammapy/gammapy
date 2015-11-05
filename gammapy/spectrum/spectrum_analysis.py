@@ -1,18 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
-from ..utils.scripts import get_parser, set_up_logging_from_args
-from ..obs import DataStore, ObservationTable
-from ..irf import EnergyDispersion, EnergyDispersion2D
-from ..irf import EffectiveAreaTable, EffectiveAreaTable2D
-from ..data import CountsSpectrum, EventList
-from ..spectrum import EnergyBounds, Energy
-from ..background import ring_area_factor
+import logging
+import os
+import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.io import fits
-import logging
-import numpy as np
-import os
+
+from gammapy.extern.pathlib import Path
+from gammapy.region import SkyCircleRegion
+from ..background import ring_area_factor
+from ..data import CountsSpectrum
+from ..obs import DataStore
+from ..spectrum import EnergyBounds, Energy
+from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = ['SpectrumAnalysis', 'SpectrumObservation']
 
@@ -24,7 +25,8 @@ def main(args=None):
     parser.add_argument('config_file', type=str,
                         help='Config file in YAML format')
     parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
+                        choices=['debug', 'info', 'warning', 'error',
+                                 'critical'],
                         help="Set the logging level")
 
     args = parser.parse_args(args)
@@ -77,8 +79,9 @@ class SpectrumAnalysis(object):
         log.info(self.store.info())
         log.info('ON region\nCenter: {0}\nRadius: {1}'.format(
             self.target, self.radius))
-        log.info('OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
-            'Ring', self.irad, self.orad))
+        log.info(
+            'OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
+                'Ring', self.irad, self.orad))
 
     def run(self):
         """Run analysis as specified in the config"""
@@ -144,70 +147,169 @@ class SpectrumAnalysis(object):
 
 class SpectrumObservation(object):
     """1D region based spectral analysis observation.
+
     This class handles the spectrum fit for one observation/run
+    At the moment it can only be initialized with a yaml config file
+
+    TODO: Link to example
     """
 
     def __init__(self, obs, config):
         self.config = config
         self.obs = obs
-        _process_config(self)
-
-    def make_ogip(self):
-        """Write OGIP files needed for the sherpa fit
-        The 'clobber' kwarg is set to true in this function
-        """
-        self._prepare_ogip()
-        clobber = True
-        self.pha.write(self.phafile, bkg=self.bkgfile, arf=self.arffile,
-                       rmf=self.rmffile, clobber=clobber)
-        self.bkg.write(self.bkgfile, clobber=clobber)
-        self.arf.write(self.arffile, energy_unit='keV',
-                       effarea_unit='cm2', clobber=clobber)
-        self.rmf.write(self.rmffile, energy_unit='keV', clobber=clobber)
-
-    def _prepare_ogip(self):
-        """Dummy function to process IRFs and event list
-        """
-        self.make_on_vector()
-        self.make_off_vector()
-        self.make_arf()
-        self.make_rmf()
+        self._process_config()
+        self.event_list = None
+        self.pha = None
+        self.bkg = None
+        self.arf = None
+        self.bkg = None
 
     def make_on_vector(self):
         """Make ON `~gammapy.data.CountsSpectrum`
         """
-        on_list = self.event_list.select_sky_cone(self.target, self.radius)
+        self._load_event_list()
+        on_list = self.event_list.select_circular_region(self.on_region)
         on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
         self.pha = on_vec
+        return on_vec
 
     def make_off_vector(self):
         """Make OFF `~gammapy.data.CountsSpectrum`
         """
+        self._load_event_list()
         if self.off_type == "ring":
-            off_list = self.event_list.select_sky_ring(
-                self.target, self.irad, self.orad)
+            # TODO put in utils once there is a SkyRingRegion
+            center = self.on_region.pos
+            inner = self.off_region['inner_radius']
+            outer = self.off_region['outer_radius']
+            off_list = self.event_list.select_sky_ring(center, inner, outer)
+            off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+            off_vec.backscal = self.alpha
+            self.alpha = ring_area_factor(self.radius, self.irad,
+                                          self.orad).value
+            self.bkg = off_vec
         elif self.off_type == "reflected":
             raise NotImplementedError
         else:
-            raise ValueError("Undefined background method: {}".format(self.off_type))
-            
-        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
-        off_vec.backscal = self.alpha
-        self.bkg = off_vec
+            raise ValueError(
+                "Undefined background method: {}".format(self.off_type))
 
     def make_arf(self):
         """Make `~gammapy.irf.EffectiveAreaTable`
         """
-        aeff2D_file = self.store.filename(self.obs, 'aeff')
-        aeff2D = EffectiveAreaTable2D.read(aeff2D_file)
+        storename = self.config['general']['datastore']
+        store = DataStore.from_name(storename)
+        aeff2D = store.load(self.obs, 'aeff')
         self.arf = aeff2D.to_effective_area_table(self.offset)
 
     def make_rmf(self):
         """Make `~gammapy.irf.EnergyDispersion`
         """
-        edisp2D_file = self.store.filename(self.obs, 'edisp')
-        edisp2D = EnergyDispersion2D.read(edisp2D_file)
+        storename = self.config['general']['datastore']
+        store = DataStore.from_name(storename)
+        edisp2D = store.load(self.obs, 'edisp')
         self.rmf = edisp2D.to_energy_dispersion(self.offset, e_reco=self.ebounds)
+
+    def to_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
+                outdir=None, clobber=True):
+        """Write OGIP files
+
+        Only those objects are written have been created with the appropriate
+        functions before
+
+        Parameters
+        ----------
+        phafile : str
+            PHA filename
+        bkgfile : str
+            BKG filename
+        arffile : str
+            ARF filename
+        rmffile : str
+            RMF : filename
+        outdir : None
+            directory to write the files to
+        clobber : bool
+            Overwrite
+        """
+
+        if outdir is None:
+            outdir = "ogip_data"
+
+        basedir = Path(outdir)
+
+        if arffile is None:
+            arffile = basedir / "arf_run" + str(self.obs) + ".fits"
+        if rmffile is None:
+            rmffile = basedir / "rmf_run" + str(self.obs) + ".fits"
+        if phafile is None:
+            phafile = basedir / "pha_run" + str(self.obs) + ".pha"
+        if bkgfile is None:
+            bkgfile = basedir / "bkg_run" + str(self.obs) + ".pha"
+
+        if self.pha is not None:
+            self.pha.write(phafile, bkg=bkgfile, arf=arffile, rmf=rmffile, clobber=clobber)
+        if self.bkg is not None:
+            self.bkg.write(bkgfile, clobber=clobber)
+        if self.arf is not None:
+            self.arf.write(arffile, energy_unit='keV', effarea_unit='cm2', clobber=clobber)
+        if self.rmf is not None:
+            self.rmf.write(rmffile, energy_unit='keV', clobber=clobber)
+
+    def run(self):
+        """Perform all step to provide the OGIP data for a sherpa fit
+        """
+        self.make_on_vector()
+        self.make_off_vector()
+        self.make_arf()
+        self.make_rmf()
+        self.to_ogip()
+
+    def _load_event_list(self):
+        """Load event list associated with the observation
+
+        If the event list is already loaded pass
+        """
+        if self.event_list is None:
+            storename = self.config['general']['datastore']
+            store = DataStore.from_name(storename)
+            self.event_list = store.load(obs_id=self.obs, filetype='events')
+        else:
+            pass
+
+    def _process_config(self):
+        """Convert config file info into objects
+        """
+        # Binning
+        sec = self.config['binning']
+        if sec['equal_log_spacing']:
+            emin = Energy(sec['emin'])
+            emax = Energy(sec['emax'])
+            nbins = sec['nbins']
+            self.ebounds = EnergyBounds.equal_log_spacing(
+                emin, emax, nbins)
+        else:
+            if sec[binning] is None:
+                raise ValueError("No binning specified")
+        log.debug('Binning: {}'.format(self.ebounds))
+
+        # ON region
+        radius = Angle(self.config['on_region']['radius'])
+        x = self.config['on_region']['center_x']
+        y = self.config['on_region']['center_y']
+        frame = self.config['on_region']['system']
+        center = SkyCoord(x, y, frame=frame)
+        self.on_region = SkyCircleRegion(center, radius)
+
+        # OFF region
+        self.off_type = self.config['off_region']['type']
+        if self.off_type == 'ring':
+            irad = Angle(self.config['off_region']['inner_radius'])
+            orad = Angle(self.config['off_region']['outer_radius'])
+            self.off_region = dict(type='ring', inner_radius=irad,
+                                   outer_radius=orad)
+        elif self.off_type == 'reflected':
+            pass
 
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
@@ -241,7 +343,7 @@ def _process_config(object):
     object.target = SkyCoord(x, y, frame=frame)
 
     # Pointing
-    event_list = object.store.load(obs_id = object.obs, filetype ='events')
+    event_list = object.store.load(obs_id=object.obs, filetype='events')
     object.event_list = event_list
     object.pointing = object.event_list.pointing_radec
     object.offset = object.target.separation(object.pointing)
@@ -273,10 +375,11 @@ def _process_config(object):
         oval = object.config['off_region']['outer_radius']
         object.irad = Angle(ival)
         object.orad = Angle(oval)
-        object.alpha = ring_area_factor(object.radius, object.irad, object.orad).value
+        object.alpha = ring_area_factor(object.radius, object.irad,
+                                        object.orad).value
     elif object.off_type == 'reflected':
         pass
-    
+
     # Spectral fit
     object.model = object.config['model']['type']
     val = object.config['model']['threshold_low']

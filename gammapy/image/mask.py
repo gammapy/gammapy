@@ -9,6 +9,7 @@ __all__ = [
     'ExclusionMask',
 ]
 
+
 class ExclusionMask(object):
     """Exclusion mask
 
@@ -17,13 +18,14 @@ class ExclusionMask(object):
     mask : `~numpy.ndarray`; dtype = int, bool
          Exclusion mask
     """
+
     def __init__(self, mask, wcs=None):
         self.mask = mask
         self.wcs = wcs
-        self._distance_image = exclusion_distance(mask)
+        self._distance_image = None
 
     @classmethod
-    def create_random(cls, hdu, n=4, max_rad=40):
+    def create_random(cls, hdu, n=4, min_rad=0, max_rad=40):
         """Create random exclusion mask (n circles) on a  given image
 
         This is useful for testing
@@ -34,19 +36,21 @@ class ExclusionMask(object):
             ImageHDU
         n : int
             Number of circles to place
+        min_rad : int
+            Minimum circle radius in pixels
         max_rad : int
             Maximum circle radius in pixels
         """
-        
+
         wcs = WCS(hdu.header)
-        mask = np.ones(hdu.data.shape, dtype = int)
-        nx,ny = mask.shape
-        xx = np.random.choice(np.arange(nx),n)
-        yy = np.random.choice(np.arange(ny),n)
-        rr = np.random.rand(n) * max_rad
-        
-        for x,y,r in zip(xx,yy,rr):
-            xd, yd = np.ogrid[-x:nx-x, -y:ny-y] 
+        mask = np.ones(hdu.data.shape, dtype=int)
+        nx, ny = mask.shape
+        xx = np.random.choice(np.arange(nx), n)
+        yy = np.random.choice(np.arange(ny), n)
+        rr = min_rad + np.random.rand(n) * (max_rad - min_rad)
+
+        for x, y, r in zip(xx, yy, rr):
+            xd, yd = np.ogrid[-x:nx - x, -y:ny - y]
             val = xd * xd + yd * yd <= r * r
             mask[val] = 0
 
@@ -61,7 +65,7 @@ class ExclusionMask(object):
         hdu : `~astropy.fits.ImageHDU`
             ImageHDU containing only an exlcusion mask (int, bool)
         """
-        mask = np.array(hdu.data, dtype = int)
+        mask = np.array(hdu.data, dtype=int)
         wcs = WCS(hdu.header)
         return cls(mask, wcs)
 
@@ -77,16 +81,19 @@ class ExclusionMask(object):
         Parameters
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`
-            WCS axis object 
+            WCS axis object
         """
         from matplotlib import colors
         import matplotlib.pyplot as plt
-        if not 'cmap' in locals():
+        if 'cmap' not in locals():
             cmap = colors.ListedColormap(['black', 'lightgrey'])
         ax.imshow(self.mask, cmap=cmap)
 
     @property
     def distance_image(self):
         """Map containting the distance to the nearest exclusion region"""
-        return self._distance_image
 
+        if self._distance_image is None:
+            self._distance_image = exclusion_distance(self.mask)
+
+        return self._distance_image

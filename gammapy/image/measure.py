@@ -3,6 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.io import fits
 from gammapy.image.utils import coordinates
 
 __all__ = [
@@ -292,7 +293,7 @@ def lookup(image, x, y, world=True):
 
     Parameters
     ----------
-    image : array_like if world=False, astropy.io.fits.ImageHDU if world=True
+    image : array_like or astropy.io.fits.ImageHDU if world=False, astropy.io.fits.ImageHDU if world=True
         Array or image to look up the value
     x : array_like
         Array of X lookup positions
@@ -304,7 +305,10 @@ def lookup(image, x, y, world=True):
     if world:
         return _lookup_world(image, x, y)
     else:
+        if isinstance(image, fits.hdu.image._ImageBaseHDU):
+            image = image.data
         return _lookup_pix(image, x, y)
+
 
 def lookup_max(image, GLON, GLAT, theta):
     """Look up the max image values within a circle of radius theta

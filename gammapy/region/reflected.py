@@ -33,20 +33,20 @@ def find_reflected_regions(region, center, exclusion_mask,
     regions : `~gammapy.region.SkyRegionList`
         Reflected regions list
     """
-    
+
     if angle_increment is None:
         angle_increment = Angle('0.1 rad')
     if min_distance is None:
         min_distance = Angle('0 rad')
-    
+
     reflected_regions_pix = PixRegionList()
     wcs = exclusion_mask.wcs
     pix_region = region.to_pixel(wcs)
     val = center.to_pixel(wcs, origin=1)
     pix_center = (float(val[0]), float(val[1]))
     offset = pix_region.offset(pix_center)
-    angle = pix_region.angle(pix_center)    
-    min_ang = Angle(2 * pix_region.radius / offset , 'rad')
+    angle = pix_region.angle(pix_center)
+    min_ang = Angle(2 * pix_region.radius / offset, 'rad')
     max_angle = angle + Angle('360deg') - min_ang - min_distance
 
     curr_angle = angle + min_ang + min_distance
@@ -59,9 +59,10 @@ def find_reflected_regions(region, center, exclusion_mask,
             curr_angle = curr_angle + min_ang
         else:
             curr_angle = curr_angle + angle_increment
-     
+
     reflected_regions = reflected_regions_pix.to_sky(wcs)
     return reflected_regions
+
 
 def _compute_xy(pix_center, offset, angle):
     """Compute x, y position for a given position angle and offset
@@ -73,5 +74,3 @@ def _compute_xy(pix_center, offset, angle):
     x = pix_center[0] + dx
     y = pix_center[1] + dy
     return (x, y)
-
-   
