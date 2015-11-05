@@ -64,7 +64,10 @@ def find_reflected_regions(region, center, exclusion_mask,
     return reflected_regions
 
 def _compute_xy(pix_center, offset, angle):
-    """Compute x, y position for a given position angle and offset"""
+    """Compute x, y position for a given position angle and offset
+
+    # TODO: replace by calculation using `astropy.coordinates`
+    """
     dx = offset * np.sin(angle)
     dy = offset * np.cos(angle)
     x = pix_center[0] + dx

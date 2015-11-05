@@ -3,18 +3,22 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.wcs import WCS
 from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
-from ..mask import ExclusionMask
+from astropy.tests.helper import pytest
+from .. import ExclusionMask, make_empty_image
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data
+import numpy as np
 
-@requires_data('gammapy-extra')
-class TestSkyCircle:
-    def setup(self):
-        self.testfile = gammapy_extra.filename('test_datasets/spectrum/'
-                                               'dummy_exclusion.fits')
-        hdu = fits.open(self.testfile)[0]
-        self.exclusion_mask = ExclusionMask.from_hdu(hdu)
-        
-    def test_distance_image(self):
-        pass
+def test_random_creation():
+    hdu = make_empty_image(nxpix=300, nypix=100)
+    mask = ExclusionMask.create_random(hdu, n=6, max_rad=10)
+    assert mask.mask.shape[0] == 300
+    
+    excluded = np.where(mask.mask == 0)
+    assert excluded[0].size != 0
+    
+@pytest.mark.xfail 
+def test_distance_image():
+    pass
+    #TODO
 

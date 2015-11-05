@@ -115,9 +115,7 @@ class PixCircleRegion(PixRegion):
     def to_mpl_artist(self, **kwargs):
         """Convert to mpl patch.
         """
-        xc, yc = self.pos
-        major = self.radius
-        patch = mpatches.Ellipse((xc, yc), 2*major, 2*major, angle=0, **kwargs)
+        patch = mpatches.Circle(self.pos, self.radius, **kwargs)
         return patch
 
 
