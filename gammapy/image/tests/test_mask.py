@@ -12,7 +12,7 @@ import numpy as np
 def test_random_creation():
     hdu = make_empty_image(nxpix=300, nypix=100)
     mask = ExclusionMask.create_random(hdu, n=6, max_rad=10)
-    assert mask.mask.shape[0] == 300
+    assert mask.mask.shape[0] == 100
     
     excluded = np.where(mask.mask == 0)
     assert excluded[0].size != 0

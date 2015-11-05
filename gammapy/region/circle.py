@@ -115,7 +115,7 @@ class PixCircleRegion(PixRegion):
     def to_mpl_artist(self, **kwargs):
         """Convert to mpl patch.
         """
-        patch = mpatches.Circle(self.pos, self.radius, **kwargs)
+        patch = mpatches.Circle(self.pos, self.radius.value, **kwargs)
         return patch
 
 
@@ -132,8 +132,8 @@ class SkyCircleRegion(SkyRegion):
     """
 
     def __init__(self, pos, radius):
-        self.pos = pos
-        self.radius = radius
+        self.pos = SkyCoord(pos)
+        self.radius = Angle(radius)
 
     def to_pixel(self, wcs):
         """
@@ -146,14 +146,38 @@ class SkyCircleRegion(SkyRegion):
         """
 
         x, y = skycoord_to_pixel(self.pos, wcs, mode='wcs', origin=1)
+        pix_radius = self.radius.deg / np.abs(wcs.wcs.cdelt[0])
 
-        central_pos = SkyCoord([wcs.wcs.crval], frame=self.pos.name, unit=wcs.wcs.cunit)
-        xc, yc, scale, angle = skycoord_to_pixel_scale_angle(central_pos, wcs)
-        val = (scale * self.radius).to(u.pixel).value
-        pix_radius = np.round(val[0],4)
-        pix_position = np.array([x, y]).transpose()
+        #TODO understand what is going on here
+        #central_pos = SkyCoord([wcs.wcs.crval], frame=self.pos.name, unit=wcs.wcs.cunit)
+        #xc, yc, scale, angle = skycoord_to_pixel_scale_angle(central_pos, wcs)
+        #val = (scale * self.radius).to(u.pixel).value
+        #pix_radius = np.round(val[0],4)
+        #pix_position = np.array([x, y]).transpose()
 
-        return PixCircleRegion(pix_position, pix_radius)
+        return PixCircleRegion((x,y), pix_radius)
+
+    def plot(self, ax):
+        """Convert to mpl patch for wcs axis
+
+        Parameters
+        ----------
+        ax : `~astropy.wcsaxes.WCSAxes`
+            WCS axis object 
+
+        Returns
+        -------
+        patch : `~matplotlib.mpatches.Circle`
+            Matplotlib patch object
+        """
+        
+        val = self.pos.galactic
+        center = (val.l.value, val.b.value)
+        patch = mpatches.Circle(center, self.radius.value,
+                                transform=ax.get_transform('galactic'))
+
+        ax.add_artist(patch)
+        return patch
 
     def to_ds9(self):
         """Convert to ds9 region string

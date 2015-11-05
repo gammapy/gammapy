@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.wcs import WCS
+from astropy.io import fits
 from ..image import exclusion_distance, lon_lat_circle_mask, coordinates
 
 __all__ = [
@@ -34,12 +35,12 @@ class ExclusionMask(object):
         n : int
             Number of circles to place
         max_rad : int
-            Maximum circle radius
+            Maximum circle radius in pixels
         """
         
         wcs = WCS(hdu.header)
-        ny,nx = hdu.data.shape
-        mask = np.ones((nx,ny), dtype = int)
+        mask = np.ones(hdu.data.shape, dtype = int)
+        nx,ny = mask.shape
         xx = np.random.choice(np.arange(nx),n)
         yy = np.random.choice(np.arange(ny),n)
         rr = np.random.rand(n) * max_rad
@@ -63,6 +64,26 @@ class ExclusionMask(object):
         mask = np.array(hdu.data, dtype = int)
         wcs = WCS(hdu.header)
         return cls(mask, wcs)
+
+    def to_hdu(self):
+        """Create ImageHDU containting the exclusion mask
+        """
+        header = self.wcs.to_header()
+        return fits.ImageHDU(self.mask, header)
+
+    def plot(self, ax, **kwargs):
+        """Plot
+
+        Parameters
+        ----------
+        ax : `~astropy.wcsaxes.WCSAxes`
+            WCS axis object 
+        """
+        from matplotlib import colors
+        import matplotlib.pyplot as plt
+        if not 'cmap' in locals():
+            cmap = colors.ListedColormap(['black', 'lightgrey'])
+        ax.imshow(self.mask, cmap=cmap)
 
     @property
     def distance_image(self):
