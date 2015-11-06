@@ -6,7 +6,6 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.io import fits
-
 from gammapy.extern.pathlib import Path
 from gammapy.region import SkyCircleRegion
 from ..background import ring_area_factor
@@ -41,25 +40,22 @@ class SpectrumAnalysis(object):
 
     def __init__(self, config):
         self.config = config
-        vals = config['general']['runlist']
-        if isinstance(vals, six.string_types):
-            vals = np.loadtxt(vals, dtype=np.int)
-        # TODO: add while loop
-        try:
-            self.obs = vals[0]
-            _process_config(self)
-        except IOError:
-            self.obs = vals[1]
-            _process_config(self)
+        log.info('Creating analysis ' + config['general']['outdir'])
 
-        log.info('Creating analysis ' + self.outdir)
-        self.observations = []
+        runs = config['general']['runlist']
+        if isinstance(runs, six.string_types):
+            runs = np.loadtxt(runs, dtype=np.int)
+
+        storename = self.config['general']['datastore']
+        store = DataStore.from_name(storename)
+
         nruns = self.config['general']['nruns'] - 1
-        for i, obs in enumerate(vals):
+        self.observations = []
+        for i, obs in enumerate(runs):
             try:
-                val = SpectrumObservation(obs, config)
-            except IOError:
-                log.warn('Run ' + str(obs) + ' does not exist - skipping')
+                val = SpectrumObservation(obs, store, config)
+            except IndexError:
+                log.warn('Run {} not in store {}'.format(obs, store.name))
                 nruns = nruns + 1
                 continue
             self.observations.append(val)
@@ -68,43 +64,55 @@ class SpectrumAnalysis(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        """Read config from YAML file."""
+        """Read config from YAML file.
+
+        Parameters
+        ----------
+        filename : str
+            YAML config file
+        """
         import yaml
         log.info('Reading {}'.format(filename))
         with open(filename) as fh:
             config = yaml.safe_load(fh)
         return cls(config)
 
-    def info(self):
-        log.info(self.store.info())
-        log.info('ON region\nCenter: {0}\nRadius: {1}'.format(
-            self.target, self.radius))
-        log.info(
-            'OFF region\nType: {0}\nInner Radius: {1}\nOuter Radius: {2}'.format(
-                'Ring', self.irad, self.orad))
-
     def run(self):
         """Run analysis as specified in the config"""
         if self.config['general']['create_ogip']:
-            self.make_ogip()
+            self.prepare_ogip_data()
         if self.config['general']['run_fit']:
-            fit = self.run_fit()
+            model = self.config['model']['type']
+            thres_low = Energy(self.config['model']['threshold_low'])
+            thres_high = Energy(self.config['model']['threshold_high'])
+            fit = self.run_hspec_fit(model, thres_low, thres_high)
             return fit
 
-    def make_ogip(self):
+    def prepare_ogip_data(self):
         """Create OGIP files"""
         for obs in self.observations:
-            obs.make_ogip()
+            obs.prepare_ogip_data()
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
-    def run_fit(self):
-        """Run the gammapy.hspec fit"""
+    def run_hspec_fit(self, model, thres_low, thres_high):
+        """Run the gammapy.hspec fit
+
+        Parameters
+        ----------
+        model : str
+            Sherpa model
+        thres_high : `~gammapy.spectrum.Energy`
+            Upper threshold of the spectral fit
+        thres_low : `~gammapy.spectrum.Energy`
+            Lower threshold of the spectral fit
+        """
+
         log.info("Starting HSPEC")
         import sherpa.astro.ui as sau
         from ..hspec import wstat
         from sherpa.models import PowLaw1D
 
-        if (self.model == 'PL'):
+        if (model == 'PL'):
             p1 = PowLaw1D('p1')
             p1.gamma = 2.2
             p1.ref = 1e9
@@ -112,15 +120,17 @@ class SpectrumAnalysis(object):
         else:
             raise ValueError('Desired Model is not defined')
 
+        thres = thres_low.to('keV').value
+        emax = thres_high.to('keV').value
+
         sau.freeze(p1.ref)
         sau.set_conf_opt("max_rstat", 100)
 
         list_data = []
         for obs in self.observations:
-            runfile = obs.phafile
-            datid = runfile.split('/')[2][7:12]
-            sau.load_data(datid, runfile)
-            sau.notice_id(datid, self.thres, self.emax)
+            datid = obs.phafile.parts[-1][7:12]
+            sau.load_data(datid, str(obs.phafile))
+            sau.notice_id(datid, thres, emax)
             sau.set_source(datid, p1)
             list_data.append(datid)
         wstat.wfit(list_data)
@@ -152,20 +162,39 @@ class SpectrumObservation(object):
     At the moment it can only be initialized with a yaml config file
 
     TODO: Link to example
+
+    Parameters
+    ----------
+    obs : int
+        Observation ID, runnumber
+    store : `~gammapy.obs.DataStore
+        Data Store
+    config : dict
+        Configuration, provided by YAML config file
     """
 
-    def __init__(self, obs, config):
+    def __init__(self, obs, store, config):
+
+        # Raises Error if obs is not available
+        store.filename(obs, 'events')
         self.config = config
         self.obs = obs
+        self.store = store
         self._process_config()
         self.event_list = None
         self.pha = None
         self.bkg = None
         self.arf = None
         self.bkg = None
+        self.phafile = None
 
     def make_on_vector(self):
-        """Make ON `~gammapy.data.CountsSpectrum`
+        """Create ON vector
+
+        Returns
+        -------
+        on_vec : `gammapy.data.CountsSpectrum`
+            Counts spectrum inside the ON region
         """
         self._load_event_list()
         on_list = self.event_list.select_circular_region(self.on_region)
@@ -174,41 +203,61 @@ class SpectrumObservation(object):
         return on_vec
 
     def make_off_vector(self):
-        """Make OFF `~gammapy.data.CountsSpectrum`
+        """Create OFF vector
+
+        Returns
+        -------
+        on_vec : `gammapy.data.CountsSpectrum`
+            Counts spectrum inside the OFF region
         """
         self._load_event_list()
         if self.off_type == "ring":
             # TODO put in utils once there is a SkyRingRegion
             center = self.on_region.pos
+            radius = self.on_region.radius
             inner = self.off_region['inner_radius']
             outer = self.off_region['outer_radius']
             off_list = self.event_list.select_sky_ring(center, inner, outer)
             off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
-            off_vec.backscal = self.alpha
-            self.alpha = ring_area_factor(self.radius, self.irad,
-                                          self.orad).value
-            self.bkg = off_vec
+            alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
+
         elif self.off_type == "reflected":
             raise NotImplementedError
         else:
             raise ValueError(
                 "Undefined background method: {}".format(self.off_type))
 
+        off_vec.backscal = alpha
+        self.bkg = off_vec
+        return off_vec
+
     def make_arf(self):
-        """Make `~gammapy.irf.EffectiveAreaTable`
+        """Create effective area vector correct energy binning
+
+        Returns
+        -------
+        arf : `~gammapy.irf.EffectiveAreaTable`
+             effective area vector
         """
-        storename = self.config['general']['datastore']
-        store = DataStore.from_name(storename)
-        aeff2D = store.load(self.obs, 'aeff')
-        self.arf = aeff2D.to_effective_area_table(self.offset)
+        self._load_event_list()
+        aeff2D = self.store.load(self.obs, 'aeff')
+        arf_vec = aeff2D.to_effective_area_table(self.offset)
+        self.arf = arf_vec
+        return arf_vec
 
     def make_rmf(self):
-        """Make `~gammapy.irf.EnergyDispersion`
+        """Create energy disperion matrix in correct energy binning
+
+        Returns
+        -------
+        rmf : `~gammapy.irf.EnergyDispersion`
+            energy dispersion matrix
         """
-        storename = self.config['general']['datastore']
-        store = DataStore.from_name(storename)
-        edisp2D = store.load(self.obs, 'edisp')
-        self.rmf = edisp2D.to_energy_dispersion(self.offset, e_reco=self.ebounds)
+        edisp2D = self.store.load(self.obs, 'edisp')
+        rmf_mat = edisp2D.to_energy_dispersion(self.offset,
+                                               e_reco=self.ebounds)
+        self.rmf = rmf_mat
+        return rmf_mat
 
     def to_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                 outdir=None, clobber=True):
@@ -237,26 +286,31 @@ class SpectrumObservation(object):
             outdir = "ogip_data"
 
         basedir = Path(outdir)
+        basedir.mkdir(exist_ok=True)
 
         if arffile is None:
-            arffile = basedir / "arf_run" + str(self.obs) + ".fits"
+            arffile = basedir / "arf_run{}.fits".format(self.obs)
         if rmffile is None:
-            rmffile = basedir / "rmf_run" + str(self.obs) + ".fits"
+            rmffile = basedir / "rmf_run{}.fits".format(self.obs)
         if phafile is None:
-            phafile = basedir / "pha_run" + str(self.obs) + ".pha"
+            phafile = basedir / "pha_run{}.pha".format(self.obs)
         if bkgfile is None:
-            bkgfile = basedir / "bkg_run" + str(self.obs) + ".pha"
+            bkgfile = basedir / "bkg_run{}.pha".format(self.obs)
+
+        self.phafile = phafile
 
         if self.pha is not None:
-            self.pha.write(phafile, bkg=bkgfile, arf=arffile, rmf=rmffile, clobber=clobber)
+            self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
+                           rmf=str(rmffile), clobber=clobber)
         if self.bkg is not None:
-            self.bkg.write(bkgfile, clobber=clobber)
+            self.bkg.write(str(bkgfile), clobber=clobber)
         if self.arf is not None:
-            self.arf.write(arffile, energy_unit='keV', effarea_unit='cm2', clobber=clobber)
+            self.arf.write(str(arffile), energy_unit='keV', effarea_unit='cm2',
+                           clobber=clobber)
         if self.rmf is not None:
-            self.rmf.write(rmffile, energy_unit='keV', clobber=clobber)
+            self.rmf.write(str(rmffile), energy_unit='keV', clobber=clobber)
 
-    def run(self):
+    def prepare_ogip_data(self):
         """Perform all step to provide the OGIP data for a sherpa fit
         """
         self.make_on_vector()
@@ -271,9 +325,9 @@ class SpectrumObservation(object):
         If the event list is already loaded pass
         """
         if self.event_list is None:
-            storename = self.config['general']['datastore']
-            store = DataStore.from_name(storename)
-            self.event_list = store.load(obs_id=self.obs, filetype='events')
+            self.event_list = self.store.load(obs_id=self.obs, filetype='events')
+            pointing = self.event_list.pointing_radec
+            self.offset = pointing.separation(self.on_region.pos)
         else:
             pass
 
@@ -289,7 +343,7 @@ class SpectrumObservation(object):
             self.ebounds = EnergyBounds.equal_log_spacing(
                 emin, emax, nbins)
         else:
-            if sec[binning] is None:
+            if sec['binning'] is None:
                 raise ValueError("No binning specified")
         log.debug('Binning: {}'.format(self.ebounds))
 

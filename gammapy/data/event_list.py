@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
@@ -290,8 +291,8 @@ class EventList(Table):
 
         Parameters
         ----------
-        region : `~gammapy.region.SkyRegionList`
-            List of sky regions
+        region : `~gammapy.region.SkyRegionList`, `~gammapy.region.SkyCircleRegion`
+            (List of) sky region(s)
 
         Returns
         -------
@@ -299,6 +300,8 @@ class EventList(Table):
             Copy of event list with selection applied.
         """
 
+        if not isinstance(region, list):
+            region = list([region])
         mask = self.filter_circular_region(region)
         return self[mask]
 

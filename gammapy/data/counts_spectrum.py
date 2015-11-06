@@ -127,13 +127,13 @@ class CountsSpectrum(object):
         Parameters
         ----------
         arf : str
-            ARF file to write into FITS header
+            ARF file to be written into FITS header
         rmf : str
-            RMF file to write into FITS header
+            RMF file to be written into FITS header
         corr : str
-            CORR file to write into FITS header
+            CORR file to be written into FITS header
         bkg : str
-            BKG file to write into FITS header
+            BKG file to be written into FITS header
         filename : str
             File to be written
         """
