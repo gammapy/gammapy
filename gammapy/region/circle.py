@@ -173,7 +173,7 @@ class SkyCircleRegion(SkyRegion):
 
         val = self.pos.galactic
         center = (val.l.value, val.b.value)
-        patch = mpatches.Circle(center, self.radius.value,
+        patch = mpatches.Circle(center, self.radius.value, edgecolor="None",
                                 transform=ax.get_transform('galactic'))
 
         ax.add_artist(patch)

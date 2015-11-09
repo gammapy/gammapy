@@ -1,25 +1,49 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import datetime
 import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
+from astropy.wcs import WCS
 from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'LogEnergyAxis',
     'np_to_pha',
-    'make_off_vector_reflected',
-    'make_off_vector_ring',
+    'plot_reflected_regions',
 ]
 
 
-def make_off_vector_reflected():
-    pass
+def plot_reflected_regions(analysis, hdu):
+    """Plot reflected regions for a given set of observations
 
+    Parameters
+    ----------
+    analysis : `~gammapy.spectrum.SpectrumAnalysis`
+        1D spectrum analysis object
+    hdu : `~astropy.fit.ImageHDU`
+        ImageHDU
+    """
 
-def make_off_vector_ring():
-    pass
+    import matplotlib.pyplot as plt
+
+    reflected_regions = analysis.reflected_regions
+    for obs in reflected_regions:
+        wcs = WCS(hdu.header)
+        fig = plt.figure(figsize=(8, 5), dpi=80)
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs)
+        analysis.exclusion.plot(ax)
+        for reg in obs['region']:
+            patch = reg.plot(ax)
+            patch.set_facecolor('red')
+        patch2 = analysis.on_region.plot(ax)
+        patch2.set_facecolor('blue')
+        l = obs['pointing'].galactic.l
+        b = obs['pointing'].galactic.b
+        ax.scatter(l, b, transform=ax.get_transform('galactic'), s=90,
+                   marker="+", color='yellow')
+        plt.savefig(str(obs['obs']) + "_reflected_regions.png")
 
 
 class LogEnergyAxis(object):
@@ -109,8 +133,10 @@ class LogEnergyAxis(object):
 def np_to_pha(channel, counts, exposure, dstart, dstop,
               dbase=None, stat_err=None, quality=None, syserr=None,
               obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
-              version='v0.0.0', telescope='DUMMY', instrument='DUMMY', filter='NONE',
-              backfile='none', corrfile='none', respfile='none', ancrfile='none'):
+              version='v0.0.0', telescope='DUMMY', instrument='DUMMY',
+              filter='NONE',
+              backfile='none', corrfile='none', respfile='none',
+              ancrfile='none'):
     """Create PHA FITS table extension from numpy arrays.
 
     Outdated. Use gammapy.data.CountsSpectrum.to_fits()
@@ -175,7 +201,8 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     header['RESPFILE'] = respfile, 'Redistribution matrix file (RMF)'
     header['ANCRFILE'] = ancrfile, 'Ancillary response file (ARF)'
 
-    header['HDUCLASS'] = 'OGIP', 'Format conforms to OGIP/GSFC spectral standards'
+    header[
+        'HDUCLASS'] = 'OGIP', 'Format conforms to OGIP/GSFC spectral standards'
     header['HDUCLAS1'] = 'SPECTRUM', 'Extension contains a spectrum'
     header['HDUVERS '] = '1.2.1', 'Version number of the format'
 
@@ -185,7 +212,8 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     header['POISSERR'] = poisserr, 'Are Poisson Distribution errors assumed'
 
     header['CHANTYPE'] = 'PHA', 'Channels assigned by detector electronics'
-    header['DETCHANS'] = len(channel), 'Total number of detector channels available'
+    header['DETCHANS'] = len(
+        channel), 'Total number of detector channels available'
     header['TLMIN1'] = channel[0], 'Lowest Legal channel number'
     header['TLMAX1'] = channel[-1], 'Highest Legal channel number'
 
@@ -195,17 +223,23 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     header['DEC-OBJ'] = obj_dec, 'DEC of First input object'
     header['EQUINOX'] = 2000.00, 'Equinox of the FIRST object'
     header['RADECSYS'] = 'FK5', 'Co-ordinate frame used for equinox'
-    header['DATE-OBS'] = dstart.datetime.strftime('%Y-%m-%d'), 'EARLIEST observation date of files'
-    header['TIME-OBS'] = dstart.datetime.strftime('%H:%M:%S'), 'EARLIEST time of all input files'
-    header['DATE-END'] = dstop.datetime.strftime('%Y-%m-%d'), 'LATEST observation date of files'
-    header['TIME-END'] = dstop.datetime.strftime('%H:%M:%S'), 'LATEST time of all input files'
+    header['DATE-OBS'] = dstart.datetime.strftime(
+        '%Y-%m-%d'), 'EARLIEST observation date of files'
+    header['TIME-OBS'] = dstart.datetime.strftime(
+        '%H:%M:%S'), 'EARLIEST time of all input files'
+    header['DATE-END'] = dstop.datetime.strftime(
+        '%Y-%m-%d'), 'LATEST observation date of files'
+    header['TIME-END'] = dstop.datetime.strftime(
+        '%H:%M:%S'), 'LATEST time of all input files'
 
-    header['CREATOR'] = '{0} {1}'.format(creator, version), 'Program name that produced this file'
+    header['CREATOR'] = '{0} {1}'.format(creator,
+                                         version), 'Program name that produced this file'
 
     header['HDUCLAS2'] = 'NET', 'Extension contains a bkgr substr. spec.'
     header['HDUCLAS3'] = 'COUNT', 'Extension contains counts'
     header['HDUCLAS4'] = 'TYPE:I', 'Single PHA file contained'
-    header['HDUVERS1'] = '1.2.1', 'Obsolete - included for backwards compatibility'
+    header[
+        'HDUVERS1'] = '1.2.1', 'Obsolete - included for backwards compatibility'
 
     if syserr is None:
         header['SYS_ERR'] = 0, 'No systematic error was specified'
@@ -219,9 +253,11 @@ def np_to_pha(channel, counts, exposure, dstart, dstop,
     header['BACKSCAL'] = 1., 'Background scale factor'
     header['CORRSCAL'] = 0., 'Correlation scale factor'
 
-    header['FILENAME'] = 'several', 'Spectrum was produced from more than one file'
+    header[
+        'FILENAME'] = 'several', 'Spectrum was produced from more than one file'
     header['ORIGIN'] = 'dummy', 'origin of fits file'
-    header['DATE'] = datetime.datetime.today().strftime('%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
+    header['DATE'] = datetime.datetime.today().strftime(
+        '%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
     header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
 
     if dbase is not None:

@@ -9,8 +9,8 @@ __all__ = [
 ]
 
 
-def find_reflected_regions(region, center, exclusion_mask,
-                           angle_increment=None, min_distance=None):
+def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
+                           min_distance=None, min_distance_input=None):
     """Find reflected regions.
 
     Converts to pixel coordinates internally
@@ -25,7 +25,9 @@ def find_reflected_regions(region, center, exclusion_mask,
         Exlusion mask
     angle_increment : `~astropy.coordinates.Angle`
         Rotation angle for each step
-    min_dinstance : `~astropy.coordinates.Angle`
+    min_distance : `~astropy.coordinates.Angle`
+        Minimal distance between to reflected regions
+    min_distance_input
         Minimal distance from input region
 
     Returns
@@ -38,6 +40,8 @@ def find_reflected_regions(region, center, exclusion_mask,
         angle_increment = Angle('0.1 rad')
     if min_distance is None:
         min_distance = Angle('0 rad')
+    if min_distance_input is None:
+        min_distance_input = Angle('0 rad')
 
     reflected_regions_pix = PixRegionList()
     wcs = exclusion_mask.wcs
@@ -46,11 +50,10 @@ def find_reflected_regions(region, center, exclusion_mask,
     pix_center = (float(val[0]), float(val[1]))
     offset = pix_region.offset(pix_center)
     angle = pix_region.angle(pix_center)
-    min_ang = Angle(2 * pix_region.radius / offset, 'rad')
-    max_angle = angle + Angle('360deg') - min_ang - min_distance
+    min_ang = Angle(2 * pix_region.radius / offset, 'rad') + min_distance
+    max_angle = angle + Angle('360deg') - min_ang - min_distance_input
 
-    curr_angle = angle + min_ang + min_distance
-    found_region = False
+    curr_angle = angle + min_ang + min_distance_input
     while curr_angle < max_angle:
         test_pos = _compute_xy(pix_center, offset, curr_angle)
         test_reg = PixCircleRegion(test_pos, pix_region.radius)

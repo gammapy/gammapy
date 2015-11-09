@@ -69,6 +69,39 @@ class ExclusionMask(object):
         wcs = WCS(hdu.header)
         return cls(mask, wcs)
 
+    @classmethod
+    def from_fits(cls, excl_file):
+        """Read exclusion mask fits file
+
+        Parameters
+        ----------
+        excl_file : str
+            fits file containing an ImageHDU
+        """
+        hdu = fits.open(excl_file)[0]
+        return cls.from_hdu(hdu)
+
+    @classmethod
+    def from_ds9(cls, excl_file, hdu):
+        """Create exclusion mask from ds9 regions file
+
+        Uses the pyregion package
+        (http://pyregion.readthedocs.org/en/latest/index.html)
+
+        Parameters
+        ----------
+        excl_file : str
+            ds9 region file
+        hdu : `~astropy.fits.ImageHDU`
+            Map to fill exclusion mask
+        """
+        import pyregion
+        r = pyregion.open(excl_file)
+        val = r.get_mask(hdu=hdu)
+        mask = np.invert(val)
+        wcs = WCS(hdu.header)
+        return cls(mask, wcs)
+
     def to_hdu(self):
         """Create ImageHDU containting the exclusion mask
         """
@@ -87,7 +120,7 @@ class ExclusionMask(object):
         import matplotlib.pyplot as plt
         if 'cmap' not in locals():
             cmap = colors.ListedColormap(['black', 'lightgrey'])
-        ax.imshow(self.mask, cmap=cmap)
+        ax.imshow(self.mask, cmap=cmap, origin='lower')
 
     @property
     def distance_image(self):
@@ -97,3 +130,4 @@ class ExclusionMask(object):
             self._distance_image = exclusion_distance(self.mask)
 
         return self._distance_image
+
