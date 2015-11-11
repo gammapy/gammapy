@@ -1,3 +1,5 @@
+.. include:: references.txt
+
 .. _references:
 
 References
@@ -98,24 +100,15 @@ Make sure to also check out the following packages that contain very useful func
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
 * `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
 * `ctapipe`_ --- CTA Python pipeline experimental version
-* `threeml`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
+* `3ML`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
   (`code <https://github.com/giacomov/3ML>`__,
   `example notebook <http://nbviewer.ipython.org/github/giacomov/3ML/blob/master/examples/090217206.ipynb>`__)
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `GamERa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) by Joachim Hahn
-* `Enrico <https://github.com/gammapy/enrico/>`__ --- helps you with your Fermi data analysis
+* `Enrico`_ --- helps you with your Fermi data analysis
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 
-
-.. _ctapipe: https://github.com/cta-observatory/ctapipe
-.. _Sherpa: http://cxc.cfa.harvard.edu/sherpa/
-.. _GammaLib: http://gammalib.sourceforge.net
-.. _ctools: http://cta.irap.omp.eu/ctools/
-.. _naima: https://github.com/zblz/naima
-.. _GamERa: https://github.com/JoachimHahn/GamERa
-.. _gammatools: https://github.com/woodmd/gammatools
-.. _threeml: http://threeml.stanford.edu/
 
 Some other projects:
 
@@ -125,10 +118,6 @@ Some other projects:
 * `pytevcat`_ --- A ROOT Python GUI interface for TeVCat
 * `pycrflux`_ --- Python module to plot cosmic-ray flux
 
-.. _act-analysis: https://bitbucket.org/kosack/act-analysis
-.. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
-.. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
-
 Other useful packages
 ---------------------
 
@@ -136,8 +125,7 @@ In addition to the packages mentioned in the last section and at :ref:`install-d
 here's a few other Python packages you might find useful / interesting:
 
 * See the list here: http://www.astropy.org/affiliated/
-* Pulsar timing package `PINT <https://github.com/nanograv/PINT>`__
-* `iminuit <https://github.com/iminuit/iminuit>`__ fitter and
-  `probfit <https://github.com/iminuit/probfit>`__ likelihood function builder.
+* Pulsar timing package `PINT`_
+* `iminuit`_ fitter and `probfit`_ likelihood function builder.
 * Andy strong has C++ codes (GALPROP and Galplot) for Galactic cosmic rays and emission
   and source population synthesis at http://www.mpe.mpg.de/~aws/propagate.html .

@@ -17,8 +17,9 @@
 .. _gwcs: http://gwcs.readthedocs.org
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
 .. _iminuit: https://github.com/iminuit/iminuit
+.. _probfit: https://github.com/iminuit/probfit
 .. _h5py: http://www.h5py.org/
-.. _naima: http://naima.readthedocs.org/en/latest/
+.. _naima: https://github.com/zblz/naima
 .. _ROOT: https://root.cern.ch/drupal/
 .. _rootpy: http://www.rootpy.org/
 .. _Kapteyn: http://www.astro.rug.nl/software/kapteyn/
@@ -41,6 +42,12 @@
 .. _flask: http://flask.pocoo.org/
 .. _pytevcat: https://github.com/akira-okumura/PyTeVCat
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
+.. _act-analysis: https://bitbucket.org/kosack/act-analysis
+.. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
+.. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
+.. _PINT: https://github.com/nanograv/PINT
+.. _GAMERA: https://github.com/JoachimHahn/GAMERA
+.. _gammatools: https://github.com/woodmd/gammatools
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
