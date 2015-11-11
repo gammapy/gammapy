@@ -122,6 +122,8 @@ Some other projects:
 * `act-analysis`_ --- Python scripts and Makefiles for some common gamma-ray data analysis tasks by Karl Kosack
 * `VHEObserverTools`_ --- tools to predict detectability at VHE by Jeremy Perkins
 * `photon_simulator`_ --- Python code to simulate X-ray observations
+* `pytevcat`_ --- A ROOT Python GUI interface for TeVCat
+* `pycrflux`_ --- Python module to plot cosmic-ray flux
 
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools

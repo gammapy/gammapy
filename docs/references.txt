@@ -39,6 +39,8 @@
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
 .. _flask: http://flask.pocoo.org/
+.. _pytevcat: https://github.com/akira-okumura/PyTeVCat
+.. _pycrflux: https://github.com/akira-okumura/pycrflux
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/

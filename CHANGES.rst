@@ -26,13 +26,13 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
 .. _gammapy_0p4_release:
 
-0.4 (November 11, 2015, unreleased)
+0.4 (November 15, 2015, unreleased)
 -----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on November 11, 2015.
+Gammapy 0.4 will be released on November 15, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
