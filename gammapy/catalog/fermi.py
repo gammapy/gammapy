@@ -334,6 +334,8 @@ class SourceCatalog3FGL(SourceCatalog):
             filename = gammapy_extra.filename('datasets/catalogs/fermi/gll_psc_v16.fit.gz')
 
         self.hdu_list = fits.open(filename)
+        self.extended_sources_table = Table(self.hdu_list['ExtendedSources'].data)
+
         table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
         super(SourceCatalog3FGL, self).__init__(table=table)
 
@@ -345,6 +347,14 @@ class SourceCatalog2FHL(SourceCatalog):
     description = 'LAT Second High-Energy Source Catalog'
     source_object_class = SourceCatalogObject2FHL
 
-    def __init__(self):
-        self.hdu_list = fetch_fermi_catalog(catalog='2FGL')
-        self.table = Table(self.hdu_list['LAT_Point_Source_Catalog'].data)
+    def __init__(self, filename=None):
+        if not filename:
+            filename = gammapy_extra.filename('datasets/catalogs/fermi/gll_psch_v08.fit.gz')
+
+        self.hdu_list = fits.open(filename)
+        self.count_map_hdu = self.hdu_list['Count Map']
+        self.extended_sources_table = Table(self.hdu_list['Extended Sources'].data)
+        self.rois = Table(self.hdu_list['ROIs'].data)
+
+        table = Table(self.hdu_list['2FHL Source Catalog'].data)
+        super(SourceCatalog2FHL, self).__init__(table=table)

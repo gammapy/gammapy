@@ -10,6 +10,7 @@ from ...image.utils import upsample_2N, downsample_2N
 
 
 @requires_dependency('scipy')
+@requires_dependency('skimage')
 @requires_data('gammapy-extra')
 def test_compute_ts_map(tmpdir):
     """Minimal test of compute_ts_map"""

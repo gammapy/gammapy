@@ -30,8 +30,11 @@ class SourceCatalogHGPS(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/HGPS_internal_v0.3.1.fits'
+            filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/HGPS_v0.3.1.fits'
 
         self.hdu_list = fits.open(str(filename))
-        table = Table(self.hdu_list['HGPS_SOURCE_CATALOG'].data)
+        table = Table(self.hdu_list['HGPS_SOURCES'].data)
+
+        self.components = Table(self.hdu_list['HGPS_COMPONENTS'].data)
+        self.associations = Table(self.hdu_list['HGPS_ASSOCIATIONS'].data)
         super(SourceCatalogHGPS, self).__init__(table=table)

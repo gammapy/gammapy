@@ -36,7 +36,8 @@ class SourceCatalogObject(object):
     @property
     def name(self):
         """Source name"""
-        return self.data[self._source_name_key]
+        name = self.data[self._source_name_key]
+        return name.strip()
 
     @property
     def index(self):
