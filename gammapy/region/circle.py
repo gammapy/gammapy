@@ -176,10 +176,10 @@ class SkyCircleRegion(SkyRegion):
         val = self.pos.galactic
         center = (val.l.value, val.b.value)
 
-        temp = dict(transform = ax.get_transform('galactic'),
-                    center=center, radius=self.radius.value)
+        temp = dict(transform = ax.get_transform('galactic'), 
+                    radius=self.radius.value)
         kwargs.update(temp)
-        patch = mpatches.Circle(**kwargs)
+        patch = mpatches.Circle(center, **kwargs)
 
         return patch
 
