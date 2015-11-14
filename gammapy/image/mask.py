@@ -15,12 +15,12 @@ class ExclusionMask(object):
 
     Parameters
     ----------
-    mask : `~numpy.ndarray`; dtype = int, bool
+    mask : `~numpy.ndarray`
          Exclusion mask
     """
 
     def __init__(self, mask, wcs=None):
-        self.mask = mask
+        self.mask = np.array(mask, dtype=int)
         self.wcs = wcs
         self._distance_image = None
 
@@ -65,7 +65,7 @@ class ExclusionMask(object):
         hdu : `~astropy.fits.ImageHDU`
             ImageHDU containing only an exlcusion mask (int, bool)
         """
-        mask = np.array(hdu.data, dtype=int)
+        mask = np.array(hdu.data)
         wcs = WCS(hdu.header)
         return cls(mask, wcs)
 
@@ -76,9 +76,10 @@ class ExclusionMask(object):
         Parameters
         ----------
         excl_file : str
-            fits file containing an ImageHDU
+            fits file containing an Exclusion extension
         """
-        hdu = fits.open(excl_file)[0]
+        hdulist = fits.open(excl_file)
+        hdu = hdulist['Exclusion']
         return cls.from_hdu(hdu)
 
     @classmethod
@@ -106,7 +107,7 @@ class ExclusionMask(object):
         """Create ImageHDU containting the exclusion mask
         """
         header = self.wcs.to_header()
-        return fits.ImageHDU(self.mask, header)
+        return fits.ImageHDU(self.mask, header, name='Exclusion')
 
     def plot(self, ax, **kwargs):
         """Plot

@@ -212,13 +212,28 @@ class CountsSpectrum(object):
 
     def plot(self, ax=None, filename=None, **kwargs):
         """
-        Plot effective area vs. energy.
+        Plot counts vector
+
+        kwargs are forwarded to matplotlib.pyplot.hist
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axis` (optional)
+            Axis instance to be used for the plot
+        filename : str (optional)
+            File to save the plot to
+
+        Returns
+        -------
+        ax: `~matplotlib.axis`
+            Axis instance used for the plot
         """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        plt.plot(self.energy, self.counts, 'o', **kwargs)
+        plt.hist(self.energy.value, len(self.energy.value),
+                 weights=self.counts, **kwargs)
         plt.xlabel('Energy [{0}]'.format(self.energy.unit))
         plt.ylabel('Counts')
         if filename is not None:

@@ -155,13 +155,15 @@ class SkyCircleRegion(SkyRegion):
 
         return PixCircleRegion((x, y), pix_radius)
 
-    def plot(self, ax):
-        """Convert to mpl patch for wcs axis
+    def plot(self, ax, **kwargs):
+        """Convert to mpl patch using a given wcs transformation
 
         Parameters
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`
             WCS axis object
+        kwargs : dict
+            kwargs are forwarded to mpatches.Circle
 
         Returns
         -------
@@ -173,10 +175,12 @@ class SkyCircleRegion(SkyRegion):
 
         val = self.pos.galactic
         center = (val.l.value, val.b.value)
-        patch = mpatches.Circle(center, self.radius.value, edgecolor="None",
-                                transform=ax.get_transform('galactic'))
 
-        ax.add_artist(patch)
+        temp = dict(transform = ax.get_transform('galactic'),
+                    center=center, radius=self.radius.value)
+        kwargs.update(temp)
+        patch = mpatches.Circle(**kwargs)
+
         return patch
 
     def to_ds9(self):

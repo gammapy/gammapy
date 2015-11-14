@@ -222,12 +222,33 @@ class SpectrumObservation(object):
         self.bkg_method = bkg_method
         self.ebounds = ebounds
         self.exclusion = exclusion
-        self.event_list = None
+        self._event_list = None
         self.pha = None
         self.bkg = None
         self.arf = None
         self.rmf = None
         self.phafile = None
+
+    @property
+    def event_list(self):
+        """`~gammapy.data.EventList` corresponding to the observation
+        """
+        if self._event_list is None:
+            self._event_list = self.store.load(obs_id=self.obs,
+                                              filetype='events')
+        return self._event_list
+
+    @property
+    def pointing(self):
+        """`~astropy.coordinates.SkyCoord corresponding to the obs position
+        """
+        return self.event_list.pointing_radec
+
+    @property
+    def offset(self):
+        """`~astropy.coordinates.Angle corresponding to the obs offset
+        """
+        return self.pointing.separation(self.on_region.pos)
 
     def make_on_vector(self):
         """Create ON vector
@@ -237,7 +258,6 @@ class SpectrumObservation(object):
         on_vec : `gammapy.data.CountsSpectrum`
             Counts spectrum inside the ON region
         """
-        self._load_event_list()
         on_list = self.event_list.select_circular_region(self.on_region)
         on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
         self.pha = on_vec
@@ -253,7 +273,6 @@ class SpectrumObservation(object):
 
         kwargs are forwarded to gammapy.region.find_reflected_regions
         """
-        self._load_event_list()
         off_region = find_reflected_regions(self.on_region, self.pointing,
                                             self.exclusion, **kwargs)
         return off_region
@@ -266,7 +285,6 @@ class SpectrumObservation(object):
         on_vec : `gammapy.data.CountsSpectrum`
             Counts spectrum inside the OFF region
         """
-        self._load_event_list()
         if self.bkg_method['type'] == "ring":
             # TODO put in utils once there is a SkyRingRegion
             center = self.on_region.pos
@@ -298,8 +316,7 @@ class SpectrumObservation(object):
         arf : `~gammapy.irf.EffectiveAreaTable`
              effective area vector
         """
-        self._load_event_list()
-        aeff2d = self.store.load(self.obs, 'aeff')
+        aeff2d = self.store.load(obs_id=self.obs, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(self.offset)
         self.arf = arf_vec
         return arf_vec
@@ -312,7 +329,7 @@ class SpectrumObservation(object):
         rmf : `~gammapy.irf.EnergyDispersion`
             energy dispersion matrix
         """
-        edisp2d = self.store.load(self.obs, 'edisp')
+        edisp2d = self.store.load(obs_id=self.obs, filetype='edisp')
         rmf_mat = edisp2d.to_energy_dispersion(self.offset,
                                                e_reco=self.ebounds)
         self.rmf = rmf_mat
@@ -383,19 +400,6 @@ class SpectrumObservation(object):
         self.make_rmf()
         self.write_ogip(outdir=dir)
 
-    def _load_event_list(self):
-        """Load event list associated with the observation
-
-        If the event list is already loaded pass
-        """
-        if self.event_list is None:
-            self.event_list = self.store.load(obs_id=self.obs,
-                                              filetype='events')
-            self.pointing = self.event_list.pointing_radec
-            self.offset = self.pointing.separation(self.on_region.pos)
-        else:
-            pass
-
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
         """
@@ -412,16 +416,16 @@ def run_spectrum_analysis_using_configfile(configfile):
 
     Returns
     -------
-    fit : dict
-        Fit results
+    analysis : `~gammapy.spectrum.SpectrumAnalysis`
+        Spectrum analysis instance
     """
     import yaml
     log.info('Reading {}'.format(configfile))
     with open(configfile) as fh:
         config = yaml.safe_load(fh)
 
-    fit = run_spectrum_analysis_using_config(config)
-    return fit
+    analysis = run_spectrum_analysis_using_config(config)
+    return analysis
 
 
 def run_spectrum_analysis_using_config(config):
@@ -434,8 +438,8 @@ def run_spectrum_analysis_using_config(config):
 
     Returns
     -------
-    fit : dict
-        Fit results
+    analysis : `~gammapy.spectrum.SpectrumAnalysis`
+        Spectrum analysis instance
     """
 
     # Observations
@@ -481,7 +485,7 @@ def run_spectrum_analysis_using_config(config):
     analysis = SpectrumAnalysis(datastore=store, obs=obs, on_region=on_region,
                                 bkg_method=bkg_method, exclusion=exclusion,
                                 nobs=nobs, ebounds=ebounds)
-
+    
     if config['general']['create_ogip']:
         outdir = config['general']['outdir']
         analysis.write_ogip_data(outdir)
@@ -491,4 +495,4 @@ def run_spectrum_analysis_using_config(config):
         thres_high = Energy(config['model']['threshold_high'])
         fit = analysis.run_hspec_fit(model, thres_low, thres_high)
 
-    return fit
+    return analysis
