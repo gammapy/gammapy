@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data, data_manager
 
-
+@pytest.mark.xfail
 @requires_data('hess')
 def test_DataManager(data_manager):
     # TODO: add asserts on info output

@@ -201,6 +201,8 @@ def test_wcs_histogram2d():
     lon, lat, weights = np.array(data).T
     image = wcs_histogram2d(header, lon, lat, weights)
 
+    print(type(image))
+
     assert lookup(image, 0, 0, world=False) == 1 + 3
     assert lookup(image, 1, 0, world=False) == 2
 

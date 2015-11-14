@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..data import GoodTimeIntervals, TelescopeArray
@@ -282,6 +283,51 @@ class EventList(Table):
         """
         from ..catalog import select_sky_box
         return select_sky_box(self, lon_lim, lat_lim, frame)
+
+    def select_circular_region(self, region):
+        """Select events in circular regions
+
+        TODO: Extend to support generic regions
+
+        Parameters
+        ----------
+        region : `~gammapy.region.SkyRegionList`, `~gammapy.region.SkyCircleRegion`
+            (List of) sky region(s)
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+        """
+
+        if not isinstance(region, list):
+            region = list([region])
+        mask = self.filter_circular_region(region)
+        return self[mask]
+
+    def filter_circular_region(self, region):
+        """Create selection mask for event in given circular regions
+
+        TODO: Extend to support generic regions
+
+        Parameters
+        ----------
+        region : `~gammapy.region.SkyRegionList`
+            List of sky regions
+
+        Returns
+        -------
+        index_array : `np.array`
+            Index array of seleced events
+        """
+        
+        position = self.radec
+        mask = np.array([], dtype=int)
+        for reg in region:
+            separation = reg.pos.separation(position)
+            temp = np.where(separation < reg.radius)[0]
+            mask = np.union1d(mask, temp)
+        return mask
 
     def fill_counts_image(self, image):
         """Fill events in counts image.
