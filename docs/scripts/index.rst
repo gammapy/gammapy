@@ -21,6 +21,8 @@ So please use these tools and help us make them better:
 complain if something doesn't work, file feature requests,
 ... on Github or the mailing list!
 
+.. _scripts_overview:
+
 Overview
 ========
 
