@@ -1,0 +1,6 @@
+stores:
+  - name: crab_example
+    base_dir: <path-to-gammapy-extra>/datasets/hess-crab4
+    obs_table: observations.fits.gz
+    file_table: files.fits.gz
+

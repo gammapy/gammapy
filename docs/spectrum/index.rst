@@ -24,10 +24,15 @@ A good reference for the forward-folding on-off likelihood fitting methods is Se
 in publications usually the reference [Piron2001]_ is used.
 A standard reference for the unfolding method is [Albert2007]_.
 
+.. _spectrum_getting_started:
+
 Getting Started
 ===============
 
-TODO
+Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool. 
+
+The spectral fitting command-line tool makes use of the data management functionality in Gammapy. In order to download an example dataset from the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository and set up an example `gammapy.obs.DataManager` please follow the instructions in :ref:`obs_dm`. If you already have a data set, please modify the steps below accordingly.
+
 
 .. _energy_handling_gammapy:
 

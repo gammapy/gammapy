@@ -65,7 +65,7 @@ Using Gammapy as a command line tool
 All available command line tools are listed in the :ref:`scripts_overview` section of the `gammapy.scripts` subpackage.
 
 An example how to perform a spectral fit using the ``gammapy-spectrum`` command line tool
-is available in the "Getting Started" section of `gammapy.spectrum`.
+is available in the :ref:`spectrum_getting_started` section of `gammapy.spectrum`.
 
 What next?
 ----------

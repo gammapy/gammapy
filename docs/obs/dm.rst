@@ -8,7 +8,7 @@ Data Management
 Classes
 -------
 
-Gammapy helps with data management using a multi-layered set of classes:
+Gammapy helps with data management using a multi-layered set of classes. The job of the DataManager and DataStore is to make it easy and fast to locate files and select subsets of observations.
 
 * The `~gammapy.obs.DataManager` represents a configuration (usually read
   from a YAML file) of directories and index files specifying where
@@ -19,28 +19,75 @@ Gammapy helps with data management using a multi-layered set of classes:
   and a `~gammapy.obs.ObservationTable` that contains relevant parameters
   for each observation (e.g. time, pointing position, ...)
 * The actual data and IRFs are represented by classes,
-  e.g. `~gammapy.data.EventList` or `~gammapy.irf.EffectiveAreaTable2D`, ...
+  e.g. `~gammapy.data.EventList` or `~gammapy.irf.EffectiveAreaTable2D`.
 
-The job of the DataManager and DataStore is to make it easy and fast
-to locate files and select subsets of observations.
+Getting Started
+---------------
+
+The following example demonstrates how data management is done in Gammapy. It uses a test data set, which is available in the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository. Please clone this repository and navigate to ``gammapy-extra/datasets/``. The folder ``hess-crab4`` contains IRFs and simulated event lists for 4 observations of the Crab nebula. It also contains two index files:
+
+* Observation table `observations.fits.gz`
+* File table `files.fits.gz`
+
+These files tell gammapy which observations are contained in the data set and where the event list and IRF files are located for each observation (for more information see :ref:`dm_formats`). 
+
+Data Store
+++++++++++
+
+Exploring the data using the DataStore class works like this
+
 
 .. code-block:: python
 
-    >>> from gammapy.obs import DataManager
-    >>> data_manager = DataManager.from_yaml('data-register.yaml')
-    >>> data_store = data_manager['hess-hap-prod01']
-    >>> data_store.filename(obs_id=89565, filetype='AEFF')
-    /Users/deil/work/_Data/hess/fits/hap-hd/fits_prod01/std_zeta_fullEnclosure/run089400-089599/run089565/hess_aeff_2d_089565.fits.gz
+    >>> from gammapy.obs import DataStore
+    >>> data_store = DataStore.from_dir('hess-crab4')
+    >>> data_store.info()
+    Data store summary info:
+    name: noname
+    base_dir: hess-crab4
+    observations: 4
+    files: 16
+    >>> data_store.filename(obs_id=23592, filetype='events')
+    'hess-crab4/hess_events_simulated_023592.fits'
 
-
-In addition, these classes contain convenience properties and methods that
+In addition, the DataStore class has convenience properties and methods that
 actually load the data and IRFs and return objects of the appropriate class
 
 .. code-block:: python
 
-    >>> aeff = data_store.load(obs_id=89565, filetype='AEFF')
-    >>> aeff.__class__.name
-    TODO: gammapy.irf.EffectiveAreaTable2D
+    >>> aeff2d = data_store.load(obs_id=23592, filetype='aeff')
+    >>> type(aeff2d)
+    <class 'gammapy.irf.effective_area_table.EffectiveAreaTable2D'>
+    >>> event_list = data_store.load(obs_id=23592, filetype='events')
+    >>> event_list.target_radec
+    <SkyCoord (FK5: equinox=J2000.000): (ra, dec) in deg
+	(83.63333333, 22.01444444)>
+
+Data Manager
+++++++++++++
+
+The data access is even more convenient with a DataManager. It is based one a data registry config file (YAML format) that specifies where data and index files are located on the user's machine. In other words, the data registry is a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files in the ``~/.gammapy`` folder. Put the following example file there in order to proceed with the example.
+
+.. include:: ./example-data-register.yaml
+    :code: yaml
+
+
+Now the data access work like this
+
+.. code-block:: python
+
+    >>> from gammapy.obs import DataManager
+    >>> data_manager = DataManager.from_yaml(DataManager.DEFAULT_CONFIG_FILE)
+    >>> data_manager.store_names
+    ['crab_example']
+    >>> data_store = data_manager.stores[0]
+
+or just
+
+.. code-block:: python
+
+    >>> from gammapy.obs import DataStore
+    >>> data_store = DataStore.from_name('crab_example')
 
 
 Command line tools
@@ -50,18 +97,10 @@ Command line tools
 * ``gammapy-data-browse`` -- A web app to browse local data (stats and quick look plots)
 
 
+.. _dm_formats:
+
 Data formats
 ------------
-
-Users should have one data registry config file (YAML format) that specifies where data
-and index files are located on the user's machine.
-
-The data registry is basically a list of datastores that can be accessed by name.
-
-Each data store has two index files:
-
-* Observation table (FITS format)
-* File table (FITS format)
 
 Data registry config file
 +++++++++++++++++++++++++
