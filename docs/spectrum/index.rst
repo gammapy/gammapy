@@ -31,8 +31,19 @@ Getting Started
 
 Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool. 
 
-The spectral fitting command-line tool makes use of the data management functionality in Gammapy. In order to download an example dataset from the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository and set up an example `gammapy.obs.DataManager` please follow the instructions in :ref:`obs_dm`. If you already have a data set, please modify the steps below accordingly.
+The spectral fitting command-line tool makes use of the data management functionality in Gammapy. In order to download an example dataset from the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository and set up an example `gammapy.obs.DataManager` please follow the instructions in :ref:`obs_dm`. The following step assume you have this example data set. If you already have a data set, please modify the steps below accordingly.
 
+This is an example config file (YAML format) to be used with the ``gammapy-spectrum`` command line tool.
+
+.. include:: ./analysis_example.yaml
+    :code: yaml
+
+
+Copy it to for example ``crab_config.yaml`` and run
+
+.. code-block:: bash
+
+   gammapy-spectrum crab_config.yaml
 
 .. _energy_handling_gammapy:
 

@@ -1,0 +1,38 @@
+general:
+  # name of a data store
+  datastore: crab_example
+  # runlist to be processed, can be specified in a file {list, str}
+  runlist : [23523, 23559, 23592, 23526]
+  # number of runs to be processed, 0 corresponds to all runs
+  nruns : 4
+  # output directory
+  outdir : crab_example_out
+  # create OGIP files, only has to be done once
+  create_ogip : true
+  # perform a fit to the OGIP data
+  run_fit : true
+
+binning:
+  equal_log_spacing: true
+  emin: 0.1 TeV
+  emax: 10 TeV
+  nbins: 30
+
+on_region:
+  type: circle
+  center_x: 83.633083 deg
+  center_y: 22.014500 deg
+  system: icrs
+  radius: 0.3 deg
+
+off_region:
+  type: reflected
+
+excluded_regions:
+  file: <path-to-gammapy-extra>/test_datasets/spectrum/dummy_exclusion.fits 
+
+model:
+   type: PL
+   threshold_low: 0.1 TeV
+   threshold_high: 10 TeV
+   

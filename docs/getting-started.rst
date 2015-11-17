@@ -67,6 +67,8 @@ All available command line tools are listed in the :ref:`scripts_overview` secti
 An example how to perform a spectral fit using the ``gammapy-spectrum`` command line tool
 is available in the :ref:`spectrum_getting_started` section of `gammapy.spectrum`.
 
+An example how to create an counts maps from an event list is available at TODO.
+
 What next?
 ----------
 
