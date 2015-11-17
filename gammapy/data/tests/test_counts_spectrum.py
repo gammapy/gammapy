@@ -28,3 +28,6 @@ def test_CountsSpectrum():
 
     # set backscal
     spec.backscal = 15
+
+    #test to_fits
+    spec.to_fits()

@@ -6,6 +6,7 @@ from astropy import log
 from ..spectrum.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
+from astropy.units import Quantity
 from gammapy.data import EventList, EventListDataset
 
 __all__ = ['CountsSpectrum']
@@ -21,7 +22,7 @@ class CountsSpectrum(object):
         Counts
     energy : `~gammapy.spectrum.Energy`, `~gammapy.spectrum.EnergyBounds`.
         Energy axis
-    livetime : float
+    livetime : `~astropy.units.Quantiy`
         Livetime of the dataset
 
     Examples
@@ -31,10 +32,10 @@ class CountsSpectrum(object):
 
         from gammapy.spectrum import Energy, EnergyBounds
         from gammapy.data import CountsSpectrum
-        ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV') 
+        ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV')
         counts = [6,3,8,4,9,5,9,5,5,1]
         spec = CountsSpectrum(counts, ebounds)
-        hdu = spec.to_fits() 
+        hdu = spec.to_fits()
     """
 
     def __init__(self, counts, energy, livetime=None, backscal=1):
@@ -53,7 +54,10 @@ class CountsSpectrum(object):
         else:
             self.energy = energy
 
-        self._livetime = livetime
+        if livetime is not None:
+            self._livetime = livetime
+        else:
+            self._livetime = Quantity(0, 's')
         self._backscal = backscal
         self.channels = np.arange(1, self.energy.nbins + 1, 1)
 
