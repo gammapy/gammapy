@@ -54,35 +54,20 @@ Call the `~gammapy.spectrum.crab_flux` and `~gammapy.spectrum.crab_spectral_inde
    >>> crab_spectral_index(energy=3, reference='meyer')
    2.6763224503600429
 
-All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spectrum`) ...
-browse their docs to see if it contains the methods you want.
+All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spectrum`).
+Just browse this documentation to see if the functionality you are looking for is available.
+You can try for example to find a suitable data structure to represent a counts vector,
+i.e. list of events binned in energy.
 
 Using Gammapy as a command line tool
 ------------------------------------
 
-This section contains a few examples how to use Gammapy as a command line tool.
+All available command line tools are listed in the :ref:`scripts_overview` section of the `gammapy.scripts` subpackage.
 
-Say you have a counts and background model image and would like to compute
-a significance image with a correlation radius of 0.1 deg:
+An example how to perform a spectral fit using the ``gammapy-spectrum`` command line tool
+is available in the :ref:`spectrum_getting_started` section of `gammapy.spectrum`.
 
-.. code-block:: bash
-
-   $ gammapy-make-derived-maps --in counts.fits background.fits \
-                               --meaning counts background \
-                               --out significance.fits \
-                               --correlation_radius 0.1
-
-Say you have an image that contains the `Crab nebula`_
-and want to look up the map value at the Crab position
-(name lookup is done with `SIMBAD`_):
-
-.. code-block:: bash
-
-   $ gammapy-lookup-map-values crab_image.fits --object "Crab"
-
-You can call ``gammapy-tool-name --help`` or ``gammapy-tool-name -h`` for any tool.
-
-More information on tools and a list of all available tools can be found in :ref:`scripts`.
+An example how to create an counts maps from an event list is available at TODO.
 
 What next?
 ----------

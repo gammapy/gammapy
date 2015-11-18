@@ -22,12 +22,12 @@ def test_spectrum_analysis_from_configfile(tmpdir):
 
     config['general']['outdir']=str(tmpdir)
 
-    fit = run_spectrum_analysis_using_config(config)
+    ana = run_spectrum_analysis_using_config(config)
 
-    assert_allclose(fit['parvals'][0], 2.44, rtol = 1e-2)
+    assert_allclose(ana.fit['parvals'][0], 2.44, rtol = 1e-2)
 
     config['off_region']['type'] = 'reflected'
 
-    fit = run_spectrum_analysis_using_config(config)
-    assert_allclose(fit['parvals'][0], 2.2, rtol = 1e-2)
+    ana = run_spectrum_analysis_using_config(config)
+    assert_allclose(ana.fit['parvals'][0], 2.44, rtol = 1e-2)
 

@@ -175,7 +175,7 @@ class SpectrumAnalysis(object):
         fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
         fit = self.apply_containment(fit)
         sau.clean()
-        return fit
+        self.fit = fit
 
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
@@ -298,7 +298,7 @@ class SpectrumObservation(object):
             kwargs.pop('type')
             off = self.make_reflected_regions(**kwargs)
             off_list = self.event_list.select_circular_region(off)
-            alpha = 1. / len(off_list)
+            alpha = len(off)
         else:
             raise ValueError("Undefined background method: {}".format(
                 self.bkg_method['type']))
@@ -489,6 +489,7 @@ def run_spectrum_analysis_using_config(config):
     if config['general']['create_ogip']:
         outdir = config['general']['outdir']
         analysis.write_ogip_data(outdir)
+
     if config['general']['run_fit']:
         model = config['model']['type']
         thres_low = Energy(config['model']['threshold_low'])
