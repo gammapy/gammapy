@@ -66,7 +66,7 @@ actually load the data and IRFs and return objects of the appropriate class
 Data Manager
 ++++++++++++
 
-The data access is even more convenient with a DataManager. It is based one a data registry config file (YAML format) that specifies where data and index files are located on the user's machine. In other words, the data registry is a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files in the ``~/.gammapy`` folder. Put the following example file there in order to proceed with the example.
+The data access is even more convenient with a DataManager. It is based one a data registry config file (YAML format) that specifies where data and index files are located on the user's machine. In other words, the data registry is a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files called ``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml`` in order to proceed with the example.
 
 .. include:: ./example-data-register.yaml
     :code: yaml
