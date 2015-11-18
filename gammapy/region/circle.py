@@ -186,8 +186,8 @@ class SkyCircleRegion(SkyRegion):
     def to_ds9(self):
         """Convert to ds9 region string
         """
-        l = self.pos.l.value
-        b = self.pos.b.value
+        l = self.pos.galactic.l.value
+        b = self.pos.galactic.b.value
         r = self.radius.value
         sys = self.pos.name
 
