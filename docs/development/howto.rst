@@ -6,6 +6,8 @@
 Developer HOWTO
 ***************
 
+Hello World!
+
 This page is a collection of notes for Gammapy contributors and maintainers,
 in the form of short "How to" or "Q & A" entries.
 
