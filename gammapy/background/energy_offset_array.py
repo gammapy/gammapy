@@ -9,6 +9,14 @@ class EnergyOffsetArray(object):
     """
     Energy offset dependent array.
 
+    Parameters
+    ----------
+    energy : `~numpy.ndarray`
+        Energy array (1D)
+    offset : `~numpy.ndarray`
+        offset array (1D)
+    data : `~numpy.ndarray`
+        data array (2D)
 
     """
 
@@ -17,7 +25,7 @@ class EnergyOffsetArray(object):
         self.offset = offset
         self.data = data
 
+
     @classmethod
     def from_fits_image(cis, filename):
         hdu_list=fits.open(filename)
-        energy=
