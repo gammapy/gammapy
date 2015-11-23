@@ -14,10 +14,10 @@ from astropy.io import ascii
 from gammapy.background import CubeBackgroundModel
 from gammapy.obs import ObservationGroups, ObservationGroupAxis
 
-NORMALIZE = 0 # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
-              # 0: do not normalize
-              # 1: normalize w.r.t. cube integral
-              # 2: normalize w.r.t images integral (normalize each image on its own)
+NORMALIZE = 0  # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
+# 0: do not normalize
+# 1: normalize w.r.t. cube integral
+# 2: normalize w.r.t images integral (normalize each image on its own)
 
 INPUT_DIR1 = '/home/mapaz/astropy/working_dir/bg_cube_models_gammapy_a_la_michi'
 BINNING_FORMAT1 = 'default'
@@ -106,7 +106,7 @@ def look_obs_groups_michi(group_id):
     i_az : int
         Azimuth bin index corresponding to the requested group ID.
     """
-    #read lookup
+    # read lookup
     filename = 'lookup_obs_groups_michi.ecsv'
     lookup_obs_groups_michi = ascii.read(filename)
 
@@ -177,7 +177,7 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
     accepted_binnings = ['default', 'michi']
 
     if ((binning_format1 not in accepted_binnings) or
-        (binning_format2 not in accepted_binnings)):
+            (binning_format2 not in accepted_binnings)):
         raise ValueError("Invalid binning format: {0} or {1}".format(binning_format1,
                                                                      binning_format2))
 
@@ -211,18 +211,18 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
             if binning_format1 == 'michi':
                 # find corresponding ALT_ID, AZ_ID in lookup table
                 i_alt, i_az = look_obs_groups_michi(group)
-                filename1 = input_dir1 + '/hist_alt' + str(i_alt) +\
+                filename1 = input_dir1 + '/hist_alt' + str(i_alt) + \
                             '_az' + str(i_az) + '.fits.gz'
             else:
-                filename1 = input_dir1 + '/bg_cube_model_group' + str(group) +\
+                filename1 = input_dir1 + '/bg_cube_model_group' + str(group) + \
                             '_table.fits.gz'
             if binning_format2 == 'michi':
                 # find corresponding ALT_ID, AZ_ID in lookup table
                 i_alt, i_az = look_obs_groups_michi(group)
-                filename2 = input_dir2 + '/hist_alt' + str(i_alt) +\
+                filename2 = input_dir2 + '/hist_alt' + str(i_alt) + \
                             '_az' + str(i_az) + '.fits.gz'
             else:
-                filename2 = input_dir2 + '/bg_cube_model_group' + str(group) +\
+                filename2 = input_dir2 + '/bg_cube_model_group' + str(group) + \
                             '_table.fits.gz'
             print('filename1', filename1)
             print('filename2', filename2)
@@ -236,13 +236,13 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
                 # normalize w.r.t. cube integral
                 integral1 = bg_cube_model1.integral
                 integral2 = bg_cube_model2.integral
-                bg_cube_model1.data *= integral2/integral1
+                bg_cube_model1.data *= integral2 / integral1
             elif NORMALIZE == 2:
                 # normalize w.r.t images integral (normalize each image on its own)
                 integral_images1 = bg_cube_model1.integral_images
                 integral_images2 = bg_cube_model2.integral_images
                 for i_energy in np.arange(len(bg_cube_model1.energy_edges) - 1):
-                    bg_cube_model1.data[i_energy] *= (integral_images2/integral_images1)[i_energy]
+                    bg_cube_model1.data[i_energy] *= (integral_images2 / integral_images1)[i_energy]
 
             # compare binning
             print("energy edges 1", bg_cube_model1.energy_edges)
@@ -263,12 +263,12 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
             # plot images
             #  rows: similar energy bin
             #  cols: same file
-            #bg_cube_model1.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 0])
+            # bg_cube_model1.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 0])
             bg_cube_model1.plot_image(energy=Quantity(5., 'TeV'), ax=axes[0, 0])
             axes[0, 0].set_title("{0}: {1}".format(name1, axes[0, 0].get_title()))
             bg_cube_model1.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1, 0])
             axes[1, 0].set_title("{0}: {1}".format(name1, axes[1, 0].get_title()))
-            #bg_cube_model2.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 1])
+            # bg_cube_model2.plot_image(energy=Quantity(0.5, 'TeV'), ax=axes[0, 1])
             bg_cube_model2.plot_image(energy=Quantity(5., 'TeV'), ax=axes[0, 1])
             axes[0, 1].set_title("{0}: {1}".format(name2, axes[0, 1].get_title()))
             bg_cube_model2.plot_image(energy=Quantity(50., 'TeV'), ax=axes[1, 1])
@@ -317,10 +317,10 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
 
             # save
             outfile = "bg_cube_model_comparison_group{}.png".format(group)
-                print('Writing {}'.format(outfile))
-                fig.savefig(outfile)
+            print('Writing {}'.format(outfile))
+            fig.savefig(outfile)
 
-    plt.show() # don't leave at the end
+    plt.show()  # don't leave at the end
 
 
 if __name__ == '__main__':
@@ -331,36 +331,36 @@ if __name__ == '__main__':
     parser.add_argument('--input-dir1', type=str,
                         default=INPUT_DIR1,
                         help='Directory where the corresponding set '
-                        'of bg cube models is stored. '
-                        '(default is {}).'.format(INPUT_DIR1))
+                             'of bg cube models is stored. '
+                             '(default is {}).'.format(INPUT_DIR1))
 
     parser.add_argument('--binning-format1', type=str,
                         default=BINNING_FORMAT1,
                         choices=['default', 'michi'],
                         help='String specifying the binning format. '
-                        '(default is {}).'.format(BINNING_FORMAT1))
+                             '(default is {}).'.format(BINNING_FORMAT1))
 
     parser.add_argument('--name1', type=str,
                         default=NAME1,
                         help='Name to use for plot labels/legends. '
-                        '(default is {}).'.format(NAME1))
+                             '(default is {}).'.format(NAME1))
 
     parser.add_argument('--input-dir2', type=str,
                         default=INPUT_DIR2,
                         help='Directory where the corresponding set '
-                        'of bg cube models is stored. '
-                        '(default is {}).'.format(INPUT_DIR2))
+                             'of bg cube models is stored. '
+                             '(default is {}).'.format(INPUT_DIR2))
 
     parser.add_argument('--binning-format2', type=str,
                         default=BINNING_FORMAT2,
                         choices=['default', 'michi'],
                         help='String specifying the binning format. '
-                        '(default is {}).'.format(BINNING_FORMAT2))
+                             '(default is {}).'.format(BINNING_FORMAT2))
 
     parser.add_argument('--name2', type=str,
                         default=NAME2,
                         help='Name to use for plot labels/legends. '
-                        '(default is {}).'.format(NAME2))
+                             '(default is {}).'.format(NAME2))
 
     args = parser.parse_args()
 
