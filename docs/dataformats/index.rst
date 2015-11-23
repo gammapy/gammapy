@@ -6,6 +6,11 @@
 Data Formats
 ************
 
+.. warning:: Since November 2015 there is the `Data formats for gamma-ray astronomy <gadf>`_ project.
+    Most of the information in ``gammapy/docs`` should be moved there.
+    Probably keeping the overview table which formats are supported in Gammapy and
+    linking format names and class names should be kept.
+
 Here we describe various data file formats that are useful for the exchange
 of TeV data, instrument response functions and results.
 

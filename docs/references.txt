@@ -36,7 +36,6 @@
 .. _healpy: https://healpy.readthedocs.org/en/latest/
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
-.. _Enrico: https://github.com/gammapy/enrico/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
 .. _flask: http://flask.pocoo.org/
@@ -46,7 +45,8 @@
 .. _VHEObserverTools: https://github.com/kialio/VHEObserverTools
 .. _photon_simulator: http://yt-project.org/doc/analyzing/analysis_modules/photon_simulator.html
 .. _PINT: https://github.com/nanograv/PINT
-.. _GAMERA: https://github.com/JoachimHahn/GAMERA
+.. _Gamera: https://github.com/JoachimHahn/GAMERA
+.. _Gappa: https://pypi.python.org/pypi/gappa
 .. _gammatools: https://github.com/woodmd/gammatools
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
@@ -58,6 +58,8 @@
 .. _VERITAS: http://veritas.sao.arizona.edu/
 .. _MAGIC: https://magic.mpp.mpg.de/
 .. _Fermi-LAT: http://fermi.gsfc.nasa.gov/
+.. _FermiPy: https://github.com/fermiPy/fermipy
+.. _gadf: http://gamma-astro-data-formats.readthedocs.org/
 
 .. _Werner Hofmann: https://en.wikipedia.org/wiki/Werner_Hofmann_(physicist)
 .. _Jim Hinton: https://www.mpi-hd.mpg.de/mpi/en/hinton/home/
@@ -69,7 +71,6 @@
 .. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
-.. _Gammapy on Twitter: https://twitter.com/Gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
 .. _Gammapy documentation: https://gammapy.readthedocs.org/
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy

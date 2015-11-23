@@ -86,7 +86,7 @@ Other related packages
 Besides Gammapy, there are two other major open-source analysis packages (that we are aware of)
 for multi-mission gamma-ray likelihood analysis:
 
-- `Gammalib`_/`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
+- `Gammalib`_ /`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
   that uses the same input file formats as Gammapy.
 - 3ML is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
   to deal with the data and IRFs and compute the likelihood for a given model.
@@ -103,10 +103,10 @@ Make sure to also check out the following packages that contain very useful func
 * `3ML`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
   (`code <https://github.com/giacomov/3ML>`__,
   `example notebook <http://nbviewer.ipython.org/github/giacomov/3ML/blob/master/examples/090217206.ipynb>`__)
+* `FermiPy`_ --- Fermi Python analysis framework
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
-* `GamERa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) by Joachim Hahn
-* `Enrico`_ --- helps you with your Fermi data analysis
+* `Gamera`_, `Gappa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
 
 

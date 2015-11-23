@@ -27,12 +27,10 @@ and then head over to the 5 minute :ref:`getting-started` tutorial.
 News
 ----
 
-Coming up:
+
+To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
 * November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
-
-To get notifications for Gammapy releases, join the `Gammapy mailing list`_ or follow `Gammapy on Twitter`_.
-
 * August 13, 2015 --- Gammapy **0.3** release. See changelog: :ref:`gammapy_0p3_release`
 * August 2015 --- `Gammapy poster and proceeding at ICRC 2015`_
 * May - August 2015 --- `Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling`_

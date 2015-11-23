@@ -63,6 +63,7 @@ setup_cfg = dict(conf.items('metadata'))
 # that is listed in `astropy/sphinx/conf.py`.
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
+intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.org/en/latest/', None)
 
 # Extend intersphinx_mapping with packages we use in gammapy
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
