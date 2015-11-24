@@ -9,6 +9,7 @@ import os
 import glob
 import logging
 import shutil
+from astropy.extern import six
 
 __all__ = [
     'GammapyFormatter',
@@ -133,17 +134,38 @@ def _configure_root_logger(level='info', format=None):
 
 
 def read_yaml(filename, logger=None):
-    """Read config from YAML file."""
+    """
+    Read config from YAML file resolving environment variables.
+    """
     import yaml
     if logger is not None:
         logger.info('Reading {}'.format(filename))
     with open(filename) as fh:
         config = yaml.safe_load(fh)
+    
+    _resolve_environ(config)
+
     return config
 
+def _resolve_environ(ddict):
+    """
+    Helper function to resolve environment variables in YAML config files
+    """
+    for k in ddict.keys():
+        val = ddict[k]
+        if isinstance(val, six.string_types):
+            pos = val.find('$')
+            if pos != -1:
+                pos2 = val[pos:].find('/')
+                variable = val[pos:pos2]
+                resolved = os.environ[variable[1:]]
+                ddict[k] = val.replace(variable,resolved)
+        elif type(val) == dict:
+            _resolve_environ(val)
 
 def write_yaml(config, filename, logger=None):
-    """Write YAML config file
+    """
+    Write YAML config file
 
     This function can be used by scripts that alter the users config file.
     """
