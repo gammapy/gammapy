@@ -4,6 +4,8 @@
 
 <h1>Info on {{ session.get('source_name') }}</h1>
 
+{% block section_table_data %}
+
 <h2>Table data</h2>
 
 <table id="data-table">
@@ -28,13 +30,20 @@
     });
 </script>
 
+{% endblock %}
+
+
+{% block section_spectrum %}
+
 <h2>Spectrum</h2>
 
-<img src="{{ url_for('catalog_browser.view_api_image', image_type='test', catalog_name=session.get('catalog_name'), source_id=session.get('source_id')) }}" alt="Image Placeholder" height="400">
+<img src="{{ url_for('catalog_browser.view_api_image', image_type='test', catalog_name=session.get('catalog_name'), source_id=session.get('source_id')) }}"
+     alt="Image Placeholder" height="400">
 
+{% endblock %}
 
-<h2>Light curve</h2>
-
-<img src="{{ url_for('catalog_browser.view_api_image', image_type='lightcurve', catalog_name=session.get('catalog_name'), source_id=session.get('source_id')) }}" alt="Image Placeholder" height="400">
+{% block section_lightcurve %}
+<!-- Placeholder -->
+{% endblock %}
 
 {% endblock %}

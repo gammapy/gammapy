@@ -115,7 +115,7 @@ entry_points['console_scripts'] = [
     'gammapy-detect-iterative = gammapy.scripts.detect_iterative:detect_iterative_main',
 
     'gammapy-catalog-browse = gammapy.scripts.catalog_browser:main',
-    'gammapy-catalog-query = gammapy.scripts.catalog_query:catalog_query_main',
+    'gammapy-catalog-query = gammapy.scripts.catalog_query:cli',
     'gammapy-catalog-simulate = gammapy.scripts.catalog_simulate:catalog_simulate_main',
 ]
 

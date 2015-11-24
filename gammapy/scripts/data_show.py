@@ -18,8 +18,10 @@ logging.basicConfig(level=logging.INFO)
 
 FILETYPES = ['events', 'aeff', 'edisp', 'psf']
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-@click.command()
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('filename')
 @click.argument('filetype')
 @click.option('--plot', '-p', 'do_plot', is_flag=True, help='Show plots?')

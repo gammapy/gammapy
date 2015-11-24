@@ -1,56 +1,110 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from ..utils.scripts import get_parser
+import click
 from ..catalog import source_catalogs
 
-__all__ = ['catalog_query']
+__all__ = []
 
 log = logging.getLogger(__name__)
 
-
-def catalog_query_main(args=None):
-    parser = get_parser(catalog_query)
-    # TODO: get available catalogs from the registry and add
-    # an option to print them here.
-    parser.add_argument('-c', '--catalog', dest='catalog_name',
-                        default='3fgl',
-                        choices=['3fgl', '2fhl'],
-                        help='Catalog for the source e.g. "3fgl"')
-    parser.add_argument('-s', '--source', dest='source_name',
-                        help='Source name e.g. "3FGL J0349.9-2102"')
-    parser.add_argument('--querytype',
-                        choices=['info', 'lightcurve', 'spectrum'],
-                        help='The query type: info, lightcurve, or spectrum')
-    args = parser.parse_args(args)
-    catalog_query(**vars(args))
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
-def catalog_query(catalog_name, source_name, querytype):
-    """Query the requested catalog for the requested source.
+@click.group(context_settings=CONTEXT_SETTINGS)
+def cli():
+    """Gammapy catalog query command line tool.
 
-    Based on the requested querytype return information on the object,
-    plot the object's light curve or plot the object's spectrum.
+    \b
+    Examples
+    --------
+    \b
+    gammapy-catalog-query -h
+    gammapy-catalog-query catalogs
+    gammapy-catalog-query sources 2fhl
+    gammapy-catalog-query info 2fhl "2FHL J0534.5+2201"
+    gammapy-catalog-query info 3fgl "3FGL J0534.5+2201"
+    gammapy-catalog-query info hgps "HESS J1825-137"
+    \b
+    gammapy-catalog-query table-info 2fhl
+    gammapy-catalog-query table-web 2fhl
     """
-    # TODO: validate inputs and give nice error message instead of traceback?
-    catalog = source_catalogs[catalog_name]
-    source = catalog[source_name]
+    pass
 
-    if querytype == 'info':
-        print(source.info())
-    elif querytype == 'lightcurve':
-        import matplotlib.pyplot as plt
-        plt.style.use('fivethirtyeight')
-        ax = source.plot_lightcurve()
-        ax.plot()
-        plt.tight_layout()
-        plt.show()
-    elif querytype == 'spectrum':
-        import matplotlib.pyplot as plt
-        plt.style.use('fivethirtyeight')
-        ax = source.plot_spectrum()
-        ax.plot()
-        plt.tight_layout()
-        plt.show()
-    else:
-        raise ValueError('Invalid querytype: {}'.format(querytype))
+
+@cli.command('catalogs')
+def list_catalogs():
+    """List available catalogs"""
+    source_catalogs.info_table.pprint()
+
+
+@cli.command('sources')
+@click.argument('catalog')
+def show_catalog_table(catalog):
+    """List sources for CATALOG"""
+    catalog = source_catalogs[catalog]
+    catalog.table['Source_Name'].pprint(max_lines=-1)
+
+
+@cli.command('info')
+@click.argument('catalog')
+@click.argument('source')
+def plot_lightcurve(catalog, source):
+    """Print info for CATALOG and SOURCE"""
+    catalog = source_catalogs[catalog]
+    source = catalog[source]
+
+    # Generic info dict
+    source.pprint()
+
+    # Specific source info print-out
+    if hasattr(source, 'print_info'):
+        source.print_info()
+
+
+@cli.command('table-info')
+@click.argument('catalog')
+def show_catalog_table(catalog):
+    """Summarise table info for CATALOG"""
+    catalog = source_catalogs[catalog]
+    catalog.table.info()
+
+
+@cli.command('table-web')
+@click.argument('catalog')
+def show_catalog_table(catalog):
+    """Open table in web browser for CATALOG"""
+    catalog = source_catalogs[catalog]
+    catalog.table.show_in_browser(jsviewer=True)
+
+
+@cli.command('plot-lightcurve')
+@click.argument('catalog')
+@click.argument('source')
+def plot_lightcurve(catalog, source):
+    """Plot lightcurve for CATALOG and SOURCE"""
+    catalog = source_catalogs[catalog]
+    source = catalog[source]
+
+    import matplotlib.pyplot as plt
+    plt.style.use('fivethirtyeight')
+    ax = source.plot_lightcurve()
+    ax.plot()
+    plt.tight_layout()
+    plt.show()
+
+
+@cli.command('plot-spectrum')
+@click.argument('catalog')
+@click.argument('source')
+def plot_spectrum(catalog, source):
+    """Plot spectrum for CATALOG and SOURCE"""
+    catalog = source_catalogs[catalog]
+    source = catalog[source]
+
+    import matplotlib.pyplot as plt
+    plt.style.use('fivethirtyeight')
+    ax = source.plot_spectrum()
+    ax.plot()
+    plt.tight_layout()
+    plt.show()

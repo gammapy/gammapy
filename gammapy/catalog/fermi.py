@@ -2,6 +2,7 @@
 """Fermi catalog and source classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import sys
 import tarfile
 import numpy as np
 from astropy.io import fits
@@ -299,21 +300,22 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         return ax
 
-    def info(self):
+    def print_info(self, file=None):
         """Print summary info."""
-        data = self.data
-        info = "\n"
-        info += data['Source_Name'] + "\n"
-        info += "\n"
-        info += "RA (J2000) " + str(data['RAJ2000']) + "\n"
-        info += "Dec (J2000) " + str(data['DEJ2000']) + "\n"
-        info += "l " + str(data['GLON']) + "\n"
-        info += "b " + str(data['GLAT']) + "\n"
-        info += "Energy Flux (100 MeV - 100 GeV): " + str(data['Energy_Flux100']) + \
-                " +/- " + str('Unc_Energy_Flux100') + " erg /cm2 /s\n"
-        info += "Detection significance: " + str(data['Signif_Avg']) + " sigma\n"
+        if not file:
+            file = sys.stdout
 
-        return info
+        d = self.data
+
+        print(d['Source_Name'], file=file)
+        print('', file=file)
+        print('RA (J2000)  : {}'.format(d['RAJ2000']), file=file)
+        print('Dec (J2000) : {}'.format(d['DEJ2000']), file=file)
+        print('GLON        : {}'.format(d['GLON']), file=file)
+        print('GLAT        : {}'.format(d['GLAT']), file=file)
+        val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
+        print('Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1'.format(val, err), file=file)
+        print('Detection significance : {}'.format(d['Signif_Avg']), file=file)
 
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
@@ -326,7 +328,7 @@ class SourceCatalog3FGL(SourceCatalog):
     """Fermi-LAT 3FGL source catalog.
     """
     name = '3fgl'
-    description = 'LAT 4-year Point Source Catalog'
+    description = 'LAT 4-year point source catalog'
     source_object_class = SourceCatalogObject3FGL
 
     def __init__(self, filename=None):
@@ -344,7 +346,7 @@ class SourceCatalog2FHL(SourceCatalog):
     """Fermi-LAT 2FHL source catalog.
     """
     name = '2fhl'
-    description = 'LAT Second High-Energy Source Catalog'
+    description = 'LAT second high-energy source catalog'
     source_object_class = SourceCatalogObject2FHL
 
     def __init__(self, filename=None):
