@@ -43,8 +43,8 @@ class SpectrumAnalysis(object):
 
     Parameters
     ----------
-    datastore : str
-        Name of a `~gammapy.obs.Data store`
+    datastore : `~gammapy.obs.Data store`
+        Data for the analysis
     obs : list, str
         List of observations or file containing such a list
     on_region : `gammapy.region.SkyCircleRegion`
@@ -64,7 +64,7 @@ class SpectrumAnalysis(object):
                  nobs=-1, ebounds=None):
 
         self.on_region = on_region
-        self.store = DataStore.from_name(datastore)
+        self.store = datastore
         self.exclusion = exclusion
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
@@ -444,7 +444,8 @@ def run_spectrum_analysis_using_config(config):
 
     # Observations
     obs = config['general']['runlist']
-    store = config['general']['datastore']
+    store_val = config['general']['datastore']
+    store = DataStore.from_all(store_val)
     nobs = config['general']['nruns']
 
     # Binning

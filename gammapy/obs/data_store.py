@@ -99,6 +99,25 @@ class DataStore(object):
         dm = DataManager()
         return dm[name]
 
+    @classmethod
+    def from_all(cls, val):
+        """Try different DataStore construtors.
+        
+        Currently tried
+        - from_name
+        - from_dir
+        """
+        try:
+            store = cls.from_name(val)
+        except(KeyError):
+            try:
+                store = cls.from_dir(val)
+            except(OSError):
+                raise ValueError('Not able to contruct DataStore'
+                                 ' using key: {}'.format(val))
+                
+        return store
+
     def info(self, stream=None):
         """Print some info"""
         if not stream:
