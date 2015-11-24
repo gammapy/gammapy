@@ -20,7 +20,7 @@ def test_compute_ts_map(tmpdir):
         data[_] = downsample_2N(data[_], 2, func)
 
     result = compute_ts_map(data['counts'], data['background'], data['exposure'],
-                            kernel)
+                            kernel, method='leastsq iter')
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = np.nan_to_num(result[name])
         result[name] = upsample_2N(result[name], 2, order=order)

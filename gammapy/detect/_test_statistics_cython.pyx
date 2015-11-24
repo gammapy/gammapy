@@ -41,6 +41,43 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
+def _x_best_leastsq(np.ndarray[np.float_t, ndim=2] counts,
+                    np.ndarray[np.float_t, ndim=2] background,
+                    np.ndarray[np.float_t, ndim=2] model,
+                    np.ndarray[np.float_t, ndim=2] weights):
+    """
+    Best fit amplitude using weighted least squares fit.
+
+    For a single parameter amplitude fit this can be solved analytically.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count map.
+    background : `~numpy.ndarray`
+        Background map.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    weights : `~numpy.ndarray`
+        Fit weights.
+    """
+    cdef np.float_t sum
+    cdef np.float_t norm
+    cdef unsigned int i, j, ni, nj
+    ni = counts.shape[1]
+    nj = counts.shape[0]
+    sum = 0
+    norm = 0
+    for j in range(nj):
+        for i in range(ni):
+            if model[j, i] > 0 and weights[j, i] > 0:
+                sum += (counts[j, i] - background[j, i]) * model[j, i] / weights[j, i]
+                norm += model[j, i] * model[j, i] / weights[j, i]
+    return sum / norm
+
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
                              np.ndarray[np.float_t, ndim=2] background,
                              np.ndarray[np.float_t, ndim=2] model):
@@ -127,3 +164,4 @@ def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
             if model[j, i] > 0:
                 sum += model[j, i] - counts[j, i] * log(model[j, i])
     return 2 * sum
+
