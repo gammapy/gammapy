@@ -9,7 +9,8 @@ import os
 import glob
 import logging
 import shutil
-from astropy.extern import six
+from os.path import expandvars
+from ..extern.pathlib import Path
 
 __all__ = [
     'GammapyFormatter',
@@ -135,7 +136,7 @@ def _configure_root_logger(level='info', format=None):
 
 def read_yaml(filename, logger=None):
     """
-    Read config from YAML file resolving environment variables.
+    Read config from YAML file 
     """
     import yaml
     if logger is not None:
@@ -143,25 +144,7 @@ def read_yaml(filename, logger=None):
     with open(filename) as fh:
         config = yaml.safe_load(fh)
     
-    _resolve_environ(config)
-
     return config
-
-def _resolve_environ(ddict):
-    """
-    Helper function to resolve environment variables in YAML config files
-    """
-    for k in ddict.keys():
-        val = ddict[k]
-        if isinstance(val, six.string_types):
-            pos = val.find('$')
-            if pos != -1:
-                pos2 = val[pos:].find('/')
-                variable = val[pos:pos2]
-                resolved = os.environ[variable[1:]]
-                ddict[k] = val.replace(variable,resolved)
-        elif type(val) == dict:
-            _resolve_environ(val)
 
 def write_yaml(config, filename, logger=None):
     """
@@ -175,3 +158,10 @@ def write_yaml(config, filename, logger=None):
         logger.info('Writing {}'.format(filename))
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(config, default_flow_style=False))
+
+
+def make_path(path):
+    """
+    Expand environment varibles on `~pathlib.Path` construction
+    """
+    return Path(expandvars(path))

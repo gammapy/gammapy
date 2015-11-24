@@ -4,6 +4,7 @@ import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
 from ..image import exclusion_distance, lon_lat_circle_mask, coordinates
+from ..utils.scripts import make_path
 
 __all__ = [
     'ExclusionMask',
@@ -78,7 +79,8 @@ class ExclusionMask(object):
         excl_file : str
             fits file containing an Exclusion extension
         """
-        hdulist = fits.open(excl_file)
+        path = make_path(excl_file)
+        hdulist = fits.open(str(path))
         hdu = hdulist['Exclusion']
         return cls.from_hdu(hdu)
 
