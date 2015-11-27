@@ -48,6 +48,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#379] Reflected Regions (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)
 - [#369] Improve the data management toolbox (Christoph Deil)
