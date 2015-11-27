@@ -23,9 +23,9 @@ class EnergyDispersion(object):
     pdf_matrix : array_like
         2-dim energy dispersion matrix (probability density).
         First index for true energy, second index for reco energy.
-    e_true : `~gammapy.spectrum.EnergyBounds`
+    e_true : `~gammapy.utils.energy.EnergyBounds`
         True energy binning
-    e_reco : `~gammapy.spectrum.EnergyBounds`
+    e_reco : `~gammapy.utils.energy.EnergyBounds`
         Reco energy binning
 
     Notes
@@ -85,13 +85,13 @@ class EnergyDispersion(object):
 
     @property
     def reco_energy(self):
-        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
+        """Reconstructed Energy axis (`~gammapy.utils.energy.EnergyBounds`)
         """
         return self._e_reco
 
     @property
     def true_energy(self):
-        """Reconstructed Energy axis (`~gammapy.spectrum.EnergyBounds`)
+        """Reconstructed Energy axis (`~gammapy.utils.energy.EnergyBounds`)
         """
         return self._e_true
 
@@ -116,7 +116,7 @@ class EnergyDispersion(object):
 
         Parameters
         ----------
-        e_reco : `~gammapy.spectrum.EnergyBounds`
+        e_reco : `~gammapy.utils.energy.EnergyBounds`
             Reco and true energy binning
         sigma : float
             RMS width of Gaussian energy dispersion.
@@ -503,7 +503,7 @@ class EnergyDispersion2D(object):
         import matplotlib.pyplot as plt
         import numpy as np
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.spectrum.energy import Energy
+        from gammapy.utils.energy import Energy
         from astropy.coordinates import Angle
         from gammapy.datasets import gammapy_extra
         filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
@@ -581,7 +581,7 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.EnergyBounds`, None
+        e_true : `~gammapy.utils.energy.EnergyBounds`, None
             True energy axis
         migra : `~numpy.ndarray`
             Energy migration e_reco/e_true
@@ -640,9 +640,9 @@ class EnergyDispersion2D(object):
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset
-        e_true : `~gammapy.spectrum.EnergyBounds`, None
+        e_true : `~gammapy.utils.energy.EnergyBounds`, None
             True energy axis
-        e_reco : `~gammapy.spectrum.EnergyBounds`
+        e_reco : `~gammapy.utils.energy.EnergyBounds`
             Reconstructed energy axis
 
         Returns
@@ -674,9 +674,9 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        e_true : `~gammapy.spectrum.Energy`
+        e_true : `~gammapy.utils.energy.Energy`
             True energy axis
-        e_reco : `~gammapy.spectrum.EnergyBounds`, None
+        e_reco : `~gammapy.utils.energy.EnergyBounds`, None
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
             Offset

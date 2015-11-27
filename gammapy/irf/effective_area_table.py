@@ -354,7 +354,7 @@ class EffectiveAreaTable2D(object):
         from astropy.coordinates import Angle
         from astropy.units import Quantity
         from gammapy.irf import EffectiveAreaTable2D
-        from gammapy.spectrum import EnergyBounds
+        from gammapy.utils.energy import EnergyBounds
         from gammapy.datasets import gammapy_extra
         filename = gammapy_extra.filename('test_datasets/unbundled/irfs/aeff2D.fits')
         aeff2D = EffectiveAreaTable2D.read(filename)
@@ -563,7 +563,7 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if offset is None:
-            offset = Angle(np.linspace(0, 2.5, 6), 'deg')
+            offset = Angle(np.linspace(0.5, 2, 4), 'deg')
 
         if energy is None:
             energy = self.energy
@@ -592,7 +592,9 @@ class EffectiveAreaTable2D(object):
             energy = Quantity(np.logspace(-1, 2, 8), 'TeV')
 
         if offset is None:
-            offset = Angle(np.linspace(0, 2.5, 100), 'deg')
+            off_lo = self.offset[0]
+            off_hi = self.offset[-1]
+            offset = Angle(np.linspace(off_lo, off_hi, 100), 'deg')
 
         for ee in energy:
             area = self.evaluate(offset, ee)

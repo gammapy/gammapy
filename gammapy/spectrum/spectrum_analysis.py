@@ -55,7 +55,7 @@ class SpectrumAnalysis(object):
         Background method including necessary parameters
     nobs : int
         number of observations to process
-    ebounds : `~gammapy.spectrum.EnergyBounds`, optional
+    ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
 
     """
@@ -136,9 +136,9 @@ class SpectrumAnalysis(object):
         ----------
         model : str
             Sherpa model
-        thres_high : `~gammapy.spectrum.Energy`
+        thres_high : `~gammapy.utils.energy.Energy`
             Upper threshold of the spectral fit
-        thres_low : `~gammapy.spectrum.Energy`
+        thres_low : `~gammapy.utils.energy.Energy`
             Lower threshold of the spectral fit
         """
 
@@ -201,9 +201,9 @@ class SpectrumObservation(object):
     ----------
     obs : int
         Observation ID, runnumber
-    store : `~gammapy.obs.DataStore
+    store : `~gammapy.obs.DataStore`
         Data Store
-    ebounds : `~gammapy.spectrum.EnergyBounds`
+    ebounds : `~gammapy.utils.energy.EnergyBounds`
         Reconstructed energy binning definition
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
@@ -240,13 +240,13 @@ class SpectrumObservation(object):
 
     @property
     def pointing(self):
-        """`~astropy.coordinates.SkyCoord corresponding to the obs position
+        """`~astropy.coordinates.SkyCoord` corresponding to the obs position
         """
         return self.event_list.pointing_radec
 
     @property
     def offset(self):
-        """`~astropy.coordinates.Angle corresponding to the obs offset
+        """`~astropy.coordinates.Angle` corresponding to the obs offset
         """
         return self.pointing.separation(self.on_region.pos)
 
@@ -255,7 +255,7 @@ class SpectrumObservation(object):
 
         Returns
         -------
-        on_vec : `gammapy.data.CountsSpectrum`
+        on_vec : `gammapy.spectrum.CountsSpectrum`
             Counts spectrum inside the ON region
         """
         on_list = self.event_list.select_circular_region(self.on_region)
@@ -282,7 +282,7 @@ class SpectrumObservation(object):
 
         Returns
         -------
-        on_vec : `gammapy.data.CountsSpectrum`
+        on_vec : `gammapy.spectrum.CountsSpectrum`
             Counts spectrum inside the OFF region
         """
         if self.bkg_method['type'] == "ring":

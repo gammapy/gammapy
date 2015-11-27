@@ -20,7 +20,7 @@ class CountsSpectrum(object):
 
     counts : `~numpy.array`, list
         Counts
-    energy : `~gammapy.spectrum.Energy`, `~gammapy.spectrum.EnergyBounds`.
+    energy : `~gammapy.utils.energy.Energy`, `~gammapy.utils.energy.EnergyBounds`.
         Energy axis
     livetime : `~astropy.units.Quantiy`
         Livetime of the dataset
@@ -30,7 +30,7 @@ class CountsSpectrum(object):
 
     .. code-block:: python
 
-        from gammapy.spectrum import Energy, EnergyBounds
+        from gammapy.utils.energy import Energy, EnergyBounds
         from gammapy.data import CountsSpectrum
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV')
         counts = [6,3,8,4,9,5,9,5,5,1]
@@ -105,7 +105,7 @@ class CountsSpectrum(object):
         ----------
         event_list : `~astropy.io.fits.BinTableHDU, `gammapy.data.EventListDataSet`,
                      `gammapy.data.EventList`, str (filename)
-        bins : `gammapy.spectrum.energy.EnergyBounds`
+        bins : `gammapy.utils.energy.EnergyBounds`
             Energy bin edges
         """
 
