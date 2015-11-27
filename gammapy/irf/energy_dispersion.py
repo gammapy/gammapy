@@ -4,7 +4,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from ..spectrum.energy import EnergyBounds
+from ..utils.energy import EnergyBounds
 from astropy.table import Table
 from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
 from ..utils.array import array_stats_str

@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
-from ...data import CountsSpectrum
-from ...spectrum import EnergyBounds
+from .. import CountsSpectrum
+from ...utils.energy import EnergyBounds
 
 
 def test_CountsSpectrum():

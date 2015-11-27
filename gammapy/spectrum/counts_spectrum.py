@@ -3,7 +3,7 @@ from __future__ import (print_function)
 
 import numpy as np
 from astropy import log
-from ..spectrum.energy import Energy, EnergyBounds
+from ..utils.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
 from astropy.units import Quantity

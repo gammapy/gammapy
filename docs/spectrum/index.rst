@@ -63,8 +63,8 @@ effective area tables. In general, this axis can be defined in two ways.
   e.g. for Fermi-LAT counts cubes. In Gammalib this is represented by GEbounds.
 
 In Gammapy both the use cases are handled by two seperate classes: 
-`gammapy.spectrum.energy.Energy` for energy values and
-`gammapy.spectrum.energy.EnergyBounds` for energy bin edges
+`gammapy.utils.energy.Energy` for energy values and
+`gammapy.utils.energy.EnergyBounds` for energy bin edges
 
 Energy
 ------
@@ -74,7 +74,7 @@ same functionality plus some convenienve functions for fits I/O
 
 .. code-block:: python
     
-    >>> from gammapy.spectrum import Energy
+    >>> from gammapy.utils.energy import Energy
     >>> energy = Energy([1,2,3], 'TeV')
     >>> hdu = energy.to_fits()
     >>> type(hdu) 
@@ -88,7 +88,7 @@ e.g. to compute the bin centers
 
 .. code-block:: python
     
-    >>> from gammapy.spectrum import EnergyBounds
+    >>> from gammapy.utils.energy import EnergyBounds
     >>> ebounds = EnergyBounds.equal_log_spacing(1, 10, 8, 'GeV')
     >>> ebounds.size
     9

@@ -515,26 +515,45 @@ class EffectiveAreaTable2D(object):
         offset = offset.to('deg')
         energy = energy.to('TeV')
 
-        # support energy=1Darray & offset=1Darray
-        if offset.shape != () and energy.shape != ():
-            val = np.zeros([len(offset), len(energy)])
-            for i in range(len(offset)):
-                val[i] = self._eval(offset[i], energy)
-        # default
-        else:
-            val = self._eval(offset=offset, energy=energy)
-
-        return Quantity(val, self.eff_area.unit)
-
-    def _eval(self, offset=None, energy=None):
         method = self.interpolation_method
         if method == 'linear':
-            val = self._linear(offset.value, np.log10(energy.value))
+            val = self._eval_linear(offset.value, np.log10(energy.value))
         elif method == 'spline':
-            val = self._spline(offset.value, np.log10(energy.value)).squeeze()
+            val = self._eval_spline(offset.value, np.log10(energy.value))
         else:
             raise ValueError('Invalid interpolation method: {}'.format(method))
         return Quantity(val, self.eff_area.unit)
+
+    def _eval_linear(self, offset=None, energy=None):
+        """Evaluate linear interpolator
+
+        Parameters
+        ----------
+        offset : float
+            offset in deg
+        energy : float
+            energy in TeV
+
+        Returns
+        -------
+        eff_area : float
+            Effective area
+        """
+        off = np.atleast_1d(offset)
+        ener = np.atleast_1d(energy)
+        points = [(x,y) for x in off for y in ener]
+        shape = (off.size, ener.size)
+        val = self._linear(points)
+        val = np.reshape(val, shape).squeeze()
+
+        return val
+
+    def _eval_spline(self, offset=None, energy=None):
+        """Evaluate spline interpolator
+
+        Not implemented
+        """
+        raise NotImplementedError
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.
@@ -639,19 +658,16 @@ class EffectiveAreaTable2D(object):
         plt.show()
 
     def _prepare_linear_interpolator(self):
-        """Could be generalized for non-radial symmetric input files (N>2)
+        """Setup `~scipy.interpolate.RegularGridInterpolator`
         """
-        # TODO Replace by scipy.interpolate.RegularGridInterpolator
-        # As in EDISP
 
-        from scipy.interpolate import LinearNDInterpolator
+        from scipy.interpolate import RegularGridInterpolator
 
         x = self.offset.value
         y = np.log10(self.energy.value)
-        coord = [(xx, yy) for xx in x for yy in y]
+        vals = self.eff_area.value
 
-        vals = self.eff_area.value.flatten()
-        self._linear = LinearNDInterpolator(coord, vals)
+        self._linear = RegularGridInterpolator((x,y),vals, bounds_error = True)
 
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)

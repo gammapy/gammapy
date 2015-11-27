@@ -52,7 +52,7 @@ def test_EffectiveAreaTable_write(tmpdir):
     assert len(hdu_list) == 2
 
 
-INTERPOLATION_METHODS = ['linear', 'spline']
+INTERPOLATION_METHODS = ['linear']
 
 
 @pytest.mark.parametrize(('method'), INTERPOLATION_METHODS)

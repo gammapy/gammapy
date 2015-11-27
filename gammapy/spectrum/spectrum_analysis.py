@@ -8,9 +8,9 @@ from gammapy.extern.pathlib import Path
 from gammapy.image import ExclusionMask
 from gammapy.region import SkyCircleRegion, find_reflected_regions
 from ..background import ring_area_factor
-from ..data import CountsSpectrum
+from . import CountsSpectrum
 from ..obs import DataStore
-from ..spectrum import EnergyBounds, Energy
+from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import get_parser, set_up_logging_from_args
 
 __all__ = [
