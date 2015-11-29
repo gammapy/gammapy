@@ -126,8 +126,8 @@ install:
     - source ci-helpers/travis/setup_conda_$TRAVIS_OS_NAME.sh
 
     - if $FETCH_GAMMAPY_EXTRA; then
-          git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra
-          export GAMMAPY_EXTRA=${HOME}/gammapy-extra
+          git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
+          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
       fi
 
 script:
