@@ -130,6 +130,13 @@ install:
           export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
       fi
 
+    # This is needed to make matplotlib plot testing work
+    - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then
+          export DISPLAY=:99.0;
+          sh -e /etc/init.d/xvfb start;
+          export QT_API=pyqt;
+      fi
+
 script:
     - $MAIN_CMD $SETUP_CMD
 
