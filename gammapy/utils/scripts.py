@@ -9,6 +9,8 @@ import os
 import glob
 import logging
 import shutil
+from os.path import expandvars
+from ..extern.pathlib import Path
 
 __all__ = [
     'GammapyFormatter',
@@ -133,17 +135,20 @@ def _configure_root_logger(level='info', format=None):
 
 
 def read_yaml(filename, logger=None):
-    """Read config from YAML file."""
+    """
+    Read config from YAML file 
+    """
     import yaml
     if logger is not None:
         logger.info('Reading {}'.format(filename))
     with open(filename) as fh:
         config = yaml.safe_load(fh)
+    
     return config
 
-
 def write_yaml(config, filename, logger=None):
-    """Write YAML config file
+    """
+    Write YAML config file
 
     This function can be used by scripts that alter the users config file.
     """
@@ -153,3 +158,10 @@ def write_yaml(config, filename, logger=None):
         logger.info('Writing {}'.format(filename))
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(config, default_flow_style=False))
+
+
+def make_path(path):
+    """
+    Expand environment varibles on `~pathlib.Path` construction
+    """
+    return Path(expandvars(path))

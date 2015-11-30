@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.io import fits
 from ..extern.pathlib import Path
 from ..obs import ObservationTable
+from ..utils.scripts import make_path
 
 __all__ = [
     'DataStore',
@@ -35,7 +36,7 @@ class DataStore(object):
     DEFAULT_NAME = 'noname'
 
     def __init__(self, base_dir, file_table=None, obs_table=None, name=None):
-        self.base_dir = Path(base_dir)
+        self.base_dir = make_path(base_dir)
         self.file_table = file_table
         self.obs_table = obs_table
         self.name = name
@@ -98,6 +99,25 @@ class DataStore(object):
         from .data_manager import DataManager
         dm = DataManager()
         return dm[name]
+
+    @classmethod
+    def from_all(cls, val):
+        """Try different DataStore construtors.
+        
+        Currently tried
+        - from_dir
+        - from_name
+        """
+        try:
+            store = cls.from_dir(val)
+        except(OSError):
+            try:
+                store = cls.from_name(val)
+            except(KeyError):
+                raise ValueError('Not able to contruct DataStore'
+                                 ' using key: {}'.format(val))
+                
+        return store
 
     def info(self, stream=None):
         """Print some info"""
@@ -239,7 +259,7 @@ class DataStore(object):
         for ii in range(len(observation_table)):
             obs_id = observation_table['OBS_ID'][ii]
             filename = self.filename(obs_id)
-            if not Path(filename).is_file():
+            if not make_path(filename).is_file():
                 file_available[ii] = False
                 if logger:
                     logger.warning('For OBS_ID = {:06d} the event list file is missing: {}'
@@ -255,8 +275,8 @@ def _find_file(filename, dir):
     - Second tris Path(dir) / filename
     - Raises OSError if both don't exist.
     """
-    path1 = Path(filename)
-    path2 = Path(dir) / filename
+    path1 = make_path(filename)
+    path2 = make_path(dir) / filename
     if path1.is_file():
         filename = path1
     elif path2.is_file():
