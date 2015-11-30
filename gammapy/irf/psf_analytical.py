@@ -10,7 +10,7 @@ from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.fits import get_hdu_with_valid_name
 from ..irf import HESSMultiGaussPSF
-from ..spectrum import Energy
+from ..utils.energy import Energy
 from ..utils.fits import table_to_fits_table
 
 __all__ = ['EnergyDependentMultiGaussPSF']

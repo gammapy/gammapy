@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDispersion, EnergyDispersion2D
 from ...datasets import gammapy_extra
-from ...spectrum.energy import EnergyBounds
+from ...utils.energy import EnergyBounds
 
 
 @requires_data('gammapy-extra')

@@ -2,7 +2,7 @@
 """
 import matplotlib.pyplot as plt
 from astropy.table import Table
-from gammapy.spectrum import EnergyBounds
+from gammapy.utils.energy import EnergyBounds
 from gammapy.datasets import FermiGalacticCenter, FermiVelaRegion
 from gammapy.datasets import load_lat_psf_performance
 

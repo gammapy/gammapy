@@ -6,14 +6,14 @@ import astropy.units as u
 from astropy.io import fits
 from ...utils.testing import requires_data
 from ...datasets import gammapy_extra
-from ...spectrum import Energy, EnergyBounds
+from ...utils.energy import Energy, EnergyBounds
 
 
 def test_Energy():
     # Explicit constructor call
     energy = Energy([1, 3, 6, 8, 12], 'TeV')
-    actual = type(energy).__module__
-    desired = 'gammapy.spectrum.energy'
+    actual = str(energy.__class__)
+    desired = "<class 'gammapy.utils.energy.Energy'>"
     assert_equal(actual, desired)
 
     val = u.Quantity([1, 3, 6, 8, 12], 'TeV')
@@ -24,7 +24,7 @@ def test_Energy():
     # View casting
     energy = val.view(Energy)
     actual = type(energy).__module__
-    desired = 'gammapy.spectrum.energy'
+    desired = 'gammapy.utils.energy'
     assert_equal(actual, desired)
 
     # New from template
@@ -81,7 +81,7 @@ def test_EnergyBounds():
     # View casting
     energy = val.view(EnergyBounds)
     actual = type(energy).__module__
-    desired = 'gammapy.spectrum.energy'
+    desired = 'gammapy.utils.energy'
     assert_equal(actual, desired)
 
     # New from template
@@ -108,7 +108,7 @@ def test_EnergyBounds():
     # Log centers
     center = energy.log_centers
     actual = type(center).__module__
-    desired = 'gammapy.spectrum.energy'
+    desired = 'gammapy.utils.energy'
     assert_equal(actual, desired)
 
     # Upper/lower bounds

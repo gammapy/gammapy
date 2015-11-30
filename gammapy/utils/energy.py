@@ -84,7 +84,7 @@ class Energy(Quantity):
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
-        """Create Energy with equal log-spacing (`~gammapy.spectrum.energy.Energy`).
+        """Create Energy with equal log-spacing (`~gammapy.utils.energy.Energy`).
 
         if no unit is given, it will be taken from emax
 
@@ -113,7 +113,7 @@ class Energy(Quantity):
 
     @classmethod
     def from_fits(cls, hdu, unit=None):
-        """Read ENERGIES fits extension (`~gammapy.spectrum.energy.Energy`).
+        """Read ENERGIES fits extension (`~gammapy.utils.energy.Energy`).
 
         Parameters
         ----------
@@ -161,7 +161,7 @@ class EnergyBounds(Energy):
 
     """EnergyBounds array.
 
-    This is a `~gammapy.spectrum.energy.Energy` sub-class that adds convenience
+    This is a `~gammapy.utils.energy.Energy` sub-class that adds convenience
     methods to handle common tasks for energy bin edges arrays, like FITS I/O or
     generating arrays of bin centers.
 
@@ -217,7 +217,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def from_lower_and_upper_bounds(cls, lower, upper, unit=None):
-        """EnergyBounds from lower and upper bounds (`~gammapy.spectrum.energy.EnergyBounds`).
+        """EnergyBounds from lower and upper bounds (`~gammapy.utils.energy.EnergyBounds`).
 
         If no unit is given, it will be taken from upper
 
@@ -240,7 +240,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def equal_log_spacing(cls, emin, emax, nbins, unit=None):
-        """EnergyBounds with equal log-spacing (`~gammapy.spectrum.energy.EnergyBounds`).
+        """EnergyBounds with equal log-spacing (`~gammapy.utils.energy.EnergyBounds`).
 
         If no unit is given, it will be taken from emax
 
@@ -261,7 +261,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def from_ebounds(cls, hdu, unit=None):
-        """Read EBOUNDS fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
+        """Read EBOUNDS fits extension (`~gammapy.utils.energy.EnergyBounds`).
 
         Parameters
         ----------
@@ -282,7 +282,7 @@ class EnergyBounds(Energy):
 
     @classmethod
     def from_rmf_matrix(cls, hdu, unit=None):
-        """Read MATRIX fits extension (`~gammapy.spectrum.energy.EnergyBounds`).
+        """Read MATRIX fits extension (`~gammapy.utils.energy.EnergyBounds`).
 
         Parameters
         ----------

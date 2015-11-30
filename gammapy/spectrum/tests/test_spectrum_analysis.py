@@ -8,13 +8,14 @@ from ...spectrum.spectrum_analysis import (
     run_spectrum_analysis_using_configfile,
     run_spectrum_analysis_using_config)
 
+@pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 @requires_data('hess')
 def test_spectrum_analysis_from_configfile(tmpdir):
     import yaml
 
-    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example_ring.yaml')
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
 
     import yaml
     with open(configfile) as fh:

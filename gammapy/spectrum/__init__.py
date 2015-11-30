@@ -15,6 +15,5 @@ from .powerlaw import *
 from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
-from .energy import *
-# TODO resolve circular import issue
-# from .spectrum_analysis import *
+from .counts_spectrum import *
+from .spectrum_analysis import *

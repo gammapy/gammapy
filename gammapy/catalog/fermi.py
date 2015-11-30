@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.units import Quantity
-from ..spectrum import EnergyBounds
+from ..utils.energy import EnergyBounds
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
 
