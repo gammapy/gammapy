@@ -26,6 +26,9 @@ sub-modules:
 
 Reference/API
 =============
+.. automodapi:: gammapy.utils.energy
+    :no-inheritance-diagram:
+
 .. automodapi:: gammapy.utils.mpl_style
     :no-inheritance-diagram:
 

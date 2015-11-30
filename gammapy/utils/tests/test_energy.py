@@ -12,8 +12,8 @@ from ...utils.energy import Energy, EnergyBounds
 def test_Energy():
     # Explicit constructor call
     energy = Energy([1, 3, 6, 8, 12], 'TeV')
-    actual = type(energy).__module__
-    desired = 'gammapy.utils.energy'
+    actual = str(energy.__class__)
+    desired = "<class 'gammapy.utils.energy.Energy'>"
     assert_equal(actual, desired)
 
     val = u.Quantity([1, 3, 6, 8, 12], 'TeV')
