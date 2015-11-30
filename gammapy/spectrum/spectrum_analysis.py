@@ -16,7 +16,6 @@ from ..utils.scripts import get_parser, set_up_logging_from_args
 __all__ = [
     'SpectrumAnalysis',
     'SpectrumObservation',
-    'run_spectrum_analysis_using_config',
     'run_spectrum_analysis_using_configfile',
 ]
 
@@ -108,6 +107,75 @@ class SpectrumAnalysis(object):
             val = dict(obs=obs.obs, pointing=obs.pointing, region=reflected)
             retval.append(val)
         return retval
+
+    @classmethod
+    def from_config(cls, config):
+        """Create `~gammapy.spectrum.SpectrumAnalysis` from config dict
+
+        Parameters
+        ----------
+        configfile : dict
+            config dict
+        """
+
+        # Observations
+        obs = config['general']['runlist']
+        store = config['general']['datastore']
+        nobs = config['general']['nruns']
+
+        # Binning
+        sec = config['binning']
+        if sec['equal_log_spacing']:
+            emin = Energy(sec['emin'])
+            emax = Energy(sec['emax'])
+            nbins = sec['nbins']
+            ebounds = EnergyBounds.equal_log_spacing(
+                emin, emax, nbins)
+        else:
+            if sec['binning'] is None:
+                raise ValueError("No binning specified")
+
+        # ON region
+        radius = Angle(config['on_region']['radius'])
+        x = config['on_region']['center_x']
+        y = config['on_region']['center_y']
+        frame = config['on_region']['system']
+        center = SkyCoord(x, y, frame=frame)
+        on_region = SkyCircleRegion(center, radius)
+
+        # OFF region
+        off_type = config['off_region']['type']
+        if off_type == 'ring':
+            irad = Angle(config['off_region']['inner_radius'])
+            orad = Angle(config['off_region']['outer_radius'])
+            bkg_method = dict(type='ring', inner_radius=irad,
+                              outer_radius=orad)
+        elif off_type == 'reflected':
+            bkg_method = dict(type='reflected')
+
+        # Exclusion
+        excl_file = config['excluded_regions']['file']
+        exclusion = ExclusionMask.from_fits(excl_file)
+
+        return cls(datastore=store, obs=obs, on_region=on_region,
+                     bkg_method=bkg_method, exclusion=exclusion,
+                     nobs=nobs, ebounds=ebounds)
+
+
+    @classmethod
+    def from_configfile(cls, configfile):
+        """Create `~gammapy.spectrum.SpectrumAnalysis` from configfile
+
+        Parameters
+        ----------
+        configfile : str
+            YAML config file
+        """
+        import yaml
+        with open(configfile) as fh:
+            config = yaml.safe_load(fh)
+            
+        return cls.from_config(config)
 
     def info(selfs):
         """Print some information
@@ -419,29 +487,10 @@ def run_spectrum_analysis_using_configfile(configfile):
     analysis : `~gammapy.spectrum.SpectrumAnalysis`
         Spectrum analysis instance
     """
-    import yaml
-    log.info('Reading {}'.format(configfile))
-    with open(configfile) as fh:
-        config = yaml.safe_load(fh)
+   
+    analysis = SpectrumAnalysis.from_configfile(configfile)
 
-    analysis = run_spectrum_analysis_using_config(config)
-    return analysis
-
-
-def run_spectrum_analysis_using_config(config):
-    """Wrapper function to run a 1D spectral analysis using a config dict
-
-    Parameters
-    ----------
-    config : dict
-        config
-
-    Returns
-    -------
-    analysis : `~gammapy.spectrum.SpectrumAnalysis`
-        Spectrum analysis instance
-    """
-
+<<<<<<< HEAD
     # Observations
     obs = config['general']['runlist']
     store_val = config['general']['datastore']
@@ -487,6 +536,8 @@ def run_spectrum_analysis_using_config(config):
                                 bkg_method=bkg_method, exclusion=exclusion,
                                 nobs=nobs, ebounds=ebounds)
     
+=======
+>>>>>>> commit before rebase
     if config['general']['create_ogip']:
         outdir = config['general']['outdir']
         analysis.write_ogip_data(outdir)

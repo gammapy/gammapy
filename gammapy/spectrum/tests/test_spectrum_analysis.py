@@ -9,16 +9,28 @@ from ...spectrum.spectrum_analysis import (
     run_spectrum_analysis_using_config,
 )
 
+@requires_dependency('yaml')
+@requires_data('gammapy-extra')
+def test_spectrum_analysis():
+    import yaml
+
+    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
+
+    analysis = SpectrumAnalysis.from_configfile(configfile)
+    
+
 @pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
+
 
     configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
 
     import yaml
     config = read_yaml(configfile)
     config['general']['outdir'] = str(tmpdir)
+    config['general']['outdir']=str(tmpdir)
 
     ana = run_spectrum_analysis_using_config(config)
     assert_allclose(ana.fit['parvals'][0], 2.0, rtol = 1e-1)
