@@ -1,7 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
 from gammapy.spectrum.spectrum_analysis import SpectrumAnalysis
-from ..utils.scripts import get_parser, set_up_logging_from_args, write_yaml, read_yaml
+from ..utils.scripts import (
+    get_parser,
+    set_up_logging_from_args,
+    write_yaml,
+    read_yaml,
+    recursive_update
+)
 import logging
 import numpy as np
 
@@ -21,38 +27,51 @@ def main(args=None):
 
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    specpipe = SpectrumPipe.from_yaml(args.config_file)
+    specpipe = SpectrumPipe.from_configfile(args.config_file)
     specpipe.run()
 
 
 class SpectrumPipe(object):
-    """Gammapy Spectrum Pipe class"""
+    """Gammapy Spectrum Pipe class
 
-    def __init__(self, config):
-        self.config = config
-        fit_config_file = config['general']['spectrum_fit_config_file']
-        fit_config = read_yaml(fit_config_file)
-        sec = self.config['sources']
-        sources = sec.keys()
-        self.analysis = []
-        for target in sources:
-            vals = sec[target]
-            fit_config['general']['outdir'] = target
-            fit_config['general']['runlist'] = vals['runlist']
-            fit_config['on_region']['center_x'] = vals['target_ra']
-            fit_config['on_region']['center_y'] = vals['target_dec']
-            try:
-                fit_config['on_region']['radius'] = vals['on_radius']
-            except KeyError:
-                pass
-            analysis = SpectrumAnalysis(fit_config)
-            write_yaml(fit_config, target + "/" + target, log)
+    Parameters
+    ----------
+    analysis : list
+        List of `~gammapy.spectrum.SpectrumAnalysis` to process
+    """
+
+    def __init__(self, analysis):
+        for ana in analysis:
             self.analysis.append(analysis)
 
     @classmethod
-    def from_yaml(cls, filename):
+    def from_configfile(cls, filename, auto_outdir=True):
+        """Create `~gammapy.script.Spectrumpipe` from config file
+
+        Parameters
+        ----------
+        filename : str
+            YAML configfile
+        auto_outdir : bool [True]
+            Set outdir explicitly for every analysis
+        """
         config = read_yaml(filename, log)
-        return cls(config)
+        base_config = config.pop('base_config')
+        analist = list([])
+        
+        for analysis in config.keys():
+            anaconf = base_config.copy()
+            temp = config[analysis]
+            anaconf = recursive_update(anaconf, temp)
+            if auto_outdir:
+                anaconf['general']['outdir'] = analysis
+
+            import IPython; IPython.embed()
+
+            val = SpectrumAnalysis.from_config(anaconf)
+            analist.append(val)
+
+        return cls(analist)
 
     def run(self):
         """Run Spectrum Analysis Pipe"""
@@ -148,3 +167,4 @@ class SpectrumPipe(object):
 
         val = filename.split('.')[0]
         fig.savefig('comparison_to_{}.png'.format(val))
+

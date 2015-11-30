@@ -120,7 +120,8 @@ class SpectrumAnalysis(object):
 
         # Observations
         obs = config['general']['runlist']
-        store = config['general']['datastore']
+        storename = config['general']['datastore']
+        store = DataStore.from_all(storename)
         nobs = config['general']['nruns']
 
         # Binning

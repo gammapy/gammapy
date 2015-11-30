@@ -165,3 +165,24 @@ def make_path(path):
     Expand environment varibles on `~pathlib.Path` construction
     """
     return Path(expandvars(path))
+
+
+def recursive_update(old, new):
+    """Recursively update a dict with new values
+
+    Parameters
+    ---------
+    old : dict
+        dict to be changed
+    new : dict
+        dict containing changes
+    """
+    
+    result = old.copy()
+    for k, v in new.iteritems():
+        if k in result and isinstance(result[k], dict):
+                result[k] = recursive_update(result[k], v)
+        else:
+            result[k] = v
+    return result
+
