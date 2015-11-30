@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import numpy as np
 from astropy.units import Quantity
+from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
 
@@ -1194,15 +1195,15 @@ def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
 
     Parameters
     ----------
-    lons : `~numpy.ndarray`
+    lons : `~astropy.coordinates.Longitude`
         Array of longitude values.
-    lats : `~numpy.ndarray`
+    lats : `~astropy.coordinates.Latitude`
         Array of latitude values.
-    center_lon : float
+    center_lon : `~astropy.coordinates.Longitude`
         Longitude of center of circular mask.
-    center_lat : float
+    center_lat : `~astropy.coordinates.Latitude`
         Latitude of center of circular mask.
-    radius : float
+    radius : `~astropy.coordinates.Angle`
         Radius of circular mask.
 
     Returns
@@ -1210,6 +1211,9 @@ def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
     mask : `~numpy.ndarray`
         Boolean mask array for a circular sub-region
     """
+    
+    lons.wrap_angle = Angle('180 deg')
+    center_lon.wrap_angle = Angle('180 deg')
 
     mask = (lons - center_lon) ** 2 + (lats - center_lat) ** 2 < radius ** 2
     return mask
