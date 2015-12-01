@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import sys
 import argparse
 from collections import OrderedDict
@@ -143,28 +144,41 @@ def read_yaml(filename, logger=None):
         logger.info('Reading {}'.format(filename))
     with open(filename) as fh:
         config = yaml.safe_load(fh)
-    
+
     return config
+
 
 def write_yaml(config, filename, logger=None):
     """
     Write YAML config file
 
     This function can be used by scripts that alter the users config file.
+
+    Parameters
+    ----------
+    config : dict
+        config to write
+    filename : str, `~gammapy.exter.pathlib.Path`
+        file to write
     """
     import yaml
-    filename = filename + '.yaml'
+    filename = make_path(filename)
     if logger is not None:
         logger.info('Writing {}'.format(filename))
-    with open(filename, 'w') as outfile:
+    with open(str(filename), 'w') as outfile:
         outfile.write(yaml.dump(config, default_flow_style=False))
 
 
 def make_path(path):
     """
     Expand environment varibles on `~pathlib.Path` construction
+
+    Parameters
+    ----------
+    path : str, `~gammapy.extern.pathlib.Path`
+        path to expand
     """
-    return Path(expandvars(path))
+    return Path(expandvars(str(path)))
 
 
 def recursive_update(old, new):
@@ -177,12 +191,11 @@ def recursive_update(old, new):
     new : dict
         dict containing changes
     """
-    
+
     result = old.copy()
     for k, v in new.iteritems():
         if k in result and isinstance(result[k], dict):
-                result[k] = recursive_update(result[k], v)
+            result[k] = recursive_update(result[k], v)
         else:
             result[k] = v
     return result
-
