@@ -438,11 +438,12 @@ class EnergyDispersion(object):
         ax.imshow(image, extent=self._extent, **kwargs)
         ax.set_xlabel('True energy (TeV)')
         ax.set_ylabel('Reco energy (TeV)')
-        ax.loglog()
 
         # TODO: better colorbar formatting
         # plt.colorbar()
         # plt.tight_layout()
+
+        return ax
 
     def _plot_bias(self, ax=None):
         raise NotImplementedError
@@ -513,6 +514,22 @@ class EnergyDispersion2D(object):
         offset = Angle([0.554], 'deg')
         edisp2D.plot_bias(offset=offset, e_true=e_true, migra=migra)
         plt.xscale('log')
+
+    Create RMF matrix
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        from gammapy.irf import EnergyDispersion2D
+        from gammapy.datasets import gammapy_extra
+        from gammapy.utils.energy import EnergyBounds
+        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
+        edisp2D = EnergyDispersion2D.read(filename)
+        e_axis = EnergyBounds.equal_log_spacing(0.1,20,60, 'TeV')
+        rmf = edisp2D.to_energy_dispersion('1.2 deg', e_reco = e_axis, e_true = e_axis)
+        rmf.plot()
+        plt.loglog()
 
     """
 
