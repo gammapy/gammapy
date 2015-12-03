@@ -612,8 +612,8 @@ class EffectiveAreaTable2D(object):
             energy = Quantity(np.logspace(-1, 2, 8), 'TeV')
 
         if offset is None:
-            off_lo = self.offset[0]
-            off_hi = self.offset[-1]
+            off_lo = self.offset[0].to('deg').value
+            off_hi = self.offset[-1].to('deg').value
             offset = Angle(np.linspace(off_lo, off_hi, 100), 'deg')
 
         for ee in energy:
