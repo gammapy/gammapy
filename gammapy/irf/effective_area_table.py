@@ -323,8 +323,6 @@ class EffectiveAreaTable2D(object):
         Lower / upper offset bin edges vector
     eff_area : `~astropy.units.Quantity`
         Effective area vector (true energy)
-    eff_area_reco : `~astropy.units.Quantity`
-        Effective area vector (reconstructed energy)
     method : str
         Interpolation method
 
@@ -384,12 +382,14 @@ class EffectiveAreaTable2D(object):
     """
 
     def __init__(self, energy_lo, energy_hi, offset_lo,
-                 offset_hi, eff_area, eff_area_reco, method='linear'):
+                 offset_hi, eff_area, method='linear', thres_lo=None,
+                 thres_hi=None):
+
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
             raise ValueError("Offsets must be Angle objects.")
-        if not isinstance(eff_area, Quantity) or not isinstance(eff_area_reco, Quantity):
+        if not isinstance(eff_area, Quantity):
             raise ValueError("Effective areas must be Quantity objects.")
 
         self.energy_lo = energy_lo.to('TeV')
@@ -397,10 +397,11 @@ class EffectiveAreaTable2D(object):
         self.offset_lo = offset_lo.to('deg')
         self.offset_hi = offset_hi.to('deg')
         self.eff_area = eff_area.to('m^2')
-        self.eff_area_reco = eff_area_reco.to('m^2')
-
         self.offset = (offset_hi + offset_lo) / 2
         self.energy = np.sqrt(energy_lo * energy_hi)
+
+        self._thres_lo = thres_lo
+        self._thres_hi = thres_hi
 
         self._prepare_linear_interpolator()
         self._prepare_spline_interpolator()
@@ -409,42 +410,61 @@ class EffectiveAreaTable2D(object):
         self.interpolation_method = method
 
     @classmethod
-    def from_fits(cls, hdu_list):
+    def from_fits(cls, hdu_list, column='true'):
         """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format HDU list.
 
         Parameters
         ----------
         hdu_list : `~astropy.io.fits.HDUList`
             HDU list with ``EFFECTIVE AREA`` extension.
+        column : str {'true', 'reco'}
+            Effective area column to be read
         """
         # Locate an HDU with the right name or raise and error
         hdu = get_hdu_with_valid_name(hdu_list, valid_extnames=['AEFF_2D', 'EFFECTIVE AREA'])
 
-        # TODO: Read and store energy threshold info
-        # TODO: where should it be used?
-        # LO_THRES, HI_THRESH header keys
-
         data = hdu.data
+        header = hdu.header
+        thres_lo = header['LO_THRES']
+        thres_hi = header['HI_THRES']
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
         e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
         o_lo = Angle(data['THETA_LO'].squeeze(), 'deg')
         o_hi = Angle(data['THETA_HI'].squeeze(), 'deg')
-        ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
-        efrec = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
+        if column == 'reco':
+            ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
+        else:
+            ef = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
 
-        return cls(e_lo, e_hi, o_lo, o_hi, ef, efrec)
+        return cls(e_lo, e_hi, o_lo, o_hi, ef, thres_lo=thres_lo, thres_hi=thres_hi)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, column='true'):
         """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format FITS file.
 
         Parameters
         ----------
         filename : str
             File name
+        column : str {'true', 'reco'}
+            Effective area column to be read
         """
         hdu_list = fits.open(filename)
-        return EffectiveAreaTable2D.from_fits(hdu_list)
+        return EffectiveAreaTable2D.from_fits(hdu_list, column=column)
+
+    @property
+    def low_threshold(self):
+        """
+        Low energy threshold
+        """
+        return self._thres_lo
+
+    @property
+    def high_threshold(self):
+        """
+        Low energy threshold
+        """
+        return self._thres_hi
 
     def to_effective_area_table(self, offset, energy_lo=None, energy_hi=None):
         """Evaluate at a given offset and return effective area table.
@@ -592,8 +612,8 @@ class EffectiveAreaTable2D(object):
             energy = Quantity(np.logspace(-1, 2, 8), 'TeV')
 
         if offset is None:
-            off_lo = self.offset[0]
-            off_hi = self.offset[-1]
+            off_lo = self.offset[0].to('deg').value
+            off_hi = self.offset[-1].to('deg').value
             offset = Angle(np.linspace(off_lo, off_hi, 100), 'deg')
 
         for ee in energy:
@@ -658,6 +678,19 @@ class EffectiveAreaTable2D(object):
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
         plt.show()
+
+    def info(self):
+        """Print some basic info.
+        """
+        ss = "\nSummary EffectiveArea2D info\n"
+        ss += "----------------\n"
+        # Summarise data members
+        ss += array_stats_str(self.energy, 'energy')
+        ss += array_stats_str(self.offset, 'offset')
+        ss += array_stats_str(self.eff_area, 'dispersion')
+
+        return ss
+
 
     def _prepare_linear_interpolator(self):
         """Setup `~scipy.interpolate.RegularGridInterpolator`
