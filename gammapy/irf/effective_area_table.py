@@ -389,7 +389,7 @@ class EffectiveAreaTable2D(object):
             raise ValueError("Energies must be Quantity objects.")
         if not isinstance(offset_lo, Angle) or not isinstance(offset_hi, Angle):
             raise ValueError("Offsets must be Angle objects.")
-        if not isinstance(eff_area, Quantity) or not isinstance(eff_area_reco, Quantity):
+        if not isinstance(eff_area, Quantity):
             raise ValueError("Effective areas must be Quantity objects.")
 
         self.energy_lo = energy_lo.to('TeV')
@@ -423,10 +423,10 @@ class EffectiveAreaTable2D(object):
         # Locate an HDU with the right name or raise and error
         hdu = get_hdu_with_valid_name(hdu_list, valid_extnames=['AEFF_2D', 'EFFECTIVE AREA'])
 
-        thres_lo = data['LO_THRES']
-        thres_hi = data['HI_THRES']
-
         data = hdu.data
+        header = hdu.header
+        thres_lo = header['LO_THRES']
+        thres_hi = header['HI_THRES']
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
         e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
         o_lo = Angle(data['THETA_LO'].squeeze(), 'deg')
