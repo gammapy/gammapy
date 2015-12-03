@@ -679,6 +679,19 @@ class EffectiveAreaTable2D(object):
         plt.tight_layout()
         plt.show()
 
+    def info(self):
+        """Print some basic info.
+        """
+        ss = "\nSummary EffectiveArea2D info\n"
+        ss += "----------------\n"
+        # Summarise data members
+        ss += array_stats_str(self.energy, 'energy')
+        ss += array_stats_str(self.offset, 'offset')
+        ss += array_stats_str(self.eff_area, 'dispersion')
+
+        return ss
+
+
     def _prepare_linear_interpolator(self):
         """Setup `~scipy.interpolate.RegularGridInterpolator`
         """
