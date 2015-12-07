@@ -466,25 +466,29 @@ class SpectralFit(object):
         return self._model
 
     @model.setter
-    def model(self, model):
+    def model(self, model, name=None):
         """
 
         Parameters
         ----------
         model : `~sherpa.models.ArithmeticModel`
             Fit model
+        name : str
+            Name for Sherpa model instance, optional
         """
         import sherpa.models
 
+        name = 'default' if name is None else name
+
         if isinstance(model, six.string_types):
             if model == 'PL':
-                model = sherpa.models.PowLaw1D()
-                model.gamma = 2.2
+                model = sherpa.models.PowLaw1D('powlaw1d.'+name)
                 model.ref = 1e9
                 model.ampl = 1e-20
 
         if not isinstance(model, sherpa.models.ArithmeticModel):
             raise ValueError("Only sherpa models are supported at the moment")
+
         self._model = model
 
     @property
@@ -525,9 +529,20 @@ class SpectralFit(object):
         """
         self._thres_hi = Energy(energy)
 
+    @property
+    def pha_list(self):
+        """Comma-separate list of PHA files"""
+        ret = ''
+        for p in self.pha:
+            ret += str(p) + ","
+
+        return ret
+
     def run(self, method='hspec'):
         if method == 'hspec':
             self._run_hspec_fit()
+        elif method == 'sherpa':
+            self._run_sherpa_fit()
         else:
             raise ValueError('Undefined fitting method')
 
@@ -554,23 +569,25 @@ class SpectralFit(object):
             list_data.append(datid)
 
         wstat.wfit(list_data)
-        sau.covar()
-
-        fit_val = sau.get_covar_results()
-        fit_attrs = ('parnames', 'parvals', 'parmins', 'parmaxes')
-        fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
-        fit = self.apply_containment(fit)
-        sau.clean()
-        self.fit = fit
 
     def _run_sherpa_fit(self):
         """Plain sherpa fit not using the session object
         """
         from sherpa.astro.datastack import DataStack
 
+        log.info("Starting SHERPA")
         ds = DataStack()
-        ds.load_pha(self.pha)
+        ds.load_pha(self.pha_list)
         log.info(ds.show_stack())
+        ds.set_source(self.model)
+        log.info(self.model)
+        thres_lo = self.low_threshold.to('keV').value
+        thres_hi = self.high_threshold.to('keV').value
+        ds.notice(thres_lo, thres_hi)
+        ds.subtract()
+        ds.fit()
+        ds.clear_stack()
+        ds.clear_models()
 
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
@@ -597,60 +614,13 @@ def run_spectral_fit_using_config(config):
 
     analysis = SpectrumAnalysis.from_config(config)
 
-<<<<<<< HEAD
-    # Observations
-    obs = config['general']['runlist']
-    store_val = config['general']['datastore']
-    store = DataStore.from_all(store_val)
-    nobs = config['general']['nruns']
-
-    # Binning
-    sec = config['binning']
-    if sec['equal_log_spacing']:
-        emin = Energy(sec['emin'])
-        emax = Energy(sec['emax'])
-        nbins = sec['nbins']
-        ebounds = EnergyBounds.equal_log_spacing(
-            emin, emax, nbins)
-    else:
-        if sec['binning'] is None:
-            raise ValueError("No binning specified")
-    log.debug('Binning: {}'.format(ebounds))
-
-    # ON region
-    radius = Angle(config['on_region']['radius'])
-    x = config['on_region']['center_x']
-    y = config['on_region']['center_y']
-    frame = config['on_region']['system']
-    center = SkyCoord(x, y, frame=frame)
-    on_region = SkyCircleRegion(center, radius)
-
-    # OFF region
-    off_type = config['off_region']['type']
-    if off_type == 'ring':
-        irad = Angle(config['off_region']['inner_radius'])
-        orad = Angle(config['off_region']['outer_radius'])
-        bkg_method = dict(type='ring', inner_radius=irad,
-                          outer_radius=orad)
-    elif off_type == 'reflected':
-        bkg_method = dict(type='reflected')
-
-    # Exclusion
-    excl_file = config['excluded_regions']['file']
-    exclusion = ExclusionMask.from_fits(excl_file)
-
-    analysis = SpectrumAnalysis(datastore=store, obs=obs, on_region=on_region,
-                                bkg_method=bkg_method, exclusion=exclusion,
-                                nobs=nobs, ebounds=ebounds)
-    
-=======
->>>>>>> commit before rebase
     if config['general']['create_ogip']:
         analysis.write_ogip_data()
 
-    if config['general']['run_fit']:
+    method =  config['general']['run_fit']
+    if method is not 'False':
         fit = SpectralFit.from_spectrum_analysis(analysis)
         fit.model = config['model']['type']
         fit.low_threshold = Energy(config['model']['threshold_low'])
         fit.high_threshold = Energy(config['model']['threshold_high'])
-        fit.run()
+        fit.run(method=method)

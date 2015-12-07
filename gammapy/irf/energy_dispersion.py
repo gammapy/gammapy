@@ -61,7 +61,11 @@ class EnergyDispersion(object):
 
     @property
     def pdf_matrix(self):
-        """PDF matrix ~numpy.ndarray"""
+        """PDF matrix ~numpy.ndarray
+
+        Rows (first index): True Energy
+        Columns (second index): Reco Energy
+        """
         return self._pdf_matrix
 
     @property
@@ -295,14 +299,14 @@ class EnergyDispersion(object):
         """
         table = Table()
 
-        rows = self._pdf_matrix.__len__()
+        rows = self.pdf_matrix.shape[0]
         n_grp = []
         f_chan = np.ndarray(dtype=np.object, shape=rows)
         n_chan = np.ndarray(dtype=np.object, shape=rows)
         matrix = np.ndarray(dtype=np.object, shape=rows)
 
         # Make RMF type matrix
-        for i, row in enumerate(self._pdf_matrix):
+        for i, row in enumerate(self.pdf_matrix):
             subsets = 1
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
@@ -385,35 +389,6 @@ class EnergyDispersion(object):
         """
         return np.dot(data, self._pdf_matrix)
 
-    def plot(self, type='matrix', energy=None, ax=None):
-        """Create energy dispersion plot.
-
-        Parameters
-        ----------
-        type : {'matrix', 'bias', 'pdf_energy_true', 'pdf_energy_reco'}
-            Type of plot to generate
-        energy : array_like
-            Energies at which to plot the PDF.
-            Only applies to type 'pdf_energy_true' and 'pdf_energy_reco'.
-
-        Examples
-        --------
-        TODO
-        """
-        if type == 'matrix':
-            self._plot_matrix(ax=ax)
-        elif type == 'bias':
-            self._plot_bias(ax=ax)
-        elif type == 'pdf_energy_true':
-            self._plot_pdf(energy, 'true', ax=ax)
-        elif type == 'pdf_energy_reco':
-            self._plot_pdf(energy, 'reco', ax=ax)
-        else:
-            ss = 'Invalid type: {0}\n'.format(type)
-            ss += 'Available types: matrix, bias'
-            raise ValueError(ss)
-
-    @property
     def _extent(self):
         """Extent (x0, x1, y0, y1) for plotting (4x float)
 
@@ -423,7 +398,7 @@ class EnergyDispersion(object):
         y = self.reco_energy.range.value
         return x[0], x[1], y[0], y[1]
 
-    def _plot_matrix(self, ax=None, **kwargs):
+    def plot_matrix(self, ax=None, **kwargs):
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
 
@@ -445,17 +420,14 @@ class EnergyDispersion(object):
 
         return ax
 
-    def _plot_bias(self, ax=None):
+    def plot_bias(self, ax=None):
         raise NotImplementedError
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
 
-        ax.set_xlabel('True energy (TeV)')
-        ax.set_ylabel('Reco energy (TeV)')
-
-    def _plot_pdf(self, energy, ax=None):
-        raise NotImplementedError
+        ax.set_xlabel('Reco energy (TeV)')
+        ax.set_ylabel('True energy (TeV)')
 
 
 class EnergyDispersion2D(object):
@@ -657,7 +629,7 @@ class EnergyDispersion2D(object):
             vec = self.get_response(offset=offset, e_true=energy, e_reco=e_reco)
             rm.append(vec)
 
-        rm = np.transpose(np.asarray(rm))
+        rm = np.asarray(rm)
         return EnergyDispersion(rm, e_true, e_reco)
 
     def get_response(self, offset, e_true, e_reco=None):
