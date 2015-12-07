@@ -507,13 +507,12 @@ class EffectiveAreaTable2D(object):
         """Evaluate effective area for a given energy and offset.
 
         If a parameter is not given, the nodes from the FITS table are used.
-        2D input arrays are not supported yet.
 
         Parameters
         ----------
-        offset : `~astropy.coordinates.Angle`
+        offset : `~astropy.coordinates.Angle`, generic ndarray
             offset
-        energy : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`, only 1D array supported
             energy
 
         Returns
@@ -535,6 +534,10 @@ class EffectiveAreaTable2D(object):
         offset = offset.to('deg')
         energy = energy.to('TeV')
 
+        offset_shape = np.shape(offset)
+        energy_shape = np.shape(energy)
+        offset = offset.flatten()
+
         method = self.interpolation_method
         if method == 'linear':
             val = self._eval_linear(offset.value, np.log10(energy.value))
@@ -542,6 +545,8 @@ class EffectiveAreaTable2D(object):
             val = self._eval_spline(offset.value, np.log10(energy.value))
         else:
             raise ValueError('Invalid interpolation method: {}'.format(method))
+
+        val = np.reshape(val, np.append(offset_shape, energy_shape))
         return Quantity(val, self.eff_area.unit)
 
     def _eval_linear(self, offset=None, energy=None):
@@ -561,7 +566,7 @@ class EffectiveAreaTable2D(object):
         """
         off = np.atleast_1d(offset)
         ener = np.atleast_1d(energy)
-        points = [(x,y) for x in off for y in ener]
+        points = [(x, y) for x in off for y in ener]
         shape = (off.size, ener.size)
         val = self._linear(points)
         val = np.reshape(val, shape).squeeze()
@@ -691,7 +696,6 @@ class EffectiveAreaTable2D(object):
 
         return ss
 
-
     def _prepare_linear_interpolator(self):
         """Setup `~scipy.interpolate.RegularGridInterpolator`
         """
@@ -702,7 +706,7 @@ class EffectiveAreaTable2D(object):
         y = np.log10(self.energy.value)
         vals = self.eff_area.value
 
-        self._linear = RegularGridInterpolator((x,y),vals, bounds_error = True)
+        self._linear = RegularGridInterpolator((x, y), vals, bounds_error=True)
 
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)
