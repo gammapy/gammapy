@@ -563,6 +563,15 @@ class SpectralFit(object):
         sau.clean()
         self.fit = fit
 
+    def _run_sherpa_fit(self):
+        """Plain sherpa fit not using the session object
+        """
+        from sherpa.astro.datastack import DataStack
+
+        ds = DataStack()
+        ds.load_pha(self.pha)
+        log.info(ds.show_stack())
+
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
         cont = self.get_containment()
