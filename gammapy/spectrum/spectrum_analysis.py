@@ -1,13 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
+
 import logging
-import naima
+
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
-from gammapy.extern.pathlib import Path
-from gammapy.image import ExclusionMask
-from gammapy.region import SkyCircleRegion, find_reflected_regions
+
+from ..image import ExclusionMask
+from ..region import SkyCircleRegion, find_reflected_regions
 from . import CountsSpectrum
 from ..background import ring_area_factor
 from ..obs import DataStore
@@ -101,6 +102,13 @@ class SpectrumAnalysis(object):
         """List of all observations belonging to the analysis
         """
         return self._observations
+
+    @property
+    def offset(self):
+        """List of offsets from the observation position for all observations
+        """
+        off = [obs.offset for obs in self.observations]
+        return off
 
     @property
     def reflected_regions(self, **kwargs):
