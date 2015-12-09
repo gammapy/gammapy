@@ -24,6 +24,16 @@ Gammapy 0.5 will be released on December 21, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
+Contributors
+++++++++++++
+
+- Luigi Tibaldo
+
+Pull requests
++++++++++++++
+
+- [#398] Exposure cube (Luigi Tibaldo)
+
 .. _gammapy_0p4_release:
 
 0.4 (November 15, 2015, unreleased)
