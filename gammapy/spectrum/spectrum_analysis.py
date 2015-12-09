@@ -2,6 +2,7 @@
 from __future__ import (print_function)
 
 import logging
+import os
 
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
@@ -60,14 +61,11 @@ class SpectrumAnalysis(object):
         number of observations to process
     ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
-    base_dir : `~gammapy.extern.pathlib.Path, str, optional
-        Analysis base directory
     """
 
     def __init__(self, datastore, obs, on_region, exclusion, bkg_method=None,
-                 nobs=-1, ebounds=None, base_dir=None):
+                 nobs=-1, ebounds=None):
 
-        self.base_dir = base_dir
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
@@ -83,8 +81,7 @@ class SpectrumAnalysis(object):
         for i, val in enumerate(obs):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
-                                           bkg_method, ebounds, exclusion,
-                                           base_dir=self.base_dir)
+                                           bkg_method, ebounds, exclusion)
             except IndexError:
                 log.warn(
                     'Observation {} not in store {}'.format(val, datastore))
@@ -177,7 +174,7 @@ class SpectrumAnalysis(object):
 
         return cls(datastore=store, obs=obs, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
-                   nobs=nobs, ebounds=ebounds, base_dir=outdir)
+                   nobs=nobs, ebounds=ebounds)
 
     @classmethod
     def from_configfile(cls, configfile):
@@ -197,25 +194,23 @@ class SpectrumAnalysis(object):
     def info(self):
         """Print some information
         """
-        ss = "\nSpectrum Analysis : {}\n".format(self.base_dir)
+        ss = "\nSpectrum Analysis"
         ss += "Observations : {}\n".format(len(self.observations))
         ss += "ON region    : {}\n".format(self.on_region.pos)
 
         return ss
 
-    def write_ogip_data(self, directory=None):
+    def write_ogip_data(self, outdir):
         """Create OGIP files
 
         Parameters
         ----------
-        directory : str, optional
+        outdir : str, `~gammapy.extern.pathlib.Path`
             write directory
         """
-        if directory is None:
-            directory = self.base_dir
 
         for obs in self.observations:
-            obs.write_all_ogip_data(directory)
+            obs.write_all_ogip_data(outdir)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
 
@@ -240,13 +235,9 @@ class SpectrumObservation(object):
         Reconstructed energy binning definition
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion mask
-    base_dir : Path, str, optional
-        Directory to write OGIP data
     """
 
-    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion,
-                 base_dir=None):
-
+    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion):
         # Raises Error if obs is not available
         store.filename(obs, 'events')
         self.obs = obs
@@ -260,11 +251,6 @@ class SpectrumObservation(object):
         self.bkg = None
         self.arf = None
         self.rmf = None
-        if base_dir is None:
-            self.basedir = make_path('ogip_data')
-        else:
-            self.basedir = make_path(base_dir)
-        self.phafile = self.basedir / "pha_run{}.pha".format(self.obs)
 
     @property
     def event_list(self):
@@ -395,22 +381,20 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        if outdir is not None:
-            self.basedir = make_path(outdir)
-        self.basedir.mkdir(exist_ok=True)
+        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True)
 
-        if phafile is not None:
-            self.phafile = phafile
-
+        if phafile is None:
+            phafile = outdir / "pha_run{}.pha".format(self.obs)
         if arffile is None:
-            arffile = self.basedir / "arf_run{}.fits".format(self.obs)
+            arffile = outdir / "arf_run{}.fits".format(self.obs)
         if rmffile is None:
-            rmffile = self.basedir / "rmf_run{}.fits".format(self.obs)
+            rmffile = outdir / "rmf_run{}.fits".format(self.obs)
         if bkgfile is None:
-            bkgfile = self.basedir / "bkg_run{}.fits".format(self.obs)
+            bkgfile = outdir / "bkg_run{}.fits".format(self.obs)
 
         if self.pha is not None:
-            self.pha.write(str(self.phafile), bkg=str(bkgfile), arf=str(arffile),
+            self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
                            rmf=str(rmffile), clobber=clobber)
         if self.bkg is not None:
             self.bkg.write(str(bkgfile), clobber=clobber)
@@ -420,19 +404,19 @@ class SpectrumObservation(object):
         if self.rmf is not None:
             self.rmf.write(str(rmffile), energy_unit='keV', clobber=clobber)
 
-    def write_all_ogip_data(self, dir):
+    def write_all_ogip_data(self, outdir):
         """Perform all step to provide the OGIP data for a sherpa fit
 
         Parameters
         ----------
-        dir : str
+        outdir : str, `~gammapy.extern.pathlib.Path`
             Directory to write to
         """
         self.make_on_vector()
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
-        self.write_ogip(outdir=dir)
+        self.write_ogip(outdir=outdir)
 
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
@@ -458,12 +442,10 @@ class SpectralFit(object):
         self._thres_hi = None
 
     @classmethod
-    def from_spectrum_analysis(cls, spectrum_analysis):
+    def from_config(cls, config):
 
-        pha_list = list([])
-        for obs in spectrum_analysis.observations:
-            pha_list.append(obs.phafile)
-
+        outdir = make_path(config['general']['outdir'])
+        pha_list = outdir.glob('pha_run*.pha')
         return cls(pha_list)
 
     @property
@@ -491,6 +473,7 @@ class SpectralFit(object):
         if isinstance(model, six.string_types):
             if model == 'PL':
                 model = sherpa.models.PowLaw1D('powlaw1d.'+name)
+                model.gamma = 2
                 model.ref = 1e9
                 model.ampl = 1e-20
 
@@ -546,6 +529,14 @@ class SpectralFit(object):
 
         return ret
 
+    def info(self):
+        """Print some basic info"""
+        ss = 'Model\n'
+        ss += str(self.model)
+        ss += '\nEnergy Range\n'
+        ss += str(self.low_threshold) + ' - ' + str(self.high_threshold)
+        return ss
+
     def run(self, method='hspec'):
         if method == 'hspec':
             self._run_hspec_fit()
@@ -581,14 +572,13 @@ class SpectralFit(object):
     def _run_sherpa_fit(self):
         """Plain sherpa fit not using the session object
         """
-        from sherpa.astro.datastack import DataStack
+        from sherpa.astro import datastack
 
         log.info("Starting SHERPA")
-        ds = DataStack()
+        log.info(self.info())
+        ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
-        log.info(ds.show_stack())
         ds.set_source(self.model)
-        log.info(self.model)
         thres_lo = self.low_threshold.to('keV').value
         thres_hi = self.high_threshold.to('keV').value
         ds.notice(thres_lo, thres_hi)
@@ -618,17 +608,24 @@ def run_spectral_fit_using_config(config):
     ----------
     config : dict
         Config dict
+
+    Returns
+    -------
+    fit : `~gammapy.spectrum.SpectralFit`
+        Fit instance
     """
 
-    analysis = SpectrumAnalysis.from_config(config)
-
     if config['general']['create_ogip']:
-        analysis.write_ogip_data()
+        analysis = SpectrumAnalysis.from_config(config)
+        outdir = config['general']['outdir']
+        analysis.write_ogip_data(outdir)
 
-    method =  config['general']['run_fit']
+    method = config['general']['run_fit']
     if method is not 'False':
-        fit = SpectralFit.from_spectrum_analysis(analysis)
+        fit = SpectralFit.from_config(config)
         fit.model = config['model']['type']
         fit.low_threshold = Energy(config['model']['threshold_low'])
         fit.high_threshold = Energy(config['model']['threshold_high'])
         fit.run(method=method)
+
+    return fit

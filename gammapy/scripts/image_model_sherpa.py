@@ -65,3 +65,4 @@ def image_model_sherpa(exposure,
 
     log.info('Computing and writing model_image: {0}'.format(model_image))
     sau.save_model(model_image, clobber=overwrite)
+    sau.clean()

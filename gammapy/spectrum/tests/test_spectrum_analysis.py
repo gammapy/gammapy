@@ -37,10 +37,9 @@ def test_spectrum_analysis(tmpdir):
     ana = SpectrumAnalysis(datastore=ds, obs=obs, on_region=on_region,
                            bkg_method=bkg_method, exclusion=excl, ebounds=bounds)
 
-    ana.write_ogip_data(directory=str(tmpdir))
+    ana.write_ogip_data(outdir=str(tmpdir))
 
 
-@pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
@@ -51,12 +50,12 @@ def test_spectrum_analysis_from_configfile(tmpdir):
     import yaml
     config = read_yaml(configfile)
     config['general']['outdir'] = str(tmpdir)
-    config['general']['outdir']=str(tmpdir)
 
-    ana = run_spectrum_analysis_using_config(config)
-    assert_allclose(ana.fit['parvals'][0], 2.0, rtol = 1e-1)
+    fit = run_spectral_fit_using_config(config)
+    assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)
 
-    config['off_region']['type'] = 'reflected'
-    ana = run_spectrum_analysis_using_config(config)
-    assert_allclose(ana.fit['parvals'][0], 2.0, rtol = 1e-1)
+    config['off_region']['type'] = 'ring'
+
+    fit = run_spectral_fit_using_config(config)
+    assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)
 
