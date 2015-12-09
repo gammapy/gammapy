@@ -56,7 +56,7 @@ The spectral fitting procedure is a two step process. Each of the two steps is r
  * The `~gammapy.spectrum.SpectralFit` class calls Sherpa in order to fit a model to the data
 
 Creating OGIP data
-++++++++++++++++++
+^^^^^^^^^^^^^^^^^^
 
 The following examples creates the 4 OGIP files that are needed for a spectral analysis
 * `PHA file <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html>`__
@@ -68,33 +68,17 @@ The following examples creates the 4 OGIP files that are needed for a spectral a
 
    run_spectrum_analysis.py
 
+In Detail:
+
+Line 1-2 : TODO
+
+At this point one could in principle perform a fit using the standard `Sherpa session interface <http://cxc.harvard.edu/sherpa/threads/pha_intro/>`__
 
 Running a Sherpa fit
-++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^
+
+To avoid having to deal with Sherpa directly or for scripting purposes the `~gammapy.spectrum.SpectralFit`
+ class can be used to perform a Fit as shown in the following example. It assumes you have created the OGIP
+ data as shown above.
 
 
-
-Reference/API
-=============
-
-.. automodapi:: gammapy.spectrum.spectrum_analysis
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.counts_spectrum
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.crab
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.fitting_utils
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.models
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.powerlaw
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.sherpa_chi2asym
-    :no-inheritance-diagram:
-    

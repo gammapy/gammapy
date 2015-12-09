@@ -500,7 +500,7 @@ class EnergyDispersion2D(object):
         edisp2D = EnergyDispersion2D.read(filename)
         e_axis = EnergyBounds.equal_log_spacing(0.1,20,60, 'TeV')
         rmf = edisp2D.to_energy_dispersion('1.2 deg', e_reco = e_axis, e_true = e_axis)
-        rmf.plot()
+        rmf.plot_matrix()
         plt.loglog()
 
     """
