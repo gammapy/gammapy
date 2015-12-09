@@ -15,6 +15,7 @@ from ...spectrum.spectrum_analysis import (
 
 from astropy.coordinates import SkyCoord, Angle
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis(tmpdir):
 
@@ -41,6 +42,7 @@ def test_spectrum_analysis(tmpdir):
 
 
 @requires_dependency('yaml')
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
 
