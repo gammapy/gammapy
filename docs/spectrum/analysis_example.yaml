@@ -1,16 +1,12 @@
+# Example Gammapy spectrum analysis pipeline config file
+
 general:
-  # name of a data store
-  datastore: crab_example
-  # runlist to be processed, can be specified in a file {list, str}
-  runlist : [23523, 23559, 23592, 23526]
-  # number of runs to be processed, 0 corresponds to all runs
-  nruns : 4
-  # output directory
-  outdir : crab_example_out
-  # create OGIP files, only has to be done once
+  datastore: $GAMMAPY_EXTRA/datasets/hess-crab4
+  runlist : [23592, 23526]
+  nruns : 0
+  outdir : test_dir
   create_ogip : true
-  # perform a fit to the OGIP data
-  run_fit : true
+  run_fit : sherpa
 
 binning:
   equal_log_spacing: true
@@ -29,7 +25,7 @@ off_region:
   type: reflected
 
 excluded_regions:
-  file: <path-to-gammapy-extra>/test_datasets/spectrum/dummy_exclusion.fits 
+  file: $GAMMAPY_EXTRA/test_datasets/spectrum/dummy_exclusion.fits 
 
 model:
    type: PL
