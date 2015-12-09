@@ -46,7 +46,6 @@ def test_spectrum_analysis_from_configfile(tmpdir):
 
 
     configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
-
     import yaml
     config = read_yaml(configfile)
     config['general']['outdir'] = str(tmpdir)
@@ -55,6 +54,8 @@ def test_spectrum_analysis_from_configfile(tmpdir):
     assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)
 
     config['off_region']['type'] = 'ring'
+    config['off_region']['inner_radius'] = '0.3 deg'
+    config['off_region']['outer_radius'] = '0.4 deg'
 
     fit = run_spectral_fit_using_config(config)
     assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)

@@ -164,6 +164,8 @@ class SpectrumAnalysis(object):
                               outer_radius=orad)
         elif off_type == 'reflected':
             bkg_method = dict(type='reflected')
+        else:
+            raise ValueError("Invalid background method: {}".format(off_type))
 
         # Exclusion
         excl_file = config['excluded_regions']['file']
@@ -573,7 +575,6 @@ class SpectralFit(object):
         """Plain sherpa fit not using the session object
         """
         from sherpa.astro import datastack
-
         log.info("Starting SHERPA")
         log.info(self.info())
         ds = datastack.DataStack()
