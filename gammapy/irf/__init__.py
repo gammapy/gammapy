@@ -6,4 +6,4 @@ from .psf_core import *
 from .psf_table import *
 from .psf_analytical import *
 from .energy_dispersion import *
-from exposure import *
+from .exposure import *
