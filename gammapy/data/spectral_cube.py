@@ -157,6 +157,31 @@ class SpectralCube(object):
 
         return cls(data, wcs, energy)
 
+    @classmethod
+    def read_counts(cls, filename):
+        """Read spectral cube of type "counts" from FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+
+        Returns
+        -------
+        spectral_cube : `SpectralCube`
+            Spectral cube
+        """
+        data = fits.getdata(filename)
+        data = Quantity(data, '')
+        # Note: the energy axis of the FITS cube is unusable.
+        # We only use proj for LON, LAT and do ENERGY ourselves
+        header = fits.getheader(filename)
+        wcs = WCS(header)
+        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'],unit='keV')
+        #keV to match convention in Fermi ST and CTOOLS, TODO read from header
+
+        return cls(data, wcs, energy)
+
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
 

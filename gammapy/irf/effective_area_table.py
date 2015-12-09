@@ -507,7 +507,7 @@ class EffectiveAreaTable2D(object):
         """Evaluate effective area for a given energy and offset.
 
         If a parameter is not given, the nodes from the FITS table are used.
-        2D input arrays are not supported yet.
+        Both offset and energy can be arbitrary ndarrays
 
         Parameters
         ----------
@@ -549,22 +549,25 @@ class EffectiveAreaTable2D(object):
 
         Parameters
         ----------
-        offset : float
+        offset : float or ndarray of floats
             offset in deg
-        energy : float
+        energy : float or ndarray of floats
             energy in TeV
 
         Returns
         -------
-        eff_area : float
+        eff_area : float or ndarray of floats
             Effective area
         """
         off = np.atleast_1d(offset)
         ener = np.atleast_1d(energy)
-        points = [(x,y) for x in off for y in ener]
-        shape = (off.size, ener.size)
+        shape_off = np.shape(off)
+        shape_ener = np.shape(ener)
+        off = off.flatten()
+        ener = ener.flatten()
+        points = [(x, y) for x in off for y in ener]
         val = self._linear(points)
-        val = np.reshape(val, shape).squeeze()
+        val = np.reshape(val, np.append(shape_off, shape_ener)).squeeze()
 
         return val
 
@@ -691,7 +694,6 @@ class EffectiveAreaTable2D(object):
 
         return ss
 
-
     def _prepare_linear_interpolator(self):
         """Setup `~scipy.interpolate.RegularGridInterpolator`
         """
@@ -702,7 +704,7 @@ class EffectiveAreaTable2D(object):
         y = np.log10(self.energy.value)
         vals = self.eff_area.value
 
-        self._linear = RegularGridInterpolator((x,y),vals, bounds_error = True)
+        self._linear = RegularGridInterpolator((x, y), vals, bounds_error=True)
 
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)

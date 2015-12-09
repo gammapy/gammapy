@@ -121,6 +121,17 @@ def test_EffectiveAreaTable2D(method):
     desired = np.zeros([nbinso, nbinse]).shape
     assert_equal(actual, desired)
 
+    # case 6: offset = 2Darray, energy = 1Darray
+    nbinse = 16
+    nx, ny = (12,3)
+    offset=np.linspace(1,0,nx*ny).reshape(nx,ny)
+    offset = Angle(offset, 'deg')
+    energy = Quantity(np.logspace(0, 1, nbinse), 'TeV')
+    actual = aeff.evaluate(offset=offset, energy=energy).shape
+    desired = np.zeros([nx, ny, nbinse]).shape
+    assert_equal(actual, desired)
+
+
     # Test ARF export
     offset = Angle(0.236, 'deg')
     e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
