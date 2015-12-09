@@ -177,7 +177,8 @@ class SpectralCube(object):
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header)
-        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'],unit='keV')#keV to match convention in Fermi ST and CTOOLS, TODO read from header
+        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'],unit='keV')
+        #keV to match convention in Fermi ST and CTOOLS, TODO read from header
 
         return cls(data, wcs, energy)
 

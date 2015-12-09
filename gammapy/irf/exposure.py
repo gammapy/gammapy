@@ -4,36 +4,32 @@ import numpy as np
 from ..data import SpectralCube
 from astropy.coordinates import SkyCoord, Angle
 
-import logging
-
 __all__ = [
     'exposure_cube'
 ]
-
-log = logging.getLogger(__name__)
 
 
 def exposure_cube(pointing,
                   livetime,
                   aeff2D,
                   ref_cube):
-    """Exposure cube
+    """Calculate exposure cube
 
-        Parameters
-        ----------
-        pointing : `~astropy.coordinates.SkyCoord`
-            pointing direction
-        livetime : `~astropy.units.Quantity`
-            livetime
-        aeff2D: 'EffectiveAreaTable2D'
-            effective area table
-        ref_cube: 'SpectralCube'
-            reference cube used to define geometry
+    Parameters
+    ----------
+    pointing : `~astropy.coordinates.SkyCoord`
+        pointing direction
+    livetime : `~astropy.units.Quantity`
+        livetime
+    aeff2D : `~gammapy.irf.EffectiveAreaTable2D`
+        effective area table
+    ref_cube : `~gammapy.data.SpectralCube`
+        reference cube used to define geometry
 
-        Returns
-        -------
-        expcube : 'SpectralCube'
-            3D exposure
+    Returns
+    -------
+    expcube : `~gammapy.data.SpectralCube`
+        3D exposure
     """
     ny, nx = ref_cube.data.shape[1:]
     xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
