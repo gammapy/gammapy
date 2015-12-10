@@ -91,9 +91,9 @@ Running a Sherpa fit
 To avoid having to deal with Sherpa directly or for scripting purposes the `~gammapy.spectrum.SpectralFit`
 class can be used to perform a Fit as shown in the example below. It uses the PHA
 files created in the example above, so feel free to use your own files instead of
- using the ones in `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__
+using the ones in `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__
 
-.. literalinclude:: run_spectral_fit.py
+.. literalinclude:: run_spectrum_fit.py
     :language: python
     :linenos:
 
