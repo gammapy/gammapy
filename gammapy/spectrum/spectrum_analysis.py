@@ -76,6 +76,7 @@ class SpectrumAnalysis(object):
             obs = np.loadtxt(obs, dtype=np.int)
 
         self._observations = []
+        self._numberobservations = []
         for i, val in enumerate(obs):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
@@ -86,6 +87,7 @@ class SpectrumAnalysis(object):
                 nobs += 1
                 continue
             self._observations.append(temp)
+            self._numberobservations.append(val)
             if i == nobs - 1:
                 break
 
@@ -213,7 +215,16 @@ class SpectrumAnalysis(object):
             obs.write_all_ogip_data(outdir)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
-
+    def grouping(self, observationlist):
+        #Regarde a quelle indice du tableau d objet SpectrumObservation correpond les runs qu on veut groupe
+        list index=[]
+        for i in observationlist:
+            ind=no.where(self._numberobservations==i)
+            index.append(ind)
+        #On boucle sur ces indices et on va sommes ON, OFF rmf et arf de ces runs
+        for i in index:
+            self._observations[i]
+        
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
