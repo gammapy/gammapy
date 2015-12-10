@@ -1,5 +1,4 @@
 """Plot energy dispersion example."""
-import numpy as np
 import matplotlib.pyplot as plt
 from gammapy.irf import EnergyDispersion
 from gammapy.utils.energy import EnergyBounds

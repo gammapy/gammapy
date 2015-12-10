@@ -409,8 +409,8 @@ class EnergyDispersion(object):
 
         ax = plt.gca() if ax is None else ax
 
-        image = self._pdf_matrix
-        ax.imshow(image, extent=self._extent, **kwargs)
+        image = self.pdf_matrix
+        ax.imshow(image, extent=self._extent(), **kwargs)
         ax.set_xlabel('True energy (TeV)')
         ax.set_ylabel('Reco energy (TeV)')
 

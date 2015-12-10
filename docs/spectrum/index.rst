@@ -106,5 +106,20 @@ In Detail:
 Background estimation methods
 =============================
 
-At the moment two background estimation methods are supported
+Currently supported background methods
+
+* :ref:`region_reflected`
+* Ring (not taking into account excluded regions)
+
+The following example shows how the background estimation method is defined
+in the YAML config file
+
+.. include:: off_methods.yaml
+    :code: yaml
+
+Reference/API
+=============
+
+.. automodapi:: gammapy.spectrum
+    :no-inheritance-diagram:
 

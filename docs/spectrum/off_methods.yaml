@@ -1,0 +1,7 @@
+off_region:
+  type: reflected
+
+off_region:
+  type: ring
+  inner_radius: 0.2 deg
+  outer_radius: 0.3 deg
