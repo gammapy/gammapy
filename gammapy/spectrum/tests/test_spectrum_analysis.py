@@ -43,6 +43,7 @@ def test_spectrum_analysis(tmpdir):
 
 @requires_dependency('yaml')
 @requires_dependency('scipy')
+@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
 

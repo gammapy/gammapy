@@ -58,7 +58,7 @@ class SpectrumAnalysis(object):
     bkg_method : dict, optional
         Background method including necessary parameters
     nobs : int
-        number of observations to process
+        number of observations to process, 0 means all observations
     ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
     """
