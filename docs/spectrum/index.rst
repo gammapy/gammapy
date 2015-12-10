@@ -72,13 +72,13 @@ The following examples creates the 4 OGIP files that are needed for a spectral a
 
 In Detail:
 
-Line 10-12 : Define signal extraction region (ON region) using a `~gammapy.region.SkyCircleRegion`
-Line 14    : Define background methods (see :ref:`spectrum_background_method`)
-Line 16-18 : Read exclusion mask from FITS file
-Line 20    : Define reconstructed energy binning of the analysis
-Line 22-24 : Select `~gammapy.obs.DataStore` and observations to be used
-Line 26    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
-Line 29    : Write OGIP data to disk
+* Line 10-12 : Define signal extraction region (ON region) using a `~gammapy.region.SkyCircleRegion`
+* Line 14    : Define background methods (see :ref:`spectrum_background_method`)
+* Line 16-18 : Read exclusion mask from FITS file
+* Line 20    : Define reconstructed energy binning of the analysis
+* Line 22-24 : Select `~gammapy.obs.DataStore` and observations to be used
+* Line 26    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
+* Line 29    : Write OGIP data to disk
 
 At this point one could in principle perform a fit using the standard `Sherpa session interface <http://cxc.harvard.edu/sherpa/threads/pha_intro/>`__.
 Note that writing the OGIP files to disk is only one option, the `~gammapy.spectrum.SpectrumAnalysis`
