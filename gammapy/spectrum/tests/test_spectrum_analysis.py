@@ -8,7 +8,7 @@ from ...utils.scripts import read_yaml, make_path
 from ...utils.energy import EnergyBounds
 from ...image import ExclusionMask
 from ...obs import DataStore
-from ...spectrum.spectrum_analysis import (
+from ...spectrum import (
     SpectrumAnalysis,
     run_spectral_fit_using_config,
     SpectralFit,

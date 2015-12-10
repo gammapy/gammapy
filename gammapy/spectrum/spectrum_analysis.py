@@ -20,6 +20,7 @@ from ..utils.scripts import get_parser, set_up_logging_from_args, read_yaml, \
 __all__ = [
     'SpectrumAnalysis',
     'SpectrumObservation',
+    'SpectralFit',
     'run_spectral_fit_using_config',
 ]
 
