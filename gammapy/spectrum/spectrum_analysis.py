@@ -6,6 +6,9 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
+from . import CountsSpectrum
+from astropy.table import Table
+from gammapy.extern.pathlib import Path
 from ..background import ring_area_factor
 from ..data import DataStore
 from ..utils.energy import EnergyBounds, Energy
@@ -215,16 +218,89 @@ class SpectrumAnalysis(object):
             obs.write_all_ogip_data(outdir)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
-    def grouping(self, observationlist):
-        #Regarde a quelle indice du tableau d objet SpectrumObservation correpond les runs qu on veut groupe
-        list index=[]
-        for i in observationlist:
-            ind=no.where(self._numberobservations==i)
-            index.append(ind)
-        #On boucle sur ces indices et on va sommes ON, OFF rmf et arf de ces runs
-        for i in index:
-            self._observations[i]
+    def band(self,tab):
+        #Tab contiendrait les bandes et les observations a grouper pour chaque bande
+        for i in tab:
+            #on itere sur chaque bande et on recupere la liste des numero de run a grouper
+            observationlist=tab.observationlist
+            list observationgroup=[]
+            #listobservation va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
+            for i in observationlist:
+                ind=no.where(self._numberobservations==i)
+                observationgroup.append(self._observations[ind])
+            #Appelle de la fonction grouping pour la bande en question avec en argument le tableau d objet SpectrumObservation a grouper
+            grouping(observationgroup)
+
+    def grouping(self, observationgroup):
+        """
+        Observationgroup va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
+        """
         
+        #On boucle sur le tableau d objet SpectrumObservation a grouper et on va sommes ON, OFF rmf et arf de ces runs
+        #Definition de la ou on va recuperer le livetime
+        t = self.store.file_table
+        filetype="events"
+        for (obs,n) in enumerate(observationgroup):
+            on_vector=obs.make_on_vector()
+            off_vector=obs.make_off_vector()
+            #OFF= OFF total de l observation car offvector cest par bin en erngie et pour l instant je ne fais pas de alpha qui depend de l energie donc pour trouver le alpha de la bande je pondere par rapport au nombre total de OFF
+            OFF=np.sum(off_vector)
+            arf_vector=obs.make_arf()
+            rmf_vector=obs.make_rmf()
+            backscal=off_vector.backscal
+            #Get Livetime of the observation from the events fits file
+            mask = (t['OBS_ID'] == obs.obs) & (t['TYPE'] == filetype)
+            try:
+                idx = np.where(mask)[0][0]
+            except IndexError:
+                msg = 'File not in table: OBS_ID = {}, TYPE = {}'.format(obs_id, filetype)
+                raise IndexError(msg)
+
+            filename = t['NAME'][idx]
+            Table=Table.read(str(self.data_store.base_dir)+str(filename))
+            livetime=Table.meta["LIVETIME"]
+            """
+            Ca va pas d avoir ce truc ou on initialise tout pour le premier run qu on groupe c est super sale doit y avoir un autre moyen
+            """
+            if(n==0):
+                ONband = on_vector
+                OFFband = off_vector
+                OFFtotband = OFF
+                backscalband = backscal*OFF
+                #Si on fait un alpha par bin en nergie
+                #backscalband=backscal*off_vector
+                livetimeband = livetime
+                arfband = arf_vector*livetime
+                #Pour la premiere observation a grouper le tableau est initaliser a la dimension (True,Ereco)
+                dim_Etrue = np.shape(rmf_vector.pdf_matrix)[0]
+                dim_Ereco = np.shape(rmf_vector.pdf_matrix)[1]
+                rmfband=np.zeros((dim_Etrue,dim_Ereco))
+                rmfmean=np.zeros((dim_Etrue,dim_Ereco))
+                """
+                Regis dans son fichier group_pha il fait plein de truc au niveau de la tms comprend pas tres bien
+                """
+                for ind_Etrue in range(dim_Etrue):
+                    rmfband[ind_Etrue,:]= rmf_vector[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+            else:
+                ONband += on_vector
+                OFFband += off_vector
+                OFFtotband += OFF
+                backscalband += backscal*OFF
+                #Si on fait un alpha par bin en nergie
+                #backscalband=backscal*off_vector
+                livetimeband += livetime
+                arfband += arf_vector*livetime
+                #rmf et dimEtrue deja defini pour la premiere observation qu on groupe
+                for ind_Etrue in range(dim_Etrue):
+                    rmfband[ind_Etrue,:] += rmf_vector[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+        #Pour normaliser le alpha Regis il prend que la ou les OFF sont positifs....
+        backscalmean = backscalband /OFFtotband
+        #backscalmean = backscalband / OFFband
+        arfmean = arfband/livetimeband
+        #rmf a diviser par sum(arfi*ti) sur les runs
+        for ind_Etrue in range(dim_Etrue):
+            rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
+            
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
