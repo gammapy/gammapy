@@ -4,13 +4,14 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...region import SkyCircleRegion
 from ...datasets import gammapy_extra
-from ...utils.scripts import read_yaml
+from ...utils.scripts import read_yaml, make_path
 from ...utils.energy import EnergyBounds
 from ...image import ExclusionMask
 from ...obs import DataStore
 from ...spectrum.spectrum_analysis import (
     SpectrumAnalysis,
     run_spectral_fit_using_config,
+    SpectralFit,
 )
 
 from astropy.coordinates import SkyCoord, Angle
@@ -40,6 +41,22 @@ def test_spectrum_analysis(tmpdir):
 
     ana.write_ogip_data(outdir=str(tmpdir))
 
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_spectral_fit(tmpdir):
+
+    pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23592.pha")
+    pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23526.pha")
+    pha_list = [pha1, pha2]
+    fit = SpectralFit(pha_list)
+    fit.model = 'PL'
+    fit.low_threshold = '100 GeV'
+    fit.high_threshold = '10 TeV'
+    fit.run(method='sherpa')
+    assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)
+
+    #broken
+    #fit.run(method='hspec')
 
 @requires_dependency('yaml')
 @requires_dependency('scipy')

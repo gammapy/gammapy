@@ -432,13 +432,13 @@ class SpectralFit(object):
 
     Parameters
     ----------
-    pha : list
+    pha : list of str, `~gammapy.extern.pathlib.Path`
         List of PHA files to fit
     """
 
     def __init__(self, pha, bkg=None, arf=None, rmf=None):
 
-        self.pha = pha
+        self.pha = [make_path(f) for f in pha]
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
