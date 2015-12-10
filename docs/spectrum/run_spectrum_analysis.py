@@ -1,13 +1,22 @@
+from astropy.coordinates import SkyCoord, Angle
+from gammapy.datasets import gammapy_extra
+from gammapy.image import ExclusionMask
+from gammapy.obs import DataStore
+from gammapy.region import SkyCircleRegion
+from gammapy.spectrum import SpectrumAnalysis
+from gammapy.utils.energy import EnergyBounds
+
 center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
 radius = Angle('0.3 deg')
-on_region = SkyCircleRegion(pos = center, radius = radius)
+on_region = SkyCircleRegion(pos=center, radius=radius)
 
 bkg_method = dict(type='reflected')
 
-exclusion_file = gammapy_extra.filename("test_datasets/spectrum/dummy_exclusion.fits")
+exclusion_file = gammapy_extra.filename("test_datasets/spectrum/"
+                                        "dummy_exclusion.fits")
 excl = ExclusionMask.from_fits(exclusion_file)
 
-bounds = EnergyBounds.equal_log_spacing(1,10,40, unit='TeV')
+bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
 store = gammapy_extra.filename("datasets/hess-crab4")
 ds = DataStore.from_dir(store)

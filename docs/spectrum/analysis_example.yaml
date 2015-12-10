@@ -1,4 +1,4 @@
-# Example Gammapy spectrum analysis pipeline config file
+# Example Gammapy spectrum config file
 
 general:
   datastore: $GAMMAPY_EXTRA/datasets/hess-crab4
