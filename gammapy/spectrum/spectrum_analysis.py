@@ -223,7 +223,7 @@ class SpectrumAnalysis(object):
         for i in tab:
             #on itere sur chaque bande et on recupere la liste des numero de run a grouper
             observationlist=tab.observationlist
-            list observationgroup=[]
+            observationgroup=[]
             #listobservation va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
             for i in observationlist:
                 ind=no.where(self._numberobservations==i)
