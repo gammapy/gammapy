@@ -15,7 +15,8 @@ The basic of this type of analysis are explained in `this <https://github.com/ga
 
 TODO: explain basics
 
-A good reference for the forward-folding on-off likelihood fitting methods is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_,
+A good reference for the forward-folding on-off likelihood fitting methods
+is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_,
 in publications usually the reference [Piron2001]_ is used.
 A standard reference for the unfolding method is [Albert2007]_.
 
@@ -81,10 +82,10 @@ In Detail:
 * Line 26    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
 * Line 29    : Write OGIP data to disk
 
-At this point one could in principle perform a fit using the standard `Sherpa session interface <http://cxc.harvard.edu/sherpa/threads/pha_intro/>`__.
-Note that writing the OGIP files to disk is only one option, the `~gammapy.spectrum.SpectrumAnalysis`
-class also has options to process e.g. counts vectors and IRFs in memory.
-
+At this point one could in principle perform a fit with spectra fitting tools
+like XSPEC or Sherpa. Also, note that writing the OGIP files to disk is only one
+option, the `~gammapy.spectrum.SpectrumAnalysis` class also has the
+functionality to process e.g. counts vectors and IRFs in memory.
 
 Running a Sherpa fit
 ^^^^^^^^^^^^^^^^^^^^
