@@ -74,13 +74,13 @@ The following examples creates the 4 OGIP files that are needed for a spectral a
 
 In Detail:
 
-* Line 10-12 : Define signal extraction region (ON region) using a `~gammapy.region.SkyCircleRegion`
-* Line 14    : Define background methods (see :ref:`spectrum_background_method`)
-* Line 16-18 : Read exclusion mask from FITS file
-* Line 20    : Define reconstructed energy binning of the analysis
-* Line 22-24 : Select `~gammapy.obs.DataStore` and observations to be used
-* Line 26    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
-* Line 29    : Write OGIP data to disk
+* Line 14-16 : Define signal extraction region (ON region) using a `~gammapy.region.SkyCircleRegion`
+* Line 18    : Define background methods (see :ref:`spectrum_background_method`)
+* Line 20-22 : Read exclusion mask from FITS file
+* Line 24    : Define reconstructed energy binning of the analysis
+* Line 26-28 : Select `~gammapy.obs.DataStore` and observations to be used
+* Line 30    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
+* Line 33    : Write OGIP data to disk
 
 At this point one could in principle perform a fit with spectra fitting tools
 like XSPEC or Sherpa. Also, note that writing the OGIP files to disk is only one
@@ -101,11 +101,11 @@ using the ones in `gammapy-extra`_.
 
 In Detail:
 
-* Line 4-6  : Define input data
-* Line 7    : Instantiate `~gammapy.spectrum.SpectralFit`
-* Line 8    : Set model, note that you can pass any Sherpa model
-* Line 9-10 : Define fit range
-* Line 11   : Run Sherpa fit, other option: method = 'hspec'
+* Line 9-10  : Define input data
+* Line 12    : Instantiate `~gammapy.spectrum.SpectralFit`
+* Line 13    : Set model, note that you can pass any Sherpa model
+* Line 14-15 : Define fit range
+* Line 16   : Run Sherpa fit, other option: method = 'hspec'
 
 .. _spectrum_background_method:
 
