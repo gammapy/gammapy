@@ -193,7 +193,7 @@ def recursive_update_dict(old, new):
     see: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
 
     Parameters
-    ---------
+    ----------
     old : dict
         dict to be changed
     new : dict

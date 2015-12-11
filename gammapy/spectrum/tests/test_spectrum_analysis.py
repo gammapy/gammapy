@@ -50,8 +50,8 @@ def test_spectral_fit(tmpdir):
     pha_list = [pha1, pha2]
     fit = SpectralFit(pha_list)
     fit.model = 'PL'
-    fit.low_threshold = '100 GeV'
-    fit.high_threshold = '10 TeV'
+    fit.energy_threshold_low = '100 GeV'
+    fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
     assert_allclose(fit.model.gamma.val, 2.0, rtol = 1e-1)
 
