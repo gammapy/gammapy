@@ -488,14 +488,14 @@ class SpectralFit(object):
         self._model = model
 
     @property
-    def low_threshold(self):
+    def energy_threshold_low(self):
         """
         Low energy threshold of the spectral fit
         """
         return self._thres_lo
 
-    @low_threshold.setter
-    def low_threshold(self, energy):
+    @energy_threshold_low.setter
+    def energy_threshold_low(self, energy):
         """
         Low energy threshold setter
 
@@ -507,14 +507,14 @@ class SpectralFit(object):
         self._thres_lo = Energy(energy)
 
     @property
-    def high_threshold(self):
+    def energy_threshold_high(self):
         """
        High energy threshold of the spectral fit
         """
         return self._thres_hi
 
-    @high_threshold.setter
-    def high_threshold(self, energy):
+    @energy_threshold_high.setter
+    def energy_threshold_high(self, energy):
         """
         High energy threshold setter
 
@@ -539,7 +539,8 @@ class SpectralFit(object):
         ss = 'Model\n'
         ss += str(self.model)
         ss += '\nEnergy Range\n'
-        ss += str(self.low_threshold) + ' - ' + str(self.high_threshold)
+        ss += str(self.energy_threshold_low) + ' - ' + str(
+            self.energy_threshold_high)
         return ss
 
     def run(self, method='hspec'):
@@ -560,8 +561,8 @@ class SpectralFit(object):
 
         sau.set_conf_opt("max_rstat", 100)
 
-        thres_lo = self.low_threshold.to('keV').value
-        thres_hi = self.high_threshold.to('keV').value
+        thres_lo = self.energy_threshold_low.to('keV').value
+        thres_hi = self.energy_threshold_high.to('keV').value
         sau.freeze(self.model.ref)
 
         list_data = []
@@ -583,8 +584,8 @@ class SpectralFit(object):
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
         ds.set_source(self.model)
-        thres_lo = self.low_threshold.to('keV').value
-        thres_hi = self.high_threshold.to('keV').value
+        thres_lo = self.energy_threshold_low.to('keV').value
+        thres_hi = self.energy_threshold_high.to('keV').value
         ds.notice(thres_lo, thres_hi)
         ds.subtract()
         ds.fit()
@@ -629,8 +630,8 @@ def run_spectral_fit_using_config(config):
     if method is not 'False':
         fit = SpectralFit.from_config(config)
         fit.model = config['model']['type']
-        fit.low_threshold = Energy(config['model']['threshold_low'])
-        fit.high_threshold = Energy(config['model']['threshold_high'])
+        fit.energy_threshold_low = Energy(config['model']['threshold_low'])
+        fit.energy_threshold_high = Energy(config['model']['threshold_high'])
         fit.run(method=method)
 
     return fit
