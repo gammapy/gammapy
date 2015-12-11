@@ -668,7 +668,41 @@ class Cube(object):
             plt.close(fig)
         return ax
 
-    def plot_spectrum(self, coord, ax=None, style_kwargs=None):
+    def make_spectrum(self, coord, energy=None):
+        """
+        Generate energy spectrum at a certain position in the FOV
+
+        Parameters
+        ----------
+        coord : `~astropy.units.Quantity`
+            Coord (X,Y) pair of cube bin to plot.
+        energy : `~gammapy.utils.energy.Energy`, optional
+            Energy binning for the spectrum
+
+        Returns
+        -------
+        spectrum : `~astropy.units.Quantity`
+            Energy spectrum
+        """
+        energy = self.energy_edges.log_centers if energy is None else energy
+        ebins = self.energy_edges.find_energy_bin(energy)
+
+        coord = coord.flatten()
+        # check shape of coord: only 1 pair is accepted
+        nvalues = len(coord.flatten())
+        if nvalues != 2:
+            ss_error = "Expected exactly 2 values for coord (X, Y),"
+            ss_error += "got {}.".format(nvalues)
+            raise IndexError(ss_error)
+
+        # find coord bin containing the specified coord coordinates
+        coord_bin = self.find_coord_bin(coord)
+        # get data for the plot
+        spectrum = self.data[ebins, coord_bin[1], coord_bin[0]]
+
+        return spectrum
+
+    def plot_spectrum(self, coord, energy=None, ax=None, style_kwargs=None):
         """Plot spectra for the coord bin containing the specified coord (X, Y) pair.
 
         Parameters
@@ -677,6 +711,8 @@ class Cube(object):
             Coord (X,Y) pair of cube bin to plot.
         ax : `~matplotlib.axes.Axes`, optional
             Axes of the figure for the plot.
+        energy : `~gammapy.utils.energy.Energy`, optional
+            Energy binning for the spectrum
         style_kwargs : dict, optional
             Style options for the plot.
 
@@ -687,33 +723,9 @@ class Cube(object):
         """
         import matplotlib.pyplot as plt
 
-        coord = coord.flatten()  # flatten
-        # check shape of coord: only 1 pair is accepted
-        nvalues = len(coord.flatten())
-        if nvalues != 2:
-            ss_error = "Expected exactly 2 values for coord (X, Y),"
-            ss_error += "got {}.".format(nvalues)
-            raise IndexError(ss_error)
-        else:
-            do_only_1_plot = True
-
-        energy_points = self.energy_edges.log_centers
-        coordx_bin_centers, coordy_bin_centers = self.image_bin_centers
-
-        # find coord bin containing the specified coord coordinates
-        coord_bin = self.find_coord_bin(coord)
+        energy = self.energy_edges.log_centers if energy is None else energy
+        data = self.make_spectrum(coord, energy=energy)
         coord_bin_edges = self.find_coord_bin_edges(coord)
-        ss_coordx_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[0].value,
-                                                      coord_bin_edges[1].value,
-                                                      coord_bin_edges.unit)
-        ss_coordy_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[2].value,
-                                                      coord_bin_edges[3].value,
-                                                      coord_bin_edges.unit)
-
-        # get data for the plot
-        data = self.data[:, coord_bin[1], coord_bin[0]]
-        coordx_bin_center = coordx_bin_centers[coord_bin[0]]
-        coordy_bin_center = coordy_bin_centers[coord_bin[1]]
 
         # create plot
         fig = plt.figure()
@@ -727,23 +739,22 @@ class Cube(object):
 
         fig.set_size_inches(8., 8., forward=True)
 
-        image = ax.plot(energy_points.to('TeV'),
-                        data,
-                        drawstyle='default',  # connect points with lines
-                        **style_kwargs)
+        ax.plot(energy.to('TeV'), data, drawstyle='default',
+                **style_kwargs)
         ax.loglog()  # double log scale # slow!
 
         # set title and axis names
-        ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[0].value,
-                                                              coord_bin_edges[1].value,
-                                                              coord_bin_edges.unit)
-        ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[2].value,
-                                                              coord_bin_edges[3].value,
-                                                              coord_bin_edges.unit)
+        ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(
+            coord_bin_edges[0].value, coord_bin_edges[1].value,
+            coord_bin_edges.unit)
+        ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(
+            coord_bin_edges[2].value, coord_bin_edges[3].value,
+            coord_bin_edges.unit)
 
-        ax.set_title('Coord = {0} {1}'.format(ss_coordx_bin_edges, ss_coordy_bin_edges))
+        ax.set_title('Coord = {0} {1}'.format(
+            ss_coordx_bin_edges, ss_coordy_bin_edges))
         ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['energy_plot_name'],
-                                         energy_points.unit))
+                                         energy.unit))
         ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['data_plot_name'],
                                          data.unit))
         # eventually close figure to avoid white canvases

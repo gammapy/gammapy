@@ -322,6 +322,8 @@ class SpectrumObservation(object):
             off = self.make_reflected_regions(**kwargs)
             off_list = self.event_list.select_circular_region(off)
             alpha = len(off)
+        elif self.bkg_method['type'] == "bg_model":
+            pass
         else:
             raise ValueError("Undefined background method: {}".format(
                     self.bkg_method['type']))
