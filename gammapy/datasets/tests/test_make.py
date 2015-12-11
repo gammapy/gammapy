@@ -74,12 +74,12 @@ def test_make_test_bg_cube_model():
     # test that values with (x, y) > (0, 0) are zero
     x_points = Angle(np.arange(5) + 0.01, 'deg')
     y_points = Angle(np.arange(5) + 0.01, 'deg')
-    e_points = bg_cube_model.background_cube.energy_bin_centers
+    e_points = bg_cube_model.background_cube.energy_edges.log_centers
     x_points, y_points, e_points = np.meshgrid(x_points, y_points, e_points,
                                                indexing='ij')
     det_bin_index = bg_cube_model.background_cube.find_coord_bin(Angle([x_points,
                                                                         y_points]))
-    e_bin_index = bg_cube_model.background_cube.find_energy_bin(e_points)
+    e_bin_index = bg_cube_model.background_cube.energy_edges.find_energy_bin(e_points)
     bg = bg_cube_model.background_cube.data[e_bin_index,
                                             det_bin_index[1],
                                             det_bin_index[0]]
