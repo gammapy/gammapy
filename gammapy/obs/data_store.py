@@ -104,9 +104,9 @@ class DataStore(object):
     def from_all(cls, val):
         """Try different DataStore construtors.
         
-        Currently tried
-        - from_dir
-        - from_name
+        Currently tried (in this order)
+        - :func:`~gammapy.obs.DataStore.from_dir`
+        - :func:`~gammapy.obs.DataStore.from_name`
         """
         try:
             store = cls.from_dir(val)

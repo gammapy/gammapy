@@ -19,6 +19,10 @@ __all__ = [
     'get_installed_scripts',
     'get_all_main_functions',
     'set_up_logging_from_args',
+    'read_yaml',
+    'write_yaml',
+    'make_path',
+    'recursive_update_dict',
 ]
 
 
@@ -181,8 +185,12 @@ def make_path(path):
     return Path(expandvars(str(path)))
 
 
-def recursive_update(old, new):
+def recursive_update_dict(old, new):
     """Recursively update a dict with new values
+
+    The built-in update function cannot be used for hierarchical dicts
+    where only a subset of keys shall be updated.
+    see: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
 
     Parameters
     ---------

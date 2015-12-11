@@ -1,3 +1,8 @@
+"""
+This script illustrates how to use `~gammapy.spectrum.SpectrumAnalysis`
+in order to create OGIP to be used for a Sherpa fit
+"""
+
 from astropy.coordinates import SkyCoord, Angle
 from gammapy.datasets import gammapy_extra
 from gammapy.image import ExclusionMask

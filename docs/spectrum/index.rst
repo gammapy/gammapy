@@ -30,7 +30,7 @@ Command line tool
 
 Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool.
 The example below shows how to use ``gammapy-spectrum`` by specifying analysis
-options in a YAML config file. It assumes you have the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__
+options in a YAML config file. It assumes you have the `gammapy-extra`_
 repository available.
 
 
@@ -50,8 +50,9 @@ Underlying classes
 
 The spectral fitting procedure is a two step process. Each of the two steps is represented by one class.
 
-* The `~gammapy.spectrum.SpectrumAnalysis` class converts the data from the
-  Fermi-LAT format (add link) into the OGIP format
+* The `~gammapy.spectrum.SpectrumAnalysis` class converts the IRFs from the 2D format
+  proposed for CTA (see :ref:`gadf:iact-irfs`) into the OGIP format needed for 1D analysis.
+  It furthermore creates a source counts vector and a background counts vectors from the event list (see :ref:`gadf:iact-events`).
 * The `~gammapy.spectrum.SpectralFit` class calls Sherpa in order to fit a
   model to the data
 
@@ -60,9 +61,9 @@ Creating OGIP data
 
 The following examples creates the 4 OGIP files that are needed for a spectral analysis
 
-* `PHA file <https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html>`__
-* `ARF file <http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc4>`__
-* `RMF file <http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1>`__
+* `PHA`_ file
+* `ARF`_ file
+* `RMF`_ file
 * BKG file (PHA format)
 
 .. literalinclude:: run_spectrum_analysis.py
@@ -91,7 +92,7 @@ Running a Sherpa fit
 To avoid having to deal with Sherpa directly or for scripting purposes the `~gammapy.spectrum.SpectralFit`
 class can be used to perform a Fit as shown in the example below. It uses the PHA
 files created in the example above, so feel free to use your own files instead of
-using the ones in `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__
+using the ones in `gammapy-extra`_.
 
 .. literalinclude:: run_spectrum_fit.py
     :language: python
@@ -99,7 +100,11 @@ using the ones in `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__
 
 In Detail:
 
-* Line x
+* Line 4-6  : Define input data
+* Line 7    : Instantiate `~gammapy.spectrum.SpectralFit`
+* Line 8    : Set model, note that you can pass any Sherpa model
+* Line 9-10 : Define fit range
+* Line 11   : Run Sherpa fit, other option: method = 'hspec'
 
 .. _spectrum_background_method:
 

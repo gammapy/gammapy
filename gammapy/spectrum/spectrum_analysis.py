@@ -474,11 +474,13 @@ class SpectralFit(object):
         name = 'default' if name is None else name
 
         if isinstance(model, six.string_types):
-            if model == 'PL':
+            if model == 'PL' or model == 'PowerLaw':
                 model = sherpa.models.PowLaw1D('powlaw1d.'+name)
                 model.gamma = 2
                 model.ref = 1e9
                 model.ampl = 1e-20
+            else:
+                raise ValueError("Undefined model string: {}".format(model))
 
         if not isinstance(model, sherpa.models.ArithmeticModel):
             raise ValueError("Only sherpa models are supported at the moment")
@@ -599,6 +601,7 @@ class SpectralFit(object):
 
     def get_containment(self):
         """Calculate PSF correction factor for containment in ON region"""
+        # TODO: do something useful here
         return 1
 
 

@@ -1,3 +1,9 @@
+"""
+This script illustrates how to use `~gammapy.spectrum.SpectralFit`
+in order to fit a model to set of OGIP data
+"""
+
+
 from gammapy.datasets import gammapy_extra
 from gammapy.spectrum.spectrum_analysis import SpectralFit
 
