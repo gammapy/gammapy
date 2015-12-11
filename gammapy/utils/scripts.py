@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utils to create scripts and command-line tools"""
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import sys
 import argparse
 from collections import OrderedDict
@@ -9,6 +10,8 @@ import os
 import glob
 import logging
 import shutil
+from os.path import expandvars
+from ..extern.pathlib import Path
 
 __all__ = [
     'GammapyFormatter',
@@ -16,6 +19,10 @@ __all__ = [
     'get_installed_scripts',
     'get_all_main_functions',
     'set_up_logging_from_args',
+    'read_yaml',
+    'write_yaml',
+    'make_path',
+    'recursive_update_dict',
 ]
 
 
@@ -133,23 +140,70 @@ def _configure_root_logger(level='info', format=None):
 
 
 def read_yaml(filename, logger=None):
-    """Read config from YAML file."""
+    """
+    Read config from YAML file 
+    """
     import yaml
     if logger is not None:
         logger.info('Reading {}'.format(filename))
     with open(filename) as fh:
         config = yaml.safe_load(fh)
+
     return config
 
 
 def write_yaml(config, filename, logger=None):
-    """Write YAML config file
+    """
+    Write YAML config file
 
     This function can be used by scripts that alter the users config file.
+
+    Parameters
+    ----------
+    config : dict
+        config to write
+    filename : str, `~gammapy.exter.pathlib.Path`
+        file to write
     """
     import yaml
-    filename = filename + '.yaml'
+    filename = make_path(filename)
     if logger is not None:
         logger.info('Writing {}'.format(filename))
-    with open(filename, 'w') as outfile:
+    with open(str(filename), 'w') as outfile:
         outfile.write(yaml.dump(config, default_flow_style=False))
+
+
+def make_path(path):
+    """
+    Expand environment varibles on `~pathlib.Path` construction
+
+    Parameters
+    ----------
+    path : str, `~gammapy.extern.pathlib.Path`
+        path to expand
+    """
+    return Path(expandvars(str(path)))
+
+
+def recursive_update_dict(old, new):
+    """Recursively update a dict with new values
+
+    The built-in update function cannot be used for hierarchical dicts
+    where only a subset of keys shall be updated.
+    see: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+
+    Parameters
+    ----------
+    old : dict
+        dict to be changed
+    new : dict
+        dict containing changes
+    """
+
+    result = old.copy()
+    for k, v in new.iteritems():
+        if k in result and isinstance(result[k], dict):
+            result[k] = recursive_update(result[k], v)
+        else:
+            result[k] = v
+    return result

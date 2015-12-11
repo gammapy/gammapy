@@ -1,7 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
-from gammapy.spectrum.spectrum_analysis import SpectrumAnalysis
-from ..utils.scripts import get_parser, set_up_logging_from_args, write_yaml, read_yaml
+
+from gammapy.extern.pathlib import Path
+from gammapy.spectrum.spectrum_analysis import (
+    SpectrumAnalysis,
+    run_spectral_fit_using_config,
+)
+from ..utils.scripts import (
+    get_parser,
+    set_up_logging_from_args,
+    write_yaml,
+    read_yaml,
+    recursive_update_dict
+)
 import logging
 import numpy as np
 
@@ -21,50 +32,82 @@ def main(args=None):
 
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
-    specpipe = SpectrumPipe.from_yaml(args.config_file)
+    specpipe = SpectrumPipe.from_configfile(args.config_file)
+    print(specpipe.info())
     specpipe.run()
 
 
 class SpectrumPipe(object):
-    """Gammapy Spectrum Pipe class"""
+    """Gammapy Spectrum Pipe class
+
+    Parameters
+    ----------
+    config : list
+        List of configurations for `~gammapy.spectrum.SpectrumAnalysis`
+    """
 
     def __init__(self, config):
         self.config = config
-        fit_config_file = config['general']['spectrum_fit_config_file']
-        fit_config = read_yaml(fit_config_file)
-        sec = self.config['sources']
-        sources = sec.keys()
-        self.analysis = []
-        for target in sources:
-            vals = sec[target]
-            fit_config['general']['outdir'] = target
-            fit_config['general']['runlist'] = vals['runlist']
-            fit_config['on_region']['center_x'] = vals['target_ra']
-            fit_config['on_region']['center_y'] = vals['target_dec']
-            try:
-                fit_config['on_region']['radius'] = vals['on_radius']
-            except KeyError:
-                pass
-            analysis = SpectrumAnalysis(fit_config)
-            write_yaml(fit_config, target + "/" + target, log)
-            self.analysis.append(analysis)
+        self._analysis = list([])
 
     @classmethod
-    def from_yaml(cls, filename):
+    def from_configfile(cls, filename, auto_outdir=True):
+        """Create `~gammapy.script.Spectrumpipe` from config file
+
+        Parameters
+        ----------
+        filename : str
+            YAML configfile
+        auto_outdir : bool [True]
+            Set outdir explicitly for every analysis
+        """
         config = read_yaml(filename, log)
-        return cls(config)
+        base_config = config.pop('base_config')
+        analist = list([])
+        
+        for analysis in config.keys():
+            log.info("Creating analysis {}".format(analysis))
+            anaconf = base_config.copy()
+            temp = config[analysis]
+            anaconf = recursive_update_dict(anaconf, temp)
+            if auto_outdir:
+                anaconf['general']['outdir'] = analysis
+
+            analist.append(anaconf)
+
+        return cls(analist)
+
+    @property
+    def analysis(self):
+        """ List of `~gammapy.spectrum.SpectrumAnalysis`
+        """
+        if not self._analysis:
+            for conf in self.config:
+                self._analysis.append(SpectrumAnalysis.from_config(conf))
+
+        return self._analysis
+
+    def write_configs(self):
+        """Write analysis configs to disc"""
+        for ana, conf in zip(self.analysis, self.config):
+            val = ana.base_dir / 'config.yaml'
+            val.basedir.mkdir(exist_ok=True)
+            write_yaml(conf, val, logger=log)
+
+    def info(self):
+        """
+        Basic information about the analysis pipeline
+        """
+        ss = "\nSpectrum Pipe ({} analyses)\n".format(len(self.analysis))
+        for ana in self.analysis:
+            ss += ana.info()
+
+        return ss
 
     def run(self):
         """Run Spectrum Analysis Pipe"""
-        self.result = dict()
-        for ana in self.analysis:
-            log.info("Starting Analysis for target " + ana.outdir)
-            fit = ana.run()
-            self.result[ana.outdir] = fit
-        self.print_result()
-        ref_vals_file = self.config['general']['reference_values']
-        if ref_vals_file is not None:
-            self.make_comparison_plot(ref_vals_file)
+        for conf in self.config:
+            run_spectral_fit_using_config(conf)
 
     def print_result(self):
         """Print Fit Results"""
@@ -148,3 +191,4 @@ class SpectrumPipe(object):
 
         val = filename.split('.')[0]
         fig.savefig('comparison_to_{}.png'.format(val))
+

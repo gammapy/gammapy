@@ -95,7 +95,7 @@ def test_EnergyDispersion2D():
     e_reco = EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV')
     e_true = EnergyBounds.equal_log_spacing(0.8, 5, 4, 'TeV')
     rmf = edisp.to_energy_dispersion(offset, e_true=e_true, e_reco=e_reco)
-    actual = rmf.pdf_matrix[:, 2]
+    actual = rmf.pdf_matrix[2]
     e_val = np.sqrt(e_true[2] * e_true[3])
     desired = edisp.get_response(offset, e_val, e_reco)
     assert_equal(actual, desired)

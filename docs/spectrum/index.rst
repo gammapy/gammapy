@@ -10,94 +10,118 @@ Spectrum estimation and modeling (`gammapy.spectrum`)
 
 Introduction
 ============
+`gammapy.spectrum` holds functions and classes related to 1D region based spectral analysis.
+The basic of this type of analysis are explained in `this <https://github.com/gammapy/PyGamma15/tree/gh-pages/talks/analysis-classical>`__ talk
 
-`gammapy.spectrum` holds functions and classes to fit spectral models and compute flux points.
+TODO: explain basics
 
-Physical radiative models (synchrotron, inverse Compton and pion-decay emission)
-for arbitrary cosmic ray particle spectra are available in the `naima`_ package.
-
-Explain spectrum estimation basics.
-
-Define vocabulary.
-
-A good reference for the forward-folding on-off likelihood fitting methods is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_,
+A good reference for the forward-folding on-off likelihood fitting methods
+is Section 7.5 "Spectra and Light Curves" in [Naurois2012]_,
 in publications usually the reference [Piron2001]_ is used.
 A standard reference for the unfolding method is [Albert2007]_.
 
-.. _spectrum_getting_started:
 
-Getting Started
-===============
+Spectral Fitting
+================
 
-Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool. 
+.. _spectrum_command_line_tool:
 
-The spectral fitting command-line tool makes use of the data management functionality in Gammapy. In order to download an example dataset from the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository and set up an example `gammapy.obs.DataManager` please follow the instructions in :ref:`obs_dm`. The following step assume you have this example data set. If you already have a data set, please modify the steps below accordingly.
+Command line tool
+-----------------
 
-This is an example config file (YAML format) to be used with the ``gammapy-spectrum`` command line tool.
+Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool.
+The example below shows how to use ``gammapy-spectrum`` by specifying analysis
+options in a YAML config file. It assumes you have the `gammapy-extra`_
+repository available.
+
 
 .. include:: ./analysis_example.yaml
     :code: yaml
 
 
-Copy it to for example ``crab_config.yaml`` and run
+Copy the above config file to your machine, to e.g. ``crab_config.yaml`` and run
 
 .. code-block:: bash
 
    gammapy-spectrum crab_config.yaml
 
-.. _energy_handling_gammapy:
 
-Energy handling in Gammapy
-==========================
+Underlying classes
+------------------
 
-Basics
-------
+The spectral fitting procedure is a two step process. Each of the two steps is represented by one class.
 
-Most objects in Astronomy require an energy axis, e.g. counts spectra or
-effective area tables. In general, this axis can be defined in two ways.
+* The `~gammapy.spectrum.SpectrumAnalysis` class converts the IRFs from the 2D format
+  proposed for CTA (see :ref:`gadf:iact-irfs`) into the OGIP format needed for 1D analysis.
+  It furthermore creates a source counts vector and a background counts vectors from the event list (see :ref:`gadf:iact-events`).
+* The `~gammapy.spectrum.SpectralFit` class calls Sherpa in order to fit a
+  model to the data
 
-* As an array of energy values. E.g. the Fermi-LAT diffuse flux is given at
-  certain energies and those are stored in an ENERGY FITS table extension.
-  In Gammalib this is represented by GEnergy.
-* As an array of energy bin edges. This is usually stored in EBOUNDS tables,
-  e.g. for Fermi-LAT counts cubes. In Gammalib this is represented by GEbounds.
+Creating OGIP data
+^^^^^^^^^^^^^^^^^^
 
-In Gammapy both the use cases are handled by two seperate classes: 
-`gammapy.utils.energy.Energy` for energy values and
-`gammapy.utils.energy.EnergyBounds` for energy bin edges
+The following examples creates the 4 OGIP files that are needed for a spectral analysis
 
-Energy
-------
+* `PHA`_ file
+* `ARF`_ file
+* `RMF`_ file
+* BKG file (PHA format)
 
-The Energy class is a subclass of `~astropy.units.Quantity` and thus has the
-same functionality plus some convenienve functions for fits I/O
+.. literalinclude:: run_spectrum_analysis.py
+    :language: python
+    :linenos:
 
-.. code-block:: python
-    
-    >>> from gammapy.utils.energy import Energy
-    >>> energy = Energy([1,2,3], 'TeV')
-    >>> hdu = energy.to_fits()
-    >>> type(hdu) 
-    <class 'astropy.io.fits.hdu.table.BinTableHDU'>
 
-EnergyBounds
-------------
+In Detail:
 
-The EnergyBounds class is a subclass of Energy. Additional functions are available
-e.g. to compute the bin centers
+* Line 10-12 : Define signal extraction region (ON region) using a `~gammapy.region.SkyCircleRegion`
+* Line 14    : Define background methods (see :ref:`spectrum_background_method`)
+* Line 16-18 : Read exclusion mask from FITS file
+* Line 20    : Define reconstructed energy binning of the analysis
+* Line 22-24 : Select `~gammapy.obs.DataStore` and observations to be used
+* Line 26    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
+* Line 29    : Write OGIP data to disk
 
-.. code-block:: python
-    
-    >>> from gammapy.utils.energy import EnergyBounds
-    >>> ebounds = EnergyBounds.equal_log_spacing(1, 10, 8, 'GeV')
-    >>> ebounds.size
-    9
-    >>> ebounds.nbins
-    8
-    >>> center = ebounds.log_centers
-    >>> center
-    <Energy [ 1.15478198, 1.53992653, 2.05352503, 2.73841963, 3.65174127,
-              4.86967525, 6.49381632, 8.65964323] GeV>
+At this point one could in principle perform a fit with spectra fitting tools
+like XSPEC or Sherpa. Also, note that writing the OGIP files to disk is only one
+option, the `~gammapy.spectrum.SpectrumAnalysis` class also has the
+functionality to process e.g. counts vectors and IRFs in memory.
+
+Running a Sherpa fit
+^^^^^^^^^^^^^^^^^^^^
+
+To avoid having to deal with Sherpa directly or for scripting purposes the `~gammapy.spectrum.SpectralFit`
+class can be used to perform a Fit as shown in the example below. It uses the PHA
+files created in the example above, so feel free to use your own files instead of
+using the ones in `gammapy-extra`_.
+
+.. literalinclude:: run_spectrum_fit.py
+    :language: python
+    :linenos:
+
+In Detail:
+
+* Line 4-6  : Define input data
+* Line 7    : Instantiate `~gammapy.spectrum.SpectralFit`
+* Line 8    : Set model, note that you can pass any Sherpa model
+* Line 9-10 : Define fit range
+* Line 11   : Run Sherpa fit, other option: method = 'hspec'
+
+.. _spectrum_background_method:
+
+Background estimation methods
+=============================
+
+Currently supported background methods
+
+* :ref:`region_reflected`
+* Ring (not taking into account excluded regions)
+
+The following example shows how the background estimation method is defined
+in the YAML config file
+
+.. include:: off_methods.yaml
+    :code: yaml
 
 Reference/API
 =============
@@ -105,15 +129,3 @@ Reference/API
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.spectrum.fitting_utils
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.models
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.powerlaw
-    :no-inheritance-diagram:
-
-.. automodapi:: gammapy.spectrum.sherpa_chi2asym
-    :no-inheritance-diagram:
-    

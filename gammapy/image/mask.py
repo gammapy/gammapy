@@ -3,10 +3,19 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
-from ..image import exclusion_distance, lon_lat_circle_mask, coordinates
+from ..utils.scripts import make_path
+from astropy.coordinates import Latitude, Longitude, Angle
+from ..image import (
+    exclusion_distance,
+    lon_lat_circle_mask,
+    coordinates,
+    make_empty_image,
+)
+
 
 __all__ = [
     'ExclusionMask',
+    'make_tevcat_exclusion_mask'
 ]
 
 
@@ -78,7 +87,8 @@ class ExclusionMask(object):
         excl_file : str
             fits file containing an Exclusion extension
         """
-        hdulist = fits.open(excl_file)
+        path = make_path(excl_file)
+        hdulist = fits.open(str(path))
         hdu = hdulist['Exclusion']
         return cls.from_hdu(hdu)
 
@@ -109,19 +119,35 @@ class ExclusionMask(object):
         header = self.wcs.to_header()
         return fits.ImageHDU(self.mask, header, name='Exclusion')
 
-    def plot(self, ax, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """Plot
 
         Parameters
         ----------
-        ax : `~astropy.wcsaxes.WCSAxes`
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
+            WCS axis object
+
+        Returns
+        ----------
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object
         """
+
         from matplotlib import colors
         import matplotlib.pyplot as plt
+        from wcsaxes import WCSAxes
+
+        if ax is None:
+            fig = plt.figure()
+            ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=self.wcs)
+            fig.add_axes(ax) 
+
         if 'cmap' not in locals():
             cmap = colors.ListedColormap(['black', 'lightgrey'])
+
         ax.imshow(self.mask, cmap=cmap, origin='lower')
+
+        return ax
 
     @property
     def distance_image(self):
@@ -132,3 +158,38 @@ class ExclusionMask(object):
 
         return self._distance_image
 
+
+def make_tevcat_exclusion_mask():
+    """Create an all-sky exclusion mask containing all TeVCat sources
+    
+    Returns
+    -------
+    mask : `~gammapy.image.ExclusionMask`
+        Exclusion mask
+    """
+
+    from gammapy.catalog import load_catalog_tevcat
+    
+    tevcat = load_catalog_tevcat()
+    all_sky_exclusion = make_empty_image(nxpix=3600, nypix=1800, binsz=0.1)
+    val = np.ones(shape=all_sky_exclusion.data.shape)
+    all_sky_exclusion.data = val
+    val_lon, val_lat = coordinates(all_sky_exclusion)
+    lons = Longitude(val_lon, 'deg')
+    lats = Latitude(val_lat, 'deg')
+
+    for source in tevcat:
+        lon = Longitude(source['coord_gal_lon'], 'deg')
+        lat = Latitude(source['coord_gal_lat'], 'deg')
+        x = Angle(source['size_x'], 'deg')
+        y = Angle(source['size_y'], 'deg')
+        if np.isnan(x) and np.isnan(y):
+            rad = Angle('0.3 deg')
+        else:
+            rad = x if x>y else y
+
+        mask = lon_lat_circle_mask(lons, lats, lon, lat, rad)
+        all_sky_exclusion.data[mask] = 0
+
+    return ExclusionMask.from_hdu(all_sky_exclusion)
+    

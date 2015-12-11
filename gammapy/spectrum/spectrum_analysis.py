@@ -1,23 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
+
 import logging
+import os
+
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
-from gammapy.extern.pathlib import Path
-from gammapy.image import ExclusionMask
-from gammapy.region import SkyCircleRegion, find_reflected_regions
-from ..background import ring_area_factor
+
+from ..image import ExclusionMask
+from ..region import SkyCircleRegion, find_reflected_regions
 from . import CountsSpectrum
+from ..background import ring_area_factor
 from ..obs import DataStore
 from ..utils.energy import EnergyBounds, Energy
-from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..utils.scripts import get_parser, set_up_logging_from_args, read_yaml, \
+    make_path
 
 __all__ = [
     'SpectrumAnalysis',
     'SpectrumObservation',
-    'run_spectrum_analysis_using_config',
-    'run_spectrum_analysis_using_configfile',
+    'SpectralFit',
+    'run_spectral_fit_using_config',
 ]
 
 log = logging.getLogger(__name__)
@@ -35,7 +39,8 @@ def main(args=None):
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
 
-    run_spectrum_analysis_using_configfile(args.config_file)
+    config = read_yaml(args.config_file)
+    run_spectral_fit_using_config(config)
 
 
 class SpectrumAnalysis(object):
@@ -43,8 +48,8 @@ class SpectrumAnalysis(object):
 
     Parameters
     ----------
-    datastore : str
-        Name of a `~gammapy.obs.Data store`
+    datastore : `~gammapy.obs.Data store`
+        Data for the analysis
     obs : list, str
         List of observations or file containing such a list
     on_region : `gammapy.region.SkyCircleRegion`
@@ -54,17 +59,16 @@ class SpectrumAnalysis(object):
     bkg_method : dict, optional
         Background method including necessary parameters
     nobs : int
-        number of observations to process
+        number of observations to process, 0 means all observations
     ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
-
     """
 
     def __init__(self, datastore, obs, on_region, exclusion, bkg_method=None,
                  nobs=-1, ebounds=None):
 
         self.on_region = on_region
-        self.store = DataStore.from_name(datastore)
+        self.store = datastore
         self.exclusion = exclusion
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
@@ -82,7 +86,7 @@ class SpectrumAnalysis(object):
             except IndexError:
                 log.warn(
                     'Observation {} not in store {}'.format(val, datastore))
-                nobs = nobs + 1
+                nobs += 1
                 continue
             self._observations.append(temp)
             if i == nobs - 1:
@@ -98,6 +102,13 @@ class SpectrumAnalysis(object):
         return self._observations
 
     @property
+    def offset(self):
+        """List of offsets from the observation position for all observations
+        """
+        off = [obs.offset for obs in self.observations]
+        return off
+
+    @property
     def reflected_regions(self, **kwargs):
         """List of dicts containing information about the reflected regions
         for each observation
@@ -109,85 +120,101 @@ class SpectrumAnalysis(object):
             retval.append(val)
         return retval
 
-    def info(selfs):
+    @classmethod
+    def from_config(cls, config):
+        """Create `~gammapy.spectrum.SpectrumAnalysis` from config dict
+
+        Parameters
+        ----------
+        configfile : dict
+            config dict
+        """
+
+        # Observations
+        obs = config['general']['runlist']
+        storename = config['general']['datastore']
+        store = DataStore.from_all(storename)
+        nobs = config['general']['nruns']
+
+        # Binning
+        sec = config['binning']
+        if sec['equal_log_spacing']:
+            emin = Energy(sec['emin'])
+            emax = Energy(sec['emax'])
+            nbins = sec['nbins']
+            ebounds = EnergyBounds.equal_log_spacing(
+                emin, emax, nbins)
+        else:
+            if sec['binning'] is None:
+                raise ValueError("No binning specified")
+
+        # ON region
+        radius = Angle(config['on_region']['radius'])
+        x = config['on_region']['center_x']
+        y = config['on_region']['center_y']
+        frame = config['on_region']['system']
+        center = SkyCoord(x, y, frame=frame)
+        on_region = SkyCircleRegion(center, radius)
+
+        # OFF region
+        off_type = config['off_region']['type']
+        if off_type == 'ring':
+            irad = Angle(config['off_region']['inner_radius'])
+            orad = Angle(config['off_region']['outer_radius'])
+            bkg_method = dict(type='ring', inner_radius=irad,
+                              outer_radius=orad)
+        elif off_type == 'reflected':
+            bkg_method = dict(type='reflected')
+        else:
+            raise ValueError("Invalid background method: {}".format(off_type))
+
+        # Exclusion
+        excl_file = config['excluded_regions']['file']
+        exclusion = ExclusionMask.from_fits(excl_file)
+
+        # Outdir
+        outdir = config['general']['outdir']
+
+        return cls(datastore=store, obs=obs, on_region=on_region,
+                   bkg_method=bkg_method, exclusion=exclusion,
+                   nobs=nobs, ebounds=ebounds)
+
+    @classmethod
+    def from_configfile(cls, configfile):
+        """Create `~gammapy.spectrum.SpectrumAnalysis` from configfile
+
+        Parameters
+        ----------
+        configfile : str
+            YAML config file
+        """
+        import yaml
+        with open(configfile) as fh:
+            config = yaml.safe_load(fh)
+
+        return cls.from_config(config)
+
+    def info(self):
         """Print some information
         """
-        pass
+        ss = "\nSpectrum Analysis"
+        ss += "Observations : {}\n".format(len(self.observations))
+        ss += "ON region    : {}\n".format(self.on_region.pos)
 
-    def write_ogip_data(self, dir=None):
+        return ss
+
+    def write_ogip_data(self, outdir):
         """Create OGIP files
 
         Parameters
         ----------
-        dir : str (optional)
+        outdir : str, `~gammapy.extern.pathlib.Path`
             write directory
         """
-        if dir is None:
-            dir = 'ogip_data'
 
         for obs in self.observations:
-            obs.write_all_ogip_data(dir)
+            obs.write_all_ogip_data(outdir)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
-
-    def run_hspec_fit(self, model, thres_low, thres_high):
-        """Run the gammapy.hspec fit
-
-        Parameters
-        ----------
-        model : str
-            Sherpa model
-        thres_high : `~gammapy.utils.energy.Energy`
-            Upper threshold of the spectral fit
-        thres_low : `~gammapy.utils.energy.Energy`
-            Lower threshold of the spectral fit
-        """
-
-        log.info("Starting HSPEC")
-        import sherpa.astro.ui as sau
-        from ..hspec import wstat
-        from sherpa.models import PowLaw1D
-
-        if model == 'PL':
-            p1 = PowLaw1D('p1')
-            p1.gamma = 2.2
-            p1.ref = 1e9
-            p1.ampl = 6e-19
-        else:
-            raise ValueError('Desired Model is not defined')
-
-        thres = thres_low.to('keV').value
-        emax = thres_high.to('keV').value
-
-        sau.freeze(p1.ref)
-        sau.set_conf_opt("max_rstat", 100)
-
-        list_data = []
-        for obs in self.observations:
-            datid = obs.phafile.parts[-1][7:12]
-            sau.load_data(datid, str(obs.phafile))
-            sau.notice_id(datid, thres, emax)
-            sau.set_source(datid, p1)
-            list_data.append(datid)
-        wstat.wfit(list_data)
-        sau.covar()
-        fit_val = sau.get_covar_results()
-        fit_attrs = ('parnames', 'parvals', 'parmins', 'parmaxes')
-        fit = dict((attr, getattr(fit_val, attr)) for attr in fit_attrs)
-        fit = self.apply_containment(fit)
-        sau.clean()
-        self.fit = fit
-
-    def apply_containment(self, fit):
-        """Apply correction factor for PSF containment in ON region"""
-        cont = self.get_containment()
-        fit['containment'] = cont
-        fit['parvals'] = list(fit['parvals'])
-        fit['parvals'][1] = fit['parvals'][1] * cont
-        return fit
-
-    def get_containment(self):
-        """Calculate PSF correction factor for containment in ON region"""
-        return 1
 
 
 class SpectrumObservation(object):
@@ -203,17 +230,17 @@ class SpectrumObservation(object):
         Observation ID, runnumber
     store : `~gammapy.obs.DataStore`
         Data Store
-    ebounds : `~gammapy.utils.energy.EnergyBounds`
-        Reconstructed energy binning definition
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
     bkg_method : dict
         Background method including necessary parameters
-
+    ebounds : `~gammapy.utils.energy.EnergyBounds`
+        Reconstructed energy binning definition
+    exclusion : `~gammapy.image.ExclusionMask`
+        Exclusion mask
     """
 
     def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion):
-
         # Raises Error if obs is not available
         store.filename(obs, 'events')
         self.obs = obs
@@ -227,7 +254,6 @@ class SpectrumObservation(object):
         self.bkg = None
         self.arf = None
         self.rmf = None
-        self.phafile = None
 
     @property
     def event_list(self):
@@ -235,7 +261,7 @@ class SpectrumObservation(object):
         """
         if self._event_list is None:
             self._event_list = self.store.load(obs_id=self.obs,
-                                              filetype='events')
+                                               filetype='events')
         return self._event_list
 
     @property
@@ -344,7 +370,7 @@ class SpectrumObservation(object):
 
         Parameters
         ----------
-        phafile : str
+        phafile : `~gammapy.extern.pathlib.Path`, str
             PHA filename
         bkgfile : str
             BKG filename
@@ -358,22 +384,17 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        if outdir is None:
-            outdir = "ogip_data"
+        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True)
 
-        basedir = Path(outdir)
-        basedir.mkdir(exist_ok=True)
-
-        if arffile is None:
-            arffile = basedir / "arf_run{}.fits".format(self.obs)
-        if rmffile is None:
-            rmffile = basedir / "rmf_run{}.fits".format(self.obs)
         if phafile is None:
-            phafile = basedir / "pha_run{}.pha".format(self.obs)
+            phafile = outdir / "pha_run{}.pha".format(self.obs)
+        if arffile is None:
+            arffile = outdir / "arf_run{}.fits".format(self.obs)
+        if rmffile is None:
+            rmffile = outdir / "rmf_run{}.fits".format(self.obs)
         if bkgfile is None:
-            bkgfile = basedir / "bkg_run{}.pha".format(self.obs)
-
-        self.phafile = phafile
+            bkgfile = outdir / "bkg_run{}.fits".format(self.obs)
 
         if self.pha is not None:
             self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
@@ -386,19 +407,19 @@ class SpectrumObservation(object):
         if self.rmf is not None:
             self.rmf.write(str(rmffile), energy_unit='keV', clobber=clobber)
 
-    def write_all_ogip_data(self, dir):
+    def write_all_ogip_data(self, outdir):
         """Perform all step to provide the OGIP data for a sherpa fit
 
         Parameters
         ----------
-        dir : str
+        outdir : str, `~gammapy.extern.pathlib.Path`
             Directory to write to
         """
         self.make_on_vector()
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
-        self.write_ogip(outdir=dir)
+        self.write_ogip(outdir=outdir)
 
     def _check_binning(self):
         """Check that ARF and RMF binnings are compatible
@@ -406,94 +427,211 @@ class SpectrumObservation(object):
         pass
 
 
-def run_spectrum_analysis_using_configfile(configfile):
-    """Wrapper function to run a 1D spectral analysis using a config file
+class SpectralFit(object):
+    """
+    Spectral Fit
 
     Parameters
     ----------
-    configfile : str
-        Config file in YAML format
-
-    Returns
-    -------
-    analysis : `~gammapy.spectrum.SpectrumAnalysis`
-        Spectrum analysis instance
+    pha : list of str, `~gammapy.extern.pathlib.Path`
+        List of PHA files to fit
     """
-    import yaml
-    log.info('Reading {}'.format(configfile))
-    with open(configfile) as fh:
-        config = yaml.safe_load(fh)
 
-    analysis = run_spectrum_analysis_using_config(config)
-    return analysis
+    def __init__(self, pha, bkg=None, arf=None, rmf=None):
+
+        self.pha = [make_path(f) for f in pha]
+        self._model = None
+        self._thres_lo = None
+        self._thres_hi = None
+
+    @classmethod
+    def from_config(cls, config):
+
+        outdir = make_path(config['general']['outdir'])
+        pha_list = outdir.glob('pha_run*.pha')
+        return cls(pha_list)
+
+    @property
+    def model(self):
+        """
+        Spectral model to be fit
+        """
+        return self._model
+
+    @model.setter
+    def model(self, model, name=None):
+        """
+
+        Parameters
+        ----------
+        model : `~sherpa.models.ArithmeticModel`
+            Fit model
+        name : str
+            Name for Sherpa model instance, optional
+        """
+        import sherpa.models
+
+        name = 'default' if name is None else name
+
+        if isinstance(model, six.string_types):
+            if model == 'PL' or model == 'PowerLaw':
+                model = sherpa.models.PowLaw1D('powlaw1d.'+name)
+                model.gamma = 2
+                model.ref = 1e9
+                model.ampl = 1e-20
+            else:
+                raise ValueError("Undefined model string: {}".format(model))
+
+        if not isinstance(model, sherpa.models.ArithmeticModel):
+            raise ValueError("Only sherpa models are supported at the moment")
+
+        self._model = model
+
+    @property
+    def energy_threshold_low(self):
+        """
+        Low energy threshold of the spectral fit
+        """
+        return self._thres_lo
+
+    @energy_threshold_low.setter
+    def energy_threshold_low(self, energy):
+        """
+        Low energy threshold setter
+
+        Parameters
+        ----------
+        energy : `~gammapy.utils.energy.Energy`, str
+            Low energy threshold
+        """
+        self._thres_lo = Energy(energy)
+
+    @property
+    def energy_threshold_high(self):
+        """
+       High energy threshold of the spectral fit
+        """
+        return self._thres_hi
+
+    @energy_threshold_high.setter
+    def energy_threshold_high(self, energy):
+        """
+        High energy threshold setter
+
+        Parameters
+        ----------
+        energy : `~gammapy.utils.energy.Energy`, str
+            High energy threshold
+        """
+        self._thres_hi = Energy(energy)
+
+    @property
+    def pha_list(self):
+        """Comma-separate list of PHA files"""
+        ret = ''
+        for p in self.pha:
+            ret += str(p) + ","
+
+        return ret
+
+    def info(self):
+        """Print some basic info"""
+        ss = 'Model\n'
+        ss += str(self.model)
+        ss += '\nEnergy Range\n'
+        ss += str(self.energy_threshold_low) + ' - ' + str(
+            self.energy_threshold_high)
+        return ss
+
+    def run(self, method='hspec'):
+        if method == 'hspec':
+            self._run_hspec_fit()
+        elif method == 'sherpa':
+            self._run_sherpa_fit()
+        else:
+            raise ValueError('Undefined fitting method')
+
+    def _run_hspec_fit(self):
+        """Run the gammapy.hspec fit
+        """
+
+        log.info("Starting HSPEC")
+        import sherpa.astro.ui as sau
+        from ..hspec import wstat
+
+        sau.set_conf_opt("max_rstat", 100)
+
+        thres_lo = self.energy_threshold_low.to('keV').value
+        thres_hi = self.energy_threshold_high.to('keV').value
+        sau.freeze(self.model.ref)
+
+        list_data = []
+        for pha in self.pha:
+            datid = pha.parts[-1][7:12]
+            sau.load_data(datid, str(pha))
+            sau.notice_id(datid, thres_lo, thres_hi)
+            sau.set_source(datid, self.model)
+            list_data.append(datid)
+
+        wstat.wfit(list_data)
+
+    def _run_sherpa_fit(self):
+        """Plain sherpa fit not using the session object
+        """
+        from sherpa.astro import datastack
+        log.info("Starting SHERPA")
+        log.info(self.info())
+        ds = datastack.DataStack()
+        ds.load_pha(self.pha_list)
+        ds.set_source(self.model)
+        thres_lo = self.energy_threshold_low.to('keV').value
+        thres_hi = self.energy_threshold_high.to('keV').value
+        ds.notice(thres_lo, thres_hi)
+        ds.subtract()
+        ds.fit()
+        ds.clear_stack()
+        ds.clear_models()
+
+    def apply_containment(self, fit):
+        """Apply correction factor for PSF containment in ON region"""
+        cont = self.get_containment()
+        fit['containment'] = cont
+        fit['parvals'] = list(fit['parvals'])
+        fit['parvals'][1] = fit['parvals'][1] * cont
+        return fit
+
+    def get_containment(self):
+        """Calculate PSF correction factor for containment in ON region"""
+        # TODO: do something useful here
+        return 1
 
 
-def run_spectrum_analysis_using_config(config):
-    """Wrapper function to run a 1D spectral analysis using a config dict
+def run_spectral_fit_using_config(config):
+    """
+    Run a 1D spectral analysis using a config dict
 
     Parameters
     ----------
     config : dict
-        config
+        Config dict
 
     Returns
     -------
-    analysis : `~gammapy.spectrum.SpectrumAnalysis`
-        Spectrum analysis instance
+    fit : `~gammapy.spectrum.SpectralFit`
+        Fit instance
     """
 
-    # Observations
-    obs = config['general']['runlist']
-    store = config['general']['datastore']
-    nobs = config['general']['nruns']
-
-    # Binning
-    sec = config['binning']
-    if sec['equal_log_spacing']:
-        emin = Energy(sec['emin'])
-        emax = Energy(sec['emax'])
-        nbins = sec['nbins']
-        ebounds = EnergyBounds.equal_log_spacing(
-            emin, emax, nbins)
-    else:
-        if sec['binning'] is None:
-            raise ValueError("No binning specified")
-    log.debug('Binning: {}'.format(ebounds))
-
-    # ON region
-    radius = Angle(config['on_region']['radius'])
-    x = config['on_region']['center_x']
-    y = config['on_region']['center_y']
-    frame = config['on_region']['system']
-    center = SkyCoord(x, y, frame=frame)
-    on_region = SkyCircleRegion(center, radius)
-
-    # OFF region
-    off_type = config['off_region']['type']
-    if off_type == 'ring':
-        irad = Angle(config['off_region']['inner_radius'])
-        orad = Angle(config['off_region']['outer_radius'])
-        bkg_method = dict(type='ring', inner_radius=irad,
-                          outer_radius=orad)
-    elif off_type == 'reflected':
-        bkg_method = dict(type='reflected')
-
-    # Exclusion
-    excl_file = config['excluded_regions']['file']
-    exclusion = ExclusionMask.from_fits(excl_file)
-
-    analysis = SpectrumAnalysis(datastore=store, obs=obs, on_region=on_region,
-                                bkg_method=bkg_method, exclusion=exclusion,
-                                nobs=nobs, ebounds=ebounds)
-    
     if config['general']['create_ogip']:
+        analysis = SpectrumAnalysis.from_config(config)
         outdir = config['general']['outdir']
         analysis.write_ogip_data(outdir)
 
-    if config['general']['run_fit']:
-        model = config['model']['type']
-        thres_low = Energy(config['model']['threshold_low'])
-        thres_high = Energy(config['model']['threshold_high'])
-        fit = analysis.run_hspec_fit(model, thres_low, thres_high)
+    method = config['general']['run_fit']
+    if method is not 'False':
+        fit = SpectralFit.from_config(config)
+        fit.model = config['model']['type']
+        fit.energy_threshold_low = Energy(config['model']['threshold_low'])
+        fit.energy_threshold_high = Energy(config['model']['threshold_high'])
+        fit.run(method=method)
 
-    return analysis
+    return fit

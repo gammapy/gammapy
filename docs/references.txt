@@ -76,9 +76,15 @@
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
 .. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy 
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
+.. _gammapy-extra: https://github.com/gammapy/gammapy-extra
 
 .. _scientific Python stack: http://www.scipy.org/about.html
 
 .. _ctobssim: http://cta.irap.omp.eu/ctools-devel/reference_manual/ctobssim.html
 .. _gtpsf: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtpsf.txt
 .. _rsync: https://en.wikipedia.org/wiki/Rsync
+
+.. _PHA: https://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/spectra/ogip_92_007/node5.html
+.. _ARF: http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc4
+.. _RMF: http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.1
+
