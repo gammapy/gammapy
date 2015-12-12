@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 from astropy.tests.helper import pytest
 from astropy.utils.data import get_pkg_data_filename
-from ..obs import DataManager
+from ..data import DataManager
 
 __all__ = [
     'requires_dependency',

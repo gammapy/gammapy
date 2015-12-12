@@ -14,7 +14,7 @@ from astropy.coordinates import Angle
 from astropy.time import Time
 from gammapy.extern.pathlib import Path
 from gammapy.datasets import make_test_bg_cube_model, make_test_dataset
-from gammapy.obs import (DataStore, ObservationGroups,
+from gammapy.data import (DataStore, ObservationGroups,
                          ObservationGroupAxis)
 from gammapy.background import make_bg_cube_model
 
@@ -57,7 +57,7 @@ def create_dummy_observation_grouping():
 
     Returns
     -------
-    obs_groups : `~gammapy.obsObservationGroups`
+    obs_groups : `~gammapy.data.ObservationGroups`
         Observation grouping.
     """
     alt_axis = ObservationGroupAxis('ALT', ALT_RANGE, 'bin_edges')

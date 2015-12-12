@@ -4,7 +4,7 @@ Observation lists
 =================
 
 Observation lists specify a list of observations (a.k.a. runs) and are
-represented in Gammapy as `~gammapy.obs.ObservationTable`, which is a sub-class
+represented in Gammapy as `~gammapy.data.ObservationTable`, which is a sub-class
 of `~astropy.table.Table`.
 
 Because there is no standard defined for observation lists, everyone uses their own format.
@@ -23,7 +23,7 @@ it yourself.
 
 Note that all of these columns are optional, i.e. a table that just contains an
 ``OBS_ID`` column is a valid observation table and is enough to look up data
-files via the `~gammapy.obs.DataStore` or `~gammapy.obs.DataManager` classes.
+files via the `~gammapy.data.DataStore` or `~gammapy.data.DataManager` classes.
 Other observation lists might only contain ``RA`` and ``DEC`` and some processing might
 not require the presence of the ``OBS_ID`` or any other columns.
 To accommodate these various use cases for observation lists and to avoid forcing

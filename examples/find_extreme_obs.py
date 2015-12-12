@@ -11,7 +11,7 @@ It finds the observations with min, max:
 
 both for 3 and 4 telescope observations: 8 obs in total.
 """
-from gammapy.obs import DataStoreIndexTable
+from gammapy.data import DataStoreIndexTable
 
 
 # get full list of H.E.S.S. observations

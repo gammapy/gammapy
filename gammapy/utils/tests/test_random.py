@@ -101,7 +101,7 @@ def test_sample_sphere_distance():
                                random_state=random_state)
     assert_allclose(x, [34.386731, 37.559774])
 
-    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=1e3,
+    x = sample_sphere_distance(distance_min=0.1, distance_max=42, size=int(1e3),
                                random_state=random_state)
     assert x.min() >= 0.1
     assert x.max() <= 42

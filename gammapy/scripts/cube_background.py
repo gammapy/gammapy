@@ -5,7 +5,7 @@ import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args
-from ..obs import (ObservationTable, DataStore, ObservationGroups,
+from ..data import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..catalog import load_catalog_tevcat
 from ..background import make_bg_cube_model
@@ -54,7 +54,7 @@ def make_bg_cube_models(indir, scheme, outdir, overwrite=False, test=False, meth
     1. make a global event list from a datastore
     2. filter the runs keeping only the ones far from known sources
     3. group the runs according to similar observation conditions (i.e. alt, az)
-        * using `~gammapy.obs.ObservationGroups`
+        * using `~gammapy.data.ObservationGroups`
     4. create a bg cube model for each group using:
         * the `~gammapy.background.make_bg_cube_model` method
         * and `~gammapy.background.CubeBackgroundModel` objects as containers

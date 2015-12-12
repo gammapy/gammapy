@@ -6,7 +6,7 @@ in order to create OGIP to be used for a Sherpa fit
 from astropy.coordinates import SkyCoord, Angle
 from gammapy.datasets import gammapy_extra
 from gammapy.image import ExclusionMask
-from gammapy.obs import DataStore
+from gammapy.data import DataStore
 from gammapy.region import SkyCircleRegion
 from gammapy.spectrum import SpectrumAnalysis
 from gammapy.utils.energy import EnergyBounds

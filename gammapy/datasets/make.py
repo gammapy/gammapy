@@ -107,7 +107,7 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
     ----------
     observatory_name : str, optional
         Name of the observatory; a list of choices is given in
-        `~gammapy.obs.observatory_locations`.
+        `~gammapy.data.observatory_locations`.
     n_obs : int, optional
         Number of observations for the obs table.
     az_range : `~astropy.coordinates.Angle`, optional
@@ -130,11 +130,11 @@ def make_test_observation_table(observatory_name='HESS', n_obs=10,
 
     Returns
     -------
-    obs_table : `~gammapy.obs.ObservationTable`
+    obs_table : `~gammapy.data.ObservationTable`
         Observation table.
     """
     from ..time import time_ref_from_dict, time_relative_to_ref
-    from ..obs import ObservationTable, observatory_locations
+    from ..data import ObservationTable, observatory_locations
     random_state = get_random_state(random_state)
 
     n_obs_start = 1
@@ -455,7 +455,7 @@ def make_test_dataset(outdir, overwrite=False,
     * `~gammapy.datasets.make_test_eventlist` to generate an event list
       and effective area table for each observation
 
-    * `~gammapy.obs.DataStore` to handle the file naming scheme;
+    * `~gammapy.data.DataStore` to handle the file naming scheme;
       currently only the H.E.S.S. naming scheme is supported
 
     This method is useful for instance to produce samples in order
@@ -471,7 +471,7 @@ def make_test_dataset(outdir, overwrite=False,
         Flag to remove previous datasets in ``outdir`` (if existing).
     observatory_name : str, optional
         Name of the observatory; a list of choices is given in
-        `~gammapy.obs.observatory_locations`.
+        `~gammapy.data.observatory_locations`.
     n_obs : int
         Number of observations for the obs table.
     az_range : `~astropy.coordinates.Angle`, optional
@@ -494,7 +494,7 @@ def make_test_dataset(outdir, overwrite=False,
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
     """
-    from ..obs import DataStore
+    from ..data import DataStore
     random_state = get_random_state(random_state)
 
     # create output folder
@@ -576,7 +576,7 @@ def make_test_eventlist(observation_table,
 
     Parameters
     ----------
-    observation_table : `~gammapy.obs.ObservationTable`
+    observation_table : `~gammapy.data.ObservationTable`
         Observation table containing the observation to fake.
     obs_id : int
         Observation ID of the observation to fake inside the observation table.

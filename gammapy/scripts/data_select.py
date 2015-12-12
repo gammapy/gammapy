@@ -6,7 +6,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.time import Time
 from ..utils.scripts import get_parser, set_up_logging_from_args
-from ..obs import ObservationTable
+from ..data import ObservationTable
 
 __all__ = ['data_select_main']
 

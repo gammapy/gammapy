@@ -1,9 +1,9 @@
-.. _obs_find_observations:
+.. _obs_select:
 
-Find observations
-=================
+Observation and data selection
+==============================
 
-The ``gammapy-obs-select`` command line tool can be used to select a
+The ``gammapy-data-select`` command line tool can be used to select a
 subset of observations from a given observation list. The format for
 observation lists is described in :ref:`dataformats_observation_lists`.
 
@@ -14,12 +14,12 @@ For more details, please refer to `~gammapy.scripts.obs_select`.
 Examples
 --------
 
-The ``gammapy-obs-select`` tool has many options. Only a few examples
+The ``gammapy-data-select`` tool has many options. Only a few examples
 are shown here. For a full list of options, please use:
 
 .. code-block:: bash
 
-    $ gammapy-obs-select --help
+    $ gammapy-data-select --help
 
 at the command line.
 
@@ -32,7 +32,7 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits galactic_center_obs.fits \
+      $ gammapy-data-select all_obs.fits galactic_center_obs.fits \
                          --x 0 --y 0 --r 50 --system 'galactic'
 
 * Select all observations in a box along the Galactic plane
@@ -41,7 +41,7 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits galactic_plane_obs.fits \
+      $ gammapy-data-select all_obs.fits galactic_plane_obs.fits \
                          --x 0 --y 0 --dx 20 --dy 3 --system 'galactic'
 
 * Select all observations in a given date range (can of course be
@@ -49,7 +49,7 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits obs_2010-04-26_to_2010-04-29-12h42.fits \
+      $ gammapy-data-select all_obs.fits obs_2010-04-26_to_2010-04-29-12h42.fits \
                          --t_start '2012-04-20' --t_stop '2012-04-30T12:42'
 
 * Select all observations in a given observation ID range (can of
@@ -57,7 +57,7 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits obs_042_to_100.fits \
+      $ gammapy-data-select all_obs.fits obs_042_to_100.fits \
                          --par_name 'OBS_ID' --par_min 42 --par_max 101
 
 * Select all observations in a given altitude range (can of course
@@ -65,7 +65,7 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits alt_70_to_90_deg_obs.fits \
+      $ gammapy-data-select all_obs.fits alt_70_to_90_deg_obs.fits \
                          --par_name 'ALT' --par_min 70 --par_max 90
 
 * Select all observations with exactly 4 telescopes (can of course
@@ -73,5 +73,5 @@ can be used as input observation list.
 
   .. code-block:: bash
 
-      $ gammapy-obs-select all_obs.fits 4_tel_obs.fits \
+      $ gammapy-data-select all_obs.fits 4_tel_obs.fits \
                          --par_name 'N_TELS' --par_min 4 --par_max 4

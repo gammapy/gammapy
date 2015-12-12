@@ -3,15 +3,14 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.modeling.models import Gaussian1D
-from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.io import fits
+from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
+from astropy.units import Quantity, UnitsError
+from gammapy.data.data_store import _get_min_energy_threshold
 from ..background import Cube
-from ..obs import DataStore
-from ..data import EventListDataset
-from ..obs.data_store import _get_min_energy_threshold
+from ..data import EventListDataset, DataStore
 
 __all__ = [
     'GaussianBand2D',
@@ -270,7 +269,7 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        observation_table : `~gammapy.obs.ObservationTable`
+        observation_table : `~gammapy.data.ObservationTable`
             Observation list to use for the *michi* binning.
         data_dir : str
             Data directory
@@ -339,7 +338,7 @@ class CubeBackgroundModel(object):
 
         Parameters
         ----------
-        observation_table : `~gammapy.obs.ObservationTable`
+        observation_table : `~gammapy.data.ObservationTable`
             Observation list to use for the histogramming.
         data_dir : str
             Data directory

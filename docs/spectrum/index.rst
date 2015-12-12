@@ -78,7 +78,7 @@ In Detail:
 * Line 18    : Define background methods (see :ref:`spectrum_background_method`)
 * Line 20-22 : Read exclusion mask from FITS file
 * Line 24    : Define reconstructed energy binning of the analysis
-* Line 26-28 : Select `~gammapy.obs.DataStore` and observations to be used
+* Line 26-28 : Select `~gammapy.data.DataStore` and observations to be used
 * Line 30    : Instantiate `~gammapy.spectrum.SpectrumAnalysis`
 * Line 33    : Write OGIP data to disk
 

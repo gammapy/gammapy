@@ -107,7 +107,7 @@ class Datasets(object):
     in gammapy-extra, e.g. large files from the web that we don't
     want to stick in gammapy-extra.
 
-    This class has overlap with the `gammapy.obs.DataManager` class ...
+    This class has overlap with the `gammapy.data.DataManager` class ...
     maybe it should be merged or maybe it's better to keep that one
     focused on HESS (and Fermi?) data management?
 

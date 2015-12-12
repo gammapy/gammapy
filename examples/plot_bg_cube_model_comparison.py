@@ -12,7 +12,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.io import ascii
 from gammapy.background import CubeBackgroundModel
-from gammapy.obs import ObservationGroups, ObservationGroupAxis
+from gammapy.data import ObservationGroups, ObservationGroupAxis
 
 NORMALIZE = 0  # normalize 1 w.r.t. 2 (i.e. true w.r.t. reco)
 # 0: do not normalize
@@ -163,7 +163,7 @@ def plot_bg_cube_model_comparison(input_dir1, binning_format1, name1,
         String specifying the binning format; accepted values are:
 
         * *default* for the Gammapy format from
-          `~gammapy.obs.ObservationGroups`; an observation groups
+          `~gammapy.data.ObservationGroups`; an observation groups
           ECVS file is expected in the bg cube models dir.
         * *michi* for the binning used by Michale Mayer;
           this script has methods to convert it to the

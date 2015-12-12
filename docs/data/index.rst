@@ -2,11 +2,21 @@
 
 .. _data:
 
-*****************************
-Data classes (`gammapy.data`)
-*****************************
+**********************************************
+Data and observation handling (`gammapy.data`)
+**********************************************
 
 .. currentmodule:: gammapy.data
+
+.. warning:: The docs for `gammapy.data` are currently a mess. We apologize!
+
+    The reason is that before there was a separate ``gammapy.obs`` sub-package
+    that was merged into `gammapy.data`, and the format specifications were
+    improved and split out into a separate repo: :ref:`gadf:main-page`.
+
+    The Gammapy data and observation handling classes and command line tools
+    will be adapted to those new specs and the `gammapy.data` docs updated
+    in the coming weeks ...
 
 Introduction
 ============
@@ -60,7 +70,6 @@ e.g. centered on the target or aligned to a survey map grid?
 Getting Started
 ===============
 
-
 .. code-block:: python
 
     >>> from gammapy.data import EventListDataset
@@ -70,6 +79,21 @@ Getting Started
     # This is just an idea ... not implemented!
     >>> counts_ds = CountsCubeDataset.from_events(events_ds, ...)
     >>> counts_ds = events_ds.make_counts_cube(...)
+
+Using `gammapy.data`
+====================
+
+If you'd like to learn more about using `gammapy.data`, read the following sub-pages:
+
+.. toctree::
+   :maxdepth: 1
+
+   index-old-obs
+   dm
+   find_observations
+   observation_grouping
+   server
+
 
 Reference/API
 =============

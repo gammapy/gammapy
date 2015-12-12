@@ -76,7 +76,7 @@ If you'd like to continue with tutorials to learn Gammapy, go to :ref:`tutorials
 
 To learn about some specific functionality that could be useful for your work,
 start browsing the "Getting Started" section of Gammapy sub-package that
-might be of interest to you (e.g. `gammapy.spectrum`, `gammapy.obs`, `gammapy.catalog`, ...).
+might be of interest to you (e.g. `gammapy.data`, `gammapy.catalog`, `gammapy.spectrum`, ...).
 
 Not sure if Gammapy has the feature you want or how to do what you want?
 Ask for help on the `Gammapy mailing list`_.

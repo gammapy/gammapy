@@ -2,8 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 from ...data import EventList
-from ...obs import DataStore
+from ...data import DataStore
 from ...utils.testing import requires_data, data_manager
+
 
 @pytest.mark.xfail
 @requires_data('hess')
@@ -17,6 +18,7 @@ def test_DataStore_construction(data_manager):
 
     base_dir = '/Users/deil/work/_Data/hess/fits/parisanalysis/fits_prod02/pa/Model_Deconvoluted_Prod26/Mpp_Std'
     data_store = DataStore.from_dir(base_dir)
+
 
 @pytest.mark.xfail
 @requires_data('hess')
@@ -46,6 +48,7 @@ def test_DataStore_filenames(data_manager):
     filename = data_store.filename(obs_id=23037, filetype='aeff', abspath=False)
     assert filename == 'run023000-023199/run023037/hess_aeff_2d_023037.fits.gz'
 
+
 @pytest.mark.xfail
 @requires_data('hess')
 def test_DataStore_load(data_manager):
@@ -54,6 +57,7 @@ def test_DataStore_load(data_manager):
 
     events = data_store.load(obs_id=23037, filetype='events')
     assert isinstance(events, EventList)
+
 
 @pytest.mark.xfail
 @requires_data('hess')

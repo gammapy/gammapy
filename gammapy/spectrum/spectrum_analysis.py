@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (print_function)
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-import os
-
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
-
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
-from . import CountsSpectrum
 from ..background import ring_area_factor
-from ..obs import DataStore
+from ..data import DataStore
 from ..utils.energy import EnergyBounds, Energy
-from ..utils.scripts import get_parser, set_up_logging_from_args, read_yaml, \
-    make_path
+from ..utils.scripts import (
+    get_parser, set_up_logging_from_args, read_yaml, make_path,
+)
+from . import CountsSpectrum
 
 __all__ = [
     'SpectrumAnalysis',
@@ -48,7 +45,7 @@ class SpectrumAnalysis(object):
 
     Parameters
     ----------
-    datastore : `~gammapy.obs.Data store`
+    datastore : `~gammapy.data.DataStore`
         Data for the analysis
     obs : list, str
         List of observations or file containing such a list
@@ -85,7 +82,7 @@ class SpectrumAnalysis(object):
                                            bkg_method, ebounds, exclusion)
             except IndexError:
                 log.warn(
-                    'Observation {} not in store {}'.format(val, datastore))
+                        'Observation {} not in store {}'.format(val, datastore))
                 nobs += 1
                 continue
             self._observations.append(temp)
@@ -143,7 +140,7 @@ class SpectrumAnalysis(object):
             emax = Energy(sec['emax'])
             nbins = sec['nbins']
             ebounds = EnergyBounds.equal_log_spacing(
-                emin, emax, nbins)
+                    emin, emax, nbins)
         else:
             if sec['binning'] is None:
                 raise ValueError("No binning specified")
@@ -228,7 +225,7 @@ class SpectrumObservation(object):
     ----------
     obs : int
         Observation ID, runnumber
-    store : `~gammapy.obs.DataStore`
+    store : `~gammapy.data.DataStore`
         Data Store
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
@@ -327,7 +324,7 @@ class SpectrumObservation(object):
             alpha = len(off)
         else:
             raise ValueError("Undefined background method: {}".format(
-                self.bkg_method['type']))
+                    self.bkg_method['type']))
 
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         off_vec.backscal = alpha
@@ -475,7 +472,7 @@ class SpectralFit(object):
 
         if isinstance(model, six.string_types):
             if model == 'PL' or model == 'PowerLaw':
-                model = sherpa.models.PowLaw1D('powlaw1d.'+name)
+                model = sherpa.models.PowLaw1D('powlaw1d.' + name)
                 model.gamma = 2
                 model.ref = 1e9
                 model.ampl = 1e-20
@@ -540,7 +537,7 @@ class SpectralFit(object):
         ss += str(self.model)
         ss += '\nEnergy Range\n'
         ss += str(self.energy_threshold_low) + ' - ' + str(
-            self.energy_threshold_high)
+                self.energy_threshold_high)
         return ss
 
     def run(self, method='hspec'):

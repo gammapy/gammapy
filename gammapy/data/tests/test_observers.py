@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from ...obs import observatory_locations
+from ...data import observatory_locations
 
 
 def test_ObservatoryLocations():

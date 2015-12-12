@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ...datasets import (make_test_psf, make_test_observation_table,
                          make_test_bg_cube_model, make_test_dataset)
-from ...obs import DataStore
+from ...data import DataStore
 
 
 def test_make_test_psf_fits_table():

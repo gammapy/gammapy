@@ -11,14 +11,14 @@ conditions in order to produce reliable models.
 
 There are 2 classes in Gammapy that handle observation groups:
 
-* `~gammapy.obs.ObservationGroupAxis` is a class to define an axis
+* `~gammapy.data.ObservationGroupAxis` is a class to define an axis
   along which to define bins for creating observation groups. The
   class offers support for dimensionless or
   `~astropy.units.Quantity`-like parameter axes. In both cases, both,
   continuous and discrete variables can be used.
 
-* `~gammapy.obs.ObservationGroups` is a class that takes a list of
-  axes (`~gammapy.obs.ObservationGroupAxis`) and defines groups
+* `~gammapy.data.ObservationGroups` is a class that takes a list of
+  axes (`~gammapy.data.ObservationGroupAxis`) and defines groups
   based on the cartesian product of the bins on each axis. The group
   definitions are internally stored as a `~astropy.table.Table`
   object. This class has also methods to group the observations of a
@@ -80,7 +80,7 @@ Group the observations of an observation list and print them:
 >>> print(obs_table_grouped)
 
 This would print an observation table with the format described in
-:ref:`dataformats_observation_lists` and an extra-column at the
+:ref:`gadf:obs-index` and an extra-column at the
 beginning specifying the ID of the group to which each observation
 belongs.
 

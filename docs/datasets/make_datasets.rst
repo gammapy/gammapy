@@ -75,7 +75,7 @@ produced with a few lines of Python code:
                       n_obs=2,
                       random_state=0)
 
-Then the data can be read back using the `~gammapy.obs.DataStore`
+Then the data can be read back using the `~gammapy.data.DataStore`
 class, and eg. print the observation table and the names of the files
 created with a few extra lines of Python code:
 

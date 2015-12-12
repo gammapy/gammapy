@@ -5,7 +5,7 @@ SkyCoords to the horizontal altitude-azimuth system.
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.units import Quantity
 from astropy.coordinates import Angle, EarthLocation
-from gammapy.extern.bunch import Bunch
+from ..extern.bunch import Bunch
 
 __all__ = ['observatory_locations']
 
@@ -38,7 +38,7 @@ Available observatories (alphabetical order):
 Examples
 --------
 
-from gammapy.obs import observatory_locations
+from gammapy.data import observatory_locations
 observatory_locations['HESS']
 observatory_locations.HESS
 list(observatory_locations.keys())

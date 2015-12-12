@@ -40,7 +40,7 @@ def make_bg_cube_model(observation_table, data_dir, method='default', do_not_for
 
     Parameters
     ----------
-    observation_table : `~gammapy.obs.ObservationTable`
+    observation_table : `~gammapy.data.ObservationTable`
         Observation list to use for the histogramming.
     data_dir : str
         Data directory

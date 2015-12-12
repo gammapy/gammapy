@@ -6,7 +6,7 @@ from astropy.time import Time
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import make_test_observation_table, gammapy_extra
 from ...catalog import skycoord_from_table
-from ...obs import (
+from ...data import (
     ObservationTable,
     ObservationGroups,
     ObservationGroupAxis
