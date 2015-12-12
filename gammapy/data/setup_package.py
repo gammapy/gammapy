@@ -5,4 +5,4 @@ def get_package_data():
     files = [
         'tests/data/data-register.yaml',
     ]
-    return {'gammapy.obs': files}
+    return {'gammapy.data': files}

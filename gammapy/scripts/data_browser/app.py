@@ -17,8 +17,7 @@ from flask_nav.elements import Navbar, View
 from flask_wtf import Form
 from wtforms import SelectField
 from wtforms.validators import InputRequired
-from ...obs import DataStore
-from ...data import EventListDataset
+from ...data import DataStore, EventListDataset
 
 # __all__ = ['run_data_browser']
 

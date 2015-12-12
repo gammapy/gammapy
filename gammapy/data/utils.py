@@ -4,6 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.coordinates import Angle, EarthLocation
 from astropy.units import Quantity
 
+__all__ = []
+
 
 def _earth_location_from_dict(meta):
     lon = Angle(meta['GEOLON'], 'deg')

@@ -6,8 +6,7 @@ import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.io import fits
-from ..extern.pathlib import Path
-from ..obs import ObservationTable
+from .observation import ObservationTable
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -26,7 +25,7 @@ class DataStore(object):
         Base directory
     file_table : `~astropy.table.Table`
         File table
-    obs_table : `~gammapy.obs.ObservationTable`
+    obs_table : `~gammapy.data.ObservationTable`
         Observation table
     name : str
         Data store name
@@ -105,8 +104,8 @@ class DataStore(object):
         """Try different DataStore construtors.
         
         Currently tried (in this order)
-        - :func:`~gammapy.obs.DataStore.from_dir`
-        - :func:`~gammapy.obs.DataStore.from_name`
+        - :func:`~gammapy.data.DataStore.from_dir`
+        - :func:`~gammapy.data.DataStore.from_name`
         """
         try:
             store = cls.from_dir(val)
@@ -219,7 +218,7 @@ class DataStore(object):
 
         Parameters
         ----------
-        observation_table : `~gammapy.obs.ObservationTable` or None
+        observation_table : `~gammapy.data.ObservationTable` or None
             Observation table (``None`` means select all observations).
         filetypes : list of str
             File types (TODO: document in a central location and reference from here).
@@ -301,7 +300,7 @@ def _get_min_energy_threshold(observation_table, data_dir):
 
     Parameters
     ----------
-    observation_table : `~gammapy.obs.ObservationTable`
+    observation_table : `~gammapy.data.ObservationTable`
         Observation list.
     data_dir : str
         Path to the data files.

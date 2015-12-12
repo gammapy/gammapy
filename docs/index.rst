@@ -27,7 +27,6 @@ and then head over to the 5 minute :ref:`getting-started` tutorial.
 News
 ----
 
-
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
 * November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
@@ -72,7 +71,6 @@ The Gammapy toolbox
   image/index
   irf/index
   morphology/index
-  obs/index
   region/index
   spectrum/index
   stats/index

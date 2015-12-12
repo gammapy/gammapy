@@ -8,7 +8,7 @@ from astropy.modeling.models import Gaussian1D
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel
-from ...obs import ObservationTable
+from ...data import ObservationTable
 
 
 @requires_dependency('scipy')

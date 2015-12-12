@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
 from ...datasets import gammapy_extra
-from ...obs import ObservationTable
+from ...data import ObservationTable
 from .. import data_select_main
 
 

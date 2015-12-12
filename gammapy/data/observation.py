@@ -10,7 +10,6 @@ from astropy.io import ascii
 from ..extern.pathlib import Path
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..catalog import select_sky_box, select_sky_circle
-from ..catalog import skycoord_from_table
 
 __all__ = [
     # 'Observation',
@@ -184,7 +183,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Observation table after selection.
         """
         obs_table = self
@@ -230,7 +229,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Observation table after selection.
         """
         obs_table = self
@@ -293,7 +292,7 @@ class ObservationTable(Table):
             - ``time_box`` is a 1D selection criterion acting on the observation
               time (**TSTART** and **TSTOP**); the interval is set via the
               **time_range** keyword; uses
-              `~gammapy.obs.ObservationTable.select_time_range`
+              `~gammapy.data.ObservationTable.select_time_range`
 
             - ``par_box`` is a 1D selection criterion acting on any
               parameter defined in the observation table that can be casted
@@ -301,7 +300,7 @@ class ObservationTable(Table):
               and interval can be specified using the keywords **variable** and
               **value_range** respectively; min = max selects exact
               values of the parameter; uses
-              `~gammapy.obs.ObservationTable.select_range`
+              `~gammapy.data.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
         **inverted** flag, in which case, the selection is applied to keep all
@@ -316,7 +315,7 @@ class ObservationTable(Table):
 
         Returns
         -------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Observation table after selection.
 
         Examples
@@ -430,29 +429,29 @@ class ObservationGroups(object):
     Class to define observation groups useful for organizing observation
     lists into groups of observations with similar properties. The
     properties and their binning are specified via
-    `~gammapy.obs.ObservationGroupAxis` objects.
+    `~gammapy.data.ObservationGroupAxis` objects.
 
-    The class takes as input a list of `~gammapy.obs.ObservationGroupAxis`
+    The class takes as input a list of `~gammapy.data.ObservationGroupAxis`
     objects and defines 1 group for each possible combination of the
     bins defined in all axes (cartesion product).
     The groups are identified by a unique ``GROUP_ID`` int value.
 
     The definitions of the groups are internally  stored as a
     `~astropy.table.Table` object, the
-    `~gammapy.obs.ObservationGroups.obs_groups_table` member.
+    `~gammapy.data.ObservationGroups.obs_groups_table` member.
 
     The axis parameters should be either dimensionless or castable
     into `~astropy.units.Quantity` objects.
 
     For details on the grouping of observations in a list, please
-    refer to the `~gammapy.obs.ObservationGroups.group_observation_table`
+    refer to the `~gammapy.data.ObservationGroups.group_observation_table`
     method.
 
     See also :ref:`obs_observation_grouping`.
 
     Parameters
     ----------
-    obs_group_axes : `~gammapy.obs.ObservationGroupAxis`
+    obs_group_axes : `~gammapy.data.ObservationGroupAxis`
         List of observation group axes.
 
     Examples
@@ -546,7 +545,7 @@ class ObservationGroups(object):
 
         Parameters
         ----------
-        axes : `~gammapy.obs.ObservationGroupAxis`
+        axes : `~gammapy.data.ObservationGroupAxis`
             List of observation group axes.
 
         Returns
@@ -616,7 +615,7 @@ class ObservationGroups(object):
 
         Returns
         -------
-        axes : `~gammapy.obs.ObservationGroupAxis`
+        axes : `~gammapy.data.ObservationGroupAxis`
             List of observation group axes.
         """
         # subset table: remove obs groups column
@@ -668,7 +667,7 @@ class ObservationGroups(object):
 
         Returns
         -------
-        obs_groups : `~gammapy.obs.ObservationGroups`
+        obs_groups : `~gammapy.data.ObservationGroups`
             Observation groups object.
         """
         cls.obs_groups_table = ascii.read(filename)
@@ -758,12 +757,12 @@ class ObservationGroups(object):
 
         Parameters
         ----------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Observation list to group.
 
         Returns
         -------
-        obs_table_grouped : `~gammapy.obs.ObservationTable`
+        obs_table_grouped : `~gammapy.data.ObservationTable`
             Grouped observation list.
         """
         if 'GROUP_ID' in obs_table.colnames:
@@ -816,7 +815,7 @@ class ObservationGroups(object):
 
         Parameters
         ----------
-        obs_table : `~gammapy.obs.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Observation list to select from.
         group : int
             Group ID to select.
@@ -827,7 +826,7 @@ class ObservationGroups(object):
 
         Returns
         -------
-        obs_table_group : `~gammapy.obs.ObservationTable`
+        obs_table_group : `~gammapy.data.ObservationTable`
             Observation list of a specific group.
         """
         if apply_grouping:

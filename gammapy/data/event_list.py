@@ -8,12 +8,12 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
-
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
-from ..data import GoodTimeIntervals, TelescopeArray
-from ..data import InvalidDataError
 from ..time import time_ref_from_dict
+from .gti import GoodTimeIntervals
+from .telarray import TelescopeArray
+from . import InvalidDataError
 from .utils import _earth_location_from_dict
 
 __all__ = [
@@ -320,7 +320,7 @@ class EventList(Table):
         index_array : `np.array`
             Index array of seleced events
         """
-        
+
         position = self.radec
         mask = np.array([], dtype=int)
         for reg in region:
@@ -392,7 +392,6 @@ class EventList(Table):
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
         plt.show()
-
 
 
 class EventListDataset(object):
@@ -549,7 +548,6 @@ class EventListDataset(object):
         # Can we avoid this?
         hdu_list = fits.HDUList()
 
-
         # TODO:
         del self.event_list['TELMASK']
 
@@ -622,14 +620,14 @@ class EventListDatasetChecker(object):
         Logger to use (use module-level Gammapy logger by default)
     """
     _AVAILABLE_CHECKS = OrderedDict(
-        misc='check_misc',
-        times='check_times',
-        coordinates='check_coordinates',
+            misc='check_misc',
+            times='check_times',
+            coordinates='check_coordinates',
     )
 
     accuracy = OrderedDict(
-        angle=Angle('1 arcsec'),
-        time=Quantity(1, 'microsecond'),
+            angle=Angle('1 arcsec'),
+            time=Quantity(1, 'microsecond'),
 
     )
 
@@ -714,9 +712,9 @@ class EventListDatasetChecker(object):
 
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         telescope_met_refs = OrderedDict(
-            FERMI=Time('2001-01-01T00:00:00'),
-            HESS=Time('2000-01-01T12:00:00.000'),
-            # TODO: Once CTA has specified their MET reference add check here
+                FERMI=Time('2001-01-01T00:00:00'),
+                HESS=Time('2000-01-01T12:00:00.000'),
+                # TODO: Once CTA has specified their MET reference add check here
         )
 
         telescope = self.dset.event_list.meta['TELESCOP']

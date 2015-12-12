@@ -1,5 +1,5 @@
 import logging
-from gammapy.obs import DataManager, DataStore
+from gammapy.data import DataManager, DataStore
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,7 +24,6 @@ def test_data_store():
     print(data_store.filename(obs_id=23037, filetype='events'))
     events = data_store.load(obs_id=23037, filetype='events')
     print(events.__class__)
-    # import IPython; IPython.embed(); 1/0
 
 
 if __name__ == '__main__':

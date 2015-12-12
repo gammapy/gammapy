@@ -5,7 +5,7 @@ from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency
 from ...datasets import make_test_dataset
 from ...background import CubeBackgroundModel
-from ...obs import ObservationGroups
+from ...data import ObservationGroups
 from ..cube_background import make_bg_cube_models_main
 
 

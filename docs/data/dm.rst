@@ -8,15 +8,16 @@ Data Management
 Classes
 -------
 
-Gammapy helps with data management using a multi-layered set of classes. The job of the DataManager and DataStore is to make it easy and fast to locate files and select subsets of observations.
+Gammapy helps with data management using a multi-layered set of classes. The job of the DataManager and DataStore is to
+make it easy and fast to locate files and select subsets of observations.
 
-* The `~gammapy.obs.DataManager` represents a configuration (usually read
+* The `~gammapy.data.DataManager` represents a configuration (usually read
   from a YAML file) of directories and index files specifying where
   data is available locally and remotely and in which formats.
-* The `~gammapy.obs.DataStore` represents data files in a given directory
+* The `~gammapy.data.DataStore` represents data files in a given directory
   and usually consists of two things: a `~astropy.table.Table`
   that contains the location, content, size, checksum of all files
-  and a `~gammapy.obs.ObservationTable` that contains relevant parameters
+  and a `~gammapy.data.ObservationTable` that contains relevant parameters
   for each observation (e.g. time, pointing position, ...)
 * The actual data and IRFs are represented by classes,
   e.g. `~gammapy.data.EventList` or `~gammapy.irf.EffectiveAreaTable2D`.
@@ -24,12 +25,16 @@ Gammapy helps with data management using a multi-layered set of classes. The job
 Getting Started
 ---------------
 
-The following example demonstrates how data management is done in Gammapy. It uses a test data set, which is available in the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository. Please clone this repository and navigate to ``gammapy-extra/datasets/``. The folder ``hess-crab4`` contains IRFs and simulated event lists for 4 observations of the Crab nebula. It also contains two index files:
+The following example demonstrates how data management is done in Gammapy. It uses a test data set, which is available
+in the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository. Please clone this repository and
+navigate to ``gammapy-extra/datasets/``. The folder ``hess-crab4`` contains IRFs and simulated event lists for 4
+observations of the Crab nebula. It also contains two index files:
 
 * Observation table `observations.fits.gz`
 * File table `files.fits.gz`
 
-These files tell gammapy which observations are contained in the data set and where the event list and IRF files are located for each observation (for more information see :ref:`dm_formats`). 
+These files tell gammapy which observations are contained in the data set and where the event list and IRF files are
+located for each observation (for more information see :ref:`dm_formats`).
 
 Data Store
 ++++++++++
@@ -39,7 +44,7 @@ Exploring the data using the DataStore class works like this
 
 .. code-block:: python
 
-    >>> from gammapy.obs import DataStore
+    >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_dir('hess-crab4')
     >>> data_store.info()
     Data store summary info:
@@ -76,7 +81,7 @@ Now the data access work like this
 
 .. code-block:: python
 
-    >>> from gammapy.obs import DataManager
+    >>> from gammapy.data import DataManager
     >>> data_manager = DataManager.from_yaml(DataManager.DEFAULT_CONFIG_FILE)
     >>> data_manager.store_names
     ['crab_example']
@@ -86,7 +91,7 @@ or just
 
 .. code-block:: python
 
-    >>> from gammapy.obs import DataStore
+    >>> from gammapy.data import DataStore
     >>> data_store = DataStore.from_name('crab_example')
 
 
@@ -107,7 +112,7 @@ Data registry config file
 
 Here's an example of a data store registry YAML config file that Gammapy understands:
 
-.. include:: ../../gammapy/obs/tests/data/data-register.yaml
+.. include:: ../../gammapy/data/tests/data/data-register.yaml
     :code: yaml
 
 Observation table

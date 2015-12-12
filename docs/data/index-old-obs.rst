@@ -1,15 +1,13 @@
 .. _obs:
 
-*************************************
-Observation handling  (`gammapy.obs`)
-*************************************
-
-.. currentmodule:: gammapy.obs
+********************
+Observation handling
+********************
 
 Introduction
 ============
 
-`gammapy.obs` contains methods to handle observations.
+`gammapy.data` contains methods to handle observations.
 
 In TeV astronomy an observation (a.k.a. a run) means pointing the telescopes at some
 position on the sky (fixed in celestial coordinates, not in horizon coordinates)
@@ -26,8 +24,9 @@ This allows you to be up and running quickly and to focus on analysis.
 
 * ``gammapy-data-manage`` -- Manage data locally and on servers
 * ``gammapy-data-browse`` -- A web app to browse local data (stats and quick look plots)
-* ``gammapy-obs-select`` -- Select observations of interest for a given analysis
-* ``gammapy-obs-group`` -- Group observations (TODO: implement)
+* ``gammapy-data-show`` -- A command line tool to print and plot contents of data files (for quick checks)
+* ``gammapy-data-select`` -- Select observations of interest for a given analysis
+* ``gammapy-data-group`` -- Group observations (TODO: implement)
 
 Download data
 -------------
@@ -87,7 +86,7 @@ Gammapy contains the locations of gamma-ray telescopes:
 
 .. code-block:: python
 
-   >>> from gammapy.obs import observatory_locations
+   >>> from gammapy.data import observatory_locations
    >>> observatory_locations.HESS
    <EarthLocation (7237.152530011689, 2143.7727767623487, -3229.3927009565496) km>
    >>> print(observatory_locations.HESS.geodetic)
@@ -97,23 +96,4 @@ This can be convenient e.g. for observation planning, or to transform between Al
 
 TODO: We should probably update this to use the `astroplan.Observer` class,
 which contains a similar observatory lookup database via `astroplan.Observer.at_site`.
-
-
-Using `gammapy.obs`
-===================
-
-If you'd like to learn more about using `gammapy.obs`, read the following sub-pages:
-
-.. toctree::
-   :maxdepth: 1
-
-   dm
-   find_observations
-   observation_grouping
-   server
-
-Reference/API
-=============
-
-.. automodapi:: gammapy.obs
-    :no-inheritance-diagram:
+Maybe this has been moved to Astropy core? At least there's an open pull request.

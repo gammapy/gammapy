@@ -4,8 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_data
 from ...datasets import gammapy_extra
-from ...data import TelescopeArray
-from ...obs import observatory_locations
+from ...data import TelescopeArray, observatory_locations
 
 
 @requires_data('gammapy-extra')

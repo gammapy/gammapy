@@ -4,7 +4,7 @@ This is an example showcasing some of the Gammapy features.
 
 With just ~ 100 lines of high-level code we can do this:
 
-- Make a global event list from a datastore (uses `gammapy.obs` and `gammapy.data`)
+- Make a global event list from a datastore (uses `gammapy.data`)
 - Apply an energy and spatial event selection (`EventList` class)
 - Bin events into a counts image (uses `gammapy.data` and `gammapy.image`)
 - Estimate a background image (uses `gammapy.background`)
@@ -32,8 +32,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution import Gaussian2DKernel
 from photutils.detection import find_peaks
-from gammapy.obs import DataStore
-from gammapy.data import EventListDataset, EventList
+from gammapy.data import DataStore, EventListDataset, EventList
 from gammapy.background import IterativeKernelBackgroundEstimator, GammaImages
 from gammapy.image import binary_disk, binary_ring
 from gammapy.detect import compute_ts_map
