@@ -6,7 +6,7 @@
 Data Formats
 ************
 
-.. warning:: Since November 2015 there is the `Data formats for gamma-ray astronomy <gadf>`_ project.
+.. warning:: Since November 2015 there is the :ref:`gadf:main-page` project.
     Most of the information in ``gammapy/docs`` should be moved there.
     Probably keeping the overview table which formats are supported in Gammapy and
     linking format names and class names should be kept.
@@ -24,6 +24,7 @@ file formats and they have developed powerful tools to work with data in that fo
 In other cases (flux points, point spread function, run lists) there is no standard and
 we simply use general-purpose file formats define our own semantics as described
 in the :ref:`dataformats_file_formats` section. 
+
 
 .. _dataformats_overview:
 
@@ -111,13 +112,6 @@ Sub-pages
 
    file_formats
 
-   events
-   maps
-   cubes
-   spectra
-   lightcurves
-
-   psf
    observation_lists
    source_models
    target_lists
