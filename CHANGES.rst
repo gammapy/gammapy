@@ -1,12 +1,12 @@
 .. _gammapy_1p0_release:
 
-1.0 (Spring 2016, unreleased)
------------------------------
+1.0 (2016, unreleased)
+----------------------
 
 Summary
 +++++++
 
-Gammapy 1.0 will be released in spring 2016.
+Gammapy 1.0 will be released in 2016.
 
 Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
 
@@ -20,29 +20,27 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released on December 21, 2015.
+Gammapy 0.5 will be released in spring 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
 Contributors
 ++++++++++++
 
-- Luigi Tibaldo
 
 Pull requests
 +++++++++++++
 
-- [#398] Exposure cube (Luigi Tibaldo)
 
 .. _gammapy_0p4_release:
 
-0.4 (November 15, 2015, unreleased)
+0.4 (December 21, 2015, unreleased)
 -----------------------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on November 15, 2015.
+Gammapy 0.4 will be released on December 21, 2015.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 
@@ -53,12 +51,16 @@ Contributors
 - Christoph Deil
 - Dirk Lennarz (new)
 - Johannes King
+- Luigi Tibaldo (new)
 - Manuel Paz Arribas
 
 Pull requests
 +++++++++++++
 
-- [#379] Reflected Regions (Johannes King)
+- [#398] Add function to compute exposure cubes (Luigi Tibaldo)
+- [#396] Rewrite spectrum analysis (Johannes King)
+- [#395] Fix misc issues with IRF classes (Johannes King)
+- [#379] Add gammapy.region and reflected region computation (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)
 - [#369] Improve the data management toolbox (Christoph Deil)
