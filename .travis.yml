@@ -107,7 +107,7 @@ matrix:
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
                SHERPA=true
                CONDA_CHANNELS='astropy-ci-extras astropy'
-               CONDA_DEPENDENCIES='Cython click'
+               CONDA_DEPENDENCIES='Cython click matplotlib'
                PIP_DEPENDENCIES=''
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
