@@ -47,56 +47,56 @@ matrix:
     include:
 
         # Try MacOS X
-        - os: osx
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
+#        - os: osx
+#          env: PYTHON_VERSION=2.7 SETUP_CMD='test'
+#               CONDA_DEPENDENCIES='Cython click'
+#               PIP_DEPENDENCIES=''
 
         # Run tests
         # Coverage is measured on Python 2 (where Sherpa is available)
-        - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V --coverage'
-               SHERPA=true
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V --coverage'
+#               SHERPA=true
 
-        - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
 
         # Build docs
-        - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
-               SHERPA=true
-        - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
+#               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+#               SHERPA=true
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 SETUP_CMD='build_sphinx -w'
+#               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
         # Run tests without GAMMAPY_EXTRA available
-        - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+#        - os: linux
+#          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.4 SETUP_CMD='test -V'
 
         # Test with Astropy dev version
-        - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
-               SHERPA=true
-        - os: linux
-          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='test -V'
-        - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
-               SHERPA=true
-        - os: linux
-          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+#               SHERPA=true
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
+#               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+#               SHERPA=true
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
+#               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
         # Test with with optional dependencies disabled
-        - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
-        - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+#               CONDA_DEPENDENCIES='Cython click'
+#               PIP_DEPENDENCIES=''
+#        - os: linux
+#          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+#               CONDA_DEPENDENCIES='Cython click'
+#               PIP_DEPENDENCIES=''
 
         # Test with other numpy versions. Not all of the packages are
         # available with these on conda, thus moving some of them to pip
@@ -108,7 +108,13 @@ matrix:
                SHERPA=true
                CONDA_CHANNELS='astropy-ci-extras astropy'
                CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES='pyregion'
+               PIP_DEPENDENCIES=''
+        - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
+               SHERPA=true
+               CONDA_CHANNELS='astropy-ci-extras astropy'
+               CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes'
+               PIP_DEPENDENCIES='uncertainties reproject pyregion'
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
                SHERPA=true
