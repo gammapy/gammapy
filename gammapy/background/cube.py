@@ -685,8 +685,7 @@ class Cube(object):
             Energy spectrum
         """
         ebounds = self.energy_edges if ebounds is None else ebounds
-        energy = ebounds.log_centers
-        ebins = energy.find_energy_bin(energy)
+        ebins = self.energy_edges.find_energy_bin(ebounds.log_centers)
 
         coord = coord.flatten()
         # check shape of coord: only 1 pair is accepted

@@ -6,7 +6,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
-from ..background import ring_area_factor
+from ..background import ring_area_factor, Cube
 from ..data import DataStore
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import (
@@ -105,7 +105,7 @@ class SpectrumAnalysis(object):
         off = [obs.offset for obs in self.observations]
         return off
 
-    def off_vec(self, method='reflected'):
+    def off_vec(self, method):
         """List of all background vectors for the analysis
 
         For available methods see :ref:`spectrum_background_method`
@@ -167,16 +167,7 @@ class SpectrumAnalysis(object):
         on_region = SkyCircleRegion(center, radius)
 
         # OFF region
-        off_type = config['off_region']['type']
-        if off_type == 'ring':
-            irad = Angle(config['off_region']['inner_radius'])
-            orad = Angle(config['off_region']['outer_radius'])
-            bkg_method = dict(type='ring', inner_radius=irad,
-                              outer_radius=orad)
-        elif off_type == 'reflected':
-            bkg_method = dict(type='reflected')
-        else:
-            raise ValueError("Invalid background method: {}".format(off_type))
+        bkg_method = config['off_region']
 
         # Exclusion
         excl_file = config['excluded_regions']['file']
@@ -286,6 +277,11 @@ class SpectrumObservation(object):
         """
         return self.pointing.separation(self.on_region.pos)
 
+    @property
+    def livetime(self):
+        """Livetime of the observation"""
+        return self.event_list.observation_live_time_duration
+
     def make_on_vector(self):
         """Create ON vector
 
@@ -358,8 +354,8 @@ class SpectrumObservation(object):
         """Helper function to create OFF vector from ring"""
         center = self.on_region.pos
         radius = self.on_region.radius
-        inner = method['inner_radius']
-        outer = method['outer_radius']
+        inner = Angle(method['inner_radius'])
+        outer = Angle(method['outer_radius'])
         off_list = self.event_list.select_sky_ring(center, inner, outer)
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
         alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
@@ -368,8 +364,13 @@ class SpectrumObservation(object):
 
     def _make_off_vector_bgmodel(self, method):
         """Helper function to create OFF vector from BgModel"""
-        bg_cube = self.store.load(obs_id=self.obs, filetype='background')
-        import IPython; IPython.embed()
+        filename = self.store.filename(obs_id=self.obs, filetype='background')
+        cube = Cube.read(filename, scheme='bg_cube')
+        # TODO: Properly transform to SkyCoords
+        coords = Angle([self.offset, '0 deg'])
+        spec = cube.make_spectrum(coords, self.ebounds)
+        cnts = spec * self.ebounds.bands * self.livetime * self.on_region.area
+        off_vec = CountsSpectrum(cnts, self.ebounds, backscal=1)
         return off_vec
 
     def make_arf(self):

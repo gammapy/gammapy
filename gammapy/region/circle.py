@@ -132,6 +132,13 @@ class SkyCircleRegion(SkyRegion):
         self.pos = SkyCoord(pos)
         self.radius = Angle(radius)
 
+    @property
+    def area(self):
+        """Circle Area
+        """
+        val = 4 * np.pi * np.sin(self.radius/2) ** 2
+        return val * u.steradian
+
     def to_pixel(self, wcs):
         """
         Return a `~gammapy.regions.PixCircleRegion`.
