@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from gammapy.utils.scripts import recursive_merge_dicts
 
 
-def test_recursive_update_dict():
+def test_recursive_merge_dicts():
     old = dict(a=42, b=dict(c=43, e=44))
     update = dict(d=99, b=dict(g=98, c=50))
 

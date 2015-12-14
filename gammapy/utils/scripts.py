@@ -186,10 +186,11 @@ def make_path(path):
 
 
 def recursive_merge_dicts(a, b):
-    """Recursively merge two dictionaries, entries in b override entries in a.
+    """Recursively merge two dictionaries.
 
-    The built-in update function cannot be used for hierarchical dicts
-    see:http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth/3233356#3233356
+    Entries in b override entries in a. The built-in update function cannot be
+    used for hierarchical dicts, see:
+    http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth/3233356#3233356
 
     Parameters
     ----------
