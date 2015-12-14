@@ -11,7 +11,7 @@ from ..utils.scripts import (
     set_up_logging_from_args,
     write_yaml,
     read_yaml,
-    recursive_update_dict
+    recursive_merge_dicts
 )
 import logging
 import numpy as np
@@ -69,7 +69,7 @@ class SpectrumPipe(object):
             log.info("Creating analysis {}".format(analysis))
             anaconf = base_config.copy()
             temp = config[analysis]
-            anaconf = recursive_update_dict(anaconf, temp)
+            anaconf = recursive_merge_dicts(anaconf, temp)
             if auto_outdir:
                 anaconf['general']['outdir'] = analysis
 
