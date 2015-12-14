@@ -105,6 +105,19 @@ class SpectrumAnalysis(object):
         off = [obs.offset for obs in self.observations]
         return off
 
+    def off_vec(self, method='reflected'):
+        """List of all background vectors for the analysis
+
+        For available methods see :ref:`spectrum_background_method`
+
+        Parameters
+        ----------
+        method : dict
+            Background estimation method
+        """
+        off = [obs.make_off_vector(method=method) for obs in self.observations]
+        return off
+
     @property
     def reflected_regions(self, **kwargs):
         """List of dicts containing information about the reflected regions
@@ -300,37 +313,63 @@ class SpectrumObservation(object):
                                             self.exclusion, **kwargs)
         return off_region
 
-    def make_off_vector(self):
+    def make_off_vector(self, method=None):
         """Create off vector
+
+        For available methods see :ref:`spectrum_background_method`
+
+        Parameters
+        ----------
+        method : dict
+            Background estimation method
 
         Returns
         -------
-        on_vec : `gammapy.spectrum.CountsSpectrum`
+        off_vec : `gammapy.spectrum.CountsSpectrum`
             Counts spectrum inside the OFF region
         """
-        if self.bkg_method['type'] == "ring":
-            # TODO put in utils once there is a SkyRingRegion
-            center = self.on_region.pos
-            radius = self.on_region.radius
-            inner = self.bkg_method['inner_radius']
-            outer = self.bkg_method['outer_radius']
-            off_list = self.event_list.select_sky_ring(center, inner, outer)
-            alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
-        elif self.bkg_method['type'] == "reflected":
-            kwargs = self.bkg_method.copy()
-            kwargs.pop('type')
-            off = self.make_reflected_regions(**kwargs)
-            off_list = self.event_list.select_circular_region(off)
-            alpha = len(off)
-        elif self.bkg_method['type'] == "bg_model":
-            pass
+
+        # TODO put in utils once there is a SkyRingRegion
+        method = self.bkg_method if method is None else method
+        if method['type'] == "ring":
+            off_vec = self._make_off_vector_ring(method)
+        elif method['type'] == "reflected":
+            off_vec = self._make_off_vector_reflected(method)
+        elif method['type'] == "bgmodel":
+            off_vec = self._make_off_vector_bgmodel(method)
         else:
             raise ValueError("Undefined background method: {}".format(
-                    self.bkg_method['type']))
+            method['type']))
 
-        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
-        off_vec.backscal = alpha
         self.bkg = off_vec
+        return off_vec
+
+    def _make_off_vector_reflected(self, method):
+        """Helper function to create OFF vector from reflected regions"""
+        kwargs = method.copy()
+        kwargs.pop('type')
+        off = self.make_reflected_regions(**kwargs)
+        off_list = self.event_list.select_circular_region(off)
+        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        off_vec.backscal = len(off)
+        return off_vec
+
+    def _make_off_vector_ring(self, method):
+        """Helper function to create OFF vector from ring"""
+        center = self.on_region.pos
+        radius = self.on_region.radius
+        inner = method['inner_radius']
+        outer = method['outer_radius']
+        off_list = self.event_list.select_sky_ring(center, inner, outer)
+        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
+        off_vec.backscal = alpha
+        return off_vec
+
+    def _make_off_vector_bgmodel(self, method):
+        """Helper function to create OFF vector from BgModel"""
+        bg_cube = self.store.load(obs_id=self.obs, filetype='background')
+        import IPython; IPython.embed()
         return off_vec
 
     def make_arf(self):

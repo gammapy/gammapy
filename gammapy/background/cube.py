@@ -668,7 +668,7 @@ class Cube(object):
             plt.close(fig)
         return ax
 
-    def make_spectrum(self, coord, energy=None):
+    def make_spectrum(self, coord, ebounds=None):
         """
         Generate energy spectrum at a certain position in the FOV
 
@@ -676,7 +676,7 @@ class Cube(object):
         ----------
         coord : `~astropy.units.Quantity`
             Coord (X,Y) pair of cube bin to plot.
-        energy : `~gammapy.utils.energy.Energy`, optional
+        ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
             Energy binning for the spectrum
 
         Returns
@@ -684,8 +684,9 @@ class Cube(object):
         spectrum : `~astropy.units.Quantity`
             Energy spectrum
         """
-        energy = self.energy_edges.log_centers if energy is None else energy
-        ebins = self.energy_edges.find_energy_bin(energy)
+        ebounds = self.energy_edges if ebounds is None else ebounds
+        energy = ebounds.log_centers
+        ebins = energy.find_energy_bin(energy)
 
         coord = coord.flatten()
         # check shape of coord: only 1 pair is accepted
@@ -702,7 +703,7 @@ class Cube(object):
 
         return spectrum
 
-    def plot_spectrum(self, coord, energy=None, ax=None, style_kwargs=None):
+    def plot_spectrum(self, coord, ebounds=None, ax=None, style_kwargs=None):
         """Plot spectra for the coord bin containing the specified coord (X, Y) pair.
 
         Parameters
@@ -711,7 +712,7 @@ class Cube(object):
             Coord (X,Y) pair of cube bin to plot.
         ax : `~matplotlib.axes.Axes`, optional
             Axes of the figure for the plot.
-        energy : `~gammapy.utils.energy.Energy`, optional
+        ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
             Energy binning for the spectrum
         style_kwargs : dict, optional
             Style options for the plot.
@@ -723,8 +724,8 @@ class Cube(object):
         """
         import matplotlib.pyplot as plt
 
-        energy = self.energy_edges.log_centers if energy is None else energy
-        data = self.make_spectrum(coord, energy=energy)
+        ebounds = self.energy_edges if ebounds is None else ebounds
+        data = self.make_spectrum(coord, ebounds=ebounds)
         coord_bin_edges = self.find_coord_bin_edges(coord)
 
         # create plot
