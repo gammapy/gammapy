@@ -22,7 +22,7 @@ __all__ = [
     'read_yaml',
     'write_yaml',
     'make_path',
-    'recursive_update_dict',
+    'recursive_merge_dicts',
 ]
 
 
@@ -175,7 +175,7 @@ def write_yaml(config, filename, logger=None):
 
 def make_path(path):
     """
-    Expand environment varibles on `~pathlib.Path` construction
+    Expand environment variables on `~pathlib.Path` construction
 
     Parameters
     ----------
@@ -185,25 +185,38 @@ def make_path(path):
     return Path(expandvars(str(path)))
 
 
-def recursive_update_dict(old, new):
-    """Recursively update a dict with new values
+def recursive_merge_dicts(a, b):
+    """Recursively merge two dictionaries, entries in b override entries in a.
 
     The built-in update function cannot be used for hierarchical dicts
-    where only a subset of keys shall be updated.
-    see: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+    see:http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth/3233356#3233356
 
     Parameters
     ----------
-    old : dict
-        dict to be changed
-    new : dict
-        dict containing changes
+    a : dict
+        dictionary to be merged
+    b : dict
+        dictionary to be merged
+
+    Returns
+    -------
+    c : dict
+        merged dict
+
+    Examples
+    --------
+    >>> from gammapy.utils.scripts import recursive_merge_dicts
+    >>> a = dict(a=42, b=dict(c=43, e=44))
+    >>> b = dict(d=99, b=dict(c=50, g=98))
+    >>> c = recursive_merge_dicts(a, b)
+    >>> print(c)
+    {'a': 42, 'b': {'c': 50, 'e': 44, 'g': 98}, 'd': 99}
     """
 
-    result = old.copy()
-    for k, v in new.iteritems():
-        if k in result and isinstance(result[k], dict):
-            result[k] = recursive_update(result[k], v)
+    c = a.copy()
+    for k, v in b.items():
+        if k in c and isinstance(c[k], dict):
+            c[k] = recursive_merge_dicts(c[k], v)
         else:
-            result[k] = v
-    return result
+            c[k] = v
+    return c
