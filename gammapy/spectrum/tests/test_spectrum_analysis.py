@@ -1,5 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+from astropy.tests.helper import pytest
+from astropy.utils.compat import NUMPY_LT_1_9
+
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import requires_dependency, requires_data
@@ -41,6 +46,7 @@ def test_spectrum_analysis(tmpdir):
     ana.write_ogip_data(outdir=str(tmpdir))
 
 
+@pytest.mark.skipif('NUMPY_LT_1_9')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_fit(tmpdir):
