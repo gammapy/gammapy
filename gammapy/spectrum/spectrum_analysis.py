@@ -220,9 +220,43 @@ class SpectrumAnalysis(object):
 
     def band(self,tab):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
-        for i in tab:
+        """
+        alt = Angle([0, 30, 60, 90], 'deg')
+        az = Angle([-90, 90, 270], 'deg')
+        ntels = np.array([3, 4])
+        list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
+                               ObservationGroupAxis('AZ', az, 'bin_edges'),
+                               ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
+        obs_groups = ObservationGroups(list_obs_group_axis)
+
+        Print the observation group table (group definitions):
+        
+        >>> print(obs_groups.obs_groups_table)
+        
+        Print the observation group axes:
+        
+        >>> print(obs_groups.info)
+        
+        Group the observations of an observation list and print them:
+        
+        >>> obs_table_grouped = obs_groups.group_observation_table(obs_table)
+        >>> print(obs_table_grouped)
+        
+        Get the observations of a particular group and print them:
+    
+        >>> obs_table_group8 = obs_groups.get_group_of_observations(obs_table_grouped, 8)
+        >>> print(obs_table_group8)
+        """
+        """
+        Reflechir a ce qu on met en entree pour le grouing deja le tableau froupe ou les axes pour groupe?
+        """
+        #Comprendre ce qu est l obs table comme objet
+        obs_table_grouped = obs_groups.group_observation_table(obs_table)
+        nband=len(obs_groups.list_of_groups)
+        for i in nband:
             #on itere sur chaque bande et on recupere la liste des numero de run a grouper
-            observationlist=tab.observationlist
+            obs_table_group=obs_groups.get_group_of_observations(obs_table_grouped, nband)
+            observationlist= obs_table_group["OBS_ID"]
             observationgroup=[]
             #listobservation va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
             for i in observationlist:
@@ -241,24 +275,15 @@ class SpectrumAnalysis(object):
         t = self.store.file_table
         filetype="events"
         for (obs,n) in enumerate(observationgroup):
-            on_vector=obs.make_on_vector()
-            off_vector=obs.make_off_vector()
+            on_vector=obs.make_on_vector().counts
+            off_vector=obs.make_off_vector().counts
             #OFF= OFF total de l observation car offvector cest par bin en erngie et pour l instant je ne fais pas de alpha qui depend de l energie donc pour trouver le alpha de la bande je pondere par rapport au nombre total de OFF
             OFF=np.sum(off_vector)
-            arf_vector=obs.make_arf()
-            rmf_vector=obs.make_rmf()
-            backscal=off_vector.backscal
-            #Get Livetime of the observation from the events fits file
-            mask = (t['OBS_ID'] == obs.obs) & (t['TYPE'] == filetype)
-            try:
-                idx = np.where(mask)[0][0]
-            except IndexError:
-                msg = 'File not in table: OBS_ID = {}, TYPE = {}'.format(obs_id, filetype)
-                raise IndexError(msg)
-
-            filename = t['NAME'][idx]
-            Table=Table.read(str(self.data_store.base_dir)+str(filename))
-            livetime=Table.meta["LIVETIME"]
+            backscal=obs.make_off_vector().backscal
+            livetime=obs.make_off_vector().livetime
+            arf_vector=obs.make_arf().effective_area
+            rmf_vector=obs.make_rmf().pdf_matrix
+            
             """
             Ca va pas d avoir ce truc ou on initialise tout pour le premier run qu on groupe c est super sale doit y avoir un autre moyen
             """
@@ -272,8 +297,8 @@ class SpectrumAnalysis(object):
                 livetimeband = livetime
                 arfband = arf_vector*livetime
                 #Pour la premiere observation a grouper le tableau est initaliser a la dimension (True,Ereco)
-                dim_Etrue = np.shape(rmf_vector.pdf_matrix)[0]
-                dim_Ereco = np.shape(rmf_vector.pdf_matrix)[1]
+                dim_Etrue = np.shape(rmf_vector)[0]
+                dim_Ereco = np.shape(rmf_vector)[1]
                 rmfband=np.zeros((dim_Etrue,dim_Ereco))
                 rmfmean=np.zeros((dim_Etrue,dim_Ereco))
                 """
@@ -296,6 +321,7 @@ class SpectrumAnalysis(object):
         #Pour normaliser le alpha Regis il prend que la ou les OFF sont positifs....
         backscalmean = backscalband /OFFtotband
         #backscalmean = backscalband / OFFband
+        OFFband.backscale=backscalmean 
         arfmean = arfband/livetimeband
         #rmf a diviser par sum(arfi*ti) sur les runs
         for ind_Etrue in range(dim_Etrue):
@@ -673,6 +699,7 @@ class SpectralFit(object):
         ds.notice(thres_lo, thres_hi)
         ds.subtract()
         ds.fit()
+        ds.plot_fit()
         ds.clear_stack()
         ds.clear_models()
 
