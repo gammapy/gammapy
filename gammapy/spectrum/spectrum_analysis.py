@@ -218,7 +218,7 @@ class SpectrumAnalysis(object):
             obs.write_all_ogip_data(outdir)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
-    def band(self,tab):
+    def band(self,tab, ebounds):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
         """
         alt = Angle([0, 30, 60, 90], 'deg')
@@ -263,9 +263,53 @@ class SpectrumAnalysis(object):
                 ind=no.where(self._numberobservations==i)
                 observationgroup.append(self._observations[ind])
             #Appelle de la fonction grouping pour la bande en question avec en argument le tableau d objet SpectrumObservation a grouper
-            grouping(observationgroup)
+            pha, bkg, arf, rmf=grouping(observationgroup)
+            """Write OGIP files
 
-    def grouping(self, observationgroup):
+            Only those objects are written have been created with the appropriate
+            functions before
+            
+            Parameters
+            ----------
+            phafile : `~gammapy.extern.pathlib.Path`, str
+            PHA filename
+            bkgfile : str
+            BKG filename
+            arffile : str
+            ARF filename
+            rmffile : str
+            RMF : filename
+            outdir : None
+            directory to write the files to
+            clobber : bool
+            Overwrite
+            """
+
+            outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
+            outdir.mkdir(exist_ok=True)
+
+            if phafile is None:
+                phafile = outdir / "pha_run{}.pha".format(nband)
+            if arffile is None:
+                arffile = outdir / "arf_run{}.fits".format(nband)
+            if rmffile is None:
+                rmffile = outdir / "rmf_run{}.fits".format(nband)
+            if bkgfile is None:
+                bkgfile = outdir / "bkg_run{}.fits".format(nband)
+
+            if self.pha is not None:
+                pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
+                           rmf=str(rmffile), clobber=clobber)
+            if self.bkg is not None:
+                bkg.write(str(bkgfile), clobber=clobber)
+            if self.arf is not None:
+                arf.write(str(arffile), energy_unit='keV', effarea_unit='cm2',
+                           clobber=clobber)
+            if self.rmf is not None:
+                rmf.write(str(rmffiVectorOnBand,VectorOFFBand, VectorArf, VectorRmfle), energy_unit='keV', clobber=clobber)
+
+    def grouping(self, observationgroup, ebounds, phafile=None, bkgfile=None, rmffile=None, arffile=None,
+                   outdir=None, clobber=True):
         """
         Observationgroup va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
         """
@@ -282,12 +326,15 @@ class SpectrumAnalysis(object):
             backscal=obs.make_off_vector().backscal
             livetime=obs.make_off_vector().livetime
             arf_vector=obs.make_arf().effective_area
-            rmf_vector=obs.make_rmf().pdf_matrix
+            rmf_matrix=obs.make_rmf().pdf_matrix
             
             """
             Ca va pas d avoir ce truc ou on initialise tout pour le premier run qu on groupe c est super sale doit y avoir un autre moyen
             """
             if(n==0):
+                #Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
+                energy_hi=obs.make_arf().energy_hi   
+                energy_lo=obs.make_arf().energy_lo
                 ONband = on_vector
                 OFFband = off_vector
                 OFFtotband = OFF
@@ -297,15 +344,15 @@ class SpectrumAnalysis(object):
                 livetimeband = livetime
                 arfband = arf_vector*livetime
                 #Pour la premiere observation a grouper le tableau est initaliser a la dimension (True,Ereco)
-                dim_Etrue = np.shape(rmf_vector)[0]
-                dim_Ereco = np.shape(rmf_vector)[1]
+                dim_Etrue = np.shape(rmf_matrix)[0]
+                dim_Ereco = np.shape(rmf_matrix)[1]
                 rmfband=np.zeros((dim_Etrue,dim_Ereco))
                 rmfmean=np.zeros((dim_Etrue,dim_Ereco))
                 """
                 Regis dans son fichier group_pha il fait plein de truc au niveau de la tms comprend pas tres bien
                 """
                 for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:]= rmf_vector[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+                    rmfband[ind_Etrue,:]= rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
             else:
                 ONband += on_vector
                 OFFband += off_vector
@@ -317,7 +364,7 @@ class SpectrumAnalysis(object):
                 arfband += arf_vector*livetime
                 #rmf et dimEtrue deja defini pour la premiere observation qu on groupe
                 for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:] += rmf_vector[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+                    rmfband[ind_Etrue,:] += rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
         #Pour normaliser le alpha Regis il prend que la ou les OFF sont positifs....
         backscalmean = backscalband /OFFtotband
         #backscalmean = backscalband / OFFband
@@ -326,7 +373,15 @@ class SpectrumAnalysis(object):
         #rmf a diviser par sum(arfi*ti) sur les runs
         for ind_Etrue in range(dim_Etrue):
             rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
-            
+
+
+        pha=CountsSpectrum(ONband, ebounds, livetimeband)
+        #voir si on veut un alpha dependant de l energie comment faire
+        bkg=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
+        arf=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
+        rmf=EnergyDispersion(rm, e_true, ebounds)
+        return (pha,bkg,arf, rmf)
+        
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
