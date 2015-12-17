@@ -1,10 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from astropy import wcs
+
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
-from ..image import ExclusionMask
+from astropy.wcs.utils import skycoord_to_pixel
+
+from gammapy.extern import pathlib
+from gammapy.extern.pathlib import Path
+from ..image import ExclusionMask, make_empty_image
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
@@ -99,6 +105,11 @@ class SpectrumAnalysis(object):
         return self._observations
 
     @property
+    def obs_ids(self):
+        """List of all observation ids"""
+        return [o.obs for o in self.observations]
+
+    @property
     def offset(self):
         """List of offsets from the observation position for all observations
         """
@@ -118,17 +129,24 @@ class SpectrumAnalysis(object):
         off = [obs.make_off_vector(method=method) for obs in self.observations]
         return off
 
-    @property
-    def reflected_regions(self, **kwargs):
-        """List of dicts containing information about the reflected regions
-        for each observation
+    def get_obs_by_id(self, id):
+        """Return an certain observation belonging to the analysis
+
+        Parameters
+        ----------
+        id : int
+            Observation Id (runnumber)
+
+        Returns
+        -------
+        observation : `~gammapy.spectrum.SpectrumObservation`
+            Spectrum observation
         """
-        retval = list([])
-        for obs in self.observations:
-            reflected = obs.make_reflected_regions(**kwargs)
-            val = dict(obs=obs.obs, pointing=obs.pointing, region=reflected)
-            retval.append(val)
-        return retval
+        try:
+            i = self.obs_ids.index(id)
+        except ValueError:
+            raise ValueError("Observation {} not found".format(id))
+        return self.observations[i]
 
     @classmethod
     def from_config(cls, config):
@@ -204,7 +222,7 @@ class SpectrumAnalysis(object):
 
         return ss
 
-    def write_ogip_data(self, outdir):
+    def write_ogip_data(self, outdir, **kwargs):
         """Create OGIP files
 
         Parameters
@@ -214,7 +232,7 @@ class SpectrumAnalysis(object):
         """
 
         for obs in self.observations:
-            obs.write_all_ogip_data(outdir)
+            obs.write_all_ogip_data(outdir, **kwargs)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
 
 
@@ -255,6 +273,7 @@ class SpectrumObservation(object):
         self.bkg = None
         self.arf = None
         self.rmf = None
+        self.reflected_regions = None
 
     @property
     def event_list(self):
@@ -307,6 +326,8 @@ class SpectrumObservation(object):
         """
         off_region = find_reflected_regions(self.on_region, self.pointing,
                                             self.exclusion, **kwargs)
+
+        self.reflected_regions = off_region
         return off_region
 
     def make_off_vector(self, method=None):
@@ -370,7 +391,7 @@ class SpectrumObservation(object):
         coords = Angle([self.offset, '0 deg'])
         spec = cube.make_spectrum(coords, self.ebounds)
         cnts = spec * self.ebounds.bands * self.livetime * self.on_region.area
-        off_vec = CountsSpectrum(cnts, self.ebounds, backscal=1)
+        off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
         return off_vec
 
     def make_arf(self):
@@ -423,7 +444,8 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
+        temp = make_path('ogip_data') if outdir is None else make_path(outdir)
+        outdir = Path.cwd() / temp
         outdir.mkdir(exist_ok=True)
 
         if phafile is None:
@@ -447,7 +469,7 @@ class SpectrumObservation(object):
         if self.rmf is not None:
             self.rmf.write(str(rmffile), energy_unit='keV', clobber=clobber)
 
-    def write_all_ogip_data(self, outdir):
+    def write_all_ogip_data(self, outdir, **kwargs):
         """Perform all step to provide the OGIP data for a sherpa fit
 
         Parameters
@@ -459,12 +481,77 @@ class SpectrumObservation(object):
         self.make_off_vector()
         self.make_arf()
         self.make_rmf()
-        self.write_ogip(outdir=outdir)
+        self.write_ogip(outdir=outdir, **kwargs)
 
-    def _check_binning(self):
+    def plot_exclusion_mask(self, size=None, **kwargs):
+        """Plot exclusion mask for this observation
+
+        The plot will be centered at the pointing position
+
+        Parameters
+        ----------
+        size : `~astropy.coordinates.Angle`
+            Edge length of the plot
+        """
+        size = Angle('5 deg') if size is None else size
+        ax = self.exclusion.plot(**kwargs)
+        self._set_ax_limits(ax, size)
+        point = skycoord_to_pixel(self.pointing, ax.wcs)
+        ax.scatter(point[0], point[1], s=250, marker="+", color='black')
+        return ax
+
+    def plot_on_region(self, ax=None, **kwargs):
+        """Plot target regions"""
+        ax = self.plot_exclusion_mask() if ax is None else ax
+        self.on_region.plot(ax, **kwargs)
+
+    def plot_reflected_regions(self, ax=None, **kwargs):
+        """Plot reflected regions"""
+        ax = self.plot_exclusion_mask() if ax is None else ax
+        if self.reflected_regions is None:
+            self.make_reflected_regions()
+        self.reflected_regions.plot(ax, **kwargs)
+
+    def plot_on_counts(self, **kwargs):
+        """Plot ON counts vectors"""
+        if self.pha is None:
+            self.make_on_vector()
+        ax = self.pha.plot(**kwargs)
+        return ax
+
+    def plot_off_counts(self, apply_alpha=False, **kwargs):
+        """Plot ON counts vectors
+
+        Parameters
+        ----------
+        apply_alpha : bool
+            weight off counts with exposure scale factor (alpha)
+        """
+        if self.bkg is None:
+            self.make_off_vector()
+        w = 1. / self.bkg.backscal if apply_alpha else 1
+        ax = self.bkg.plot(weight=w, **kwargs)
+        return ax
+
+    def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
         pass
+
+    def _set_ax_limits(self, ax, extent):
+
+        if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
+            center = self.pointing.galactic
+            xlim = (center.l + extent/2).value, (center.l - extent/2).value
+            ylim = (center.b + extent/2).value, (center.b - extent/2).value
+        else:
+            center = self.pointing.icrs
+            xlim = (center.ra + extent/2).value, (center.ra - extent/2).value
+            ylim = (center.dec + extent/2).value, (center.dec - extent/2).value
+
+        limits = ax.wcs.wcs_world2pix(xlim, ylim,1)
+        ax.set_xlim(limits[0])
+        ax.set_ylim(limits[1])
 
 
 class SpectralFit(object):

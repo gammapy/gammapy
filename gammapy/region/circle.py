@@ -139,6 +139,14 @@ class SkyCircleRegion(SkyRegion):
         val = 4 * np.pi * np.sin(self.radius/2) ** 2
         return val * u.steradian
 
+    def info(self):
+        """Print some basic information"""
+        ss = '\nSkyCircleRegion'
+        ss += '\nCenter: {}'.format(self.pos)
+        ss += '\nRadius: {}'.format(self.radius)
+
+        return ss
+
     def to_pixel(self, wcs):
         """
         Return a `~gammapy.regions.PixCircleRegion`.
@@ -162,7 +170,7 @@ class SkyCircleRegion(SkyRegion):
 
         return PixCircleRegion((x, y), pix_radius)
 
-    def plot(self, ax, **kwargs):
+    def to_mpl_artist(self, ax, **kwargs):
         """Convert to mpl patch using a given wcs transformation
 
         Parameters
@@ -183,12 +191,25 @@ class SkyCircleRegion(SkyRegion):
         val = self.pos.galactic
         center = (val.l.value, val.b.value)
 
-        temp = dict(transform = ax.get_transform('galactic'), 
+        temp = dict(transform=ax.get_transform('galactic'),
                     radius=self.radius.value)
         kwargs.update(temp)
         patch = mpatches.Circle(center, **kwargs)
 
         return patch
+
+    def plot(self, ax, **kwargs):
+        """Plot region
+
+        Parameters
+        ----------
+        ax : `~astropy.wcsaxes.WCSAxes`
+            WCS axis object
+        kwargs : dict
+            kwargs are forwarded to mpatches.Circle
+        """
+        patch = self.to_mpl_artist(ax, **kwargs)
+        ax.add_patch(patch)
 
     def to_ds9(self):
         """Convert to ds9 region string
