@@ -71,6 +71,10 @@ if [[ $SETUP_CMD == build_sphinx* ]]
 then
   $CONDA_INSTALL sphinx pygments matplotlib scipy
   conda install --yes --channel astropy wcsaxes aplpy
+  if [[ $PYTHON_VERSION == 2.7 ]]
+  then
+      conda install --yes mock
+  fi
 fi
 
 # COVERAGE DEPENDENCIES
