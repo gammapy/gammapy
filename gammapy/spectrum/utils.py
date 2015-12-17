@@ -15,6 +15,7 @@ __all__ = [
     'np_to_pha',
 ]
 
+
 class LogEnergyAxis(object):
     """Log10 energy axis.
 

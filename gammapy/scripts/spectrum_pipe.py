@@ -51,7 +51,7 @@ class SpectrumPipe(object):
 
     @classmethod
     def from_configfile(cls, filename, auto_outdir=True):
-        """Create `~gammapy.script.Spectrumpipe` from config file
+        """Create `~gammapy.script.SpectrumPipe` from config file
 
         Parameters
         ----------
@@ -61,6 +61,19 @@ class SpectrumPipe(object):
             Set outdir explicitly for every analysis
         """
         config = read_yaml(filename, log)
+        return cls.from_config(config, auto_outdir=auto_outdir)
+
+    @classmethod
+    def from_config(cls, config, auto_outdir=True):
+        """Create `~gammapy.script.SpectrumPipe` from config dict
+
+        Parameters
+        ----------
+        config : dict
+            config dict
+        auto_outdir : bool [True]
+            Set outdir explicitly for every analysis
+        """
         base_config = config.pop('base_config')
         analist = list([])
 

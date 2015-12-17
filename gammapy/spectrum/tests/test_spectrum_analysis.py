@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
 
 from astropy.tests.helper import pytest
 from astropy.utils.compat import NUMPY_LT_1_9
-
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
 from ...utils.testing import requires_dependency, requires_data
@@ -32,7 +31,7 @@ def test_spectrum_analysis(tmpdir):
 
     bkg_method = dict(type='reflected')
 
-    exclusion_file = gammapy_extra.filename("test_datasets/spectrum/dummy_exclusion.fits")
+    exclusion_file = gammapy_extra.filename("datasets/exclusion_masks/tevcat_exclusion.fits")
     excl = ExclusionMask.from_fits(exclusion_file)
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
@@ -46,6 +45,8 @@ def test_spectrum_analysis(tmpdir):
 
     ana.write_ogip_data(outdir=str(tmpdir))
 
+    total_on = np.sum(ana.on_vector())
+    total_off = np.sum(ana.off_vector())
 
 @pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
 @pytest.mark.skipif('NUMPY_LT_1_9')
@@ -60,7 +61,7 @@ def test_spectral_fit(tmpdir):
     fit.energy_threshold_low = '100 GeV'
     fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
-    assert_allclose(fit.model.gamma.val, 2.0, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)
 
     # broken
     # fit.run(method='hspec')
@@ -77,11 +78,11 @@ def test_spectrum_analysis_from_configfile(tmpdir):
     config['general']['outdir'] = str(tmpdir)
 
     fit = run_spectral_fit_using_config(config)
-    assert_allclose(fit.model.gamma.val, 2.0, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)
 
     config['off_region']['type'] = 'ring'
     config['off_region']['inner_radius'] = '0.3 deg'
     config['off_region']['outer_radius'] = '0.4 deg'
 
     fit = run_spectral_fit_using_config(config)
-    assert_allclose(fit.model.gamma.val, 2.0, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)

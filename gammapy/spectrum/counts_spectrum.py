@@ -55,7 +55,7 @@ class CountsSpectrum(object):
         self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
     @property
-    def entries(self):
+    def total_counts(self):
         """Total number of counts
         """
         return self.counts.sum()
@@ -86,6 +86,11 @@ class CountsSpectrum(object):
         counts = self.counts + other.counts
         livetime = self.livetime + other.livetime
         return CountsSpectrum(counts, self.energy_bounds, livetime=livetime)
+
+    def __mul__(self, other):
+        """Scale counts by a factor"""
+        temp = self.counts * other
+        return CountsSpectrum(temp, self.energy_bounds, livetime=self.livetime)
 
     @classmethod
     def read(cls, phafile, rmffile=None):
