@@ -105,6 +105,7 @@ class SpectrumAnalysis(object):
         """
         return self._observations
 
+    @property
     def obs_ids(self):
         """List of all observation ids"""
         return [o.obs for o in self.observations]
