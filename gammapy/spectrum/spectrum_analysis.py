@@ -488,25 +488,24 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        temp = make_path('ogip_data') if outdir is None else make_path(outdir)
-        outdir = Path.cwd() / temp
+        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True)
 
         if phafile is None:
-            phafile = outdir / "pha_run{}.pha".format(self.obs)
+            phafile = "pha_run{}.pha".format(self.obs)
         if arffile is None:
-            arffile = outdir / "arf_run{}.fits".format(self.obs)
+            arffile = "arf_run{}.fits".format(self.obs)
         if rmffile is None:
-            rmffile = outdir / "rmf_run{}.fits".format(self.obs)
+            rmffile = "rmf_run{}.fits".format(self.obs)
         if bkgfile is None:
-            bkgfile = outdir / "bkg_run{}.fits".format(self.obs)
+            bkgfile = "bkg_run{}.fits".format(self.obs)
 
-        self.on_vector.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
+        self.on_vector.write(str(outdir/phafile), bkg=str(bkgfile), arf=str(arffile),
                              rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(bkgfile), clobber=clobber)
-        self.effective_area.write(str(arffile), energy_unit='keV',
+        self.off_vector.write(str(outdir/bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir/arffile), energy_unit='keV',
                                   effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(rmffile), energy_unit='keV',
+        self.energy_dispersion.write(str(outdir/rmffile), energy_unit='keV',
                                      clobber=clobber)
 
     def plot_exclusion_mask(self, size=None, **kwargs):

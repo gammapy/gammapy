@@ -45,7 +45,7 @@ def test_spectrum_analysis(tmpdir):
 
     ana.write_ogip_data(outdir=str(tmpdir))
 
-    total_on = np.sum(ana.on_vector())
+    total_on = np.sum(ana.on_vector)
     total_off = np.sum(ana.off_vector())
 
 @pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
