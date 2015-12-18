@@ -8,6 +8,7 @@ from gammapy.utils.testing import requires_dependency, requires_data
 
 
 @requires_dependency('scipy')
+@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectrum_pipe(tmpdir):
     configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_pipe_example.yaml')
