@@ -259,7 +259,7 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
 
     if profile_axis == 'lat':
 
-        bins = np.arange((lats[1] - lats[0]) / binsz)
+        bins = np.arange((lats[1] - lats[0]) / binsz, dtype=int)
         glats_min = lats[0] + bins[:-1] * binsz
         glats_max = lats[0] + bins[1:] * binsz
 
@@ -277,7 +277,7 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
 
     elif profile_axis == 'lon':
 
-        bins = np.arange((lons[1] - lons[0]) / binsz)
+        bins = np.arange((lons[1] - lons[0]) / binsz, dtype=int)
         glons_min = lons[0] + bins[:-1] * binsz
         glons_max = lons[0] + bins[1:] * binsz
 
