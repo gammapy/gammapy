@@ -129,11 +129,13 @@ class SpectrumAnalysis(object):
             raise ValueError("Observation {} not found".format(id))
         return self.observations[i]
 
+    @property
     def offset(self):
         """List of offsets from the observation position for all observations
         """
         return [obs.offset for obs in self.observations]
 
+    @property
     def on_vector(self):
         """List of all ON `~gammapy.spectrum.CountsSpectrum`
         """
@@ -154,8 +156,15 @@ class SpectrumAnalysis(object):
                 obs.make_off_vector(method=method)
         return [obs.off_vector for obs in self.observations]
 
+    @property
     def alpha(self):
-        """Exposure Ratio between ON and OFF regions
+        """List of all exposure ratios between ON and OFF regions
+        """
+        return [obs.alpha for obs in self.observations]
+
+    @property
+    def total_alpha(self):
+        """Averaged exposure ratio between ON and OFF regions
 
         Alpha for all observations is calculated as :
         """

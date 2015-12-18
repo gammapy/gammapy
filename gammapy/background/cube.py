@@ -739,7 +739,7 @@ class Cube(object):
 
         fig.set_size_inches(8., 8., forward=True)
 
-        ax.plot(energy.to('TeV'), data, drawstyle='default',
+        ax.plot(ebounds.log_centers.to('TeV'), data, drawstyle='default',
                 **style_kwargs)
         ax.loglog()  # double log scale # slow!
 
@@ -754,7 +754,7 @@ class Cube(object):
         ax.set_title('Coord = {0} {1}'.format(
             ss_coordx_bin_edges, ss_coordy_bin_edges))
         ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['energy_plot_name'],
-                                         energy.unit))
+                                         ebounds.unit))
         ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['data_plot_name'],
                                          data.unit))
         # eventually close figure to avoid white canvases

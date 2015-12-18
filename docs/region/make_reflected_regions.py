@@ -20,9 +20,7 @@ fig = plt.figure(figsize=(8, 5), dpi=80)
 ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs)
 mask.plot(ax)
 for reg in regions:
-    patch = reg.plot(ax, facecolor='red')
-    ax.add_patch(patch)
-patch2 = test_region.plot(ax, facecolor='blue')
-ax.add_patch(patch2)
+    reg.plot(ax, facecolor='red')
+test_region.plot(ax, facecolor='blue')
 
 plt.show()
