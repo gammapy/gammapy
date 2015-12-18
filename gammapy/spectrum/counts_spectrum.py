@@ -10,6 +10,7 @@ import datetime
 from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.data import EventList, EventListDataset
+from gammapy.extern.pathlib import Path
 
 __all__ = ['CountsSpectrum']
 
@@ -111,7 +112,12 @@ class CountsSpectrum(object):
         counts = [val[1] for val in spectrum.data]
         if rmffile is None:
             try:
-                rmffile = spectrum.header['RESPFILE']
+                temp = spectrum.header['RESPFILE']
+                parts = phafile.parts[:-1]
+                rmffile = Path.cwd()
+                for part in parts:
+                    rmffile = rmffile.joinpath(part)
+                rmffile = rmffile.joinpath(temp)
             except KeyError:
                 raise ValueError('RMF file not set in PHA header. '
                                  'Please provide RMF file for energy binning')
