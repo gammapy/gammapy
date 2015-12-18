@@ -559,12 +559,15 @@ class SpectralFit(object):
         List of PHA files to fit
     """
 
-    def __init__(self, pha, bkg=None, arf=None, rmf=None):
+    DEFAULT_STAT = 'cash'
+
+    def __init__(self, pha, bkg=None, arf=None, rmf=None, stat=DEFAULT_STAT):
 
         self.pha = [make_path(f) for f in pha]
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
+        self.statistic = stat
 
     @classmethod
     def from_config(cls, config):
@@ -605,9 +608,36 @@ class SpectralFit(object):
                 raise ValueError("Undefined model string: {}".format(model))
 
         if not isinstance(model, sherpa.models.ArithmeticModel):
-            raise ValueError("Only sherpa models are supported at the moment")
+            raise ValueError("Only sherpa models are supported")
 
         self._model = model
+
+    @property
+    def statistic(self):
+        """Statistic to be used in the fit"""
+        return self._statistic
+
+    @statistic.setter
+    def statistic(self, stat):
+        """Set Statistic to be used in the fit
+
+        Parameters
+        ----------
+        stat : `~sherpa.stats.Stat`, str
+            Statistic
+        """
+        import sherpa.stats as s
+
+        if isinstance(stat, six.string_types):
+            if stat == 'cash':
+                stat = s.Cash()
+            else:
+                raise ValueError("Undefined stat string: {}".format(stat))
+
+        if not isinstance(stat, s.Stat):
+            raise ValueError("Only sherpa statistics are supported")
+
+        self._statistic = stat
 
     @property
     def energy_threshold_low(self):
@@ -709,7 +739,7 @@ class SpectralFit(object):
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
         ds.notice(thres_lo, thres_hi)
-        ds.subtract()
+        datastack.set_stat(self.statistic)
         ds.fit()
         ds.clear_stack()
         ds.clear_models()
