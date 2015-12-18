@@ -79,7 +79,8 @@ class SpectrumAnalysis(object):
             bkg_method = dict(type='no method')
 
         if isinstance(obs, six.string_types):
-            obs = np.loadtxt(obs, dtype=np.int)
+            obs = make_path(obs)
+            obs = np.loadtxt(str(obs), dtype=np.int)
 
         self._observations = []
         for i, val in enumerate(obs):
@@ -526,27 +527,6 @@ class SpectrumObservation(object):
         if self.reflected_regions is None:
             self.make_reflected_regions()
         self.reflected_regions.plot(ax, **kwargs)
-
-    def plot_on_counts(self, **kwargs):
-        """Plot ON counts vectors"""
-        if self.pha is None:
-            self.make_on_vector()
-        ax = self.pha.plot(**kwargs)
-        return ax
-
-    def plot_off_counts(self, apply_alpha=False, **kwargs):
-        """Plot OFF counts vectors
-
-        Parameters
-        ----------
-        apply_alpha : bool
-            weight off counts with exposure scale factor (alpha)
-        """
-        if self.bkg is None:
-            self.make_off_vector()
-        w = self.alpha if apply_alpha else 1
-        ax = self.bkg.plot(weight=w, **kwargs)
-        return ax
 
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
