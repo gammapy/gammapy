@@ -93,3 +93,8 @@ then
   # Note: exporting GAMMAPY_EXTRA here doesn't work, it'll not be available
   # when running the tests ...
 fi
+
+if [[ $SETUP_CMD == 'test-notebooks' ]]
+then
+  pip install runipy
+fi
