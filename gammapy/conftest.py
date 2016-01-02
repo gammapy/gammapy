@@ -4,6 +4,13 @@
 
 from astropy.tests.pytest_plugins import *
 
+# This is to figure out the affiliated package version, rather than
+# using Astropy's
+from . import version
+
+packagename = os.path.basename(os.path.dirname(__file__))
+TESTED_VERSIONS[packagename] = version.version
+
 # Treat all DeprecationWarnings as exceptions
 enable_deprecations_as_exceptions()
 
