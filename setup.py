@@ -151,7 +151,7 @@ setup(name=PACKAGENAME,
       extras_require=dict(
           analysis=[
               'click',
-              'scipy>=0.14',
+              'scipy>=0.15',
               'scikit-image>=0.10',
               'photutils>=0.1',
               'reproject',
