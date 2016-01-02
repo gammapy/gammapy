@@ -7,6 +7,8 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+# Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
+from astropy.utils.exceptions import AstropyDeprecationWarning
 
 __all__ = [
     'atrous_hdu',
@@ -993,12 +995,13 @@ def cube_to_image(cube, slicepos=None):
     from astropy.io.fits import ImageHDU
     header = cube.header.copy()
     header['NAXIS'] = 2
-    del header['NAXIS3']
-    del header['CRVAL3']
-    del header['CDELT3']
-    del header['CTYPE3']
-    del header['CRPIX3']
-    del header['CUNIT3']
+
+    for kword in ['NAXIS3', 'CRVAL3' 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
+        try:
+            del header[kword]
+        except (KeyError, AstropyDeprecationWarning):
+            pass
+
     if slicepos is None:
         data = cube.data.sum(0)
     else:
@@ -1211,7 +1214,7 @@ def lon_lat_circle_mask(lons, lats, center_lon, center_lat, radius):
     mask : `~numpy.ndarray`
         Boolean mask array for a circular sub-region
     """
-    
+
     lons.wrap_angle = Angle('180 deg')
     center_lon.wrap_angle = Angle('180 deg')
 
