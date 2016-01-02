@@ -21,6 +21,7 @@ from ...spectrum import (
 )
 
 
+@pytest.mark.xfail(reason="exclusion file is missing from gammapy-extra")
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis(tmpdir):
