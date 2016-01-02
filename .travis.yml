@@ -23,7 +23,7 @@ addons:
 
 env:
     global:
-        - NUMPY_VERSION=1.9
+        - NUMPY_VERSION=1.10
         - ASTROPY_VERSION=1.1
         - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy'
@@ -105,12 +105,17 @@ matrix:
 
         # Test with other numpy versions. Not all of the packages are
         # available with these on conda, thus moving some of them to pip
-        # install
+        # install. Latest astropy stable (1.1) is also not available for
+        # older numpies, but using lts version should be good enough for
+        # these tests (so we can avoid building it from source).
         - os: linux
           env: PYTHON_VERSION=3.4 NUMPY_VERSION=dev SETUP_CMD='test -V'
         - os: linux
+          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test -V'
+               SHERPA=true ASTROPY_VERSION=lts
+        - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
-               SHERPA=true
+               SHERPA=true ASTROPY_VERSION=lts
                CONDA_CHANNELS='astropy-ci-extras astropy'
                CONDA_DEPENDENCIES='Cython click matplotlib'
                PIP_DEPENDENCIES=''
