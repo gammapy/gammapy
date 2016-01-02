@@ -144,9 +144,11 @@ install:
           export QT_API=pyqt;
       fi
 
+    # Reinstalling the required numpy version as it may be downgraded
     - if $SHERPA; then
           conda install --yes --channel astropy numpy=$NUMPY_VERSION iminuit;
           conda install --yes --channel https://conda.anaconda.org/cxc/channel/dev sherpa;
+          conda install --yes -q numpy=$NUMPY_VERSION;
       fi
 
 script:
