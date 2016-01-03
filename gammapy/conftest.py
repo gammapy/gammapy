@@ -12,7 +12,7 @@ packagename = os.path.basename(os.path.dirname(__file__))
 TESTED_VERSIONS[packagename] = version.version
 
 # Treat all DeprecationWarnings as exceptions
-enable_deprecations_as_exceptions()
+#enable_deprecations_as_exceptions()
 
 # Declare for which packages version numbers should be displayed
 # when running the tests
