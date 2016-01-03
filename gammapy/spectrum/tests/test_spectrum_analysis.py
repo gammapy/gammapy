@@ -47,6 +47,7 @@ def test_spectrum_analysis(tmpdir):
     ana.write_ogip_data(outdir=str(tmpdir))
 
 
+@pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
@@ -65,6 +66,7 @@ def test_spectral_fit(tmpdir):
     # fit.run(method='hspec')
 
 
+@pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
 @requires_dependency('yaml')
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
