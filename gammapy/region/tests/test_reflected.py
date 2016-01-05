@@ -2,12 +2,16 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
+from astropy.tests.helper import pytest
+
 from ..reflected import find_reflected_regions
 from ...image import ExclusionMask
 from ..circle import SkyCircleRegion
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 
+
+@pytest.mark.xfail(reason="exclusion file is missing from gammapy-extra")
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_find_reflected_regions():
