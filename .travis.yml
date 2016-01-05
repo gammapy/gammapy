@@ -59,8 +59,6 @@ matrix:
                SHERPA=true
 
         - os: linux
-          env: PYTHON_VERSION=3.3 SETUP_CMD='test -V'
-        - os: linux
           env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
@@ -71,30 +69,30 @@ matrix:
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
                SHERPA=true
         - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='build_sphinx -w'
+          env: PYTHON_VERSION=3.5 SETUP_CMD='build_sphinx -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
-          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+          env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.5 SETUP_CMD='test -V'
 
         # Test with Astropy dev and LTS versions
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
                SHERPA=true
         - os: linux
-          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                SHERPA=true
         - os: linux
-          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
                SHERPA=true
         - os: linux
-          env: PYTHON_VERSION=3.4 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
+          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
 
         # Test with with optional dependencies disabled
@@ -103,7 +101,7 @@ matrix:
                CONDA_DEPENDENCIES='Cython click'
                PIP_DEPENDENCIES=''
         - os: linux
-          env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click'
                PIP_DEPENDENCIES=''
 
@@ -113,7 +111,7 @@ matrix:
         # older numpies, but using lts version should be good enough for
         # these tests (so we can avoid building it from source).
         - os: linux
-          env: PYTHON_VERSION=3.4 NUMPY_VERSION=dev SETUP_CMD='test -V'
+          env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test -V'
                SHERPA=true ASTROPY_VERSION=lts
@@ -127,7 +125,7 @@ matrix:
     # You can move builds that temporarily fail because of some non-Gammapy issue here
     # Please add a link to a GH issue that tracks the upstream issue.
     allow_failures:
-      - env: PYTHON_VERSION=3.4 NUMPY_VERSION=dev SETUP_CMD='test -V'
+      - env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
       - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
              SHERPA=true
              CONDA_CHANNELS='astropy-ci-extras astropy'
