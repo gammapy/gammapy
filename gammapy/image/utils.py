@@ -7,6 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+# TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
 

@@ -144,7 +144,10 @@ install:
           export QT_API=pyqt;
       fi
 
-    # Reinstalling the required numpy version as it may be downgraded
+    # Reinstalling the required numpy version as it may be downgraded.
+    # TODO It may be removed when/if Sherpa becomes np version agnostic
+    # (maybe as soon as v4.8). See discussion in
+    # https://travis-ci.org/gammapy/gammapy/jobs/99867950#L639
     - if $SHERPA; then
           conda install --yes --channel astropy numpy=$NUMPY_VERSION iminuit;
           conda install --yes --channel https://conda.anaconda.org/cxc/channel/dev sherpa;
