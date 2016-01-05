@@ -8,19 +8,17 @@ Summary
 
 Gammapy 1.0 will be released in 2016.
 
-Gammapy 1.0 will depend on the Astropy 1.1 and Sherpa 4.8.
-
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
 .. _gammapy_0p5_release:
 
-0.5 (December 21, 2015, unreleased)
------------------------------------
+0.5 (unreleased)
+----------------
 
 Summary
 +++++++
 
-Gammapy 0.5 will be released in spring 2016.
+Gammapy 0.5 will be released in late spring 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
@@ -34,20 +32,28 @@ Pull requests
 
 .. _gammapy_0p4_release:
 
-0.4 (December 21, 2015, unreleased)
------------------------------------
+0.4 (unreleased)
+----------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released on December 21, 2015.
+Gammapy 0.4 will be released in early spring 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
+
+Summary
++++++++
+
+- Gammapy now requires Numpy 1.8. Support for Numpy 1.6, 1.7 was dropped.
+- Gammapy now requires Scipy 0.15. Support for Scipy 0.14 was dropped.
+
 
 Contributors
 ++++++++++++
 
 - Axel Donath
+- Brigitta Sipocz (new)
 - Christoph Deil
 - Dirk Lennarz (new)
 - Johannes King
@@ -61,6 +67,7 @@ Pull requests
 - [#396] Rewrite spectrum analysis (Johannes King)
 - [#395] Fix misc issues with IRF classes (Johannes King)
 - [#394] Move some data specs to gamma-astro-data-formats (Christoph Deil)
+- [#392] Use external ci-helpers (Brigitta Sipocz)
 - [#379] Add gammapy.region and reflected region computation (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)
