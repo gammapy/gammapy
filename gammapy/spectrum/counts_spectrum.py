@@ -38,7 +38,7 @@ class CountsSpectrum(object):
         hdu = spec.to_fits()
     """
 
-    def __init__(self, counts, energy, livetime=None, backscal=1):
+    def __init__(self, counts, energy, livetime=None, muoneff=None, zenith=None, backscal=1):
 
         if np.asarray(counts).size != energy.nbins:
             raise ValueError("Dimension of {0} and {1} do not"
@@ -58,6 +58,14 @@ class CountsSpectrum(object):
             self._livetime = livetime
         else:
             self._livetime = Quantity(0, 's')
+        if muoneff is not None:
+            self.muoneff = muoneff
+        else:
+            self.muoneff = 0
+        if zenith is not None:
+            self.zenith = zenith
+        else:
+            self.zenith = 0
         self._backscal = backscal
         self.channels = np.arange(1, self.energy.nbins + 1, 1)
 
@@ -119,10 +127,11 @@ class CountsSpectrum(object):
         energy = Energy(event_list.energy).to(bins.unit)
         val, dummy = np.histogram(energy, bins.value)
         livetime = event_list.observation_live_time_duration
+        muoneff=event_list.meta["MUONEFF"]
+        zenith=90-event_list.meta["ALT_PNT"]
+        return cls(val, bins, livetime,muoneff, zenith)
 
-        return cls(val, bins, livetime)
-
-    def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
+    def write(self, filename, bkg=None, corr=None, rmf=None, arf=None, offset=None,
               *args, **kwargs):
         """Write PHA to FITS file.
 
@@ -141,10 +150,10 @@ class CountsSpectrum(object):
         filename : str
             File to be written
         """
-        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf).writeto(
+        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf, offset=offset).writeto(
             filename, *args, **kwargs)
 
-    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None):
+    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None, offset=None):
         """Output OGIP pha file
 
         Returns
@@ -211,6 +220,10 @@ class CountsSpectrum(object):
         header['ORIGIN'] = 'dummy', 'origin of fits file'
         header['DATE'] = datetime.datetime.today().strftime('%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
         header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
+        header['MUONEFF'] = self.muoneff
+        header['Zen'] = self.zenith
+        if offset is not None:
+            header['Offset'] = offset.value
 
         return hdu
 
