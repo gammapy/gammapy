@@ -537,7 +537,7 @@ class SpectralFit(object):
 
         return ret
 
-    def Band(pha_list):
+    def Band(pha_list, outdir):
         Offmin=0.
         Offmax=2.5
         Offbin=5.
@@ -547,9 +547,15 @@ class SpectralFit(object):
         CosZenmin=0
         CosZenmax=0.77
         CosZenbin=20
-        Offtab=np.arrange(Offmin,Offmax,Offbin)
-        Efftab=np.arrange(Effmin,Effmax,Effbin)
-        CosZentab=np.arrange(CosZenmin,CosZenmax,CosZenbin)
+        Offtab=np.arange(Offmin,Offmax,Offbin)
+        Efftab=np.arange(Effmin,Effmax,Effbin)
+        CosZentab=np.arange(CosZenmin,CosZenmax,CosZenbin)
+        #ListBand will contain the name of the band and the index of the list is the number of the band
+        ListeBand=[]
+        #ListGroupObs will contain the pha filename of the observations grouped togehter for each band defined in ListBand
+        ListeGroupObs=[]
+
+        #We loop over all the observations and determine to which band belong each observations. If for an observation, the band doesn't exist we create a new one otherwise we add the observation to the existing band.
         for filename in pha_list:
             try: 
                 shdu = pf.open(filename)
@@ -559,12 +565,34 @@ class SpectralFit(object):
             Offset=shdu.header['Offset']
             Zenith=shdu.header['ZEN']
             Efficiency=shdu.header['MUONEFF']
-        
-    def grouping(pha_list, band_number):
+            for(ioff,off) in enumarate(Offtab):
+                if(( Offset >= off) & (Offset < off+Offbin)):
+                    break
+            for(ieff,eff) in enumarate(Efftab):
+                if(( Effset >= eff) & (Effset < eff+Effbin)):
+                    break
+            for(izen,zen) in enumarate(Coszentab):
+                if(( Zenith >= zen) & (Zenith < zen+CosZenbin)):
+                    break
+            #Name of the band
+            namebande="Band_Eff_"+str(eff)+"_"+str(eff+Effbin)+"_CosZen_"+str(zen)+""+str(zen+CosZenbin)+"_Offset_"+str(off)+"_"+str(off+Offbin)
+
+            #If the band doesn't existe (that is to say ListBand.count(namebande)==0), we add the new band to the list of Bande ListeBand and we create a new list of observation to group in this new band
+            if(ListBand.count(namebande)==0):
+                ListeBand.append(namebande)
+                ListeGroupObs.append([filename])
+            #If the Band exist, we find the number of the band (ListeBand.index(namebande)) and we add this new observation to group in this band
+            else:
+                ListeGroupObs[ListeBand.index(namebande)].append(filename)
+        #ListObsGroup is a list of list. For each band, it contains pha filemane of the observations to group
+        for (iband, pha_list) in enumerate(ListeGroupObs):
+            grouping(pha_list, iband, outdir)
+            
+    def grouping(pha_list, band_number, outdir):
         """
         pha_list: liste des observations a grouper!
         ATTENTION A LA GESTION DE L ENERGIE SOEUIL
-        Group ON, OFF, arf and rmf for a list of observations matching with a certain group in offset, effciency and zenithal angle determined in the function band
+        Group ON, OFF, arf and rmf for a list of observations matching with a certain group in offset, efficiency and zenithal angle determined in the function band
         """
         Nontot = None
         for filename in pha_list:
@@ -649,7 +677,7 @@ class SpectralFit(object):
 
 
         # Now write results
-        outputname="Band_number_"+band_number+"_"
+        outputname=outdir+"Band_number_"+band_number+"_"
         onfile = outputname+'_pha.pha'
         offfile = outputname+'_bkg.pha'
         arffile = outputname+'_arf.fits'
