@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
 
-from gammapy.extern.pathlib import Path
 from gammapy.spectrum.spectrum_analysis import (
     SpectrumAnalysis,
     run_spectral_fit_using_config,
@@ -64,7 +63,7 @@ class SpectrumPipe(object):
         config = read_yaml(filename, log)
         base_config = config.pop('base_config')
         analist = list([])
-        
+
         for analysis in config.keys():
             log.info("Creating analysis {}".format(analysis))
             anaconf = base_config.copy()
@@ -146,8 +145,8 @@ class SpectrumPipe(object):
             try:
                 sec = ref[target]
             except KeyError:
-                log.warn('No reference values found in {0} for '
-                         'analysis {1}'.format(filename, target))
+                log.warning('No reference values found in {0} for '
+                            'analysis {1}'.format(filename, target))
 
             else:
                 labels.append(target)
