@@ -537,19 +537,20 @@ class SpectralFit(object):
 
         return ret
 
-    def Band(pha_list, outdir):
-        Offmin=0.
-        Offmax=2.5
-        Offbin=5.
-        Effmin=40
-        Effmax=100
-        Effbin=15
-        CosZenmin=0
-        CosZenmax=0.77
-        CosZenbin=20
+    def Band(pha_list, outdir, Offmin,Offmax, Offbin, Effmin,Effmax, Effbin, Zenmin, Zenmax, Zenbin):
+        #Offmin=0.
+        #Offmax=2.5
+        # Offbin=5.
+        # Effmin=40
+        # Effmax=100
+        # Effbin=15
+        CosZenmin=np.cos(Zenmax)
+        CosZenmax=np.cos(Zenmin)
+        CosZenbin=Zenbin
         Offtab=np.arange(Offmin,Offmax,Offbin)
         Efftab=np.arange(Effmin,Effmax,Effbin)
         CosZentab=np.arange(CosZenmin,CosZenmax,CosZenbin)
+
         #ListBand will contain the name of the band and the index of the list is the number of the band
         ListeBand=[]
         #ListGroupObs will contain the pha filename of the observations grouped togehter for each band defined in ListBand
@@ -563,16 +564,16 @@ class SpectralFit(object):
                 print("Cannot open file: " + filename)
                 print("skipping run")
             Offset=shdu.header['Offset']
-            Zenith=shdu.header['ZEN']
+            CosZen=np.cos(shdu.header['ZEN'])
             Efficiency=shdu.header['MUONEFF']
             for(ioff,off) in enumarate(Offtab):
                 if(( Offset >= off) & (Offset < off+Offbin)):
                     break
             for(ieff,eff) in enumarate(Efftab):
-                if(( Effset >= eff) & (Effset < eff+Effbin)):
+                if(( Efficiency >= eff) & (Efficiency < eff+Effbin)):
                     break
-            for(izen,zen) in enumarate(Coszentab):
-                if(( Zenith >= zen) & (Zenith < zen+CosZenbin)):
+            for(izen,zen) in enumarate(CosZentab):
+                if(( CosZen >= zen) & (CosZen < zen+CosZenbin)):
                     break
             #Name of the band
             namebande="Band_Eff_"+str(eff)+"_"+str(eff+Effbin)+"_CosZen_"+str(zen)+""+str(zen+CosZenbin)+"_Offset_"+str(off)+"_"+str(off+Offbin)
