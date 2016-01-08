@@ -81,8 +81,8 @@ class SpectrumAnalysis(object):
                 temp = SpectrumObservation(val, self.store, on_region,
                                            bkg_method, ebounds, exclusion)
             except IndexError:
-                log.warn(
-                        'Observation {} not in store {}'.format(val, datastore))
+                log.warning(
+                    'Observation {} not in store {}'.format(val, datastore))
                 nobs += 1
                 continue
             self._observations.append(temp)

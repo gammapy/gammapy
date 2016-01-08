@@ -241,7 +241,7 @@ class EffectiveAreaTable(object):
             return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
                                       energy_thresh_lo, energy_thresh_hi)
         except KeyError:
-            log.warn('No safe energy thresholds found. Setting to default')
+            log.warning('No safe energy thresholds found. Setting to default')
             return cls(energy_lo, energy_hi, effective_area)
 
     def effective_area_at_energy(self, energy):

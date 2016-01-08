@@ -332,9 +332,9 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     # to fail, this is a temporary fix
     mask_ = np.logical_and(background == 0, exposure > 0)
     if mask_.any():
-        log.warn('There are pixels in the data, that have exposure, but zero '
-                 'background, which can cause the ts computation to fail. '
-                 'Setting exposure of this pixels to zero.')
+        log.warning('There are pixels in the data, that have exposure, but '
+                    'zero background, which can cause the ts computation to '
+                    'fail. Setting exposure of this pixels to zero.')
         exposure[mask_] = 0
 
     if (flux is None and method != 'root brentq') or threshold is not None:

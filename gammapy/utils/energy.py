@@ -128,7 +128,7 @@ class Energy(Quantity):
 
         if fitsunit is None:
             if unit is not None:
-                log.warn("No unit found in the FITS header."
+                log.warning("No unit found in the FITS header."
                          " Setting it to {0}".format(unit))
                 fitsunit = unit
             else:
@@ -272,7 +272,8 @@ class EnergyBounds(Energy):
         """
 
         if hdu.name != 'EBOUNDS':
-            log.warn('This does not seem like an EBOUNDS extension. Are you sure?')
+            log.warning('This does not seem like an EBOUNDS extension. '
+                        'Are you sure?')
 
         header = hdu.header
         unit = header.get('TUNIT2')
@@ -293,7 +294,8 @@ class EnergyBounds(Energy):
         """
 
         if hdu.name != 'MATRIX':
-            log.warn('This does not seem like a MATRIX extension. Are you sure?')
+            log.warning('This does not seem like a MATRIX extension. '
+                        'Are you sure?')
 
         header = hdu.header
         unit = header.get('TUNIT1')
