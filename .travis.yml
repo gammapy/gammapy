@@ -35,7 +35,6 @@ env:
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='egg_info'
-        - PYTHON_VERSION=3.3 SETUP_CMD='egg_info'
         - PYTHON_VERSION=3.4 SETUP_CMD='egg_info'
         - PYTHON_VERSION=3.5 SETUP_CMD='egg_info'
 
@@ -49,6 +48,11 @@ matrix:
         # Try MacOS X
         - os: osx
           env: PYTHON_VERSION=2.7 SETUP_CMD='test'
+               CONDA_DEPENDENCIES='Cython click'
+               PIP_DEPENDENCIES=''
+
+        - os: osx
+          env: PYTHON_VERSION=3.5 SETUP_CMD='test'
                CONDA_DEPENDENCIES='Cython click'
                PIP_DEPENDENCIES=''
 

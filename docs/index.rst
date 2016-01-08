@@ -19,13 +19,23 @@ Gammapy is a community-developed, open-source Python package for gamma-ray astro
 To learn more about Gammapy, have a look at the :ref:`about` page, which includes
 a link to the Gammapy proceeding from ICRC 2015.
 
-To get started with Gammapy, follow the instructions in the :ref:`install` page,
-and then head over to the 5 minute :ref:`getting-started` tutorial.
+Gammapy works with Python 2 and 3, on Linux, Mac OS X and Windows and is easy to
+install (see instructions on the :ref:`install` page).
+
+Once you have it running, we suggest you head over to the 5 minute :ref:`getting-started` tutorial.
 
 .. _gammapy_news:
 
 News
 ----
+
+.. note::
+  :name: Announcement
+
+  Interested in Python, astronomy and `Google summer of code <https://developers.google.com/open-source/gsoc/>`__?
+
+  Check out the `Gammapy GSoC 2016 ideas page <https://github.com/gammapy/gammapy/wiki/Gammapy-GSoC-2016-ideas>`__!
+
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 

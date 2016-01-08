@@ -16,7 +16,10 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-DATASET_DIR = Path(os.environ['HOME']) / '.gammapy/datasets'
+# This is the cross-platform way to get the HOME directory, also in Windows
+# https://docs.python.org/3/library/pathlib.html#pathlib.Path.home
+# http://stackoverflow.com/a/4028943
+DATASET_DIR = Path.home() / '.gammapy/datasets'
 
 
 def download_file(url, filename, overwrite=False, mkdir=True, show_progress=True, timeout=None):
@@ -121,7 +124,7 @@ class Datasets(object):
     datasets : list of `Dataset` objects
         List of datasets
     """
-    # DEFAULT_CONFIG_FILE = Path(os.environ['HOME']) / '.gammapy/data-register.yaml'
+    # DEFAULT_CONFIG_FILE = Path.home() / '.gammapy/data-register.yaml'
     DEFAULT_CONFIG_FILE = astropy.utils.data.get_pkg_data_filename('datasets.yaml')
 
     def __init__(self, config=None):

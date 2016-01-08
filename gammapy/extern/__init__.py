@@ -15,4 +15,7 @@ The following Python packages were bundled with Gammapy.
   Origin https://raw.githubusercontent.com/mcmtroffaes/pathlib2/develop/pathlib2.py
   One line was patched: `import six` -> `from astropy.extern import six`
   See also: https://pypi.python.org/pypi/pathlib2/
+* ``appdirs.py`` is a copy from Github on 2016-01-08
+  Origin: https://raw.githubusercontent.com/ActiveState/appdirs/master/appdirs.py
+  See also: https://pypi.python.org/pypi/appdirs/
 """
