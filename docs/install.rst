@@ -7,7 +7,7 @@ Installation
 
 Here we provide short installation instructions for Gammapy and its dependencies.
 
-Gammapy works with Python 2 and 3.
+Gammapy works (and is continually tested) with Python 2 and 3 on Linux, Mac OS X and Windows.
 
 More specifically, in the Python 2 series we only support (i.e. test in continuous integration)
 Python 2.7, and in the Python 3 series we support version 3.4 or later.

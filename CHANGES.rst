@@ -45,6 +45,9 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
 Summary
 +++++++
 
+- Support for Python 3.5 added, testing on Python 3.3 removed
+  (should still work, but will break eventually)
+- Support for Windows added (testing on AppVeyor)
 - Gammapy now requires Numpy 1.8. Support for Numpy 1.6, 1.7 was dropped.
 - Gammapy now requires Scipy 0.15. Support for Scipy 0.14 was dropped.
 
@@ -63,6 +66,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#414] Add Windows tests on Appveyor. Update travis-ci config (Christoph Deil)
 - [#398] Add function to compute exposure cubes (Luigi Tibaldo)
 - [#396] Rewrite spectrum analysis (Johannes King)
 - [#395] Fix misc issues with IRF classes (Johannes King)

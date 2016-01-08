@@ -30,7 +30,7 @@ class DataManager(object):
     config : `~collections.OrderedDict`
         Data manager configuration.
     """
-    DEFAULT_CONFIG_FILE = Path(os.environ['HOME']) / '.gammapy/data-register.yaml'
+    DEFAULT_CONFIG_FILE = Path.home() / '.gammapy/data-register.yaml'
 
     def __init__(self, config=None):
         if not config:
