@@ -46,6 +46,33 @@ def main(args=None):
     run_spectral_fit_using_config(config)
 
 
+def filter_reflected_regions_analysis(analysis, n_min):
+    """Filter `~gammapy.spectrum.SpectrumAnalysis`
+
+    Only `~gammapy.spectrum.SpectrumObservation` with
+    n_reflected_regions >= n_min are kept
+
+    Parameters
+    ----------
+    analysis : `~gammapy.spectrum.SpectrumAnalysis`
+        Spectrum analysis with reflected regions background method
+    n_min : int
+        Minimum number of reflected regions
+
+    Returns
+    -------
+    mask : `np.array`
+        Indices of element fulfilling the condition
+    """
+    val = analysis.bkg_method['type']
+    if val != 'reflected':
+        raise ValueError("Wrong background method: {}".format(val))
+
+    off_vec = analysis.off_vector
+    mask = np.where(np.array([o.backscal for o in off_vec]) >= n_min)
+    return mask[0]
+
+
 class SpectrumAnalysis(object):
     """Class for 1D spectrum fitting
 
@@ -59,7 +86,7 @@ class SpectrumAnalysis(object):
         Circular region to extract on counts
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion regions
-    bkg_method : dict, optional
+    bkg_method : dict
         Background method including necessary parameters
     nobs : int
         number of observations to process, 0 means all observations
@@ -75,14 +102,14 @@ class SpectrumAnalysis(object):
         self.exclusion = exclusion
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
-        if bkg_method is None:
-            bkg_method = dict(type='no method')
+        self.ebounds = ebounds
+        self.bkg_method = 'no method' if bkg_method is None else bkg_method
 
         if isinstance(obs, six.string_types):
             obs = make_path(obs)
             obs = np.loadtxt(str(obs), dtype=np.int)
 
-        self._observations = []
+        observations = []
         for i, val in enumerate(obs):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
@@ -92,16 +119,38 @@ class SpectrumAnalysis(object):
                     'Observation {} not in store {}'.format(val, datastore))
                 nobs += 1
                 continue
-            self._observations.append(temp)
+            observations.append(temp)
             if i == nobs - 1:
                 break
 
+        self._observations = np.array(observations)
+
         if len(self.observations) == 0:
             raise ValueError("No valid observations found")
+        if bkg_method['type'] == 'reflected':
+            mask = filter_reflected_regions_analysis(self, bkg_method['n_min'])
+            self._observations = self.observations[mask]
+
+    def copy(self, bkg_method=None):
+        """Return copy of `~gammapy.spectrum.SpectrumAnalysis`
+
+        Parameters
+        ----------
+        bkg_method : dict, optional
+            New background estimation method
+        """
+
+        bkg_method = self.bkg_method if bkg_method is None else bkg_method
+
+        ana = SpectrumAnalysis(datastore=self.store, obs=self.obs_ids,
+                               on_region=self.on_region, bkg_method=bkg_method,
+                               exclusion=self.exclusion, nobs=0,
+                               ebounds=self.ebounds)
+        return ana
 
     @property
     def observations(self):
-        """List of all observations belonging to the analysis
+        """`np.array` of all observations belonging to the analysis
         """
         return self._observations
 
@@ -141,8 +190,9 @@ class SpectrumAnalysis(object):
         """
         return [obs.on_vector for obs in self.observations]
 
-    def off_vector(self, method=None):
-        """List of all OFF `~gammapy.spectrum.CountsSpectrum`
+    @property
+    def off_vector(self):
+        """`np.array` of all OFF `~gammapy.spectrum.CountsSpectrum`
 
         For available methods see :ref:`spectrum_background_method`
 
@@ -151,16 +201,13 @@ class SpectrumAnalysis(object):
         method : dict, optional
             Background estimation method
         """
-        if method is not None:
-            for obs in self.observations:
-                obs.make_off_vector(method=method)
-        return [obs.off_vector for obs in self.observations]
+        return np.array([obs.off_vector for obs in self.observations])
 
     @property
     def alpha(self):
-        """List of all exposure ratios between ON and OFF regions
+        """`np.array` of all exposure ratios between ON and OFF regions
         """
-        return [obs.alpha for obs in self.observations]
+        return np.array([obs.alpha for obs in self.observations])
 
     @property
     def total_alpha(self):
@@ -241,7 +288,7 @@ class SpectrumAnalysis(object):
     def info(self):
         """Print some information
         """
-        ss = "\nSpectrum Analysis"
+        ss = "\nSpectrum Analysis\n"
         ss += "Observations : {}\n".format(len(self.observations))
         ss += "ON region    : {}\n".format(self.on_region.pos)
 
@@ -276,7 +323,7 @@ class SpectrumObservation(object):
         Data Store
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
-    bkg_method : dict, optional
+    bkg_method : dict
         Background method including necessary parameters
     ebounds : `~gammapy.utils.energy.EnergyBounds`
         Reconstructed energy binning definition
@@ -338,7 +385,7 @@ class SpectrumObservation(object):
         """OFF `gammapy.spectrum.CountsSpectrum` corresponding to the observation
         """
         if self._off is None:
-            self.make_off_vector(method=self.bkg_method)
+            self.make_off_vector()
         return self._off
 
     @property
@@ -386,15 +433,10 @@ class SpectrumObservation(object):
         self.reflected_regions = off_region
         return off_region
 
-    def make_off_vector(self, method=None):
+    def make_off_vector(self):
         """Create off vector
 
         For available methods see :ref:`spectrum_background_method`
-
-        Parameters
-        ----------
-        method : dict
-            Background estimation method
 
         Returns
         -------
@@ -402,8 +444,7 @@ class SpectrumObservation(object):
             Counts spectrum inside the OFF region
         """
 
-        # TODO put in utils once there is a SkyRingRegion
-        method = self.bkg_method if method is None else method
+        method = self.bkg_method
         if method['type'] == "ring":
             off_vec = self._make_off_vector_ring(method)
         elif method['type'] == "reflected":
@@ -421,6 +462,7 @@ class SpectrumObservation(object):
         """Helper function to create OFF vector from reflected regions"""
         kwargs = method.copy()
         kwargs.pop('type')
+        kwargs.pop('n_min')
         off = self.make_reflected_regions(**kwargs)
         off_list = self.event_list.select_circular_region(off)
         off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
@@ -580,9 +622,18 @@ class SpectralFit(object):
 
     @classmethod
     def from_config(cls, config):
-
+        """Create `~gammapy.spectrum.SpectralFit` from config file"""
         outdir = make_path(config['general']['outdir'])
-        pha_list = outdir.glob('pha_run*.pha')
+        return cls.from_dir(outdir)
+
+    @classmethod
+    def from_dir(cls, dir):
+        """Create `~gammapy.spectrum.SpectralFit` using directory
+
+        All PHA files in the directory will be used
+        """
+        dir = make_path(dir)
+        pha_list = dir.glob('pha_run*.pha')
         return cls(pha_list)
 
     @property

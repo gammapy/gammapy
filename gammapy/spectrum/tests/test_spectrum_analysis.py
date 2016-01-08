@@ -28,7 +28,7 @@ def test_spectrum_analysis(tmpdir):
     radius = Angle('0.3 deg')
     on_region = SkyCircleRegion(pos=center, radius=radius)
 
-    bkg_method = dict(type='reflected')
+    bkg_method = dict(type='reflected', n_min=2)
 
     exclusion_file = gammapy_extra.filename(
         "datasets/exclusion_masks/tevcat_exclusion.fits")
@@ -47,7 +47,7 @@ def test_spectrum_analysis(tmpdir):
     ana.write_ogip_data(outdir=str(tmpdir))
 
     total_on = np.sum(ana.on_vector)
-    total_off = np.sum(ana.off_vector())
+    total_off = np.sum(ana.off_vector)
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
