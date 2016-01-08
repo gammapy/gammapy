@@ -111,16 +111,16 @@ class CountsSpectrum(object):
         spectrum = fits.open(str(phafile))['SPECTRUM']
         counts = [val[1] for val in spectrum.data]
         if rmffile is None:
-            try:
-                temp = spectrum.header['RESPFILE']
-                parts = phafile.parts[:-1]
-                rmffile = Path.cwd()
-                for part in parts:
-                    rmffile = rmffile.joinpath(part)
-                rmffile = rmffile.joinpath(temp)
-            except KeyError:
+            val = spectrum.header['RESPFILE']
+            if val == '':
                 raise ValueError('RMF file not set in PHA header. '
                                  'Please provide RMF file for energy binning')
+            parts = phafile.parts[:-1]
+            rmffile = Path.cwd()
+            for part in parts:
+                rmffile = rmffile.joinpath(part)
+            rmffile = rmffile.joinpath(val)
+
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
