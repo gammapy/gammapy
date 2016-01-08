@@ -793,6 +793,7 @@ def run_spectral_fit_using_config(config):
         fit.model = config['model']['type']
         fit.energy_threshold_low = Energy(config['model']['threshold_low'])
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
+        fit.info()
         fit.run(method=method)
 
     return fit

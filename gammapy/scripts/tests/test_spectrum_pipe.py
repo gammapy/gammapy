@@ -16,3 +16,4 @@ def test_spectrum_pipe(tmpdir):
     config['base_config']['general']['outdir'] = str(tmpdir)
     pipe = SpectrumPipe.from_config(config, auto_outdir=False)
     pipe.run()
+

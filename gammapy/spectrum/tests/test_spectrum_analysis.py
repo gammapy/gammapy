@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
+import numpy as np
 from astropy.tests.helper import pytest
 from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
@@ -20,7 +20,6 @@ from ...spectrum import (
 )
 
 
-@pytest.mark.xfail(reason="exclusion file is missing from gammapy-extra")
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis(tmpdir):
@@ -31,7 +30,8 @@ def test_spectrum_analysis(tmpdir):
 
     bkg_method = dict(type='reflected')
 
-    exclusion_file = gammapy_extra.filename("datasets/exclusion_masks/tevcat_exclusion.fits")
+    exclusion_file = gammapy_extra.filename(
+        "datasets/exclusion_masks/tevcat_exclusion.fits")
     excl = ExclusionMask.from_fits(exclusion_file)
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
@@ -41,14 +41,15 @@ def test_spectrum_analysis(tmpdir):
     ds = DataStore.from_dir(store)
 
     ana = SpectrumAnalysis(datastore=ds, obs=obs, on_region=on_region,
-                           bkg_method=bkg_method, exclusion=excl, ebounds=bounds)
+                           bkg_method=bkg_method, exclusion=excl,
+                           ebounds=bounds)
 
     ana.write_ogip_data(outdir=str(tmpdir))
 
     total_on = np.sum(ana.on_vector)
     total_off = np.sum(ana.off_vector())
 
-@pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
+
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
@@ -67,13 +68,13 @@ def test_spectral_fit(tmpdir):
     # fit.run(method='hspec')
 
 
-@pytest.mark.xfail(reason="xfailing it until issue #408 is fixed")
 @requires_dependency('yaml')
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
-    configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_analysis_example.yaml')
+    configfile = gammapy_extra.filename(
+        'test_datasets/spectrum/spectrum_analysis_example.yaml')
     config = read_yaml(configfile)
     config['general']['outdir'] = str(tmpdir)
 
