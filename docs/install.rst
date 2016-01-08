@@ -11,8 +11,8 @@ Gammapy works (and is continually tested) with Python 2 and 3 on Linux, Mac OS X
 
 More specifically, in the Python 2 series we only support (i.e. test in continuous integration)
 Python 2.7, and in the Python 3 series we support version 3.4 or later.
-Gammapy will not work with Python 2.6 or 3.2 (see :ref:`development-python2and3` if you care why).
-It will probably work with Python 3.3, but we don't test for that.
+Gammapy will (probably) not work with older Python versions,
+such as 2.6 or 3.2 (see :ref:`development-python2and3` if you care why).
 
 Due to the large variety of systems, package managers and setups in us it's not
 possible to give a detailed description for every option.
