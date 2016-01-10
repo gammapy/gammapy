@@ -393,6 +393,33 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
+    def plot_image(self, ax= None, number_bins=10):
+        """Plot the counts as a function of x and y camera coordinate."""
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        max_x = max((self[:]['COREX']))
+        min_x = min((self[:]['COREX']))
+        max_y = max((self[:]['COREY']))
+        min_y = min((self[:]['COREY']))
+
+        x_edges = np.linspace(min_x, max_x, number_bins)
+        y_edges = np.linspace(min_y, max_y, number_bins)
+
+        count_image, x_edges, y_edges = np.histogram2d(self[:]['COREY'], self[:]['COREX'], bins=(x_edges, y_edges))
+
+        ax.set_title('# Photons')
+
+        ax.imshow(count_image, interpolation='nearest', origin='low',
+                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
+
+    def plot_energy_dependence(self, ax = None):
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+    def plot_offset_dependence(self, ax = None):
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
