@@ -66,7 +66,7 @@ Contributors
 Pull requests
 +++++++++++++
 
-- [#414] Add Windows tests on Appveyor. Update travis-ci config (Christoph Deil)
+- [#414] Add Windows tests on Appveyor (Christoph Deil)
 - [#398] Add function to compute exposure cubes (Luigi Tibaldo)
 - [#396] Rewrite spectrum analysis (Johannes King)
 - [#395] Fix misc issues with IRF classes (Johannes King)
