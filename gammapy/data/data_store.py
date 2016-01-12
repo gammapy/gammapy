@@ -114,13 +114,13 @@ class DataStore(object):
         """
         try:
             store = cls.from_dir(val)
-        except OSError, e1:
+        except OSError as e1:
             try:
                 store = cls.from_name(val)
-            except KeyError, e2:
+            except KeyError as e2:
                 raise ValueError('Not able to contruct DataStore using key:'
-                                 ' {0}.\nError Messages\n{1}\n{2}'.format(
-                                 val, e1, e2))
+                                 ' {0}.\nErrors\nfrom_dir: {1}\nfrom_name: {2}'
+                                 .format(val, e1, e2))
                 
         return store
 
