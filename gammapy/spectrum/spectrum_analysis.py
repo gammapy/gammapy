@@ -540,7 +540,8 @@ class SpectralFit(object):
 
         return ret
 
-    def define_spectral_groups(self, pha_list, outdir, Offmin, Offmax, NOffbin, Effmin, Effmax, NEffbin, Zenmin, Zenmax, NZenbin):
+    def define_spectral_groups(self, pha_list, outdir, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40,
+                               ZenRange=[0., 70.], NZenbin=30):
         """
         Group the observations in different bands of zenith, efficiency and offset.
 
@@ -550,22 +551,16 @@ class SpectralFit(object):
             List of PHA files to group in the different bands
         filename : str
             directory where to writte the bands files
-        Offmin: float
-            lower offset boundaries for the band
-        Offmax: float
-            higher offset boundaries for the band
+        OffsetRange: tuple
+            Offset boundaries for the band
         NOffbin: int
             Number of offset bin
-        Effmin: float
-            lower muon efficiency boundaries for the band
-        Effmax: float
-            higher muon efficiency boundaries for the band
+        EffRange: tuple
+            Muon efficiency boundaries for the band
         NEffbin: int
             Number of muon efficiency bin
-        Zenmin: float
-            lower zenith angle boundaries for the band
-        Zenmax: float
-            higher zenith angle boundaries for the band
+        ZenRange: tuple
+            Zenithal angle boundaries for the band
         NZenbin: int
             Number of zenith angle bin
 
@@ -577,7 +572,9 @@ class SpectralFit(object):
             name of the pha files of the observations grouped for each previous band
 
         """
-
+        [Offmin, Offmax] = OffsetRange
+        [Effmin, Effmax] = EffRange
+        [Zenmin, Zenmax] = ZenRange
         CosZenmin = np.cos(Zenmax * math.pi / 180.)
         CosZenmax = np.cos(Zenmin * math.pi / 180.)
         NCosZenbin = NZenbin
@@ -627,7 +624,7 @@ class SpectralFit(object):
         return (ListeBand, ListeGroupObs)
 
     def apply_groupping(self, pha_list, band_number, outdir):
-        #ATTENTION A LA GESTION DE L ENERGIE SOEUIL
+        # ATTENTION A LA GESTION DE L ENERGIE SOEUIL
         """
         Group ON, OFF, arf and rmf for a list of observations matching with a certain group in offset, efficiency and zenithal angle determined in the function band. Create the ogip file (pha, bkg, arf and rmf) for the band.
 
