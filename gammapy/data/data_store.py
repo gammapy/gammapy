@@ -106,21 +106,15 @@ class DataStore(object):
         Currently tried (in this order)
         - :func:`~gammapy.data.DataStore.from_dir`
         - :func:`~gammapy.data.DataStore.from_name`
-
-        Parameters
-        ----------
-        val : str
-            Key to construct DataStore from
         """
         try:
             store = cls.from_dir(val)
-        except OSError, e1:
+        except(OSError):
             try:
                 store = cls.from_name(val)
-            except KeyError, e2:
-                raise ValueError('Not able to contruct DataStore using key:'
-                                 ' {0}.\nError Messages\n{1}\n{2}'.format(
-                                 val, e1, e2))
+            except(KeyError):
+                raise ValueError('Not able to contruct DataStore'
+                                 ' using key: {}'.format(val))
                 
         return store
 
