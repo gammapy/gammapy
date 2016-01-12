@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
-
 import numpy as np
 from astropy import log
 from ..utils.energy import Energy, EnergyBounds
@@ -127,9 +126,9 @@ class CountsSpectrum(object):
         energy = Energy(event_list.energy).to(bins.unit)
         val, dummy = np.histogram(energy, bins.value)
         livetime = event_list.observation_live_time_duration
-        muoneff=event_list.meta["MUONEFF"]
-        zenith=90-event_list.meta["ALT_PNT"]
-        return cls(val, bins, livetime,muoneff, zenith)
+        muoneff = event_list.meta["MUONEFF"]
+        zenith = 90 - event_list.meta["ALT_PNT"]
+        return cls(val, bins, livetime, muoneff, zenith)
 
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None, offset=None,
               *args, **kwargs):
@@ -139,6 +138,8 @@ class CountsSpectrum(object):
 
         Parameters
         ----------
+        offset : `~astropy.coordinates.Angle`
+            offset
         arf : str
             ARF file to be written into FITS header
         rmf : str
