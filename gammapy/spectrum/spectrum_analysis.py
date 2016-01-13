@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-#from __future__ import absolute_import, division, print_function, unicode_literals
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 from __future__ import (print_function)
 import logging
 import os
@@ -751,11 +750,12 @@ class SpectralFit(object):
             rmffile = outputname + '_rmf.fits'
 
             # total ON file
-            ONcols = pf.ColDefs([pf.Column(name='CHANNEL', format=ONheader["TFORM1"], array=channels),
-                                 pf.Column(name='COUNTS', format=ONheader["TFORM2"], array=Nontot, unit='count'),
-                                 pf.Column(name='GROUPING', format='I', array=grouping),
-                                 pf.Column(name='BACKSCAL', format='E', array=onscale)
+            ONcols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=ONheader["TFORM1"], array=channels),
+                                 pf.Column(name='COUNTS'.encode('ascii','replace'), format=ONheader["TFORM2"], array=Nontot, unit='count'),
+                                 pf.Column(name='GROUPING'.encode('ascii','replace'), format='I', array=grouping),
+                                 pf.Column(name='BACKSCAL'.encode('ascii','replace'), format='E', array=onscale)
                                  ])
+            
             ONhdu = pf.BinTableHDU.from_columns(ONcols)
 
             pha_keywords = ['EXTNAME', 'TLMIN1', 'TLMAX1', 'POISSERR', 'DETCHANS', 'CORRSCAL', 'CHANTYPE', 'HDUCLASS',
@@ -773,10 +773,10 @@ class SpectralFit(object):
 
             ONhdu.writeto(onfile, clobber=True)
 
-            OFFcols = pf.ColDefs([pf.Column(name='CHANNEL', format=OFFheader["TFORM1"], array=channels),
-                                  pf.Column(name='COUNTS', format=OFFheader["TFORM2"], array=Nofftot, unit='count'),
-                                  pf.Column(name='GROUPING', format='I', array=grouping),
-                                  pf.Column(name='BACKSCAL', format='E', array=backscale)
+            OFFcols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=OFFheader["TFORM1"], array=channels),
+                                  pf.Column(name='COUNTS'.encode('ascii','replace'), format=OFFheader["TFORM2"], array=Nofftot, unit='count'),
+                                  pf.Column(name='GROUPING'.encode('ascii','replace'), format='I', array=grouping),
+                                  pf.Column(name='BACKSCAL'.encode('ascii','replace').encode('ascii','replace'), format='E', array=backscale)
                                   ])
             OFFhdu = pf.BinTableHDU.from_columns(OFFcols)
             for entry in pha_keywords:
@@ -788,9 +788,9 @@ class SpectralFit(object):
 
             OFFhdu.writeto(offfile, clobber=True)
 
-            arfcols = pf.ColDefs([pf.Column(name='ENERG_LO', format=arfheader["TFORM1"], array=elow, unit='keV'),
-                                  pf.Column(name='ENERG_HI', format=arfheader["TFORM2"], array=ehigh, unit='keV'),
-                                  pf.Column(name='SPECRESP', format=arfheader["TFORM3"], array=arfmean, unit='cm2')
+            arfcols = pf.ColDefs([pf.Column(name='ENERG_LO'.encode('ascii','replace'), format=arfheader["TFORM1"], array=elow, unit='keV'),
+                                  pf.Column(name='ENERG_HI'.encode('ascii','replace'), format=arfheader["TFORM2"], array=ehigh, unit='keV'),
+                                  pf.Column(name='SPECRESP'.encode('ascii','replace'), format=arfheader["TFORM3"], array=arfmean, unit='cm2')
                                   ])
             arfhdu = pf.BinTableHDU.from_columns(arfcols)
             for entry in arfheader:
@@ -814,18 +814,18 @@ class SpectralFit(object):
                     n_chan[i] = np.array([0], dtype=np.dtype('int16'))
                     totmatrix[i] = np.array([], dtype=np.dtype('float32'))
 
-            rmfcols = pf.ColDefs([pf.Column(name='ENERG_LO', format=rmfheader["TFORM1"], array=elow, unit='keV'),
-                                  pf.Column(name='ENERG_HI', format=rmfheader["TFORM2"], array=ehigh, unit='keV'),
-                                  pf.Column(name='N_GRP', format=rmfheader["TFORM3"], array=n_grp),
-                                  pf.Column(name='F_CHAN', format=rmfheader["TFORM4"], array=f_chan),
-                                  pf.Column(name='N_CHAN', format=rmfheader["TFORM5"], array=n_chan),
-                                  pf.Column(name='MATRIX', format=rmfheader["TFORM6"], array=totmatrix)
+            rmfcols = pf.ColDefs([pf.Column(name='ENERG_LO'.encode('ascii','replace'), format=rmfheader["TFORM1"], array=elow, unit='keV'),
+                                  pf.Column(name='ENERG_HI'.encode('ascii','replace'), format=rmfheader["TFORM2"], array=ehigh, unit='keV'),
+                                  pf.Column(name='N_GRP'.encode('ascii','replace'), format=rmfheader["TFORM3"], array=n_grp),
+                                  pf.Column(name='F_CHAN'.encode('ascii','replace'), format=rmfheader["TFORM4"], array=f_chan),
+                                  pf.Column(name='N_CHAN'.encode('ascii','replace'), format=rmfheader["TFORM5"], array=n_chan),
+                                  pf.Column(name='MATRIX'.encode('ascii','replace'), format=rmfheader["TFORM6"], array=totmatrix)
                                   ])
             rmfhdu = pf.BinTableHDU.from_columns(rmfcols)
 
-            enercols = pf.ColDefs([pf.Column(name='CHANNEL', format=enerheader["TFORM1"], array=channels),
-                                   pf.Column(name='E_MIN', format=enerheader["TFORM2"], array=emin, unit='keV'),
-                                   pf.Column(name='E_MAX', format=enerheader["TFORM3"], array=emax, unit='keV')
+            enercols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=enerheader["TFORM1"], array=channels),
+                                   pf.Column(name='E_MIN'.encode('ascii','replace'), format=enerheader["TFORM2"], array=emin, unit='keV'),
+                                   pf.Column(name='E_MAX'.encode('ascii','replace'), format=enerheader["TFORM3"], array=emax, unit='keV')
                                    ])
             enerhdu = pf.BinTableHDU.from_columns(enercols)
             for entry in rmfheader:
