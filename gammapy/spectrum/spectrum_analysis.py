@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+#from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function
 from __future__ import (print_function)
 import logging
 import os
@@ -19,7 +20,6 @@ from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
-from . import CountsSpectrum
 
 __all__ = [
     'SpectrumAnalysis',
