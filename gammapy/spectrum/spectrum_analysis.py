@@ -1,18 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (print_function)
 import logging
+import os
+import math
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
+import astropy.io.fits as pf
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
+from . import CountsSpectrum
+from astropy.table import Table
+from gammapy.extern.pathlib import Path
 from ..background import ring_area_factor
 from ..data import DataStore
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
-from . import CountsSpectrum
 
 __all__ = [
     'SpectrumAnalysis',
@@ -76,6 +82,7 @@ class SpectrumAnalysis(object):
             obs = np.loadtxt(obs, dtype=np.int)
 
         self._observations = []
+        self._numberobservations = []
         for i, val in enumerate(obs):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
@@ -86,6 +93,7 @@ class SpectrumAnalysis(object):
                 nobs += 1
                 continue
             self._observations.append(temp)
+            self._numberobservations.append(val)
             if i == nobs - 1:
                 break
 
@@ -395,7 +403,7 @@ class SpectrumObservation(object):
 
         if self.pha is not None:
             self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
-                           rmf=str(rmffile), clobber=clobber)
+                           rmf=str(rmffile), offset=self.offset, clobber=clobber)
         if self.bkg is not None:
             self.bkg.write(str(bkgfile), clobber=clobber)
         if self.arf is not None:
@@ -531,6 +539,304 @@ class SpectralFit(object):
 
         return ret
 
+    def define_spectral_groups(self, pha_list, outdir, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40,
+                               ZenRange=[0., 70.], NZenbin=30):
+        """
+        Group the observations in different bands of zenith, efficiency and offset.
+
+        Parameters
+        ----------
+        pha_list : list of str, `~gammapy.extern.pathlib.Path`
+            List of PHA files to group in the different bands
+        filename : str
+            directory where to writte the bands files
+        OffsetRange: tuple
+            Offset boundaries for the band
+        NOffbin: int
+            Number of offset bin
+        EffRange: tuple
+            Muon efficiency boundaries for the band
+        NEffbin: int
+            Number of muon efficiency bin
+        ZenRange: tuple
+            Zenithal angle boundaries for the band
+        NZenbin: int
+            Number of zenith angle bin
+
+        Returns
+        -------
+        ListeBand : list
+            name of the different  bands
+        ListeGroupObs: list
+            name of the pha files of the observations grouped for each previous band
+
+        """
+        [Offmin, Offmax] = OffsetRange
+        [Effmin, Effmax] = EffRange
+        [Zenmin, Zenmax] = ZenRange
+        CosZenmin = np.cos(Zenmax * math.pi / 180.)
+        CosZenmax = np.cos(Zenmin * math.pi / 180.)
+        NCosZenbin = NZenbin
+        Offbin = (Offmax - Offmin) / NOffbin
+        Effbin = (Effmax - Effmin) / NEffbin
+        CosZenbin = (CosZenmax - CosZenmin) / NCosZenbin
+        Offtab = np.arange(Offmin, Offmax, Offbin)
+        Efftab = np.arange(Effmin, Effmax, Effbin)
+        CosZentab = np.arange(CosZenmin, CosZenmax, CosZenbin)
+        ListeBand = []
+        ListeGroupObs = []
+
+        # We loop over all the observations and determine to which band belong each observations. If for an observation, the band doesn't exist we create a new one otherwise we add the observation to the existing band.
+        for filename in pha_list:
+            try:
+                shdu = pf.open(filename)
+            except:
+                print("Cannot open file: " + filename)
+                print("skipping run")
+            Offset = shdu[1].header['Offset']
+            CosZen = np.cos(shdu[1].header['ZEN'] * math.pi / 180.)
+            Efficiency = shdu[1].header['MUONEFF'] * 100
+            for (ioff, off) in enumerate(Offtab):
+                if ((Offset >= off) & (Offset < off + Offbin)):
+                    break
+            for (ieff, eff) in enumerate(Efftab):
+                if ((Efficiency >= eff) & (Efficiency < eff + Effbin)):
+                    break
+            for (izen, zen) in enumerate(CosZentab):
+                if ((CosZen >= zen) & (CosZen < zen + CosZenbin)):
+                    break
+            # Name of the band
+            namebande = "Band_Eff_" + str(eff) + "_" + str(eff + Effbin) + "_CosZen_" + str(zen) + "_" + str(
+                zen + CosZenbin) + "_Offset_" + str(off) + "_" + str(off + Offbin)
+
+            # If the band doesn't existe (that is to say ListBand.count(namebande)==0), we add a new band to the list of Band ListeBand. We create a new list of observation to group in this new band
+            if (ListeBand.count(namebande) == 0):
+                ListeBand.append(namebande)
+                ListeGroupObs.append([filename])
+            # If the Band exist, we find the number of the band (ListeBand.index(namebande)) and we add this new observation to group in this band
+            else:
+                ListeGroupObs[ListeBand.index(namebande)].append(filename)
+
+        for (iband, pha_list) in enumerate(ListeGroupObs):
+            self.apply_groupping(pha_list, iband, outdir)
+
+        return (ListeBand, ListeGroupObs)
+
+    def apply_groupping(self, pha_list, band_number, outdir):
+        # ATTENTION A LA GESTION DE L ENERGIE SOEUIL
+        """
+        Group ON, OFF, arf and rmf for a list of observations matching with a certain group in offset, efficiency and zenithal angle determined in the function band. Create the ogip file (pha, bkg, arf and rmf) for the band.
+
+        Parameters
+        ----------
+        pha_list : list of str, `~gammapy.extern.pathlib.Path`
+            List of PHA files of the band to group together
+        band_number: int
+            number of the band
+        outdir: str
+            directory where to store the ogip files of the band
+        """
+        Nontot = None
+        Nofftot = None
+        alphatot = None
+        detchans = 0
+        trueEbins = 0
+        timetot = 0
+        arftot = None
+        ONheader = None
+        OFFheader = None
+        arfheader = None
+        rmfheader = None
+        enerheader = None
+        elow = None
+        ehigh = None
+        emin = None
+        emax = None
+        for filename in pha_list:
+            try:
+                shdu = pf.open(filename)
+                path = filename[:-(len(filename.split('/')[-1] + filename.split('/')[-2]) + 1)]
+            except:
+                print("Cannot open file: " + filename)
+                print("skipping run")
+            else:
+                try:
+                    bkgname = path + shdu[1].header['BACKFILE']
+                    arfname = path + shdu[1].header['ANCRFILE']
+                    rmfname = path + shdu[1].header['RESPFILE']
+                    bhdu = pf.open(bkgname)
+                    ahdu = pf.open(arfname)
+                    rhdu = pf.open(rmfname)
+
+                except:
+                    print("Cannot open files associated to " + filename)
+                    print("skipping run")
+                else:
+                    if (bhdu[1].header['BACKSCAL'] == 0):
+                        print(filename)
+                        print("Backscal value for OFF region equal 0")
+                        continue
+
+                    if Nontot is None:
+                        ONheader = shdu[1].header
+                        OFFheader = bhdu[1].header
+                        arfheader = ahdu[1].header
+                        rmfheader = rhdu[1].header
+                        enerheader = rhdu[2].header
+
+                        detchans = shdu[1].header['DETCHANS']
+                        trueEbins = ahdu[1].header['NAXIS2']
+                        elow = ahdu[1].data['ENERG_LO']
+                        ehigh = ahdu[1].data['ENERG_HI']
+                        emin = rhdu[2].data['E_MIN']
+                        emax = rhdu[2].data['E_MAX']
+
+                        Nontot = np.zeros(detchans)
+                        Nofftot = np.zeros(detchans)
+                        alphatot = np.zeros(detchans)
+                        arftot = np.zeros(trueEbins)
+                        rmftot = np.zeros((trueEbins, detchans))
+                        rmf = np.zeros((trueEbins, detchans))
+
+                    Non = shdu[1].data['counts']
+                    Nontot += Non
+                    Noff = bhdu[1].data['counts']
+                    Nofftot += Noff
+                    alpha = shdu[1].header['BACKSCAL'] / bhdu[1].header['BACKSCAL']
+                    # print alpha
+                    alphatot += alpha * Noff
+
+                    time = shdu[1].header['EXPOSURE']
+                    timetot += time
+                    arf = ahdu[1].data['SPECRESP']
+                    # an apparent bug in exported matrices
+                    arf[np.where(arf < 0)[0]] *= 0.
+                    arftot += arf * time
+
+                    matrix = rhdu[1].data['MATRIX']
+                    length_row = [row.shape[0] for row in matrix]
+
+                    for i in np.where(length_row)[0]:
+                        for j in range(rhdu[1].data['N_GRP'][i]):
+                            fchan = rhdu[1].data['F_CHAN'][i][j]
+                            nchan = rhdu[1].data['N_CHAN'][i][j]
+                            rmftot[i, fchan:fchan + nchan] += matrix[i][:nchan] * arf[i] * time
+
+        if Nontot is None:
+            print("No runs to group in the band number " + str(
+                band_number) + " due to the fact that all the observations in this band have a backscal value equal to zero")
+        # sum runs together
+        else:
+            alphamean = np.zeros_like(alphatot)
+            print(band_number)
+            alphamean[Nofftot > 0] = alphatot[Nofftot > 0] / Nofftot[Nofftot > 0]
+            backscale = np.ones_like(alphatot)
+            backscale[Nofftot > 0] = Nofftot[Nofftot > 0] / alphatot[Nofftot > 0]
+
+            arfmean = arftot / timetot
+            rmfmean = np.zeros_like(rmftot)
+            for i in np.where(arftot > 0.0)[0]:
+                rmfmean[i] = rmftot[i] / arftot[i]
+
+            channels = np.arange(detchans)
+            grouping = np.ones(detchans)
+            onscale = np.ones(detchans)
+
+            # Now write results
+            outputname = outdir + "/Band_number_" + str(band_number)
+            onfile = outputname + '_pha.pha'
+            offfile = outputname + '_bkg.pha'
+            arffile = outputname + '_arf.fits'
+            rmffile = outputname + '_rmf.fits'
+
+            # total ON file
+            ONcols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=ONheader["TFORM1"], array=channels),
+                                 pf.Column(name='COUNTS'.encode('ascii','replace'), format=ONheader["TFORM2"], array=Nontot, unit='count'),
+                                 pf.Column(name='GROUPING'.encode('ascii','replace'), format='I', array=grouping),
+                                 pf.Column(name='BACKSCAL'.encode('ascii','replace'), format='E', array=onscale)
+                                 ])
+            
+            ONhdu = pf.BinTableHDU.from_columns(ONcols)
+
+            pha_keywords = ['EXTNAME', 'TLMIN1', 'TLMAX1', 'POISSERR', 'DETCHANS', 'CORRSCAL', 'CHANTYPE', 'HDUCLASS',
+                            'HDUCLAS1', 'HDUVERS', 'QUALITY', 'TELESCOP', 'INSTRUME', 'FILTER', 'AREASCAL', 'PCOUNT',
+                            'GCOUNT']
+
+            # Write keywords
+            for entry in pha_keywords:
+                ONhdu.header[entry] = ONheader[entry]
+
+            ONhdu.header['BACKFILE'] = offfile
+            ONhdu.header['ANCRFILE'] = arffile
+            ONhdu.header['RESPFILE'] = rmffile
+            ONhdu.header['EXPOSURE'] = timetot
+
+            ONhdu.writeto(onfile, clobber=True)
+
+            OFFcols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=OFFheader["TFORM1"], array=channels),
+                                  pf.Column(name='COUNTS'.encode('ascii','replace'), format=OFFheader["TFORM2"], array=Nofftot, unit='count'),
+                                  pf.Column(name='GROUPING'.encode('ascii','replace'), format='I', array=grouping),
+                                  pf.Column(name='BACKSCAL'.encode('ascii','replace').encode('ascii','replace'), format='E', array=backscale)
+                                  ])
+            OFFhdu = pf.BinTableHDU.from_columns(OFFcols)
+            for entry in pha_keywords:
+                OFFhdu.header[entry] = ONheader[entry]
+            OFFhdu.header['BACKFILE'] = ''
+            OFFhdu.header['ANCRFILE'] = ''
+            OFFhdu.header['RESPFILE'] = ''
+            OFFhdu.header['EXPOSURE'] = timetot
+
+            OFFhdu.writeto(offfile, clobber=True)
+
+            arfcols = pf.ColDefs([pf.Column(name='ENERG_LO'.encode('ascii','replace'), format=arfheader["TFORM1"], array=elow, unit='keV'),
+                                  pf.Column(name='ENERG_HI'.encode('ascii','replace'), format=arfheader["TFORM2"], array=ehigh, unit='keV'),
+                                  pf.Column(name='SPECRESP'.encode('ascii','replace'), format=arfheader["TFORM3"], array=arfmean, unit='cm2')
+                                  ])
+            arfhdu = pf.BinTableHDU.from_columns(arfcols)
+            for entry in arfheader:
+                arfhdu.header[entry] = arfheader[entry]
+            arfhdu.writeto(arffile, clobber=True)
+
+            totmatrix = np.zeros((trueEbins,), dtype=np.dtype('O'))
+            f_chan = np.zeros((trueEbins,), dtype=np.dtype('O'))
+            n_chan = np.zeros((trueEbins,), dtype=np.dtype('O'))
+            n_grp = np.zeros((trueEbins,), dtype=np.dtype('int16'))
+
+            for i in np.arange(trueEbins):
+                idx = np.where(rmftot[i] > 0.)[0]
+                n_grp[i] = 1
+                if len(idx) > 0:
+                    f_chan[i] = np.array([idx[0]], dtype=np.dtype('int16'))
+                    n_chan[i] = np.array([idx[-1] - idx[0] + 1], dtype=np.dtype('int16'))
+                    totmatrix[i] = rmfmean[i][idx[0]:idx[-1] + 1]
+                else:
+                    f_chan[i] = np.array([0], dtype=np.dtype('int16'))
+                    n_chan[i] = np.array([0], dtype=np.dtype('int16'))
+                    totmatrix[i] = np.array([], dtype=np.dtype('float32'))
+
+            rmfcols = pf.ColDefs([pf.Column(name='ENERG_LO'.encode('ascii','replace'), format=rmfheader["TFORM1"], array=elow, unit='keV'),
+                                  pf.Column(name='ENERG_HI'.encode('ascii','replace'), format=rmfheader["TFORM2"], array=ehigh, unit='keV'),
+                                  pf.Column(name='N_GRP'.encode('ascii','replace'), format=rmfheader["TFORM3"], array=n_grp),
+                                  pf.Column(name='F_CHAN'.encode('ascii','replace'), format=rmfheader["TFORM4"], array=f_chan),
+                                  pf.Column(name='N_CHAN'.encode('ascii','replace'), format=rmfheader["TFORM5"], array=n_chan),
+                                  pf.Column(name='MATRIX'.encode('ascii','replace'), format=rmfheader["TFORM6"], array=totmatrix)
+                                  ])
+            rmfhdu = pf.BinTableHDU.from_columns(rmfcols)
+
+            enercols = pf.ColDefs([pf.Column(name='CHANNEL'.encode('ascii','replace'), format=enerheader["TFORM1"], array=channels),
+                                   pf.Column(name='E_MIN'.encode('ascii','replace'), format=enerheader["TFORM2"], array=emin, unit='keV'),
+                                   pf.Column(name='E_MAX'.encode('ascii','replace'), format=enerheader["TFORM3"], array=emax, unit='keV')
+                                   ])
+            enerhdu = pf.BinTableHDU.from_columns(enercols)
+            for entry in rmfheader:
+                rmfhdu.header[entry] = rmfheader[entry]
+            for entry in enerheader:
+                enerhdu.header[entry] = enerheader[entry]
+
+            prihdu = pf.PrimaryHDU()
+            thdulist = pf.HDUList([prihdu, rmfhdu, enerhdu])
+            thdulist.writeto(rmffile, clobber=True)
+
     def info(self):
         """Print some basic info"""
         ss = 'Model\n'
@@ -586,6 +892,7 @@ class SpectralFit(object):
         ds.notice(thres_lo, thres_hi)
         ds.subtract()
         ds.fit()
+        ds.plot_fit()
         ds.clear_stack()
         ds.clear_models()
 
