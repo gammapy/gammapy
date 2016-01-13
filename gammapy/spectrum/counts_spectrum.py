@@ -123,29 +123,41 @@ class CountsSpectrum(object):
         return cls(val, bins, livetime)
 
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
+              offset=None, muon_eff=None, zenith=None, on_region=None,
               *args, **kwargs):
         """Write PHA to FITS file.
 
-        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        Calls `gammapy.spectrum.CountsSpectrum.to_fits` and
+        `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf, offset=offset,
+                     muon_eff=muon_eff, zenith=zenith,
+                     on_region=on_region).writeto(filename, *args, **kwargs)
+
+    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None, offset=None,
+                muon_eff=None, zenith=None, on_region=None):
+        """Convert to FITS format
+
+        This can be used to write a :ref:`gadf:ogip-pha`
 
         Parameters
         ----------
-        arf : str
-            ARF file to be written into FITS header
-        rmf : str
-            RMF file to be written into FITS header
-        corr : str
-            CORR file to be written into FITS header
         bkg : str
-            BKG file to be written into FITS header
-        filename : str
-            File to be written
-        """
-        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf).writeto(
-            filename, *args, **kwargs)
-
-    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None):
-        """Output OGIP pha file
+            :ref:`gadf:ogip-bkg` containing the corresponding background spectrum
+        corr : str
+            name of the corresponding correction file
+        rmf : str
+            :ref:`gadf:ogip-rmf` containing the corresponding energy resolution
+        arf : str
+            :ref:`gadf:ogip-arf` containing the corresponding effective area
+        offset : `~astropy.coordinates.Angle`
+            Angular distance between target and pointing position
+        muon_eff : float
+            Muon efficiency
+        zenith : `~astropy.coordinates.Angle`
+            Zenith angle
+        on_region : `~gammapy.region.SkyCircleRegion`
+            Region used to extract the spectrum
 
         Returns
         -------
@@ -168,7 +180,6 @@ class CountsSpectrum(object):
         hdu = fits.BinTableHDU.from_columns(cols)
         header = hdu.header
 
-        # TODO: option to store meta info in the class
         header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'
         header['TELESCOP'] = 'DUMMY', 'Telescope (mission) name'
         header['INSTRUME'] = 'DUMMY', 'Instrument name'
@@ -203,7 +214,7 @@ class CountsSpectrum(object):
 
         header['QUALITY '] = 0, 'No data quality information specified'
 
-        header['AREASCAL'] = 1., 'Nominal effective area'
+        header['AREASCAL'] = 1., 'Area scaling factor'
         header['BACKSCAL'] = self.backscal, 'Background scale factor'
         header['CORRSCAL'] = 0., 'Correlation scale factor'
 
@@ -211,6 +222,17 @@ class CountsSpectrum(object):
         header['ORIGIN'] = 'dummy', 'origin of fits file'
         header['DATE'] = datetime.datetime.today().strftime('%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
         header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
+
+        if offset is not None:
+            header['OFFSET'] = offset.to('deg').value, 'Target offset from pointing position'
+        if muon_eff is not None:
+            header['MUONEFF'] = muon_eff, 'Muon efficiency'
+        if zenith is not None:
+            header['ZENITH'] = zenith.to('deg').value, 'Zenith angle'
+        if on_region is not None:
+            header['RA-OBJ'] = on_region.pos.icrs.ra.value, 'Right ascension of the target'
+            header['DEC-OBJ'] = on_region.pos.icrs.dec.value , 'Declination of the target'
+            header['ON-RAD'] = on_region.radius.to('deg').value, 'Radius of the circular spectral extraction region'
 
         return hdu
 

@@ -395,7 +395,8 @@ class SpectrumObservation(object):
 
         if self.pha is not None:
             self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
-                           rmf=str(rmffile), clobber=clobber)
+                           rmf=str(rmffile), offset=self.offset,
+                           on_region=self.on_region, clobber=clobber)
         if self.bkg is not None:
             self.bkg.write(str(bkgfile), clobber=clobber)
         if self.arf is not None:
