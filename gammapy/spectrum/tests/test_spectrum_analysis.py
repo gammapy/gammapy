@@ -62,7 +62,7 @@ def test_spectral_fit(tmpdir):
     fit.energy_threshold_low = '100 GeV'
     fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
-    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, atol=1e-1)
 
     # broken
     # fit.run(method='hspec')
@@ -79,11 +79,11 @@ def test_spectrum_analysis_from_configfile(tmpdir):
     config['general']['outdir'] = str(tmpdir)
 
     fit = run_spectral_fit_using_config(config)
-    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, atol=1e-1)
 
     config['off_region']['type'] = 'ring'
     config['off_region']['inner_radius'] = '0.3 deg'
     config['off_region']['outer_radius'] = '0.4 deg'
 
     fit = run_spectral_fit_using_config(config)
-    assert_allclose(fit.model.gamma.val, 2.23, rtol=1e-1)
+    assert_allclose(fit.model.gamma.val, 2.23, atol=1e-1)

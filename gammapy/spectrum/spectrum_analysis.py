@@ -1,24 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
-from astropy import wcs
 
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
 
-from gammapy.extern import pathlib
-from gammapy.extern.pathlib import Path
-from ..image import ExclusionMask, make_empty_image
-from ..region import SkyCircleRegion, find_reflected_regions
+from . import CountsSpectrum
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
+from ..image import ExclusionMask
+from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
-from . import CountsSpectrum
 
 __all__ = [
     'SpectrumAnalysis',
@@ -44,33 +42,6 @@ def main(args=None):
 
     config = read_yaml(args.config_file)
     run_spectral_fit_using_config(config)
-
-
-def filter_reflected_regions_analysis(analysis, n_min):
-    """Filter `~gammapy.spectrum.SpectrumAnalysis`
-
-    Only `~gammapy.spectrum.SpectrumObservation` with
-    n_reflected_regions >= n_min are kept
-
-    Parameters
-    ----------
-    analysis : `~gammapy.spectrum.SpectrumAnalysis`
-        Spectrum analysis with reflected regions background method
-    n_min : int
-        Minimum number of reflected regions
-
-    Returns
-    -------
-    mask : `np.array`
-        Indices of element fulfilling the condition
-    """
-    val = analysis.bkg_method['type']
-    if val != 'reflected':
-        raise ValueError("Wrong background method: {}".format(val))
-
-    off_vec = analysis.off_vector
-    mask = np.where(np.array([o.backscal for o in off_vec]) >= n_min)
-    return mask[0]
 
 
 class SpectrumAnalysis(object):
@@ -128,7 +99,7 @@ class SpectrumAnalysis(object):
         if len(self.observations) == 0:
             raise ValueError("No valid observations found")
         if bkg_method['type'] == 'reflected':
-            mask = filter_reflected_regions_analysis(self, bkg_method['n_min'])
+            mask = self.filter_by_reflected_regions(bkg_method['n_min'])
             self._observations = self.observations[mask]
 
     def copy(self, bkg_method=None):
@@ -213,7 +184,11 @@ class SpectrumAnalysis(object):
     def total_alpha(self):
         """Averaged exposure ratio between ON and OFF regions
 
-        Alpha for all observations is calculated as :
+        :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
+
+        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
+
+        where :math:`N_i` is the number of OFF counts for observation :math:`i`
         """
         val = [o.alpha * o.off_vector.total_counts for o in self.observations]
         num = np.sum(val)
@@ -306,6 +281,29 @@ class SpectrumAnalysis(object):
         for obs in self.observations:
             obs.write_ogip(outdir=outdir, **kwargs)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
+
+    def filter_by_reflected_regions(self, n_min):
+        """Filter runs according to number of reflected regions
+
+        Condition: number of reflected regions >= nmin
+
+        Parameters
+        ----------
+        n_min : int
+            Minimum number of reflected regions
+
+        Returns
+        -------
+        idx : `np.array`
+            Indices of element fulfilling the condition
+        """
+        val = self.bkg_method['type']
+        if val != 'reflected':
+            raise ValueError("Wrong background method: {}".format(val))
+
+        condition = np.array([o.backscal for o in self.off_vector]) >= n_min
+        idx = np.nonzero(condition)
+        return idx[0]
 
 
 class SpectrumObservation(object):
@@ -618,7 +616,7 @@ class SpectralFit(object):
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
-        self.statistic = stat
+        self._stat = stat
 
     @classmethod
     def from_config(cls, config):
@@ -675,7 +673,7 @@ class SpectralFit(object):
     @property
     def statistic(self):
         """Statistic to be used in the fit"""
-        return self._statistic
+        return self._stat
 
     @statistic.setter
     def statistic(self, stat):
@@ -697,7 +695,7 @@ class SpectralFit(object):
         if not isinstance(stat, s.Stat):
             raise ValueError("Only sherpa statistics are supported")
 
-        self._statistic = stat
+        self._stat = stat
 
     @property
     def energy_threshold_low(self):

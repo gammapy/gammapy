@@ -54,9 +54,10 @@ class TestSkyCircle:
         assert_allclose(sky.radius, sky2.radius)
 
     def test_area(self):
-        pos = SkyCoord.from_name('crab')
+        pos = SkyCoord(83.633083, 22.0145, unit='deg')
         rad = Angle('1.3451 deg')
         reg = SkyCircleRegion(pos, rad)
+        # small angle approximation, method: spherical cap area
         desired = (rad ** 2 * np.pi).to('steradian')
         actual = reg.area
         assert_allclose(actual, desired, rtol=1e-3)

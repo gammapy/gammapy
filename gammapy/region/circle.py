@@ -134,9 +134,16 @@ class SkyCircleRegion(SkyRegion):
 
     @property
     def area(self):
-        """Circle Area
+        """Circle area (solid angle [sr])
+
+        For a circular region with radius :math:`2\\theta`
+        the solid angle :math:`\\Theta` reads
+
+        .. math:: \\Theta = 2\\pi (1-\\cos(\\theta))
+
+        see: https://en.wikipedia.org/wiki/Solid_angle#Cone.2C_spherical_cap.2C_hemisphere
         """
-        val = 4 * np.pi * np.sin(self.radius/2) ** 2
+        val = 2 * np.pi * (1 - np.cos(self.radius))
         return val * u.steradian
 
     def info(self):
