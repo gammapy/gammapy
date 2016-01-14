@@ -670,7 +670,7 @@ class EnergyDispersion2D(object):
         val = self.evaluate(offset=offset, e_true=e_true, migra=migra)
 
         # Multiply by migra bin width (~Integration)
-        rv = val * (e_reco.band / e_true)
+        rv = val * (e_reco.bands / e_true)
 
         return rv.value
 
