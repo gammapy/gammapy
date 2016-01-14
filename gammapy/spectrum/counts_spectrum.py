@@ -53,18 +53,10 @@ class CountsSpectrum(object):
         else:
             self.energy = energy
 
-        if livetime is not None:
-            self._livetime = livetime
-        else:
-            self._livetime = Quantity(0, 's')
-        if muoneff is not None:
-            self.muoneff = muoneff
-        else:
-            self.muoneff = 0
-        if zenith is not None:
-            self.zenith = zenith
-        else:
-            self.zenith = 0
+        self._livetime = None if livetime is None else Quantity(livetime)
+        self._muoneff = None if muoneff is None else Quantity(muoneff)
+        self._zenith = None if zenith is None else Quantity(zenith)
+        
         self._backscal = backscal
         self.channels = np.arange(1, self.energy.nbins + 1, 1)
 
