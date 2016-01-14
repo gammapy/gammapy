@@ -509,8 +509,8 @@ class SpectrumObservation(object):
                    outdir=None, clobber=True):
         """Write OGIP files
 
-        The arf, rmf and bkg files are set in the pha FITS header. If no
-        filenames are given, default names will be chosen.
+        The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
+        header. If no filenames are given, default names will be chosen.
 
         Parameters
         ----------
