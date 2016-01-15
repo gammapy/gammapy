@@ -3,11 +3,14 @@ from __future__ import (print_function)
 
 import numpy as np
 from astropy import log
+
+from gammapy.utils.scripts import make_path
 from ..utils.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
 from astropy.units import Quantity
 from gammapy.data import EventList, EventListDataset
+from gammapy.extern.pathlib import Path
 
 __all__ = ['CountsSpectrum']
 
@@ -20,7 +23,7 @@ class CountsSpectrum(object):
 
     counts : `~numpy.array`, list
         Counts
-    energy : `~gammapy.utils.energy.Energy`, `~gammapy.utils.energy.EnergyBounds`.
+    energy : `~gammapy.utils.energy.EnergyBounds`
         Energy axis
     livetime : `~astropy.units.Quantiy`
         Livetime of the dataset
@@ -44,25 +47,16 @@ class CountsSpectrum(object):
             raise ValueError("Dimension of {0} and {1} do not"
                              " match".format(counts, energy))
 
-        if not isinstance(energy, Energy):
-            raise ValueError("energy must be an Energy object")
-
         self.counts = np.asarray(counts)
 
-        if isinstance(energy, EnergyBounds):
-            self.energy = energy.log_centers
-        else:
-            self.energy = energy
+        self.energy_bounds = EnergyBounds(energy)
 
-        if livetime is not None:
-            self._livetime = livetime
-        else:
-            self._livetime = Quantity(0, 's')
+        self._livetime = Quantity(0, 's') if livetime is None else livetime
         self._backscal = backscal
-        self.channels = np.arange(1, self.energy.nbins + 1, 1)
+        self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
     @property
-    def entries(self):
+    def total_counts(self):
         """Total number of counts
         """
         return self.counts.sum()
@@ -83,16 +77,55 @@ class CountsSpectrum(object):
     def backscal(self, value):
         self._backscal = value
 
+    def __add__(self, other):
+        """Add two counts spectra and returns new instance
+
+        The two spectra need to have the same binning
+        """
+        if (self.energy_bounds != other.energy_bounds).all():
+            raise ValueError("Cannot add counts spectra with different binning")
+        counts = self.counts + other.counts
+        livetime = self.livetime + other.livetime
+        return CountsSpectrum(counts, self.energy_bounds, livetime=livetime)
+
+    def __mul__(self, other):
+        """Scale counts by a factor"""
+        temp = self.counts * other
+        return CountsSpectrum(temp, self.energy_bounds, livetime=self.livetime)
+
     @classmethod
-    def from_fits(cls, hdu):
-        """Read SPECTRUM fits extension from pha file (`CountsSpectrum`).
+    def read(cls, phafile, rmffile=None):
+        """Read PHA fits file
+
+        The energy binning is not contained in the PHA standard. Therefore is
+        is inferred from the corresponding RMF EBOUNDS extension.
 
         Parameters
         ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
-            ``SPECTRUM`` extensions.
+        phafile : str
+            PHA file with ``SPECTRUM`` extension
+        rmffile : str
+            RMF file with ``EBOUNDS`` extennsion, optional
         """
-        pass
+        phafile = make_path(phafile)
+        spectrum = fits.open(str(phafile))['SPECTRUM']
+        counts = [val[1] for val in spectrum.data]
+        if rmffile is None:
+            val = spectrum.header['RESPFILE']
+            if val == '':
+                raise ValueError('RMF file not set in PHA header. '
+                                 'Please provide RMF file for energy binning')
+            parts = phafile.parts[:-1]
+            rmffile = Path.cwd()
+            for part in parts:
+                rmffile = rmffile.joinpath(part)
+            rmffile = rmffile.joinpath(val)
+
+        rmffile = make_path(rmffile)
+        ebounds = fits.open(str(rmffile))['EBOUNDS']
+        bins = EnergyBounds.from_ebounds(ebounds)
+        livetime = Quantity(0, 's')
+        return cls(counts, bins, livetime=livetime)
 
     @classmethod
     def from_eventlist(cls, event_list, bins):
@@ -196,9 +229,9 @@ class CountsSpectrum(object):
         header['HDUVERS '] = '1.2.1', 'Version number of the format'
 
         header['CHANTYPE'] = 'PHA', 'Channels assigned by detector electronics'
-        header['DETCHANS'] = self.energy.nbins, 'Total number of detector channels available'
+        header['DETCHANS'] = self.channels.size, 'Total number of detector channels available'
         header['TLMIN1'] = 1, 'Lowest Legal channel number'
-        header['TLMAX1'] = self.energy.nbins, 'Highest Legal channel number'
+        header['TLMAX1'] = self.channels[-1], 'Highest Legal channel number'
 
         header['XFLT0001'] = 'none', 'XSPEC selection filter description'
 
@@ -236,7 +269,7 @@ class CountsSpectrum(object):
 
         return hdu
 
-    def plot(self, ax=None, filename=None, **kwargs):
+    def plot(self, ax=None, filename=None, weight=1, **kwargs):
         """
         Plot counts vector
 
@@ -248,6 +281,8 @@ class CountsSpectrum(object):
             Axis instance to be used for the plot
         filename : str (optional)
             File to save the plot to
+        weight : float
+            Weighting factor for the counts
 
         Returns
         -------
@@ -257,10 +292,10 @@ class CountsSpectrum(object):
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-
-        plt.hist(self.energy.value, len(self.energy.value),
-                 weights=self.counts, **kwargs)
-        plt.xlabel('Energy [{0}]'.format(self.energy.unit))
+        w = self.counts * weight
+        plt.hist(self.energy_bounds.log_centers, bins=self.energy_bounds,
+                 weights=w, **kwargs)
+        plt.xlabel('Energy [{0}]'.format(self.energy_bounds.unit))
         plt.ylabel('Counts')
         if filename is not None:
             plt.savefig(filename)

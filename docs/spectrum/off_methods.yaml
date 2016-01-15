@@ -1,7 +1,12 @@
 off_region:
   type: reflected
+  n_min: Int, minimum number of reflected regions
+  angle_increment : Angle, optional (Rotation angle for each step)
+  min_distance : Angle, optional (Minimal distance between to reflected regions)
+  min_distance_input: Angle, optional (Minimal distance from input region)
 
 off_region:
   type: ring
-  inner_radius: 0.2 deg
-  outer_radius: 0.3 deg
+  inner_radius: Angle
+  outer_radius: Angle
+

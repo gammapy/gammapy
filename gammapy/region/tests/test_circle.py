@@ -1,5 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+import numpy as np
 from astropy.wcs import WCS
 from astropy.coordinates import Angle, SkyCoord
 from ...image import make_empty_image
@@ -50,3 +52,12 @@ class TestSkyCircle:
         assert_allclose(sky.pos.l, sky2.pos.l)
         assert_allclose(sky.pos.b, sky2.pos.b)
         assert_allclose(sky.radius, sky2.radius)
+
+    def test_area(self):
+        pos = SkyCoord(83.633083, 22.0145, unit='deg')
+        rad = Angle('1.3451 deg')
+        reg = SkyCircleRegion(pos, rad)
+        # small angle approximation, method: spherical cap area
+        desired = (rad ** 2 * np.pi).to('steradian')
+        actual = reg.area
+        assert_allclose(actual, desired, rtol=1e-3)

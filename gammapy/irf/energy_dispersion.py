@@ -661,7 +661,7 @@ class EnergyDispersion2D(object):
                 self.migra_lo * e_true, self.migra_hi * e_true)
             migra = self.migra
 
-        # Translate given e_reco band to migra vector
+        # Translate given e_reco binning to migra at bin center
         else:
             e_reco = EnergyBounds(e_reco)
             center = e_reco.log_centers
@@ -669,9 +669,8 @@ class EnergyDispersion2D(object):
 
         val = self.evaluate(offset=offset, e_true=e_true, migra=migra)
 
-        # Integrate e_reco bins
-        band = e_reco.bands
-        rv = (val / e_true) * band
+        # Multiply by migra bin width (~Integration)
+        rv = val * (e_reco.bands / e_true)
 
         return rv.value
 

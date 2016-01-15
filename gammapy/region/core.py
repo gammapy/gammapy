@@ -170,6 +170,11 @@ class SkyRegionList(list):
         with open(filename, 'w') as fh:
             fh.write(ss)
 
+    def plot(self, ax, **kwargs):
+        """Plot all regions in the list"""
+        for reg in self:
+            reg.plot(ax, **kwargs)
+
 
 class PixRegionList(list):
     """List of pix regions"""

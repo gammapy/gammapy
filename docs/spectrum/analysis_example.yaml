@@ -23,6 +23,7 @@ on_region:
 
 off_region:
   type: reflected
+  n_min: 4
 
 excluded_regions:
   file: $GAMMAPY_EXTRA/test_datasets/spectrum/dummy_exclusion.fits 

@@ -12,6 +12,7 @@ from astropy.wcs import WCS
 from ..utils.wcs import (linear_wcs_to_arrays,
                          linear_arrays_to_wcs)
 from ..utils.fits import table_to_fits_table
+from ..utils.energy import Energy, EnergyBounds
 
 __all__ = [
     'Cube',
@@ -55,7 +56,7 @@ def _parse_data_units(data_unit):
                 u.Unit(data_unit, format='ogip')
             # if it still fails, raise an exception
             except ValueError:
-                raise ValueError("Invalid unit format {}.".format(background_unit))
+                raise ValueError("Invalid unit format {}.".format(data_unit))
 
     return data_unit
 
@@ -102,7 +103,7 @@ class Cube(object):
         Spatial bin edges vector (low and high). X coordinate.
     coordy_edges : `~astropy.coordinates.Angle`, optional
         Spatial bin edges vector (low and high). Y coordinate.
-    energy_edges : `~astropy.units.Quantity`, optional
+    energy_edges : `~gammapy.utils.energy.EnergyBounds`, optional
         Energy bin edges vector (low and high).
     data : `~astropy.units.Quantity`, optional
         Data cube matrix in (energy, X, Y) format.
@@ -115,7 +116,7 @@ class Cube(object):
 
     .. code:: python
 
-        energy_bin = cube.find_energy_bin(energy=Quantity(2., 'TeV'))
+        energy_bin = cube.energy_edges.find_energy_bin('2 TeV')
         coord_bin = cube.find_coord_bin(coord=Angle([0., 0.], 'deg'))
         cube.data[energy_bin, coord_bin[1], coord_bin[0]]
     """
@@ -125,7 +126,7 @@ class Cube(object):
     def __init__(self, coordx_edges=None, coordy_edges=None, energy_edges=None, data=None, scheme=None):
         self.coordx_edges = coordx_edges
         self.coordy_edges = coordy_edges
-        self.energy_edges = energy_edges
+        self._energy_edges = EnergyBounds(energy_edges)
 
         self.data = data
 
@@ -523,17 +524,9 @@ class Cube(object):
         return coordx_bin_centers, coordy_bin_centers
 
     @property
-    def energy_bin_centers(self):
-        """Energy bin centers (logarithmic center) (`~astropy.units.Quantity`)"""
-        log_bin_edges = np.log(self.energy_edges.value)
-        log_bin_centers = 0.5 * (log_bin_edges[:-1] + log_bin_edges[1:])
-        energy_bin_centers = Quantity(np.exp(log_bin_centers), self.energy_edges.unit)
-        # TODO: this function should be reviewed/re-written, when
-        # the following PR is completed:
-        # https://github.com/gammapy/gammapy/pull/290
-        # as suggested in:
-        # https://github.com/gammapy/gammapy/pull/292#discussion_r34412865
-        return energy_bin_centers
+    def energy_edges(self):
+        """Energy binning (`~gammapy.utils.energy.EnergyBounds`)"""
+        return self._energy_edges
 
     @property
     def coord_wcs(self):
@@ -576,30 +569,6 @@ class Cube(object):
 
         return np.array([bin_index_x, bin_index_y])
 
-    def find_energy_bin(self, energy):
-        """Find the bins that contain the specified energy values.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Array of energies to search for.
-
-        Returns
-        -------
-        bin_index : `~numpy.ndarray`
-            Indices of the energy bins containing the specified energies.
-        """
-        # check that the specified energy is within the boundaries of the cube
-        energy_extent = self.spectrum_extent
-        if not (energy_extent[0] <= energy).all() and (energy < energy_extent[1]).all():
-            ss_error = "Specified energy {}".format(energy)
-            ss_error += " is outside the boundaries {}.".format(energy_extent)
-            raise ValueError(ss_error)
-
-        bin_index = np.searchsorted(self.energy_edges[1:], energy)
-
-        return bin_index
-
     def find_coord_bin_edges(self, coord):
         """Find the bin edges of the specified coord (X, Y) pairs.
 
@@ -621,31 +590,12 @@ class Cube(object):
 
         return bin_edges
 
-    def find_energy_bin_edges(self, energy):
-        """Find the bin edges of the specified energy values.
-
-        Parameters
-        ----------
-        energy : `~astropy.units.Quantity`
-            Array of energies to search for.
-
-        Returns
-        -------
-        bin_edges : `~astropy.units.Quantity`
-            Energy bin edges [E_min, E_max).
-        """
-        bin_index = self.find_energy_bin(energy)
-        bin_edges = Quantity([self.energy_edges[bin_index],
-                              self.energy_edges[bin_index + 1]])
-
-        return bin_edges
-
     def plot_image(self, energy, ax=None, style_kwargs=None):
         """Plot image for the energy bin containing the specified energy.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `~gammapy.utils.energy.Energy`
             Energy of cube bin to plot.
         ax : `~matplotlib.axes.Axes`, optional
             Axes of the figure for the plot.
@@ -660,28 +610,21 @@ class Cube(object):
         import matplotlib.pyplot as plt
         from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-        energy = energy.flatten()
+        energy = Energy(energy)
+
         # check shape of energy: only 1 value is accepted
-        nvalues = len(energy)
-        if nvalues != 1:
-            ss_error = "Expected exactly 1 value for energy, got {}.".format(nvalues)
-            raise IndexError(ss_error)
-        else:
-            energy = Quantity(energy[0])
+        if energy.size != 1:
+            raise IndexError("Expected exactly 1 value for energy"
+                             ", got {}.".format(energy.size))
 
         extent = self.image_extent
-        energy_bin_centers = self.energy_bin_centers
 
         # find energy bin containing the specified energy
-        energy_bin = self.find_energy_bin(energy)
-        energy_bin_edges = self.find_energy_bin_edges(energy)
-        ss_energy_bin_edges = "[{0}, {1}) {2}".format(energy_bin_edges[0].value,
-                                                      energy_bin_edges[1].value,
-                                                      energy_bin_edges.unit)
+        energy_bin = self.energy_edges.find_energy_bin(energy)
+        energy_bin_edges = self.energy_edges.bin(energy_bin)
 
         # get data for the plot
         data = self.data[energy_bin]
-        energy_bin_center = energy_bin_centers[energy_bin]
 
         # create plot
         fig = plt.figure()
@@ -705,9 +648,9 @@ class Cube(object):
                           **style_kwargs)
 
         # set title and axis names
-        ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(energy_bin_edges[0].value,
-                                                              energy_bin_edges[1].value,
-                                                              energy_bin_edges.unit))
+        ax.set_title('Energy = [{0:.1f}, {1:.1f}) {2}'.format(
+            energy_bin_edges[0].value, energy_bin_edges[1].value,
+            energy_bin_edges.unit))
         ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['coordx_plot_name'],
                                          extent.unit))
         ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['coordy_plot_name'],
@@ -725,7 +668,41 @@ class Cube(object):
             plt.close(fig)
         return ax
 
-    def plot_spectrum(self, coord, ax=None, style_kwargs=None):
+    def make_spectrum(self, coord, ebounds=None):
+        """
+        Generate energy spectrum at a certain position in the FOV
+
+        Parameters
+        ----------
+        coord : `~astropy.units.Quantity`
+            Coord (X,Y) pair of cube bin to plot.
+        ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
+            Energy binning for the spectrum
+
+        Returns
+        -------
+        spectrum : `~astropy.units.Quantity`
+            Energy spectrum
+        """
+        ebounds = self.energy_edges if ebounds is None else ebounds
+        ebins = self.energy_edges.find_energy_bin(ebounds.log_centers)
+
+        coord = coord.flatten()
+        # check shape of coord: only 1 pair is accepted
+        nvalues = len(coord.flatten())
+        if nvalues != 2:
+            ss_error = "Expected exactly 2 values for coord (X, Y),"
+            ss_error += "got {}.".format(nvalues)
+            raise IndexError(ss_error)
+
+        # find coord bin containing the specified coord coordinates
+        coord_bin = self.find_coord_bin(coord)
+        # get data for the plot
+        spectrum = self.data[ebins, coord_bin[1], coord_bin[0]]
+
+        return spectrum
+
+    def plot_spectrum(self, coord, ebounds=None, ax=None, style_kwargs=None):
         """Plot spectra for the coord bin containing the specified coord (X, Y) pair.
 
         Parameters
@@ -734,6 +711,8 @@ class Cube(object):
             Coord (X,Y) pair of cube bin to plot.
         ax : `~matplotlib.axes.Axes`, optional
             Axes of the figure for the plot.
+        ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
+            Energy binning for the spectrum
         style_kwargs : dict, optional
             Style options for the plot.
 
@@ -744,33 +723,9 @@ class Cube(object):
         """
         import matplotlib.pyplot as plt
 
-        coord = coord.flatten()  # flatten
-        # check shape of coord: only 1 pair is accepted
-        nvalues = len(coord.flatten())
-        if nvalues != 2:
-            ss_error = "Expected exactly 2 values for coord (X, Y),"
-            ss_error += "got {}.".format(nvalues)
-            raise IndexError(ss_error)
-        else:
-            do_only_1_plot = True
-
-        energy_points = self.energy_bin_centers
-        coordx_bin_centers, coordy_bin_centers = self.image_bin_centers
-
-        # find coord bin containing the specified coord coordinates
-        coord_bin = self.find_coord_bin(coord)
+        ebounds = self.energy_edges if ebounds is None else ebounds
+        data = self.make_spectrum(coord, ebounds=ebounds)
         coord_bin_edges = self.find_coord_bin_edges(coord)
-        ss_coordx_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[0].value,
-                                                      coord_bin_edges[1].value,
-                                                      coord_bin_edges.unit)
-        ss_coordy_bin_edges = "[{0}, {1}) {2}".format(coord_bin_edges[2].value,
-                                                      coord_bin_edges[3].value,
-                                                      coord_bin_edges.unit)
-
-        # get data for the plot
-        data = self.data[:, coord_bin[1], coord_bin[0]]
-        coordx_bin_center = coordx_bin_centers[coord_bin[0]]
-        coordy_bin_center = coordy_bin_centers[coord_bin[1]]
 
         # create plot
         fig = plt.figure()
@@ -784,23 +739,22 @@ class Cube(object):
 
         fig.set_size_inches(8., 8., forward=True)
 
-        image = ax.plot(energy_points.to('TeV'),
-                        data,
-                        drawstyle='default',  # connect points with lines
-                        **style_kwargs)
+        ax.plot(ebounds.log_centers.to('TeV'), data, drawstyle='default',
+                **style_kwargs)
         ax.loglog()  # double log scale # slow!
 
         # set title and axis names
-        ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[0].value,
-                                                              coord_bin_edges[1].value,
-                                                              coord_bin_edges.unit)
-        ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(coord_bin_edges[2].value,
-                                                              coord_bin_edges[3].value,
-                                                              coord_bin_edges.unit)
+        ss_coordx_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(
+            coord_bin_edges[0].value, coord_bin_edges[1].value,
+            coord_bin_edges.unit)
+        ss_coordy_bin_edges = "[{0:.1f}, {1:.1f}) {2}".format(
+            coord_bin_edges[2].value, coord_bin_edges[3].value,
+            coord_bin_edges.unit)
 
-        ax.set_title('Coord = {0} {1}'.format(ss_coordx_bin_edges, ss_coordy_bin_edges))
+        ax.set_title('Coord = {0} {1}'.format(
+            ss_coordx_bin_edges, ss_coordy_bin_edges))
         ax.set_xlabel('{0} / {1}'.format(self.scheme_dict['energy_plot_name'],
-                                         energy_points.unit))
+                                         ebounds.unit))
         ax.set_ylabel('{0} / {1}'.format(self.scheme_dict['data_plot_name'],
                                          data.unit))
         # eventually close figure to avoid white canvases

@@ -6,44 +6,14 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+
+from ..image import make_empty_image
 from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'LogEnergyAxis',
     'np_to_pha',
-    'plot_reflected_regions',
 ]
-
-
-def plot_reflected_regions(analysis, hdu):
-    """Plot reflected regions for a given set of observations
-
-    Parameters
-    ----------
-    analysis : `~gammapy.spectrum.SpectrumAnalysis`
-        1D spectrum analysis object
-    hdu : `~astropy.fit.ImageHDU`
-        ImageHDU
-    """
-
-    import matplotlib.pyplot as plt
-
-    reflected_regions = analysis.reflected_regions
-    for obs in reflected_regions:
-        wcs = WCS(hdu.header)
-        fig = plt.figure(figsize=(8, 5), dpi=80)
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs)
-        analysis.exclusion.plot(ax)
-        for reg in obs['region']:
-            patch = reg.plot(ax)
-            patch.set_facecolor('red')
-        patch2 = analysis.on_region.plot(ax)
-        patch2.set_facecolor('blue')
-        l = obs['pointing'].galactic.l
-        b = obs['pointing'].galactic.b
-        ax.scatter(l, b, transform=ax.get_transform('galactic'), s=90,
-                   marker="+", color='yellow')
-        plt.savefig(str(obs['obs']) + "_reflected_regions.png")
 
 
 class LogEnergyAxis(object):

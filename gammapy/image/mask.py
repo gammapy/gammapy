@@ -113,6 +113,16 @@ class ExclusionMask(object):
         wcs = WCS(hdu.header)
         return cls(mask, wcs)
 
+    def write(self, filename, **kwargs):
+        """Write Exclusion mask to file
+
+        Parameters
+        ----------
+        filename : str
+            File to write
+        """
+        self.to_hdu().writeto(filename, **kwargs)
+
     def to_hdu(self):
         """Create ImageHDU containting the exclusion mask
         """
@@ -192,4 +202,3 @@ def make_tevcat_exclusion_mask():
         all_sky_exclusion.data[mask] = 0
 
     return ExclusionMask.from_hdu(all_sky_exclusion)
-    

@@ -1,18 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import logging
+
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
+from astropy.wcs.utils import skycoord_to_pixel
+
+from . import CountsSpectrum
+from ..background import ring_area_factor, Cube
+from ..data import DataStore
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
-from ..background import ring_area_factor
-from ..data import DataStore
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
-from . import CountsSpectrum
 
 __all__ = [
     'SpectrumAnalysis',
@@ -53,7 +57,7 @@ class SpectrumAnalysis(object):
         Circular region to extract on counts
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion regions
-    bkg_method : dict, optional
+    bkg_method : dict
         Background method including necessary parameters
     nobs : int
         number of observations to process, 0 means all observations
@@ -69,13 +73,14 @@ class SpectrumAnalysis(object):
         self.exclusion = exclusion
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
-        if bkg_method is None:
-            bkg_method = dict(type='no method')
+        self.ebounds = ebounds
+        self.bkg_method = 'no method' if bkg_method is None else bkg_method
 
         if isinstance(obs, six.string_types):
-            obs = np.loadtxt(obs, dtype=np.int)
+            obs = make_path(obs)
+            obs = np.loadtxt(str(obs), dtype=np.int)
 
-        self._observations = []
+        observations = []
         for i, val in enumerate(obs):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
@@ -85,37 +90,110 @@ class SpectrumAnalysis(object):
                     'Observation {} not in store {}'.format(val, datastore))
                 nobs += 1
                 continue
-            self._observations.append(temp)
+            observations.append(temp)
             if i == nobs - 1:
                 break
 
+        self._observations = np.array(observations)
+
         if len(self.observations) == 0:
             raise ValueError("No valid observations found")
+        if bkg_method['type'] == 'reflected':
+            mask = self.filter_by_reflected_regions(bkg_method['n_min'])
+            self._observations = self.observations[mask]
+
+    def copy(self, bkg_method=None):
+        """Return copy of `~gammapy.spectrum.SpectrumAnalysis`
+
+        Parameters
+        ----------
+        bkg_method : dict, optional
+            New background estimation method
+        """
+
+        bkg_method = self.bkg_method if bkg_method is None else bkg_method
+
+        ana = SpectrumAnalysis(datastore=self.store, obs=self.obs_ids,
+                               on_region=self.on_region, bkg_method=bkg_method,
+                               exclusion=self.exclusion, nobs=0,
+                               ebounds=self.ebounds)
+        return ana
 
     @property
     def observations(self):
-        """List of all observations belonging to the analysis
+        """`np.array` of all observations belonging to the analysis
         """
         return self._observations
+
+    @property
+    def obs_ids(self):
+        """List of all observation ids"""
+        return [o.obs for o in self.observations]
+
+    def get_obs_by_id(self, id):
+        """Return an certain observation belonging to the analysis
+
+        Parameters
+        ----------
+        id : int
+            Observation Id (runnumber)
+
+        Returns
+        -------
+        observation : `~gammapy.spectrum.SpectrumObservation`
+            Spectrum observation
+        """
+        try:
+            i = self.obs_ids.index(id)
+        except ValueError:
+            raise ValueError("Observation {} not found".format(id))
+        return self.observations[i]
 
     @property
     def offset(self):
         """List of offsets from the observation position for all observations
         """
-        off = [obs.offset for obs in self.observations]
-        return off
+        return [obs.offset for obs in self.observations]
 
     @property
-    def reflected_regions(self, **kwargs):
-        """List of dicts containing information about the reflected regions
-        for each observation
+    def on_vector(self):
+        """List of all ON `~gammapy.spectrum.CountsSpectrum`
         """
-        retval = list([])
-        for obs in self.observations:
-            reflected = obs.make_reflected_regions(**kwargs)
-            val = dict(obs=obs.obs, pointing=obs.pointing, region=reflected)
-            retval.append(val)
-        return retval
+        return [obs.on_vector for obs in self.observations]
+
+    @property
+    def off_vector(self):
+        """`np.array` of all OFF `~gammapy.spectrum.CountsSpectrum`
+
+        For available methods see :ref:`spectrum_background_method`
+
+        Parameters
+        ----------
+        method : dict, optional
+            Background estimation method
+        """
+        return np.array([obs.off_vector for obs in self.observations])
+
+    @property
+    def alpha(self):
+        """`np.array` of all exposure ratios between ON and OFF regions
+        """
+        return np.array([obs.alpha for obs in self.observations])
+
+    @property
+    def total_alpha(self):
+        """Averaged exposure ratio between ON and OFF regions
+
+        :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
+
+        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
+
+        where :math:`N_i` is the number of OFF counts for observation :math:`i`
+        """
+        val = [o.alpha * o.off_vector.total_counts for o in self.observations]
+        num = np.sum(val)
+        den = np.sum([o.off_vector.total_counts for o in self.observations])
+        return num/den
 
     @classmethod
     def from_config(cls, config):
@@ -154,16 +232,7 @@ class SpectrumAnalysis(object):
         on_region = SkyCircleRegion(center, radius)
 
         # OFF region
-        off_type = config['off_region']['type']
-        if off_type == 'ring':
-            irad = Angle(config['off_region']['inner_radius'])
-            orad = Angle(config['off_region']['outer_radius'])
-            bkg_method = dict(type='ring', inner_radius=irad,
-                              outer_radius=orad)
-        elif off_type == 'reflected':
-            bkg_method = dict(type='reflected')
-        else:
-            raise ValueError("Invalid background method: {}".format(off_type))
+        bkg_method = config['off_region']
 
         # Exclusion
         excl_file = config['excluded_regions']['file']
@@ -194,13 +263,13 @@ class SpectrumAnalysis(object):
     def info(self):
         """Print some information
         """
-        ss = "\nSpectrum Analysis"
+        ss = "\nSpectrum Analysis\n"
         ss += "Observations : {}\n".format(len(self.observations))
         ss += "ON region    : {}\n".format(self.on_region.pos)
 
         return ss
 
-    def write_ogip_data(self, outdir):
+    def write_ogip_data(self, outdir, **kwargs):
         """Create OGIP files
 
         Parameters
@@ -210,8 +279,31 @@ class SpectrumAnalysis(object):
         """
 
         for obs in self.observations:
-            obs.write_all_ogip_data(outdir)
+            obs.write_ogip(outdir=outdir, **kwargs)
             log.info('Creating OGIP data for run{}'.format(obs.obs))
+
+    def filter_by_reflected_regions(self, n_min):
+        """Filter runs according to number of reflected regions
+
+        Condition: number of reflected regions >= nmin
+
+        Parameters
+        ----------
+        n_min : int
+            Minimum number of reflected regions
+
+        Returns
+        -------
+        idx : `np.array`
+            Indices of element fulfilling the condition
+        """
+        val = self.bkg_method['type']
+        if val != 'reflected':
+            raise ValueError("Wrong background method: {}".format(val))
+
+        condition = np.array([o.backscal for o in self.off_vector]) >= n_min
+        idx = np.nonzero(condition)
+        return idx[0]
 
 
 class SpectrumObservation(object):
@@ -247,10 +339,11 @@ class SpectrumObservation(object):
         self.ebounds = ebounds
         self.exclusion = exclusion
         self._event_list = None
-        self.pha = None
-        self.bkg = None
-        self.arf = None
-        self.rmf = None
+        self._on = None
+        self._off = None
+        self._aeff = None
+        self._edisp = None
+        self.reflected_regions = None
 
     @property
     def event_list(self):
@@ -260,6 +353,43 @@ class SpectrumObservation(object):
             self._event_list = self.store.load(obs_id=self.obs,
                                                filetype='events')
         return self._event_list
+
+    @property
+    def effective_area(self):
+        """`~gammapy.irf.EffectiveArea` corresponding to the observation
+        """
+        if self._aeff is None:
+            self._make_aeff()
+        return self._aeff
+
+    @property
+    def energy_dispersion(self):
+        """`~gammapy.irf.EnergyDispersion` corresponding to the observation
+        """
+        if self._edisp is None:
+            self._make_edisp()
+        return self._edisp
+
+    @property
+    def on_vector(self):
+        """ON `gammapy.spectrum.CountsSpectrum` corresponding to the observation
+        """
+        if self._on is None:
+            self._make_on()
+        return self._on
+
+    @property
+    def off_vector(self):
+        """OFF `gammapy.spectrum.CountsSpectrum` corresponding to the observation
+        """
+        if self._off is None:
+            self.make_off_vector()
+        return self._off
+
+    @property
+    def alpha(self):
+        """Exposure ratio between ON and OFF region"""
+        return self.on_vector.backscal / self.off_vector.backscal
 
     @property
     def pointing(self):
@@ -273,18 +403,17 @@ class SpectrumObservation(object):
         """
         return self.pointing.separation(self.on_region.pos)
 
-    def make_on_vector(self):
-        """Create ON vector
+    @property
+    def livetime(self):
+        """Livetime of the observation"""
+        return self.event_list.observation_live_time_duration
 
-        Returns
-        -------
-        on_vec : `gammapy.spectrum.CountsSpectrum`
-            Counts spectrum inside the ON region
+    def _make_on(self):
+        """Create ON vector
         """
         on_list = self.event_list.select_circular_region(self.on_region)
         on_vec = CountsSpectrum.from_eventlist(on_list, self.ebounds)
-        self.pha = on_vec
-        return on_vec
+        self._on = on_vec
 
     def make_reflected_regions(self, **kwargs):
         """Create reflected off regions
@@ -298,72 +427,90 @@ class SpectrumObservation(object):
         """
         off_region = find_reflected_regions(self.on_region, self.pointing,
                                             self.exclusion, **kwargs)
+
+        self.reflected_regions = off_region
         return off_region
 
     def make_off_vector(self):
         """Create off vector
 
+        For available methods see :ref:`spectrum_background_method`
+
         Returns
         -------
-        on_vec : `gammapy.spectrum.CountsSpectrum`
+        off_vec : `gammapy.spectrum.CountsSpectrum`
             Counts spectrum inside the OFF region
         """
-        if self.bkg_method['type'] == "ring":
-            # TODO put in utils once there is a SkyRingRegion
-            center = self.on_region.pos
-            radius = self.on_region.radius
-            inner = self.bkg_method['inner_radius']
-            outer = self.bkg_method['outer_radius']
-            off_list = self.event_list.select_sky_ring(center, inner, outer)
-            alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
-        elif self.bkg_method['type'] == "reflected":
-            kwargs = self.bkg_method.copy()
-            kwargs.pop('type')
-            off = self.make_reflected_regions(**kwargs)
-            off_list = self.event_list.select_circular_region(off)
-            alpha = len(off)
+
+        method = self.bkg_method
+        if method['type'] == "ring":
+            off_vec = self._make_off_vector_ring(method)
+        elif method['type'] == "reflected":
+            off_vec = self._make_off_vector_reflected(method)
+        elif method['type'] == "bgmodel":
+            off_vec = self._make_off_vector_bgmodel(method)
         else:
             raise ValueError("Undefined background method: {}".format(
-                    self.bkg_method['type']))
+            method['type']))
 
-        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
-        off_vec.backscal = alpha
-        self.bkg = off_vec
+        self._off = off_vec
         return off_vec
 
-    def make_arf(self):
-        """Create effective area vector correct energy binning
+    def _make_off_vector_reflected(self, method):
+        """Helper function to create OFF vector from reflected regions"""
+        kwargs = method.copy()
+        kwargs.pop('type')
+        kwargs.pop('n_min')
+        off = self.make_reflected_regions(**kwargs)
+        off_list = self.event_list.select_circular_region(off)
+        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        off_vec.backscal = len(off)
+        return off_vec
 
-        Returns
-        -------
-        arf : `~gammapy.irf.EffectiveAreaTable`
-             effective area vector
+    def _make_off_vector_ring(self, method):
+        """Helper function to create OFF vector from ring"""
+        center = self.on_region.pos
+        radius = self.on_region.radius
+        inner = Angle(method['inner_radius'])
+        outer = Angle(method['outer_radius'])
+        off_list = self.event_list.select_sky_ring(center, inner, outer)
+        off_vec = CountsSpectrum.from_eventlist(off_list, self.ebounds)
+        alpha = ring_area_factor(radius.deg, inner.deg, outer.deg)
+        off_vec.backscal = alpha
+        return off_vec
+
+    def _make_off_vector_bgmodel(self, method):
+        """Helper function to create OFF vector from BgModel"""
+        filename = self.store.filename(obs_id=self.obs, filetype='background')
+        cube = Cube.read(filename, scheme='bg_cube')
+        # TODO: Properly transform to SkyCoords
+        coords = Angle([self.offset, '0 deg'])
+        spec = cube.make_spectrum(coords, self.ebounds)
+        cnts = spec * self.ebounds.bands * self.livetime * self.on_region.area
+        off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
+        return off_vec
+
+    def _make_aeff(self):
+        """Create effective area vector correct energy binning
         """
         aeff2d = self.store.load(obs_id=self.obs, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(self.offset)
-        self.arf = arf_vec
-        return arf_vec
+        self._aeff = arf_vec
 
-    def make_rmf(self):
-        """Create energy disperion matrix in correct energy binning
-
-        Returns
-        -------
-        rmf : `~gammapy.irf.EnergyDispersion`
-            energy dispersion matrix
+    def _make_edisp(self):
+        """Create energy dispersion matrix in correct energy binning
         """
         edisp2d = self.store.load(obs_id=self.obs, filetype='edisp')
         rmf_mat = edisp2d.to_energy_dispersion(self.offset,
                                                e_reco=self.ebounds)
-        self.rmf = rmf_mat
-        return rmf_mat
+        self._edisp = rmf_mat
 
     def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                    outdir=None, clobber=True):
         """Write OGIP files
 
-        Only those objects are written have been created with the appropriate
-        functions before
+        The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
+        header. If no filenames are given, default names will be chosen.
 
         Parameters
         ----------
@@ -385,44 +532,70 @@ class SpectrumObservation(object):
         outdir.mkdir(exist_ok=True)
 
         if phafile is None:
-            phafile = outdir / "pha_run{}.pha".format(self.obs)
+            phafile = "pha_run{}.pha".format(self.obs)
         if arffile is None:
-            arffile = outdir / "arf_run{}.fits".format(self.obs)
+            arffile = "arf_run{}.fits".format(self.obs)
         if rmffile is None:
-            rmffile = outdir / "rmf_run{}.fits".format(self.obs)
+            rmffile = "rmf_run{}.fits".format(self.obs)
         if bkgfile is None:
-            bkgfile = outdir / "bkg_run{}.fits".format(self.obs)
+            bkgfile = "bkg_run{}.fits".format(self.obs)
 
-        if self.pha is not None:
-            self.pha.write(str(phafile), bkg=str(bkgfile), arf=str(arffile),
-                           rmf=str(rmffile), offset=self.offset,
-                           on_region=self.on_region, clobber=clobber)
-        if self.bkg is not None:
-            self.bkg.write(str(bkgfile), clobber=clobber)
-        if self.arf is not None:
-            self.arf.write(str(arffile), energy_unit='keV', effarea_unit='cm2',
-                           clobber=clobber)
-        if self.rmf is not None:
-            self.rmf.write(str(rmffile), energy_unit='keV', clobber=clobber)
+        self.on_vector.write(str(outdir/phafile), bkg=str(bkgfile), arf=str(arffile),
+                             rmf=str(rmffile), clobber=clobber)
+        self.off_vector.write(str(outdir/bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir/arffile), energy_unit='keV',
+                                  effarea_unit='cm2', clobber=clobber)
+        self.energy_dispersion.write(str(outdir/rmffile), energy_unit='keV',
+                                     clobber=clobber)
 
-    def write_all_ogip_data(self, outdir):
-        """Perform all step to provide the OGIP data for a sherpa fit
+    def plot_exclusion_mask(self, size=None, **kwargs):
+        """Plot exclusion mask for this observation
+
+        The plot will be centered at the pointing position
 
         Parameters
         ----------
-        outdir : str, `~gammapy.extern.pathlib.Path`
-            Directory to write to
+        size : `~astropy.coordinates.Angle`
+            Edge length of the plot
         """
-        self.make_on_vector()
-        self.make_off_vector()
-        self.make_arf()
-        self.make_rmf()
-        self.write_ogip(outdir=outdir)
+        size = Angle('5 deg') if size is None else size
+        ax = self.exclusion.plot(**kwargs)
+        self._set_ax_limits(ax, size)
+        point = skycoord_to_pixel(self.pointing, ax.wcs)
+        ax.scatter(point[0], point[1], s=250, marker="+", color='black')
+        return ax
 
-    def _check_binning(self):
+    def plot_on_region(self, ax=None, **kwargs):
+        """Plot target regions"""
+        ax = self.plot_exclusion_mask() if ax is None else ax
+        self.on_region.plot(ax, **kwargs)
+
+    def plot_reflected_regions(self, ax=None, **kwargs):
+        """Plot reflected regions"""
+        ax = self.plot_exclusion_mask() if ax is None else ax
+        if self.reflected_regions is None:
+            self.make_reflected_regions()
+        self.reflected_regions.plot(ax, **kwargs)
+
+    def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
         pass
+
+    def _set_ax_limits(self, ax, extent):
+
+        if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
+            center = self.pointing.galactic
+            xlim = (center.l + extent/2).value, (center.l - extent/2).value
+            ylim = (center.b + extent/2).value, (center.b - extent/2).value
+        else:
+            center = self.pointing.icrs
+            xlim = (center.ra + extent/2).value, (center.ra - extent/2).value
+            ylim = (center.dec + extent/2).value, (center.dec - extent/2).value
+
+        limits = ax.wcs.wcs_world2pix(xlim, ylim,1)
+        ax.set_xlim(limits[0])
+        ax.set_ylim(limits[1])
 
 
 class SpectralFit(object):
@@ -435,18 +608,30 @@ class SpectralFit(object):
         List of PHA files to fit
     """
 
-    def __init__(self, pha, bkg=None, arf=None, rmf=None):
+    DEFAULT_STAT = 'cash'
+
+    def __init__(self, pha, bkg=None, arf=None, rmf=None, stat=DEFAULT_STAT):
 
         self.pha = [make_path(f) for f in pha]
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
+        self._stat = stat
 
     @classmethod
     def from_config(cls, config):
-
+        """Create `~gammapy.spectrum.SpectralFit` from config file"""
         outdir = make_path(config['general']['outdir'])
-        pha_list = outdir.glob('pha_run*.pha')
+        return cls.from_dir(outdir)
+
+    @classmethod
+    def from_dir(cls, dir):
+        """Create `~gammapy.spectrum.SpectralFit` using directory
+
+        All PHA files in the directory will be used
+        """
+        dir = make_path(dir)
+        pha_list = dir.glob('pha_run*.pha')
         return cls(pha_list)
 
     @property
@@ -481,9 +666,36 @@ class SpectralFit(object):
                 raise ValueError("Undefined model string: {}".format(model))
 
         if not isinstance(model, sherpa.models.ArithmeticModel):
-            raise ValueError("Only sherpa models are supported at the moment")
+            raise ValueError("Only sherpa models are supported")
 
         self._model = model
+
+    @property
+    def statistic(self):
+        """Statistic to be used in the fit"""
+        return self._stat
+
+    @statistic.setter
+    def statistic(self, stat):
+        """Set Statistic to be used in the fit
+
+        Parameters
+        ----------
+        stat : `~sherpa.stats.Stat`, str
+            Statistic
+        """
+        import sherpa.stats as s
+
+        if isinstance(stat, six.string_types):
+            if stat == 'cash':
+                stat = s.Cash()
+            else:
+                raise ValueError("Undefined stat string: {}".format(stat))
+
+        if not isinstance(stat, s.Stat):
+            raise ValueError("Only sherpa statistics are supported")
+
+        self._stat = stat
 
     @property
     def energy_threshold_low(self):
@@ -585,7 +797,7 @@ class SpectralFit(object):
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
         ds.notice(thres_lo, thres_hi)
-        ds.subtract()
+        datastack.set_stat(self.statistic)
         ds.fit()
         ds.clear_stack()
         ds.clear_models()
@@ -630,6 +842,7 @@ def run_spectral_fit_using_config(config):
         fit.model = config['model']['type']
         fit.energy_threshold_low = Energy(config['model']['threshold_low'])
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
+        fit.info()
         fit.run(method=method)
 
     return fit

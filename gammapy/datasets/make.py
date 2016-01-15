@@ -368,7 +368,7 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
 
     # define coordinate grids for the calculations
     det_bin_centers = bg_cube_model.counts_cube.image_bin_centers
-    energy_bin_centers = bg_cube_model.counts_cube.energy_bin_centers
+    energy_bin_centers = bg_cube_model.counts_cube.energy_edges.log_centers
     energy_points, dety_points, detx_points = np.meshgrid(energy_bin_centers,
                                                           det_bin_centers[1],
                                                           det_bin_centers[0],

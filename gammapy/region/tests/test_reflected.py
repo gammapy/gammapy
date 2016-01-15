@@ -16,8 +16,8 @@ from ...utils.testing import requires_data, requires_dependency
 @requires_data('gammapy-extra')
 def test_find_reflected_regions():
 
-    testfile = gammapy_extra.filename('test_datasets/spectrum/dummy_exclusion.fits')
-    hdu = fits.open(testfile)[0]
+    testfile = gammapy_extra.filename('datasets/exclusion_masks/tevcat_exclusion.fits')
+    hdu = fits.open(testfile)[1]
     mask = ExclusionMask.from_hdu(hdu)
     pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     radius = Angle(0.4, 'deg')

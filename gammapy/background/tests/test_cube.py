@@ -37,7 +37,7 @@ class TestCube:
         plot_data = image_im.get_array()
 
         # get data from bg model object to compare
-        energy_bin = cube.find_energy_bin(energy)
+        energy_bin = cube.energy_edges.find_energy_bin(energy)
         model_data = cube.data[energy_bin]
 
         # test if both arrays are equal

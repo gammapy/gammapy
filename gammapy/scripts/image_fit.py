@@ -53,7 +53,7 @@ def image_fit(counts,
     # Load images, PSF and sources
     # ---------------------------------------------------------
     log.info('Clearing the sherpa session')
-    # sherpa.astro.ui.clean()
+    sherpa.astro.ui.clean()
 
     log.info('Reading counts: {0}'.format(counts))
     sherpa.astro.ui.load_image(counts)
@@ -110,3 +110,4 @@ def image_fit(counts,
     sherpa.astro.ui.notice2d()
     log.info('Writing model.fits')
     sherpa.astro.ui.save_model('model.fits', clobber=True)
+    sherpa.astro.ui.clean()
