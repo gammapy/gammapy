@@ -393,6 +393,54 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
+    def peek_time_map(self, ax=None, num_sides=0):
+        '''
+        A time map showing for each event the time between the previous and following event.
+
+        The use and implementation are described here
+
+        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
+
+        '''
+
+        import matplotlib.pyplot as plt
+
+        first_event_time = np.min(self[:]['TIME'])
+
+        # Note the events are not necessarily in time order
+        relative_event_times = np.sort(self[:]['TIME']) - first_event_time
+
+        diffs = np.array([relative_event_times[i]-relative_event_times[i-1]
+                          for i in range(1, len(relative_event_times))])
+
+        xcoords = diffs[:-1]  # all differences except the last
+        ycoords = diffs[1:]  # all differences except the first
+
+        max_diff = np.max(diffs)  # maximum time difference
+
+        if num_sides == 0:
+            num_sides = len(diffs) / 5
+
+        # the xy coordinates scaled to the size of the matrix
+        x_heat = (num_sides - 1) * xcoords / max_diff
+        y_heat = (num_sides - 1) * ycoords / max_diff
+
+        histogram = np.zeros((num_sides, num_sides)) # a 'histogram' matrix that counts the number of points in each grid-square
+
+        for i in range(len(xcoords)): # loop over all points to calculate the population of each bin
+            histogram[x_heat[i], y_heat[i]] += 1  # Increase count by 1
+            #here, the integer part of x/y_heat[i] is automatically taken
+
+        # TODO: apply Gaussian blur
+        blur_width = 8 # the width of the Gaussian function along x and y when applying the blur operation
+
+        H = np.transpose(histogram) # so that the orientation is the same as a scatter plot
+
+        plt.xlabel('time before event / s')
+        plt.ylabel('time after event / s')
+        plt.imshow(H, origin='lower')  # display H as an image
+        plt.show()
+
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
