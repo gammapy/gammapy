@@ -386,10 +386,8 @@ class EventList(Table):
     def peek(self):
         """Summary plots."""
         import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
-        self.plot_image(ax=axes[0])
-        self.plot_energy_dependence(ax=axes[1])
-        self.plot_offset_dependence(ax=axes[2])
+        self.plot_image()
+
         plt.tight_layout()
         plt.show()
 
