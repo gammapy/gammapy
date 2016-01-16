@@ -393,20 +393,20 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
-    def plot_image(self, ax= None, number_bins=10):
+    def plot_image(self, ax= None, number_bins=50):
         """Plot the counts as a function of x and y camera coordinate."""
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        max_x = max((self[:]['COREX']))
-        min_x = min((self[:]['COREX']))
-        max_y = max((self[:]['COREY']))
-        min_y = min((self[:]['COREY']))
+        max_x = max((self[:]['DETX']))
+        min_x = min((self[:]['DETX']))
+        max_y = max((self[:]['DETY']))
+        min_y = min((self[:]['DETY']))
 
         x_edges = np.linspace(min_x, max_x, number_bins)
         y_edges = np.linspace(min_y, max_y, number_bins)
 
-        count_image, x_edges, y_edges = np.histogram2d(self[:]['COREY'], self[:]['COREX'], bins=(x_edges, y_edges))
+        count_image, x_edges, y_edges = np.histogram2d(self[:]['DETY'], self[:]['DETX'], bins=(x_edges, y_edges))
 
         ax.set_title('# Photons')
 
