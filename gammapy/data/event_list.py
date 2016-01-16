@@ -393,15 +393,20 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
-    def peek_time_map(self, ax=None, num_sides=0):
-        '''
+    def peek_time_map(self, num_sides=0):
+        """
         A time map showing for each event the time between the previous and following event.
 
         The use and implementation are described here
 
         https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
 
-        '''
+        Parameters
+        ----------
+        num_sides :int
+            Number of bins for the histogram
+
+        """
 
         import matplotlib.pyplot as plt
 
@@ -440,7 +445,6 @@ class EventList(Table):
         plt.ylabel('time after event / s')
         plt.imshow(H, origin='lower')  # display H as an image
         plt.show()
-
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
