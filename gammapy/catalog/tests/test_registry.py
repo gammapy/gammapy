@@ -19,6 +19,7 @@ class TestSourceCatalogs:
         table = self.source_catalogs.info_table
         assert table.colnames == ['Name', 'Description', 'Sources']
 
+    @requires_data('gammapy-extra')
     def test_info(self):
         # TODO: assert output somehow
         self.source_catalogs.info()

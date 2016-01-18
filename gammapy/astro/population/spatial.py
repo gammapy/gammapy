@@ -3,16 +3,16 @@
 
 Attributes
 ----------
-radial_distributions : `~astropy.utils.compat.odict.OrderedDict`
+radial_distributions : `~collections.OrderedDict`
     Dictionary of available spatial distributions.
 
     Useful for automatic processing.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from collections import OrderedDict
 import numpy as np
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
-from astropy.utils.compat.odict import OrderedDict
 from astropy.modeling import Fittable1DModel, Parameter
 from ...utils.coordinates import cartesian, polar
 from ...utils.const import d_sun_to_galactic_center
