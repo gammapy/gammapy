@@ -146,7 +146,7 @@ setup(name=PACKAGENAME,
       install_requires=[
           'setuptools',
           'numpy>=1.8',
-          'astropy>=1.0',
+          'astropy>=1.1',
       ],
       extras_require=dict(
           analysis=[
