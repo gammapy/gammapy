@@ -9,8 +9,10 @@ log = logging.getLogger(__name__)
 
 __all__ = []
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-@click.command()
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('--debug', is_flag=True, help='Run in debug mode?')
 @click.option('--port', default=5000, help='Port to run on')
 def main(debug, port):

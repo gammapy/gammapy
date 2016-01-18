@@ -46,9 +46,8 @@ class TestFermi3FGLObject:
     def test_plot_spectrum(self):
         self.source.plot_spectrum()
 
-    def test_info(self):
-        info = self.source.info()
-        self.source_name in info
+    def test_print_info(self):
+        self.source.print_info()
 
 
 @requires_data('gammapy-extra')

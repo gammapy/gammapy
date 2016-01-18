@@ -3,8 +3,8 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import warnings
+from collections import OrderedDict
 import numpy as np
-from astropy.utils.compat.odict import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 

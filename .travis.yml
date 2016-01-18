@@ -81,11 +81,11 @@ matrix:
           env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.5 SETUP_CMD='test -V'
 
         # Test with Astropy dev and LTS versions
-        - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
-               SHERPA=true
-        - os: linux
-          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+#               SHERPA=true
+#        - os: linux
+#          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                SHERPA=true
@@ -116,23 +116,23 @@ matrix:
         # these tests (so we can avoid building it from source).
         - os: linux
           env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
-        - os: linux
-          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test -V'
-               SHERPA=true ASTROPY_VERSION=lts
-        - os: linux
-          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
-               SHERPA=true ASTROPY_VERSION=lts
-               CONDA_CHANNELS='astropy-ci-extras astropy'
-               CONDA_DEPENDENCIES='Cython click matplotlib'
-               PIP_DEPENDENCIES=''
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test -V'
+#               SHERPA=true ASTROPY_VERSION=lts
+#        - os: linux
+#          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
+#               SHERPA=true ASTROPY_VERSION=lts
+#               CONDA_CHANNELS='astropy-ci-extras astropy'
+#               CONDA_DEPENDENCIES='Cython click matplotlib'
+#               PIP_DEPENDENCIES=''
 
     # You can move builds that temporarily fail because of some non-Gammapy issue here
     # Please add a link to a GH issue that tracks the upstream issue.
-    allow_failures:
-      - env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
-      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
-             SHERPA=true
-             CONDA_CHANNELS='astropy-ci-extras astropy'
+#    allow_failures:
+#      - env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
+#      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
+#             SHERPA=true
+#             CONDA_CHANNELS='astropy-ci-extras astropy'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git

@@ -38,8 +38,10 @@ class SourceCatalogRegistry(object):
         from .fermi import SourceCatalog2FHL
         source_catalogs.register('2fhl', SourceCatalog2FHL)
 
-        from .hess import SourceCatalogHGPS
-        source_catalogs.register('hgps', SourceCatalogHGPS)
+        import os
+        if 'HGPS_ANALYSIS' in os.environ:
+            from .hess import SourceCatalogHGPS
+            source_catalogs.register('hgps', SourceCatalogHGPS)
 
         return source_catalogs
 
@@ -81,16 +83,19 @@ class SourceCatalogRegistry(object):
 
     @property
     def info_table(self):
-        """Summary info table on catalogs."""
+        """Summary info table on catalogs.
+
+        Loads all catalogs.
+        """
         table = []
         for name in self._available_catalogs.keys():
+            cat = self[name]
             data = dict()
             data['Name'] = name
-            data['Description'] = 'description'
-            loaded = 'yes' if name in self._loaded_catalogs else 'no'
-            data['Loaded'] = loaded
+            data['Description'] = cat.description
+            data['Sources'] = len(cat.table)
             table.append(data)
-        table = Table(rows=table, names=['Name', 'Description', 'Loaded'])
+        table = Table(rows=table, names=['Name', 'Description', 'Sources'])
         return table
 
 

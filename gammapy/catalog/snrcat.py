@@ -5,7 +5,6 @@ from astropy.extern import six
 from astropy.utils.data import download_file
 from astropy.coordinates import Angle, SkyCoord
 from astropy.table import Table, Column
-from ..datasets.core import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [

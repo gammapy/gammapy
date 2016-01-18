@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data
 from ..registry import source_catalogs, SourceCatalogRegistry
@@ -15,10 +14,12 @@ class TestSourceCatalogs:
     def setup(self):
         self.source_catalogs = SourceCatalogRegistry.builtins()
 
+    @requires_data('hgps')
     def test_info_table(self):
         table = self.source_catalogs.info_table
-        assert table.colnames == ['Name', 'Description', 'Loaded']
+        assert table.colnames == ['Name', 'Description', 'Sources']
 
+    @requires_data('gammapy-extra')
     def test_info(self):
         # TODO: assert output somehow
         self.source_catalogs.info()
@@ -42,5 +43,4 @@ class TestSourceCatalogs:
 def test_source_catalogs():
     """Test the global registry instance"""
 
-    names = source_catalogs.catalog_names
-    assert names == ['3fgl', '2fhl', 'hgps']
+    assert set(['3fgl', '2fhl']).issubset(source_catalogs.catalog_names)

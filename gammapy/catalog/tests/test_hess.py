@@ -55,3 +55,6 @@ class TestSourceCatalogObjectHGPS:
 
     def test_pprint(self):
         self.source.pprint()
+
+    def test_print_info(self):
+        self.source.print_info()
