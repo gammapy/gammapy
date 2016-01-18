@@ -1,6 +1,7 @@
 from ..energy_offset_array import EnergyOffsetArray
+from ...datasets import gammapy_extra
 
-
+@requires_data('gammapy-extra')
 def test_energy_offset_array():
     a = EnergyOffsetArray(1, 2, 3)
 
