@@ -6,5 +6,5 @@ def test_energy_offset_array():
 
 
     assert a.energy == 1
-    assert a.offset == 2
+    assert a.offset == 2.4
     assert a.data == 3
