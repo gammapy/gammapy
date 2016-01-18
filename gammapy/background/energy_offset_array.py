@@ -35,27 +35,24 @@ class EnergyOffsetArray(object):
 
 
 
-    def fill_events(self,observation_table, data_dir):
+    def fill_events(self,event_list_table):
         """
         from the fill_events method of the Cubebackgroundmodel class in model.py
-        """
-        """
-        observatory_name = observation_table.meta['OBSERVATORY_NAME']
-        if observatory_name == 'HESS':
-            scheme = 'HESS'
-        else:
-            s_error = "Warning! Storage scheme for {}".format(observatory_name)
-            s_error += "not implemented. Only H.E.S.S. scheme is available."
-            raise ValueError(s_error)
-        data_store = DataStore(dir=data_dir, scheme=scheme)
-        """
-        data_store = DataStore.from_dir(base_dir=data_dir)
-        event_list_files = data_store.make_table_of_files(observation_table,
-                                                          filetypes=['events'])
-        
+        Fill events in a 2D energy_offset histograms
 
+        Get data files corresponding to the observation list, histogram
+        the counts and fill the corresponding cube containers.
+
+        Parameters
+        ----------
+        event_list_table : `~astropy.table`
+            Astropy table to use for the histogramming that contains three columns: the OBS_ID of the observations to stack, the filetype: "events" and the fits event files for each observation. 
+        
+        """
+        
+        self.data = None
         # loop over observations
-        for (i,i_ev_file) in enumerate(event_list_files['filename']):
+        for (i,i_ev_file) in enumerate(event_list_table['filename']):
             ev_list_ds = EventListDataset.read(i_ev_file)
             # fill events above energy threshold, correct livetime accordingly
             data_set = ev_list_ds.event_list
@@ -98,10 +95,7 @@ class EnergyOffsetArray(object):
 
             # fill data
             #Ca c'est tres sale donc voir si il y a un autre moyen de le faire.
-            if(i==0):
-                self.data = ev_cube_hist
-            else:
-                self.data += ev_cube_hist
+            self.data += ev_cube_hist
         
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
@@ -138,6 +132,4 @@ class EnergyOffsetArray(object):
         plt.colorbar(ax.imshow(self.data, extent=extent, **kwargs))
         return ax
 
-    @classmethod
-    def from_fits_image(cis, filename):
-        hdu_list=fits.open(filename)
+    
