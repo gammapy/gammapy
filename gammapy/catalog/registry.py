@@ -38,8 +38,10 @@ class SourceCatalogRegistry(object):
         from .fermi import SourceCatalog2FHL
         source_catalogs.register('2fhl', SourceCatalog2FHL)
 
-        from .hess import SourceCatalogHGPS
-        source_catalogs.register('hgps', SourceCatalogHGPS)
+        import os
+        if 'HGPS_ANALYSIS' in os.environ:
+            from .hess import SourceCatalogHGPS
+            source_catalogs.register('hgps', SourceCatalogHGPS)
 
         return source_catalogs
 

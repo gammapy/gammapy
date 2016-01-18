@@ -43,5 +43,4 @@ class TestSourceCatalogs:
 def test_source_catalogs():
     """Test the global registry instance"""
 
-    names = source_catalogs.catalog_names
-    assert names == ['3fgl', '2fhl', 'hgps']
+    assert set(['3fgl', '2fhl']).issubset(source_catalogs.catalog_names)
