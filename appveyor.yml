@@ -11,6 +11,7 @@ environment:
                         # of 32 bit and 64 bit builds are needed, move this
                         # to the matrix section.
       CONDA_DEPENDENCIES: "Cython click pyyaml scipy jinja2 click scikit-image matplotlib"
+      FETCH_GAMMAPY_EXTRA: true
 
   matrix:
       - PYTHON_VERSION: "2.7"
@@ -30,9 +31,14 @@ install:
     - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
+    - if $FETCH_GAMMAPY_EXTRA; then
+          git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
+          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
+      fi
+
 
 # Not a .NET project, we build photutils in the install step instead
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py test"
+  - "%CMD_IN_ENV% python setup.py test -V"
