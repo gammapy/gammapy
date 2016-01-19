@@ -54,7 +54,7 @@ class EnergyOffsetArray(object):
         # loop over observations
         for (i,i_ev_file) in enumerate(event_list_table['filename']):
             ev_list_ds = EventListDataset.read(i_ev_file)
-            # fill events above energy threshold, correct livetime accordingly
+            # fill events 
             data_set = ev_list_ds.event_list
            
             # construct histogram (energy, offset) for each event of the list
@@ -94,8 +94,10 @@ class EnergyOffsetArray(object):
             #ev_cube_hist = Quantity(ev_cube_hist, '')
 
             # fill data
-            #Ca c'est tres sale donc voir si il y a un autre moyen de le faire.
-            self.data += ev_cube_hist
+            if(i==0):
+                self.data = ev_cube_hist
+            else:
+                self.data += ev_cube_hist
         
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
