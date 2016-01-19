@@ -439,11 +439,24 @@ class EventList(Table):
         # TODO: apply Gaussian blur
         blur_width = 8 # the width of the Gaussian function along x and y when applying the blur operation
 
-        H = np.transpose(histogram) # so that the orientation is the same as a scatter plot
+        H = np.transpose(histogram)  # so that the orientation is the same as a scatter plot
 
         plt.xlabel('time before event / s')
         plt.ylabel('time after event / s')
         plt.imshow(H, origin='lower')  # display H as an image
+
+        xlocs, xlabels = plt.xticks()
+        xlocs = xlocs[1:-1]  # I honestly have no idea why this line is needed
+
+        xlabels = np.linspace(round(min(xcoords), 1), round(max(xcoords), 1), np.size(xlocs))
+        plt.xticks(xlocs, xlabels)
+
+        ylocs, ylabels = plt.yticks()
+        ylocs = ylocs[1:-1]  # I honestly have no idea why this line is needed
+
+        ylabels = np.linspace(round(min(ycoords), 1), round(max(ycoords), 1), np.size(ylocs))
+        plt.yticks(ylocs, ylabels)
+
         plt.show()
 
 class EventListDataset(object):
