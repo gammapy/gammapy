@@ -146,6 +146,31 @@ class SkyCircleRegion(SkyRegion):
         val = 2 * np.pi * (1 - np.cos(self.radius))
         return val * u.steradian
 
+    def contains(self, coordinate):
+        """Checks if a given coordinate lies inside the circle.
+
+        Parameters
+        ----------
+        coordinate : `~astropy.coordinates.SkyCoord`
+            Coordinate to check for containment.
+
+        Returns
+        -------
+        contains : bool
+            Does this region contain the coordinate?
+        """
+        return self.pos.separation(coordinate) <= self.radius
+
+    def intersects(self, other):
+        """Checks if two sky circles overlap.
+
+        Parameters
+        ----------
+        other : `~gammapy.region.SkyCircleRegion`
+            Other region.
+        """
+        return self.pos.separation(other.pos) <= self.radius + other.radius
+
     def info(self):
         """Print some basic information"""
         ss = '\nSkyCircleRegion'
