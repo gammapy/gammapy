@@ -3,8 +3,7 @@ import numpy as np
 from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.table import Table
-from ..data import DataStore
-from ..data import EventListDataset
+#from ..data import EventListDataset
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
