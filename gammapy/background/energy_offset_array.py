@@ -34,7 +34,7 @@ class EnergyOffsetArray(object):
 
 
 
-    def fill_events(self,event_list_table):
+    def fill_events(self,event_list):
         """
         from the fill_events method of the Cubebackgroundmodel class in model.py
         Fill events in a 2D energy_offset histograms
@@ -43,19 +43,17 @@ class EnergyOffsetArray(object):
         the counts and fill the corresponding cube containers.
 
         Parameters
-        ----------
-        event_list_table : `~astropy.table`
-            Astropy table to use for the histogramming that contains three columns: the OBS_ID of the observations to stack, the filetype: "events" and the fits event files for each observation. 
+        -------------
+        events : list of `~gammapy.data.EventList`
+           Python list of event list objects.
+            
         
         """
         
         self.data = None
-        # loop over observations
-        for (i,i_ev_file) in enumerate(event_list_table['filename']):
-            ev_list_ds = EventListDataset.read(i_ev_file)
-            # fill events 
-            data_set = ev_list_ds.event_list
-           
+        # loop over the Lost of object EventList
+        for (i,data_set) in enumerate(event_list):
+        
             # construct histogram (energy, offset) for each event of the list
             # TODO: units are missing in the H.E.S.S. FITS event
             #       lists; this should be solved in the next (prod03)
