@@ -112,7 +112,7 @@ class EventList(Table):
         return SkyCoord(lon, lat, unit='deg', frame='galactic')
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, **kwargs):
         """Read :ref:`gadf:iact-events`
 
         Parameters
@@ -121,7 +121,9 @@ class EventList(Table):
             File to read
         """
         filename = make_path(filename)
-        return super(EventList, cls).read(str(filename), hdu='EVENTS')
+        if 'hdu' not in kwargs:
+            kwargs.update(hdu='EVENTS')
+        return super(EventList, cls).read(str(filename), **kwargs)
 
     def add_galactic_columns(self):
         """Add Galactic coordinate columns to the table.
@@ -451,7 +453,7 @@ class EventListDataset(object):
         """Read event list from FITS file.
         """
         # return EventList.from_hdu_list(fits.open(filename))
-        event_list = EventList.read(filename, hdu='EVENTS')
+        event_list = EventList.read(filename)
         try:
             telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
         except KeyError:
