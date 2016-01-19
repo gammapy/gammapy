@@ -21,7 +21,7 @@ from ..utils.scripts import (
 __all__ = [
     'SpectrumAnalysis',
     'SpectrumObservation',
-    'SpectralFit',
+    'SpectrumFit',
     'run_spectral_fit_using_config',
 ]
 
@@ -46,6 +46,12 @@ def main(args=None):
 
 class SpectrumAnalysis(object):
     """Class for 1D spectrum fitting
+
+    This class creates several `~gammapy.spectrum.SpectrumObservation` instances
+    for a given list of observations. All functionality is implemented in the
+    `~gammapy.spectrum.SpectrumObservation` class. This class is only
+    responsible for managing several observations.
+    For more info see :ref:`spectral_fitting`.
 
     Parameters
     ----------
@@ -157,13 +163,13 @@ class SpectrumAnalysis(object):
 
     @property
     def on_vector(self):
-        """List of all ON `~gammapy.spectrum.CountsSpectrum`
+        """List of on `~gammapy.spectrum.CountsSpectrum`
         """
         return [obs.on_vector for obs in self.observations]
 
     @property
     def off_vector(self):
-        """`np.array` of all OFF `~gammapy.spectrum.CountsSpectrum`
+        """`np.array` of off `~gammapy.spectrum.CountsSpectrum`
 
         For available methods see :ref:`spectrum_background_method`
 
@@ -309,9 +315,7 @@ class SpectrumAnalysis(object):
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
-    This class handles the spectrum fit for one observation/run
-
-    TODO: Link to example
+    This class corresponds to one spectral observation
 
     Parameters
     ----------
@@ -356,7 +360,7 @@ class SpectrumObservation(object):
 
     @property
     def effective_area(self):
-        """`~gammapy.irf.EffectiveArea` corresponding to the observation
+        """`~gammapy.irf.EffectiveAreaTable` corresponding to the observation
         """
         if self._aeff is None:
             self._make_aeff()
@@ -598,7 +602,7 @@ class SpectrumObservation(object):
         ax.set_ylim(limits[1])
 
 
-class SpectralFit(object):
+class SpectrumFit(object):
     """
     Spectral Fit
 
@@ -620,13 +624,13 @@ class SpectralFit(object):
 
     @classmethod
     def from_config(cls, config):
-        """Create `~gammapy.spectrum.SpectralFit` from config file"""
+        """Create `~gammapy.spectrum.SpectrumFit` from config file"""
         outdir = make_path(config['general']['outdir'])
         return cls.from_dir(outdir)
 
     @classmethod
     def from_dir(cls, dir):
-        """Create `~gammapy.spectrum.SpectralFit` using directory
+        """Create `~gammapy.spectrum.SpectrumFit` using directory
 
         All PHA files in the directory will be used
         """
@@ -820,6 +824,9 @@ def run_spectral_fit_using_config(config):
     """
     Run a 1D spectral analysis using a config dict
 
+    This function is called by the ``gammapy-spectrum`` command line tool.
+    See :ref:`spectrum_command_line_tool`.
+
     Parameters
     ----------
     config : dict
@@ -827,7 +834,7 @@ def run_spectral_fit_using_config(config):
 
     Returns
     -------
-    fit : `~gammapy.spectrum.SpectralFit`
+    fit : `~gammapy.spectrum.SpectrumFit`
         Fit instance
     """
 
@@ -838,7 +845,7 @@ def run_spectral_fit_using_config(config):
 
     method = config['general']['run_fit']
     if method is not 'False':
-        fit = SpectralFit.from_config(config)
+        fit = SpectrumFit.from_config(config)
         fit.model = config['model']['type']
         fit.energy_threshold_low = Energy(config['model']['threshold_low'])
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])

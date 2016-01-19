@@ -16,7 +16,7 @@ from ...data import DataStore
 from ...spectrum import (
     SpectrumAnalysis,
     run_spectral_fit_using_config,
-    SpectralFit,
+    SpectrumFit,
 )
 
 
@@ -57,7 +57,7 @@ def test_spectral_fit(tmpdir):
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23592.pha")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23526.pha")
     pha_list = [pha1, pha2]
-    fit = SpectralFit(pha_list)
+    fit = SpectrumFit(pha_list)
     fit.model = 'PL'
     fit.energy_threshold_low = '100 GeV'
     fit.energy_threshold_high = '10 TeV'
