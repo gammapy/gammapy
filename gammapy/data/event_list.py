@@ -8,6 +8,8 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+
+from gammapy.utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..time import time_ref_from_dict
@@ -108,6 +110,20 @@ class EventList(Table):
         self.add_galactic_columns()
         lon, lat = self['GLON'], self['GLAT']
         return SkyCoord(lon, lat, unit='deg', frame='galactic')
+
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read :ref:`gadf:iact-events`
+
+        Parameters
+        ----------
+        filename: `~gammapy.extern.pathlib.Path`, str
+            File to read
+        """
+        filename = make_path(filename)
+        if 'hdu' not in kwargs:
+            kwargs.update(hdu='EVENTS')
+        return super(EventList, cls).read(str(filename), **kwargs)
 
     def add_galactic_columns(self):
         """Add Galactic coordinate columns to the table.
@@ -437,7 +453,7 @@ class EventListDataset(object):
         """Read event list from FITS file.
         """
         # return EventList.from_hdu_list(fits.open(filename))
-        event_list = EventList.read(filename, hdu='EVENTS')
+        event_list = EventList.read(filename)
         try:
             telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
         except KeyError:

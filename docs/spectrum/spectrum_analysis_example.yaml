@@ -1,4 +1,4 @@
-# Example Gammapy spectrum config file
+# Example Gammapy spectrum analysis pipeline config file
 
 general:
   datastore: $GAMMAPY_EXTRA/datasets/hess-crab4
@@ -10,7 +10,7 @@ general:
 
 binning:
   equal_log_spacing: true
-  emin: 0.1 TeV
+  emin: 500 GeV
   emax: 10 TeV
   nbins: 30
 
@@ -23,13 +23,13 @@ on_region:
 
 off_region:
   type: reflected
-  n_min: 4
+  n_min: 1
 
 excluded_regions:
-  file: $GAMMAPY_EXTRA/test_datasets/spectrum/dummy_exclusion.fits 
+  file: $GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits 
 
 model:
    type: PL
-   threshold_low: 0.1 TeV
+   threshold_low: 500 GeV
    threshold_high: 10 TeV
    

@@ -97,9 +97,6 @@ Reference/API
 .. automodapi:: gammapy.utils.fits
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.utils.region
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.utils.root
     :no-inheritance-diagram:
 

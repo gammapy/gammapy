@@ -11,7 +11,7 @@ from ...datasets import gammapy_extra
 @requires_data('gammapy-extra')
 def test_EventList():
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
-    event_list = EventList.read(filename, hdu='EVENTS')
+    event_list = EventList.read(filename)
 
     assert len(event_list) == 49
     assert 'Event list info' in event_list.summary
