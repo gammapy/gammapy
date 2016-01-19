@@ -1,6 +1,7 @@
 from ..energy_offset_array import EnergyOffsetArray
 from gammapy.data import DataStore
 from ...datasets import gammapy_extra
+from ...utils.testing import requires_dependency, requires_data
 import numpy as np
 import pylab as pt
 pt.ion()
@@ -17,6 +18,6 @@ def test_energy_offset_array():
     Array=EnergyOffsetArray(energy,offset)
     Array.fill_events(event_list_files)
     Array.plot_image()
-
+    pt.savefig("test_energy_offset_array.jpg")
 
     
