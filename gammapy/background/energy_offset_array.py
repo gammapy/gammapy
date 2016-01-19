@@ -3,7 +3,6 @@ import numpy as np
 from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.table import Table
-#from ..data import EventListDataset
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
@@ -27,14 +26,12 @@ class EnergyOffsetArray(object):
 
     """
 
-    def __init__(self, energy= None, offset=None, data=None):
+    def __init__(self, energy=None, offset=None, data=None):
         self.energy = Quantity(energy, 'TeV')
         self.offset = Angle(offset, 'deg')
         self.data = data
 
-
-
-    def fill_events(self,event_list):
+    def fill_events(self, event_list):
         """
         from the fill_events method of the Cubebackgroundmodel class in model.py
         Fill events in a 2D energy_offset histograms
@@ -49,53 +46,63 @@ class EnergyOffsetArray(object):
             
         
         """
-        
+
         self.data = None
         # loop over the Lost of object EventList
-        for (i,data_set) in enumerate(event_list):
-        
-            # construct histogram (energy, offset) for each event of the list
-            # TODO: units are missing in the H.E.S.S. FITS event
-            #       lists; this should be solved in the next (prod03)
-            #       H.E.S.S. fits production
-            # workaround: try to cast units, if it doesn't work, use hard coded
-            # ones
-            try:
-                ev_detx = Angle(data_set['DETX'])
-                ev_dety = Angle(data_set['DETY'])
-                ev_energy = Quantity(data_set['ENERGY'])
-            except UnitsError:
-                ev_detx = Angle(data_set['DETX'], 'deg')
-                ev_dety = Angle(data_set['DETY'], 'deg')
-                ev_energy = Quantity(data_set['ENERGY'],
-                                     data_set.meta['EUNIT'])
-            #ici calculer offset mis voir si je le calcul avec detx dety ou raddec
-            offset=np.sqrt(ev_detx**2 + ev_dety**2)
-            ev_cube_table = Table([ev_energy, offset],
-                                  names=('ENERGY', 'OFFSET'))
-
-            # TODO: filter out possible sources in the data;
-            #       for now, the observation table should not contain any
-            #       observation at or near an existing source
-
-            # fill events
-
-            # get correct data cube format for histogramdd
-            ev_cube_array = np.vstack([ev_cube_table['ENERGY'],
-                                       ev_cube_table['OFFSET']]).T
-
-            # fill data cube into histogramdd
-            ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                         [self.energy.value,
-                                                          self.offset.value])
-            #ev_cube_hist = Quantity(ev_cube_hist, '')
-
+        for (i, data_set) in enumerate(event_list):
+            ev_cube_hist = self._fill_one_event_list(data_set)
             # fill data
-            if(i==0):
+            if (i == 0):
                 self.data = ev_cube_hist
             else:
                 self.data += ev_cube_hist
+
+    def _fill_one_event_list(self, events):
+        """
+        histogram the counts of an EventList object in 2D (energy,offset)
+
+        Parameters
+        -------------
+        events :`~gammapy.data.EventList`
+           Event list objects.
+            
         
+        """
+        # construct histogram (energy, offset) for each event of the list
+        # TODO: units are missing in the H.E.S.S. FITS event
+        #       lists; this should be solved in the next (prod03)
+        #       H.E.S.S. fits production
+        # workaround: try to cast units, if it doesn't work, use hard coded
+        # ones
+        try:
+            ev_detx = Angle(events['DETX'])
+            ev_dety = Angle(events['DETY'])
+            ev_energy = Quantity(events['ENERGY'])
+        except UnitsError:
+            ev_detx = Angle(events['DETX'], 'deg')
+            ev_dety = Angle(events['DETY'], 'deg')
+            ev_energy = Quantity(events['ENERGY'],
+                                 events.meta['EUNIT'])
+        # ici calculer offset mis voir si je le calcul avec detx dety ou raddec
+        offset = np.sqrt(ev_detx ** 2 + ev_dety ** 2)
+        ev_cube_table = Table([ev_energy, offset],
+                              names=('ENERGY', 'OFFSET'))
+
+        # TODO: filter out possible sources in the data;
+        #       for now, the observation table should not contain any
+        #       observation at or near an existing source
+
+        # fill events
+
+        # get correct data cube format for histogramdd
+        ev_cube_array = np.vstack([ev_cube_table['ENERGY'],
+                                   ev_cube_table['OFFSET']]).T
+
+        # fill data cube into histogramdd
+        ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
+                                                     [self.energy.value,
+                                                      self.offset.value])
+        return ev_cube_hist
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot Energy_offset Array image (x=offset, y=energy).
@@ -114,7 +121,7 @@ class EnergyOffsetArray(object):
         if energy is None:
             energy = self.energy
 
-        #aeff = self.evaluate(offset, energy).T
+        # aeff = self.evaluate(offset, energy).T
         extent = [
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),
@@ -130,5 +137,3 @@ class EnergyOffsetArray(object):
         ax.legend()
         plt.colorbar(ax.imshow(self.data, extent=extent, **kwargs))
         return ax
-
-    
