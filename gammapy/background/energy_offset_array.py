@@ -4,7 +4,6 @@ from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.units import Quantity
-from astropy.coordinates import Angle
 
 __all__ = [
     'EnergyOffsetArray',
@@ -32,12 +31,9 @@ class EnergyOffsetArray(object):
         self.data = data
 
     def fill_events(self, event_list):
-        """
-        from the fill_events method of the Cubebackgroundmodel class in model.py
-        Fill events in a 2D energy_offset histograms
+        """Fill events histogram.
 
-        Get data files corresponding to the observation list, histogram
-        the counts and fill the corresponding cube containers.
+        This add the counts to the existing value array.
 
         Parameters
         -------------
@@ -80,8 +76,6 @@ class EnergyOffsetArray(object):
                                  events.meta['EUNIT'])
         # ici calculer offset mis voir si je le calcul avec detx dety ou raddec
         offset = np.sqrt(ev_detx ** 2 + ev_dety ** 2)
-        ev_cube_table = Table([ev_energy, offset],
-                              names=('ENERGY', 'OFFSET'))
 
         # TODO: filter out possible sources in the data;
         #       for now, the observation table should not contain any
@@ -90,8 +84,7 @@ class EnergyOffsetArray(object):
         # fill events
 
         # get correct data cube format for histogramdd
-        ev_cube_array = np.vstack([ev_cube_table['ENERGY'],
-                                   ev_cube_table['OFFSET']]).T
+        ev_cube_array = np.vstack([ev_energy, offset]).T
 
         # fill data cube into histogramdd
         ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
