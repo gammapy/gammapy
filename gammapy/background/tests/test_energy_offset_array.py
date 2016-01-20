@@ -22,7 +22,7 @@ def test_energy_offset_array():
         offset=np.linspace(0, 2.5, 100)
         Array=EnergyOffsetArray(energy,offset)
         Array.fill_events(ev_list)
-        Array.plot_image()
-
+        g=Array.plot_image()
+        g.figure.savefig("/Users/jouvin/gammapy/gammapy/background/tests/test_energy_offset_array.png")
 
     
