@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 import numpy as np
-from astropy.units import Quantity, UnitsError
 from astropy.coordinates import Angle
-from astropy.table import Table
 from astropy.units import Quantity
 
 __all__ = [
@@ -65,25 +63,10 @@ class EnergyOffsetArray(object):
                    
         """
         
-        try:
-            ev_detx = Angle(events['DETX'])
-            ev_dety = Angle(events['DETY'])
-            ev_energy = Quantity(events['ENERGY'])
-        except UnitsError:
-            ev_detx = Angle(events['DETX'], 'deg')
-            ev_dety = Angle(events['DETY'], 'deg')
-            ev_energy = Quantity(events['ENERGY'],
-                                 events.meta['EUNIT'])
-        # ici calculer offset mis voir si je le calcul avec detx dety ou raddec
-        offset = np.sqrt(ev_detx ** 2 + ev_dety ** 2)
-
-        # TODO: filter out possible sources in the data;
-        #       for now, the observation table should not contain any
-        #       observation at or near an existing source
-
-        # fill events
-
-        # get correct data cube format for histogramdd
+        offset = events.offset
+        ev_energy = events.energy
+        
+        # stack the offset and energy array
         ev_cube_array = np.vstack([ev_energy, offset]).T
 
         # fill data cube into histogramdd

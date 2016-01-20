@@ -132,7 +132,14 @@ class EventList(Table):
 
         lon, lat = self['AZ'], self['ALT']
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
-
+    
+    @property
+    def offset(self):
+        """Event offset (`~astropy.coordinates.Angle`)"""
+        ev_detx, ev_dety = self['DETX'], self['DETY']
+        offset= np.sqrt(ev_detx ** 2 + ev_dety ** 2)
+        return Angle(offset, unit='deg')
+    
     @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)"""
