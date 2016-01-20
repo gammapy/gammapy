@@ -27,9 +27,10 @@ class EnergyOffsetArray(object):
         self.energy = Quantity(energy, 'TeV')
         self.offset = Angle(offset, 'deg')
         if data is None:
-            self.data = np.zeros((len(energy)-1,len(offset)-1))
+            self.data = np.zeros((len(energy) - 1, len(offset) - 1))
         else:
             self.data = data
+
     def fill_events(self, event_list):
         """Fill events histogram.
 
@@ -44,10 +45,9 @@ class EnergyOffsetArray(object):
         """
         # loop over the Lost of object EventList
         for (i, data_set) in enumerate(event_list):
-            #Fill the events
+            # Fill the events
             counts = self._fill_one_event_list(data_set)
             self.data += counts
-                
 
     def _fill_one_event_list(self, events):
         """
@@ -59,10 +59,10 @@ class EnergyOffsetArray(object):
            Event list objects.
                    
         """
-        
+
         offset = events.offset
         ev_energy = events.energy
-        
+
         # stack the offset and energy array
         ev_cube_array = np.vstack([ev_energy, offset]).T
 
@@ -90,7 +90,6 @@ class EnergyOffsetArray(object):
         if energy is None:
             energy = self.energy
 
-            
         extent = [
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),
@@ -101,6 +100,6 @@ class EnergyOffsetArray(object):
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Energy_offset Array')
         ax.legend()
-        map=ax.imshow(self.data, extent=extent, **kwargs)
+        map = ax.imshow(self.data, extent=extent, **kwargs)
         plt.colorbar(map)
         return ax
