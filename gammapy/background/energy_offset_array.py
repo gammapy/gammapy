@@ -23,11 +23,13 @@ class EnergyOffsetArray(object):
 
     """
 
-    def __init__(self, energy=None, offset=None, data=None):
+    def __init__(self, energy, offset, data=None):
         self.energy = Quantity(energy, 'TeV')
         self.offset = Angle(offset, 'deg')
-        self.data = data
-
+        if data is None:
+            self.data = np.zeros((len(energy)-1,len(offset)-1))
+        else:
+            self.data = data
     def fill_events(self, event_list):
         """Fill events histogram.
 
@@ -40,18 +42,13 @@ class EnergyOffsetArray(object):
             
         
         """
-
-        self.data = None
         # loop over the Lost of object EventList
         for (i, data_set) in enumerate(event_list):
-            ev_cube_hist = self._fill_one_event_list(data_set)
-            # fill data
-            if (i == 0):
-                self.data = ev_cube_hist
-            else:
-                self.data += ev_cube_hist
-
+            #Fill the events
+            counts = self._fill_one_event_list(data_set)
+            self.data += counts
                 
+
     def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
@@ -93,15 +90,12 @@ class EnergyOffsetArray(object):
         if energy is None:
             energy = self.energy
 
-        # aeff = self.evaluate(offset, energy).T
+            
         extent = [
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),
         ]
         ax.imshow(self.data, extent=extent, **kwargs)
-        # ax.set_xlim(offset.value.min(), offset.value.max())
-        # ax.set_ylim(energy.value.min(), energy.value.max())
-
         ax.semilogy()
         ax.set_xlabel('Offset ({0})'.format(offset.unit))
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
