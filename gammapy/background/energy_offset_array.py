@@ -50,14 +50,15 @@ class EnergyOffsetArray(object):
         self.data = None
         # loop over the Lost of object EventList
         for (i, data_set) in enumerate(event_list):
-            ev_cube_hist = self._fill_one_event_list(data_set)
+            ev_cube_hist = self.fill_one_event_list(data_set)
             # fill data
             if (i == 0):
                 self.data = ev_cube_hist
             else:
                 self.data += ev_cube_hist
 
-    def _fill_one_event_list(self, events):
+                
+    def fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
 
@@ -65,15 +66,9 @@ class EnergyOffsetArray(object):
         -------------
         events :`~gammapy.data.EventList`
            Event list objects.
-            
-        
+                   
         """
-        # construct histogram (energy, offset) for each event of the list
-        # TODO: units are missing in the H.E.S.S. FITS event
-        #       lists; this should be solved in the next (prod03)
-        #       H.E.S.S. fits production
-        # workaround: try to cast units, if it doesn't work, use hard coded
-        # ones
+        
         try:
             ev_detx = Angle(events['DETX'])
             ev_dety = Angle(events['DETY'])
@@ -105,7 +100,8 @@ class EnergyOffsetArray(object):
         return ev_cube_hist
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
-        """Plot Energy_offset Array image (x=offset, y=energy).
+        """
+        Plot Energy_offset Array image (x=offset, y=energy).
         """
         import matplotlib.pyplot as plt
 
