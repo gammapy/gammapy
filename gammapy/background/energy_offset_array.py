@@ -107,5 +107,6 @@ class EnergyOffsetArray(object):
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Energy_offset Array')
         ax.legend()
-        plt.colorbar(ax.imshow(self.data, extent=extent, **kwargs))
+        map=ax.imshow(self.data, extent=extent, **kwargs)
+        plt.colorbar(map)
         return ax
