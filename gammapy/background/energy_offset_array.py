@@ -44,7 +44,7 @@ class EnergyOffsetArray(object):
         self.data = None
         # loop over the Lost of object EventList
         for (i, data_set) in enumerate(event_list):
-            ev_cube_hist = self.fill_one_event_list(data_set)
+            ev_cube_hist = self._fill_one_event_list(data_set)
             # fill data
             if (i == 0):
                 self.data = ev_cube_hist
@@ -52,7 +52,7 @@ class EnergyOffsetArray(object):
                 self.data += ev_cube_hist
 
                 
-    def fill_one_event_list(self, events):
+    def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
 
