@@ -4,7 +4,6 @@ from gammapy.data import EventList
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 import numpy as np
-#import pylab as pt
 
 
 @requires_dependency('matplotlib')
@@ -22,7 +21,6 @@ def test_energy_offset_array():
         offset=np.linspace(0, 2.5, 100)
         Array=EnergyOffsetArray(energy,offset)
         Array.fill_events(ev_list)
-        g=Array.plot_image()
-        g.figure.savefig("/Users/jouvin/gammapy/gammapy/background/tests/test_energy_offset_array.png")
-
+        Array.plot_image()
+        
     
