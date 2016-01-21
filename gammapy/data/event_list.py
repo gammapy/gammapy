@@ -136,9 +136,15 @@ class EventList(Table):
     @property
     def offset(self):
         """Event offset (`~astropy.coordinates.Angle`)"""
+        position = self.radec
+        center=self.target_radec
+        offset=center.separation(position)
+        """
         ev_detx, ev_dety = self['DETX'], self['DETY']
         offset= np.sqrt(ev_detx ** 2 + ev_dety ** 2)
+        """
         return Angle(offset, unit='deg')
+
     
     @property
     def energy(self):
