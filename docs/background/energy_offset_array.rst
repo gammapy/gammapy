@@ -11,9 +11,9 @@ examples:
 `hess_events_simulated_023523.fits`_ , `hess_events_simulated_023526.fits`_ , `hess_events_simulated_023559.fits`_ and `hess_events_simulated_023592.fits`_
 
 An example script of how to fill this Array from these four observations and plots the result is given in the ``examples`` directory:
-:download:`fill_and_plot_energy_offset_array.py <../../examples/fill_and_plot_energy_offset_array.py>`
+:download:`example_energy_offset_array.py <../../examples/example_energy_offset_array.py>`
 
-.. plot:: ../examples/fill_and_plot_energy_offset_array.py
+.. plot:: ../examples/example_energy_offset_array.py
    :include-source:
 
 
