@@ -1,4 +1,4 @@
-.. _bg_models:
+.. _energyoffset_array:
 
 EnergyOffset Array
 =================
