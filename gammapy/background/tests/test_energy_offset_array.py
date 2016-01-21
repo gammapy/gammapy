@@ -1,9 +1,11 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from ..energy_offset_array import EnergyOffsetArray
-from gammapy.data import DataStore
-from gammapy.data import EventList
+from ...data import DataStore, EventList
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
-import numpy as np
+
 
 
 @requires_dependency('matplotlib')

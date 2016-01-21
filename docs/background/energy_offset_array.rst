@@ -3,7 +3,7 @@
 EnergyOffset Array
 =================
 
-**energyOffset Array** is a 2D array *(energy,offset)* that is filled with an eventlist. For a set of observations, by giving an energy binning and an offset binning, you fill the events in this histogram.
+The `~gammapy.background.EnergyOffsetArray` class represents a 2D array *(energy,offset)* that is filled with an eventlist. For a set of observations, by giving an energy binning and an offset binning, you fill the events in this histogram.
 
 
 Four Crab observations are located in the ``gammapy-extra`` repository as
