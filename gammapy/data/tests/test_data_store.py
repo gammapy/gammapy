@@ -5,6 +5,7 @@ from ...data import EventList
 from ...data import DataStore
 from ...utils.testing import requires_data, data_manager
 from ...datasets import gammapy_extra
+from numpy.testing import assert_allclose
 
 @pytest.mark.xfail
 @requires_data('hess')
@@ -65,8 +66,8 @@ def test_DataStore_load_all():
     dir = str(gammapy_extra.dir) + '/datasets/hess-crab4'
     data_store = DataStore.from_dir(dir)
     event_lists = data_store.load_all(filetype='events')
-    assert event_lists[0]['ENERGY'][0] == 1.1156039
-    assert event_lists[-1]['ENERGY'][0] == 1.0204216
+    assert_allclose(event_lists[0]['ENERGY'][0], 1.1156039)
+    assert_allclose(event_lists[-1]['ENERGY'][0], 1.0204216)
 
 @pytest.mark.xfail
 @requires_data('hess')
