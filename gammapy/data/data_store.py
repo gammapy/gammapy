@@ -210,7 +210,7 @@ class DataStore(object):
             raise ValueError('Invalid filetype.')
 
     def load_all(self, filetype):
-        """Load data file as appropriate object for a
+        """Load a given file type for all observations
 
         Parameters
         ----------
@@ -222,11 +222,11 @@ class DataStore(object):
         list : python list of object
             Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
         """
-        event_lists = []
+        data_lists = []
         for obs_id in self.obs_table['OBS_ID']:
-            event_list = self.load(obs_id, filetype)
-            event_lists.append(event_list)
-        return event_lists
+            data_list = self.load(obs_id, filetype)
+            data_lists.append(data_list)
+        return data_lists
         
     def check_integrity(self, logger):
         """Check integrity, i.e. whether index table and files match.

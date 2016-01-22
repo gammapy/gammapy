@@ -32,7 +32,7 @@ class EnergyOffsetArray(object):
         else:
             self.data = data
 
-    def fill_events(self, event_list):
+    def fill_events(self, event_lists):
         """Fill events histogram.
 
         This add the counts to the existing value array.
@@ -45,9 +45,9 @@ class EnergyOffsetArray(object):
         
         """
         # loop over the Lost of object EventList
-        for (i, data_set) in enumerate(event_list):
+        for event_list in event_lists:
             # Fill the events
-            counts = self._fill_one_event_list(data_set)
+            counts = self._fill_one_event_list(event_list)
             self.data += counts
 
     def _fill_one_event_list(self, events):
