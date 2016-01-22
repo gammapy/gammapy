@@ -9,11 +9,7 @@ def make_counts_array():
     """Make an example counts array with energy and offset axes."""
     data_store = DataStore.from_dir(gammapy_extra.dir / 'datasets/hess-crab4')
 
-    event_lists = []
-    for obs_id in data_store.obs_table['OBS_ID']:
-        event_list = data_store.load(obs_id, 'events')
-        event_lists.append(event_list)
-
+    event_lists = data_store.load_all('events')
     energy = np.logspace(-1, 2, 100)
     offset = np.linspace(0, 2.5, 100)
     array = EnergyOffsetArray(energy, offset)

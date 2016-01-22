@@ -58,6 +58,16 @@ def test_DataStore_load(data_manager):
     events = data_store.load(obs_id=23037, filetype='events')
     assert isinstance(events, EventList)
 
+@pytest.mark.xfail
+@requires_data('hess')
+def test_DataStore_load_all(data_manager):
+    """Test loading data and IRF files via the DataStore"""
+    data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']
+
+    events_list = data_store.load_all(filetype='events')
+    for events in events_list:
+        assert isinstance(events, EventList)
+    
 
 @pytest.mark.xfail
 @requires_data('hess')
