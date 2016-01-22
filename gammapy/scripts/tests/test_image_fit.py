@@ -26,7 +26,7 @@ def test_sherpa_like(tmpdir):
         json.dump(sources_data, fh)
 
     # set up args
-    args = {'counts': str(filenames['counts']),
+    args = {'counts': str(filenames['source']),
             'exposure': str(filenames['exposure']),
             'background': str(filenames['background']),
             'psf': filenames['psf'],

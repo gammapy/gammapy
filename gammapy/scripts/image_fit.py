@@ -64,8 +64,8 @@ def image_fit(counts,
     log.info('Reading background: {0}'.format(background))
     sherpa.astro.ui.load_table_model('background', background)
 
-    log.info('Reading PSF: {0}'.format(psf))
-    SherpaMultiGaussPSF(psf).set()
+    #log.info('Reading PSF: {0}'.format(psf))
+    #SherpaMultiGaussPSF(psf).set()
 
     if roi:
         log.info('Reading ROI: {0}'.format(roi))
@@ -81,9 +81,14 @@ def image_fit(counts,
     # ---------------------------------------------------------
     # Scale exposure by 1e-10 to get ampl or order unity and avoid some fitting problems
     name = sherpa.astro.ui.get_source().name
-    full_model = 'background + 1e-12 * exposure * psf ({})'.format(name)
+    # full_model = 'background + 1e-12 * exposure * psf ({})'.format(name)
+    # sherpa.astro.ui.set_full_model(full_model)
+    # sherpa.astro.ui.freeze('background', 'exposure', 'psf')
+
+    full_model = 'background + 1e-12 * exposure * {}'.format(name)
     sherpa.astro.ui.set_full_model(full_model)
-    sherpa.astro.ui.freeze('background', 'exposure', 'psf')
+    sherpa.astro.ui.freeze('background', 'exposure')
+
 
     # ---------------------------------------------------------
     # Set up the fit

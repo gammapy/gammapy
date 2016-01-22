@@ -78,13 +78,16 @@ class SherpaMultiGaussPSF(object):
     def center_psf(self):
         """Set ``xpos`` and ``ypos`` of the PSF to the dataspace center."""
         import sherpa.astro.ui as sau
+
+        #from IPython import embed; embed()
         try:
             ny, nx = sau.get_data().shape
-            for par in sau.get_psf().kernel.pars:
-                if par.name is 'xpos':
-                    par.val = (nx + 1) / 2.
-                elif par.name is 'ypos':
-                    par.val = (ny + 1) / 2.
+            for _ in ['psf1', 'psf2', 'psf3']:
+                par = sau.get_par(_ + '.xpos')
+                par.val = (nx) / 2.
+                
+                par = sau.get_par(_ + '.ypos')
+                par.val = (ny) / 2.
         except:
             raise Exception('PSF is not centered.')
 
@@ -94,9 +97,9 @@ class SherpaMultiGaussPSF(object):
         # from morphology.utils import read_json
         read_json(self.pars, sau.set_model)
         sau.load_psf('psf', sau.get_model())
-        sau.set_psf('psf')
         self.center_psf()
-
+        sau.set_psf('psf')
+        
     def evaluate(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
         """Hand-coded evaluate for debugging."""
         f = 4 * np.log(2)
