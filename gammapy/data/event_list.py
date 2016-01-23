@@ -393,7 +393,7 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
-    def peek_time_map(self, log_scale=False):
+    def plot_time_map(self, ax=None):
         """
         A time map showing for each event the time between the previous and following event.
 
@@ -403,12 +403,42 @@ class EventList(Table):
 
         Parameters
         ----------
-        log_scale : bool
-            If true, plot in log-log scale
+
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes
+
+        Examples
+        --------
+        Plot a time map of the events:
+
+        .. plot::
+            :include-source:
+
+        from gammapy.data import EventList, EventListDataset, EventListDatasetChecker
+        from gammapy.datasets import gammapy_extra
+
+        import os
+        import numpy
+        import matplotlib.pyplot as plt
+
+        os.environ["GAMMAPY_EXTRA"] = "/home/jon/Pycharm/gammapy-extra"
+        filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
+        event_list = EventList.read(filename, hdu='EVENTS')
+
+        event_list.plot_time_map()
+        
+        plt.show()
 
         """
 
         import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
 
         first_event_time = np.min(self[:]['TIME'])
 
@@ -421,16 +451,11 @@ class EventList(Table):
         xcoords = diffs[:-1]  # all differences except the last
         ycoords = diffs[1:]  # all differences except the first
 
-        plt.xlabel('time before event / s')
-        plt.ylabel('time after event / s')
-        plt.scatter(xcoords, ycoords)
+        ax.set_xlabel('time before event / s')
+        ax.set_ylabel('time after event / s')
+        ax.scatter(xcoords, ycoords)
 
-        if log_scale:
-            plt.xlim(1e-3, xcoords.max())
-            plt.ylim(1e-3, ycoords.max())
-            plt.loglog()
-
-        plt.show()
+        return ax
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
