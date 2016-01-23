@@ -393,7 +393,7 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
-    def peek_time_map(self, num_sides=0):
+    def peek_time_map(self, log_scale=False):
         """
         A time map showing for each event the time between the previous and following event.
 
@@ -403,8 +403,8 @@ class EventList(Table):
 
         Parameters
         ----------
-        num_sides :int
-            Number of bins for the histogram
+        log_scale : bool
+            If true, plot in log-log scale
 
         """
 
@@ -421,41 +421,14 @@ class EventList(Table):
         xcoords = diffs[:-1]  # all differences except the last
         ycoords = diffs[1:]  # all differences except the first
 
-        max_diff = np.max(diffs)  # maximum time difference
-
-        if num_sides == 0:
-            num_sides = len(diffs) / 5
-
-        # the xy coordinates scaled to the size of the matrix
-        x_heat = (num_sides - 1) * xcoords / max_diff
-        y_heat = (num_sides - 1) * ycoords / max_diff
-
-        histogram = np.zeros((num_sides, num_sides)) # a 'histogram' matrix that counts the number of points in each grid-square
-
-        for i in range(len(xcoords)): # loop over all points to calculate the population of each bin
-            histogram[x_heat[i], y_heat[i]] += 1  # Increase count by 1
-            #here, the integer part of x/y_heat[i] is automatically taken
-
-        # TODO: apply Gaussian blur
-        blur_width = 8 # the width of the Gaussian function along x and y when applying the blur operation
-
-        H = np.transpose(histogram)  # so that the orientation is the same as a scatter plot
-
         plt.xlabel('time before event / s')
         plt.ylabel('time after event / s')
-        plt.imshow(H, origin='lower')  # display H as an image
+        plt.scatter(xcoords, ycoords)
 
-        xlocs, xlabels = plt.xticks()
-        xlocs = xlocs[1:-1]  # I honestly have no idea why this line is needed
-
-        xlabels = np.linspace(round(min(xcoords), 1), round(max(xcoords), 1), np.size(xlocs))
-        plt.xticks(xlocs, xlabels)
-
-        ylocs, ylabels = plt.yticks()
-        ylocs = ylocs[1:-1]  # I honestly have no idea why this line is needed
-
-        ylabels = np.linspace(round(min(ycoords), 1), round(max(ycoords), 1), np.size(ylocs))
-        plt.yticks(ylocs, ylabels)
+        if log_scale:
+            plt.xlim(1e-3, xcoords.max())
+            plt.ylim(1e-3, ycoords.max())
+            plt.loglog()
 
         plt.show()
 
