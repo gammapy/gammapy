@@ -409,6 +409,44 @@ class EventList(Table):
         plt.tight_layout()
         plt.show()
 
+    def peek_time_map(self, log_scale=False):
+        """
+        A time map showing for each event the time between the previous and following event.
+
+        The use and implementation are described here
+
+        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
+
+        Parameters
+        ----------
+        log_scale : bool
+            If true, plot in log-log scale
+
+        """
+
+        import matplotlib.pyplot as plt
+
+        first_event_time = np.min(self[:]['TIME'])
+
+        # Note the events are not necessarily in time order
+        relative_event_times = np.sort(self[:]['TIME']) - first_event_time
+
+        diffs = np.array([relative_event_times[i]-relative_event_times[i-1]
+                          for i in range(1, len(relative_event_times))])
+
+        xcoords = diffs[:-1]  # all differences except the last
+        ycoords = diffs[1:]  # all differences except the first
+
+        plt.xlabel('time before event / s')
+        plt.ylabel('time after event / s')
+        plt.scatter(xcoords, ycoords)
+
+        if log_scale:
+            plt.xlim(1e-3, xcoords.max())
+            plt.ylim(1e-3, ycoords.max())
+            plt.loglog()
+
+        plt.show()
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
