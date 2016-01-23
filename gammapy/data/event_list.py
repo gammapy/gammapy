@@ -386,8 +386,18 @@ class EventList(Table):
     def peek(self):
         """Summary plots."""
         import matplotlib.pyplot as plt
-        self.plot_image()
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
+        self.plot_image(ax=axes[0])
+        self.plot_time_map(ax=axes[1])
 
+        #log-log scale for time map
+        xlims = axes[1].set_xlim()
+        ylims = axes[1].set_ylim()
+        axes[1].set_xlim(1e-3, xlims[1])
+        axes[1].set_ylim(1e-3, ylims[1])
+        axes[1].loglog()
+        # TODO: self.plot_energy_dependence(ax=axes[x])
+        # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
         plt.show()
 
@@ -476,6 +486,8 @@ class EventList(Table):
 
         xcoords = diffs[:-1]  # all differences except the last
         ycoords = diffs[1:]  # all differences except the first
+
+        ax.set_title('Time Map')
 
         ax.set_xlabel('time before event / s')
         ax.set_ylabel('time after event / s')
