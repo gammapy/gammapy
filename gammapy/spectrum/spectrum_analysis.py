@@ -612,7 +612,7 @@ class SpectrumFit(object):
         List of PHA files to fit
     """
 
-    DEFAULT_STAT = 'cash'
+    DEFAULT_STAT = 'wstat'
 
     def __init__(self, pha, bkg=None, arf=None, rmf=None, stat=DEFAULT_STAT):
 
@@ -620,7 +620,7 @@ class SpectrumFit(object):
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
-        self._stat = stat
+        self.statistic = stat
 
     @classmethod
     def from_config(cls, config):
@@ -693,6 +693,8 @@ class SpectrumFit(object):
         if isinstance(stat, six.string_types):
             if stat == 'cash':
                 stat = s.Cash()
+            elif stat == 'wstat':
+                stat = s.WStat()
             else:
                 raise ValueError("Undefined stat string: {}".format(stat))
 
@@ -803,16 +805,17 @@ class SpectrumFit(object):
         ds.notice(thres_lo, thres_hi)
         datastack.set_stat(self.statistic)
         ds.fit()
+        datastack.covar()
+        covar = datastack.get_covar_results()
+        efilter = datastack.get_filter()
+        # TODO: Create spectrum result object
         ds.clear_stack()
         ds.clear_models()
 
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
         cont = self.get_containment()
-        fit['containment'] = cont
-        fit['parvals'] = list(fit['parvals'])
-        fit['parvals'][1] = fit['parvals'][1] * cont
-        return fit
+        pass
 
     def get_containment(self):
         """Calculate PSF correction factor for containment in ON region"""
@@ -837,6 +840,7 @@ def run_spectral_fit_using_config(config):
     fit : `~gammapy.spectrum.SpectrumFit`
         Fit instance
     """
+    log.info("\nStarting analysis {}".format(config['general']['outdir']))
 
     if config['general']['create_ogip']:
         analysis = SpectrumAnalysis.from_config(config)
@@ -844,12 +848,11 @@ def run_spectral_fit_using_config(config):
         analysis.write_ogip_data(outdir)
 
     method = config['general']['run_fit']
-    if method is not 'False':
+    if method is not False:
         fit = SpectrumFit.from_config(config)
         fit.model = config['model']['type']
         fit.energy_threshold_low = Energy(config['model']['threshold_low'])
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
         fit.info()
         fit.run(method=method)
-
-    return fit
+        return fit

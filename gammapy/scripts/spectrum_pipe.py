@@ -10,7 +10,8 @@ from ..utils.scripts import (
     set_up_logging_from_args,
     write_yaml,
     read_yaml,
-    recursive_merge_dicts
+    recursive_merge_dicts,
+    make_path,
 )
 import logging
 import numpy as np
@@ -32,7 +33,7 @@ def main(args=None):
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
     specpipe = SpectrumPipe.from_configfile(args.config_file)
-    print(specpipe.info())
+    specpipe.write_configs()
     specpipe.run()
 
 
@@ -78,7 +79,7 @@ class SpectrumPipe(object):
         analist = list([])
 
         for analysis in config.keys():
-            log.info("Creating analysis {}".format(analysis))
+            log.info("Generating config for analysis {}".format(analysis))
             anaconf = base_config.copy()
             temp = config[analysis]
             anaconf = recursive_merge_dicts(anaconf, temp)
@@ -101,10 +102,11 @@ class SpectrumPipe(object):
 
     def write_configs(self):
         """Write analysis configs to disc"""
-        for ana, conf in zip(self.analysis, self.config):
-            val = ana.base_dir / 'config.yaml'
-            val.basedir.mkdir(exist_ok=True)
-            write_yaml(conf, val, logger=log)
+        for conf in self.config:
+            outdir = make_path(conf['general']['outdir'])
+            outdir.mkdir(exist_ok=True)
+            outfile = outdir / 'config.yaml'
+            write_yaml(conf, str(outfile), logger=log)
 
     def info(self):
         """
