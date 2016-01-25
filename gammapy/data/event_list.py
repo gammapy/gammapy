@@ -418,6 +418,8 @@ class EventList(Table):
 
         ax.set_title('# Photons')
 
+        ax.set_xlabel('x / deg')
+        ax.set_ylabel('y / deg')
         ax.imshow(count_image, interpolation='nearest', origin='low',
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
