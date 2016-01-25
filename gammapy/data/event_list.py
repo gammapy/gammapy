@@ -463,7 +463,7 @@ class EventList(Table):
             from gammapy.datasets import gammapy_extra
             import os
 
-            os.environ["GAMMAPY_EXTRA"] = "/home/jon/Pycharm/gammapy-extra"
+            os.environ["GAMMAPY_EXTRA"] = "../gammapy-extra"
             filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
             event_list = EventList.read(filename, hdu='EVENTS')
 
