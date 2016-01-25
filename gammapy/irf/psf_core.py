@@ -78,16 +78,14 @@ class SherpaMultiGaussPSF(object):
     def center_psf(self):
         """Set ``xpos`` and ``ypos`` of the PSF to the dataspace center."""
         import sherpa.astro.ui as sau
-
-        #from IPython import embed; embed()
         try:
             ny, nx = sau.get_data().shape
             for _ in ['psf1', 'psf2', 'psf3']:
                 par = sau.get_par(_ + '.xpos')
-                par.val = (nx) / 2.
+                par.val = nx / 2.
                 
                 par = sau.get_par(_ + '.ypos')
-                par.val = (ny) / 2.
+                par.val = ny / 2.
         except:
             raise Exception('PSF is not centered.')
 
