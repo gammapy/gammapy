@@ -453,20 +453,21 @@ class EventList(Table):
         .. plot::
             :include-source:
 
-        from gammapy.data import EventList, EventListDataset, EventListDatasetChecker
-        from gammapy.datasets import gammapy_extra
+            from gammapy.datasets import gammapy_extra
 
-        import os
-        import numpy
-        import matplotlib.pyplot as plt
+            import matplotlib.pyplot as plt
+            import matplotlib.pyplot as plt
+            from gammapy.data import EventList
+            from gammapy.datasets import gammapy_extra
+            import os
 
-        os.environ["GAMMAPY_EXTRA"] = "/home/jon/Pycharm/gammapy-extra"
-        filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
-        event_list = EventList.read(filename, hdu='EVENTS')
+            os.environ["GAMMAPY_EXTRA"] = "/home/jon/Pycharm/gammapy-extra"
+            filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
+            event_list = EventList.read(filename, hdu='EVENTS')
 
-        event_list.plot_time_map()
-        
-        plt.show()
+            event_list.plot_time_map()
+
+            plt.show()
 
         """
 
