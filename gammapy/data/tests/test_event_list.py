@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_data
+from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import gammapy_extra
 
@@ -64,3 +64,12 @@ def test_EventListDatasetChecker():
     dset = EventListDataset.read(filename)
     checker = EventListDatasetChecker(dset)
     checker.run('all')
+
+@requires_dependency('matplotlib')
+@requires_data('gammapy-extra')
+def test_Eventlist_peek():
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
+    event_list = EventList.read(filename, hdu='EVENTS')
+
+    event_list.peek()
+    
