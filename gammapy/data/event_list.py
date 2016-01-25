@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
+from twisted.protocols.ftp import CmdNotImplementedError
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
@@ -406,10 +407,10 @@ class EventList(Table):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        max_x = max((self[:]['DETX']))
-        min_x = min((self[:]['DETX']))
-        max_y = max((self[:]['DETY']))
-        min_y = min((self[:]['DETY']))
+        max_x = max((self['DETX']))
+        min_x = min((self['DETX']))
+        max_y = max((self['DETY']))
+        min_y = min((self['DETY']))
 
         x_edges = np.linspace(min_x, max_x, number_bins)
         y_edges = np.linspace(min_y, max_y, number_bins)
@@ -421,13 +422,11 @@ class EventList(Table):
         ax.imshow(count_image, interpolation='nearest', origin='low',
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
-    def plot_energy_dependence(self, ax = None):
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+    def plot_energy_dependence(self, ax=None):
+        raise NotImplementedError
 
-    def plot_offset_dependence(self, ax = None):
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
+    def plot_offset_dependence(self, ax=None):
+        raise NotImplementedError
 
     def plot_time_map(self, ax=None):
         """
@@ -494,6 +493,7 @@ class EventList(Table):
         ax.scatter(xcoords, ycoords)
 
         return ax
+
 
 class EventListDataset(object):
     """Event list dataset (event list plus some extra info).
