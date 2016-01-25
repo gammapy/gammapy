@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from collections import OrderedDict
 import numpy as np
-from twisted.protocols.ftp import CmdNotImplementedError
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
@@ -478,10 +477,9 @@ class EventList(Table):
         first_event_time = np.min(self[:]['TIME'])
 
         # Note the events are not necessarily in time order
-        relative_event_times = np.sort(self[:]['TIME']) - first_event_time
+        relative_event_times = self[:]['TIME'] - first_event_time
 
-        diffs = np.array([relative_event_times[i]-relative_event_times[i-1]
-                          for i in range(1, len(relative_event_times))])
+        diffs = relative_event_times[1:] - relative_event_times[:-1]
 
         xcoords = diffs[:-1]  # all differences except the last
         ycoords = diffs[1:]  # all differences except the first
