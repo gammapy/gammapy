@@ -156,7 +156,7 @@ install:
     # https://travis-ci.org/gammapy/gammapy/jobs/99867950#L639
     - if $SHERPA; then
           conda install --yes --channel astropy numpy=$NUMPY_VERSION iminuit;
-          conda install --yes --channel https://conda.anaconda.org/cxc/channel/dev sherpa;
+          conda install --yes --no-pin --channel https://conda.anaconda.org/cxc/channel/dev sherpa;
           conda install --yes -q numpy=$NUMPY_VERSION;
       fi
 
