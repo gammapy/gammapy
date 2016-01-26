@@ -808,7 +808,8 @@ class SpectrumFit(object):
         datastack.covar()
         covar = datastack.get_covar_results()
         efilter = datastack.get_filter()
-        # TODO: Create spectrum result object
+        from gammapy.spectrum.results import SpectrumFitResult
+        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model)
         ds.clear_stack()
         ds.clear_models()
 
@@ -841,11 +842,11 @@ def run_spectral_fit_using_config(config):
         Fit instance
     """
     log.info("\nStarting analysis {}".format(config['general']['outdir']))
+    outdir = make_path(config['general']['outdir'])
 
     if config['general']['create_ogip']:
         analysis = SpectrumAnalysis.from_config(config)
-        outdir = config['general']['outdir']
-        analysis.write_ogip_data(outdir)
+        analysis.write_ogip_data(str(outdir))
 
     method = config['general']['run_fit']
     if method is not False:
@@ -855,4 +856,5 @@ def run_spectral_fit_using_config(config):
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
         fit.info()
         fit.run(method=method)
+        fit.result.write(str(outdir / 'fit_result.yaml'))
         return fit

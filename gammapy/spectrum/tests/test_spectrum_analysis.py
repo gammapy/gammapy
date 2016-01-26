@@ -6,6 +6,8 @@ from astropy.tests.helper import pytest
 from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
+
+from gammapy.spectrum.results import SpectrumFitResult
 from ...utils.testing import requires_dependency, requires_data
 from ...region import SkyCircleRegion
 from ...datasets import gammapy_extra
@@ -62,7 +64,6 @@ def test_spectral_fit(tmpdir):
     fit.energy_threshold_low = '100 GeV'
     fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
-    assert_allclose(fit.model.gamma.val, 2.23, atol=1e-1)
 
     # broken
     # fit.run(method='hspec')
@@ -79,7 +80,15 @@ def test_spectrum_analysis_from_configfile(tmpdir):
     config['general']['outdir'] = str(tmpdir)
 
     fit = run_spectral_fit_using_config(config)
-    assert_allclose(fit.model.gamma.val, 2.23, atol=1e-1)
+    tmpfile = tmpdir / 'result.yaml'
+    fit.result.write(str(tmpfile))
+
+    result = SpectrumFitResult.read(str(tmpfile))
+    reference = SpectrumFitResult.read(
+        gammapy_extra.filename('test_datasets/spectrum/fit_result.yaml'))
+
+    # Todo Actually compare the two files. Not possible now due to float issues
+    assert_allclose(result.parameters.Gamma.value, reference.parameters.Gamma.value)
 
     config['off_region']['type'] = 'ring'
     config['off_region']['inner_radius'] = '0.3 deg'
