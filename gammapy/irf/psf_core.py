@@ -20,7 +20,7 @@ import numpy as np
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
 from astropy import log
-from ..utils.const import sigma_to_fwhm, fwhm_to_sigma
+from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
 from ..morphology import read_json
 from ..morphology import Gauss2DPDF, MultiGauss2D
 
@@ -44,7 +44,7 @@ class GaussPSF(Gauss2DPDF):
         that the integral is 1"""
         d = {}
         d['ampl'] = binsz ** 2 * self.norm
-        d['fwhm'] = sigma_to_fwhm / binsz * self.sigma
+        d['fwhm'] = gaussian_sigma_to_fwhm / binsz * self.sigma
         return {'psf1': d}
 
 
@@ -219,7 +219,7 @@ class HESSMultiGaussPSF(object):
             A = self.pars['A_{0}'.format(ii)]
             sigma = self.pars['sigma_{0}'.format(ii)]
             d['ampl'] = A
-            d['fwhm'] = sigma_to_fwhm * sigma / binsz
+            d['fwhm'] = gaussian_sigma_to_fwhm * sigma / binsz
             name = 'psf{0}'.format(ii)
             pars[name] = d
         return pars
@@ -360,7 +360,7 @@ def multi_gauss_psf_kernel(psf_parameters, BINSZ=0.02, NEW_BINSZ=0.02, **kwargs)
     for ii in range(1, 4):
         # Convert sigma and amplitude
         pars = psf_parameters['psf{0}'.format(ii)]
-        sigma = fwhm_to_sigma * pars['fwhm'] * BINSZ / NEW_BINSZ
+        sigma = gaussian_fwhm_to_sigma * pars['fwhm'] * BINSZ / NEW_BINSZ
         ampl = 2 * np.pi * sigma ** 2 * pars['ampl']
         if psf is None:
             psf = float(ampl) * Gaussian2DKernel(sigma, **kwargs)

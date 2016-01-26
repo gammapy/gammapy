@@ -6,8 +6,6 @@ from astropy.units import Unit, Quantity
 
 __all__ = ['conversion_factor',
            'd_sun_to_galactic_center',
-           'sigma_to_fwhm',
-           'fwhm_to_sigma',
            ]
 
 
@@ -24,10 +22,6 @@ def conversion_factor(old, new):
 
 """ Astronomical constants """
 d_sun_to_galactic_center = Quantity(8.5, 'kpc')  # Distance Sun to Galactic center (kpc)
-
-""" Additional constants """
-sigma_to_fwhm = np.sqrt(8 * np.log(2))  # ~ 2.35
-fwhm_to_sigma = 1 / sigma_to_fwhm
 
 # Here's how to compute the conversion factors in astropy that I used in my old code:
 # See https://gist.github.com/cdeil/5990465
