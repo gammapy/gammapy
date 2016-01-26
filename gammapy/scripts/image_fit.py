@@ -68,7 +68,7 @@ def image_fit(counts,
         log.info('Reading PSF: {0}'.format(psf))
         SherpaMultiGaussPSF(psf).set()
     else:
-        log.info("Not applying PSF convolution.")
+        log.warning("No PSF convolution.")
 
     if roi:
         log.info('Reading ROI: {0}'.format(roi))
