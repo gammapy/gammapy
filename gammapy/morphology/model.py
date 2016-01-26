@@ -6,7 +6,7 @@ At the moment you can have any number of Gaussians.
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from ..utils.const import fwhm_to_sigma
+from astropy.stats import gaussian_fwhm_to_sigma
 from ..utils.random import get_random_state
 
 __all__ = [
@@ -86,7 +86,7 @@ class MorphModelImageCreator(object):
             # TODO: Add other source models
             if cfg[source]['Type'] != 'NormGaussian':
                 raise ValueError('So far only normgauss2d models can be handled.')
-            sigma = fwhm_to_sigma * float(cfg[source]['fwhm'])
+            sigma = gaussian_fwhm_to_sigma * float(cfg[source]['fwhm'])
             ampl = float(cfg[source]['ampl']) * 1 / (2 * np.pi * sigma ** 2)
             xpos = float(cfg[source]['xpos']) - 1
             ypos = float(cfg[source]['ypos']) - 1
@@ -124,9 +124,9 @@ class MorphModelImageCreator(object):
         psf_data = json.load(open(self.psf_file))
 
         # Convert sigma and amplitude
-        sigma_1 = fwhm_to_sigma * psf_data['psf1']['fwhm']
-        sigma_2 = fwhm_to_sigma * psf_data['psf2']['fwhm']
-        sigma_3 = fwhm_to_sigma * psf_data['psf3']['fwhm']
+        sigma_1 = gaussian_fwhm_to_sigma * psf_data['psf1']['fwhm']
+        sigma_2 = gaussian_fwhm_to_sigma * psf_data['psf2']['fwhm']
+        sigma_3 = gaussian_fwhm_to_sigma * psf_data['psf3']['fwhm']
         ampl_1 = psf_data['psf1']['ampl'] * 2 * np.pi * sigma_1 ** 2
         ampl_2 = psf_data['psf2']['ampl'] * 2 * np.pi * sigma_2 ** 2
         ampl_3 = psf_data['psf3']['ampl'] * 2 * np.pi * sigma_3 ** 2

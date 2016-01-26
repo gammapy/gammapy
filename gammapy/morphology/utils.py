@@ -8,7 +8,7 @@ __all__ = ['read_ascii', 'read_json', 'write_all', 'write_ascii', 'write_json']
 
 def _name(ii):
     """Use this to make the model name for source number `ii`."""
-    return 'gauss2d.source_{0:02d}'.format(ii)
+    return 'normgauss2d.source_{0:02d}'.format(ii)
 
 
 def _set(name, par, val):
@@ -23,7 +23,7 @@ def _set(name, par, val):
 
 def _model(source_names):
     """Build additive model string for Gaussian sources."""
-    return ' + '.join(['gauss2d.' + name for name in source_names])
+    return ' + '.join(['normgauss2d.' + name for name in source_names])
 
 
 def read_json(source, setter):
