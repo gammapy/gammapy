@@ -44,17 +44,21 @@ class SourceCatalogObject(object):
         """Row index of source in catalog"""
         return self.data[self._source_index_key]
 
+    def to_json(self, cols=None):
+        """Convert data to JSON.
+
+        TODO: rename to `to_dict`?
+        """
+        cols = cols or self.data.keys()
+        data = dict((col, str(self.data[col])) for col in cols)
+        return data
+
     def pprint(self, file=None):
         """Pretty-print source data"""
         if not file:
             file = sys.stdout
 
         pprint(self.data, stream=file)
-
-        # TODO: add methods to serialise to JSON and YAML
-        # and also to quickly pretty-print output in that format for interactive use.
-        # Maybe even add HTML output for IPython repr?
-        # Or at to_table method?
 
 
 class SourceCatalog(object):
@@ -180,4 +184,43 @@ class SourceCatalog(object):
         row = self.table[index]
         data = OrderedDict(zip(row.colnames, row.as_void()))
         data[self._source_index_key] = index
+        return data
+
+    def to_json(self, sources=None, cols=None, format='objects'):
+        """Export catalog data to JSON.
+
+        The main use case for this is to display catalog data on webpages,
+        where Python / Gammapy and FITS aren't available.
+
+        The formats we support are the ones that can be easily read by
+        https://www.datatables.net/manual/data/
+
+        - 'arrays' -- List of lists (row data represented as list)
+        - 'objects' -- List of dicts (row data represented as dict)
+
+        TODO: the arrays format is more efficient, but hard to maintain
+        if the columns aren't stored as well ... change this to also store columns!!!
+
+        Parameters
+        ----------
+        sources : List of source
+
+        """
+        sources = sources or list(range(len(self.table)))
+        cols = cols or self.table.colnames
+
+        if format == 'arrays':
+            data = []
+            data.append([42, 43])
+            data.append([100, 102])
+            columns = ['name', 'ra']
+            return dict(columns=columns, data=data)
+        elif format == 'objects':
+            data = []
+            # TODO: implement iterating over source catalog!!
+            for source in sources:
+                source = self[source]
+                d = source.to_json(cols=cols)
+                data.append(d)
+
         return data
