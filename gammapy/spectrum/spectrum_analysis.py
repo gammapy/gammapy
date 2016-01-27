@@ -87,7 +87,7 @@ class SpectrumAnalysis(object):
             obs = np.loadtxt(str(obs), dtype=np.int)
 
         observations = []
-        for i, val in enumerate(obs):
+        for i, val in enumerate(np.atleast_1d(obs)):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
                                            bkg_method, ebounds, exclusion)
@@ -626,6 +626,7 @@ class SpectrumFit(object):
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` from config file"""
         outdir = make_path(config['general']['outdir'])
+        # TODO: this is not a good solution! an obs table should be used
         return cls.from_dir(outdir)
 
     @classmethod
@@ -856,5 +857,6 @@ def run_spectral_fit_using_config(config):
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
         fit.info()
         fit.run(method=method)
+        log.info("\n\n*** Fit Result ***\n\n{}\n".format(fit.result.to_yaml()))
         fit.result.write(str(outdir / 'fit_result.yaml'))
         return fit
