@@ -142,7 +142,7 @@ class SED(list):
         @todo: Possibly pass plotting parameters along here by
         appending them to the ecpl_params dictionary
         -> I don't think this works at the moment!!!"""
-        from atpy import Table
+        from astropy.table import Table,Column
         # Get the catalog from file and initialize some things
         self.catalog_format = catalog_format
         self.catalog_name = catalog_name
