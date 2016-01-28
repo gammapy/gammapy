@@ -59,7 +59,7 @@ class AnimMaker:
 			self.curr_frame = (self.curr_frame + 1)%len(self.imlist)
 			self.im.set_array(self.imlist[self.curr_frame])
 
-		self.ani = animation.FuncAnimation(self.fig, updatefig, interval=duration, blit=False	)
+		self.ani = animation.FuncAnimation(self.fig, updatefig, interval=duration, blit=False)
 
 	def show_anim(self):
 		"""
@@ -67,7 +67,7 @@ class AnimMaker:
 		"""
 		plt.show()
 
-	def write_anim(self, fname, enc='mencoder'):
+	def write_anim(self, fname, enc='imagemagick'):
 		"""
 		Write the image list to file 
 
