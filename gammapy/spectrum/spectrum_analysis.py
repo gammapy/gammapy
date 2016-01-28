@@ -312,7 +312,7 @@ class SpectrumAnalysis(object):
         return idx[0]
 
     @classmethod
-    def call_grouping(self,Observation_grouped_file, ebounds):
+    def call_grouping(self,Observation_grouped_file, outdir):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
         """
         alt = Angle([0, 30, 60, 90], 'deg')
@@ -357,83 +357,13 @@ class SpectrumAnalysis(object):
                 ind=np.where(Obsnumber==obs)
                 Observation_grouped_list.append(self._observations[ind])
             #Appelle de la fonction grouping pour la bande en question avec en argument le tableau d objet SpectrumObservation a grouper
-            pha, bkg, arf, rmf=self.apply_grouping(Observation_grouped_list)
+            #pha, bkg, arf, rmf=self.apply_grouping(Observation_grouped_list)
             #est-ce qu'on defini un autre constructeur qui orend que numero de band, pha, bkg arf et rmf ou on redefini celui existant pour qu il puisse etre defini avec pha, bkg arf et rmf et tant pis si y a des truc inuutils?
-            ObsBand=SpectrumObservation
-            ObsBand=write_ogip(pha, bkg, arf, rmf, outdir)
-    @classmethod
-    def apply_grouping(self, spectrum_observation_list, ebounds, phafile=None, bkgfile=None, rmffile=None, arffile=None,
-                   outdir=None, clobber=True):
-
-        """Method that stack the ON, OFF, arf and RMF for an observation group
-        
-        Parameters
-        ----------
-        spectrum_observation_list : list of `~gammapy.spectrum.SpectrumObservation`
-                                 contain the list of the observations to group together
-        ebounds : `~gammapy.utils.energy.EnergyBounds`
-                Reconstructed energy binning definition
-        
-        
-        """
-        #Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
-        for (n,obs) in enumerate(spectrum_observation_list):
-            on_vector=obs.make_on_vector().counts
-            off_vector=obs.make_off_vector().counts
-            OFF=np.sum(off_vector)
-            #For the moment alpha for one band independent of the energy, weighted by the total OFF events
-            backscal=obs.make_off_vector().backscal
-            livetime=obs.make_off_vector().livetime
-            arf_vector=obs.make_arf().effective_area
-            rmf_matrix=obs.make_rmf().pdf_matrix
-            #Find a better way to do this since I initialize for the first SpectrumObservation of the band (n==0) and I sum for the other observations... I think there are a way to combine the initialisation and sum
-            if(n==0):
-                #Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
-                energy_hi=obs.make_arf().energy_hi   
-                energy_lo=obs.make_arf().energy_lo
-                ONband = on_vector
-                OFFband = off_vector
-                OFFtotband = OFF
-                backscalband = backscal*OFF
-                #For a dependent energy backscale
-                #backscalband=backscal*off_vector
-                livetimeband = livetime
-                arfband = arf_vector*livetime
-                #For the first observation to group: the rmftab dimension is initialized to dim(Etrue,Ereco)
-                dim_Etrue = np.shape(rmf_matrix)[0]
-                dim_Ereco = np.shape(rmf_matrix)[1]
-                rmfband=np.zeros((dim_Etrue,dim_Ereco))
-                rmfmean=np.zeros((dim_Etrue,dim_Ereco))
-                for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:]= rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
-            else:
-                ONband += on_vector
-                OFFband += off_vector
-                OFFtotband += OFF
-                backscalband += backscal*OFF
-                #For a dependent energy backscale
-                #backscalband=backscal*off_vector
-                livetimeband += livetime
-                arfband += arf_vector*livetime
-                #rmf et dimEtrue already defined in the if(n==0) for the first observation
-                for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:] += rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
-
-        #Mean backscale of the band
-        backscalmean = backscalband /OFFtotband
-        #backscalmean = backscalband / OFFband
-        OFFband.backscale=backscalmean 
-        arfmean = arfband/livetimeband
-        for ind_Etrue in range(dim_Etrue):
-            rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
-
-
-        pha=CountsSpectrum(ONband, ebounds, livetimeband)
-        bkg=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
-        arf=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
-        rmf=EnergyDispersion(rmfmean, e_true, ebounds)
-        return (pha,bkg,arf, rmf)
-        
+            ObsBand=SpectrumObservation(nband, self.store, self.on_region,
+                                           self.bkg_method, self.ebounds, self.exclusion)
+            ObsBand.apply_grouping(Observation_grouped_list)
+            
+    
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
@@ -723,6 +653,77 @@ class SpectrumObservation(object):
         ax.set_xlim(limits[0])
         ax.set_ylim(limits[1])
 
+    
+    def apply_grouping(self, spectrum_observation_list, outdir=None):
+
+        """Method that stack the ON, OFF, arf and RMF for an observation group
+        
+        Parameters
+        ----------
+        spectrum_observation_list : list of `~gammapy.spectrum.SpectrumObservation`
+                                 contain the list of the observations to group together
+        outdir : None
+            directory to write the band ogip files to
+        
+        """
+        #Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
+        for (n,obs) in enumerate(spectrum_observation_list):
+            on_vector=obs.make_on_vector().counts
+            off_vector=obs.make_off_vector().counts
+            OFF=np.sum(off_vector)
+            #For the moment alpha for one band independent of the energy, weighted by the total OFF events
+            backscal=obs.make_off_vector().backscal
+            livetime=obs.make_off_vector().livetime
+            arf_vector=obs.make_arf().effective_area
+            rmf_matrix=obs.make_rmf().pdf_matrix
+            #Find a better way to do this since I initialize for the first SpectrumObservation of the band (n==0) and I sum for the other observations... I think there are a way to combine the initialisation and sum
+            if(n==0):
+                #Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
+                energy_hi=obs.make_arf().energy_hi   
+                energy_lo=obs.make_arf().energy_lo
+                ONband = on_vector
+                OFFband = off_vector
+                OFFtotband = OFF
+                backscalband = backscal*OFF
+                #For a dependent energy backscale
+                #backscalband=backscal*off_vector
+                livetimeband = livetime
+                arfband = arf_vector*livetime
+                #For the first observation to group: the rmftab dimension is initialized to dim(Etrue,Ereco)
+                dim_Etrue = np.shape(rmf_matrix)[0]
+                dim_Ereco = np.shape(rmf_matrix)[1]
+                rmfband=np.zeros((dim_Etrue,dim_Ereco))
+                rmfmean=np.zeros((dim_Etrue,dim_Ereco))
+                for ind_Etrue in range(dim_Etrue):
+                    rmfband[ind_Etrue,:]= rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+            else:
+                ONband += on_vector
+                OFFband += off_vector
+                OFFtotband += OFF
+                backscalband += backscal*OFF
+                #For a dependent energy backscale
+                #backscalband=backscal*off_vector
+                livetimeband += livetime
+                arfband += arf_vector*livetime
+                #rmf et dimEtrue already defined in the if(n==0) for the first observation
+                for ind_Etrue in range(dim_Etrue):
+                    rmfband[ind_Etrue,:] += rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+
+        #Mean backscale of the band
+        backscalmean = backscalband /OFFtotband
+        #backscalmean = backscalband / OFFband
+        OFFband.backscale=backscalmean 
+        arfmean = arfband/livetimeband
+        for ind_Etrue in range(dim_Etrue):
+            rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
+
+
+        self._on=CountsSpectrum(ONband, ebounds, livetimeband)
+        self._off=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
+        self._aeff=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
+        self._edisp=EnergyDispersion(rmfmean, e_true, ebounds)
+        self.write_ogip_data(outdir=outdir)
+        
 
 class SpectrumFit(object):
     """
