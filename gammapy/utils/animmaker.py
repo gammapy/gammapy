@@ -44,6 +44,8 @@ class AnimMaker:
 	imlist : tuple of ndarrays 
 		Input image NumPy ndarrays in the order in which they
 		have to be put in the output animation.
+	duration : float, optional
+		Time (ms) between consecutive animation frames
 	"""
 
 	def __init__(self, imlist, duration=200):
@@ -57,7 +59,7 @@ class AnimMaker:
 			self.curr_frame = (self.curr_frame + 1)%len(self.imlist)
 			self.im.set_array(self.imlist[self.curr_frame])
 
-		self.ani = animation.FuncAnimation(self.fig, updatefig, interval=duration, blit=True)
+		self.ani = animation.FuncAnimation(self.fig, updatefig, interval=duration, blit=False	)
 
 	def show_anim(self):
 		"""
@@ -74,7 +76,7 @@ class AnimMaker:
 		
 		fname : string
 			Output file name
-		duration : float, optional
-			Time (ms) between consecutive animation frames
+		enc : string, optional
+			Name of the encoder to use while writing the output
 		"""
 		self.ani.save(fname, writer=enc)
