@@ -362,7 +362,7 @@ class SpectrumAnalysis(object):
             ObsBand=SpectrumObservation(nband, self.store, self.on_region,
                                            self.bkg_method, self.ebounds, self.exclusion)
             ObsBand.apply_grouping(Observation_grouped_list)
-            
+            ObsBand.write_ogip_data(outdir=outdir)
     
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
@@ -654,7 +654,7 @@ class SpectrumObservation(object):
         ax.set_ylim(limits[1])
 
     
-    def apply_grouping(self, spectrum_observation_list, outdir=None):
+    def apply_grouping(self, spectrum_observation_list):
 
         """Method that stack the ON, OFF, arf and RMF for an observation group
         
@@ -662,8 +662,6 @@ class SpectrumObservation(object):
         ----------
         spectrum_observation_list : list of `~gammapy.spectrum.SpectrumObservation`
                                  contain the list of the observations to group together
-        outdir : None
-            directory to write the band ogip files to
         
         """
         #Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
@@ -722,7 +720,7 @@ class SpectrumObservation(object):
         self._off=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
         self._aeff=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
         self._edisp=EnergyDispersion(rmfmean, e_true, ebounds)
-        self.write_ogip_data(outdir=outdir)
+        
         
 
 class SpectrumFit(object):
