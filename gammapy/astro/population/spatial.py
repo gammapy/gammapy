@@ -490,7 +490,7 @@ class FaucherSpiral(LogSpiral):
         """
         random_state = get_random_state(random_state)
 
-        N = random_state.random_integers(0, 3, radius.size)  # Choose Spiralarm
+        N = random_state.randint(0, 4, radius.size)  # Choose Spiralarm
         theta = self.k[N] * log(radius / self.r_0[N]) + self.theta_0[N]  # Compute angle
         spiralarm = self.spiralarms[N]  # List that contains in wich spiralarm a postion lies
 
