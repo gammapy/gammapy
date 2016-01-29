@@ -809,8 +809,22 @@ class SpectrumFit(object):
         datastack.covar()
         covar = datastack.get_covar_results()
         efilter = datastack.get_filter()
+
+        # First go on calculation flux points following
+        # http://cxc.harvard.edu/sherpa/faq/phot_plot.html
+        xx = datastack.get_fit_plot().dataplot.x
+        dd = datastack.get_fit_plot().dataplot.y
+        ee = datastack.get_fit_plot().dataplot.yerr
+        mm = datastack.get_fit_plot().modelplot.y
+        src = datastack.get_source()(xx)
+        points = dd / mm * src
+        errors = ee / mm * src
+        flux_graph = dict(energy=xx, flux=points, flux_err_hi=errors,
+                          flux_err_lo=errors)
+
         from gammapy.spectrum.results import SpectrumFitResult
-        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model)
+        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model,
+                                                    flux_graph)
         ds.clear_stack()
         ds.clear_models()
 
@@ -859,4 +873,7 @@ def run_spectral_fit_using_config(config):
         fit.run(method=method)
         log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
         fit.result.write(str(outdir / 'fit_result.yaml'))
+        from IPython import embed; embed()
         return fit
+
+

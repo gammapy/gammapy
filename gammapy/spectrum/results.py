@@ -78,8 +78,11 @@ class SpectrumFitResult(object):
                    flux_points=flux_points)
 
     @classmethod
-    def from_sherpa(cls, covar, filter, model):
-        """Create SpectrumFitResult from sherpa objects"""
+    def from_sherpa(cls, covar, filter, model, flux_graph = None):
+        """Create SpectrumFitResult from sherpa objects
+
+        TODO: Should this be a function?
+        """
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
         energy_range = EnergyBounds((el, eh), 'keV')
         if model.name.split('.')[0] == 'powlaw1d':
@@ -89,10 +92,13 @@ class SpectrumFitResult(object):
         parameters = Bunch()
         parameter_errors = Bunch()
 
+        # Get thawed parameters from covar object (with errors)
         # Todo: Support assymetric errors
+        thawed_pars = list()
         for pname, pval, perr in zip(covar.parnames, covar.parvals,
                                      covar.parmaxes):
             pname = pname.split('.')[-1]
+            thawed_pars.append(pname)
             if pname == 'gamma':
                 name = 'Gamma'
                 unit = Unit('')
@@ -104,14 +110,34 @@ class SpectrumFitResult(object):
             parameters[name] = pval * unit
             parameter_errors[name] = perr * unit
 
+        # Get fixed parameters from model (not stored in covar)
+        for par in model.pars:
+            if par.name in thawed_pars:
+                continue
+            if par.name == 'ref':
+                name = 'Reference'
+                unit = Unit('keV')
+            parameters[name] = par.val * unit
+            parameter_errors[name] = 0 * unit
+
         fluxes = Bunch()
         fluxes['1TeV'] = model(1e6) * Unit('cm-2 s-1')
         flux_errors = Bunch()
         flux_errors['1TeV'] = 0 * Unit('cm-2 s-1')
 
+        flux_points = Table(data=flux_graph, masked=True)
+        flux_points['energy'].unit = 'keV'
+        # Fill empty error columns to be consistent
+        val = np.zeros(shape=flux_points['energy'].shape)
+        flux_points['energy_err_hi'] = Column(data=val, unit='keV')
+        flux_points['energy_err_lo'] = Column(data=val, unit='keV')
+        flux_points['flux'].unit = 'cm-2 s-1 keV-1'
+        flux_points['flux_err_hi'].unit = 'cm-2 s-1 keV-1'
+        flux_points['flux_err_lo'].unit = 'cm-2 s-1 keV-1'
+
         return cls(energy_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
-                   spectral_model=spectral_model,
+                   spectral_model=spectral_model, flux_points=flux_points,
                    fluxes=fluxes, flux_errors=flux_errors)
 
     def to_yaml(self):
