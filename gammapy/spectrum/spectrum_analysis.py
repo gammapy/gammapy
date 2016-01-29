@@ -8,6 +8,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
 
+from gammapy.extern.pathlib import Path
 from . import CountsSpectrum
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
@@ -532,8 +533,8 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True)
+        outdir = Path.cwd() if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
 
         if phafile is None:
             phafile = "pha_run{}.pha".format(self.obs)
@@ -627,7 +628,7 @@ class SpectrumFit(object):
         """Create `~gammapy.spectrum.SpectrumFit` from config file"""
         outdir = make_path(config['general']['outdir'])
         # TODO: this is not a good solution! an obs table should be used
-        return cls.from_dir(outdir)
+        return cls.from_dir(outdir/'ogip_data')
 
     @classmethod
     def from_dir(cls, dir):
@@ -861,7 +862,7 @@ def run_spectral_fit_using_config(config):
 
     if config['general']['create_ogip']:
         analysis = SpectrumAnalysis.from_config(config)
-        analysis.write_ogip_data(str(outdir))
+        analysis.write_ogip_data(str(outdir / 'ogip_data'))
 
     method = config['general']['run_fit']
     if method is not False:

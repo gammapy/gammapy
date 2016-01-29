@@ -154,7 +154,17 @@ class SpectrumFitResult(object):
                                           error=err.value,
                                           unit='{}'.format(par.unit))
         val['spectral_model'] = self.spectral_model
-        return yaml.safe_dump(val, default_flow_style=False)
+        val['flux_points'] = dict()
+
+        if self.flux_points is not None:
+            fp = self.flux_points
+            for col in fp.columns:
+                val['flux_points'][col] = [float(_) for _ in fp[col]]
+            val['flux_points']['energy_unit'] = '{}'.format(fp['energy'].unit)
+            val['flux_points']['flux_unit'] = '{}'.format(fp['flux'].unit)
+
+        rtval = yaml.safe_dump(val, default_flow_style=False)
+        return rtval
 
     def write(self, filename):
         """Write YAML file
@@ -178,8 +188,23 @@ class SpectrumFitResult(object):
             parameter_errors[par] = pars[par]['error'] * Unit(pars[par]['unit'])
         spectral_model = val['spectral_model']
 
+        try:
+            fp = val['flux_points']
+        except KeyError:
+            flux_points = None
+        else:
+            e_unit = Unit(fp.pop('energy_unit'))
+            f_unit = Unit(fp.pop('flux_unit'))
+            flux_points = Table(val['flux_points'])
+            flux_points['energy'].unit = e_unit
+            flux_points['energy_err_hi'].unit = e_unit
+            flux_points['energy_err_lo'].unit = e_unit
+            flux_points['flux'].unit = f_unit
+            flux_points['flux_err_hi'].unit = f_unit
+            flux_points['flux_err_lo'].unit = f_unit
+
         return cls(energy_range=energy_range, parameters=parameters,
-                   parameter_errors=parameter_errors,
+                   parameter_errors=parameter_errors, flux_points=flux_points,
                    spectral_model=spectral_model)
 
     @classmethod
