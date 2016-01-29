@@ -873,7 +873,6 @@ def run_spectral_fit_using_config(config):
         fit.run(method=method)
         log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
         fit.result.write(str(outdir / 'fit_result.yaml'))
-        from IPython import embed; embed()
         return fit
 
 
