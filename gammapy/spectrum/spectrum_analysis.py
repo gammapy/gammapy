@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+#from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
 import numpy as np
+from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
@@ -14,6 +15,7 @@ from ..data import DataStore
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
+from ..data import ObservationGroupAxis, ObservationGroups
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
@@ -101,7 +103,6 @@ class SpectrumAnalysis(object):
                 break
 
         self._observations = np.array(observations)
-        import IPython; IPython.embed()
         if len(self.observations) == 0:
             raise ValueError("No valid observations found")
         if bkg_method['type'] == 'reflected':
@@ -312,56 +313,38 @@ class SpectrumAnalysis(object):
         return idx[0]
 
     @classmethod
-    def call_grouping(self,Observation_grouped_file, outdir):
+    def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40, ZenRange=[0., 70.], NZenbin=30, outdir=None):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
-        """
-        alt = Angle([0, 30, 60, 90], 'deg')
-        az = Angle([-90, 90, 270], 'deg')
-        ntels = np.array([3, 4])
-        list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
-                               ObservationGroupAxis('AZ', az, 'bin_edges'),
-                               ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
+        [Offmin, Offmax] = OffsetRange
+        [Effmin, Effmax] = EffRange
+        [Zenmin, Zenmax] = ZenRange
+        CosZenmin = np.cos(Zenmax * math.pi / 180.)
+        CosZenmax = np.cos(Zenmin * math.pi / 180.)
+        NCosZenbin = NZenbin
+        Offbin = (Offmax - Offmin) / NOffbin
+        Effbin = (Effmax - Effmin) / NEffbin
+        CosZenbin = (CosZenmax - CosZenmin) / NCosZenbin
+        Offtab = Angle(np.arange(Offmin, Offmax, Offbin), "deg")
+        Efftab = Quantity(np.arange(Effmin, Effmax, Effbin),"")
+        CosZentab = Angle(np.arange(CosZenmin, CosZenmax, CosZenbin), "")
+        list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab/100., 'bin_edges'),
+                       ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges')]
         obs_groups = ObservationGroups(list_obs_group_axis)
+        Observation_Table=self.data_store.obs_table
+        obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
+        Nband=obs_groups.n_groups
+        obs_id_tot=[l.obs for l in self._observations]
+        for nband in range(Nband):
+            spectrum_observation_band_list=[]
+            tablegroup=obs_groups.get_group_of_observations(obs_table_grouped, nband)
+            obsvervations_id=tablegroup["OBS_ID"]
+            for obs in obsvervations_id:
+                ind=np.where(obs_id_tot==obs)
+                spectrum_observation_band_list.append(self._observations[ind])
 
-        Print the observation group table (group definitions):
-        
-        >>> print(obs_groups.obs_groups_table)
-        
-        Print the observation group axes:
-        
-        >>> print(obs_groups.info)
-        
-        Group the observations of an observation list and print them:
-        
-        >>> obs_table_grouped = obs_groups.group_observation_table(obs_table)
-        >>> print(obs_table_grouped)
-        
-        Get the observations of a particular group and print them:
-    
-        >>> obs_table_group8 = obs_groups.get_group_of_observations(obs_table_grouped, 8)
-        >>> print(obs_table_group8)
-        """
-        """
-        Reflechir a ce qu on met en entree pour le grouing deja le tableau froupe ou les axes pour groupe?
-        """
-        #TODO=add in the header of the grouped_observation_table the number of band in order to loop over it in the function
-        Observation_grouped_table= Table.read(Observation_grouped_file)
-        nband=Observation_grouped_table.meta["NGROUP"]
-        Observation_grouped_list=[]
-        for n in nband:
-            i=np.where(Observation_grouped_table["NGROUP"]==nband)
-            ObsTableList=Observation_grouped_table["OBS_ID"][i]
-            Obsnumber=[l.obs for l in self._observations]
-            #listobservation va contenir les objets SpectrumObservation de tous les runs qu on va grouper ensemble
-            for obs in observationlist:
-                ind=np.where(Obsnumber==obs)
-                Observation_grouped_list.append(self._observations[ind])
-            #Appelle de la fonction grouping pour la bande en question avec en argument le tableau d objet SpectrumObservation a grouper
-            #pha, bkg, arf, rmf=self.apply_grouping(Observation_grouped_list)
-            #est-ce qu'on defini un autre constructeur qui orend que numero de band, pha, bkg arf et rmf ou on redefini celui existant pour qu il puisse etre defini avec pha, bkg arf et rmf et tant pis si y a des truc inuutils?
             ObsBand=SpectrumObservation(nband, self.store, self.on_region,
                                            self.bkg_method, self.ebounds, self.exclusion)
-            ObsBand.apply_grouping(Observation_grouped_list)
+            ObsBand.apply_grouping(spectrum_observation_band_list)
             ObsBand.write_ogip_data(outdir=outdir)
     
 class SpectrumObservation(object):
