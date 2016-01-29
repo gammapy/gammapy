@@ -4,6 +4,7 @@
 import logging
 
 import numpy as np
+from astropy.table import Column
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
@@ -328,18 +329,20 @@ class SpectrumAnalysis(object):
         Efftab = Quantity(np.arange(Effmin, Effmax, Effbin),"")
         CosZentab = Angle(np.arange(CosZenmin, CosZenmax, CosZenbin), "")
         list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab/100., 'bin_edges'),
-                       ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges')]
+                               ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
+                               ObservationGroupAxis('Offset', Offtab, 'bin_edges') ]
         obs_groups = ObservationGroups(list_obs_group_axis)
         Observation_Table=self.data_store.obs_table
+        Offcol=Column(self.offset(), name='Offset', unit="deg")
+        Observation_Table.add_column(OffCol)
         obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
         Nband=obs_groups.n_groups
-        obs_id_tot=[l.obs for l in self._observations]
         for nband in range(Nband):
             spectrum_observation_band_list=[]
             tablegroup=obs_groups.get_group_of_observations(obs_table_grouped, nband)
             obsvervations_id=tablegroup["OBS_ID"]
             for obs in obsvervations_id:
-                ind=np.where(obs_id_tot==obs)
+                ind=np.where(self.obs_ids()==obs)
                 spectrum_observation_band_list.append(self._observations[ind])
 
             ObsBand=SpectrumObservation(nband, self.store, self.on_region,
