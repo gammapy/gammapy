@@ -4,6 +4,7 @@
 import logging
 
 import numpy as np
+import math
 from astropy.table import Column
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
@@ -321,19 +322,19 @@ class SpectrumAnalysis(object):
         [Zenmin, Zenmax] = ZenRange
         CosZenmin = np.cos(Zenmax * math.pi / 180.)
         CosZenmax = np.cos(Zenmin * math.pi / 180.)
-        NCosZenbin = NZenbin
-        Offbin = (Offmax - Offmin) / NOffbin
-        Effbin = (Effmax - Effmin) / NEffbin
-        CosZenbin = (CosZenmax - CosZenmin) / NCosZenbin
-        Offtab = Angle(np.arange(Offmin, Offmax, Offbin), "deg")
-        Efftab = Quantity(np.arange(Effmin, Effmax, Effbin),"")
-        CosZentab = Angle(np.arange(CosZenmin, CosZenmax, CosZenbin), "")
+        #NCosZenbin = NZenbin
+        #Offbin = (Offmax - Offmin) / NOffbin
+        #Effbin = (Effmax - Effmin) / NEffbin
+        #CosZenbin = (CosZenmax - CosZenmin) / NCosZenbin
+        Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin), "deg")
+        Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin),"")
+        CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin), "")
         list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab/100., 'bin_edges'),
                                ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
                                ObservationGroupAxis('Offset', Offtab, 'bin_edges') ]
         obs_groups = ObservationGroups(list_obs_group_axis)
         Observation_Table=self.data_store.obs_table
-        Offcol=Column(self.offset(), name='Offset', unit="deg")
+        Offcol=Column(self.offset, name='Offset', unit="deg")
         Observation_Table.add_column(OffCol)
         obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
         Nband=obs_groups.n_groups
