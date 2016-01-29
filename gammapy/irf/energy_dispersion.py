@@ -311,6 +311,7 @@ class EnergyDispersion(object):
             subsets = 1
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
+            #add 1 to borders for correct behaviour of np.split
             groups = np.asarray(np.split(pos, borders + 1))
             n_grp_temp = groups.shape[0] if groups.size > 0 else 1
             n_chan_temp = np.asarray([val.size for val in groups])
