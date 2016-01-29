@@ -21,8 +21,12 @@ from ...spectrum import (
     SpectrumFit,
 )
 
-
-
+try:
+    from sherpa.stats import WStat
+except ImportError:
+    HAS_WSTAT = False
+else:
+    HAS_WSTAT = True
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -55,9 +59,8 @@ def test_spectrum_analysis(tmpdir):
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
+@pytest.mark.skipif(not HAS_WSTAT, reason="Wstat only in sherpa head version")
 @requires_dependency('sherpa')
-# WStat only in head version of sherpa at the moment
-@requires_dependency('sherpa.stats.Wstat')
 @requires_data('gammapy-extra')
 def test_spectral_fit(tmpdir):
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23592.pha")
@@ -76,8 +79,7 @@ def test_spectral_fit(tmpdir):
 @requires_dependency('yaml')
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
-# WStat only in head version of sherpa at the moment
-@requires_dependency('sherpa.stats.Wstat')
+@pytest.mark.skipif(not HAS_WSTAT, reason="Wstat only in sherpa head version")
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
     configfile = gammapy_extra.filename(
