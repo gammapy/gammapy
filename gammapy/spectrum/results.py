@@ -46,13 +46,13 @@ class SpectrumFitResult(object):
             pname = par['name']
             if pname == 'Index':
                 unit = Unit('')
-                name = 'Gamma'
+                name = 'index'
             elif pname == 'Norm':
                 unit = val['norm_scale'] * Unit('cm-2 s-1 TeV-1')
-                name = 'Amplitude'
+                name = 'norm'
             elif pname == 'E0':
                 unit = Unit('TeV')
-                name = 'Reference'
+                name = 'reference'
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
             parameters[name] = par['value'] * unit
@@ -100,11 +100,11 @@ class SpectrumFitResult(object):
             pname = pname.split('.')[-1]
             thawed_pars.append(pname)
             if pname == 'gamma':
-                name = 'Gamma'
+                name = 'index'
                 unit = Unit('')
             elif pname == 'ampl':
                 unit = Unit('cm-2 s-1 keV-1')
-                name = 'Amplitude'
+                name = 'norm'
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
             parameters[name] = pval * unit
@@ -115,7 +115,7 @@ class SpectrumFitResult(object):
             if par.name in thawed_pars:
                 continue
             if par.name == 'ref':
-                name = 'Reference'
+                name = 'reference'
                 unit = Unit('keV')
             parameters[name] = par.val * unit
             parameter_errors[name] = 0 * unit
@@ -207,9 +207,9 @@ class SpectrumFitResult(object):
 
         if self.spectral_model == 'PowerLaw':
             model = m.PowLaw1D('powlaw1d.' + name)
-            model.gamma = self.parameters.Gamma.value
-            model.ref = self.parameters.Reference.to('keV').value
-            model.ampl = self.parameters.Amplitude.to('cm-2 s-1 keV-1').value
+            model.gamma = self.parameters.index.value
+            model.ref = self.parameters.reference.to('keV').value
+            model.ampl = self.parameters.norm.to('cm-2 s-1 keV-1').value
         else:
             raise NotImplementedError()
 
@@ -255,10 +255,10 @@ class SpectrumFitResult(object):
         # Todo: Find better solution
         if butterfly:
             e = x.to('TeV').value
-            e0 = self.parameters.Reference.to('TeV').value
-            f0 = self.parameters.Amplitude.to('cm-2 s-1 TeV-1').value
-            df0 = self.parameter_errors.Amplitude.to('cm-2 s-1 TeV-1').value
-            dg = self.parameter_errors.Gamma.value
+            e0 = self.parameters.reference.to('TeV').value
+            f0 = self.parameters.norm.to('cm-2 s-1 TeV-1').value
+            df0 = self.parameter_errors.norm.to('cm-2 s-1 TeV-1').value
+            dg = self.parameter_errors.index.value
             cov = 0
             e = df_over_f(e, e0, f0, df0, dg, cov) * y
         else:
@@ -311,7 +311,7 @@ class SpectrumFitResult(object):
         return ax
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      e_power = 0):
+                      e_power = 0, fit_kwargs=None, point_kwargs=None):
         """Plot full spectrum including flux points and residuals"""
         from matplotlib import gridspec
         import matplotlib.pyplot as plt
@@ -328,19 +328,21 @@ class SpectrumFitResult(object):
         ax0.set_xscale('log')
         ax1.set_xscale('log')
 
+        if fit_kwargs is None:
+            fit_kwargs = dict(label='Best Fit {}'.format(self.spectral_model),
+                              barsabove=True, capsize=0, alpha=0.4,
+                              color='cornflowerblue', ecolor='cornflowerblue')
+        if point_kwargs is None:
+            point_kwargs = dict(color='navy')
+
         self.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
-                               e_power = e_power,
-                               label='Best Fit {}'.format(self.spectral_model),
-                               barsabove=True, capsize=0, color='cornflowerblue',
-                               ecolor='cornflowerblue', alpha=0.4, ax=ax0)
-
+                               e_power=e_power, ax=ax0, **fit_kwargs)
         self.plot_flux_points(energy_unit=energy_unit, flux_unit=flux_unit,
-                              e_power=e_power,
-                              ax=ax0, color='navy')
-        self.plot_residuals(energy_unit=energy_unit, ax=ax1, color='navy')
+                              e_power=e_power, ax=ax0, **point_kwargs)
+        self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
-        plt.xlim(self.energy_range[0].to(energy_unit).value*0.9,
-                 self.energy_range[1].to(energy_unit).value*1.1)
+        plt.xlim(self.energy_range[0].to(energy_unit).value * 0.9,
+                 self.energy_range[1].to(energy_unit).value * 1.1)
 
         ax0.legend(numpoints=1)
         return gs
