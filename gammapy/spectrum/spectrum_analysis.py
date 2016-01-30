@@ -12,6 +12,8 @@ from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
 from astropy.table import Table
 from . import CountsSpectrum
+from ..irf.effective_area_table import EffectiveAreaTable
+from ..irf.energy_dispersion import EnergyDispersion 
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
 from ..image import ExclusionMask
@@ -110,7 +112,7 @@ class SpectrumAnalysis(object):
         if bkg_method['type'] == 'reflected':
             mask = self.filter_by_reflected_regions(bkg_method['n_min'])
             self._observations = self.observations[mask]
-
+        
     def copy(self, bkg_method=None):
         """Return copy of `~gammapy.spectrum.SpectrumAnalysis`
 
@@ -314,7 +316,7 @@ class SpectrumAnalysis(object):
         idx = np.nonzero(condition)
         return idx[0]
 
-    @classmethod
+    
     def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40, ZenRange=[0., 70.], NZenbin=30, outdir=None):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
         [Offmin, Offmax] = OffsetRange
@@ -322,10 +324,6 @@ class SpectrumAnalysis(object):
         [Zenmin, Zenmax] = ZenRange
         CosZenmin = np.cos(Zenmax * math.pi / 180.)
         CosZenmax = np.cos(Zenmin * math.pi / 180.)
-        #NCosZenbin = NZenbin
-        #Offbin = (Offmax - Offmin) / NOffbin
-        #Effbin = (Effmax - Effmin) / NEffbin
-        #CosZenbin = (CosZenmax - CosZenmin) / NCosZenbin
         Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin), "deg")
         Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin),"")
         CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin), "")
@@ -333,23 +331,27 @@ class SpectrumAnalysis(object):
                                ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
                                ObservationGroupAxis('Offset', Offtab, 'bin_edges') ]
         obs_groups = ObservationGroups(list_obs_group_axis)
-        Observation_Table=self.data_store.obs_table
-        Offcol=Column(self.offset, name='Offset', unit="deg")
-        Observation_Table.add_column(OffCol)
+        Observation_Table=self.store.obs_table
+        offset=[i.value for i in self.offset]
+        Offcol=Column(offset, name='Offset', unit="deg")
+        Observation_Table.add_column(Offcol)
         obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
         Nband=obs_groups.n_groups
         for nband in range(Nband):
-            spectrum_observation_band_list=[]
             tablegroup=obs_groups.get_group_of_observations(obs_table_grouped, nband)
-            obsvervations_id=tablegroup["OBS_ID"]
-            for obs in obsvervations_id:
-                ind=np.where(self.obs_ids()==obs)
-                spectrum_observation_band_list.append(self._observations[ind])
-
-            ObsBand=SpectrumObservation(nband, self.store, self.on_region,
-                                           self.bkg_method, self.ebounds, self.exclusion)
-            ObsBand.apply_grouping(spectrum_observation_band_list)
-            ObsBand.write_ogip_data(outdir=outdir)
+            if len(tablegroup)==0:
+                continue
+            else:
+                spectrum_observation_band_list=[]
+            
+                obsvervations_id=tablegroup["OBS_ID"]
+                for obs in obsvervations_id:
+                    ind=np.where(self.obs_ids==obs)
+                    spectrum_observation_band_list.append(self._observations[ind][0])
+                ObsBand=SpectrumObservation(nband, self.store, self.on_region,
+                                           self.bkg_method, self.ebounds, self.exclusion, True)
+                ObsBand.apply_grouping(spectrum_observation_band_list,self.ebounds)
+                ObsBand.write_ogip(outdir=outdir)
     
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
@@ -372,9 +374,10 @@ class SpectrumObservation(object):
         Exclusion mask
     """
 
-    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion):
+    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion, band = False):
         # Raises Error if obs is not available
-        store.filename(obs, 'events')
+        if band is False:
+            store.filename(obs, 'events')
         self.obs = obs
         self.store = store
         self.on_region = on_region
@@ -641,7 +644,7 @@ class SpectrumObservation(object):
         ax.set_ylim(limits[1])
 
     
-    def apply_grouping(self, spectrum_observation_list):
+    def apply_grouping(self, spectrum_observation_list, ebounds):
 
         """Method that stack the ON, OFF, arf and RMF for an observation group
         
@@ -652,20 +655,34 @@ class SpectrumObservation(object):
         
         """
         #Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
+        ONband = None
+        OFFband = None
+        OFFtotband = None
+        backscalband = None
+        livetimeband = None
+        arfband = None
+        rmfband= None
         for (n,obs) in enumerate(spectrum_observation_list):
-            on_vector=obs.make_on_vector().counts
-            off_vector=obs.make_off_vector().counts
+            obs._make_on()
+            obs.make_off_vector()
+            obs._make_aeff()
+            obs._make_edisp()
+            #import IPython; IPython.embed()
+            on_vector=obs._on.counts
+            off_vector=obs._off.counts
             OFF=np.sum(off_vector)
             #For the moment alpha for one band independent of the energy, weighted by the total OFF events
-            backscal=obs.make_off_vector().backscal
-            livetime=obs.make_off_vector().livetime
-            arf_vector=obs.make_arf().effective_area
-            rmf_matrix=obs.make_rmf().pdf_matrix
+            backscal=obs._off.backscal
+            livetime=obs._off.livetime
+            arf_vector=obs._aeff.effective_area
+            rmf_matrix=obs._edisp.pdf_matrix
             #Find a better way to do this since I initialize for the first SpectrumObservation of the band (n==0) and I sum for the other observations... I think there are a way to combine the initialisation and sum
             if(n==0):
                 #Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
-                energy_hi=obs.make_arf().energy_hi   
-                energy_lo=obs.make_arf().energy_lo
+                energy_hi=obs._aeff.energy_hi   
+                energy_lo=obs._aeff.energy_lo
+                #Ca c est tres sale car normalement les membres avec un _ on doit pas y acceder direct comme ca voir comment determiner etrue autrement
+                e_true=obs._edisp._e_true
                 ONband = on_vector
                 OFFband = off_vector
                 OFFtotband = OFF
@@ -697,7 +714,6 @@ class SpectrumObservation(object):
         #Mean backscale of the band
         backscalmean = backscalband /OFFtotband
         #backscalmean = backscalband / OFFband
-        OFFband.backscale=backscalmean 
         arfmean = arfband/livetimeband
         for ind_Etrue in range(dim_Etrue):
             rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
