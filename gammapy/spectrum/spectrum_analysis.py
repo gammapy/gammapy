@@ -337,6 +337,7 @@ class SpectrumAnalysis(object):
         Observation_Table.add_column(Offcol)
         obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
         Nband=obs_groups.n_groups
+        observation_band_list=[]
         for nband in range(Nband):
             tablegroup=obs_groups.get_group_of_observations(obs_table_grouped, nband)
             if len(tablegroup)==0:
@@ -351,7 +352,10 @@ class SpectrumAnalysis(object):
                 ObsBand=SpectrumObservation(nband, self.store, self.on_region,
                                            self.bkg_method, self.ebounds, self.exclusion, True)
                 ObsBand.apply_grouping(spectrum_observation_band_list,self.ebounds)
-                ObsBand.write_ogip(outdir=outdir)
+                observation_band_list.append(ObsBand)
+            
+        self._observations = np.array(observation_band_list)
+        #        ObsBand.write_ogip(outdir=outdir)
     
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
