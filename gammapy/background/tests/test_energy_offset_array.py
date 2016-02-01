@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from ..energy_offset_array import EnergyOffsetArray
-from ...data import DataStore, EventList
+from ...data import DataStore
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds
