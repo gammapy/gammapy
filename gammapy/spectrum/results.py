@@ -504,6 +504,33 @@ class SpectrumFitResult(object):
         return gs
 
 
+class SpectrumStats(object):
+    """Class summarizing basic spectral parameteres"""
+    def __init__(self, n_on):
+        self.n_on = n_on
+
+    @classmethod
+    def from_fitspectrum_json(cls, filename):
+        pass
+
+    @classmethod
+    def from_spectrum_observation(cls, obs):
+        n_on = obs.on_vector.total_counts
+        return cls(n_on)
+
+    def to_dict(self):
+        pass
+
+    def from_dict(self, val):
+        pass
+
+    def to_table(self):
+        """Create overview `~astropy.table.Table`"""
+        t = Table()
+        t['n_on'] = np.atleast_1d(self.n_on)
+        return t
+
+
 class SpectrumFitResultDict(dict):
     """Dict of several `~gammapy.spectrum.SpectrumFitResults`"""
 
