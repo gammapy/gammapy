@@ -4,9 +4,9 @@ import numpy as np
 from astropy.table import Table, Column, QTable
 from astropy.units import Unit
 
-from gammapy.extern.bunch import Bunch
-from gammapy.utils.energy import EnergyBounds
-from gammapy.utils.scripts import read_yaml
+from ..extern.bunch import Bunch
+from ..utils.energy import EnergyBounds
+from ..utils.scripts import read_yaml
 
 
 class SpectrumFitResult(object):
@@ -22,7 +22,7 @@ class SpectrumFitResult(object):
         Fitted parameters, for allowed names see :ref:`gadf:source-models`
     parameter_errors : dict
         Parameter errors, for allowed names see :ref:`gadf:source-models`
-    energy_range : `~gammapy.utils.energy.EnergyBounds
+    energy_range : `~gammapy.utils.energy.EnergyBounds`
         Energy range of the spectral fit
     fluxes : dict, optional
         Flux for the fitted model at a given energy
@@ -112,7 +112,7 @@ class SpectrumFitResult(object):
         """
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
         energy_range = EnergyBounds((el, eh), 'keV')
-        if model.name.split('.')[0] == 'powlaw1d':
+        if model.type == 'powlaw1d':
             spectral_model = 'PowerLaw'
         else:
             raise ValueError("Model not understood: {}".format(model.name))
@@ -167,9 +167,11 @@ class SpectrumFitResult(object):
                    spectral_model=spectral_model, flux_points=flux_points,
                    fluxes=fluxes, flux_errors=flux_errors)
 
-    def to_yaml(self):
-        """Export spectrum results to YAML dict"""
-        import yaml
+    def to_dict(self):
+        """Export spectrum results to dict
+
+        The output dict can be used for YAML or JSON serialisation.
+        """
         val = dict()
         val['energy_range'] = dict(min=self.energy_range[0].value,
                                    max=self.energy_range[1].value,
@@ -191,31 +193,35 @@ class SpectrumFitResult(object):
             val['flux_points']['energy_unit'] = '{}'.format(fp['energy'].unit)
             val['flux_points']['flux_unit'] = '{}'.format(fp['flux'].unit)
 
-        rtval = yaml.safe_dump(val, default_flow_style=False)
-        return rtval
 
-    def write(self, filename):
+        return val
+
+    def to_yaml(self, filename):
         """Write YAML file
 
-        TODO: Round float to a given precision
+        TODO: Round floats to a given precision
 
         Parameters
         ----------
         filename : str
             File to write
         """
-        val = self.to_yaml()
+        import yaml
+
+        d = self.to_dict()
+        val = yaml.safe_dump(d, default_flow_style=False)
+
         with open(str(filename), 'w') as outfile:
             outfile.write(val)
 
     @classmethod
-    def from_yaml(cls, val):
-        """Create `~gammapy.spectrum.results.SpectrumFitResult` from YAML dict
+    def from_dict(cls, val):
+        """Create `~gammapy.spectrum.results.SpectrumFitResult` from dict
 
         Parameters
         ----------
         val : dict
-            YAML dict to read
+            dict to read
         """
         erange = val['energy_range']
         energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
@@ -247,7 +253,7 @@ class SpectrumFitResult(object):
                    spectral_model=spectral_model)
 
     @classmethod
-    def read(cls, filename):
+    def from_yaml(cls, filename):
         """Create `~gammapy.spectrum.results.SpectrumResult` from YAML file
 
         Parameters
@@ -256,7 +262,7 @@ class SpectrumFitResult(object):
             File to write
         """
         val = read_yaml(filename)
-        return cls.from_yaml(val)
+        return cls.from_dict(val)
 
     def to_table(self):
         """Create overview `~astropy.table.Table`"""
@@ -315,8 +321,7 @@ class SpectrumFitResult(object):
         """
         import matplotlib.pyplot as plt
 
-        if 'fmt' not in kwargs:
-            kwargs.update(fmt='o')
+        kwargs.setdefault('fmt', 'o')
         ax = plt.gca() if ax is None else ax
         x = self.flux_points['energy'].quantity.to(energy_unit).value
         y = self.flux_points['flux'].quantity.to(flux_unit).value
@@ -425,8 +430,8 @@ class SpectrumFitResult(object):
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
-        if 'fmt' not in kwargs:
-            kwargs.update(fmt='o')
+
+        kwargs.setdefault('fmt', 'o')
 
         y, y_err = self.residuals()
         x = self.flux_points['energy'].quantity

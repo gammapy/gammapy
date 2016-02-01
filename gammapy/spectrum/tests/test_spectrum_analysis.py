@@ -7,8 +7,8 @@ from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
 
-from gammapy.spectrum.results import SpectrumFitResult
-from ...utils.testing import requires_dependency, requires_data
+from ...spectrum.results import SpectrumFitResult
+from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from ...region import SkyCircleRegion
 from ...datasets import gammapy_extra
 from ...utils.scripts import read_yaml
@@ -20,13 +20,6 @@ from ...spectrum import (
     run_spectral_fit_using_config,
     SpectrumFit,
 )
-
-try:
-    from sherpa.stats import WStat
-except ImportError:
-    HAS_WSTAT = False
-else:
-    HAS_WSTAT = True
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -59,7 +52,7 @@ def test_spectrum_analysis(tmpdir):
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif(not HAS_WSTAT, reason="Wstat only in sherpa head version")
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_fit(tmpdir):
@@ -79,7 +72,7 @@ def test_spectral_fit(tmpdir):
 @requires_dependency('yaml')
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
-@pytest.mark.skipif(not HAS_WSTAT, reason="Wstat only in sherpa head version")
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_data('gammapy-extra')
 def test_spectrum_analysis_from_configfile(tmpdir):
     configfile = gammapy_extra.filename(
@@ -89,14 +82,14 @@ def test_spectrum_analysis_from_configfile(tmpdir):
 
     fit = run_spectral_fit_using_config(config)
     tmpfile = tmpdir / 'result.yaml'
-    fit.result.write(str(tmpfile))
+    fit.result.to_yaml(str(tmpfile))
 
-    result = SpectrumFitResult.read(str(tmpfile))
-    reference = SpectrumFitResult.read(
+    result = SpectrumFitResult.from_yaml(str(tmpfile))
+    reference = SpectrumFitResult.from_yaml(
         gammapy_extra.filename('test_datasets/spectrum/fit_result.yaml'))
 
     # Todo Actually compare the two files. Not possible now due to float issues
-    assert_allclose(result.parameters.Gamma.value, reference.parameters.Gamma.value)
+    assert_allclose(result.parameters.index.value, reference.parameters.index.value)
 
     config['off_region']['type'] = 'ring'
     config['off_region']['inner_radius'] = '0.3 deg'

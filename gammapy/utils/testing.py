@@ -1,19 +1,24 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
+
 from astropy.tests.helper import pytest
-from astropy.utils.data import get_pkg_data_filename
+from astropy.utils import minversion
 from ..data import DataManager
 
 __all__ = [
     'requires_dependency',
     'requires_data',
+    'SHERPA_LT_4_8'
 ]
+
+# Todo : Change to 4_8 once there is a sherpa release
+SHERPA_LT_4_8 = not minversion('sherpa', '4.7+642')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
-
 
 def requires_dependency(name):
     """Decorator to declare required dependencies for tests.
@@ -94,6 +99,8 @@ def requires_data(name):
 
     reason = 'Missing data: {}'.format(name)
     return pytest.mark.skipif(skip_it, reason=reason)
+
+
 
 
 # https://pytest.org/latest/tmpdir.html#the-tmpdir-factory-fixture

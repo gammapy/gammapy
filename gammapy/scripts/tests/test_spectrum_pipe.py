@@ -5,19 +5,11 @@ from astropy.tests.helper import pytest
 from gammapy.datasets import gammapy_extra
 from gammapy.scripts import SpectrumPipe
 from gammapy.utils.scripts import read_yaml
-from gammapy.utils.testing import requires_dependency, requires_data
-
-try:
-    from sherpa.stats import WStat
-except ImportError:
-    HAS_WSTAT = False
-else:
-    HAS_WSTAT = True
-
+from gammapy.utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 
 @requires_dependency('scipy')
 @requires_dependency('sherpa')
-@pytest.mark.skipif(not HAS_WSTAT, reason="Wstat only in sherpa head version")
+@pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_data('gammapy-extra')
 def test_spectrum_pipe(tmpdir):
     configfile = gammapy_extra.filename('test_datasets/spectrum/spectrum_pipe_example.yaml')

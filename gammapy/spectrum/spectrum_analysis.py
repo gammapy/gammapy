@@ -8,8 +8,8 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
 
-from gammapy.extern.pathlib import Path
 from . import CountsSpectrum
+from ..extern.pathlib import Path
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
 from ..image import ExclusionMask
@@ -813,6 +813,7 @@ class SpectrumFit(object):
 
         # First go on calculation flux points following
         # http://cxc.harvard.edu/sherpa/faq/phot_plot.html
+        # This should be split out and improved
         xx = datastack.get_fit_plot().dataplot.x
         dd = datastack.get_fit_plot().dataplot.y
         ee = datastack.get_fit_plot().dataplot.yerr
@@ -873,7 +874,7 @@ def run_spectral_fit_using_config(config):
         fit.info()
         fit.run(method=method)
         log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
-        fit.result.write(str(outdir / 'fit_result.yaml'))
+        fit.result.to_yaml(str(outdir / 'fit_result.yaml'))
         return fit
 
 
