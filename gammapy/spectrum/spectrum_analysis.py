@@ -110,9 +110,10 @@ class SpectrumAnalysis(object):
         if len(self.observations) == 0:
             raise ValueError("No valid observations found")
         if bkg_method['type'] == 'reflected':
-            mask = self.filter_by_reflected_regions(bkg_method['n_min'])
+            mask, ibkg_obs = self.filter_by_reflected_regions(bkg_method['n_min'])
+            self._bkg_observations =self.observations[ibkg_obs]
             self._observations = self.observations[mask]
-        
+
     def copy(self, bkg_method=None):
         """Return copy of `~gammapy.spectrum.SpectrumAnalysis`
 
@@ -314,24 +315,31 @@ class SpectrumAnalysis(object):
 
         condition = np.array([o.backscal for o in self.off_vector]) >= n_min
         idx = np.nonzero(condition)
-        return idx[0]
+        idx1 = np.where(condition==False)
+        return idx[0], idx1[0]
 
     
-    def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40, ZenRange=[0., 70.], NZenbin=30, outdir=None):
+    def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40, ZenRange=[0., 70.], NZenbin=30):
         #Tab contiendrait les bandes et les observations a grouper pour chaque bande
         [Offmin, Offmax] = OffsetRange
         [Effmin, Effmax] = EffRange
         [Zenmin, Zenmax] = ZenRange
         CosZenmin = np.cos(Zenmax * math.pi / 180.)
         CosZenmax = np.cos(Zenmin * math.pi / 180.)
-        Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin), "deg")
-        Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin),"")
-        CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin), "")
+        Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin+1), "deg")
+        Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin+1),"")
+        CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin+1), "")
         list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab/100., 'bin_edges'),
                                ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
                                ObservationGroupAxis('Offset', Offtab, 'bin_edges') ]
         obs_groups = ObservationGroups(list_obs_group_axis)
         Observation_Table=self.store.obs_table
+        list_index_bkg_obs=[]
+        for obs in self._bkg_observations:
+            i=np.where(obs.obs==Observation_Table["OBS_ID"])
+            list_index_bkg_obs.append(i[0][0])
+        
+        Observation_Table.remove_rows(list_index_bkg_obs)
         offset=[i.value for i in self.offset]
         Offcol=Column(offset, name='Offset', unit="deg")
         Observation_Table.add_column(Offcol)
@@ -355,8 +363,7 @@ class SpectrumAnalysis(object):
                 observation_band_list.append(ObsBand)
             
         self._observations = np.array(observation_band_list)
-        #        ObsBand.write_ogip(outdir=outdir)
-    
+        #import IPython; IPython.embed()
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
@@ -721,13 +728,15 @@ class SpectrumObservation(object):
         arfmean = arfband/livetimeband
         for ind_Etrue in range(dim_Etrue):
             rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
-
-
+        rmfmean[np.isnan(rmfmean)]=0
+        if(self.obs==375):
+            print rmfmean
+            import IPython; IPython.embed()
         self._on=CountsSpectrum(ONband, ebounds, livetimeband)
         self._off=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
         self._aeff=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
         self._edisp=EnergyDispersion(rmfmean, e_true, ebounds)
-        
+        #import IPython; IPython.embed()
         
 
 class SpectrumFit(object):
