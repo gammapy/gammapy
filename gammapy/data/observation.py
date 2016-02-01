@@ -516,7 +516,7 @@ class ObservationGroups(object):
         for i_axis in np.arange(len(self.obs_group_axes)):
             n_groups *= self.obs_group_axes[i_axis].n_bins
 
-        if len(table) is not n_groups:
+        if len(table) != n_groups:
             raise ValueError("Invalid table length. Got {0}, expected {1}".format(
                 len(table), n_groups))
 
