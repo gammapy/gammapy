@@ -20,16 +20,18 @@ addons:
       - graphviz
       - texlive-latex-extra
       - dvipng
+      - gfortran
 
 env:
     global:
         - NUMPY_VERSION=1.10
         - ASTROPY_VERSION=1.1
-        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy'
+        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes sherpa'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy sherpa'
+        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy'
         - PIP_DEPENDENCIES='uncertainties reproject'
-        - SHERPA=false
-        - CONDA_CHANNELS='astropy'
+        - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true
         - MAIN_CMD='python setup.py'
 
@@ -48,56 +50,59 @@ matrix:
         # Try MacOS X
         - os: osx
           env: PYTHON_VERSION=2.7 SETUP_CMD='test'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
 
         - os: osx
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
                CONDA_DEPENDENCIES='Cython click'
                PIP_DEPENDENCIES=''
 
+        # Test the dev version of Sherpa, this may take a longer time
+        - os: linux
+          env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
+               PIP_DEPENDENCIES='uncertainties reproject https://github.com/sherpa/sherpa/archive/master.zip'
+
         # Run tests
         # Coverage is measured on Python 2 (where Sherpa is available)
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V --coverage'
-               SHERPA=true
 
         - os: linux
           env: PYTHON_VERSION=3.4 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
 
         # Build docs
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
-               SHERPA=true
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES_WO_SHERPA
 
         # Run tests without GAMMAPY_EXTRA available
         - os: linux
           env: FETCH_GAMMAPY_EXTRA=false PYTHON_VERSION=3.5 SETUP_CMD='test -V'
-
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         # Test with Astropy dev and LTS versions
 #        - os: linux
 #          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=lts SETUP_CMD='test -V'
-#               SHERPA=true
 #        - os: linux
 #          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=lts SETUP_CMD='test -V'
+#               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='test -V'
-               SHERPA=true
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
         - os: linux
           env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
-               SHERPA=true
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
+               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES_WO_SHERPA
 
         # Test with with optional dependencies disabled
         - os: linux
@@ -116,23 +121,22 @@ matrix:
         # these tests (so we can avoid building it from source).
         - os: linux
           env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
 #        - os: linux
 #          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test -V'
-#               SHERPA=true ASTROPY_VERSION=lts
+#               ASTROPY_VERSION=lts
 #        - os: linux
 #          env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.8 SETUP_CMD='test -V'
-#               SHERPA=true ASTROPY_VERSION=lts
+#               ASTROPY_VERSION=lts
 #               CONDA_CHANNELS='astropy-ci-extras astropy'
 #               CONDA_DEPENDENCIES='Cython click matplotlib'
 #               PIP_DEPENDENCIES=''
 
-    # You can move builds that temporarily fail because of some non-Gammapy issue here
+    # You can move builds that temporarily fail because of some non-Gammapy
+    # issue here
     # Please add a link to a GH issue that tracks the upstream issue.
 #    allow_failures:
-#      - env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
-#      - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.7 SETUP_CMD='test -V'
-#             SHERPA=true
-#             CONDA_CHANNELS='astropy-ci-extras astropy'
+
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
@@ -148,16 +152,6 @@ install:
           export DISPLAY=:99.0;
           sh -e /etc/init.d/xvfb start;
           export QT_API=pyqt;
-      fi
-
-    # Reinstalling the required numpy version as it may be downgraded.
-    # TODO It may be removed when/if Sherpa becomes np version agnostic
-    # (maybe as soon as v4.8). See discussion in
-    # https://travis-ci.org/gammapy/gammapy/jobs/99867950#L639
-    - if $SHERPA; then
-          conda install --yes --channel astropy numpy=$NUMPY_VERSION iminuit;
-          conda install --yes --no-pin --channel https://conda.anaconda.org/cxc/channel/dev sherpa;
-          conda install --yes -q numpy=$NUMPY_VERSION;
       fi
 
 script:

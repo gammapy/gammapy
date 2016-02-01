@@ -29,19 +29,17 @@ Let's say you have a large image, but are only interested in a small box (a rect
    np.sum(full_array)
    np.sum(sub_array)
 
-Numpy supports working with such boxes efficiently through the concept of 
+Numpy supports working with such boxes efficiently through the concept of
 `slicing <http://scipy-lectures.github.io/intro/numpy/array_object.html#indexing-and-slicing>`__
-and 
+and
 `views <http://scipy-lectures.github.io/intro/numpy/array_object.html#copies-and-views>`__.
 
 By slicing ``[1000:1010, 2000:2020]`` we created a view (not a copy) ``sub_array`` into the ``full_array``.
-On my machine making a measurement on ``sub_array`` is about 1000 times as fast as for ``full_array``:
-
-.. code-block:: python
+On my machine making a measurement on ``sub_array`` is about 1000 times as fast as for ``full_array``::
 
    In [34]: %timeit np.sum(full_array)
    100 loops, best of 3: 5.32 ms per loop
-   
+
    In [35]: %timeit np.sum(sub_array)
    100000 loops, best of 3: 7.41 µs per loop
 
@@ -49,7 +47,7 @@ How to represent bounding boxes and pass them around in code?
 -------------------------------------------------------------
 
 In gammapy we frequently need to bass bounding boxes around, e.g. from a function that detects
-many small objects in a large survey image to another function that measures some properties of these objects.  
+many small objects in a large survey image to another function that measures some properties of these objects.
 
 Python does have a built-in `slice <https://docs.python.org/3/library/functions.html#slice>`__ class,
 and we can use it to represent 1-dimensional slices:
@@ -70,7 +68,7 @@ and we can use it to represent 1-dimensional slices:
                stop = ii
                object_slices.append(slice(start, stop))
        return object_slices
-   
+
    def measure_objects(array, object_slices):
        """Measure something for all objects and print the result."""
        for object_slice in object_slices:
@@ -100,7 +98,7 @@ Before inventing our own, let's look at what kinds of representations others hav
   .. code-block:: python
 
       bbox = (slice(1, 3, None), slice(2, 5, None))
-  
+
   This has the advantage that for a numpy array it is very easy to create views
   for the rectangles represented by the bounding box:
 
@@ -115,7 +113,7 @@ Before inventing our own, let's look at what kinds of representations others hav
   As far as I can see no other function except `scipy.ndimage.measurements.find_objects` uses
   this bbox format, though. E.g. all other functions in `scipy.ndimage.measurements` take a
   ``label`` array as input, none has a ``bboxes`` argument.
- 
+
 * The `skimage.measure.regionprops` function returns ``properties``, a list of dict-like objects
   with (among many other things) a ``bbox`` entry, which is a Python tuple of integers::
 
@@ -132,17 +130,17 @@ Before inventing our own, let's look at what kinds of representations others hav
           return (self._slice[0].start, self._slice[1].start,
                   self._slice[0].stop, self._slice[1].stop)
 
-  As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`. 
+  As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`.
 
 * `photutils` has this `coordinate convention <http://photutils.readthedocs.org/en/latest/photutils/overview.html#coordinate-conventions>`__.
   Looking at the `photutils.aperture_photometry` implementation, it looks like they don't have an official ``bbox`` representation,
   but simply compute ``(x_min, x_max, y_min, y_max)`` where needed and then use ``data[y_min:y_max, x_min:x_max]`` views.
-  TODO: update once this is in: https://github.com/astropy/astropy/issues/2607 
+  TODO: update once this is in: https://github.com/astropy/astropy/issues/2607
 
 * `imutils <http://imutils.readthedocs.org/en/latest/>`__ has a
   `Cutout <http://imutils.readthedocs.org/en/latest/api/imutils.Cutout.html>`__ class.
 
-I also found 
+I also found
 `this <http://stackoverflow.com/questions/9525313/rectangular-bounding-box-around-blobs-in-a-monochrome-image-using-python>`__
 and
 `this <http://stackoverflow.com/questions/4087919/how-can-i-improve-my-paw-detection>`__
