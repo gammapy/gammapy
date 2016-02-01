@@ -60,6 +60,7 @@ Contributors
 - Christoph Deil
 - Dirk Lennarz (new)
 - Johannes King
+- Lea Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
 
@@ -74,6 +75,7 @@ Pull requests
 - [#394] Move some data specs to gamma-astro-data-formats (Christoph Deil)
 - [#392] Use external ci-helpers (Brigitta Sipocz)
 - [#387] Improve Gammapy catalog query and browser (Christoph Deil)
+- [#383] Add EnergyOffsetArray (Lea Jouvin)
 - [#379] Add gammapy.region and reflected region computation (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)

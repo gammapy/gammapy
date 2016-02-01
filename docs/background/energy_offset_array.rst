@@ -3,14 +3,14 @@
 EnergyOffset Array
 ==================
 
-The `~gammapy.background.EnergyOffsetArray` class represents a 2D array *(energy,offset)* that is filled with an eventlist. For a set of observations, by giving an energy binning and an offset binning, you fill the events in this histogram.
+The `~gammapy.background.EnergyOffsetArray` class represents a 2D array *(energy,offset)* that is filled with an eventlist.
+For a set of observations, by giving an energy binning and an offset binning, you fill the events in this histogram.
 
 
-Four Crab observations are located in the ``gammapy-extra`` repository as
-examples:
+Four Crab observations are located in the ``gammapy-extra`` repository as examples:
 `hess_events_simulated_023523.fits`_ , `hess_events_simulated_023526.fits`_ , `hess_events_simulated_023559.fits`_ and `hess_events_simulated_023592.fits`_
 
-An example script of how to fill this Array from these four observations and plots the result is given in the ``examples`` directory:
+An example script of how to fill this array from these four observations and plots the result is given in the ``examples`` directory:
 :download:`example_energy_offset_array.py <../../examples/example_energy_offset_array.py>`
 
 .. plot:: ../examples/example_energy_offset_array.py

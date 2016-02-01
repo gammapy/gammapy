@@ -1,3 +1,5 @@
+"""Example how to use `gammapy.background.EnergyOffsetArray`.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
