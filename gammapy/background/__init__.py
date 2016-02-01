@@ -2,6 +2,7 @@
 """
 Background estimation and modeling methods.
 """
+from .energy_offset_array import *
 from .fov import *
 from .maps import *
 from .cube import *

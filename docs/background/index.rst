@@ -39,7 +39,8 @@ If you'd like to learn more about using `gammapy.background`, read the following
 
    models
    make_models
-
+   energy_offset_array
+   
 Reference/API
 =============
 
