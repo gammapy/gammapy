@@ -31,11 +31,13 @@ install:
     - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
-# TODO: fix this: https://ci.appveyor.com/project/cdeil/gammapy/build/1.0.27/job/d2kja8n372q8qgsu#L140
-#    - if $FETCH_GAMMAPY_EXTRA; then
-#          git clone https://github.com/gammapy/gammapy-extra.git $HOME/gammapy-extra;
-#          export GAMMAPY_EXTRA=${HOME}/gammapy-extra;
-#      fi
+
+    - ps: |
+         if($FETCH_GAMMAPY_EXTRA) 
+         {
+             git clone https://github.com/gammapy/gammapy-extra.git
+             $env:GAMMAPY_EXTRA="c:\projects\gammapy-extra"
+         }
 
 
 # Not a .NET project, we build photutils in the install step instead
