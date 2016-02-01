@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-#from __future__ import absolute_import, division, print_function, unicode_literals
+# from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
-
 import numpy as np
 import math
 from astropy.table import Column
@@ -13,7 +12,7 @@ from astropy.wcs.utils import skycoord_to_pixel
 from astropy.table import Table
 from . import CountsSpectrum
 from ..irf.effective_area_table import EffectiveAreaTable
-from ..irf.energy_dispersion import EnergyDispersion 
+from ..irf.energy_dispersion import EnergyDispersion
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
 from ..image import ExclusionMask
@@ -111,7 +110,7 @@ class SpectrumAnalysis(object):
             raise ValueError("No valid observations found")
         if bkg_method['type'] == 'reflected':
             mask, ibkg_obs = self.filter_by_reflected_regions(bkg_method['n_min'])
-            self._bkg_observations =self.observations[ibkg_obs]
+            self._bkg_observations = self.observations[ibkg_obs]
             self._observations = self.observations[mask]
 
     def copy(self, bkg_method=None):
@@ -205,7 +204,7 @@ class SpectrumAnalysis(object):
         val = [o.alpha * o.off_vector.total_counts for o in self.observations]
         num = np.sum(val)
         den = np.sum([o.off_vector.total_counts for o in self.observations])
-        return num/den
+        return num / den
 
     @classmethod
     def from_config(cls, config):
@@ -230,7 +229,7 @@ class SpectrumAnalysis(object):
             emax = Energy(sec['emax'])
             nbins = sec['nbins']
             ebounds = EnergyBounds.equal_log_spacing(
-                    emin, emax, nbins)
+                emin, emax, nbins)
         else:
             if sec['binning'] is None:
                 raise ValueError("No binning specified")
@@ -315,55 +314,57 @@ class SpectrumAnalysis(object):
 
         condition = np.array([o.backscal for o in self.off_vector]) >= n_min
         idx = np.nonzero(condition)
-        idx1 = np.where(condition==False)
+        idx1 = np.where(condition == False)
         return idx[0], idx1[0]
 
-    
-    def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40, ZenRange=[0., 70.], NZenbin=30):
-        #Tab contiendrait les bandes et les observations a grouper pour chaque bande
+    def define_spectral_groups(self, OffsetRange=[0, 2.5], NOffbin=25, EffRange=[0, 100], NEffbin=40,
+                               ZenRange=[0., 70.], NZenbin=30):
+        # Tab contiendrait les bandes et les observations a grouper pour chaque bande
         [Offmin, Offmax] = OffsetRange
         [Effmin, Effmax] = EffRange
         [Zenmin, Zenmax] = ZenRange
         CosZenmin = np.cos(Zenmax * math.pi / 180.)
         CosZenmax = np.cos(Zenmin * math.pi / 180.)
-        Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin+1), "deg")
-        Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin+1),"")
-        CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin+1), "")
-        list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab/100., 'bin_edges'),
+        Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin + 1), "deg")
+        Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin + 1), "")
+        CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin + 1), "")
+        list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab / 100., 'bin_edges'),
                                ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
-                               ObservationGroupAxis('Offset', Offtab, 'bin_edges') ]
+                               ObservationGroupAxis('Offset', Offtab, 'bin_edges')]
         obs_groups = ObservationGroups(list_obs_group_axis)
-        Observation_Table=self.store.obs_table
-        list_index_bkg_obs=[]
+        Observation_Table = self.store.obs_table
+        list_index_bkg_obs = []
         for obs in self._bkg_observations:
-            i=np.where(obs.obs==Observation_Table["OBS_ID"])
+            i = np.where(obs.obs == Observation_Table["OBS_ID"])
             list_index_bkg_obs.append(i[0][0])
-        
+
         Observation_Table.remove_rows(list_index_bkg_obs)
-        offset=[i.value for i in self.offset]
-        Offcol=Column(offset, name='Offset', unit="deg")
+        offset = [i.value for i in self.offset]
+        Offcol = Column(offset, name='Offset', unit="deg")
         Observation_Table.add_column(Offcol)
         obs_table_grouped = obs_groups.group_observation_table(Observation_Table)
-        Nband=obs_groups.n_groups
-        observation_band_list=[]
+        Nband = obs_groups.n_groups
+        observation_band_list = []
         for nband in range(Nband):
-            tablegroup=obs_groups.get_group_of_observations(obs_table_grouped, nband)
-            if len(tablegroup)==0:
+            tablegroup = obs_groups.get_group_of_observations(obs_table_grouped, nband)
+            if len(tablegroup) == 0:
                 continue
             else:
-                spectrum_observation_band_list=[]
-            
-                obsvervations_id=tablegroup["OBS_ID"]
+                spectrum_observation_band_list = []
+
+                obsvervations_id = tablegroup["OBS_ID"]
                 for obs in obsvervations_id:
-                    ind=np.where(self.obs_ids==obs)
+                    ind = np.where(self.obs_ids == obs)
                     spectrum_observation_band_list.append(self._observations[ind][0])
-                ObsBand=SpectrumObservation(nband, self.store, self.on_region,
-                                           self.bkg_method, self.ebounds, self.exclusion, True)
-                ObsBand.apply_grouping(spectrum_observation_band_list,self.ebounds)
+                ObsBand = SpectrumObservation(nband, self.store, self.on_region,
+                                              self.bkg_method, self.ebounds, self.exclusion, True)
+                ObsBand.apply_grouping(spectrum_observation_band_list, self.ebounds)
                 observation_band_list.append(ObsBand)
-            
+
         self._observations = np.array(observation_band_list)
-        #import IPython; IPython.embed()
+        # import IPython; IPython.embed()
+
+
 class SpectrumObservation(object):
     """Helper class for 1D region based spectral analysis
 
@@ -385,7 +386,7 @@ class SpectrumObservation(object):
         Exclusion mask
     """
 
-    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion, band = False):
+    def __init__(self, obs, store, on_region, bkg_method, ebounds, exclusion, band=False):
         # Raises Error if obs is not available
         if band is False:
             store.filename(obs, 'events')
@@ -508,7 +509,7 @@ class SpectrumObservation(object):
             off_vec = self._make_off_vector_bgmodel(method)
         else:
             raise ValueError("Undefined background method: {}".format(
-            method['type']))
+                method['type']))
 
         self._off = off_vec
         return off_vec
@@ -597,12 +598,12 @@ class SpectrumObservation(object):
         if bkgfile is None:
             bkgfile = "bkg_run{}.fits".format(self.obs)
 
-        self.on_vector.write(str(outdir/phafile), bkg=str(bkgfile), arf=str(arffile),
+        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
                              rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(outdir/bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir/arffile), energy_unit='keV',
+        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
                                   effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(outdir/rmffile), energy_unit='keV',
+        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=clobber)
 
     def plot_exclusion_mask(self, size=None, **kwargs):
@@ -643,18 +644,17 @@ class SpectrumObservation(object):
 
         if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
             center = self.pointing.galactic
-            xlim = (center.l + extent/2).value, (center.l - extent/2).value
-            ylim = (center.b + extent/2).value, (center.b - extent/2).value
+            xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
+            ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
         else:
             center = self.pointing.icrs
-            xlim = (center.ra + extent/2).value, (center.ra - extent/2).value
-            ylim = (center.dec + extent/2).value, (center.dec - extent/2).value
+            xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
+            ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
 
-        limits = ax.wcs.wcs_world2pix(xlim, ylim,1)
+        limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
         ax.set_xlim(limits[0])
         ax.set_ylim(limits[1])
 
-    
     def apply_grouping(self, spectrum_observation_list, ebounds):
 
         """Method that stack the ON, OFF, arf and RMF for an observation group
@@ -665,79 +665,80 @@ class SpectrumObservation(object):
                                  contain the list of the observations to group together
         
         """
-        #Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
+        # Loop over the List of SpectrumObservation object to stack the ON, OFF rmf et arf
         ONband = None
         OFFband = None
         OFFtotband = None
         backscalband = None
         livetimeband = None
         arfband = None
-        rmfband= None
-        for (n,obs) in enumerate(spectrum_observation_list):
+        rmfband = None
+        for (n, obs) in enumerate(spectrum_observation_list):
             obs._make_on()
             obs.make_off_vector()
             obs._make_aeff()
             obs._make_edisp()
-            #import IPython; IPython.embed()
-            on_vector=obs._on.counts
-            off_vector=obs._off.counts
-            OFF=np.sum(off_vector)
-            #For the moment alpha for one band independent of the energy, weighted by the total OFF events
-            backscal=obs._off.backscal
-            livetime=obs._off.livetime
-            arf_vector=obs._aeff.effective_area
-            rmf_matrix=obs._edisp.pdf_matrix
-            #Find a better way to do this since I initialize for the first SpectrumObservation of the band (n==0) and I sum for the other observations... I think there are a way to combine the initialisation and sum
-            if(n==0):
-                #Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
-                energy_hi=obs._aeff.energy_hi   
-                energy_lo=obs._aeff.energy_lo
-                #Ca c est tres sale car normalement les membres avec un _ on doit pas y acceder direct comme ca voir comment determiner etrue autrement
-                e_true=obs._edisp._e_true
+            # import IPython; IPython.embed()
+            on_vector = obs._on.counts
+            off_vector = obs._off.counts
+            OFF = np.sum(off_vector)
+            # For the moment alpha for one band independent of the energy, weighted by the total OFF events
+            backscal = obs._off.backscal
+            livetime = obs._off.livetime
+            arf_vector = obs._aeff.effective_area
+            rmf_matrix = obs._edisp.pdf_matrix
+            # Find a better way to do this since I initialize for the first SpectrumObservation of the band (n==0) and I sum for the other observations... I think there are a way to combine the initialisation and sum
+            if (n == 0):
+                # Pour la creation de l objet effective_area_table et de l objet energy_dispersion pour ecrire en forma ogip
+                energy_hi = obs._aeff.energy_hi
+                energy_lo = obs._aeff.energy_lo
+                # Ca c est tres sale car normalement les membres avec un _ on doit pas y acceder direct comme ca voir comment determiner etrue autrement
+                e_true = obs._edisp._e_true
                 ONband = on_vector
                 OFFband = off_vector
                 OFFtotband = OFF
-                backscalband = backscal*OFF
-                #For a dependent energy backscale
-                #backscalband=backscal*off_vector
+                backscalband = backscal * OFF
+                # For a dependent energy backscale
+                # backscalband=backscal*off_vector
                 livetimeband = livetime
-                arfband = arf_vector*livetime
-                #For the first observation to group: the rmftab dimension is initialized to dim(Etrue,Ereco)
+                arfband = arf_vector * livetime
+                # For the first observation to group: the rmftab dimension is initialized to dim(Etrue,Ereco)
                 dim_Etrue = np.shape(rmf_matrix)[0]
                 dim_Ereco = np.shape(rmf_matrix)[1]
-                rmfband=np.zeros((dim_Etrue,dim_Ereco))
-                rmfmean=np.zeros((dim_Etrue,dim_Ereco))
+                rmfband = np.zeros((dim_Etrue, dim_Ereco))
+                rmfmean = np.zeros((dim_Etrue, dim_Ereco))
                 for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:]= rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+                    rmfband[ind_Etrue, :] = rmf_matrix[ind_Etrue, :] * arf_vector[ind_Etrue] * livetime
             else:
                 ONband += on_vector
                 OFFband += off_vector
                 OFFtotband += OFF
-                backscalband += backscal*OFF
-                #For a dependent energy backscale
-                #backscalband=backscal*off_vector
+                backscalband += backscal * OFF
+                # For a dependent energy backscale
+                # backscalband=backscal*off_vector
                 livetimeband += livetime
-                arfband += arf_vector*livetime
-                #rmf et dimEtrue already defined in the if(n==0) for the first observation
+                arfband += arf_vector * livetime
+                # rmf et dimEtrue already defined in the if(n==0) for the first observation
                 for ind_Etrue in range(dim_Etrue):
-                    rmfband[ind_Etrue,:] += rmf_matrix[ind_Etrue,:]*arf_vector[ind_Etrue]*livetime
+                    rmfband[ind_Etrue, :] += rmf_matrix[ind_Etrue, :] * arf_vector[ind_Etrue] * livetime
 
-        #Mean backscale of the band
-        backscalmean = backscalband /OFFtotband
-        #backscalmean = backscalband / OFFband
-        arfmean = arfband/livetimeband
+        # Mean backscale of the band
+        backscalmean = backscalband / OFFtotband
+        # backscalmean = backscalband / OFFband
+        arfmean = arfband / livetimeband
         for ind_Etrue in range(dim_Etrue):
-            rmfmean[ind_Etrue,:] = rmfband[ind_Etrue,:]/arfband[ind_Etrue]
-        rmfmean[np.isnan(rmfmean)]=0
-        if(self.obs==375):
+            rmfmean[ind_Etrue, :] = rmfband[ind_Etrue, :] / arfband[ind_Etrue]
+        rmfmean[np.isnan(rmfmean)] = 0
+        if (self.obs == 375):
             print rmfmean
-            import IPython; IPython.embed()
-        self._on=CountsSpectrum(ONband, ebounds, livetimeband)
-        self._off=CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
-        self._aeff=EffectiveAreaTable(energy_lo, energy_hi, arfmean)
-        self._edisp=EnergyDispersion(rmfmean, e_true, ebounds)
-        #import IPython; IPython.embed()
-        
+            import IPython;
+            IPython.embed()
+        self._on = CountsSpectrum(ONband, ebounds, livetimeband)
+        self._off = CountsSpectrum(OFFband, ebounds, livetimeband, backscalmean)
+        self._aeff = EffectiveAreaTable(energy_lo, energy_hi, arfmean)
+        self._edisp = EnergyDispersion(rmfmean, e_true, ebounds)
+        # import IPython; IPython.embed()
+
 
 class SpectrumFit(object):
     """
@@ -891,7 +892,7 @@ class SpectrumFit(object):
         ss += str(self.model)
         ss += '\nEnergy Range\n'
         ss += str(self.energy_threshold_low) + ' - ' + str(
-                self.energy_threshold_high)
+            self.energy_threshold_high)
         return ss
 
     def run(self, method='hspec'):
