@@ -40,6 +40,7 @@ class SpectrumFitResult(object):
         self.energy_range = EnergyBounds(energy_range).to('TeV')
         self.fluxes = fluxes
         self.flux_errors = flux_errors
+        # Todo : factor out into separate class
         self.flux_points = Table(flux_points)
 
     @classmethod
@@ -105,7 +106,7 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_sherpa(cls, covar, filter, model, flux_graph = None):
-        """Create SpectrumFitResult from sherpa objects
+        """Create `~gammapy.spectrum.results.SpectrumFitResult` from sherpa objects
 
         TODO: Should this be a function?
         """
@@ -209,7 +210,7 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_yaml(cls, val):
-        """Create `~gammapy.spectrum.results.SpectrumResult` from YAML dict
+        """Create `~gammapy.spectrum.results.SpectrumFitResult` from YAML dict
 
         Parameters
         ----------
@@ -306,6 +307,11 @@ class SpectrumFitResult(object):
             Unit of the flux axis
         e_power : int
             Power of energy to multiply flux axis with
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
         """
         import matplotlib.pyplot as plt
 
@@ -325,10 +331,27 @@ class SpectrumFitResult(object):
 
     def plot_fit_function(self, ax=None, butterfly=True, energy_unit='TeV',
                           flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
-        """Plot fit function points
+        """Plot fit function
 
-        Units are hardcoded
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        e_power : int
+            Power of energy to multiply flux axis with
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
         """
+
         import matplotlib.pyplot as plt
         from gammapy.spectrum import df_over_f
 
@@ -363,7 +386,15 @@ class SpectrumFitResult(object):
         return ax
 
     def residuals(self):
-        """Calculate residuals + errors"""
+        """Calculate residuals and residual errors
+
+        Returns
+        -------
+        residuals : `~astropy.units.Quantity`
+            Residuals
+        residuals_err : `~astropy.units.Quantity`
+            Residual errirs
+        """
         func = self.to_sherpa_model()
         x = self.flux_points['energy'].quantity
         y = self.flux_points['flux'].quantity
@@ -377,7 +408,20 @@ class SpectrumFitResult(object):
         return residuals.decompose(), residuals_err.decompose()
 
     def plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):
-        """Plot residuals"""
+        """Plot residuals
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
+        """
         import matplotlib.pyplot as plt
 
         ax = plt.gca() if ax is None else ax
@@ -400,7 +444,28 @@ class SpectrumFitResult(object):
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                       e_power = 0, fit_kwargs=None, point_kwargs=None):
-        """Plot full spectrum including flux points and residuals"""
+        """Plot full spectrum including flux points and residuals
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        e_power : int
+            Power of energy to multiply flux axis with
+        fit_kwargs : dict, optional
+            forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_fit_function`
+        point_kwargs : dict, optional
+            forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_points`
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
+        """
         from matplotlib import gridspec
         import matplotlib.pyplot as plt
 
