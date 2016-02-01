@@ -49,8 +49,6 @@ matrix:
         # Try MacOS X
         - os: osx
           env: PYTHON_VERSION=2.7 SETUP_CMD='test'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
 
         - os: osx
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
