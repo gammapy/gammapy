@@ -12,10 +12,24 @@ from gammapy.utils.scripts import read_yaml
 class SpectrumFitResult(object):
     """Class representing the result of a spectral fit
 
-    * Fit Function
-    * Parameters
-    * Energy Range
-    * Flux points
+    For a complete documentation see :ref:`gadf:spectrum-fit-result`
+
+    Parameters
+    ----------
+    spectral_model : str
+        Spectral model, for allowed names see :ref:`gadf:source-models`
+    parameters : dict
+        Fitted parameters, for allowed names see :ref:`gadf:source-models`
+    parameter_errors : dict
+        Parameter errors, for allowed names see :ref:`gadf:source-models`
+    energy_range : `~gammapy.utils.energy.EnergyBounds
+        Energy range of the spectral fit
+    fluxes : dict, optional
+        Flux for the fitted model at a given energy
+    flux_errors : dict, optional
+        Error on the flux for the fitted model at a given energy
+    flux_points : `~astropy.table.Table`, optional
+        Flux points
     """
     def __init__(self, spectral_model, parameters, parameter_errors,
                  energy_range=None, fluxes=None, flux_errors=None,
@@ -30,7 +44,19 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
-        """Read FitSpectrum output file"""
+        """Read FitSpectrum output file
+
+        Several models can be stored in the JSON file, the appropriate model
+        to read can be chosen with the ``model`` parameter.
+        TODO: Should this be a function?
+
+        Parameters
+        ----------
+        filename : str
+            Name of the JSON file to read
+        model : int
+            Model to read from JSON file
+        """
         import json
 
         with open(filename) as fh:
@@ -141,6 +167,7 @@ class SpectrumFitResult(object):
                    fluxes=fluxes, flux_errors=flux_errors)
 
     def to_yaml(self):
+        """Export spectrum results to YAML dict"""
         import yaml
         val = dict()
         val['energy_range'] = dict(min=self.energy_range[0].value,
@@ -169,7 +196,12 @@ class SpectrumFitResult(object):
     def write(self, filename):
         """Write YAML file
 
-        Floats are rounded
+        TODO: Round float to a given precision
+
+        Parameters
+        ----------
+        filename : str
+            File to write
         """
         val = self.to_yaml()
         with open(str(filename), 'w') as outfile:
@@ -177,7 +209,13 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_yaml(cls, val):
-        """Create SpectrumResult from YAML dict"""
+        """Create `~gammapy.spectrum.results.SpectrumResult` from YAML dict
+
+        Parameters
+        ----------
+        val : dict
+            YAML dict to read
+        """
         erange = val['energy_range']
         energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
         pars = val['parameters']
@@ -209,12 +247,18 @@ class SpectrumFitResult(object):
 
     @classmethod
     def read(cls, filename):
-        """Read YAMl file"""
+        """Create `~gammapy.spectrum.results.SpectrumResult` from YAML file
+
+        Parameters
+        ----------
+        filename : str
+            File to write
+        """
         val = read_yaml(filename)
         return cls.from_yaml(val)
 
     def to_table(self):
-        """Create overview `~astropy.table.QTable`"""
+        """Create overview `~astropy.table.Table`"""
         t = Table()
         for par in self.parameters.keys():
             t[par] = np.atleast_1d(self.parameters[par])
@@ -227,7 +271,13 @@ class SpectrumFitResult(object):
         return t
 
     def to_sherpa_model(self, name='default'):
-        """Return sherpa model"""
+        """Return sherpa model
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
         import sherpa.models as m
 
         if self.spectral_model == 'PowerLaw':
@@ -243,6 +293,19 @@ class SpectrumFitResult(object):
     def plot_flux_points(self, ax=None, energy_unit='TeV',
                          flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
         """Plot spectral points
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        e_power : int
+            Power of energy to multiply flux axis with
         """
         import matplotlib.pyplot as plt
 
