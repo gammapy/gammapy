@@ -19,7 +19,7 @@ def test_EventList():
     assert event_list.radec[0].to_string() == '82.7068 19.8186'
     assert event_list.galactic[0].to_string() == '185.956 -7.69277'
     assert event_list.altaz[0].to_string() == '46.2059 31.2001'
-    assert event_list.offset[0].value == 1.904497742652893
+    assert_allclose(event_list.offset[0].value, 1.904497742652893)
     assert '{:1.5f}'.format(event_list.energy[0]) == '11.64355 TeV'
 
     lon, lat, height = event_list.observatory_earth_location.to_geodetic()
