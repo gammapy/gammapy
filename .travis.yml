@@ -53,14 +53,13 @@ matrix:
 
         - os: osx
           env: PYTHON_VERSION=3.5 SETUP_CMD='test'
-               CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
 
         # Test the dev version of Sherpa, this may take a longer time
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
-               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
-               PIP_DEPENDENCIES='uncertainties reproject https://github.com/sherpa/sherpa/archive/master.zip'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA DEBUG=True
+               PIP_DEPENDENCIES='uncertainties reproject git+http://github.com/sherpa/sherpa.git#egg=sherpa'
 
         # Run tests
         # Coverage is measured on Python 2 (where Sherpa is available)
