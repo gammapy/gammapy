@@ -49,7 +49,7 @@ class SpectrumFitResult(object):
 
         Several models can be stored in the JSON file, the appropriate model
         to read can be chosen with the ``model`` parameter.
-        TODO: Should this be a function?
+        TODO: Remove once FitSpectrum writes readable files
 
         Parameters
         ----------
@@ -107,8 +107,6 @@ class SpectrumFitResult(object):
     @classmethod
     def from_sherpa(cls, covar, filter, model, flux_graph = None):
         """Create `~gammapy.spectrum.results.SpectrumFitResult` from sherpa objects
-
-        TODO: Should this be a function?
         """
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
         energy_range = EnergyBounds((el, eh), 'keV')
