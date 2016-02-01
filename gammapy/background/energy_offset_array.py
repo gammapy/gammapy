@@ -39,7 +39,7 @@ class EnergyOffsetArray(object):
 
         Parameters
         -------------
-        events : list of `~gammapy.data.EventList`
+        event_lists : list of `~gammapy.data.EventList`
            Python list of event list objects.
             
         
@@ -101,6 +101,6 @@ class EnergyOffsetArray(object):
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Energy_offset Array')
         ax.legend()
-        map = ax.imshow(self.data, extent=extent, **kwargs)
-        plt.colorbar(map)
+        image = ax.imshow(self.data, extent=extent, **kwargs)
+        plt.colorbar(image)
         return ax
