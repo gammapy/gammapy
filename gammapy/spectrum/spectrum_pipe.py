@@ -1,18 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
 
-from gammapy.spectrum.spectrum_analysis import (
-    SpectrumAnalysis,
-    run_spectral_fit_using_config,
-)
-from ..utils.scripts import (
-    get_parser,
-    set_up_logging_from_args,
-    write_yaml,
-    read_yaml,
-    recursive_merge_dicts,
-    make_path,
-)
 import logging
 import numpy as np
 
@@ -20,21 +8,6 @@ import numpy as np
 __all__ = ['SpectrumPipe']
 
 log = logging.getLogger(__name__)
-
-
-def main(args=None):
-    parser = get_parser(SpectrumPipe)
-    parser.add_argument('config_file', type=str,
-                        help='Config file in YAML format')
-    parser.add_argument("-l", "--loglevel", default='info',
-                        choices=['debug', 'info', 'warning', 'error', 'critical'],
-                        help="Set the logging level")
-
-    args = parser.parse_args(args)
-    set_up_logging_from_args(args)
-    specpipe = SpectrumPipe.from_configfile(args.config_file)
-    specpipe.write_configs()
-    specpipe.run()
 
 
 class SpectrumPipe(object):
