@@ -16,4 +16,4 @@ from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
 from .counts_spectrum import *
-from .spectrum_analysis import *
+from .spectrum_extraction import *

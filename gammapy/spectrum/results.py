@@ -519,10 +519,49 @@ class SpectrumStats(object):
         return cls(n_on)
 
     def to_dict(self):
-        pass
+        rtval = dict(spectrum=dict())
+        v = rtval['spectrum']
+        v['total_on'] = int(self.n_on)
+        return rtval
 
-    def from_dict(self, val):
-        pass
+    def to_yaml(self, filename):
+        """Write YAML file
+
+        TODO: Round floats to a given precision
+
+        Parameters
+        ----------
+        filename : str
+            File to write
+        """
+        # TODO: this could be a mixin somehow
+
+        import yaml
+
+        d = self.to_dict()
+        val = yaml.safe_dump(d, default_flow_style=False)
+
+        with open(str(filename), 'w') as outfile:
+            outfile.write(val)
+
+    @classmethod
+    def from_dict(cls, val):
+        d = val['spectrum']
+        n_on = d['total_on']
+
+        return cls(n_on)
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Create `~gammapy.spectrum.results.SpectrumStats` from YAML file
+
+        Parameters
+        ----------
+        filename : str
+            File to read
+        """
+        val = read_yaml(filename)
+        return cls.from_dict(val)
 
     def to_table(self):
         """Create overview `~astropy.table.Table`"""
