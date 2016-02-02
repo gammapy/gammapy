@@ -833,7 +833,7 @@ class SpectrumFit(object):
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
         cont = self.get_containment()
-        pass
+        raise NotImplementedError
 
     def get_containment(self):
         """Calculate PSF correction factor for containment in ON region"""

@@ -508,7 +508,7 @@ class SpectrumFitResultDict(dict):
     """Dict of several `~gammapy.spectrum.SpectrumFitResults`"""
 
     def info(self):
-        pass
+        raise NotImplementedError
 
     def to_table(self):
         """Create overview `~astropy.table.QTable`"""
@@ -529,7 +529,7 @@ class SpectrumFitResultDict(dict):
 
     def overplot(self):
         """Overplot spectra"""
-        pass
+        raise NotImplementedError
 
 
 

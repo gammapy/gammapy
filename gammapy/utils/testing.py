@@ -14,8 +14,7 @@ __all__ = [
     'SHERPA_LT_4_8'
 ]
 
-# Todo : Change to 4_8 once there is a sherpa release
-SHERPA_LT_4_8 = not minversion('sherpa', '4.7+642')
+SHERPA_LT_4_8 = not minversion('sherpa', '4.8')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
