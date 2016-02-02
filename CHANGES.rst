@@ -67,6 +67,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#421] Add spectrum fit serialisation code (Johannes King)
 - [#403] Improve spectrum analysis (Johannes King)
 - [#414] Add Windows tests on Appveyor (Christoph Deil)
 - [#398] Add function to compute exposure cubes (Luigi Tibaldo)
