@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.coordinates import SkyCoord, Longitude, Latitude
+from astropy.table import Table
+from astropy.coordinates import SkyCoord, Longitude, Latitude, Angle
 from ...catalog import coordinate_iau_format, ra_iau_format, dec_iau_format
-
+from ...region import SkyCircleRegion
+from ...data import ObservationTable
 
 def test_make_source_designation():
     # Crab pulsar position for HESS
@@ -84,8 +86,8 @@ def test_dec_iau_format():
     assert dec_iau_format(dec, digits=8) == '-422633.79'
 
 def test_dec_skycoord_from_table():
-    Table_runinfo=Table.read("runinfo.fits")
+    Table_runinfo=Table.read("/Users/jouvin/Desktop/these/WorkGAMMAPI/IRF/Model_Deconvoluted_Prod26/Mpp_Std/runinfo.fits")
     Obstable=ObservationTable(Table_runinfo)
     selection = dict(type='sky_circle', frame='icrs', lon=Angle(266.41, 'deg'), lat=Angle(-29.01, 'deg'), radius=Angle(5, 'deg'), border=Angle(2, 'deg'))
-Obstable.select_observations(selection)
+    Obstable.select_observations(selection)
 
