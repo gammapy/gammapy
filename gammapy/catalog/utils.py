@@ -246,13 +246,12 @@ def skycoord_from_table(table):
 
     if set(['RAJ2000', 'DEJ2000']).issubset(table.colnames):
         lon, lat, frame = 'RAJ2000', 'DEJ2000', 'icrs'
-    elif set(['RA', 'DEC']).issubset(table.colnames):
-        lon, lat, frame = 'RA', 'DEC', 'icrs'
+    elif set(['RA_PNT', 'DEC_PNT']).issubset(table.colnames):
+        lon, lat, frame = 'RA_PNT', 'DEC_PNT', 'icrs'
     elif set(['GLON', 'GLAT']).issubset(table.colnames):
         lon, lat, frame = 'GLON', 'GLAT', 'galactic'
     else:
         raise KeyError('No column GLON / GLAT or RA / DEC or RAJ2000 / DEJ2000 found.')
-
     unit = table[lon].unit if table[lon].unit else 'deg'
 
     skycoord = SkyCoord(table[lon], table[lat], unit=unit, frame=frame)
