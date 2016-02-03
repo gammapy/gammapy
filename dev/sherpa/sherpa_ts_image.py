@@ -52,7 +52,7 @@ from time import time
 import numpy as np
 from sherpa.astro.ui import *
 from sherpa.utils.err import FitErr
-from const import sigma_to_fwhm
+from astropy.stats import gaussian_sigma_to_fwhm
 import morphology.utils
 import morphology.psf
 
@@ -102,7 +102,7 @@ else:
 
 set_full_model('background + exposure * psf(' + get_source().name + ')')
 [par.freeze() for par in get_model().pars]
-test_source.fwhm = sigma_to_fwhm * args.sigma
+test_source.fwhm = gaussian_signma_to_fwhm * args.sigma
 #test_source.ampl.min = 0
 thaw(test_source.ampl)
 

@@ -13,6 +13,7 @@ from astropy.table import Table
 from . import CountsSpectrum
 from ..irf.effective_area_table import EffectiveAreaTable
 from ..irf.energy_dispersion import EnergyDispersion
+from ..extern.pathlib import Path
 from ..background import ring_area_factor, Cube
 from ..data import DataStore
 from ..image import ExclusionMask
@@ -92,7 +93,7 @@ class SpectrumAnalysis(object):
             obs = np.loadtxt(str(obs), dtype=np.int)
 
         observations = []
-        for i, val in enumerate(obs):
+        for i, val in enumerate(np.atleast_1d(obs)):
             try:
                 temp = SpectrumObservation(val, self.store, on_region,
                                            bkg_method, ebounds, exclusion)
@@ -586,8 +587,8 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        outdir = make_path('ogip_data') if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True)
+        outdir = Path.cwd() if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
 
         if phafile is None:
             phafile = "pha_run{}.pha".format(self.obs)
@@ -750,7 +751,7 @@ class SpectrumFit(object):
         List of PHA files to fit
     """
 
-    DEFAULT_STAT = 'cash'
+    DEFAULT_STAT = 'wstat'
 
     def __init__(self, pha, bkg=None, arf=None, rmf=None, stat=DEFAULT_STAT):
 
@@ -758,13 +759,14 @@ class SpectrumFit(object):
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
-        self._stat = stat
+        self.statistic = stat
 
     @classmethod
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` from config file"""
         outdir = make_path(config['general']['outdir'])
-        return cls.from_dir(outdir)
+        # TODO: this is not a good solution! an obs table should be used
+        return cls.from_dir(outdir/'ogip_data')
 
     @classmethod
     def from_dir(cls, dir):
@@ -831,6 +833,8 @@ class SpectrumFit(object):
         if isinstance(stat, six.string_types):
             if stat == 'cash':
                 stat = s.Cash()
+            elif stat == 'wstat':
+                stat = s.WStat()
             else:
                 raise ValueError("Undefined stat string: {}".format(stat))
 
@@ -941,16 +945,33 @@ class SpectrumFit(object):
         ds.notice(thres_lo, thres_hi)
         datastack.set_stat(self.statistic)
         ds.fit()
+        datastack.covar()
+        covar = datastack.get_covar_results()
+        efilter = datastack.get_filter()
+
+        # First go on calculation flux points following
+        # http://cxc.harvard.edu/sherpa/faq/phot_plot.html
+        # This should be split out and improved
+        xx = datastack.get_fit_plot().dataplot.x
+        dd = datastack.get_fit_plot().dataplot.y
+        ee = datastack.get_fit_plot().dataplot.yerr
+        mm = datastack.get_fit_plot().modelplot.y
+        src = datastack.get_source()(xx)
+        points = dd / mm * src
+        errors = ee / mm * src
+        flux_graph = dict(energy=xx, flux=points, flux_err_hi=errors,
+                          flux_err_lo=errors)
+
+        from gammapy.spectrum.results import SpectrumFitResult
+        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model,
+                                                    flux_graph)
         ds.clear_stack()
         ds.clear_models()
 
     def apply_containment(self, fit):
         """Apply correction factor for PSF containment in ON region"""
         cont = self.get_containment()
-        fit['containment'] = cont
-        fit['parvals'] = list(fit['parvals'])
-        fit['parvals'][1] = fit['parvals'][1] * cont
-        return fit
+        raise NotImplementedError
 
     def get_containment(self):
         """Calculate PSF correction factor for containment in ON region"""
@@ -975,19 +996,23 @@ def run_spectral_fit_using_config(config):
     fit : `~gammapy.spectrum.SpectrumFit`
         Fit instance
     """
+    log.info("\nStarting analysis {}".format(config['general']['outdir']))
+    outdir = make_path(config['general']['outdir'])
 
     if config['general']['create_ogip']:
         analysis = SpectrumAnalysis.from_config(config)
-        outdir = config['general']['outdir']
-        analysis.write_ogip_data(outdir)
+        analysis.write_ogip_data(str(outdir / 'ogip_data'))
 
     method = config['general']['run_fit']
-    if method is not 'False':
+    if method is not False:
         fit = SpectrumFit.from_config(config)
         fit.model = config['model']['type']
         fit.energy_threshold_low = Energy(config['model']['threshold_low'])
         fit.energy_threshold_high = Energy(config['model']['threshold_high'])
         fit.info()
         fit.run(method=method)
+        log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
+        fit.result.to_yaml(str(outdir / 'fit_result.yaml'))
+        return fit
 
-    return fit
+

@@ -60,12 +60,14 @@ Contributors
 - Christoph Deil
 - Dirk Lennarz (new)
 - Johannes King
+- Lea Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
 
 Pull requests
 +++++++++++++
 
+- [#421] Add spectrum fit serialisation code (Johannes King)
 - [#403] Improve spectrum analysis (Johannes King)
 - [#414] Add Windows tests on Appveyor (Christoph Deil)
 - [#398] Add function to compute exposure cubes (Luigi Tibaldo)
@@ -74,6 +76,7 @@ Pull requests
 - [#394] Move some data specs to gamma-astro-data-formats (Christoph Deil)
 - [#392] Use external ci-helpers (Brigitta Sipocz)
 - [#387] Improve Gammapy catalog query and browser (Christoph Deil)
+- [#383] Add EnergyOffsetArray (Lea Jouvin)
 - [#379] Add gammapy.region and reflected region computation (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)

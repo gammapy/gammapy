@@ -291,7 +291,7 @@ def make_base_catalog_galactic(n_sources, rad_dis='YK04', vel_dis='H05',
 
     # For now we only simulate shell-type SNRs.
     # Later we might want to simulate certain fractions of object classes
-    # index = random_integers(0, 0, n_sources)
+    # index = randint(0, 1, n_sources)
     index = 2 * np.ones(n_sources, dtype=np.int)
     morph_type = np.array(list(morph_types.keys()))[index]
 

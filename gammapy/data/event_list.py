@@ -150,6 +150,14 @@ class EventList(Table):
         return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
 
     @property
+    def offset(self):
+        """Event offset (`~astropy.coordinates.Angle`)"""
+        position = self.radec
+        center = self.pointing_radec
+        offset = center.separation(position)
+        return Angle(offset, unit='deg')
+
+    @property
     def energy(self):
         """Event energies (`~astropy.units.Quantity`)"""
         energy = self['ENERGY']
@@ -636,14 +644,14 @@ class EventListDatasetChecker(object):
         Logger to use (use module-level Gammapy logger by default)
     """
     _AVAILABLE_CHECKS = OrderedDict(
-            misc='check_misc',
-            times='check_times',
-            coordinates='check_coordinates',
+        misc='check_misc',
+        times='check_times',
+        coordinates='check_coordinates',
     )
 
     accuracy = OrderedDict(
-            angle=Angle('1 arcsec'),
-            time=Quantity(1, 'microsecond'),
+        angle=Angle('1 arcsec'),
+        time=Quantity(1, 'microsecond'),
 
     )
 
@@ -728,9 +736,9 @@ class EventListDatasetChecker(object):
 
         # http://fermi.gsfc.nasa.gov/ssc/data/analysis/documentation/Cicerone/Cicerone_Data/Time_in_ScienceTools.html
         telescope_met_refs = OrderedDict(
-                FERMI=Time('2001-01-01T00:00:00'),
-                HESS=Time('2000-01-01T12:00:00.000'),
-                # TODO: Once CTA has specified their MET reference add check here
+            FERMI=Time('2001-01-01T00:00:00'),
+            HESS=Time('2000-01-01T12:00:00.000'),
+            # TODO: Once CTA has specified their MET reference add check here
         )
 
         telescope = self.dset.event_list.meta['TELESCOP']
