@@ -82,3 +82,10 @@ def test_dec_iau_format():
     assert dec_iau_format(dec, digits=6) == '-4226.33'
     assert dec_iau_format(dec, digits=7) == '-422633.7'
     assert dec_iau_format(dec, digits=8) == '-422633.79'
+
+def test_dec_skycoord_from_table():
+    Table_runinfo=Table.read("runinfo.fits")
+    Obstable=ObservationTable(Table_runinfo)
+    selection = dict(type='sky_circle', frame='icrs', lon=Angle(266.41, 'deg'), lat=Angle(-29.01, 'deg'), radius=Angle(5, 'deg'), border=Angle(2, 'deg'))
+Obstable.select_observations(selection)
+
