@@ -50,7 +50,8 @@ def extract_spectrum(configfile, interactive):
 
 @cli.command('compare')
 @click.argument('files', nargs=-1, required=True)
-def compare_spectrum(files):
+@click.option('--short', is_flag=True, default=False)
+def compare_spectrum(files, short):
     """Create comparison table from several spectrum results files"""
     if len(files) == 0:
         raise ValueError("")
@@ -59,6 +60,9 @@ def compare_spectrum(files):
     for f in files:
         val = SpectrumResult.from_all(f)
         master[f] = val
+
+    if short:
+        master = master['index', 'index_err', 'flux [1TeV]', 'flux_err [1TeV]']
 
     print(master.to_table(format='.3g'))
 
