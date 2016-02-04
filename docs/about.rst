@@ -29,7 +29,7 @@ Feature requests and contributions welcome!
 
 Gammapy is under very active development
 (see the `Gammapy project summary on Open HUB`_ and the `Gammapy contributors page on Github`_).
-A 1.0 release and a paper are planned for fall 2015.
+A 1.0 release and a paper are planned for 2016.
 
 For now, please see the Gammapy
 `poster <https://indico.cern.ch/event/344485/session/142/contribution/695/attachments/1136524/1626432/gammapy-icrc2015-poster.pdf>`_

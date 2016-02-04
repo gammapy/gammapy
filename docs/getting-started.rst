@@ -25,6 +25,24 @@ If you'd like to follow along, make sure you have Gammapy installed (see :ref:`i
 If you're new to Python for gamma-ray astronomy and would like to learn the basics, we recommend
 you go to the `Scipy Lecture Notes`_ or the `Practical Python for Astronomers Tutorial`_.
 
+Sample datasets
+---------------
+
+The main purpose of Gammapy is to analyse gamma-ray data.
+So to do something interesting with Gammapy, you have to download or simulate some sample datasets.
+
+There's exensive information about `gammapy.datasets` in :ref:`datasets`, but for now,
+please execute the following command that will download ~ 10 MB of curated sample datasets
+that we will use for the tutorials.
+
+.. code-block:: bash
+
+    $ gammapy-data-manage --fetch-sample
+
+
+.. warning:: This isn't implemented yet, for now please fetch :ref:`gammapy-extra` !
+
+
 Using Gammapy as a Python package
 ---------------------------------
 
@@ -68,6 +86,7 @@ An example how to perform a spectral fit using the ``gammapy-spectrum`` command 
 is available in the :ref:`spectrum_command_line_tool` section of `gammapy.spectrum`.
 
 An example how to create an counts maps from an event list is available at TODO.
+
 
 What next?
 ----------

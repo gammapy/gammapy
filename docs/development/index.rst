@@ -12,10 +12,12 @@ If something is not covered here, have a look at the very extensive Astropy deve
 `here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
 we do most things the same way.
 
-You shouldn't read all this stuff if you want to contribute something to Gammapy.
-Just open an issue or pull request on Github, or ask on the mailing list.
-We'll then help you get it done by pointing out where / how to add it and via code review on the pull request
-(and linking to relevant sections in the developer docs where relevant).
+But you don't have to read all this stuff if you want to contribute something to Gammapy.
+
+We're happy to help out with any Gammapy-related questions or issues!
+
+Just :ref:`talk to us <development-contact>`!
+
 
 .. toctree::
   :maxdepth: 1

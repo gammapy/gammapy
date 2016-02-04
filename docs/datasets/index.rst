@@ -1,3 +1,5 @@
+.. include:: ../references.txt
+
 .. _datasets:
 
 ************************************
@@ -22,6 +24,55 @@ The functions have a naming pattern (following the `sklearn.datasets` lead):
           sub-package, which contains classes representing gamma-ray data.
           And there is a separate section describing the :ref:`dataformats`
           that are commonly used in gamma-ray astronomy.
+
+.. _gammapy-extra:
+
+gammapy-extra
+=============
+
+To keep the Gammapy code repository at https://github.com/gammapy/gammapy small and clean,
+we are putting sample data files and IPython notebooks in an extra repository
+at https://github.com/gammapy/gammapy-extra/ .
+
+To get the repository, ``git clone`` it to a location of your choosing using a git protocol of your choosing
+(try HTTPS or see the `Github clone URL help article`_ if you're not sure which you want).
+
+.. code-block:: bash
+
+    git clone https://github.com/gammapy/gammapy-extra.git
+    git clone git@github.com:gammapy/gammapy-extra.git
+
+If you don't have git, you can also fetch the latest version as a zip file:
+
+.. code-block:: bash
+
+    wget https://github.com/gammapy/gammapy-extra/archive/master.zip
+    unzip master.zip # will result in a `gammapy-extra-master` folder
+
+The Gammapy tests, docs generator, examples and tutorials will access files from the ``gammapy-extra``
+repo using the `gammapy.datasets.gammapy_extra` object.
+
+For this to work, you have to set the ``GAMMAPY_EXTRA`` shell environment variable to point to that folder.
+We suggest you put this in you ``.bashrc`` or ``.profile``
+
+.. code-block:: bash
+
+    export GAMMAPY_EXTRA=/path/on/your/machine/to/gammapy-extra
+
+After you've done this, open up a new terminal (or ``source .profile``) and check if ``gammapy-extra`` is found:
+
+.. code-block:: bash
+
+    # TODO: make this print some info about gammapy-extra (including a version!!!)
+    gammapy-info
+
+Example usage:
+
+.. code-block:: python
+
+    >>> from gammapy.datasets import gammapy_extra
+    >>> gammapy_extra.filename('logo/gammapy_banner.png')
+    '/Users/deil/code/gammapy-extra/logo/gammapy_banner.png'
 
 Getting Started
 ===============
