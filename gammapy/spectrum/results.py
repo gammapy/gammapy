@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import numpy as np
-from astropy.table import Table, Column, QTable
+from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit
 
 from ..extern.bunch import Bunch
@@ -260,17 +260,21 @@ class SpectrumFitResult(object):
         val = read_yaml(filename)
         return cls.from_dict(val)
 
-    def to_table(self):
+    def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
         t = Table()
         for par in self.parameters.keys():
-            t[par] = np.atleast_1d(self.parameters[par])
-            t['{}_err'.format(par)] = np.atleast_1d(self.parameter_errors[par])
+            t[par] = Column(data=np.atleast_1d(self.parameters[par]), **kwargs)
+            t['{}_err'.format(par)] = Column(
+                data=np.atleast_1d(self.parameter_errors[par]), **kwargs)
 
-        t['Threshold'] = self.energy_range[0]
+        t['e_min'] = Column(data=np.atleast_1d(self.energy_range[0]), **kwargs)
+        t['e_max'] = Column(data=np.atleast_1d(self.energy_range[1]), **kwargs)
         if self.fluxes is not None:
-            t['Flux@1TeV'] = self.fluxes['1TeV']
-            t['Flux@1TeV_err'] = self.flux_errors['1TeV']
+            t['flux [1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
+                                      **kwargs)
+            t['flux_err [1TeV]'] = Column(
+                data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
         return t
 
     def to_sherpa_model(self, name='default'):
@@ -512,11 +516,20 @@ class SpectrumStats(object):
     ----------
     n_on : int
         number of events inside on region
+    n_off : int
+        number of events inside on region
+    alpha : float
+        exposure ratio between on and off regions
+    excess : float
+        number of excess events in on region
     energy_range : `~gammapy.utils.energy.EnergyBounds`
         Energy range over which the spectrum as extracted
     """
-    def __init__(self, **pars):
-        for k, v in pars.items():
+    def __init__(self, n_on=None, n_off=None, energy_range=None, **kwargs):
+        self.n_on = n_on
+        self.n_off = n_off
+        self.energy_range = energy_range
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
     @classmethod
@@ -553,13 +566,18 @@ class SpectrumStats(object):
             data = json.load(fh)
 
         val = data['rate_stats']['event_stats']
+        # Todo: What is the energy range of BgStats?
+        val.update(energy_range=EnergyBounds([0.1, 300], 'TeV'))
         return cls(**val)
 
     def to_dict(self):
+        """Return dict for serialization"""
         rtval = dict(spectrum=dict())
         v = rtval['spectrum']
         v['n_on'] = int(self.n_on)
         v['n_off'] = int(self.n_off)
+        v['alpha'] = float(self.alpha)
+        v['excess'] = float(self.excess)
         v['energy_range'] = self.energy_range.to_dict()
         return rtval
 
@@ -601,37 +619,84 @@ class SpectrumStats(object):
         val = read_yaml(filename)
         return cls.from_dict(val)
 
-    def to_table(self):
+    def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
         t = Table()
-        t['n_on'] = np.atleast_1d(self.n_on)
+        t['n_on'] = Column(data=np.atleast_1d(self.n_on), **kwargs)
+        t['n_off'] = Column(data=np.atleast_1d(self.n_off), **kwargs)
+        t['alpha'] = Column(data=np.atleast_1d(self.alpha), **kwargs)
+        t['excess'] = Column(data=np.atleast_1d(self.excess), **kwargs)
         return t
 
 
-class SpectrumFitResultDict(dict):
-    """Dict of several `~gammapy.spectrum.SpectrumFitResults`"""
+class SpectrumResult(object):
+    """Class holding all results of a spectral analysis
+
+    Parameters
+    ----------
+    spectrum_stats: `~gammapy.spectrum.results.SpectrumStats`, optional
+        Spectrum stats
+    spectrum_fit_result: `~gammapy.spectrum.results.SpectrumFitResult`, optional
+        Spectrum fit result
+        """
+
+    def __init__(self, spectrum_stats=None, spectrum_fit_result=None,
+                 flux_points=None):
+
+        self.stats = spectrum_stats
+        self.fit = spectrum_fit_result
+        self.flux_points = flux_points
+
+    @classmethod
+    def from_fitspectrum_json(cls, filename, model=0):
+        stats = SpectrumStats.from_fitspectrum_json(filename)
+        fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
+
+        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
+                   flux_points=None)
+
+    @classmethod
+    def from_all(cls, filename):
+        try:
+            val = cls.from_fitspectrum_json(filename)
+        except KeyError:
+            val = cls.from_yaml(filename)
+
+        return val
+
+    def to_table(self, **kwargs):
+        """Return `~astropy.table.Table` containing all results"""
+        val = [self.stats, self.fit, self.flux_points]
+        l = list()
+        for result in val:
+            if result is not None:
+                l.append(result.to_table(**kwargs))
+        return hstack(l)
+
+
+class SpectrumResultDict(dict):
+    """Dict of several spectrum results
+
+    * `~gammapy.spectrum.results.SpectrumStats`
+    * `~gammapy.spectrum.results.SpectrumFitResult`
+    """
 
     def info(self):
         raise NotImplementedError
 
-    def to_table(self):
+    def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
 
         val = self.keys()
         analyses = Column(val, name='Analysis')
-        table = self[val.pop(0)].to_table()
-        # Add other analysis with correct units
+        l = list()
         for key in val:
-            temp = QTable(self[key].to_table())
-            new_row = list()
-            for col in table.columns:
-                new_row.append(temp[col].to(table[col].unit).value)
-            table.add_row(new_row)
-
+            l.append(self[key].to_table(**kwargs))
+        table = vstack(l, join_type='outer')
         table.add_column(analyses, index=0)
         return table
 
-    def overplot(self):
+    def overplot_spectra(self):
         """Overplot spectra"""
         raise NotImplementedError
 

@@ -2,6 +2,8 @@ import logging
 import click
 
 from gammapy.spectrum import run_spectrum_extraction_using_config
+from gammapy.spectrum.results import SpectrumResult
+from gammapy.spectrum.results import SpectrumResultDict
 from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
 from gammapy.utils.scripts import read_yaml
 
@@ -45,4 +47,19 @@ def extract_spectrum(configfile, interactive):
     fit = run_spectrum_fit_using_config(config)
     if interactive:
         import IPython; IPython.embed()
+
+@cli.command('compare')
+@click.argument('files', nargs=-1, required=True)
+def compare_spectrum(files):
+
+    if len(files) == 0:
+        raise ValueError("")
+
+    master = SpectrumResultDict()
+    for f in files:
+        val = SpectrumResult.from_all(f)
+        master[f] = val
+
+    print(master.to_table(format='.3g'))
+
 

@@ -337,10 +337,11 @@ class SpectrumObservation(object):
         num = np.sum(val)
         den = np.sum([o.off_vector.total_counts for o in obs_list])
         alpha = num/den
+        off_vec.backscal = 1. / alpha
 
         m = Bunch()
         m['obs_ids'] = [o.obs_id for o in obs_list]
-        m['averaged_alpha'] = alpha
+        m['alpha_method1'] = alpha
         return cls(obs_id, on_vec, off_vec, arf, rmf, meta=m)
 
     @property
@@ -352,9 +353,13 @@ class SpectrumObservation(object):
     def spectrum_stats(self):
         """`~gammapy.spectrum.results.SpectrumStats`
         """
+        n_on = self.on_vector.total_counts
+        n_off = self.off_vector.total_counts
         val = dict()
-        val['n_on'] = self.on_vector.total_counts
-        val['n_off'] = self.off_vector.total_counts
+        val['n_on'] = n_on
+        val['n_off'] = n_off
+        val['alpha'] = self.alpha
+        val['excess'] = float(n_on) - float(n_off) * self.alpha
         val['energy_range'] = self.meta.energy_range
         return SpectrumStats(**val)
 
