@@ -171,9 +171,7 @@ class SpectrumFitResult(object):
         The output dict can be used for YAML or JSON serialisation.
         """
         val = dict()
-        val['energy_range'] = dict(min=self.energy_range[0].value,
-                                   max=self.energy_range[1].value,
-                                   unit='{}'.format(self.energy_range.unit))
+        val['energy_range'] = self.energy_range.to_dict()
         val['parameters'] = dict()
         for key in self.parameters:
             par = self.parameters[key]
@@ -505,23 +503,64 @@ class SpectrumFitResult(object):
 
 
 class SpectrumStats(object):
-    """Class summarizing basic spectral parameteres"""
-    def __init__(self, n_on):
-        self.n_on = n_on
+    """Class summarizing basic spectral parameters
+
+    'Spectrum' refers to a set of on, off, and effective area vectors
+     as well as an energy dispersion matrix.
+
+    Parameters
+    ----------
+    n_on : int
+        number of events inside on region
+    energy_range : `~gammapy.utils.energy.EnergyBounds`
+        Energy range over which the spectrum as extracted
+    """
+    def __init__(self, **pars):
+        for k, v in pars.items():
+            setattr(self, k, v)
 
     @classmethod
     def from_fitspectrum_json(cls, filename):
-        pass
+        """Read FitSpectrum output file
+
+        Parameters
+        ----------
+        filename : str
+            JSON file produced by FitSpectrum
+        """
+        import json
+
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        val = data['spectrum_stats']
+        return cls(**val)
 
     @classmethod
-    def from_spectrum_observation(cls, obs):
-        n_on = obs.on_vector.total_counts
-        return cls(n_on)
+    def from_bg_stats_json(cls, filename):
+        """Read BgStats json file
+
+        This file can be produces with hap-show
+
+        Parameters
+        ----------
+        filename : str
+            JSON file produced by hap-show
+        """
+        import json
+
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        val = data['rate_stats']['event_stats']
+        return cls(**val)
 
     def to_dict(self):
         rtval = dict(spectrum=dict())
         v = rtval['spectrum']
-        v['total_on'] = int(self.n_on)
+        v['n_on'] = int(self.n_on)
+        v['n_off'] = int(self.n_off)
+        v['energy_range'] = self.energy_range.to_dict()
         return rtval
 
     def to_yaml(self, filename):
@@ -547,9 +586,8 @@ class SpectrumStats(object):
     @classmethod
     def from_dict(cls, val):
         d = val['spectrum']
-        n_on = d['total_on']
 
-        return cls(n_on)
+        return cls(**d)
 
     @classmethod
     def from_yaml(cls, filename):
@@ -577,7 +615,7 @@ class SpectrumFitResultDict(dict):
         raise NotImplementedError
 
     def to_table(self):
-        """Create overview `~astropy.table.QTable`"""
+        """Create overview `~astropy.table.Table`"""
 
         val = self.keys()
         analyses = Column(val, name='Analysis')

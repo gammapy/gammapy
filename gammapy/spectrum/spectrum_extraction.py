@@ -60,20 +60,22 @@ class SpectrumExtraction(object):
     """
 
     def __init__(self, datastore, obs_ids, on_region, exclusion, bkg_method,
-                 nobs=-1, ebounds=None):
+                 nobs=-1, ebounds=None, **kwargs):
 
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
+        self.datastore = datastore
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
         self.ebounds = ebounds
         self.bkg_method = bkg_method
         self.nobs = nobs
+        self.extra_info = kwargs
 
         if isinstance(obs_ids, six.string_types):
-            obs = make_path(obs_ids)
-            obs = np.loadtxt(str(obs), dtype=np.int)
+            temp = make_path(obs_ids)
+            obs_ids = np.loadtxt(str(temp), dtype=np.int)
         self.obs_ids = obs_ids
 
         self._observations = None
@@ -88,7 +90,9 @@ class SpectrumExtraction(object):
                                                           self.on_region,
                                                           self.bkg_method,
                                                           self.ebounds,
-                                                          self.exclusion)
+                                                          self.exclusion,
+                                                          **self.extra_info
+                                                          )
             except IndexError:
                 log.warning(
                     'Observation {} not in store {}'.format(val, self.datastore))
@@ -130,7 +134,7 @@ class SpectrumExtraction(object):
         return ana
 
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config, **kwargs):
         """Create `~gammapy.spectrum.SpectrumAnalysis` from config dict
 
         Parameters
@@ -177,7 +181,7 @@ class SpectrumExtraction(object):
 
         return cls(datastore=store, obs_ids=obs, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
-                   nobs=nobs, ebounds=ebounds)
+                   nobs=nobs, ebounds=ebounds, **kwargs)
 
     @classmethod
     def from_configfile(cls, configfile):
@@ -217,6 +221,10 @@ class SpectrumObservation(object):
         self.effective_area = effective_area
         self.meta = Bunch(meta)
 
+        #These values are needed for I/O
+        self.meta.setdefault('phafile', 'None')
+        self.meta.setdefault('energy_range', EnergyBounds([0.01, 300], 'TeV'))
+
     @classmethod
     def read_ogip(cls, phafile, rmffile=None, bkgfile=None, arffile=None):
         """ Read PHA file
@@ -230,7 +238,7 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True):
+        exclusion, save_meta=True, dry_run=False):
         """ Create Spectrum Observation from datastore
 
         BLABLA is stored in the meta
@@ -251,7 +259,10 @@ class SpectrumObservation(object):
             Exclusion mask
         save_meta : bool, optional
             Save meta information, default: True
+        dry_run : bool, optional
+            Only process meta data, not actual spectra are extracted
         """
+
         event_list = store.load(obs_id=obs_id, filetype='events')
         on = None
         off = None
@@ -268,6 +279,9 @@ class SpectrumObservation(object):
         m['datastore'] = store
         m['ebounds'] = ebounds
         m['obs_id'] = obs_id
+
+        if dry_run:
+          return cls(obs_id, None, None, None, None, meta=m)
 
         b = BackgroundEstimator(event_list, m)
         b.make_off_vector()
@@ -290,7 +304,7 @@ class SpectrumObservation(object):
         return cls(obs_id, on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
     @classmethod
-    def from_observation_list(cls, obs_list, obs_id = None):
+    def from_observation_list(cls, obs_list, obs_id=None):
         """Create `~gammapy.spectrum.SpectrumObservations` from list
 
         Observation stacking is implemented as follows
@@ -336,7 +350,13 @@ class SpectrumObservation(object):
 
     @property
     def spectrum_stats(self):
-        return SpectrumStats.from_spectrum_observation(self)
+        """`~gammapy.spectrum.results.SpectrumStats`
+        """
+        val = dict()
+        val['n_on'] = self.on_vector.total_counts
+        val['n_off'] = self.off_vector.total_counts
+        val['energy_range'] = self.meta.energy_range
+        return SpectrumStats(**val)
 
     def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                    outdir=None, clobber=True):
@@ -507,6 +527,7 @@ class SpectrumObservationList(list):
         col2 = [o.meta.phafile for o in self]
         return ObservationTable(data=[col1, col2], names=names)
 
+
 class BackgroundEstimator(object):
     """TBD
 
@@ -585,12 +606,12 @@ class BackgroundEstimator(object):
         self.off_vec = off_vec
 
 
-def run_spectrum_extraction_using_config(config):
+def run_spectrum_extraction_using_config(config, **kwargs):
     """
     Run a 1D spectral analysis using a config dict
 
-    This function is called by the ``gammapy-spectrum`` command line tool.
-    See :ref:`spectrum_command_line_tool`.
+    kwargs are forwarded to
+     :func:`spectrum.spectrum_extraction.SpectrumObservation.from_config`
 
     Parameters
     ----------
@@ -602,12 +623,17 @@ def run_spectrum_extraction_using_config(config):
     fit : `~gammapy.spectrum.SpectrumFit`
         Fit instance
     """
+    kwargs.setdefault('dry_run', False)
     config = config['extraction']
     outdir = config['results']['outdir']
     log.info("\nStarting analysis {}".format(outdir))
     outdir = make_path(outdir)
-    analysis = SpectrumExtraction.from_config(config)
+    outdir.mkdir(exist_ok=True, parents=True)
+    analysis = SpectrumExtraction.from_config(config, **kwargs)
     obs = analysis.observations
+    if kwargs['dry_run']:
+        return analysis
+
     if config['off_region']['type'] == 'reflected':
         mask = obs.filter_by_reflected_regions(config['off_region']['n_min'])
         # Todo: should ObservationList subclass np.array to avoid this hack?
@@ -616,8 +642,10 @@ def run_spectrum_extraction_using_config(config):
 
     if config['results']['write_ogip']:
         obs.write_ogip_data(str(outdir / 'ogip_data'))
-    rfile = config['results']['result_file']
-    obs.total_spectrum.spectrum_stats.to_yaml(str(outdir / rfile))
+    rfile = outdir / config['results']['result_file']
+
+    obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
+    log.info('\nWriting file {}'.format(rfile))
     obs.to_observation_table().write(
         str(outdir / 'observations.fits'), format='fits', overwrite=True)
 

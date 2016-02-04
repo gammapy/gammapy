@@ -395,3 +395,13 @@ class EnergyBounds(Energy):
         header['HDUVERS2'] = '1.1.0', 'Obsolete'
 
         return hdu
+
+    def to_dict(self):
+        """Construct dict representing an energy range"""
+        if len(self) != 2:
+            raise ValueError(
+                "This is not an energy range. Nbins: {}".format(self.nbins))
+
+        d = dict(min=self[0].value, max=self[1].value, unit='{}'.format(self.unit))
+
+        return d

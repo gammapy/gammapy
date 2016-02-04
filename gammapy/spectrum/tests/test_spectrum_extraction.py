@@ -36,7 +36,7 @@ def test_spectrum_extraction(tmpdir):
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
-    obs = [23523, 23559]
+    obs = [23523, 23559, 11111]
     store = gammapy_extra.filename("datasets/hess-crab4")
     ds = DataStore.from_dir(store)
 
