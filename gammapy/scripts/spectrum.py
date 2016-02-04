@@ -51,7 +51,7 @@ def extract_spectrum(configfile, interactive):
 @cli.command('compare')
 @click.argument('files', nargs=-1, required=True)
 def compare_spectrum(files):
-
+    """Create comparison table from several spectrum results files"""
     if len(files) == 0:
         raise ValueError("")
 

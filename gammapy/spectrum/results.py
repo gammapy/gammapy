@@ -96,8 +96,7 @@ class SpectrumFitResult(object):
         flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
         flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
         flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_ul'].unit = 'cm-2 s-1 TeV-1'
-
+        
         return cls(energy_range=energy_range, parameters=parameters,
                    parameter_errors=parameters_errors,
                    spectral_model=spectral_model,
@@ -656,10 +655,14 @@ class SpectrumResult(object):
                    flux_points=None)
 
     @classmethod
+    def from_yaml(cls, filename):
+        raise NotImplementedError
+
+    @classmethod
     def from_all(cls, filename):
         try:
             val = cls.from_fitspectrum_json(filename)
-        except KeyError:
+        except KeyError as e1:
             val = cls.from_yaml(filename)
 
         return val
