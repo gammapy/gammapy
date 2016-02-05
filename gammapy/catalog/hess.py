@@ -229,6 +229,7 @@ class SourceCatalogHGPS(SourceCatalog):
         self.components = Table(self.hdu_list['HGPS_COMPONENTS'].data)
         self.components.index_column('Component_ID')
         self.associations = Table(self.hdu_list['HGPS_ASSOCIATIONS'].data)
+        self.identifications = Table(self.hdu_list['HGPS_IDENTIFICATIONS'].data)
         super(SourceCatalogHGPS, self).__init__(table=table)
 
     def _make_source_object(self, index):

@@ -73,10 +73,10 @@ class SourceCatalogATNF(SourceCatalog):
     Unfortunately it's only available in a database format that can only
     be read with their software.
 
-    This function loads a FITS copy of version 1.51 of the ATNF catalog:
+    This function loads a FITS copy of version 1.54 of the ATNF catalog:
     http://www.atnf.csiro.au/research/pulsar/psrcat/catalogueHistory.html
 
-    The ``ATNF_v1.51.fits.gz`` file and ``make_atnf.py`` script are available
+    The ``ATNF_v1.54.fits.gz`` file and ``make_atnf.py`` script are available
     `here <https://github.com/gammapy/gammapy-extra/blob/master/datasets/catalogs/>`__.
     """
     name = 'ATNF'
@@ -85,5 +85,5 @@ class SourceCatalogATNF(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = gammapy_extra.filename('datasets/catalogs/ATNF_v1.51.fits.gz')
+            filename = gammapy_extra.filename('datasets/catalogs/ATNF_v1.54.fits.gz')
             self.table = Table.read(filename)
