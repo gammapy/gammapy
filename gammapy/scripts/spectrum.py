@@ -48,22 +48,34 @@ def extract_spectrum(configfile, interactive):
     if interactive:
         import IPython; IPython.embed()
 
-@cli.command('compare')
+@cli.command('display')
 @click.argument('files', nargs=-1, required=True)
 @click.option('--short', is_flag=True, default=False)
-def compare_spectrum(files, short):
-    """Create comparison table from several spectrum results files"""
-    if len(files) == 0:
-        raise ValueError("")
+@click.option('--browser', is_flag=True, default=False)
+def display_spectrum(files, short, browser):
+    """Display results table of one or several spectrum results files"""
 
-    master = SpectrumResultDict()
-    for f in files:
-        val = SpectrumResult.from_all(f)
-        master[f] = val
+    master = SpectrumResultDict.from_files(files)
+    t = master.to_table(format='.3g')
 
     if short:
-        master = master['index', 'index_err', 'flux [1TeV]', 'flux_err [1TeV]']
+        t = t['analysis', 'index', 'index_err', 'flux [1TeV]', 'flux_err [1TeV]']
 
-    print(master.to_table(format='.3g'))
+    if browser:
+        t.show_in_browser(jsviewer=True)
+    else:
+        print(t)
 
+@cli.command('plot')
+@click.argument('file', nargs=1, required=True)
+@click.option('--flux_unit', default='m-2 s-1 TeV-1', help='Unit of flux axis')
+@click.option('--energy_unit', default='TeV', help='Unit of energy axis')
+@click.option('--energy_power', default=0, help='Energy power to multiply flux with')
+def overplot_spectrum(file, flux_unit, energy_unit, energy_power):
+    """Plot spectrum results file"""
 
+    import matplotlib.pyplot as plt
+    spec = SpectrumResult.from_all(file)
+    spec.fit.plot_spectrum(flux_unit=flux_unit, energy_unit=energy_unit,
+                           e_power=energy_power)
+    plt.show()

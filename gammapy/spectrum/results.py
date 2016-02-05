@@ -687,11 +687,26 @@ class SpectrumResultDict(dict):
     def info(self):
         raise NotImplementedError
 
+    @classmethod
+    def from_files(cls, files):
+        """Create `~gammapy.spectrum.SpectrumResultDict` from a list of files
+
+        Parameters
+        ----------
+        files : list, tuple
+            Files to load
+        """
+        val = cls()
+        for f in files:
+            temp = SpectrumResult.from_all(f)
+            val[f] = temp
+        return val
+
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
 
         val = self.keys()
-        analyses = Column(val, name='Analysis')
+        analyses = Column(val, name='analysis')
         l = list()
         for key in val:
             l.append(self[key].to_table(**kwargs))
