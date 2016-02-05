@@ -1,0 +1,35 @@
+# Gammapy spectrum analysis example config file
+
+extraction:
+  data:
+    datastore: $GAMMAPY_EXTRA/datasets/hess-crab4
+    runlist : [23592, 23526]
+    nruns : 0
+
+  binning:
+    equal_log_spacing: true
+    emin: 100 GeV
+    emax: 50 TeV
+    nbins: 60
+
+  on_region:
+    type: circle
+    center_x: 83.633083 deg
+    center_y: 22.014500 deg
+    system: icrs
+    radius: 0.3 deg
+
+  off_region:
+    type: reflected
+    n_min: 1
+    min_distance : 0.02 rad
+
+  excluded_regions:
+    file: $GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits 
+
+  results:
+    outdir: crab_analysis
+    write_ogip : true
+    result_file : spectrum_stats.yaml
+
+

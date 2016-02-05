@@ -203,7 +203,7 @@ class SpectrumFitResult(object):
         """
         import yaml
 
-        d = self.to_dict()
+        d = dict(fitresult = self.to_dict())
         val = yaml.safe_dump(d, default_flow_style=False)
 
         with open(str(filename), 'w') as outfile:
@@ -257,7 +257,7 @@ class SpectrumFitResult(object):
             File to write
         """
         val = read_yaml(filename)
-        return cls.from_dict(val)
+        return cls.from_dict(val['fitresult'])
 
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
@@ -594,7 +594,7 @@ class SpectrumStats(object):
 
         import yaml
 
-        d = self.to_dict()
+        d = dict(spectrumstats=self.to_dict())
         val = yaml.safe_dump(d, default_flow_style=False)
 
         with open(str(filename), 'w') as outfile:
@@ -616,7 +616,7 @@ class SpectrumStats(object):
             File to read
         """
         val = read_yaml(filename)
-        return cls.from_dict(val)
+        return cls.from_dict(val['spectrumstats'])
 
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
@@ -656,13 +656,24 @@ class SpectrumResult(object):
 
     @classmethod
     def from_yaml(cls, filename):
-        raise NotImplementedError
+
+        try:
+            stats = SpectrumStats.from_yaml(filename)
+        except KeyError:
+            stats = None
+        try:
+            fit = SpectrumFitResult.from_yaml(filename)
+        except KeyError:
+            fit = None
+
+        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
+                   flux_points=None)
 
     @classmethod
     def from_all(cls, filename):
         try:
             val = cls.from_fitspectrum_json(filename)
-        except KeyError as e1:
+        except ValueError as e1:
             val = cls.from_yaml(filename)
 
         return val
