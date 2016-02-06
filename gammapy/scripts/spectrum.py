@@ -5,6 +5,7 @@ from gammapy.spectrum import run_spectrum_extraction_using_config
 from gammapy.spectrum.results import SpectrumResult
 from gammapy.spectrum.results import SpectrumResultDict
 from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
+from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from gammapy.utils.scripts import read_yaml
 
 __all__ = []
@@ -26,6 +27,7 @@ def cli():
     """
     pass
 
+
 @cli.command('extract')
 @click.option('--interactive', is_flag=True, default=False)
 @click.option('--dry-run', is_flag=True, default=False)
@@ -41,12 +43,31 @@ def extract_spectrum(configfile, interactive, dry_run):
 @cli.command('fit')
 @click.option('--interactive', is_flag=True, default=False)
 @click.argument('configfile')
-def extract_spectrum(configfile, interactive):
+def fit_spectrum(configfile, interactive):
     """Fit spectral model to 1D spectrum"""
     config = read_yaml(configfile)
     fit = run_spectrum_fit_using_config(config)
     if interactive:
         import IPython; IPython.embed()
+
+
+@cli.command('all')
+@click.option('--interactive', is_flag=True, default=False)
+@click.argument('configfile')
+def all_spectrum(configfile, interactive):
+    """Fit spectral model to 1D spectrum"""
+    config = read_yaml(configfile)
+    fit, analysis = run_spectrum_analysis_using_config(config)
+    if interactive:
+        import IPython; IPython.embed()
+
+
+@cli.command('pipe')
+@click.argument('configfile')
+def spectrum_pipe(configfile):
+    """Run spectrum analysis pipeline"""
+    raise NotImplementedError
+
 
 @cli.command('display')
 @click.argument('files', nargs=-1, required=True)
@@ -65,6 +86,7 @@ def display_spectrum(files, short, browser):
         t.show_in_browser(jsviewer=True)
     else:
         print(t)
+
 
 @cli.command('plot')
 @click.argument('file', nargs=1, required=True)

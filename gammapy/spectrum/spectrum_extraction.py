@@ -625,8 +625,8 @@ def run_spectrum_extraction_using_config(config, **kwargs):
 
     Returns
     -------
-    fit : `~gammapy.spectrum.SpectrumFit`
-        Fit instance
+    analysis : `~gammapy.spectrum.spectrum_extraction.SpectrumExtraction`
+        Spectrum extraction analysis instance
     """
     kwargs.setdefault('dry_run', False)
     config = config['extraction']

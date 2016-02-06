@@ -278,8 +278,8 @@ def run_spectrum_fit_using_config(config):
 
     Returns
     -------
-    fit : `~gammapy.spectrum.SpectrumFit`
-        Fit instance
+    fit : `~gammapy.spectrum.spectrum_fit.SpectrumFit`
+        Spectrum fit instance
     """
 
     config = config['fit']
@@ -293,4 +293,5 @@ def run_spectrum_fit_using_config(config):
     log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
     outdir = make_path(config['outdir'])
     fit.result.to_yaml(str(outdir / config['result_file']))
+
     return fit

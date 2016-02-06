@@ -4,6 +4,10 @@ from __future__ import (print_function)
 import logging
 import numpy as np
 
+from gammapy.spectrum import run_spectrum_extraction_using_config
+from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
+from gammapy.utils.scripts import read_yaml, recursive_merge_dicts, make_path, \
+    write_yaml
 
 __all__ = ['SpectrumPipe']
 
@@ -16,12 +20,11 @@ class SpectrumPipe(object):
     Parameters
     ----------
     config : list
-        List of configurations for `~gammapy.spectrum.SpectrumAnalysis`
+        List of configuration files
     """
 
     def __init__(self, config):
         self.config = config
-        self._analysis = list([])
 
     @classmethod
     def from_configfile(cls, filename, auto_outdir=True):
@@ -57,26 +60,17 @@ class SpectrumPipe(object):
             temp = config[analysis]
             anaconf = recursive_merge_dicts(anaconf, temp)
             if auto_outdir:
-                anaconf['general']['outdir'] = analysis
+                anaconf['extraction']['results']['outdir'] = analysis
+                anaconf['fit']['outdir'] = analysis
 
             analist.append(anaconf)
 
         return cls(analist)
 
-    @property
-    def analysis(self):
-        """ List of `~gammapy.spectrum.SpectrumAnalysis`
-        """
-        if not self._analysis:
-            for conf in self.config:
-                self._analysis.append(SpectrumAnalysis.from_config(conf))
-
-        return self._analysis
-
     def write_configs(self):
         """Write analysis configs to disc"""
         for conf in self.config:
-            outdir = make_path(conf['general']['outdir'])
+            outdir = make_path(conf['fit']['outdir'])
             outdir.mkdir(exist_ok=True)
             outfile = outdir / 'config.yaml'
             write_yaml(conf, str(outfile), logger=log)
@@ -85,97 +79,38 @@ class SpectrumPipe(object):
         """
         Basic information about the analysis pipeline
         """
-        ss = "\nSpectrum Pipe ({} analyses)\n".format(len(self.analysis))
-        for ana in self.analysis:
-            ss += ana.info()
-
-        return ss
+        raise NotImplementedError
 
     def run(self):
-        """Run Spectrum Analysis Pipe"""
+        """Run spectrum pipe"""
         for conf in self.config:
-            run_spectral_fit_using_config(conf)
+            run_spectrum_analysis_using_config(conf)
 
-    def print_result(self):
-        """Print Fit Results"""
-        print('\n------------------------------')
-        for target, res in self.result.iteritems():
-            gamma = res['parvals'][0]
-            gamma_err = res['parmaxes'][0]
-            norm = res['parvals'][1] * 1e9
-            norm_err = res['parmaxes'][1] * 1e9
-            print('\n')
-            print('Target     : {}'.format(target))
-            print('Gamma      : {0:.3f} +/- {1:.3f}'.format(gamma, gamma_err))
-            print('Flux@1TeV  : {0:.3e} +/- {1:.3e}'.format(norm, norm_err))
-            print('Containment: {0:.1%}'.format(res['containment']))
-        print('\n------------------------------\n')
 
-    def make_comparison_plot(self, filename):
-        """Create comparison plot
+def run_spectrum_analysis_using_config(config):
+    """Run entire specturm analysis
 
-        This function takes some reference values for the spectrum
-        pipeline and create a plot that visualizes the deviation
-        of the pipeline results to the reference values
+    This function simply calls
+    * :func:`gammapy.spectrum.spectrum_extraction.run_spectrum_extraction_using_config()
+    * :func:`gammapy.spectrum.spectrum_fit.run_spectrum_fit_using_config()
 
-        TODO: Enable this script to run on old fit results
-        """
-        import matplotlib.pyplot as plt
+    Parameters
+    ----------
+    config : dict
+       config dict with keys 'extraction' and 'fit'
 
-        ref = read_yaml(filename, log)
-        labels = []
-        g_diff = []
-        g_diff_err = []
-        f_diff = []
-        f_diff_err = []
+    Returns
+    -------
+    fit : `~gammapy.spectrum.spectrum_fit.SpectrumFit`
+        Spectrum fit instance
+    analysis : `~gammapy.spectrum.spectrum_extraction.SpectrumExtraction`
+        Spectrum extraction analysis instance
+    """
 
-        for target, res in self.result.iteritems():
-            try:
-                sec = ref[target]
-            except KeyError:
-                log.warning('No reference values found in {0} for '
-                            'analysis {1}'.format(filename, target))
+    analysis = run_spectrum_extraction_using_config(config)
+    fit = run_spectrum_fit_using_config(config)
 
-            else:
-                labels.append(target)
-                g_ref = float(sec['index'].split()[0])
-                g_ref_err = float(sec['index'].split()[1])
-                g_act = res['parvals'][0]
-                g_act_err = res['parmaxes'][0]
+    #Todo: add utility to not have to specify same outdir twice
+    #Todo: add utility to write only one outputfile
 
-                f_exp = float("1" + sec['flux'].split()[2])
-                f_ref = float(sec['flux'].split()[0]) * f_exp
-                f_ref_err = float(sec['flux'].split()[1]) * f_exp
-                f_act = res['parvals'][1] * 1e9
-                f_act_err = res['parmaxes'][1] * 1e9
-
-                g_diff.append(g_ref - g_act)
-                g_diff_err.append(np.sqrt(g_ref_err**2 + g_act_err**2))
-
-                f_diff.append(f_act / f_ref)
-                f_diff_err.append(np.sqrt((f_ref_err * f_act / f_ref**2)**2 + (
-                    f_act_err / f_ref)**2))
-
-        x = np.arange(len(labels))
-        fig, axarr = plt.subplots(2, sharex=True)
-        plt.sca(axarr[0])
-        plt.xticks(x, labels, size='medium', rotation=45)
-        plt.errorbar(x, g_diff, yerr=g_diff_err, fmt='b.')
-        min = -1
-        max = len(x)
-        plt.xlim(min, max)
-        plt.ylim(-0.5, 0.5)
-        plt.ylabel('Index - Reference Value')
-        plt.errorbar(np.linspace(min, max, 10000), np.zeros(10000),
-                     yerr=0.2, fmt='r-', ecolor='lightgray')
-
-        plt.sca(axarr[1])
-        axarr[1].errorbar(x, f_diff, yerr=f_diff_err, fmt='g.')
-        plt.ylabel('Flux @ 1 TeV / Reference Value')
-        plt.ylim(0, 2)
-        plt.errorbar(np.linspace(min, max, 10000), np.ones(10000),
-                     yerr=0.2, fmt='r-', ecolor='lightgray')
-
-        val = filename.split('.')[0]
-        fig.savefig('comparison_to_{}.png'.format(val))
-
+    return fit, analysis
