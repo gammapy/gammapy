@@ -134,7 +134,11 @@ matrix:
     # You can move builds that temporarily fail because of some non-Gammapy
     # issue here
     # Please add a link to a GH issue that tracks the upstream issue.
-#    allow_failures:
+    allow_failures:
+        # see https://github.com/gammapy/gammapy/issues/439
+        - os: linux
+          env: PYTHON_VERSION=3.5 NUMPY_VERSION=dev SETUP_CMD='test -V'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
 
 
 install:
