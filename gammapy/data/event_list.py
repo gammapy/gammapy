@@ -424,9 +424,21 @@ class EventList(Table):
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
     def plot_energy_dependence(self, ax=None):
+        """
+        A plot showing counts as a function of energy. Not implemented.
+        """
         raise NotImplementedError
 
     def plot_offset_dependence(self, ax=None):
+        """
+        A plot showing counts as a function of camera offset. Not implemented.
+        """
+        raise NotImplementedError
+
+    def plot_energy_offset(self, ax=None):
+        """
+        A plot showing energy dependence as a function of  camera offset. Not implemented.
+        """
         raise NotImplementedError
 
     def plot_time_map(self, ax=None):
