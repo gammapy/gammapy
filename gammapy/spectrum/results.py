@@ -12,6 +12,12 @@ from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml
 
+__all__ = ['SpectrumStats',
+           'SpectrumFitResult',
+           'SpectrumResult',
+           'SpectrumResultDict',
+           'FluxPoints',
+           ]
 
 @six.add_metaclass(abc.ABCMeta)
 class Result():
@@ -45,7 +51,7 @@ class Result():
             File to read
         """
         val = read_yaml(filename)
-        return cls.from_dict(val[HIGH_LEVEL_KEY])
+        return cls.from_dict(val[cls.HIGH_LEVEL_KEY])
 
     def to_dict(self):
         """Export to Python dict
@@ -54,7 +60,7 @@ class Result():
         """
         raise NotImplementedError
 
-    def to_yaml(self, filename, key):
+    def to_yaml(self, filename):
         """Write YAML file
 
         Parameters
@@ -68,7 +74,7 @@ class Result():
         import yaml
 
         d = dict()
-        d[HIGH_LEVEL_KEY] = self.to_dict()
+        d[self.HIGH_LEVEL_KEY] = self.to_dict()
         val = yaml.safe_dump(d, default_flow_style=False)
 
         with open(str(filename), 'w') as outfile:
@@ -495,18 +501,6 @@ class SpectrumStats(Result):
 
         return cls(**d)
 
-    @classmethod
-    def from_yaml(cls, filename):
-        """Create `~gammapy.spectrum.results.SpectrumStats` from YAML file
-
-        Parameters
-        ----------
-        filename : str
-            File to read
-        """
-        val = read_yaml(filename)
-        return cls.from_dict(val['spectrumstats'])
-
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
         t = Table()
@@ -528,6 +522,22 @@ class SpectrumResult(object):
         Spectrum fit result
     points: `~gammapy.spectrum.results.FluxPoints`, optional
         Flux points
+
+    Examples
+    --------
+    Plot fit function:
+
+    .. plot::
+        :include-source:
+
+        import matplotlib.pyplot as plt
+        from gammapy.datasets import gammapy_extra
+        filename = gammapy_extra.filename('test_datasets/spectrum/fitfunction.yaml')
+        result = SpectrumResult.from_yaml(filename)
+        result.fit.plot()
+        plt.loglog()
+        plt.show
+
     """
 
     def __init__(self, **results):
@@ -541,8 +551,7 @@ class SpectrumResult(object):
         fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
         points = FluxPoints.from_fitspectrum_json(filename)
 
-        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
-                   flux_points=points)
+        return cls(stats=stats, fit=fit, points=points)
 
     @classmethod
     def from_yaml(cls, filename):
@@ -554,17 +563,23 @@ class SpectrumResult(object):
         """
         data = read_yaml(filename)
 
-        results = OrderedDict(fit=None, points=None, stats=None)
+        results = OrderedDict()
+        results['fit'] = None
+        results['points'] = None
+        results['stats'] = None
 
-        for i, _ in enumerate(cls.__subclasses__()):
+        for i, _ in enumerate(Result.__subclasses__()):
             try:
                 val = data[_.HIGH_LEVEL_KEY]
             except KeyError:
                 pass
             else:
-                temp  = _.from_dict(val)
-                results[i] = temp
-        return cls(**results)
+                print (i)
+                print(results.keys())
+                temp = _.from_dict(val)
+                results[results.keys()[i]] = temp
+
+        return cls(**dict(results))
 
     @classmethod
     def from_all(cls, filename):
@@ -656,9 +671,10 @@ class SpectrumResult(object):
             point_kwargs = dict(color='navy')
 
         self.fit.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
-                               e_power=e_power, ax=ax0, **fit_kwargs)
-        self.points.plot_flux_points(energy_unit=energy_unit, flux_unit=flux_unit,
-                              e_power=e_power, ax=ax0, **point_kwargs)
+                                   e_power=e_power, ax=ax0, **fit_kwargs)
+        self.points.plot_flux_points(energy_unit=energy_unit,
+                                     flux_unit=flux_unit,
+                                     e_power=e_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
         plt.xlim(self.energy_range[0].to(energy_unit).value * 0.9,
@@ -666,7 +682,6 @@ class SpectrumResult(object):
 
         ax0.legend(numpoints=1)
         return gs
-
 
     def plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):
         """Plot residuals
