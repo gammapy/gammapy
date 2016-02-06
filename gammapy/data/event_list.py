@@ -399,7 +399,6 @@ class EventList(Table):
         # TODO: self.plot_energy_dependence(ax=axes[x])
         # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
-        plt.show()
 
     def plot_image(self, ax= None, number_bins=50):
         """Plot the counts as a function of x and y camera coordinate."""
