@@ -1,6 +1,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import abc
+from collections import OrderedDict
+
 import numpy as np
+from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit
 
@@ -9,7 +13,89 @@ from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml
 
 
-class SpectrumFitResult(object):
+@six.add_metaclass(abc.ABCMeta)
+class Result():
+    """Base class for spectrum results
+
+    All serialisation methods should be implemented here, all derived classed
+    only have from_dict and to_dict methods. The HIGH_LEVEL_KEY describes the
+    highest level key in the serialised dicts (that way one can store all
+    spectrum results in one file).
+    """
+    HIGH_LEVEL_KEY = 'Default'
+
+    @classmethod
+    def from_dict(cls, val):
+        """Create cls from dict
+
+        Parameters
+        ----------
+        val : dict
+            dict to read
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Create cls from YAML file
+
+        Parameters
+        ----------
+        filename : str
+            File to read
+        """
+        val = read_yaml(filename)
+        return cls.from_dict(val[HIGH_LEVEL_KEY])
+
+    def to_dict(self):
+        """Export to Python dict
+
+        The dict can be used for YAML or JSON serialisation.
+        """
+        raise NotImplementedError
+
+    def to_yaml(self, filename, key):
+        """Write YAML file
+
+        Parameters
+        ----------
+        filename : str
+            File to write
+        key : str
+            Highest level key to read
+        """
+
+        import yaml
+
+        d = dict()
+        d[HIGH_LEVEL_KEY] = self.to_dict()
+        val = yaml.safe_dump(d, default_flow_style=False)
+
+        with open(str(filename), 'w') as outfile:
+            outfile.write(val)
+
+    @classmethod
+    def from_fitspectrum_json(cls, filename):
+        """Read FitSpectrum output file
+
+        TODO: Remove once FitSpectrum writes standard YAML files
+
+        Parameters
+        ----------
+        filename : str
+            Name of the JSON file to read
+        """
+        raise NotImplementedError
+
+    def to_table(self, **kwargs):
+        """Create overview `~astropy.table.Table`
+
+        kwargs are forwarded to `~astropy.table.Column`
+        """
+        raise NotImplementedError
+
+
+class SpectrumFitResult(Result):
     """Class representing the result of a spectral fit
 
     For a complete documentation see :ref:`gadf:spectrum-fit-result`
@@ -28,36 +114,22 @@ class SpectrumFitResult(object):
         Flux for the fitted model at a given energy
     flux_errors : dict, optional
         Error on the flux for the fitted model at a given energy
-    flux_points : `~astropy.table.Table`, optional
-        Flux points
     """
+
+    HIGH_LEVEL_KEY = 'fit_result'
+
     def __init__(self, spectral_model, parameters, parameter_errors,
-                 energy_range=None, fluxes=None, flux_errors=None,
-                 flux_points=None):
+                 energy_range=None, fluxes=None, flux_errors=None):
+
         self.spectral_model = spectral_model
         self.parameters = Bunch(parameters)
         self.parameter_errors = Bunch(parameter_errors)
         self.energy_range = EnergyBounds(energy_range).to('TeV')
         self.fluxes = fluxes
         self.flux_errors = flux_errors
-        # Todo : factor out into separate class
-        self.flux_points = Table(flux_points)
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
-        """Read FitSpectrum output file
-
-        Several models can be stored in the JSON file, the appropriate model
-        to read can be chosen with the ``model`` parameter.
-        TODO: Remove once FitSpectrum writes readable files
-
-        Parameters
-        ----------
-        filename : str
-            Name of the JSON file to read
-        model : int
-            Model to read from JSON file
-        """
         import json
 
         with open(filename) as fh:
@@ -89,22 +161,14 @@ class SpectrumFitResult(object):
         fluxes['1TeV'] = val['flux_at_1'] * Unit('cm-2 s-1')
         flux_errors = Bunch()
         flux_errors['1TeV'] = val['flux_at_1_err'] * Unit('cm-2 s-1')
-        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
-        flux_points['energy'].unit = 'TeV'
-        flux_points['energy_err_hi'].unit = 'TeV'
-        flux_points['energy_err_lo'].unit = 'TeV'
-        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
 
         return cls(energy_range=energy_range, parameters=parameters,
                    parameter_errors=parameters_errors,
                    spectral_model=spectral_model,
-                   fluxes=fluxes, flux_errors=flux_errors,
-                   flux_points=flux_points)
+                   fluxes=fluxes, flux_errors=flux_errors)
 
     @classmethod
-    def from_sherpa(cls, covar, filter, model, flux_graph = None):
+    def from_sherpa(cls, covar, filter, model):
         """Create `~gammapy.spectrum.results.SpectrumFitResult` from sherpa objects
         """
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
@@ -149,26 +213,12 @@ class SpectrumFitResult(object):
         flux_errors = Bunch()
         flux_errors['1TeV'] = 0 * Unit('cm-2 s-1')
 
-        flux_points = Table(data=flux_graph, masked=True)
-        flux_points['energy'].unit = 'keV'
-        # Fill empty error columns to be consistent
-        val = np.zeros(shape=flux_points['energy'].shape)
-        flux_points['energy_err_hi'] = Column(data=val, unit='keV')
-        flux_points['energy_err_lo'] = Column(data=val, unit='keV')
-        flux_points['flux'].unit = 'cm-2 s-1 keV-1'
-        flux_points['flux_err_hi'].unit = 'cm-2 s-1 keV-1'
-        flux_points['flux_err_lo'].unit = 'cm-2 s-1 keV-1'
-
         return cls(energy_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
-                   spectral_model=spectral_model, flux_points=flux_points,
+                   spectral_model=spectral_model,
                    fluxes=fluxes, flux_errors=flux_errors)
 
     def to_dict(self):
-        """Export spectrum results to dict
-
-        The output dict can be used for YAML or JSON serialisation.
-        """
         val = dict()
         val['energy_range'] = self.energy_range.to_dict()
         val['parameters'] = dict()
@@ -179,45 +229,11 @@ class SpectrumFitResult(object):
                                           error=err.value,
                                           unit='{}'.format(par.unit))
         val['spectral_model'] = self.spectral_model
-        val['flux_points'] = dict()
-
-        if self.flux_points is not None:
-            fp = self.flux_points
-            for col in fp.columns:
-                val['flux_points'][col] = [float(_) for _ in fp[col]]
-            val['flux_points']['energy_unit'] = '{}'.format(fp['energy'].unit)
-            val['flux_points']['flux_unit'] = '{}'.format(fp['flux'].unit)
-
 
         return val
 
-    def to_yaml(self, filename):
-        """Write YAML file
-
-        TODO: Round floats to a given precision
-
-        Parameters
-        ----------
-        filename : str
-            File to write
-        """
-        import yaml
-
-        d = dict(fitresult = self.to_dict())
-        val = yaml.safe_dump(d, default_flow_style=False)
-
-        with open(str(filename), 'w') as outfile:
-            outfile.write(val)
-
     @classmethod
     def from_dict(cls, val):
-        """Create `~gammapy.spectrum.results.SpectrumFitResult` from dict
-
-        Parameters
-        ----------
-        val : dict
-            dict to read
-        """
         erange = val['energy_range']
         energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
         pars = val['parameters']
@@ -228,39 +244,11 @@ class SpectrumFitResult(object):
             parameter_errors[par] = pars[par]['error'] * Unit(pars[par]['unit'])
         spectral_model = val['spectral_model']
 
-        try:
-            fp = val['flux_points']
-        except KeyError:
-            flux_points = None
-        else:
-            e_unit = Unit(fp.pop('energy_unit'))
-            f_unit = Unit(fp.pop('flux_unit'))
-            flux_points = Table(val['flux_points'])
-            flux_points['energy'].unit = e_unit
-            flux_points['energy_err_hi'].unit = e_unit
-            flux_points['energy_err_lo'].unit = e_unit
-            flux_points['flux'].unit = f_unit
-            flux_points['flux_err_hi'].unit = f_unit
-            flux_points['flux_err_lo'].unit = f_unit
-
         return cls(energy_range=energy_range, parameters=parameters,
-                   parameter_errors=parameter_errors, flux_points=flux_points,
+                   parameter_errors=parameter_errors,
                    spectral_model=spectral_model)
 
-    @classmethod
-    def from_yaml(cls, filename):
-        """Create `~gammapy.spectrum.results.SpectrumResult` from YAML file
-
-        Parameters
-        ----------
-        filename : str
-            File to write
-        """
-        val = read_yaml(filename)
-        return cls.from_dict(val['fitresult'])
-
     def to_table(self, **kwargs):
-        """Create overview `~astropy.table.Table`"""
         t = Table()
         for par in self.parameters.keys():
             t[par] = Column(data=np.atleast_1d(self.parameters[par]), **kwargs)
@@ -296,45 +284,8 @@ class SpectrumFitResult(object):
 
         return model
 
-    def plot_flux_points(self, ax=None, energy_unit='TeV',
-                         flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
-        """Plot spectral points
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
-
-        Parameters
-        ----------
-        ax : `~matplolib.axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
-        e_power : int
-            Power of energy to multiply flux axis with
-
-        Returns
-        -------
-        ax : `~matplolib.axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-
-        kwargs.setdefault('fmt', 'o')
-        ax = plt.gca() if ax is None else ax
-        x = self.flux_points['energy'].quantity.to(energy_unit).value
-        y = self.flux_points['flux'].quantity.to(flux_unit).value
-        yh = self.flux_points['flux_err_hi'].quantity.to(flux_unit).value
-        yl = self.flux_points['flux_err_lo'].quantity.to(flux_unit).value
-        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, e_power)
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
-        ax.errorbar(x, y, yerr=(yh, yl), **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
-        return ax
-
-    def plot_fit_function(self, ax=None, butterfly=True, energy_unit='TeV',
-                          flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
+    def plot(self, ax=None, butterfly=True, energy_unit='TeV',
+             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
         """Plot fit function
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
@@ -389,8 +340,255 @@ class SpectrumFitResult(object):
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         return ax
 
-    def residuals(self):
+
+class FluxPoints(Table, Result):
+    """Flux points table"""
+
+    HIGH_LEVEL_KEY = 'flux_points'
+
+    def from_fitspectrum_json(cls, filename):
+        import json
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
+        flux_points['energy'].unit = 'TeV'
+        flux_points['energy_err_hi'].unit = 'TeV'
+        flux_points['energy_err_lo'].unit = 'TeV'
+        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
+        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
+        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
+
+        return cls(flux_points)
+
+    def to_dict(self):
+        val = dict(flux_points = dict())
+        for col in self:
+            val['flux_points'][col] = [float(_) for _ in self[col]]
+            val['flux_points']['energy_unit'] = '{}'.format(self['energy'].unit)
+            val['flux_points']['flux_unit'] = '{}'.format(self['flux'].unit)
+
+    @classmethod
+    def from_dict(cls, val):
+        fp = val['flux_points']
+        e_unit = Unit(fp.pop('energy_unit'))
+        f_unit = Unit(fp.pop('flux_unit'))
+        flux_points = Table(val['flux_points'])
+        flux_points['energy'].unit = e_unit
+        flux_points['energy_err_hi'].unit = e_unit
+        flux_points['energy_err_lo'].unit = e_unit
+        flux_points['flux'].unit = f_unit
+        flux_points['flux_err_hi'].unit = f_unit
+        flux_points['flux_err_lo'].unit = f_unit
+
+    def plot(self, ax=None, energy_unit='TeV',
+             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
+        """Plot spectral points
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        e_power : int
+            Power of energy to multiply flux axis with
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        kwargs.setdefault('fmt', 'o')
+        ax = plt.gca() if ax is None else ax
+        x = self['energy'].quantity.to(energy_unit).value
+        y = self['flux'].quantity.to(flux_unit).value
+        yh = self['flux_err_hi'].quantity.to(flux_unit).value
+        yl = self['flux_err_lo'].quantity.to(flux_unit).value
+        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, e_power)
+        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
+        ax.errorbar(x, y, yerr=(yh, yl), **kwargs)
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
+        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        return ax
+
+
+class SpectrumStats(Result):
+    """Class summarizing basic spectral parameters
+
+    'Spectrum' refers to a set of on, off, and effective area vectors
+     as well as an energy dispersion matrix.
+
+    Parameters
+    ----------
+    n_on : int
+        number of events inside on region
+    n_off : int
+        number of events inside on region
+    alpha : float
+        exposure ratio between on and off regions
+    excess : float
+        number of excess events in on region
+    energy_range : `~gammapy.utils.energy.EnergyBounds`
+        Energy range over which the spectrum as extracted
+    """
+
+    HIGH_LEVEL_KEY = 'spectrum'
+
+    def __init__(self, n_on=None, n_off=None, energy_range=None, **kwargs):
+        self.n_on = n_on
+        self.n_off = n_off
+        self.energy_range = energy_range
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    @classmethod
+    def from_fitspectrum_json(cls, filename):
+        import json
+
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        val = data['spectrum_stats']
+        return cls(**val)
+
+    @classmethod
+    def from_bg_stats_json(cls, filename):
+        """Read BgStats json file
+
+        This file can be produces with hap-show
+
+        Parameters
+        ----------
+        filename : str
+            JSON file produced by hap-show
+        """
+        import json
+
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        val = data['rate_stats']['event_stats']
+        # Todo: What is the energy range of BgStats?
+        val.update(energy_range=EnergyBounds([0.1, 300], 'TeV'))
+        return cls(**val)
+
+    def to_dict(self):
+        rtval = dict(spectrum=dict())
+        v = rtval['spectrum']
+        v['n_on'] = int(self.n_on)
+        v['n_off'] = int(self.n_off)
+        v['alpha'] = float(self.alpha)
+        v['excess'] = float(self.excess)
+        v['energy_range'] = self.energy_range.to_dict()
+        return rtval
+
+    @classmethod
+    def from_dict(cls, val):
+        d = val['spectrum']
+
+        return cls(**d)
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Create `~gammapy.spectrum.results.SpectrumStats` from YAML file
+
+        Parameters
+        ----------
+        filename : str
+            File to read
+        """
+        val = read_yaml(filename)
+        return cls.from_dict(val['spectrumstats'])
+
+    def to_table(self, **kwargs):
+        """Create overview `~astropy.table.Table`"""
+        t = Table()
+        t['n_on'] = Column(data=np.atleast_1d(self.n_on), **kwargs)
+        t['n_off'] = Column(data=np.atleast_1d(self.n_off), **kwargs)
+        t['alpha'] = Column(data=np.atleast_1d(self.alpha), **kwargs)
+        t['excess'] = Column(data=np.atleast_1d(self.excess), **kwargs)
+        return t
+
+
+class SpectrumResult(object):
+    """Class holding all results of a spectral analysis
+
+    Parameters
+    ----------
+    stats: `~gammapy.spectrum.results.SpectrumStats`, optional
+        Spectrum stats
+    fit: `~gammapy.spectrum.results.SpectrumFitResult`, optional
+        Spectrum fit result
+    points: `~gammapy.spectrum.results.FluxPoints`, optional
+        Flux points
+    """
+
+    def __init__(self, **results):
+
+        for k, v in results.items():
+            setattr(self, k, v)
+
+    @classmethod
+    def from_fitspectrum_json(cls, filename, model=0):
+        stats = SpectrumStats.from_fitspectrum_json(filename)
+        fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
+        points = FluxPoints.from_fitspectrum_json(filename)
+
+        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
+                   flux_points=points)
+
+    @classmethod
+    def from_yaml(cls, filename):
+        """Read YAML file
+
+        This method searches the highest-level key in a YAML file and
+        creates `~gammapy.spectrum.results.Result` instances depending
+        on the available keys
+        """
+        data = read_yaml(filename)
+
+        results = OrderedDict(fit=None, points=None, stats=None)
+
+        for i, _ in enumerate(cls.__subclasses__()):
+            try:
+                val = data[_.HIGH_LEVEL_KEY]
+            except KeyError:
+                pass
+            else:
+                temp  = _.from_dict(val)
+                results[i] = temp
+        return cls(**results)
+
+    @classmethod
+    def from_all(cls, filename):
+        try:
+            val = cls.from_fitspectrum_json(filename)
+        except ValueError as e1:
+            val = cls.from_yaml(filename)
+
+        return val
+
+    def to_table(self, **kwargs):
+        """Return `~astropy.table.Table` containing all results"""
+        val = [self.stats, self.fit, self.flux_points]
+        l = list()
+        for result in val:
+            if result is not None:
+                l.append(result.to_table(**kwargs))
+        return hstack(l)
+
+    def calculate_residuals(self):
         """Calculate residuals and residual errors
+
+        Based on `~gammapy.spectrum.results.SpectrumFitResult` and
+        `~gammapy.spectrum.results.FluxPoints`
 
         Returns
         -------
@@ -399,7 +597,7 @@ class SpectrumFitResult(object):
         residuals_err : `~astropy.units.Quantity`
             Residual errirs
         """
-        func = self.to_sherpa_model()
+        func = self.fit.to_sherpa_model()
         x = self.flux_points['energy'].quantity
         y = self.flux_points['flux'].quantity
         y_err = self.flux_points['flux_err_hi'].quantity
@@ -411,43 +609,8 @@ class SpectrumFitResult(object):
 
         return residuals.decompose(), residuals_err.decompose()
 
-    def plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):
-        """Plot residuals
-
-        Parameters
-        ----------
-        ax : `~matplolib.axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-
-        Returns
-        -------
-        ax : `~matplolib.axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-
-        ax = plt.gca() if ax is None else ax
-
-        kwargs.setdefault('fmt', 'o')
-
-        y, y_err = self.residuals()
-        x = self.flux_points['energy'].quantity
-        x = x.to(energy_unit).value
-        ax.errorbar(x, y, yerr=y_err, **kwargs)
-
-        xx = ax.get_xlim()
-        yy = [0, 0]
-        ax.plot(xx, yy, color='black')
-
-        ax.set_xlabel('E [{}]'.format(energy_unit))
-        ax.set_ylabel('Residuals')
-
-        return ax
-
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      e_power = 0, fit_kwargs=None, point_kwargs=None):
+                      e_power=0, fit_kwargs=None, point_kwargs=None):
         """Plot full spectrum including flux points and residuals
 
         Parameters
@@ -492,9 +655,9 @@ class SpectrumFitResult(object):
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        self.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
+        self.fit.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
                                e_power=e_power, ax=ax0, **fit_kwargs)
-        self.plot_flux_points(energy_unit=energy_unit, flux_unit=flux_unit,
+        self.points.plot_flux_points(energy_unit=energy_unit, flux_unit=flux_unit,
                               e_power=e_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
@@ -505,187 +668,40 @@ class SpectrumFitResult(object):
         return gs
 
 
-class SpectrumStats(object):
-    """Class summarizing basic spectral parameters
-
-    'Spectrum' refers to a set of on, off, and effective area vectors
-     as well as an energy dispersion matrix.
-
-    Parameters
-    ----------
-    n_on : int
-        number of events inside on region
-    n_off : int
-        number of events inside on region
-    alpha : float
-        exposure ratio between on and off regions
-    excess : float
-        number of excess events in on region
-    energy_range : `~gammapy.utils.energy.EnergyBounds`
-        Energy range over which the spectrum as extracted
-    """
-    def __init__(self, n_on=None, n_off=None, energy_range=None, **kwargs):
-        self.n_on = n_on
-        self.n_off = n_off
-        self.energy_range = energy_range
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-    @classmethod
-    def from_fitspectrum_json(cls, filename):
-        """Read FitSpectrum output file
+    def plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):
+        """Plot residuals
 
         Parameters
         ----------
-        filename : str
-            JSON file produced by FitSpectrum
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
         """
-        import json
+        import matplotlib.pyplot as plt
 
-        with open(filename) as fh:
-            data = json.load(fh)
+        ax = plt.gca() if ax is None else ax
 
-        val = data['spectrum_stats']
-        return cls(**val)
+        kwargs.setdefault('fmt', 'o')
 
-    @classmethod
-    def from_bg_stats_json(cls, filename):
-        """Read BgStats json file
+        y, y_err = self.residuals()
+        x = self.flux_points['energy'].quantity
+        x = x.to(energy_unit).value
+        ax.errorbar(x, y, yerr=y_err, **kwargs)
 
-        This file can be produces with hap-show
+        xx = ax.get_xlim()
+        yy = [0, 0]
+        ax.plot(xx, yy, color='black')
 
-        Parameters
-        ----------
-        filename : str
-            JSON file produced by hap-show
-        """
-        import json
+        ax.set_xlabel('E [{}]'.format(energy_unit))
+        ax.set_ylabel('Residuals')
 
-        with open(filename) as fh:
-            data = json.load(fh)
-
-        val = data['rate_stats']['event_stats']
-        # Todo: What is the energy range of BgStats?
-        val.update(energy_range=EnergyBounds([0.1, 300], 'TeV'))
-        return cls(**val)
-
-    def to_dict(self):
-        """Return dict for serialization"""
-        rtval = dict(spectrum=dict())
-        v = rtval['spectrum']
-        v['n_on'] = int(self.n_on)
-        v['n_off'] = int(self.n_off)
-        v['alpha'] = float(self.alpha)
-        v['excess'] = float(self.excess)
-        v['energy_range'] = self.energy_range.to_dict()
-        return rtval
-
-    def to_yaml(self, filename):
-        """Write YAML file
-
-        TODO: Round floats to a given precision
-
-        Parameters
-        ----------
-        filename : str
-            File to write
-        """
-        # TODO: this could be a mixin somehow
-
-        import yaml
-
-        d = dict(spectrumstats=self.to_dict())
-        val = yaml.safe_dump(d, default_flow_style=False)
-
-        with open(str(filename), 'w') as outfile:
-            outfile.write(val)
-
-    @classmethod
-    def from_dict(cls, val):
-        d = val['spectrum']
-
-        return cls(**d)
-
-    @classmethod
-    def from_yaml(cls, filename):
-        """Create `~gammapy.spectrum.results.SpectrumStats` from YAML file
-
-        Parameters
-        ----------
-        filename : str
-            File to read
-        """
-        val = read_yaml(filename)
-        return cls.from_dict(val['spectrumstats'])
-
-    def to_table(self, **kwargs):
-        """Create overview `~astropy.table.Table`"""
-        t = Table()
-        t['n_on'] = Column(data=np.atleast_1d(self.n_on), **kwargs)
-        t['n_off'] = Column(data=np.atleast_1d(self.n_off), **kwargs)
-        t['alpha'] = Column(data=np.atleast_1d(self.alpha), **kwargs)
-        t['excess'] = Column(data=np.atleast_1d(self.excess), **kwargs)
-        return t
-
-
-class SpectrumResult(object):
-    """Class holding all results of a spectral analysis
-
-    Parameters
-    ----------
-    spectrum_stats: `~gammapy.spectrum.results.SpectrumStats`, optional
-        Spectrum stats
-    spectrum_fit_result: `~gammapy.spectrum.results.SpectrumFitResult`, optional
-        Spectrum fit result
-        """
-
-    def __init__(self, spectrum_stats=None, spectrum_fit_result=None,
-                 flux_points=None):
-
-        self.stats = spectrum_stats
-        self.fit = spectrum_fit_result
-        self.flux_points = flux_points
-
-    @classmethod
-    def from_fitspectrum_json(cls, filename, model=0):
-        stats = SpectrumStats.from_fitspectrum_json(filename)
-        fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
-
-        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
-                   flux_points=None)
-
-    @classmethod
-    def from_yaml(cls, filename):
-
-        try:
-            stats = SpectrumStats.from_yaml(filename)
-        except KeyError:
-            stats = None
-        try:
-            fit = SpectrumFitResult.from_yaml(filename)
-        except KeyError:
-            fit = None
-
-        return cls(spectrum_stats=stats, spectrum_fit_result=fit,
-                   flux_points=None)
-
-    @classmethod
-    def from_all(cls, filename):
-        try:
-            val = cls.from_fitspectrum_json(filename)
-        except ValueError as e1:
-            val = cls.from_yaml(filename)
-
-        return val
-
-    def to_table(self, **kwargs):
-        """Return `~astropy.table.Table` containing all results"""
-        val = [self.stats, self.fit, self.flux_points]
-        l = list()
-        for result in val:
-            if result is not None:
-                l.append(result.to_table(**kwargs))
-        return hstack(l)
+        return ax
 
 
 class SpectrumResultDict(dict):

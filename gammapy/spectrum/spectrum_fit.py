@@ -251,8 +251,7 @@ class SpectrumFit(object):
                           flux_err_lo=errors)
 
         from gammapy.spectrum.results import SpectrumFitResult
-        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model,
-                                                    flux_graph)
+        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model)
         ds.clear_stack()
         ds.clear_models()
 
