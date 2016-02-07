@@ -16,7 +16,7 @@ Command line tool
 
 Spectral fitting within Gammapy is most easily performed with the ``gammapy-spectrum`` command line tool.
 The example below shows how to use ``gammapy-spectrum`` by specifying analysis
-options in a YAML config file. It assumes you have the `gammapy-extra`_
+options in a YAML config file. It assumes you have the :ref:`gammapy-extra`
 repository available.
 
 
@@ -80,7 +80,7 @@ Running a Sherpa fit
 To avoid having to deal with Sherpa directly or for scripting purposes the `~gammapy.spectrum.SpectrumFit`
 class can be used to perform a Fit as shown in the example below. It uses the PHA
 files created in the example above, so feel free to use your own files instead of
-using the ones in `gammapy-extra`_.
+using the ones in :ref:`gammapy-extra`.
 
 .. literalinclude:: run_spectrum_fit.py
     :language: python

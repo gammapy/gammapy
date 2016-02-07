@@ -67,6 +67,7 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
 - [#421] Add spectrum fit serialisation code (Johannes King)
 - [#403] Improve spectrum analysis (Johannes King)
 - [#414] Add Windows tests on Appveyor (Christoph Deil)
