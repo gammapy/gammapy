@@ -264,9 +264,9 @@ class SpectrumFitResult(Result):
         t['e_min'] = Column(data=np.atleast_1d(self.energy_range[0]), **kwargs)
         t['e_max'] = Column(data=np.atleast_1d(self.energy_range[1]), **kwargs)
         if self.fluxes is not None:
-            t['flux [1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
+            t['flux[1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
                                       **kwargs)
-            t['flux_err [1TeV]'] = Column(
+            t['flux_err[1TeV]'] = Column(
                 data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
         return t
 
@@ -365,10 +365,14 @@ class SpectrumFitResult(Result):
 
 
 class FluxPoints(Table, Result):
-    """Flux points table"""
+    """Flux points table
+
+    For a complete documentation see :ref:`gadf:flux-points`
+    """
 
     HIGH_LEVEL_KEY = 'flux_points'
 
+    @classmethod
     def from_fitspectrum_json(cls, filename):
         import json
         with open(filename) as fh:
@@ -519,12 +523,12 @@ class SpectrumStats(Result):
         return cls(**d)
 
     def to_table(self, **kwargs):
-        """Create overview `~astropy.table.Table`"""
-        t = Table()
-        t['n_on'] = Column(data=np.atleast_1d(self.n_on), **kwargs)
-        t['n_off'] = Column(data=np.atleast_1d(self.n_off), **kwargs)
-        t['alpha'] = Column(data=np.atleast_1d(self.alpha), **kwargs)
-        t['excess'] = Column(data=np.atleast_1d(self.excess), **kwargs)
+        data = self.__dict__.values()
+        names = self.__dict__.keys()
+        cols = list()
+        for d in zip(data):
+            cols.append(Column(data=d, **kwargs))
+        t = Table(cols, names=names)
         return t
 
 
@@ -606,9 +610,13 @@ class SpectrumResult(object):
         return val
 
     def to_table(self, **kwargs):
-        """Return `~astropy.table.Table` containing all results"""
+        """Return `~astropy.table.Table` containing all results
 
-        val = [_ for _ in self.__dict__.values() if _]
+        only SpectrumStats and SpectrumFitResult are taken into account
+        """
+
+        temp = [self.stats, self.fit]
+        val = [_ for _ in temp if _]
         l = list()
         for result in val:
             if result is not None:
@@ -735,7 +743,7 @@ class SpectrumResult(object):
         return ax
 
 
-class SpectrumResultDict(dict):
+class SpectrumResultDict(OrderedDict):
     """Dict of several spectrum results
 
     * `~gammapy.spectrum.results.SpectrumStats`
@@ -746,18 +754,21 @@ class SpectrumResultDict(dict):
         raise NotImplementedError
 
     @classmethod
-    def from_files(cls, files):
+    def from_files(cls, files, identifiers=None):
         """Create `~gammapy.spectrum.SpectrumResultDict` from a list of files
 
         Parameters
         ----------
         files : list, tuple
             Files to load
+        identifiers : list
+            Analysis identifiers
         """
         val = cls()
-        for f in files:
+        identifiers = files if identifiers is None else identifiers
+        for f, id in zip(files, identifiers):
             temp = SpectrumResult.from_all(f)
-            val[f] = temp
+            val[id] = temp
         return val
 
     def to_table(self, **kwargs):

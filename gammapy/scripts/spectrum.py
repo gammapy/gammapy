@@ -7,7 +7,13 @@ from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
 from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from gammapy.utils.scripts import read_yaml
 
-__all__ = []
+__all__ = [
+           'SpectrumFitResult',
+           'SpectrumStats',
+           'FluxPoints',
+           'SpectrumResult',
+           'SpectrumResultDict',
+           ]
 
 log = logging.getLogger(__name__)
 
@@ -73,17 +79,30 @@ def spectrum_pipe(configfile):
 
 @cli.command('display')
 @click.argument('files', nargs=-1, required=True)
-@click.option('--short', '-s', type=str, help='Comma separated list of parameters')
-@click.option('--browser', is_flag=True, default=False)
-def display_spectrum(files, short, browser):
+@click.option('--browser', is_flag=True, default=False,
+              help='Display in browser')
+@click.option('--keys', is_flag=True, default=False,
+              help='Print available column names')
+@click.option('--format', default='.3g', help='Column format')
+@click.option('--identifiers', '-id', type=str, default=None,
+              help='Comma separated list of file identifiers')
+@click.option('--cols', '-c', type=str,
+              help='Comma separated list of parameters to display')
+@click.option('--sort', '-s', type=str,
+              help='Column to sort by')
+def display_spectrum(files, cols, browser, format, keys, identifiers, sort):
     """Display results table of one or several spectrum results files"""
 
-    master = SpectrumResultDict.from_files(files)
-    t = master.to_table(format='.3g')
-
-    if short:
-        t = t[short.split(',')]
-
+    id = identifiers.split(',') if identifiers is not None else None
+    master = SpectrumResultDict.from_files(files, id)
+    t = master.to_table(format=format)
+    if keys:
+        print '\n'.join(t.keys())
+        return
+    if cols:
+        t = t[cols.split(',')]
+    if sort:
+        t.sort(sort)
     if browser:
         t.show_in_browser(jsviewer=True)
     else:
@@ -105,7 +124,6 @@ def plot_spectrum(function, butterfly, residuals, points, flux_unit,
     if butterfly or residuals:
         raise NotImplementedError
 
-    import IPython; IPython.embed()
     import matplotlib.pyplot as plt
     for f in function:
         res = SpectrumResult.from_all(f)
