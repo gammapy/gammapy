@@ -85,7 +85,7 @@ def spectrum_pipe(configfile):
               help='Print available column names')
 @click.option('--format', default='.3g', help='Column format')
 @click.option('--identifiers', '-id', type=str, default=None,
-              help='Comma separated list of file identifiers')
+              help='Comma separated list of file identifiers. Order: file input')
 @click.option('--cols', '-c', type=str,
               help='Comma separated list of parameters to display')
 @click.option('--sort', '-s', type=str,
@@ -97,7 +97,7 @@ def display_spectrum(files, cols, browser, format, keys, identifiers, sort):
     master = SpectrumResultDict.from_files(files, id)
     t = master.to_table(format=format)
     if keys:
-        print '\n'.join(t.keys())
+        print ('\n'.join(t.keys()))
         return
     if cols:
         t = t[cols.split(',')]
