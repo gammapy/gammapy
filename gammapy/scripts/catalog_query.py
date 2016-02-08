@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
+click.disable_unicode_literals_warning = True
 from ..catalog import source_catalogs
 
 __all__ = []
@@ -55,7 +56,7 @@ def plot_lightcurve(catalog, source):
     source = catalog[source]
 
     # Generic info dict
-    source.pprint()
+    #source.pprint()
 
     # Specific source info print-out
     if hasattr(source, 'print_info'):
