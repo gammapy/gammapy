@@ -39,6 +39,7 @@
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
 .. _click: http://click.pocoo.org/
 .. _flask: http://flask.pocoo.org/
+.. _TevCat: http://tevcat.uchicago.edu/
 .. _pytevcat: https://github.com/akira-okumura/PyTeVCat
 .. _pycrflux: https://github.com/akira-okumura/pycrflux
 .. _act-analysis: https://bitbucket.org/kosack/act-analysis

@@ -405,3 +405,9 @@ class EnergyBounds(Energy):
         d = dict(min=self[0].value, max=self[1].value, unit='{}'.format(self.unit))
 
         return d
+
+    @classmethod
+    def from_dict(cls, d):
+        """Read dict representing an energy range"""
+
+        return cls((d['min'], d['max']), d['unit'])

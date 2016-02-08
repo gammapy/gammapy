@@ -139,6 +139,5 @@ def plot_spectrum(function, butterfly, residuals, points, flux_unit,
         res.points.plot(flux_unit=flux_unit, energy_unit=energy_unit,
         e_power=energy_power)
 
-
     plt.loglog()
     plt.show()

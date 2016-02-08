@@ -5,10 +5,11 @@
 Spectral fitting with ``gammapy-spectrum``
 ==========================================
 
-In this tutorial you will perform a spectra fit starting from an event list
-and a set of 2D IRFs. The data used in this tutorial consist of 2 simulated
-Crab observations with the H.E.S.S. array. They are available in the gammapy-extra
-repository.
+In this tutorial you will perform a spectra fit starting from an
+`~gammapy.data.EventList` and a set of 2D IRFs
+(`~gammapy.irf.EnergyDispersion2D`, `~gammapy.irf.EffectiveAreaTable2D`).
+The data used in this tutorial consist of 2 simulated
+Crab observations with the H.E.S.S. array. They are available in `gammapy-extra`_.
 
 .. _tutorials-gammapy-spectrum-extract:
 
@@ -16,8 +17,9 @@ Extracting 1D spectral information
 ----------------------------------
 
 The first step on our way to the Crab spectrum is generating 1D spectral
-information, i.e. an on counts vector, and off counts vector, an effective area
-vector, and an energy dispersion matrix. This is done with
+information, i.e. an on `~gammapy.spectrum.CountsSpectrum`, and off
+`~gammapy.spectrum.CountsSpectrum`, an `~gammapy.irf.EffectiveAreaTable`
+vector, and an `~gammapy.irf.EnergyDispersion` matrix. This is done with
 ``gammapy-spectrum extract``. Below you find an example config file:
 
 
@@ -28,7 +30,7 @@ vector, and an energy dispersion matrix. This is done with
 
 In Detail:
 
-* Line 4-7 : Specify the DataStore to take the data from,
+* Line 4-7 : Specify the `~gammapy.data.DataStore` to take the data from,
   a list of observations (list or filename),
   and the number of observations to analyse (0: all observations)
 * Line 9-13 : Define reconstructed energy binning, the true energy binning is
@@ -37,12 +39,8 @@ In Detail:
 * Line 22-25 : Choose background estimation method.
   For available methods see :ref:`spectrum_background_method`
 * Line 27-28 : Specify fits map containing exclusion regions. Here a map
-  excluding all TevCat sources is used.
-* Line 30-33 : Define ouput folder and files.
-
-Note that at the moment it is necessary to create OGIP files at the spectrum
-extraction step, because they will be used as input for the spectral fit (and
-cannot be transferred in-memory).
+  excluding all `TevCat`_ sources is used.
+* Line 30-33 : Define output folder and files.
 
 To run the spectral extraction copy the above config file to your machine,
 to e.g. ``crab_config.yaml`` and run
@@ -51,18 +49,32 @@ to e.g. ``crab_config.yaml`` and run
 
    gammapy-spectrum extract crab_config.yaml
 
-
 This creates the folder ``crab_analysis`` in you current working directory. In
-this folder you find all the generated OGIP file (in the folder ``ogip_data``),
-as well the ``spectrum_stats.yaml`` file holding some parameters (TODO: link to
-description). You can examine this file as explained in
-:ref:`tutorials-gammapy-spectrum-examine`. Furthermore, there is an
-``observations.fits`` file, which holds `~gammapy.data.ObservationTable` can
-serves as input for ``gammapy-spectrum fit``
+this folder you find the generated OGIP data in the folder ``ogip_data``.
+A detailed description of the OGIP files, can be found under :ref:`gadf:ogip`.
+The ``spectrum_stats.yaml`` file holds all results of the spectrum extration step.
+You can examine this file as explained in :ref:`tutorials-gammapy-spectrum-examine`.
+Furthermore, there is an ``observations.fits`` file holding an `~gammapy.data.ObservationTable`. It
+points to the OGIP data for each run, which serves as input for ``gammapy-spectrum fit``.
+Note that at the moment it is necessary to create OGIP files at the spectrum
+extraction step, the data cannot be transferred in-memory to ``gammapy-spectrum fit``
 
 ``gammapy-spectrum extract --interactive`` will drop you into an IPython session
   after the extraction step, where you can interactively look at all analysis
-  results. This is illustrated in this IPython notebook (TODO: example).
+  results, as shown in the following
+
+.. ipython::
+
+   In [136]: x = 2
+
+   In [137]: x**3
+   Out[137]: 8
+
+If you do not want to actually create all the 1D spectrum objects but only
+have a look at analysis parameters like the offset distribution you can run
+``gammapy-spectrum extract --interactive --dry-run``
+
+.. _tutorials-gammapy-spectrum-fit:
 
 Fitting a spectral model
 ------------------------
@@ -91,12 +103,13 @@ Append this config file to your ``crab_config.yaml`` file and run the fit via
 
    gammapy-spectrum extract crab_config.yaml
 
+This creates the file ``fitresult.yaml`` in the ``crab_analysis`` folder, which
+can be used as shown in :ref:`tutorials-gammapy-spectrum-examine`.
 
-``gammapy-spectrum fit`` also has an ``--interactive`` flag as shown in this
-IPython notebook (TODO: example).
+``gammapy-spectrum fit`` also has an ``--interactive`` flag.
 
-This creates the file ``fitresult.yaml`` in the ``crab_analysis`` folder.
-
+If you do not care about intermediate analysis result you can use
+``gammapy-spectrum all`` to run the extraction and the fitting step in one go.
 
 .. _tutorials-gammapy-spectrum-examine:
 
@@ -106,27 +119,36 @@ Examining all results
 ``gammapy-spectrum`` features two tools to examine and compare fit results.
 
 * ``gammapy-spectrum display`` takes any number of results files as arguments
-  and print a comparison table. The ``--browser`` flag shows this table in your
-  browser.
-
+  and prints a comparison table. :download:`This <./spectrum_stats_23592.yaml>`
+  file contains the `~gammapy.spectrum.results.SpectrumStats` for a Crab analysis
+  using only one of the runs. Copy it to your analysis directory to run the
+  following command
 
 .. code-block:: bash
 
-    gammapy-spectrum display crab_analysis/*.yaml
-                 analysis             index index_err       norm          norm_err    reference reference_err e_min e_max n_on n_off alpha excess
-                                                      1 / (cm2 keV s) 1 / (cm2 keV s)    keV         keV       TeV   TeV
-    --------------------------------- ----- --------- --------------- --------------- --------- ------------- ----- ----- ---- ----- ----- ------
-        crab_analysis/fitresults.yaml  2.31     0.126        2.91e-20        3.62e-21     1e+09             0  1.03  10.1   --    --    --     --
-    crab_analysis/spectrum_stats.yaml    --        --              --              --        --            --    --    --  416   414 0.149    354
+    gammapy-spectrum display crab_analysis/spectrum_stats.yaml spectrum_stats_23592.yaml
+                     analysis             n_off n_on excess energy_range [2] alpha
+                                                              TeV
+    --------------------------------- ----- ---- ------ ---------------- ------
+    crab_analysis/spectrum_stats.yaml   414  416    354      0.01 .. 300  0.149
+            spectrum_stats_23592.yaml   252  197    176      0.01 .. 300 0.0833
 
+If you want to customize this output table you could for example run
+
+.. code-block:: bash
+
+    gammapy-spectrum display crab_analysis/spectrum_stats.yaml spectrum_stats_23592.yaml --cols analysis,n_on,alpha --sort n_on --identifiers two_runs,one_run
+    analysis n_on alpha
+
+    -------- ---- ------
+     one_run  197 0.0833
+    two_runs  416  0.149
+
+The ``--browser`` flag lets you examine your comparison table in the browser
 
 * ``gammapy-spectrum plot`` can be used to plot fit results.
 
-
-.. code-block:: bash
-
-    gammapy-spectrum plot crab_analysis/fitresults.yaml --flux_unit 'cm-2 s-1 TeV-1'
-
+TODO
 
 .. image:: crab_plot.png
 

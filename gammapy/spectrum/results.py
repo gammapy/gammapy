@@ -6,8 +6,7 @@ from collections import OrderedDict
 import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
-from astropy.units import Unit
-
+from astropy.units import Unit, Quantity
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml
@@ -507,19 +506,18 @@ class SpectrumStats(Result):
         return cls(**val)
 
     def to_dict(self):
-        rtval = dict(spectrum=dict())
-        v = rtval['spectrum']
-        v['n_on'] = int(self.n_on)
-        v['n_off'] = int(self.n_off)
-        v['alpha'] = float(self.alpha)
-        v['excess'] = float(self.excess)
-        v['energy_range'] = self.energy_range.to_dict()
-        return rtval
+        val = dict()
+        val['n_on'] = int(self.n_on)
+        val['n_off'] = int(self.n_off)
+        val['alpha'] = float(self.alpha)
+        val['excess'] = float(self.excess)
+        val['energy_range'] = self.energy_range.to_dict()
+        return val
 
     @classmethod
-    def from_dict(cls, val):
-        d = val['spectrum']
-
+    def from_dict(cls, d):
+        e_range = EnergyBounds.from_dict(d.pop('energy_range'))
+        d.update(energy_range=e_range)
         return cls(**d)
 
     def to_table(self, **kwargs):
@@ -527,7 +525,7 @@ class SpectrumStats(Result):
         names = self.__dict__.keys()
         cols = list()
         for d in zip(data):
-            cols.append(Column(data=d, **kwargs))
+            cols.append(Column(data=Quantity(d), **kwargs))
         t = Table(cols, names=names)
         return t
 

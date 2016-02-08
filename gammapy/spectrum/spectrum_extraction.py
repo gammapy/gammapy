@@ -647,8 +647,8 @@ def run_spectrum_extraction_using_config(config, **kwargs):
 
     if config['results']['write_ogip']:
         obs.write_ogip_data(str(outdir / 'ogip_data'))
-    rfile = outdir / config['results']['result_file']
 
+    rfile = outdir / config['results']['result_file']
     obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
     log.info('\nWriting file {}'.format(rfile))
     obs.to_observation_table().write(
