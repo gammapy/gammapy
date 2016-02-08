@@ -61,18 +61,11 @@ extraction step, the data cannot be transferred in-memory to ``gammapy-spectrum 
 
 ``gammapy-spectrum extract --interactive`` will drop you into an IPython session
   after the extraction step, where you can interactively look at all analysis
-  results, as shown in the following
-
-.. ipython::
-
-   In [136]: x = 2
-
-   In [137]: x**3
-   Out[137]: 8
+  results.
 
 If you do not want to actually create all the 1D spectrum objects but only
 have a look at analysis parameters like the offset distribution you can run
-``gammapy-spectrum extract --interactive --dry-run``
+``gammapy-spectrum extract --interactive --dry-run``.
 
 .. _tutorials-gammapy-spectrum-fit:
 
