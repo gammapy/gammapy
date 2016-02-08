@@ -290,7 +290,7 @@ class SpectrumFitResult(Result):
 
         return model
 
-    def plot(self, ax=None, butterfly=True, energy_unit='TeV',
+    def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
         """Plot fit function
 
@@ -314,37 +314,54 @@ class SpectrumFitResult(Result):
         """
 
         import matplotlib.pyplot as plt
-        from gammapy.spectrum import df_over_f
 
         ax = plt.gca() if ax is None else ax
 
         func = self.to_sherpa_model()
         x_min = np.log10(self.energy_range[0].value)
         x_max = np.log10(self.energy_range[1].value)
-        x = np.logspace(x_min, x_max, 10000) * self.energy_range.unit
+        x = np.logspace(x_min, x_max, 100) * self.energy_range.unit
         y = func(x.to('keV').value) * Unit('cm-2 s-1 keV-1')
-
-        # Todo: Find better solution
-        if butterfly:
-            e = x.to('TeV').value
-            e0 = self.parameters.reference.to('TeV').value
-            f0 = self.parameters.norm.to('cm-2 s-1 TeV-1').value
-            df0 = self.parameter_errors.norm.to('cm-2 s-1 TeV-1').value
-            dg = self.parameter_errors.index.value
-            cov = 0
-            e = df_over_f(e, e0, f0, df0, dg, cov) * y
-        else:
-            e = np.zeros(shape=x.shape()) * Unit(flux_unit)
-
         x = x.to(energy_unit).value
         y = y.to(flux_unit).value
-        e = e.to(flux_unit).value
-        y, e = np.asarray([y, e]) * np.power(x, e_power)
+        y = y * np.power(x, e_power)
         flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
-        ax.errorbar(x, y, yerr=e, **kwargs)
+        ax.plot(x, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         return ax
+
+    def analytical_butterfly(self):
+        """Calculate butterfly analytically
+
+        Disclaimer: Only available for PowerLaw assuming no correlation
+
+        Returns
+        -------
+        x : float
+            Energy array [TeV]
+        butterfly : float
+            Butterfly
+        """
+
+        from gammapy.spectrum import df_over_f
+        if self.spectral_model is not 'PowerLaw':
+            raise NotImplementedError('Analytical butterfly calculation'
+                                      'not implemented for model {}'.format(
+                                      self.spectral_model))
+
+        x_min = np.log10(self.energy_range[0].value)
+        x_max = np.log10(self.energy_range[1].value)
+        x = np.logspace(x_min, x_max, 1000) * self.energy_range.unit
+        x = x.to('TeV').value
+        e0 = self.parameters.reference.to('TeV').value
+        f0 = self.parameters.norm.to('cm-2 s-1 TeV-1').value
+        df0 = self.parameter_errors.norm.to('cm-2 s-1 TeV-1').value
+        dg = self.parameter_errors.index.value
+        cov = 0
+        butterfly = df_over_f(x, e0, f0, df0, dg, cov) * y
+
+        return x, butterfly
 
 
 class FluxPoints(Table, Result):
@@ -574,8 +591,6 @@ class SpectrumResult(object):
             except KeyError:
                 pass
             else:
-                print (i)
-                print(results.keys())
                 temp = _.from_dict(val)
                 results[results.keys()[i]] = temp
 
@@ -592,7 +607,8 @@ class SpectrumResult(object):
 
     def to_table(self, **kwargs):
         """Return `~astropy.table.Table` containing all results"""
-        val = [self.stats, self.fit, self.flux_points]
+
+        val = [_ for _ in self.__dict__.values() if _]
         l = list()
         for result in val:
             if result is not None:

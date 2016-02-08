@@ -1,8 +1,7 @@
 import logging
 import click
-
 from gammapy.spectrum import run_spectrum_extraction_using_config
-from gammapy.spectrum.results import SpectrumResult
+from gammapy.spectrum.results import SpectrumResult, SpectrumFitResult
 from gammapy.spectrum.results import SpectrumResultDict
 from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
 from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
@@ -37,7 +36,8 @@ def extract_spectrum(configfile, interactive, dry_run):
     config = read_yaml(configfile)
     analysis = run_spectrum_extraction_using_config(config, dry_run=dry_run)
     if interactive:
-        import IPython; IPython.embed()
+        import IPython;
+        IPython.embed()
 
 
 @cli.command('fit')
@@ -48,7 +48,8 @@ def fit_spectrum(configfile, interactive):
     config = read_yaml(configfile)
     fit = run_spectrum_fit_using_config(config)
     if interactive:
-        import IPython; IPython.embed()
+        import IPython;
+        IPython.embed()
 
 
 @cli.command('all')
@@ -59,7 +60,8 @@ def all_spectrum(configfile, interactive):
     config = read_yaml(configfile)
     fit, analysis = run_spectrum_analysis_using_config(config)
     if interactive:
-        import IPython; IPython.embed()
+        import IPython;
+        IPython.embed()
 
 
 @cli.command('pipe')
@@ -71,7 +73,7 @@ def spectrum_pipe(configfile):
 
 @cli.command('display')
 @click.argument('files', nargs=-1, required=True)
-@click.option('--short', is_flag=True, default=False)
+@click.option('--short', '-s', type=str, help='Comma separated list of parameters')
 @click.option('--browser', is_flag=True, default=False)
 def display_spectrum(files, short, browser):
     """Display results table of one or several spectrum results files"""
@@ -80,7 +82,7 @@ def display_spectrum(files, short, browser):
     t = master.to_table(format='.3g')
 
     if short:
-        t = t['analysis', 'index', 'index_err', 'flux [1TeV]', 'flux_err [1TeV]']
+        t = t[short.split(',')]
 
     if browser:
         t.show_in_browser(jsviewer=True)
@@ -89,15 +91,36 @@ def display_spectrum(files, short, browser):
 
 
 @cli.command('plot')
-@click.argument('file', nargs=1, required=True)
+@click.option('--function', '-f', multiple=True)
+@click.option('--points', '-p', multiple=True)
+@click.option('--residuals', '-r', multiple=True)
+@click.option('--butterfly', '-b', multiple=True)
 @click.option('--flux_unit', default='m-2 s-1 TeV-1', help='Unit of flux axis')
 @click.option('--energy_unit', default='TeV', help='Unit of energy axis')
-@click.option('--energy_power', default=0, help='Energy power to multiply flux with')
-def overplot_spectrum(file, flux_unit, energy_unit, energy_power):
+@click.option('--energy_power', default=0,
+              help='Energy power to multiply flux with')
+def plot_spectrum(function, butterfly, residuals, points, flux_unit,
+                  energy_unit, energy_power):
     """Plot spectrum results file"""
+    if butterfly or residuals:
+        raise NotImplementedError
 
+    import IPython; IPython.embed()
     import matplotlib.pyplot as plt
-    spec = SpectrumResult.from_all(file)
-    spec.fit.plot_spectrum(flux_unit=flux_unit, energy_unit=energy_unit,
-                           e_power=energy_power)
+    for f in function:
+        res = SpectrumResult.from_all(f)
+        if res.fit is None:
+            raise ValueError('File {} does not contain a fit function'.format(f))
+        res.fit.plot(flux_unit=flux_unit, energy_unit=energy_unit,
+        e_power=energy_power)
+
+    for p in points:
+        res = SpectrumResult.from_all(p)
+        if res.points is None:
+            raise ValueError('File {} does not contain flux points'.format(f))
+        res.points.plot(flux_unit=flux_unit, energy_unit=energy_unit,
+        e_power=energy_power)
+
+
+    plt.loglog()
     plt.show()
