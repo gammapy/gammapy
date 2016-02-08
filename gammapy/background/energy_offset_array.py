@@ -4,11 +4,13 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
+from astropy.io import fits
 from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'EnergyOffsetArray',
 ]
+
 
 def _make_bin_edges_array(lo, hi):
     """Make bin edges array from a low values and a high values array.
@@ -40,8 +42,9 @@ class EnergyOffsetArray(object):
          energy bin vector
     offset : `~astropy.coordinates.Angle`
         offset bin vector
-    data : `~numpy.ndarray`
-        data array (2D): Background rate (s-1 MeV-1 sr-1)
+    data : `~astropy.units.Quantity`
+        data array (2D): Background rate
+        units: s-1 TeV-1 sr-1
 
     """
 
@@ -51,7 +54,7 @@ class EnergyOffsetArray(object):
         if data is None:
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), 's-1 TeV-1 sr-1')
         else:
-            self.data = Quantity(data, 's-1 TeV-1 sr-1')
+            self.data = data
 
     def fill_events(self, event_lists):
         """Fill events histogram.
@@ -70,11 +73,7 @@ class EnergyOffsetArray(object):
             # Fill the events
             counts = self._fill_one_event_list(event_list)
             self.data += counts
-        #theta2=self.offset.value**2
-        #solid_angle=np.pi*np.diff(theta2)
-        #energy_bin=np.diff(self.energy.value)
-        #self.data
-        
+
     def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
@@ -91,18 +90,17 @@ class EnergyOffsetArray(object):
 
         # stack the offset and energy array
         ev_cube_array = np.vstack([ev_energy, offset]).T
-        
+
         # fill data cube into histogramdd
         ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
                                                      [self.energy.value,
                                                       self.offset.value])
-        energy_bin=np.diff(ev_cube_edges[0])
-        solid_angle_bin=np.pi*np.diff(ev_cube_edges[1]**2)
-        solid_angle_tab, energy_tab= np.meshgrid(solid_angle_bin, energy_bin)
-        bkg_rate=ev_cube_hist/(solid_angle_tab*energy_tab)
+        energy_bin = np.diff(ev_cube_edges[0])
+        solid_angle_bin = np.pi * np.diff(ev_cube_edges[1] ** 2)
+        solid_angle_tab, energy_tab = np.meshgrid(solid_angle_bin, energy_bin)
+        bkg_rate = ev_cube_hist / (solid_angle_tab * energy_tab)
         return Quantity(bkg_rate, 's-1 TeV-1 sr-1')
-       
-    
+
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """
         Plot Energy_offset Array image (x=offset, y=energy).
@@ -147,7 +145,6 @@ class EnergyOffsetArray(object):
         hdu_list = fits.open(filename)
         return cls.from_fits(hdu_list)
 
-    
     @classmethod
     def from_fits(cls, hdu, scheme=None):
         """Read EnergyOffsetArray from a fits binary table.
@@ -164,38 +161,22 @@ class EnergyOffsetArray(object):
 
         header = hdu.header
         data = hdu.data
-        
+
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'], data['THETA_HI'])
         energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
-        
+
         offset_edges = Angle(offset_edges, header['TUNIT1'])
         energy_edges = Quantity(energy_edges, header['TUNIT3'])
 
         # get data
-        bkg_rate=data['bkg']
-        #bkg_rate = Quantity(data, header['TUNIT5'])
+        bkg_rate = Quantity(data['bkg'], header['TUNIT5'])
 
         return cls(offset_edges, energy_edges, data=bkg_rate)
 
-    def to_table(self):
-        """Convert EnergyOffsetArray to astropy table format.
-
-        Returns
-        -------
-        table : `~astropy.table.Table`
-            Table containing the EnergyOffsetArray.
-        """
-        # table
-        table = Table()
-        table['THETA_LO']=self.offset[:-1]
-        table['THETA_HI']=self.offset[1:]
-        table['ENERG_LO']=self.energy[:-1]
-        table['ENERG_HI']=self.energy[1:]
-        table['bkg']=Quantity(self.data, "s-1 MeV-1 sr-1")
-        table.meta['name'] = 'BACKGROUND'
-
-        return table
+    def write(self, filename, **kwargs):
+        """ Write EnergyOffsetArray to fits file"""
+        self.to_fits().writeto(filename, **kwargs)
 
     def to_fits(self):
         """Convert EnergyOffsetArray to binary table fits format.
@@ -207,8 +188,21 @@ class EnergyOffsetArray(object):
         """
         return table_to_fits_table(self.to_table())
 
-    def write(self, filename, **kwargs):
-        """ Write EnergyOffsetArray to fits file"""
-        self.to_fits().writeto(filename, **kwargs)
-        
-        
+    def to_table(self):
+        """Convert EnergyOffsetArray to astropy table format.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table containing the EnergyOffsetArray.
+        """
+        # table
+        table = Table()
+        table['THETA_LO'] = self.offset[:-1]
+        table['THETA_HI'] = self.offset[1:]
+        table['ENERG_LO'] = self.energy[:-1]
+        table['ENERG_HI'] = self.energy[1:]
+        table['bkg'] = self.data
+        table.meta['name'] = 'BACKGROUND'
+
+        return table
