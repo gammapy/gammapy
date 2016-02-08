@@ -49,9 +49,9 @@ class EnergyOffsetArray(object):
         self.energy = Quantity(energy, 'TeV')
         self.offset = Angle(offset, 'deg')
         if data is None:
-            self.data = np.zeros((len(energy) - 1, len(offset) - 1))
+            self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), 's-1 TeV-1 sr-1')
         else:
-            self.data = data
+            self.data = Quantity(data, 's-1 TeV-1 sr-1')
 
     def fill_events(self, event_lists):
         """Fill events histogram.
@@ -69,7 +69,7 @@ class EnergyOffsetArray(object):
         for event_list in event_lists:
             # Fill the events
             counts = self._fill_one_event_list(event_list)
-            self.data += Quantity(counts, 's')
+            self.data += counts
         #theta2=self.offset.value**2
         #solid_angle=np.pi*np.diff(theta2)
         #energy_bin=np.diff(self.energy.value)
@@ -100,8 +100,8 @@ class EnergyOffsetArray(object):
         solid_angle_bin=np.pi*np.diff(ev_cube_edges[1]**2)
         solid_angle_tab, energy_tab= np.meshgrid(solid_angle_bin, energy_bin)
         bkg_rate=ev_cube_hist/(solid_angle_tab*energy_tab)
-        #return Quantity(bkg_rate, 's-1 TeV-1 sr-1')
-        return ev_cube_hist/(solid_angle_tab*energy_tab)
+        return Quantity(bkg_rate, 's-1 TeV-1 sr-1')
+       
     
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """
@@ -125,13 +125,13 @@ class EnergyOffsetArray(object):
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),
         ]
-        ax.imshow(self.data, extent=extent, **kwargs)
+        ax.imshow(self.data.value, extent=extent, **kwargs)
         ax.semilogy()
         ax.set_xlabel('Offset ({0})'.format(offset.unit))
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Energy_offset Array')
         ax.legend()
-        image = ax.imshow(self.data, extent=extent, **kwargs)
+        image = ax.imshow(self.data.value, extent=extent, **kwargs)
         plt.colorbar(image)
         return ax
 
