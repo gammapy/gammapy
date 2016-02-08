@@ -41,7 +41,7 @@ class EnergyOffsetArray(object):
     offset : `~astropy.coordinates.Angle`
         offset bin vector
     data : `~numpy.ndarray`
-        data array (2D):
+        data array (2D): Background rate (s-1 MeV-1 sr-1)
 
     """
 
@@ -69,8 +69,12 @@ class EnergyOffsetArray(object):
         for event_list in event_lists:
             # Fill the events
             counts = self._fill_one_event_list(event_list)
-            self.data += counts
-
+            self.data += Quantity(counts, 's')
+        #theta2=self.offset.value**2
+        #solid_angle=np.pi*np.diff(theta2)
+        #energy_bin=np.diff(self.energy.value)
+        #self.data
+        
     def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
@@ -87,13 +91,18 @@ class EnergyOffsetArray(object):
 
         # stack the offset and energy array
         ev_cube_array = np.vstack([ev_energy, offset]).T
-
+        
         # fill data cube into histogramdd
         ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
                                                      [self.energy.value,
                                                       self.offset.value])
-        return ev_cube_hist
-
+        energy_bin=np.diff(ev_cube_edges[0])
+        solid_angle_bin=np.pi*np.diff(ev_cube_edges[1]**2)
+        solid_angle_tab, energy_tab= np.meshgrid(solid_angle_bin, energy_bin)
+        bkg_rate=ev_cube_hist/(solid_angle_tab*energy_tab)
+        #return Quantity(bkg_rate, 's-1 TeV-1 sr-1')
+        return ev_cube_hist/(solid_angle_tab*energy_tab)
+    
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """
         Plot Energy_offset Array image (x=offset, y=energy).
@@ -139,7 +148,7 @@ class EnergyOffsetArray(object):
         return cls.from_fits(hdu_list)
 
     
-        @classmethod
+    @classmethod
     def from_fits(cls, hdu, scheme=None):
         """Read EnergyOffsetArray from a fits binary table.
 
@@ -181,8 +190,8 @@ class EnergyOffsetArray(object):
         table = Table()
         table['THETA_LO']=self.offset[:-1]
         table['THETA_HI']=self.offset[1:]
-        table[data['ENERG_LO']=self.energy[:-1]
-        table[data['ENERG_HI']=self.energy[1:]
+        table['ENERG_LO']=self.energy[:-1]
+        table['ENERG_HI']=self.energy[1:]
         table['bkg']=Quantity(self.data, "s-1 MeV-1 sr-1")
         table.meta['name'] = 'BACKGROUND'
 
@@ -199,7 +208,7 @@ class EnergyOffsetArray(object):
         return table_to_fits_table(self.to_table())
 
     def write(self, filename, **kwargs):
-             """ Write EnergyOffsetArray to fits file"""
+        """ Write EnergyOffsetArray to fits file"""
         self.to_fits().writeto(filename, **kwargs)
         
         
