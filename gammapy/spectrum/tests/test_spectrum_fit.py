@@ -16,6 +16,7 @@ from ...utils.scripts import read_yaml
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from astropy.utils.compat import NUMPY_LT_1_9
 
+
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
@@ -32,6 +33,9 @@ def test_spectral_fit():
     assert fit.result.spectral_model == 'PowerLaw'
 
 
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+@pytest.mark.skipif('SHERPA_LT_4_8')
 def test_spectral_fit_using_config(tmpdir):
 
     configfile = gammapy_extra.filename(
