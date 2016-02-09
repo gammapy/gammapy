@@ -128,7 +128,7 @@ class EnergyOffsetArray(object):
 
     @classmethod
     def read(cls, filename):
-        """Create `EnergyOffsetArray` from background rate 2D FITS file.
+        """Create `EnergyOffsetArray` from  fits file.
 
         Parameters
         ----------
@@ -164,10 +164,9 @@ class EnergyOffsetArray(object):
         energy_edges = Quantity(energy_edges, header['TUNIT3'])
 
         # get data
-        bkg_rate=data['bkg']
-        #bkg_rate = Quantity(data, header['TUNIT5'])
+        energy_offset_array=data['bkg']
 
-        return cls(offset_edges, energy_edges, data=bkg_rate)
+        return cls(offset_edges, energy_edges, data=energy_offset_array)
 
     def to_table(self):
         """Convert EnergyOffsetArray to astropy table format.
@@ -183,8 +182,8 @@ class EnergyOffsetArray(object):
         table['THETA_HI']=self.offset[1:]
         table[data['ENERG_LO']=self.energy[:-1]
         table[data['ENERG_HI']=self.energy[1:]
-        table['bkg']=Quantity(self.data, "s-1 MeV-1 sr-1")
-        table.meta['name'] = 'BACKGROUND'
+        table['bkg']=Quantity(self.data, " u ")
+        table.meta['name'] = 'TO DEFINE'
 
         return table
 
