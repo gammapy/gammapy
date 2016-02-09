@@ -9,7 +9,7 @@ In this tutorial you will perform a spectra fit starting from an
 `~gammapy.data.EventList` and a set of 2D IRFs
 (`~gammapy.irf.EnergyDispersion2D`, `~gammapy.irf.EffectiveAreaTable2D`).
 The data used in this tutorial consist of 2 simulated
-Crab observations with the H.E.S.S. array. They are available in `gammapy-extra`_.
+Crab observations with the H.E.S.S. array. They are available in gammapy-extra.
 
 .. _tutorials-gammapy-spectrum-extract:
 
@@ -142,8 +142,6 @@ The ``--browser`` flag lets you examine your comparison table in the browser
 * ``gammapy-spectrum plot`` can be used to plot fit results.
 
 TODO
-
-.. image:: crab_plot.png
 
 
 
