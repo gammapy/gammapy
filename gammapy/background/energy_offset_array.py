@@ -162,12 +162,9 @@ class EnergyOffsetArray(object):
         offset_edges = _make_bin_edges_array(data['THETA_LO'], data['THETA_HI'])
         energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
         
-        offset_edges = Angle(offset_edges, header['TUNIT1'])
-        energy_edges = Quantity(energy_edges, header['TUNIT3'])
-
         # get data
         energy_offset_array=data['EnergyOffsetArray']
-        return cls(offset_edges, energy_edges, data=energy_offset_array)
+        return cls(offset_edges, energy_edges , energy_offset_array)
 
     def to_table(self):
         """Convert EnergyOffsetArray to astropy table format.
@@ -185,7 +182,7 @@ class EnergyOffsetArray(object):
         table['ENERG_HI']=self.energy[1:]
         table['EnergyOffsetArray']=Quantity(self.data, " u ")
         table.meta['name'] = 'TO DEFINE'
-
+        
         return table
 
     def to_fits(self):
