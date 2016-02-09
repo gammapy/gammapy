@@ -15,6 +15,7 @@ from ..data import EventListDataset, DataStore
 __all__ = [
     'GaussianBand2D',
     'CubeBackgroundModel',
+    'EnergyOffsetBackgroundModel',
 ]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
@@ -418,6 +419,7 @@ class CubeBackgroundModel(object):
         for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
             self.background_cube.data[i_energy] *= (integral_images / integral_images_smooth)[i_energy]
 
+
     def compute_rate(self):
         """Compute background_cube from count_cube and livetime_cube.
         """
@@ -430,3 +432,129 @@ class CubeBackgroundModel(object):
         bg_rate = bg_rate.to('1 / (MeV sr s)')
 
         self.background_cube.data = bg_rate
+
+class EnergyOffsetBackgroundModel(object):
+    """EnergyOffsetArray background model.
+
+    Container class for EnergyOffset background model *(energy, offset)*.
+    This class defines 3 EnergyOffset Array of type `~gammapy.background.EnergyOffsetArray`:
+
+    - **counts_2Dcube**: to store the counts (a.k.a. events) that
+      participate in the model creation.
+
+    - **livetime_2Dcube**: to store the livetime correction.
+
+    - **background_2Dcube**: to store the background model.
+
+    The class defines methods to define the binning, fill and smooth
+    of the background cube models.
+
+    Parameters
+    ----------
+    counts_2Dcube : `~gammapy.background.EnergyOffsetArray`, optional
+        EnergyOffsetArray to store counts.
+    livetime_2Dcube : `~gammapy.background.EnergyOffsetArray`, optional
+        EnergyOffsetArray to store livetime correction.
+    background_2Dcube : `~gammapy.background.EnergyOffsetArray`, optional
+        EnergyOffsetArray to store background model.
+    """
+
+    def __init__(self, counts_2Dcube=None, livetime_2Dcube=None, background_2Dcube=None):
+        self.counts_2Dcube = counts_2Dcube
+        self.livetime_2Dcube = livetime_2Dcube
+        self.background_2Dcube = background_2Dcube
+
+    @classmethod
+    def read(cls, filename, format='table'):
+        """Read EnergyOffsetArray background model from fits file.
+
+        Several input formats are accepted, depending on the value
+        of the **format** parameter:
+
+        * table (default and preferred format): all 3 EnergyOffsetArray as
+          `~astropy.io.fits.HDUList` of `~astropy.io.fits.BinTableHDU`
+        * image (alternative format): bg EnergyOffsetArray saved as
+          `~astropy.io.fits.PrimaryHDU`, with the energy binning
+          stored as `~astropy.io.fits.BinTableHDU`
+
+        The counts and livetime cubes are optional.
+
+        This method calls `~gammapy.background.EnergyOffsetArray.read`,
+        forwarding all arguments.
+
+        Parameters
+        ----------
+        filename : str
+            Name of file with the cube.
+        format : str, optional
+            Format of the EnergyOffsetArray to read.
+
+        Returns
+        -------
+        bg_energyoffset_model : `~gammapy.background.EnergyOffsetBackgroundModel`
+            Energyoffset background model object.
+        """
+        hdu = fits.open(filename)
+        counts_scheme_dict = EnergyOffsetArray.define_scheme('bg_counts_2Dcube')
+        livetime_scheme_dict = EnergyOffsetArray.define_scheme('bg_livetime_2Dcube')
+        background_scheme_dict = EnergyOffsetArray.define_scheme('bg_2Dcube')
+
+        try:
+            counts_2Dcube = EnergyOffsetArray.read(filename, format, scheme='bg_counts_2Dcube')
+            livetime_2Dcube = EnergyOffsetArray.read(filename, format, scheme='bg_livetime_2Dcube')
+        except:
+            # no counts/livetime 2Dcube found: read only bg 2Dcube
+            counts_2Dcube = EnergyOffsetArray()
+            livetime_2Dcube = EnergyOffsetArray()
+
+        background_2Dcube = EnergyOffsetArray.read(filename, format, scheme='bg_2Dcube')
+
+        return cls(counts_2Dcube=counts_2Dcube,
+                   livetime_2Dcube=livetime_2Dcube,
+                   background_2Dcube=background_2Dcube)
+
+    def write(self, outfile, format='table', **kwargs):
+        """Write EnergyOffsetArray background model to FITS file.
+
+        Several output formats are accepted, depending on the value
+        of the **format** parameter:
+
+        * table (default and preferred format): all 3 EnergyOffsetArray as
+          `~astropy.io.fits.HDUList` of `~astropy.io.fits.BinTableHDU`
+        * image (alternative format): bg EnergyOffsetArray saved as
+          `~astropy.io.fits.PrimaryHDU`, with the energy binning
+          stored as `~astropy.io.fits.BinTableHDU`
+
+        The counts and livetime cubes are optional.
+
+        This method calls `~gammapy.background.EnergyOffsetArray.write`,
+        forwarding the **kwargs** arguments.
+
+        Parameters
+        ----------
+        outfile : str
+            Name of file to write.
+        format : str, optional
+            Format of the EnergyOffsetArray to write.
+        kwargs
+            Extra arguments for the corresponding `astropy.io.fits` ``writeto`` method.
+        """
+        if ((self.counts_2Dcube.data.sum() == 0) or
+                (self.livetime_2Dcube.data.sum() == 0)):
+            # empty envets/livetime 2Dcube: save only bg 2Dcube
+            self.background_2Dcube.write(outfile, format, **kwargs)
+        else:
+            if format == 'table':
+                hdu_list = fits.HDUList([fits.PrimaryHDU(),  # empty primary HDU
+                                         self.counts_2Dcube.to_fits_table(),
+                                         self.livetime_2Dcube.to_fits_table(),
+                                         self.background_2Dcube.to_fits_table()])
+                hdu_list.writeto(outfile, **kwargs)
+            elif format == 'image':
+                # save only bg 2Dcube: DS9 understands only one (primary) HDU
+                self.background_2Dcube.write(outfile, format, **kwargs)
+            else:
+                raise ValueError("Invalid format {}.".format(format))
+
+    
+
