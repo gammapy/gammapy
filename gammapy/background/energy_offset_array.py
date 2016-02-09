@@ -28,9 +28,10 @@ class EnergyOffsetArray(object):
         data array (2D)
     """
 
+
     def __init__(self, energy, offset, data=None):
-        self.energy = energy
-        self.offset = Angle(offset, 'deg')
+        self.energy = EnergyBounds(energy)
+        self.offset = Angle(offset)
         if data is None:
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), "u")
         else:
