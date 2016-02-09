@@ -75,7 +75,6 @@ def all_spectrum(configfile, interactive):
 def spectrum_pipe(configfile):
     """Run spectrum analysis pipeline"""
     pipe = SpectrumPipe.from_configfile(configfile)
-    import IPython; IPython.embed()
     pipe.write_configs()
     pipe.run()
 
