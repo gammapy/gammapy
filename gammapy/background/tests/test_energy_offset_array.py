@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing import assert_equal
 import numpy as np
 from ..energy_offset_array import EnergyOffsetArray
 from ...data import DataStore
@@ -19,3 +20,6 @@ def test_energy_offset_array():
     array = EnergyOffsetArray(ebounds, offset)
     array.fill_events(ev_list)
     array.plot_image()
+    array.write("test_write_read_method_energyoffsetarray.fits.gz")
+    array_read=array.read("test_write_read_method_energyoffsetarray.fits.gz")
+    assert_equal(array.data, array_read.data)
