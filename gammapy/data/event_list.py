@@ -390,7 +390,7 @@ class EventList(Table):
         self.plot_image(ax=axes[0])
         self.plot_time_map(ax=axes[1])
 
-        #log-log scale for time map
+        # log-log scale for time map
         xlims = axes[1].set_xlim()
         ylims = axes[1].set_ylim()
         axes[1].set_xlim(1e-3, xlims[1])
@@ -400,7 +400,7 @@ class EventList(Table):
         # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
 
-    def plot_image(self, ax= None, number_bins=50):
+    def plot_image(self, ax=None, number_bins=50):
         """Plot the counts as a function of x and y camera coordinate."""
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
