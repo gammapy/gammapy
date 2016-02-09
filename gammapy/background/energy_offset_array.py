@@ -9,6 +9,7 @@ from ..utils.fits import table_to_fits_table
 from ..utils.energy import EnergyBounds, Energy
 from .cube import _make_bin_edges_array
 
+
 __all__ = [
     'EnergyOffsetArray',
 ]
@@ -100,6 +101,7 @@ class EnergyOffsetArray(object):
         image = ax.imshow(self.data.value, extent=extent, **kwargs)
         plt.colorbar(image)
         return ax
+
 
     @classmethod
     def read(cls, filename):
