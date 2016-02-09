@@ -36,12 +36,9 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
         Reflected regions list
     """
 
-    if angle_increment is None:
-        angle_increment = Angle('0.1 rad')
-    if min_distance is None:
-        min_distance = Angle('0 rad')
-    if min_distance_input is None:
-        min_distance_input = Angle('0 rad')
+    angle_increment = Angle('0.1 rad') if angle_increment is None else Angle(angle_increment)
+    min_distance = Angle('0 rad') if min_distance is None else Angle(min_distance)
+    min_distance_input = Angle('0 rad') if min_distance_input is None else Angle(min_distance_input)
 
     reflected_regions_pix = PixRegionList()
     wcs = exclusion_mask.wcs

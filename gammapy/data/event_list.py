@@ -9,7 +9,7 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
 
-from gammapy.utils.scripts import make_path
+from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..time import time_ref_from_dict
