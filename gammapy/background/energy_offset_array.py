@@ -4,7 +4,9 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
+from astropy.io import fits
 from ..utils.fits import table_to_fits_table
+
 
 __all__ = [
     'EnergyOffsetArray',
@@ -139,7 +141,7 @@ class EnergyOffsetArray(object):
         return cls.from_fits(hdu_list)
 
     
-        @classmethod
+    @classmethod
     def from_fits(cls, hdu, scheme=None):
         """Read EnergyOffsetArray from a fits binary table.
 
@@ -153,8 +155,8 @@ class EnergyOffsetArray(object):
             EnergyOffsetArray object.
         """
 
-        header = hdu.header
-        data = hdu.data
+        header = hdu[1].header
+        data = hdu[1].data
         
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'], data['THETA_HI'])
@@ -164,8 +166,7 @@ class EnergyOffsetArray(object):
         energy_edges = Quantity(energy_edges, header['TUNIT3'])
 
         # get data
-        energy_offset_array=data['bkg']
-
+        energy_offset_array=data['EnergyOffsetArray']
         return cls(offset_edges, energy_edges, data=energy_offset_array)
 
     def to_table(self):
@@ -180,9 +181,9 @@ class EnergyOffsetArray(object):
         table = Table()
         table['THETA_LO']=self.offset[:-1]
         table['THETA_HI']=self.offset[1:]
-        table[data['ENERG_LO']=self.energy[:-1]
-        table[data['ENERG_HI']=self.energy[1:]
-        table['bkg']=Quantity(self.data, " u ")
+        table['ENERG_LO']=self.energy[:-1]
+        table['ENERG_HI']=self.energy[1:]
+        table['EnergyOffsetArray']=Quantity(self.data, " u ")
         table.meta['name'] = 'TO DEFINE'
 
         return table
@@ -198,7 +199,7 @@ class EnergyOffsetArray(object):
         return table_to_fits_table(self.to_table())
 
     def write(self, filename, **kwargs):
-             """ Write EnergyOffsetArray to fits file"""
+        """ Write EnergyOffsetArray to fits file"""
         self.to_fits().writeto(filename, **kwargs)
         
         
