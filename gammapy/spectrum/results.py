@@ -103,6 +103,8 @@ class Result():
 class SpectrumFitResult(Result):
     """Class representing the result of a spectral fit
 
+    For a complete documentation see :ref:`spectrum-fit-result`
+
     Parameters
     ----------
     spectral_model : str
@@ -536,24 +538,6 @@ class SpectrumResult(object):
         Spectrum fit result
     points: `~gammapy.spectrum.results.FluxPoints`, optional
         Flux points
-
-    Examples
-    --------
-    Plot fit function:
-
-    .. plot::
-        :include-source:
-
-        import matplotlib.pyplot as plt
-        import sherpa
-        from gammapy.datasets import gammapy_extra
-        from gammapy.spectrum.results import SpectrumResult
-        filename = gammapy_extra.filename('test_datasets/spectrum/fitfunction.yaml')
-        result = SpectrumResult.from_yaml(filename)
-        result.fit.plot()
-        plt.loglog()
-        plt.show
-
     """
 
     def __init__(self, **results):
