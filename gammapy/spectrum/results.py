@@ -590,7 +590,7 @@ class SpectrumResult(object):
                 pass
             else:
                 temp = _.from_dict(val)
-                results[results.keys()[i]] = temp
+                results[list(results.keys())[i]] = temp
 
         return cls(**dict(results))
 
