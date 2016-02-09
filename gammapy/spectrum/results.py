@@ -103,16 +103,14 @@ class Result():
 class SpectrumFitResult(Result):
     """Class representing the result of a spectral fit
 
-    For a complete documentation see :ref:`gadf:spectrum-fit-result`
-
     Parameters
     ----------
     spectral_model : str
-        Spectral model, for allowed names see :ref:`gadf:source-models`
+        Spectral model
     parameters : dict
-        Fitted parameters, for allowed names see :ref:`gadf:source-models`
+        Fitted parameters
     parameter_errors : dict
-        Parameter errors, for allowed names see :ref:`gadf:source-models`
+        Parameter errors
     energy_range : `~gammapy.utils.energy.EnergyBounds`
         Energy range of the spectral fit
     fluxes : dict, optional
@@ -467,11 +465,8 @@ class SpectrumStats(Result):
 
     HIGH_LEVEL_KEY = 'spectrum'
 
-    def __init__(self, n_on=None, n_off=None, energy_range=None, **kwargs):
-        self.n_on = n_on
-        self.n_off = n_off
-        self.energy_range = energy_range
-        for k, v in kwargs.items():
+    def __init__(self, **pars):
+        for k, v in pars.items():
             setattr(self, k, v)
 
     @classmethod
@@ -525,7 +520,7 @@ class SpectrumStats(Result):
         names = self.__dict__.keys()
         cols = list()
         for d in zip(data):
-            cols.append(Column(data=Quantity(d), **kwargs))
+            cols.append(Column(data=d, **kwargs))
         t = Table(cols, names=names)
         return t
 
@@ -551,6 +546,7 @@ class SpectrumResult(object):
 
         import matplotlib.pyplot as plt
         from gammapy.datasets import gammapy_extra
+        from gammapy.spectrum.results import SpectrumResult
         filename = gammapy_extra.filename('test_datasets/spectrum/fitfunction.yaml')
         result = SpectrumResult.from_yaml(filename)
         result.fit.plot()
