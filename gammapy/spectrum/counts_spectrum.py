@@ -4,13 +4,13 @@ from __future__ import (print_function)
 import numpy as np
 from astropy import log
 
-from gammapy.utils.scripts import make_path
+from ..utils.scripts import make_path
 from ..utils.energy import Energy, EnergyBounds
 import datetime
 from astropy.io import fits
 from astropy.units import Quantity
-from gammapy.data import EventList, EventListDataset
-from gammapy.extern.pathlib import Path
+from ..data import EventList, EventListDataset
+from ..extern.pathlib import Path
 
 __all__ = ['CountsSpectrum']
 

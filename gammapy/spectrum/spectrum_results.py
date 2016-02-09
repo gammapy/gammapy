@@ -22,7 +22,7 @@ import sys
 from collections import OrderedDict
 import numpy as np
 from astropy.table import Table
-from gammapy.extern.bunch import Bunch
+from ...extern.bunch import Bunch
 
 
 class DictWithInfo(OrderedDict):

@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 from astropy.tests.helper import pytest
 from numpy.testing import assert_allclose
 
-from gammapy.spectrum import run_spectrum_extraction_using_config
+from ...spectrum import run_spectrum_extraction_using_config
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_fit import (
     SpectrumFit,

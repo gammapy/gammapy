@@ -1,11 +1,11 @@
 import logging
 import click
-from gammapy.spectrum import run_spectrum_extraction_using_config
-from gammapy.spectrum.results import SpectrumResult, SpectrumFitResult
-from gammapy.spectrum.results import SpectrumResultDict
-from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
-from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
-from gammapy.utils.scripts import read_yaml
+from ..spectrum import run_spectrum_extraction_using_config
+from ..spectrum.results import SpectrumResult, SpectrumFitResult
+from ..spectrum.results import SpectrumResultDict
+from ..spectrum.spectrum_fit import run_spectrum_fit_using_config
+from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config, SpectrumPipe
+from ..utils.scripts import read_yaml
 
 __all__ = [
            'SpectrumFitResult',
@@ -74,8 +74,10 @@ def all_spectrum(configfile, interactive):
 @click.argument('configfile')
 def spectrum_pipe(configfile):
     """Run spectrum analysis pipeline"""
-    raise NotImplementedError
-
+    pipe = SpectrumPipe.from_configfile(configfile)
+    import IPython; IPython.embed()
+    pipe.write_configs()
+    pipe.run()
 
 @cli.command('display')
 @click.argument('files', nargs=-1, required=True)

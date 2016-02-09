@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
 
+import copy
 import logging
 import numpy as np
 
-from gammapy.spectrum import run_spectrum_extraction_using_config
-from gammapy.spectrum.spectrum_fit import run_spectrum_fit_using_config
-from gammapy.utils.scripts import read_yaml, recursive_merge_dicts, make_path, \
+from ..spectrum import run_spectrum_extraction_using_config
+from ..spectrum.spectrum_fit import run_spectrum_fit_using_config
+from ..utils.scripts import read_yaml, recursive_merge_dicts, make_path, \
     write_yaml
 
 __all__ = ['SpectrumPipe']
@@ -19,8 +20,8 @@ class SpectrumPipe(object):
 
     Parameters
     ----------
-    config : list
-        List of configuration files
+    config : dict
+        Configuration file dict
     """
 
     def __init__(self, config):
@@ -51,25 +52,27 @@ class SpectrumPipe(object):
         auto_outdir : bool [True]
             Set outdir explicitly for every analysis
         """
+
         base_config = config.pop('base_config')
-        analist = list([])
+        analist = dict()
 
         for analysis in config.keys():
             log.info("Generating config for analysis {}".format(analysis))
-            anaconf = base_config.copy()
+            anaconf = copy.deepcopy(base_config)
             temp = config[analysis]
             anaconf = recursive_merge_dicts(anaconf, temp)
             if auto_outdir:
                 anaconf['extraction']['results']['outdir'] = analysis
                 anaconf['fit']['outdir'] = analysis
+                anaconf['fit']['observation_table'] = '{}/observations.fits'.format(analysis)
 
-            analist.append(anaconf)
+            analist[analysis] = anaconf
 
         return cls(analist)
 
     def write_configs(self):
         """Write analysis configs to disc"""
-        for conf in self.config:
+        for conf in self.config.values():
             outdir = make_path(conf['fit']['outdir'])
             outdir.mkdir(exist_ok=True)
             outfile = outdir / 'config.yaml'
@@ -83,7 +86,7 @@ class SpectrumPipe(object):
 
     def run(self):
         """Run spectrum pipe"""
-        for conf in self.config:
+        for conf in self.config.values():
             run_spectrum_analysis_using_config(conf)
 
 

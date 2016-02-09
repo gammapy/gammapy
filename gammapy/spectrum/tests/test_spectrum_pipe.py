@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from astropy.tests.helper import pytest
-from gammapy.datasets import gammapy_extra
-from gammapy.spectrum.spectrum_pipe import SpectrumPipe
-from gammapy.utils.scripts import read_yaml
-from gammapy.utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
+from ...datasets import gammapy_extra
+from ...spectrum.spectrum_pipe import SpectrumPipe
+from ...utils.scripts import read_yaml
+from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 
 @requires_dependency('scipy')
 @requires_dependency('sherpa')

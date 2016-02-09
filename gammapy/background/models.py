@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity, UnitsError
-from gammapy.data.data_store import _get_min_energy_threshold
+from ..data.data_store import _get_min_energy_threshold
 from ..background import Cube
 from ..data import EventListDataset, DataStore
 

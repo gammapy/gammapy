@@ -545,6 +545,7 @@ class SpectrumResult(object):
         :include-source:
 
         import matplotlib.pyplot as plt
+        import sherpa
         from gammapy.datasets import gammapy_extra
         from gammapy.spectrum.results import SpectrumResult
         filename = gammapy_extra.filename('test_datasets/spectrum/fitfunction.yaml')

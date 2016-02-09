@@ -2,7 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
-from gammapy.utils.scripts import get_parser
+from ..utils.scripts import get_parser
 
 __all__ = ['ImageAnalysis']
 
