@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from astropy.table import Table
+from astropy.table import Table, Column
 from astropy.io import fits
 from ..utils.fits import table_to_fits_table
 
@@ -163,7 +163,7 @@ class EnergyOffsetArray(object):
         energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
         
         # get data
-        energy_offset_array=data['EnergyOffsetArray']
+        energy_offset_array=data['EnergyOffsetArray'][0]
         return cls(offset_edges, energy_edges , energy_offset_array)
 
     def to_table(self):
@@ -176,11 +176,11 @@ class EnergyOffsetArray(object):
         """
         # table
         table = Table()
-        table['THETA_LO']=self.offset[:-1]
-        table['THETA_HI']=self.offset[1:]
-        table['ENERG_LO']=self.energy[:-1]
-        table['ENERG_HI']=self.energy[1:]
-        table['EnergyOffsetArray']=Quantity(self.data, " u ")
+        table['THETA_LO']=np.expand_dims(self.offset[:-1],0)
+        table['THETA_HI']=np.expand_dims(self.offset[1:],0)
+        table['ENERG_LO']=np.expand_dims(self.energy[:-1],0)
+        table['ENERG_HI']=np.expand_dims(self.energy[1:],0)
+        table['EnergyOffsetArray']=np.expand_dims(Quantity(self.data, " u "),0)
         table.meta['name'] = 'TO DEFINE'
         
         return table
