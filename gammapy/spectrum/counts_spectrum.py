@@ -4,6 +4,7 @@ from __future__ import (print_function)
 import numpy as np
 from astropy import log
 
+from gammapy.extern.bunch import Bunch
 from ..utils.scripts import make_path
 from ..utils.energy import Energy, EnergyBounds
 import datetime
@@ -25,8 +26,6 @@ class CountsSpectrum(object):
         Counts
     energy : `~gammapy.utils.energy.EnergyBounds`
         Energy axis
-    livetime : `~astropy.units.Quantiy`
-        Livetime of the dataset
 
     Examples
     --------
@@ -41,18 +40,19 @@ class CountsSpectrum(object):
         hdu = spec.to_fits()
     """
 
-    def __init__(self, counts, energy, livetime=None, backscal=1):
+    def __init__(self, counts, energy, meta=None):
 
         if np.asarray(counts).size != energy.nbins:
             raise ValueError("Dimension of {0} and {1} do not"
                              " match".format(counts, energy))
 
         self.counts = np.asarray(counts)
-
         self.energy_bounds = EnergyBounds(energy)
 
-        self._livetime = Quantity(0, 's') if livetime is None else livetime
-        self._backscal = backscal
+        self.meta = Bunch(meta) if meta is not None else Bunch()
+        # This is needed to write valid OGIP files
+        self.meta.setdefault('livetime', Quantity(0, 's'))
+        self.meta.setdefault('backscal', 1)
         self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
     @property
@@ -60,22 +60,6 @@ class CountsSpectrum(object):
         """Total number of counts
         """
         return self.counts.sum()
-
-    @property
-    def livetime(self):
-        """Live time of the dataset
-        """
-        return self._livetime
-
-    @property
-    def backscal(self):
-        """Area scaling factor
-        """
-        return self._backscal
-
-    @backscal.setter
-    def backscal(self, value):
-        self._backscal = value
 
     def __add__(self, other):
         """Add two counts spectra and returns new instance
@@ -85,13 +69,14 @@ class CountsSpectrum(object):
         if (self.energy_bounds != other.energy_bounds).all():
             raise ValueError("Cannot add counts spectra with different binning")
         counts = self.counts + other.counts
-        livetime = self.livetime + other.livetime
-        return CountsSpectrum(counts, self.energy_bounds, livetime=livetime)
+        meta = dict(livetime=self.meta.livetime + other.meta.livetime)
+        return CountsSpectrum(counts, self.energy_bounds, meta=meta)
 
     def __mul__(self, other):
         """Scale counts by a factor"""
         temp = self.counts * other
-        return CountsSpectrum(temp, self.energy_bounds, livetime=self.livetime)
+        meta = dict(livetime=self.meta.livetime)
+        return CountsSpectrum(temp, self.energy_bounds, meta=meta)
 
     @classmethod
     def read(cls, phafile, rmffile=None):
@@ -124,8 +109,7 @@ class CountsSpectrum(object):
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
-        livetime = Quantity(0, 's')
-        return cls(counts, bins, livetime=livetime)
+        return cls(counts, bins)
 
     @classmethod
     def from_eventlist(cls, event_list, bins):
@@ -152,26 +136,25 @@ class CountsSpectrum(object):
         energy = Energy(event_list.energy).to(bins.unit)
         val, dummy = np.histogram(energy, bins.value)
         livetime = event_list.observation_live_time_duration
+        meta = dict(livetime = livetime)
 
-        return cls(val, bins, livetime)
+        return cls(val, bins)
 
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
-              offset=None, muon_eff=None, zenith=None, on_region=None,
               *args, **kwargs):
         """Write PHA to FITS file.
 
         Calls `gammapy.spectrum.CountsSpectrum.to_fits` and
         `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
-        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf, offset=offset,
-                     muon_eff=muon_eff, zenith=zenith,
-                     on_region=on_region).writeto(filename, *args, **kwargs)
+        self.to_fits(bkg=bkg, corr=corr, rmf=rmf, arf=arf).writeto(
+            filename, *args, **kwargs)
 
-    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None, offset=None,
-                muon_eff=None, zenith=None, on_region=None):
+    def to_fits(self, bkg=None, corr=None, rmf=None, arf=None):
         """Convert to FITS format
 
-        This can be used to write a :ref:`gadf:ogip-pha`
+        This can be used to write a :ref:`gadf:ogip-pha`. Meta info is written
+        in the fits header.
 
         Parameters
         ----------
@@ -183,14 +166,6 @@ class CountsSpectrum(object):
             :ref:`gadf:ogip-rmf` containing the corresponding energy resolution
         arf : str
             :ref:`gadf:ogip-arf` containing the corresponding effective area
-        offset : `~astropy.coordinates.Angle`
-            Angular distance between target and pointing position
-        muon_eff : float
-            Muon efficiency
-        zenith : `~astropy.coordinates.Angle`
-            Zenith angle
-        on_region : `~gammapy.region.SkyCircleRegion`
-            Region used to extract the spectrum
 
         Returns
         -------
@@ -217,7 +192,7 @@ class CountsSpectrum(object):
         header['TELESCOP'] = 'DUMMY', 'Telescope (mission) name'
         header['INSTRUME'] = 'DUMMY', 'Instrument name'
         header['FILTER'] = 'NONE', 'Instrument filter in use'
-        header['EXPOSURE'] = self.livetime.to('second').value, 'Exposure time'
+        header['EXPOSURE'] = self.meta.livetime.to('second').value, 'Exposure time'
 
         header['BACKFILE'] = bkg, 'Background FITS file'
         header['CORRFILE'] = corr, 'Correlation FITS file'
@@ -248,7 +223,7 @@ class CountsSpectrum(object):
         header['QUALITY '] = 0, 'No data quality information specified'
 
         header['AREASCAL'] = 1., 'Area scaling factor'
-        header['BACKSCAL'] = self.backscal, 'Background scale factor'
+        header['BACKSCAL'] = self.meta.backscal, 'Background scale factor'
         header['CORRSCAL'] = 0., 'Correlation scale factor'
 
         header['FILENAME'] = 'several', 'Spectrum was produced from more than one file'
@@ -256,16 +231,23 @@ class CountsSpectrum(object):
         header['DATE'] = datetime.datetime.today().strftime('%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
         header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
 
-        if offset is not None:
-            header['OFFSET'] = offset.to('deg').value, 'Target offset from pointing position'
-        if muon_eff is not None:
-            header['MUONEFF'] = muon_eff, 'Muon efficiency'
-        if zenith is not None:
-            header['ZENITH'] = zenith.to('deg').value, 'Zenith angle'
-        if on_region is not None:
-            header['RA-OBJ'] = on_region.pos.icrs.ra.value, 'Right ascension of the target'
-            header['DEC-OBJ'] = on_region.pos.icrs.dec.value , 'Declination of the target'
-            header['ON-RAD'] = on_region.radius.to('deg').value, 'Radius of the circular spectral extraction region'
+        # Todo: think about better way to handel this
+        val = self.meta.keys()
+        if 'obs_id' in val:
+            header['OBS_ID'] = self.meta.obs_id
+        if 'offset' in val:
+            header['OFFSET'] = self.meta.offset.to('deg').value, 'Target offset from pointing position'
+        if 'muon_eff' in val:
+            header['MUONEFF'] = self.meta.muon_eff, 'Muon efficiency'
+        if 'zenith' in val:
+            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle'
+        if 'on_region' in val:
+            header['RA-OBJ'] = self.meta.on_region.pos.icrs.ra.value, 'Right ascension of the target'
+            header['DEC-OBJ'] = self.meta.on_region.pos.icrs.dec.value , 'Declination of the target'
+            header['ON-RAD'] = self.meta.on_region.radius.to('deg').value, 'Radius of the circular spectral extraction region'
+        if 'energy_range' in val:
+            header['HI_THRES'] = self.meta.energy_range[1].to('TeV').value
+            header['LO_THRES'] = self.meta.energy_range[0].to('TeV').value
 
         return hdu
 

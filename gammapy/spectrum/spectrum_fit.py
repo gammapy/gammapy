@@ -2,10 +2,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
+import numpy as np
 
 from astropy.extern import six
 
 from ..utils.energy import Energy
+from ..spectrum import CountsSpectrum
+from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ..data import ObservationTable
 from ..utils.scripts import (
     make_path,
@@ -24,36 +27,19 @@ class SpectrumFit(object):
 
     Parameters
     ----------
-    pha : list of str, `~gammapy.extern.pathlib.Path`
-        List of PHA files to fit
+    obs_list : SpectrumObservationList
+        Observations to fit
     """
 
     DEFAULT_STAT = 'wstat'
 
-    def __init__(self, pha, bkg=None, arf=None, rmf=None, stat=DEFAULT_STAT):
+    def __init__(self, obs_list, stat=DEFAULT_STAT):
 
-        self.pha = [make_path(f) for f in pha]
+        self.obs_list = obs_list
         self._model = None
         self._thres_lo = None
         self._thres_hi = None
         self.statistic = stat
-
-    @classmethod
-    def from_config(cls, config):
-        """Create `~gammapy.spectrum.SpectrumFit` from config file"""
-        outdir = make_path(config['general']['outdir'])
-        # TODO: this is not a good solution! an obs table should be used
-        return cls.from_dir(outdir/'ogip_data')
-
-    @classmethod
-    def from_dir(cls, dir):
-        """Create `~gammapy.spectrum.SpectrumFit` using directory
-
-        All PHA files in the directory will be used
-        """
-        dir = make_path(dir)
-        pha_list = dir.glob('pha_run*.pha')
-        return cls(pha_list)
 
     @classmethod
     def from_observation_table(cls, obs_table):
@@ -64,7 +50,18 @@ class SpectrumFit(object):
         - PHAFILE
         """
         pha_list = list(obs_table['PHAFILE'])
-        return cls(pha_list)
+        obs_list = SpectrumObservationList()
+        for f in pha_list:
+            val = SpectrumObservation.read_ogip(f)
+            val.meta.phafile = f
+            obs_list.append(val)
+        return cls(obs_list)
+
+    @property
+    def on_vector(self):
+        """`~gammapy.spectrum.CountsSpectrum` of all on vectors"""
+        l = [CountsSpectrum.read(f) for f in self.pha]
+        return l
 
     @property
     def model(self):
@@ -135,6 +132,9 @@ class SpectrumFit(object):
     def energy_threshold_low(self):
         """
         Low energy threshold of the spectral fit
+
+        If a list of observations is fit at the same time, this is a list with
+        the theshold for each observation.
         """
         return self._thres_lo
 
@@ -148,14 +148,26 @@ class SpectrumFit(object):
         energy : `~gammapy.utils.energy.Energy`, str
             Low energy threshold
         """
+        energy = Energy(energy)
+        shape = len(self.obs_list)
+        if energy.shape is ():
+            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+
+        if energy.shape[0] is not shape:
+            raise ValueError('Dimensios to not match: {} {}'.format(
+                self.obs_list, energy))
+
         self._thres_lo = Energy(energy)
 
     @property
     def energy_threshold_high(self):
-        """
+       """
        High energy threshold of the spectral fit
-        """
-        return self._thres_hi
+
+       If a list of observations is fit at the same time, this is a list with
+       the threshold for each observation.
+       """
+       return self._thres_hi
 
     @energy_threshold_high.setter
     def energy_threshold_high(self, energy):
@@ -167,16 +179,30 @@ class SpectrumFit(object):
         energy : `~gammapy.utils.energy.Energy`, str
             High energy threshold
         """
+        energy = Energy(energy)
+        shape = len(self.obs_list)
+        if energy.shape is ():
+            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+
+        if energy.shape[0] is not shape:
+            raise ValueError('Dimensios to not match: {} {}'.format(
+                self.obs_list, energy))
+
         self._thres_hi = Energy(energy)
 
     @property
     def pha_list(self):
         """Comma-separate list of PHA files"""
-        ret = ''
-        for p in self.pha:
-            ret += str(p) + ","
-
+        file_list = [o.meta.phafile for o in self.obs_list]
+        ret = ','.join(file_list)
         return ret
+
+    def set_default_thresholds(self):
+        """Set energy threshold to the value in the PHA headers"""
+        lo_thres = [o.meta.energy_range[0] for o in self.obs_list]
+        hi_thres = [o.meta.energy_range[1] for o in self.obs_list]
+        self.energy_threshold_low = lo_thres
+        self.energy_threshold_high = hi_thres
 
     def info(self):
         """Print some basic info"""
@@ -199,6 +225,7 @@ class SpectrumFit(object):
         """Run the gammapy.hspec fit
         """
 
+        raise ValueError('Broken')
         log.info("Starting HSPEC")
         import sherpa.astro.ui as sau
         from ..hspec import wstat
@@ -230,7 +257,10 @@ class SpectrumFit(object):
         ds.set_source(self.model)
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
-        ds.notice(thres_lo, thres_hi)
+
+        for i in range(len(ds.datasets)):
+            datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
+
         datastack.set_stat(self.statistic)
         ds.fit()
         datastack.covar()
@@ -286,8 +316,13 @@ def run_spectrum_fit_using_config(config):
     obs_table = ObservationTable.read(table_file)
     fit = SpectrumFit.from_observation_table(obs_table)
     fit.model = config['model']
-    fit.energy_threshold_low = Energy(config['threshold_low'])
-    fit.energy_threshold_high = Energy(config['threshold_high'])
+    lo = config['threshold_low']
+    hi = config['threshold_high']
+    if lo == 'default' or hi == 'default':
+        fit.set_default_thresholds()
+    else:
+        fit.energy_threshold_low = lo
+        fit.energy_threshold_high = hi
     fit.run(method=config['method'])
     log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
     outdir = make_path(config['outdir'])
