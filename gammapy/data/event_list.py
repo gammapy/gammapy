@@ -410,12 +410,123 @@ class EventList(Table):
     def peek(self):
         """Summary plots."""
         import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8))
         self.plot_image(ax=axes[0])
-        self.plot_energy_dependence(ax=axes[1])
-        self.plot_offset_dependence(ax=axes[2])
+        self.plot_time_map(ax=axes[1])
+
+        # log-log scale for time map
+        xlims = axes[1].set_xlim()
+        ylims = axes[1].set_ylim()
+        axes[1].set_xlim(1e-3, xlims[1])
+        axes[1].set_ylim(1e-3, ylims[1])
+        axes[1].loglog()
+        # TODO: self.plot_energy_dependence(ax=axes[x])
+        # TODO: self.plot_offset_dependence(ax=axes[x])
         plt.tight_layout()
-        plt.show()
+
+    def plot_image(self, ax=None, number_bins=50):
+        """Plot the counts as a function of x and y camera coordinate."""
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        max_x = max((self['DETX']))
+        min_x = min((self['DETX']))
+        max_y = max((self['DETY']))
+        min_y = min((self['DETY']))
+
+        x_edges = np.linspace(min_x, max_x, number_bins)
+        y_edges = np.linspace(min_y, max_y, number_bins)
+
+        count_image, x_edges, y_edges = np.histogram2d(self[:]['DETY'], self[:]['DETX'], bins=(x_edges, y_edges))
+
+        ax.set_title('# Photons')
+
+        ax.set_xlabel('x / deg')
+        ax.set_ylabel('y / deg')
+        ax.imshow(count_image, interpolation='nearest', origin='low',
+                  extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
+
+    def plot_energy_hist(self, ax=None):
+        """
+        A plot showing counts as a function of energy. Not implemented.
+        """
+        raise NotImplementedError
+
+    def plot_offset_hist(self, ax=None):
+        """
+        A plot showing counts as a function of camera offset. Not implemented.
+        """
+        raise NotImplementedError
+
+    def plot_energy_offset(self, ax=None):
+        """
+        A plot showing energy dependence as a function of  camera offset. Not implemented.
+        """
+        raise NotImplementedError
+
+    def plot_time_map(self, ax=None):
+        """
+        A time map showing for each event the time between the previous and following event.
+
+        The use and implementation are described here
+
+        https://districtdatalabs.silvrback.com/time-maps-visualizing-discrete-events-across-many-timescales
+
+        Parameters
+        ----------
+
+        ax : `~matplotlib.axes.Axes` or None
+            Axes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`
+            Axes
+
+        Examples
+        --------
+        Plot a time map of the events:
+
+        .. plot::
+            :include-source:
+
+            from gammapy.datasets import gammapy_extra
+
+            import matplotlib.pyplot as plt
+            import matplotlib.pyplot as plt
+            from gammapy.data import EventList
+            from gammapy.datasets import gammapy_extra
+
+            filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
+            event_list = EventList.read(filename, hdu='EVENTS')
+
+            event_list.plot_time_map()
+
+            plt.show()
+
+        """
+
+        import matplotlib.pyplot as plt
+
+        ax = plt.gca() if ax is None else ax
+
+        first_event_time = np.min(self[:]['TIME'])
+
+        # Note the events are not necessarily in time order
+        relative_event_times = self[:]['TIME'] - first_event_time
+
+        diffs = relative_event_times[1:] - relative_event_times[:-1]
+
+        xcoords = diffs[:-1]  # all differences except the last
+        ycoords = diffs[1:]  # all differences except the first
+
+        ax.set_title('Time Map')
+
+        ax.set_xlabel('time before event / s')
+        ax.set_ylabel('time after event / s')
+        ax.scatter(xcoords, ycoords)
+
+        return ax
 
 
 class EventListDataset(object):
