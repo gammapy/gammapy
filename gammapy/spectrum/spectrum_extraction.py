@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import copy
 import logging
 
 import numpy as np
@@ -213,15 +214,15 @@ class SpectrumObservation(object):
     """
 
     def __init__(self, obs_id, on_vector, off_vector, energy_dispersion,
-                 effective_area, meta):
+                 effective_area, meta=None):
         self.obs_id = obs_id
         self.on_vector = on_vector
         self.off_vector = off_vector
         self.energy_dispersion = energy_dispersion
         self.effective_area = effective_area
-        self.meta = Bunch(meta)
+        self.meta = Bunch(meta) if meta is not None else Bunch()
 
-        #These values are needed for I/O
+        # These values are needed for I/O
         self.meta.setdefault('phafile', 'None')
         self.meta.setdefault('energy_range', EnergyBounds([0.01, 300], 'TeV'))
 
@@ -234,7 +235,13 @@ class SpectrumObservation(object):
         phafile : str
             OGIP PHA file to read
         """
-        pass
+        f = make_path(phafile)
+        on_vector = CountsSpectrum.read(f)
+
+        # Todo : read in IRF files
+
+        meta = dict(phafile=phafile)
+        return cls(0, on_vector, None, None, None, meta)
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
@@ -288,10 +295,14 @@ class SpectrumObservation(object):
         m['off_list'] = b.off_list
         m['off_region'] = b.off_region
         off_vec = b.off_vec
-        off_vec.backscal = b.backscal
+        off_vec.meta.update(backscal=b.backscal)
+        off_vec.meta.update(livetime=m.livetime)
 
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
+
+        # Todo: Agree where to store all meta info
+        on_vec.meta.update(m)
 
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(m.offset)
@@ -337,9 +348,14 @@ class SpectrumObservation(object):
         num = np.sum(val)
         den = np.sum([o.off_vector.total_counts for o in obs_list])
         alpha = num/den
-        off_vec.backscal = 1. / alpha
+        off_vec.meta.backscal = 1. / alpha
+
+        #Calculate energy range
+        emin = min([_.meta.energy_range[0] for _ in obs_list])
+        emax = max([_.meta.energy_range[1] for _ in obs_list])
 
         m = Bunch()
+        m['energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.obs_id for o in obs_list]
         m['alpha_method1'] = alpha
         return cls(obs_id, on_vec, off_vec, arf, rmf, meta=m)
@@ -347,7 +363,7 @@ class SpectrumObservation(object):
     @property
     def alpha(self):
         """Exposure ratio between ON and OFF region"""
-        return self.on_vector.backscal / self.off_vector.backscal
+        return self.on_vector.meta.backscal / self.off_vector.meta.backscal
 
     @property
     def spectrum_stats(self):
@@ -362,6 +378,58 @@ class SpectrumObservation(object):
         val['excess'] = float(n_on) - float(n_off) * self.alpha
         val['energy_range'] = self.meta.energy_range
         return SpectrumStats(**val)
+
+    def restrict_energy_range(self, energy_range=None, method='binned'):
+        """Restrict to a given energy range
+
+        If no energy range is given, it will be extracted from the PHA header.
+        Tow methods are available . Unbinned method: The new counts vectors are
+        created from the list of on and off events. Therefore this list must be
+        saved in the meta info. Binned method: The counts vectors are taken as
+        a basis for the energy range restriction. Only bins that are entirely
+        contained in the desired energy range are copied.
+
+        Parameters
+        ----------
+        energy_range : `~gammapy.utils.energy.EnergyBounds`, optional
+            Desired energy range
+        method : str {'unbinned', 'binned'}
+            Use unbinned on list / binned on vector
+
+        Returns
+        -------
+        obs : `~gammapy.spectrum.spectrum_extraction.SpectrumObservation`
+            Spectrum observation in desired energy range
+        """
+
+        if energy_range is None:
+            arf = self.effective_area
+            energy_range = [arf.energy_thresh_lo, arf.energy_thresh_hi]
+
+        energy_range = EnergyBounds(energy_range)
+        ebounds = self.on_vector.energy_bounds
+        if method == 'unbinned':
+            on_list_temp = self.meta.on_list.select_energy(energy_range)
+            off_list_temp = self.meta.off_list.select_energy(energy_range)
+            on_vec = CountsSpectrum.from_eventlist(on_list_temp, ebounds)
+            off_vec = CountsSpectrum.from_eventlist(off_list_temp, ebounds)
+        elif method == 'binned':
+            val = self.on_vector.energy_bounds.lower_bounds
+            mask = np.invert(energy_range.contains(val))
+            on_counts = np.copy(self.on_vector.counts)
+            on_counts[mask] = 0
+            off_counts = np.copy(self.off_vector.counts)
+            off_counts[mask] = 0
+            on_vec = CountsSpectrum(on_counts, ebounds)
+            off_vec = CountsSpectrum(off_counts, ebounds)
+
+        off_vec.meta.update(backscal = self.off_vector.meta.backscal)
+        m = copy.deepcopy(self.meta)
+        m.update(energy_range=energy_range)
+
+        return SpectrumObservation(self.obs_id, on_vec, off_vec,
+                                   self.energy_dispersion, self.effective_area,
+                                   meta=m)
 
     def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                    outdir=None, clobber=True):
@@ -509,7 +577,7 @@ class SpectrumObservationList(list):
         idx : `np.array`
             Indices of element fulfilling the condition
         """
-        val = [o.off_vector.backscal for o in self]
+        val = [o.off_vector.meta.backscal for o in self]
         condition = np.array(val) >= n_min
         idx = np.nonzero(condition)
         return idx[0]
@@ -645,11 +713,16 @@ def run_spectrum_extraction_using_config(config, **kwargs):
         temp = np.asarray(obs)[mask]
         obs = SpectrumObservationList(temp)
 
+    obs_in_erange = SpectrumObservationList(
+        [o.restrict_energy_range(method='binned') for o in obs])
+
+    # Output
     if config['results']['write_ogip']:
         obs.write_ogip_data(str(outdir / 'ogip_data'))
 
     rfile = outdir / config['results']['result_file']
     obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
+    obs_in_erange.total_spectrum.spectrum_stats.to_yaml('test.yaml')
     log.info('\nWriting file {}'.format(rfile))
     obs.to_observation_table().write(
         str(outdir / 'observations.fits'), format='fits', overwrite=True)
