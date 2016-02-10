@@ -83,6 +83,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         self.print_info_spec(file=file)
         self.print_info_components(file=file)
         self.print_info_associations(file=file)
+        self.print_info_references(file=file)
 
     def print_info_basic(self, file=None):
         """Print basic info."""
@@ -207,8 +208,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         if file is None:
             file = sys.stdout
 
-        # import IPython; IPython.embed(); 1/0
-
         if not hasattr(self, 'components'):
             return
 
@@ -224,7 +223,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         associations = ', '.join(self.associations)
         print('List of associated objects: {}'.format(associations), file=file)
 
-
+    def print_info_references(self, file=None):
+        print('\n*** Further source info ***\n', file=file)
+        print(self.data['TeVCat_Reference'])
+        print('\n')
 
 
 class SourceCatalogHGPS(SourceCatalog):
@@ -242,11 +244,11 @@ class SourceCatalogHGPS(SourceCatalog):
         if not filename:
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/HGPS_v0.3.1.fits'
         self.filename = str(filename)
-        self._hdu_list = fits.open(str(filename))
-        table = Table(self._hdu_list['HGPS_SOURCES'].data)
-        self.components = Table(self._hdu_list['HGPS_COMPONENTS'].data)
-        self.associations = Table(self._hdu_list['HGPS_ASSOCIATIONS'].data)
-        self.identifications = Table(self._hdu_list['HGPS_IDENTIFICATIONS'].data)
+        self.hdu_list = fits.open(str(filename))
+        table = Table(self.hdu_list['HGPS_SOURCES'].data)
+        self.components = Table(self.hdu_list['HGPS_COMPONENTS'].data)
+        self.associations = Table(self.hdu_list['HGPS_ASSOCIATIONS'].data)
+        self.identifications = Table(self.hdu_list['HGPS_IDENTIFICATIONS'].data)
         super(SourceCatalogHGPS, self).__init__(table=table)
 
     def _make_source_object(self, index):
@@ -279,7 +281,6 @@ class SourceCatalogHGPS(SourceCatalog):
             source.components.append(component)
 
     def _attach_association_info(self, source):
-        from IPython import embed; embed()
         source.associations = []
         _ = source.data['Source_Name'] == self.associations['Source_Name']
 
