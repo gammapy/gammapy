@@ -710,6 +710,22 @@ for the command line scripts at the moment).
 
 See ``gammapy/scripts/find_obs.py`` as an example.
 
+
+Command line tools using click
+------------------------------
+
+Command line tools that use the `click <http://click.pocoo.org/>`_ module should disable
+the unicode literals warnings to clean up the output of the tool:
+
+.. code-block:: python
+
+    import click
+    click.disable_unicode_literals_warning = True
+
+See `here <http://click.pocoo.org/5/python3/#unicode-literals>`_ for further
+information.  
+
+
 BSD or GPL license?
 -------------------
 
@@ -813,3 +829,5 @@ To see what is there, check out the ``gammapy/extern`` directory locally or on
 `Github <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
 Notes on the bundled files are kept in the docstring of
 `gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
+
+

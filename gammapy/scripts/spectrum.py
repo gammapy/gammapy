@@ -1,5 +1,6 @@
 import logging
 import click
+click.disable_unicode_literals_warning = True
 from ..spectrum import run_spectrum_extraction_using_config
 from ..spectrum.results import SpectrumResult, SpectrumFitResult
 from ..spectrum.results import SpectrumResultDict
