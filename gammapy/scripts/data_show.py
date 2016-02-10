@@ -64,6 +64,8 @@ def show_events(filename, do_plot=False):
 
     if do_plot:
         events.peek()
+        import matplotlib.pyplot as plt
+        plt.show()
 
 
 def show_aeff2d(filename, do_plot=False):

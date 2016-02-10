@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
-from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import gammapy_extra
+from ...region import SkyCircleRegion, SkyRegionList
 
 
 @requires_data('gammapy-extra')
@@ -34,19 +34,18 @@ def test_EventList():
 
 @requires_data('gammapy-extra')
 def test_EventList_region():
-    from gammapy.region import SkyCircleRegion, SkyRegionList
-
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/run_0023037_hard_eventlist.fits.gz')
     event_list = EventList.read(filename, hdu='EVENTS')
-    
+
     pos = SkyCoord(81, 21, unit='deg', frame='icrs')
     radius = Angle(1, 'deg')
     circ = SkyCircleRegion(pos=pos, radius=radius)
     region = SkyRegionList([circ])
     filtered_list = event_list.select_circular_region(region)
-    
-    assert_allclose(filtered_list[4]['RA'],81,rtol=1)
-    assert_allclose(filtered_list[2]['DEC'],21,rtol=1)
+
+    assert_allclose(filtered_list[4]['RA'], 81, rtol=1)
+    assert_allclose(filtered_list[2]['DEC'], 21, rtol=1)
+
 
 @requires_data('gammapy-extra')
 def test_EventListDataset():
@@ -66,6 +65,7 @@ def test_EventListDatasetChecker():
     checker = EventListDatasetChecker(dset)
     checker.run('all')
 
+
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_Eventlist_peek():
@@ -73,4 +73,3 @@ def test_Eventlist_peek():
     event_list = EventList.read(filename, hdu='EVENTS')
 
     event_list.peek()
-    

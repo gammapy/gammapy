@@ -145,12 +145,12 @@ setup(name=PACKAGENAME,
       # To find out if everything works run the Gammapy tests.
       install_requires=[
           'setuptools',
+          'click',
           'numpy>=1.8',
           'astropy>=1.1',
       ],
       extras_require=dict(
           analysis=[
-              'click',
               'scipy>=0.15',
               'scikit-image>=0.10',
               'photutils>=0.1',

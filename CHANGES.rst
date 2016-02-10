@@ -60,6 +60,7 @@ Contributors
 - Christoph Deil
 - Dirk Lennarz (new)
 - Johannes King
+- Jonathan Harris
 - Lea Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
@@ -67,10 +68,11 @@ Contributors
 Pull requests
 +++++++++++++
 
-- [#436] Restructure spectrum package and command line tool
+- [#436] Restructure spectrum package and command line tool (Johannes King)
 - [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
 - [#421] Add spectrum fit serialisation code (Johannes King)
 - [#403] Improve spectrum analysis (Johannes King)
+- [#415] Add EventList plots (Jonathan Harris)
 - [#414] Add Windows tests on Appveyor (Christoph Deil)
 - [#398] Add function to compute exposure cubes (Luigi Tibaldo)
 - [#396] Rewrite spectrum analysis (Johannes King)
