@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.table import Table
 import click
+click.disable_unicode_literals_warning = True
 from .. import irf
 from ..data import EventList
 
