@@ -221,7 +221,7 @@ class SpectrumObservation(object):
         self.effective_area = effective_area
         self.meta = Bunch(meta)
 
-        #These values are needed for I/O
+        # These values are needed for I/O
         self.meta.setdefault('phafile', 'None')
         self.meta.setdefault('energy_range', EnergyBounds([0.01, 300], 'TeV'))
 
@@ -362,6 +362,58 @@ class SpectrumObservation(object):
         val['excess'] = float(n_on) - float(n_off) * self.alpha
         val['energy_range'] = self.meta.energy_range
         return SpectrumStats(**val)
+
+    def restrict_energy_range(self, energy_range=None, method='unbinned'):
+        """Restrict to a given energy range
+
+        If no energy range is given, it will be extracted from the PHA header.
+        Tow methods are available
+        * Unbinned method: The new counts vectors are created from the list of
+          on and off events. Therefore this list must be saved in the meta info.
+        * Binned method: The counts vectors are taken as as basis for the energy
+          range restriction. Only bin that are entirely contained in the desired
+          energy range are copied.
+
+        Parameters
+        ----------
+        energy_range : `~gammapy.utils.energy.EnergyBounds`, optional
+            Desired energy range
+        method : str {'unbinned', 'binned'}
+            Use unbinned on list / binned on vector
+
+        Returns
+        -------
+        obs : `~gammapy.spectrum.spectrum_extraction.SpectrumObservation`
+            Spectrum observation in desired energy range
+        """
+
+        if energy_range is None:
+            arf = self.effective_area
+            energy_range = [arf.energy_thresh_lo, arf.energy_thresh_hi]
+
+        energy_range = EnergyBounds(energy_range)
+        ebounds = self.on_vector.energy_bounds
+        if method == 'unbinned':
+            on_list_temp = self.meta.on_list.select_energy(energy_range)
+            off_list_temp = self.meta.off_list.select_energy(energy_range)
+            on_vec = CountsSpectrum.from_eventlist(on_list_temp, ebounds)
+            off_vec = CountsSpectrum.from_eventlist(off_list_temp, ebounds)
+        elif method == 'binned':
+            val = self.on_vector.energy_bounds.lower_bounds
+            mask = np.invert(energy_range.contains(val))
+            on_counts = np.copy(self.on_vector.counts)
+            on_counts[mask] = 0
+            off_counts = np.copy(self.off_vector.counts)
+            off_counts[mask] = 0
+            on_vec = CountsSpectrum(on_counts, ebounds, self.meta.livetime)
+            off_vec = CountsSpectrum(off_counts, ebounds, self.meta.livetime)
+
+        m = self.meta
+        m.update(energy_range=energy_range)
+
+        return SpectrumObservation(self.obs_id, on_vec, off_vec,
+                                   self.energy_dispersion, self.effective_area,
+                                   meta=m)
 
     def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                    outdir=None, clobber=True):
@@ -645,6 +697,9 @@ def run_spectrum_extraction_using_config(config, **kwargs):
         temp = np.asarray(obs)[mask]
         obs = SpectrumObservationList(temp)
 
+    obs[0].restrict_energy_range(None)
+
+    # Output
     if config['results']['write_ogip']:
         obs.write_ogip_data(str(outdir / 'ogip_data'))
 

@@ -472,6 +472,19 @@ class SpectrumStats(Result):
             setattr(self, k, v)
 
     @classmethod
+    def from_hap_output(cls, filename):
+        """Try two json read methods
+
+        * :func:`~gammapy.spectrum.results.from_fitspectrum_json`
+        * :func:`~gammapy.spectrum.results.from_bg_stats_json`
+        """
+        try:
+            val = cls.from_fitspectrum_json(filename)
+        except KeyError:
+            val = cls.from_bg_stats_json(filename)
+        return val
+
+    @classmethod
     def from_fitspectrum_json(cls, filename):
         import json
 
@@ -547,9 +560,18 @@ class SpectrumResult(object):
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
-        stats = SpectrumStats.from_fitspectrum_json(filename)
-        fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
-        points = FluxPoints.from_fitspectrum_json(filename)
+        try:
+            stats = SpectrumStats.from_hap_output(filename)
+        except KeyError:
+            stats = None
+        try:
+            fit = SpectrumFitResult.from_fitspectrum_json(filename, model=model)
+        except KeyError:
+            fit = None
+        try:
+            points = FluxPoints.from_fitspectrum_json(filename)
+        except KeyError:
+            points = None
 
         return cls(stats=stats, fit=fit, points=points)
 

@@ -6,6 +6,8 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+
+from ..utils.energy import Energy
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
@@ -425,8 +427,8 @@ class EffectiveAreaTable2D(object):
 
         data = hdu.data
         header = hdu.header
-        thres_lo = header['LO_THRES']
-        thres_hi = header['HI_THRES']
+        thres_lo = Energy(header['LO_THRES'], 'TeV')
+        thres_hi = Energy(header['HI_THRES'], 'TeV')
         e_lo = Quantity(data['ENERG_LO'].squeeze(), 'TeV')
         e_hi = Quantity(data['ENERG_HI'].squeeze(), 'TeV')
         o_lo = Angle(data['THETA_LO'].squeeze(), 'deg')
@@ -501,7 +503,9 @@ class EffectiveAreaTable2D(object):
         energy = np.sqrt(energy_lo * energy_hi)
         area = self.evaluate(offset, energy)
 
-        return EffectiveAreaTable(energy_lo, energy_hi, area)
+        return EffectiveAreaTable(energy_lo, energy_hi, area,
+                                  energy_thresh_lo=self.low_threshold,
+                                  energy_thresh_hi=self.high_threshold)
 
     def evaluate(self, offset=None, energy=None):
         """Evaluate effective area for a given energy and offset.
