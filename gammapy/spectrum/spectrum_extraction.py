@@ -422,6 +422,8 @@ class SpectrumObservation(object):
             off_counts[mask] = 0
             on_vec = CountsSpectrum(on_counts, ebounds)
             off_vec = CountsSpectrum(off_counts, ebounds)
+        else:
+            raise ValueError('Undefined method: {}'.format(method))
 
         off_vec.meta.update(backscal = self.off_vector.meta.backscal)
         m = copy.deepcopy(self.meta)

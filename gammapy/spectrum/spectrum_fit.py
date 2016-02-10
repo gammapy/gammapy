@@ -154,7 +154,7 @@ class SpectrumFit(object):
             energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
-            raise ValueError('Dimensios to not match: {} {}'.format(
+            raise ValueError('Dimension to not match: {} {}'.format(
                 self.obs_list, energy))
 
         self._thres_lo = Energy(energy)
@@ -185,7 +185,7 @@ class SpectrumFit(object):
             energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
-            raise ValueError('Dimensios to not match: {} {}'.format(
+            raise ValueError('Dimensions to not match: {} {}'.format(
                 self.obs_list, energy))
 
         self._thres_hi = Energy(energy)
