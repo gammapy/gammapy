@@ -479,9 +479,9 @@ class SpectrumStats(Result):
         * :func:`~gammapy.spectrum.results.from_bg_stats_json`
         """
         try:
-            val = cls.from_fitspectrum_json(filename)
-        except KeyError:
             val = cls.from_bg_stats_json(filename)
+        except KeyError:
+            val = cls.from_fitspectrum_json(filename)
         return val
 
     @classmethod
@@ -492,6 +492,10 @@ class SpectrumStats(Result):
             data = json.load(fh)
 
         val = data['spectrum_stats']
+        emin = data['flux_graph']['energy_fit_range_min']
+        emax = data['flux_graph']['energy_fit_range_max']
+        energy_range = EnergyBounds([emin, emax], 'TeV')
+        val.update(energy_range=energy_range)
         return cls(**val)
 
     @classmethod
@@ -534,9 +538,10 @@ class SpectrumStats(Result):
         data = self.__dict__.values()
         names = self.__dict__.keys()
         cols = list()
-        for d in zip(data):
-            cols.append(Column(data=d, **kwargs))
+        for d in data:
+            cols.append(Column(data=[d], **kwargs))
         t = Table(cols, names=names)
+        t['energy_range'].unit = self.energy_range.unit
         return t
 
 

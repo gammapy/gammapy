@@ -17,77 +17,10 @@ log = logging.getLogger(__name__)
 
 class SpectrumPipe(object):
     """Gammapy Spectrum Pipe class
-
-    Parameters
-    ----------
-    config : dict
-        Configuration file dict
     """
 
-    def __init__(self, config):
-        self.config = config
-
-    @classmethod
-    def from_configfile(cls, filename, auto_outdir=True):
-        """Create `~gammapy.script.SpectrumPipe` from config file
-
-        Parameters
-        ----------
-        filename : str
-            YAML configfile
-        auto_outdir : bool [True]
-            Set outdir explicitly for every analysis
-        """
-        config = read_yaml(filename, log)
-        return cls.from_config(config, auto_outdir=auto_outdir)
-
-    @classmethod
-    def from_config(cls, config, auto_outdir=True):
-        """Create `~gammapy.script.SpectrumPipe` from config dict
-
-        Parameters
-        ----------
-        config : dict
-            config dict
-        auto_outdir : bool [True]
-            Set outdir explicitly for every analysis
-        """
-
-        base_config = config.pop('base_config')
-        analist = dict()
-
-        for analysis in config.keys():
-            log.info("Generating config for analysis {}".format(analysis))
-            anaconf = copy.deepcopy(base_config)
-            temp = config[analysis]
-            anaconf = recursive_merge_dicts(anaconf, temp)
-            if auto_outdir:
-                anaconf['extraction']['results']['outdir'] = analysis
-                anaconf['fit']['outdir'] = analysis
-                anaconf['fit']['observation_table'] = '{}/observations.fits'.format(analysis)
-
-            analist[analysis] = anaconf
-
-        return cls(analist)
-
-    def write_configs(self):
-        """Write analysis configs to disc"""
-        for conf in self.config.values():
-            outdir = make_path(conf['fit']['outdir'])
-            outdir.mkdir(exist_ok=True)
-            outfile = outdir / 'config.yaml'
-            write_yaml(conf, str(outfile), logger=log)
-
-    def info(self):
-        """
-        Basic information about the analysis pipeline
-        """
-        raise NotImplementedError
-
-    def run(self):
-        """Run spectrum pipe"""
-        for conf in self.config.values():
-            run_spectrum_analysis_using_config(conf)
+    def __init__(self):
+        pass
 
 
 def run_spectrum_analysis_using_config(config):

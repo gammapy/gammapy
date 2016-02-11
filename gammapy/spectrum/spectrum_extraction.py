@@ -82,6 +82,11 @@ class SpectrumExtraction(object):
         self._observations = None
 
     def extract_spectrum(self, nobs=None):
+        """Extract 1D spectral information
+
+        The result can be obtained via
+        :func:`~gammapy.spectrum.spectrum_extraction.observations`
+        """
         nobs = self.nobs if nobs is None else nobs
         observations = []
         for i, val in enumerate(np.atleast_1d(self.obs_ids)):
@@ -110,7 +115,11 @@ class SpectrumExtraction(object):
 
     @property
     def observations(self):
-        """`~gamampy.spectrum.ObservationList`
+        """`~gamampy.spectrum.ObservationList` of all observations
+
+        This list is generated via
+        :func:`~gammapy.spectrum.spectrum_extraction.extract_spectrum`
+        when the property is first called and the result is cached.
         """
         if self._observations is None:
             self.extract_spectrum()
@@ -127,7 +136,7 @@ class SpectrumExtraction(object):
 
         bkg_method = self.bkg_method if bkg_method is None else bkg_method
 
-        ana = SpectrumExtraction(datastore=self.store, obs=self.obs_ids,
+        ana = SpectrumExtraction(datastore=self.store, obs_ids=self.obs_ids,
                                  on_region=self.on_region,
                                  bkg_method=bkg_method,
                                  exclusion=self.exclusion, nobs=0,
@@ -176,9 +185,6 @@ class SpectrumExtraction(object):
         # Exclusion
         excl_file = config['excluded_regions']['file']
         exclusion = ExclusionMask.from_fits(excl_file)
-
-        # Outdir
-        outdir = config['results']['outdir']
 
         return cls(datastore=store, obs_ids=obs, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
@@ -489,7 +495,7 @@ class SpectrumObservation(object):
         size : `~astropy.coordinates.Angle`
             Edge length of the plot
         """
-        size = Angle('5 deg') if size is None else size
+        size = Angle('5 deg') if size is None else Angle(size)
         ax = self.meta.exclusion.plot(**kwargs)
         self._set_ax_limits(ax, size)
         point = skycoord_to_pixel(self.meta.pointing, ax.wcs)
