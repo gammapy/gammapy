@@ -48,4 +48,4 @@ def test_energy_offset_array_read_write(tmpdir):
     assert_equal(array.data, array2.data)
     assert_equal(array.energy, array2.energy)
     assert_equal(array.offset, array2.offset)
-    # TODO: add more asserts for other data members (the axes).
+   
