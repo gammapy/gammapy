@@ -7,10 +7,10 @@ from astropy.table import Table, Column
 from astropy.io import fits
 from ..utils.fits import table_to_fits_table
 
-
 __all__ = [
     'EnergyOffsetArray',
 ]
+
 
 def _make_bin_edges_array(lo, hi):
     """Make bin edges array from a low values and a high values array.
@@ -140,7 +140,6 @@ class EnergyOffsetArray(object):
         hdu_list = fits.open(filename)
         return cls.from_fits(hdu_list)
 
-    
     @classmethod
     def from_fits(cls, hdu, scheme=None):
         """Read EnergyOffsetArray from a fits binary table.
@@ -149,6 +148,7 @@ class EnergyOffsetArray(object):
         ----------
         hdu : `~astropy.io.fits.BinTableHDU`
             HDU binary table for the EnergyOffsetArray.
+
         Returns
         -------
         cube : `~gammapy.background.EnergyOffsetArray`
@@ -157,14 +157,14 @@ class EnergyOffsetArray(object):
 
         header = hdu[1].header
         data = hdu[1].data
-        
+
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'], data['THETA_HI'])
         energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
-        
+
         # get data
-        energy_offset_array=data['EnergyOffsetArray'][0]
-        return cls(energy_edges, offset_edges , energy_offset_array)
+        energy_offset_array = data['EnergyOffsetArray'][0]
+        return cls(energy_edges, offset_edges, energy_offset_array)
 
     def to_table(self):
         """Convert EnergyOffsetArray to astropy table format.
@@ -176,13 +176,13 @@ class EnergyOffsetArray(object):
         """
         # table
         table = Table()
-        table['THETA_LO']=np.expand_dims(self.offset[:-1],0)
-        table['THETA_HI']=np.expand_dims(self.offset[1:],0)
-        table['ENERG_LO']=np.expand_dims(self.energy[:-1],0)
-        table['ENERG_HI']=np.expand_dims(self.energy[1:],0)
-        table['EnergyOffsetArray']=np.expand_dims(Quantity(self.data, " u "),0)
+        table['THETA_LO'] = np.expand_dims(self.offset[:-1], 0)
+        table['THETA_HI'] = np.expand_dims(self.offset[1:], 0)
+        table['ENERG_LO'] = np.expand_dims(self.energy[:-1], 0)
+        table['ENERG_HI'] = np.expand_dims(self.energy[1:], 0)
+        table['EnergyOffsetArray'] = np.expand_dims(Quantity(self.data, " u "), 0)
         table.meta['name'] = 'TO DEFINE'
-        
+
         return table
 
     def to_fits(self):
@@ -198,5 +198,3 @@ class EnergyOffsetArray(object):
     def write(self, filename, **kwargs):
         """ Write EnergyOffsetArray to fits file"""
         self.to_fits().writeto(filename, **kwargs)
-        
-        

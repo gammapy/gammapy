@@ -16,7 +16,7 @@ def make_test_array():
     # put some dummy example data
     # TODO: this could be made optional or split out into a
     # separate utility function later on when lookup / interpolation methods are added to the class.
-    array.data[5, 3] = 42
+    # array.data[5, 3] = 42
     return array
 
 
