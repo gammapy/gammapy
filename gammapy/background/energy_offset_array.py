@@ -6,30 +6,12 @@ from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.io import fits
 from ..utils.fits import table_to_fits_table
+from .cube import _make_bin_edges_array
+
 
 __all__ = [
     'EnergyOffsetArray',
 ]
-
-
-def _make_bin_edges_array(lo, hi):
-    """Make bin edges array from a low values and a high values array.
-
-    TODO: move this function to somewhere else? (i.e. utils?)
-
-    Parameters
-    ----------
-    lo : `~numpy.ndarray`
-        Lower boundaries.
-    hi : `~numpy.ndarray`
-        Higher boundaries.
-
-    Returns
-    -------
-    bin_edges : `~numpy.ndarray`
-        Array of bin edges as ``[[low], [high]]``.
-    """
-    return np.append(lo.flatten(), hi.flatten()[-1:])
 
 
 class EnergyOffsetArray(object):
@@ -43,7 +25,7 @@ class EnergyOffsetArray(object):
     offset : `~astropy.coordinates.Angle`
         offset bin vector
     data : `~numpy.ndarray`
-        data array (2D):
+        data array (2D)
 
     """
 
@@ -138,7 +120,8 @@ class EnergyOffsetArray(object):
             File name
         """
         hdu_list = fits.open(filename)
-        return cls.from_fits(hdu_list)
+        hdu=hdu_list[1]
+        return cls.from_fits(hdu)
 
     @classmethod
     def from_fits(cls, hdu):
@@ -155,8 +138,8 @@ class EnergyOffsetArray(object):
             EnergyOffsetArray object.
         """
 
-        header = hdu[1].header
-        data = hdu[1].data
+        header = hdu.header
+        data = hdu.data
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
         energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
