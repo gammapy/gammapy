@@ -70,16 +70,18 @@ class SourceCatalog(object):
     ----------
     table : `~astropy.table.Table`
         Table with catalog data.
+    source_name_key : str ('Source_Name')
+        Column with source name information
     """
     source_object_class = SourceCatalogObject
 
     # TODO: at the moment these are duplicated in SourceCatalogObject.
     # Should we share them somehow?
-    _source_name_key = 'Source_Name'
     _source_index_key = 'catalog_row_index'
 
-    def __init__(self, table):
+    def __init__(self, table, source_name_key='Source_Name'):
         self.table = table
+        self._source_name_key = source_name_key
 
         # Make a dict for quick lookup: source name -> row index
         names = dict()

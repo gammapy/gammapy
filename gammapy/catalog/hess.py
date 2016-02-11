@@ -13,6 +13,7 @@ TODO:
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import sys
+from collections import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -57,8 +58,18 @@ class HGPSGaussComponent(object):
         """Pretty-print source data"""
         if not file:
             file = sys.stdout
+        d = self.data   
+        print('\nComponent {}:'.format(d['Component_ID']), file=file)
+        print('{:<20s} : {:8.3f} \u00B1 {:.3f} deg'.format('GLON', d['GLON'],
+              d['GLON_Err']), file=file)
+        print('{:<20s} : {:8.3f} \u00B1 {:.3f} deg'.format('GLAT', d['GLAT'],
+              d['GLAT_Err']), file=file)
+        print('{:<20s} : {:.3f} \u00B1 {:.3f} deg'
+              ''.format('Size', d['Size'], d['Size_Err']), file=file)
+        val, err = d['Flux_Map'], d['Flux_Map_Err']
+        print('{:<20s} : ({:.2f} \u00B1 {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} \u00B1 {:.1f}) % Crab'
+              ''.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB), file=file)
 
-        print('This is component XYZ', file=file)
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
@@ -71,6 +82,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         self.print_info_map(file=file)
         self.print_info_spec(file=file)
         self.print_info_components(file=file)
+        self.print_info_associations(file=file)
+        self.print_info_references(file=file)
 
     def print_info_basic(self, file=None):
         """Print basic info."""
@@ -167,10 +180,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_PL_Int_1TeV']
         err = d['Flux_Spec_PL_Int_1TeV_Err']
-        print('PL   Flux(>1) : {:.1f} \u00B1 {:.1f}'.format(val / FF, err / FF), file=file)
+        print('PL   Flux(>1 TeV) : {:.1f} \u00B1 {:.1f}'.format(val / FF, err / FF), file=file)
         val = d['Flux_Spec_ECPL_Int_1TeV']
         err = d['Flux_Spec_ECPL_Int_1TeV_Err']
-        print('ECPL Flux(>1) : {:.1f} \u00B1 {:.1f}'.format(val / FF, err / FF), file=file)
+        print('ECPL Flux(>1 TeV) : {:.1f} \u00B1 {:.1f}'.format(val / FF, err / FF), file=file)
 
         val = d['Index_Spec_PL']
         err = d['Index_Spec_PL_Err']
@@ -195,8 +208,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         if file is None:
             file = sys.stdout
 
-        # import IPython; IPython.embed(); 1/0
-
         if not hasattr(self, 'components'):
             return
 
@@ -206,6 +217,16 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         for component in self.components:
             component.print_info(file=file)
+
+    def print_info_associations(self, file=None):
+        print('\n*** Source associations info ***\n', file=file)
+        associations = ', '.join(self.associations)
+        print('List of associated objects: {}'.format(associations), file=file)
+
+    def print_info_references(self, file=None):
+        print('\n*** Further source info ***\n', file=file)
+        print(self.data['TeVCat_Reference'])
+        print('\n')
 
 
 class SourceCatalogHGPS(SourceCatalog):
@@ -222,12 +243,10 @@ class SourceCatalogHGPS(SourceCatalog):
     def __init__(self, filename=None):
         if not filename:
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/HGPS_v0.3.1.fits'
-
+        self.filename = str(filename)
         self.hdu_list = fits.open(str(filename))
         table = Table(self.hdu_list['HGPS_SOURCES'].data)
-
         self.components = Table(self.hdu_list['HGPS_COMPONENTS'].data)
-        self.components.index_column('Component_ID')
         self.associations = Table(self.hdu_list['HGPS_ASSOCIATIONS'].data)
         self.identifications = Table(self.hdu_list['HGPS_IDENTIFICATIONS'].data)
         super(SourceCatalogHGPS, self).__init__(table=table)
@@ -249,14 +268,22 @@ class SourceCatalogHGPS(SourceCatalog):
 
         if source.data['Components'] != '':
             self._attach_component_info(source)
-
+        self._attach_association_info(source)
+        #if source.data['Source_Class'] != 'Unid':
+        #    self._attach_identification_info(source)
         return source
 
     def _attach_component_info(self, source):
         source.components = []
-        for name in source.data['Components'].split(','):
-            row = self.components[name]
-            from collections import OrderedDict
-            data = OrderedDict(row)
-            component = HGPSGaussComponent(data=data)
+        lookup = SourceCatalog(self.components, source_name_key='Component_ID')
+        for name in source.data['Components'].split(', '):
+            component = HGPSGaussComponent(data=lookup[name].data)
             source.components.append(component)
+
+    def _attach_association_info(self, source):
+        source.associations = []
+        _ = source.data['Source_Name'] == self.associations['Source_Name']
+
+        source.associations = list(self.associations['Association_Name'][_])
+
+

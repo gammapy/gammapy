@@ -18,9 +18,8 @@ class TestSourceCatalogHGPS:
     def test_component_table(self):
         assert len(self.cat.components) == 97
 
-    @pytest.mark.xfail
     def test_associations_table(self):
-        assert len(self.cat.associations) == 200
+        assert len(self.cat.associations) == 216
 
 
 @requires_data('hgps')

@@ -56,7 +56,7 @@ def plot_lightcurve(catalog, source):
     source = catalog[source]
 
     # Generic info dict
-    source.pprint()
+    #source.pprint()
 
     # Specific source info print-out
     if hasattr(source, 'print_info'):
