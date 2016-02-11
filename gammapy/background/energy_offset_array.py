@@ -54,7 +54,7 @@ class EnergyOffsetArray(object):
             # Fill the events
             counts = self._fill_one_event_list(event_list)
             self.data += Quantity(counts, "u")
-        
+
     def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
@@ -196,5 +196,8 @@ class EnergyOffsetArray(object):
         -------
         Interpolated value
         """
-        Interpolator = interpolate.interp2d(self.offset.value, self.energy.value, self.data.value, fill_value="None")
+        #import IPython; IPython.embed()
+        Energy_bin=np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
+        Offset_bin=(self.offset.value[:-1] + self.offset.value[1:])/2.
+        Interpolator = interpolate.interp2d(Offset_bin, Energy_bin, self.data.value, fill_value="None")
         return Interpolator(offset.value, energy.value)
