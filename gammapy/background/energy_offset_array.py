@@ -157,13 +157,13 @@ class EnergyOffsetArray(object):
 
         header = hdu[1].header
         data = hdu[1].data
-
+        import IPython; IPython.embed()
         # get offset and energy binning
-        offset_edges = _make_bin_edges_array(data['THETA_LO'], data['THETA_HI'])
-        energy_edges = _make_bin_edges_array(data['ENERG_LO'], data['ENERG_HI'])
+        offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
+        energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
 
         # get data
-        energy_offset_array = data['EnergyOffsetArray'][0]
+        energy_offset_array = data['EnergyOffsetArray'].squeeze()
         return cls(energy_edges, offset_edges, energy_offset_array)
 
     def to_table(self):
