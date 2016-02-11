@@ -5,7 +5,6 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.io import fits
-from scipy import interpolate
 from ..utils.fits import table_to_fits_table
 from .cube import _make_bin_edges_array
 
@@ -181,7 +180,7 @@ class EnergyOffsetArray(object):
         """ Write EnergyOffsetArray to fits file"""
         self.to_fits().writeto(filename, **kwargs)
 
-    def evaluate(self, energy, offset):
+    def evaluate(self, energy, offset, interpolate_params):
         """
         Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
 
@@ -191,13 +190,16 @@ class EnergyOffsetArray(object):
          energy value
         offset : `~astropy.coordinates.Angle`
         offset value
+        interpolate_params: dict
+        give the options for the RegularGridInterpolator
 
         Returns
         -------
         Interpolated value
         """
-        # import IPython; IPython.embed()
+        from scipy import interpolate
+
         Energy_bin = np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
         Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
-        Interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value, fill_value=None)
+        Interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value, **interpolate_params)
         return Interpolator([energy.value, offset.value])
