@@ -5,7 +5,8 @@ from __future__ import (absolute_import, division, print_function,
 from astropy.tests.helper import pytest
 from numpy.testing import assert_allclose
 
-from ...spectrum import run_spectrum_extraction_using_config, SpectrumObservation
+from ...spectrum import run_spectrum_extraction_using_config
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_fit import (
     SpectrumFit,
@@ -24,8 +25,10 @@ from astropy.utils.compat import NUMPY_LT_1_9
 def test_spectral_fit():
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23592.pha")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23526.pha")
-    obs_list = [SpectrumObservation.read_ogip(pha1),
-                SpectrumObservation.read_ogip(pha2)]
+
+    obs1 = SpectrumObservation.read_ogip(pha1)
+    obs2 = SpectrumObservation.read_ogip(pha2)
+    obs_list = SpectrumObservationList([obs1, obs2])
     fit = SpectrumFit(obs_list)
     fit.model = 'PL'
     fit.energy_threshold_low = '100 GeV'

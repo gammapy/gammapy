@@ -100,7 +100,7 @@ class SpectrumExtraction(object):
                                                           )
             except IndexError:
                 log.warning(
-                    'Observation {} not in store {}'.format(val, self.datastore))
+                    'Observation {} not in store {}'.format(val, self.store))
                 nobs += 1
                 continue
             observations.append(temp)
