@@ -164,7 +164,7 @@ class EnergyOffsetArray(object):
         
         # get data
         energy_offset_array=data['EnergyOffsetArray'][0]
-        return cls(offset_edges, energy_edges , energy_offset_array)
+        return cls(energy_edges, offset_edges , energy_offset_array)
 
     def to_table(self):
         """Convert EnergyOffsetArray to astropy table format.
