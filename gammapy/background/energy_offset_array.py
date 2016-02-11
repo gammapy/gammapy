@@ -196,8 +196,8 @@ class EnergyOffsetArray(object):
         -------
         Interpolated value
         """
-        #import IPython; IPython.embed()
-        Energy_bin=np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
-        Offset_bin=(self.offset.value[:-1] + self.offset.value[1:])/2.
-        Interpolator = interpolate.interp2d(Offset_bin, Energy_bin, self.data.value, fill_value="None")
-        return Interpolator(offset.value, energy.value)
+        # import IPython; IPython.embed()
+        Energy_bin = np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
+        Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
+        Interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value, fill_value=None)
+        return Interpolator([energy.value, offset.value])
