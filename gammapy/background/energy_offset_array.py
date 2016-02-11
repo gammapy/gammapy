@@ -5,9 +5,9 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.io import fits
+from scipy import interpolate
 from ..utils.fits import table_to_fits_table
 from .cube import _make_bin_edges_array
-
 
 __all__ = [
     'EnergyOffsetArray',
@@ -33,7 +33,7 @@ class EnergyOffsetArray(object):
         self.energy = Quantity(energy, 'TeV')
         self.offset = Angle(offset, 'deg')
         if data is None:
-            self.data = np.zeros((len(energy) - 1, len(offset) - 1))
+            self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), "u")
         else:
             self.data = data
 
@@ -53,8 +53,8 @@ class EnergyOffsetArray(object):
         for event_list in event_lists:
             # Fill the events
             counts = self._fill_one_event_list(event_list)
-            self.data += counts
-
+            self.data += Quantity(counts, "u")
+        
     def _fill_one_event_list(self, events):
         """
         histogram the counts of an EventList object in 2D (energy,offset)
@@ -100,13 +100,13 @@ class EnergyOffsetArray(object):
             offset.value.min(), offset.value.max(),
             energy.value.min(), energy.value.max(),
         ]
-        ax.imshow(self.data, extent=extent, **kwargs)
+        ax.imshow(self.data.value, extent=extent, **kwargs)
         ax.semilogy()
         ax.set_xlabel('Offset ({0})'.format(offset.unit))
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Energy_offset Array')
         ax.legend()
-        image = ax.imshow(self.data, extent=extent, **kwargs)
+        image = ax.imshow(self.data.value, extent=extent, **kwargs)
         plt.colorbar(image)
         return ax
 
@@ -120,7 +120,7 @@ class EnergyOffsetArray(object):
             File name
         """
         hdu_list = fits.open(filename)
-        hdu=hdu_list[1]
+        hdu = hdu_list[1]
         return cls.from_fits(hdu)
 
     @classmethod
@@ -180,3 +180,21 @@ class EnergyOffsetArray(object):
     def write(self, filename, **kwargs):
         """ Write EnergyOffsetArray to fits file"""
         self.to_fits().writeto(filename, **kwargs)
+
+    def evaluate(self, energy, offset):
+        """
+        Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+         energy value
+        offset : `~astropy.coordinates.Angle`
+        offset value
+
+        Returns
+        -------
+        Interpolated value
+        """
+        Interpolator = interpolate.interp2d(self.offset.value, self.energy.value, self.data.value, fill_value="None")
+        return Interpolator(offset.value, energy.value)
