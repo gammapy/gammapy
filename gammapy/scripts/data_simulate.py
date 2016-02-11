@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import click
+from astropy.io import fits
 
 click.disable_unicode_literals_warning = True
 
@@ -36,22 +37,49 @@ def data_simulate_main(model, runlist, indir, outdir):
     click.echo('indir: {}'.format(indir))
     click.echo('outdir: {}'.format(outdir))
 
-    # obs_ids = [23523]
-    # make_obsdef(obs_ids)
-    # run_obssim()
+    # TODO: get obs list from `runlist` input file
+    obs_ids = [23523]
+    make_obsdef(obs_ids)
+    run_obssim(model)
     # cleanup()
+
+    infile = 'hess_events_023523.fits.gz'
+    outfile='hess_events_023523_empty.fits'
+    select_event_subset(infile=infile, outfile=outfile)
+
 
 
 def make_obsdef(obs_ids):
     """Make observation definition XML file."""
-    pass
+    template = """
+<observation_list title="observation library">
+    <observation name="Crab" id="{obs_id}" instrument="HESS">
+        <parameter name="EventList" file="{event_file}"/>
+        <parameter name="EffectiveArea" file="{aeff_file}[AEFF_2D]"/>
+        <!--<parameter name="EnergyDispersion" file="{edisp_file}[EDISP_2D]"/>-->
+        <parameter name="PointSpreadFunction" file="{psf_file}[PSF_2D_GAUSS]"/>
+        <!--<parameter name="Background" file="hess_bkg_offruns_023523.fits.gz"/>-->
+    </observation>
+</observation_list>
+    """
+    filename = 'obsdef.xml'
+    context = dict()
+    context['obs_id'] = obs_ids[0]
+    context['event_file'] = 'run023400-023599/run023523/hess_events_023523.fits.gz'
+    context['aeff_file'] = 'run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
+    context['edisp_file'] = 'run023400-023599/run023523/hess_edisp_2d_023523.fits.gz'
+    context['psf_file'] = 'run023400-023599/run023523/hess_psf_3gauss_023523.fits.gz'
+    text = template.format(**context)
+    with open(filename, 'w') as fh:
+        log.info('Writing {}'.format(filename))
+        fh.write(text)
 
 
-def run_obssim():
+def run_obssim(model):
     import ctools
     sim = ctools.ctobssim()
     sim['inmodel'] = 'model.xml'
-    sim['inobs'] = 'observation_definition.xml'
+    sim['inobs'] = 'obsdef.xml'
     sim['outevents'] = 'outevents.xml'
     sim['prefix'] = 'hess_events_'
     sim['emin'] = 0.5
@@ -59,6 +87,23 @@ def run_obssim():
     sim['rad'] = 3
     sim['logfile'] = 'simulation_output.log'
     sim.execute()
+
+
+def select_event_subset(infile, outfile, n_events_max=5):
+    """Select subset of events.
+
+    We use this for H.E.S.S. event lists which we're not allowed
+    to share publicly, e.g. for Gammalib or Gammapy tests and bug reports.
+    But after just keeping a few (5 by default) it's not an issue any more.
+    """
+    log.info('Reading {}'.format(infile))
+    hdu = fits.open(infile)['EVENTS']
+
+    log.info('Selecting first {} events...'.format(n_event_max))
+    hdu.data = hdu.data[:n_events_max]
+
+    log.info('Writing {}'.format(outfile))
+    hdu.writeto(outfile, clobber=True)
 
 
 def cleanup():
