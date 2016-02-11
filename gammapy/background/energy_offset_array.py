@@ -142,7 +142,7 @@ class EnergyOffsetArray(object):
 
     @classmethod
     def from_fits(cls, hdu):
-        """Read EnergyOffsetArray from a fits binary table.
+        """Read `EnergyOffsetArray` from a fits binary table.
 
         Parameters
         ----------
@@ -167,7 +167,7 @@ class EnergyOffsetArray(object):
         return cls(energy_edges, offset_edges, energy_offset_array)
 
     def to_table(self):
-        """Convert EnergyOffsetArray to astropy table format.
+        """Convert `EnergyOffsetArray` to astropy table format.
 
         Returns
         -------
@@ -186,7 +186,7 @@ class EnergyOffsetArray(object):
         return table
 
     def to_fits(self):
-        """Convert EnergyOffsetArray to binary table fits format.
+        """Convert `EnergyOffsetArray` to binary table fits format.
 
         Returns
         -------
