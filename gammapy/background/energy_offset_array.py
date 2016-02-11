@@ -141,7 +141,7 @@ class EnergyOffsetArray(object):
         return cls.from_fits(hdu_list)
 
     @classmethod
-    def from_fits(cls, hdu, scheme=None):
+    def from_fits(cls, hdu):
         """Read EnergyOffsetArray from a fits binary table.
 
         Parameters
