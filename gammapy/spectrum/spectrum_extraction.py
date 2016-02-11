@@ -66,7 +66,6 @@ class SpectrumExtraction(object):
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
-        self.datastore = datastore
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
         self.ebounds = ebounds
@@ -251,10 +250,10 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True, dry_run=False):
+        exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
-        BLABLA is stored in the meta
+        Extraction parameters are stored in the meta attribute
 
         Parameters
         ----------
@@ -274,6 +273,8 @@ class SpectrumObservation(object):
             Save meta information, default: True
         dry_run : bool, optional
             Only process meta data, not actual spectra are extracted
+        calc_containment : bool, optional
+            Calculate containment fraction of the on region
         """
 
         event_list = store.load(obs_id=obs_id, filetype='events')
@@ -292,6 +293,13 @@ class SpectrumObservation(object):
         m['datastore'] = store
         m['ebounds'] = ebounds
         m['obs_id'] = obs_id
+
+        if calc_containment:
+            psf2d = store.load(obs_id=obs_id, filetype='psf')
+            val = Energy('10 TeV')
+            psf = psf2d.psf_at_energy_and_theta(val, m.offset)
+            cont = psf.containment_fraction(m.on_region.radius)
+            m['psf_containment'] = float(cont)
 
         if dry_run:
           return cls(obs_id, None, None, None, None, meta=m)

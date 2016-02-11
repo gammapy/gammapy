@@ -113,7 +113,7 @@ class SpectrumFitResult(Result):
         Fitted parameters
     parameter_errors : dict
         Parameter errors
-    energy_range : `~gammapy.utils.energy.EnergyBounds`
+    fit_range : `~gammapy.utils.energy.EnergyBounds`
         Energy range of the spectral fit
     fluxes : dict, optional
         Flux for the fitted model at a given energy
@@ -124,14 +124,27 @@ class SpectrumFitResult(Result):
     HIGH_LEVEL_KEY = 'fit_result'
 
     def __init__(self, spectral_model, parameters, parameter_errors,
-                 energy_range=None, fluxes=None, flux_errors=None):
+                 fit_range=None, fluxes=None, flux_errors=None):
 
         self.spectral_model = spectral_model
         self.parameters = Bunch(parameters)
         self.parameter_errors = Bunch(parameter_errors)
-        self.energy_range = EnergyBounds(energy_range).to('TeV')
+        if fit_range is not None:
+            self.fit_range = EnergyBounds(fit_range).to('TeV')
+        else:
+            self.fit_range = EnergyBounds([0.01, 300], 'TeV')
         self.fluxes = fluxes
         self.flux_errors = flux_errors
+
+        # Todo: remove this once vstack is available for astropy.table.QTable
+        if self.fluxes is not None:
+            self.fluxes['1TeV'] = self.fluxes['1TeV'].to('m-2 s-1 TeV-1')
+            self.flux_errors['1TeV'] = self.flux_errors['1TeV'].to('m-2 s-1 TeV-1')
+        self.parameters.norm = self.parameters.norm.to('m-2 s-1 TeV-1')
+        self.parameter_errors.norm = self.parameter_errors.norm.to('m-2 s-1 TeV-1')
+        self.parameters.reference = self.parameters.reference.to('TeV')
+        self.parameter_errors.reference = self.parameter_errors.reference.to('TeV')
+
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
@@ -163,11 +176,11 @@ class SpectrumFitResult(Result):
             parameters_errors[name] = par['error'] * unit
 
         fluxes = Bunch()
-        fluxes['1TeV'] = val['flux_at_1'] * Unit('cm-2 s-1')
+        fluxes['1TeV'] = val['flux_at_1'] * Unit('cm-2 s-1 TeV-1')
         flux_errors = Bunch()
-        flux_errors['1TeV'] = val['flux_at_1_err'] * Unit('cm-2 s-1')
+        flux_errors['1TeV'] = val['flux_at_1_err'] * Unit('cm-2 s-1 TeV-1')
 
-        return cls(energy_range=energy_range, parameters=parameters,
+        return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameters_errors,
                    spectral_model=spectral_model,
                    fluxes=fluxes, flux_errors=flux_errors)
@@ -214,18 +227,18 @@ class SpectrumFitResult(Result):
             parameter_errors[name] = 0 * unit
 
         fluxes = Bunch()
-        fluxes['1TeV'] = model(1e6) * Unit('cm-2 s-1')
+        fluxes['1TeV'] = model(1e9) * Unit('cm-2 s-1 keV-1')
         flux_errors = Bunch()
-        flux_errors['1TeV'] = 0 * Unit('cm-2 s-1')
+        flux_errors['1TeV'] = 0 * Unit('cm-2 s-1 keV-1')
 
-        return cls(energy_range=energy_range, parameters=parameters,
+        return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
                    spectral_model=spectral_model,
                    fluxes=fluxes, flux_errors=flux_errors)
 
     def to_dict(self):
         val = dict()
-        val['energy_range'] = self.energy_range.to_dict()
+        val['fit_range'] = self.fit_range.to_dict()
         val['parameters'] = dict()
         for key in self.parameters:
             par = self.parameters[key]
@@ -239,7 +252,7 @@ class SpectrumFitResult(Result):
 
     @classmethod
     def from_dict(cls, val):
-        erange = val['energy_range']
+        erange = val['fit_range']
         energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
         pars = val['parameters']
         parameters = Bunch()
@@ -249,7 +262,7 @@ class SpectrumFitResult(Result):
             parameter_errors[par] = pars[par]['error'] * Unit(pars[par]['unit'])
         spectral_model = val['spectral_model']
 
-        return cls(energy_range=energy_range, parameters=parameters,
+        return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
                    spectral_model=spectral_model)
 
@@ -260,8 +273,8 @@ class SpectrumFitResult(Result):
             t['{}_err'.format(par)] = Column(
                 data=np.atleast_1d(self.parameter_errors[par]), **kwargs)
 
-        t['e_min'] = Column(data=np.atleast_1d(self.energy_range[0]), **kwargs)
-        t['e_max'] = Column(data=np.atleast_1d(self.energy_range[1]), **kwargs)
+        t['fit_range'] = Column(data=[self.fit_range], unit=self.fit_range.unit,
+                                **kwargs)
         if self.fluxes is not None:
             t['flux[1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
                                       **kwargs)
@@ -317,9 +330,9 @@ class SpectrumFitResult(Result):
         ax = plt.gca() if ax is None else ax
 
         func = self.to_sherpa_model()
-        x_min = np.log10(self.energy_range[0].value)
-        x_max = np.log10(self.energy_range[1].value)
-        x = np.logspace(x_min, x_max, 100) * self.energy_range.unit
+        x_min = np.log10(self.fit_range[0].value)
+        x_max = np.log10(self.fit_range[1].value)
+        x = np.logspace(x_min, x_max, 100) * self.fit_range.unit
         y = func(x.to('keV').value) * Unit('cm-2 s-1 keV-1')
         x = x.to(energy_unit).value
         y = y.to(flux_unit).value
@@ -349,8 +362,8 @@ class SpectrumFitResult(Result):
                                       'not implemented for model {}'.format(
                                       self.spectral_model))
 
-        x_min = np.log10(self.energy_range[0].value)
-        x_max = np.log10(self.energy_range[1].value)
+        x_min = np.log10(self.fit_range[0].value)
+        x_max = np.log10(self.fit_range[1].value)
         x = np.logspace(x_min, x_max, 1000) * self.energy_range.unit
         x = x.to('TeV').value
         e0 = self.parameters.reference.to('TeV').value
@@ -558,10 +571,10 @@ class SpectrumResult(object):
         Flux points
     """
 
-    def __init__(self, **results):
-
-        for k, v in results.items():
-            setattr(self, k, v)
+    def __init__(self, stats=None, fit=None, points=None):
+        self.stats = stats
+        self.fit = fit
+        self.points = points
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):

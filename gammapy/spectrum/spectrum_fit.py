@@ -34,6 +34,9 @@ class SpectrumFit(object):
     DEFAULT_STAT = 'wstat'
 
     def __init__(self, obs_list, stat=DEFAULT_STAT):
+        if not isinstance(obs_list, SpectrumObservationList):
+            raise ValueError('Wrong input format {}\nUse SpectrumObservation'
+                             'List'.format(type(obs_list)))
 
         self.obs_list = obs_list
         self._model = None
@@ -213,7 +216,7 @@ class SpectrumFit(object):
                 self.energy_threshold_high)
         return ss
 
-    def run(self, method='hspec'):
+    def run(self, method='sherpa'):
         if method == 'hspec':
             self._run_hspec_fit()
         elif method == 'sherpa':
@@ -225,7 +228,7 @@ class SpectrumFit(object):
         """Run the gammapy.hspec fit
         """
 
-        raise ValueError('Broken')
+        raise ValueError('HSPEC is currently broken. Use sherpa')
         log.info("Starting HSPEC")
         import sherpa.astro.ui as sau
         from ..hspec import wstat
@@ -284,16 +287,6 @@ class SpectrumFit(object):
         self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model)
         ds.clear_stack()
         ds.clear_models()
-
-    def apply_containment(self, fit):
-        """Apply correction factor for PSF containment in ON region"""
-        cont = self.get_containment()
-        pass
-
-    def get_containment(self):
-        """Calculate PSF correction factor for containment in ON region"""
-        # TODO: do something useful here
-        return 1
 
 
 def run_spectrum_fit_using_config(config):
