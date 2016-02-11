@@ -157,7 +157,6 @@ class EnergyOffsetArray(object):
 
         header = hdu[1].header
         data = hdu[1].data
-        import IPython; IPython.embed()
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
         energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
@@ -176,11 +175,11 @@ class EnergyOffsetArray(object):
         """
         # table
         table = Table()
-        table['THETA_LO'] = np.expand_dims(self.offset[:-1], 0)
-        table['THETA_HI'] = np.expand_dims(self.offset[1:], 0)
-        table['ENERG_LO'] = np.expand_dims(self.energy[:-1], 0)
-        table['ENERG_HI'] = np.expand_dims(self.energy[1:], 0)
-        table['EnergyOffsetArray'] = np.expand_dims(Quantity(self.data, " u "), 0)
+        table['THETA_LO'] = [self.offset[:-1]]
+        table['THETA_HI'] = [self.offset[1:]]
+        table['ENERG_LO'] = [self.energy[:-1]]
+        table['ENERG_HI'] = [self.energy[1:]]
+        table['EnergyOffsetArray'] = [Quantity(self.data, " u ")]
         table.meta['name'] = 'TO DEFINE'
 
         return table
