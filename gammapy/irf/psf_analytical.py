@@ -90,20 +90,20 @@ class EnergyDependentMultiGaussPSF(object):
             File name
         """
         hdu_list = fits.open(filename)
-        return cls.from_fits(hdu_list)
+        # TODO: improve this ... use HDUCLASS
+        valid_extnames = ['POINT SPREAD FUNCTION', 'PSF_2D', 'PSF_2D_GAUSS']
+        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames)
+        return cls.from_fits(hdu)
 
     @classmethod
-    def from_fits(cls, hdu_list):
+    def from_fits(cls, hdu):
         """Create `EnergyDependentMultiGaussPSF` from HDU list.
 
         Parameters
         ----------
-        hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with correct extensions.
+        hdu : `~astropy.io.fits.BintableHDU`
+            HDU with serialised PSF.
         """
-        valid_extnames = ['POINT SPREAD FUNCTION', 'PSF_2D']
-        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames)
-
         energy_lo = Quantity(hdu.data['ENERG_LO'][0], 'TeV')
         energy_hi = Quantity(hdu.data['ENERG_HI'][0], 'TeV')
         theta = Angle(hdu.data['THETA_LO'][0], 'deg')

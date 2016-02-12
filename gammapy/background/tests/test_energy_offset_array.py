@@ -36,7 +36,7 @@ def make_test_array(dummy_data=False):
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_energy_offset_array_fill():
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4'
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     ev_list = data_store.load_all('events')
 

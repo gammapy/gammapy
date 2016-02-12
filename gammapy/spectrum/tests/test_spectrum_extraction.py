@@ -37,7 +37,7 @@ def test_spectrum_extraction(tmpdir):
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
     obs = [23523, 23559, 11111]
-    store = gammapy_extra.filename("datasets/hess-crab4")
+    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
 
     ana = SpectrumExtraction(datastore=ds, obs_ids=obs, on_region=on_region,
@@ -50,7 +50,7 @@ def test_spectrum_extraction(tmpdir):
     obs23523 = obs.get_obs_by_id(23523)
     assert obs23523.on_vector.total_counts == 123
 
-@pytest.mark.xskip
+# @pytest.mark.xfail
 @requires_dependency('yaml')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')

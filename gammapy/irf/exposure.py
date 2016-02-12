@@ -36,9 +36,7 @@ def exposure_cube(pointing,
     lon, lat, en = ref_cube.pix2world(xx, yy, 0)
     coord = SkyCoord(lon, lat, frame=ref_cube.wcs.wcs.radesys.lower())  # don't care about energy
     offset = coord.separation(pointing)
-    ###this is a hack to make the current code work in spite of issues with offset binning from HAP export
-    ###TODO remove once the issue has been fixed
-    offset = np.clip(offset, Angle(0.2, 'deg'), Angle(2.2, 'deg'))
+    offset = np.clip(offset, Angle(0, 'deg'), Angle(2.2, 'deg'))
 
     exposure = aeff2D.evaluate(offset, ref_cube.energy)
     exposure = np.rollaxis(exposure, 2)

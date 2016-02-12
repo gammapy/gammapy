@@ -63,7 +63,7 @@ def test_DataStore_load(data_manager):
 @requires_data('hess')
 def test_DataStore_load_all():
     """Test loading data and IRF files via the DataStore"""
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4'
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
     event_lists = data_store.load_all(filetype='events')
     assert_allclose(event_lists[0]['ENERGY'][0], 1.1156039)

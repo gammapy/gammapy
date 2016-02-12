@@ -4,14 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gammapy.data import DataStore
-from gammapy.datasets import gammapy_extra
 from gammapy.background import EnergyOffsetArray
 from gammapy.utils.energy import EnergyBounds
 
 
 def make_counts_array():
     """Make an example counts array with energy and offset axes."""
-    data_store = DataStore.from_dir(gammapy_extra.dir / 'datasets/hess-crab4')
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 
     event_lists = data_store.load_all('events')
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')

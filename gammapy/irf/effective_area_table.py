@@ -616,7 +616,10 @@ class EffectiveAreaTable2D(object):
         ax = plt.gca() if ax is None else ax
 
         if energy is None:
-            energy = Quantity(np.logspace(-1, 2, 8), 'TeV')
+            # TODO: choose values in a better way here? Not sure how ...
+            emin = self.energy_lo[1]
+            emax = self.energy_hi[-2]
+            energy = Energy.equal_log_spacing(emin, emax, nbins=5)
 
         if offset is None:
             off_lo = self.offset[0].to('deg').value

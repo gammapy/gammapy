@@ -2,7 +2,7 @@
 
 extraction:
   data:
-    datastore: $GAMMAPY_EXTRA/datasets/hess-crab4
+    datastore: $GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2
     runlist : [23592, 23526]
     nruns : 0
 
