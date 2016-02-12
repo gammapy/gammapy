@@ -6,6 +6,7 @@ from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.io import fits
 from ..utils.fits import table_to_fits_table
+from ..utils.energy import EnergyBounds
 from .cube import _make_bin_edges_array
 
 __all__ = [
@@ -19,7 +20,7 @@ class EnergyOffsetArray(object):
 
     Parameters
     ----------
-    energy : `~astropy.units.Quantity`
+    energy : `~gammapy.utils.energy.EnergyBounds`
          energy bin vector
     offset : `~astropy.coordinates.Angle`
         offset bin vector
@@ -29,7 +30,7 @@ class EnergyOffsetArray(object):
     """
 
     def __init__(self, energy, offset, data=None):
-        self.energy = Quantity(energy, 'TeV')
+        self.energy = energy
         self.offset = Angle(offset, 'deg')
         if data is None:
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), "u")
@@ -141,7 +142,7 @@ class EnergyOffsetArray(object):
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
         energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
-
+        energy_edges = EnergyBounds(energy_edges , 'TeV')
         # get data
         energy_offset_array = data['EnergyOffsetArray'].squeeze()
         return cls(energy_edges, offset_edges, energy_offset_array)
@@ -198,7 +199,7 @@ class EnergyOffsetArray(object):
         """
         from scipy import interpolate
 
-        Energy_bin = np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
+        Energy_bin = self.energy.log_centers
         Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
         interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value,
                                                            **interpolate_params)
