@@ -27,7 +27,7 @@ Getting Started
 
 The following example demonstrates how data management is done in Gammapy. It uses a test data set, which is available
 in the `gammapy-extra <https://github.com/gammapy/gammapy-extra>`__ repository. Please clone this repository and
-navigate to ``gammapy-extra/datasets/``. The folder ``hess-crab4`` contains IRFs and simulated event lists for 4
+navigate to ``gammapy-extra/datasets/``. The folder ``hess-crab4-hd-hap-prod2`` contains IRFs and simulated event lists for 4
 observations of the Crab nebula. It also contains two index files:
 
 * Observation table `observations.fits.gz`
@@ -45,7 +45,7 @@ Exploring the data using the DataStore class works like this
 .. code-block:: python
 
     >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('hess-crab4')
+    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
     >>> data_store.info()
     Data store summary info:
     name: noname

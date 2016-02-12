@@ -1,5 +1,6 @@
 import logging
 from gammapy.data import DataManager, DataStore
+from gammapy.datasets import gammapy_extra
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,6 +27,13 @@ def test_data_store():
     print(events.__class__)
 
 
+def test_data_store2():
+    dir = gammapy_extra.dir / 'datasets/hess-crab4-hd-hap-prod2'
+    ds = DataStore.from_dir(dir)
+    ds.info()
+
+
 if __name__ == '__main__':
-    test_data_manager()
-    test_data_store()
+    # test_data_manager()
+    # test_data_store()
+    test_data_store2()

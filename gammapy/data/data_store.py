@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.io import fits
 from .observation import ObservationTable
 from ..utils.scripts import make_path
+from ..extern.pathlib import Path
 
 __all__ = [
     'DataStore',
@@ -23,31 +24,31 @@ class DataStore(object):
     ----------
     base_dir : str
         Base directory
-    file_table : `~astropy.table.Table`
+    hdu_table : `~astropy.table.Table`
         File table
     obs_table : `~gammapy.data.ObservationTable`
         Observation table
     name : str
         Data store name
     """
-    DEFAULT_FILE_TABLE = 'files.fits.gz'
-    DEFAULT_OBS_TABLE = 'observations.fits.gz'
+    DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
+    DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
     DEFAULT_NAME = 'noname'
 
-    def __init__(self, base_dir, file_table=None, obs_table=None, name=None):
+    def __init__(self, base_dir, hdu_table=None, obs_table=None, name=None):
         self.base_dir = make_path(base_dir)
-        self.file_table = file_table
+        self.hdu_table = hdu_table
         self.obs_table = obs_table
         self.name = name
 
     @classmethod
-    def from_files(cls, base_dir, file_table_filename=None, obs_table_filename=None, name=None):
+    def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None, name=None):
         """Construct `DataStore` from file and obs table files."""
-        if file_table_filename:
-            log.debug('Reading {}'.format(file_table_filename))
-            file_table = Table.read(str(file_table_filename), format='fits')
+        if hdu_table_filename:
+            log.debug('Reading {}'.format(hdu_table_filename))
+            hdu_table = Table.read(str(hdu_table_filename), format='fits')
         else:
-            file_table = None
+            hdu_table = None
 
         if obs_table_filename:
             log.debug('Reading {}'.format(str(obs_table_filename)))
@@ -57,7 +58,7 @@ class DataStore(object):
 
         return cls(
             base_dir=base_dir,
-            file_table=file_table,
+            hdu_table=hdu_table,
             obs_table=obs_table,
             name=name,
         )
@@ -77,15 +78,15 @@ class DataStore(object):
         """Create a `DataStore` from a config dict."""
         base_dir = config['base_dir']
         name = config.get('name', cls.DEFAULT_NAME)
-        file_table_filename = config.get('files', cls.DEFAULT_FILE_TABLE)
+        hdu_table_filename = config.get('files', cls.DEFAULT_HDU_TABLE)
         obs_table_filename = config.get('observations', cls.DEFAULT_OBS_TABLE)
 
-        file_table_filename = _find_file(file_table_filename, base_dir)
+        hdu_table_filename = _find_file(hdu_table_filename, base_dir)
         obs_table_filename = _find_file(obs_table_filename, base_dir)
 
         return cls.from_files(
             base_dir=base_dir,
-            file_table_filename=file_table_filename,
+            hdu_table_filename=hdu_table_filename,
             obs_table_filename=obs_table_filename,
             name=name,
         )
@@ -121,7 +122,7 @@ class DataStore(object):
                 raise ValueError('Not able to contruct DataStore using key:'
                                  ' {0}.\nErrors\nfrom_dir: {1}\nfrom_name: {2}'
                                  .format(val, e1, e2))
-                
+
         return store
 
     def info(self, stream=None):
@@ -131,10 +132,10 @@ class DataStore(object):
 
         print(file=stream)
         print('Data store summary info:', file=stream)
-        print('name: {}'.format(self.name), file=stream)
-        print('base_dir: {}'.format(self.base_dir), file=stream)
-        print('observations: {}'.format(len(self.obs_table)), file=stream)
-        print('files: {}'.format(len(self.file_table)), file=stream)
+        print('name:       {}'.format(self.name), file=stream)
+        print('base_dir:   {}'.format(self.base_dir), file=stream)
+        print('obs table:  {}'.format(len(self.obs_table)), file=stream)
+        print('file table: {}'.format(len(self.hdu_table)), file=stream)
 
     def filename(self, obs_id, filetype, abspath=True):
         """File name (relative to datastore `dir`).
@@ -159,15 +160,16 @@ class DataStore(object):
         """
         _validate_filetype(filetype)
 
-        t = self.file_table
-        mask = (t['OBS_ID'] == obs_id) & (t['TYPE'] == filetype)
+        mask = self.hdu_table['OBS_ID'] == obs_id
+        mask &= self.hdu_table['HDU_TYPE'] == filetype
         try:
             idx = np.where(mask)[0][0]
         except IndexError:
             msg = 'File not in table: OBS_ID = {}, TYPE = {}'.format(obs_id, filetype)
             raise IndexError(msg)
 
-        filename = t['NAME'][idx]
+        filedir = Path(self.hdu_table['FILE_DIR'][idx])
+        filename = filedir / self.hdu_table['FILE_NAME'][idx]
 
         if abspath:
             filename = self.base_dir / filename
@@ -227,7 +229,7 @@ class DataStore(object):
             data_list = self.load(obs_id, filetype)
             data_lists.append(data_list)
         return data_lists
-        
+
     def check_integrity(self, logger):
         """Check integrity, i.e. whether index table and files match.
         """
@@ -361,4 +363,3 @@ def _get_min_energy_threshold(observation_table, data_dir):
         min_energy_threshold = min(min_energy_threshold, energy_threshold)
 
     return min_energy_threshold
-

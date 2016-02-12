@@ -501,15 +501,11 @@ class EventList(Table):
         .. plot::
             :include-source:
 
-            from gammapy.datasets import gammapy_extra
-
             import matplotlib.pyplot as plt
-            import matplotlib.pyplot as plt
-            from gammapy.data import EventList
-            from gammapy.datasets import gammapy_extra
+            from gammapy.data import DataStore
 
-            filename = gammapy_extra.filename('datasets/hess-crab4/hess_events_simulated_023523.fits')
-            event_list = EventList.read(filename, hdu='EVENTS')
+            ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+            event_list = ds.load(obs_id=23523, filetype='events')
 
             event_list.plot_time_map()
 
