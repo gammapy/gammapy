@@ -30,7 +30,11 @@ def check_main(args=None):
     log_parser.add_argument("-l", "--loglevel", default='info',
                             choices=['debug', 'info', 'warning', 'error', 'critical'],
                             help="Set the logging level")
+
     data_parser = subparsers.add_parser('fitsexport', help='Test fits data')
+    data_parser.add_argument('--directory', default='out', type=str,
+                            help="FITS export output folder")
+
 
     args = parser.parse_args(args)
     set_up_logging_from_args(args)
@@ -66,7 +70,7 @@ def run_log_examples():
     warnings.warn('this is warnings.warn() output')
 
 
-def run_test_fitsexport():
+def run_test_fitsexport(directory):
     """Run example analysis to test a fits data production
 
     hap-data-fits-export crab has to be run in order to produce the example data
@@ -78,7 +82,7 @@ def run_test_fitsexport():
     from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
     from gammapy.spectrum.results import SpectrumResult
 
-    s = DataStore.from_dir('out')
+    s = DataStore.from_dir(directory)
     print(s.info())
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')

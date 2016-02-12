@@ -16,7 +16,7 @@ from ...datasets import gammapy_extra
 # The aeff interpolation fails currently.
 # Need to write a script to make another example cube and / or
 # change the interpolation to not raise error / put useful fill value
-@pytest.mark.xfail
+@pytest.mark.skipif(True, reason='see TODO')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_exposure_cube():
