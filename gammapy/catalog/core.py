@@ -113,7 +113,7 @@ class SourceCatalog(object):
         index : int
             Row index of source in table
         """
-        return self._name_to_index_cache[name]
+        return self._name_to_index_cache[name.strip()]
 
     def source_name(self, index):
         """Look up source name by row index.

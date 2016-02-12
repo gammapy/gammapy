@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.table import Table
 from ..core import SourceCatalog
-from decimal import Decimal
+
 
 def make_test_catalog():
     table = Table()
@@ -68,7 +68,7 @@ class TestSourceCatalog:
         data_actual = json.load(open(filename, 'r'))
         assert data_actual['columns'] == data_desired['columns']
         assert data_actual['data'] == data_desired['data']
-        
+
     def test_to_json_format_object(self, tmpdir):
         filename = str(tmpdir / 'catalog_to_json__test.json')
         data_desired = self.cat.to_json(format='objects')
@@ -78,7 +78,6 @@ class TestSourceCatalog:
         for row_1, row_2 in zip(data_actual['data'], data_desired['data']):
             for key in list(row_1.keys()):
                 assert row_1[key] == row_2[key]
-    
 
 
 class TestSourceCatalogObject:
