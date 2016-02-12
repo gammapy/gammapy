@@ -142,7 +142,7 @@ class EnergyOffsetArray(object):
         # get offset and energy binning
         offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
         energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
-        energy_edges = EnergyBounds(energy_edges , 'TeV')
+        energy_edges = EnergyBounds(energy_edges, 'TeV')
         # get data
         energy_offset_array = data['EnergyOffsetArray'].squeeze()
         return cls(energy_edges, offset_edges, energy_offset_array)
