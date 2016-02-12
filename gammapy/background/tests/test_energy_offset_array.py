@@ -56,10 +56,12 @@ def test_energy_offset_array_fill_evaluate():
     assert_equal(bin_E, ind[0])
     assert_equal(bin_off, ind[1])
     # Test the evaluate method
-    Interpol_param = dict(method='nearest', fill_value=None)
+    interpol_param = dict(method='nearest', fill_value=None)
     for off, E in zip(offset, energy):
-        res = array.evaluate(E, off, Interpol_param)
+        res = array.evaluate(E, off, interpol_param)
+        res_GeV = array.evaluate(E.to('GeV'), off, interpol_param)
         assert_equal(res, 1)
+        assert_equal(res_GeV, 1)
 
 
 def test_energy_offset_array_plot():

@@ -199,6 +199,7 @@ class EnergyOffsetArray(object):
         """
         from scipy import interpolate
 
+        energy = energy.to('TeV')
         Energy_bin = self.energy.log_centers
         Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
         interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value,
