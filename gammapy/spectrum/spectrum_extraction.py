@@ -66,7 +66,6 @@ class SpectrumExtraction(object):
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
-        self.datastore = datastore
         if ebounds is None:
             ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
         self.ebounds = ebounds
@@ -82,6 +81,11 @@ class SpectrumExtraction(object):
         self._observations = None
 
     def extract_spectrum(self, nobs=None):
+        """Extract 1D spectral information
+
+        The result can be obtained via
+        :func:`~gammapy.spectrum.spectrum_extraction.observations`
+        """
         nobs = self.nobs if nobs is None else nobs
         observations = []
         for i, val in enumerate(np.atleast_1d(self.obs_ids)):
@@ -96,7 +100,7 @@ class SpectrumExtraction(object):
                                                           )
             except IndexError:
                 log.warning(
-                    'Observation {} not in store {}'.format(val, self.datastore))
+                    'Observation {} not in store {}'.format(val, self.store))
                 nobs += 1
                 continue
             observations.append(temp)
@@ -110,7 +114,11 @@ class SpectrumExtraction(object):
 
     @property
     def observations(self):
-        """`~gamampy.spectrum.ObservationList`
+        """`~gamampy.spectrum.ObservationList` of all observations
+
+        This list is generated via
+        :func:`~gammapy.spectrum.spectrum_extraction.extract_spectrum`
+        when the property is first called and the result is cached.
         """
         if self._observations is None:
             self.extract_spectrum()
@@ -127,7 +135,7 @@ class SpectrumExtraction(object):
 
         bkg_method = self.bkg_method if bkg_method is None else bkg_method
 
-        ana = SpectrumExtraction(datastore=self.store, obs=self.obs_ids,
+        ana = SpectrumExtraction(datastore=self.store, obs_ids=self.obs_ids,
                                  on_region=self.on_region,
                                  bkg_method=bkg_method,
                                  exclusion=self.exclusion, nobs=0,
@@ -176,9 +184,6 @@ class SpectrumExtraction(object):
         # Exclusion
         excl_file = config['excluded_regions']['file']
         exclusion = ExclusionMask.from_fits(excl_file)
-
-        # Outdir
-        outdir = config['results']['outdir']
 
         return cls(datastore=store, obs_ids=obs, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
@@ -245,10 +250,10 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True, dry_run=False):
+        exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
-        BLABLA is stored in the meta
+        Extraction parameters are stored in the meta attribute
 
         Parameters
         ----------
@@ -268,6 +273,8 @@ class SpectrumObservation(object):
             Save meta information, default: True
         dry_run : bool, optional
             Only process meta data, not actual spectra are extracted
+        calc_containment : bool, optional
+            Calculate containment fraction of the on region
         """
 
         event_list = store.load(obs_id=obs_id, filetype='events')
@@ -286,6 +293,13 @@ class SpectrumObservation(object):
         m['datastore'] = store
         m['ebounds'] = ebounds
         m['obs_id'] = obs_id
+
+        if calc_containment:
+            psf2d = store.load(obs_id=obs_id, filetype='psf')
+            val = Energy('10 TeV')
+            psf = psf2d.psf_at_energy_and_theta(val, m.offset)
+            cont = psf.containment_fraction(m.on_region.radius)
+            m['psf_containment'] = float(cont)
 
         if dry_run:
           return cls(obs_id, None, None, None, None, meta=m)
@@ -422,6 +436,8 @@ class SpectrumObservation(object):
             off_counts[mask] = 0
             on_vec = CountsSpectrum(on_counts, ebounds)
             off_vec = CountsSpectrum(off_counts, ebounds)
+        else:
+            raise ValueError('Undefined method: {}'.format(method))
 
         off_vec.meta.update(backscal = self.off_vector.meta.backscal)
         m = copy.deepcopy(self.meta)
@@ -487,7 +503,7 @@ class SpectrumObservation(object):
         size : `~astropy.coordinates.Angle`
             Edge length of the plot
         """
-        size = Angle('5 deg') if size is None else size
+        size = Angle('5 deg') if size is None else Angle(size)
         ax = self.meta.exclusion.plot(**kwargs)
         self._set_ax_limits(ax, size)
         point = skycoord_to_pixel(self.meta.pointing, ax.wcs)

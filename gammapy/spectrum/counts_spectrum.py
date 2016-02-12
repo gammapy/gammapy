@@ -85,6 +85,8 @@ class CountsSpectrum(object):
         The energy binning is not contained in the PHA standard. Therefore is
         is inferred from the corresponding RMF EBOUNDS extension.
 
+        Todo: Should the energy binning be in the PHA file?
+
         Parameters
         ----------
         phafile : str
@@ -109,7 +111,8 @@ class CountsSpectrum(object):
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
-        return cls(counts, bins)
+        m = dict(spectrum.header)
+        return cls(counts, bins, meta=m)
 
     @classmethod
     def from_eventlist(cls, event_list, bins):
@@ -248,6 +251,8 @@ class CountsSpectrum(object):
         if 'energy_range' in val:
             header['HI_THRES'] = self.meta.energy_range[1].to('TeV').value
             header['LO_THRES'] = self.meta.energy_range[0].to('TeV').value
+        if 'psf_containment' in val:
+            header['PSF_CONT'] = self.meta.psf_containment
 
         return hdu
 
