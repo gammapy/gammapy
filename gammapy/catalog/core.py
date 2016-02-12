@@ -44,10 +44,15 @@ class SourceCatalogObject(object):
         """Row index of source in catalog"""
         return self.data[self._source_index_key]
 
-    def to_json(self, cols=None):
-        """Convert data to JSON.
+    def to_dict(self, cols=None):
+        """
+        Convert source data to Python dict.
 
-        TODO: rename to `to_dict`?
+        Parameters
+        ----------
+        cols : list (default=None)
+            List of column names to be included.
+            If None all columns will be used.
         """
         cols = cols or self.data.keys()
         data = dict((col, str(self.data[col])) for col in cols)
@@ -198,29 +203,35 @@ class SourceCatalog(object):
         - 'arrays' -- List of lists (row data represented as list)
         - 'objects' -- List of dicts (row data represented as dict)
 
-        TODO: the arrays format is more efficient, but hard to maintain
-        if the columns aren't stored as well ... change this to also store columns!!!
 
         Parameters
         ----------
-        sources : List of source
+        sources : list, optional
+            List of sources names to be included. If it is set to None (default)
+            all sources are included.
+        cols : list, optional
+            List of column names to be included. If it is set to None (default)
+            all sources are included.
+        format : {'objects', 'arrays'}
+            Format specifier (see above, default is 'objects')
 
         """
-        sources = sources or list(range(len(self.table)))
+        sources = sources or self.table[self._source_name_key]
         cols = cols or self.table.colnames
+        
+        data = []
 
         if format == 'arrays':
-            data = []
-            data.append([42, 43])
-            data.append([100, 102])
-            columns = ['name', 'ra']
-            return dict(columns=columns, data=data)
-        elif format == 'objects':
-            data = []
-            # TODO: implement iterating over source catalog!!
             for source in sources:
                 source = self[source]
-                d = source.to_json(cols=cols)
+                data.append(list(source.data.values()))
+        elif format == 'objects':
+            for source in sources:
+                source = self[source]
+                d = source.to_dict(cols=cols)
                 data.append(d)
+        else:
+            raise ValueError('Not a valid data format.')
 
-        return data
+        return dict(columns=cols, data=data)
+
