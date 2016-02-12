@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from astropy.table import Table, Column
+from astropy.table import Table
 from astropy.io import fits
 from ..utils.fits import table_to_fits_table
-from ..utils.energy import EnergyBounds
+from ..utils.energy import EnergyBounds, Energy
 from .cube import _make_bin_edges_array
 
 __all__ = [
@@ -26,7 +26,6 @@ class EnergyOffsetArray(object):
         offset bin vector
     data : `~numpy.ndarray`
         data array (2D)
-
     """
 
     def __init__(self, energy, offset, data=None):
@@ -46,12 +45,8 @@ class EnergyOffsetArray(object):
         -------------
         event_lists : list of `~gammapy.data.EventList`
            Python list of event list objects.
-            
-        
         """
-        # loop over the Lost of object EventList
         for event_list in event_lists:
-            # Fill the events
             counts = self._fill_one_event_list(event_list)
             self.data += Quantity(counts, "u")
 
@@ -63,19 +58,15 @@ class EnergyOffsetArray(object):
         -------------
         events :`~gammapy.data.EventList`
            Event list objects.
-                   
         """
         offset = events.offset
         ev_energy = events.energy
 
-        # stack the offset and energy array
-        ev_cube_array = np.vstack([ev_energy, offset]).T
+        sample = np.vstack([ev_energy, offset]).T
+        bins = [self.energy.value, self.offset.value]
+        hist, edges = np.histogramdd(sample, bins)
 
-        # fill data cube into histogramdd
-        ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                     [self.energy.value,
-                                                      self.offset.value])
-        return ev_cube_hist
+        return hist
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """
@@ -111,7 +102,7 @@ class EnergyOffsetArray(object):
 
     @classmethod
     def read(cls, filename):
-        """Create `EnergyOffsetArray` from  fits file.
+        """Create `EnergyOffsetArray` from  FITS file.
 
         Parameters
         ----------
@@ -124,7 +115,7 @@ class EnergyOffsetArray(object):
 
     @classmethod
     def from_fits(cls, hdu):
-        """Read `EnergyOffsetArray` from a fits binary table.
+        """Read `EnergyOffsetArray` from a FITS binary table.
 
         Parameters
         ----------
@@ -136,15 +127,14 @@ class EnergyOffsetArray(object):
         cube : `~gammapy.background.EnergyOffsetArray`
             EnergyOffsetArray object.
         """
-
-        header = hdu.header
         data = hdu.data
-        # get offset and energy binning
+
         offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
         energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, 'TeV')
-        # get data
+
         energy_offset_array = data['EnergyOffsetArray'].squeeze()
+
         return cls(energy_edges, offset_edges, energy_offset_array)
 
     def to_table(self):
@@ -155,7 +145,6 @@ class EnergyOffsetArray(object):
         table : `~astropy.table.Table`
             Table containing the EnergyOffsetArray.
         """
-        # table
         table = Table()
         table['THETA_LO'] = [self.offset[:-1]]
         table['THETA_HI'] = [self.offset[1:]]
@@ -167,7 +156,7 @@ class EnergyOffsetArray(object):
         return table
 
     def to_fits(self):
-        """Convert `EnergyOffsetArray` to binary table fits format.
+        """Convert `EnergyOffsetArray` to binary table FITS format.
 
         Returns
         -------
@@ -177,7 +166,7 @@ class EnergyOffsetArray(object):
         return table_to_fits_table(self.to_table())
 
     def write(self, filename, **kwargs):
-        """ Write EnergyOffsetArray to fits file"""
+        """ Write EnergyOffsetArray to FITS file"""
         self.to_fits().writeto(filename, **kwargs)
 
     def evaluate(self, energy, offset, interpolate_params):
@@ -197,11 +186,14 @@ class EnergyOffsetArray(object):
         -------
         Interpolated value
         """
-        from scipy import interpolate
+        from scipy.interpolate import RegularGridInterpolator
 
-        energy = energy.to('TeV')
-        Energy_bin = self.energy.log_centers
-        Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
-        interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value,
-                                                           **interpolate_params)
+        energy = Energy(energy).to('TeV')
+        offset = Angle(offset).to('deg')
+
+        energy_bin = self.energy.log_centers
+        offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
+        points = (energy_bin, offset_bin)
+        interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
+
         return interpolator([energy.value, offset.value])

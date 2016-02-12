@@ -33,7 +33,6 @@ def make_test_array(dummy_data=False):
         return array
 
 
-@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_energy_offset_array_fill():
     dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
@@ -64,6 +63,7 @@ def test_energy_offset_array_fill_evaluate():
         assert_equal(res_GeV, 1)
 
 
+@requires_dependency('matplotlib')
 def test_energy_offset_array_plot():
     array = make_test_array()
     array.plot_image()
