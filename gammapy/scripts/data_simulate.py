@@ -89,7 +89,7 @@ def run_obssim(model):
     sim.execute()
 
 
-def select_event_subset(infile, outfile, n_events_max=5):
+def select_event_subset(infile, outfile, n_event_max=5):
     """Select subset of events.
 
     We use this for H.E.S.S. event lists which we're not allowed
@@ -100,7 +100,7 @@ def select_event_subset(infile, outfile, n_events_max=5):
     hdu = fits.open(infile)['EVENTS']
 
     log.info('Selecting first {} events...'.format(n_event_max))
-    hdu.data = hdu.data[:n_events_max]
+    hdu.data = hdu.data[:n_event_max]
 
     log.info('Writing {}'.format(outfile))
     hdu.writeto(outfile, clobber=True)

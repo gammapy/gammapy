@@ -12,14 +12,20 @@ Gammapy is mostly an analysis package for binned analysis,
 and so far we haven't implemented general tools to sample
 arbitrary spatial and spectral density distributions.
 
-An excellent tool `ctobssim`_ is available within the ctools
-package, so here we'll describe how to use that first and then
-mention the existing functionality in Gammapy.
+An excellent tool `ctobssim`_ is available within the ctools package, and we've written a
+convenience command line tool ``gammapy-data-simulate`` that calls ``ctobssim``.
+At the moment, this method is much more powerful and recommended, so we'll describe it first.
 
 .. _datasets_obssim_ctobssim:
 
-Using ctobssim
-++++++++++++++
+Using ctobssim and gammapy-data-simulate
+++++++++++++++++++++++++++++++++++++++++
+
+TODO: document!
+
+---
+
+Old text:
 
 Using HESS IRFs and a real event list as input (for header info),
 it's possible to simulate event lists according to any source and background model you like.
