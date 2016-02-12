@@ -87,7 +87,7 @@ def run_test_fitsexport(directory):
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')
     config = read_yaml(configfile)
-    config['extraction']['data']['datastore'] = 'out'
+    config['extraction']['data']['datastore'] = directory
     config['extraction']['data']['runlist'] = [23523, 23526, 23559, 23592]
 
     fit, analysis = run_spectrum_analysis_using_config(config)
