@@ -11,15 +11,26 @@ from ..energy_offset_array import EnergyOffsetArray
 from ...data import EventList
 
 
-def make_test_array():
+def make_test_array(dummy_data=False):
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
     offset = np.linspace(0, 2.5, 100)
     array = EnergyOffsetArray(ebounds, offset)
-    # put some dummy example data
-    # TODO: this could be made optional or split out into a
-    # separate utility function later on when lookup / interpolation methods are added to the class.
-    # array.data[5, 3] = 42
-    return array
+    if dummy_data is True:
+        # Define an EventList with three events
+        table = Table()
+        table['RA'] = [83, 85.2, 86]
+        table['DEC'] = [21, 22.8, 22.5]
+        table['ENERGY'] = [0.12, 22, 55]
+        table.meta['RA_PNT'] = 85
+        table.meta['DEC_PNT'] = 22
+        table.meta['EUNIT'] = 'TeV'
+        events = EventList(table)
+        ev_list = [events]
+        # Fill the array with these three events
+        array.fill_events(ev_list)
+        return array, events.offset, events.energy
+    else:
+        return array
 
 
 @requires_dependency('matplotlib')
@@ -37,28 +48,16 @@ def test_energy_offset_array_fill():
 
 @requires_dependency('scipy')
 def test_energy_offset_array_fill_evaluate():
-    array = make_test_array()
-    # Define an EventList with three events
-    table = Table()
-    table['RA'] = [83, 85.2, 86]
-    table['DEC'] = [21, 22.8, 22.5]
-    table['ENERGY'] = [0.12, 22, 55]
-    table.meta['RA_PNT'] = 85
-    table.meta['DEC_PNT'] = 22
-    table.meta['EUNIT'] = 'TeV'
-    events = EventList(table)
-    ev_list = [events]
-    # Fill the array with these three events
-    array.fill_events(ev_list)
-    #Test if the array is filled correctly
+    array, offset, energy = make_test_array(True)
+    # Test if the array is filled correctly
     bin_E = np.array([2, 78, 91])
     bin_off = np.array([83, 32, 41])
     ind = np.where(array.data.value == 1)
     assert_equal(bin_E, ind[0])
     assert_equal(bin_off, ind[1])
-    #Test the evaluate method
+    # Test the evaluate method
     Interpol_param = dict(method='nearest', fill_value=None)
-    for off, E in zip(events.offset, events.energy):
+    for off, E in zip(offset, energy):
         res = array.evaluate(E, off, Interpol_param)
         assert_equal(res, 1)
 

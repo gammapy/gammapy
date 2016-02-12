@@ -186,19 +186,20 @@ class EnergyOffsetArray(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-         energy value
+            energy value
         offset : `~astropy.coordinates.Angle`
-        offset value
+            offset value
         interpolate_params: dict
-        give the options for the RegularGridInterpolator
+            give the options for the RegularGridInterpolator
 
         Returns
         -------
         Interpolated value
         """
         from scipy import interpolate
-        
+
         Energy_bin = np.sqrt(self.energy.value[:-1] * self.energy.value[1:])
         Offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
-        Interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value, **interpolate_params)
-        return Interpolator([energy.value, offset.value])
+        interpolator = interpolate.RegularGridInterpolator((Energy_bin, Offset_bin), self.data.value,
+                                                           **interpolate_params)
+        return interpolator([energy.value, offset.value])
