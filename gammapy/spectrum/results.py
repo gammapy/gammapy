@@ -634,6 +634,7 @@ class SpectrumResult(object):
         only SpectrumStats and SpectrumFitResult are taken into account
         """
 
+        kwargs.setdefault('format', '.3g')
         temp = [self.stats, self.fit]
         val = [_ for _ in temp if _]
         l = list()

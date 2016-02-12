@@ -76,6 +76,7 @@ def run_test_fitsexport():
     from gammapy.datasets import gammapy_extra
     from gammapy.utils.scripts import read_yaml
     from gammapy.spectrum.spectrum_pipe import run_spectrum_analysis_using_config
+    from gammapy.spectrum.results import SpectrumResult
 
     s = DataStore.from_dir('out')
     print(s.info())
@@ -85,4 +86,7 @@ def run_test_fitsexport():
     config['extraction']['data']['datastore'] = 'out'
     config['extraction']['data']['runlist'] = [23523, 23526, 23559, 23592]
 
-    run_spectrum_analysis_using_config(config)
+    fit, analysis = run_spectrum_analysis_using_config(config)
+    res = SpectrumResult(fit=fit.result, stats=analysis.observations.total_spectrum.spectrum_stats)
+    print(res.to_table())
+    
