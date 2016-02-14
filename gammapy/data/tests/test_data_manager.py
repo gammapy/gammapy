@@ -3,8 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_data, data_manager
 
-@pytest.mark.xfail
-@requires_data('hess')
+@requires_data('gammapy-extra')
 def test_DataManager(data_manager):
     # TODO: add asserts on info output
 
@@ -13,7 +12,7 @@ def test_DataManager(data_manager):
     with pytest.raises(KeyError):
         ds = data_manager['kronka-lonka']
 
-    ds = data_manager['hess-paris-prod02']
+    ds = data_manager['hess-crab4-hd-hap-prod2']
 
     for ds in data_manager.stores:
         ds.info()
