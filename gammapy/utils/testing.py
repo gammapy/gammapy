@@ -7,6 +7,7 @@ import os
 from astropy.tests.helper import pytest
 from astropy.utils import minversion
 from ..data import DataManager
+from ..datasets import gammapy_extra
 
 __all__ = [
     'requires_dependency',
@@ -105,7 +106,8 @@ def requires_data(name):
 # https://pytest.org/latest/tmpdir.html#the-tmpdir-factory-fixture
 @pytest.fixture
 def data_manager():
-    test_register = gammapy_extra.filename('test_datasets/test-data-register.yaml')
-    return DataManager.from_yaml(test_register)
+    test_register = gammapy_extra.filename('datasets/data-register.yaml')
+    dm = DataManager.from_yaml(test_register)
+    return dm
     
 
