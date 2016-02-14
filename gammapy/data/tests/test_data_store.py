@@ -29,9 +29,11 @@ def test_DataStore_filenames(data_manager):
     data_store = data_manager['hess-crab4-hd-hap-prod2']
 
     filename = data_store.filename(obs_id=23523, filetype='aeff')
-    assert filename == str(make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'))
+    assert filename == str(make_path(
+        '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'))
 
     filename = data_store.filename(obs_id=23523, filetype='aeff', abspath=False)
+
     assert filename == 'run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'
 
     with pytest.raises(IndexError) as exc:
@@ -42,17 +44,15 @@ def test_DataStore_filenames(data_manager):
     with pytest.raises(ValueError):
         data_store.filename(obs_id=89565, filetype='effective area')
 
-@pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_DataStore_filenames_pa(data_manager):
 
     data_store = data_manager['hess-crab4-pa']
 
     filename = data_store.filename(obs_id=23523, filetype='aeff')
-    assert filename == str(make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-pa/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'))
 
-    filename = data_store.filename(obs_id=23523, filetype='aeff', abspath=False)
-    assert filename == str(make_path('run023400-023599/run023523/hess_aeff_2d_023523.fits.gz'))
+    assert filename == str(make_path(
+        '$GAMMAPY_EXTRA/datasets/hess-crab4-pa/run23400-23599/run23523/aeff_2d_23523.fits.gz'))
 
 @requires_data('gammapy-extra')
 def test_DataStore_load(data_manager):

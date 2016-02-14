@@ -160,16 +160,20 @@ class DataStore(object):
         """
         _validate_filetype(filetype)
 
-        mask = self.hdu_table['OBS_ID'] == obs_id
-        mask &= self.hdu_table['HDU_TYPE'] == filetype
-        try:
-            idx = np.where(mask)[0][0]
-        except IndexError:
+        val = None
+        for row in self.hdu_table:
+            id = row['OBS_ID']
+            type = row['HDU_TYPE'].strip()
+            if id == obs_id and type == filetype:
+                val = row
+                break
+
+        if val is None:
             msg = 'File not in table: OBS_ID = {}, TYPE = {}'.format(obs_id, filetype)
             raise IndexError(msg)
-
-        filedir = Path(self.hdu_table['FILE_DIR'][idx])
-        filename = filedir / self.hdu_table['FILE_NAME'][idx]
+        else:
+            filedir = Path(val['FILE_DIR'].strip())
+            filename = filedir / val['FILE_NAME'].strip()
 
         if abspath:
             filename = self.base_dir / filename
