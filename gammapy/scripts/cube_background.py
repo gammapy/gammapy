@@ -1,4 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""
+TODO: review this code, move what's useful to `background_model.py`.
+
+
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import numpy as np
@@ -8,7 +13,7 @@ from ..utils.scripts import get_parser, set_up_logging_from_args
 from ..data import (ObservationTable, DataStore, ObservationGroups,
                    ObservationGroupAxis)
 from ..catalog import load_catalog_tevcat
-from ..background import make_bg_cube_model
+# from ..background import make_bg_cube_model
 
 __all__ = ['make_bg_cube_models',
            'create_bg_observation_list',
@@ -23,8 +28,6 @@ def make_bg_cube_models_main(args=None):
     parser = get_parser(make_bg_cube_models)
     parser.add_argument('indir', type=str,
                         help='Input directory (that contains the event lists)')
-    parser.add_argument('scheme', type=str,
-                        help='Scheme of file naming.')
     parser.add_argument('outdir', type=str,
                         help='Dir path to store the results.')
     parser.add_argument('--overwrite', action='store_true',
@@ -45,7 +48,7 @@ def make_bg_cube_models_main(args=None):
     make_bg_cube_models(**vars(args))
 
 
-def make_bg_cube_models(indir, scheme, outdir, overwrite=False, test=False, method='default'):
+def make_bg_cube_models(indir, outdir, overwrite=False, test=False, method='default'):
     """Create background cube models from the complete dataset of an experiment.
 
     Starting with gamma-ray event lists and effective area IRFs,
@@ -68,8 +71,6 @@ def make_bg_cube_models(indir, scheme, outdir, overwrite=False, test=False, meth
     ----------
     indir : str
         Input directory (that contains the event lists)
-    scheme : str
-        Scheme of file naming.
     outdir : str
         Dir path to store the results.
     overwrite : bool
@@ -90,12 +91,12 @@ def make_bg_cube_models(indir, scheme, outdir, overwrite=False, test=False, meth
     """
     Path(outdir).mkdir(exist_ok=overwrite)
 
-    create_bg_observation_list(indir, scheme, outdir, overwrite, test)
+    create_bg_observation_list(indir, outdir, overwrite, test)
     group_observations(outdir, overwrite, test)
     stack_observations(indir, outdir, overwrite, method)
 
 
-def create_bg_observation_list(indir, scheme, outdir, overwrite, test):
+def create_bg_observation_list(indir, outdir, overwrite, test):
     """Make total observation list and filter the observations.
 
     In a first version, all obs taken within 3 deg of a known source
@@ -106,8 +107,6 @@ def create_bg_observation_list(indir, scheme, outdir, overwrite, test):
     ----------
     indir : str
         Input directory (that contains the event lists)
-    scheme : str
-        Scheme of file naming.
     outdir : str
         Dir path to store the results.
     overwrite : bool
@@ -121,8 +120,8 @@ def create_bg_observation_list(indir, scheme, outdir, overwrite, test):
     log.info("#######################################")
 
     # get full list of observations
-    data_store = DataStore(dir=indir, scheme=scheme)
-    observation_table = data_store.make_observation_table()
+    data_store = DataStore.from_dir(indir)
+    observation_table = data_store.obs_table
 
     # for testing, only process a small subset of observations
     if test and len(observation_table) > 100:

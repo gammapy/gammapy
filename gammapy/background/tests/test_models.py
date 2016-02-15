@@ -90,15 +90,10 @@ class TestCubeBackgroundModel:
         obs_table = ObservationTable()
         obs_table['OBS_ID'] = np.arange(100)
         bg_cube_model = CubeBackgroundModel.define_cube_binning(
-            observation_table=obs_table, data_dir='dummy', method='default',
+            observation_table=obs_table, method='default',
         )
 
         assert bg_cube_model.background_cube.data.shape == (20, 60, 60)
-
-    # TODO: implement this test of remove this
-    # def test_fill_events(self):
-    # fill_events is tested (high-level) by
-    # gammapy/scripts/tests/test_make_bg_cube_models.py
 
     @requires_dependency('scipy')
     def test_smooth(self):
@@ -113,8 +108,7 @@ class TestCubeBackgroundModel:
         bg_cube_model2.background_cube.data = bg_cube_model2.counts_cube.data.copy()
         bg_cube_model2.smooth()
         bg_cube_model2.background_cube.data /= bg_cube_model2.livetime_cube.data
-        bg_cube_model2.background_cube.divide_bin_volume()
-        bg_cube_model2.background_cube.set_zero_level()
+        bg_cube_model2.background_cube.data /= bg_cube_model2.background_cube.bin_volume
 
         # test: the bg should be the same as at the beginning
         assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()

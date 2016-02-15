@@ -255,7 +255,7 @@ class CubeBackgroundModel(object):
                    background_cube=background_cube)
 
     @classmethod
-    def define_cube_binning(cls, observation_table, data_dir, method='default'):
+    def define_cube_binning(cls, observation_table, method='default'):
         """Define cube binning (E, Y, X).
 
         The shape of the cube (number of bins on each axis) depends on the
@@ -295,13 +295,7 @@ class CubeBackgroundModel(object):
 
         # define cube edges
         energy_min = Quantity(0.1, 'TeV')
-        if method == 'michi':
-            # minimum energy equal to minimum energy threshold of all
-            # observations in the group
-            min_energy_threshold = _get_min_energy_threshold(observation_table,
-                                                             data_dir)
-            energy_min = min_energy_threshold
-        energy_max = Quantity(80, 'TeV')
+        energy_max = Quantity(100, 'TeV')
         dety_min = Angle(-0.07, 'radian').to('deg')
         dety_max = Angle(0.07, 'radian').to('deg')
         detx_min = Angle(-0.07, 'radian').to('deg')
@@ -329,7 +323,7 @@ class CubeBackgroundModel(object):
 
         return cls.set_cube_binning(detx_edges, dety_edges, energy_edges)
 
-    def fill_events(self, observation_table, data_dir):
+    def fill_obs(self, observation_table, data_store):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -340,96 +334,18 @@ class CubeBackgroundModel(object):
         ----------
         observation_table : `~gammapy.data.ObservationTable`
             Observation list to use for the histogramming.
-        data_dir : str
-            Data directory
+        data_store : `~gammapy.data.DataStore`
+            Data store
         """
-        # stack events
+        for obs in observation_table:
+            events = data_store.load(obs['OBS_ID'], 'events')
 
-        observatory_name = observation_table.meta['OBSERVATORY_NAME']
-        if observatory_name == 'HESS':
-            scheme = 'HESS'
-        else:
-            s_error = "Warning! Storage scheme for {}".format(observatory_name)
-            s_error += "not implemented. Only H.E.S.S. scheme is available."
-            raise ValueError(s_error)
-
-        data_store = DataStore(dir=data_dir, scheme=scheme)
-        event_list_files = data_store.make_table_of_files(observation_table,
-                                                          filetypes=['events'])
-        aeff_table_files = data_store.make_table_of_files(observation_table,
-                                                          filetypes=['effective area'])
-
-        # loop over observations
-        for i_ev_file, i_aeff_file in zip(event_list_files['filename'],
-                                          aeff_table_files['filename']):
-            ev_list_ds = EventListDataset.read(i_ev_file)
-            livetime = ev_list_ds.event_list.observation_live_time_duration
-            aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
-            # TODO: Gammapy needs a class that interprets IRF files!!!
-            if aeff_hdu.header.comments['LO_THRES'] == '[TeV]':
-                energy_threshold_unit = 'TeV'
-            energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
-                                        energy_threshold_unit)
-            # TODO: Aeff FITS files contain some header keywords,
-            # where the units are stored in comments -> hard to parse!!!
-
-            # fill events above energy threshold, correct livetime accordingly
-            data_set = ev_list_ds.event_list
-            data_set = data_set.select_energy((energy_threshold,
-                                               energy_threshold * 1.e6))
-
-            # construct counts cube (energy, X, Y)
-            # TODO: units are missing in the H.E.S.S. FITS event
-            #       lists; this should be solved in the next (prod03)
-            #       H.E.S.S. fits production
-            # workaround: try to cast units, if it doesn't work, use hard coded
-            # ones
-            try:
-                ev_detx = Angle(data_set['DETX'])
-                ev_dety = Angle(data_set['DETY'])
-                ev_energy = Quantity(data_set['ENERGY'])
-            except UnitsError:
-                ev_detx = Angle(data_set['DETX'], 'deg')
-                ev_dety = Angle(data_set['DETY'], 'deg')
-                ev_energy = Quantity(data_set['ENERGY'],
-                                     data_set.meta['EUNIT'])
-            ev_cube_table = Table([ev_energy, ev_dety, ev_detx],
-                                  names=('ENERGY', 'DETY', 'DETX'))
-
-            # TODO: filter out possible sources in the data;
+            # TODO: filter out (mask) possible sources in the data
             #       for now, the observation table should not contain any
-            #       observation at or near an existing source
+            #       run at or near an existing source
 
-            # fill events
-
-            # get correct data cube format for histogramdd
-            ev_cube_array = np.vstack([ev_cube_table['ENERGY'],
-                                       ev_cube_table['DETY'],
-                                       ev_cube_table['DETX']]).T
-
-            # fill data cube into histogramdd
-            ev_cube_hist, ev_cube_edges = np.histogramdd(ev_cube_array,
-                                                         [self.counts_cube.energy_edges,
-                                                          self.counts_cube.coordy_edges,
-                                                          self.counts_cube.coordx_edges])
-            ev_cube_hist = Quantity(ev_cube_hist, '')
-
-            # fill cube
-            self.counts_cube.data += ev_cube_hist
-
-            # fill livetime for bins where E_max > E_thres
-            energy_max = self.counts_cube.energy_edges[1:]
-            dummy_dety_max = np.zeros_like(self.counts_cube.coordy_edges[1:])
-            dummy_detx_max = np.zeros_like(self.counts_cube.coordx_edges[1:])
-            # define grid of max values (i.e. bin max values for each 3D bin)
-            energy_max, dummy_dety_max, dummy_detx_max = np.meshgrid(energy_max,
-                                                                     dummy_dety_max,
-                                                                     dummy_detx_max,
-                                                                     indexing='ij')
-            mask = energy_max > energy_threshold
-
-            # fill cube
-            self.livetime_cube.data += livetime * mask
+            self.counts_cube.fill_events([events])
+            self.livetime_cube.data += events.observation_live_time_duration
 
     def smooth(self):
         """
@@ -501,3 +417,16 @@ class CubeBackgroundModel(object):
         # loop over energy bins (i.e. images)
         for i_energy in np.arange(len(self.background_cube.energy_edges) - 1):
             self.background_cube.data[i_energy] *= (integral_images / integral_images_smooth)[i_energy]
+
+    def compute_rate(self):
+        """Compute background_cube from count_cube and livetime_cube.
+        """
+        bg_rate = self.counts_cube.data / self.livetime_cube.data
+
+        bg_rate /= self.counts_cube.bin_volume
+        # bg_rate.set_zero_level()
+
+        # import IPython; IPython.embed()
+        bg_rate = bg_rate.to('1 / (MeV sr s)')
+
+        self.background_cube.data = bg_rate
