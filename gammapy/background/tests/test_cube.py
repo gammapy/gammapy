@@ -112,14 +112,14 @@ def array():
 
 @pytest.fixture
 def event_lists():
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    dir = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2')
     data_store = DataStore.from_dir(dir)
     event_lists = data_store.load_all('events')
     return event_lists
 
 
+@requires_data('gammapy-extra')
 def test_fill_cube(array, event_lists):
-
     array.fill_events(event_lists)
 
     # TODO: implement test that correct bin is hit
