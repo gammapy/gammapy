@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_data, data_manager
+from ...utils.testing import requires_data, data_manager, requires_dependency
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataManager(data_manager):
     # TODO: add asserts on info output
 

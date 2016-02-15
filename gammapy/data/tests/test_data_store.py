@@ -3,12 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.tests.helper import pytest
 from ...data import EventList
 from ...data import DataStore, DataManager
-from ...utils.testing import requires_data, data_manager
+from ...utils.testing import requires_data, data_manager, requires_dependency
 from ...utils.scripts import make_path
 from ...datasets import gammapy_extra
 from numpy.testing import assert_allclose
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_construction(data_manager):
     """Construct DataStore objects in various ways"""
     data_store = data_manager['hess-crab4-hd-hap-prod2']
@@ -24,6 +25,7 @@ def test_DataStore_construction(data_manager):
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_filenames(data_manager):
     """Check if filenames are constructed correctly"""
     data_store = data_manager['hess-crab4-hd-hap-prod2']
@@ -45,6 +47,7 @@ def test_DataStore_filenames(data_manager):
         data_store.filename(obs_id=89565, filetype='effective area')
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_filenames_pa(data_manager):
 
     data_store = data_manager['hess-crab4-pa']
@@ -55,6 +58,7 @@ def test_DataStore_filenames_pa(data_manager):
         '$GAMMAPY_EXTRA/datasets/hess-crab4-pa/run23400-23599/run23523/aeff_2d_23523.fits.gz'))
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_load(data_manager):
     """Test loading data and IRF files via the DataStore"""
     data_store = data_manager['hess-crab4-hd-hap-prod2']
@@ -64,6 +68,7 @@ def test_DataStore_load(data_manager):
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_load_all(data_manager):
     """Test loading data and IRF files via the DataStore"""
     data_store = data_manager['hess-crab4-hd-hap-prod2']
@@ -73,6 +78,7 @@ def test_DataStore_load_all(data_manager):
 
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
+@requires_dependency('yaml')
 def test_DataStore_other(data_manager):
     """Misc tests"""
     data_store = data_manager['hess-hap-hd-prod01-std_zeta_fullEnclosure']
