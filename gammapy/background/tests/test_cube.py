@@ -1,16 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...background import Cube
 from ...datasets import gammapy_extra, make_test_bg_cube_model
+from ...data import DataStore
 
 
 class TestCube:
-
     @requires_data('gammapy-extra')
     def test_read_fits_table(self):
         # test shape and scheme of cube when reading a file
@@ -99,3 +100,27 @@ class TestCube:
                                  cube1.coordy_edges)
         assert_quantity_allclose(cube2.energy_edges,
                                  cube1.energy_edges)
+
+
+@pytest.fixture
+def array():
+    filename = gammapy_extra.filename('test_datasets/background/bg_cube_model_test1.fits')
+    array = Cube.read(filename, format='table', scheme='bg_cube')
+    array.data = Quantity(np.zeros_like(array.data.value), 'u')
+    return array
+
+
+@pytest.fixture
+def event_lists():
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    event_lists = data_store.load_all('events')
+    return event_lists
+
+
+def test_fill_cube(array, event_lists):
+
+    array.fill_events(event_lists)
+
+    # TODO: implement test that correct bin is hit
+    assert array.data.value.sum() == 5967

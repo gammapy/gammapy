@@ -87,6 +87,8 @@ entry_points['console_scripts'] = [
     'gammapy-data-select = gammapy.scripts.data_select:data_select_main',
     'gammapy-data-show = gammapy.scripts.data_show:data_show_main',
 
+    'gammapy-background-model = gammapy.scripts.background:background_cli',
+
     'gammapy-spectrum = gammapy.scripts.spectrum:cli',
     'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
     'gammapy-spectrum-hspec = gammapy.hspec.run_fit:main',
@@ -108,7 +110,6 @@ entry_points['console_scripts'] = [
     'gammapy-image-significance = gammapy.scripts.image_significance:image_significance_main',
     'gammapy-image-ts = gammapy.scripts.image_ts:image_ts_main',
 
-    'gammapy-cube-background = gammapy.scripts.cube_background:make_bg_cube_models_main',
     'gammapy-cube-bin = gammapy.scripts.cube_bin:cube_bin_main',
 
     'gammapy-detect = gammapy.scripts.detect:detect_main',

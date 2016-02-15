@@ -413,8 +413,8 @@ def make_test_bg_cube_model(detx_range=Angle([-10., 10.], 'deg'),
     # background
     bg_cube_model.background_cube.data = bg_cube_model.counts_cube.data.copy()
     bg_cube_model.background_cube.data /= bg_cube_model.livetime_cube.data
-    bg_cube_model.background_cube.divide_bin_volume()
-    bg_cube_model.background_cube.set_zero_level()
+    bg_cube_model.background_cube.data /= bg_cube_model.background_cube.bin_volume
+    # bg_cube_model.background_cube.set_zero_level()
 
     if not do_not_force_mev_units:
         # use units of 1 / (MeV sr s) for the bg rate

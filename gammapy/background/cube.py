@@ -128,7 +128,12 @@ class Cube(object):
         self.coordy_edges = coordy_edges
         self._energy_edges = EnergyBounds(energy_edges)
 
-        self.data = data
+        if data:
+            self.data = data
+        else:
+            raise NotImplementedError
+            # TODO: make this consistent with have the 2d BCK class works
+            self.data = 'TODO'
 
         self.scheme = scheme
 
@@ -801,8 +806,12 @@ class Cube(object):
 
         return integral_images.sum(axis=(1, 2))
 
-    def divide_bin_volume(self):
-        """Divide cube by the bin volume."""
+    @property
+    def bin_volume(self):
+        """Per-pixel bin volume.
+
+        TODO: explain with formula and units
+        """
         delta_energy = self.energy_edges[1:] - self.energy_edges[:-1]
         delta_y = self.coordy_edges[1:] - self.coordy_edges[:-1]
         delta_x = self.coordx_edges[1:] - self.coordx_edges[:-1]
@@ -810,16 +819,51 @@ class Cube(object):
         delta_energy, delta_y, delta_x = np.meshgrid(delta_energy, delta_y,
                                                      delta_x, indexing='ij')
         bin_volume = delta_energy * (delta_y * delta_x).to('sr')
-        self.data /= bin_volume
 
-    def set_zero_level(self):
-        """Setting level 0 of the cube to something very small.
+        return bin_volume
 
-        Also for NaN values: they may appear in the 1st few E bins,
-        where no stat is present: (0 events/ 0 livetime = NaN)
+    # TODO: remove?
+    # def set_zero_level(self):
+    #     """Setting level 0 of the cube to something very small.
+    #
+    #     Also for NaN values: they may appear in the 1st few E bins,
+    #     where no stat is present: (0 events/ 0 livetime = NaN)
+    #     """
+    #     zero_level = Quantity(1.e-10, self.data.unit)
+    #     zero_level_mask = self.data < zero_level
+    #     self.data[zero_level_mask] = zero_level
+    #     nan_mask = np.isnan(self.data)
+    #     self.data[nan_mask] = zero_level
+
+    def fill_events(self, event_lists):
+        """Fill events histogram.
+
+        This add the counts to the existing value array.
+
+        Parameters
+        -------------
+        event_lists : list of `~gammapy.data.EventList`
+           Python list of event list objects.
         """
-        zero_level = Quantity(1.e-10, self.data.unit)
-        zero_level_mask = self.data < zero_level
-        self.data[zero_level_mask] = zero_level
-        nan_mask = np.isnan(self.data)
-        self.data[nan_mask] = zero_level
+        for event_list in event_lists:
+            counts = self._fill_one_event_list(event_list)
+            self.data += Quantity(counts, self.data.unit)
+
+    def _fill_one_event_list(self, events):
+        """Fill one event list into a counts array.
+
+        Parameters
+        -------------
+        events :`~gammapy.data.EventList`
+           Event list objects.
+        """
+        energy = events.energy.to('TeV').value
+        detx = np.array(events['DETX'])
+        dety = np.array(events['DETY'])
+        sample = np.vstack([energy, detx, dety]).T
+
+        bins = [self.energy_edges.value, self.coordy_edges.value, self.coordx_edges.value]
+
+        hist, edges = np.histogramdd(sample, bins)
+
+        return hist
