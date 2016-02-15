@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_equal
 import numpy as np
 from astropy.table import Table
+from astropy.coordinates import Angle
 from ...data import DataStore
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
@@ -13,7 +14,7 @@ from ...data import EventList
 
 def make_test_array(dummy_data=False):
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-    offset = np.linspace(0, 2.5, 100)
+    offset = Angle(np.linspace(0, 2.5, 100),"deg")
     array = EnergyOffsetArray(ebounds, offset)
     if dummy_data is True:
         # Define an EventList with three events
