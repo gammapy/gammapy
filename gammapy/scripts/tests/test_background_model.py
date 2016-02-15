@@ -17,7 +17,7 @@ def test_background_cli_help():
     assert 'Background models' in result.output
 
 
-@pytest.mark.xfail
+#@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_background_cli_all(tmpdir):
@@ -41,7 +41,7 @@ def test_background_cli_all(tmpdir):
     assert list(table['ZEN_PNT_MAX']) == [49, 90]
 
     # Step 3: model
-    result = runner.invoke(background_cli, cmds + ['model'])
+    result = runner.invoke(background_cli, cmds + ['model','--modeltype', '3D'])
     assert result.exit_code == 0
     model = CubeBackgroundModel.read('out/background_group_001_table.fits.gz')
     assert model.counts_cube.data.sum() == 1527

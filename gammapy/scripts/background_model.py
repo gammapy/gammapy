@@ -171,7 +171,9 @@ def background_group():
 
 
 @background_cli.command('model')
-def background_model():
+@click.option('--modeltype', default='3D',
+              type=click.Choice(['3D', '2D']))
+def background_model(modeltype):
     """Make background models.
 
     """
@@ -189,10 +191,11 @@ def background_model():
         log.info('Processing group {} with {} observations'.format(group, len(obs_table_group)))
 
         # Build the model
-        model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
-        model.fill_obs(obs_table_group, config.data_store)
-        model.smooth()
-        model.compute_rate()
+        if(modeltype=="3D"):
+            model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
+            model.fill_obs(obs_table_group, config.data_store)
+            model.smooth()
+            model.compute_rate()
 
         # Store the model
         filename = config.outdir / 'background_group_{:03d}_table.fits.gz'.format(group)
