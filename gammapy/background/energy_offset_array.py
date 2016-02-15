@@ -9,7 +9,6 @@ from ..utils.fits import table_to_fits_table
 from ..utils.energy import EnergyBounds, Energy
 from .cube import _make_bin_edges_array
 
-
 __all__ = [
     'EnergyOffsetArray',
 ]
@@ -29,14 +28,13 @@ class EnergyOffsetArray(object):
         data array (2D)
     """
 
-
     def __init__(self, energy, offset, data=None):
         self.energy = EnergyBounds(energy)
         self.offset = Angle(offset)
         if data is None:
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), "u")
         else:
-            self.data = data
+            self.data = Quantity(data)
 
     def fill_events(self, event_lists):
         """Fill events histogram.
@@ -50,7 +48,7 @@ class EnergyOffsetArray(object):
         """
         for event_list in event_lists:
             counts = self._fill_one_event_list(event_list)
-            self.data += Quantity(counts, "u")
+            self.data += Quantity(counts, unit=self.data.unit)
 
     def _fill_one_event_list(self, events):
         """
@@ -102,9 +100,8 @@ class EnergyOffsetArray(object):
         plt.colorbar(image)
         return ax
 
-
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, data_name="data"):
         """Create `EnergyOffsetArray` from  FITS file.
 
         Parameters
@@ -112,35 +109,24 @@ class EnergyOffsetArray(object):
         filename : str
             File name
         """
-        hdu_list = fits.open(filename)
-        hdu = hdu_list[1]
-        return cls.from_fits(hdu)
+        table = Table.read(filename)
+        return cls.from_table(table, data_name)
 
     @classmethod
-    def from_fits(cls, hdu):
-        """Read `EnergyOffsetArray` from a FITS binary table.
+    def from_table(cls, table, data_name= "data"):
+        offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
+        offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
+        energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
+        energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
+        data= Quantity(table[data_name].squeeze(), table[data_name].unit)
+        return cls(energy_edges, offset_edges, data)
 
-        Parameters
-        ----------
-        hdu : `~astropy.io.fits.BinTableHDU`
-            HDU binary table for the EnergyOffsetArray.
 
-        Returns
-        -------
-        cube : `~gammapy.background.EnergyOffsetArray`
-            EnergyOffsetArray object.
-        """
-        data = hdu.data
+    def write(self, filename, data_name="data",**kwargs):
+        """ Write EnergyOffsetArray to FITS file"""
+        self.to_table(data_name).write(filename, **kwargs)
 
-        offset_edges = _make_bin_edges_array(data['THETA_LO'].squeeze(), data['THETA_HI'].squeeze())
-        energy_edges = _make_bin_edges_array(data['ENERG_LO'].squeeze(), data['ENERG_HI'].squeeze())
-        energy_edges = EnergyBounds(energy_edges, 'TeV')
-
-        energy_offset_array = data['EnergyOffsetArray'].squeeze()
-
-        return cls(energy_edges, offset_edges, energy_offset_array)
-
-    def to_table(self):
+    def to_table(self, data_name="data"):
         """Convert `EnergyOffsetArray` to astropy table format.
 
         Returns
@@ -149,28 +135,14 @@ class EnergyOffsetArray(object):
             Table containing the EnergyOffsetArray.
         """
         table = Table()
-        table['THETA_LO'] = [self.offset[:-1]]
-        table['THETA_HI'] = [self.offset[1:]]
-        table['ENERG_LO'] = [self.energy[:-1]]
-        table['ENERG_HI'] = [self.energy[1:]]
-        table['EnergyOffsetArray'] = [Quantity(self.data, " u ")]
-        table.meta['name'] = 'TO DEFINE'
+        table['THETA_LO'] = Quantity([self.offset[:-1]], unit=self.offset.unit)
+        table['THETA_HI'] = Quantity([self.offset[1:]], unit=self.offset.unit)
+        table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
+        table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
+        table[data_name] = Quantity([self.data], unit=self.data.unit)
 
         return table
 
-    def to_fits(self):
-        """Convert `EnergyOffsetArray` to binary table FITS format.
-
-        Returns
-        -------
-        tbhdu : `~astropy.io.fits.BinTableHDU`
-            Table containing the EnergyOffsetArray.
-        """
-        return table_to_fits_table(self.to_table())
-
-    def write(self, filename, **kwargs):
-        """ Write EnergyOffsetArray to FITS file"""
-        self.to_fits().writeto(filename, **kwargs)
 
     def evaluate(self, energy, offset, interpolate_params):
         """
@@ -200,3 +172,17 @@ class EnergyOffsetArray(object):
         interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
 
         return interpolator([energy.value, offset.value])
+
+    @property
+    def bin_volume(self):
+        """Per-pixel bin volume.
+
+        TODO: explain with formula and units
+        """
+        delta_energy = self.energy[1:] - self.energy[:-1]
+        delta_off = np.pi*(self.offset[1:]**2 - self.offset[:-1]**2)
+        # define grid of deltas (i.e. bin widths for each 3D bin)
+        delta_energy, delta_off = np.meshgrid(delta_energy, delta_off)
+        bin_volume = delta_energy * (delta_off).to('sr')
+
+        return bin_volume
