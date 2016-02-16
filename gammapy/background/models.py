@@ -13,7 +13,7 @@ from ..background import Cube
 from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
 from ..data import EventListDataset, DataStore
-
+from .cube import _make_bin_edges_array
 __all__ = [
     'GaussianBand2D',
     'CubeBackgroundModel',
@@ -442,7 +442,7 @@ class EnergyOffsetBackgroundModel(object):
         self.energy = EnergyBounds(energy)
         self.offset = Angle(offset)
         self.counts = EnergyOffsetArray(energy, offset, counts)
-        self.livetime = EnergyOffsetArray(energy, offset, livetime)
+        self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate)
 
     def write(self, filename, **kwargs):
@@ -455,9 +455,9 @@ class EnergyOffsetBackgroundModel(object):
         table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
         table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
         table['counts'] = self.counts.to_table()['data']
-        table['livetime'] = self.counts.to_table()['data']
-        table['bg_rate'] = self.counts.to_table()['data']
-
+        table['livetime'] = self.livetime.to_table()['data']
+        table['bg_rate'] = self.bg_rate.to_table()['data']
+        return table
     @classmethod
     def read(cls, filename):
         table = Table.read(filename)

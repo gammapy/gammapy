@@ -12,6 +12,7 @@ from ..energy_offset_array import EnergyOffsetArray
 from ...data import EventList
 
 
+
 def make_test_array(dummy_data=False):
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
     offset = Angle(np.linspace(0, 2.5, 100),"deg")

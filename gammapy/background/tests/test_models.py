@@ -118,25 +118,20 @@ class TestCubeBackgroundModel:
         # test: the bg should be the same as at the beginning
         assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()
 
-
-@requires_data('gammapy-extra')
-class TestEnergyOffsetBackgroundModel:
-    def make_test_array_empty(self):
+def make_test_array_empty():
         ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
         offset = Angle(np.linspace(0, 2.5, 100),"deg")
         multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
         return multi_array
 
-    def test_read_write(self):
-        ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-        offset = Angle(np.linspace(0, 2.5, 100),"deg")
-        counts= np.zeros((len(ebounds) - 1, len(offset) - 1))
-        livetime= np.zeros((len(ebounds) - 1, len(offset) - 1))
-        bg_rate= np.zeros((len(ebounds) - 1, len(offset) - 1))
-        livetime[:,:]=1
-        bg_rate[:,:]=2
-        multi_array = EnergyOffsetBackgroundModel(ebounds, offset, counts, livetime, bg_rate)
+@requires_data('gammapy-extra')
+class TestEnergyOffsetBackgroundModel:
 
+    def test_read_write(self):
+        multi_array=make_test_array_empty()
+        multi_array.livetime.data.value[:,:]=1
+        multi_array.bg_rate.data.value[:,:]=2
+        print(multi_array.livetime.data)
         filename = 'multidata.fits'
         multi_array.write(filename)
         multi_array2 = multi_array.read(filename)
@@ -151,5 +146,10 @@ class TestEnergyOffsetBackgroundModel:
         dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
         data_store = DataStore.from_dir(dir)
         obs_table=data_store.obs_table
+        multi_array=make_test_array_empty()
+        multi_array.fill_obs(obs_table, data_store)
+        assert_equal(multi_array.counts.data.value.sum(), 5403)
+        assert_equal(multi_array.livetime.data.value.sum(), 62506736.499239981)
+        assert_equal(multi_array.bg_rate.data.value.sum(), 0)
 
 
