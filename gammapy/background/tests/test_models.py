@@ -5,6 +5,8 @@ from numpy.testing import assert_allclose
 from numpy.testing import assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
+import astropy.units as u
+from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from ...utils.testing import requires_dependency, requires_data
@@ -13,7 +15,6 @@ from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackg
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore
-
 
 
 @requires_dependency('scipy')
@@ -118,45 +119,42 @@ class TestCubeBackgroundModel:
         # test: the bg should be the same as at the beginning
         assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()
 
-def make_test_array_empty():
-        ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-        offset = Angle(np.linspace(0, 2.5, 100),"deg")
-        multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
-        return multi_array
+
+def make_test_array(empty=True):
+    ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+    offset = Angle(np.linspace(0, 2.5, 100), "deg")
+    multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
+    if not empty:
+        multi_array.counts.data.value[:] = 1
+        multi_array.livetime.data.value[:] = 2
+        multi_array.bg_rate.data.value[:] = 3
+
+    return multi_array
+
 
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
-
     def test_read_write(self):
-        multi_array=make_test_array_empty()
-        multi_array.livetime.data.value[:,:]=1
-        multi_array.bg_rate.data.value[:,:]=2
+        multi_array = make_test_array(empty=False)
         filename = 'multidata.fits'
         multi_array.write(filename)
-        multi_array2 = multi_array.read(filename)
+        multi_array2 = EnergyOffsetBackgroundModel.read(filename)
 
-        assert_equal(multi_array.counts.data, multi_array2.counts.data)
-        assert_equal(multi_array.livetime.data, multi_array2.livetime.data)
-        assert_equal(multi_array.bg_rate.data, multi_array2.bg_rate.data)
-        assert_equal(multi_array.energy, multi_array2.energy)
-        assert_equal(multi_array.offset, multi_array2.offset)
+        assert_quantity_allclose(multi_array.counts.data, multi_array2.counts.data)
+        assert_quantity_allclose(multi_array.livetime.data, multi_array2.livetime.data)
+        assert_quantity_allclose(multi_array.bg_rate.data, multi_array2.bg_rate.data)
+        assert_quantity_allclose(multi_array.energy, multi_array2.energy)
+        assert_quantity_allclose(multi_array.offset, multi_array2.offset)
 
-    def test_fill_obs(self):
+    def test_fillobs_and_computerate(self):
         dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
         data_store = DataStore.from_dir(dir)
-        obs_table=data_store.obs_table
-        multi_array=make_test_array_empty()
-        multi_array.fill_obs(obs_table, data_store)
-        assert_equal(multi_array.counts.data.value.sum(), 5403)
-        assert_equal(multi_array.livetime.data.value.sum(), 62506736.499239981)
-        assert_equal(multi_array.bg_rate.data.value.sum(), 0)
-
-    def test_compute_rate(self):
-        dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
-        data_store = DataStore.from_dir(dir)
-        obs_table=data_store.obs_table
-        multi_array=make_test_array_empty()
+        obs_table = data_store.obs_table
+        multi_array = make_test_array()
         multi_array.fill_obs(obs_table, data_store)
         multi_array.compute_rate()
-        assert_equal(multi_array.bg_rate.data.value.sum(), 0.27537506238749021)
-
+        assert_equal(multi_array.counts.data.value.sum(), 5403)
+        pix = 23, 1
+        assert_quantity_allclose(multi_array.livetime.data[pix], 6313.8117676 * u.s)
+        rate = Quantity(0.0024697306536062276, "MeV-1 s-1 sr-1")
+        assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)

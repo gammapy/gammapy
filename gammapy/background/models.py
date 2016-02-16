@@ -443,7 +443,7 @@ class EnergyOffsetBackgroundModel(object):
         self.offset = Angle(offset)
         self.counts = EnergyOffsetArray(energy, offset, counts)
         self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
-        self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "1 / (MeV sr s)")
+        self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
 
     def write(self, filename, **kwargs):
         self.to_table().write(filename, format='fits', overwrite=True, **kwargs)
@@ -505,6 +505,6 @@ class EnergyOffsetBackgroundModel(object):
 
         bg_rate /= self.counts.bin_volume
 
-        bg_rate = bg_rate.to('1 / (MeV sr s)')
+        bg_rate = bg_rate.to('MeV-1 sr-1 s-1')
 
         self.bg_rate.data = bg_rate

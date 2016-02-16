@@ -76,7 +76,7 @@ def test_energy_offset_array_read_write(tmpdir):
 
     filename = str(tmpdir / 'data.fits')
     array.write(filename)
-    array2 = array.read(filename)
+    array2 = EnergyOffsetArray.read(filename)
 
     assert_equal(array.data, array2.data)
     assert_equal(array.energy, array2.energy)

@@ -87,7 +87,7 @@ entry_points['console_scripts'] = [
     'gammapy-data-select = gammapy.scripts.data_select:data_select_main',
     'gammapy-data-show = gammapy.scripts.data_show:data_show_main',
 
-    'gammapy-background-model = gammapy.scripts.background:background_cli',
+    'gammapy-background-model = gammapy.scripts.background_model:background_cli',
 
     'gammapy-spectrum = gammapy.scripts.spectrum:cli',
     'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
