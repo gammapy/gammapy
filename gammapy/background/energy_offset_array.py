@@ -182,7 +182,7 @@ class EnergyOffsetArray(object):
         delta_energy = self.energy[1:] - self.energy[:-1]
         delta_off = np.pi*(self.offset[1:]**2 - self.offset[:-1]**2)
         # define grid of deltas (i.e. bin widths for each 3D bin)
-        delta_energy, delta_off = np.meshgrid(delta_energy, delta_off)
+        delta_energy, delta_off = np.meshgrid(delta_energy, delta_off, indexing='ij')
         bin_volume = delta_energy * (delta_off).to('sr')
 
         return bin_volume
