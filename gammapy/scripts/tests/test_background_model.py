@@ -18,7 +18,7 @@ def test_background_cli_help():
     assert 'Background models' in result.output
 
 
-# @pytest.mark.xfail
+@pytest.mark.xfail
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_background_cli_all(tmpdir):

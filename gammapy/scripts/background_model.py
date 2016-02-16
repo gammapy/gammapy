@@ -194,7 +194,7 @@ def background_model(modeltype):
         log.info('Processing group {} with {} observations'.format(group, len(obs_table_group)))
 
         # Build the model
-        if (modeltype == "3D"):
+        if modeltype == "3D":
             model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
             model.fill_obs(obs_table_group, config.data_store)
             model.smooth()
@@ -209,7 +209,7 @@ def background_model(modeltype):
             log.info('Writing {}'.format(filename))
             model.write(str(filename), format='image', clobber=config.clobber)
 
-        if (modeltype == "2D"):
+        elif modeltype == "2D":
             ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
             offset = Angle(np.linspace(0, 2.5, 100), "deg")
             model = EnergyOffsetBackgroundModel(ebounds, offset)
@@ -220,3 +220,6 @@ def background_model(modeltype):
             filename = config.outdir / 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
             log.info('Writing {}'.format(filename))
             model.write(str(filename))
+
+        else:
+            raise ValueError("Invalid model type: {}".format(modeltype))
