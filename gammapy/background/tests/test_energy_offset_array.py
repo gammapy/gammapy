@@ -1,8 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
+from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from astropy.table import Table
+from astropy.coordinates import Angle
 from ...data import DataStore
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
@@ -13,7 +15,7 @@ from ...data import EventList
 
 def make_test_array(dummy_data=False):
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-    offset = np.linspace(0, 2.5, 100)
+    offset = Angle(np.linspace(0, 2.5, 100), "deg")
     array = EnergyOffsetArray(ebounds, offset)
     if dummy_data is True:
         # Define an EventList with three events
@@ -74,8 +76,17 @@ def test_energy_offset_array_read_write(tmpdir):
 
     filename = str(tmpdir / 'data.fits')
     array.write(filename)
-    array2 = array.read(filename)
+    array2 = EnergyOffsetArray.read(filename)
 
     assert_equal(array.data, array2.data)
     assert_equal(array.energy, array2.energy)
     assert_equal(array.offset, array2.offset)
+
+
+def test_energy_offset_array_bin_volume(tmpdir):
+    array = make_test_array()
+    energy_bin = array.energy.bands
+    offset_bin = np.pi * (array.offset[1:] ** 2 - array.offset[:-1] ** 2)
+    expected_volume = energy_bin[3] * offset_bin[4].to('sr')
+    bin_volume = array.bin_volume
+    assert_quantity_allclose(expected_volume, bin_volume[3, 4])

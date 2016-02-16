@@ -10,11 +10,14 @@ from astropy.table import Table
 from astropy.units import Quantity, UnitsError
 from ..data.data_store import _get_min_energy_threshold
 from ..background import Cube
+from ..background import EnergyOffsetArray
+from ..utils.energy import EnergyBounds
 from ..data import EventListDataset, DataStore
-
+from .cube import _make_bin_edges_array
 __all__ = [
     'GaussianBand2D',
     'CubeBackgroundModel',
+    'EnergyOffsetBackgroundModel',
 ]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
@@ -430,3 +433,79 @@ class CubeBackgroundModel(object):
         bg_rate = bg_rate.to('1 / (MeV sr s)')
 
         self.background_cube.data = bg_rate
+
+
+class EnergyOffsetBackgroundModel(object):
+    """EnergyOffsetArray background model."""
+
+    def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None):
+        self.energy = EnergyBounds(energy)
+        self.offset = Angle(offset)
+        self.counts = EnergyOffsetArray(energy, offset, counts)
+        self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
+        self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
+
+    def write(self, filename, **kwargs):
+        self.to_table().write(filename, format='fits', overwrite=True, **kwargs)
+
+    def to_table(self):
+        table = Table()
+        table['THETA_LO'] = Quantity([self.offset[:-1]], unit=self.offset.unit)
+        table['THETA_HI'] = Quantity([self.offset[1:]], unit=self.offset.unit)
+        table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
+        table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
+        table['counts'] = self.counts.to_table()['data']
+        table['livetime'] = self.livetime.to_table()['data']
+        table['bg_rate'] = self.bg_rate.to_table()['data']
+        return table
+
+    @classmethod
+    def read(cls, filename):
+        table = Table.read(filename)
+        return cls.from_table(table)
+
+    @classmethod
+    def from_table(cls, table):
+        offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
+        offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
+        energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
+        energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
+        counts = Quantity(table['counts'].squeeze(), table['counts'].unit)
+        livetime = Quantity(table['livetime'].squeeze(), table['livetime'].unit)
+        bg_rate = Quantity(table['bg_rate'].squeeze(), table['bg_rate'].unit)
+        return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
+
+    def fill_obs(self, observation_table, data_store):
+        """Fill events and compute corresponding livetime.
+
+        Get data files corresponding to the observation list, histogram
+        the counts and the livetime and fill the corresponding cube
+        containers.
+
+        Parameters
+        ----------
+        observation_table : `~gammapy.data.ObservationTable`
+            Observation list to use for the histogramming.
+        data_store : `~gammapy.data.DataStore`
+            Data store
+        """
+        for obs in observation_table:
+            events = data_store.load(obs['OBS_ID'], 'events')
+
+            # TODO: filter out (mask) possible sources in the data
+            #       for now, the observation table should not contain any
+            #       run at or near an existing source
+
+            self.counts.fill_events([events])
+            self.livetime.data += events.observation_live_time_duration
+
+    def compute_rate(self):
+        """Compute background_cube from count_cube and livetime_cube.
+        """
+        bg_rate = self.counts.data / self.livetime.data
+
+        bg_rate /= self.counts.bin_volume
+
+        bg_rate = bg_rate.to('MeV-1 sr-1 s-1')
+
+        self.bg_rate.data = bg_rate
