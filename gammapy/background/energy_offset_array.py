@@ -259,15 +259,29 @@ class EnergyOffsetArray(object):
         return table
 
 
-    """
-    def to_multi_Cube(self, Cube):
-        x=Cube.counts.coordx_edge[:-1]+Cube.counts.coordx_edge[1:]
-        y=Cube.counts.coordy_edge[:-1]+Cube.counts.coordy_edge[1:]
 
-        XX, YY = np.meshgrid(x, y)
-        dist=np.sqrt(XX**2 + YY**2)
-        EEE, Cube_dist= np.meshgrid(dist, self.energy.log_centers)
-        points=zip(EE, Cube_dist)
-        data=self.evaluate(EEE, Cube_dist)
-        return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data)
-    """
+    def to_multi_Cube(self, Cube):
+        """
+
+        Parameters
+        ----------
+        Cube: `~gammapy.background.Cube`
+
+        Returns
+        -------
+
+        """
+        coordx_center=(Cube.counts.coordx_edge[:-1]+Cube.counts.coordx_edge[1:])/2.
+        coordy_center=(Cube.counts.coordy_edge[:-1]+Cube.counts.coordy_edge[1:])/2.
+
+        xx, yy = np.meshgrid(coordx_center, coordy_center)
+        dist=np.sqrt(xx**2 + yy**2)
+        shape=np.shape(dist)
+        data=self.evaluate(self.energy.log_centers, dist.flat)
+        data_reshape= np.zeros((len(Cube.energy_edges) - 1,
+                                    len(Cube.coordy_edges) - 1,
+                                    len(Cube.coordx_edges) - 1))
+        for i in range(len(energy.log_centers)):
+            data_reshape[i,:,:]=np.reshape(data[i,:],shape)
+        return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data_reshape)
+
