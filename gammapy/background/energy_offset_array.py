@@ -267,14 +267,14 @@ class EnergyOffsetArray(object):
 
         Parameters
         ----------
-        Cube: `~gammapy.background.Cube`
+        Cube: `~gammapy.background.models.CubeBackgroundModel`
 
         Returns
         -------
 
         """
-        coordx_center=(Cube.counts.coordx_edge[:-1]+Cube.counts.coordx_edge[1:])/2.
-        coordy_center=(Cube.counts.coordy_edge[:-1]+Cube.counts.coordy_edge[1:])/2.
+        coordx_center=(Cube.counts_cube.coordx_edges[:-1]+Cube.counts_cube.coordx_edges[1:])/2.
+        coordy_center=(Cube.counts_cube.coordy_edges[:-1]+Cube.counts_cube.coordy_edges[1:])/2.
 
         xx, yy = np.meshgrid(coordx_center, coordy_center)
         dist=np.sqrt(xx**2 + yy**2)

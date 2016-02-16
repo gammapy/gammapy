@@ -10,6 +10,7 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
+from ...background import CubeBackgroundModel
 from ...data import EventList
 
 
@@ -100,3 +101,11 @@ def test_curve():
     Erange=Energy([1,10],'TeV')
     Nbin=10
     table_offset=array.acceptance_curve_in_energy_band(Erange, Nbin)
+
+def test_to_cube():
+    array=test_energy_offset_array_fill()
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    obs_table=data_store.obs_table
+    Model = CubeBackgroundModel.define_cube_binning(obs_table, method='default')
+    array.to_multi_Cube(Model)
