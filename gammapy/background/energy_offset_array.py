@@ -169,7 +169,7 @@ class EnergyOffsetArray(object):
         offset = Angle(offset).to('deg')
 
         energy_bin = self.energy.log_centers
-        offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
+        offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
 
@@ -181,18 +181,83 @@ class EnergyOffsetArray(object):
         return data_interp.reshape(shape)
 
     @property
+    def offset_bin_center(self):
+        off=(self.offset[:-1] + self.offset[1:]) / 2.
+        return off
+
+    @property
+    def solide_angle(self):
+        s=np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
+        return s
+
+    @property
     def bin_volume(self):
         """Per-pixel bin volume.
 
         TODO: explain with formula and units
         """
         delta_energy = self.energy.bands
-        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
+        solid_angle = self.solide_angle
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, solid_angle = np.meshgrid(delta_energy, solid_angle, indexing='ij')
         bin_volume = delta_energy * (solid_angle).to('sr')
 
         return bin_volume
+
+
+    def curve_at_energy(self, energy):
+        """
+        Parameters
+        ----------
+        energy: `~astropy.units.Quantity`
+
+        Returns
+        -------
+
+        """
+        table=Table()
+        table["offset"]=self.offset_bin_center
+        table["1Dcurve"]=self.evaluate(energy, offset=None)
+        return table
+
+    def curve_at_energy(self, offset):
+        """
+
+        Parameters
+        ----------
+        offset: `~astropy.coordinates.Angle`
+
+        Returns
+        -------
+
+        """
+        table=Table()
+        table["energy"]=self.energy.log_centers
+        table["1Dcurve"]=self.evaluate(energy=None, offset)
+        return table
+
+
+    def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10):
+        """
+        Parameters
+        ----------
+        energy_band : `~astropy.units.Quantity`
+            Tuple ``(energy_min, energy_max)``
+        energy_bins : int or `~astropy.units.Quantity`
+            Energy bin definition.
+
+        """
+        [Emin,Emax]=energy_band
+        energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
+        energy_bins=energy_edges.log_centers
+        acceptance =+ self.evaluate(energy_bins, offset=None)
+        #Sum over the energy
+        acceptance_tot=np.sum(acceptance*self.solide_angle.to('sr')*energy_edges.bands.to('MeV'), axis=0)
+        table=Table()
+        table["offset"]=self.offset_bin_center
+        table["Acceptance"]=acceptance_tot
+        return table
+
 
     """
     def to_multi_Cube(self, Cube):
@@ -205,29 +270,4 @@ class EnergyOffsetArray(object):
         points=zip(EE, Cube_dist)
         data=self.evaluate(EEE, Cube_dist)
         return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data)
-
-    def acceptance_curve_at_energy(self, energy):
-        #Wa have to evaluate in the middle of the pffset bin right?
-        offsetbin=(self.offset[:-1]+self.offset[1:])/2
-        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
-        points=zip(energy,offsetbin)
-        acceptance=self.evaluate(points)
-        return acceptance
-
-    def acceptance_curve_in_energy_band(self, energyrange):
-        #Wa have to evaluate in the middle of the pffset bin right?
-
-        offsetbin=(self.offset[:-1]+self.offset[1:])/2
-        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
-        acceptance=np.zeros(len(offsetbin))
-
-        [Emin,Emax]=energyrange
-        energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, 10, energyrange.unit)
-        energybin=energy_edges.log_centers
-
-        for i_E,energy in energybin:
-            points=zip(energy,offsetbin)
-            acceptance =+ self.evaluate(points)*(solid_angle).to('sr')*energy_edges.bands[i_E].to('MeV')
-        resust
-        return acceptance
     """
