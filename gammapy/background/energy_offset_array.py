@@ -28,13 +28,13 @@ class EnergyOffsetArray(object):
         data array (2D)
     """
 
-    def __init__(self, energy, offset, data=None):
+    def __init__(self, energy, offset, data=None, data_units=""):
         self.energy = EnergyBounds(energy)
         self.offset = Angle(offset)
         if data is None:
-            self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), "u")
+            self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), data_units)
         else:
-            self.data = Quantity(data)
+            self.data = Quantity(data, data_units)
 
     def fill_events(self, event_lists):
         """Fill events histogram.
