@@ -131,7 +131,6 @@ class TestEnergyOffsetBackgroundModel:
         multi_array=make_test_array_empty()
         multi_array.livetime.data.value[:,:]=1
         multi_array.bg_rate.data.value[:,:]=2
-        print(multi_array.livetime.data)
         filename = 'multidata.fits'
         multi_array.write(filename)
         multi_array2 = multi_array.read(filename)
