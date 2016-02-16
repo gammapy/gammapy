@@ -161,4 +161,3 @@ class TestEnergyOffsetBackgroundModel:
         multi_array.compute_rate()
         assert_equal(multi_array.bg_rate.data.value.sum(), 0.27537506238749021)
 
-    
