@@ -161,9 +161,9 @@ class EnergyOffsetArray(object):
         """
         from scipy.interpolate import RegularGridInterpolator
         if energy is None:
-            energy = self.energy
+            energy = self.energy.log_centers
         if offset is None:
-            offset = self.offset
+            offset = self.offset_bin_center
 
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
@@ -220,7 +220,7 @@ class EnergyOffsetArray(object):
         table["1Dcurve"]=self.evaluate(energy, offset=None)
         return table
 
-    def curve_at_energy(self, offset):
+    def curve_at_offset(self, offset):
         """
 
         Parameters
@@ -233,7 +233,7 @@ class EnergyOffsetArray(object):
         """
         table=Table()
         table["energy"]=self.energy.log_centers
-        table["1Dcurve"]=self.evaluate(energy=None, offset)
+        table["1Dcurve"]=self.evaluate(None, offset)
         return table
 
 
@@ -251,8 +251,10 @@ class EnergyOffsetArray(object):
         energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
         energy_bins=energy_edges.log_centers
         acceptance =+ self.evaluate(energy_bins, offset=None)
-        #Sum over the energy
-        acceptance_tot=np.sum(acceptance*self.solide_angle.to('sr')*energy_edges.bands.to('MeV'), axis=0)
+        #this is super crado to do that, is there not a way to directly multiply 2D(N1, N2) with 1D(N1)?
+        acceptance_tot=np.zeros(len(self.offset) - 1)
+        for i in range(len(energy_bins)):
+            acceptance_tot += acceptance[i,:]*self.solide_angle.to('sr')*energy_edges.bands[i].to('MeV')
         table=Table()
         table["offset"]=self.offset_bin_center
         table["Acceptance"]=acceptance_tot

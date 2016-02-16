@@ -456,7 +456,8 @@ class EnergyOffsetBackgroundModel(object):
         table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
         table['counts'] = self.counts.to_table()['data']
         table['livetime'] = self.livetime.to_table()['data']
-        table['bg_rate'] = self.bg_rate.to_table()['data']
+        table['bkg'] = self.bg_rate.to_table()['data']
+        table.meta['HDUNAME']="bkg_2d"
         return table
 
     @classmethod

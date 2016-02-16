@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 from ...data import DataStore
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
-from ...utils.energy import EnergyBounds
+from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
 from ...data import EventList
 
@@ -43,7 +43,7 @@ def test_energy_offset_array_fill():
 
     array = make_test_array()
     array.fill_events(ev_list)
-
+    return array
     # TODO: add some assert, e.g. counts in some bin with non-zero entries.
 
 
@@ -90,3 +90,13 @@ def test_energy_offset_array_bin_volume(tmpdir):
     expected_volume = energy_bin[3] * offset_bin[4].to('sr')
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
+
+def test_curve():
+    array=test_energy_offset_array_fill()
+    energy= Energy(4, 'TeV')
+    off=Angle(1.2, 'deg')
+    table_energy=array.curve_at_energy(energy)
+    table_band=array.curve_at_offset(off)
+    Erange=Energy([1,10],'TeV')
+    Nbin=10
+    table_offset=array.acceptance_curve_in_energy_band(Erange, Nbin)
