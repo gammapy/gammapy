@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
+from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -80,3 +81,12 @@ def test_energy_offset_array_read_write(tmpdir):
     assert_equal(array.data, array2.data)
     assert_equal(array.energy, array2.energy)
     assert_equal(array.offset, array2.offset)
+
+
+def test_energy_offset_array_bin_volume(tmpdir):
+    array = make_test_array()
+    energy_bin = array.energy.bands
+    offset_bin = np.pi * (array.offset[1:] ** 2 - array.offset[:-1] ** 2)
+    expected_volume = energy_bin[3] * offset_bin[4].to('sr')
+    bin_volume = array.bin_volume
+    assert_quantity_allclose(expected_volume, bin_volume[3, 4])
