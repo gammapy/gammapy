@@ -2,13 +2,18 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
+from numpy.testing import assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
+from astropy.coordinates import Angle
 from astropy.modeling.models import Gaussian1D
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
-from ...background import GaussianBand2D, CubeBackgroundModel
+from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
+from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
+from ...data import DataStore
+
 
 
 @requires_dependency('scipy')
@@ -112,3 +117,39 @@ class TestCubeBackgroundModel:
 
         # test: the bg should be the same as at the beginning
         assert (bg_cube_model2.background_cube.data == bg_cube_model1.background_cube.data).all()
+
+
+@requires_data('gammapy-extra')
+class TestEnergyOffsetBackgroundModel:
+    def make_test_array_empty(self):
+        ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+        offset = Angle(np.linspace(0, 2.5, 100),"deg")
+        multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
+        return multi_array
+
+    def test_read_write(self):
+        ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+        offset = Angle(np.linspace(0, 2.5, 100),"deg")
+        counts= np.zeros((len(ebounds) - 1, len(offset) - 1))
+        livetime= np.zeros((len(ebounds) - 1, len(offset) - 1))
+        bg_rate= np.zeros((len(ebounds) - 1, len(offset) - 1))
+        livetime[:,:]=1
+        bg_rate[:,:]=2
+        multi_array = EnergyOffsetBackgroundModel(ebounds, offset, counts, livetime, bg_rate)
+
+        filename = 'multidata.fits'
+        multi_array.write(filename)
+        multi_array2 = multi_array.read(filename)
+
+        assert_equal(multi_array.counts.data, multi_array2.counts.data)
+        assert_equal(multi_array.livetime.data, multi_array2.livetime.data)
+        assert_equal(multi_array.bg_rate.data, multi_array2.bg_rate.data)
+        assert_equal(multi_array.energy, multi_array2.energy)
+        assert_equal(multi_array.offset, multi_array2.offset)
+
+    def test_fill_obs(self):
+        dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+        data_store = DataStore.from_dir(dir)
+        obs_table=data_store.obs_table
+
+
