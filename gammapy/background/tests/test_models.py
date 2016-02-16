@@ -152,4 +152,13 @@ class TestEnergyOffsetBackgroundModel:
         assert_equal(multi_array.livetime.data.value.sum(), 62506736.499239981)
         assert_equal(multi_array.bg_rate.data.value.sum(), 0)
 
+    def test_compute_rate(self):
+        dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+        data_store = DataStore.from_dir(dir)
+        obs_table=data_store.obs_table
+        multi_array=make_test_array_empty()
+        multi_array.fill_obs(obs_table, data_store)
+        multi_array.compute_rate()
+        assert_equal(multi_array.bg_rate.data.value.sum(), 0.27537506238749021)
+
 
