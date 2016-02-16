@@ -184,3 +184,41 @@ class EnergyOffsetArray(object):
         bin_volume = delta_energy * (solid_angle).to('sr')
 
         return bin_volume
+
+    """
+    def to_multi_Cube(self, Cube):
+        x=Cube.counts.coordx_edge[:-1]+Cube.counts.coordx_edge[1:]
+        y=Cube.counts.coordy_edge[:-1]+Cube.counts.coordy_edge[1:]
+
+        XX, YY = np.meshgrid(x, y)
+        dist=np.sqrt(XX**2 + YY**2)
+        EEE, Cube_dist= np.meshgrid(dist, self.energy.log_centers)
+        points=zip(EE, Cube_dist)
+        data=self.evaluate(EEE, Cube_dist)
+        return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data)
+
+    def acceptance_curve_at_energy(self, energy):
+        #Wa have to evaluate in the middle of the pffset bin right?
+        offsetbin=(self.offset[:-1]+self.offset[1:])/2
+        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
+        points=zip(energy,offsetbin)
+        acceptance=self.evaluate(points)
+        return acceptance
+
+    def acceptance_curve_in_energy_band(self, energyrange):
+        #Wa have to evaluate in the middle of the pffset bin right?
+
+        offsetbin=(self.offset[:-1]+self.offset[1:])/2
+        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
+        acceptance=np.zeros(len(offsetbin))
+
+        [Emin,Emax]=energyrange
+        energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, 10, energyrange.unit)
+        energybin=energy_edges.log_centers
+
+        for i_E,energy in energybin:
+            points=zip(energy,offsetbin)
+            acceptance =+ self.evaluate(points)*(solid_angle).to('sr')*energy_edges.bands[i_E].to('MeV')
+        resust
+        return acceptance
+    """
