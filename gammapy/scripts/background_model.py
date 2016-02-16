@@ -5,10 +5,13 @@ import logging
 import click
 import numpy as np
 from astropy.table import Table
+from astropy.coordinates import Angle
 from astropy.table import join as table_join
 from ..data import DataStore
 from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
 from ..background import CubeBackgroundModel
+from ..background import EnergyOffsetBackgroundModel
+from ..utils.energy import EnergyBounds
 from ..extern.pathlib import Path
 
 click.disable_unicode_literals_warning = True
@@ -177,13 +180,13 @@ def background_model(modeltype):
     """Make background models.
 
     """
+
     filename = config.obs_table_grouped_filename
     log.info('Reading {}'.format(filename))
     obs_table = ObservationTable.read(str(filename), format='ascii.ecsv')
 
     groups = sorted(np.unique(obs_table['GROUP_ID']))
     log.info('Groups: {}'.format(groups))
-
     for group in groups:
         # Get observations in the group
         idx = np.where(obs_table['GROUP_ID'] == group)[0]
@@ -191,17 +194,32 @@ def background_model(modeltype):
         log.info('Processing group {} with {} observations'.format(group, len(obs_table_group)))
 
         # Build the model
-        if(modeltype=="3D"):
+        if (modeltype == "3D"):
             model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
             model.fill_obs(obs_table_group, config.data_store)
             model.smooth()
             model.compute_rate()
 
-        # Store the model
-        filename = config.outdir / 'background_group_{:03d}_table.fits.gz'.format(group)
-        log.info('Writing {}'.format(filename))
-        model.write(str(filename), format='table', clobber=config.clobber)
+            # Store the model
+            filename = config.outdir / 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
+            log.info('Writing {}'.format(filename))
+            model.write(str(filename), format='table', clobber=config.clobber)
 
-        filename = config.outdir / 'background_group_{:03d}_image.fits.gz'.format(group)
-        log.info('Writing {}'.format(filename))
-        model.write(str(filename), format='image', clobber=config.clobber)
+            filename = config.outdir / 'background_{}_group_{:03d}_image.fits.gz'.format(modeltype, group)
+            log.info('Writing {}'.format(filename))
+            model.write(str(filename), format='image', clobber=config.clobber)
+
+
+        if (modeltype == "2D"):
+            ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+            offset = Angle(np.linspace(0, 2.5, 100), "deg")
+            model = EnergyOffsetBackgroundModel(ebounds, offset)
+            model.fill_obs(obs_table_group, config.data_store)
+            model.compute_rate()
+
+            # Store the model
+            filename = config.outdir / 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
+            log.info('Writing {}'.format(filename))
+            model.write(str(filename))
+
+
