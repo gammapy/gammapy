@@ -209,7 +209,6 @@ def background_model(modeltype):
             log.info('Writing {}'.format(filename))
             model.write(str(filename), format='image', clobber=config.clobber)
 
-
         if (modeltype == "2D"):
             ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
             offset = Angle(np.linspace(0, 2.5, 100), "deg")
@@ -221,5 +220,3 @@ def background_model(modeltype):
             filename = config.outdir / 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
             log.info('Writing {}'.format(filename))
             model.write(str(filename))
-
-

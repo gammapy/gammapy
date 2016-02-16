@@ -113,16 +113,15 @@ class EnergyOffsetArray(object):
         return cls.from_table(table, data_name)
 
     @classmethod
-    def from_table(cls, table, data_name= "data"):
+    def from_table(cls, table, data_name="data"):
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
-        data= Quantity(table[data_name].squeeze(), table[data_name].unit)
+        data = Quantity(table[data_name].squeeze(), table[data_name].unit)
         return cls(energy_edges, offset_edges, data)
 
-
-    def write(self, filename, data_name="data",**kwargs):
+    def write(self, filename, data_name="data", **kwargs):
         """ Write EnergyOffsetArray to FITS file"""
         self.to_table(data_name).write(filename, **kwargs)
 
@@ -142,7 +141,6 @@ class EnergyOffsetArray(object):
         table[data_name] = Quantity([self.data], unit=self.data.unit)
 
         return table
-
 
     def evaluate(self, energy, offset, interpolate_params):
         """
@@ -179,10 +177,10 @@ class EnergyOffsetArray(object):
 
         TODO: explain with formula and units
         """
-        delta_energy = self.energy[1:] - self.energy[:-1]
-        delta_off = np.pi*(self.offset[1:]**2 - self.offset[:-1]**2)
+        delta_energy = self.energy.bands
+        solid_angle = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
         # define grid of deltas (i.e. bin widths for each 3D bin)
-        delta_energy, delta_off = np.meshgrid(delta_energy, delta_off, indexing='ij')
-        bin_volume = delta_energy * (delta_off).to('sr')
+        delta_energy, solid_angle = np.meshgrid(delta_energy, solid_angle, indexing='ij')
+        bin_volume = delta_energy * (solid_angle).to('sr')
 
         return bin_volume

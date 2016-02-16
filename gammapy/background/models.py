@@ -458,6 +458,7 @@ class EnergyOffsetBackgroundModel(object):
         table['livetime'] = self.livetime.to_table()['data']
         table['bg_rate'] = self.bg_rate.to_table()['data']
         return table
+
     @classmethod
     def read(cls, filename):
         table = Table.read(filename)
