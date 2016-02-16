@@ -168,8 +168,11 @@ class EnergyOffsetArray(object):
         offset_bin = (self.offset.value[:-1] + self.offset.value[1:]) / 2.
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
-
-        return interpolator([energy.value, offset.value])
+        EE, OFF = np.meshgrid(energy.value, offset.value, indexing='ij')
+        shape = EE.shape
+        pix_coords = np.column_stack([EE.flat, OFF.flat])
+        data_interp = interpolator(pix_coords)
+        return data_interp.reshape(shape)
 
     @property
     def bin_volume(self):
