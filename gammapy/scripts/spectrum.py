@@ -33,7 +33,9 @@ def cli():
     Examples
     --------
     \b
-    TODO
+    gammapy-spectrum extract config.yaml
+    gammapy-spectrum fit config.yaml
+    gammapy-spectrum all config.yaml
     """
     pass
 

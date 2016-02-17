@@ -3,15 +3,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from astropy.tests.helper import pytest
-from numpy.testing import assert_allclose
 
-from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...datasets import gammapy_extra
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...spectrum.spectrum_fit import SpectrumFit
-from ...spectrum.results import SpectrumFitResult
-from ...utils.scripts import read_yaml
-from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
-from astropy.utils.compat import NUMPY_LT_1_9
+from ...utils.testing import requires_dependency, requires_data
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
