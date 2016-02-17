@@ -8,6 +8,7 @@ from astropy.io import fits
 from ..utils.fits import table_to_fits_table
 from ..utils.energy import EnergyBounds, Energy
 from .cube import _make_bin_edges_array
+from .cube import Cube
 
 __all__ = [
     'EnergyOffsetArray',
@@ -142,7 +143,8 @@ class EnergyOffsetArray(object):
 
         return table
 
-    def evaluate(self, energy=None, offset=None, interpolate_params=dict(method='nearest', bounds_error=False, fill_value=np.nan)):
+    def evaluate(self, energy=None, offset=None,
+                 interpolate_params=dict(method='nearest', bounds_error=False, fill_value=np.nan)):
         """
         Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
 
@@ -181,12 +183,12 @@ class EnergyOffsetArray(object):
 
     @property
     def offset_bin_center(self):
-        off=(self.offset[:-1] + self.offset[1:]) / 2.
+        off = (self.offset[:-1] + self.offset[1:]) / 2.
         return off
 
     @property
-    def solide_angle(self):
-        s=np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
+    def solid_angle(self):
+        s = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
         return s
 
     @property
@@ -196,13 +198,12 @@ class EnergyOffsetArray(object):
         TODO: explain with formula and units
         """
         delta_energy = self.energy.bands
-        solid_angle = self.solide_angle
+        solid_angle = self.solid_angle
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, solid_angle = np.meshgrid(delta_energy, solid_angle, indexing='ij')
         bin_volume = delta_energy * (solid_angle).to('sr')
 
         return bin_volume
-
 
     def curve_at_energy(self, energy):
         """
@@ -214,9 +215,9 @@ class EnergyOffsetArray(object):
         -------
 
         """
-        table=Table()
-        table["offset"]=self.offset_bin_center
-        table["1Dcurve"]=self.evaluate(energy, offset=None)
+        table = Table()
+        table["offset"] = self.offset_bin_center
+        table["1Dcurve"] = self.evaluate(energy, offset=None)
         return table
 
     def curve_at_offset(self, offset):
@@ -230,11 +231,10 @@ class EnergyOffsetArray(object):
         -------
 
         """
-        table=Table()
-        table["energy"]=self.energy.log_centers
-        table["1Dcurve"]=self.evaluate(None, offset)
+        table = Table()
+        table["energy"] = self.energy.log_centers
+        table["1Dcurve"] = self.evaluate(None, offset)
         return table
-
 
     def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10):
         """
@@ -246,44 +246,53 @@ class EnergyOffsetArray(object):
             Energy bin definition.
 
         """
-        [Emin,Emax]=energy_band
-        energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
-        energy_bins=energy_edges.log_centers
-        acceptance =+ self.evaluate(energy_bins, offset=None)
-        #Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
-        acceptance_tot = np.sum(acceptance.T*energy_edges.bands.to('MeV'),axis=1)
-        table=Table()
-        table["offset"]=self.offset_bin_center
-        table["Acceptance"]=acceptance_tot*self.solide_angle.to('sr')
+        [Emin, Emax] = energy_band
+        energy_edges = EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
+        energy_bins = energy_edges.log_centers
+        acceptance = + self.evaluate(energy_bins, offset=None)
+        # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
+        acceptance_tot = np.sum(acceptance.T * energy_edges.bands.to('MeV'), axis=1)
+        table = Table()
+        table["offset"] = self.offset_bin_center
+        table["Acceptance"] = acceptance_tot * self.solid_angle.to('sr')
         return table
 
-
-
-    def to_multi_Cube(self, Cube):
+    def to_multi_Cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None):
         """
 
         Parameters
         ----------
-        Cube: `~gammapy.background.models.CubeBackgroundModel`
+        Cube: `~gammapy.background.models.Cube`
 
         Returns
         -------
 
         """
-        #Later the CubeBackgroundModel will have as attributes the coordx, coory and energy and we will not have to call the counts_cube
-        coordx_center=(Cube.counts_cube.coordx_edges[:-1]+Cube.counts_cube.coordx_edges[1:])/2.
-        coordy_center=(Cube.counts_cube.coordy_edges[:-1]+Cube.counts_cube.coordy_edges[1:])/2.
+        if coordx_edges is None:
+            offmax = self.offset.max() / 2.
+            offmin = self.offset.min() / 2.
+            Nbin = 2 * len(self.offset)
+            coordx_edges = np.linspace(offmax, offmin, Nbin)
+        if coordy_edges is None:
+            offmax = self.offset.max() / 2.
+            offmin = self.offset.min() / 2.
+            Nbin = 2 * len(self.offset)
+            coordy_edges = np.linspace(offmax, offmin, Nbin)
+        if energy_edges is None:
+            energy_edges = self.energy
+
+        # Later the CubeBackgroundModel will have as attributes the coordx, coory and energy and we will not have to call the counts_cube
+        coordx_center = (coordx_edges[:-1] + coordx_edges[1:]) / 2.
+        coordy_center = (coordy_edges[:-1] + coordy_edges[1:]) / 2.
 
         xx, yy = np.meshgrid(coordx_center, coordy_center)
-        dist=np.sqrt(xx**2 + yy**2)
-        shape=np.shape(dist)
-        data=self.evaluate(self.energy.log_centers, dist.flat)
+        dist = np.sqrt(xx ** 2 + yy ** 2)
+        shape = np.shape(dist)
+        data = self.evaluate(energy_edges.log_centers, dist.flat)
 
-        data_reshape= np.zeros((len(Cube.counts_cube.energy_edges) - 1,
-                                    len(Cube.counts_cube.coordy_edges) - 1,
-                                    len(Cube.counts_cube.coordx_edges) - 1))
-        import IPython; IPython.embed()
-        for i in range(len(self.energy.log_centers)):
-            data_reshape[i,:,:]=np.reshape(data[i,:],shape)
-        return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data_reshape)
-
+        data_reshape = np.zeros((len(energy_edges) - 1,
+                                 len(coordy_edges) - 1,
+                                 len(coordx_edges) - 1))
+        for i in range(len(energy_edges.log_centers)):
+            data_reshape[i, :, :] = np.reshape(data[i, :], shape)
+        return Cube(coordx_edges, coordy_edges, energy_edges, data_reshape)

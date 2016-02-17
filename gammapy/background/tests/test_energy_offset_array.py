@@ -10,7 +10,7 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...utils.energy import EnergyBounds, Energy
 from ..energy_offset_array import EnergyOffsetArray
-from ...background import CubeBackgroundModel
+from ..cube import Cube
 from ...data import EventList
 
 
@@ -34,6 +34,18 @@ def make_test_array(dummy_data=False):
         return array, events.offset, events.energy
     else:
         return array
+
+def make_empty_Cube():
+    array=make_test_array()
+    offmax = array.offset.max() / 2.
+    offmin = array.offset.min() / 2.
+    Nbin = 2 * len(array.offset)
+    coordx_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin),"deg")
+    coordy_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin),"deg")
+    energy_edges = array.energy
+    empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
+    return empty_cube
+
 
 
 @requires_data('gammapy-extra')
@@ -104,8 +116,7 @@ def test_curve():
 
 def test_to_cube():
     array=test_energy_offset_array_fill()
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
-    data_store = DataStore.from_dir(dir)
-    obs_table=data_store.obs_table
-    Model = CubeBackgroundModel.define_cube_binning(obs_table, method='default')
-    array.to_multi_Cube(Model)
+    Cube= make_empty_Cube()
+    #energy bin differen from the enrgyoffsetarray just for the test
+    E=EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
+    array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
