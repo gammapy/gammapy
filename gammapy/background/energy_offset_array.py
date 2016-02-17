@@ -107,7 +107,7 @@ class EnergyOffsetArray(object):
         ----------
         filename : str
             File name
-        data_name: str
+        data_name : str
             name of the data column in the table
         """
         table = Table.read(filename)
@@ -120,7 +120,7 @@ class EnergyOffsetArray(object):
 
         Parameters
         ----------
-        table: `~astropy.table.Table`
+        table : `~astropy.table.Table`
         data_name: str
             name of the data column in the table
         """
@@ -138,7 +138,7 @@ class EnergyOffsetArray(object):
         ----------
         filename : str
             File name
-        data_name: str
+        data_name : str
             name of the data column in the table
         """
         self.to_table(data_name).write(filename, **kwargs)
@@ -148,7 +148,7 @@ class EnergyOffsetArray(object):
 
         Parameters
         ----------
-        data_name: str
+        data_name : str
             name of the data column in the table
 
         Returns
