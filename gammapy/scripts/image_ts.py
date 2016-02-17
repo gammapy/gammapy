@@ -37,9 +37,6 @@ def image_ts_main(args=None):
                              "using the '--model' parameter.")
     parser.add_argument('--model', type=str,
                         help='Input excess model FITS file name')
-    parser.add_argument('--threshold', type=float, default=None,
-                        help="Minimal required initial (before fitting) TS value,"
-                             " that the fit is done at all.")
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite output files.')
     parser.add_argument("-l", "--loglevel", default='info',
@@ -81,17 +78,14 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     results = compute_ts_map_multiscale(maps, psf_parameters, scales, downsample,
                                         residual, morphology, width)
 
-    # TODO: changed to `Path` ... untested!
-    folder, filename = Path(output_file).split()
-    Path(folder).mkdir(exist_ok=False)
-
+    
     # Write results to file
     header = maps[0].header
     if len(results) > 1:
         for scale, result in zip(scales, results):
             # TODO: this is unnecessarily complex
             # Simplify, e.g. by letting the user specify a `base_dir`.
-            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
+            filename_ = output_file.replace('.fits', '_{0:.3f}.fits'.format(scale))
             fn = Path(folder) / filename_
             log.info('Writing {}'.format(fn))
             result.write(str(fn), header, overwrite=overwrite)
