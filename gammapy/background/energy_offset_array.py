@@ -23,7 +23,7 @@ class EnergyOffsetArray(object):
          energy bin vector
     offset : `~astropy.coordinates.Angle`
         offset bin vector
-    data : `~numpy.ndarray`
+    data : `~numpy.ndarray`, optional
         data array (2D)
     """
 
@@ -34,6 +34,28 @@ class EnergyOffsetArray(object):
             self.data = Quantity(np.zeros((len(energy) - 1, len(offset) - 1)), data_units)
         else:
             self.data = Quantity(data, data_units)
+
+    @classmethod
+    def theta2_linspace(cls, energy, theta2_min, theta2_max, theta2_bin, data=None):
+        """
+        Define an `EnergyOffsetArray` with a square root offset binning
+        From a linsopace distribution in theta square you define a square root distribution in theta
+
+        Parameters
+        ----------
+        energy : `~gammapy.utils.energy.EnergyBounds`
+            energy bin vector
+        theta2_min: `~astropy.units.Quantity`, deg2
+        theta2_max: `~astropy.units.Quantity`, deg2
+        theta2_bin: int
+        data : `~numpy.ndarray`, optional
+        data array (2D)
+
+        """
+        theta2=Quantity(np.linspace(theta2_min.value, theta2_max.value, theta2_bin), theta2_min.unit)
+        theta=Angle(np.sqrt(theta2))
+        return cls(energy, theta, data)
+
 
     def fill_events(self, event_lists):
         """Fill events histogram.

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from astropy.table import Table
@@ -48,6 +49,16 @@ def make_empty_cube():
     empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
     return empty_cube
 
+def test_energy_offset_array_theta2_linspace():
+    ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+    theta2_min=Quantity(0, "deg2")
+    theta2_max=Quantity(2.5**2, "deg2")
+    theta2_bin=100
+    array = EnergyOffsetArray.theta2_linspace(ebounds, theta2_min, theta2_max, theta2_bin)
+    theta2=Quantity(np.linspace(theta2_min.value, theta2_max.value, theta2_bin), theta2_min.unit)
+    theta=Angle(np.sqrt(theta2))
+    assert_quantity_allclose(array.energy, ebounds)
+    assert_quantity_allclose(array.offset, theta)
 
 @requires_data('gammapy-extra')
 def test_energy_offset_array_fill():
