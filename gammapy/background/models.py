@@ -426,7 +426,7 @@ class CubeBackgroundModel(object):
             Data store
         """
         for obs in observation_table:
-            events = data_store.load(obs['OBS_ID'], 'events')
+            events = data_store.obs(obs_id=obs['OBS_ID']).events
 
             # TODO: filter out (mask) possible sources in the data
             #       for now, the observation table should not contain any
@@ -603,7 +603,7 @@ class EnergyOffsetBackgroundModel(object):
         bg_rate = Quantity(table['bkg'].squeeze(), table['bkg'].unit)
         return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
 
-    def fill_obs(self, observation_table, data_store, excluded_sources=None, fov_radius=Angle(2.5, "deg")):
+    def fill_obs(self, obs_ids, data_store, excluded_sources=None, fov_radius=Angle(2.5, "deg")):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -612,8 +612,8 @@ class EnergyOffsetBackgroundModel(object):
 
         Parameters
         ----------
-        observation_table : `~gammapy.data.ObservationTable`
-            Observation list to use for the histogramming.
+        obs_ids : list
+            List of observation IDs
         data_store : `~gammapy.data.DataStore`
             Data store
         excluded_sources : `~astropy.table.Table`
@@ -622,8 +622,9 @@ class EnergyOffsetBackgroundModel(object):
         fov_radius : `~astropy.coordinates.Angle`
             Field of view radius
         """
-        for obs in observation_table:
-            events = data_store.load(obs['OBS_ID'], 'events')
+        for obs_id in obs_ids:
+            obs = data_store.obs(obs_id=obs_id)
+            events = obs.events
 
             if excluded_sources:
                 pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
@@ -634,7 +635,7 @@ class EnergyOffsetBackgroundModel(object):
                 pie_fraction = 0
 
             self.counts.fill_events([events])
-            self.livetime.data += events.observation_live_time_duration * (1 - pie_fraction)
+            self.livetime.data += obs.observation_live_time_duration * (1 - pie_fraction)
 
     def compute_rate(self):
         """Compute background rate cube from count_cube and livetime_cube.

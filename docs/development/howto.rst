@@ -604,7 +604,7 @@ As an example see `gammapy.data.EventList.radec`, which is reproduced here:
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
         """
         lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
 
 Class attributes

@@ -14,14 +14,14 @@ def test_EnergyDependentMultiGaussPSF():
     info_str = open(filename, 'r').read()
 
     filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
-    psf = EnergyDependentMultiGaussPSF.read(filename)
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
     assert psf.info() == info_str
 
 
 @requires_data('gammapy-extra')
 def test_EnergyDependentMultiGaussPSF_write(tmpdir):
     filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
-    psf = EnergyDependentMultiGaussPSF.read(filename)
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
 
     # Write it back to disk
     filename = str(tmpdir / 'multigauss_psf_test.fits')

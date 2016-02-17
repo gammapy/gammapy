@@ -266,7 +266,7 @@ class SpectrumExtraction(object):
         e = config['extraction']
         e.update(data=dict())
         e['data']['obstable'] = self.OBSTABLE_FILE
-        e['data']['datastore'] = str(self.store.base_dir)
+        e['data']['datastore'] = str(self.store.hdu_table.base_dir)
         e['data']['nruns'] = len(self.obs_table)
 
         e.update(binning=dict())
@@ -482,7 +482,7 @@ class SpectrumObservation(object):
         obs_id = obs['OBS_ID']
 
         if event_list is None:
-            event_list = store.load(obs_id=obs_id, filetype='events')
+            event_list = store.obs(obs_id=obs_id).events
 
         on = None
         off = None
@@ -491,11 +491,12 @@ class SpectrumObservation(object):
 
         pointing = event_list.pointing_radec
         offset = pointing.separation(on_region.pos)
-        livetime = event_list.observation_live_time_duration
+        livetime = store.obs(obs_id=obs_id).observation_live_time_duration
 
         if calc_containment:
-            psf2d = store.load(obs_id=obs_id, filetype='psf')
+            psf2d = store.obs(obs_id=obs_id).psf
             val = Energy('10 TeV')
+            # TODO: error: unresolved reference: `m` on the next lines
             psf = psf2d.psf_at_energy_and_theta(val, m.offset)
             cont = psf.containment_fraction(m.on_region.radius)
 
@@ -528,12 +529,12 @@ class SpectrumObservation(object):
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
 
-        aeff2d = store.load(obs_id=obs_id, filetype='aeff')
+        aeff2d = store.obs(obs_id=obs_id).aeff
         arf_vec = aeff2d.to_effective_area_table(offset)
         elo, ehi = arf_vec.energy_thresh_lo, arf_vec.energy_thresh_hi
         m['safe_energy_range'] = EnergyBounds([elo, ehi])
 
-        edisp2d = store.load(obs_id=obs_id, filetype='edisp')
+        edisp2d = store.obs(obs_id=obs_id).edisp
         rmf_mat = edisp2d.to_energy_dispersion(offset, e_reco=ebounds)
 
         # Todo: Define what metadata is stored where (obs table?)

@@ -154,11 +154,13 @@ class OffDataBackgroundMaker(object):
             # Get observations in the group
             idx = np.where(self.obs_table['GROUP_ID'] == group)[0]
             obs_table_group = self.obs_table[idx]
+            obs_ids = list(obs_table_group['OBS_ID'])
             log.info('Processing group {} with {} observations'.format(group, len(obs_table_group)))
 
             # Build the model
             if modeltype == "3D":
                 model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
+                # TODO: should adapt to pass `obs_ids` here like for 2D below
                 model.fill_obs(obs_table_group, self.data_store)
                 model.smooth()
                 model.compute_rate()
@@ -167,8 +169,8 @@ class OffDataBackgroundMaker(object):
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
-                model = EnergyOffsetBackgroundModel(ebounds, offset)
-                model.fill_obs(obs_table_group, self.data_store, self.excluded_sources)
+                model = EnergyOffsetBackgroundModel(energy=ebounds, offset=offset)
+                model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
                 self.models2D.append(model)
             else:

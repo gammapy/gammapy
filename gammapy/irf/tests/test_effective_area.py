@@ -7,7 +7,6 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
-from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_equal
 
 from ...datasets import gammapy_extra
@@ -21,7 +20,7 @@ from ...utils.testing import requires_dependency, requires_data, data_manager
 def test_EffectivateAreaTable2D(data_manager):
     # Check that nodes are evaluated correctly
     store = data_manager['hess-crab4-hd-hap-prod2']
-    aeff = store.load(23523, filetype='aeff')
+    aeff = store.obs(obs_id=23523).aeff
 
     e_node = 43
     off_node = 3
@@ -116,7 +115,7 @@ def test_EffectivateAreaTable2D(data_manager):
 def test_EffectiveAreaTable(tmpdir, data_manager):
 
     store = data_manager['hess-crab4-hd-hap-prod2']
-    aeff = store.load(23523, filetype='aeff')
+    aeff = store.obs(obs_id=23523).aeff
     arf = aeff.to_effective_area_table('0.3 deg')
 
     assert (arf.evaluate() == arf.effective_area).all() == True
