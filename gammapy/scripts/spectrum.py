@@ -1,11 +1,13 @@
 import logging
+
 import click
+
 click.disable_unicode_literals_warning = True
-from ..spectrum import run_spectrum_extraction_using_config
+from ..spectrum import SpectrumExtraction
+from ..spectrum.spectrum_fit import SpectrumFit
 from ..spectrum.results import SpectrumResult, SpectrumFitResult
 from ..spectrum.results import SpectrumResultDict
-from ..spectrum.spectrum_fit import run_spectrum_fit_using_config
-from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config, SpectrumPipe
+from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from ..utils.scripts import read_yaml
 
 __all__ = [
@@ -35,13 +37,17 @@ def cli():
 
 
 @cli.command('extract')
-@click.option('--interactive', is_flag=True, default=False)
-@click.option('--dry-run', is_flag=True, default=False)
+@click.option('--interactive', is_flag=True, default=False, help='Open IPython session at the end')
+@click.option('--dry-run', is_flag=True, default=False, help='Do no extract spectrum')
 @click.argument('configfile')
 def extract_spectrum(configfile, interactive, dry_run):
     """Extract 1D spectral information from event list and 2D IRFs"""
-    config = read_yaml(configfile)
-    analysis = run_spectrum_extraction_using_config(config, dry_run=dry_run)
+    analysis = SpectrumExtraction.from_configfile(configfile)
+    if dry_run:
+        return analysis
+    else:
+        analysis.run()
+
     if interactive:
         import IPython;
         IPython.embed()
@@ -53,31 +59,21 @@ def extract_spectrum(configfile, interactive, dry_run):
 def fit_spectrum(configfile, interactive):
     """Fit spectral model to 1D spectrum"""
     config = read_yaml(configfile)
-    fit = run_spectrum_fit_using_config(config)
+    fit = SpectrumFit.from_config(config)
+    fit.run()
     if interactive:
         import IPython;
         IPython.embed()
 
 
 @cli.command('all')
-@click.option('--interactive', is_flag=True, default=False)
 @click.argument('configfile')
-def all_spectrum(configfile, interactive):
+@click.pass_context
+def all_spectrum(ctx, configfile):
     """Fit spectral model to 1D spectrum"""
-    config = read_yaml(configfile)
-    fit, analysis = run_spectrum_analysis_using_config(config)
-    if interactive:
-        import IPython;
-        IPython.embed()
+    ctx.invoke(extract_spectrum, configfile=configfile)
+    ctx.invoke(fit_spectrum, configfile=configfile)
 
-
-@cli.command('pipe')
-@click.argument('configfile')
-def spectrum_pipe(configfile):
-    """Run spectrum analysis pipeline"""
-    pipe = SpectrumPipe.from_configfile(configfile)
-    pipe.write_configs()
-    pipe.run()
 
 @cli.command('display')
 @click.argument('files', nargs=-1, required=True)

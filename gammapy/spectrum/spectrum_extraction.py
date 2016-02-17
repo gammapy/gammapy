@@ -25,7 +25,7 @@ from ..utils.scripts import (
 __all__ = [
     'SpectrumExtraction',
     'SpectrumObservation',
-    'run_spectrum_extraction_using_config',
+    'SpectrumObservationList',
 ]
 
 log = logging.getLogger(__name__)
@@ -79,6 +79,27 @@ class SpectrumExtraction(object):
         self.obs_ids = obs_ids
 
         self._observations = None
+
+    def run(self):
+        """Run all steps
+
+        Extract spectrum, filter observations, write results to disk.
+        """
+        self.extract_spectrum()
+        if self.bkg_method['type'] == 'reflected':
+            self.filter_observations()
+
+        o = self.observations
+        o.write_ogip_data('ogip_data')
+        o.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
+        o.to_observation_table().write('observation_table.fits', format='fits',
+                                       overwrite=True)
+
+    def filter_observations(self):
+        """Filter observations by number of reflected regions"""
+        obs = self.observations
+        mask = obs.filter_by_reflected_regions(self.bkg_method['n_min'])
+        self._observations = SpectrumObservationList(np.asarray(obs)[mask])
 
     def extract_spectrum(self, nobs=None):
         """Extract 1D spectral information
@@ -152,6 +173,7 @@ class SpectrumExtraction(object):
         configfile : dict
             config dict
         """
+        config = config['extraction']
 
         # Observations
         obs = config['data']['runlist']
@@ -695,57 +717,5 @@ class BackgroundEstimator(object):
         off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
         self.backscal = 1
         self.off_vec = off_vec
-
-
-def run_spectrum_extraction_using_config(config, **kwargs):
-    """
-    Run a 1D spectral analysis using a config dict
-
-    kwargs are forwarded to
-     :func:`spectrum.spectrum_extraction.SpectrumObservation.from_config`
-
-    Parameters
-    ----------
-    config : dict
-        Config dict
-
-    Returns
-    -------
-    analysis : `~gammapy.spectrum.spectrum_extraction.SpectrumExtraction`
-        Spectrum extraction analysis instance
-    """
-    kwargs.setdefault('dry_run', False)
-    config = config['extraction']
-    outdir = config['results']['outdir']
-    log.info("\nStarting analysis {}".format(outdir))
-    outdir = make_path(outdir)
-    outdir.mkdir(exist_ok=True, parents=True)
-    analysis = SpectrumExtraction.from_config(config, **kwargs)
-    obs = analysis.observations
-    
-    if kwargs['dry_run']:
-        return analysis
-
-    if config['off_region']['type'] == 'reflected':
-        mask = obs.filter_by_reflected_regions(config['off_region']['n_min'])
-        # Todo: should ObservationList subclass np.array to avoid this hack?
-        temp = np.asarray(obs)[mask]
-        obs = SpectrumObservationList(temp)
-
-    obs_in_erange = SpectrumObservationList(
-        [o.restrict_energy_range(method='binned') for o in obs])
-
-    # Output
-    if config['results']['write_ogip']:
-        obs.write_ogip_data(str(outdir / 'ogip_data'))
-
-    rfile = outdir / config['results']['result_file']
-    obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
-    log.info('\nWriting file {}'.format(rfile))
-    obs.to_observation_table().write(
-        str(outdir / 'observations.fits'), format='fits', overwrite=True)
-
-    return analysis
-
 
 

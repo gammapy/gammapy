@@ -60,6 +60,20 @@ class SpectrumFit(object):
             obs_list.append(val)
         return cls(obs_list)
 
+    @classmethod
+    def from_config(cls, config):
+        """Create `~gammapy.spectrum.SpectrumFit` using a config dict
+
+        The spectrum extraction step has to have run before
+        """
+        config = config['fit']
+        table_file = 'observation_table.fits'
+        obs_table = ObservationTable.read(table_file)
+        fit = SpectrumFit.from_observation_table(obs_table)
+        fit.model = config['model']
+        fit.set_default_thresholds()
+        return fit
+
     @property
     def on_vector(self):
         """`~gammapy.spectrum.CountsSpectrum` of all on vectors"""
@@ -230,6 +244,9 @@ class SpectrumFit(object):
         else:
             raise ValueError('Undefined fitting method')
 
+        modelname = self.result.spectral_model
+        self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
+
     def _run_hspec_fit(self):
         """Run the gammapy.hspec fit
         """
@@ -295,36 +312,3 @@ class SpectrumFit(object):
         ds.clear_models()
 
 
-def run_spectrum_fit_using_config(config):
-    """
-    Run a 1D spectral analysis using a config dict
-
-    Parameters
-    ----------
-    config : dict
-        Config dict
-
-    Returns
-    -------
-    fit : `~gammapy.spectrum.spectrum_fit.SpectrumFit`
-        Spectrum fit instance
-    """
-
-    config = config['fit']
-    table_file = config['observation_table']
-    obs_table = ObservationTable.read(table_file)
-    fit = SpectrumFit.from_observation_table(obs_table)
-    fit.model = config['model']
-    lo = config['threshold_low']
-    hi = config['threshold_high']
-    if lo == 'default' or hi == 'default':
-        fit.set_default_thresholds()
-    else:
-        fit.energy_threshold_low = lo
-        fit.energy_threshold_high = hi
-    fit.run(method=config['method'])
-    log.info("\n\n*** Fit Result ***\n\n{}\n\n\n".format(fit.result.to_table()))
-    outdir = make_path(config['outdir'])
-    fit.result.to_yaml(str(outdir / config['result_file']))
-
-    return fit
