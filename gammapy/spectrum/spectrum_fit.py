@@ -94,6 +94,12 @@ class SpectrumFit(object):
                 model.gamma = 2
                 model.ref = 1e9
                 model.ampl = 1e-20
+            elif model == 'LOGPAR' or model == 'LogParabola':
+                model = sherpa.models.LogParabola('logparabola.' + name)
+                model.c1 = 2
+                model.c2 = 0
+                model.ref = 1e9
+                model.ampl = 1e-20
             else:
                 raise ValueError("Undefined model string: {}".format(model))
 
@@ -202,8 +208,8 @@ class SpectrumFit(object):
 
     def set_default_thresholds(self):
         """Set energy threshold to the value in the PHA headers"""
-        lo_thres = [o.meta.energy_range[0] for o in self.obs_list]
-        hi_thres = [o.meta.energy_range[1] for o in self.obs_list]
+        lo_thres = [o.meta.safe_energy_range[0] for o in self.obs_list]
+        hi_thres = [o.meta.safe_energy_range[1] for o in self.obs_list]
         self.energy_threshold_low = lo_thres
         self.energy_threshold_high = hi_thres
 

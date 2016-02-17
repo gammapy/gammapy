@@ -4,7 +4,8 @@ from __future__ import (print_function)
 import numpy as np
 from astropy import log
 
-from gammapy.extern.bunch import Bunch
+from ..extern.bunch import Bunch
+from ..utils.array import array_stats_str
 from ..utils.scripts import make_path
 from ..utils.energy import Energy, EnergyBounds
 import datetime
@@ -61,6 +62,18 @@ class CountsSpectrum(object):
         """
         return self.counts.sum()
 
+    def info(self):
+        """Info string
+        """
+        ss = "\nSummary CountsSpectrum info\n"
+        ss += "----------------\n"
+        # Summarise data members
+        ss += array_stats_str(self.counts, 'counts')
+        ss += array_stats_str(self.energy_bounds.to('TeV'), 'energy')
+        ss += 'Total Counts: {}'.format(self.total_counts)
+
+        return ss
+
     def __add__(self, other):
         """Add two counts spectra and returns new instance
 
@@ -97,8 +110,9 @@ class CountsSpectrum(object):
         phafile = make_path(phafile)
         spectrum = fits.open(str(phafile))['SPECTRUM']
         counts = [val[1] for val in spectrum.data]
+        header = spectrum.header
         if rmffile is None:
-            val = spectrum.header['RESPFILE']
+            val = header['RESPFILE']
             if val == '':
                 raise ValueError('RMF file not set in PHA header. '
                                  'Please provide RMF file for energy binning')
@@ -111,7 +125,10 @@ class CountsSpectrum(object):
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
-        m = dict(spectrum.header)
+        m = dict(header)
+        if 'LO_THRES' in header.keys():
+            rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
+            m.update(safe_energy_range=rng)
         return cls(counts, bins, meta=m)
 
     @classmethod
@@ -139,7 +156,7 @@ class CountsSpectrum(object):
         energy = Energy(event_list.energy).to(bins.unit)
         val, dummy = np.histogram(energy, bins.value)
         livetime = event_list.observation_live_time_duration
-        meta = dict(livetime = livetime)
+        meta = dict(livetime=livetime)
 
         return cls(val, bins)
 
@@ -248,15 +265,15 @@ class CountsSpectrum(object):
             header['RA-OBJ'] = self.meta.on_region.pos.icrs.ra.value, 'Right ascension of the target'
             header['DEC-OBJ'] = self.meta.on_region.pos.icrs.dec.value , 'Declination of the target'
             header['ON-RAD'] = self.meta.on_region.radius.to('deg').value, 'Radius of the circular spectral extraction region'
-        if 'energy_range' in val:
-            header['HI_THRES'] = self.meta.energy_range[1].to('TeV').value
-            header['LO_THRES'] = self.meta.energy_range[0].to('TeV').value
+        if 'safe_energy_range' in val:
+            header['HI_THRES'] = self.meta.safe_energy_range[1].to('TeV').value, 'Low energy threshold [TeV] for spectral fit'
+            header['LO_THRES'] = self.meta.safe_energy_range[0].to('TeV').value, 'High energy threshold [TeV] for spectral fit'
         if 'psf_containment' in val:
             header['PSF_CONT'] = self.meta.psf_containment
 
         return hdu
 
-    def plot(self, ax=None, filename=None, weight=1, **kwargs):
+    def plot(self, ax=None, weight=1, energy_unit='TeV', **kwargs):
         """
         Plot counts vector
 
@@ -266,8 +283,6 @@ class CountsSpectrum(object):
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
-        filename : str (optional)
-            File to save the plot to
         weight : float
             Weighting factor for the counts
 
@@ -280,12 +295,17 @@ class CountsSpectrum(object):
 
         ax = plt.gca() if ax is None else ax
         w = self.counts * weight
-        plt.hist(self.energy_bounds.log_centers, bins=self.energy_bounds,
-                 weights=w, **kwargs)
-        plt.xlabel('Energy [{0}]'.format(self.energy_bounds.unit))
+        e = self.energy_bounds.to(energy_unit)
+        plt.hist(e.log_centers, bins=e, weights=w, **kwargs)
+        plt.xlabel('Energy [{0}]'.format(energy_unit))
         plt.ylabel('Counts')
-        if filename is not None:
-            plt.savefig(filename)
-            log.info('Wrote {0}'.format(filename))
 
         return ax
+
+    def peek(self, figsize=(5, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        ax = plt.figure(figsize=figsize)
+        self.plot(ax=ax)
+        plt.xscale('log')
+        plt.show()

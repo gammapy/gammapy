@@ -103,6 +103,7 @@ class SpectrumExtraction(object):
                     'Observation {} not in store {}'.format(val, self.store))
                 nobs += 1
                 continue
+                
             observations.append(temp)
             if i == nobs - 1:
                 break
@@ -229,7 +230,6 @@ class SpectrumObservation(object):
 
         # These values are needed for I/O
         self.meta.setdefault('phafile', 'None')
-        self.meta.setdefault('energy_range', EnergyBounds([0.01, 300], 'TeV'))
 
     @classmethod
     def read_ogip(cls, phafile, rmffile=None, bkgfile=None, arffile=None):
@@ -244,13 +244,13 @@ class SpectrumObservation(object):
         on_vector = CountsSpectrum.read(f)
 
         # Todo : read in IRF files
-
-        meta = dict(phafile=phafile)
+        meta = on_vector.meta
+        meta.update(phafile=phafile)
         return cls(0, on_vector, None, None, None, meta)
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True, dry_run=False, calc_containment=False):
+                       exclusion, save_meta=True, dry_run=False, calc_containment=True):
         """ Create Spectrum Observation from datastore
 
         Extraction parameters are stored in the meta attribute
@@ -315,16 +315,18 @@ class SpectrumObservation(object):
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
 
-        # Todo: Agree where to store all meta info
-        on_vec.meta.update(m)
-
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(m.offset)
+        elo, ehi = arf_vec.energy_thresh_lo, arf_vec.energy_thresh_hi
+        m['safe_energy_range'] = EnergyBounds([elo, ehi])
 
         edisp2d = store.load(obs_id=obs_id, filetype='edisp')
         rmf_mat = edisp2d.to_energy_dispersion(m.offset, e_reco=ebounds)
 
         m = None if not save_meta else m
+
+        # Todo: Agree where to store all meta info
+        on_vec.meta.update(m)
 
         return cls(obs_id, on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
@@ -364,9 +366,9 @@ class SpectrumObservation(object):
         alpha = num/den
         off_vec.meta.backscal = 1. / alpha
 
-        #Calculate energy range
-        emin = min([_.meta.energy_range[0] for _ in obs_list])
-        emax = max([_.meta.energy_range[1] for _ in obs_list])
+        #Calculate safe energy range
+        emin = min([_.meta.safe_energy_range[0] for _ in obs_list])
+        emax = max([_.meta.safe_energy_range[1] for _ in obs_list])
 
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
@@ -720,6 +722,7 @@ def run_spectrum_extraction_using_config(config, **kwargs):
     outdir.mkdir(exist_ok=True, parents=True)
     analysis = SpectrumExtraction.from_config(config, **kwargs)
     obs = analysis.observations
+    
     if kwargs['dry_run']:
         return analysis
 
@@ -738,7 +741,6 @@ def run_spectrum_extraction_using_config(config, **kwargs):
 
     rfile = outdir / config['results']['result_file']
     obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
-    obs_in_erange.total_spectrum.spectrum_stats.to_yaml('test.yaml')
     log.info('\nWriting file {}'.format(rfile))
     obs.to_observation_table().write(
         str(outdir / 'observations.fits'), format='fits', overwrite=True)

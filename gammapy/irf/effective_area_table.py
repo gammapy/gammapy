@@ -232,9 +232,13 @@ class EffectiveAreaTable(object):
         Recommended units for ARF tables are keV and cm^2,
         but TeV and m^2 are chosen here as the more natural units for IACTs.
         """
-        energy_lo = Quantity(hdu_list['SPECRESP'].data['ENERG_LO'], 'TeV')
-        energy_hi = Quantity(hdu_list['SPECRESP'].data['ENERG_HI'], 'TeV')
-        effective_area = Quantity(hdu_list['SPECRESP'].data['SPECRESP'], 'm^2')
+        spec = hdu_list['SPECRESP']
+        e_unit = spec.header['TUNIT1']
+        a_unit = spec.header['TUNIT3']
+
+        energy_lo = Quantity(spec.data['ENERG_LO'], e_unit)
+        energy_hi = Quantity(spec.data['ENERG_HI'], e_unit)
+        effective_area = Quantity(hdu_list['SPECRESP'].data['SPECRESP'], a_unit)
         try:
             energy_thresh_lo = Quantity(
                 hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
@@ -283,7 +287,7 @@ class EffectiveAreaTable(object):
 
         return ss
 
-    def plot_area_vs_energy(self, ax=None, show_safe_energy=True):
+    def plot_area_vs_energy(self, ax=None, show_safe_energy=False, **kwargs):
         """
         Plot effective area vs. energy.
         """
@@ -292,7 +296,8 @@ class EffectiveAreaTable(object):
 
         energy_hi = self.energy_hi.value
         effective_area = self.effective_area.value
-        ax.plot(energy_hi, effective_area)
+
+        ax.plot(energy_hi, effective_area, **kwargs)
         if show_safe_energy:
             ax.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
             text = 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi)
@@ -300,11 +305,12 @@ class EffectiveAreaTable(object):
             ax.vlines(self.energy_thresh_lo.value, 1E3, 1E7, 'k', linestyles='--')
             text = 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_lo)
             ax.text(self.energy_thresh_lo.value + 0.1, 3E3, text)
-        ax.set_xlim(0.1, 100)
-        ax.set_ylim(1E3, 1E7)
+
+        ax.set_xscale('log')
         ax.set_xlabel('Energy (TeV)')
         ax.set_ylabel('Effective Area (m2)')
-        ax.loglog()
+
+        return ax
 
 
 class EffectiveAreaTable2D(object):
