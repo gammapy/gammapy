@@ -41,9 +41,9 @@ def make_empty_cube():
     array = make_test_array()
     offmax = array.offset.max() / 2.
     offmin = array.offset.min()
-    Nbin = 2 * len(array.offset)
-    coordx_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
-    coordy_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
+    bins = 2 * len(array.offset)
+    coordx_edges = Angle(np.linspace(offmax.value, offmin.value, bins), "deg")
+    coordy_edges = Angle(np.linspace(offmax.value, offmin.value, bins), "deg")
     energy_edges = array.energy
     empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
     return empty_cube
@@ -139,16 +139,16 @@ def test_acceptance_curve_in_energy_band():
     """
     array, offset, energy = make_test_array(True)
     energ_range = Energy([0.1, 100], 'TeV')
-    Nbin = 100
+    bins = 100
     interpol_param = dict(method='nearest', bounds_error=False)
-    table_energy = array.acceptance_curve_in_energy_band(energ_range, Nbin, interpol_param)
+    table_energy = array.acceptance_curve_in_energy_band(energ_range, bins, interpol_param)
     assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
     assert_quantity_allclose(table_energy["Acceptance"][23] * table_energy["Acceptance"].unit,
-                             1 * array.solid_angle[23].to('sr') * array.energy.bands[2].to('MeV'))
+                             1 * array.energy.bands[2].to('MeV'))
     assert_quantity_allclose(table_energy["Acceptance"][59] * table_energy["Acceptance"].unit,
-                             1 * array.solid_angle[59].to('sr') * array.energy.bands[78].to('MeV'))
+                             1 * array.energy.bands[78].to('MeV'))
     assert_quantity_allclose(table_energy["Acceptance"][79] * table_energy["Acceptance"].unit,
-                             1 * array.solid_angle[79].to('sr') * array.energy.bands[91].to('MeV'))
+                             1 * array.energy.bands[91].to('MeV'))
 
 
 def test_to_cube():

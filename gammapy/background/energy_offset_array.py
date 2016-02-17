@@ -268,7 +268,8 @@ class EnergyOffsetArray(object):
         return table
 
     def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10, interp_kwargs=None):
-        """
+        """Compute acceptance curve in energy band.
+
         Evaluate the `EnergyOffsetArray` at different energies in the energy_band.
         Then integrate them in order to get the total acceptance curve
 
@@ -293,12 +294,11 @@ class EnergyOffsetArray(object):
         acceptance_tot = np.sum(acceptance.T * energy_edges.bands.to('MeV'), axis=1)
         table = Table()
         table["offset"] = self.offset_bin_center
-        table["Acceptance"] = acceptance_tot * self.solid_angle
+        table["Acceptance"] = acceptance_tot
         return table
 
     def to_cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
-        """
-        Transform the `EnergyOffsetArray` into a `Cube`
+        """Transform the `EnergyOffsetArray` into a `Cube`.
 
         Parameters
         ----------
