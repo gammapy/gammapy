@@ -381,7 +381,7 @@ class SpectrumObservation(object):
         arf = None
         rmf = None
 
-        # Calculate average alpha
+        # Calculate average alpha (remove?)
         val = [o.alpha * o.off_vector.total_counts for o in obs_list]
         num = np.sum(val)
         den = np.sum([o.off_vector.total_counts for o in obs_list])
@@ -635,10 +635,11 @@ class SpectrumObservationList(list):
 
     def to_observation_table(self):
         """Create `~gammapy.data.ObservationTable"""
-        names = ['OBS_ID', 'PHAFILE']
+        names = ['OBS_ID', 'PHAFILE', 'OFFSET']
         col1 = [o.obs_id for o in self]
         col2 = [o.meta.phafile for o in self]
-        return ObservationTable(data=[col1, col2], names=names)
+        col3 = [o.meta.offset.value for o in self]
+        return ObservationTable(data=[col1, col2, col3], names=names)
 
 
 class BackgroundEstimator(object):
