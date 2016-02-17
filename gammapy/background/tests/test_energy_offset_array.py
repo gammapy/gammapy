@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
+import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from astropy.table import Table
@@ -139,6 +140,29 @@ def test_acceptance_curve_in_energy_band():
     assert_quantity_allclose(table_energy["Acceptance"][23]*table_energy["Acceptance"].unit, 1*array.solid_angle[23].to('sr')*array.energy.bands[2].to('MeV'))
     assert_quantity_allclose(table_energy["Acceptance"][59]*table_energy["Acceptance"].unit, 1*array.solid_angle[59].to('sr')*array.energy.bands[78].to('MeV'))
     assert_quantity_allclose(table_energy["Acceptance"][79]*table_energy["Acceptance"].unit, 1*array.solid_angle[79].to('sr')*array.energy.bands[91].to('MeV'))
+
+def test_to_cube():
+    array, offset, energy = make_test_array(True)
+    bin_E = np.array([2, 78, 91])
+    bin_off = np.array([23, 59, 79])
+    Cube = make_empty_Cube()
+    # energy bin differen from the enrgyoffsetarray just for the test
+    E = EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
+    array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
+
+def test_to_cube():
+    array, offset, energy = make_test_array(True)
+    bin_E = np.array([2, 78, 91])
+    bin_off = np.array([23, 59, 79])
+    Cube = make_empty_Cube()
+    interpol_param = dict(method='nearest', bounds_error=False)
+    CubeModel=array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, Cube.energy_edges, interpol_param)
+    i=np.where(CubeModel.data[2,:,:]==1)
+    x=Cube.coordx_edges
+    y=Cube.coordy_edges
+    XX,YY=np.meshgrid(x,y)
+    dist=np.sqrt(XX**2+YY**2)
+    assert_quantity_allclose(dist[i],0.6*u.deg, atol=0.1*u.deg)
 
 
 

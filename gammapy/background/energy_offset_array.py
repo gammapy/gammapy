@@ -264,7 +264,7 @@ class EnergyOffsetArray(object):
         table["Acceptance"] = acceptance_tot * self.solid_angle.to('sr')
         return table
 
-    def to_multi_Cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None):
+    def to_multi_Cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
         """
 
         Parameters
@@ -295,7 +295,7 @@ class EnergyOffsetArray(object):
         xx, yy = np.meshgrid(coordx_center, coordy_center)
         dist = np.sqrt(xx ** 2 + yy ** 2)
         shape = np.shape(dist)
-        data = self.evaluate(energy_edges.log_centers, dist.flat)
+        data = self.evaluate(energy_edges.log_centers, dist.flat, interp_kwargs)
 
         data_reshape = np.zeros((len(energy_edges) - 1,
                                  len(coordy_edges) - 1,
