@@ -70,7 +70,7 @@ def test_energy_offset_array_fill_evaluate():
     assert_equal(bin_E, ind[0])
     assert_equal(bin_off, ind[1])
     # Test the evaluate method
-    interpol_param = dict(method='nearest', fill_value=None)
+    interpol_param = dict(method='nearest', bounds_error=False)
     for off, E in zip(offset, energy):
         res = array.evaluate(E, off, interpol_param)
         res_GeV = array.evaluate(E.to('GeV'), off, interpol_param)
@@ -104,11 +104,28 @@ def test_energy_offset_array_bin_volume(tmpdir):
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
-"""
+
 def test_evaluate_at_energy():
     array, offset, energy = make_test_array(True)
+    e_eval = energy[0]
+    bin_E = np.array([2, 78, 91])
+    bin_off = np.array([23, 59, 79])
+    interpol_param = dict(method='nearest', bounds_error=False)
+    table_energy = array.evaluate_at_energy(e_eval, interpol_param)
+    assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
+    assert_equal(table_energy["value"][23], 1)
 
+def test_evaluate_at_offset():
+    array, offset, energy = make_test_array(True)
+    off_eval = offset[0]
+    bin_E = np.array([2, 78, 91])
+    bin_off = np.array([23, 59, 79])
+    interpol_param = dict(method='nearest', bounds_error=False)
+    table_energy = array.evaluate_at_offset(off_eval, interpol_param)
+    assert_quantity_allclose(table_energy["energy"], array.energy.log_centers)
+    assert_equal(table_energy["value"][2], 1)
 
+"""
 def test_curve():
     array = test_energy_offset_array_fill()
     energy = Energy(4, 'TeV')

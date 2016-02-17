@@ -144,7 +144,7 @@ class EnergyOffsetArray(object):
         return table
 
     def evaluate(self, energy=None, offset=None,
-                 interpolate_params=dict(method='nearest', bounds_error=False, fill_value=np.nan)):
+                 interp_kwargs=None):
         """
         Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
 
@@ -161,6 +161,9 @@ class EnergyOffsetArray(object):
         -------
         Interpolated value
         """
+        if not interp_kwargs:
+            interp_kwargs=dict(bounds_error=False)
+
         from scipy.interpolate import RegularGridInterpolator
         if energy is None:
             energy = self.energy.log_centers
@@ -173,7 +176,7 @@ class EnergyOffsetArray(object):
         energy_bin = self.energy.log_centers
         offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
-        interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
+        interpolator = RegularGridInterpolator(points, self.data.value, **interp_kwargs)
         EE, OFF = np.meshgrid(energy.value, offset.value, indexing='ij')
         shape = EE.shape
         pix_coords = np.column_stack([EE.flat, OFF.flat])
@@ -205,24 +208,27 @@ class EnergyOffsetArray(object):
 
         return bin_volume
 
-    def curve_at_energy(self, energy):
+    def evaluate_at_energy(self, energy, interp_kwargs=None):
         """
+        Evaluate the `EnergyOffsetArray` at one given energy
+
         Parameters
         ----------
-        energy: `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`
 
         Returns
         -------
 
         """
+
         table = Table()
         table["offset"] = self.offset_bin_center
-        table["1Dcurve"] = self.evaluate(energy, offset=None)
+        table["value"] = self.evaluate(energy, None, interp_kwargs)[0,:]
         return table
 
-    def curve_at_offset(self, offset):
+    def evaluate_at_offset(self, offset, interp_kwargs=None):
         """
-
+        Evaluate the `EnergyOffsetArray` at one given offset
         Parameters
         ----------
         offset: `~astropy.coordinates.Angle`
@@ -233,11 +239,12 @@ class EnergyOffsetArray(object):
         """
         table = Table()
         table["energy"] = self.energy.log_centers
-        table["1Dcurve"] = self.evaluate(None, offset)
+        table["value"] = self.evaluate(None, offset, interp_kwargs)[:,0]
         return table
 
-    def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10):
+    def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10, interp_kwargs=None):
         """
+        Evaluate the `EnergyOffsetArray` at different energies in the energy_band. Then integrate them in order to get the total acceptance curve
         Parameters
         ----------
         energy_band : `~astropy.units.Quantity`
@@ -270,12 +277,12 @@ class EnergyOffsetArray(object):
         """
         if coordx_edges is None:
             offmax = self.offset.max() / 2.
-            offmin = self.offset.min() / 2.
+            offmin = self.offset.min()
             Nbin = 2 * len(self.offset)
             coordx_edges = np.linspace(offmax, offmin, Nbin)
         if coordy_edges is None:
             offmax = self.offset.max() / 2.
-            offmin = self.offset.min() / 2.
+            offmin = self.offset.min()
             Nbin = 2 * len(self.offset)
             coordy_edges = np.linspace(offmax, offmin, Nbin)
         if energy_edges is None:
