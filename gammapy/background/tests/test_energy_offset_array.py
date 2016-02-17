@@ -97,7 +97,7 @@ def test_energy_offset_array_read_write(tmpdir):
     assert_equal(array.offset, array2.offset)
 
 
-def test_energy_offset_array_bin_volume(tmpdir):
+def test_energy_offset_array_bin_volume():
     array = make_test_array()
     energy_bin = array.energy.bands
     offset_bin = np.pi * (array.offset[1:] ** 2 - array.offset[:-1] ** 2)

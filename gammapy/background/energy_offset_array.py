@@ -132,7 +132,7 @@ class EnergyOffsetArray(object):
         return cls(energy_edges, offset_edges, data)
 
     def write(self, filename, data_name="data", **kwargs):
-        """ Write EnergyOffsetArray to FITS file.
+        """ Write `EnergyOffsetArray` to FITS file.
 
         Parameters
         ----------
@@ -286,8 +286,8 @@ class EnergyOffsetArray(object):
             two column: energy and acceptance
 
         """
-        [Emin, Emax] = energy_band
-        energy_edges = EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
+        [emin, emax] = energy_band
+        energy_edges = EnergyBounds.equal_log_spacing(emin, emax, energy_bins)
         energy_bins = energy_edges.log_centers
         acceptance = self.evaluate(energy_bins, None, interp_kwargs)
         # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands

@@ -14,6 +14,7 @@ from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
 from ..data import EventListDataset, DataStore
 from .cube import _make_bin_edges_array
+
 __all__ = [
     'GaussianBand2D',
     'CubeBackgroundModel',
@@ -436,7 +437,23 @@ class CubeBackgroundModel(object):
 
 
 class EnergyOffsetBackgroundModel(object):
-    """EnergyOffsetArray background model."""
+    """EnergyOffsetArray background model.
+
+    Container class for `EnergyOffsetArray` background model *(energy, offset)*.
+    This class defines 3 `EnergyOffsetArray` of type `~gammapy.background.EnergyOffsetArray`:
+    Parameters
+    ----------
+    energy : `~gammapy.utils.energy.EnergyBounds`
+         energy bin vector
+    offset : `~astropy.coordinates.Angle`
+        offset bin vector
+    counts : `~numpy.ndarray`, optional
+        data array (2D): store counts.
+    livetime : `~numpy.ndarray`, optional
+        data array (2D): store livetime correction
+    bg_rate : `~numpy.ndarray`, optional
+        data array (2D): store background model
+    """
 
     def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None):
         self.energy = EnergyBounds(energy)
@@ -446,9 +463,23 @@ class EnergyOffsetBackgroundModel(object):
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
 
     def write(self, filename, **kwargs):
+        """ Write `EnergyOffsetBackgroundModel` to FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        """
         self.to_table().write(filename, format='fits', **kwargs)
 
     def to_table(self):
+        """Convert `EnergyOffsetBackgroundModel` to astropy table format.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table containing the `EnergyOffsetBackgroundModel`: counts, livetime and bg_rate
+        """
         table = Table()
         table['THETA_LO'] = Quantity([self.offset[:-1]], unit=self.offset.unit)
         table['THETA_HI'] = Quantity([self.offset[1:]], unit=self.offset.unit)
@@ -457,16 +488,30 @@ class EnergyOffsetBackgroundModel(object):
         table['counts'] = self.counts.to_table()['data']
         table['livetime'] = self.livetime.to_table()['data']
         table['bkg'] = self.bg_rate.to_table()['data']
-        table.meta['HDUNAME']="bkg_2d"
+        table.meta['HDUNAME'] = "bkg_2d"
         return table
 
     @classmethod
     def read(cls, filename):
+        """Create `EnergyOffsetBackgroundModel` from  FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        """
         table = Table.read(filename)
         return cls.from_table(table)
 
     @classmethod
     def from_table(cls, table):
+        """
+        Create `EnergyOffsetBackgroundModel` from  `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+        """
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
@@ -501,7 +546,7 @@ class EnergyOffsetBackgroundModel(object):
             self.livetime.data += events.observation_live_time_duration
 
     def compute_rate(self):
-        """Compute background_cube from count_cube and livetime_cube.
+        """Compute background rate cube from count_cube and livetime_cube.
         """
         bg_rate = self.counts.data / self.livetime.data
 
