@@ -2,6 +2,8 @@ import logging
 
 import click
 
+from gammapy.extern.pathlib import Path
+
 click.disable_unicode_literals_warning = True
 from ..spectrum import SpectrumExtraction
 from ..spectrum.spectrum_fit import SpectrumFit
@@ -76,66 +78,27 @@ def all_spectrum(ctx, configfile):
 
 
 @cli.command('display')
-@click.argument('files', nargs=-1, required=True)
-@click.option('--browser', is_flag=True, default=False,
-              help='Display in browser')
-@click.option('--keys', is_flag=True, default=False,
-              help='Print available column names')
-@click.option('--format', default='.3g', help='Column format')
-@click.option('--identifiers', '-id', type=str, default=None,
-              help='Comma separated list of file identifiers. Order: file input')
-@click.option('--cols', '-c', type=str,
-              help='Comma separated list of parameters to display')
-@click.option('--sort', '-s', type=str,
-              help='Column to sort by')
-def display_spectrum(files, cols, browser, format, keys, identifiers, sort):
-    """Display results table of one or several spectrum results files"""
+def display_spectrum():
+    """Display results of spectrum fit"""
+    stats = SpectrumResult.from_yaml('total_spectrum_stats.yaml')
+    stats_table = stats.to_table()['n_on', 'n_off', 'alpha', 'n_bkg', 'excess', 'energy_range']
+    files = [str(l) for l in Path.cwd().glob('fit*.yaml')]
+    fit = SpectrumResultDict.from_files(files)
+    fit_table = fit.to_table()
+    fit_table.remove_column('analysis')
 
-    id = identifiers.split(',') if identifiers is not None else None
-    master = SpectrumResultDict.from_files(files, id)
-    t = master.to_table(format=format)
-    if keys:
-        print ('\n'.join(t.keys()))
-        return
-    if cols:
-        t = t[cols.split(',')]
-    if sort:
-        t.sort(sort)
-    if browser:
-        t.show_in_browser(jsviewer=True)
-    else:
-        print(t)
+    print('\n\n')
+    print('\t\tSpectrum Stats')
+    print('\t\t--------------')
+    print(stats_table)
+    print('\n\n')
+    print('\t\tSpectral Fit')
+    print('\t\t------------')
+    print(fit_table)
+    print('\n\n')
 
 
 @cli.command('plot')
-@click.option('--function', '-f', multiple=True)
-@click.option('--points', '-p', multiple=True)
-@click.option('--residuals', '-r', multiple=True)
-@click.option('--butterfly', '-b', multiple=True)
-@click.option('--flux_unit', default='m-2 s-1 TeV-1', help='Unit of flux axis')
-@click.option('--energy_unit', default='TeV', help='Unit of energy axis')
-@click.option('--energy_power', default=0,
-              help='Energy power to multiply flux with')
-def plot_spectrum(function, butterfly, residuals, points, flux_unit,
-                  energy_unit, energy_power):
+def plot_spectrum():
     """Plot spectrum results file"""
-    if butterfly or residuals:
-        raise NotImplementedError
-
-    import matplotlib.pyplot as plt
-    for f in function:
-        res = SpectrumResult.from_all(f)
-        if res.fit is None:
-            raise ValueError('File {} does not contain a fit function'.format(f))
-        res.fit.plot(flux_unit=flux_unit, energy_unit=energy_unit,
-        e_power=energy_power)
-
-    for p in points:
-        res = SpectrumResult.from_all(p)
-        if res.points is None:
-            raise ValueError('File {} does not contain flux points'.format(f))
-        res.points.plot(flux_unit=flux_unit, energy_unit=energy_unit,
-        e_power=energy_power)
-
-    plt.loglog()
-    plt.show()
+    raise NotImplementedError

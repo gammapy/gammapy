@@ -30,3 +30,15 @@ def test_spectrum(tmpdir):
 
     assert filecmp.cmp(sref, sres)
     assert filecmp.cmp(fref, fres)
+
+    #test display
+    args = ['display']
+    with pytest.raises(SystemExit) as exc:
+        cli(args)
+
+    # Todo: Implement this
+    #args = ['plot']
+    #with pytest.raises(SystemExit) as exc:
+    #    cli(args)
+
+
