@@ -312,7 +312,7 @@ class EffectiveAreaTable2D(object):
 
     Two interpolation methods area available:
 
-    * `~scipy.interpolate.LinearNDInterpolator` (default)
+    * `~scipy.interpolate.RegularGridInterpolator` (default)
     * `~scipy.interpolate.RectBivariateSpline`
 
     Equivalent to GammaLib/ctools``GCTAAeff2D FITS`` format
@@ -327,6 +327,9 @@ class EffectiveAreaTable2D(object):
         Effective area vector (true energy)
     method : str
         Interpolation method
+    interp_kwargs : dict or None
+        Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
+        If you pass ``None``, the default ``interp_params=dict(bounds_error=False)`` is used.
 
 
     Examples
@@ -384,8 +387,8 @@ class EffectiveAreaTable2D(object):
     """
 
     def __init__(self, energy_lo, energy_hi, offset_lo,
-                 offset_hi, eff_area, method='linear', thres_lo=None,
-                 thres_hi=None):
+                 offset_hi, eff_area, method='linear', interp_kwargs=None,
+                 thres_lo=None, thres_hi=None):
 
         if not isinstance(energy_lo, Quantity) or not isinstance(energy_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
@@ -405,7 +408,10 @@ class EffectiveAreaTable2D(object):
         self._thres_lo = thres_lo
         self._thres_hi = thres_hi
 
-        self._prepare_linear_interpolator()
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False)
+
+        self._prepare_linear_interpolator(interp_kwargs)
         self._prepare_spline_interpolator()
 
         # set to linear interpolation by default
@@ -701,17 +707,15 @@ class EffectiveAreaTable2D(object):
 
         return ss
 
-    def _prepare_linear_interpolator(self):
-        """Setup `~scipy.interpolate.RegularGridInterpolator`
-        """
-
+    def _prepare_linear_interpolator(self, interp_kwargs):
         from scipy.interpolate import RegularGridInterpolator
 
         x = self.offset.value
         y = np.log10(self.energy.value)
-        vals = self.eff_area.value
+        points = (x, y)
+        values = self.eff_area.value
 
-        self._linear = RegularGridInterpolator((x, y), vals, bounds_error=True)
+        self._linear = RegularGridInterpolator(points, values, **interp_kwargs)
 
     def _prepare_spline_interpolator(self):
         """Only works for radial symmetric input files (N=2)

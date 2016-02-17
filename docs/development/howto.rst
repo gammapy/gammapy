@@ -831,3 +831,51 @@ Notes on the bundled files are kept in the docstring of
 `gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
 
 
+Interpolation and extrapolation
+-------------------------------
+
+In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response functions (IRFs) on
+data grids, or to reproject diffuse models on data grids.
+
+The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
+(more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
+across all of parameter space would be needed).
+
+You should use this pattern to implement a function of method that does interpolation:
+
+.. code-block:: python
+
+    def do_something(..., interp_kwargs=None):
+        """Do something.
+
+        Parameters
+        ----------
+        interp_kwargs : dict or None
+            Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
+            If you pass ``None``, the default ``interp_params=dict(bounds_error=False)`` is used.
+        """
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False)
+
+        interpolator = RegularGridInterpolator(..., **interp_kwargs)
+
+Since the other defaults are ``method='linear'`` and ``fill_value=nan``, this implies that linear interpolation
+is used and `NaN`_ values are returned for points outside of the interpolation domain.
+This is a compromise between the alternatives:
+
+* ``bounds_error=True`` -- Very "safe", refuse to return results for any points if one of the points is outside the valid domain.
+  Can be annoying for the caller to not get any result.
+* ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
+  for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
+  to NaN values in high-level analysis results.
+* ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
+  Extrapolate with zero or edge values (this is what ``None`` means).
+  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high-level analysis results
+  aren't quite correct because IRFs or background models or ... were used outside their valid range.
+
+Methods that use interpolation should provide an option to the caller to pass interpolation options on to
+``RegularGridInterpolator`` in case the default behaviour doesn't suit the application.
+
+TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator, currently in the constructor.
+In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the `read` and other constructors.
+Do we want / need that?
