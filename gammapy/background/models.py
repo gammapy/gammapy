@@ -446,7 +446,7 @@ class EnergyOffsetBackgroundModel(object):
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
 
     def write(self, filename, **kwargs):
-        self.to_table().write(filename, format='fits', overwrite=True, **kwargs)
+        self.to_table().write(filename, format='fits', **kwargs)
 
     def to_table(self):
         table = Table()
@@ -473,7 +473,7 @@ class EnergyOffsetBackgroundModel(object):
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
         counts = Quantity(table['counts'].squeeze(), table['counts'].unit)
         livetime = Quantity(table['livetime'].squeeze(), table['livetime'].unit)
-        bg_rate = Quantity(table['bg_rate'].squeeze(), table['bg_rate'].unit)
+        bg_rate = Quantity(table['bkg'].squeeze(), table['bkg'].unit)
         return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
 
     def fill_obs(self, observation_table, data_store):
