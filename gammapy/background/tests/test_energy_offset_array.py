@@ -121,9 +121,26 @@ def test_evaluate_at_offset():
     bin_E = np.array([2, 78, 91])
     bin_off = np.array([23, 59, 79])
     interpol_param = dict(method='nearest', bounds_error=False)
-    table_energy = array.evaluate_at_offset(off_eval, interpol_param)
-    assert_quantity_allclose(table_energy["energy"], array.energy.log_centers)
-    assert_equal(table_energy["value"][2], 1)
+    table_offset = array.evaluate_at_offset(off_eval, interpol_param)
+    assert_quantity_allclose(table_offset["energy"], array.energy.log_centers)
+    assert_equal(table_offset["value"][2], 1)
+
+def test_acceptance_curve_in_energy_band():
+
+    array, offset, energy = make_test_array(True)
+    bin_E = np.array([2, 78, 91])
+    bin_off = np.array([23, 59, 79])
+    #Test for a range in energy that is the same as array.energy and that has the same number of bin as the array.energy. I know where are my three events in offset and energy thus I know where I will get one for the interpolation with the method="nearest". then by mulyiplying by the solid_angle and the enrgy_bin width where are my three events I can use assert
+    Erange = Energy([0.1, 100], 'TeV')
+    Nbin = 100
+    interpol_param = dict(method='nearest', bounds_error=False)
+    table_energy = array.acceptance_curve_in_energy_band(Erange, Nbin, interpol_param)
+    assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
+    assert_quantity_allclose(table_energy["Acceptance"][23]*table_energy["Acceptance"].unit, 1*array.solid_angle[23].to('sr')*array.energy.bands[2].to('MeV'))
+    assert_quantity_allclose(table_energy["Acceptance"][59]*table_energy["Acceptance"].unit, 1*array.solid_angle[59].to('sr')*array.energy.bands[78].to('MeV'))
+    assert_quantity_allclose(table_energy["Acceptance"][79]*table_energy["Acceptance"].unit, 1*array.solid_angle[79].to('sr')*array.energy.bands[91].to('MeV'))
+
+
 
 """
 def test_curve():
