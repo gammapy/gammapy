@@ -340,6 +340,7 @@ class SpectrumAnalysis(object):
             list_index_bkg_obs.append(i[0][0])
 
         Observation_Table.remove_rows(list_index_bkg_obs)
+        #ATTENTION/ ca n existe plus la liste d offset mnt c est une meta de l objet observation. you have to write [O.meta.offset for o in e.observation] e est mnt un objet SpectralExtraction
         offset = [i.value for i in self.offset]
         Offcol = Column(offset, name='Offset', unit="deg")
         Observation_Table.add_column(Offcol)
