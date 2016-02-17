@@ -162,7 +162,7 @@ class EnergyOffsetArray(object):
         Interpolated value
         """
         if not interp_kwargs:
-            interp_kwargs=dict(bounds_error=False)
+            interp_kwargs = dict(bounds_error=False)
 
         from scipy.interpolate import RegularGridInterpolator
         if energy is None:
@@ -223,7 +223,7 @@ class EnergyOffsetArray(object):
 
         table = Table()
         table["offset"] = self.offset_bin_center
-        table["value"] = self.evaluate(energy, None, interp_kwargs)[0,:]
+        table["value"] = self.evaluate(energy, None, interp_kwargs)[0, :]
         return table
 
     def evaluate_at_offset(self, offset, interp_kwargs=None):
@@ -239,7 +239,7 @@ class EnergyOffsetArray(object):
         """
         table = Table()
         table["energy"] = self.energy.log_centers
-        table["value"] = self.evaluate(None, offset, interp_kwargs)[:,0]
+        table["value"] = self.evaluate(None, offset, interp_kwargs)[:, 0]
         return table
 
     def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10, interp_kwargs=None):
