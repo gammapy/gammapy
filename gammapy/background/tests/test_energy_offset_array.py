@@ -37,7 +37,7 @@ def make_test_array(dummy_data=False):
         return array
 
 
-def make_empty_Cube():
+def make_empty_cube():
     array = make_test_array()
     offmax = array.offset.max() / 2.
     offmin = array.offset.min()
@@ -65,10 +65,10 @@ def test_energy_offset_array_fill():
 def test_energy_offset_array_fill_evaluate():
     array, offset, energy = make_test_array(True)
     # Test if the array is filled correctly
-    bin_E = np.array([2, 78, 91])
+    bin_e = np.array([2, 78, 91])
     bin_off = np.array([23, 59, 79])
     ind = np.where(array.data.value == 1)
-    assert_equal(bin_E, ind[0])
+    assert_equal(bin_e, ind[0])
     assert_equal(bin_off, ind[1])
     # Test the evaluate method
     interpol_param = dict(method='nearest', bounds_error=False)
@@ -109,41 +109,39 @@ def test_energy_offset_array_bin_volume(tmpdir):
 def test_evaluate_at_energy():
     array, offset, energy = make_test_array(True)
     e_eval = energy[0]
-    bin_E = np.array([2, 78, 91])
-    bin_off = np.array([23, 59, 79])
     interpol_param = dict(method='nearest', bounds_error=False)
     table_energy = array.evaluate_at_energy(e_eval, interpol_param)
     assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
+    # Offset bin for the first event is 23
     assert_equal(table_energy["value"][23], 1)
 
 
 def test_evaluate_at_offset():
     array, offset, energy = make_test_array(True)
     off_eval = offset[0]
-    bin_E = np.array([2, 78, 91])
-    bin_off = np.array([23, 59, 79])
     interpol_param = dict(method='nearest', bounds_error=False)
     table_offset = array.evaluate_at_offset(off_eval, interpol_param)
     assert_quantity_allclose(table_offset["energy"], array.energy.log_centers)
+    # Energy bin for the first event is 2
     assert_equal(table_offset["value"][2], 1)
 
 
 def test_acceptance_curve_in_energy_band():
     """
-    I define an energy range on witch I want to compute the acceptance curve that has the same boundaries as the energyoffsetarray.energy one and I take a Nbin for this range
-    equal to the number of bin of the energyoffsetarray.energy one. This way, the interpolator will evaluate at energies that are the same as the one that define the RegularGridInterpolator.
-    With the method="nearest" you are sure to get 1 for the energybin where are located the three events that define the energyoffsetarray. Since in this method we integrate over the energy
-    and multiply by the solid angle, I check if for the offset of the three events (bin [23, 59, 79]), we get in the table["Acceptance"] what we expect by multiplying 1 by the solid angle and
-    the energy bin width where is situated the event.
+    I define an energy range on witch I want to compute the acceptance curve that has the same boundaries as the
+    energyoffsetarray.energy one and I take a Nbin for this range equal to the number of bin of the
+    energyoffsetarray.energy one. This way, the interpolator will evaluate at energies that are the same as the one
+    that define the RegularGridInterpolator. With the method="nearest" you are sure to get 1 for the energybin where
+    are located the three events that define the energyoffsetarray. Since in this method we integrate over the energy
+    and multiply by the solid angle, I check if for the offset of the three events (bin [23, 59, 79]), we get in the
+    table["Acceptance"] what we expect by multiplying 1 by the solid angle and the energy bin width where is situated
+    the event (bin [2, 78, 91]).
     """
     array, offset, energy = make_test_array(True)
-    bin_E = np.array([2, 78, 91])
-    bin_off = np.array([23, 59, 79])
-    # Test for a range in energy that is the same as array.energy and that has the same number of bin as the array.energy. I know where are my three events in offset and energy thus I know where I will get one for the interpolation with the method="nearest". then by mulyiplying by the solid_angle and the enrgy_bin width where are my three events I can use assert
-    Erange = Energy([0.1, 100], 'TeV')
+    energ_range = Energy([0.1, 100], 'TeV')
     Nbin = 100
     interpol_param = dict(method='nearest', bounds_error=False)
-    table_energy = array.acceptance_curve_in_energy_band(Erange, Nbin, interpol_param)
+    table_energy = array.acceptance_curve_in_energy_band(energ_range, Nbin, interpol_param)
     assert_quantity_allclose(table_energy["offset"], array.offset_bin_center)
     assert_quantity_allclose(table_energy["Acceptance"][23] * table_energy["Acceptance"].unit,
                              1 * array.solid_angle[23].to('sr') * array.energy.bands[2].to('MeV'))
@@ -154,51 +152,19 @@ def test_acceptance_curve_in_energy_band():
 
 
 def test_to_cube():
-    array, offset, energy = make_test_array(True)
-    bin_E = np.array([2, 78, 91])
-    bin_off = np.array([23, 59, 79])
-    Cube = make_empty_Cube()
-    # energy bin differen from the enrgyoffsetarray just for the test
-    E = EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
-    array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
-
-
-def test_to_cube():
     """
-    There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy bin as the energyoffsetarray.energy.
-    For the event in the offset bin 23 (=0.6 degre) and in the energy bin 2 (0.12 Tev), I check if after calling the to_cube() method, all the x and y of
-    the new Cube matching with an offset equal to 0.6+/-0.1 are filled with 1.
+    There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy
+    bin as the energyoffsetarray.energy. For the event in the offset bin 23 (=0.6 degre) and in the energy bin 2
+    (0.12 Tev), I check if after calling the to_cube() method, all the x and y of the new Cube matching with an offset
+    equal to 0.6+/-0.1 are filled with 1.
     """
     array, offset, energy = make_test_array(True)
-    bin_E = np.array([2, 78, 91])
-    bin_off = np.array([23, 59, 79])
-    Cube = make_empty_Cube()
+    cube = make_empty_cube()
     interpol_param = dict(method='nearest', bounds_error=False)
-    CubeModel = array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, Cube.energy_edges, interpol_param)
-    i = np.where(CubeModel.data[2, :, :] == 1)
-    x = Cube.coordx_edges
-    y = Cube.coordy_edges
-    XX, YY = np.meshgrid(x, y)
-    dist = np.sqrt(XX ** 2 + YY ** 2)
+    cube_model = array.to_cube(cube.coordx_edges, cube.coordy_edges, cube.energy_edges, interpol_param)
+    i = np.where(cube_model.data[2, :, :] == 1)
+    x = cube_model.coordx_edges
+    y = cube_model.coordy_edges
+    xx, yy = np.meshgrid(x, y)
+    dist = np.sqrt(xx ** 2 + yy ** 2)
     assert_quantity_allclose(dist[i], 0.6 * u.deg, atol=0.1 * u.deg)
-
-
-"""
-def test_curve():
-    array = test_energy_offset_array_fill()
-    energy = Energy(4, 'TeV')
-    off = Angle(1.2, 'deg')
-    table_energy = evaluate.curve_at_energy(energy)
-    table_band = evaluate.curve_at_offset(off)
-    Erange = Energy([1, 10], 'TeV')
-    Nbin = 10
-    table_offset = array.acceptance_curve_in_energy_band(Erange, Nbin)
-
-
-def test_to_cube():
-    array = test_energy_offset_array_fill()
-    Cube = make_empty_Cube()
-    # energy bin differen from the enrgyoffsetarray just for the test
-    E = EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
-    array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
-"""

@@ -4,8 +4,6 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
-from astropy.io import fits
-from ..utils.fits import table_to_fits_table
 from ..utils.energy import EnergyBounds, Energy
 from .cube import _make_bin_edges_array
 from .cube import Cube
@@ -109,12 +107,23 @@ class EnergyOffsetArray(object):
         ----------
         filename : str
             File name
+        data_name: str
+            name of the data column in the table
         """
         table = Table.read(filename)
         return cls.from_table(table, data_name)
 
     @classmethod
     def from_table(cls, table, data_name="data"):
+        """
+        Create `EnergyOffsetArray` from  `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table: `~astropy.table.Table`
+        data_name: str
+            name of the data column in the table
+        """
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
@@ -123,11 +132,24 @@ class EnergyOffsetArray(object):
         return cls(energy_edges, offset_edges, data)
 
     def write(self, filename, data_name="data", **kwargs):
-        """ Write EnergyOffsetArray to FITS file"""
+        """ Write EnergyOffsetArray to FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        data_name: str
+            name of the data column in the table
+        """
         self.to_table(data_name).write(filename, **kwargs)
 
     def to_table(self, data_name="data"):
         """Convert `EnergyOffsetArray` to astropy table format.
+
+        Parameters
+        ----------
+        data_name: str
+            name of the data column in the table
 
         Returns
         -------
@@ -146,15 +168,15 @@ class EnergyOffsetArray(object):
     def evaluate(self, energy=None, offset=None,
                  interp_kwargs=None):
         """
-        Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
+        Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             energy value
-        offset : `~astropy.coordinates.Angle
+        offset : `~astropy.coordinates.Angle`
             offset value
-        interpolate_params: dict
+        interp_kwargs: dict
             give the options for the RegularGridInterpolator
 
         Returns
@@ -177,40 +199,39 @@ class EnergyOffsetArray(object):
         offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interp_kwargs)
-        EE, OFF = np.meshgrid(energy.value, offset.value, indexing='ij')
-        shape = EE.shape
-        pix_coords = np.column_stack([EE.flat, OFF.flat])
+        ee, off = np.meshgrid(energy.value, offset.value, indexing='ij')
+        shape = ee.shape
+        pix_coords = np.column_stack([ee.flat, off.flat])
 
         data_interp = interpolator(pix_coords)
         return data_interp.reshape(shape)
 
     @property
     def offset_bin_center(self):
+        """Offset bin center location (1D `~astropy.coordinates.Angle` in deg)."""
         off = (self.offset[:-1] + self.offset[1:]) / 2.
-        return off
+        return off.to("deg")
 
     @property
     def solid_angle(self):
+        """Solid angle for each offset bin (1D `~astropy.units.Quantity` in sr)."""
         s = np.pi * (self.offset[1:] ** 2 - self.offset[:-1] ** 2)
-        return s
+        return s.to('sr')
 
     @property
     def bin_volume(self):
-        """Per-pixel bin volume.
-
-        TODO: explain with formula and units
-        """
+        """Per-pixel bin volume (solid angle * energy). (2D `~astropy.units.Quantity` in Tev sr)."""
         delta_energy = self.energy.bands
         solid_angle = self.solid_angle
         # define grid of deltas (i.e. bin widths for each 3D bin)
         delta_energy, solid_angle = np.meshgrid(delta_energy, solid_angle, indexing='ij')
-        bin_volume = delta_energy * (solid_angle).to('sr')
+        bin_volume = delta_energy * solid_angle
 
-        return bin_volume
+        return bin_volume.to('TeV sr')
 
     def evaluate_at_energy(self, energy, interp_kwargs=None):
         """
-        Evaluate the `EnergyOffsetArray` at one given energy
+        Evaluate the `EnergyOffsetArray` at one given energy.
 
         Parameters
         ----------
@@ -218,7 +239,8 @@ class EnergyOffsetArray(object):
 
         Returns
         -------
-
+        table : `~astropy.table.Table`
+            two column: offset and data
         """
 
         table = Table()
@@ -228,13 +250,16 @@ class EnergyOffsetArray(object):
 
     def evaluate_at_offset(self, offset, interp_kwargs=None):
         """
-        Evaluate the `EnergyOffsetArray` at one given offset
+        Evaluate the `EnergyOffsetArray` at one given offset.
+
         Parameters
         ----------
-        offset: `~astropy.coordinates.Angle`
+        offset : `~astropy.coordinates.Angle`
 
         Returns
         -------
+        table : `~astropy.table.Table`
+            two column: energy and data
 
         """
         table = Table()
@@ -244,13 +269,20 @@ class EnergyOffsetArray(object):
 
     def acceptance_curve_in_energy_band(self, energy_band, energy_bins=10, interp_kwargs=None):
         """
-        Evaluate the `EnergyOffsetArray` at different energies in the energy_band. Then integrate them in order to get the total acceptance curve
+        Evaluate the `EnergyOffsetArray` at different energies in the energy_band.
+        Then integrate them in order to get the total acceptance curve
+
         Parameters
         ----------
         energy_band : `~astropy.units.Quantity`
             Tuple ``(energy_min, energy_max)``
         energy_bins : int or `~astropy.units.Quantity`
             Energy bin definition.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            two column: energy and acceptance
 
         """
         [Emin, Emax] = energy_band
@@ -261,34 +293,39 @@ class EnergyOffsetArray(object):
         acceptance_tot = np.sum(acceptance.T * energy_edges.bands.to('MeV'), axis=1)
         table = Table()
         table["offset"] = self.offset_bin_center
-        table["Acceptance"] = acceptance_tot * self.solid_angle.to('sr')
+        table["Acceptance"] = acceptance_tot * self.solid_angle
         return table
 
-    def to_multi_Cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
+    def to_cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
         """
+        Transform the `EnergyOffsetArray` into a `Cube`
 
         Parameters
         ----------
-        Cube: `~gammapy.background.models.Cube`
+        coordx_edges : `~astropy.coordinates.Angle`, optional
+            Spatial bin edges vector (low and high). X coordinate.
+        coordy_edges : `~astropy.coordinates.Angle`, optional
+            Spatial bin edges vector (low and high). Y coordinate.
+        energy_edges : `~gammapy.utils.energy.EnergyBounds`, optional
+            Energy bin edges vector (low and high).
 
         Returns
         -------
-
+        Cube: `~gammapy.background.Cube`
         """
         if coordx_edges is None:
             offmax = self.offset.max() / 2.
             offmin = self.offset.min()
-            Nbin = 2 * len(self.offset)
-            coordx_edges = np.linspace(offmax, offmin, Nbin)
+            nbin = 2 * len(self.offset)
+            coordx_edges = np.linspace(offmax, offmin, nbin)
         if coordy_edges is None:
             offmax = self.offset.max() / 2.
             offmin = self.offset.min()
-            Nbin = 2 * len(self.offset)
-            coordy_edges = np.linspace(offmax, offmin, Nbin)
+            nbin = 2 * len(self.offset)
+            coordy_edges = np.linspace(offmax, offmin, nbin)
         if energy_edges is None:
             energy_edges = self.energy
 
-        # Later the CubeBackgroundModel will have as attributes the coordx, coory and energy and we will not have to call the counts_cube
         coordx_center = (coordx_edges[:-1] + coordx_edges[1:]) / 2.
         coordy_center = (coordy_edges[:-1] + coordy_edges[1:]) / 2.
 
