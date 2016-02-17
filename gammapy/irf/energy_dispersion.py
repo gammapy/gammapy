@@ -401,6 +401,8 @@ class EnergyDispersion(object):
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, **kwargs):
+        """TODO: document me.
+        """
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
 
@@ -423,6 +425,8 @@ class EnergyDispersion(object):
         return ax
 
     def plot_bias(self, ax=None):
+        """TODO: document me.
+        """
         raise NotImplementedError
         import matplotlib.pyplot as plt
 
@@ -451,6 +455,9 @@ class EnergyDispersion2D(object):
         Offset lower bounds
     dispersion : `~numpy.ndarray`
         PDF matrix
+    interp_kwargs : dict or None
+        Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
+        If you pass ``None``, the default ``interp_params=dict(bounds_error=False, fill_value=0)`` is used.
 
     Examples
     --------
@@ -508,7 +515,7 @@ class EnergyDispersion2D(object):
     """
 
     def __init__(self, etrue_lo, etrue_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, dispersion):
+                 offset_hi, dispersion, interp_kwargs=None):
 
         if not isinstance(etrue_lo, Quantity) or not isinstance(etrue_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
@@ -526,7 +533,10 @@ class EnergyDispersion2D(object):
         self.offset = (offset_hi + offset_lo) / 2
         self.migra = (migra_hi + migra_lo) / 2
 
-        self._prepare_linear_interpolator()
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False, fill_value=0)
+
+        self._prepare_linear_interpolator(interp_kwargs)
 
     @classmethod
     def from_fits(cls, hdu):
@@ -786,20 +796,16 @@ class EnergyDispersion2D(object):
         plt.tight_layout()
         plt.show()
 
-    def _prepare_linear_interpolator(self):
-        """Linear interpolation in N dimensions
-
-        Values outside the bounds are set to 0
-        """
+    def _prepare_linear_interpolator(self, interp_kwargs):
         from scipy.interpolate import RegularGridInterpolator
 
         x = self.offset
         y = self.migra
         z = np.log10(self.energy.value)
-        data = self.dispersion
+        points = (x, y, z)
+        values = self.dispersion
 
-        self._linear = RegularGridInterpolator(
-            (x, y, z), data, bounds_error=False, fill_value=0)
+        self._linear = RegularGridInterpolator(points, values, **interp_kwargs)
 
     def info(self):
         """Print some basic info.
