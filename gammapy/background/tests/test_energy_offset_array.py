@@ -21,11 +21,11 @@ def make_test_array(dummy_data=False):
     if dummy_data is True:
         # Define an EventList with three events
         table = Table()
-        table['RA'] = [83, 85.2, 86]
-        table['DEC'] = [21, 22.8, 22.5]
+        table['RA'] = [0.6, 0, 2]
+        table['DEC'] = [0, 1.5, 0]
         table['ENERGY'] = [0.12, 22, 55]
-        table.meta['RA_PNT'] = 85
-        table.meta['DEC_PNT'] = 22
+        table.meta['RA_PNT'] = 0
+        table.meta['DEC_PNT'] = 0
         table.meta['EUNIT'] = 'TeV'
         events = EventList(table)
         ev_list = [events]
@@ -39,7 +39,7 @@ def make_test_array(dummy_data=False):
 def make_empty_Cube():
     array = make_test_array()
     offmax = array.offset.max() / 2.
-    offmin = array.offset.min() / 2.
+    offmin = array.offset.min()
     Nbin = 2 * len(array.offset)
     coordx_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
     coordy_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
@@ -56,7 +56,7 @@ def test_energy_offset_array_fill():
 
     array = make_test_array()
     array.fill_events(ev_list)
-    return array
+
     # TODO: add some assert, e.g. counts in some bin with non-zero entries.
 
 
@@ -65,7 +65,7 @@ def test_energy_offset_array_fill_evaluate():
     array, offset, energy = make_test_array(True)
     # Test if the array is filled correctly
     bin_E = np.array([2, 78, 91])
-    bin_off = np.array([83, 32, 41])
+    bin_off = np.array([23, 59, 79])
     ind = np.where(array.data.value == 1)
     assert_equal(bin_E, ind[0])
     assert_equal(bin_off, ind[1])
@@ -104,13 +104,17 @@ def test_energy_offset_array_bin_volume(tmpdir):
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
+"""
+def test_evaluate_at_energy():
+    array, offset, energy = make_test_array(True)
+
 
 def test_curve():
     array = test_energy_offset_array_fill()
     energy = Energy(4, 'TeV')
     off = Angle(1.2, 'deg')
-    table_energy = array.curve_at_energy(energy)
-    table_band = array.curve_at_offset(off)
+    table_energy = evaluate.curve_at_energy(energy)
+    table_band = evaluate.curve_at_offset(off)
     Erange = Energy([1, 10], 'TeV')
     Nbin = 10
     table_offset = array.acceptance_curve_in_energy_band(Erange, Nbin)
@@ -122,3 +126,4 @@ def test_to_cube():
     # energy bin differen from the enrgyoffsetarray just for the test
     E = EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
     array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
+"""
