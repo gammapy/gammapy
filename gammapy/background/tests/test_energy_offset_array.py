@@ -35,17 +35,17 @@ def make_test_array(dummy_data=False):
     else:
         return array
 
+
 def make_empty_Cube():
-    array=make_test_array()
+    array = make_test_array()
     offmax = array.offset.max() / 2.
     offmin = array.offset.min() / 2.
     Nbin = 2 * len(array.offset)
-    coordx_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin),"deg")
-    coordy_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin),"deg")
+    coordx_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
+    coordy_edges = Angle(np.linspace(offmax.value, offmin.value, Nbin), "deg")
     energy_edges = array.energy
     empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
     return empty_cube
-
 
 
 @requires_data('gammapy-extra')
@@ -104,19 +104,21 @@ def test_energy_offset_array_bin_volume(tmpdir):
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
+
 def test_curve():
-    array=test_energy_offset_array_fill()
-    energy= Energy(4, 'TeV')
-    off=Angle(1.2, 'deg')
-    table_energy=array.curve_at_energy(energy)
-    table_band=array.curve_at_offset(off)
-    Erange=Energy([1,10],'TeV')
-    Nbin=10
-    table_offset=array.acceptance_curve_in_energy_band(Erange, Nbin)
+    array = test_energy_offset_array_fill()
+    energy = Energy(4, 'TeV')
+    off = Angle(1.2, 'deg')
+    table_energy = array.curve_at_energy(energy)
+    table_band = array.curve_at_offset(off)
+    Erange = Energy([1, 10], 'TeV')
+    Nbin = 10
+    table_offset = array.acceptance_curve_in_energy_band(Erange, Nbin)
+
 
 def test_to_cube():
-    array=test_energy_offset_array_fill()
-    Cube= make_empty_Cube()
-    #energy bin differen from the enrgyoffsetarray just for the test
-    E=EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
+    array = test_energy_offset_array_fill()
+    Cube = make_empty_Cube()
+    # energy bin differen from the enrgyoffsetarray just for the test
+    E = EnergyBounds.equal_log_spacing(0.1, 100, 10, 'TeV')
     array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)

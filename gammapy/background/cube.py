@@ -130,14 +130,14 @@ class Cube(object):
 
         if data is None:
             self.data = np.zeros((len(energy_edges) - 1,
-                                    len(coordy_edges) - 1,
-                                    len(coordx_edges) - 1))
+                                  len(coordy_edges) - 1,
+                                  len(coordx_edges) - 1))
         else:
             self.data = data
 
 
             # TODO: make this consistent with have the 2d BCK class works
-            #self.data = 'TODO'
+            # self.data = 'TODO'
 
         self.scheme = scheme
 
