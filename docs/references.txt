@@ -49,6 +49,7 @@
 .. _Gamera: https://github.com/JoachimHahn/GAMERA
 .. _Gappa: https://pypi.python.org/pypi/gappa
 .. _gammatools: https://github.com/woodmd/gammatools
+.. _NaN: https://en.wikipedia.org/wiki/NaN
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
 .. _Python for gamma-ray astronomy 2015: http://gammapy.github.io/PyGamma15/
