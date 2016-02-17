@@ -127,7 +127,13 @@ def test_evaluate_at_offset():
     assert_equal(table_offset["value"][2], 1)
 
 def test_acceptance_curve_in_energy_band():
-
+    """
+    I define an energy range on witch I want to compute the acceptance curve that has the same boundaries as the energyoffsetarray.energy one and I take a Nbin for this range
+    equal to the number of bin of the energyoffsetarray.energy one. This way, the interpolator will evaluate at energies that are the same as the one that define the RegularGridInterpolator.
+    With the method="nearest" you are sure to get 1 for the energybin where are located the three events that define the energyoffsetarray. Since in this method we integrate over the energy
+    and multiply by the solid angle, I check if for the offset of the three events (bin [23, 59, 79]), we get in the table["Acceptance"] what we expect by multiplying 1 by the solid angle and
+    the energy bin width where is situated the event.
+    """
     array, offset, energy = make_test_array(True)
     bin_E = np.array([2, 78, 91])
     bin_off = np.array([23, 59, 79])
@@ -151,6 +157,11 @@ def test_to_cube():
     array.to_multi_Cube(Cube.coordx_edges, Cube.coordy_edges, E)
 
 def test_to_cube():
+    """
+    There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy bin as the energyoffsetarray.energy.
+    For the event in the offset bin 23 (=0.6 degre) and in the energy bin 2 (0.12 Tev), I check if after calling the to_cube() method, all the x and y of
+    the new Cube matching with an offset equal to 0.6+/-0.1 are filled with 1.
+    """
     array, offset, energy = make_test_array(True)
     bin_E = np.array([2, 78, 91])
     bin_off = np.array([23, 59, 79])
