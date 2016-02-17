@@ -142,7 +142,7 @@ class EnergyOffsetArray(object):
 
         return table
 
-    def evaluate(self, energy=None, offset=None, interpolate_params=dict(method='nearest', fill_value=None)):
+    def evaluate(self, energy=None, offset=None, interpolate_params=dict(method='nearest', bounds_error=False, fill_value=np.nan)):
         """
         Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy
 
@@ -150,7 +150,7 @@ class EnergyOffsetArray(object):
         ----------
         energy : `~astropy.units.Quantity`
             energy value
-        offset : `~astropy.coordinates.Angle`
+        offset : `~astropy.coordinates.Angle
             offset value
         interpolate_params: dict
             give the options for the RegularGridInterpolator
@@ -172,7 +172,6 @@ class EnergyOffsetArray(object):
         offset_bin = self.offset_bin_center
         points = (energy_bin, offset_bin)
         interpolator = RegularGridInterpolator(points, self.data.value, **interpolate_params)
-
         EE, OFF = np.meshgrid(energy.value, offset.value, indexing='ij')
         shape = EE.shape
         pix_coords = np.column_stack([EE.flat, OFF.flat])
@@ -251,13 +250,11 @@ class EnergyOffsetArray(object):
         energy_edges=EnergyBounds.equal_log_spacing(Emin, Emax, energy_bins)
         energy_bins=energy_edges.log_centers
         acceptance =+ self.evaluate(energy_bins, offset=None)
-        #this is super crado to do that, is there not a way to directly multiply 2D(N1, N2) with 1D(N1)?
-        acceptance_tot=np.zeros(len(self.offset) - 1)
-        for i in range(len(energy_bins)):
-            acceptance_tot += acceptance[i,:]*self.solide_angle.to('sr')*energy_edges.bands[i].to('MeV')
+        #Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
+        acceptance_tot = np.sum(acceptance.T*energy_edges.bands.to('MeV'),axis=1)
         table=Table()
         table["offset"]=self.offset_bin_center
-        table["Acceptance"]=acceptance_tot
+        table["Acceptance"]=acceptance_tot*self.solide_angle.to('sr')
         return table
 
 
@@ -273,6 +270,7 @@ class EnergyOffsetArray(object):
         -------
 
         """
+        #Later the CubeBackgroundModel will have as attributes the coordx, coory and energy and we will not have to call the counts_cube
         coordx_center=(Cube.counts_cube.coordx_edges[:-1]+Cube.counts_cube.coordx_edges[1:])/2.
         coordy_center=(Cube.counts_cube.coordy_edges[:-1]+Cube.counts_cube.coordy_edges[1:])/2.
 
@@ -280,10 +278,12 @@ class EnergyOffsetArray(object):
         dist=np.sqrt(xx**2 + yy**2)
         shape=np.shape(dist)
         data=self.evaluate(self.energy.log_centers, dist.flat)
-        data_reshape= np.zeros((len(Cube.energy_edges) - 1,
-                                    len(Cube.coordy_edges) - 1,
-                                    len(Cube.coordx_edges) - 1))
-        for i in range(len(energy.log_centers)):
+
+        data_reshape= np.zeros((len(Cube.counts_cube.energy_edges) - 1,
+                                    len(Cube.counts_cube.coordy_edges) - 1,
+                                    len(Cube.counts_cube.coordx_edges) - 1))
+        import IPython; IPython.embed()
+        for i in range(len(self.energy.log_centers)):
             data_reshape[i,:,:]=np.reshape(data[i,:],shape)
         return Cube(self.energy, Cube.counts.coordx_edge, Cube.counts.coordy_edge, data_reshape)
 
