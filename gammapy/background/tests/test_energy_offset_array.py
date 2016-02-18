@@ -49,6 +49,7 @@ def make_empty_cube():
     empty_cube = Cube(coordx_edges, coordy_edges, energy_edges)
     return empty_cube
 
+
 @requires_data('gammapy-extra')
 def test_energy_offset_array_fill():
     dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
@@ -105,6 +106,7 @@ def test_energy_offset_array_bin_volume():
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
+
 @requires_dependency('scipy')
 def test_evaluate_at_energy():
     array, offset, energy = make_test_array(True)
@@ -116,6 +118,7 @@ def test_evaluate_at_energy():
     assert_equal(table_energy["value"][23], 1)
 
 
+@requires_dependency('scipy')
 def test_evaluate_at_offset():
     array, offset, energy = make_test_array(True)
     off_eval = offset[0]
@@ -126,6 +129,7 @@ def test_evaluate_at_offset():
     assert_equal(table_offset["value"][2], 1)
 
 
+@requires_dependency('scipy')
 def test_acceptance_curve_in_energy_band():
     """
     I define an energy range on witch I want to compute the acceptance curve that has the same boundaries as the
@@ -151,6 +155,7 @@ def test_acceptance_curve_in_energy_band():
                              1 * array.energy.bands[91].to('MeV'))
 
 
+@requires_dependency('scipy')
 def test_to_cube():
     """
     There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy
