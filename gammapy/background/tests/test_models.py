@@ -6,6 +6,7 @@ from numpy.testing import assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
+from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
@@ -17,7 +18,8 @@ from ...data import ObservationTable
 from ...data import DataStore
 from ...region import SkyCircleRegion
 from ...background.models import compute_pie_fraction, select_events_outside_pie
-from ...image import make_empty_image,
+from ...image import make_empty_image
+
 
 @requires_dependency('scipy')
 class TestGaussianBand2D:
@@ -179,7 +181,12 @@ def test_select_events_outside_pie():
     events["RA"]=
     events["DEC"]=
     select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
-    #Je crois qu ic faut utiliser wcs pour avoir acces aux coordonee radec de l imagemais voir la doc...
+    RA_image.data[:]=1
+    RA_image.data[:]=1
+    wcs = WCS(RA_image.header)
+    
+    xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)
+    #Je crois qu ic faut utiliser wcs pour avoir acces aux coordonee radec de l imagemais voir la doc... Utiliser wcs_pix2world pour avoir les coordonnee des images en ra des et apres on met ca dans l table d evenement avec un fatl je pense et on re_shape ensuite je dirais... a voir
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
     def test_read_write(self):

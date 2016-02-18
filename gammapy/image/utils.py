@@ -649,7 +649,6 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     wcs = WCS(header)
     origin = 0  # convention for gammapy
     xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
@@ -715,7 +714,7 @@ def bin_events_in_cube(events, reference_cube, energies):
     # We're not interested in the energy axis, so we give a dummy value of 1
     origin = 0  # convention for gammapy
     xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)[:-1]
-
+    
     event_energies = events['Energy']
     zz = np.searchsorted(event_energies, energies)
 

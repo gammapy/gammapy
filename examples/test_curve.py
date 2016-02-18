@@ -38,10 +38,11 @@ def make_model():
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
     offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
 
-    excluded_sources = make_excluded_sources()
+    #excluded_sources = make_excluded_sources()
 
     multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
-    multi_array.fill_obs(obs_table, data_store, excluded_sources)
+    #multi_array.fill_obs(obs_table, data_store, excluded_sources)
+    multi_array.fill_obs(obs_table, data_store)
     multi_array.compute_rate()
 
     bgarray = multi_array.bg_rate
