@@ -40,13 +40,13 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max=None, i
     """
     from scipy.interpolate import interp1d
     if not offset_max:
-        offset_max= offset[-1]
+        offset_max = offset[-1]
     if not interp_kwargs:
-            interp_kwargs = dict(bounds_error= None, fill_value=acceptance[0])
+        interp_kwargs = dict(bounds_error=None, fill_value=acceptance[0])
 
     # initialize WCS to the header of the image
     wcs = WCS(header)
-    data=np.zeros((header["NAXIS2"], header["NAXIS1"]))
+    data = np.zeros((header["NAXIS2"], header["NAXIS1"]))
     image = fits.ImageHDU(data=data, header=header)
 
     # define grids of pixel coorinates
@@ -56,11 +56,8 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max=None, i
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
     pix_off = coord.separation(center)
 
-
-
-    # interpolate
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
-    image.data[pix_off.value >= offset_max]=0
+    image.data[pix_off >= offset_max] = 0
 
     return image
