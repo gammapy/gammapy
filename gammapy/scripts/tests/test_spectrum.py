@@ -28,9 +28,13 @@ def test_spectrum(tmpdir):
         'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
     fres = 'fit_result_PowerLaw.yaml'
 
-    # Todo: Implement proper file comparison with sensible output
-    # assert filecmp.cmp(sref, sres)
-    # assert filecmp.cmp(fref, fres)
+    actual = open(sres, 'r').read()
+    desired = open(sref, 'r').read()
+    assert actual == desired
+
+    actual = open(fres, 'r').read()
+    desired = open(fref, 'r').read()
+    assert actual == desired
 
     #test display
     args = ['display']

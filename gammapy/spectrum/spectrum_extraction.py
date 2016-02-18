@@ -255,21 +255,32 @@ class SpectrumObservation(object):
         self.meta.setdefault('phafile', 'None')
 
     @classmethod
-    def read_ogip(cls, phafile, rmffile=None, bkgfile=None, arffile=None):
-        """ Read PHA file
+    def read_ogip(cls, phafile):
+        """ Read `~gammapy.spectrum.SpectrumObservation` from OGIP files
+
+        BKG file, ARF, and RMF must be set in the PHA header
 
         Parameters
         ----------
         phafile : str
             OGIP PHA file to read
         """
+        # Put here due to circular imports issues
+        from ..irf import EnergyDispersion, EffectiveAreaTable
+
         f = make_path(phafile)
+        base = f.parent
         on_vector = CountsSpectrum.read(f)
 
-        # Todo : read in IRF files
         meta = on_vector.meta
+        energy_dispersion = EnergyDispersion.read(str(base / meta.RESPFILE))
+        effective_area = EffectiveAreaTable.read(str(base / meta.ANCRFILE))
+        off_vector = CountsSpectrum.read(str(base / meta.BACKFILE),
+                                         str(base / meta.RESPFILE))
+
         meta.update(phafile=phafile)
-        return cls(0, on_vector, None, None, None, meta)
+        return cls(meta.OBS_ID, on_vector, off_vector, energy_dispersion,
+                   effective_area, meta)
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
@@ -403,6 +414,14 @@ class SpectrumObservation(object):
     def alpha(self):
         """Exposure ratio between ON and OFF region"""
         return self.on_vector.meta.backscal / self.off_vector.meta.backscal
+
+    @property
+    def excess_vector(self):
+        """Excess vector
+
+        Excess = n_on - alpha * n_off
+        """
+        return self.on_vector + self.off_vector * self.alpha * -1
 
     @property
     def spectrum_stats(self):

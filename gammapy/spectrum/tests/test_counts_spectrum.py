@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 
 from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult
 from ...datasets import gammapy_extra
@@ -64,6 +64,8 @@ def test_n_pred():
     obs = extraction.observations
     fit = SpectrumFitResult.from_yaml(fitresult)
 
-    n_pred = CountsSpectrum.get_npred(fit, obs)
+    n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]
+    n_pred = np.sum(n_pred_vec)
 
+    assert_allclose (max(n_pred.counts), 53, atol=0.1)
 

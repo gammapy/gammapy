@@ -326,4 +326,14 @@ class SpectrumFit(object):
         ds.clear_stack()
         ds.clear_models()
 
+    def plot_npred_vs_excess(self):
+        """Plot prediced counts vs. excess counts
+        """
+        pass
+
+    def debug_plots(self):
+        """Write some debug plots to disk"""
+        pass
+
+
 

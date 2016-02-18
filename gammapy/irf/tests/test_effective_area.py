@@ -34,7 +34,7 @@ def test_EffectiveAreaTable():
     filename = get_pkg_data_filename('data/arf_info.txt')
     info_str = open(filename, 'r').read()
 
-    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/arf.fits')
+    filename = gammapy_extra.filename('datasets/hess-crab4_pha/arf_run23526.fits')
     arf = EffectiveAreaTable.read(filename)
     assert arf.info() == info_str
 
@@ -142,7 +142,7 @@ def test_EffectiveAreaTable2D(method):
 
     energy = Quantity(np.sqrt(energy_lo.value * energy_hi.value), 'TeV')
     area = aeff.evaluate(offset, energy)
-    effarea1d = EffectiveAreaTable(energy_lo, energy_hi, area)
+    effarea1d = EffectiveAreaTable(e_axis, area)
 
     test_energy = Quantity(2.34, 'TeV')
     actual = effareafrom2d.effective_area_at_energy(test_energy)

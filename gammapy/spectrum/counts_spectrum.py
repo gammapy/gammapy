@@ -137,7 +137,22 @@ class CountsSpectrum(object):
             Spectrum observation holding the irfs
         """
 
+        m = fit.to_sherpa_model()
 
+        # Get differential flux at true energy log bin center
+        ebounds = obs.effective_area.ebounds
+        x = ebounds.log_centers.to('keV')
+        diff_flux = Quantity(m(x), 'cm-2 s-1 keV-1')
+
+        # Multiply with bin width = integration
+        int_flux = (diff_flux * ebounds.bands).decompose()
+
+        # Apply ARF and RMF to get n_pred
+        temp = int_flux * obs.meta.livetime * obs.effective_area.effective_area
+        counts = obs.energy_dispersion.pdf_matrix.transpose().dot(temp)
+
+        e_reco = obs.energy_dispersion.reco_energy
+        return cls(counts, e_reco)
 
     @property
     def total_counts(self):
