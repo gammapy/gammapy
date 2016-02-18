@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_equal
 import astropy.units as u
+from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 import numpy as np
 from astropy.table import Table
@@ -97,7 +98,7 @@ def test_energy_offset_array_read_write(tmpdir):
     assert_equal(array.offset, array2.offset)
 
 
-def test_energy_offset_array_bin_volume(tmpdir):
+def test_energy_offset_array_bin_volume():
     array = make_test_array()
     energy_bin = array.energy.bands
     offset_bin = np.pi * (array.offset[1:] ** 2 - array.offset[:-1] ** 2)
@@ -106,6 +107,7 @@ def test_energy_offset_array_bin_volume(tmpdir):
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
 
+@requires_dependency('scipy')
 def test_evaluate_at_energy():
     array, offset, energy = make_test_array(True)
     e_eval = energy[0]
@@ -116,6 +118,7 @@ def test_evaluate_at_energy():
     assert_equal(table_energy["value"][23], 1)
 
 
+@requires_dependency('scipy')
 def test_evaluate_at_offset():
     array, offset, energy = make_test_array(True)
     off_eval = offset[0]
@@ -126,6 +129,7 @@ def test_evaluate_at_offset():
     assert_equal(table_offset["value"][2], 1)
 
 
+@requires_dependency('scipy')
 def test_acceptance_curve_in_energy_band():
     """
     I define an energy range on witch I want to compute the acceptance curve that has the same boundaries as the
@@ -151,6 +155,7 @@ def test_acceptance_curve_in_energy_band():
                              1 * array.energy.bands[91].to('MeV'))
 
 
+@requires_dependency('scipy')
 def test_to_cube():
     """
     There are three events in the energyoffsetarray at three offset and energies. I define a Cube with the same energy

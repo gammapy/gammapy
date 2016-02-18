@@ -49,7 +49,7 @@ def test_fill_acceptance_image():
     acceptance = gaus_model(offset.radian)
 
     # fill acceptance in the image
-    image = fill_acceptance_image(image, center, offset, acceptance)
+    image = fill_acceptance_image(image.header, center, offset, acceptance)
 
     # test: check points at the offsets where the acceptance is defined
     # along the x axis

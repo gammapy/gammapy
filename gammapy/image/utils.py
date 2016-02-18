@@ -666,7 +666,7 @@ def bin_events_in_image(events, reference_image):
 
     Parameters
     ----------
-    events : `~astropy.table.Table`
+    events : `~gammapy.events.data.EventList`
         Event list table
     reference_image : `~astropy.io.fits.ImageHDU`
         An image defining the spatial bins.
@@ -677,13 +677,11 @@ def bin_events_in_image(events, reference_image):
         Count image
     """
     if 'GLON' in reference_image.header['CTYPE1']:
-        lon = events['GLON']
-        lat = events['GLAT']
+        pos = events.galactic
     else:
-        lon = events['RA']
-        lat = events['DEC']
+        pos = events.radec
 
-    return wcs_histogram2d(reference_image.header, lon, lat)
+    return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
 
 
 def bin_events_in_cube(events, reference_cube, energies):
