@@ -215,7 +215,7 @@ class SpectrumExtraction(object):
 
     @classmethod
     def from_configfile(cls, configfile):
-        """Create `~gammapy.spectrum.SpectrumAnalysis` from configfile
+        """Create `~gammapy.spectrum.SpectrumExtraction` from configfile
 
         Parameters
         ----------

@@ -7,8 +7,7 @@ from astropy.tests.helper import pytest
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...spectrum.spectrum_fit import SpectrumFit
-from ...utils.testing import requires_dependency, requires_data
-
+from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')

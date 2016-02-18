@@ -61,6 +61,21 @@ class SpectrumFit(object):
         return cls(obs_list)
 
     @classmethod
+    def from_configfile(cls, configfile):
+        """Create `~gammapy.spectrum.SpectrumFit` from configfile
+
+        Parameters
+        ----------
+        configfile : str
+            YAML config file
+        """
+        import yaml
+        with open(configfile) as fh:
+            config = yaml.safe_load(fh)
+
+        return cls.from_config(config)
+
+    @classmethod
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` using a config dict
 
