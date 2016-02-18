@@ -35,26 +35,6 @@ class EnergyOffsetArray(object):
         else:
             self.data = Quantity(data, data_units)
 
-    @classmethod
-    def theta2_linspace(cls, energy, theta2_min, theta2_max, theta2_bin, data=None):
-        """
-        Define an `EnergyOffsetArray` with a square root offset binning
-        From a linsopace distribution in theta square you define a square root distribution in theta
-
-        Parameters
-        ----------
-        energy : `~gammapy.utils.energy.EnergyBounds`
-            energy bin vector
-        theta2_min: `~astropy.units.Quantity`, deg2
-        theta2_max: `~astropy.units.Quantity`, deg2
-        theta2_bin: int
-        data : `~numpy.ndarray`, optional
-        data array (2D)
-
-        """
-        theta2=Quantity(np.linspace(theta2_min.value, theta2_max.value, theta2_bin), theta2_min.unit)
-        theta=Angle(np.sqrt(theta2))
-        return cls(energy, theta, data)
 
 
     def fill_events(self, event_lists):
@@ -92,6 +72,8 @@ class EnergyOffsetArray(object):
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
         """
         Plot Energy_offset Array image (x=offset, y=energy).
+        TODO: Currently theta axis is not shown correctly if theta scale is not linear (like square root). Can be fixed by creating a matplotlib square root scale r using contourf or placing tick manually
+        
         """
         import matplotlib.pyplot as plt
 
