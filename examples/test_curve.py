@@ -99,5 +99,7 @@ def plot_model():
 
 
 if __name__ == '__main__':
-    # make_model()
-    plot_model()
+    make_model()
+    #plot_model()
+    make_image()
+    make_significance_image()
