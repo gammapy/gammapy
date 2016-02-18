@@ -3,10 +3,6 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.units import Quantity
-from astropy.coordinates import Angle
-
-
 
 
 def sqrt_space(start, stop, num):
@@ -25,6 +21,6 @@ def sqrt_space(start, stop, num):
     tab = `~numpy.ndarray`
         1D array with a square root scale
     """
-    tab2=np.linspace(start, stop, num)
+    tab2=np.linspace(start**2, stop**2, num)
     tab=np.sqrt(tab2)
     return tab
