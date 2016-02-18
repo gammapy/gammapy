@@ -3,7 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
@@ -22,6 +22,52 @@ __all__ = [
 ]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
+
+
+def _select_closest():
+    pass
+
+
+def compute_pie_fraction(sources, pointing_position, fov_radius):
+    """
+    Parameters
+    ----------
+    source
+    pointing_position
+
+    Returns
+    -------
+
+    """
+    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
+    sources["separation"] = pointing_position.separation(source_pos)
+    sources.sort("separation")
+    radius = Angle(sources["Radius"])[0]
+    separation=Angle(sources["separation"])[0]
+    if separation > fov_radius:
+        return 0
+    else:
+        return 2*np.arctan(radius / separation)/ (2*np.pi)
+
+
+def select_events_outside_pie(sources, events, pointing_position, fov_radius):
+    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
+    sources["separation"] = pointing_position.separation(source_pos)
+    sources["phi"] = pointing_position.position_angle(source_pos)
+    sources.sort("separation")
+    radius = Angle(sources["Radius"])[0]
+    phi= Angle(sources["phi"])[0]
+    separation=Angle(sources["separation"])[0]
+    if separation > fov_radius:
+        return np.arange(len(events))
+    else:
+        import IPython; IPython.embed()
+        phi_min = phi - np.arctan(radius/ separation)
+        phi_max = phi + np.arctan(radius / separation)
+
+        phi_events = pointing_position.position_angle(events.radec)
+        idx = np.where((phi_events > phi_max) | (phi_events < phi_min))
+        return idx
 
 
 class GaussianBand2D(object):
@@ -521,7 +567,7 @@ class EnergyOffsetBackgroundModel(object):
         bg_rate = Quantity(table['bkg'].squeeze(), table['bkg'].unit)
         return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
 
-    def fill_obs(self, observation_table, data_store):
+    def fill_obs(self, observation_table, data_store, excluded_sources=None, fov_radius=Angle(2.5, "deg")):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -534,16 +580,26 @@ class EnergyOffsetBackgroundModel(object):
             Observation list to use for the histogramming.
         data_store : `~gammapy.data.DataStore`
             Data store
+        excluded_sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
+        fov_radius : `~astropy.coordinates.Angle`
+            Field of view radius
         """
         for obs in observation_table:
             events = data_store.load(obs['OBS_ID'], 'events')
 
-            # TODO: filter out (mask) possible sources in the data
-            #       for now, the observation table should not contain any
-            #       run at or near an existing source
+
+            if excluded_sources:
+                pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
+
+                idx = select_events_outside_pie(excluded_sources, events, events.pointing_radec, fov_radius)
+                events = events[idx]
+            else:
+                livetime_lost_fraction = 0
 
             self.counts.fill_events([events])
-            self.livetime.data += events.observation_live_time_duration
+            self.livetime.data += events.observation_live_time_duration * (1 - pie_fraction)
 
     def compute_rate(self):
         """Compute background rate cube from count_cube and livetime_cube.

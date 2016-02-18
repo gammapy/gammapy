@@ -12,11 +12,23 @@ from gammapy.data import DataStore
 from gammapy.utils.axis import sqrt_space
 from gammapy.image import bin_events_in_image, make_empty_image, disk_correlate
 from gammapy.background import fill_acceptance_image
+from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 # from gammapy.detect import compute_ts_map
 import pylab as pt
 
 pt.ion()
+
+
+def make_excluded_sources():
+    centers = SkyCoord([84, 82], [23, 21], unit='deg')
+    radius = Angle('0.3 deg')
+    sources = SkyCircleRegion(pos=centers, radius=radius)
+    catalog = Table()
+    catalog["RA"] = sources.pos.data.lon
+    catalog["DEC"] = sources.pos.data.lat
+    catalog["Radius"] = sources.radius
+    return catalog
 
 
 def make_model():
@@ -25,8 +37,11 @@ def make_model():
     obs_table = data_store.obs_table
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
     offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
+
+    excluded_sources = make_excluded_sources()
+
     multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
-    multi_array.fill_obs(obs_table, data_store)
+    multi_array.fill_obs(obs_table, data_store, excluded_sources)
     multi_array.compute_rate()
 
     bgarray = multi_array.bg_rate
@@ -51,11 +66,11 @@ def make_image():
     for events in data_store.load_all("events"):
         center = events.pointing_radec.galactic
         livetime = events.observation_live_time_duration
-        solid_angle = Angle(0.01,"deg")**2
+        solid_angle = Angle(0.01, "deg") ** 2
 
         counts_image.data += bin_events_in_image(events, counts_image).data
 
-        interp_param = dict(bounds_error=False, fill_value= None)
+        interp_param = dict(bounds_error=False, fill_value=None)
 
         acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"], interp_param)
         acc = Quantity(acc_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
@@ -68,17 +83,46 @@ def make_image():
     # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
     #  maps['ExpGammaMap'].data, kernel)
 
+
 def make_significance_image():
-    counts_image=fits.open("counts_image.fits")[1]
-    bkg_image=fits.open("bkg_image.fits")[1]
+    counts_image = fits.open("counts_image.fits")[1]
+    bkg_image = fits.open("bkg_image.fits")[1]
     counts = disk_correlate(counts_image.data, 10)
     bkg = disk_correlate(bkg_image.data, 10)
     s = significance(counts, bkg)
-    s_image =fits.ImageHDU(data=s, header= counts_image.header)
+    s_image = fits.ImageHDU(data=s, header=counts_image.header)
     s_image.writeto("significance_image.fits", clobber=True)
 
 
+def remove_agn():
+    sources_coord = SkyCoord(catalog['RA'], catalog['DEC'])
 
+    # sources sizes (x, y): radius
+    sources_size = Angle(catalog['Radius'])
+    sources_max_size = np.amax(sources_size)
+
+    # sources exclusion radius = 2x max size + 3 deg (fov + 0.5 deg?)
+    sources_excl_radius = 2 * sources_max_size + Angle(3., 'deg')
+
+    # mask all obs taken within the excl radius of any of the sources
+    # loop over sources
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    observation_table = data_store.obs_table
+    obs_coords = SkyCoord(observation_table['RA'], observation_table['DEC'])
+    for i_source in range(len(catalog)):
+        selection = dict(type='sky_circle', frame='icrs',
+                         lon=sources_coord[i_source].ra,
+                         lat=sources_coord[i_source].dec,
+                         radius=sources_excl_radius[i_source],
+                         inverted=True,
+                         border=Angle(0., 'deg'))
+        observation_table = observation_table.select_observations(selection)
+
+    # save the bg observation list to a fits file
+    outfile = Path(outdir) / 'bg_observation_table.fits.gz'
+    log.info("Writing {}".format(outfile))
+    observation_table.write(str(outfile), overwrite=overwrite)
 
 
 def plot_model():
@@ -100,6 +144,6 @@ def plot_model():
 
 if __name__ == '__main__':
     make_model()
-    #plot_model()
-    make_image()
-    make_significance_image()
+    # plot_model()
+    #make_image()
+    #make_significance_image()
