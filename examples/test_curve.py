@@ -16,8 +16,8 @@ def make_model():
     data_store = DataStore.from_dir(dir)
     obs_table = data_store.obs_table
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-    theta2_min=Quantity(0, "deg2")
-    theta2_max=Quantity(2.5**2, "deg2")
+    theta_min=0
+    theta_max=2.5
     theta2_bin=100
     theta2=Quantity(np.linspace(theta2_min.value, theta2_max.value, theta2_bin), theta2_min.unit)
     offset=Angle(np.sqrt(theta2))

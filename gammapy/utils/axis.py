@@ -6,21 +6,31 @@ import numpy as np
 
 
 def sqrt_space(start, stop, num):
-    """
-    Define a square root binning
-    From a linspace distribution in the square of the value, you define a square root distribution in theta
+    """Return numbers spaced evenly on a square root scale.
+
+    This function is similar to `numpy.linspace` and `numpy.logspace`.
 
     Parameters
     ----------
     start : float
+        start is the starting value of the sequence
     stop : float
+        stop is the final value of the sequence
     num : int
+        Number of samples to generate.
 
     Returns
     -------
-    tab = `~numpy.ndarray`
+    samples : `~numpy.ndarray`
         1D array with a square root scale
+
+    Examples
+    --------
+    >>> from gammapy.utils.axis import sqrt_space
+    >>> samples = sqrt_space(0, 2, 5)
+    array([ 0.        ,  1.        ,  1.41421356,  1.73205081,  2.        ])
+
     """
-    tab2=np.linspace(start**2, stop**2, num)
-    tab=np.sqrt(tab2)
-    return tab
+    samples2 = np.linspace(start ** 2, stop ** 2, num)
+    samples = np.sqrt(samples2)
+    return samples
