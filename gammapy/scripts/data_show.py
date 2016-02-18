@@ -10,6 +10,7 @@ from astropy.table import Table
 import click
 click.disable_unicode_literals_warning = True
 from .. import irf
+from ..spectrum import CountsSpectrum
 from ..data import EventList
 
 __all__ = ['data_show_main']
@@ -17,7 +18,7 @@ __all__ = ['data_show_main']
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-FILETYPES = ['events', 'aeff', 'edisp', 'psf']
+FILETYPES = ['events', 'aeff', 'edisp', 'psf', 'arf', 'pha']
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -43,6 +44,10 @@ def data_show_main(filename, filetype, do_plot):
         show_edisp2d(filename, do_plot)
     elif filetype == 'psf':
         show_psf2d(filename, do_plot)
+    elif filetype == 'arf':
+        show_arf(filename, do_plot)
+    elif filetype == 'pha':
+        show_pha(filename, do_plot)
     else:
         msg = 'Invalid filetype: {} '.format(filetype)
         msg += 'Valid filetypes are: {}'.format(FILETYPES)
@@ -120,6 +125,16 @@ def show_arf(hdu_list, energies, do_plot=False):
 
     if do_plot:
         arf.plot_area_vs_energy('effective_area.png')
+
+
+def show_pha(filename, do_plot=True):
+    """Print / plot some basic info about a PHA format file.
+    """
+    pha = CountsSpectrum.read(filename)
+    print(pha.info())
+
+    if do_plot:
+        pha.peek()
 
 
 def show_background(filename, do_plot=False):

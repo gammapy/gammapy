@@ -25,7 +25,7 @@ from ..utils.scripts import (
 __all__ = [
     'SpectrumExtraction',
     'SpectrumObservation',
-    'run_spectrum_extraction_using_config',
+    'SpectrumObservationList',
 ]
 
 log = logging.getLogger(__name__)
@@ -80,6 +80,27 @@ class SpectrumExtraction(object):
 
         self._observations = None
 
+    def run(self):
+        """Run all steps
+
+        Extract spectrum, filter observations, write results to disk.
+        """
+        self.extract_spectrum()
+        if self.bkg_method['type'] == 'reflected':
+            self.filter_observations()
+
+        o = self.observations
+        o.write_ogip_data('ogip_data')
+        o.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
+        o.to_observation_table().write('observation_table.fits', format='fits',
+                                       overwrite=True)
+
+    def filter_observations(self):
+        """Filter observations by number of reflected regions"""
+        obs = self.observations
+        mask = obs.filter_by_reflected_regions(self.bkg_method['n_min'])
+        self._observations = SpectrumObservationList(np.asarray(obs)[mask])
+
     def extract_spectrum(self, nobs=None):
         """Extract 1D spectral information
 
@@ -98,11 +119,13 @@ class SpectrumExtraction(object):
                                                           self.exclusion,
                                                           **self.extra_info
                                                           )
-            except IndexError:
+            except IndexError as err:
                 log.warning(
-                    'Observation {} not in store {}'.format(val, self.store))
+                    'Could not load observation {} from store{}'
+                    'Error: \n{}'.format(val, self.store.base_dir, err))
                 nobs += 1
                 continue
+                
             observations.append(temp)
             if i == nobs - 1:
                 break
@@ -151,6 +174,7 @@ class SpectrumExtraction(object):
         configfile : dict
             config dict
         """
+        config = config['extraction']
 
         # Observations
         obs = config['data']['runlist']
@@ -191,7 +215,7 @@ class SpectrumExtraction(object):
 
     @classmethod
     def from_configfile(cls, configfile):
-        """Create `~gammapy.spectrum.SpectrumAnalysis` from configfile
+        """Create `~gammapy.spectrum.SpectrumExtraction` from configfile
 
         Parameters
         ----------
@@ -229,7 +253,6 @@ class SpectrumObservation(object):
 
         # These values are needed for I/O
         self.meta.setdefault('phafile', 'None')
-        self.meta.setdefault('energy_range', EnergyBounds([0.01, 300], 'TeV'))
 
     @classmethod
     def read_ogip(cls, phafile, rmffile=None, bkgfile=None, arffile=None):
@@ -244,13 +267,13 @@ class SpectrumObservation(object):
         on_vector = CountsSpectrum.read(f)
 
         # Todo : read in IRF files
-
-        meta = dict(phafile=phafile)
+        meta = on_vector.meta
+        meta.update(phafile=phafile)
         return cls(0, on_vector, None, None, None, meta)
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True, dry_run=False, calc_containment=False):
+                       exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
         Extraction parameters are stored in the meta attribute
@@ -315,16 +338,18 @@ class SpectrumObservation(object):
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
 
-        # Todo: Agree where to store all meta info
-        on_vec.meta.update(m)
-
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(m.offset)
+        elo, ehi = arf_vec.energy_thresh_lo, arf_vec.energy_thresh_hi
+        m['safe_energy_range'] = EnergyBounds([elo, ehi])
 
         edisp2d = store.load(obs_id=obs_id, filetype='edisp')
         rmf_mat = edisp2d.to_energy_dispersion(m.offset, e_reco=ebounds)
 
         m = None if not save_meta else m
+
+        # Todo: Agree where to store all meta info
+        on_vec.meta.update(m)
 
         return cls(obs_id, on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
@@ -357,16 +382,16 @@ class SpectrumObservation(object):
         arf = None
         rmf = None
 
-        # Calculate average alpha
+        # Calculate average alpha (remove?)
         val = [o.alpha * o.off_vector.total_counts for o in obs_list]
         num = np.sum(val)
         den = np.sum([o.off_vector.total_counts for o in obs_list])
         alpha = num/den
         off_vec.meta.backscal = 1. / alpha
 
-        #Calculate energy range
-        emin = min([_.meta.energy_range[0] for _ in obs_list])
-        emax = max([_.meta.energy_range[1] for _ in obs_list])
+        #Calculate safe energy range
+        emin = min([_.meta.safe_energy_range[0] for _ in obs_list])
+        emax = max([_.meta.safe_energy_range[1] for _ in obs_list])
 
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
@@ -544,7 +569,7 @@ class SpectrumObservation(object):
 
 
 class SpectrumObservationList(list):
-    """List of `gammapy.spectrum.SpectrumObservation`
+    """List of `~gammapy.spectrum.SpectrumObservation`
     """
     def get_obs_by_id(self, id):
         """Return an observation with a certain id
@@ -590,7 +615,7 @@ class SpectrumObservationList(list):
 
         Returns
         -------
-        idx : `np.array`
+        idx : `~np.array`
             Indices of element fulfilling the condition
         """
         val = [o.off_vector.meta.backscal for o in self]
@@ -610,11 +635,12 @@ class SpectrumObservationList(list):
             obs.write_ogip(outdir=outdir, **kwargs)
 
     def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable"""
-        names = ['OBS_ID', 'PHAFILE']
+        """Create `~gammapy.data.ObservationTable`"""
+        names = ['OBS_ID', 'PHAFILE', 'OFFSET']
         col1 = [o.obs_id for o in self]
         col2 = [o.meta.phafile for o in self]
-        return ObservationTable(data=[col1, col2], names=names)
+        col3 = [o.meta.offset.value for o in self]
+        return ObservationTable(data=[col1, col2, col3], names=names)
 
 
 class BackgroundEstimator(object):
@@ -693,57 +719,5 @@ class BackgroundEstimator(object):
         off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
         self.backscal = 1
         self.off_vec = off_vec
-
-
-def run_spectrum_extraction_using_config(config, **kwargs):
-    """
-    Run a 1D spectral analysis using a config dict
-
-    kwargs are forwarded to
-     :func:`spectrum.spectrum_extraction.SpectrumObservation.from_config`
-
-    Parameters
-    ----------
-    config : dict
-        Config dict
-
-    Returns
-    -------
-    analysis : `~gammapy.spectrum.spectrum_extraction.SpectrumExtraction`
-        Spectrum extraction analysis instance
-    """
-    kwargs.setdefault('dry_run', False)
-    config = config['extraction']
-    outdir = config['results']['outdir']
-    log.info("\nStarting analysis {}".format(outdir))
-    outdir = make_path(outdir)
-    outdir.mkdir(exist_ok=True, parents=True)
-    analysis = SpectrumExtraction.from_config(config, **kwargs)
-    obs = analysis.observations
-    if kwargs['dry_run']:
-        return analysis
-
-    if config['off_region']['type'] == 'reflected':
-        mask = obs.filter_by_reflected_regions(config['off_region']['n_min'])
-        # Todo: should ObservationList subclass np.array to avoid this hack?
-        temp = np.asarray(obs)[mask]
-        obs = SpectrumObservationList(temp)
-
-    obs_in_erange = SpectrumObservationList(
-        [o.restrict_energy_range(method='binned') for o in obs])
-
-    # Output
-    if config['results']['write_ogip']:
-        obs.write_ogip_data(str(outdir / 'ogip_data'))
-
-    rfile = outdir / config['results']['result_file']
-    obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
-    obs_in_erange.total_spectrum.spectrum_stats.to_yaml('test.yaml')
-    log.info('\nWriting file {}'.format(rfile))
-    obs.to_observation_table().write(
-        str(outdir / 'observations.fits'), format='fits', overwrite=True)
-
-    return analysis
-
 
 

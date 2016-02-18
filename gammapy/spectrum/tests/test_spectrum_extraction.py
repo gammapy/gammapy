@@ -1,24 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-import numpy as np
-from astropy.tests.helper import pytest
-from astropy.utils.compat import NUMPY_LT_1_9
-from numpy.testing import assert_allclose
+
 from astropy.coordinates import SkyCoord, Angle
 
-from ...spectrum.results import SpectrumFitResult, SpectrumStats
-from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
-from ...region import SkyCircleRegion
-from ...datasets import gammapy_extra
-from ...utils.scripts import read_yaml
-from ...utils.energy import EnergyBounds
-from ...image import ExclusionMask
 from ...data import DataStore
-from ...spectrum import (
-    SpectrumExtraction,
-    run_spectrum_extraction_using_config,
-)
+from ...datasets import gammapy_extra
+from ...image import ExclusionMask
+from ...region import SkyCircleRegion
+from ...spectrum import SpectrumExtraction
+from ...utils.energy import EnergyBounds
+from ...utils.testing import requires_dependency, requires_data
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -50,22 +43,3 @@ def test_spectrum_extraction(tmpdir):
     obs23523 = obs.get_obs_by_id(23523)
     assert obs23523.on_vector.total_counts == 123
 
-# @pytest.mark.xfail
-@requires_dependency('yaml')
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_spectrum_extraction_from_configfile(tmpdir):
-    configfile = gammapy_extra.filename(
-        'test_datasets/spectrum/spectrum_analysis_example.yaml')
-    config = read_yaml(configfile)
-    config['extraction']['results']['outdir'] = str(tmpdir)
-    tmpfile = tmpdir / 'spectrum.yaml'
-    config['extraction']['results']['result_file'] = str(tmpfile)
-
-    run_spectrum_extraction_using_config(config)
-    actual = SpectrumStats.from_yaml(str(tmpfile))
-
-    desired = SpectrumStats.from_yaml(
-        gammapy_extra.filename('test_datasets/spectrum/spectrum.yaml'))
-
-    assert actual.n_on == desired.n_on

@@ -1,14 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (print_function)
 
-import copy
 import logging
-import numpy as np
 
-from ..spectrum import run_spectrum_extraction_using_config
-from ..spectrum.spectrum_fit import run_spectrum_fit_using_config
-from ..utils.scripts import read_yaml, recursive_merge_dicts, make_path, \
-    write_yaml
 
 __all__ = ['SpectrumPipe']
 
@@ -43,10 +37,4 @@ def run_spectrum_analysis_using_config(config):
         Spectrum extraction analysis instance
     """
 
-    analysis = run_spectrum_extraction_using_config(config)
-    fit = run_spectrum_fit_using_config(config)
-
-    #Todo: add utility to not have to specify same outdir twice
-    #Todo: add utility to write only one outputfile
-
-    return fit, analysis
+    raise NotImplementedError

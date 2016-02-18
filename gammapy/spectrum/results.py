@@ -170,6 +170,13 @@ class SpectrumFitResult(Result):
             elif pname == 'E0':
                 unit = Unit('TeV')
                 name = 'reference'
+            elif pname == 'Alpha':
+                unit = Unit('')
+                name = 'alpha'
+            elif pname == 'Beta':
+                unit = Unit('')
+                name = 'beta'
+
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
             parameters[name] = par['value'] * unit
@@ -193,8 +200,10 @@ class SpectrumFitResult(Result):
         energy_range = EnergyBounds((el, eh), 'keV')
         if model.type == 'powlaw1d':
             spectral_model = 'PowerLaw'
+        elif model.type == 'logparabola':
+            spectral_model = 'LogParabola'
         else:
-            raise ValueError("Model not understood: {}".format(model.name))
+            raise ValueError("Cannot read sherpa model: {}".format(model.name))
         parameters = Bunch()
         parameter_errors = Bunch()
 
@@ -205,16 +214,24 @@ class SpectrumFitResult(Result):
                                      covar.parmaxes):
             pname = pname.split('.')[-1]
             thawed_pars.append(pname)
+            factor = 1
             if pname == 'gamma':
                 name = 'index'
                 unit = Unit('')
             elif pname == 'ampl':
                 unit = Unit('cm-2 s-1 keV-1')
                 name = 'norm'
+            elif pname == 'c1':
+                unit = Unit('')
+                name = 'alpha'
+            elif pname == 'c2':
+                unit = Unit('')
+                name = 'beta'
+                factor = 1. / np.log(10)
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
-            parameters[name] = pval * unit
-            parameter_errors[name] = perr * unit
+            parameters[name] = pval * unit * factor
+            parameter_errors[name] = perr * unit * factor
 
         # Get fixed parameters from model (not stored in covar)
         for par in model.pars:
@@ -247,7 +264,13 @@ class SpectrumFitResult(Result):
                                           error=err.value,
                                           unit='{}'.format(par.unit))
         val['spectral_model'] = self.spectral_model
-
+        val['fluxes'] = dict()
+        for key in self.fluxes:
+            flux = self.fluxes[key]
+            flux_err = self.flux_errors[key]
+            val['fluxes'][key] = dict(value=flux.value,
+                                      error=flux_err.value,
+                                      unit='{}'.format(flux.unit))
         return val
 
     @classmethod
@@ -262,12 +285,26 @@ class SpectrumFitResult(Result):
             parameter_errors[par] = pars[par]['error'] * Unit(pars[par]['unit'])
         spectral_model = val['spectral_model']
 
+        try:
+            fl = val['fluxes']
+        except KeyError:
+            fluxes=None
+            flux_errors=None
+        else:
+            fluxes = Bunch()
+            flux_errors = Bunch()
+            for flu in fl:
+                fluxes[flu] = fl[flu]['value'] * Unit(fl[flu]['unit'])
+                flux_errors[flu] = fl[flu]['error'] * Unit(fl[flu]['unit'])
+
         return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
-                   spectral_model=spectral_model)
+                   spectral_model=spectral_model, fluxes=fluxes,
+                   flux_errors=flux_errors)
 
     def to_table(self, **kwargs):
         t = Table()
+        t['model'] = [self.spectral_model]
         for par in self.parameters.keys():
             t[par] = Column(data=np.atleast_1d(self.parameters[par]), **kwargs)
             t['{}_err'.format(par)] = Column(
@@ -297,8 +334,16 @@ class SpectrumFitResult(Result):
             model.gamma = self.parameters.index.value
             model.ref = self.parameters.reference.to('keV').value
             model.ampl = self.parameters.norm.to('cm-2 s-1 keV-1').value
+        elif self.spectral_model == 'LogParabola':
+            model = m.LogParabola('logparabola.' + name)
+            model.c1 = self.parameters.alpha.value
+            # Sherpa models have log10 in the exponent, we want ln
+            model.c2 = self.parameters.beta.value * np.log(10)
+            model.ref = self.parameters.reference.to('keV').value
+            model.ampl = self.parameters.norm.to('cm-2 s-1 keV-1').value
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(
+                'to_sherpa_model for model {}'.format(self.spectral_model))
 
         return model
 
@@ -555,6 +600,7 @@ class SpectrumStats(Result):
             cols.append(Column(data=[d], **kwargs))
         t = Table(cols, names=names)
         t['energy_range'].unit = self.energy_range.unit
+        t['n_bkg'] = t['n_off'] * t['alpha']
         return t
 
 

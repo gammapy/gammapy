@@ -1,9 +1,0 @@
-spectrum:
-  alpha: 0.08333333333333333
-  energy_range:
-    max: 300.0
-    min: 0.01
-    unit: TeV
-  excess: 176.0
-  n_off: 252
-  n_on: 197
