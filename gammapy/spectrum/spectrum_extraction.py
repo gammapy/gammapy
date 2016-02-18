@@ -119,9 +119,10 @@ class SpectrumExtraction(object):
                                                           self.exclusion,
                                                           **self.extra_info
                                                           )
-            except IndexError:
+            except IndexError as err:
                 log.warning(
-                    'Observation {} not in store {}'.format(val, self.store))
+                    'Could not load observation {} from store{}'
+                    'Error: \n{}'.format(val, self.store.base_dir, err))
                 nobs += 1
                 continue
                 
@@ -272,7 +273,7 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-                       exclusion, save_meta=True, dry_run=False, calc_containment=True):
+                       exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
         Extraction parameters are stored in the meta attribute
@@ -568,7 +569,7 @@ class SpectrumObservation(object):
 
 
 class SpectrumObservationList(list):
-    """List of `gammapy.spectrum.SpectrumObservation`
+    """List of `~gammapy.spectrum.SpectrumObservation`
     """
     def get_obs_by_id(self, id):
         """Return an observation with a certain id
@@ -614,7 +615,7 @@ class SpectrumObservationList(list):
 
         Returns
         -------
-        idx : `np.array`
+        idx : `~np.array`
             Indices of element fulfilling the condition
         """
         val = [o.off_vector.meta.backscal for o in self]
@@ -634,7 +635,7 @@ class SpectrumObservationList(list):
             obs.write_ogip(outdir=outdir, **kwargs)
 
     def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable"""
+        """Create `~gammapy.data.ObservationTable`"""
         names = ['OBS_ID', 'PHAFILE', 'OFFSET']
         col1 = [o.obs_id for o in self]
         col2 = [o.meta.phafile for o in self]
