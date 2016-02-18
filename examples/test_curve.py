@@ -44,7 +44,6 @@ def make_model():
     #multi_array.fill_obs(obs_table, data_store, excluded_sources)
     multi_array.fill_obs(obs_table, data_store)
     multi_array.compute_rate()
-
     bgarray = multi_array.bg_rate
     energy_range = Energy([1, 10], 'TeV')
     table = bgarray.acceptance_curve_in_energy_band(energy_range, energy_bins=10)
@@ -70,9 +69,9 @@ def make_image():
 
         counts_image.data += bin_events_in_image(events, counts_image).data
 
-        interp_param = dict(bounds_error=False, fill_value=None)
+        #interp_param = dict(bounds_error=False, fill_value=None)
 
-        acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"], interp_param)
+        acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"])
         acc = Quantity(acc_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
         bkg_image.data += acc.decompose()
         print(acc.decompose().sum())
@@ -114,6 +113,6 @@ def plot_model():
 
 if __name__ == '__main__':
     make_model()
-    # plot_model()
+    #plot_model()
     make_image()
     #make_significance_image()
