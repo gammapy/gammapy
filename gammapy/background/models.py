@@ -440,7 +440,8 @@ class EnergyOffsetBackgroundModel(object):
     """EnergyOffsetArray background model.
 
     Container class for `EnergyOffsetArray` background model *(energy, offset)*.
-    This class defines 3 `EnergyOffsetArray` of type `~gammapy.background.EnergyOffsetArray`:
+    This class defines 3 `EnergyOffsetArray` of type `~gammapy.background.EnergyOffsetArray`
+
     Parameters
     ----------
     energy : `~gammapy.utils.energy.EnergyBounds`
@@ -463,7 +464,7 @@ class EnergyOffsetBackgroundModel(object):
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
 
     def write(self, filename, **kwargs):
-        """ Write `EnergyOffsetBackgroundModel` to FITS file.
+        """Write `EnergyOffsetBackgroundModel` to FITS file.
 
         Parameters
         ----------
@@ -493,7 +494,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def read(cls, filename):
-        """Create `EnergyOffsetBackgroundModel` from  FITS file.
+        """Create `EnergyOffsetBackgroundModel` from FITS file.
 
         Parameters
         ----------
@@ -505,8 +506,7 @@ class EnergyOffsetBackgroundModel(object):
 
     @classmethod
     def from_table(cls, table):
-        """
-        Create `EnergyOffsetBackgroundModel` from  `~astropy.table.Table`.
+        """Create `EnergyOffsetBackgroundModel` from `~astropy.table.Table`.
 
         Parameters
         ----------

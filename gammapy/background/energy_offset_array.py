@@ -14,17 +14,16 @@ __all__ = [
 
 
 class EnergyOffsetArray(object):
-    """
-    Energy offset dependent array.
+    """Energy offset dependent array.
 
     Parameters
     ----------
     energy : `~gammapy.utils.energy.EnergyBounds`
-         energy bin vector
+        Energy bounds vector (1D)
     offset : `~astropy.coordinates.Angle`
-        offset bin vector
+        Offset vector (1D)
     data : `~numpy.ndarray`, optional
-        data array (2D)
+        Data array (2D)
     """
 
     def __init__(self, energy, offset, data=None, data_units=""):
@@ -35,15 +34,13 @@ class EnergyOffsetArray(object):
         else:
             self.data = Quantity(data, data_units)
 
-
-
     def fill_events(self, event_lists):
         """Fill events histogram.
 
         This add the counts to the existing value array.
 
         Parameters
-        -------------
+        ----------
         event_lists : list of `~gammapy.data.EventList`
            Python list of event list objects.
         """
@@ -52,13 +49,12 @@ class EnergyOffsetArray(object):
             self.data += Quantity(counts, unit=self.data.unit)
 
     def _fill_one_event_list(self, events):
-        """
-        histogram the counts of an EventList object in 2D (energy,offset)
+        """Histogram the counts of an EventList object in 2D (energy,offset)
 
         Parameters
-        -------------
+        ----------
         events :`~gammapy.data.EventList`
-           Event list objects.
+           Event list
         """
         offset = events.offset
         ev_energy = events.energy
@@ -70,10 +66,11 @@ class EnergyOffsetArray(object):
         return hist
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
-        """
-        Plot Energy_offset Array image (x=offset, y=energy).
-        TODO: Currently theta axis is not shown correctly if theta scale is not linear (like square root). Can be fixed by creating a matplotlib square root scale r using contourf or placing tick manually
-        
+        """Plot Energy_offset Array image (x=offset, y=energy).
+
+        TODO: Currently theta axis is not shown correctly if theta scale is not linear (like square root).
+        Can be fixed by creating a matplotlib square root scale r using contourf or placing tick manually
+
         """
         import matplotlib.pyplot as plt
 
@@ -112,21 +109,21 @@ class EnergyOffsetArray(object):
         filename : str
             File name
         data_name : str
-            name of the data column in the table
+            Name of the data column in the table
         """
         table = Table.read(filename)
         return cls.from_table(table, data_name)
 
     @classmethod
     def from_table(cls, table, data_name="data"):
-        """
-        Create `EnergyOffsetArray` from  `~astropy.table.Table`.
+        """Create `EnergyOffsetArray` from  `~astropy.table.Table`.
 
         Parameters
         ----------
         table : `~astropy.table.Table`
-        data_name: str
-            name of the data column in the table
+            Table
+        data_name : str
+            Name of the data column in the table
         """
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
@@ -143,7 +140,7 @@ class EnergyOffsetArray(object):
         filename : str
             File name
         data_name : str
-            name of the data column in the table
+            Name of the data column in the table
         """
         self.to_table(data_name).write(filename, **kwargs)
 
@@ -153,7 +150,7 @@ class EnergyOffsetArray(object):
         Parameters
         ----------
         data_name : str
-            name of the data column in the table
+            Name of the data column in the table
 
         Returns
         -------
@@ -171,8 +168,7 @@ class EnergyOffsetArray(object):
 
     def evaluate(self, energy=None, offset=None,
                  interp_kwargs=None):
-        """
-        Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
+        """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
 
         Parameters
         ----------
@@ -180,14 +176,13 @@ class EnergyOffsetArray(object):
             energy value
         offset : `~astropy.coordinates.Angle`
             offset value
-        interp_kwargs: dict
-            give the options for the RegularGridInterpolator
         interp_kwargs : dict
-        option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
-        Interpolated value
+        values : `~astropy.units.Quantity`
+            Interpolated value
         """
         if not interp_kwargs:
             interp_kwargs = dict(bounds_error=False, fill_value=None)
@@ -236,19 +231,19 @@ class EnergyOffsetArray(object):
         return bin_volume.to('TeV sr')
 
     def evaluate_at_energy(self, energy, interp_kwargs=None):
-        """
-        Evaluate the `EnergyOffsetArray` at one given energy.
+        """Evaluate the `EnergyOffsetArray` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
+            Energy
         interp_kwargs : dict
-            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+            Option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         table : `~astropy.table.Table`
-            two column: offset and data
+            Table with two columns: offset, value
         """
 
         table = Table()
@@ -257,20 +252,19 @@ class EnergyOffsetArray(object):
         return table
 
     def evaluate_at_offset(self, offset, interp_kwargs=None):
-        """
-        Evaluate the `EnergyOffsetArray` at one given offset.
+        """Evaluate the `EnergyOffsetArray` at one given offset.
 
         Parameters
         ----------
         offset : `~astropy.coordinates.Angle`
+            Offset angle
         interp_kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         table : `~astropy.table.Table`
-            two column: energy and data
-
+            Table with two columns: energy, value
         """
         table = Table()
         table["energy"] = self.energy.log_centers
@@ -325,7 +319,8 @@ class EnergyOffsetArray(object):
 
         Returns
         -------
-        Cube: `~gammapy.background.Cube`
+        cube : `~gammapy.background.Cube`
+            Cube
         """
         if coordx_edges is None:
             offmax = self.offset.max() / 2.
