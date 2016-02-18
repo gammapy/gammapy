@@ -557,7 +557,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
     amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
     try:
         result = minimize_scalar(f_cash, bracket=(amplitude_min, amplitude_max),
-                                 args=args, method=optimizer, tol=10)
+                                 args=args, method=optimizer, tol=0.1)
         return result.x, result.nfev
     except ValueError:
         result = minimize_scalar(f_cash, args=args, method=optimizer, tol=0.1)
