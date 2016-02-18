@@ -7,7 +7,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
@@ -15,6 +15,8 @@ from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackg
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore
+from ...region import SkyCircleRegion
+from ...background.models import compute_pie_fraction
 
 
 @requires_dependency('scipy')
@@ -132,6 +134,40 @@ def make_test_array(empty=True):
     return multi_array
 
 
+def make_test_array_fillobs(empty=True):
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    obs_table = data_store.obs_table
+    multi_array = make_test_array()
+    multi_array.fill_obs(obs_table, data_store)
+    return multi_array
+
+
+def make_excluded_sources():
+    centers = SkyCoord([0, 1], [1, 2], unit='deg')
+    radius = Angle('0.3 deg')
+    sources = SkyCircleRegion(pos=centers, radius=radius)
+    catalog = Table()
+    catalog["RA"] = sources.pos.data.lon
+    catalog["DEC"] = sources.pos.data.lat
+    catalog["Radius"] = sources.radius
+    return catalog
+
+
+def test_compute_pie_fraction():
+    excluded_sources = make_excluded_sources()
+    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+
+    pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
+    assert_allclose(pie_fraction, 0)
+
+    source_closest = SkyCoord(excluded_sources["RA"][0], excluded_sources["DEC"][0], unit="deg")
+    separation = pointing_position.separation(source_closest).value
+    pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(5, "deg"))
+    pie_fraction_expected = (2 * np.arctan(excluded_sources["Radius"][0] / separation) / (2 * np.pi))
+    assert_allclose(pie_fraction, pie_fraction_expected)
+
+
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
     def test_read_write(self):
@@ -147,14 +183,17 @@ class TestEnergyOffsetBackgroundModel:
         assert_quantity_allclose(multi_array.offset, multi_array2.offset)
 
     def test_fillobs_and_computerate(self):
-        dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
-        data_store = DataStore.from_dir(dir)
-        obs_table = data_store.obs_table
-        multi_array = make_test_array()
-        multi_array.fill_obs(obs_table, data_store)
+        multi_array = make_test_array_fillobs()
         multi_array.compute_rate()
         assert_equal(multi_array.counts.data.value.sum(), 5403)
         pix = 23, 1
         assert_quantity_allclose(multi_array.livetime.data[pix], 6313.8117676 * u.s)
         rate = Quantity(0.0024697306536062276, "MeV-1 s-1 sr-1")
         assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)
+
+    """
+    def test_compute_pie_fraction(self):
+        excluded_sources = make_excluded_sources()
+        multi_array = make_test_array_fillobs()
+        excluded_sources = make_excluded_sources()
+    """

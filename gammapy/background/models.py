@@ -43,11 +43,11 @@ def compute_pie_fraction(sources, pointing_position, fov_radius):
     sources["separation"] = pointing_position.separation(source_pos)
     sources.sort("separation")
     radius = Angle(sources["Radius"])[0]
-    separation=Angle(sources["separation"])[0]
+    separation = Angle(sources["separation"])[0]
     if separation > fov_radius:
         return 0
     else:
-        return (2*np.arctan(radius / separation)/ (2*np.pi)).value
+        return (2 * np.arctan(radius / separation) / (2 * np.pi)).value
 
 
 def select_events_outside_pie(sources, events, pointing_position, fov_radius):
@@ -56,12 +56,12 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
     sources["phi"] = pointing_position.position_angle(source_pos)
     sources.sort("separation")
     radius = Angle(sources["Radius"])[0]
-    phi= Angle(sources["phi"])[0]
-    separation=Angle(sources["separation"])[0]
+    phi = Angle(sources["phi"])[0]
+    separation = Angle(sources["separation"])[0]
     if separation > fov_radius:
         return np.arange(len(events))
     else:
-        phi_min = phi - np.arctan(radius/ separation)
+        phi_min = phi - np.arctan(radius / separation)
         phi_max = phi + np.arctan(radius / separation)
 
         phi_events = pointing_position.position_angle(events.radec)
@@ -588,14 +588,13 @@ class EnergyOffsetBackgroundModel(object):
         for obs in observation_table:
             events = data_store.load(obs['OBS_ID'], 'events')
 
-
             if excluded_sources:
                 pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
 
                 idx = select_events_outside_pie(excluded_sources, events, events.pointing_radec, fov_radius)
                 events = events[idx]
             else:
-                livetime_lost_fraction = 0
+                pie_fraction = 0
 
             self.counts.fill_events([events])
             self.livetime.data += events.observation_live_time_duration * (1 - pie_fraction)
