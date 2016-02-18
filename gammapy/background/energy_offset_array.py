@@ -182,13 +182,15 @@ class EnergyOffsetArray(object):
             offset value
         interp_kwargs: dict
             give the options for the RegularGridInterpolator
+        interp_kwargs : dict
+        option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         Interpolated value
         """
         if not interp_kwargs:
-            interp_kwargs = dict(bounds_error=False)
+            interp_kwargs = dict(bounds_error=False, fill_value=None)
 
         from scipy.interpolate import RegularGridInterpolator
         if energy is None:
@@ -208,7 +210,7 @@ class EnergyOffsetArray(object):
         pix_coords = np.column_stack([ee.flat, off.flat])
 
         data_interp = interpolator(pix_coords)
-        return data_interp.reshape(shape)
+        return Quantity(data_interp.reshape(shape), self.data.unit)
 
     @property
     def offset_bin_center(self):
@@ -240,6 +242,8 @@ class EnergyOffsetArray(object):
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
+        interp_kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
@@ -259,6 +263,8 @@ class EnergyOffsetArray(object):
         Parameters
         ----------
         offset : `~astropy.coordinates.Angle`
+        interp_kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
@@ -283,11 +289,13 @@ class EnergyOffsetArray(object):
             Tuple ``(energy_min, energy_max)``
         energy_bins : int or `~astropy.units.Quantity`
             Energy bin definition.
+        interp_kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
         table : `~astropy.table.Table`
-            two column: energy and acceptance
+            two column: offset and integral values (units = self.data.unit * self.energy.units)
 
         """
         [emin, emax] = energy_band
@@ -295,10 +303,10 @@ class EnergyOffsetArray(object):
         energy_bins = energy_edges.log_centers
         acceptance = self.evaluate(energy_bins, None, interp_kwargs)
         # Sum over the energy (axis=1 since we used .T to broadcast acceptance and energy_edges.bands
-        acceptance_tot = np.sum(acceptance.T * energy_edges.bands.to('MeV'), axis=1)
+        acceptance_tot = np.sum(acceptance.T * energy_edges.bands, axis=1)
         table = Table()
         table["offset"] = self.offset_bin_center
-        table["Acceptance"] = acceptance_tot
+        table["Acceptance"] = acceptance_tot.decompose()
         return table
 
     def to_cube(self, coordx_edges=None, coordy_edges=None, energy_edges=None, interp_kwargs=None):
@@ -312,6 +320,8 @@ class EnergyOffsetArray(object):
             Spatial bin edges vector (low and high). Y coordinate.
         energy_edges : `~gammapy.utils.energy.EnergyBounds`, optional
             Energy bin edges vector (low and high).
+        interp_kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
