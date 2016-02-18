@@ -105,7 +105,7 @@ def test_energy_offset_array_bin_volume():
     bin_volume = array.bin_volume
     assert_quantity_allclose(expected_volume, bin_volume[3, 4])
 
-
+@requires_dependency('scipy')
 def test_evaluate_at_energy():
     array, offset, energy = make_test_array(True)
     e_eval = energy[0]
