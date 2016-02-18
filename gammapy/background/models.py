@@ -47,7 +47,7 @@ def compute_pie_fraction(sources, pointing_position, fov_radius):
     if separation > fov_radius:
         return 0
     else:
-        return 2*np.arctan(radius / separation)/ (2*np.pi)
+        return (2*np.arctan(radius / separation)/ (2*np.pi)).value
 
 
 def select_events_outside_pie(sources, events, pointing_position, fov_radius):
@@ -61,7 +61,6 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
     if separation > fov_radius:
         return np.arange(len(events))
     else:
-        import IPython; IPython.embed()
         phi_min = phi - np.arctan(radius/ separation)
         phi_max = phi + np.arctan(radius / separation)
 
