@@ -60,7 +60,6 @@ def make_image():
     counts_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
                                     proj='TAN')
     bkg_image = counts_image.copy()
-
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 
     for events in data_store.load_all("events"):
@@ -94,36 +93,6 @@ def make_significance_image():
     s_image.writeto("significance_image.fits", clobber=True)
 
 
-def remove_agn():
-    sources_coord = SkyCoord(catalog['RA'], catalog['DEC'])
-
-    # sources sizes (x, y): radius
-    sources_size = Angle(catalog['Radius'])
-    sources_max_size = np.amax(sources_size)
-
-    # sources exclusion radius = 2x max size + 3 deg (fov + 0.5 deg?)
-    sources_excl_radius = 2 * sources_max_size + Angle(3., 'deg')
-
-    # mask all obs taken within the excl radius of any of the sources
-    # loop over sources
-    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
-    data_store = DataStore.from_dir(dir)
-    observation_table = data_store.obs_table
-    obs_coords = SkyCoord(observation_table['RA'], observation_table['DEC'])
-    for i_source in range(len(catalog)):
-        selection = dict(type='sky_circle', frame='icrs',
-                         lon=sources_coord[i_source].ra,
-                         lat=sources_coord[i_source].dec,
-                         radius=sources_excl_radius[i_source],
-                         inverted=True,
-                         border=Angle(0., 'deg'))
-        observation_table = observation_table.select_observations(selection)
-
-    # save the bg observation list to a fits file
-    outfile = Path(outdir) / 'bg_observation_table.fits.gz'
-    log.info("Writing {}".format(outfile))
-    observation_table.write(str(outfile), overwrite=overwrite)
-
 
 def plot_model():
     multi_array = EnergyOffsetBackgroundModel.read('energy_offset_array.fits')
@@ -145,5 +114,5 @@ def plot_model():
 if __name__ == '__main__':
     make_model()
     # plot_model()
-    #make_image()
+    make_image()
     #make_significance_image()

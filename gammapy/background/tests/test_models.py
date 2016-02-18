@@ -16,8 +16,8 @@ from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore
 from ...region import SkyCircleRegion
-from ...background.models import compute_pie_fraction
-
+from ...background.models import compute_pie_fraction, select_events_outside_pie
+from ...image import make_empty_image,
 
 @requires_dependency('scipy')
 class TestGaussianBand2D:
@@ -167,7 +167,19 @@ def test_compute_pie_fraction():
     pie_fraction_expected = (2 * np.arctan(excluded_sources["Radius"][0] / separation) / (2 * np.pi))
     assert_allclose(pie_fraction, pie_fraction_expected)
 
-
+def test_select_events_outside_pie():
+    excluded_sources = make_excluded_sources()
+    center = SkyCoord(0.5, 0.5, unit='deg').galactic
+    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+    RA_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
+                                    proj='TAN')
+    DEC_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
+                                    proj='TAN')
+    events = Table()
+    events["RA"]=
+    events["DEC"]=
+    select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
+    #Je crois qu ic faut utiliser wcs pour avoir acces aux coordonee radec de l imagemais voir la doc...
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
     def test_read_write(self):
