@@ -549,25 +549,34 @@ class SpectrumObservation(object):
 class SpectrumObservationList(list):
     """List of `gammapy.spectrum.SpectrumObservation`
     """
-    def get_obs_by_id(self, id):
+    #@classmethod
+    def get_obslist_from_obsid(self, list_ids):
         """Return an observation with a certain id
 
         Parameters
         ----------
-        id : int
-            Observation Id (runnumber)
+        list_id : list of int
+            List of Observation Id (runnumber)
 
         Returns
         -------
-        observation : `~gammapy.spectrum.SpectrumObservation`
-            Spectrum observation
+        observation : `~gammapy.spectrum.SpectrumObservationList`
+            List of `~gammapy.spectrum.SpectrumObservation`
         """
-        ids = [o.obs_id for o in self]
-        try:
-            i = ids.index(id)
-        except ValueError:
-            raise ValueError("Observation {} not in list".format(id))
-        return self[i]
+        new_list = list()
+        
+        for id in list_ids:
+            ids = [o.obs_id for o in self]
+            try:
+                i = ids.index(id)
+            except ValueError:
+                raise ValueError("Observation {} not in list".format(id))
+
+            new_list.append(self[i])
+
+        return SpectrumObservationList(new_list)
+           
+        
 
     @property
     def total_spectrum(self):
