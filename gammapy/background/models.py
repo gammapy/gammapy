@@ -502,8 +502,6 @@ class EnergyOffsetBackgroundModel(object):
     """
 
     def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None):
-        self.energy = EnergyBounds(energy)
-        self.offset = Angle(offset)
         self.counts = EnergyOffsetArray(energy, offset, counts)
         self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
@@ -527,10 +525,10 @@ class EnergyOffsetBackgroundModel(object):
             Table containing the `EnergyOffsetBackgroundModel`: counts, livetime and bg_rate
         """
         table = Table()
-        table['THETA_LO'] = Quantity([self.offset[:-1]], unit=self.offset.unit)
-        table['THETA_HI'] = Quantity([self.offset[1:]], unit=self.offset.unit)
-        table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
-        table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
+        table['THETA_LO'] = Quantity([self.counts.offset[:-1]], unit=self.counts.offset.unit)
+        table['THETA_HI'] = Quantity([self.counts.offset[1:]], unit=self.counts.offset.unit)
+        table['ENERG_LO'] = Quantity([self.counts.energy[:-1]], unit=self.counts.energy.unit)
+        table['ENERG_HI'] = Quantity([self.counts.energy[1:]], unit=self.counts.energy.unit)
         table['counts'] = self.counts.to_table()['data']
         table['livetime'] = self.livetime.to_table()['data']
         table['bkg'] = self.bg_rate.to_table()['data']

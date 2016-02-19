@@ -184,8 +184,8 @@ class TestEnergyOffsetBackgroundModel:
         assert_quantity_allclose(multi_array.counts.data, multi_array2.counts.data)
         assert_quantity_allclose(multi_array.livetime.data, multi_array2.livetime.data)
         assert_quantity_allclose(multi_array.bg_rate.data, multi_array2.bg_rate.data)
-        assert_quantity_allclose(multi_array.energy, multi_array2.energy)
-        assert_quantity_allclose(multi_array.offset, multi_array2.offset)
+        assert_quantity_allclose(multi_array.counts.energy, multi_array2.counts.energy)
+        assert_quantity_allclose(multi_array.counts.offset, multi_array2.counts.offset)
 
     def test_fillobs_and_computerate(self):
         multi_array = make_test_array_fillobs()
