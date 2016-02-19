@@ -146,7 +146,7 @@ def make_test_array_fillobs(empty=True):
 
 
 def make_excluded_sources():
-    centers = SkyCoord([0, 1], [1, 2], unit='deg')
+    centers = SkyCoord([1, 0], [2, 1], unit='deg')
     radius = Angle('0.3 deg')
     sources = SkyCircleRegion(pos=centers, radius=radius)
     catalog = Table()
@@ -159,34 +159,20 @@ def make_excluded_sources():
 def test_compute_pie_fraction():
     excluded_sources = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
-
     pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
     assert_allclose(pie_fraction, 0)
 
-    source_closest = SkyCoord(excluded_sources["RA"][0], excluded_sources["DEC"][0], unit="deg")
+    #I have to use an other object excluded_region because the previous one was
+    # already sorted in the compute_pie_fraction
+    excluded_sources2 = make_excluded_sources()
+    source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
     separation = pointing_position.separation(source_closest).value
     pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(5, "deg"))
-    pie_fraction_expected = (2 * np.arctan(excluded_sources["Radius"][0] / separation) / (2 * np.pi))
+    pie_fraction_expected = (2 * np.arctan(excluded_sources2["Radius"][1] / separation) / (2 * np.pi))
     assert_allclose(pie_fraction, pie_fraction_expected)
 
-def test_select_events_outside_pie():
-    excluded_sources = make_excluded_sources()
-    center = SkyCoord(0.5, 0.5, unit='deg').galactic
-    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
-    RA_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
-                                    proj='TAN')
-    DEC_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
-                                    proj='TAN')
-    events = Table()
-    events["RA"]=
-    events["DEC"]=
-    select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
-    RA_image.data[:]=1
-    RA_image.data[:]=1
-    wcs = WCS(RA_image.header)
-    
-    xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)
-    #Je crois qu ic faut utiliser wcs pour avoir acces aux coordonee radec de l imagemais voir la doc... Utiliser wcs_pix2world pour avoir les coordonnee des images en ra des et apres on met ca dans l table d evenement avec un fatl je pense et on re_shape ensuite je dirais... a voir
+
+
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
     def test_read_write(self):
