@@ -6,7 +6,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
 
 
@@ -51,6 +51,8 @@ def test_CountsSpectrum():
     actual = pha_sum.counts[5]
     assert_equal(actual, desired)
 
+
+@requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_n_pred():
     configfile = gammapy_extra.filename(
@@ -67,5 +69,4 @@ def test_n_pred():
     n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]
     n_pred = np.sum(n_pred_vec)
 
-    assert_allclose (max(n_pred.counts), 53, atol=0.1)
-
+    assert_allclose(max(n_pred.counts), 53, atol=0.1)

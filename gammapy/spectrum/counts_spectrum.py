@@ -189,7 +189,6 @@ class CountsSpectrum(object):
         meta = dict(livetime=self.meta.livetime)
         return CountsSpectrum(temp, self.energy_bounds, meta=meta)
 
-
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
               *args, **kwargs):
         """Write PHA to FITS file.

@@ -337,5 +337,5 @@ class SpectrumFit(object):
         if self.n_pred is None:
             self.make_npred()
         for key, val in self.n_pred.items():
-            filename = "npred_run{}.pha".format(key)
+            filename = "npred_run{}.fits".format(key)
             val.write(str(outdir / filename))
