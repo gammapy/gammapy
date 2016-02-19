@@ -10,9 +10,7 @@ from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
 from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ..data import ObservationTable
-from ..utils.scripts import (
-    make_path,
-)
+from ..utils.scripts import make_path
 
 __all__ = [
     'SpectrumFit',
@@ -43,6 +41,7 @@ class SpectrumFit(object):
         self._thres_lo = None
         self._thres_hi = None
         self.statistic = stat
+        self.n_pred = None
 
     @classmethod
     def from_observation_table(cls, obs_table):
@@ -88,12 +87,6 @@ class SpectrumFit(object):
         fit.model = config['model']
         fit.set_default_thresholds()
         return fit
-
-    @property
-    def on_vector(self):
-        """`~gammapy.spectrum.CountsSpectrum` of all on vectors"""
-        l = [CountsSpectrum.read(f) for f in self.pha]
-        return l
 
     @property
     def model(self):
@@ -261,6 +254,7 @@ class SpectrumFit(object):
 
         modelname = self.result.spectral_model
         self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
+        self.write_npred()
 
     def _run_hspec_fit(self):
         """Run the gammapy.hspec fit
@@ -326,14 +320,22 @@ class SpectrumFit(object):
         ds.clear_stack()
         ds.clear_models()
 
-    def plot_npred_vs_excess(self):
-        """Plot prediced counts vs. excess counts
+    def make_npred(self):
+        """Create `~gammapy.spectrum.CountsSpectrum` of predicted on counts
         """
-        pass
+        self.n_pred = dict()
+        for obs in self.obs_list:
+            temp = CountsSpectrum.get_npred(self.result, obs)
+            self.n_pred[obs.obs_id] = temp
 
-    def debug_plots(self):
-        """Write some debug plots to disk"""
-        pass
+    def write_npred(self, outdir=None):
+        """Write predicted counts PHA file
+        """
+        outdir = make_path('n_pred') if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True)
 
-
-
+        if self.n_pred is None:
+            self.make_npred()
+        for key, val in self.n_pred.items():
+            filename = "npred_run{}.pha".format(key)
+            val.write(str(outdir / filename))
