@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import unittest
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
 from astropy.tests.helper import pytest
@@ -15,11 +14,11 @@ from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 
 @requires_dependency('scipy')
-class TestGauss2DPDF(unittest.TestCase):
+class TestGauss2DPDF:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals as advertised are 1."""
 
-    def setUp(self):
+    def setup(self):
         self.gs = [Gauss2DPDF(0.1), Gauss2DPDF(1), Gauss2DPDF(1)]
 
     def test_call(self):
@@ -59,7 +58,7 @@ class TestGauss2DPDF(unittest.TestCase):
 
 
 @requires_dependency('scipy')
-class TestMultiGauss2D(unittest.TestCase):
+class TestMultiGauss2D:
     """Note that we test __call__ and dpdtheta2 by
     checking that their integrals."""
 

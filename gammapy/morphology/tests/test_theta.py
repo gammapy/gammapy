@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal
 from astropy.tests.helper import pytest
@@ -13,10 +12,10 @@ from ...morphology import (Gauss2DPDF,
 
 
 @requires_dependency('scipy')
-class TestThetaCalculator(unittest.TestCase):
+class TestThetaCalculator:
     """We use a Gaussian, because it has known analytical
     solutions for theta and containment."""
-    def setUp(self):
+    def setup(self):
         # Single Gauss
         self.g = Gauss2DPDF(sigma=1)
         self.g_tc = ThetaCalculator(self.g.dpdtheta2, theta_max=5, n_bins=1e6)
