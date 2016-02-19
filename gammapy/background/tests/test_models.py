@@ -19,7 +19,8 @@ from ...data import DataStore, EventList
 from ...region import SkyCircleRegion
 from ...background.models import compute_pie_fraction, select_events_outside_pie
 from ...image import make_empty_image
-from ...image import coordinates, bin_events_in_image ,make_empty_image
+from ...image import coordinates, bin_events_in_image, make_empty_image
+
 
 @requires_dependency('scipy')
 class TestGaussianBand2D:
@@ -144,6 +145,7 @@ def make_test_array_fillobs(excluded_sources=None, fov_radius=Angle(2.5, "deg"))
     multi_array.fill_obs(obs_table, data_store)
     return multi_array
 
+
 def make_test_array_oneobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
     dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
     data_store = DataStore.from_dir(dir)
@@ -163,8 +165,9 @@ def make_excluded_sources():
     catalog["Radius"] = sources.radius
     return catalog
 
+
 def make_source_nextCrab():
-    center = SkyCoord([84,89], [23,20], unit='deg', frame='icrs')
+    center = SkyCoord([84, 89], [23, 20], unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
     sources = SkyCircleRegion(pos=center, radius=radius)
     catalog = Table()
@@ -173,14 +176,15 @@ def make_source_nextCrab():
     catalog["Radius"] = sources.radius
     return catalog
 
+
 def test_compute_pie_fraction():
     excluded_sources = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
-    #Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
+    # Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
     pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
     assert_allclose(pie_fraction, 0)
 
-    #I have to use an other object excluded_region because the previous one was
+    # I have to use an other object excluded_region because the previous one was
     # already sorted in the compute_pie_fraction
     excluded_sources2 = make_excluded_sources()
     source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
@@ -189,45 +193,48 @@ def test_compute_pie_fraction():
     pie_fraction_expected = (2 * np.arctan(excluded_sources2["Radius"][1] / separation) / (2 * np.pi))
     assert_allclose(pie_fraction, pie_fraction_expected)
 
+
 def test_select_events_outside_pie():
     """
-    Create an empty image centered on the pointing position and all the radec position of the pixels will define one event. Thus we create a false EventList with these pixels. We apply the select_events_outside_pie() and we fill the image only with the events (pixels) outside the pie. We assert that outside the pie the image is fill with one and inside with 0.
+    Create an empty image centered on the pointing position and all the radec position of the pixels will
+    define one event. Thus we create a false EventList with these pixels. We apply the select_events_outside_pie()
+    and we fill the image only with the events (pixels) outside the pie. We assert that outside the pie the image is
+    fill with 1 and inside with 0.
     """
     excluded_sources = make_excluded_sources()
     excluded_sources2 = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
-    #Define an emppty image centered on the pointing position
-    image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=pointing_position.ra.deg, yref=pointing_position.dec.deg,
-                                    proj='TAN', coordsys='CEL')
+    # Define an empty image centered on the pointing position
+    image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=pointing_position.ra.deg,
+                             yref=pointing_position.dec.deg,
+                             proj='TAN', coordsys='CEL')
     ra, dec = coordinates(image)
     events = EventList()
-    #Faked EventList with the radec of all the pixel in the empty image
-    events["RA"]=ra.flat
-    events["DEC"]=dec.flat
+    # Faked EventList with the radec of all the pixel in the empty image
+    events["RA"] = ra.flat
+    events["DEC"] = dec.flat
 
-    #Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
+    # Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
     idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
     assert_allclose(np.arange(len(events)), idx)
 
-    #Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
-    idx=select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
+    # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
+    idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
     events_outside = events[idx]
     image = bin_events_in_image(events_outside, image)
-    #image.writeto("test_pie.fits", clobber=True)
+    # image.writeto("test_pie.fits", clobber=True)
     source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
     separation = pointing_position.separation(source_closest)
-    phi_source=pointing_position.position_angle(source_closest)
-    radius=Angle(excluded_sources2["Radius"])[1]
+    phi_source = pointing_position.position_angle(source_closest)
+    radius = Angle(excluded_sources2["Radius"])[1]
     phi_min = phi_source - np.arctan(radius / separation)
     phi_max = phi_source + np.arctan(radius / separation)
-    skycoord_pix=SkyCoord(ra, dec, unit='deg')
-    phi=pointing_position.position_angle(skycoord_pix)
+    skycoord_pix = SkyCoord(ra, dec, unit='deg')
+    phi = pointing_position.position_angle(skycoord_pix)
     idx_image_out_pie = np.where((phi > phi_max) | (phi < phi_min))
     idx_image_in_pie = np.where((phi <= phi_max) & (phi >= phi_min))
     assert_allclose(image.data[idx_image_out_pie], 1)
     assert_allclose(image.data[idx_image_in_pie], 0)
-   
-    
 
 
 @requires_data('gammapy-extra')
@@ -253,22 +260,23 @@ class TestEnergyOffsetBackgroundModel:
         rate = Quantity(0.0024697306536062276, "MeV-1 s-1 sr-1")
         assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)
 
-    
     def test_fillobs_pie(self):
+        """
+        Test for one observation of the for Crab for the livetime array and the counts array after applying the pie
+        """
         excluded_sources = make_source_nextCrab()
         multi_array1, data_store1, obs_table1 = make_test_array_oneobs(excluded_sources, fov_radius=Angle(2.5, "deg"))
         multi_array2, data_store2, obs_table2 = make_test_array_oneobs()
-        
         events = data_store1.load(obs_table1['OBS_ID'], 'events')
+
+        # Test if the livetime array where we apply the pie is less by the factor pie_fraction of the livetime
+        # array where we don't apply the pie
         pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
+        assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data * (1 - pie_fraction))
+
+        # Test if the total counts array where we apply the pie is equal to the number of events outside the pie
         idx = select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
-        
-        assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data*(1-pie_fraction))
-        
-        offmax=multi_array1.counts.offset.max()
-        nevents_sup_offmax =len(np.where(events[idx].offset > offmax)[0])
-        assert_allclose(np.sum(multi_array1.counts.data), len(idx)-nevents_sup_offmax)    
-     
-      
-    
-    
+        offmax = multi_array1.counts.offset.max()
+        # This is important since in the counts array the events > offsetmax will not be in the histogram.
+        nevents_sup_offmax = len(np.where(events[idx].offset > offmax)[0])
+        assert_allclose(np.sum(multi_array1.counts.data), len(idx) - nevents_sup_offmax)
