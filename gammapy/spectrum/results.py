@@ -840,13 +840,14 @@ class SpectrumResultDict(OrderedDict):
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
 
-        val = self.keys()
+        val = list(self.keys())
         analyses = Column(val, name='analysis')
         l = list()
         for key in val:
             l.append(self[key].to_table(**kwargs))
         table = vstack(l, join_type='outer')
         table.add_column(analyses, index=0)
+
         return table
 
     def overplot_spectra(self):

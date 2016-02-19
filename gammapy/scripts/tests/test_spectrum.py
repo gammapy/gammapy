@@ -10,6 +10,7 @@ from ..spectrum import cli
 
 
 @requires_dependency('sherpa')
+@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_spectrum(tmpdir):
     os.chdir(str(tmpdir))
@@ -35,15 +36,5 @@ def test_spectrum(tmpdir):
     actual = open(fres, 'r').read()
     desired = open(fref, 'r').read()
     assert actual == desired
-
-    #test display
-    args = ['display']
-    with pytest.raises(SystemExit) as exc:
-        cli(args)
-
-    # Todo: Implement this
-    #args = ['plot']
-    #with pytest.raises(SystemExit) as exc:
-    #    cli(args)
 
 
