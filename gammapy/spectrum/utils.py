@@ -1,18 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
-import datetime
+
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import Table
-from astropy.wcs import WCS
-
-from ..image import make_empty_image
-from ..utils.fits import table_to_fits_table
 
 __all__ = [
     'LogEnergyAxis',
-    'np_to_pha',
+    'plot_npred_vs_excess',
 ]
 
 
@@ -100,141 +95,38 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-def np_to_pha(channel, counts, exposure, dstart, dstop,
-              dbase=None, stat_err=None, quality=None, syserr=None,
-              obj_ra=0., obj_dec=0., obj_name='DUMMY', creator='DUMMY',
-              version='v0.0.0', telescope='DUMMY', instrument='DUMMY',
-              filter='NONE',
-              backfile='none', corrfile='none', respfile='none',
-              ancrfile='none'):
-    """Create PHA FITS table extension from numpy arrays.
-
-    Outdated. Use gammapy.data.CountsSpectrum.to_fits()
+def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
+    """Plot predicted and measured excess counts
 
     Parameters
     ----------
-    dat : numpy 1D array float
-        Binned spectral data [counts]
-    dat_err : numpy 1D array float
-        Statistical errors associated with dat [counts]
-    chan : numpu 1D array int
-        Corresponding channel numbers for dat
-    exposure : float
-        Exposure [s]
-    dstart : astropy.time.Time
-        Observation start time.
-    dstop : astropy.time.Time
-        Observation stop time.
-    dbase : astropy.time.Time
-        Base date used for TSTART/TSTOP.
-    quality : numpy 1D array integer
-        Quality flags for the channels (optional)
-    syserr : numpy 1D array float
-        Fractional systematic error for the channel (optional)
-    obj_ra/obj_dec : float
-        Object RA/DEC J2000 [deg]
-
-    Returns
-    -------
-    pha : `~astropy.io.fits.BinTableHDU`
-        PHA FITS HDU
-
-    Notes
-    -----
-    For more info on the PHA FITS file format see:
-    http://heasarc.gsfc.nasa.gov/docs/heasarc/ofwg/docs/summary/ogip_92_007_summary.html
+    npred_dir : str, Path
+        Directory holding npred fits files
+    ogip_dir : str, Path
+        Directory holding OGIP data
     """
-    table = Table()
-    table['CHANNEL'] = channel
-    table['COUNTS'] = counts
+    from ..spectrum.spectrum_extraction import SpectrumObservationList
+    from ..spectrum import CountsSpectrum
+    from ..utils.scripts import make_path
 
-    if stat_err is not None:
-        table['STAT_ERR'] = stat_err
+    import matplotlib.pyplot as plt
+    ax = plt.gca() if ax is None else ax
 
-    if syserr is not None:
-        table['SYS_ERR'] = syserr
+    ogip_dir = make_path(ogip_dir)
+    n_pred_dir = make_path(npred_dir)
 
-    if quality is not None:
-        table['QUALITY'] = quality
+    obs = SpectrumObservationList.read_ogip(ogip_dir)
+    excess = np.sum([o.excess_vector for o in obs])
 
-    hdu = table_to_fits_table(table)
-    header = hdu.header
+    # Need to give RMF file for reco energy binning
+    id = obs[0].obs_id
+    rmf = str(ogip_dir/ 'rmf_run{}.fits'.format(id))
+    val = [CountsSpectrum.read(_, rmf) for _ in n_pred_dir.glob('*.fits')]
+    npred = np.sum(val)
 
-    header['EXTNAME'] = 'SPECTRUM', 'name of this binary table extension'
-    header['TELESCOP'] = telescope, 'Telescope (mission) name'
-    header['INSTRUME'] = instrument, 'Instrument name'
-    header['FILTER'] = filter, 'Instrument filter in use'
-    header['EXPOSURE'] = exposure, 'Exposure time'
+    npred.plot(ax=ax, color='red', alpha=0.7, label='Predicted counts')
+    excess.plot(ax=ax, color='green', alpha=0.7, label='Excess counts')
+    ax.legend(numpoints=1)
+    plt.xscale('log')
 
-    header['BACKFILE'] = backfile, 'Background FITS file'
-    header['CORRFILE'] = corrfile, 'Correlation FITS file'
-    header['RESPFILE'] = respfile, 'Redistribution matrix file (RMF)'
-    header['ANCRFILE'] = ancrfile, 'Ancillary response file (ARF)'
-
-    header[
-        'HDUCLASS'] = 'OGIP', 'Format conforms to OGIP/GSFC spectral standards'
-    header['HDUCLAS1'] = 'SPECTRUM', 'Extension contains a spectrum'
-    header['HDUVERS '] = '1.2.1', 'Version number of the format'
-
-    poisserr = False
-    if stat_err is None:
-        poisserr = True
-    header['POISSERR'] = poisserr, 'Are Poisson Distribution errors assumed'
-
-    header['CHANTYPE'] = 'PHA', 'Channels assigned by detector electronics'
-    header['DETCHANS'] = len(
-        channel), 'Total number of detector channels available'
-    header['TLMIN1'] = channel[0], 'Lowest Legal channel number'
-    header['TLMAX1'] = channel[-1], 'Highest Legal channel number'
-
-    header['XFLT0001'] = 'none', 'XSPEC selection filter description'
-    header['OBJECT'] = obj_name, 'OBJECT from the FIRST input file'
-    header['RA-OBJ'] = obj_ra, 'RA of First input object'
-    header['DEC-OBJ'] = obj_dec, 'DEC of First input object'
-    header['EQUINOX'] = 2000.00, 'Equinox of the FIRST object'
-    header['RADECSYS'] = 'FK5', 'Co-ordinate frame used for equinox'
-    header['DATE-OBS'] = dstart.datetime.strftime(
-        '%Y-%m-%d'), 'EARLIEST observation date of files'
-    header['TIME-OBS'] = dstart.datetime.strftime(
-        '%H:%M:%S'), 'EARLIEST time of all input files'
-    header['DATE-END'] = dstop.datetime.strftime(
-        '%Y-%m-%d'), 'LATEST observation date of files'
-    header['TIME-END'] = dstop.datetime.strftime(
-        '%H:%M:%S'), 'LATEST time of all input files'
-
-    header['CREATOR'] = '{0} {1}'.format(creator,
-                                         version), 'Program name that produced this file'
-
-    header['HDUCLAS2'] = 'NET', 'Extension contains a bkgr substr. spec.'
-    header['HDUCLAS3'] = 'COUNT', 'Extension contains counts'
-    header['HDUCLAS4'] = 'TYPE:I', 'Single PHA file contained'
-    header[
-        'HDUVERS1'] = '1.2.1', 'Obsolete - included for backwards compatibility'
-
-    if syserr is None:
-        header['SYS_ERR'] = 0, 'No systematic error was specified'
-
-    header['GROUPING'] = 0, 'No grouping data has been specified'
-
-    if quality is None:
-        header['QUALITY '] = 0, 'No data quality information specified'
-
-    header['AREASCAL'] = 1., 'Nominal effective area'
-    header['BACKSCAL'] = 1., 'Background scale factor'
-    header['CORRSCAL'] = 0., 'Correlation scale factor'
-
-    header[
-        'FILENAME'] = 'several', 'Spectrum was produced from more than one file'
-    header['ORIGIN'] = 'dummy', 'origin of fits file'
-    header['DATE'] = datetime.datetime.today().strftime(
-        '%Y-%m-%d'), 'FITS file creation date (yyyy-mm-dd)'
-    header['PHAVERSN'] = '1992a', 'OGIP memo number for file format'
-
-    if dbase is not None:
-        header['TIMESYS'] = 'MJD', 'The time system is MJD'
-        header['TIMEUNIT'] = 's', 'unit for TSTARTI/F and TSTOPI/F, TIMEZERO'
-        header['MJDREF'] = dbase.mjd, 'MJD for reference time'
-        header['TSTART'] = (dstart - dbase).sec, 'Observation start time [s]'
-        header['TSTOP'] = (dstop - dbase).sec, 'Observation stop time [s]'
-
-    return hdu
+    return ax

@@ -338,4 +338,4 @@ class SpectrumFit(object):
             self.make_npred()
         for key, val in self.n_pred.items():
             filename = "npred_run{}.fits".format(key)
-            val.write(str(outdir / filename))
+            val.write(str(outdir / filename), clobber=True)

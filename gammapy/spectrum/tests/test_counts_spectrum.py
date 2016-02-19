@@ -4,7 +4,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult
+from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult, \
+    SpectrumObservationList
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
@@ -55,15 +56,13 @@ def test_CountsSpectrum():
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_n_pred():
-    configfile = gammapy_extra.filename(
-        'test_datasets/spectrum/spectrum_analysis_example.yaml')
     fitresult = gammapy_extra.filename(
         'test_datasets/spectrum/fit_result_PowerLaw.yaml')
 
-    extraction = SpectrumExtraction.from_configfile(configfile)
+    testdir = gammapy_extra.filename(
+        'datasets/hess-crab4_pha')
 
-    # Todo: Read SpectrumObservationList from disk once from_ogip is implemented
-    obs = extraction.observations
+    obs = SpectrumObservationList.read_ogip(dir=testdir)
     fit = SpectrumFitResult.from_yaml(fitresult)
 
     n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]

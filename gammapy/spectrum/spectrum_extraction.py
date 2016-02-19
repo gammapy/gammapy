@@ -653,6 +653,22 @@ class SpectrumObservationList(list):
         for obs in self:
             obs.write_ogip(outdir=outdir, **kwargs)
 
+    @classmethod
+    def read_ogip(cls, dir='ogip_data'):
+        """Read `~gammapy.spectrum.SpectrumObservationList` from OGIP files
+
+        The pha file need to be contained in one directroy and have '.pha' as
+        suffix
+
+        Parameters
+        ----------
+        dir : str, Path
+            Directory holding the OGIP data
+        """
+        dir = make_path(dir)
+        obs = [SpectrumObservation.read_ogip(_) for _ in dir.glob('*.pha')]
+        return cls(obs)
+
     def to_observation_table(self):
         """Create `~gammapy.data.ObservationTable`"""
         names = ['OBS_ID', 'PHAFILE', 'OFFSET']

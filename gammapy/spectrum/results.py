@@ -9,7 +9,7 @@ from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
-from ..utils.scripts import read_yaml
+from ..utils.scripts import read_yaml, make_path
 
 __all__ = ['SpectrumStats',
            'SpectrumFitResult',
@@ -852,6 +852,3 @@ class SpectrumResultDict(OrderedDict):
     def overplot_spectra(self):
         """Overplot spectra"""
         raise NotImplementedError
-
-
-

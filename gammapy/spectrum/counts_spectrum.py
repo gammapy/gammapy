@@ -91,6 +91,7 @@ class CountsSpectrum(object):
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
         m = dict(header)
+        m.update(livetime=Quantity(header['EXPOSURE'], 's'))
         if 'LO_THRES' in header.keys():
             rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
             m.update(safe_energy_range=rng)
@@ -152,7 +153,7 @@ class CountsSpectrum(object):
         counts = obs.energy_dispersion.pdf_matrix.transpose().dot(temp)
 
         e_reco = obs.energy_dispersion.reco_energy
-        return cls(counts, e_reco)
+        return cls(counts.decompose(), e_reco)
 
     @property
     def total_counts(self):
