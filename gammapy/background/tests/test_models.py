@@ -254,15 +254,21 @@ class TestEnergyOffsetBackgroundModel:
         assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)
 
     
-    def test_compute_pie_fraction(self):
+    def test_fillobs_pie(self):
         excluded_sources = make_source_nextCrab()
         multi_array1, data_store1, obs_table1 = make_test_array_oneobs(excluded_sources, fov_radius=Angle(2.5, "deg"))
         multi_array2, data_store2, obs_table2 = make_test_array_oneobs()
         
         events = data_store1.load(obs_table1['OBS_ID'], 'events')
         pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
+        idx = select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
         
         assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data*(1-pie_fraction))
+        
+        offmax=multi_array1.counts.offset.max()
+        nevents_sup_offmax =len(np.where(events[idx].offset > offmax)[0])
+        assert_allclose(np.sum(multi_array1.counts.data), len(idx)-nevents_sup_offmax)    
+     
       
     
     
