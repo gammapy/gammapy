@@ -66,7 +66,7 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
 
         phi_events = pointing_position.position_angle(events.radec)
         idx = np.where((phi_events > phi_max) | (phi_events < phi_min))
-        return idx
+        return idx[0]
 
 
 class GaussianBand2D(object):
