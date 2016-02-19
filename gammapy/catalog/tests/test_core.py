@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import json
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.table import Table
@@ -59,6 +60,24 @@ class TestSourceCatalog:
 
         with pytest.raises(ValueError):
             self.cat[int]
+
+    def test_to_json_format_arrays(self, tmpdir):
+        filename = str(tmpdir / 'catalog_to_json__test.json')
+        data_desired = self.cat.to_json(format='arrays')
+        json.dump(data_desired, open(filename, 'w'))
+        data_actual = json.load(open(filename, 'r'))
+        assert data_actual['columns'] == data_desired['columns']
+        assert data_actual['data'] == data_desired['data']
+
+    def test_to_json_format_object(self, tmpdir):
+        filename = str(tmpdir / 'catalog_to_json__test.json')
+        data_desired = self.cat.to_json(format='objects')
+        json.dump(data_desired, open(filename, 'w'))
+        data_actual = json.load(open(filename, 'r'))
+        assert data_actual['columns'] == data_desired['columns']
+        for row_1, row_2 in zip(data_actual['data'], data_desired['data']):
+            for key in list(row_1.keys()):
+                assert row_1[key] == row_2[key]
 
 
 class TestSourceCatalogObject:

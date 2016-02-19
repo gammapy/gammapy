@@ -44,17 +44,26 @@ class SourceCatalogObject(object):
         """Row index of source in catalog"""
         return self.data[self._source_index_key]
 
+    def to_dict(self, cols=None):
+        """
+        Convert source data to Python dict.
+
+        Parameters
+        ----------
+        cols : list (default=None)
+            List of column names to be included.
+            If None all columns will be used.
+        """
+        cols = cols or self.data.keys()
+        data = dict((col, str(self.data[col])) for col in cols)
+        return data
+
     def pprint(self, file=None):
         """Pretty-print source data"""
         if not file:
             file = sys.stdout
 
         pprint(self.data, stream=file)
-
-        # TODO: add methods to serialise to JSON and YAML
-        # and also to quickly pretty-print output in that format for interactive use.
-        # Maybe even add HTML output for IPython repr?
-        # Or at to_table method?
 
 
 class SourceCatalog(object):
@@ -104,7 +113,7 @@ class SourceCatalog(object):
         index : int
             Row index of source in table
         """
-        return self._name_to_index_cache[name]
+        return self._name_to_index_cache[name.strip()]
 
     def source_name(self, index):
         """Look up source name by row index.
@@ -181,3 +190,48 @@ class SourceCatalog(object):
         data = OrderedDict(zip(row.colnames, row.as_void()))
         data[self._source_index_key] = index
         return data
+
+    def to_json(self, sources=None, cols=None, format='objects'):
+        """Export catalog data to JSON.
+
+        The main use case for this is to display catalog data on webpages,
+        where Python / Gammapy and FITS aren't available.
+
+        The formats we support are the ones that can be easily read by
+        https://www.datatables.net/manual/data/
+
+        - 'arrays' -- List of lists (row data represented as list)
+        - 'objects' -- List of dicts (row data represented as dict)
+
+
+        Parameters
+        ----------
+        sources : list, optional
+            List of sources names to be included. If it is set to None (default)
+            all sources are included.
+        cols : list, optional
+            List of column names to be included. If it is set to None (default)
+            all sources are included.
+        format : {'objects', 'arrays'}
+            Format specifier (see above, default is 'objects')
+
+        """
+        sources = sources or self.table[self._source_name_key]
+        cols = cols or self.table.colnames
+        
+        data = []
+
+        if format == 'arrays':
+            for source in sources:
+                source = self[source]
+                data.append(list(source.data.values()))
+        elif format == 'objects':
+            for source in sources:
+                source = self[source]
+                d = source.to_dict(cols=cols)
+                data.append(d)
+        else:
+            raise ValueError('Not a valid data format.')
+
+        return dict(columns=cols, data=data)
+
