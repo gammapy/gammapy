@@ -142,7 +142,15 @@ def make_test_array_fillobs(excluded_sources=None, fov_radius=Angle(2.5, "deg"))
     obs_table = data_store.obs_table
     multi_array = make_test_array()
     multi_array.fill_obs(obs_table, data_store)
-    return multi_array, data_store, obs_table
+    return multi_array
+
+def make_test_array_oneobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    obs_table = data_store.obs_table
+    multi_array = make_test_array()
+    multi_array.fill_obs([obs_table[0]], data_store, excluded_sources, fov_radius)
+    return multi_array, data_store, obs_table[0]
 
 
 def make_excluded_sources():
@@ -156,9 +164,9 @@ def make_excluded_sources():
     return catalog
 
 def make_source_nextCrab():
-    center = SkyCoord(84, 23, unit='deg', frame='icrs')
+    center = SkyCoord([84,89], [23,20], unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
-    on_region = SkyCircleRegion(pos=center, radius=radius)
+    sources = SkyCircleRegion(pos=center, radius=radius)
     catalog = Table()
     catalog["RA"] = sources.pos.data.lon
     catalog["DEC"] = sources.pos.data.lat
@@ -237,7 +245,7 @@ class TestEnergyOffsetBackgroundModel:
         assert_quantity_allclose(multi_array.counts.offset, multi_array2.counts.offset)
 
     def test_fillobs_and_computerate(self):
-        multi_array, data_store, obs_table = make_test_array_fillobs()
+        multi_array = make_test_array_fillobs()
         multi_array.compute_rate()
         assert_equal(multi_array.counts.data.value.sum(), 5403)
         pix = 23, 1
@@ -245,16 +253,16 @@ class TestEnergyOffsetBackgroundModel:
         rate = Quantity(0.0024697306536062276, "MeV-1 s-1 sr-1")
         assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)
 
-    """
+    
     def test_compute_pie_fraction(self):
         excluded_sources = make_source_nextCrab()
-        multi_array1 = make_test_array_fillobs(excluded_sources, fov_radius=Angle(2.5, "deg"))
-        multi_array2 = make_test_array_fillobs()
-        source_closest = SkyCoord(excluded_sources2["RA"][0], excluded_sources2["DEC"][0], unit="deg")
-        separation = pointing_position.separation(source_closest).value
+        multi_array1, data_store1, obs_table1 = make_test_array_oneobs(excluded_sources, fov_radius=Angle(2.5, "deg"))
+        multi_array2, data_store2, obs_table2 = make_test_array_oneobs()
         
-        pie_fraction = (2 * np.arctan(excluded_sources2["Radius"][0] / separation) / (2 * np.pi))
-        assert_quantity(multi_array1.livetime, multi_array2.livetime*(1-pie_fraction)
-       """ 
+        events = data_store1.load(obs_table1['OBS_ID'], 'events')
+        pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
         
+        assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data*(1-pie_fraction))
+      
+    
     
