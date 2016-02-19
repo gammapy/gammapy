@@ -28,6 +28,28 @@ def _select_closest():
     pass
 
 
+def add_column_and_sort_table(sources, pointing_position):
+    """Sort the table and add the column separation (offset from the source) and phi (position angle from the source)
+
+    Parameters
+    ----------
+    sources : `~astropy.table.Table`
+            Table of excluded sources.
+    pointing_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the pointing position
+
+    Returns
+    -------
+    sources : `~astropy.table.Table`
+        given sources table sorted with extra column "separation" and "phi"
+    """
+    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
+    sources["separation"] = pointing_position.separation(source_pos)
+    sources["phi"] = pointing_position.position_angle(source_pos)
+    sources.sort("separation")
+    return sources
+
+
 def compute_pie_fraction(sources, pointing_position, fov_radius):
     """Compute the fraction of the pie over a circle
 
@@ -45,9 +67,7 @@ def compute_pie_fraction(sources, pointing_position, fov_radius):
     -------
     pie fraction : float
     """
-    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
-    sources["separation"] = pointing_position.separation(source_pos)
-    sources.sort("separation")
+    add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
     separation = Angle(sources["separation"])[0]
     if separation > fov_radius:
@@ -74,10 +94,7 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
     -------
 
     """
-    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
-    sources["separation"] = pointing_position.separation(source_pos)
-    sources["phi"] = pointing_position.position_angle(source_pos)
-    sources.sort("separation")
+    add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
     phi = Angle(sources["phi"])[0]
     separation = Angle(sources["separation"])[0]
