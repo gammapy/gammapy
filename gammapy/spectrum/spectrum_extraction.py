@@ -293,7 +293,10 @@ class SpectrumObservation(object):
         m['datastore'] = store
         m['ebounds'] = ebounds
         m['obs_id'] = obs_id
-
+        m['zen'] = 90 - event_list.meta['ALT_PNT']
+        m['coszen'] = np.cos(m['zen'] * np.pi / 180.)
+        #m['muoneff'] = event_list.meta['MUONEFF']
+        
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
             val = Energy('10 TeV')
