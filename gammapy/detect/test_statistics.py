@@ -154,72 +154,77 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     BINSZ = abs(maps[0].header['CDELT1'])
     shape = maps[0].data.shape
     multiscale_result = []
-
+       
     for scale in scales:
-        log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
-                 ' morphology.'.format('residual ' if residual else '',
-                                       scale, morphology))
+        try:
+            log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
+                     ' morphology.'.format('residual ' if residual else '',
+                                           scale, morphology))
 
-        # Sample down and require that scale parameters is at least 5 pix
-        if downsample == 'auto':
-            factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
-                                    scale < 20 * BINSZ, scale < 40 * BINSZ],
-                                   [1, 2, 4, 4], 8))
-        else:
-            factor = int(downsample)
-        if factor == 1:
-            log.info('No down sampling used.')
-            downsampled = False
-        else:
-            if morphology == 'Shell2D':
-                factor /= 2
-            log.info('Using down sampling factor of {0}'.format(factor))
-            downsampled = True
+            # Sample down and require that scale parameters is at least 5 pix
+            if downsample == 'auto':
+                factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
+                                        scale < 20 * BINSZ, scale < 40 * BINSZ],
+                                       [1, 2, 4, 4], 8))
+            else:
+                factor = int(downsample)
+            if factor == 1:
+                log.info('No down sampling used.')
+                downsampled = False
+            else:
+                if morphology == 'Shell2D':
+                    factor /= 2
+                log.info('Using down sampling factor of {0}'.format(factor))
+                downsampled = True
 
-        funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
-        maps_ = {}
-        for map_, func in zip(maps, funcs):
+            funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
+            maps_ = {}
+            for map_, func in zip(maps, funcs):
+                if downsampled:
+                    maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
+                                                             shape=shape_2N(shape))
+                else:
+                    maps_[map_.name.lower()] = map_.data
+
+            # Set up PSF and source kernel
+            kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
+                                            NEW_BINSZ=BINSZ * factor,
+                                            mode='oversample')
+
+            if scale > 0:
+                from astropy.convolution import convolve
+                sigma = scale / (BINSZ * factor)
+                if morphology == 'Gaussian2D':
+                    source_kernel = Gaussian2DKernel(sigma, mode='oversample')
+                elif morphology == 'Shell2D':
+                    model = Shell2D(1, 0, 0, sigma, sigma * width)
+                    x_size = _round_up_to_odd_integer(2 * sigma * (1 + width)
+                                                      + kernel.shape[0] / 2)
+                    source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
+                else:
+                    raise ValueError('Unknown morphology: {}'.format(morphology))
+                kernel = convolve(source_kernel, kernel)
+                kernel.normalize()
+
+            # Compute TS map
+            if residual:
+                background = (maps_['background'] + maps_['diffuse'] + maps_['onmodel'])
+            else:
+                background = maps_['background']  # + maps_['diffuse']
+            ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
+                                        kernel, *args, **kwargs)
+            log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
+            ts_results['scale'] = scale
+            ts_results['morphology'] = morphology
             if downsampled:
-                maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
-                                                         shape=shape_2N(shape))
-            else:
-                maps_[map_.name.lower()] = map_.data
-
-        # Set up PSF and source kernel
-        kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
-                                        NEW_BINSZ=BINSZ * factor,
-                                        mode='oversample')
-
-        if scale > 0:
-            from astropy.convolution import convolve
-            sigma = scale / (BINSZ * factor)
-            if morphology == 'Gaussian2D':
-                source_kernel = Gaussian2DKernel(sigma, mode='oversample')
-            elif morphology == 'Shell2D':
-                model = Shell2D(1, 0, 0, sigma, sigma * width)
-                x_size = _round_up_to_odd_integer(2 * sigma * (1 + width)
-                                                  + kernel.shape[0] / 2)
-                source_kernel = Model2DKernel(model, x_size=x_size, mode='oversample')
-            else:
-                raise ValueError('Unknown morphology: {}'.format(morphology))
-            kernel = convolve(source_kernel, kernel)
-            kernel.normalize()
-
-        # Compute TS map
-        if residual:
-            background = (maps_['background'] + maps_['diffuse'] + maps_['onmodel'])
-        else:
-            background = maps_['background']  # + maps_['diffuse']
-        ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
-                                    kernel, *args, **kwargs)
-        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
-        ts_results['scale'] = scale
-        ts_results['morphology'] = morphology
-        if downsampled:
-            for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
-                ts_results[name] = upsample_2N(ts_results[name], factor,
-                                               order=order, shape=shape)
-        multiscale_result.append(ts_results)
+                for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
+                    ts_results[name] = upsample_2N(ts_results[name], factor,
+                                                   order=order, shape=shape)
+            multiscale_result.append(ts_results)
+        except:
+            log.info("Exception during computation of scale {}, ".format(scale) +
+                     "perhaps the kernel size is bigger than the image" +
+                     "and positions are empty because of that" ,exc_info=1)
     return multiscale_result
 
 

@@ -10,6 +10,7 @@ from astropy.wcs import WCS
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
+ 
 
 __all__ = [
     'atrous_hdu',
@@ -208,7 +209,9 @@ def downsample_2N(image, factor, method=np.nansum, shape=None):
     if shape is not None:
         x_pad = (shape[1] - image.shape[1]) // 2
         y_pad = (shape[0] - image.shape[0]) // 2
-        image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode='reflect')
+        #converting from unicode to ascii string as a workaround 
+        #for https://github.com/numpy/numpy/issues/7112
+        image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
     return block_reduce(image, (factor, factor), method)
 
 
