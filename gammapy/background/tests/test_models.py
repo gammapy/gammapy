@@ -15,11 +15,11 @@ from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
-from ...data import DataStore
+from ...data import DataStore, EventList
 from ...region import SkyCircleRegion
 from ...background.models import compute_pie_fraction, select_events_outside_pie
 from ...image import make_empty_image
-
+from ...image import coordinates, bin_events_in_image ,make_empty_image
 
 @requires_dependency('scipy')
 class TestGaussianBand2D:
@@ -159,6 +159,7 @@ def make_excluded_sources():
 def test_compute_pie_fraction():
     excluded_sources = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+    #Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
     pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
     assert_allclose(pie_fraction, 0)
 
@@ -171,6 +172,45 @@ def test_compute_pie_fraction():
     pie_fraction_expected = (2 * np.arctan(excluded_sources2["Radius"][1] / separation) / (2 * np.pi))
     assert_allclose(pie_fraction, pie_fraction_expected)
 
+def test_select_events_outside_pie():
+    """
+    Create an empty image centered on the pointing position and all the radec position of the pixels will define one event. Thus we create a false EventList with these pixels. We apply the select_events_outside_pie() and we fill the image only with the events (pixels) outside the pie. We assert that outside the pie the image is fill with one and inside with 0.
+    """
+    excluded_sources = make_excluded_sources()
+    excluded_sources2 = make_excluded_sources()
+    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+    #Define an emppty image centered on the pointing position
+    image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=pointing_position.ra.deg, yref=pointing_position.dec.deg,
+                                    proj='TAN', coordsys='CEL')
+    ra, dec = coordinates(image)
+    events = EventList()
+    #Faked EventList with the radec of all the pixel in the empty image
+    events["RA"]=ra.flat
+    events["DEC"]=dec.flat
+
+    #Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
+    idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
+    assert_allclose(np.arange(len(events)), idx)
+
+    #Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
+    idx=select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
+    events_outside = events[idx]
+    image = bin_events_in_image(events_outside, image)
+    #image.writeto("test_pie.fits", clobber=True)
+    source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
+    separation = pointing_position.separation(source_closest)
+    phi_source=pointing_position.position_angle(source_closest)
+    radius=Angle(excluded_sources2["Radius"])[1]
+    phi_min = phi_source - np.arctan(radius / separation)
+    phi_max = phi_source + np.arctan(radius / separation)
+    skycoord_pix=SkyCoord(ra, dec, unit='deg')
+    phi=pointing_position.position_angle(skycoord_pix)
+    idx_image_out_pie = np.where((phi > phi_max) | (phi < phi_min))
+    idx_image_in_pie = np.where((phi <= phi_max) & (phi >= phi_min))
+    assert_allclose(image.data[idx_image_out_pie], 1)
+    assert_allclose(image.data[idx_image_in_pie], 0)
+   
+    
 
 
 @requires_data('gammapy-extra')
