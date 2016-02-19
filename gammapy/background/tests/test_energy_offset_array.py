@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_equal
 import astropy.units as u
-from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
-import numpy as np
 from astropy.table import Table
 from astropy.coordinates import Angle
 from ...data import DataStore

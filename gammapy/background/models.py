@@ -7,12 +7,10 @@ from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from astropy.units import Quantity, UnitsError
-from ..data.data_store import _get_min_energy_threshold
+from astropy.units import Quantity
 from ..background import Cube
 from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
-from ..data import EventListDataset, DataStore
 from .cube import _make_bin_edges_array
 
 __all__ = [

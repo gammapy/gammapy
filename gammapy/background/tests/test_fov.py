@@ -7,8 +7,7 @@ from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.modeling import models
 from ...utils.testing import requires_dependency
 from ...background import fill_acceptance_image
-from ...image import make_empty_image
-from ...image.utils import coordinates
+from ...image import make_empty_image, coordinates
 
 
 @requires_dependency('scipy')

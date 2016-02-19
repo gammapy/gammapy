@@ -134,7 +134,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     convolved_cube = new_image.copy()
 
     psf = psf.table_psf_in_energy_band(Quantity([np.min(energy).value,
-                                       np.max(energy).value], energy.unit))
+                                                 np.max(energy).value], energy.unit))
 
     resolution = abs(reference.header['CDELT1'])
 

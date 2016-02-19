@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
@@ -9,7 +8,7 @@ from ...utils.testing import requires_dependency
 
 
 @requires_dependency('scipy')
-class TestRingBgMaker(unittest.TestCase):
+class TestRingBgMaker:
     def test_construction(self):
         r = RingBgMaker(0.3, 0.5)
         r.info()
