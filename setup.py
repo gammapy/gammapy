@@ -92,7 +92,6 @@ entry_points['console_scripts'] = [
     'gammapy-spectrum = gammapy.scripts.spectrum:cli',
     'gammapy-spectrum-pipe = gammapy.scripts.spectrum_pipe:main',
     'gammapy-spectrum-hspec = gammapy.hspec.run_fit:main',
-    'gammapy-spectrum-pfspec = gammapy.scripts.spectrum_pfspec:spectrum_pfspec_main',
     'gammapy-spectrum-pfsim = gammapy.scripts.spectrum_pfsim:spectrum_pfsim_main',
     'gammapy-spectrum-regions = gammapy.scripts.spectrum_regions:spectrum_regions_main',
 
