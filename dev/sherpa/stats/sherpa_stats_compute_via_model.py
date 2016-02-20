@@ -10,7 +10,7 @@ data_value = np.arange(numbins)  # 10
 model_value = 5  # np.arange(numbins) #11
 staterror_value = 10
 
-# @note: We have a DataSpace1DInt data space here,
+# Note: We have a DataSpace1DInt data space here,
 # i.e. the model will be integrated over the bins
 # and the bin width matters.
 binwidth = 1

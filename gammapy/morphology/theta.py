@@ -2,7 +2,7 @@
 """Classes for working with radial distributions,
 e.g. the PSF or a source or a PSF-convolved source.
 
-@todo: ThetaCalculator2D and ModelThetaCalculator are not
+TODO: ThetaCalculator2D and ModelThetaCalculator are not
 finished and need tests!
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -112,15 +112,15 @@ class ThetaCalculator2D(ThetaCalculatorScipy):
     model images, where analytical distributions or
     1D distributions are not available.
 
-    @note: The theta and containment is calculated relative
+    Note: The theta and containment is calculated relative
     to the origin (x, y) = (0, 0).
 
-    @note: We do simple bin summing. In principle we could
+    Note: We do simple bin summing. In principle we could
     do integration over bins by using scipy.integrate.dblquad
     in combination with e.g. scipy.interpolate.interp2d,
     but for the speed / precision we need this is overkill.
 
-    @todo: I just realized that probably the best thing to
+    TODO: I just realized that probably the best thing to
     do is to bin (x,y) -> theta2, make a spline interpolation
     and then call ThetaCalculatorScipy!
 
@@ -152,7 +152,7 @@ class ModelThetaCalculator(ThetaCalculator):
     Slow but simple, so useful to check more complicated methods.
 
     Source and PSF must be callable and return
-    dP/dtheta (@todo: or dP/dtheta^2?)
+    dP/dtheta (TODO: or dP/dtheta^2?)
 
     fov = field of view (deg)
     binsz = bin size (deg)

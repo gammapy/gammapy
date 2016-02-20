@@ -35,7 +35,7 @@ def plot_spectra(what="flux"):
         if what == 'flux':
             y = Unit('TeV').to('erg') * e ** 2 * crab.crab_flux(e, reference)
         elif what == 'int_flux':
-            # @todo there are integration problems!
+            # TODO: there are integration problems!
             e2 = 1e4 * np.ones_like(e)
             y = crab.crab_integral_flux(e, e2, reference=reference)
         if what == 'ratio':

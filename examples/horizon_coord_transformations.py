@@ -22,7 +22,7 @@ def approximate_nominal_to_altaz(nominal, horizon_center=(0, 0)):
     x, y = np.asarray(nominal, dtype='float64')
     az_center, alt_center = np.asarray(horizon_center, dtype='float64')
 
-    # @note: alt increases where x increases, az increases where y increases
+    # Note: alt increases where x increases, az increases where y increases
     az = az_center + np.degrees(np.tan(y)) / np.cos(np.radians(alt_center))
     alt = alt_center + np.degrees(np.tan(x))
 

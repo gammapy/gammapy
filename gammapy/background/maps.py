@@ -241,8 +241,8 @@ class Maps(fits.HDUList):
     def make_correlated_basic_maps(self):
         """Make correlated versions of all the basic maps.
 
-        @note This is mainly useful for debugging.
-        @note All maps are disk-correlated, even e.g. the off map
+        Note: This is mainly useful for debugging.
+        Note: All maps are disk-correlated, even e.g. the off map
         if it had been ring-correlated before already.
         """
         log.debug('Making correlated basic maps.')

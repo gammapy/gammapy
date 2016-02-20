@@ -114,7 +114,7 @@ def crab_integral_flux(energy_min=1, energy_max=1e4, reference=CRAB_DEFAULT_REFE
         Integral flux (cm^-2 s^-1) in energy band ``energy_min`` to ``energy_max``
     """
     from scipy.integrate import quad
-    # @todo How does one usually handle 0-dim and 1-dim
+    # TODO: How does one usually handle 0-dim and 1-dim
     # arrays at the same time?
     energy_min, energy_max = np.asarray(energy_min, dtype=float), np.asarray(energy_max, dtype=float)
     npoints = energy_min.size

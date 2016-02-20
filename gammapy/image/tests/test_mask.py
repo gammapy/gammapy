@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy.tests.helper import pytest
 from .. import ExclusionMask, make_empty_image
 from ...utils.testing import requires_dependency
-import numpy as np
 
 
 @requires_dependency('scipy')
