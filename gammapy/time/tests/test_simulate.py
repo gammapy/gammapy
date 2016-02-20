@@ -11,6 +11,7 @@ def test_make_random_times_poisson_process():
                         rate=Quantity(10, 'Hz'),
                         dead_time=Quantity(0.1, 'second'),
                         random_state=0)
+
     assert np.min(time) >= Quantity(0.1, 'second')
     assert_almost_equal(time[0].sec, 0.179587450816311)
     assert_almost_equal(time[-1].sec, 0.14836021009022532)

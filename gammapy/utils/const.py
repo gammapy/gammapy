@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Thin wrapper and some additions to the astropy const and units packages."""
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from astropy.units import Unit, Quantity
 
 __all__ = ['conversion_factor',
