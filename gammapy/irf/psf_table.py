@@ -245,14 +245,17 @@ class TablePSF(object):
 
         if quantity == 'dp_domega':
             y = self._dp_domega_spline(x)
-            return Quantity(y, 'sr^-1').reshape(shape)
+            unit = 'sr^-1'
         elif quantity == 'dp_dtheta':
             y = self._dp_dtheta_spline(x)
-            return Quantity(y, 'radian^-1').reshape(shape)
+            unit = 'radian^-1'
         else:
             ss = 'Invalid quantity: {0}\n'.format(quantity)
             ss += "Choose one of: 'dp_domega', 'dp_dtheta'"
             raise ValueError(ss)
+
+        y = np.clip(a=y, a_min=0, a_max=None)
+        return Quantity(y, unit).reshape(shape)
 
     def integral(self, offset_min=None, offset_max=None):
         """Compute PSF integral, aka containment fraction.
