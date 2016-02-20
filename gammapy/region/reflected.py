@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from . import SkyRegionList, PixRegionList, PixCircleRegion
+from . import PixRegionList, PixCircleRegion
 from astropy.coordinates import Angle
 
 __all__ = [
@@ -13,7 +13,7 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
                            min_distance=None, min_distance_input=None):
     """Find reflected regions.
 
-    Converts to pixel coordinates internally
+    Converts to pixel coordinates internally.
 
     Parameters
     ----------
@@ -27,7 +27,7 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
         Rotation angle for each step
     min_distance : `~astropy.coordinates.Angle`
         Minimal distance between to reflected regions
-    min_distance_input
+    min_distance_input : `~astropy.coordinates.Angle`
         Minimal distance from input region
 
     Returns
@@ -35,7 +35,6 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
     regions : `~gammapy.region.SkyRegionList`
         Reflected regions list
     """
-
     angle_increment = Angle('0.1 rad') if angle_increment is None else Angle(angle_increment)
     min_distance = Angle('0 rad') if min_distance is None else Angle(min_distance)
     min_distance_input = Angle('0 rad') if min_distance_input is None else Angle(min_distance_input)
@@ -73,4 +72,4 @@ def _compute_xy(pix_center, offset, angle):
     dy = offset * np.cos(angle)
     x = pix_center[0] + dx
     y = pix_center[1] + dy
-    return (x, y)
+    return x, y

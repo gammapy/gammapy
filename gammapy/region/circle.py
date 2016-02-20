@@ -6,7 +6,6 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
 from .core import SkyRegion, PixRegion
 
-
 __all__ = [
     'PixCircleRegion',
     'SkyCircleRegion',
