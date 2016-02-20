@@ -7,7 +7,7 @@ from gammapy.image import GalacticPlaneSurveyPanelPlot
 class GPSFermiPlot(GalacticPlaneSurveyPanelPlot):
     def main(self, figure, subplot):
         filename = FermiGalacticCenter.filenames()['counts']
-        self.fits_figure = FITSFigure(filename, figure=figure, subplot=subplot)
+        self.fits_figure = FITSFigure(filename, hdu=1, figure=figure, subplot=subplot)
         self.fits_figure.show_colorscale(vmin=1, vmax=10, cmap='afmhot')
         self.fits_figure.ticks.set_xspacing(2)
 
