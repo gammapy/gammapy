@@ -2,8 +2,8 @@
 """Example and test datasets.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.utils.data import get_pkg_data_filename
-from astropy.units import Quantity
+import warnings
+from astropy.units import Quantity, UnitsWarning
 from astropy.io import fits
 from astropy.table import Table
 from .core import gammapy_extra
@@ -129,8 +129,14 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
 
     """
+    if with_fermi_flare:
+        raise NotImplementedError
+
     filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
-    table = Table.read(filename)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', UnitsWarning)
+        table = Table.read(filename)
 
     if component == 'pulsar':
         mask = table['component'] == 'pulsar'
