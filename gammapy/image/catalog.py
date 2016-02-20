@@ -109,7 +109,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack
     reference_cube = SpectralCube(data=Quantity(np.array(reference.data), ''),
-                                  wcs=wcs, energy=Quantity([0, 1], 'GeV'))
+                                  wcs=wcs, energy=Quantity([1e-3, 1], 'GeV'))
 
     if source_type == 'extended':
         raise NotImplementedError
