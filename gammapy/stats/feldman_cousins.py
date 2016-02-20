@@ -6,9 +6,6 @@ import numpy as np
 from astropy.extern.six.moves import range
 from astropy.extern.six import iteritems
 
-
-log = logging.getLogger(__name__)
-
 __all__ = ['fc_find_acceptance_interval_gauss',
            'fc_find_acceptance_interval_poisson',
            'fc_construct_acceptance_intervals_pdfs',
@@ -19,14 +16,16 @@ __all__ = ['fc_find_acceptance_interval_gauss',
            'fc_construct_acceptance_intervals',
            ]
 
+log = logging.getLogger(__name__)
+
 
 def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     r"""
-    Analytical acceptance interval for Gaussian with boundary at the origin
+    Analytical acceptance interval for Gaussian with boundary at the origin.
 
     .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
@@ -44,7 +43,6 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-
     from scipy import stats
 
     dist = stats.norm(loc=mu, scale=sigma)
@@ -65,13 +63,13 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
         # This is the more general formula
         else:
             # Implementing the boundary condition at zero
-            muBest = max(0, x)
-            probMuBest = stats.norm.pdf(x, loc=muBest, scale=sigma)
+            mu_best = max(0, x)
+            prob_mu_best = stats.norm.pdf(x, loc=mu_best, scale=sigma)
             # probMuBest should never be zero. Check it just in case.
-            if probMuBest == 0.0:
+            if prob_mu_best == 0.0:
                 r.append(0.0)
             else:
-                r.append(p[-1] / probMuBest)
+                r.append(p[-1] / prob_mu_best)
 
     p = np.asarray(p)
     r = np.asarray(r)
@@ -104,12 +102,11 @@ def fc_find_acceptance_interval_gauss(mu, sigma, x_bins, alpha):
 
 
 def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
-    r"""
-    Analytical acceptance interval for Poisson process with background
+    r"""Analytical acceptance interval for Poisson process with background.
 
     .. math :: \int_{x_{min}}^{x_{max}} P(x|mu)\mathrm{d}x = alpha
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
@@ -127,7 +124,6 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
     (x_min, x_max) : tuple of floats
         Acceptance interval
     """
-
     from scipy import stats
 
     dist = stats.poisson(mu=mu + background)
@@ -179,10 +175,9 @@ def fc_find_acceptance_interval_poisson(mu, background, x_bins, alpha):
 
 
 def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
-    r"""
-    Numerically choose bins a la Feldman Cousins ordering principle
+    r"""Numerically choose bins a la Feldman Cousins ordering principle.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
@@ -196,7 +191,6 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
     distributions_scaled : ndarray
         Acceptance intervals (1 means inside, 0 means outside)
     """
-
     number_mus = len(matrix)
 
     distributions_scaled = np.asarray(matrix)
@@ -253,10 +247,9 @@ def fc_construct_acceptance_intervals_pdfs(matrix, alpha):
 
 
 def fc_get_limits(mu_bins, x_bins, acceptance_intervals):
-    r"""
-    Find lower and upper limit from acceptance intervals
+    r"""Find lower and upper limit from acceptance intervals.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
@@ -276,7 +269,6 @@ def fc_get_limits(mu_bins, x_bins, acceptance_intervals):
     x_values : array-like
         All the points that are inside the acceptance intervals
     """
-
     upper_limit = []
     lower_limit = []
     x_values = []
@@ -307,10 +299,9 @@ def fc_get_limits(mu_bins, x_bins, acceptance_intervals):
 
 
 def fc_fix_limits(lower_limit, upper_limit):
-    r"""
-    Push limits outwards as described in the FC paper
+    r"""Push limits outwards as described in the FC paper.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
@@ -407,14 +398,13 @@ def fc_find_average_upper_limit(x_bins, matrix, upper_limit, mu_bins):
 
 
 def fc_construct_acceptance_intervals(distribution_dict, bins, alpha):
-    r"""
-    Convenience function that calculates the PDF for the user
+    r"""Convenience function that calculates the PDF for the user.
 
-    For more information see :ref:`documentation <feldman_cousins>`
+    For more information see :ref:`documentation <feldman_cousins>`.
 
     Parameters
     ----------
-    distribution_dict : `dict`
+    distribution_dict : dict
         Keys are mu values and value is an array-like list of x values
     bins : array-like
         The bins the x distribution will have
