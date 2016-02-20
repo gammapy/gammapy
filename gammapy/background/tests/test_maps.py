@@ -11,7 +11,6 @@ from ...utils.testing import requires_dependency
 from ..maps import Maps
 
 
-@pytest.mark.xfail
 @requires_dependency('scipy')
 class TestMaps(unittest.TestCase):
     # TODO: use `tmpdir` fixture

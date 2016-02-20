@@ -57,49 +57,49 @@ class Maps(fits.HDUList):
     def __init__(self, hdus=[], file=None, rename_hdus=None,
                  is_off_correlated=True, theta=None, theta_pix=0):
         super(Maps, self).__init__(hdus, file)
+        
+        if not len(hdus) == 0:
+            # if rename_hdus is not None:
+            #    for name, number in rename_hdus.items():
+            #        self[number].name = name
 
-        # if rename_hdus is not None:
-        #    for name, number in rename_hdus.items():
-        #        self[number].name = name
+            hdu_names = [hdu.name.lower() for hdu in self]
 
-        hdu_names = [hdu.name.lower() for hdu in self]
-        print(hdu_names)
+            # Check that there is at least one of the basic_maps present.
+            # This is required so that the map geometry is defined.
+            existing_basic_maps = [name for name in BASIC_MAP_NAMES
+                                   if name in hdu_names]
+            nonexisting_basic_maps = [name for name in BASIC_MAP_NAMES
+                                      if name not in hdu_names]
+            if not existing_basic_maps:
+                log.error('hdu_names = {}'.format(hdu_names))
+                log.error('BASIC_MAP_NAMES = {}'.format(BASIC_MAP_NAMES))
+            # Declare any one of the existing basic maps the reference map.
+            # This HDU will be used as the template when adding other hdus.
+            self.ref_hdu = self[existing_basic_maps[0]]
+            # If the HDUList doesn't contain a PrimaryHDU at index x,
+            # add an empty one because this is required by the FITS standard
+            if not isinstance(self[0], fits.PrimaryHDU):
+                self.insert(0, fits.PrimaryHDU())
+            # Add missing BASIC_MAP_NAMES with default value and
+            # same shape and type as existing reference basic map
+            log.debug('Adding missing basic maps: {0}'
+                      ''.format(nonexisting_basic_maps))
+            for name in nonexisting_basic_maps:
+                value = basic_map_defaults[BASIC_MAP_NAMES.index(name)]
+                data = np.ones_like(self.ref_hdu.data) * value
+                header = self.ref_hdu.header
+                hdu = fits.ImageHDU(data, header, name)
+                self.append(hdu)
+            self.is_off_correlated = is_off_correlated
+            log.debug('is_off_correlated: {0}'.format(self.is_off_correlated))
+            # Set the correlation radius in pix
+            if theta and 'CDELT2' in self.ref_hdu.header:
+                self.theta = theta / self.ref_hdu.header['CDELT2']
+            else:
+                self.theta = theta_pix
+            log.debug('theta: {0}'.format(self.theta))
 
-        # Check that there is at least one of the basic_maps present.
-        # This is required so that the map geometry is defined.
-        existing_basic_maps = [name for name in BASIC_MAP_NAMES
-                               if name in hdu_names]
-        nonexisting_basic_maps = [name for name in BASIC_MAP_NAMES
-                                  if name not in hdu_names]
-        if not existing_basic_maps:
-            log.error('hdu_names = {}'.format(hdu_names))
-            log.error('BASIC_MAP_NAMES = {}'.format(BASIC_MAP_NAMES))
-            raise IndexError('hdus must contain at least one of the BASIC_MAP_NAMES')
-        # Declare any one of the existing basic maps the reference map.
-        # This HDU will be used as the template when adding other hdus.
-        self.ref_hdu = self[existing_basic_maps[0]]
-        # If the HDUList doesn't contain a PrimaryHDU at index x,
-        # add an empty one because this is required by the FITS standard
-        if not isinstance(self[0], fits.PrimaryHDU):
-            self.insert(0, fits.PrimaryHDU())
-        # Add missing BASIC_MAP_NAMES with default value and
-        # same shape and type as existing reference basic map
-        log.debug('Adding missing basic maps: {0}'
-                  ''.format(nonexisting_basic_maps))
-        for name in nonexisting_basic_maps:
-            value = basic_map_defaults[BASIC_MAP_NAMES.index(name)]
-            data = np.ones_like(self.ref_hdu.data) * value
-            header = self.ref_hdu.header
-            hdu = fits.ImageHDU(data, header, name)
-            self.append(hdu)
-        self.is_off_correlated = is_off_correlated
-        log.debug('is_off_correlated: {0}'.format(self.is_off_correlated))
-        # Set the correlation radius in pix
-        if theta and 'CDELT2' in self.ref_hdu.header:
-            self.theta = theta / self.ref_hdu.header['CDELT2']
-        else:
-            self.theta = theta_pix
-        log.debug('theta: {0}'.format(self.theta))
 
     def get_basic(self, name):
         """Gets the data of a basic map and disk-correlates if required.
@@ -194,7 +194,7 @@ class Maps(fits.HDUList):
         return self._make_hdu(background, 'background')
 
     @property
-    def make_excess(self):
+    def excess(self):
         """Excess map (`~astropy.io.fits.ImageHDU`)"""
         n_on = self.get_basic('n_on')
         background = self.get_derived('background')
@@ -227,7 +227,7 @@ class Maps(fits.HDUList):
         log.debug('Making derived maps.')
         for name in DERIVED_MAP_NAMES:
             # Compute the derived map
-            hdu = eval('self.make_{0}()'.format(name))
+            hdu = eval('self.{0}'.format(name))
             # Put it in the HDUList, removing an older version
             # of the derived map should it exist.
             try:
