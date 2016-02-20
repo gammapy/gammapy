@@ -18,7 +18,7 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released in sprint or summer 2016.
+Gammapy 0.5 will be released in spring or summer 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 

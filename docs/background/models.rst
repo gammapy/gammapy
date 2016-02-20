@@ -52,9 +52,9 @@ examples and test benches of these classes:
 
 An example script of how to read/write the cubes from file and
 perform some simple plots is given in the ``examples`` directory:
-:download:`plot_bg_cube_model.py <../../examples/plot_bg_cube_model.py>`
+:download:`example_plot_background_model.py <../../examples/example_plot_background_model.py>`
 
-.. literalinclude:: ../../examples/plot_bg_cube_model.py
+.. literalinclude:: ../../examples/example_plot_background_model.py
 
 The data of the cube can be accessed via:
 
