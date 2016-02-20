@@ -3,9 +3,10 @@ import filecmp
 import os
 from astropy.tests.helper import pytest
 
-from gammapy.extern.pathlib import Path
+from ...extern.pathlib import Path
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
+from ...spectrum.results import SpectrumStats, SpectrumFitResult
 from ..spectrum import cli
 
 
@@ -29,12 +30,16 @@ def test_spectrum(tmpdir):
         'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
     fres = 'fit_result_PowerLaw.yaml'
 
-    actual = open(sres, 'r').read()
-    desired = open(sref, 'r').read()
-    assert actual == desired
+    actual = SpectrumStats.from_yaml(sres)
+    desired = SpectrumStats.from_yaml(sref)
 
-    actual = open(fres, 'r').read()
-    desired = open(fref, 'r').read()
-    assert actual == desired
+    assert actual.to_table(format='.3g') == desired.to_table(format='.3g')
+
+    actual = SpectrumFitResult.from_yaml(fres)
+    desired = SpectrumFitResult.from_yaml(fref)
+
+    assert actual.to_table(format='.3g') == desired.to_table(format='.3g')
+
+
 
 
