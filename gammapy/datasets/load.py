@@ -78,11 +78,10 @@ def load_tev_spectrum(source_name):
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == 'crab':
-        filename = 'tev_spectra/crab_hess_spec.txt'
+        filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_hess_spec.txt')
     else:
         raise ValueError('Data not available for source: {0}'.format(source_name))
 
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])

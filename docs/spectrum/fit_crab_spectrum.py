@@ -1,15 +1,15 @@
 """Fit and plot Crab nebula spectrum."""
 import matplotlib.pyplot as plt
 from astropy.modeling.models import PowerLaw1D
-from astropy.modeling.fitting import NonLinearLSQFitter
-from gammapy.datasets import tev_spectrum
+from astropy.modeling.fitting import LevMarLSQFitter
+from gammapy.datasets import load_tev_spectrum
 
-data = tev_spectrum('crab')
+data = load_tev_spectrum('crab')
 energy, flux, flux_err = data['energy'], data['flux'], data['flux_err']
 
 model = PowerLaw1D(4e-11, 1, 2.6)
 model.x_0.fixed = True
-fitter = NonLinearLSQFitter()
+fitter = LevMarLSQFitter()
 
 model = fitter(model, energy, flux, weights=(1. / flux_err))
 print(model)
