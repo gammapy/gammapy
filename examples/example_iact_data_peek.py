@@ -1,8 +1,4 @@
-"""Make plots of the IRFs we support.
-
-This is not very useful for end-users,
-more to check that all the plotting functions work,
-until we implement proper tests for them.
+"""Example how to load and take a peek at an IACT observation.
 """
 import matplotlib.pyplot as plt
 from gammapy.data import DataStore
