@@ -161,10 +161,12 @@ def load_diffuse_gamma_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
+    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+
     if reference == 'Fermi':
-        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'
+        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi.txt')
     elif reference == 'Fermi2':
-        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi2.txt'
+        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi2.txt')
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
 
@@ -172,7 +174,6 @@ def load_diffuse_gamma_spectrum(reference):
 
 
 def _read_diffuse_gamma_spectrum_fermi(filename):
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_hi', 'flux_lo'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
@@ -203,21 +204,22 @@ def load_electron_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
+    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+
     if reference == 'HESS':
-        filename = 'data/tev_spectra/electron_spectrum_hess.txt'
+        filename = str(dir / 'electron_spectrum_hess.txt')
         return _read_electron_spectrum_hess(filename)
     elif reference == 'HESS low energy':
-        filename = 'data/tev_spectra/electron_spectrum_hess_low_energy.txt'
+        filename = str(dir / 'electron_spectrum_hess_low_energy.txt')
         return _read_electron_spectrum_hess(filename)
     elif reference == 'Fermi':
-        filename = 'data/tev_spectra/electron_spectrum_fermi.txt'
+        filename = str(dir / 'electron_spectrum_fermi.txt')
         return _read_electron_spectrum_fermi(filename)
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
 
 
 def _read_electron_spectrum_hess(filename):
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
@@ -236,7 +238,6 @@ def _read_electron_spectrum_hess(filename):
 
 
 def _read_electron_spectrum_fermi(filename):
-    filename = get_pkg_data_filename(filename)
     t = Table.read(filename, format='ascii')
 
     table = Table()
