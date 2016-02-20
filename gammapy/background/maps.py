@@ -99,7 +99,8 @@ class Maps(fits.HDUList):
             else:
                 self.theta = theta_pix
             log.debug('theta: {0}'.format(self.theta))
-
+        else:
+            log.warn('Maps container is empty.')
 
     def get_basic(self, name):
         """Gets the data of a basic map and disk-correlates if required.
