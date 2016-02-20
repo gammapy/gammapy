@@ -998,11 +998,9 @@ def cube_to_image(cube, slicepos=None):
     header = cube.header.copy()
     header['NAXIS'] = 2
 
-    for kword in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
-        try:
-            del header[kword]
-        except (KeyError, AstropyDeprecationWarning):
-            pass
+    for key in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
+        if key in header:
+            del header[key]
 
     if slicepos is None:
         data = cube.data.sum(0)
