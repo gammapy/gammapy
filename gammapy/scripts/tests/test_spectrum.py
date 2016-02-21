@@ -3,13 +3,15 @@ import filecmp
 import os
 from astropy.tests.helper import pytest
 
-from gammapy.extern.pathlib import Path
+from ...extern.pathlib import Path
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
+from ...spectrum.results import SpectrumStats, SpectrumFitResult
 from ..spectrum import cli
 
 
 @requires_dependency('sherpa')
+@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_spectrum(tmpdir):
     os.chdir(str(tmpdir))
@@ -28,18 +30,16 @@ def test_spectrum(tmpdir):
         'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
     fres = 'fit_result_PowerLaw.yaml'
 
-    # Todo: Implement proper file comparison with sensible output
-    # assert filecmp.cmp(sref, sres)
-    # assert filecmp.cmp(fref, fres)
+    actual = SpectrumStats.from_yaml(sres)
+    desired = SpectrumStats.from_yaml(sref)
 
-    #test display
-    args = ['display']
-    with pytest.raises(SystemExit) as exc:
-        cli(args)
+    assert str(actual.to_table(format='.3g')) == str(desired.to_table(format='.3g'))
 
-    # Todo: Implement this
-    #args = ['plot']
-    #with pytest.raises(SystemExit) as exc:
-    #    cli(args)
+    actual = SpectrumFitResult.from_yaml(fres)
+    desired = SpectrumFitResult.from_yaml(fref)
+
+    assert str(actual.to_table(format='.3g')) == str(desired.to_table(format='.3g'))
+
+
 
 

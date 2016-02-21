@@ -56,41 +56,6 @@ class CountsSpectrum(object):
         self.meta.setdefault('backscal', 1)
         self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
-    @property
-    def total_counts(self):
-        """Total number of counts
-        """
-        return self.counts.sum()
-
-    def info(self):
-        """Info string
-        """
-        ss = "\nSummary CountsSpectrum info\n"
-        ss += "----------------\n"
-        # Summarise data members
-        ss += array_stats_str(self.counts, 'counts')
-        ss += array_stats_str(self.energy_bounds.to('TeV'), 'energy')
-        ss += 'Total Counts: {}'.format(self.total_counts)
-
-        return ss
-
-    def __add__(self, other):
-        """Add two counts spectra and returns new instance
-
-        The two spectra need to have the same binning
-        """
-        if (self.energy_bounds != other.energy_bounds).all():
-            raise ValueError("Cannot add counts spectra with different binning")
-        counts = self.counts + other.counts
-        meta = dict(livetime=self.meta.livetime + other.meta.livetime)
-        return CountsSpectrum(counts, self.energy_bounds, meta=meta)
-
-    def __mul__(self, other):
-        """Scale counts by a factor"""
-        temp = self.counts * other
-        meta = dict(livetime=self.meta.livetime)
-        return CountsSpectrum(temp, self.energy_bounds, meta=meta)
-
     @classmethod
     def read(cls, phafile, rmffile=None):
         """Read PHA fits file
@@ -126,6 +91,7 @@ class CountsSpectrum(object):
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
         m = dict(header)
+        m.update(livetime=Quantity(header['EXPOSURE'], 's'))
         if 'LO_THRES' in header.keys():
             rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
             m.update(safe_energy_range=rng)
@@ -159,6 +125,70 @@ class CountsSpectrum(object):
         meta = dict(livetime=livetime)
 
         return cls(val, bins)
+
+    @classmethod
+    def get_npred(cls, fit, obs):
+        """Get N_pred vector from spectral fit
+
+        Parameters
+        ----------
+        fit : SpectrumFitResult
+            Fitted spectrum
+        obs : SpectrumObservationList
+            Spectrum observation holding the irfs
+        """
+
+        m = fit.to_sherpa_model()
+
+        # Get differential flux at true energy log bin center
+        ebounds = obs.effective_area.ebounds
+        x = ebounds.log_centers.to('keV')
+        diff_flux = Quantity(m(x), 'cm-2 s-1 keV-1')
+
+        # Multiply with bin width = integration
+        int_flux = (diff_flux * ebounds.bands).decompose()
+
+        # Apply ARF and RMF to get n_pred
+        temp = int_flux * obs.meta.livetime * obs.effective_area.effective_area
+        counts = obs.energy_dispersion.pdf_matrix.transpose().dot(temp)
+
+        e_reco = obs.energy_dispersion.reco_energy
+        return cls(counts.decompose(), e_reco)
+
+    @property
+    def total_counts(self):
+        """Total number of counts
+        """
+        return self.counts.sum()
+
+    def info(self):
+        """Info string
+        """
+        ss = "\nSummary CountsSpectrum info\n"
+        ss += "----------------\n"
+        # Summarise data members
+        ss += array_stats_str(self.counts, 'counts')
+        ss += array_stats_str(self.energy_bounds.to('TeV'), 'energy')
+        ss += 'Total Counts: {}'.format(self.total_counts)
+
+        return ss
+
+    def __add__(self, other):
+        """Add two counts spectra and returns new instance
+
+        The two spectra need to have the same binning
+        """
+        if (self.energy_bounds != other.energy_bounds).all():
+            raise ValueError("Cannot add counts spectra with different binning")
+        counts = self.counts + other.counts
+        meta = dict(livetime=self.meta.livetime + other.meta.livetime)
+        return CountsSpectrum(counts, self.energy_bounds, meta=meta)
+
+    def __mul__(self, other):
+        """Scale counts by a factor"""
+        temp = self.counts * other
+        meta = dict(livetime=self.meta.livetime)
+        return CountsSpectrum(temp, self.energy_bounds, meta=meta)
 
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
               *args, **kwargs):

@@ -15,6 +15,7 @@ Running the fit
 Create a new folder on your machine, e.g. `gammapy_crab_analysis` and put the
 following :download:`example config file <./spectrum_analysis_example.yaml>`
 into this folder
+
 .. code-block:: bash
 
     mkdir gammapy_crab_analysis
@@ -25,13 +26,13 @@ Now run
 
 .. code-block:: bash
 
-    [<...>/gammapy_crab_analysis] gammapy-spectrum all spectrum_analysis_example.yaml
+    $ gammapy-spectrum all spectrum_analysis_example.yaml
 
 and check out the result of the spectral fit
 
 .. code-block:: bash
 
-    [<...>/gammapy_crab_analysis] gammapy-spectrum display
+    $ gammapy-spectrum display
 
                     Spectrum Stats
                     --------------
@@ -51,7 +52,7 @@ To plot the fitted spectrum use
 
 .. code-block:: bash
 
-    <...>/gammapy_crab_analysis] gammapy-spectrum plot
+    $ gammapy-spectrum plot
     TODO: Implement
 
 Results files
@@ -61,7 +62,7 @@ at your analysis folder
 
 .. code-block:: bash
 
-    [<...>/gammapy_crab_analysis] tree .
+    $ tree .
     .
     ├── fit_result_PowerLaw.yaml
     ├── observation_table.fits
@@ -93,7 +94,7 @@ spectrum is stored in ``total_spectrum_stats.yaml``
 
 .. code-block:: bash
 
-    [<...>/crab_analysis] cat total_spectrum_stats.yaml
+    $ cat total_spectrum_stats.yaml
     spectrum:
       alpha: 0.15508291527313264
       energy_range:
@@ -108,7 +109,7 @@ The result of the spectral fit is contained in ``fit_result_PowerLaw.yaml``
 
 .. code-block:: bash
 
-    [<...>/gammapy_crab_analysis] cat fit_result_PowerLaw.yaml
+    $ cat fit_result_PowerLaw.yaml
     fit_result:
       fit_range:
          max: 101.7654126750981
@@ -141,7 +142,7 @@ You can also run the individual steps of the analysis
 
 .. code-block:: bash
 
-    [<...>/gammapy_crab_analysis] gammapy-spectrum --help
+    $ gammapy-spectrum --help
     Usage: gammapy-spectrum [OPTIONS] COMMAND [ARGS]...
 
     Gammapy tool for spectrum extraction and fitting.

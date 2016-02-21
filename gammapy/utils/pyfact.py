@@ -20,7 +20,6 @@ from astropy.table import Table, Column
 from astropy.time import Time, TimeDelta
 from ..stats import significance_on_off
 from ..irf import EnergyDispersion, EffectiveAreaTable
-from ..spectrum import np_to_pha
 from ..version import version
 from ..utils.random import get_random_state
 

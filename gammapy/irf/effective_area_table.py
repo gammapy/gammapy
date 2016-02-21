@@ -7,7 +7,7 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
@@ -74,10 +74,8 @@ class EffectiveAreaTable(object):
 
     Parameters
     ----------
-    energy_lo : `~astropy.units.Quantity`
-        Lower energy boundary of the energy bin.
-    energy_hi : `~astropy.units.Quantity`
-        Upper energy boundary of the energy bin.
+    ebounds : `~gammapy.utils.energy.EnergyBounds`
+        Energy axis
     effective_area : `~astropy.units.Quantity`
         Effective area at the given energy bins.
     energy_thresh_lo : `~astropy.units.Quantity`
@@ -101,31 +99,32 @@ class EffectiveAreaTable(object):
         plt.show()
     """
 
-    def __init__(self, energy_lo, energy_hi, effective_area,
-                 energy_thresh_lo=Quantity(0.1, 'TeV'),
-                 energy_thresh_hi=Quantity(100, 'TeV')):
+    def __init__(self, ebounds, effective_area,
+                 energy_thresh_lo=None, energy_thresh_hi=None):
+
+        if energy_thresh_lo is not None:
+            self.energy_thresh_lo = Energy(energy_thresh_lo).to('TeV')
+        else:
+            self.energy_thresh_lo = Energy('10 GeV')
+        if energy_thresh_hi is not None:
+            self.energy_thresh_hi = Energy(energy_thresh_hi).to('TeV')
+        else:
+            self.energy_thresh_hi = Energy('100 TeV')
 
         # Validate input
-        validate_physical_type('energy_lo', energy_lo, 'energy')
-        validate_physical_type('energy_hi', energy_hi, 'energy')
         validate_physical_type('effective_area', effective_area, 'area')
-        validate_physical_type('energy_thresh_lo', energy_thresh_lo, 'energy')
-        validate_physical_type('energy_thresh_hi', energy_thresh_hi, 'energy')
 
         # Set attributes
-        self.energy_hi = energy_hi.to('TeV')
-        self.energy_lo = energy_lo.to('TeV')
-        self.effective_area = effective_area.to('m^2')
-        self.energy_thresh_lo = energy_thresh_lo.to('TeV')
-        self.energy_thresh_hi = energy_thresh_hi.to('TeV')
+        self.ebounds = EnergyBounds(ebounds)
+        self.effective_area = effective_area
 
     def to_table(self):
         """Convert to `~astropy.table.Table`.
         """
         table = Table()
 
-        table['ENERG_LO'] = self.energy_lo
-        table['ENERG_HI'] = self.energy_hi
+        table['ENERG_LO'] = self.ebounds.lower_bounds
+        table['ENERG_HI'] = self.ebounds.upper_bounds
         table['SPECRESP'] = self.effective_area
 
         return table
@@ -158,8 +157,7 @@ class EffectiveAreaTable(object):
         natural units for IACTs
         """
 
-        self.energy_lo = self.energy_lo.to(energy_unit)
-        self.energy_hi = self.energy_hi.to(energy_unit)
+        self.ebounds = self.ebounds.to(energy_unit)
         self.effective_area = self.effective_area.to(effarea_unit)
 
         hdu = table_to_fits_table(self.to_table())
@@ -236,19 +234,21 @@ class EffectiveAreaTable(object):
         e_unit = spec.header['TUNIT1']
         a_unit = spec.header['TUNIT3']
 
-        energy_lo = Quantity(spec.data['ENERG_LO'], e_unit)
-        energy_hi = Quantity(spec.data['ENERG_HI'], e_unit)
+        e_lo = Quantity(spec.data['ENERG_LO'], e_unit)
+        e_hi = Quantity(spec.data['ENERG_HI'], e_unit)
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(e_lo, e_hi)
         effective_area = Quantity(hdu_list['SPECRESP'].data['SPECRESP'], a_unit)
+        e_thresh_hi = None
+        e_thresh_lo = None
         try:
-            energy_thresh_lo = Quantity(
+            e_thresh_lo = Quantity(
                 hdu_list['SPECRESP'].header['LO_THRES'], 'TeV')
-            energy_thresh_hi = Quantity(
+            e_thresh_hi = Quantity(
                 hdu_list['SPECRESP'].header['HI_THRES'], 'TeV')
-            return EffectiveAreaTable(energy_lo, energy_hi, effective_area,
-                                      energy_thresh_lo, energy_thresh_hi)
         except KeyError:
             log.warning('No safe energy thresholds found. Setting to default')
-            return cls(energy_lo, energy_hi, effective_area)
+
+        return cls(ebounds, effective_area, e_thresh_lo, e_thresh_hi)
 
     def effective_area_at_energy(self, energy):
         """
@@ -266,11 +266,11 @@ class EffectiveAreaTable(object):
         effective_area : `~astropy.units.Quantity`
             Effective area at given energy.
         """
-        if not isinstance(energy, Quantity):
-            raise ValueError("energy must be a Quantity object.")
+        energy = Energy(energy)
+
+        i = self.ebounds.find_energy_bin(energy)
 
         # TODO: Use some kind of interpolation here
-        i = np.argmin(np.abs(self.energy_hi - energy))
         return self.effective_area[i]
 
     def info(self):
@@ -279,9 +279,8 @@ class EffectiveAreaTable(object):
         ss = "\nSummary ARF info\n"
         ss += "----------------\n"
         # Summarise data members
-        ss += array_stats_str(self.energy_lo, 'Energy lo')
-        ss += array_stats_str(self.energy_hi, 'Energy hi')
-        ss += array_stats_str(self.effective_area.to('m^2'), 'Effective area')
+        ss += array_stats_str(self.ebounds.to('TeV'), 'Energy Bounds')
+        ss += array_stats_str(self.effective_area.to('m2'), 'Effective area')
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.energy_thresh_lo)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.energy_thresh_hi)
 
@@ -294,10 +293,10 @@ class EffectiveAreaTable(object):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        energy_hi = self.energy_hi.value
+        energy = self.ebounds.log_centers
         effective_area = self.effective_area.value
 
-        ax.plot(energy_hi, effective_area, **kwargs)
+        ax.plot(energy, effective_area, **kwargs)
         if show_safe_energy:
             ax.vlines(self.energy_thresh_hi.value, 1E3, 1E7, 'k', linestyles='--')
             text = 'Safe energy threshold: {0:3.2f}'.format(self.energy_thresh_hi)
@@ -483,7 +482,6 @@ class EffectiveAreaTable2D(object):
     def to_effective_area_table(self, offset, energy_lo=None, energy_hi=None):
         """Evaluate at a given offset and return effective area table.
 
-        The energy thresholds in the effective area table object are not set.
         If the effective area table is intended to be used for spectral analysis,
         the final true energy binning should be given here, since the
         effective area table class does no interpolation.
@@ -500,6 +498,8 @@ class EffectiveAreaTable2D(object):
         eff_area_table : `EffectiveAreaTable`
              Effective area table
         """
+        # Todo: use gammapy.utils.energy.EnergyBounds
+
         offset = Angle(offset)
 
         if energy_lo is None and energy_hi is None:
@@ -512,10 +512,9 @@ class EffectiveAreaTable2D(object):
         if len(energy_lo) != len(energy_hi):
             raise ValueError("Energy Vectors must have same length")
 
-        energy = np.sqrt(energy_lo * energy_hi)
-        area = self.evaluate(offset, energy)
-
-        return EffectiveAreaTable(energy_lo, energy_hi, area,
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(energy_lo, energy_hi)
+        area = self.evaluate(offset, ebounds.log_centers)
+        return EffectiveAreaTable(ebounds, area,
                                   energy_thresh_lo=self.low_threshold,
                                   energy_thresh_hi=self.high_threshold)
 

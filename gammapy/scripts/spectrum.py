@@ -2,7 +2,7 @@ import logging
 
 import click
 
-from gammapy.extern.pathlib import Path
+from ..extern.pathlib import Path
 
 click.disable_unicode_literals_warning = True
 from ..spectrum import SpectrumExtraction
@@ -10,7 +10,7 @@ from ..spectrum.spectrum_fit import SpectrumFit
 from ..spectrum.results import SpectrumResult, SpectrumFitResult
 from ..spectrum.results import SpectrumResultDict
 from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
-from ..utils.scripts import read_yaml
+from ..utils.scripts import read_yaml, make_path
 
 __all__ = [
            'SpectrumFitResult',
@@ -74,9 +74,11 @@ def fit_spectrum(configfile, interactive):
 @click.argument('configfile')
 @click.pass_context
 def all_spectrum(ctx, configfile):
-    """Fit spectral model to 1D spectrum"""
+    """Run all steps"""
     ctx.invoke(extract_spectrum, configfile=configfile)
     ctx.invoke(fit_spectrum, configfile=configfile)
+    ctx.invoke(display_spectrum)
+    ctx.invoke(plot_spectrum)
 
 
 @cli.command('display')
@@ -102,5 +104,13 @@ def display_spectrum():
 
 @cli.command('plot')
 def plot_spectrum():
-    """Plot spectrum results file"""
-    raise NotImplementedError
+    """Make default plots"""
+    import matplotlib.pyplot as plt
+    from gammapy.spectrum.utils import plot_npred_vs_excess
+    outdir = Path('plots')
+    outdir.mkdir(exist_ok=True)
+
+    f = str(outdir/'npred_vs_excess.png')
+    log.info('Writing file {}'.format(f))
+    plot_npred_vs_excess()
+    plt.savefig(f)

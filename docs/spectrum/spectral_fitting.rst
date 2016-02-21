@@ -9,6 +9,8 @@ Spectral Fitting
 .. currentmodule:: gammapy.spectrum
 
 
+This section explains the classes used to perform a spectral git with Gammapy. For a introductory tutorial using the ``gammapy-spectrum`` command line tool see :ref:`tutorials-gammapy-spectrum`
+
 TODO: explain class interface
 
 

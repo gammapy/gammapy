@@ -9,7 +9,7 @@ from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
-from ..utils.scripts import read_yaml
+from ..utils.scripts import read_yaml, make_path
 
 __all__ = ['SpectrumStats',
            'SpectrumFitResult',
@@ -840,18 +840,16 @@ class SpectrumResultDict(OrderedDict):
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
 
-        val = self.keys()
+        val = list(self.keys())
         analyses = Column(val, name='analysis')
         l = list()
         for key in val:
             l.append(self[key].to_table(**kwargs))
         table = vstack(l, join_type='outer')
         table.add_column(analyses, index=0)
+
         return table
 
     def overplot_spectra(self):
         """Overplot spectra"""
         raise NotImplementedError
-
-
-
