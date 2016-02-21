@@ -33,12 +33,12 @@ def test_spectrum(tmpdir):
     actual = SpectrumStats.from_yaml(sres)
     desired = SpectrumStats.from_yaml(sref)
 
-    assert actual.to_table(format='.3g') == desired.to_table(format='.3g')
+    assert str(actual.to_table(format='.3g')) == str(desired.to_table(format='.3g'))
 
     actual = SpectrumFitResult.from_yaml(fres)
     desired = SpectrumFitResult.from_yaml(fref)
 
-    assert actual.to_table(format='.3g') == desired.to_table(format='.3g')
+    assert str(actual.to_table(format='.3g')) == str(desired.to_table(format='.3g'))
 
 
 
