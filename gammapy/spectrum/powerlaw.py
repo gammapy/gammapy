@@ -84,13 +84,13 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     ----------
     I : array_like
         Integral flux in ``energy_min``, ``energy_max`` band
-    alpha : array_like
+    g : array_like
         Power law spectral index
-    energy : array_like
+    e : array_like
         Energy at which to compute the differential flux
-    e_min : array_like
+    e1 : array_like
         Energy band minimum
-    e_max : array_like
+    e2 : array_like
         Energy band maximum
 
     Returns
@@ -108,13 +108,13 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     ----------
     f : array_like
         Differential flux at ``energy``
-    alpha : array_like
+    g : array_like
         Power law spectral index
-    energy : array_like
+    e : array_like
         Energy at which the differential flux is given
-    e_min : array_like
+    e1 : array_like
         Energy band minimum
-    e_max : array_like
+    e2 : array_like
         Energy band maximum
 
     Returns
