@@ -98,7 +98,7 @@ When ``--residual`` is set an excess model must be provided using the ``--model`
 
 
 Iterative detection
------------------
+-------------------
 In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection. 
 It takes as arguments count, background and exposure FITS maps(in separate files, unlike previous tool) and a list of ``--scales`` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
 
@@ -108,8 +108,7 @@ It implements the following algorithm:
 2. Largest peak on any scale gives a seed position / extension (the scale)
 3. Fit a 2D Gauss-model source using the seed parameters
 4. Add the source to a list of detected sources and the background model
-5. Restart at 1, but this time with detected sources added to the background
-   model, i.e. significance maps will be "residual significance" maps.
+5. Restart at 1, but this time with detected sources added to the background model, i.e. significance maps will be "residual significance" maps.
 
 Usage example:
 
