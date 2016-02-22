@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 import logging
-
 import numpy as np
+from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
-
 from . import CountsSpectrum
 from .results import SpectrumStats
 from ..extern.pathlib import Path
@@ -18,6 +16,7 @@ from ..data import DataStore, ObservationTable
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
+from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
@@ -167,7 +166,7 @@ class SpectrumExtraction(object):
             emax = Energy(sec['emax'])
             nbins = sec['nbins']
             ebounds = EnergyBounds.equal_log_spacing(
-                    emin, emax, nbins)
+                emin, emax, nbins)
         else:
             if sec['binning'] is None:
                 raise ValueError("No binning specified")
@@ -252,7 +251,7 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-        exclusion, save_meta=True, dry_run=False, calc_containment=False):
+                       exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
         Extraction parameters are stored in the meta attribute
@@ -297,8 +296,8 @@ class SpectrumObservation(object):
         m['obs_id'] = obs_id
         m['zen'] = 90 - event_list.meta['ALT_PNT']
         m['coszen'] = np.cos(m['zen'] * np.pi / 180.)
-        #m['muoneff'] = event_list.meta['MUONEFF']
-        
+        # m['muoneff'] = event_list.meta['MUONEFF']
+
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
             val = Energy('10 TeV')
@@ -307,7 +306,7 @@ class SpectrumObservation(object):
             m['psf_containment'] = float(cont)
 
         if dry_run:
-          return cls(obs_id, None, None, None, None, meta=m)
+            return cls(obs_id, None, None, None, None, meta=m)
 
         b = BackgroundEstimator(event_list, m)
         b.make_off_vector()
@@ -334,113 +333,76 @@ class SpectrumObservation(object):
         return cls(obs_id, on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
     @classmethod
-    def from_observation_list(cls, obs_list, obs_id=None):
+    def grouping_from_an_observation_list(cls, obs_list, obs_stacked_id):
+
         """Create `~gammapy.spectrum.SpectrumObservations` from list
 
-        Observation stacking is implemented as follows
+       Observation stacking is implemented as follows
 
-        Averaged exposure ratio between ON and OFF regions
+       Averaged exposure ratio between ON and OFF regions
 
-        :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
+       :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
 
-        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
+       .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
 
-        where :math:`N_i` is the number of OFF counts for observation :math:`i`
+       where :math:`N_i` is the number of OFF counts for observation :math:`i`
 
-        Parameters
-        ----------
-        obs_list : list of `~gammapy.spectrum.SpectrumObservations`
-            Observations to stack
-        obs_id : int, optional
-            Observation ID for stacked observations
-        """
-        obs_id = 0 if obs_id is None else obs_id
-
+       Parameters
+       ----------
+       obs_list : list of `~gammapy.spectrum.SpectrumObservations`
+           Observations to stack
+       obs_id : int, optional
+           Observation ID for stacked observations
+       """
+        # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
         off_vec = np.sum([o.off_vector for o in obs_list])
-        # Todo : Stack RMF and ARF
-        arf = None
         rmf = None
 
-        # Calculate average alpha
-        val = [o.alpha * o.off_vector.total_counts for o in obs_list]
-        num = np.sum(val)
-        den = np.sum([o.off_vector.total_counts for o in obs_list])
-        alpha = num/den
-        off_vec.meta.backscal = 1. / alpha
+        # Stack arf vector
 
-        #Calculate energy range
-        emin = min([_.meta.energy_range[0] for _ in obs_list])
-        emax = max([_.meta.energy_range[1] for _ in obs_list])
+        arf_band = [o.effective_area.effective_area * o.meta.livetime.value for o in obs_list]
+        arf_band_tot = np.sum(arf_band, axis=0)
+        livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
+        arf_vec = arf_band_tot / livetime_tot
+        ener_hi = obs_list[0].effective_area.energy_hi
+        ener_lo = obs_list[0].effective_area.energy_lo
+        arf = EffectiveAreaTable(ener_lo, ener_hi, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
+
+        """
+        # Stack rmf vector
+        #Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
+        rmf_band = [o.rmf_mat.T *o.arf_vector * o.livetime for o in obs_list]
+        #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
+        rmf_band_tot = np.sum(rmf_band, axis=dimension_observation)
+        #ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
+        livetime_arf_tot = np.sum([o.arf_vector*o.livetime for o in obs_list], axis=dimension_observation)
+        #Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
+        rmf_mat=rmf_band_tot/livetime_arf_tot
+        """
+
+        # Calculate average alpha
+        alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
+        alpha_band_tot = np.sum(alpha_band)
+        off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
+        alpha_mean = alpha_band_tot / off_tot
+        off_vec.meta.backscal = 1. / alpha_mean
+
+        # Calculate energy range
+        # TODO: pour l instant on va prendre le plus petit range en energy possible pour pas se faire chier avec des
+        # livetime different en fonctiond des bins en erngies mais c'est crado. Voir avec Regis aussi c'est quoi cette
+        #  energie range et si on a vraiment besoin de prendre le max en energy range et de definir un livetime
+        # dependant des energies bins
+        emin = max([_.meta.energy_range[0] for _ in obs_list])
+        emax = min([_.meta.energy_range[1] for _ in obs_list])
 
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.obs_id for o in obs_list]
-        m['alpha_method1'] = alpha
-        return cls(obs_id, on_vec, off_vec, arf, rmf, meta=m)
-
-    @classmethod
-    def grouping_from_an_observation_list(cls, obs_list, obs_stacked_id):
-
-         """Method that stack the ON, OFF, arf and RMF for an observation group
-
-         Parameters
-         ----------
-         obs_list : list of `~gammapy.spectrum.SpectrumObservationList`
-            list of the observations to group together
-         obs_stacked_id: int
-             Observation ID for stacked observations
-
-         """
-          # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
-         on_vec = np.sum([o.on_vector for o in obs_list])
-         off_vec = np.sum([o.off_vector for o in obs_list])
-         arf= None
-         rmf = None
-
-         """
-         # Stack arf vector
-         arf_band = [o.arf_vector * o.livetime for o in obs_list]
-         #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES ICI
-         #arf_band ici est a 2D (erngie*dim(listobservation))
-         arf_band_tot = np.sum(arf_band, axis=dimension_observation)
-         livetime_tot = np.sum([o.livetime for o in obs_list])
-         arf_vec=arf_band_tot/livetime_tot
-
-         # Stack rmf vector
-         #Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
-         rmf_band = [o.rmf_mat.T *o.arf_vector * o.livetime for o in obs_list]
-         #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
-         rmf_band_tot = np.sum(rmf_band, axis=dimension_observation)
-         #ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
-         livetime_arf_tot = np.sum([o.arf_vector*o.livetime for o in obs_list], axis=dimension_observation)
-         #Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
-         rmf_mat=rmf_band_tot/livetime_arf_tot
-         """
-
-         # Calculate average alpha
-         alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
-         alpha_band_tot = np.sum(alpha_band)
-         off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
-         alpha_mean = alpha_band_tot/off_tot
-         off_vec.meta.backscal = 1. / alpha_mean
-
-
-         #Calculate energy range
-         #TODO: pour l instant on va prendre le plus petit range en energy possible pour pas se faire chier avec des
-         # livetime different en fonctiond des bins en erngies mais c'est crado. Voir avec Regis aussi c'est quoi cette
-         #  energie range et si on a vraiment besoin de prendre le max en energy range et de definir un livetime
-         # dependant des energies bins
-         emin = max([_.meta.energy_range[0] for _ in obs_list])
-         emax = min([_.meta.energy_range[1] for _ in obs_list])
-
-         m = Bunch()
-         m['energy_range'] = EnergyBounds([emin, emax])
-         m['obs_ids'] = [o.obs_id for o in obs_list]
-         m['alpha_method1'] = alpha_mean
-         #m['livetime'] = livetime_tot
-         #import IPython; IPython.embed()
-         return cls(obs_stacked_id, on_vec, off_vec, arf, rmf, meta=m)
+        m['alpha_method1'] = alpha_mean
+        m['livetime'] = Quantity(livetime_tot, "s")
+        #import IPython; IPython.embed()
+        return cls(obs_stacked_id, on_vec, off_vec, rmf, arf,  meta=m)
 
     @property
     def alpha(self):
@@ -507,7 +469,7 @@ class SpectrumObservation(object):
         else:
             raise ValueError('Undefined method: {}'.format(method))
 
-        off_vec.meta.update(backscal = self.off_vector.meta.backscal)
+        off_vec.meta.update(backscal=self.off_vector.meta.backscal)
         m = copy.deepcopy(self.meta)
         m.update(energy_range=energy_range)
 
@@ -539,7 +501,7 @@ class SpectrumObservation(object):
         """
 
         cwd = Path.cwd()
-        outdir = cwd if outdir is None else cwd /make_path(outdir)
+        outdir = cwd if outdir is None else cwd / make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         if phafile is None:
@@ -551,14 +513,14 @@ class SpectrumObservation(object):
         if bkgfile is None:
             bkgfile = "bkg_run{}.fits".format(self.obs_id)
 
-        self.meta['phafile'] = str(outdir/phafile)
+        self.meta['phafile'] = str(outdir / phafile)
 
-        self.on_vector.write(str(outdir/phafile), bkg=str(bkgfile), arf=str(arffile),
+        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
                              rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(outdir/bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir/arffile), energy_unit='keV',
+        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
                                   effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(outdir/rmffile), energy_unit='keV',
+        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=clobber)
 
     def plot_exclusion_mask(self, size=None, **kwargs):
@@ -599,14 +561,14 @@ class SpectrumObservation(object):
 
         if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
             center = self.meta.pointing.galactic
-            xlim = (center.l + extent/2).value, (center.l - extent/2).value
-            ylim = (center.b + extent/2).value, (center.b - extent/2).value
+            xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
+            ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
         else:
             center = self.meta.pointing.icrs
-            xlim = (center.ra + extent/2).value, (center.ra - extent/2).value
-            ylim = (center.dec + extent/2).value, (center.dec - extent/2).value
+            xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
+            ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
 
-        limits = ax.wcs.wcs_world2pix(xlim, ylim,1)
+        limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
         ax.set_xlim(limits[0])
         ax.set_ylim(limits[1])
 
@@ -614,7 +576,8 @@ class SpectrumObservation(object):
 class SpectrumObservationList(list):
     """List of `gammapy.spectrum.SpectrumObservation`
     """
-    #@classmethod
+
+    # @classmethod
     def get_obslist_from_obsid(self, list_ids):
         """Return an observation with a certain id
 
@@ -629,7 +592,7 @@ class SpectrumObservationList(list):
             List of `~gammapy.spectrum.SpectrumObservation`
         """
         new_list = list()
-        
+
         for id in list_ids:
             ids = [o.obs_id for o in self]
             try:
@@ -640,8 +603,6 @@ class SpectrumObservationList(list):
             new_list.append(self[i])
 
         return SpectrumObservationList(new_list)
-           
-        
 
     @property
     def total_spectrum(self):
@@ -821,6 +782,3 @@ def run_spectrum_extraction_using_config(config, **kwargs):
         str(outdir / 'observations.fits'), format='fits', overwrite=True)
 
     return analysis
-
-
-
