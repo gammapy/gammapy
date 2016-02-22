@@ -357,7 +357,6 @@ class SpectrumObservation(object):
         # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
         off_vec = np.sum([o.off_vector for o in obs_list])
-        rmf = None
 
         # Stack arf vector
 
@@ -369,17 +368,23 @@ class SpectrumObservation(object):
         ener_lo = obs_list[0].effective_area.energy_lo
         arf = EffectiveAreaTable(ener_lo, ener_hi, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
 
-        """
+
         # Stack rmf vector
-        #Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
-        rmf_band = [o.rmf_mat.T *o.arf_vector * o.livetime for o in obs_list]
-        #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
-        rmf_band_tot = np.sum(rmf_band, axis=dimension_observation)
-        #ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
-        livetime_arf_tot = np.sum([o.arf_vector*o.livetime for o in obs_list], axis=dimension_observation)
-        #Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
-        rmf_mat=rmf_band_tot/livetime_arf_tot
-        """
+        # Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
+        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
+                    o in obs_list]
+        # ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
+        rmf_band_tot = np.sum(rmf_band, axis=0)
+        # ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
+
+        # Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
+        pdf_mat = rmf_band_tot / arf_band_tot
+        etrue = obs_list[0].energy_dispersion.true_energy
+        ereco = obs_list[0].energy_dispersion.reco_energy
+        inan=np.isnan(pdf_mat)
+        pdf_mat[inan]=0
+        rmf = EnergyDispersion(pdf_mat.T, etrue, ereco)
+
 
         # Calculate average alpha
         alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
@@ -401,8 +406,8 @@ class SpectrumObservation(object):
         m['obs_ids'] = [o.obs_id for o in obs_list]
         m['alpha_method1'] = alpha_mean
         m['livetime'] = Quantity(livetime_tot, "s")
-        #import IPython; IPython.embed()
-        return cls(obs_stacked_id, on_vec, off_vec, rmf, arf,  meta=m)
+        # import IPython; IPython.embed()
+        return cls(obs_stacked_id, on_vec, off_vec, rmf, arf, meta=m)
 
     @property
     def alpha(self):
