@@ -700,12 +700,12 @@ class SpectrumResult(object):
         residuals : `~astropy.units.Quantity`
             Residuals
         residuals_err : `~astropy.units.Quantity`
-            Residual errirs
+            Residual errors
         """
         func = self.fit.to_sherpa_model()
-        x = self.flux_points['energy'].quantity
-        y = self.flux_points['flux'].quantity
-        y_err = self.flux_points['flux_err_hi'].quantity
+        x = self.points['energy'].quantity
+        y = self.points['flux'].quantity
+        y_err = self.points['flux_err_hi'].quantity
 
         func_y = func(x.to('keV').value) * Unit('s-1 cm-2 keV-1')
         residuals = (y - func_y) / y
@@ -754,21 +754,20 @@ class SpectrumResult(object):
         ax1.set_xscale('log')
 
         if fit_kwargs is None:
-            fit_kwargs = dict(label='Best Fit {}'.format(self.spectral_model),
-                              barsabove=True, capsize=0, alpha=0.4,
-                              color='cornflowerblue', ecolor='cornflowerblue')
+            fit_kwargs = dict(label='Best Fit {}'.format(
+                    self.fit.spectral_model), color='navy')
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        self.fit.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
-                                   e_power=e_power, ax=ax0, **fit_kwargs)
-        self.points.plot_flux_points(energy_unit=energy_unit,
-                                     flux_unit=flux_unit,
-                                     e_power=e_power, ax=ax0, **point_kwargs)
+        
+        self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
+                      e_power=e_power, ax=ax0, **fit_kwargs)
+        self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
+                         e_power=e_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
-        plt.xlim(self.energy_range[0].to(energy_unit).value * 0.9,
-                 self.energy_range[1].to(energy_unit).value * 1.1)
+        plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,
+                 self.fit.fit_range[1].to(energy_unit).value * 1.1)
 
         ax0.legend(numpoints=1)
         return gs
@@ -794,8 +793,8 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        y, y_err = self.residuals()
-        x = self.flux_points['energy'].quantity
+        y, y_err = self.calculate_residuals()
+        x = self.points['energy'].quantity
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
 
