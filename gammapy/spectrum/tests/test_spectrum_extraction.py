@@ -19,7 +19,7 @@ from ...spectrum import (
     SpectrumExtraction,
     run_spectrum_extraction_using_config,
 )
-from ...spectrum.spectrum_extraction import SpectrumObservationList
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 
 def make_spectrum_extraction():
     # Construct w/o config file
@@ -97,4 +97,18 @@ def test_spectrum_extraction_from_configfile(tmpdir):
 
     assert actual.n_on == desired.n_on
 
+@requires_data('gammapy-extra')
+def test_spectrum_extraction_grouping_from_an_observation_list():
+    ana = make_spectrum_extraction()
+    ana.extract_spectrum()
+    spectrum_observation_grouped = SpectrumObservation.grouping_from_an_observation_list(ana.observations, 0)
+    obs0 = ana.observations[0]
+    obs1 = ana.observations[1]
+    sum_on_vector = obs0.on_vector.counts + obs1.on_vector.counts
+    sum_off_vector = obs0.off_vector.counts + obs1.off_vector.counts
+    alpha_times_off_tot = obs0.alpha * obs0.off_vector.total_counts + obs1.alpha * obs1.off_vector.total_counts
+    total_off = obs0.off_vector.total_counts+obs1.off_vector.total_counts
+    assert_allclose(spectrum_observation_grouped.on_vector.counts, sum_on_vector)
+    assert_allclose(spectrum_observation_grouped.off_vector.counts, sum_off_vector)
+    assert_allclose(spectrum_observation_grouped.alpha, alpha_times_off_tot/ total_off)
 
