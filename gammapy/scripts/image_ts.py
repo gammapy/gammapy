@@ -79,7 +79,7 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
         maps.append(fits.ImageHDU(data, header, 'OnModel'))
 
     results = compute_ts_map_multiscale(maps, psf_parameters, scales, downsample,
-                                        residual, morphology, width)
+                                        residual, morphology, width, threshold)
 
     filename = Path(output_file).name
     folder = Path(output_file).parent
