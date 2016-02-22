@@ -6,7 +6,6 @@ from astropy.tests.helper import pytest
 from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
-
 from ...spectrum.results import SpectrumFitResult, SpectrumStats
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from ...region import SkyCircleRegion
@@ -20,6 +19,7 @@ from ...spectrum import (
     run_spectrum_extraction_using_config,
 )
 from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
+
 
 def make_spectrum_extraction():
     # Construct w/o config file
@@ -40,9 +40,10 @@ def make_spectrum_extraction():
     ds = DataStore.from_dir(store)
 
     ana = SpectrumExtraction(datastore=ds, obs_ids=obs, on_region=on_region,
-                           bkg_method=bkg_method, exclusion=excl,
-                           ebounds=bounds)
+                             bkg_method=bkg_method, exclusion=excl,
+                             ebounds=bounds)
     return ana
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -65,10 +66,10 @@ def test_spectrum_extraction(tmpdir):
     ds = DataStore.from_dir(store)
 
     ana = SpectrumExtraction(datastore=ds, obs_ids=obs, on_region=on_region,
-                           bkg_method=bkg_method, exclusion=excl,
-                           ebounds=bounds)
+                             bkg_method=bkg_method, exclusion=excl,
+                             ebounds=bounds)
 
-    #test methods on SpectrumObservationList
+    # test methods on SpectrumObservationList
     obs = ana.observations
     assert len(obs) == 3
     obs23523 = obs.get_obslist_from_obsid([23523])[0]
@@ -76,6 +77,7 @@ def test_spectrum_extraction(tmpdir):
     new_list = obs.get_obslist_from_obsid([23523, 23592])
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
+
 
 """
 # @pytest.mark.xfail
@@ -102,35 +104,38 @@ def test_spectrum_extraction_from_configfile(tmpdir):
 
 @requires_data('gammapy-extra')
 def test_spectrum_extraction_grouping_from_an_observation_list():
+    """
+    Test the stacking for two observations
+    """
+
     ana = make_spectrum_extraction()
     ana.extract_spectrum()
     spectrum_observation_grouped = SpectrumObservation.grouping_from_an_observation_list(ana.observations, 0)
     obs0 = ana.observations[0]
     obs1 = ana.observations[1]
 
-    #Test sum on/off vector and alpha group
+    # Test sum on/off vector and alpha group
     sum_on_vector = obs0.on_vector.counts + obs1.on_vector.counts
     sum_off_vector = obs0.off_vector.counts + obs1.off_vector.counts
     alpha_times_off_tot = obs0.alpha * obs0.off_vector.total_counts + obs1.alpha * obs1.off_vector.total_counts
-    total_off = obs0.off_vector.total_counts+obs1.off_vector.total_counts
+    total_off = obs0.off_vector.total_counts + obs1.off_vector.total_counts
 
     assert_allclose(spectrum_observation_grouped.on_vector.counts, sum_on_vector)
     assert_allclose(spectrum_observation_grouped.off_vector.counts, sum_off_vector)
-    assert_allclose(spectrum_observation_grouped.alpha, alpha_times_off_tot/ total_off)
+    assert_allclose(spectrum_observation_grouped.alpha, alpha_times_off_tot / total_off)
 
-
-    #Test arf group
+    # Test arf group
     total_time = obs0.meta.livetime + obs1.meta.livetime
     arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
                          + obs1.meta.livetime * obs1.effective_area.effective_area
-    assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime/total_time)
-    #Test rmf group
-    rmf_times_arf_times_livetime= obs0.meta.livetime * obs0.effective_area.effective_area \
-                                 * obs0.energy_dispersion.pdf_matrix.T   \
-                         + obs1.meta.livetime * obs1.effective_area.effective_area  \
-                           * obs1.energy_dispersion.pdf_matrix.T
+    assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime / total_time)
+    # Test rmf group
+    rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
+                                   * obs0.energy_dispersion.pdf_matrix.T \
+                                   + obs1.meta.livetime * obs1.effective_area.effective_area \
+                                     * obs1.energy_dispersion.pdf_matrix.T
 
-    inan=np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
-    pdf_expexted=rmf_times_arf_times_livetime / arf_times_livetime
-    pdf_expexted[inan]=0
+    inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
+    pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime
+    pdf_expexted[inan] = 0
     assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
