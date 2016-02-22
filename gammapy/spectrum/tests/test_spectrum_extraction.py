@@ -107,15 +107,30 @@ def test_spectrum_extraction_grouping_from_an_observation_list():
     spectrum_observation_grouped = SpectrumObservation.grouping_from_an_observation_list(ana.observations, 0)
     obs0 = ana.observations[0]
     obs1 = ana.observations[1]
+
+    #Test sum on/off vector and alpha group
     sum_on_vector = obs0.on_vector.counts + obs1.on_vector.counts
     sum_off_vector = obs0.off_vector.counts + obs1.off_vector.counts
     alpha_times_off_tot = obs0.alpha * obs0.off_vector.total_counts + obs1.alpha * obs1.off_vector.total_counts
     total_off = obs0.off_vector.total_counts+obs1.off_vector.total_counts
-    total_time = obs0.meta.livetime + obs1.meta.livetime
-    arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
-                         + obs1.meta.livetime * obs1.effective_area.effective_area
+
     assert_allclose(spectrum_observation_grouped.on_vector.counts, sum_on_vector)
     assert_allclose(spectrum_observation_grouped.off_vector.counts, sum_off_vector)
     assert_allclose(spectrum_observation_grouped.alpha, alpha_times_off_tot/ total_off)
-    #assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime / total_time)
 
+
+    #Test arf group
+    total_time = obs0.meta.livetime + obs1.meta.livetime
+    arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
+                         + obs1.meta.livetime * obs1.effective_area.effective_area
+    assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime/total_time)
+    #Test rmf group
+    rmf_times_arf_times_livetime= obs0.meta.livetime * obs0.effective_area.effective_area \
+                                 * obs0.energy_dispersion.pdf_matrix.T   \
+                         + obs1.meta.livetime * obs1.effective_area.effective_area  \
+                           * obs1.energy_dispersion.pdf_matrix.T
+
+    inan=np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
+    pdf_expexted=rmf_times_arf_times_livetime / arf_times_livetime
+    pdf_expexted[inan]=0
+    assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
