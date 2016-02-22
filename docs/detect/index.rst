@@ -14,8 +14,6 @@ into source catalogs.
 
 * TODO: Describe references: [Stewart2009]_
 * TODO: general intro
-* TODO: describe the ``gammapy-iterative-source-detect`` tool.
-* TODO: describe the ``gammapy-image-decompose-a-trous`` tool.
 
 
 Getting Started
@@ -75,17 +73,17 @@ The TS map itself can bes accessed using the ``ts`` attribute of the `~gammapy.d
 Command line tool
 -----------------
 
-Gammapy also provides a command line tool ``gammapy-ts-image`` for TS map computation, which can be run
+Gammapy also provides a command line tool ``gammapy-image-ts`` for TS map computation, which can be run
 on the Fermi example dataset by:
 
 .. code-block:: bash
 
 	$ cd gammapy-extra/datasets/fermi_survey
-	$ gammapy-ts-image all.fits.gz ts_map_0.00.fits --scale 0 
+	$ gammapy-image-ts all.fits.gz ts_map_0.00.fits --scale 0 
 
 The command line tool additionally requires a psf json file, where the psf shape is defined by the parameters
 of a triple Gaussian model. See also `gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
-a Gaussian source kernel, where the width in degree can be defined by the ``--scale`` parameter. When setting
+a Gaussian source kernel, where the width in degree can be defined by the ``--scale`` parameter. Multiple scales can be selected by passing a list to the ``scales`` parameter.  When setting
 ``--scale 0`` only the psf is used as source model, which is the preferred setting to detect point sources.
 When using scales that are larger than five times the binning of the data, the data is sampled down and later
 sampled up again to speed up the performance. See `~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.   
@@ -94,9 +92,32 @@ Furthermore it is possible to compute residual TS maps. Using the following opti
  
 .. code-block:: bash
 
-	$ gammapy-ts-image all.fits.gz residual_ts_map_0.00.fits --scale 0 --residual --model model.fits.gz 
+	$ gammapy-image-ts all.fits.gz residual_ts_map_0.00.fits --scale 0 --residual --model model.fits.gz 
 
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
+
+
+Iterative detection
+-----------------
+In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection. 
+It takes as arguments count, background and exposure FITS maps(in separate files, unlike previous tool) and a list of ```--scales``` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
+
+
+It implements the following algorithm:
+1. Compute significance maps on multiple scales (disk-correlate)
+2. Largest peak on any scale gives a seed position / extension (the scale)
+3. Fit a 2D Gauss-model source using the seed parameters
+4. Add the source to a list of detected sources and the background model
+5. Restart at 1, but this time with detected sources added to the background
+   model, i.e. significance maps will be "residual significance" maps.
+
+Usage example:
+
+.. code-block:: bash
+	$ cd gammapy-extra/datasets/source_diffuse_separation/galactic_simulations
+	$ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
+
+
 
 Reference/API
 =============
