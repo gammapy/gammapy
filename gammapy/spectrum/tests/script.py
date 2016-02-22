@@ -71,7 +71,7 @@ def test_spectrum_extraction_grouping_from_an_observation_list():
     pdf_expexted=rmf_times_arf_times_livetime / arf_times_livetime
     pdf_expexted[inan]=0
     assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
-    
+
 
 if __name__ == '__main__':
     test_spectrum_extraction_grouping_from_an_observation_list()

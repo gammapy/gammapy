@@ -394,6 +394,7 @@ class SpectrumObservation(object):
         on_vec = np.sum([o.on_vector for o in obs_list])
         off_vec = np.sum([o.off_vector for o in obs_list])
 
+        # Stack arf vector
         arf_band = [o.effective_area.effective_area * o.meta.livetime.value for o in obs_list]
         arf_band_tot = np.sum(arf_band, axis=0)
         livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
@@ -402,23 +403,16 @@ class SpectrumObservation(object):
         ener_lo = obs_list[0].effective_area.energy_lo
         arf = EffectiveAreaTable(ener_lo, ener_hi, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
 
-
         # Stack rmf vector
-        # Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
         rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
                     o in obs_list]
-        # ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
         rmf_band_tot = np.sum(rmf_band, axis=0)
-        # ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
-
-        # Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
         pdf_mat = rmf_band_tot / arf_band_tot
         etrue = obs_list[0].energy_dispersion.true_energy
         ereco = obs_list[0].energy_dispersion.reco_energy
-        inan=np.isnan(pdf_mat)
-        pdf_mat[inan]=0
+        inan = np.isnan(pdf_mat)
+        pdf_mat[inan] = 0
         rmf = EnergyDispersion(pdf_mat.T, etrue, ereco)
-
 
         # Calculate average alpha
         alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
@@ -797,55 +791,3 @@ class BackgroundEstimator(object):
         self.off_vec = off_vec
 
 
-<<<<<<< HEAD
-=======
-def run_spectrum_extraction_using_config(config, **kwargs):
-    """
-    Run a 1D spectral analysis using a config dict
-
-    kwargs are forwarded to
-     :func:`spectrum.spectrum_extraction.SpectrumObservation.from_config`
-
-    Parameters
-    ----------
-    config : dict
-        Config dict
-
-    Returns
-    -------
-    analysis : `~gammapy.spectrum.spectrum_extraction.SpectrumExtraction`
-        Spectrum extraction analysis instance
-    """
-    kwargs.setdefault('dry_run', False)
-    config = config['extraction']
-    outdir = config['results']['outdir']
-    log.info("\nStarting analysis {}".format(outdir))
-    outdir = make_path(outdir)
-    outdir.mkdir(exist_ok=True, parents=True)
-    analysis = SpectrumExtraction.from_config(config, **kwargs)
-    obs = analysis.observations
-    if kwargs['dry_run']:
-        return analysis
-
-    if config['off_region']['type'] == 'reflected':
-        mask = obs.filter_by_reflected_regions(config['off_region']['n_min'])
-        # Todo: should ObservationList subclass np.array to avoid this hack?
-        temp = np.asarray(obs)[mask]
-        obs = SpectrumObservationList(temp)
-
-    obs_in_erange = SpectrumObservationList(
-        [o.restrict_energy_range(method='binned') for o in obs])
-
-    # Output
-    if config['results']['write_ogip']:
-        obs.write_ogip_data(str(outdir / 'ogip_data'))
-
-    rfile = outdir / config['results']['result_file']
-    obs.total_spectrum.spectrum_stats.to_yaml(str(rfile))
-    obs_in_erange.total_spectrum.spectrum_stats.to_yaml('test.yaml')
-    log.info('\nWriting file {}'.format(rfile))
-    obs.to_observation_table().write(
-        str(outdir / 'observations.fits'), format='fits', overwrite=True)
-
-    return analysis
->>>>>>> arf seems ok
