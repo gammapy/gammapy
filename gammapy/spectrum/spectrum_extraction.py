@@ -50,6 +50,8 @@ class SpectrumExtraction(object):
         List of observations or file containing such a list
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
+
+
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion regions
     bkg_method : dict
@@ -412,6 +414,69 @@ class SpectrumObservation(object):
         m['obs_ids'] = [o.obs_id for o in obs_list]
         m['alpha_method1'] = alpha
         return cls(obs_id, on_vec, off_vec, arf, rmf, meta=m)
+
+    @classmethod
+    def grouping_from_an_observation_list(cls, obs_list, obs_stacked_id):
+
+         """Method that stack the ON, OFF, arf and RMF for an observation group
+
+         Parameters
+         ----------
+         obs_list : list of `~gammapy.spectrum.SpectrumObservationList`
+            list of the observations to group together
+         obs_stacked_id: int
+             Observation ID for stacked observations
+
+         """
+          # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
+         on_vec = np.sum([o.on_vector for o in obs_list])
+         off_vec = np.sum([o.off_vector for o in obs_list])
+         arf= None
+         rmf = None
+
+         """
+         # Stack arf vector
+         arf_band = [o.arf_vector * o.livetime for o in obs_list]
+         #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES ICI
+         #arf_band ici est a 2D (erngie*dim(listobservation))
+         arf_band_tot = np.sum(arf_band, axis=dimension_observation)
+         livetime_tot = np.sum([o.livetime for o in obs_list])
+         arf_vec=arf_band_tot/livetime_tot
+
+         # Stack rmf vector
+         #Je crois que je dois mettre un .T si je multiplie rmf_mat avec arf car dim rmf_mat is (Etrue,Ereco) et pour multiplier un tableau 2D avec un 1D de dim Etrue, le tableau 2D doit avec la dim (Ereco, Etrue) mais a verifier ladimension de rmf_mat
+         rmf_band = [o.rmf_mat.T *o.arf_vector * o.livetime for o in obs_list]
+         #ATTENTION: DANS LE np.sum IL FAUT FAIRE SELON LA DIMENSION DES OBSERVATIONS CAR IL Y A LA DIMENSION DES ENERGIES true et des energies reco ICI. Donc rmf_band est a 3D (voir quelle est la dimension des observations)
+         rmf_band_tot = np.sum(rmf_band, axis=dimension_observation)
+         #ici o.arf_vector*o.livetime est a 2D (dim_E_true*dim_list_observation)
+         livetime_arf_tot = np.sum([o.arf_vector*o.livetime for o in obs_list], axis=dimension_observation)
+         #Dim de rmf_band_tot est 2D (Etrue,Ereco) ou (Ereco,Etrue). Voir dans quelle sens est la shape pour voir si je peux diviser par un truc de la shape Etrue ou si je dois mettre un .T a rmf_band_tot
+         rmf_mat=rmf_band_tot/livetime_arf_tot
+         """
+
+         # Calculate average alpha
+         alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
+         alpha_band_tot = np.sum(alpha_band)
+         off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
+         alpha_mean = alpha_band_tot/off_tot
+         off_vec.meta.backscal = 1. / alpha_mean
+
+
+         #Calculate energy range
+         #TODO: pour l instant on va prendre le plus petit range en energy possible pour pas se faire chier avec des
+         # livetime different en fonctiond des bins en erngies mais c'est crado. Voir avec Regis aussi c'est quoi cette
+         #  energie range et si on a vraiment besoin de prendre le max en energy range et de definir un livetime
+         # dependant des energies bins
+         emin = max([_.meta.energy_range[0] for _ in obs_list])
+         emax = min([_.meta.energy_range[1] for _ in obs_list])
+
+         m = Bunch()
+         m['energy_range'] = EnergyBounds([emin, emax])
+         m['obs_ids'] = [o.obs_id for o in obs_list]
+         m['alpha_method1'] = alpha_mean
+         #m['livetime'] = livetime_tot
+         #import IPython; IPython.embed()
+         return cls(obs_stacked_id, on_vec, off_vec, arf, rmf, meta=m)
 
     @property
     def alpha(self):
