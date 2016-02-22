@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from ..data import SpectralCube
 from astropy.coordinates import SkyCoord, Angle
 
 __all__ = [
@@ -35,6 +34,12 @@ def exposure_cube(pointing,
     expcube : `~gammapy.data.SpectralCube`
         Exposure cube (3D)
     """
+    # Delayed import to avoid circular import issues
+    # TODO: figure out if `gammapy.irf` is a good location for
+    # exposure computation functionality, or if this should be
+    # moved to `gammapy.data` or `gammapy.spectrum` or ...
+    from ..data import SpectralCube
+
     ny, nx = ref_cube.data.shape[1:]
     xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
     lon, lat, en = ref_cube.pix2world(xx, yy, 0)
