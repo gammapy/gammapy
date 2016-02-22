@@ -100,7 +100,7 @@ When ``--residual`` is set an excess model must be provided using the ``--model`
 Iterative detection
 -----------------
 In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection. 
-It takes as arguments count, background and exposure FITS maps(in separate files, unlike previous tool) and a list of ```--scales``` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
+It takes as arguments count, background and exposure FITS maps(in separate files, unlike previous tool) and a list of ``--scales`` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
 
 
 It implements the following algorithm:
@@ -114,6 +114,7 @@ It implements the following algorithm:
 Usage example:
 
 .. code-block:: bash
+
 	$ cd gammapy-extra/datasets/source_diffuse_separation/galactic_simulations
 	$ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
 
