@@ -65,7 +65,7 @@ def compute_pie_fraction(sources, pointing_position, fov_radius):
     pie fraction : float
         If 0: nothing is excluded
     """
-    add_column_and_sort_table(sources, pointing_position)
+    sources = add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
     separation = Angle(sources["separation"])[0]
     if separation > fov_radius:
@@ -95,7 +95,7 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
         coord of the events that are outside the pie
 
     """
-    add_column_and_sort_table(sources, pointing_position)
+    sources = add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
     phi = Angle(sources["phi"])[0]
     separation = Angle(sources["separation"])[0]
