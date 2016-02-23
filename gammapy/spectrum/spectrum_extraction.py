@@ -296,7 +296,7 @@ class SpectrumObservation(object):
         m['obs_id'] = obs_id
         m['zen'] = 90 - event_list.meta['ALT_PNT']
         m['coszen'] = np.cos(m['zen'] * np.pi / 180.)
-        # m['muoneff'] = event_list.meta['MUONEFF']
+        m['muoneff'] = event_list.meta['MUONEFF']
 
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
@@ -658,10 +658,11 @@ class SpectrumObservationList(list):
         col1 = [o.obs_id for o in self]
         col2 = [o.meta.phafile for o in self]
         if moreparameters:
-            names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen']
+            names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen', 'muoneff']
             col3 = Angle([o.meta.offset.value for o in self], "deg")
             col4 = [o.meta.coszen for o in self]
-            return ObservationTable(data=[col1, col2, col3, col4], names=names)
+            col5 = [o.meta.muoneff for o in self]
+            return ObservationTable(data=[col1, col2, col3, col4, col5], names=names)
         else:
             return ObservationTable(data=[col1, col2], names=names)
 
