@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
 import numpy as np
-
 from astropy.extern import six
-
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
 from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
@@ -182,7 +179,7 @@ class SpectrumFit(object):
         energy = Energy(energy)
         shape = len(self.obs_list)
         if energy.shape is ():
-            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
             raise ValueError('Dimension to not match: {} {}'.format(
@@ -192,13 +189,13 @@ class SpectrumFit(object):
 
     @property
     def energy_threshold_high(self):
-       """
-       High energy threshold of the spectral fit
+        """
+        High energy threshold of the spectral fit
 
-       If a list of observations is fit at the same time, this is a list with
-       the threshold for each observation.
-       """
-       return self._thres_hi
+        If a list of observations is fit at the same time, this is a list with
+        the threshold for each observation.
+        """
+        return self._thres_hi
 
     @energy_threshold_high.setter
     def energy_threshold_high(self, energy):
@@ -213,7 +210,7 @@ class SpectrumFit(object):
         energy = Energy(energy)
         shape = len(self.obs_list)
         if energy.shape is ():
-            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
             raise ValueError('Dimensions to not match: {} {}'.format(
@@ -241,7 +238,7 @@ class SpectrumFit(object):
         ss += str(self.model)
         ss += '\nEnergy Range\n'
         ss += str(self.energy_threshold_low) + ' - ' + str(
-                self.energy_threshold_high)
+            self.energy_threshold_high)
         return ss
 
     def run(self, method='sherpa'):
@@ -296,7 +293,7 @@ class SpectrumFit(object):
         namedataset = []
         for i in range(len(ds.datasets)):
             datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
-            namedataset.append(i+1)
+            namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
         ds.fit(*namedataset)
         datastack.covar(*namedataset)
