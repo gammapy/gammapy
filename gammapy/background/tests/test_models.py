@@ -210,6 +210,8 @@ def test_select_events_outside_pie():
                              proj='TAN', coordsys='CEL')
     ra, dec = coordinates(image)
     events = EventList()
+    ra=np.array([0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48])
+    dec=np.array([0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24])
     # Faked EventList with the radec of all the pixel in the empty image
     events["RA"] = ra.flat
     events["DEC"] = dec.flat
@@ -220,22 +222,8 @@ def test_select_events_outside_pie():
 
     # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
     idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
-    events_outside = events[idx]
-    image = bin_events_in_image(events_outside, image)
-    #image.writeto("test_pie.fits", clobber=True)
-    source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
-    separation = pointing_position.separation(source_closest)
-    phi_source = pointing_position.position_angle(source_closest)
-    radius = Angle(excluded_sources2["Radius"])[1]
-    phi_min = phi_source - np.arctan(radius / separation)
-    phi_max = phi_source + np.arctan(radius / separation)
-    skycoord_pix = SkyCoord(ra, dec, unit='deg')
-    phi = pointing_position.position_angle(skycoord_pix)
-    idx_image_out_pie = np.where((phi > phi_max) | (phi < phi_min))
-    idx_image_in_pie = np.where((phi <= phi_max) & (phi >= phi_min))
-    assert_allclose(image.data[idx_image_out_pie], 1)
-    assert_allclose(image.data[idx_image_in_pie], 0)
-
+    assert_allclose(idx, [3, 4, 6])
+    
 
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
