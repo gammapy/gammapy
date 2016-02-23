@@ -339,19 +339,29 @@ class SpectrumObservation(object):
 
        Observation stacking is implemented as follows
 
-       Averaged exposure ratio between ON and OFF regions
+       Averaged exposure ratio between ON and OFF regions, arf and rmf
 
        :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
 
        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
 
-       where :math:`N_i` is the number of OFF counts for observation :math:`i`
+
+       :math:`\\arf_{\\mathrm{tot}}` for all observations is calculated as
+
+       .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
+
+
+       :math:`\\rmf_{\\mathrm{tot}}` for all observations is calculated as
+
+       .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot
+       livetime_i}
+
 
        Parameters
        ----------
        obs_list : list of `~gammapy.spectrum.SpectrumObservations`
            Observations to stack
-       obs_id : int, optional
+       obs_stacked_id : int, optional
            Observation ID for stacked observations
        """
         # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
@@ -386,10 +396,8 @@ class SpectrumObservation(object):
         off_vec.meta.backscal = 1. / alpha_mean
 
         # Calculate energy range
-        # TODO: pour l instant on va prendre le plus petit range en energy possible pour pas se faire chier avec des
-        # livetime different en fonctiond des bins en erngies mais c'est crado. Voir avec Regis aussi c'est quoi cette
-        #  energie range et si on a vraiment besoin de prendre le max en energy range et de definir un livetime
-        # dependant des energies bins
+        # TODO: for the moment we take the minimum range for the energybin but we have to take the largest one
+        # and to compute livetime that varries from energy bin to bin
         emin = max([_.meta.energy_range[0] for _ in obs_list])
         emax = min([_.meta.energy_range[1] for _ in obs_list])
 
@@ -580,7 +588,7 @@ class SpectrumObservationList(list):
 
         Parameters
         ----------
-        list_id : list of int
+        list_ids : list of int
             List of Observation Id (runnumber)
 
         Returns
@@ -644,13 +652,18 @@ class SpectrumObservationList(list):
         for obs in self:
             obs.write_ogip(outdir=outdir, **kwargs)
 
-    def to_observation_table(self):
+    def to_observation_table(self, moreparameters = False):
         """Create `~gammapy.data.ObservationTable"""
         names = ['OBS_ID', 'PHAFILE']
         col1 = [o.obs_id for o in self]
         col2 = [o.meta.phafile for o in self]
-        return ObservationTable(data=[col1, col2], names=names)
-
+        if moreparameters:
+            names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen']
+            col3 = Angle([o.meta.offset.value for o in self], "deg")
+            col4 = [o.meta.coszen for o in self]
+            return ObservationTable(data=[col1, col2, col3, col4], names=names)
+        else:
+            return ObservationTable(data=[col1, col2], names=names)
 
 class BackgroundEstimator(object):
     """TBD
