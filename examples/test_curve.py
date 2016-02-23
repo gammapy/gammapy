@@ -21,7 +21,8 @@ pt.ion()
 
 
 def make_excluded_sources():
-    centers = SkyCoord([84, 82], [23, 21], unit='deg')
+    #centers = SkyCoord([84, 82], [23, 21], unit='deg')
+    centers = SkyCoord([83.63, 83.63], [22.01, 22.01], unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
     sources = SkyCircleRegion(pos=centers, radius=radius)
     catalog = Table()
@@ -38,11 +39,11 @@ def make_model():
     ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
     offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
 
-    #excluded_sources = make_excluded_sources()
+    excluded_sources = make_excluded_sources()
 
     multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
-    #multi_array.fill_obs(obs_table, data_store, excluded_sources)
-    multi_array.fill_obs(obs_table, data_store)
+    multi_array.fill_obs(obs_table, data_store, excluded_sources)
+    #multi_array.fill_obs(obs_table, data_store)
     multi_array.compute_rate()
     bgarray = multi_array.bg_rate
     energy_range = Energy([1, 10], 'TeV')
@@ -113,6 +114,6 @@ def plot_model():
 
 if __name__ == '__main__':
     make_model()
-    #plot_model()
+    plot_model()
     make_image()
-    #make_significance_image()
+    make_significance_image()
