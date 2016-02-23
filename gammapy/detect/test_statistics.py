@@ -158,9 +158,8 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     for scale in scales:
         log.info('Computing {0}TS map for scale {1:.3f} deg and {2}'
                  ' morphology.'.format('residual ' if residual else '',
-                                       scale, morphology))
-
-        # Sample down and require that scale parameters is at least 5 pix
+                                       scale,
+                                       morphology))  # Sample down and require that scale parameters is at least 5 pix
         if downsample == 'auto':
             factor = int(np.select([scale < 5 * BINSZ, scale < 10 * BINSZ,
                                     scale < 20 * BINSZ, scale < 40 * BINSZ],
@@ -220,6 +219,8 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
                 ts_results[name] = upsample_2N(ts_results[name], factor,
                                                order=order, shape=shape)
         multiscale_result.append(ts_results)
+
+
     return multiscale_result
 
 
@@ -372,6 +373,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     else:
         results = map(wrap, positions)
 
+    assert positions, ("Positions are empty: possibly kernel " +
+                       "{} is larger than counts {}".format(kernel.shape, counts.shape))
     # Set TS values at given positions
     j, i = zip(*positions)
     TS = np.empty(counts.shape) * np.nan
