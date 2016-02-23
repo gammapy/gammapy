@@ -1,12 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from ...data import EventList
 from ...data import DataStore, DataManager
-from ...utils.testing import requires_data, data_manager, requires_dependency
+from ...utils.testing import data_manager, requires_data, requires_dependency
 from ...utils.scripts import make_path
 from ...datasets import gammapy_extra
-from numpy.testing import assert_allclose
+from ...extern.pathlib import Path
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
@@ -18,7 +20,6 @@ def test_DataStore_construction(data_manager):
     DataManager.DEFAULT_CONFIG_FILE = gammapy_extra.filename('datasets/data-register.yaml')
     data_store = DataStore.from_name('hess-crab4-hd-hap-prod2')
     data_store.info()
-
 
     base_dir = make_path('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
     data_store = DataStore.from_dir(base_dir)
@@ -46,16 +47,17 @@ def test_DataStore_filenames(data_manager):
     with pytest.raises(ValueError):
         data_store.filename(obs_id=89565, filetype='effective area')
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
 def test_DataStore_filenames_pa(data_manager):
-
     data_store = data_manager['hess-crab4-pa']
 
     filename = data_store.filename(obs_id=23523, filetype='aeff')
 
     assert filename == str(make_path(
         '$GAMMAPY_EXTRA/datasets/hess-crab4-pa/run23400-23599/run23523/aeff_2d_23523.fits.gz'))
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
@@ -76,6 +78,7 @@ def test_DataStore_load_all(data_manager):
     assert_allclose(event_lists[0]['ENERGY'][0], 1.1156039)
     assert_allclose(event_lists[-1]['ENERGY'][0], 1.0204216)
 
+
 @pytest.mark.xfail
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
@@ -87,3 +90,15 @@ def test_DataStore_other(data_manager):
     #                           lon=(-100, 50), lat=(-5, 5), border=2)
     # run_list = data_store.make_run_list(run_list_selection)
     # print(len(run_list))
+
+
+@requires_data('gammapy-extra')
+def test_load_background():
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-pa/')
+
+    filename = data_store.filename(23523, 'bkg')
+    assert Path(filename).parts[-1] == 'bgmodel_alt7_az0.fits.gz'
+
+    # TODO: loading doesn't work yet
+    # KeyError: "Extension 'DATA' not found."
+    # ds.load(23523, 'bkg')

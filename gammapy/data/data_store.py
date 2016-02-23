@@ -144,7 +144,7 @@ class DataStore(object):
         ----------
         obs_id : int
             Observation ID.
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
+        filetype : {'events', 'aeff', 'edisp', 'psf', 'bkg'}
             Type of file.
         abspath : bool
             Absolute path (including data store base_dir)?
@@ -187,7 +187,7 @@ class DataStore(object):
         ----------
         obs_id : int
             Observation ID.
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
+        filetype : {'events', 'aeff', 'edisp', 'psf', 'bkg'}
             Type of file.
 
         Returns
@@ -210,7 +210,7 @@ class DataStore(object):
             return irf.EnergyDispersion2D.read(filename)
         elif filetype == 'psf':
             return irf.EnergyDependentMultiGaussPSF.read(filename)
-        elif filetype == 'background':
+        elif filetype == 'bkg':
             return Cube.read(filename)
         else:
             raise ValueError('Invalid filetype.')
@@ -220,7 +220,7 @@ class DataStore(object):
 
         Parameters
         ----------
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
+        filetype : {'events', 'aeff', 'edisp', 'psf', 'bkg'}
             Type of file.
 
         Returns
@@ -317,7 +317,7 @@ def _find_file(filename, dir):
 
 
 def _validate_filetype(filetype):
-    VALID_FILETYPES = ['events', 'aeff', 'edisp', 'psf', 'background']
+    VALID_FILETYPES = ['events', 'aeff', 'edisp', 'psf', 'bkg']
     if not filetype in VALID_FILETYPES:
         msg = "Invalid filetype: '{}'. ".format(filetype)
         msg += 'Valid filetypes are: {}'.format(VALID_FILETYPES)
