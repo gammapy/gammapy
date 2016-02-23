@@ -24,10 +24,6 @@ __all__ = [
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
 
 
-def _select_closest():
-    pass
-
-
 def add_column_and_sort_table(sources, pointing_position):
     """Sort the table and add the column separation (offset from the source) and phi (position angle from the source)
 
@@ -43,6 +39,7 @@ def add_column_and_sort_table(sources, pointing_position):
     sources : `~astropy.table.Table`
         given sources table sorted with extra column "separation" and "phi"
     """
+    sources = sources.copy()
     source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
     sources["separation"] = pointing_position.separation(source_pos)
     sources["phi"] = pointing_position.position_angle(source_pos)
@@ -66,6 +63,7 @@ def compute_pie_fraction(sources, pointing_position, fov_radius):
     Returns
     -------
     pie fraction : float
+        If 0: nothing is excluded
     """
     add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
@@ -90,8 +88,11 @@ def select_events_outside_pie(sources, events, pointing_position, fov_radius):
             Coordinates of the pointing position
     fov_radius : `~astropy.coordinates.Angle`
             Field of view radius
+
     Returns
     -------
+    idx : `~numpy.array`
+        coord of the events that are outside the pie
 
     """
     add_column_and_sort_table(sources, pointing_position)

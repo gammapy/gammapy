@@ -222,7 +222,7 @@ def test_select_events_outside_pie():
     idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
     events_outside = events[idx]
     image = bin_events_in_image(events_outside, image)
-    # image.writeto("test_pie.fits", clobber=True)
+    #image.writeto("test_pie.fits", clobber=True)
     source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
     separation = pointing_position.separation(source_closest)
     phi_source = pointing_position.position_angle(source_closest)
