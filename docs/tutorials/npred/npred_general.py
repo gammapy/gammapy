@@ -42,7 +42,7 @@ def prepare_images():
     counts_cube = SpectralCube(data=Quantity(counts_data, ''),
                                wcs=counts_wcs,
                                energy=energies)
-    counts_cube = counts_cube.reproject_to(npred_cube)
+    counts_cube = counts_cube.reproject_to(npred_cube, projection_type='nearest-neighbor')
 
     counts = counts_cube.data[0]
     model = convolved_npred_cube.data[0]
