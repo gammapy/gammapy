@@ -261,12 +261,13 @@ class SpectrumFit(object):
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
 
+        namedataset = []
         for i in range(len(ds.datasets)):
             datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
-
+            namedataset.append(i+1)
         datastack.set_stat(self.statistic)
-        ds.fit()
-        datastack.covar()
+        ds.fit(*namedataset)
+        datastack.covar(*namedataset)
         covar = datastack.get_covar_results()
         efilter = datastack.get_filter()
 
