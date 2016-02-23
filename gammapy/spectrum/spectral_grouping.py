@@ -61,11 +61,11 @@ class SpectralGrouping(object):
         Offtab = Angle(np.linspace(Offmin, Offmax, NOffbin + 1), "deg")
         Efftab = Quantity(np.linspace(Effmin, Effmax, NEffbin + 1), "")
         CosZentab = Quantity(np.linspace(CosZenmin, CosZenmax, NZenbin + 1), "")
-        # list_obs_group_axis = [ObservationGroupAxis('MUONEFF', Efftab / 100., 'bin_edges'),
-        # ObservationGroupAxis('CosZEN', CosZentab, 'bin_edges'),
-        # ObservationGroupAxis('Offset', Offtab, 'bin_edges')]
-        list_obs_group_axis = [ObservationGroupAxis('coszen', CosZentab, 'bin_edges'),
-                               ObservationGroupAxis('offset', Offtab, 'bin_edges')]
+        list_obs_group_axis = [ObservationGroupAxis('muoneff', Efftab / 100., 'bin_edges'),
+                    ObservationGroupAxis('coszen', CosZentab, 'bin_edges'),
+                    ObservationGroupAxis('offset', Offtab, 'bin_edges')]
+        #list_obs_group_axis = [ObservationGroupAxis('coszen', CosZentab, 'bin_edges'),
+                               #ObservationGroupAxis('offset', Offtab, 'bin_edges')]
         obs_groups = ObservationGroups(list_obs_group_axis)
         return obs_groups
 

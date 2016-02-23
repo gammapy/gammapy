@@ -40,7 +40,7 @@ def test_define_spectral_groups():
     ana= make_spectrum_extraction()
     group=SpectralGrouping(ana.observations)
     obs_groups = group.define_spectral_groups()
-    assert obs_groups.n_groups == 25*30
+    assert obs_groups.n_groups == 25*30*40
     obs_groups2 =group.define_spectral_groups(OffsetRange=[0, 2.5], NOffbin=1, EffRange=[0, 100], NEffbin=1, ZenRange=[0., 70.], NZenbin=1)
     assert obs_groups2.n_groups == 1
 
