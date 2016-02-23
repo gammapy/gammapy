@@ -341,17 +341,11 @@ class SpectrumObservation(object):
 
        Averaged exposure ratio between ON and OFF regions, arf and rmf
 
-       :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
+       :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
 
        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
 
-
-       :math:`\\arf_{\\mathrm{tot}}` for all observations is calculated as
-
        .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
-
-
-       :math:`\\rmf_{\\mathrm{tot}}` for all observations is calculated as
 
        .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot
        livetime_i}
@@ -652,7 +646,7 @@ class SpectrumObservationList(list):
         for obs in self:
             obs.write_ogip(outdir=outdir, **kwargs)
 
-    def to_observation_table(self, moreparameters = False):
+    def to_observation_table(self, moreparameters=False):
         """Create `~gammapy.data.ObservationTable"""
         names = ['OBS_ID', 'PHAFILE']
         col1 = [o.obs_id for o in self]
@@ -665,6 +659,7 @@ class SpectrumObservationList(list):
             return ObservationTable(data=[col1, col2, col3, col4, col5], names=names)
         else:
             return ObservationTable(data=[col1, col2], names=names)
+
 
 class BackgroundEstimator(object):
     """TBD
