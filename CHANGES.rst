@@ -64,10 +64,12 @@ Contributors
 - Lea Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
+- Olga Vorokh (new)
 
 Pull requests
 +++++++++++++
 
+- [#456] Fix and improvements to TS map tool (Olga Vorokh)
 - [#436] Restructure spectrum package and command line tool (Johannes King)
 - [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
 - [#421] Add spectrum fit serialisation code (Johannes King)
