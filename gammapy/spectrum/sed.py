@@ -55,7 +55,7 @@ class SEDComponent(object):
         if self.points is None:
             log.warning('{0}: No points available.'.format(self.name))
             return
-        # @note We plot each point individually because anyway
+        # Note: We plot each point individually because anyway
         # upper limits have to be plotted differently which I
         # think is not possible because the marker argument doesn't
         # take arrays.

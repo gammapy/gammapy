@@ -109,7 +109,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack
     reference_cube = SpectralCube(data=Quantity(np.array(reference.data), ''),
-                                  wcs=wcs, energy=Quantity([0, 1], 'GeV'))
+                                  wcs=wcs, energy=Quantity([1e-3, 1], 'GeV'))
 
     if source_type == 'extended':
         raise NotImplementedError
@@ -134,7 +134,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     convolved_cube = new_image.copy()
 
     psf = psf.table_psf_in_energy_band(Quantity([np.min(energy).value,
-                                       np.max(energy).value], energy.unit))
+                                                 np.max(energy).value], energy.unit))
 
     resolution = abs(reference.header['CDELT1'])
 

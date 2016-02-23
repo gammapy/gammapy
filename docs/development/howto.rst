@@ -879,3 +879,29 @@ Methods that use interpolation should provide an option to the caller to pass in
 TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator, currently in the constructor.
 In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the `read` and other constructors.
 Do we want / need that?
+
+
+Locate origin of warnings
+-------------------------
+
+By default, warnings appear on the console, but often it's not clear where a given warning
+originates (e.g. when building the docs or running scripts or tests) or how to fix it.
+
+Sometimes putting this in ``gammapy/__init__.py`` can help::
+
+    import numpy as np
+    np.seterr(all='raise')
+
+Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
+putting this in ``docs/conf.py`` can also help sometimes::
+
+    import traceback
+    import warnings
+    import sys
+
+    def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+        traceback.print_stack()
+        log = file if hasattr(file,'write') else sys.stderr
+        log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+    warnings.showwarning = warn_with_traceback

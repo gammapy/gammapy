@@ -4,7 +4,6 @@ TODO: add tests for different cases of theta and is_off_correlated
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
-import unittest
 import numpy as np
 from astropy.io import fits
 from ...utils.testing import requires_dependency
@@ -13,13 +12,13 @@ from ..maps import Maps
 
 @pytest.mark.xfail
 @requires_dependency('scipy')
-class TestMaps(unittest.TestCase):
+class TestMaps:
     # TODO: use `tmpdir` fixture
     dir = '/tmp/'
     filename_basic = dir + 'maps_basic.fits'
     filename_derived = dir + 'maps_derived.fits'
 
-    def setUp(self):
+    def setup(self):
         """Make an example file containing a Maps object."""
         # Parameters
         shape = (300, 300)

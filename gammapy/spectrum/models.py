@@ -59,7 +59,7 @@ class Model(object):
             emin = self.emin
         if emax is None:
             emax = self.emax
-        # @todo: Is this necessary?
+        # TODO: Is this necessary?
         # emin = np.asarray(emin, dtype=float)
         # emax = np.asarray(emax, dtype=float)
         return np.array((emin, emax))
@@ -97,7 +97,7 @@ class Model(object):
             return integrators[method](emin, emax, power)
         except ValueError:
             # quad can't handle arrays, so we do the for loop ourselves.
-            # @todo: I'm not sure what the best way to detect that case is here?
+            # TODO: I'm not sure what the best way to detect that case is here?
             result = np.empty_like(emin)
             for ii in np.arange(len(result)):
                 result[ii] = integrators[method](emin[ii], emax[ii], power)[0]
@@ -211,7 +211,7 @@ class PowerLaw(AnalyticModel):
 
     def integral(self, emin=None, emax=None, power=0):
         """Compute integral using analytic formula (fast and exact)"""
-        # @todo: should be implemented in log for speed and stability,
+        # TODO: should be implemented in log for speed and stability,
         # but how???
         emin, emax = self._elim(emin, emax)
         N0, g, E0 = [par.value for par in self.pars]
@@ -292,7 +292,7 @@ class BrokenPowerLaw(AnalyticModel):
 
     @staticmethod
     def _formula(E, N0, g, g2, Eb):
-        # @todo: I don't like the fact that Eb is used as E0!!!
+        # TODO: I don't like the fact that Eb is used as E0!!!
         # Probably best to have an independent E0 in the formula?
         return np.where(E < Eb,
                         N0 * (E / Eb) ** g,

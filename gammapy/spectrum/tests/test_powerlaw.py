@@ -136,7 +136,7 @@ def test_SED_error(I=1., e1=1, e2=10):
     from scipy.stats import gmean
     e = gmean([e1, e2])
     f = I / (e2 - e1)
-    e2f = e ** 2 * f  # @note: e ** 2 = e1 * e2 here.
+    e2f = e ** 2 * f  # Note: e ** 2 = e1 * e2 here.
     for Index in np.arange(1.5, 3.5, 0.5):
         f_correct = powerlaw.power_law_flux(I, Index, e, e1, e2)
         e2f_correct = e ** 2 * f_correct

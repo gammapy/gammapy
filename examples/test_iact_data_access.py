@@ -1,3 +1,5 @@
+"""Some test examples how to access IACT data.
+"""
 import logging
 from gammapy.data import DataManager, DataStore
 from gammapy.datasets import gammapy_extra

@@ -11,14 +11,17 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 
 
-@pytest.mark.xfail(reason="exclusion file is missing from gammapy-extra")
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_find_reflected_regions():
-
+@pytest.fixture
+def mask():
+    """Example mask for testing."""
     testfile = gammapy_extra.filename('datasets/exclusion_masks/tevcat_exclusion.fits')
     hdu = fits.open(testfile)[1]
-    mask = ExclusionMask.from_hdu(hdu)
+    return ExclusionMask.from_hdu(hdu)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_find_reflected_regions(mask):
     pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     radius = Angle(0.4, 'deg')
     region = SkyCircleRegion(pos=pos, radius=radius)

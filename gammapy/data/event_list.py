@@ -8,7 +8,6 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
-
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d

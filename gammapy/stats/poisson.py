@@ -164,7 +164,7 @@ def excess_error(n_on, n_off, alpha):
 # It currently has the same name as the `gammapy/stats/significance.py`
 # and shadows in in `gammapy/stats/__init.py`
 # Maybe `significance_poisson`?
-def significance(n_observed, mu_background, method='lima'):
+def significance(n_observed, mu_background, method='lima', n_observed_min=1):
     r"""Compute significance for an observed number of counts and known background.
 
     The simple significance estimate :math:`S_{simple}` is given by
@@ -191,6 +191,8 @@ def significance(n_observed, mu_background, method='lima'):
         Known background level
     method : str
         Select method: 'lima' or 'simple'
+    n_observed_min : float
+        Minimum ``n_observed`` (return ``NaN`` for smaller values)
 
     Returns
     -------
@@ -221,13 +223,22 @@ def significance(n_observed, mu_background, method='lima'):
     mu_background = np.asanyarray(mu_background, dtype=np.float64)
 
     if method == 'simple':
-        return _significance_simple(n_observed, mu_background)
+        func = _significance_simple
     elif method == 'lima':
-        return _significance_lima(n_observed, mu_background)
+        func = _significance_lima
     elif method == 'direct':
-        return _significance_direct(n_observed, mu_background)
+        func = _significance_direct
     else:
         raise ValueError('Invalid method: {0}'.format(method))
+
+    # For low `n_observed` values, don't try to compute a significance and return `NaN`.
+    n_observed = np.atleast_1d(n_observed)
+    mu_background = np.atleast_1d(mu_background)
+    mask = (n_observed >= n_observed_min)
+    s = np.ones_like(n_observed) * np.nan
+    s[mask] = func(n_observed[mask], mu_background[mask])
+
+    return s
 
 
 def _significance_simple(n_observed, mu_background):
@@ -238,6 +249,7 @@ def _significance_simple(n_observed, mu_background):
 
 
 def _significance_lima(n_observed, mu_background):
+    # import IPython; IPython.embed()
     term_a = sign(n_observed - mu_background) * sqrt(2)
     term_b = sqrt(n_observed * log(n_observed / mu_background) - n_observed + mu_background)
     return term_a * term_b
@@ -251,6 +263,16 @@ def _significance_direct(n_observed, mu_background):
 
     TODO: add large unit test coverage (where is it numerically precise enough)?
     TODO: check coverage with MC simulation
+
+    I'm getting a positive significance for zero observed counts and small mu_background.
+    That doesn't make too much sense ...
+
+    >>> stats.poisson._significance_direct(0, 2)
+    -1.1015196284987503
+
+    >>> stats.poisson._significance_direct(0, 0.1)
+    1.309617799458493
+
     """
     from scipy.stats import norm, poisson
 

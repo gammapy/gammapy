@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import unittest
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_allclose
 from astropy.utils.data import get_pkg_data_filename
@@ -9,8 +8,10 @@ from ...irf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 
 @requires_dependency('scipy')
-class TestHESS(unittest.TestCase):
-    def test_dpdtheta2(self):
+class TestHESS:
+
+    @staticmethod
+    def test_dpdtheta2():
         """Check that the amplitudes and sigmas were converted correctly in
         HESS.to_MultiGauss2D() by comparing the dpdtheta2 distribution.
 
@@ -42,7 +43,8 @@ class TestHESS(unittest.TestCase):
             val_m = m.dpdtheta2(theta ** 2)
             assert_almost_equal(val_hess, val_m, decimal=4)
 
-    def test_GC(self):
+    @staticmethod
+    def test_GC():
         """Compare the containment radii computed with the HESS software
         with those found by using MultiGauss2D.
 

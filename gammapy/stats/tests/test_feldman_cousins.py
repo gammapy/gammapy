@@ -30,10 +30,10 @@ def test_acceptance_interval_gauss():
     # be 1.02 and 4.24. Reversed that means that for mu=1.02, the acceptance
     # interval should end at 2.6 and for mu=4.24 should start at 2.6.
     (x_min, x_max) = fc_find_acceptance_interval_gauss(1.02, sigma, x_bins, cl)
-    assert_allclose(x_max, 2.6, 1e-07, 0.1)
+    assert_allclose(x_max, 2.6, atol=0.1)
 
     (x_min, x_max) = fc_find_acceptance_interval_gauss(4.24, sigma, x_bins, cl)
-    assert_allclose(x_min, 2.6, 1e-07, 0.1)
+    assert_allclose(x_min, 2.6, atol=0.1)
 
     # At mu=0, confidence interval should start at the negative x_bins range.
     (x_min, x_max) = fc_find_acceptance_interval_gauss(0, sigma, x_bins, cl)
@@ -86,32 +86,32 @@ def test_numerical_confidence_interval_pdfs():
 
     acceptance_intervals = fc_construct_acceptance_intervals_pdfs(matrix, cl)
 
-    LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+    lower_limit_num, upper_limit_num, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
-    fc_fix_limits(LowerLimitNum, UpperLimitNum)
+    fc_fix_limits(lower_limit_num, upper_limit_num)
 
     x_measured = 6
-    upper_limit = fc_find_limit(x_measured, UpperLimitNum, mu_bins)
-    lower_limit = fc_find_limit(x_measured, LowerLimitNum, mu_bins)
+    upper_limit = fc_find_limit(x_measured, upper_limit_num, mu_bins)
+    lower_limit = fc_find_limit(x_measured, lower_limit_num, mu_bins)
 
     # Values are taken from Table IV in the Feldman and Cousins paper.
-    assert_allclose(upper_limit, 8.47, 1e-07, 0.01)
-    assert_allclose(lower_limit, 0.15, 1e-07, 0.01)
+    assert_allclose(upper_limit, 8.47, atol=0.01)
+    assert_allclose(lower_limit, 0.15, atol=0.01)
 
     # A value which is not inside the x axis range should raise an exception
     with pytest.raises(ValueError):
-        fc_find_limit(51, UpperLimitNum, mu_bins)
+        fc_find_limit(51, upper_limit_num, mu_bins)
 
     # Calculate the average upper limit. The upper limit calculated here is
     # only defined for a small x range, so limit the x bins here so the
     # calculation of the average limit is meaningful.
     average_upper_limit = fc_find_average_upper_limit(x_bins[0:14], matrix,
-                                                      UpperLimitNum, mu_bins)
+                                                      upper_limit_num, mu_bins)
 
     # Values are taken from Table XII in the Feldman and Cousins paper.
     # A higher accuracy would require a higher mu_max, which would increase
     # the computation time.
-    assert_allclose(average_upper_limit, 4.42, 1e-07, 0.1)
+    assert_allclose(average_upper_limit, 4.42, atol=0.1)
 
 
 @requires_dependency('scipy')
@@ -133,12 +133,12 @@ def test_numerical_confidence_interval_values():
 
     acceptance_intervals = fc_construct_acceptance_intervals(distribution_dict, x_bins, cl)
 
-    LowerLimitNum, UpperLimitNum, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
+    lower_limit_num, upper_limit_num, _ = fc_get_limits(mu_bins, x_bins, acceptance_intervals)
 
-    fc_fix_limits(LowerLimitNum, UpperLimitNum)
+    fc_fix_limits(lower_limit_num, upper_limit_num)
 
     x_measured = 1.7
-    upper_limit = fc_find_limit(x_measured, UpperLimitNum, mu_bins)
+    upper_limit = fc_find_limit(x_measured, upper_limit_num, mu_bins)
 
     # Value taken from Table X in the Feldman and Cousins paper.
-    assert_allclose(upper_limit, 3.34, 1e-07, 0.1)
+    assert_allclose(upper_limit, 3.34, atol=0.1)

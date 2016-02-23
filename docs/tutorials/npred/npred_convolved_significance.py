@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from gammapy.stats import significance
 from gammapy.image.utils import disk_correlate
-from npred_general import prepare_images
 from aplpy import FITSFigure
+from npred_general import prepare_images
 
 model, gtmodel, ratio, counts, header = prepare_images()
 

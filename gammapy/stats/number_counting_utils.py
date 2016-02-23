@@ -11,10 +11,10 @@ class NumberCountingUtils(object):
     """Formulas for computing tail probabilities of on/off
     observations in RooStats::NumberCountingUtils in ROOT.
 
-    @see: The ROOT documentation mentions the relevant papers:
+    See: The ROOT documentation mentions the relevant papers:
     http://root.cern.ch/root/html/RooStats__NumberCountingUtils.html
 
-    @note To me it is not quite clear how these formulae relate
+    Note: To me it is not quite clear how these formulae relate
     to Li & Ma."""
 
     @staticmethod

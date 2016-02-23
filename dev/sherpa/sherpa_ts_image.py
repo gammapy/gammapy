@@ -109,7 +109,7 @@ thaw(test_source.ampl)
 # ---------------------------------------------------------
 # Set up the fit
 # ---------------------------------------------------------
-set_coord('physical') # @todo Check is positions are correct
+set_coord('physical') # TODO: Check is positions are correct
 set_stat('cash') # Do a likelihood fit
 set_method('levmar') # Use the fastest optimizer
 set_method_opt('maxfev', int(1e2)) # Limit should never be reached
@@ -119,7 +119,7 @@ set_method_opt('verbose', 0) # Don't babble
 # Compute ROI such that a certain fraction of the PSF-
 # convolved test_source is inside
 # ---------------------------------------------------------
-# @todo Implement a more precise formula as promised,
+# TODO: Implement a more precise formula as promised,
 # i.e. using the convolved model image
 psf_width = max(psf1.fwhm.val, psf2.fwhm.val, psf3.fwhm.val)
 roi_sigma = np.sqrt(psf_width ** 2 + test_source.fwhm.val ** 2)
@@ -172,7 +172,7 @@ for x in range(0, nx, args.stepsize):
                 L0 = get_stat_info()[0].statval
                 
                 # Compute L1
-                # @todo When taking the last amplitude as fit start value I observed
+                # TODO: When taking the last amplitude as fit start value I observed
                 # zero significance in the whole first row and column.
                 # This occurs irrespective of using last_ampl or 1 here as a starting
                 # value!???

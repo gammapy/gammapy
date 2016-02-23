@@ -2,8 +2,8 @@
 """Example and test datasets.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.utils.data import get_pkg_data_filename
-from astropy.units import Quantity
+import warnings
+from astropy.units import Quantity, UnitsWarning
 from astropy.io import fits
 from astropy.table import Table
 from .core import gammapy_extra
@@ -78,11 +78,10 @@ def load_tev_spectrum(source_name):
         Energy spectrum as a table (one flux point per row).
     """
     if source_name == 'crab':
-        filename = 'tev_spectra/crab_hess_spec.txt'
+        filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_hess_spec.txt')
     else:
         raise ValueError('Data not available for source: {0}'.format(source_name))
 
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
@@ -130,8 +129,14 @@ def load_crab_flux_points(component='both', with_fermi_flare=False):
     and Abdo et al. Astrophys. J. Suppl. Ser. 208 2013.
 
     """
+    if with_fermi_flare:
+        raise NotImplementedError
+
     filename = gammapy_extra.filename('test_datasets/unbundled/tev_spectra/crab_mwl.fits.gz')
-    table = Table.read(filename)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', UnitsWarning)
+        table = Table.read(filename)
 
     if component == 'pulsar':
         mask = table['component'] == 'pulsar'
@@ -162,10 +167,12 @@ def load_diffuse_gamma_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
+    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+
     if reference == 'Fermi':
-        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi.txt'
+        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi.txt')
     elif reference == 'Fermi2':
-        filename = 'data/tev_spectra/diffuse_isotropic_gamma_spectrum_fermi2.txt'
+        filename = str(dir / 'diffuse_isotropic_gamma_spectrum_fermi2.txt')
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
 
@@ -173,7 +180,6 @@ def load_diffuse_gamma_spectrum(reference):
 
 
 def _read_diffuse_gamma_spectrum_fermi(filename):
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_hi', 'flux_lo'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
@@ -204,21 +210,22 @@ def load_electron_spectrum(reference):
     spectrum : `~astropy.table.Table`
         Energy spectrum as a table (one flux point per row).
     """
+    dir = gammapy_extra.dir / 'test_datasets/unbundled/tev_spectra'
+
     if reference == 'HESS':
-        filename = 'data/tev_spectra/electron_spectrum_hess.txt'
+        filename = str(dir / 'electron_spectrum_hess.txt')
         return _read_electron_spectrum_hess(filename)
     elif reference == 'HESS low energy':
-        filename = 'data/tev_spectra/electron_spectrum_hess_low_energy.txt'
+        filename = str(dir / 'electron_spectrum_hess_low_energy.txt')
         return _read_electron_spectrum_hess(filename)
     elif reference == 'Fermi':
-        filename = 'data/tev_spectra/electron_spectrum_fermi.txt'
+        filename = str(dir / 'electron_spectrum_fermi.txt')
         return _read_electron_spectrum_fermi(filename)
     else:
         raise ValueError('Data not available for reference: {0}'.format(reference))
 
 
 def _read_electron_spectrum_hess(filename):
-    filename = get_pkg_data_filename(filename)
     table = Table.read(filename, format='ascii',
                        names=['energy', 'flux', 'flux_lo', 'flux_hi'])
     table['flux_err'] = 0.5 * (table['flux_lo'] + table['flux_hi'])
@@ -237,7 +244,6 @@ def _read_electron_spectrum_hess(filename):
 
 
 def _read_electron_spectrum_fermi(filename):
-    filename = get_pkg_data_filename(filename)
     t = Table.read(filename, format='ascii')
 
     table = Table()

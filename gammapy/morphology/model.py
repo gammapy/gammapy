@@ -76,7 +76,7 @@ class MorphModelImageCreator(object):
         self.source_models = []
 
         # Read config file
-        from configobj import ConfigObj
+        from astropy.extern.configobj.configobj import ConfigObj
         cfg = ConfigObj(self.cfg_file, file_error=True)
 
         # Set up model

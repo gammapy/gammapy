@@ -12,7 +12,6 @@ from ..image import (
     make_empty_image,
 )
 
-
 __all__ = [
     'ExclusionMask',
     'make_tevcat_exclusion_mask'
@@ -150,7 +149,7 @@ class ExclusionMask(object):
         if ax is None:
             fig = plt.figure()
             ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=self.wcs)
-            fig.add_axes(ax) 
+            fig.add_axes(ax)
 
         if 'cmap' not in locals():
             cmap = colors.ListedColormap(['black', 'lightgrey'])
@@ -179,7 +178,7 @@ def make_tevcat_exclusion_mask():
     """
 
     from gammapy.catalog import load_catalog_tevcat
-    
+
     tevcat = load_catalog_tevcat()
     all_sky_exclusion = make_empty_image(nxpix=3600, nypix=1800, binsz=0.1)
     val = np.ones(shape=all_sky_exclusion.data.shape)
@@ -196,7 +195,7 @@ def make_tevcat_exclusion_mask():
         if np.isnan(x) and np.isnan(y):
             rad = Angle('0.3 deg')
         else:
-            rad = x if x>y else y
+            rad = x if x > y else y
 
         mask = lon_lat_circle_mask(lons, lats, lon, lat, rad)
         all_sky_exclusion.data[mask] = 0

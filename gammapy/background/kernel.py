@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import gc
 import numpy as np
 from astropy.io import fits
-import gc
 from ..extern.pathlib import Path
 from ..stats import significance
 from ..image import binary_dilation_circle

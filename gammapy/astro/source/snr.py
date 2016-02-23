@@ -275,9 +275,13 @@ class SNRTrueloveMcKee(SNR):
             t = self.age
         else:
             raise ValueError('Need time variable or age attribute.')
-        r = np.where(t > self.sedov_taylor_begin,
-                     self._radius_sedov_taylor(t).to('cm').value,
-                     self._radius_free_expansion(t).to('cm').value)
+
+        # Evaluate `_radius_sedov_taylor` on `t > self.sedov_taylor_begin`
+        # only to avoid a warning
+        r = np.empty(t.shape, dtype=np.float64)
+        mask = t > self.sedov_taylor_begin
+        r[mask] = self._radius_sedov_taylor(t[mask]).to('cm').value
+        r[~mask] = self._radius_free_expansion(t[~mask]).to('cm').value
         return Quantity(r, 'cm')
 
     def _radius_free_expansion(self, t):
@@ -294,15 +298,13 @@ class SNRTrueloveMcKee(SNR):
 
     def _radius_sedov_taylor(self, t):
         """
-        Shock radius  at age t  during Sedov Taylor phase.
+        Shock radius  at age t during Sedov Taylor phase.
 
         Parameters
         ----------
         t : `~astropy.units.Quantity`
             Time after birth of the SNR.
-
         """
-        # Sedov Taylor Phase
         term1 = self._radius_free_expansion(self.sedov_taylor_begin) ** (5. / 2)
         term2 = (2.026 * (self.e_sn / self.rho_ISM)) ** (1. / 2)
         return (term1 + term2 * (t - self.sedov_taylor_begin)) ** (2. / 5)

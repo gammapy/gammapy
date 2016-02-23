@@ -9,8 +9,7 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
-from ..utils.wcs import (linear_wcs_to_arrays,
-                         linear_arrays_to_wcs)
+from ..utils.wcs import linear_wcs_to_arrays, linear_arrays_to_wcs
 from ..utils.fits import table_to_fits_table
 from ..utils.energy import Energy, EnergyBounds
 

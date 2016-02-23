@@ -10,7 +10,6 @@ from .data_manage import *
 from .data_select import *
 from .data_show import *
 
-from .spectrum_pfspec import *
 from .spectrum_pfsim import *
 from .spectrum_regions import *
 

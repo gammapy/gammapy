@@ -2,16 +2,15 @@
 """Other coordinate and distance-related functions"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.units import Unit
-from ...utils.const import d_sun_to_galactic_center
+from astropy.units import Unit, Quantity
 
+__all__ = [
+    'cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
+    'radius_to_angle', 'angle_to_radius', 'velocity_glon_glat',
+    'motion_since_birth', 'polar', 'D_SUN_TO_GALACTIC_CENTER',
+]
 
-__all__ = ['cartesian', 'galactic', 'luminosity_to_flux', 'flux_to_luminosity',
-           'radius_to_angle', 'angle_to_radius', 'velocity_glon_glat',
-           'motion_since_birth', 'polar']
-
-
-D_SUN_GALACTIC_CENTER = d_sun_to_galactic_center.to('kpc')
+D_SUN_TO_GALACTIC_CENTER = Quantity(8.5, 'kpc')
 
 
 def cartesian(r, theta):
@@ -30,10 +29,10 @@ def polar(x, y):
     return r, theta
 
 
-def galactic(x, y, z, obs_pos=[d_sun_to_galactic_center, 0, 0]):
+def galactic(x, y, z, obs_pos=[D_SUN_TO_GALACTIC_CENTER, 0, 0]):
     """Compute galactic coordinates lon, lat (deg) and distance (kpc)
     for given position in cartesian coordinates (kpc)"""
-    y_prime = y + d_sun_to_galactic_center
+    y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
     glon = np.arctan2(x, y_prime).to('deg')
     glat = np.arcsin(z / d).to('deg')
@@ -86,7 +85,7 @@ def velocity_glon_glat(x, y, z, vx, vy, vz):
     v_glat : `~astropy.units.Quantity`
         Projected velocity in Galactic latitude
     """
-    y_prime = y + d_sun_to_galactic_center
+    y_prime = y + D_SUN_TO_GALACTIC_CENTER
     d = np.sqrt(x ** 2 + y_prime ** 2 + z ** 2)
     r = np.sqrt(x ** 2 + y_prime ** 2)
 

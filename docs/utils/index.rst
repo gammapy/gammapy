@@ -91,9 +91,6 @@ Reference/API
 .. automodapi:: gammapy.utils.coordinates
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.utils.const
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.utils.fits
     :no-inheritance-diagram:
 

@@ -300,7 +300,7 @@ class MultiGauss2D(object):
             # positive if theta too large
             return self.containment_fraction(theta) - containment_fraction
 
-        # @todo: if it is an array we have to loop by hand!
+        # TODO: if it is an array we have to loop by hand!
         # containment = np.asarray(containment, dtype=np.float64)
         # Inital guess for theta
         theta_max = self.eff_sigma

@@ -48,7 +48,6 @@ Spectrum
 - ``gammapy-spectrum`` calls `gammapy.spectrum.spectrum_analysis`
 - ``gammapy-spectrum-hspec`` calls `gammapy.hspec.run_fit` (old script, will be refactored, then removed)
 - ``gammapy-spectrum-pfsim`` calls `gammapy.script.spectrum_pfsim` (old script, will be refactored, then removed)
-- ``gammapy-spectrum-pfspec`` calls `gammapy.scripts.spectrum_pfspec` (old script, will be refactored, then removed)
 - ``gammapy-spectrum-pipe`` runs `gammapy.scripts.SpectrumPipe`
 - ``gammapy-spectrum-regions`` calls `gammapy.scripts.spectrum_regions`
 

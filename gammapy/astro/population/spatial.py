@@ -14,8 +14,7 @@ import numpy as np
 from numpy import exp, pi, log, abs, cos, sin
 from astropy.units import Quantity
 from astropy.modeling import Fittable1DModel, Parameter
-from ...utils.coordinates import cartesian, polar
-from ...utils.const import d_sun_to_galactic_center
+from ...utils.coordinates import cartesian, polar, D_SUN_TO_GALACTIC_CENTER
 from ...utils.random import get_random_state
 
 __all__ = [
@@ -34,7 +33,6 @@ __all__ = [
     'ZMIN', 'ZMAX',
 ]
 
-R_SUN_GALACTIC = d_sun_to_galactic_center.value
 
 # Simulation range used for random number drawing
 RMIN, RMAX = Quantity(0, 'kpc'), Quantity(20, 'kpc')
@@ -113,8 +111,8 @@ class CaseBattacharya1998(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, alpha, beta):
         """One dimensional Case & Battacharya 2006 model function"""
-        term1 = (r / R_SUN_GALACTIC) ** alpha
-        term2 = np.exp(-beta * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** alpha
+        term2 = np.exp(-beta * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
         return amplitude * term1 * term2
 
 
@@ -159,8 +157,8 @@ class YusifovKucuk2004(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, a, b, r_1):
         """One dimensional Yusifov & Kucuk 2004 model function"""
-        term1 = ((r + r_1) / (R_SUN_GALACTIC + r_1)) ** a
-        term2 = np.exp(-b * (r - R_SUN_GALACTIC) / (R_SUN_GALACTIC + r_1))
+        term1 = ((r + r_1) / (D_SUN_TO_GALACTIC_CENTER.value + r_1)) ** a
+        term2 = np.exp(-b * (r - D_SUN_TO_GALACTIC_CENTER.value) / (D_SUN_TO_GALACTIC_CENTER.value + r_1))
         return amplitude * term1 * term2
 
 
@@ -202,7 +200,7 @@ class YusifovKucuk2004B(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, a, b):
         """One dimensional Yusifov & Kucuk 2004 model function"""
-        return amplitude * (r / R_SUN_GALACTIC) ** a * np.exp(-b * (r / R_SUN_GALACTIC))
+        return amplitude * (r / D_SUN_TO_GALACTIC_CENTER.value) ** a * np.exp(-b * (r / D_SUN_TO_GALACTIC_CENTER.value))
 
 
 class FaucherKaspi2006(Fittable1DModel):
@@ -282,8 +280,8 @@ class Lorimer2006(Fittable1DModel):
     @staticmethod
     def evaluate(r, amplitude, B, C):
         """One dimensional Lorimer 2006 model function"""
-        term1 = (r / R_SUN_GALACTIC) ** B
-        term2 = np.exp(-C * (r - R_SUN_GALACTIC) / R_SUN_GALACTIC)
+        term1 = (r / D_SUN_TO_GALACTIC_CENTER.value) ** B
+        term2 = np.exp(-C * (r - D_SUN_TO_GALACTIC_CENTER.value) / D_SUN_TO_GALACTIC_CENTER.value)
         return amplitude * term1 * term2
 
 
