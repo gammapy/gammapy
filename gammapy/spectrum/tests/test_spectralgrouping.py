@@ -41,7 +41,7 @@ def test_define_spectral_groups():
     group=SpectralGrouping(ana.observations)
     obs_groups = group.define_spectral_groups()
     assert obs_groups.n_groups == 25*30*40
-    obs_groups2 =group.define_spectral_groups(OffsetRange=[0, 2.5], NOffbin=1, EffRange=[0, 100], NEffbin=1, ZenRange=[0., 70.], NZenbin=1)
+    obs_groups2 =group.define_spectral_groups(offset_range=[0, 2.5], n_off_bin=1, eff_range=[0, 100], n_eff_bin=1, zen_range=[0., 70.], n_zen_bin=1)
     assert obs_groups2.n_groups == 1
 
 def test_define_groups_and_stack(tmpdir):
@@ -56,7 +56,7 @@ def test_define_groups_and_stack(tmpdir):
     fit.run(method='sherpa')
 
 
-    #Test that if we have 4 bands fot the 4 runs it gives exactly the same result that before
+    #Test that if we have 4 bands for the 4 runs it gives exactly the same result that before
     group=SpectralGrouping(ana.observations)
     obs_list =group.define_groups_and_stack()
     obs_list.write_ogip_data(outdir=tmpdir+'group_2')
@@ -70,8 +70,8 @@ def test_define_groups_and_stack(tmpdir):
     assert_quantity_allclose(fit.result.parameters["norm"], fit_band2.result.parameters["norm"])
 
     #Test that if we stack all the runs in one band we get a result close than before
-    obs_list2 =group.define_groups_and_stack(OffsetRange=[0, 2.5], NOffbin=1, EffRange=[0, 100], NEffbin=1,
-                                                             ZenRange=[0., 70.], NZenbin=1)
+    obs_list2 =group.define_groups_and_stack(offset_range=[0, 2.5], n_off_bin=1, eff_range=[0, 100], n_eff_bin=1,
+                                             zen_range=[0., 70.], n_zen_bin=1)
     obs_list2.write_ogip_data(outdir=tmpdir+'group_all')
     band_obs2=obs_list2.to_observation_table()
     fit_band3 = SpectrumFit.from_observation_table(band_obs2)
