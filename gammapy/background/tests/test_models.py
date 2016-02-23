@@ -202,16 +202,11 @@ def test_select_events_outside_pie():
     fill with 1 and inside with 0.
     """
     excluded_sources = make_excluded_sources()
-    excluded_sources2 = make_excluded_sources()
+
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
-    # Define an empty image centered on the pointing position
-    image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=pointing_position.ra.deg,
-                             yref=pointing_position.dec.deg,
-                             proj='TAN', coordsys='CEL')
-    ra, dec = coordinates(image)
     events = EventList()
-    ra=np.array([0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48])
-    dec=np.array([0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24])
+    ra = np.array([0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48])
+    dec = np.array([0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24])
     # Faked EventList with the radec of all the pixel in the empty image
     events["RA"] = ra.flat
     events["DEC"] = dec.flat
@@ -223,7 +218,7 @@ def test_select_events_outside_pie():
     # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
     idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
     assert_allclose(idx, [3, 4, 6])
-    
+
 
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
