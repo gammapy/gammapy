@@ -45,7 +45,7 @@ def test_CountsSpectrum():
 
     #add two spectra
     bins = pha1.energy_bounds.nbins
-    counts = np.array(np.random.rand(bins)*10 , dtype = int)
+    counts = np.array(np.random.rand(bins) * 10, dtype=int)
     pha2 = CountsSpectrum(counts, pha1.energy_bounds)
     pha_sum = np.sum([pha1, pha2])
     desired = pha1.counts[5] + counts[5]
@@ -57,7 +57,7 @@ def test_CountsSpectrum():
 @requires_data('gammapy-extra')
 def test_n_pred():
     fitresult = gammapy_extra.filename(
-        'test_datasets/spectrum/fit_result_PowerLaw.yaml')
+        'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
 
     testdir = gammapy_extra.filename(
         'datasets/hess-crab4_pha')
