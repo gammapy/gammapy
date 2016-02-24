@@ -63,7 +63,9 @@ Contributors
 Pull requests
 +++++++++++++
 
+- [#461] Pacman (Lea Jouvin)
 - [#456] Fix and improvements to TS map tool (Olga Vorokh)
+- [#447] Add King profile PSF class (Christoph Deil)
 - [#436] Restructure spectrum package and command line tool (Johannes King)
 - [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
 - [#421] Add spectrum fit serialisation code (Johannes King)
