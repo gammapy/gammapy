@@ -151,6 +151,7 @@ def background_group():
     For now we'll just use the zenith binning from HAP.
     """
     obs_table = config.obs_table.copy()
+    obs_table['ZEN_PNT'] = 90 - obs_table['ALT_PNT']
 
     # Define observation groups
     # zenith_bins = np.array([0, 20, 30, 40, 50, 90])

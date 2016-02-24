@@ -54,6 +54,7 @@ class ObservationTable(Table):
     convenience methods. The format of the observation table
     is described in :ref:`dataformats_observation_lists`.
     """
+
     # For now I've decided to not do the cleanup in `__init__`,
     # but instead in `read`.
     # See https://groups.google.com/d/msg/astropy-dev/0EaOw9peWSk/MSjH7q_7htoJ
@@ -911,7 +912,7 @@ class ObservationGroupAxis(object):
             Value or tuple of bin edges, depending on the **format** parameter.
         """
         if self.format == 'bin_edges':
-            return (self.bins[bin_id], self.bins[bin_id + 1])
+            return self.bins[bin_id], self.bins[bin_id + 1]
         elif self.format == 'bin_values':
             return self.bins[bin_id]
 

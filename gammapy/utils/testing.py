@@ -1,9 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utilities for testing"""
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
-
 from astropy.tests.helper import pytest
 from astropy.utils import minversion
 from ..data import DataManager
@@ -19,6 +17,7 @@ SHERPA_LT_4_8 = not minversion('sherpa', '4.8')
 
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
+
 
 def requires_dependency(name):
     """Decorator to declare required dependencies for tests.
@@ -101,6 +100,16 @@ def requires_data(name):
     return pytest.mark.skipif(skip_it, reason=reason)
 
 
+def run_cli(cli, args, assert_ok=True):
+    """Helper function to run command line tools.
+    """
+    with pytest.raises(SystemExit) as exc:
+        cli(args)
+
+    if assert_ok:
+        assert exc.value.args[0] == 0
+
+    return exc
 
 
 # https://pytest.org/latest/tmpdir.html#the-tmpdir-factory-fixture
@@ -109,5 +118,3 @@ def data_manager():
     test_register = gammapy_extra.filename('datasets/data-register.yaml')
     dm = DataManager.from_yaml(test_register)
     return dm
-    
-

@@ -4,7 +4,7 @@ import json
 from numpy.testing.utils import assert_allclose
 from astropy.stats import gaussian_sigma_to_fwhm
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, run_cli
 from ...datasets import load_poisson_stats_image
 from ..image_fit import image_fit
 
