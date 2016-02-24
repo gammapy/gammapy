@@ -68,4 +68,4 @@ def test_n_pred():
     n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]
     n_pred = np.sum(n_pred_vec)
 
-    assert_allclose(max(n_pred.counts), 53, atol=0.1)
+    assert_allclose(max(n_pred.counts), 48.6, atol=0.1)
