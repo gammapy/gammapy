@@ -17,7 +17,7 @@ from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore, EventList
 from ...region import SkyCircleRegion
-from ...background.models import compute_pie_fraction, select_events_outside_pie
+from ...background.models import _compute_pie_fraction, _select_events_outside_pie
 from ...image import make_empty_image
 from ...image import coordinates, bin_events_in_image, make_empty_image
 
@@ -181,7 +181,7 @@ def test_compute_pie_fraction():
     excluded_sources = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
     # Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
-    pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
+    pie_fraction = _compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
     assert_allclose(pie_fraction, 0)
 
     # I have to use an other object excluded_region because the previous one was
@@ -189,7 +189,7 @@ def test_compute_pie_fraction():
     excluded_sources2 = make_excluded_sources()
     source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
     separation = pointing_position.separation(source_closest).value
-    pie_fraction = compute_pie_fraction(excluded_sources, pointing_position, Angle(5, "deg"))
+    pie_fraction = _compute_pie_fraction(excluded_sources, pointing_position, Angle(5, "deg"))
     pie_fraction_expected = (2 * np.arctan(excluded_sources2["Radius"][1] / separation) / (2 * np.pi))
     assert_allclose(pie_fraction, pie_fraction_expected)
 
@@ -212,11 +212,11 @@ def test_select_events_outside_pie():
     events["DEC"] = dec.flat
 
     # Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
-    idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
+    idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
     assert_allclose(np.arange(len(events)), idx)
 
     # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
-    idx = select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
+    idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
     assert_allclose(idx, [3, 4, 6])
 
 
@@ -254,11 +254,11 @@ class TestEnergyOffsetBackgroundModel:
 
         # Test if the livetime array where we apply the pie is less by the factor pie_fraction of the livetime
         # array where we don't apply the pie
-        pie_fraction = compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
+        pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
         assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data * (1 - pie_fraction))
 
         # Test if the total counts array where we apply the pie is equal to the number of events outside the pie
-        idx = select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
+        idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
         offmax = multi_array1.counts.offset.max()
         # This is important since in the counts array the events > offsetmax will not be in the histogram.
         nevents_sup_offmax = len(np.where(events[idx].offset > offmax)[0])
