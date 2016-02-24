@@ -669,14 +669,19 @@ class EffectiveAreaTable2D(object):
         """Print some basic info.
         """
         ss = "\nSummary EffectiveArea2D info\n"
-        ss += "----------------\n"
+        ss += "-----------------------------\n"
         # Summarise data members
-        ss += array_stats_str(self.ebounds, 'energy')
-        ss += array_stats_str(self.offset, 'offset')
-        ss += array_stats_str(self.eff_area, 'effective area')
+        ss += array_stats_str(self.ebounds, 'Energy')
+        ss += array_stats_str(self.offset, 'Offset')
+        ss += array_stats_str(self.eff_area, 'Effective Area')
         ss += 'Safe energy threshold lo: {0:6.3f}\n'.format(self.low_threshold)
         ss += 'Safe energy threshold hi: {0:6.3f}\n'.format(self.high_threshold)
 
+        offset = Angle(0.5, 'deg')
+        energy = Energy(1, 'TeV')
+        effarea = self.evaluate(offset=offset, energy=energy)
+        ss += 'Effective area at {} and {} : {:.3f}'.format(
+            offset, energy, effarea)
 
         return ss
 

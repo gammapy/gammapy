@@ -905,3 +905,27 @@ putting this in ``docs/conf.py`` can also help sometimes::
         log.write(warnings.formatwarning(message, category, filename, lineno, line))
 
     warnings.showwarning = warn_with_traceback
+
+
+Validating output IRF files written by H.E.S.S. exporters
+---------------------------------------------------------
+
+The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:iact-irfs` format.
+The Gammapy tests contain a mechanism to track changes in these exporters.
+
+
+In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads 
+IRF files from different chains and prints the output of the ``info`` function to a file. It also creates a YAML file 
+holding information about the datastore used for each chain, the observations used, etc. 
+
+
+The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
+``info`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by 
+Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script 
+again to ensure the passing of all Gammapy tests.
+
+If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to 
+ manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
+
+
+
