@@ -9,7 +9,7 @@ from ...irf import PSFKing
 test_psf_king_args = [
     {
         'chain': 'hap-hd',
-        'filename': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2-input/run023400-023599/run023523/hess_psf_king_023523.fits.gz',
+        'filename': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_psf_king_023523.fits.gz',
         'energy': 0.25178512930870056,
         'offset': 1.25,
         'gamma': 3.8902931213378906,
