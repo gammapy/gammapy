@@ -62,5 +62,4 @@ def test_sensitivity():
                     significance = significance_on_off(n_on, n_off, alpha, method=method)
                     excess = sensitivity_on_off(n_off, alpha, significance, method=method)
                     n_on2 = excess + alpha * n_off
-                    # print(n_on, n_off, alpha, significance, excess, n_on2)
                     assert_allclose(n_on, n_on2, decimal=3)

@@ -33,10 +33,6 @@ class TestHESS:
         filename = get_pkg_data_filename('data/psf.txt')
         hess = HESSMultiGaussPSF(filename)
         m = hess.to_MultiGauss2D(normalize=False)
-        if 0:
-            print('integral:', m.integral)
-            print('sigmas:  ', m.sigmas)
-            print('norms:   ', m.norms)
 
         for theta in np.linspace(0, 1, 10):
             val_hess = hess.dpdtheta2(theta ** 2)

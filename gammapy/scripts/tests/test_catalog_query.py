@@ -22,6 +22,5 @@ def test_catalog_query_main(args):
     with pytest.raises(SystemExit) as exc:
         cli(args)
 
-    print(exc.__dict__)
     assert exc.value.args[0] == 0
 
