@@ -1,7 +1,0 @@
-
-Summary ARF info
-----------------
-Energy Bounds  : size =    74, min =  0.020 TeV, max = 89.337 TeV
-Effective area : size =    73, min =  0.000 m2, max = 619079.044 m2
-Safe energy threshold lo:  0.567 TeV
-Safe energy threshold hi: 99.083 TeV
