@@ -97,7 +97,7 @@ class EnergyOffsetArray(object):
         ax.set_title('Energy_offset Array')
         ax.legend()
         image = ax.imshow(self.data.value, extent=extent, **kwargs)
-        plt.colorbar(image)
+        # plt.colorbar(image)
         return ax
 
     @classmethod
