@@ -6,15 +6,20 @@ from numpy.testing import assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
+from astropy.wcs import WCS
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
-from ...data import DataStore
+from ...data import DataStore, EventList
+from ...region import SkyCircleRegion
+from ...background.models import _compute_pie_fraction, _select_events_outside_pie
+from ...image import make_empty_image
+from ...image import coordinates, bin_events_in_image, make_empty_image
 
 
 @requires_dependency('scipy')
@@ -132,6 +137,89 @@ def make_test_array(empty=True):
     return multi_array
 
 
+def make_test_array_fillobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    obs_table = data_store.obs_table
+    multi_array = make_test_array()
+    multi_array.fill_obs(obs_table, data_store)
+    return multi_array
+
+
+def make_test_array_oneobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
+    dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dir)
+    obs_table = data_store.obs_table
+    multi_array = make_test_array()
+    multi_array.fill_obs([obs_table[0]], data_store, excluded_sources, fov_radius)
+    return multi_array, data_store, obs_table[0]
+
+
+def make_excluded_sources():
+    centers = SkyCoord([1, 0], [2, 1], unit='deg')
+    radius = Angle('0.3 deg')
+    sources = SkyCircleRegion(pos=centers, radius=radius)
+    catalog = Table()
+    catalog["RA"] = sources.pos.data.lon
+    catalog["DEC"] = sources.pos.data.lat
+    catalog["Radius"] = sources.radius
+    return catalog
+
+
+def make_source_nextCrab():
+    center = SkyCoord([84, 89], [23, 20], unit='deg', frame='icrs')
+    radius = Angle('0.3 deg')
+    sources = SkyCircleRegion(pos=center, radius=radius)
+    catalog = Table()
+    catalog["RA"] = sources.pos.data.lon
+    catalog["DEC"] = sources.pos.data.lat
+    catalog["Radius"] = sources.radius
+    return catalog
+
+
+def test_compute_pie_fraction():
+    excluded_sources = make_excluded_sources()
+    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+    # Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
+    pie_fraction = _compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
+    assert_allclose(pie_fraction, 0)
+
+    # I have to use an other object excluded_region because the previous one was
+    # already sorted in the compute_pie_fraction
+    excluded_sources2 = make_excluded_sources()
+    source_closest = SkyCoord(excluded_sources2["RA"][1], excluded_sources2["DEC"][1], unit="deg")
+    separation = pointing_position.separation(source_closest).value
+    pie_fraction = _compute_pie_fraction(excluded_sources, pointing_position, Angle(5, "deg"))
+    pie_fraction_expected = (2 * np.arctan(excluded_sources2["Radius"][1] / separation) / (2 * np.pi))
+    assert_allclose(pie_fraction, pie_fraction_expected)
+
+
+def test_select_events_outside_pie():
+    """
+    Create an empty image centered on the pointing position and all the radec position of the pixels will
+    define one event. Thus we create a false EventList with these pixels. We apply the select_events_outside_pie()
+    and we fill the image only with the events (pixels) outside the pie. We assert that outside the pie the image is
+    fill with 1 and inside with 0.
+    """
+    excluded_sources = make_excluded_sources()
+
+    pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+    events = EventList()
+    ra = np.array([0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48])
+    dec = np.array([0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24])
+    # Faked EventList with the radec of all the pixel in the empty image
+    events["RA"] = ra.flat
+    events["DEC"] = dec.flat
+
+    # Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
+    idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
+    assert_allclose(np.arange(len(events)), idx)
+
+    # Test if after calling the select_events_outside_pie, the image is 0 inside the pie and 1 outside the pie
+    idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(5, "deg"))
+    assert_allclose(idx, [3, 4, 6])
+
+
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
     def test_read_write(self):
@@ -143,18 +231,35 @@ class TestEnergyOffsetBackgroundModel:
         assert_quantity_allclose(multi_array.counts.data, multi_array2.counts.data)
         assert_quantity_allclose(multi_array.livetime.data, multi_array2.livetime.data)
         assert_quantity_allclose(multi_array.bg_rate.data, multi_array2.bg_rate.data)
-        assert_quantity_allclose(multi_array.energy, multi_array2.energy)
-        assert_quantity_allclose(multi_array.offset, multi_array2.offset)
+        assert_quantity_allclose(multi_array.counts.energy, multi_array2.counts.energy)
+        assert_quantity_allclose(multi_array.counts.offset, multi_array2.counts.offset)
 
     def test_fillobs_and_computerate(self):
-        dir = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2'
-        data_store = DataStore.from_dir(dir)
-        obs_table = data_store.obs_table
-        multi_array = make_test_array()
-        multi_array.fill_obs(obs_table, data_store)
+        multi_array = make_test_array_fillobs()
         multi_array.compute_rate()
         assert_equal(multi_array.counts.data.value.sum(), 5403)
         pix = 23, 1
         assert_quantity_allclose(multi_array.livetime.data[pix], 6313.8117676 * u.s)
         rate = Quantity(0.0024697306536062276, "MeV-1 s-1 sr-1")
         assert_quantity_allclose(multi_array.bg_rate.data[pix], rate)
+
+    def test_fillobs_pie(self):
+        """
+        Test for one observation of the for Crab for the livetime array and the counts array after applying the pie
+        """
+        excluded_sources = make_source_nextCrab()
+        multi_array1, data_store1, obs_table1 = make_test_array_oneobs(excluded_sources, fov_radius=Angle(2.5, "deg"))
+        multi_array2, data_store2, obs_table2 = make_test_array_oneobs()
+        events = data_store1.load(obs_table1['OBS_ID'], 'events')
+
+        # Test if the livetime array where we apply the pie is less by the factor pie_fraction of the livetime
+        # array where we don't apply the pie
+        pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, Angle(5, "deg"))
+        assert_allclose(multi_array1.livetime.data, multi_array2.livetime.data * (1 - pie_fraction))
+
+        # Test if the total counts array where we apply the pie is equal to the number of events outside the pie
+        idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
+        offmax = multi_array1.counts.offset.max()
+        # This is important since in the counts array the events > offsetmax will not be in the histogram.
+        nevents_sup_offmax = len(np.where(events[idx].offset > offmax)[0])
+        assert_allclose(np.sum(multi_array1.counts.data), len(idx) - nevents_sup_offmax)

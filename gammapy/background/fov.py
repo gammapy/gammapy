@@ -7,6 +7,7 @@ import numpy as np
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy.io import fits
+from astropy.coordinates import Angle
 from ..image.utils import coordinates
 
 __all__ = [
@@ -14,7 +15,7 @@ __all__ = [
 ]
 
 
-def fill_acceptance_image(header, center, offset, acceptance, offset_max=None, interp_kwargs=None):
+def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None, offset_max=None):
     """Generate a 2D image of a radial acceptance curve.
 
     The radial acceptance curve is given as an array of values
@@ -40,7 +41,7 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max=None, i
     """
     from scipy.interpolate import interp1d
     if not offset_max:
-        offset_max = offset[-1]
+        offset_max = Angle(offset)[-1]
     if not interp_kwargs:
         interp_kwargs = dict(bounds_error=None, fill_value=acceptance[0])
 
@@ -55,7 +56,7 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max=None, i
     # calculate pixel offset from center (in world coordinates)
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
     pix_off = coord.separation(center)
-
+    
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
     image.data[pix_off >= offset_max] = 0
