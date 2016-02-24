@@ -403,9 +403,8 @@ class SpectrumObservation(object):
         arf_band_tot = np.sum(arf_band, axis=0)
         livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
         arf_vec = arf_band_tot / livetime_tot
-        ener_hi = obs_list[0].effective_area.energy_hi
-        ener_lo = obs_list[0].effective_area.energy_lo
-        arf = EffectiveAreaTable(ener_lo, ener_hi, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
+        ebounds = obs_list[0].effective_area.ebounds
+        arf = EffectiveAreaTable(ebounds, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
 
         # Stack rmf vector
         rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
@@ -428,9 +427,11 @@ class SpectrumObservation(object):
         # Calculate energy range
         # TODO: for the moment we take the minimum range for the energybin but we have to take the largest one
         # and to compute livetime that varries from energy bin to bin
-        emin = max([_.meta.energy_range[0] for _ in obs_list])
-        emax = min([_.meta.energy_range[1] for _ in obs_list])
-
+        #emin = max([_.meta.energy_range[0] for _ in obs_list])
+        #emax = min([_.meta.energy_range[1] for _ in obs_list])
+        emin = max([_.meta.ebounds[0] for _ in obs_list])
+        emax = min([_.meta.ebounds[1] for _ in obs_list])
+        
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.obs_id for o in obs_list]

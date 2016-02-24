@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
+import numpy as np
 from astropy.coordinates import SkyCoord, Angle
-
+from numpy.testing import assert_allclose
 from ...data import DataStore
 from ...spectrum.results import SpectrumFitResult, SpectrumStats
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
@@ -14,7 +14,7 @@ from ...region import SkyCircleRegion
 from ...spectrum import SpectrumExtraction
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
-from ...spectrum.spectrum_extraction import SpectrumObservationList
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 
 
 def make_spectrum_extraction():
@@ -100,26 +100,14 @@ def test_spectrum_extraction_grouping_from_an_observation_list():
     total_time = obs0.meta.livetime + obs1.meta.livetime
     arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
                          + obs1.meta.livetime * obs1.effective_area.effective_area
+    assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime / total_time)
+    # Test rmf group
+    rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
+                                   * obs0.energy_dispersion.pdf_matrix.T \
+                                   + obs1.meta.livetime * obs1.effective_area.effective_area \
+                                     * obs1.energy_dispersion.pdf_matrix.T
 
-    # JOLEROI: Je ne sais quelle version est bonne
-
-    #Test rmf group
-    #rmf_times_arf_times_livetime= obs0.meta.livetime * obs0.effective_area.effective_area \
-    #                             * obs0.energy_dispersion.pdf_matrix.T   \
-    #                     + obs1.meta.livetime * obs1.effective_area.effective_area  \
-    #                       * obs1.energy_dispersion.pdf_matrix.T
-
-    #inan=np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
-    #pdf_expexted=rmf_times_arf_times_livetime / arf_times_livetime
-    #pdf_expexted[inan]=0
-    #assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime / total_time)
-    ## Test rmf group
-    #rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
-    #                               * obs0.energy_dispersion.pdf_matrix.T \
-    #                               + obs1.meta.livetime * obs1.effective_area.effective_area \
-    #                                 * obs1.energy_dispersion.pdf_matrix.T
-
-    #inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
-    #pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime
-    #pdf_expexted[inan] = 0
-    #assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
+    inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
+    pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime
+    pdf_expexted[inan] = 0
+    assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
