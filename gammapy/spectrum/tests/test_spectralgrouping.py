@@ -13,6 +13,7 @@ from ...spectrum.spectral_grouping import SpectralGrouping
 from ...spectrum.spectrum_fit import SpectrumFit
 from astropy.tests.helper import assert_quantity_allclose
 
+@requires_data('gammapy-extra')
 def make_spectrum_extraction():
     # Construct w/o config file
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
@@ -44,6 +45,7 @@ def test_define_spectral_groups():
     obs_groups2 =group.define_spectral_groups(offset_range=[0, 2.5], n_off_bin=1, eff_range=[0, 100], n_eff_bin=1, zen_range=[0., 70.], n_zen_bin=1)
     assert obs_groups2.n_groups == 1
 
+ 
 def test_define_groups_and_stack(tmpdir):
     ana= make_spectrum_extraction()
     ana.observations.write_ogip_data(outdir=tmpdir+'ogip_data')
