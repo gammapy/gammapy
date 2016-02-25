@@ -396,8 +396,9 @@ class SpectrumObservation(object):
        """
         # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
+        on_vec.meta["obs_id"] = obs_stacked_id
         off_vec = np.sum([o.off_vector for o in obs_list])
-        import IPython; IPython.embed()
+
         # Stack arf vector
         arf_band = [o.effective_area.effective_area * o.meta.livetime.value for o in obs_list]
         arf_band_tot = np.sum(arf_band, axis=0)
