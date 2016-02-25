@@ -3,10 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import copy
 import logging
 import numpy as np
+from astropy.table import Column
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
+from astropy.table import Table
 from . import CountsSpectrum
 from .results import SpectrumStats
 from ..extern.pathlib import Path
@@ -710,19 +712,18 @@ class SpectrumObservationList(list):
 
     def to_observation_table(self, moreparameters=False):
         """Create `~gammapy.data.ObservationTable"""
-        names = ['OBS_ID', 'PHAFILE']
-        col1 = [o.obs_id for o in self]
-        col2 = [o.meta.phafile for o in self]
-        if moreparameters:
-            names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen', 'muoneff']
-            col3 = Angle([o.meta.offset.value for o in self], "deg")
-            col4 = [o.meta.coszen for o in self]
-            col5 = [o.meta.muoneff for o in self]
-            return ObservationTable(data=[col1, col2, col3, col4, col5], names=names)
-        else:
-            return ObservationTable(data=[col1, col2], names=names)
-
-
+        observation_table= ObservationTable()
+        keys = ['obs_id', 'phafile', 'offset', 'coszen', 'muoneff']
+        names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen', 'muoneff']
+        for key,name in zip(keys, names):
+            if key in self[0].meta:
+                if key=="offset" :
+                    col=Column(Angle([o.meta[key].value for o in self], "deg"), name)
+                else:
+                    col=Column([o.meta[key] for o in self], name)
+                observation_table.add_column(col)
+        return observation_table
+    
 class BackgroundEstimator(object):
     """TBD
 
