@@ -49,7 +49,7 @@ class SpectralGrouping(object):
 
         Returns
         -------
-        obs_group: `~gammapy.data.ObservationGroups`
+        obs_group : `~gammapy.data.ObservationGroups`
 
         """
         [offmin, offmax] = offset_range
@@ -73,7 +73,7 @@ class SpectralGrouping(object):
 
         Parameters
         ----------
-        obs_groups: `~gammapy.data.ObservationGroups`
+        obs_groups : `~gammapy.data.ObservationGroups`
                 Contains the boundaries of the different band
 
         Returns
