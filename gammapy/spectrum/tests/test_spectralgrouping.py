@@ -12,6 +12,7 @@ from ...spectrum import SpectrumExtraction
 from ...spectrum.spectral_grouping import SpectralGrouping
 from ...spectrum.spectrum_fit import SpectrumFit
 from astropy.tests.helper import assert_quantity_allclose
+from ...utils.testing import requires_data
 
 @requires_data('gammapy-extra')
 def make_spectrum_extraction():
