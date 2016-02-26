@@ -33,9 +33,16 @@ def get_list_of_chains():
 @requires_dependency('scipy')
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
-def test_EffectiveArea(data_manager, chain):
-    ref_file = make_path(chain['aeff2D_reference_file'])
-    ref_aeff = open(str(ref_file), 'r').read()
+def test_hess_chains(data_manager, chain):
+    ref_file_aeff = make_path(chain['aeff2D_reference_file'])
+    ref_aeff = open(str(ref_file_aeff), 'r').read()
+    ref_file_edisp = make_path(chain['edisp2D_reference_file'])
+    ref_edisp = open(str(ref_file_edisp), 'r').read()
+
+
     store = data_manager[chain['store']]
     aeff = store.obs(obs_id=chain['obs']).aeff
+
     assert aeff.info() == ref_aeff
+    assert edisp.info() == ref_edisp
+
