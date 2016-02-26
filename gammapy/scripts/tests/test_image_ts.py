@@ -19,7 +19,6 @@ def test_command_line_gammapy_image_ts(tmpdir):
     """Minimal test of gammapy_image_ts using testcase that
     guaranteed to work with compute_ts_map"""
     data = load_poisson_stats_image(extra_info=True)
-    print("DATAKEYS", data.keys())
     kernel = Gaussian2DKernel(2.5)
     data['exposure'] = np.ones(data['counts'].shape) * 1E12
     for _, func in zip(['counts', 'background', 'exposure'], [np.nansum, np.nansum, np.mean]):
@@ -27,7 +26,6 @@ def test_command_line_gammapy_image_ts(tmpdir):
 
     result = compute_ts_map(data['counts'], data['background'], data['exposure'],
                             kernel)
-    print("KERNEL", kernel)
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = np.nan_to_num(result[name])
         result[name] = upsample_2N(result[name], 2, order=order)
