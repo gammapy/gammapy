@@ -1,14 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-from ..utils.scripts import get_parser
+import click
+click.disable_unicode_literals_warning = True
 
-__all__ = ['image_derived']
+from astropy.io import fits
+from astropy.convolution import Tophat2DKernel
+
+from ..detect import compute_lima_map, compute_lima_on_off_map
+from ..image.utils import dict_to_hdulist
+
+__all__ = ['image_lima']
 
 log = logging.getLogger(__name__)
 
 
-def image_derived_main(args=None):
+def image_lima_main(args=None):
     parser = get_parser(image_derived)
     parser.add_argument('infile', type=str,
                         help='Input FITS file name')
@@ -16,31 +23,29 @@ def image_derived_main(args=None):
                         help='Output FITS file name')
     parser.add_argument('theta', type=float,
                         help='On-region correlation radius (deg)')
-    parser.add_argument('--is_off_correlated', action='store_false',
-                        help='Are the basic OFF maps correlated?')
     parser.add_argument('--overwrite', action='store_true',
                         help='Overwrite existing output file?')
     args = parser.parse_args(args)
     image_derived(**vars(args))
 
 
-def image_derived(infile,
-                  outfile,
-                  theta,
-                  is_off_correlated,
-                  overwrite):
-    """Make derived maps for a given set of basic maps.
+def image_lima(infile, outfile, theta, overwrite):
+    """
+    Compute Li&Ma significance maps for a given set of input maps.
 
     TODO: describe
     """
-    from astropy.io import fits
-    from gammapy.background import Maps
-
     log.info('Reading {0}'.format(infile))
     hdus = fits.open(infile)
-    maps = Maps(hdus, theta=theta,
-                is_off_correlated=is_off_correlated)
+
+    # Convert theta to pix
+    theta_pix = theta / hdus[0].header['CDELT2']
+
+    kernel = Tophat2DKernel(theta_pix)
+    result = compute_lima_map(hdus['counts'], hdu['background'],
+                              hdus['exposure'], kernel)
     log.info('Computing derived maps')
-    maps.make_derived_maps()
+
     log.info('Writing {0}'.format(outfile))
-    maps.writeto(outfile, clobber=overwrite)
+    hdu_list = dict_to_hdulist(result, header)
+    hdu_list.writeto(outfile, clobber=overwrite)
