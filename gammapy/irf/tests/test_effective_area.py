@@ -1,80 +1,38 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
+
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
-from astropy.units import Quantity
 from astropy.coordinates import Angle
-from astropy.utils.data import get_pkg_data_filename
-from astropy.tests.helper import pytest
 from astropy.io import fits
-from ...utils.testing import requires_dependency, requires_data
-from ...irf import EffectiveAreaTable2D, EffectiveAreaTable, abramowski_effective_area
+from astropy.tests.helper import pytest
+from astropy.units import Quantity
+from astropy.utils.data import get_pkg_data_filename
+from numpy.testing import assert_allclose, assert_equal
+
 from ...datasets import gammapy_extra
-
-
-def test_abramowski_effective_area():
-    energy = Quantity(100, 'GeV')
-    area_ref = Quantity(1.65469579e+07, 'cm^2')
-
-    area = abramowski_effective_area(energy, 'HESS')
-    assert_allclose(area, area_ref)
-    assert area.unit == area_ref.unit
-
-    energy = Quantity([0.1, 2], 'TeV')
-    area_ref = Quantity([1.65469579e+07, 1.46451957e+09], 'cm^2')
-
-    area = abramowski_effective_area(energy, 'HESS')
-    assert_allclose(area, area_ref)
-    assert area.unit == area_ref.unit
+from ...irf import EffectiveAreaTable, abramowski_effective_area
+from ...utils.energy import EnergyBounds
+from ...utils.testing import requires_dependency, requires_data, data_manager
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_EffectiveAreaTable():
-    filename = get_pkg_data_filename('data/arf_info.txt')
-    info_str = open(filename, 'r').read()
-
-    filename = gammapy_extra.filename('datasets/hess-crab4_pha/arf_run23526.fits')
-    arf = EffectiveAreaTable.read(filename)
-    assert arf.info() == info_str
-
-
-@requires_data('gammapy-extra')
-def test_EffectiveAreaTable_write(tmpdir):
-    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/arf.fits')
-    irf = EffectiveAreaTable.read(filename)
-
-    filename = str(tmpdir / 'effarea_test.fits')
-    irf.write(filename)
-
-    hdu_list = fits.open(filename)
-    # TODO: replace this with an assert that tests more.
-    assert len(hdu_list) == 2
-
-
-INTERPOLATION_METHODS = ['linear']
-
-
-@pytest.mark.parametrize(('method'), INTERPOLATION_METHODS)
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_EffectiveAreaTable2D(method):
-    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/aeff2D.fits')
-    aeff = EffectiveAreaTable2D.read(filename)
-
-    aeff.interpolation_method = method
-
+def test_EffectivateAreaTable2D(data_manager):
     # Check that nodes are evaluated correctly
-    e_node = 42
+    store = data_manager['hess-crab4-hd-hap-prod2']
+    aeff = store.load(23523, filetype='aeff')
+
+    e_node = 43
     off_node = 3
     offset = aeff.offset[off_node]
-    energy = aeff.energy[e_node]
+    energy = aeff.ebounds.log_centers[e_node]
     actual = aeff.evaluate(offset, energy)
     desired = aeff.eff_area[off_node, e_node]
     assert_allclose(actual, desired)
 
     # Check that values between node make sense
-    energy2 = aeff.energy[e_node + 1]
+    energy2 = aeff.ebounds.log_centers[e_node + 1]
     upper = aeff.evaluate(offset, energy)
     lower = aeff.evaluate(offset, energy2)
     e_val = (energy + energy2) / 2
@@ -87,7 +45,7 @@ def test_EffectiveAreaTable2D(method):
     # Case 1: offset = scalar, energy = None
     offset = Angle(0.234, 'deg')
     actual = aeff.evaluate(offset=offset).shape
-    desired = aeff.energy.shape
+    desired = aeff.ebounds.log_centers.shape
     assert_equal(actual, desired)
 
     # Case 2: offset = scalar, energy = 1Darray
@@ -123,31 +81,67 @@ def test_EffectiveAreaTable2D(method):
 
     # case 6: offset = 2Darray, energy = 1Darray
     nbinse = 16
-    nx, ny = (12,3)
-    offset=np.linspace(1,0,nx*ny).reshape(nx,ny)
+    nx, ny = (12, 3)
+    offset = np.linspace(1, 0, nx * ny).reshape(nx, ny)
     offset = Angle(offset, 'deg')
     energy = Quantity(np.logspace(0, 1, nbinse), 'TeV')
     actual = aeff.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros([nx, ny, nbinse]).shape
     assert_equal(actual, desired)
 
-
     # Test ARF export
     offset = Angle(0.236, 'deg')
     e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
-    energy_lo = e_axis[:-1]
-    energy_hi = e_axis[1:]
 
-    effareafrom2d = aeff.to_effective_area_table(offset, energy_lo, energy_hi)
+    effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
 
-    energy = Quantity(np.sqrt(energy_lo.value * energy_hi.value), 'TeV')
+    energy = EnergyBounds(e_axis).log_centers
     area = aeff.evaluate(offset, energy)
     effarea1d = EffectiveAreaTable(e_axis, area)
 
     test_energy = Quantity(2.34, 'TeV')
-    actual = effareafrom2d.effective_area_at_energy(test_energy)
-    desired = effarea1d.effective_area_at_energy(test_energy)
+    actual = effareafrom2d.evaluate(test_energy)
+    desired = effarea1d.evaluate(test_energy)
     assert_equal(actual, desired)
 
     # Test ARF export #2
-    effareafrom2dv2 = aeff.to_effective_area_table(offset)
+    effareafrom2dv2 = aeff.to_effective_area_table('1.2 deg')
+    actual = effareafrom2dv2.effective_area
+    desired = aeff.evaluate(offset='1.2 deg')
+    assert_equal(actual, desired)
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_EffectiveAreaTable(tmpdir, data_manager):
+
+    store = data_manager['hess-crab4-hd-hap-prod2']
+    aeff = store.load(23523, filetype='aeff')
+    arf = aeff.to_effective_area_table('0.3 deg')
+
+    assert (arf.evaluate() == arf.effective_area).all() == True
+
+    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/arf.fits')
+    irf = EffectiveAreaTable.read(filename)
+
+    filename = str(tmpdir / 'effarea_test.fits')
+    irf.write(filename)
+
+    hdu_list = fits.open(filename)
+    assert len(hdu_list) == 2
+
+
+def test_abramowski_effective_area():
+    energy = Quantity(100, 'GeV')
+    area_ref = Quantity(1.65469579e+07, 'cm^2')
+
+    area = abramowski_effective_area(energy, 'HESS')
+    assert_allclose(area, area_ref)
+    assert area.unit == area_ref.unit
+
+    energy = Quantity([0.1, 2], 'TeV')
+    area_ref = Quantity([1.65469579e+07, 1.46451957e+09], 'cm^2')
+
+    area = abramowski_effective_area(energy, 'HESS')
+    assert_allclose(area, area_ref)
+    assert area.unit == area_ref.unit
