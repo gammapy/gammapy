@@ -34,8 +34,6 @@ def get_list_of_chains():
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_EffectiveArea(data_manager, chain):
-    print (type(chain))
-    print(chain)
     ref_file = make_path(chain['aeff2D_reference_file'])
     ref_aeff = open(str(ref_file), 'r').read()
     store = data_manager[chain['store']]
