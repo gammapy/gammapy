@@ -8,16 +8,6 @@ Data and observation handling (`gammapy.data`)
 
 .. currentmodule:: gammapy.data
 
-.. warning:: The docs for `gammapy.data` are currently a mess. We apologize!
-
-    The reason is that before there was a separate ``gammapy.obs`` sub-package
-    that was merged into `gammapy.data`, and the format specifications were
-    improved and split out into a separate repo: :ref:`gadf:main-page`.
-
-    The Gammapy data and observation handling classes and command line tools
-    will be adapted to those new specs and the `gammapy.data` docs updated
-    in the coming weeks ...
-
 Introduction
 ============
 
@@ -88,11 +78,11 @@ If you'd like to learn more about using `gammapy.data`, read the following sub-p
 .. toctree::
    :maxdepth: 1
 
-   index-old-obs
+   obs_select
+   obs_group
    dm
-   find_observations
-   observation_grouping
    server
+   index-old-obs
 
 
 Reference/API

@@ -49,8 +49,8 @@ def convert_obs_groups_binning_def_michi_to_default():
 
     # convert observation groups binning definition "michi" to "default"
 
-    list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, 'bin_edges'),
-                           ObservationGroupAxis('AZ', azimuth_edges, 'bin_edges')]
+    list_obs_group_axis = [ObservationGroupAxis('ALT', altitude_edges, fmt='edges'),
+                           ObservationGroupAxis('AZ', azimuth_edges, fmt='edges')]
     obs_groups_michi = ObservationGroups(list_obs_group_axis)
     print("Observation groups 'michi':")
     print(obs_groups_michi.obs_groups_table)

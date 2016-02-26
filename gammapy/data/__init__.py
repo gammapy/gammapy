@@ -11,7 +11,8 @@ from .data_store import *
 from .event_list import *
 from .gti import *
 from .observation import *
-from .observers import  *
+from .obsgroup import *
+from .observers import *
 from .spectral_cube import *
 from .telarray import *
 from .utils import *

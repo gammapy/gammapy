@@ -225,7 +225,7 @@ def group_observations(outdir, overwrite, test):
     observation_table_grouped['AZ'] = azimuth
 
     # apply grouping
-    observation_table_grouped = observation_groups.group_observation_table(observation_table_grouped)
+    observation_table_grouped = observation_groups.apply(observation_table_grouped)
 
     # wrap azimuth angles back to [0, 360) deg
     azimuth = Angle(observation_table_grouped['AZ']).wrap_at(Angle(360., 'deg'))
