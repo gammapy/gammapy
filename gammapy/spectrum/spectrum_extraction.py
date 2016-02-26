@@ -1,14 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 import logging
-
 import numpy as np
+from astropy.table import Column
+from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
-
+from astropy.table import Table
 from . import CountsSpectrum
 from .results import SpectrumStats
 from ..extern.pathlib import Path
@@ -18,6 +18,7 @@ from ..data import DataStore, ObservationTable
 from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
+from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..utils.scripts import (
     get_parser, set_up_logging_from_args, read_yaml, make_path,
 )
@@ -50,6 +51,8 @@ class SpectrumExtraction(object):
         List of observations or file containing such a list
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
+
+
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion regions
     bkg_method : dict
@@ -189,7 +192,7 @@ class SpectrumExtraction(object):
             emax = Energy(sec['emax'])
             nbins = sec['nbins']
             ebounds = EnergyBounds.equal_log_spacing(
-                    emin, emax, nbins)
+                emin, emax, nbins)
         else:
             if sec['binning'] is None:
                 raise ValueError("No binning specified")
@@ -327,6 +330,9 @@ class SpectrumObservation(object):
         m['datastore'] = store
         m['ebounds'] = ebounds
         m['obs_id'] = obs_id
+        m['zen'] = 90 - event_list.meta['ALT_PNT']
+        m['coszen'] = np.cos(m['zen'] * np.pi / 180.)
+        m['muoneff'] = event_list.meta['MUONEFF']
 
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
@@ -336,7 +342,7 @@ class SpectrumObservation(object):
             m['psf_containment'] = float(cont)
 
         if dry_run:
-          return cls(obs_id, None, None, None, None, meta=m)
+            return cls(obs_id, None, None, None, None, meta=m)
 
         b = BackgroundEstimator(event_list, m)
         b.make_off_vector()
@@ -365,50 +371,77 @@ class SpectrumObservation(object):
         return cls(obs_id, on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
     @classmethod
-    def from_observation_list(cls, obs_list, obs_id=None):
+    def grouping_from_an_observation_list(cls, obs_list, obs_stacked_id):
+
         """Create `~gammapy.spectrum.SpectrumObservations` from list
 
-        Observation stacking is implemented as follows
+       Observation stacking is implemented as follows
 
-        Averaged exposure ratio between ON and OFF regions
+       Averaged exposure ratio between ON and OFF regions, arf and rmf
 
-        :math:`\\alpha_{\\mathrm{tot}}` for all observations is calculated as
+       :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
 
-        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
+       .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
 
-        where :math:`N_i` is the number of OFF counts for observation :math:`i`
+       .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
 
-        Parameters
-        ----------
-        obs_list : list of `~gammapy.spectrum.SpectrumObservations`
-            Observations to stack
-        obs_id : int, optional
-            Observation ID for stacked observations
-        """
-        obs_id = 0 if obs_id is None else obs_id
+       .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot
+       livetime_i}
 
+
+       Parameters
+       ----------
+       obs_list : list of `~gammapy.spectrum.SpectrumObservations`
+           Observations to stack
+       obs_stacked_id : int, optional
+           Observation ID for stacked observations
+       """
+        # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
+        on_vec.meta["obs_id"] = obs_stacked_id
         off_vec = np.sum([o.off_vector for o in obs_list])
-        # Todo : Stack RMF and ARF
-        arf = None
-        rmf = None
 
-        # Calculate average alpha (remove?)
-        val = [o.alpha * o.off_vector.total_counts for o in obs_list]
-        num = np.sum(val)
-        den = np.sum([o.off_vector.total_counts for o in obs_list])
-        alpha = num/den
-        off_vec.meta.backscal = 1. / alpha
+        # Stack arf vector
+        arf_band = [o.effective_area.effective_area * o.meta.livetime.value for o in obs_list]
+        arf_band_tot = np.sum(arf_band, axis=0)
+        livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
+        arf_vec = arf_band_tot / livetime_tot
+        ebounds = obs_list[0].effective_area.ebounds
+        arf = EffectiveAreaTable(ebounds, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
 
-        #Calculate safe energy range
-        emin = min([_.meta.safe_energy_range[0] for _ in obs_list])
-        emax = max([_.meta.safe_energy_range[1] for _ in obs_list])
+        # Stack rmf vector
+        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
+                    o in obs_list]
+        rmf_band_tot = np.sum(rmf_band, axis=0)
+        pdf_mat = rmf_band_tot / arf_band_tot
+        etrue = obs_list[0].energy_dispersion.true_energy
+        ereco = obs_list[0].energy_dispersion.reco_energy
+        inan = np.isnan(pdf_mat)
+        pdf_mat[inan] = 0
+        rmf = EnergyDispersion(pdf_mat.T, etrue, ereco)
 
+        # Calculate average alpha
+        alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
+        alpha_band_tot = np.sum(alpha_band)
+        off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
+        alpha_mean = alpha_band_tot / off_tot
+        off_vec.meta.backscal = 1. / alpha_mean
+
+        # Calculate energy range
+        # TODO: for the moment we take the minimum range for the energybin but we have to take the largest one
+        # and to compute livetime that varries from energy bin to bin
+        #emin = max([_.meta.energy_range[0] for _ in obs_list])
+        #emax = min([_.meta.energy_range[1] for _ in obs_list])
+        emin = max([_.meta.ebounds[0] for _ in obs_list])
+        emax = min([_.meta.ebounds[1] for _ in obs_list])
+        
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.obs_id for o in obs_list]
-        m['alpha_method1'] = alpha
-        return cls(obs_id, on_vec, off_vec, arf, rmf, meta=m)
+        m['alpha_method1'] = alpha_mean
+        m['livetime'] = Quantity(livetime_tot, "s")
+        # import IPython; IPython.embed()
+        return cls(obs_stacked_id, on_vec, off_vec, rmf, arf, meta=m)
 
     @property
     def alpha(self):
@@ -483,7 +516,7 @@ class SpectrumObservation(object):
         else:
             raise ValueError('Undefined method: {}'.format(method))
 
-        off_vec.meta.update(backscal = self.off_vector.meta.backscal)
+        off_vec.meta.update(backscal=self.off_vector.meta.backscal)
         m = copy.deepcopy(self.meta)
         m.update(energy_range=energy_range)
 
@@ -515,7 +548,7 @@ class SpectrumObservation(object):
         """
 
         cwd = Path.cwd()
-        outdir = cwd if outdir is None else cwd /make_path(outdir)
+        outdir = cwd if outdir is None else cwd / make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         if phafile is None:
@@ -527,14 +560,14 @@ class SpectrumObservation(object):
         if bkgfile is None:
             bkgfile = "bkg_run{}.fits".format(self.obs_id)
 
-        self.meta['phafile'] = str(outdir/phafile)
+        self.meta['phafile'] = str(outdir / phafile)
 
-        self.on_vector.write(str(outdir/phafile), bkg=str(bkgfile), arf=str(arffile),
+        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
                              rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(outdir/bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir/arffile), energy_unit='keV',
+        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
                                   effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(outdir/rmffile), energy_unit='keV',
+        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=clobber)
 
     def plot_exclusion_mask(self, size=None, **kwargs):
@@ -575,14 +608,14 @@ class SpectrumObservation(object):
 
         if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
             center = self.meta.pointing.galactic
-            xlim = (center.l + extent/2).value, (center.l - extent/2).value
-            ylim = (center.b + extent/2).value, (center.b - extent/2).value
+            xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
+            ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
         else:
             center = self.meta.pointing.icrs
-            xlim = (center.ra + extent/2).value, (center.ra - extent/2).value
-            ylim = (center.dec + extent/2).value, (center.dec - extent/2).value
+            xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
+            ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
 
-        limits = ax.wcs.wcs_world2pix(xlim, ylim,1)
+        limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
         ax.set_xlim(limits[0])
         ax.set_ylim(limits[1])
 
@@ -590,25 +623,33 @@ class SpectrumObservation(object):
 class SpectrumObservationList(list):
     """List of `~gammapy.spectrum.SpectrumObservation`
     """
-    def get_obs_by_id(self, id):
+
+    # @classmethod
+    def get_obslist_from_obsid(self, list_ids):
         """Return an observation with a certain id
 
         Parameters
         ----------
-        id : int
-            Observation Id (runnumber)
+        list_ids : list of int
+            List of Observation Id (runnumber)
 
         Returns
         -------
-        observation : `~gammapy.spectrum.SpectrumObservation`
-            Spectrum observation
+        observation : `~gammapy.spectrum.SpectrumObservationList`
+            List of `~gammapy.spectrum.SpectrumObservation`
         """
-        ids = [o.obs_id for o in self]
-        try:
-            i = ids.index(id)
-        except ValueError:
-            raise ValueError("Observation {} not in list".format(id))
-        return self[i]
+        new_list = list()
+
+        for id in list_ids:
+            ids = [o.obs_id for o in self]
+            try:
+                i = ids.index(id)
+            except ValueError:
+                raise ValueError("Observation {} not in list".format(id))
+
+            new_list.append(self[i])
+
+        return SpectrumObservationList(new_list)
 
     @property
     def total_spectrum(self):
@@ -669,15 +710,20 @@ class SpectrumObservationList(list):
         obs = [SpectrumObservation.read_ogip(_) for _ in dir.glob('*.pha')]
         return cls(obs)
 
-    def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable`"""
-        names = ['OBS_ID', 'PHAFILE', 'OFFSET']
-        col1 = [o.obs_id for o in self]
-        col2 = [o.meta.phafile for o in self]
-        col3 = [o.meta.offset.value for o in self]
-        return ObservationTable(data=[col1, col2, col3], names=names)
-
-
+    def to_observation_table(self, moreparameters=False):
+        """Create `~gammapy.data.ObservationTable"""
+        observation_table= ObservationTable()
+        keys = ['obs_id', 'phafile', 'offset', 'coszen', 'muoneff']
+        names = ['OBS_ID', 'PHAFILE', 'offset', 'coszen', 'muoneff']
+        for key,name in zip(keys, names):
+            if key in self[0].meta:
+                if key=="offset" :
+                    col=Column(Angle([o.meta[key].value for o in self], "deg"), name)
+                else:
+                    col=Column([o.meta[key] for o in self], name)
+                observation_table.add_column(col)
+        return observation_table
+    
 class BackgroundEstimator(object):
     """TBD
 
