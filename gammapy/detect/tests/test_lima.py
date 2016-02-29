@@ -11,7 +11,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, compute_lima_map, compute_lima_on_off_map
 from ...datasets.core import _GammapyExtra
 from ...datasets import load_poisson_stats_image
-from ...data import FitsMapBunch
+from ...data import MapsBunch
 
 from pathlib import Path
 
@@ -43,7 +43,7 @@ def test_compute_lima_on_off_map():
     """
     filename = _GammapyExtra().filename('test_datasets/unbundled/'
                                         'hess/survey/hess_survey_snippet.fits.gz')
-    data = FitsMapBunch.read(filename)
+    data = MapsBunch.read(filename)
 
     kernel = Tophat2DKernel(5)
 

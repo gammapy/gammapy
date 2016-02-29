@@ -6,29 +6,13 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 
-from ..extern.bunch import Bunch
+from ..data import MapsBunch
 from ..stats import significance, significance_on_off
 
 __all__ = ['compute_lima_map', 'compute_lima_on_off_map']
 
 log = logging.getLogger(__name__)
 
-
-def _convolve_boundary_nan(array, kernel, fft=True):
-    """
-    Wrapper for `~scipy.signal.convolve` an `~scipy.signal.fftconvolve` that
-    sets all values in the results array, that would require any kind of
-    boundary handling to NaN and thus leaves the total size of the resulting
-    array unchanged.
-    """
-    from scipy.signal import convolve, fftconvolve
-
-    _convolve = fftconvolve if fft else convolve
-
-    result = _convolve(array, kernel, mode='valid')
-    padding = [ _ // 2 for _ in kernel.shape]
-    return np.pad(result, (padding, padding), mode=str('constant'),
-                  constant_values=np.nan)
 
 
 def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
@@ -55,6 +39,8 @@ def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
     Bunch : `gammapy.extern.bunch.Bunch`
         Bunch of result maps.
     """
+    from scipy.ndimage import convolve
+
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
 
@@ -62,35 +48,35 @@ def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    counts_ = _convolve_boundary_nan(counts, kernel.array, fft=fft)
-    background_ = _convolve_boundary_nan(background, kernel.array, fft=fft)
+    counts_ = convolve(counts, kernel.array, mode='constant', cval=np.nan)
+    background_ = convolve(background, kernel.array, mode='constant', cval=np.nan)
 
     significance_lima = significance(counts_, background_, method='lima') 
 
-    result = Bunch(significance=significance_lima,
-                   counts=counts_,
-                   background=background_,
-                   excess= counts_ - background_)
+    result = MapsBunch(significance=significance_lima,
+                       counts=counts_,
+                       background=background_,
+                       excess= counts_ - background_)
 
     if not exposure is None:
         kernel.normalize('integral')
-        exposure_ = _convolve_boundary_nan(exposure, kernel.array, fft=fft)
+        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
         flux = (counts_ - background_) / exposure_
         result.flux = flux
 
     return result
 
 
-def compute_lima_on_off_map(counts, off, a_on, a_off, kernel, exposure=None,
+def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
                             fft=False):
     """
     Compute Li&Ma significance and flux maps on off observation.
 
     Parameters
     ----------
-    counts : `~numpy.ndarray`
-        Count map
-    off : `~numpy.ndarray`
+    n_on : `~numpy.ndarray`
+        Counts map.
+    n_off : `~numpy.ndarray`
         Off counts map.
     a_on : `~numpy.ndarray`
         Relative .
@@ -108,7 +94,8 @@ def compute_lima_on_off_map(counts, off, a_on, a_off, kernel, exposure=None,
     Bunch : `gammapy.extern.bunch.Bunch`
         Bunch of result maps.   
     """
- 
+    from scipy.ndimage import convolve
+
     # Kernel is modified later make a copy here
     kernel = deepcopy(kernel)
 
@@ -116,26 +103,27 @@ def compute_lima_on_off_map(counts, off, a_on, a_off, kernel, exposure=None,
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    counts_ = _convolve_boundary_nan(counts, kernel.array, fft=fft)
-    a_ = _convolve_boundary_nan(a_on, kernel.array, fft=fft)
+    n_on_ = convolve(n_on, kernel.array, mode='constant', cval=np.nan)
+    a_ = convolve(a_on, kernel.array, mode='constant', cval=np.nan)
     alpha = a_ / a_off
-    background = alpha * off
+    background = alpha * n_off
 
-    significance_lima = significance_on_off(counts_, off, alpha, method='lima')
+    significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
     
-    # safe significance threshold. Is this worse making an option?
-    significance_lima[counts_ < 5] = 0
+    # safe significance threshold. Is this worse making an option to
+    # significance()?
+    significance_lima[n_on_ < 5] = 0
 
-    result = Bunch(significance=significance_lima,
-                   counts=counts_,
-                   background=background,
-                   excess=counts_ - background,
-                   alpha=alpha)
+    result = MapsBunch(significance=significance_lima,
+                       n_on=n_on_,
+                       background=background,
+                       excess=n_on_ - background,
+                       alpha=alpha)
 
     if not exposure is None:
         kernel.normalize('integral')
-        exposure_ = _convolve_boundary_nan(exposure, kernel.array, fft=fft)
-        flux = (counts_ - background_) / exposure_
+        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
+        flux = (n_on_ - background_) / exposure_
         result.flux = flux
 
     return result

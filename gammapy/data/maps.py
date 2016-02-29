@@ -5,14 +5,14 @@ import logging
 from ..extern.bunch import Bunch
 from astropy.io import fits
 
-__all__ = ['FitsMapBunch']
+__all__ = ['MapsBunch']
 
 log = logging.getLogger(__name__)
 
 
-class FitsMapBunch(Bunch):
+class MapsBunch(Bunch):
     """
-    Minimal version of future Fits map container class.
+    Minimal version of a future map container class.
     """
     @classmethod
     def read(cls, filename):
@@ -24,15 +24,13 @@ class FitsMapBunch(Bunch):
         filename : str
             Fits file name.
         """
+        hdulist = fits.open(filename)
         kwargs = {}
-        
-        # list of map names to save maps order in fits file
-        _map_names = []
-        for hdu in fits.open(filename):
-            try:
-                name = hdu.header['HDUNAME']
-            except KeyError:
-                name = hdu.name.lower()
+        _map_names = []  # list of map names to save order in fits file
+        kwargs['_ref_header'] = hdulist[0].header
+
+        for hdu in hdulist:
+            name =  hdu.header.get('HDUNAME', hdu.name.lower())
             kwargs[name] = hdu.data
             _map_names.append(name)
         kwargs['_map_names'] = _map_names
@@ -47,14 +45,12 @@ class FitsMapBunch(Bunch):
         ----------
         filename : str
             Fits file name.
- 
+        header : `~astropy.io.fits.Header`
+            Reference header to be used for all maps. 
         """
         hdulist = fits.HDUList()
-        try:
-            names = self._map_names
-        except AttributeError:
-            names = sorted(self)
-        for name in names:
+        header = header or self.get('_ref_header')
+        for name in self.get('_map_names', sorted(self)):
             hdu = fits.ImageHDU(data=self[name], header=header, name=name)
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
