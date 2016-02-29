@@ -8,13 +8,13 @@ from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObse
 from ..data import ObservationGroupAxis, ObservationGroups
 
 __all__ = [
-    'SpectralGrouping',
+    'SpectrumGrouping',
 ]
 
 log = logging.getLogger(__name__)
 
 
-class SpectralGrouping(object):
+class SpectrumGrouping(object):
     """
     Class that will define the band and the observations in each band from an observation list.
 
@@ -28,8 +28,8 @@ class SpectralGrouping(object):
     def __init__(self, spectrum_observation_list):
         self.spectrum_observation_list = spectrum_observation_list
 
-    def define_spectral_groups(self, offset_range=[0, 2.5], n_off_bin=25, eff_range=[0, 100], n_eff_bin=40,
-                               zen_range=[0., 70.], n_zen_bin=30):
+    def define_spectral_groups(self, offset_range=[0, 2.5], n_off_bin=5, eff_range=[0, 100], n_eff_bin=4,
+                               zen_range=[0., 70.], n_zen_bin=7):
         """Define the number of bands in zenith, efficiency and offset.
     
         Parameters
@@ -60,9 +60,9 @@ class SpectralGrouping(object):
         offtab = Angle(np.linspace(offmin, offmax, n_off_bin + 1), "deg")
         efftab = Quantity(np.linspace(effmin, effmax, n_eff_bin + 1), "")
         coszentab = Quantity(np.linspace(coszenmin, coszenmax, n_zen_bin + 1), "")
-        list_obs_group_axis = [ObservationGroupAxis('muoneff', efftab / 100., 'bin_edges'),
-                               ObservationGroupAxis('coszen', coszentab, 'bin_edges'),
-                               ObservationGroupAxis('offset', offtab, 'bin_edges')]
+        list_obs_group_axis = [ObservationGroupAxis('MUONEFF', efftab / 100., 'bin_edges'),
+                               ObservationGroupAxis('COSZEN', coszentab, 'bin_edges'),
+                               ObservationGroupAxis('OFFSET', offtab, 'bin_edges')]
         # list_obs_group_axis = [ObservationGroupAxis('coszen', CosZentab, 'bin_edges'),
         # ObservationGroupAxis('offset', Offtab, 'bin_edges')]
         obs_groups = ObservationGroups(list_obs_group_axis)
@@ -83,7 +83,8 @@ class SpectralGrouping(object):
 
         """
         # Define a new observation table with the number of each band for each observation
-        observation_table = self.spectrum_observation_list.to_observation_table(True)
+        observation_table = self.spectrum_observation_list.to_observation_table()
+
         obs_table_grouped = obs_groups.group_observation_table(observation_table)
 
         nband = obs_groups.n_groups
@@ -95,15 +96,14 @@ class SpectralGrouping(object):
                 continue
             else:
                 list_obsid = tablegroup["OBS_ID"]
-                list_obs_band = self.spectrum_observation_list.get_obslist_from_obsid(list_obsid)
-
-                obsband = SpectrumObservation.grouping_from_an_observation_list(list_obs_band, nb)
+                list_obs_band = self.spectrum_observation_list.get_obslist_from_ids(list_obsid)
+                obsband = SpectrumObservation.stack_observation_list(list_obs_band, nb)
                 list_band.append(obsband)
 
         return SpectrumObservationList(list_band)
 
-    def define_groups_and_stack(self, offset_range=[0, 2.5], n_off_bin=25, eff_range=[0, 100], n_eff_bin=40,
-                                zen_range=[0., 70.], n_zen_bin=30):
+    def define_groups_and_stack(self, offset_range=[0, 2.5], n_off_bin=5, eff_range=[0, 100], n_eff_bin=4,
+                                zen_range=[0., 70.], n_zen_bin=7):
         """Define the number of bands in zenith, efficiency and offset and stack the events in each band
         using the previous method
 

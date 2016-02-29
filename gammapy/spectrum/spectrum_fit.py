@@ -324,7 +324,7 @@ class SpectrumFit(object):
         self.n_pred = dict()
         for obs in self.obs_list:
             temp = CountsSpectrum.get_npred(self.result, obs)
-            self.n_pred[obs.obs_id] = temp
+            self.n_pred[obs.meta.obs_id] = temp
 
     def write_npred(self, outdir=None):
         """Write predicted counts PHA file
