@@ -3,6 +3,7 @@ from __future__ import (print_function)
 
 import numpy as np
 from astropy import log
+from astropy.coordinates import Angle
 
 from ..extern.bunch import Bunch
 from ..utils.array import array_stats_str
@@ -57,7 +58,7 @@ class CountsSpectrum(object):
         self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
     @classmethod
-    def read(cls, phafile, rmffile=None):
+    def read_pha(cls, phafile, rmffile=None):
         """Read PHA fits file
 
         The energy binning is not contained in the PHA standard. Therefore is
@@ -90,11 +91,54 @@ class CountsSpectrum(object):
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
-        m = dict(header)
+        m = dict()
+
+        # Todo: think about better way to handle this
+        m.update(backscal=header['BACKSCAL'])
+        m.update(obs_id=header['OBS_ID'])
         m.update(livetime=Quantity(header['EXPOSURE'], 's'))
+        m.update(rmf=header['RESPFILE'])
+        m.update(arf=header['ANCRFILE'])
+        m.update(bkg=header['BACKFILE'])
+        if 'OFFSET' in header.keys():
+            m.update(offset=Angle(header['OFFSET'], 'deg'))
+        if 'ZENITH' in header.keys():
+            m.update(zenith=Angle(header['ZENITH'], 'deg'))
+        if 'MUONEFF' in header.keys():
+            m.update(muoneff=header['MUONEFF'])
         if 'LO_THRES' in header.keys():
             rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
             m.update(safe_energy_range=rng)
+
+        return cls(counts, bins, meta=m)
+
+    @classmethod
+    def read_bkg(cls, bkgfile, rmffile):
+        """Read BKG fits file
+
+        The energy binning is not contained in the PHA standard. Therefore is
+        is inferred from the corresponding RMF EBOUNDS extension.
+
+        Todo: Should the energy binning be in the BKG file?
+
+        Parameters
+        ----------
+        phafile : str
+            PHA file with ``SPECTRUM`` extension
+        rmffile : str
+            RMF file with ``EBOUNDS`` extennsion
+        """
+        bkgfile = make_path(bkgfile)
+        spectrum = fits.open(str(bkgfile))['SPECTRUM']
+        counts = [val[1] for val in spectrum.data]
+        rmffile = make_path(rmffile)
+        ebounds = fits.open(str(rmffile))['EBOUNDS']
+        bins = EnergyBounds.from_ebounds(ebounds)
+        header = spectrum.header
+        m = dict()
+        m.update(backscal=header['BACKSCAL'])
+        m.update(livetime=Quantity(header['EXPOSURE'], 's'))
+
         return cls(counts, bins, meta=m)
 
     @classmethod
@@ -287,10 +331,10 @@ class CountsSpectrum(object):
             header['OBS_ID'] = self.meta.obs_id
         if 'offset' in val:
             header['OFFSET'] = self.meta.offset.to('deg').value, 'Target offset from pointing position'
-        if 'muon_eff' in val:
-            header['MUONEFF'] = self.meta.muon_eff, 'Muon efficiency'
+        if 'muoneff' in val:
+            header['MUONEFF'] = self.meta.muoneff, 'Muon efficiency'
         if 'zenith' in val:
-            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle'
+            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle [deg]'
         if 'on_region' in val:
             header['RA-OBJ'] = self.meta.on_region.pos.icrs.ra.value, 'Right ascension of the target'
             header['DEC-OBJ'] = self.meta.on_region.pos.icrs.dec.value , 'Declination of the target'

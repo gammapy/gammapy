@@ -41,7 +41,7 @@ def test_CountsSpectrum():
 
     # Read pha file
     f = gammapy_extra.filename('datasets/hess-crab4_pha/pha_run23526.pha')
-    pha1 = CountsSpectrum.read(f)
+    pha1 = CountsSpectrum.read_pha(f)
 
     #add two spectra
     bins = pha1.energy_bounds.nbins
@@ -68,4 +68,4 @@ def test_n_pred():
     n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]
     n_pred = np.sum(n_pred_vec)
 
-    assert_allclose(max(n_pred.counts), 48.6, atol=0.1)
+    assert_allclose(max(n_pred.counts), 50.8, atol=0.1)

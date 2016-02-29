@@ -1,16 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
+import numpy as np
 from astropy.coordinates import SkyCoord, Angle
-
+from numpy.testing import assert_allclose
 from ...data import DataStore
+from ...spectrum.results import SpectrumFitResult, SpectrumStats
+from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
+from ...region import SkyCircleRegion
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...region import SkyCircleRegion
 from ...spectrum import SpectrumExtraction
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 
 
 @requires_dependency('scipy')
@@ -29,17 +33,55 @@ def test_spectrum_extraction(tmpdir):
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
-    obs = [23523, 23559, 11111]
+    obs = [23523, 23559, 11111, 23592]
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
 
     ana = SpectrumExtraction(datastore=ds, obs_ids=obs, on_region=on_region,
-                           bkg_method=bkg_method, exclusion=excl,
-                           ebounds=bounds)
+                             bkg_method=bkg_method, exclusion=excl,
+                             ebounds=bounds)
 
-    #test methods on SpectrumObservationList
+    # test methods on SpectrumObservationList
     obs = ana.observations
-    assert len(obs) == 2
-    obs23523 = obs.get_obs_by_id(23523)
+    assert len(obs) == 3
+    obs23523 = obs.get_obslist_from_ids([23523])[0]
     assert obs23523.on_vector.total_counts == 123
+    new_list = obs.get_obslist_from_ids([23523, 23592])
+    assert new_list[0].meta.obs_id == 23523
+    assert new_list[1].meta.obs_id == 23592
+
+@requires_data('gammapy-extra')
+def test_observation_stacking():
+    phadir = gammapy_extra.filename('datasets/hess-crab4_pha')
+    temp = SpectrumObservationList.read_ogip(phadir)
+    observations = temp.get_obslist_from_ids([23523, 23592])
+    spectrum_observation_grouped = SpectrumObservation.stack_observation_list(observations, 0)
+    obs0 = observations[0]
+    obs1 = observations[1]
+
+    # Test sum on/off vector and alpha group
+    sum_on_vector = obs0.on_vector.counts + obs1.on_vector.counts
+    sum_off_vector = obs0.off_vector.counts + obs1.off_vector.counts
+    alpha_times_off_tot = obs0.alpha * obs0.off_vector.total_counts + obs1.alpha * obs1.off_vector.total_counts
+    total_off = obs0.off_vector.total_counts + obs1.off_vector.total_counts
+
+    assert_allclose(spectrum_observation_grouped.on_vector.counts, sum_on_vector)
+    assert_allclose(spectrum_observation_grouped.off_vector.counts, sum_off_vector)
+    assert_allclose(spectrum_observation_grouped.alpha, alpha_times_off_tot / total_off)
+
+    # Test arf group
+    total_time = obs0.meta.livetime + obs1.meta.livetime
+    arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
+                         + obs1.meta.livetime * obs1.effective_area.effective_area
+    assert_allclose(spectrum_observation_grouped.effective_area.effective_area, arf_times_livetime / total_time)
+    # Test rmf group
+    rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.effective_area \
+                                   * obs0.energy_dispersion.pdf_matrix.T \
+                                   + obs1.meta.livetime * obs1.effective_area.effective_area \
+                                     * obs1.energy_dispersion.pdf_matrix.T
+
+    inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
+    pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime
+    pdf_expexted[inan] = 0
+    assert_allclose(spectrum_observation_grouped.energy_dispersion.pdf_matrix, pdf_expexted.T, atol=1e-6)
 
