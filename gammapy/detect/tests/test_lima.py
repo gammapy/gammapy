@@ -13,7 +13,7 @@ from ...datasets.core import _GammapyExtra
 from ...datasets import load_poisson_stats_image
 from ...data import MapsBunch
 
-from pathlib import Path
+from ...extern.pathlib import Path
 
 
 @requires_dependency('scipy')
