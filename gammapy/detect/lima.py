@@ -70,7 +70,7 @@ def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
 def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
                             fft=False):
     """
-    Compute Li&Ma significance and flux maps on off observation.
+    Compute Li&Ma significance and flux maps for on-off observations.
 
     Parameters
     ----------
@@ -109,11 +109,11 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
     background = alpha * n_off
 
     significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
-    
+
     # safe significance threshold. Is this worse making an option to
     # significance()?
     significance_lima[n_on_ < 5] = 0
-
+    
     result = MapsBunch(significance=significance_lima,
                        n_on=n_on_,
                        background=background,
