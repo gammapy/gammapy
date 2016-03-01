@@ -3,6 +3,7 @@ from __future__ import (print_function)
 
 import numpy as np
 from astropy import log
+from astropy.coordinates import Angle
 
 from ..extern.bunch import Bunch
 from ..utils.array import array_stats_str
@@ -19,20 +20,15 @@ __all__ = ['CountsSpectrum']
 
 class CountsSpectrum(object):
     """Counts spectrum dataset
-
     Parameters
     ----------
-
     counts : `~numpy.array`, list
         Counts
     energy : `~gammapy.utils.energy.EnergyBounds`
         Energy axis
-
     Examples
     --------
-
     .. code-block:: python
-
         from gammapy.utils.energy import Energy, EnergyBounds
         from gammapy.data import CountsSpectrum
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV')
@@ -57,14 +53,11 @@ class CountsSpectrum(object):
         self.channels = np.arange(1, self.energy_bounds.nbins + 1, 1)
 
     @classmethod
-    def read(cls, phafile, rmffile=None):
+    def read_pha(cls, phafile, rmffile=None):
         """Read PHA fits file
-
         The energy binning is not contained in the PHA standard. Therefore is
         is inferred from the corresponding RMF EBOUNDS extension.
-
         Todo: Should the energy binning be in the PHA file?
-
         Parameters
         ----------
         phafile : str
@@ -90,20 +83,58 @@ class CountsSpectrum(object):
         rmffile = make_path(rmffile)
         ebounds = fits.open(str(rmffile))['EBOUNDS']
         bins = EnergyBounds.from_ebounds(ebounds)
-        m = dict(header)
+        m = dict()
+
+        # Todo: think about better way to handle this
+        m.update(backscal=header['BACKSCAL'])
+        m.update(obs_id=header['OBS_ID'])
         m.update(livetime=Quantity(header['EXPOSURE'], 's'))
+        m.update(rmf=header['RESPFILE'])
+        m.update(arf=header['ANCRFILE'])
+        m.update(bkg=header['BACKFILE'])
+        if 'OFFSET' in header.keys():
+            m.update(offset=Angle(header['OFFSET'], 'deg'))
+        if 'ZENITH' in header.keys():
+            m.update(zenith=Angle(header['ZENITH'], 'deg'))
+        if 'MUONEFF' in header.keys():
+            m.update(muoneff=header['MUONEFF'])
         if 'LO_THRES' in header.keys():
             rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
             m.update(safe_energy_range=rng)
+
+        return cls(counts, bins, meta=m)
+
+    @classmethod
+    def read_bkg(cls, bkgfile, rmffile):
+        """Read BKG fits file
+        The energy binning is not contained in the PHA standard. Therefore is
+        is inferred from the corresponding RMF EBOUNDS extension.
+        Todo: Should the energy binning be in the BKG file?
+        Parameters
+        ----------
+        phafile : str
+            PHA file with ``SPECTRUM`` extension
+        rmffile : str
+            RMF file with ``EBOUNDS`` extennsion
+        """
+        bkgfile = make_path(bkgfile)
+        spectrum = fits.open(str(bkgfile))['SPECTRUM']
+        counts = [val[1] for val in spectrum.data]
+        rmffile = make_path(rmffile)
+        ebounds = fits.open(str(rmffile))['EBOUNDS']
+        bins = EnergyBounds.from_ebounds(ebounds)
+        header = spectrum.header
+        m = dict()
+        m.update(backscal=header['BACKSCAL'])
+        m.update(livetime=Quantity(header['EXPOSURE'], 's'))
+
         return cls(counts, bins, meta=m)
 
     @classmethod
     def from_eventlist(cls, event_list, bins):
         """Create CountsSpectrum from fits 'EVENTS' extension (`CountsSpectrum`).
-
         Subsets of the event list should be chosen via the appropriate methods
         in `~gammapy.data.EventList`.
-
         Parameters
         ----------
         event_list : `~astropy.io.fits.BinTableHDU, `gammapy.data.EventListDataSet`,
@@ -129,7 +160,6 @@ class CountsSpectrum(object):
     @classmethod
     def get_npred(cls, fit, obs):
         """Get N_pred vector from spectral fit
-
         Parameters
         ----------
         fit : SpectrumFitResult
@@ -175,7 +205,6 @@ class CountsSpectrum(object):
 
     def __add__(self, other):
         """Add two counts spectra and returns new instance
-
         The two spectra need to have the same binning
         """
         if (self.energy_bounds != other.energy_bounds).all():
@@ -193,7 +222,6 @@ class CountsSpectrum(object):
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
               *args, **kwargs):
         """Write PHA to FITS file.
-
         Calls `gammapy.spectrum.CountsSpectrum.to_fits` and
         `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
@@ -202,10 +230,8 @@ class CountsSpectrum(object):
 
     def to_fits(self, bkg=None, corr=None, rmf=None, arf=None):
         """Convert to FITS format
-
         This can be used to write a :ref:`gadf:ogip-pha`. Meta info is written
         in the fits header.
-
         Parameters
         ----------
         bkg : str
@@ -216,12 +242,10 @@ class CountsSpectrum(object):
             :ref:`gadf:ogip-rmf` containing the corresponding energy resolution
         arf : str
             :ref:`gadf:ogip-arf` containing the corresponding effective area
-
         Returns
         -------
         pha : `~astropy.io.fits.BinTableHDU`
             PHA FITS HDU
-
         Notes
         -----
         For more info on the PHA FITS file format see:
@@ -287,10 +311,10 @@ class CountsSpectrum(object):
             header['OBS_ID'] = self.meta.obs_id
         if 'offset' in val:
             header['OFFSET'] = self.meta.offset.to('deg').value, 'Target offset from pointing position'
-        if 'muon_eff' in val:
-            header['MUONEFF'] = self.meta.muon_eff, 'Muon efficiency'
+        if 'muoneff' in val:
+            header['MUONEFF'] = self.meta.muoneff, 'Muon efficiency'
         if 'zenith' in val:
-            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle'
+            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle [deg]'
         if 'on_region' in val:
             header['RA-OBJ'] = self.meta.on_region.pos.icrs.ra.value, 'Right ascension of the target'
             header['DEC-OBJ'] = self.meta.on_region.pos.icrs.dec.value , 'Declination of the target'
@@ -306,16 +330,13 @@ class CountsSpectrum(object):
     def plot(self, ax=None, weight=1, energy_unit='TeV', **kwargs):
         """
         Plot counts vector
-
         kwargs are forwarded to matplotlib.pyplot.hist
-
         Parameters
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
         weight : float
             Weighting factor for the counts
-
         Returns
         -------
         ax: `~matplotlib.axis`

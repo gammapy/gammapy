@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
 import numpy as np
-
 from astropy.extern import six
-
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
 from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
@@ -22,7 +19,6 @@ log = logging.getLogger(__name__)
 class SpectrumFit(object):
     """
     Spectral Fit
-
     Parameters
     ----------
     obs_list : SpectrumObservationList
@@ -46,7 +42,6 @@ class SpectrumFit(object):
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
-
         Required columns
         - OBS_ID
         - PHAFILE
@@ -62,7 +57,6 @@ class SpectrumFit(object):
     @classmethod
     def from_configfile(cls, configfile):
         """Create `~gammapy.spectrum.SpectrumFit` from configfile
-
         Parameters
         ----------
         configfile : str
@@ -77,7 +71,6 @@ class SpectrumFit(object):
     @classmethod
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` using a config dict
-
         The spectrum extraction step has to have run before
         """
         config = config['fit']
@@ -98,7 +91,6 @@ class SpectrumFit(object):
     @model.setter
     def model(self, model, name=None):
         """
-
         Parameters
         ----------
         model : `~sherpa.models.ArithmeticModel`
@@ -138,7 +130,6 @@ class SpectrumFit(object):
     @statistic.setter
     def statistic(self, stat):
         """Set Statistic to be used in the fit
-
         Parameters
         ----------
         stat : `~sherpa.stats.Stat`, str
@@ -163,7 +154,6 @@ class SpectrumFit(object):
     def energy_threshold_low(self):
         """
         Low energy threshold of the spectral fit
-
         If a list of observations is fit at the same time, this is a list with
         the theshold for each observation.
         """
@@ -173,7 +163,6 @@ class SpectrumFit(object):
     def energy_threshold_low(self, energy):
         """
         Low energy threshold setter
-
         Parameters
         ----------
         energy : `~gammapy.utils.energy.Energy`, str
@@ -182,7 +171,7 @@ class SpectrumFit(object):
         energy = Energy(energy)
         shape = len(self.obs_list)
         if energy.shape is ():
-            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
             raise ValueError('Dimension to not match: {} {}'.format(
@@ -192,19 +181,17 @@ class SpectrumFit(object):
 
     @property
     def energy_threshold_high(self):
-       """
-       High energy threshold of the spectral fit
-
-       If a list of observations is fit at the same time, this is a list with
-       the threshold for each observation.
-       """
-       return self._thres_hi
+        """
+        High energy threshold of the spectral fit
+        If a list of observations is fit at the same time, this is a list with
+        the threshold for each observation.
+        """
+        return self._thres_hi
 
     @energy_threshold_high.setter
     def energy_threshold_high(self, energy):
         """
         High energy threshold setter
-
         Parameters
         ----------
         energy : `~gammapy.utils.energy.Energy`, str
@@ -213,7 +200,7 @@ class SpectrumFit(object):
         energy = Energy(energy)
         shape = len(self.obs_list)
         if energy.shape is ():
-            energy = Energy(np.ones(shape=shape)*energy.value, energy.unit)
+            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
 
         if energy.shape[0] is not shape:
             raise ValueError('Dimensions to not match: {} {}'.format(
@@ -241,7 +228,7 @@ class SpectrumFit(object):
         ss += str(self.model)
         ss += '\nEnergy Range\n'
         ss += str(self.energy_threshold_low) + ' - ' + str(
-                self.energy_threshold_high)
+            self.energy_threshold_high)
         return ss
 
     def run(self, method='sherpa'):
@@ -293,12 +280,13 @@ class SpectrumFit(object):
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
 
+        namedataset = []
         for i in range(len(ds.datasets)):
             datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
-
+            namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
-        ds.fit()
-        datastack.covar()
+        ds.fit(*namedataset)
+        datastack.covar(*namedataset)
         covar = datastack.get_covar_results()
         efilter = datastack.get_filter()
 
@@ -326,7 +314,7 @@ class SpectrumFit(object):
         self.n_pred = dict()
         for obs in self.obs_list:
             temp = CountsSpectrum.get_npred(self.result, obs)
-            self.n_pred[obs.obs_id] = temp
+            self.n_pred[obs.meta.obs_id] = temp
 
     def write_npred(self, outdir=None):
         """Write predicted counts PHA file

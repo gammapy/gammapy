@@ -17,4 +17,6 @@ from .sherpa_chi2asym import *
 from .utils import *
 from .counts_spectrum import *
 from .spectrum_extraction import *
+from .spectrum_grouping import *
+from .spectrum_fit import *
 from .results import *
