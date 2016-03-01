@@ -60,8 +60,8 @@ def create_dummy_observation_grouping():
     obs_groups : `~gammapy.data.ObservationGroups`
         Observation grouping.
     """
-    alt_axis = ObservationGroupAxis('ALT', ALT_RANGE, 'bin_edges')
-    az_axis = ObservationGroupAxis('AZ', AZ_RANGE, 'bin_edges')
+    alt_axis = ObservationGroupAxis('ALT', ALT_RANGE, fmt='edges')
+    az_axis = ObservationGroupAxis('AZ', AZ_RANGE, fmt='edges')
     obs_groups = ObservationGroups([alt_axis, az_axis])
     obs_groups.obs_groups_table['GROUP_ID'][0] = GROUP_ID
 

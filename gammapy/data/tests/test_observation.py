@@ -3,19 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
-from ...utils.testing import requires_dependency, requires_data
-from ...datasets import make_test_observation_table, gammapy_extra
+from ...datasets import make_test_observation_table
 from ...catalog import skycoord_from_table
-from ...data import (
-    ObservationTable,
-    ObservationGroups,
-    ObservationGroupAxis
-)
 
 
 def common_sky_region_select_test_routines(obs_table, selection):
     """Common routines for the tests of sky_box/sky_circle selection of obs tables."""
     type = selection['type']
+
     if type not in ['sky_box', 'sky_circle']:
         raise ValueError("Invalid type: {}".format(type))
 
@@ -32,8 +27,7 @@ def common_sky_region_select_test_routines(obs_table, selection):
 
     do_wrapping = False
     # not needed in the case of sky_circle
-    if (type == 'sky_box' and
-            any(l < Angle(0., 'deg') for l in lon_range_eff)):
+    if type == 'sky_box' and any(l < Angle(0., 'deg') for l in lon_range_eff):
         do_wrapping = True
 
     # observation table
@@ -80,11 +74,7 @@ def test_select_parameter_box():
     random_state = np.random.RandomState(seed=0)
     obs_table = make_test_observation_table(n_obs=10, random_state=random_state)
 
-    # test no selection: input and output tables should be the same
-    selected_obs_table = obs_table.select_observations()
-    assert len(selected_obs_table) == len(obs_table)
-
-    # select some pars and check the correspoding values in the columns
+    # select some pars and check the corresponding values in the columns
 
     # test box selection in obs_id
     variable = 'OBS_ID'
@@ -131,8 +121,6 @@ def test_select_time_box():
     time_stop = selected_obs_table['TSTOP']
     assert (value_range[0] < time_start).all()
     assert (time_start < value_range[1]).all()
-    assert (value_range[0] < time_stop).all()
-    assert (time_stop < value_range[1]).all()
 
 
 def test_select_sky_regions():
@@ -183,87 +171,3 @@ def test_select_sky_regions():
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
-
-
-@requires_dependency('yaml')
-@requires_data('gammapy-extra')
-def test_ObservationGroups(tmpdir):
-    """Test create obs groups"""
-    alt = Angle([0, 30, 60, 90], 'deg')
-    az = Angle([-90, 90, 270], 'deg')
-    ntels = np.array([3, 4])
-    list_obs_group_axis = [ObservationGroupAxis('ALT', alt, 'bin_edges'),
-                           ObservationGroupAxis('AZ', az, 'bin_edges'),
-                           ObservationGroupAxis('N_TELS', ntels, 'bin_values')]
-    obs_groups = ObservationGroups(list_obs_group_axis)
-    assert ((0 <= obs_groups.obs_groups_table['GROUP_ID']) &
-            (obs_groups.obs_groups_table['GROUP_ID'] < obs_groups.n_groups)).all()
-
-    # write
-    obs_groups_1 = obs_groups
-    outfile = str(tmpdir / 'obs_groups.ecsv')
-    obs_groups_1.write(outfile)
-
-    # read
-    obs_groups_2 = ObservationGroups.read(outfile)
-
-    # test that obs groups read from file match the ones defined
-    assert (obs_groups_1.obs_groups_table == obs_groups_2.obs_groups_table).all()
-
-    # test group obs list
-    infile = gammapy_extra.filename('test_datasets/obs/test_observation_table.fits')
-    obs_table = ObservationTable.read(infile)
-
-    # wrap azimuth angles to [-90, 270) deg
-    # to match definition of azimuth grouping axis
-    obs_table['AZ'] = Angle(obs_table['AZ']).wrap_at(Angle(270., 'deg'))
-
-    # group obs list
-    obs_table_grouped = obs_groups.group_observation_table(obs_table)
-
-    # assert consistency of the grouping
-    assert len(obs_table) == len(obs_table_grouped)
-    assert ((0 <= obs_table_grouped['GROUP_ID']) &
-            (obs_table_grouped['GROUP_ID'] < obs_groups.n_groups)).all()
-    # check grouping for 1 group
-    group_id = 10
-    obs_table_grouped_10 = obs_groups.get_group_of_observations(obs_table_grouped,
-                                                                group_id)
-    alt_min = obs_groups.obs_groups_table['ALT_MIN'][group_id]
-    alt_max = obs_groups.obs_groups_table['ALT_MAX'][group_id]
-    az_min = obs_groups.obs_groups_table['AZ_MIN'][group_id]
-    az_max = obs_groups.obs_groups_table['AZ_MAX'][group_id]
-    n_tels = obs_groups.obs_groups_table['N_TELS'][group_id]
-    assert ((alt_min <= obs_table_grouped_10['ALT']) &
-            (obs_table_grouped_10['ALT'] < alt_max)).all()
-    assert ((az_min <= obs_table_grouped_10['AZ']) &
-            (obs_table_grouped_10['AZ'] < az_max)).all()
-    assert (n_tels == obs_table_grouped_10['N_TELS']).all()
-    # check on inverse mask (i.e. all other groups)
-    obs_table_grouped_not10 = obs_groups.get_group_of_observations(obs_table_grouped,
-                                                                   group_id,
-                                                                   inverted=True)
-    assert (((alt_min > obs_table_grouped_not10['ALT']) |
-             (obs_table_grouped_not10['ALT'] >= alt_max)) |
-            ((az_min > obs_table_grouped_not10['AZ']) |
-             (obs_table_grouped_not10['AZ'] >= az_max)) |
-            (n_tels != obs_table_grouped_not10['N_TELS'])).all()
-    # check sum of selections
-    assert (len(obs_table_grouped_10) + len(obs_table_grouped_not10)
-            == len(obs_table_grouped))
-
-
-def test_ObservationGroupAxis():
-    """Test create a few obs group axis objects"""
-
-    alt = Angle([0, 30, 60, 90], 'deg')
-    alt_obs_group_axis = ObservationGroupAxis('ALT', alt, 'bin_edges')
-    assert alt_obs_group_axis.n_bins == len(alt) - 1
-
-    az = Angle([-90, 90, 270], 'deg')
-    az_obs_group_axis = ObservationGroupAxis('AZ', az, 'bin_edges')
-    assert az_obs_group_axis.n_bins == len(az) - 1
-
-    ntels = np.array([3, 4])
-    ntels_obs_group_axis = ObservationGroupAxis('N_TELS', ntels, 'bin_values')
-    assert ntels_obs_group_axis.n_bins == len(ntels)

@@ -90,5 +90,4 @@ def test_convert_likelihood_roundtrip():
         for to in ['probability', 'ts']:
             val = convert_likelihood(to=to, significance=significance, df=df)
             significance2 = convert_likelihood(to='significance', df=df, **{to: val})
-            print(locals())
             assert_allclose(significance2, significance)

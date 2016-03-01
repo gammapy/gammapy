@@ -21,10 +21,10 @@ def test_load_catalog_snrcat(tmpdir):
 
     # Check OBS table
     table = snrcat.obs_table
-    print(table.colnames)
     assert len(table) > 1000
     expected_colnames = ['SNR_id', 'source_id']
     assert set(expected_colnames).issubset(table.colnames)
+
     # Check if catalog can be serialised to FITS
     filename = str(tmpdir / 'obs_test.fits')
     table.write(filename)

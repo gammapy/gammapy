@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, run_cli
 from ..catalog_query import cli
 
 
@@ -19,9 +19,4 @@ from ..catalog_query import cli
 @requires_data('gammapy-extra')
 def test_catalog_query_main(args):
     """This test just exercises the code, the output is not checked."""
-    with pytest.raises(SystemExit) as exc:
-        cli(args)
-
-    print(exc.__dict__)
-    assert exc.value.args[0] == 0
-
+    run_cli(cli, args)

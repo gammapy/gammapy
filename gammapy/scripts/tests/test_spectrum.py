@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-import filecmp
 import os
 from astropy.tests.helper import pytest
-
-from ...extern.pathlib import Path
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, run_cli
 from ...spectrum.results import SpectrumStats, SpectrumFitResult
 from ..spectrum import cli
 
@@ -19,8 +16,7 @@ def test_spectrum(tmpdir):
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')
     args = ['all', configfile]
-    with pytest.raises(SystemExit) as exc:
-        cli(args)
+    run_cli(cli, args)
 
     sref = gammapy_extra.filename(
         'test_datasets/spectrum/total_spectrum_stats_reference.yaml')

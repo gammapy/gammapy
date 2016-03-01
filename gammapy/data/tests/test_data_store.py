@@ -89,7 +89,6 @@ def test_DataStore_other(data_manager):
     # run_list_selection = dict(shape='box', frame='galactic',
     #                           lon=(-100, 50), lat=(-5, 5), border=2)
     # run_list = data_store.make_run_list(run_list_selection)
-    # print(len(run_list))
 
 
 @requires_data('gammapy-extra')

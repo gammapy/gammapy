@@ -156,12 +156,12 @@ def background_group():
     # zenith_bins = np.array([0, 20, 30, 40, 50, 90])
     zenith_bins = np.array([0, 49, 90])
     # zenith_bins = np.array([0, 30, 90])  # for testing
-    axes = [ObservationGroupAxis('ZEN_PNT', zenith_bins, 'bin_edges')]
+    axes = [ObservationGroupAxis('ZEN_PNT', zenith_bins, fmt='edges')]
     obs_groups = ObservationGroups(axes)
     log.info(obs_groups.info)
 
     # Apply observation grouping
-    obs_table = obs_groups.group_observation_table(obs_table)
+    obs_table = obs_groups.apply(obs_table)
 
     # Store the results
     filename = config.obs_table_grouped_filename

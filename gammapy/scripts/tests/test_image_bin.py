@@ -14,7 +14,8 @@ def test_bin_image_main(tmpdir):
     event_file = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_events_023523.fits.gz')
     reference_file = gammapy_extra.filename('test_datasets/irf/hess/pa/ctskymap.fits.gz')
     out_file = str(tmpdir / 'gammapy_ctskymap.fits.gz')
-    image_bin_main([event_file, reference_file, out_file])
+    args = [event_file, reference_file, out_file]
+    image_bin_main(args)
 
     gammapy_hdu = fits.open(out_file)[0]
     ctools_hdu = fits.open(reference_file)[0]
