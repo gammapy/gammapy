@@ -119,9 +119,9 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     excess = np.sum([o.excess_vector for o in obs])
 
     # Need to give RMF file for reco energy binning
-    id = obs[0].obs_id
+    id = obs[0].meta.obs_id
     rmf = str(ogip_dir/ 'rmf_run{}.fits'.format(id))
-    val = [CountsSpectrum.read(_, rmf) for _ in n_pred_dir.glob('*.fits')]
+    val = [CountsSpectrum.read_bkg(_, rmf) for _ in n_pred_dir.glob('*.fits')]
     npred = np.sum(val)
 
     npred.plot(ax=ax, color='red', alpha=0.7, label='Predicted counts')
