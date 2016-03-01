@@ -16,3 +16,4 @@ from .observers import *
 from .spectral_cube import *
 from .telarray import *
 from .utils import *
+from .maps import *

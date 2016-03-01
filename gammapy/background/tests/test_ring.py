@@ -3,7 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from ...background import Maps, RingBgMaker, ring_r_out
+from ...background import RingBgMaker, ring_r_out
+from ...data import MapsBunch
 from ...utils.testing import requires_dependency
 
 
@@ -22,9 +23,10 @@ class TestRingBgMaker:
 
     def test_correlate_maps(self):
         n_on = np.ones((200, 200))
-        hdu = fits.ImageHDU(n_on, name='n_on')
-        maps = Maps([hdu])
-        maps['exclusion'].data[100:110, 100:110] = 0
+        maps = MapsBunch()
+        maps['n_on'] = n_on
+        maps['a_on'] = n_on
+        maps['exclusion'] = n_on[100:110, 100:110] = 0
         r = RingBgMaker(10, 13, 1)
         r.correlate_maps(maps)
 

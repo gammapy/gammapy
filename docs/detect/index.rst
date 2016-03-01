@@ -9,25 +9,23 @@ Source detection tools (`gammapy.detect`)
 Introduction
 ============
 
-`gammapy.detect` holds source detection methods that turn event lists or images or cubes
-into source catalogs. 
+The `gammapy.detect` submodule includes low level functions to compute significance
+and test statistics maps as well as some high level source detection method
+prototypes.
 
-* TODO: Describe references: [Stewart2009]_
-* TODO: general intro
+Detailed description of the methods can be found in [Stewart2009]_
+and [LiMa1983]_.
 
 
-Getting Started
-===============
+
+Computation of TS maps
+======================
 
 .. figure:: fermi_ts_map.png
    :scale: 100 %
    
    Test statistics map computed using `~gammapy.detect.compute_ts_map` for an
    example Fermi dataset.
-   
-
-Computation of TS maps
-----------------------
 
 The `gammapy.detect` module includes a high performance `~gammapy.detect.compute_ts_map` function to
 compute test statistics (TS) maps for Gamma-Ray survey data. The implementation is based on the method 
@@ -54,8 +52,8 @@ In the following the computation of a TS map for prepared Fermi survey data, whi
 	from gammapy.detect import compute_ts_map
 	hdu_list = fits.open('all.fits.gz')
 	kernel = Gaussian2DKernel(5)
-	result = compute_ts_map(hdu_list['On'].data, hdu_list['Background'].data,
-							hdu_list['ExpGammaMap'].data, kernel)
+	result = compute_ts_map(hdu_list['counts'].data, hdu_list['background'].data,
+							hdu_list['exposure'].data, kernel)
 
 The function returns a `~gammapy.detect.TSMapResult` object, that bundles all relevant
 data. E.g. the time needed for the TS map computation can be checked by:
@@ -64,7 +62,7 @@ data. E.g. the time needed for the TS map computation can be checked by:
 
 	print(result.runtime)
 
-The TS map itself can bes accessed using the ``ts`` attribute of the `~gammapy.detect.TSMapResult` object:
+The TS map itself can be accessed using the ``ts`` attribute of the `~gammapy.detect.TSMapResult` object:
 
 .. code-block:: python
 
@@ -81,12 +79,16 @@ on the Fermi example dataset by:
 	$ cd gammapy-extra/datasets/fermi_survey
 	$ gammapy-image-ts all.fits.gz ts_map_0.00.fits --scale 0 
 
-The command line tool additionally requires a psf json file, where the psf shape is defined by the parameters
-of a triple Gaussian model. See also `gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
-a Gaussian source kernel, where the width in degree can be defined by the ``--scale`` parameter. Multiple scales can be selected by passing a list to the ``scales`` parameter.  When setting
-``--scale 0`` only the psf is used as source model, which is the preferred setting to detect point sources.
-When using scales that are larger than five times the binning of the data, the data is sampled down and later
-sampled up again to speed up the performance. See `~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.   
+The command line tool additionally requires a psf json file, where the psf shape
+is defined by the parameters of a triple Gaussian model. See also 
+`gammapy.irf.multi_gauss_psf_kernel`. By default the command line tool uses
+a Gaussian source kernel, where the width in degree can be defined by the 
+``--scale`` parameter. Multiple scales can be selected by passing a list to the
+``scales`` parameter.  When setting ``--scale 0`` only the psf is used as source
+model, which is the preferred setting to detect point sources. When using scales
+that are larger than five times the binning of the data, the data is sampled down
+and later sampled up again to speed up the performance. See 
+`~gammapy.image.downsample_2N` and `~gammapy.image.upsample_2N` for details.   
 
 Furthermore it is possible to compute residual TS maps. Using the following options:
  
@@ -97,8 +99,48 @@ Furthermore it is possible to compute residual TS maps. Using the following opti
 When ``--residual`` is set an excess model must be provided using the ``--model`` option.
 
 
-Iterative detection
--------------------
+Computation of Li&Ma significance maps
+======================================
+
+The method derived by [LiMa1983]_ is one of the standard methods to determine
+detection significances for gamma-ray sources. Using the same prepared Fermi
+dataset as above, the corresponding maps can be computed as following:
+
+.. code-block:: python
+
+    from astropy.io import fits
+    from astropy.convolution import Tophat2DKernel
+    from gammapy.detect import compute_lima_map
+    hdu_list = fits.open('all.fits.gz')
+    kernel = Tophat2DKernel(5)
+    result = compute_lima_map(hdu_list['On'].data, hdu_list['Background'].data,
+                              hdu_list['ExpGammaMap'].data, kernel)
+
+The function returns a `~gammapy.data.maps.MapsBunch`, that bundles all resulting 
+maps such as significance, flux and correlated counts and excess maps. 
+
+
+Command line tool
+-----------------
+
+There is also a corresponding command line tool available. That can be used as
+following:
+
+.. code-block:: bash
+
+    $ cd gammapy-extra/datasets/fermi_survey
+    $ gammapy-image-lima all.fits.gz lima_map_0.1.fits --theta 0.1 
+    
+
+The command line tool features an ``--onoff`` option to compute Li & Ma significance
+for on-off observations and a ``--residual`` option to compute residual significance
+maps. For this function the input fits file needs a ``model`` extension, containing
+a excess model.
+
+
+Iterative source detection
+==========================
+
 In addition to ``gammapy-image-ts`` there is also command-line tool ``gammapy-detect-iterative``, which runs iterative multi-scale source detection. 
 It takes as arguments count, background and exposure FITS maps(in separate files, unlike previous tool) and a list of ``--scales`` and calls ``~gammapy.detect.iterfind.IterativeSourceDetection`` class.
 

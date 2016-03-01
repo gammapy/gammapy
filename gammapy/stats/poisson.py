@@ -176,7 +176,7 @@ def significance(n_observed, mu_background, method='lima', n_observed_min=1):
     The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
     in the limiting case of known background :math:`\mu_{background} = \alpha \times n_{off}`
     with :math:`\alpha \to 0`.
-    The following formula for :math:`S_{lima}` was obtained with Mathematica::
+    The following formula for :math:`S_{lima}` was obtained with Mathematica:
 
     .. math ::
 

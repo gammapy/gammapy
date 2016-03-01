@@ -61,16 +61,16 @@ class RingBgMaker(object):
 
         Parameters
         ----------
-        maps : gammapy.background.maps.Maps
+        maps : gammapy.data.maps.MapsBunch
             Input maps (is modified in-place)
         """
         # Note: maps['on'] returns a copy of the HDU,
         # so assigning to on would be pointless.
-        n_on = maps['n_on'].data
-        a_on = maps['a_on'].data
-        exclusion = maps['exclusion'].data
-        maps['n_off'].data = self.correlate(n_on * exclusion)
-        maps['a_off'].data = self.correlate(a_on * exclusion)
+        n_on = maps['n_on']
+        a_on = maps['a_on']
+        exclusion = maps['exclusion']
+        maps['n_off'] = self.correlate(n_on * exclusion)
+        maps['a_off'] = self.correlate(a_on * exclusion)
         maps.is_off_correlated = True
 
 
@@ -79,7 +79,7 @@ def ring_correlate_off_maps(maps, r_in, r_out):
 
     Parameters
     ----------
-    maps : gammapy.background.maps.Maps
+    maps : gammapy.data.maps.MapsBunch
         Maps container
     r_in : float
         Inner ring radius (deg)

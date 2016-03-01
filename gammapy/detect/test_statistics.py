@@ -128,10 +128,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     ----------
     maps : `astropy.io.fits.HDUList`
         HDU list containing the data. The list must contain the following HDU extensions:
-            * 'On', Counts image
-            * 'Background', Background image
-            * 'Diffuse', Diffuse model image
-            * 'ExpGammaMap', Exposure image
+            * 'counts', Counts image
+            * 'background', Background image
+            * 'exposure', Exposure image
     psf_parameters : dict
         Dict defining the multi gauss PSF parameters.
         See `~gammapy.irf.multi_gauss_psf` for details.
@@ -205,10 +204,10 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
         # Compute TS map
         if residual:
-            background = (maps_['background'] + maps_['diffuse'] + maps_['onmodel'])
+            background = (maps_['background'] + maps_['onmodel'])
         else:
-            background = maps_['background']  # + maps_['diffuse']
-        ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
+            background = maps_['background']
+        ts_results = compute_ts_map(maps_['counts'], background, maps_['exposure'],
                                     kernel, *args, **kwargs)
         log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
@@ -373,6 +372,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     assert positions, ("Positions are empty: possibly kernel " +
                        "{} is larger than counts {}".format(kernel.shape, counts.shape))
+    
     # Set TS values at given positions
     j, i = zip(*positions)
     TS = np.ones(counts.shape) * np.nan
@@ -557,7 +557,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
     amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
     try:
         result = minimize_scalar(f_cash, bracket=(amplitude_min, amplitude_max),
-                                 args=args, method=optimizer, tol=10)
+                                 args=args, method=optimizer, tol=0.1)
         return result.x, result.nfev
     except ValueError:
         result = minimize_scalar(f_cash, args=args, method=optimizer, tol=0.1)
