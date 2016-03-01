@@ -12,7 +12,16 @@ log = logging.getLogger(__name__)
 
 class MapsBunch(Bunch):
     """
-    Minimal version of a future map container class.
+    Bunch with Fits I/O.
+    
+    Here's an example:
+
+    .. code-block:: python
+    
+        from gammapy.data import MapsBunch
+        maps = MapsBunch.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+
+    Then try tab completion on the ``maps`` object.
     """
     @classmethod
     def read(cls, filename):

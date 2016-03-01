@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 
-def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
+def compute_lima_map(counts, background, kernel, exposure=None):
     """
     Compute Li&Ma significance and flux maps for known background.
 
@@ -31,13 +31,16 @@ def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
         convolution kernel. 
     exposure : `~numpy.ndarray`
         Exposure map
-    fft : bool
-        Use fast fft convolution. Default is False.
-    
+
     Returns
     -------
-    Bunch : `gammapy.extern.bunch.Bunch`
+    MapsBunch : `gammapy.data.maps.MapsBunch`
         Bunch of result maps.
+
+
+    See Also
+    --------
+    gammapy.stats.significance
     """
     from scipy.ndimage import convolve
 
@@ -67,8 +70,7 @@ def compute_lima_map(counts, background, kernel, exposure=None, fft=False):
     return result
 
 
-def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
-                            fft=False):
+def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
     """
     Compute Li&Ma significance and flux maps for on-off observations.
 
@@ -79,20 +81,23 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
     n_off : `~numpy.ndarray`
         Off counts map.
     a_on : `~numpy.ndarray`
-        Relative .
+        Relative background efficiency in the on region
     a_off : `~numpy.ndarray`
-        Exposure ratio map.
+        Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
         convolution kernel. 
     exposure : `~numpy.ndarray`
         Exposure map.
-    fft : bool
-        Use fast fft convolution. Default is False.
     
     Returns
     -------
-    Bunch : `gammapy.extern.bunch.Bunch`
+    MapsBunch : `gammapy.data.maps.MapsBunch`
         Bunch of result maps.   
+
+    See also
+    --------
+    gammapy.stats.significance_on_off
+
     """
     from scipy.ndimage import convolve
 
@@ -109,10 +114,6 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None,
     background = alpha * n_off
 
     significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
-
-    # safe significance threshold. Is this worse making an option to
-    # significance()?
-    significance_lima[n_on_ < 5] = 0
     
     result = MapsBunch(significance=significance_lima,
                        n_on=n_on_,

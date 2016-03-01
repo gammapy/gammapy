@@ -9,8 +9,7 @@ from astropy.io import fits
 
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, compute_lima_map, compute_lima_on_off_map
-from ...datasets.core import _GammapyExtra
-from ...datasets import load_poisson_stats_image
+from ...datasets import load_poisson_stats_image, gammapy_extra
 from ...data import MapsBunch
 
 from ...extern.pathlib import Path
@@ -41,8 +40,8 @@ def test_compute_lima_on_off_map():
     """
     Test Li&Ma map with snippet from the H.E.S.S. survey data.
     """
-    filename = _GammapyExtra().filename('test_datasets/unbundled/'
-                                        'hess/survey/hess_survey_snippet.fits.gz')
+    filename = gammapy_extra.filename('test_datasets/unbundled/hess/survey/'
+                                      'hess_survey_snippet.fits.gz')
     data = MapsBunch.read(filename)
 
     kernel = Tophat2DKernel(5)
@@ -50,6 +49,9 @@ def test_compute_lima_on_off_map():
     result_lima = compute_lima_on_off_map(data.On, data.Off, data.OnExposure,
                                           data.OffExposure, kernel)
     
+    # reproduce safe significance threshold from HESS software
+    result_lima.significance[result_lima.n_on < 5] = 0
+
     # Set boundary to NaN in reference image
     data.Significance[np.isnan(result_lima.significance)] = np.nan
     assert_allclose(result_lima.significance, data.Significance, atol=1E-5)

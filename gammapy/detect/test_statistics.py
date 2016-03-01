@@ -510,7 +510,7 @@ def _root_amplitude_brentq(counts, background, model):
     amplitude : float
         Fitted flux amplitude.
     niter : int
-        Number of function evaluations` needed for the fit.
+        Number of function evaluations needed for the fit.
     """
     from scipy.optimize import brentq
 

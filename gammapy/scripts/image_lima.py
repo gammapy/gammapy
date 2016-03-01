@@ -29,7 +29,6 @@ def image_lima(infile, outfile, theta, onoff, residual, overwrite):
     Compute Li&Ma significance maps for a given set of input maps.
 
     """
-    print('ests', theta)
     log.info('Reading {0}'.format(infile))
     data = MapsBunch.read(infile)
     if residual:
