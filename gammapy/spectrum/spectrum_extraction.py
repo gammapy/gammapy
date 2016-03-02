@@ -8,7 +8,6 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
-from astropy.table import Table
 from . import CountsSpectrum
 from .results import SpectrumStats
 from ..extern.pathlib import Path
@@ -19,9 +18,8 @@ from ..image import ExclusionMask
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
 from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..utils.scripts import (
-    get_parser, set_up_logging_from_args, read_yaml, make_path,
-)
+from ..utils.scripts import make_path
+
 
 __all__ = [
     'SpectrumExtraction',
@@ -126,7 +124,7 @@ class SpectrumExtraction(object):
                     '\nError: \n{}'.format(val, self.store.base_dir, err))
                 nobs += 1
                 continue
-                
+
             observations.append(temp)
             if i == nobs - 1:
                 break
@@ -522,7 +520,7 @@ class SpectrumObservation(object):
 
         The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
         header. If no filenames are given, default names will be chosen.
-       
+
         Parameters
         ----------
         phafile : `~gammapy.extern.pathlib.Path`, str
@@ -568,7 +566,7 @@ class SpectrumObservation(object):
         """Plot exclusion mask for this observation
 
         The plot will be centered at the pointing position
-       
+
         Parameters
         ----------
         size : `~astropy.coordinates.Angle`
@@ -620,7 +618,7 @@ class SpectrumObservationList(list):
 
     def get_obslist_from_ids(self, id_list):
         """Return an subset of the observation list
-        
+
         Parameters
         ----------
         id_list : list of int
