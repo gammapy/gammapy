@@ -255,9 +255,9 @@ class SpectrumObservation(object):
 
     @classmethod
     def read_ogip(cls, phafile):
-        """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files
+        """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files.
 
-        BKG file, ARF, and RMF must be set in the PHA header
+        BKG file, ARF, and RMF must be set in the PHA header.
 
         Parameters
         ----------
@@ -657,9 +657,8 @@ class SpectrumObservationList(list):
         return ss
 
     def filter_by_reflected_regions(self, n_min):
-        """Filter observation list according to number of reflected regions
-
-        Condition: number of reflected regions >= nmin
+        """Filter observation list according to number of reflected regions.
+        Condition: number of reflected regions >= nmin.
 
         Parameters
         ----------
@@ -689,14 +688,14 @@ class SpectrumObservationList(list):
 
     @classmethod
     def read_ogip(cls, dir='ogip_data'):
-        """Create `~gammapy.spectrum.SpectrumObservationList` from OGIP files
+        """Create `~gammapy.spectrum.SpectrumObservationList` from OGIP files.
 
         The pha file need to be contained in one directroy and have '.pha' as
-        suffix
+        suffix.
 
         Parameters
         ----------
-        dir : str, Path
+        dir : str, `~gammapy.extern.pathlib.Path`
             Directory holding the OGIP data
         """
         dir = make_path(dir)
@@ -704,7 +703,8 @@ class SpectrumObservationList(list):
         return cls(obs)
 
     def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable`"""
+        """Create `~gammapy.data.ObservationTable`."""
+
         observation_table = ObservationTable()
 
         files = np.array([o.meta.phafile for o in self])
