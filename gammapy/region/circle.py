@@ -244,8 +244,8 @@ class SkyCircleRegion(SkyRegion):
     def to_dict(self):
         rtdict = dict()
         rtdict['radius'] = '{}'.format(self.radius)
-        rtdict['center_x'] = '{}'.format(self.center.icrs.ra)
-        rtdict['center_y'] = '{}'.format(self.center.icrs.dec)
+        rtdict['center_x'] = '{}'.format(self.pos.icrs.ra)
+        rtdict['center_y'] = '{}'.format(self.pos.icrs.dec)
         rtdict['system'] = 'icrs'
         return rtdict
 

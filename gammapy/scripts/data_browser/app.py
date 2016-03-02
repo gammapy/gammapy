@@ -88,7 +88,7 @@ def view_data():
 @app.route('/events', methods=('GET', 'POST'))
 def view_events():
     obs_id = 23037
-    obs = datastore.index_table.get_obs_row(obs_id)
+    obs = datastore.index_table.select_obs_subset(obs_id)[0]
     filename = datastore.filename(obs_id, filetype='events')
     events = EventListDataset.read(filename).event_list
 

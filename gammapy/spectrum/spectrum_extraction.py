@@ -1,24 +1,26 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import copy
 import logging
+
 import numpy as np
+from astropy.coordinates import Angle
 from astropy.table import Column
 from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
-from astropy.extern import six
 from astropy.wcs.utils import skycoord_to_pixel
+
 from . import CountsSpectrum
 from .results import SpectrumStats
-from ..extern.pathlib import Path
-from ..extern.bunch import Bunch
 from ..background import ring_area_factor, Cube
 from ..data import DataStore, ObservationTable
+from ..extern.bunch import Bunch
+from ..extern.pathlib import Path
 from ..image import ExclusionMask
+from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..utils.scripts import make_path
+from ..utils.scripts import make_path, write_yaml
 
 
 __all__ = [
@@ -45,8 +47,8 @@ class SpectrumExtraction(object):
     ----------
     datastore : `~gammapy.data.DataStore`
         Data for the analysis
-    obs_ids : list, str
-        List of observations or file containing such a list
+    obs_table : `~gammapy.data.ObservationTable`
+        Table of observations to analyse
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
     exclusion : `~gammapy.image.ExclusionMask`
@@ -59,24 +61,22 @@ class SpectrumExtraction(object):
         Reconstructed energy binning definition
     """
 
-    def __init__(self, datastore, obs_ids, on_region, exclusion, bkg_method,
+    OBSTABLE_FILE = 'observation_table.fits'
+    EXCLUDEDREGIONS_FILE = 'excluded_regions.fits'
+
+    def __init__(self, datastore, obs_table, on_region, exclusion, bkg_method,
                  nobs=-1, ebounds=None, **kwargs):
 
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
         if ebounds is None:
-            ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
+            ebounds = EnergyBounds.equal_log_spacing(0.01, 316, 108, 'TeV')
         self.ebounds = ebounds
         self.bkg_method = bkg_method
         self.nobs = nobs
         self.extra_info = kwargs
-
-        if isinstance(obs_ids, six.string_types):
-            temp = make_path(obs_ids)
-            obs_ids = np.loadtxt(str(temp), dtype=np.int)
-        # Todo: Take ObservationTable as input
-        self.obs_ids = obs_ids
+        self.obs_table = obs_table
 
         self._observations = None
 
@@ -92,8 +92,7 @@ class SpectrumExtraction(object):
         o = self.observations
         o.write_ogip_data('ogip_data')
         o.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
-        o.to_observation_table().write('observation_table.fits', format='fits',
-                                       overwrite=True)
+        self.obs_table.write(self.OBSTABLE_FILE, format='fits', overwrite=True)
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
@@ -106,34 +105,30 @@ class SpectrumExtraction(object):
 
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
+
+        Parameters
+        ----------
+        nobs : int
+            Number of observations to process
         """
         nobs = self.nobs if nobs is None else nobs
         observations = []
-        for i, val in enumerate(np.atleast_1d(self.obs_ids)):
-            log.info('Extracting spectrum for observation {}'.format(val))
-            try:
-                temp = SpectrumObservation.from_datastore(val, self.store,
-                                                          self.on_region,
-                                                          self.bkg_method,
-                                                          self.ebounds,
-                                                          self.exclusion,
-                                                          **self.extra_info
-                                                          )
-            except IndexError as err:
-                log.warning(
-                    'Could not load observation {} from store{}'
-                    '\nError: \n{}'.format(val, self.store.base_dir, err))
-                nobs += 1
-                continue
+        for row in self.obs_table:
+            id = row['OBS_ID']
+            log.info('Extracting spectrum for observation {}'.format(id))
+            temp = SpectrumObservation.from_datastore(id, self.store,
+                                                      self.on_region,
+                                                      self.bkg_method,
+                                                      self.ebounds,
+                                                      self.exclusion,
+                                                      **self.extra_info
+                                                      )
 
             observations.append(temp)
-            if i == nobs - 1:
+            if row.index == nobs - 1:
                 break
 
         self._observations = SpectrumObservationList(observations)
-
-        if len(self.observations) == 0:
-            raise ValueError("No valid observations found")
 
     @property
     def observations(self):
@@ -158,7 +153,7 @@ class SpectrumExtraction(object):
 
         bkg_method = self.bkg_method if bkg_method is None else bkg_method
 
-        ana = SpectrumExtraction(datastore=self.store, obs_ids=self.obs_ids,
+        ana = SpectrumExtraction(datastore=self.store, obs_table=self.obs_ids,
                                  on_region=self.on_region,
                                  bkg_method=bkg_method,
                                  exclusion=self.exclusion, nobs=0,
@@ -177,7 +172,7 @@ class SpectrumExtraction(object):
         config = config['extraction']
 
         # Observations
-        obs = config['data']['runlist']
+        obs_table = ObservationTable.read(config['data']['obstable'])
         storename = config['data']['datastore']
         store = DataStore.from_all(storename)
         nobs = config['data']['nruns']
@@ -191,8 +186,8 @@ class SpectrumExtraction(object):
             ebounds = EnergyBounds.equal_log_spacing(
                 emin, emax, nbins)
         else:
-            if sec['binning'] is None:
-                raise ValueError("No binning specified")
+            vals = np.fromstring(sec['bounds'], dtype=float, sep=' ')
+            ebounds = EnergyBounds(vals, sec['unit'])
 
         # ON region
         on_region = SkyCircleRegion.from_dict(config['on_region'])
@@ -204,15 +199,16 @@ class SpectrumExtraction(object):
         excl_file = config['excluded_regions']['file']
         exclusion = ExclusionMask.from_fits(excl_file)
 
-        return cls(datastore=store, obs_ids=obs, on_region=on_region,
+        return cls(datastore=store, obs_table=obs_table, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
                    nobs=nobs, ebounds=ebounds, **kwargs)
 
-    def write_configfile(self, filename):
+    def write_configfile(self, filename='config.yaml'):
         """Write config file in YAML format
 
         This is usefull when the `~gammapy.spectrum.SpectrumExtraction` has
-        been altered and the changes want to be saved
+        been altered and the changes want to be saved. Files need to read the
+        configfile again are also written.
 
         Parameters
         ----------
@@ -221,8 +217,24 @@ class SpectrumExtraction(object):
         """
         config = dict(extraction=dict())
         e = config['extraction']
-        e.update(data = dict())
-        e['data'] = 0
+        e.update(data=dict())
+        e['data']['obstable'] = self.OBSTABLE_FILE
+        e['data']['datastore'] = str(self.store.base_dir)
+        e['data']['nruns'] = self.nobs
+
+        e.update(binning=dict())
+        e['binning']['equal_log_spacing'] = False
+        e['binning']['bounds'] = np.array_str(self.ebounds.value)[1:-1]
+        e['binning']['unit'] = str(self.ebounds.unit)
+
+        e.update(on_region=self.on_region.to_dict())
+        e.update(off_region=self.bkg_method)
+        e.update(excluded_regions=self.EXCLUDEDREGIONS_FILE)
+
+        log.info('Writing {}'.format(filename))
+        write_yaml(config, filename=filename)
+        log.info('Writing {}'.format(self.OBSTABLE_FILE))
+        self.obs_table.write(self.OBSTABLE_FILE)
 
     @classmethod
     def from_configfile(cls, configfile):
