@@ -613,7 +613,8 @@ class SpectrumObservation(object):
 
 
 class SpectrumObservationList(list):
-    """List of `~gammapy.spectrum.SpectrumObservation`
+    """
+    List of `~gammapy.spectrum.SpectrumObservation`.
     """
 
     def get_obslist_from_ids(self, id_list):
