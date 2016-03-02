@@ -2,7 +2,6 @@
 from __future__ import (print_function)
 
 import numpy as np
-from astropy import log
 from astropy.coordinates import Angle
 
 from ..extern.bunch import Bunch
@@ -20,15 +19,19 @@ __all__ = ['CountsSpectrum']
 
 class CountsSpectrum(object):
     """Counts spectrum dataset
+
     Parameters
     ----------
     counts : `~numpy.array`, list
         Counts
     energy : `~gammapy.utils.energy.EnergyBounds`
         Energy axis
+
     Examples
     --------
+
     .. code-block:: python
+
         from gammapy.utils.energy import Energy, EnergyBounds
         from gammapy.data import CountsSpectrum
         ebounds = EnergyBounds.equal_log_spacing(1,10,10,'TeV')
@@ -55,9 +58,11 @@ class CountsSpectrum(object):
     @classmethod
     def read_pha(cls, phafile, rmffile=None):
         """Read PHA fits file
+
         The energy binning is not contained in the PHA standard. Therefore is
         is inferred from the corresponding RMF EBOUNDS extension.
         Todo: Should the energy binning be in the PHA file?
+
         Parameters
         ----------
         phafile : str
@@ -107,9 +112,11 @@ class CountsSpectrum(object):
     @classmethod
     def read_bkg(cls, bkgfile, rmffile):
         """Read BKG fits file
+
         The energy binning is not contained in the PHA standard. Therefore is
         is inferred from the corresponding RMF EBOUNDS extension.
         Todo: Should the energy binning be in the BKG file?
+
         Parameters
         ----------
         phafile : str
@@ -135,6 +142,7 @@ class CountsSpectrum(object):
         """Create CountsSpectrum from fits 'EVENTS' extension (`CountsSpectrum`).
         Subsets of the event list should be chosen via the appropriate methods
         in `~gammapy.data.EventList`.
+
         Parameters
         ----------
         event_list : `~astropy.io.fits.BinTableHDU, `gammapy.data.EventListDataSet`,
@@ -160,6 +168,7 @@ class CountsSpectrum(object):
     @classmethod
     def get_npred(cls, fit, obs):
         """Get N_pred vector from spectral fit
+
         Parameters
         ----------
         fit : SpectrumFitResult
@@ -230,8 +239,10 @@ class CountsSpectrum(object):
 
     def to_fits(self, bkg=None, corr=None, rmf=None, arf=None):
         """Convert to FITS format
+
         This can be used to write a :ref:`gadf:ogip-pha`. Meta info is written
         in the fits header.
+
         Parameters
         ----------
         bkg : str
@@ -242,10 +253,12 @@ class CountsSpectrum(object):
             :ref:`gadf:ogip-rmf` containing the corresponding energy resolution
         arf : str
             :ref:`gadf:ogip-arf` containing the corresponding effective area
+
         Returns
         -------
         pha : `~astropy.io.fits.BinTableHDU`
             PHA FITS HDU
+
         Notes
         -----
         For more info on the PHA FITS file format see:
@@ -331,12 +344,14 @@ class CountsSpectrum(object):
         """
         Plot counts vector
         kwargs are forwarded to matplotlib.pyplot.hist
+
         Parameters
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
         weight : float
             Weighting factor for the counts
+
         Returns
         -------
         ax: `~matplotlib.axis`

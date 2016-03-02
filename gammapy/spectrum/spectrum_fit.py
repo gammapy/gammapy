@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 class SpectrumFit(object):
     """
     Spectral Fit
+
     Parameters
     ----------
     obs_list : SpectrumObservationList
@@ -57,6 +58,7 @@ class SpectrumFit(object):
     @classmethod
     def from_configfile(cls, configfile):
         """Create `~gammapy.spectrum.SpectrumFit` from configfile
+
         Parameters
         ----------
         configfile : str
@@ -130,6 +132,7 @@ class SpectrumFit(object):
     @statistic.setter
     def statistic(self, stat):
         """Set Statistic to be used in the fit
+
         Parameters
         ----------
         stat : `~sherpa.stats.Stat`, str
@@ -163,6 +166,7 @@ class SpectrumFit(object):
     def energy_threshold_low(self, energy):
         """
         Low energy threshold setter
+
         Parameters
         ----------
         energy : `~gammapy.utils.energy.Energy`, str
@@ -192,6 +196,7 @@ class SpectrumFit(object):
     def energy_threshold_high(self, energy):
         """
         High energy threshold setter
+
         Parameters
         ----------
         energy : `~gammapy.utils.energy.Energy`, str

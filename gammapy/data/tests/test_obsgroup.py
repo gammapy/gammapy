@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...datasets import gammapy_extra
 from ..observation import ObservationTable
 from ..obsgroup import ObservationGroups, ObservationGroupAxis
@@ -69,6 +69,7 @@ def test_obsgroup():
     assert len(obs_table_group_5) + len(obs_table_grouped_not5) == len(obs_table_grouped)
 
 
+@requires_dependency('pyyaml')
 @requires_data('gammapy-extra')
 def test_obsgroup_io():
     obs_groups = make_test_obs_groups()
