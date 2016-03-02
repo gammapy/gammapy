@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 
 class SpectrumExtraction(object):
     """Class for creating input data to 1D spectrum fitting
+
     The purpose of this class is to create 1D counts on and off counts vectors
     as well as an effective area vector and an energy dispersion matrix starting
     from an event list and 2D irfs for as set of observations. The container
@@ -41,6 +42,7 @@ class SpectrumExtraction(object):
     The present class is responsible for filling a list of such observations,
     starting from some extraction parameters.
     For more info see :ref:`spectral_fitting`.
+
     Parameters
     ----------
     datastore : `~gammapy.data.DataStore`
@@ -81,6 +83,7 @@ class SpectrumExtraction(object):
 
     def run(self):
         """Run all steps
+
         Extract spectrum, filter observations, write results to disk.
         """
         self.extract_spectrum()
@@ -101,6 +104,7 @@ class SpectrumExtraction(object):
 
     def extract_spectrum(self, nobs=None):
         """Extract 1D spectral information
+
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
         """
@@ -135,6 +139,7 @@ class SpectrumExtraction(object):
     @property
     def observations(self):
         """`~gamampy.spectrum.ObservationList` of all observations
+
         This list is generated via
         :func:`~gammapy.spectrum.spectrum_extraction.extract_spectrum`
         when the property is first called and the result is cached.
@@ -145,6 +150,7 @@ class SpectrumExtraction(object):
 
     def copy(self, bkg_method=None):
         """Return copy of `~gammapy.spectrum.SpectrumExtraction`
+
         Parameters
         ----------
         bkg_method : dict, optional
@@ -163,6 +169,7 @@ class SpectrumExtraction(object):
     @classmethod
     def from_config(cls, config, **kwargs):
         """Create `~gammapy.spectrum.SpectrumAnalysis` from config dict
+
         Parameters
         ----------
         configfile : dict
@@ -210,6 +217,7 @@ class SpectrumExtraction(object):
     @classmethod
     def from_configfile(cls, configfile):
         """Create `~gammapy.spectrum.SpectrumExtraction` from configfile
+
         Parameters
         ----------
         configfile : str
@@ -249,8 +257,10 @@ class SpectrumObservation(object):
 
     @classmethod
     def read_ogip(cls, phafile):
-        """ Read `~gammapy.spectrum.SpectrumObservation` from OGIP files
+        """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files
+
         BKG file, ARF, and RMF must be set in the PHA header
+
         Parameters
         ----------
         phafile : str
@@ -277,7 +287,9 @@ class SpectrumObservation(object):
     def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
                        exclusion, save_meta=True, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
+
         Extraction parameters are stored in the meta attribute
+
         Parameters
         ----------
         obs : int
@@ -355,12 +367,14 @@ class SpectrumObservation(object):
     @classmethod
     def stack_observation_list(cls, obs_list, group_id=None):
         """Create `~gammapy.spectrum.SpectrumObservations` from list
+
         Observation stacking is implemented as follows
         Averaged exposure ratio between ON and OFF regions, arf and rmf
         :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
         .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
         .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
         .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot livetime_i}
+
         Parameters
         ----------
         obs_list : list of `~gammapy.spectrum.SpectrumObservations`
@@ -450,18 +464,21 @@ class SpectrumObservation(object):
 
     def restrict_energy_range(self, energy_range=None, method='binned'):
         """Restrict to a given energy range
+
         If no energy range is given, it will be extracted from the PHA header.
         Tow methods are available . Unbinned method: The new counts vectors are
         created from the list of on and off events. Therefore this list must be
         saved in the meta info. Binned method: The counts vectors are taken as
         a basis for the energy range restriction. Only bins that are entirely
         contained in the desired energy range are copied.
+
         Parameters
         ----------
         energy_range : `~gammapy.utils.energy.EnergyBounds`, optional
             Desired energy range
         method : str {'unbinned', 'binned'}
             Use unbinned on list / binned on vector
+
         Returns
         -------
         obs : `~gammapy.spectrum.spectrum_extraction.SpectrumObservation`
@@ -502,8 +519,10 @@ class SpectrumObservation(object):
     def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
                    outdir=None, clobber=True):
         """Write OGIP files
+
         The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
         header. If no filenames are given, default names will be chosen.
+       
         Parameters
         ----------
         phafile : `~gammapy.extern.pathlib.Path`, str
@@ -547,7 +566,9 @@ class SpectrumObservation(object):
 
     def plot_exclusion_mask(self, size=None, **kwargs):
         """Plot exclusion mask for this observation
+
         The plot will be centered at the pointing position
+       
         Parameters
         ----------
         size : `~astropy.coordinates.Angle`
@@ -599,14 +620,16 @@ class SpectrumObservationList(list):
 
     def get_obslist_from_ids(self, id_list):
         """Return an subset of the observation list
+        
         Parameters
         ----------
         id_list : list of int
             List of Observation Id (runnumber)
+
         Returns
         -------
         observation : `~gammapy.spectrum.SpectrumObservationList`
-            List of `~gammapy.spectrum.SpectrumObservation`
+            Subset of observations
         """
         new_list = list()
 
@@ -623,6 +646,7 @@ class SpectrumObservationList(list):
 
     @property
     def total_spectrum(self):
+        """Stack all observations belongig to the list"""
         return SpectrumObservation.stack_observation_list(self)
 
     def info(self):
@@ -635,11 +659,14 @@ class SpectrumObservationList(list):
 
     def filter_by_reflected_regions(self, n_min):
         """Filter observation list according to number of reflected regions
+
         Condition: number of reflected regions >= nmin
+
         Parameters
         ----------
         n_min : int
             Minimum number of reflected regions
+
         Returns
         -------
         idx : `~np.array`
@@ -652,6 +679,7 @@ class SpectrumObservationList(list):
 
     def write_ogip_data(self, outdir, **kwargs):
         """Create OGIP files
+
         Parameters
         ----------
         outdir : str, `~gammapy.extern.pathlib.Path`
@@ -663,8 +691,10 @@ class SpectrumObservationList(list):
     @classmethod
     def read_ogip(cls, dir='ogip_data'):
         """Create `~gammapy.spectrum.SpectrumObservationList` from OGIP files
+
         The pha file need to be contained in one directroy and have '.pha' as
         suffix
+
         Parameters
         ----------
         dir : str, Path
@@ -675,7 +705,7 @@ class SpectrumObservationList(list):
         return cls(obs)
 
     def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable"""
+        """Create `~gammapy.data.ObservationTable`"""
         observation_table = ObservationTable()
 
         files = np.array([o.meta.phafile for o in self])
@@ -700,9 +730,11 @@ class SpectrumObservationList(list):
 
 class BackgroundEstimator(object):
     """TBD
+
     Select events inside off regsion. At one point this can be replaced by a
     more generic `~gammapy.regions` module
     For available methods see :ref:`spectrum_background_method`
+
     Parameters
     ----------
     event_list : `~gammapy.data.EventList`
