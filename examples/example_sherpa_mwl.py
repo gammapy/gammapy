@@ -12,7 +12,7 @@ import numpy as np
 from astropy.units import Quantity
 import astropy.units as u
 
-from sherpa.data import Data1D, DataSimulFit
+from sherpa.data import Data1D, DataSimulFit, Data, BaseData
 from sherpa.models import PowLaw1D, LogParabola, SimulFitModel
 from sherpa.stats import Chi2DataVar, Likelihood
 from sherpa.optmethods import LevMar
@@ -52,6 +52,52 @@ class FermiData(object):
         return Data1D(name=self.name, x=self.x, y=self.y, staterror=self.staterror)
 
 
+class FermiDataShim(Data):
+    """A shim to interface Sherpa to the Fermi science tools.
+    """
+
+    def __init__(self, name='fermi_data_shim'):
+        # TODO: need dummy? simplify?
+        self.dep = np.array([42])  # Dummy
+        self.indep = np.array([42])  # Dummy
+        BaseData.__init__(self)
+
+    def eval_model(self, modelfunc):
+        print('hello from FermiDataShim.eval_model')
+        print(modelfunc)
+        raise NotImplementedError()
+
+    def eval_model_to_fit(self, modelfunc):
+        pars = [(par.name, par.val) for par in modelfunc.pars]
+        # IPython.embed();
+        return np.atleast_1d(FermiDataShim.fermi_loglike(pars))
+
+    @staticmethod
+    def fermi_loglike(pars):
+        # TODO: import fermipy here
+        # TODO: compute loglike for fermi using the Fermi science tools via fermipy
+        print('hello from FermiDataShim.eval_model_to_fit')
+        print(pars)
+        loglike = 42.2
+        return loglike
+
+
+class FermiStatShim(Likelihood):
+    """A shim to interface Sherpa to the Fermi science tools
+    """
+
+    def __init__(self, name='fermi'):
+        Likelihood.__init__(self, name)
+
+    @staticmethod
+    def calc_stat(data, model, staterror=None, syserror=None, weight=None, bkg=None):
+        """We pass the logL value in `model` here.
+        """
+        print('hello from FermiStatShim.calc_stat')
+        print(model, model)
+        return float(model), model
+
+
 class IACTData(object):
     def __init__(self):
         table = load_crab_flux_points(component='nebula')
@@ -65,6 +111,29 @@ class IACTData(object):
     @property
     def sherpa_data(self):
         return Data1D(name=self.name, x=self.x, y=self.y, staterror=self.staterror)
+
+
+def mwl_fit_low_level_calling_fermi():
+    """Example how to do a Sherpa model fit,
+    but use the Fermi ScienceTools to evaluate
+    the likelihood for the Fermi dataset.
+    """
+
+    spec_model = LogParabola('spec_model')
+    spec_model.c1 = 0.5
+    spec_model.c2 = 0.2
+    spec_model.ampl = 5e-11
+
+    model = spec_model
+
+    data = FermiDataShim()
+    stat = FermiStatShim()
+    method = LevMar()
+    fit = Fit(data=data, model=model, stat=stat, method=method)
+    result = fit.fit()
+
+    # IPython.embed()
+    return Bunch(results=result, model=spec_model)
 
 
 def mwl_fit_low_level():
@@ -87,7 +156,7 @@ def mwl_fit_low_level():
     # TODO: Figure out how to notice using the low-level API
     # data.notice(mins=1e-3, maxes=None, axislist=None)
     model = SimulFitModel(name='global_model', parts=[spec_model, spec_model])
-    stat = Chi2DataVar()
+    stat = FermiStat()
     method = LevMar()
     fit = Fit(data=data, model=model, stat=stat, method=method)
     result = fit.fit()
@@ -169,8 +238,9 @@ def plot_result(results):
 
 
 if __name__ == '__main__':
-    results = mwl_fit_low_level()
     # results = mwl_fit_high_level()
+    # results = mwl_fit_low_level()
+    results = mwl_fit_low_level_calling_fermi()
 
     print_results(results)
     plot_result(results)
