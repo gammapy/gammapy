@@ -75,6 +75,7 @@ class SpectrumExtraction(object):
         if isinstance(obs_ids, six.string_types):
             temp = make_path(obs_ids)
             obs_ids = np.loadtxt(str(temp), dtype=np.int)
+        # Todo: Take ObservationTable as input
         self.obs_ids = obs_ids
 
         self._observations = None
@@ -194,12 +195,7 @@ class SpectrumExtraction(object):
                 raise ValueError("No binning specified")
 
         # ON region
-        radius = Angle(config['on_region']['radius'])
-        x = config['on_region']['center_x']
-        y = config['on_region']['center_y']
-        frame = config['on_region']['system']
-        center = SkyCoord(x, y, frame=frame)
-        on_region = SkyCircleRegion(center, radius)
+        on_region = SkyCircleRegion.from_dict(config['on_region'])
 
         # OFF region
         bkg_method = config['off_region']
@@ -211,6 +207,19 @@ class SpectrumExtraction(object):
         return cls(datastore=store, obs_ids=obs, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
                    nobs=nobs, ebounds=ebounds, **kwargs)
+
+    def write_configfile(self, filename):
+        """Write config file in YAML format
+
+        This is usefull when the `~gammapy.spectrum.SpectrumExtraction` has
+        been altered and the changes want to be saved
+
+        Parameters
+        ----------
+        filename : str
+            YAML file to write
+        """
+        config = dict(extraction=dict())
 
     @classmethod
     def from_configfile(cls, configfile):
