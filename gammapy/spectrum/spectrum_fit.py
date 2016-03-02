@@ -43,6 +43,7 @@ class SpectrumFit(object):
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
+    
         Required columns
         - OBS_ID
         - PHAFILE
@@ -73,6 +74,7 @@ class SpectrumFit(object):
     @classmethod
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` using a config dict
+        
         The spectrum extraction step has to have run before
         """
         config = config['fit']
@@ -157,6 +159,7 @@ class SpectrumFit(object):
     def energy_threshold_low(self):
         """
         Low energy threshold of the spectral fit
+        
         If a list of observations is fit at the same time, this is a list with
         the theshold for each observation.
         """

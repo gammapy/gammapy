@@ -220,6 +220,9 @@ class SpectrumExtraction(object):
             YAML file to write
         """
         config = dict(extraction=dict())
+        e = config['extraction']
+        e.update(data = dict())
+        e['data'] = 0
 
     @classmethod
     def from_configfile(cls, configfile):

@@ -5,6 +5,8 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
+from astropy.utils import lazyproperty
+
 from ..time import time_ref_from_dict, time_relative_to_ref
 from ..catalog import select_sky_box, select_sky_circle
 
@@ -31,13 +33,24 @@ class ObservationTable(Table):
         """Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)"""
         return SkyCoord(self['GLON'], self['GLAT'], unit='deg', frame='galactic')
 
+    @lazyproperty
+    def index_dict(self):
+        """Dict containing row index for all obs ids"""
+        temp = (zip(self['OBS_ID'], np.arange(len(self))))
+        return dict(temp)
+
     def get_obs_idx(self, obs_id):
         """Get observation table row index for given ``obs_id``.
 
         Raises ValueError if the observation isn't available.
+
+        Parameters
+        ----------
+        obs_id: int, list
+            observation ids
         """
-        # TODO: maybe searchsorted is faster?
-        return list(self['OBS_ID']).index(obs_id)
+        idx = [self.index_dict[key] for key in np.atleast_1d(obs_id)]
+        return idx
 
     def get_obs_row(self, obs_id):
         """Get observation table row for given ``obs_id``.

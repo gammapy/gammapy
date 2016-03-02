@@ -17,7 +17,11 @@ log = logging.getLogger(__name__)
 class SpectrumGrouping(object):
     """
     Class that will define the band and the observations in each band from an observation list.
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> temp commit
     Parameters
     ----------
     spectrum_observation_list : `~gammapy.spectrum.SpectrumObservationList`
@@ -45,7 +49,11 @@ class SpectrumGrouping(object):
             Min/Max zenith angle boundaries for the band
         n_zen_bin : int
             Number of zenith bin
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> temp commit
         Returns
         -------
         obs_group : `~gammapy.data.ObservationGroups`
@@ -68,12 +76,20 @@ class SpectrumGrouping(object):
 
     def apply_grouping(self, obs_groups):
         """Attribute the number of the band to each observation and stack the observations together.
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> temp commit
         Parameters
         ----------
         obs_groups : `~gammapy.data.ObservationGroups`
                 Contains the boundaries of the different band
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> temp commit
         Returns
         -------
         list_band : `~gammapy.spectrum.SpectrumObservationList`
@@ -103,7 +119,11 @@ class SpectrumGrouping(object):
                                 zen_range=[0., 70.], n_zen_bin=7):
         """Define the number of bands in zenith, efficiency and offset and stack the events in each band
         using the previous method
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> temp commit
         Parameters
         ----------
         offset_range : tuple
@@ -118,7 +138,11 @@ class SpectrumGrouping(object):
             Min/Max zenith angle boundaries for the band
         n_zen_bin : int
             Number of zenith bin
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> temp commit
         Returns
         -------
         list_band : `~gammapy.spectrum.SpectrumObservationList`

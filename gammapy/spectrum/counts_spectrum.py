@@ -140,6 +140,7 @@ class CountsSpectrum(object):
     @classmethod
     def from_eventlist(cls, event_list, bins):
         """Create CountsSpectrum from fits 'EVENTS' extension (`CountsSpectrum`).
+
         Subsets of the event list should be chosen via the appropriate methods
         in `~gammapy.data.EventList`.
 
@@ -231,6 +232,7 @@ class CountsSpectrum(object):
     def write(self, filename, bkg=None, corr=None, rmf=None, arf=None,
               *args, **kwargs):
         """Write PHA to FITS file.
+
         Calls `gammapy.spectrum.CountsSpectrum.to_fits` and
         `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
         """
@@ -343,6 +345,7 @@ class CountsSpectrum(object):
     def plot(self, ax=None, weight=1, energy_unit='TeV', **kwargs):
         """
         Plot counts vector
+
         kwargs are forwarded to matplotlib.pyplot.hist
 
         Parameters
