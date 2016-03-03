@@ -588,8 +588,8 @@ In these cases, the following shorter format omitting the *Returns* section is r
 Usually the parameter description doesn't fit on the one line, so it's
 recommended to always keep this in the *Parameters* section.
 
-This is just a recommendation, e.g. for `gammapy.data.SpectralCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.data.SpectralCube.flux` we
+This is just a recommendation, e.g. for `gammapy.cube.SpectralCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.cube.SpectralCube.flux` we
 decided to stick with the more verbose format, because the return type and units
 didn't fit on the first line.
 
@@ -611,7 +611,7 @@ Class attributes
 ++++++++++++++++
 
 Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.data.SpectralCube` as an example.
+see `~gammapy.cube.SpectralCube` as an example.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*

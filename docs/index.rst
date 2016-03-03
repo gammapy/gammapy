@@ -75,6 +75,7 @@ The Gammapy toolbox
   astro/index
   background/index
   catalog/index
+  cube/index
   data/index
   datasets/index
   detect/index

@@ -4,7 +4,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-from gammapy.data import SpectralCube, compute_npred_cube, convolve_cube
+from gammapy.cube import SpectralCube, compute_npred_cube, convolve_cube
 from gammapy.datasets import FermiVelaRegion
 from gammapy.irf import EnergyDependentTablePSF
 
