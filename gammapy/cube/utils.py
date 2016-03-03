@@ -14,7 +14,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         Differential flux cube.
     exposure_cube : `SpectralCube`
         Instrument exposure cube.
-    energy_bins : `~astropy.units.Quantity`
+    energy_bins : `~gammapy.utils.energy.EnergyBounds`
         An array of Quantities specifying the edges of the energy band
         required for the predicted counts cube.
     integral_resolution : int (optional)
@@ -30,8 +30,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
                          'flux_cube: {0}\nexposure_cube: {1}'
                          ''.format(flux_cube.data.shape[1:], exposure_cube.data.shape[1:]))
 
-    energy = EnergyBounds(energy_bins)
-    energy_centers = energy.log_centers
+    energy_centers = energy_bins.log_centers
     wcs = exposure_cube.wcs
     lon, lat = exposure_cube.spatial_coordinate_images
     solid_angle = exposure_cube.solid_angle_image
