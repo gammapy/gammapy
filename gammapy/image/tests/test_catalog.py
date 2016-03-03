@@ -7,7 +7,7 @@ from ...utils.testing import requires_dependency, requires_data
 from .. import catalog
 from ...image import make_empty_image
 from ...irf import EnergyDependentTablePSF
-from ...data import SpectralCube
+from ...cube import SpectralCube
 from ...datasets import FermiGalacticCenter
 
 

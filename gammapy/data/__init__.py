@@ -13,7 +13,6 @@ from .gti import *
 from .observation import *
 from .obsgroup import *
 from .observers import *
-from .spectral_cube import *
 from .telarray import *
 from .utils import *
 from .maps import *
