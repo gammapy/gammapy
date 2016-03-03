@@ -3,7 +3,7 @@
 Fermi-LAT diffuse model predicted counts image
 ==============================================
 
-The `~gammapy.data.SpectralCube` class allows for image-based analysis in energy
+The `~gammapy.cube.SpectralCube` class allows for image-based analysis in energy
 bands. In particular, similar functionality to gtmodel in the Fermi Science
 tools [FSSC2013]_ is offered in `~gammapy.data.compute_npred_cube`
 which generates a predicted instrument PSF-convolved counts cube based on a
@@ -15,7 +15,7 @@ Predicting Counts
 -----------------
 
 The example script below computes the Fermi PSF-convolved predicted counts map
-using `~gammapy.data.SpectralCube`. This is then used to produce a Li & Ma significance
+using `~gammapy.cube.SpectralCube`. This is then used to produce a Li & Ma significance
 image [LiMa1983]_. The left image shows the significance image,
 while a comparison against the significance image
 produced using the Fermi Science tools is shown on the right. These results are

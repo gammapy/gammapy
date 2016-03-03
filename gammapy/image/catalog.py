@@ -21,7 +21,7 @@ def _extended_image(catalog, reference_cube):
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
     from ..catalog import fetch_fermi_extended_sources
-    from ..data import SpectralCube
+    from ..cube import SpectralCube
 
     # Note that the first extended source fits file is unreadable...
     hdu_list = fetch_fermi_extended_sources(catalog)[1:]
@@ -102,7 +102,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     from scipy.ndimage import convolve
     # This import is here instead of at the top to avoid an ImportError
     # due to circular dependencies
-    from ..data import SpectralCube
+    from ..cube import SpectralCube
 
     lons, lats = coordinates(reference)
     wcs = WCS(reference.header)

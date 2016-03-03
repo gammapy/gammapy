@@ -4,9 +4,10 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.io import fits
 from astropy.wcs import WCS
-from gammapy.data import SpectralCube, compute_npred_cube, convolve_cube
+from gammapy.cube import SpectralCube, compute_npred_cube, convolve_cube
 from gammapy.datasets import FermiVelaRegion
 from gammapy.irf import EnergyDependentTablePSF
+from gammapy.utils.energy import EnergyBounds
 
 __all__ = ['prepare_images']
 
@@ -26,7 +27,7 @@ def prepare_images():
     repro_bg_cube = background_model.reproject_to(exposure_cube)
 
     # Define energy band required for output
-    energies = Quantity([10, 500], 'GeV')
+    energies = EnergyBounds([10, 500], 'GeV')
 
     # Compute the predicted counts cube
     npred_cube = compute_npred_cube(repro_bg_cube, exposure_cube, energies)

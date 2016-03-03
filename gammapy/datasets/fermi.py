@@ -72,14 +72,14 @@ class FermiGalacticCenter(object):
     @staticmethod
     def diffuse_model():
         """Diffuse model (`~gammapy.data.SpectralCube`)"""
-        from ..data import SpectralCube
+        from ..cube import SpectralCube
         filename = FermiGalacticCenter.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
     @staticmethod
     def exposure_cube():
         """Exposure cube (`~gammapy.data.SpectralCube`)"""
-        from ..data import SpectralCube
+        from ..cube import SpectralCube
         filename = FermiGalacticCenter.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
@@ -132,7 +132,7 @@ class FermiVelaRegion(object):
     @staticmethod
     def diffuse_model():
         """Diffuse model (`~gammapy.data.SpectralCube`)"""
-        from ..data import SpectralCube
+        from ..cube import SpectralCube
         filename = FermiVelaRegion.filenames()['diffuse_model']
         return SpectralCube.read(filename)
 
@@ -170,7 +170,7 @@ class FermiVelaRegion(object):
     @staticmethod
     def exposure_cube():
         """Exposure cube (`~gammapy.data.SpectralCube`)."""
-        from ..data import SpectralCube
+        from ..cube import SpectralCube
         filename = FermiVelaRegion.filenames()['exposure_cube']
         return SpectralCube.read(filename)
 
