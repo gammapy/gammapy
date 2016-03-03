@@ -97,12 +97,6 @@ class CountsSpectrum(object):
         m.update(rmf=header['RESPFILE'])
         m.update(arf=header['ANCRFILE'])
         m.update(bkg=header['BACKFILE'])
-        if 'OFFSET' in header.keys():
-            m.update(offset=Angle(header['OFFSET'], 'deg'))
-        if 'ZENITH' in header.keys():
-            m.update(zenith=Angle(header['ZENITH'], 'deg'))
-        if 'MUONEFF' in header.keys():
-            m.update(muoneff=header['MUONEFF'])
         if 'LO_THRES' in header.keys():
             rng = EnergyBounds([header['LO_THRES'], header['HI_THRES']], 'TeV')
             m.update(safe_energy_range=rng)
@@ -324,21 +318,9 @@ class CountsSpectrum(object):
         val = self.meta.keys()
         if 'obs_id' in val:
             header['OBS_ID'] = self.meta.obs_id
-        if 'offset' in val:
-            header['OFFSET'] = self.meta.offset.to('deg').value, 'Target offset from pointing position'
-        if 'muoneff' in val:
-            header['MUONEFF'] = self.meta.muoneff, 'Muon efficiency'
-        if 'zenith' in val:
-            header['ZENITH'] = self.meta.zenith.to('deg').value, 'Zenith angle [deg]'
-        if 'on_region' in val:
-            header['RA-OBJ'] = self.meta.on_region.pos.icrs.ra.value, 'Right ascension of the target'
-            header['DEC-OBJ'] = self.meta.on_region.pos.icrs.dec.value , 'Declination of the target'
-            header['ON-RAD'] = self.meta.on_region.radius.to('deg').value, 'Radius of the circular spectral extraction region'
         if 'safe_energy_range' in val:
             header['HI_THRES'] = self.meta.safe_energy_range[1].to('TeV').value, 'Low energy threshold [TeV] for spectral fit'
             header['LO_THRES'] = self.meta.safe_energy_range[0].to('TeV').value, 'High energy threshold [TeV] for spectral fit'
-        if 'psf_containment' in val:
-            header['PSF_CONT'] = self.meta.psf_containment
 
         return hdu
 

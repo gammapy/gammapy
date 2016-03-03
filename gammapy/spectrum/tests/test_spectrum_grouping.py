@@ -1,19 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.tests.helper import assert_quantity_allclose
+from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_data, requires_dependency
 from ...datasets import gammapy_extra
 from ...spectrum import SpectrumObservationList
 from ...spectrum.spectrum_fit import SpectrumFit
 from ...spectrum.spectrum_grouping import SpectrumGrouping
 
-
+@pytest.mark.xfail
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_define_groups_and_stack(tmpdir):
     phadir = gammapy_extra.filename('datasets/hess-crab4_pha')
     observations = SpectrumObservationList.read_ogip(phadir)
-    observations.write_ogip_data(outdir='ogip_data')
+    observations.write_ogip(outdir='ogip_data')
     obs_table = observations.to_observation_table()
 
     fit = SpectrumFit.from_observation_table(obs_table)

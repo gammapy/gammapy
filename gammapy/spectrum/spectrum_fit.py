@@ -43,12 +43,10 @@ class SpectrumFit(object):
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
-    
-        Required columns
-        - OBS_ID
-        - PHAFILE
         """
-        pha_list = list(obs_table['PHAFILE'])
+
+        # pha_list = list(obs_table['PHAFILE'])
+        # Todo: find solution to get correct pha file
         obs_list = SpectrumObservationList()
         for f in pha_list:
             val = SpectrumObservation.read_ogip(f)

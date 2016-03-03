@@ -34,7 +34,7 @@ def test_spectrum_extraction(tmpdir):
 
     full_table = ObservationTable.read(gammapy_extra.filename(
         "datasets/hess-crab4-hd-hap-prod2/obs-index.fits.gz"))
-    obs_table = full_table.select_obs_id([23523, 23592, 23526])
+    obs_table = full_table.select_obs_id([23523, 23592])
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
 
@@ -44,7 +44,7 @@ def test_spectrum_extraction(tmpdir):
 
     # test methods on SpectrumObservationList
     obs = ana.observations
-    assert len(obs) == 3
+    assert len(obs) == 2
     obs23523 = obs.get_obslist_from_ids([23523])[0]
     assert obs23523.on_vector.total_counts == 123
     new_list = obs.get_obslist_from_ids([23523, 23592])
