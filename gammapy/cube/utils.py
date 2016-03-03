@@ -1,5 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+"""
+Cube analysis utility functions.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
+
+from astropy.units import Quantity
+from astropy.coordinates import Angle
+
+from .spectral_cube import SpectralCube
 
 __all__ = ['compute_npred_cube', 'convolve_cube']
 
@@ -85,3 +95,4 @@ def convolve_cube(cube, psf, offset_max):
     convolved_cube = SpectralCube(data=convolved_cube, wcs=cube.wcs,
                                   energy=cube.energy)
     return convolved_cube
+

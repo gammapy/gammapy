@@ -16,7 +16,6 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-from astropy.coordinates import Angle
 
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
@@ -176,7 +175,7 @@ class SpectralCube(object):
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header)
-        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'],unit='keV')
+        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
         #keV to match convention in Fermi ST and CTOOLS, TODO read from header
 
         return cls(data, wcs, energy)
