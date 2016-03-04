@@ -597,84 +597,6 @@ class SpectrumObservation(object):
                                    self.energy_dispersion, self.effective_area,
                                    meta=m)
 
-<<<<<<< HEAD
-    def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
-                   outdir=None, clobber=True):
-        """Write OGIP files
-
-        The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
-        header. If no filenames are given, default names will be chosen.
-
-        Parameters
-        ----------
-        phafile : `~gammapy.extern.pathlib.Path`, str
-            PHA filename
-        bkgfile : str
-            BKG filename
-        arffile : str
-            ARF filename
-        rmffile : str
-            RMF : filename
-        outdir : None
-            directory to write the files to, default: pwd
-        clobber : bool
-            Overwrite
-        """
-
-        cwd = Path.cwd()
-        outdir = cwd if outdir is None else cwd / make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-
-        id = self.meta.obs_id
-
-        if phafile is None:
-            phafile = "pha_run{}.pha".format(id)
-        if arffile is None:
-            arffile = "arf_run{}.fits".format(id)
-        if rmffile is None:
-            rmffile = "rmf_run{}.fits".format(id)
-        if bkgfile is None:
-            bkgfile = "bkg_run{}.fits".format(id)
-
-        self.meta['phafile'] = str(outdir / phafile)
-
-        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
-                             rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
-                                  effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
-                                     clobber=clobber)
-
-    def plot_exclusion_mask(self, size=None, **kwargs):
-        """Plot exclusion mask for this observation
-
-        The plot will be centered at the pointing position
-
-        Parameters
-        ----------
-        size : `~astropy.coordinates.Angle`
-            Edge length of the plot
-        """
-        size = Angle('5 deg') if size is None else Angle(size)
-        ax = self.meta.exclusion.plot(**kwargs)
-        self._set_ax_limits(ax, size)
-        point = skycoord_to_pixel(self.meta.pointing, ax.wcs)
-        ax.scatter(point[0], point[1], s=250, marker="+", color='black')
-        return ax
-
-    def plot_on_region(self, ax=None, **kwargs):
-        """Plot target regions"""
-        ax = self.plot_exclusion_mask() if ax is None else ax
-        self.meta.on_region.plot(ax, **kwargs)
-        return ax
-
-    def plot_reflected_regions(self, ax=None, **kwargs):
-        """Plot reflected regions"""
-        ax = self.plot_exclusion_mask() if ax is None else ax
-        self.meta.off_region.plot(ax, **kwargs)
-        return ax
-
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
@@ -846,10 +768,10 @@ class BackgroundEstimator(object):
         self.off_vec = off_vec
 
 
-
+# Todo: move to spectrum analysis class
 
 def plot_exclusion_mask(self, size=None, **kwargs):
-    """Plot exclusion mask 
+    """Plot exclusion mask
 
     The plot will be centered at the pointing position
        
