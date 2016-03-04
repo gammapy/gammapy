@@ -43,10 +43,13 @@ class SpectrumFit(object):
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
+
+        Required columns
+        - OBS_ID
+        - PHAFILE
         """
 
-        # pha_list = list(obs_table['PHAFILE'])
-        # Todo: find solution to get correct pha file
+        pha_list = list(obs_table['PHAFILE'])
         obs_list = SpectrumObservationList()
         for f in pha_list:
             val = SpectrumObservation.read_ogip(f)
@@ -249,39 +252,15 @@ class SpectrumFit(object):
         self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
         self.write_npred()
 
-    def _run_hspec_fit(self):
-        """Run the gammapy.hspec fit
-        """
-
-        raise ValueError('HSPEC is currently broken. Use sherpa')
-        log.info("Starting HSPEC")
-        import sherpa.astro.ui as sau
-        from ..hspec import wstat
-
-        sau.set_conf_opt("max_rstat", 100)
-
-        thres_lo = self.energy_threshold_low.to('keV').value
-        thres_hi = self.energy_threshold_high.to('keV').value
-        sau.freeze(self.model.ref)
-
-        list_data = []
-        for pha in self.pha:
-            datid = pha.parts[-1][7:12]
-            sau.load_data(datid, str(pha))
-            sau.notice_id(datid, thres_lo, thres_hi)
-            sau.set_source(datid, self.model)
-            list_data.append(datid)
-
-        wstat.wfit(list_data)
-
     def _run_sherpa_fit(self):
-        """Plain sherpa fit not using the session object
+        """Plain sherpa fit using the session object
         """
         from sherpa.astro import datastack
         log.info("Starting SHERPA")
         log.info(self.info())
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
+        import IPython; IPython.embed()
         ds.set_source(self.model)
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value

@@ -89,7 +89,7 @@ class SpectrumExtraction(object):
         if self.bkg_method['type'] == 'reflected':
             self.filter_observations()
 
-        self.observations.write_ogip('ogip_data')
+        self.observations.write_ogip()
         self.observations.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
         self.write_configfile()
 
@@ -116,13 +116,8 @@ class SpectrumExtraction(object):
 
         # Add meta columns to obs_table
         t = self.obs_table
-        if 'OFFSET' not in t.colnames:
-            t.add_column(Column(np.zeros(len(t)), 'OFFSET'))
-        if 'CONTAINMENT' not in t.colnames:
-            t.add_column(Column(np.zeros(len(t)), 'CONTAINMENT'))
-
         for row in t:
-            log.info('Extracting spectrum for observation {}'.format(id))
+            log.info('Extracting spectrum for observation {}'.format(row['OBS_ID']))
             temp = SpectrumObservation.from_datastore(row, self.store,
                                                       self.on_region,
                                                       self.bkg_method,
@@ -132,10 +127,22 @@ class SpectrumExtraction(object):
                                                       )
 
             observations.append(temp)
+
             if row.index == nobs - 1:
                 break
 
         self._observations = SpectrumObservationList(observations)
+
+        #update meta info
+        if 'OFFSET' not in t.colnames:
+            offset = [_.meta.offset for _ in self.observations]
+            t.add_column(Column(name='OFFSET', data=Angle(offset)))
+        if 'CONTAINMENT' not in t.colnames:
+            containment = [_.meta.containment for _ in self.observations]
+            t.add_column(Column(name='CONTAINMENT', data=containment))
+        if 'PHAFILE' not in t.colnames:
+            pha = [str(_.meta.ogip_dir/_.meta.phafile) for _ in self.observations]
+            t.add_column(Column(name='PHAFILE', data=pha))
 
     @property
     def observations(self):
@@ -282,9 +289,6 @@ class SpectrumObservation(object):
         self.effective_area = effective_area
         self.meta = on_vector.meta
 
-        # These values are needed for I/O
-        self.meta.setdefault('phafile', 'None')
-
     @classmethod
     def read_ogip(cls, phafile):
         """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files.
@@ -337,13 +341,13 @@ class SpectrumObservation(object):
         """
 
         cwd = Path.cwd()
-        outdir = cwd if outdir is None else cwd / make_path(outdir)
+        outdir = cwd / make_path(self.meta.ogip_dir) if outdir is None else cwd
         outdir.mkdir(exist_ok=True, parents=True)
 
         id = self.meta.obs_id
 
         if phafile is None:
-            phafile = "pha_run{}.pha".format(id)
+            phafile = self.meta.phafile
         if arffile is None:
             arffile = "arf_run{}.fits".format(id)
         if rmffile is None:
@@ -396,20 +400,22 @@ class SpectrumObservation(object):
         aeff = None
         edisp = None
 
-        m = Bunch()
-        m['obs_id'] = obs_id
-
-        # Update observation table row with additional meta info
         pointing = event_list.pointing_radec
         offset = pointing.separation(on_region.pos)
         livetime = event_list.observation_live_time_duration
-        obs['OFFSET'] = offset.to('deg').value
 
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
             val = Energy('10 TeV')
             psf = psf2d.psf_at_energy_and_theta(val, m.offset)
             cont = psf.containment_fraction(m.on_region.radius)
+
+        m = Bunch()
+        m['obs_id'] = obs_id
+        m['phafile'] = 'pha_run{}.pha'.format(obs_id)
+        m['ogip_dir'] = make_path('ogip_data')
+        m['offset'] = offset
+        m['containment'] = 1
 
         if dry_run:
             return cls(obs_id, None, None, None, None, meta=m)
@@ -431,6 +437,8 @@ class SpectrumObservation(object):
 
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
+        off_vec.meta.update(backscal=1)
+        off_vec.meta.update(livetime=livetime)
 
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(offset)
@@ -741,7 +749,7 @@ class SpectrumObservationList(list):
         idx = np.nonzero(condition)
         return idx[0]
 
-    def write_ogip(self, outdir, **kwargs):
+    def write_ogip(self, outdir=None, **kwargs):
         """Create OGIP files
 
         Parameters
