@@ -715,17 +715,14 @@ def bin_events_in_cube(events, reference_cube, energies):
     # We're not interested in the energy axis, so we give a dummy value of 1
     origin = 0  # convention for gammapy
     xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)[:-1]
-    
-    event_energies = events['Energy']
-    zz = np.searchsorted(event_energies, energies)
-
+    event_energies = events['ENERGY']
+    zz = np.searchsorted(energies.value, event_energies.data)
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
     shape = reference_cube.data.shape
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
     data = np.histogramdd([zz, yy, xx], bins)[0]
-
     hdu = fits.ImageHDU(data, reference_cube.header)
     return hdu
 

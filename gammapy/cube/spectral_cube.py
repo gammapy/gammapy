@@ -81,6 +81,7 @@ class SpectralCube(object):
         # TODO: check validity of inputs
         self.data = data
         self.wcs = wcs
+        self.header = wcs.to_header()
 
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
@@ -245,6 +246,7 @@ class SpectralCube(object):
         lon, lat, _ = self.pix2world(i_lon, i_lat, 0)
 
         return lon, lat
+
 
     @property
     def solid_angle_image(self):
