@@ -54,8 +54,8 @@ class SpectrumExtraction(object):
         Exclusion regions
     bkg_method : dict
         Background method including necessary parameters
-    nobs : int
-        number of observations to process, 0 means all observations
+    nobs : int, optional
+        number of observations to process
     ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
     """
@@ -64,7 +64,7 @@ class SpectrumExtraction(object):
     EXCLUDEDREGIONS_FILE = 'excluded_regions.fits'
 
     def __init__(self, datastore, obs_table, on_region, exclusion, bkg_method,
-                 nobs=-1, ebounds=None, **kwargs):
+                 nobs=None, ebounds=None, **kwargs):
 
         self.on_region = on_region
         self.store = datastore
@@ -73,9 +73,8 @@ class SpectrumExtraction(object):
             ebounds = EnergyBounds.equal_log_spacing(0.01, 316, 108, 'TeV')
         self.ebounds = ebounds
         self.bkg_method = bkg_method
-        self.nobs = nobs
         self.extra_info = kwargs
-        self.obs_table = obs_table
+        self.obs_table = obs_table[0:nobs]
 
         self._observations = None
 
@@ -99,22 +98,16 @@ class SpectrumExtraction(object):
         mask = obs.filter_by_reflected_regions(self.bkg_method['n_min'])
         self._observations = SpectrumObservationList(np.asarray(obs)[mask])
 
-    def extract_spectrum(self, nobs=None):
+    def extract_spectrum(self):
         """Extract 1D spectral information
 
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
         The observation table is updated with some meta information.
-
-        Parameters
-        ----------
-        nobs : int
-            Number of observations to process
         """
-        nobs = self.nobs if nobs is None else nobs
+
         observations = []
 
-        # Add meta columns to obs_table
         t = self.obs_table
         for row in t:
             log.info('Extracting spectrum for observation {}'.format(row['OBS_ID']))
@@ -127,9 +120,6 @@ class SpectrumExtraction(object):
                                                       )
 
             observations.append(temp)
-
-            if row.index == nobs - 1:
-                break
 
         self._observations = SpectrumObservationList(observations)
 
@@ -167,10 +157,10 @@ class SpectrumExtraction(object):
 
         bkg_method = self.bkg_method if bkg_method is None else bkg_method
 
-        ana = SpectrumExtraction(datastore=self.store, obs_table=self.obs_ids,
+        ana = SpectrumExtraction(datastore=self.store, obs_table=self.obs_table,
                                  on_region=self.on_region,
                                  bkg_method=bkg_method,
-                                 exclusion=self.exclusion, nobs=0,
+                                 exclusion=self.exclusion,
                                  ebounds=self.ebounds)
         return ana
 
@@ -190,6 +180,7 @@ class SpectrumExtraction(object):
         storename = config['data']['datastore']
         store = DataStore.from_all(storename)
         nobs = config['data']['nruns']
+        nobs = None if nobs == 0 else nobs
 
         # Binning
         sec = config['binning']
@@ -249,7 +240,7 @@ class SpectrumExtraction(object):
         e.update(data=dict())
         e['data']['obstable'] = self.OBSTABLE_FILE
         e['data']['datastore'] = str(self.store.base_dir)
-        e['data']['nruns'] = self.nobs
+        e['data']['nruns'] = len(self.obs_table)
 
         e.update(binning=dict())
         e['binning']['equal_log_spacing'] = False
@@ -283,11 +274,10 @@ class SpectrumObservation(object):
     def __init__(self, on_vector, off_vector, energy_dispersion,
                  effective_area, meta=None):
         self.on_vector = on_vector
-        self.on_vector.meta.update(**meta)
         self.off_vector = off_vector
         self.energy_dispersion = energy_dispersion
         self.effective_area = effective_area
-        self.meta = on_vector.meta
+        self.meta = meta
 
     @classmethod
     def read_ogip(cls, phafile):
@@ -341,19 +331,17 @@ class SpectrumObservation(object):
         """
 
         cwd = Path.cwd()
-        outdir = cwd / make_path(self.meta.ogip_dir) if outdir is None else cwd
+        outdir = cwd / make_path(self.meta.ogip_dir) if outdir is None else outdir
         outdir.mkdir(exist_ok=True, parents=True)
-
-        id = self.meta.obs_id
 
         if phafile is None:
             phafile = self.meta.phafile
         if arffile is None:
-            arffile = "arf_run{}.fits".format(id)
+            arffile = phafile.replace('pha', 'arf')
         if rmffile is None:
-            rmffile = "rmf_run{}.fits".format(id)
+            rmffile = phafile.replace('pha', 'rmf')
         if bkgfile is None:
-            bkgfile = "bkg_run{}.fits".format(id)
+            bkgfile = phafile.replace('pha', 'bkg')
 
         self.meta['phafile'] = str(outdir / phafile)
 
@@ -412,10 +400,11 @@ class SpectrumObservation(object):
 
         m = Bunch()
         m['obs_id'] = obs_id
-        m['phafile'] = 'pha_run{}.pha'.format(obs_id)
-        m['ogip_dir'] = make_path('ogip_data')
+        m['phafile'] = 'pha_run{}.fits'.format(obs_id)
+        m['ogip_dir'] = Path(Path.cwd() / 'ogip_data')
         m['offset'] = offset
         m['containment'] = 1
+        m['livetime'] = livetime
 
         if dry_run:
             return cls(obs_id, None, None, None, None, meta=m)
@@ -437,8 +426,6 @@ class SpectrumObservation(object):
 
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
-        off_vec.meta.update(backscal=1)
-        off_vec.meta.update(livetime=livetime)
 
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
         arf_vec = aeff2d.to_effective_area_table(offset)
@@ -447,6 +434,12 @@ class SpectrumObservation(object):
 
         edisp2d = store.load(obs_id=obs_id, filetype='edisp')
         rmf_mat = edisp2d.to_energy_dispersion(offset, e_reco=ebounds)
+
+        # Todo: Define what metadata is stored where (obs table?)
+        on_vec.meta.update(backscal=1)
+        on_vec.meta.update(livetime=livetime)
+        on_vec.meta.update(obs_id=obs_id)
+        on_vec.meta.update(safe_energy_range=m.safe_energy_range)
 
         return cls(on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
@@ -465,9 +458,12 @@ class SpectrumObservation(object):
         ----------
         obs_list : list of `~gammapy.spectrum.SpectrumObservations`
             Observations to stack
-        obs_stacked_id : int, optional
-            Observation ID for stacked observations
+        group_id : int, optional
+            ID for stacked observations
         """
+
+        group_id = obs_list[0].meta.obs_id if group_id is None else group_id
+
         # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
 
@@ -476,6 +472,8 @@ class SpectrumObservation(object):
         if len(obs_list) == 1:
             on_vec.meta = Bunch(livetime=obs_list[0].meta.livetime,
                                 backscal=1)
+
+        on_vec.meta.update(obs_id=group_id)
 
         off_vec = np.sum([o.off_vector for o in obs_list])
 
@@ -515,10 +513,7 @@ class SpectrumObservation(object):
         m['obs_ids'] = [o.meta.obs_id for o in obs_list]
         m['alpha_method1'] = alpha_mean
         m['livetime'] = Quantity(livetime_tot, "s")
-
-        # TODO: properly handle groups ID vs obs ID now only use obs ID
-        #m['group_id'] = group_id if group_id is not None else 0
-        m['obs_id'] = group_id if group_id is not None else 0
+        m['group_id'] = group_id
 
         return cls(on_vec, off_vec, rmf, arf, meta=m)
 
@@ -761,19 +756,16 @@ class SpectrumObservationList(list):
             obs.write_ogip(outdir=outdir, **kwargs)
 
     @classmethod
-    def read_ogip(cls, dir='ogip_data'):
-        """Create `~gammapy.spectrum.SpectrumObservationList` from OGIP files.
-
-        The pha file need to be contained in one directroy and have '.pha' as
-        suffix.
+    def from_observation_table(cls, obs_table):
+        """Create `~gammapy.spectrum.SpectrumObservationList` from an
+        observation table.
 
         Parameters
         ----------
-        dir : str, `~gammapy.extern.pathlib.Path`
-            Directory holding the OGIP data
+        obs_table : `~gammapy.data.ObservationTable`
+            Observation table with column ``PHAFILE``
         """
-        dir = make_path(dir)
-        obs = [SpectrumObservation.read_ogip(_) for _ in dir.glob('*.pha')]
+        obs = [SpectrumObservation.read_ogip(_) for _ in obs_table['PHAFILE']]
         return cls(obs)
 
 

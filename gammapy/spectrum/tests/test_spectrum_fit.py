@@ -15,8 +15,8 @@ from astropy.utils.compat import NUMPY_LT_1_9
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_fit():
-    pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23592.pha")
-    pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_run23526.pha")
+    pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/ogip_data/pha_run23592.fits")
+    pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/ogip_data/pha_run23526.fits")
 
     obs1 = SpectrumObservation.read_ogip(pha1)
     obs2 = SpectrumObservation.read_ogip(pha2)

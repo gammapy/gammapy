@@ -57,19 +57,24 @@ def test_spectrum_extraction_from_config(tmpdir):
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')
     extraction = SpectrumExtraction.from_configfile(configfile)
-    extraction.extract_spectrum(nobs=1)
+    extraction.obs_table.remove_rows([1, 2, 3])
+    extraction.extract_spectrum()
     desired = extraction.observations
     configfile2 = str(tmpdir / 'config.yaml')
     extraction.write_configfile(configfile2)
     extraction2 = SpectrumExtraction.from_configfile(configfile2)
-    extraction2.extract_spectrum(nobs=1)
+    extraction2.extract_spectrum()
     actual = extraction2.observations
     assert actual[0].on_vector.total_counts == desired[0].on_vector.total_counts
 
 @requires_data('gammapy-extra')
 def test_observation_stacking():
-    phadir = gammapy_extra.filename('datasets/hess-crab4_pha')
-    temp = SpectrumObservationList.read_ogip(phadir)
+    obs_table_file = gammapy_extra.filename(
+        'datasets/hess-crab4_pha/observation_table.fits')
+
+    obs_table = ObservationTable.read(obs_table_file)
+    temp = SpectrumObservationList.from_observation_table(obs_table)
+
     observations = temp.get_obslist_from_ids([23523, 23592])
     spectrum_observation_grouped = SpectrumObservation.stack_observation_list(observations, 0)
     obs0 = observations[0]

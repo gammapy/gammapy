@@ -6,6 +6,8 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult, \
     SpectrumObservationList
+
+from ...data import ObservationTable
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
@@ -40,7 +42,7 @@ def test_CountsSpectrum():
     spec.to_fits()
 
     # Read pha file
-    f = gammapy_extra.filename('datasets/hess-crab4_pha/pha_run23526.pha')
+    f = gammapy_extra.filename('datasets/hess-crab4_pha/ogip_data/pha_run23526.fits')
     pha1 = CountsSpectrum.read_pha(f)
 
     #add two spectra
@@ -59,10 +61,11 @@ def test_n_pred():
     fitresult = gammapy_extra.filename(
         'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
 
-    testdir = gammapy_extra.filename(
-        'datasets/hess-crab4_pha')
+    obs_table_file = gammapy_extra.filename(
+        'datasets/hess-crab4_pha/observation_table.fits')
 
-    obs = SpectrumObservationList.read_ogip(dir=testdir)
+    obs_table = ObservationTable.read(obs_table_file)
+    obs = SpectrumObservationList.from_observation_table(obs_table)
     fit = SpectrumFitResult.from_yaml(fitresult)
 
     n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]

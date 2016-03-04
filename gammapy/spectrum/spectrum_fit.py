@@ -45,13 +45,13 @@ class SpectrumFit(object):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
 
         Required columns
-        - OBS_ID
         - PHAFILE
         """
 
         pha_list = list(obs_table['PHAFILE'])
         obs_list = SpectrumObservationList()
-        for f in pha_list:
+        for temp in pha_list:
+            f = str(make_path(temp))
             val = SpectrumObservation.read_ogip(f)
             val.meta.phafile = f
             obs_list.append(val)
@@ -260,7 +260,6 @@ class SpectrumFit(object):
         log.info(self.info())
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
-        import IPython; IPython.embed()
         ds.set_source(self.model)
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
