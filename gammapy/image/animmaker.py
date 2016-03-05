@@ -1,9 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Utility class to export animations from Gammapy for visualization"""
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib import animation
+__all__ = [
+    'AnimMaker'
+]
 
 
 class AnimMaker:
@@ -24,7 +23,7 @@ class AnimMaker:
         Container for the figure that is being generated
 
     im : Pyplot image
-        Container for the pyplot image:w
+        Container for the pyplot image
 
     curr_frame : int
         Frame number of the currently displayed frame
@@ -50,6 +49,10 @@ class AnimMaker:
     """
 
     def __init__(self, imlist, duration=200):
+
+        import matplotlib.pyplot as plt
+        from matplotlib import animation
+
         self.fig = plt.figure()
         self.imlist = imlist
         self.im = plt.imshow(self.imlist[0], animated=True)
@@ -69,6 +72,8 @@ class AnimMaker:
         """
         Show the generated animation
         """
+        import matplotlib.pyplot as plt
+
         plt.show()
 
     def write_anim(self, fname, enc='imagemagick'):
