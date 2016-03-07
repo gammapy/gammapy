@@ -1,20 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from numpy.testing import assert_allclose
-from ...data import DataStore
-from ...spectrum.results import SpectrumFitResult, SpectrumStats
-from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
-from ...region import SkyCircleRegion
+
+from ...data import DataStore, ObservationTable
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...region import SkyCircleRegion
 from ...spectrum import SpectrumExtraction
+from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
-from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 
 
 @requires_dependency('scipy')
@@ -33,27 +32,49 @@ def test_spectrum_extraction(tmpdir):
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
-    obs = [23523, 23559, 11111, 23592]
+    full_table = ObservationTable.read(gammapy_extra.filename(
+        "datasets/hess-crab4-hd-hap-prod2/obs-index.fits.gz"))
+    obs_table = full_table.select_obs_id([23523, 23592])
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
 
-    ana = SpectrumExtraction(datastore=ds, obs_ids=obs, on_region=on_region,
+    ana = SpectrumExtraction(datastore=ds, obs_table=obs_table, on_region=on_region,
                              bkg_method=bkg_method, exclusion=excl,
                              ebounds=bounds)
 
     # test methods on SpectrumObservationList
     obs = ana.observations
-    assert len(obs) == 3
+    assert len(obs) == 2
     obs23523 = obs.get_obslist_from_ids([23523])[0]
     assert obs23523.on_vector.total_counts == 123
     new_list = obs.get_obslist_from_ids([23523, 23592])
     assert new_list[0].meta.obs_id == 23523
     assert new_list[1].meta.obs_id == 23592
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+def test_spectrum_extraction_from_config(tmpdir):
+    configfile = gammapy_extra.filename(
+        'test_datasets/spectrum/spectrum_analysis_example.yaml')
+    extraction = SpectrumExtraction.from_configfile(configfile)
+    extraction.obs_table.remove_rows([1, 2, 3])
+    extraction.extract_spectrum()
+    desired = extraction.observations
+    configfile2 = str(tmpdir / 'config.yaml')
+    extraction.write_configfile(configfile2)
+    extraction2 = SpectrumExtraction.from_configfile(configfile2)
+    extraction2.extract_spectrum()
+    actual = extraction2.observations
+    assert actual[0].on_vector.total_counts == desired[0].on_vector.total_counts
+
 @requires_data('gammapy-extra')
 def test_observation_stacking():
-    phadir = gammapy_extra.filename('datasets/hess-crab4_pha')
-    temp = SpectrumObservationList.read_ogip(phadir)
+    obs_table_file = gammapy_extra.filename(
+        'datasets/hess-crab4_pha/observation_table.fits')
+
+    obs_table = ObservationTable.read(obs_table_file)
+    temp = SpectrumObservationList.from_observation_table(obs_table)
+
     observations = temp.get_obslist_from_ids([23523, 23592])
     spectrum_observation_grouped = SpectrumObservation.stack_observation_list(observations, 0)
     obs0 = observations[0]

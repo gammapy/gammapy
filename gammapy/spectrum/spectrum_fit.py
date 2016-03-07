@@ -43,13 +43,15 @@ class SpectrumFit(object):
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
+
         Required columns
-        - OBS_ID
         - PHAFILE
         """
+
         pha_list = list(obs_table['PHAFILE'])
         obs_list = SpectrumObservationList()
-        for f in pha_list:
+        for temp in pha_list:
+            f = str(make_path(temp))
             val = SpectrumObservation.read_ogip(f)
             val.meta.phafile = f
             obs_list.append(val)
@@ -73,6 +75,7 @@ class SpectrumFit(object):
     @classmethod
     def from_config(cls, config):
         """Create `~gammapy.spectrum.SpectrumFit` using a config dict
+        
         The spectrum extraction step has to have run before
         """
         config = config['fit']
@@ -157,6 +160,7 @@ class SpectrumFit(object):
     def energy_threshold_low(self):
         """
         Low energy threshold of the spectral fit
+        
         If a list of observations is fit at the same time, this is a list with
         the theshold for each observation.
         """
@@ -248,33 +252,8 @@ class SpectrumFit(object):
         self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
         self.write_npred()
 
-    def _run_hspec_fit(self):
-        """Run the gammapy.hspec fit
-        """
-
-        raise ValueError('HSPEC is currently broken. Use sherpa')
-        log.info("Starting HSPEC")
-        import sherpa.astro.ui as sau
-        from ..hspec import wstat
-
-        sau.set_conf_opt("max_rstat", 100)
-
-        thres_lo = self.energy_threshold_low.to('keV').value
-        thres_hi = self.energy_threshold_high.to('keV').value
-        sau.freeze(self.model.ref)
-
-        list_data = []
-        for pha in self.pha:
-            datid = pha.parts[-1][7:12]
-            sau.load_data(datid, str(pha))
-            sau.notice_id(datid, thres_lo, thres_hi)
-            sau.set_source(datid, self.model)
-            list_data.append(datid)
-
-        wstat.wfit(list_data)
-
     def _run_sherpa_fit(self):
-        """Plain sherpa fit not using the session object
+        """Plain sherpa fit using the session object
         """
         from sherpa.astro import datastack
         log.info("Starting SHERPA")

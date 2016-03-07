@@ -170,7 +170,7 @@ def write_yaml(config, filename, logger=None):
     if logger is not None:
         logger.info('Writing {}'.format(filename))
     with open(str(filename), 'w') as outfile:
-        outfile.write(yaml.dump(config, default_flow_style=False))
+        outfile.write(yaml.safe_dump(config, default_flow_style=False))
 
 
 def make_path(path):

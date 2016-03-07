@@ -105,12 +105,14 @@ def display_spectrum():
 @cli.command('plot')
 def plot_spectrum():
     """Make default plots"""
-    import matplotlib.pyplot as plt
-    from gammapy.spectrum.utils import plot_npred_vs_excess
-    outdir = Path('plots')
-    outdir.mkdir(exist_ok=True)
 
-    f = str(outdir/'npred_vs_excess.png')
-    log.info('Writing file {}'.format(f))
-    plot_npred_vs_excess()
-    plt.savefig(f)
+    # Todo: Move to spectrum analysis class
+    import matplotlib.pyplot as plt
+    #from gammapy.spectrum.utils import plot_npred_vs_excess
+    #outdir = Path('plots')
+    #outdir.mkdir(exist_ok=True)
+
+    #f = str(outdir/'npred_vs_excess.png')
+    #log.info('Writing file {}'.format(f))
+    #plot_npred_vs_excess()
+    #plt.savefig(f)

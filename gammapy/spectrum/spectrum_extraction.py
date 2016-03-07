@@ -1,24 +1,25 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import copy
 import logging
+
 import numpy as np
+from astropy.coordinates import Angle
 from astropy.table import Column
 from astropy.units import Quantity
-from astropy.coordinates import Angle, SkyCoord
-from astropy.extern import six
-from astropy.wcs.utils import skycoord_to_pixel
+
 from . import CountsSpectrum
 from .results import SpectrumStats
-from ..extern.pathlib import Path
-from ..extern.bunch import Bunch
 from ..background import ring_area_factor, Cube
 from ..data import DataStore, ObservationTable
+from ..extern.bunch import Bunch
+from ..extern.pathlib import Path
 from ..image import ExclusionMask
+from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..utils.scripts import make_path
+from ..utils.scripts import make_path, write_yaml
 
 
 __all__ = [
@@ -45,54 +46,51 @@ class SpectrumExtraction(object):
     ----------
     datastore : `~gammapy.data.DataStore`
         Data for the analysis
-    obs_ids : list, str
-        List of observations or file containing such a list
+    obs_table : `~gammapy.data.ObservationTable`
+        Table of observations to analyse
     on_region : `gammapy.region.SkyCircleRegion`
         Circular region to extract on counts
     exclusion : `~gammapy.image.ExclusionMask`
         Exclusion regions
     bkg_method : dict
         Background method including necessary parameters
-    nobs : int
-        number of observations to process, 0 means all observations
+    nobs : int, optional
+        number of observations to process
     ebounds : `~gammapy.utils.energy.EnergyBounds`, optional
         Reconstructed energy binning definition
     """
 
-    def __init__(self, datastore, obs_ids, on_region, exclusion, bkg_method,
-                 nobs=-1, ebounds=None, **kwargs):
+    OBSTABLE_FILE = 'observation_table.fits'
+    EXCLUDEDREGIONS_FILE = 'excluded_regions.fits'
+
+    def __init__(self, datastore, obs_table, on_region, exclusion, bkg_method,
+                 nobs=None, ebounds=None, **kwargs):
 
         self.on_region = on_region
         self.store = datastore
         self.exclusion = exclusion
         if ebounds is None:
-            ebounds = EnergyBounds.equal_log_spacing(0.1, 10, 20, 'TeV')
+            ebounds = EnergyBounds.equal_log_spacing(0.01, 316, 108, 'TeV')
         self.ebounds = ebounds
         self.bkg_method = bkg_method
-        self.nobs = nobs
         self.extra_info = kwargs
-
-        if isinstance(obs_ids, six.string_types):
-            temp = make_path(obs_ids)
-            obs_ids = np.loadtxt(str(temp), dtype=np.int)
-        self.obs_ids = obs_ids
+        self.obs_table = obs_table[0:nobs]
 
         self._observations = None
 
     def run(self):
         """Run all steps
 
-        Extract spectrum, filter observations, write results to disk.
+        Extract spectrum, update observation table, filter observations, 
+        write results to disk.
         """
         self.extract_spectrum()
         if self.bkg_method['type'] == 'reflected':
             self.filter_observations()
 
-        o = self.observations
-        o.write_ogip_data('ogip_data')
-        o.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
-        o.to_observation_table().write('observation_table.fits', format='fits',
-                                       overwrite=True)
+        self.observations.write_ogip()
+        self.observations.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
+        self.write_configfile()
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
@@ -100,39 +98,41 @@ class SpectrumExtraction(object):
         mask = obs.filter_by_reflected_regions(self.bkg_method['n_min'])
         self._observations = SpectrumObservationList(np.asarray(obs)[mask])
 
-    def extract_spectrum(self, nobs=None):
+    def extract_spectrum(self):
         """Extract 1D spectral information
 
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
+        The observation table is updated with some meta information.
         """
-        nobs = self.nobs if nobs is None else nobs
+
         observations = []
-        for i, val in enumerate(np.atleast_1d(self.obs_ids)):
-            log.info('Extracting spectrum for observation {}'.format(val))
-            try:
-                temp = SpectrumObservation.from_datastore(val, self.store,
-                                                          self.on_region,
-                                                          self.bkg_method,
-                                                          self.ebounds,
-                                                          self.exclusion,
-                                                          **self.extra_info
-                                                          )
-            except IndexError as err:
-                log.warning(
-                    'Could not load observation {} from store{}'
-                    '\nError: \n{}'.format(val, self.store.base_dir, err))
-                nobs += 1
-                continue
+
+        t = self.obs_table
+        for row in t:
+            log.info('Extracting spectrum for observation {}'.format(row['OBS_ID']))
+            temp = SpectrumObservation.from_datastore(row, self.store,
+                                                      self.on_region,
+                                                      self.bkg_method,
+                                                      self.ebounds,
+                                                      self.exclusion,
+                                                      **self.extra_info
+                                                      )
 
             observations.append(temp)
-            if i == nobs - 1:
-                break
 
         self._observations = SpectrumObservationList(observations)
 
-        if len(self.observations) == 0:
-            raise ValueError("No valid observations found")
+        #update meta info
+        if 'OFFSET' not in t.colnames:
+            offset = [_.meta.offset for _ in self.observations]
+            t.add_column(Column(name='OFFSET', data=Angle(offset)))
+        if 'CONTAINMENT' not in t.colnames:
+            containment = [_.meta.containment for _ in self.observations]
+            t.add_column(Column(name='CONTAINMENT', data=containment))
+        if 'PHAFILE' not in t.colnames:
+            pha = [str(_.meta.ogip_dir/_.meta.phafile) for _ in self.observations]
+            t.add_column(Column(name='PHAFILE', data=pha))
 
     @property
     def observations(self):
@@ -157,10 +157,10 @@ class SpectrumExtraction(object):
 
         bkg_method = self.bkg_method if bkg_method is None else bkg_method
 
-        ana = SpectrumExtraction(datastore=self.store, obs_ids=self.obs_ids,
+        ana = SpectrumExtraction(datastore=self.store, obs_table=self.obs_table,
                                  on_region=self.on_region,
                                  bkg_method=bkg_method,
-                                 exclusion=self.exclusion, nobs=0,
+                                 exclusion=self.exclusion,
                                  ebounds=self.ebounds)
         return ana
 
@@ -176,10 +176,11 @@ class SpectrumExtraction(object):
         config = config['extraction']
 
         # Observations
-        obs = config['data']['runlist']
+        obs_table = ObservationTable.read(config['data']['obstable'])
         storename = config['data']['datastore']
         store = DataStore.from_all(storename)
         nobs = config['data']['nruns']
+        nobs = None if nobs == 0 else nobs
 
         # Binning
         sec = config['binning']
@@ -190,16 +191,11 @@ class SpectrumExtraction(object):
             ebounds = EnergyBounds.equal_log_spacing(
                 emin, emax, nbins)
         else:
-            if sec['binning'] is None:
-                raise ValueError("No binning specified")
+            vals = np.fromstring(sec['bounds'], dtype=float, sep=' ')
+            ebounds = EnergyBounds(vals, sec['unit'])
 
         # ON region
-        radius = Angle(config['on_region']['radius'])
-        x = config['on_region']['center_x']
-        y = config['on_region']['center_y']
-        frame = config['on_region']['system']
-        center = SkyCoord(x, y, frame=frame)
-        on_region = SkyCircleRegion(center, radius)
+        on_region = SkyCircleRegion.from_dict(config['on_region'])
 
         # OFF region
         bkg_method = config['off_region']
@@ -208,7 +204,7 @@ class SpectrumExtraction(object):
         excl_file = config['excluded_regions']['file']
         exclusion = ExclusionMask.from_fits(excl_file)
 
-        return cls(datastore=store, obs_ids=obs, on_region=on_region,
+        return cls(datastore=store, obs_table=obs_table, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
                    nobs=nobs, ebounds=ebounds, **kwargs)
 
@@ -227,6 +223,40 @@ class SpectrumExtraction(object):
 
         return cls.from_config(config)
 
+    def write_configfile(self, filename='config.yaml'):
+        """Write config file in YAML format
+
+        This is usefull when the `~gammapy.spectrum.SpectrumExtraction` has
+        been altered and the changes want to be saved. Files need to read the
+        configfile again are also written.
+
+        Parameters
+        ----------
+        filename : str
+            YAML file to write
+        """
+        config = dict(extraction=dict())
+        e = config['extraction']
+        e.update(data=dict())
+        e['data']['obstable'] = self.OBSTABLE_FILE
+        e['data']['datastore'] = str(self.store.base_dir)
+        e['data']['nruns'] = len(self.obs_table)
+
+        e.update(binning=dict())
+        e['binning']['equal_log_spacing'] = False
+        e['binning']['bounds'] = np.array_str(self.ebounds.value)[1:-1]
+        e['binning']['unit'] = str(self.ebounds.unit)
+
+        e.update(on_region=self.on_region.to_dict())
+        e.update(off_region=self.bkg_method)
+        e.update(excluded_regions=dict(file=self.EXCLUDEDREGIONS_FILE))
+
+        log.info('Writing {}'.format(filename))
+        write_yaml(config, filename=filename)
+        log.info('Writing {}'.format(self.OBSTABLE_FILE))
+        self.exclusion.write(self.EXCLUDEDREGIONS_FILE, clobber=True)
+        self.obs_table.write(self.OBSTABLE_FILE, format='fits', overwrite=True)
+
     def info(self):
         """Print some information
         """
@@ -244,14 +274,10 @@ class SpectrumObservation(object):
     def __init__(self, on_vector, off_vector, energy_dispersion,
                  effective_area, meta=None):
         self.on_vector = on_vector
-        self.on_vector.meta.update(**meta)
         self.off_vector = off_vector
         self.energy_dispersion = energy_dispersion
         self.effective_area = effective_area
-        self.meta = on_vector.meta
-
-        # These values are needed for I/O
-        self.meta.setdefault('phafile', 'None')
+        self.meta = meta
 
     @classmethod
     def read_ogip(cls, phafile):
@@ -281,17 +307,64 @@ class SpectrumObservation(object):
         return cls(on_vector, off_vector, energy_dispersion, effective_area,
                    meta)
 
+    def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
+                   outdir=None, clobber=True):
+        """Write OGIP files
+
+        The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
+        header. If no filenames are given, default names will be chosen.
+       
+        Parameters
+        ----------
+        phafile : `~gammapy.extern.pathlib.Path`, str
+            PHA filename
+        bkgfile : str
+            BKG filename
+        arffile : str
+            ARF filename
+        rmffile : str
+            RMF : filename
+        outdir : None
+            directory to write the files to, default: pwd
+        clobber : bool
+            Overwrite
+        """
+
+        cwd = Path.cwd()
+        outdir = cwd / make_path(self.meta.ogip_dir) if outdir is None else outdir
+        outdir.mkdir(exist_ok=True, parents=True)
+
+        if phafile is None:
+            phafile = self.meta.phafile
+        if arffile is None:
+            arffile = phafile.replace('pha', 'arf')
+        if rmffile is None:
+            rmffile = phafile.replace('pha', 'rmf')
+        if bkgfile is None:
+            bkgfile = phafile.replace('pha', 'bkg')
+
+        self.meta['phafile'] = str(outdir / phafile)
+
+        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
+                             rmf=str(rmffile), clobber=clobber)
+        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
+        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
+                                  effarea_unit='cm2', clobber=clobber)
+        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
+                                     clobber=clobber)
+
+
     @classmethod
-    def from_datastore(cls, obs_id, store, on_region, bkg_method, ebounds,
-                       exclusion, save_meta=True, dry_run=False, calc_containment=False):
+    def from_datastore(cls, obs, store, on_region, bkg_method, ebounds,
+                       exclusion, dry_run=False, calc_containment=False):
         """ Create Spectrum Observation from datastore
 
-        Extraction parameters are stored in the meta attribute
+        Meta info is stored in the input astropy table row
 
         Parameters
         ----------
-        obs : int
-            Observation ID, runnumber
+        obs : `~astropy.table.Row`
+            Row of a `~gammapy.spectrum.ObservationTable`
         store : `~gammapy.data.DataStore`
             Data Store
         on_region : `gammapy.region.SkyCircleRegion`
@@ -302,63 +375,71 @@ class SpectrumObservation(object):
             Reconstructed energy binning definition
         exclusion : `~gammapy.image.ExclusionMask`
             Exclusion mask
-        save_meta : bool, optional
-            Save meta information, default: True
         dry_run : bool, optional
             Only process meta data, not actual spectra are extracted
         calc_containment : bool, optional
             Calculate containment fraction of the on region
         """
 
+        obs_id = obs['OBS_ID']
         event_list = store.load(obs_id=obs_id, filetype='events')
         on = None
         off = None
         aeff = None
         edisp = None
 
-        m = Bunch()
-        m['pointing'] = event_list.pointing_radec
-        m['offset'] = m.pointing.separation(on_region.pos)
-        m['livetime'] = event_list.observation_live_time_duration
-        m['exclusion'] = exclusion
-        m['on_region'] = on_region
-        m['bkg_method'] = bkg_method
-        m['datastore'] = store
-        m['ebounds'] = ebounds
-        m['obs_id'] = obs_id
-        m['zenith'] = Angle((90 - event_list.meta['ALT_PNT']), 'deg')
-        m['muoneff'] = event_list.meta['MUONEFF']
+        pointing = event_list.pointing_radec
+        offset = pointing.separation(on_region.pos)
+        livetime = event_list.observation_live_time_duration
 
         if calc_containment:
             psf2d = store.load(obs_id=obs_id, filetype='psf')
             val = Energy('10 TeV')
             psf = psf2d.psf_at_energy_and_theta(val, m.offset)
             cont = psf.containment_fraction(m.on_region.radius)
-            m['psf_containment'] = float(cont)
+
+        m = Bunch()
+        m['obs_id'] = obs_id
+        m['phafile'] = 'pha_run{}.fits'.format(obs_id)
+        m['ogip_dir'] = Path(Path.cwd() / 'ogip_data')
+        m['offset'] = offset
+        m['containment'] = 1
+        m['livetime'] = livetime
 
         if dry_run:
             return cls(obs_id, None, None, None, None, meta=m)
 
-        b = BackgroundEstimator(event_list, m)
+        bkg_meta = Bunch()
+        bkg_meta['bkg_method'] = bkg_method
+        bkg_meta['on_region'] = on_region
+        bkg_meta['exclusion'] = exclusion
+        bkg_meta['pointing'] = pointing
+        bkg_meta['ebounds'] = ebounds
+
+        b = BackgroundEstimator(event_list, bkg_meta)
         b.make_off_vector()
         m['off_list'] = b.off_list
         m['off_region'] = b.off_region
         off_vec = b.off_vec
         off_vec.meta.update(backscal=b.backscal)
-        off_vec.meta.update(livetime=m.livetime)
+        off_vec.meta.update(livetime=livetime)
 
         m['on_list'] = event_list.select_circular_region(on_region)
         on_vec = CountsSpectrum.from_eventlist(m.on_list, ebounds)
 
         aeff2d = store.load(obs_id=obs_id, filetype='aeff')
-        arf_vec = aeff2d.to_effective_area_table(m.offset)
+        arf_vec = aeff2d.to_effective_area_table(offset)
         elo, ehi = arf_vec.energy_thresh_lo, arf_vec.energy_thresh_hi
         m['safe_energy_range'] = EnergyBounds([elo, ehi])
 
         edisp2d = store.load(obs_id=obs_id, filetype='edisp')
-        rmf_mat = edisp2d.to_energy_dispersion(m.offset, e_reco=ebounds)
+        rmf_mat = edisp2d.to_energy_dispersion(offset, e_reco=ebounds)
 
-        m = None if not save_meta else m
+        # Todo: Define what metadata is stored where (obs table?)
+        on_vec.meta.update(backscal=1)
+        on_vec.meta.update(livetime=livetime)
+        on_vec.meta.update(obs_id=obs_id)
+        on_vec.meta.update(safe_energy_range=m.safe_energy_range)
 
         return cls(on_vec, off_vec, rmf_mat, arf_vec, meta=m)
 
@@ -377,9 +458,12 @@ class SpectrumObservation(object):
         ----------
         obs_list : list of `~gammapy.spectrum.SpectrumObservations`
             Observations to stack
-        obs_stacked_id : int, optional
-            Observation ID for stacked observations
+        group_id : int, optional
+            ID for stacked observations
         """
+
+        group_id = obs_list[0].meta.obs_id if group_id is None else group_id
+
         # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
         on_vec = np.sum([o.on_vector for o in obs_list])
 
@@ -388,6 +472,8 @@ class SpectrumObservation(object):
         if len(obs_list) == 1:
             on_vec.meta = Bunch(livetime=obs_list[0].meta.livetime,
                                 backscal=1)
+
+        on_vec.meta.update(obs_id=group_id)
 
         off_vec = np.sum([o.off_vector for o in obs_list])
 
@@ -427,10 +513,7 @@ class SpectrumObservation(object):
         m['obs_ids'] = [o.meta.obs_id for o in obs_list]
         m['alpha_method1'] = alpha_mean
         m['livetime'] = Quantity(livetime_tot, "s")
-
-        # TODO: properly handle groups ID vs obs ID now only use obs ID
-        #m['group_id'] = group_id if group_id is not None else 0
-        m['obs_id'] = group_id if group_id is not None else 0
+        m['group_id'] = group_id
 
         return cls(on_vec, off_vec, rmf, arf, meta=m)
 
@@ -514,102 +597,10 @@ class SpectrumObservation(object):
                                    self.energy_dispersion, self.effective_area,
                                    meta=m)
 
-    def write_ogip(self, phafile=None, bkgfile=None, rmffile=None, arffile=None,
-                   outdir=None, clobber=True):
-        """Write OGIP files
-
-        The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
-        header. If no filenames are given, default names will be chosen.
-
-        Parameters
-        ----------
-        phafile : `~gammapy.extern.pathlib.Path`, str
-            PHA filename
-        bkgfile : str
-            BKG filename
-        arffile : str
-            ARF filename
-        rmffile : str
-            RMF : filename
-        outdir : None
-            directory to write the files to, default: pwd
-        clobber : bool
-            Overwrite
-        """
-
-        cwd = Path.cwd()
-        outdir = cwd if outdir is None else cwd / make_path(outdir)
-        outdir.mkdir(exist_ok=True, parents=True)
-
-        id = self.meta.obs_id
-
-        if phafile is None:
-            phafile = "pha_run{}.pha".format(id)
-        if arffile is None:
-            arffile = "arf_run{}.fits".format(id)
-        if rmffile is None:
-            rmffile = "rmf_run{}.fits".format(id)
-        if bkgfile is None:
-            bkgfile = "bkg_run{}.fits".format(id)
-
-        self.meta['phafile'] = str(outdir / phafile)
-
-        self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
-                             rmf=str(rmffile), clobber=clobber)
-        self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
-                                  effarea_unit='cm2', clobber=clobber)
-        self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
-                                     clobber=clobber)
-
-    def plot_exclusion_mask(self, size=None, **kwargs):
-        """Plot exclusion mask for this observation
-
-        The plot will be centered at the pointing position
-
-        Parameters
-        ----------
-        size : `~astropy.coordinates.Angle`
-            Edge length of the plot
-        """
-        size = Angle('5 deg') if size is None else Angle(size)
-        ax = self.meta.exclusion.plot(**kwargs)
-        self._set_ax_limits(ax, size)
-        point = skycoord_to_pixel(self.meta.pointing, ax.wcs)
-        ax.scatter(point[0], point[1], s=250, marker="+", color='black')
-        return ax
-
-    def plot_on_region(self, ax=None, **kwargs):
-        """Plot target regions"""
-        ax = self.plot_exclusion_mask() if ax is None else ax
-        self.meta.on_region.plot(ax, **kwargs)
-        return ax
-
-    def plot_reflected_regions(self, ax=None, **kwargs):
-        """Plot reflected regions"""
-        ax = self.plot_exclusion_mask() if ax is None else ax
-        self.meta.off_region.plot(ax, **kwargs)
-        return ax
-
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
-        pass
-
-    def _set_ax_limits(self, ax, extent):
-
-        if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
-            center = self.meta.pointing.galactic
-            xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
-            ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
-        else:
-            center = self.meta.pointing.icrs
-            xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
-            ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
-
-        limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
-        ax.set_xlim(limits[0])
-        ax.set_ylim(limits[1])
+        raise NotImplementedError
 
 
 class SpectrumObservationList(list):
@@ -675,7 +666,7 @@ class SpectrumObservationList(list):
         idx = np.nonzero(condition)
         return idx[0]
 
-    def write_ogip_data(self, outdir, **kwargs):
+    def write_ogip(self, outdir=None, **kwargs):
         """Create OGIP files
 
         Parameters
@@ -687,44 +678,17 @@ class SpectrumObservationList(list):
             obs.write_ogip(outdir=outdir, **kwargs)
 
     @classmethod
-    def read_ogip(cls, dir='ogip_data'):
-        """Create `~gammapy.spectrum.SpectrumObservationList` from OGIP files.
-
-        The pha file need to be contained in one directroy and have '.pha' as
-        suffix.
+    def from_observation_table(cls, obs_table):
+        """Create `~gammapy.spectrum.SpectrumObservationList` from an
+        observation table.
 
         Parameters
         ----------
-        dir : str, `~gammapy.extern.pathlib.Path`
-            Directory holding the OGIP data
+        obs_table : `~gammapy.data.ObservationTable`
+            Observation table with column ``PHAFILE``
         """
-        dir = make_path(dir)
-        obs = [SpectrumObservation.read_ogip(_) for _ in dir.glob('*.pha')]
+        obs = [SpectrumObservation.read_ogip(_) for _ in obs_table['PHAFILE']]
         return cls(obs)
-
-    def to_observation_table(self):
-        """Create `~gammapy.data.ObservationTable`."""
-
-        observation_table = ObservationTable()
-
-        files = np.array([o.meta.phafile for o in self])
-        observation_table.add_column(Column(files, 'PHAFILE'))
-
-        keys = ['obs_id', 'offset', 'zenith', 'muoneff']
-        names = ['OBS_ID', 'OFFSET', 'ZENITH', 'MUONEFF']
-        for key, name in zip(keys, names):
-            if key in self[0].meta:
-                data = Quantity([o.meta[key] for o in self])
-                col = Column(data=data, name=name)
-                observation_table.add_column(col)
-
-        # obs grouping is done in cos(zenith)
-        if 'ZENITH' in observation_table.colnames:
-            zen = observation_table['ZENITH'].quantity
-            coszen = np.cos(zen)
-            observation_table.add_column(Column(coszen, 'COSZEN'))
-
-        return observation_table
 
 
 class BackgroundEstimator(object):
@@ -802,3 +766,45 @@ class BackgroundEstimator(object):
         off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
         self.backscal = 1
         self.off_vec = off_vec
+
+
+# Todo: move to spectrum analysis class
+
+def plot_exclusion_mask(self, size=None, **kwargs):
+    """Plot exclusion mask
+
+    The plot will be centered at the pointing position
+       
+    Parameters
+    ----------
+    size : `~astropy.coordinates.Angle`
+    Edge length of the plot
+    """
+    size = Angle('5 deg') if size is None else Angle(size)
+    ax = self.exclusion.plot(**kwargs)
+    self._set_ax_limits(ax, size)
+    #point = skycoord_to_pixel(self.meta.pointing, ax.wcs)
+    #ax.scatter(point[0], point[1], s=250, marker="+", color='black')
+    return ax
+
+def plot_on_region(self, ax=None, **kwargs):
+    """Plot target regions"""
+    ax = self.plot_exclusion_mask() if ax is None else ax
+    self.on_region.plot(ax, **kwargs)
+    return ax
+
+def _set_ax_limits(self, ax, extent):
+
+    if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
+        center = self.meta.pointing.galactic
+        xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
+        ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
+    else:
+        center = self.meta.pointing.icrs
+        xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
+        ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
+
+    limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
+    ax.set_xlim(limits[0])
+    ax.set_ylim(limits[1])
+

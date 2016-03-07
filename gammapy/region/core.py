@@ -105,6 +105,11 @@ class SkyRegion(Region):
         ----------
         skycoord : `~astropy.coordinates.SkyCoord`
             The position or positions to check
+
+        Returns
+        -------
+        contains : bool
+            Does this region contain the coordinate?
         """
         raise NotImplementedError
 
@@ -121,6 +126,15 @@ class SkyRegion(Region):
         wcs : `~astropy.wcs.WCS` instance
             The world coordinate system transformation to assume
         """
+        raise NotImplementedError
+
+    def to_dict(self):
+        """Create dict that can be used for serialization"""
+        raise NotImplementedError
+
+    @classmethod
+    def from_dict(cls, dict):
+        """Create from dict"""
         raise NotImplementedError
 
 
