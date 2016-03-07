@@ -5,8 +5,12 @@ from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.units import Quantity
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
+from ...data import DataStore
+from ...utils.energy import EnergyBounds
+from ...cube import SpectralCube
 from ...image import (
     binary_disk,
     binary_ring,
@@ -20,6 +24,7 @@ from ...image import (
     wcs_histogram2d,
     lon_lat_rectangle_mask,
     SkyMap
+    bin_events_in_cube,
 )
 
 
@@ -210,3 +215,46 @@ def test_lon_lat_rectangle_mask():
                                   lon_max=None, lat_min=None,
                                   lat_max=None)
     assert_allclose(mask.sum(), 80601)
+
+
+@requires_data('gammapy-extra')
+def test_bin_events_in_cube():
+    dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dirname)
+
+    events = data_store.load(obs_id=23523, filetype='events')
+
+    # Define WCS reference header
+    refheader = fits.Header()
+    refheader['WCSAXES'] = 3
+    refheader['NAXIS'] = 3
+    refheader['CRPIX1'] = 100.5
+    refheader['CRPIX2'] = 100.5
+    refheader['CRPIX3'] = 1.0
+    refheader['CDELT1'] = -0.02
+    refheader['CDELT2'] = 0.02
+
+    # shouldn't matter, but must contain sufficient number of digits,
+    # so that CDELT1 and CDELT2 are not truncated, when wcs.to_header() is called
+    # seems to be a bug...
+    refheader['CDELT3'] = 2.02  
+
+    refheader['CTYPE1'] = 'RA---CAR'
+    refheader['CTYPE2'] = 'DEC--CAR'
+    refheader['CTYPE3'] = 'log_Energy'  # shouldn't matter
+    refheader['CUNIT1'] = 'deg'
+    refheader['CUNIT2'] = 'deg'
+    refheader['CRVAL1'] = events.meta['RA_OBJ']
+    refheader['CRVAL2'] = events.meta['DEC_OBJ']
+    refheader['CRVAL3'] = 10.0  # shouldn't matter
+
+    energies = EnergyBounds.equal_log_spacing(0.5, 80, 8, 'TeV')
+    data = Quantity(np.zeros((len(energies), 200, 200)))
+    wcs = WCS(refheader)
+    refcube = SpectralCube(data, wcs, energy=energies)
+
+    # Counts cube
+    counts_hdu = bin_events_in_cube(events, refcube, energies)
+    counts = SpectralCube(Quantity(counts_hdu.data, 'count'), wcs, energies)
+
+    assert counts.data.sum().value == 1233
