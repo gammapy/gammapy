@@ -22,17 +22,25 @@ log = logging.getLogger(__name__)
 class OffDataBackgroundMaker(object):
     def __init__(self, data_store, outdir=None, run_list=None, obs_table_grouped_filename=None,
                  group_table_filename=None):
-        """
+        """OffDataBackgroundMaker class.
+
+        Class that will select an OFF list run from a Data list and then group this runlist in group of
+        zenithal angle and efficiency. Then for each group, it will compute the background rate model in
+        3D *(X, Y, energy)* or 2D *(energy, offset)* via the class `~gammapy.background.CubeBackgroundModel` (3D) or
+         `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
+
         Parameters
         ----------
-        data_store
-        run_list
-        outdir
-        obs_table_grouped_filename
-        group_table_filename
-
-        Returns
-        -------
+        data_store : `~gammapy.data.DataStore`
+            Data for the background model
+        run_list : str
+            filename where is store the OFF run list
+        outdir : str
+            directory where will go the output
+        obs_table_grouped_filename : str
+            filename of the `~astropy.table.Table` where the group number of each observation is indicated
+        group_table_filename : str
+            filename of the `~astropy.table.Table` where is store the grouping info
 
         """
         self.data_store = data_store
@@ -60,6 +68,15 @@ class OffDataBackgroundMaker(object):
         self.ntot_group = None
 
     def define_obs_table(self):
+        """Make an obs table for the OFF runs list.
+
+        This table is created from the obs table of all the runs
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            observation table of the OFF run List
+        """
         table = Table.read(self.run_list, format='ascii.csv')
         obs_table = self.data_store.obs_table
         table = table_join(table, obs_table)
@@ -87,8 +104,8 @@ class OffDataBackgroundMaker(object):
         """
         if selection == 'offplane':
             obs_table = self.data_store.obs_table[:n_obs_max]
-            MIN_GLAT = 5
-            mask = np.abs(obs_table['GLAT']) > MIN_GLAT
+            min_glat = 5
+            mask = np.abs(obs_table['GLAT']) > min_glat
             obs_table = obs_table[mask]
             obs_table = obs_table[['OBS_ID']]
         elif selection == 'debug':
@@ -155,7 +172,20 @@ class OffDataBackgroundMaker(object):
     def make_model(self, modeltype, obs_table=None, excluded_sources=None):
         """Make background models.
 
+        Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
+        `~gammapy.background.EnergyOffsetBackgroundModel` (2D)) for each group in zenithal angle and efficiency
+
+        Parameters
+        ----------
+        modeltype : str
+            type of the background modelisation: 3D or 2D
+        obs_table : `~astropy.table.Table`
+            observation table of the OFF run List used for the background modelling
+        excluded_sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
         """
+
         if not obs_table:
             filename = self.obs_table_grouped_filename
             log.info('Reading {}'.format(filename))
@@ -188,6 +218,16 @@ class OffDataBackgroundMaker(object):
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
     def save_model(self, modeltype, ngroup):
+        """Save model to fits for one group in zenithal angle and efficiency.
+
+        Parameters
+        ----------
+        modeltype : str
+            type of the background modelisation: 3D or 2D
+        ngroup : int
+            group number
+
+        """
         filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
         if modeltype == "3D":
             self.models3D[ngroup].write(str(filename), format='table', clobber=True)
@@ -195,5 +235,13 @@ class OffDataBackgroundMaker(object):
             self.models2D[ngroup].write(str(filename), overwrite=True)
 
     def save_models(self, modeltype):
+        """Save model to fits for all the groups in zenithal angle and efficiency
+
+        Parameters
+        ----------
+        modeltype : str
+            type of the background modelisation: 3D or 2D
+
+        """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
