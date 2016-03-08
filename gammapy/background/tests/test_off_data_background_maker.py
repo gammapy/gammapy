@@ -12,24 +12,24 @@ def test_background_model(tmpdir):
     out_dir = tmpdir
     bgmaker = OffDataBackgroundMaker(data_store, out_dir)
 
-    selection= "debug"
+    selection = "debug"
     bgmaker.select_observations(selection)
     table = Table.read('run.lis', format='ascii.csv')
     assert table['OBS_ID'][1] == 23526
 
-
-    run_list="run.lis"
     bgmaker.group_observations()
 
-    table = ObservationTable.read(str(tmpdir /'obs.ecsv'), format='ascii.ecsv')
+    table = ObservationTable.read(str(tmpdir / 'obs.ecsv'), format='ascii.ecsv')
     assert list(table['GROUP_ID']) == [0, 0, 0, 1]
-    table = ObservationTable.read(str(tmpdir /'group-def.ecsv'), format='ascii.ecsv')
+    table = ObservationTable.read(str(tmpdir / 'group-def.ecsv'), format='ascii.ecsv')
     assert list(table['ZEN_PNT_MAX']) == [49, 90]
 
     bgmaker.make_model("3D")
-    model = CubeBackgroundModel.read(str(tmpdir /'background_3D_group_001_table.fits.gz'))
+    bgmaker.save_models("3D")
+    model = CubeBackgroundModel.read(str(tmpdir / 'background_3D_group_001_table.fits.gz'))
     assert model.counts_cube.data.sum() == 1527
 
     bgmaker.make_model("2D")
-    model = EnergyOffsetBackgroundModel.read(str(tmpdir /'background_2D_group_001_table.fits.gz'))
+    bgmaker.save_models("2D")
+    model = EnergyOffsetBackgroundModel.read(str(tmpdir / 'background_2D_group_001_table.fits.gz'))
     assert model.counts.data.value.sum() == 1398
