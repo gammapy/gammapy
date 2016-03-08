@@ -4,12 +4,13 @@ import os
 import logging
 import numpy as np
 from astropy.table import Table
-from astropy.coordinates import Angle
+import astropy.units as u
 from astropy.table import join as table_join
 from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
 from .models import CubeBackgroundModel
 from .models import EnergyOffsetBackgroundModel
 from ..utils.energy import EnergyBounds
+from ..utils.axis import sqrt_space
 from ..extern.pathlib import Path
 
 __all__ = [
@@ -209,7 +210,7 @@ class OffDataBackgroundMaker(object):
 
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
-                offset = Angle(np.linspace(0, 2.5, 100), "deg")
+                offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_table_group, self.data_store, excluded_sources)
                 model.compute_rate()
