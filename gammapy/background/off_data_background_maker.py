@@ -18,6 +18,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+
 class OffDataBackgroundMaker(object):
     def __init__(self, data_store, outdir=None, run_list=None, obs_table_grouped_filename=None,
                  group_table_filename=None):
@@ -38,7 +39,7 @@ class OffDataBackgroundMaker(object):
         if not run_list:
             self.run_list = "run.lis"
         else:
-             self.run_list = run_list
+            self.run_list = run_list
 
         if not outdir:
             self.outdir = "out"
@@ -54,7 +55,9 @@ class OffDataBackgroundMaker(object):
             self.group_table_filename = self.outdir + '/group-def.ecsv'
         else:
             self.group_table_filename = group_table_filename
-        self.model = None
+        self.models3D = list()
+        self.models2D = list()
+        self.ntot_group = None
 
     def define_obs_table(self):
         table = Table.read(self.run_list, format='ascii.csv')
@@ -147,6 +150,7 @@ class OffDataBackgroundMaker(object):
         filename = self.group_table_filename
         log.info('Writing {}'.format(filename))
         obs_groups.obs_groups_table.write(str(filename), format='ascii.ecsv')
+        self.ntot_group = obs_groups.n_groups
 
     def make_model(self, modeltype, obs_table=None, excluded_sources=None):
         """Make background models.
@@ -167,31 +171,29 @@ class OffDataBackgroundMaker(object):
 
             # Build the model
             if modeltype == "3D":
-                self.model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
-                self.model.fill_obs(obs_table_group, self.data_store)
-                self.model.smooth()
-                self.model.compute_rate()
-
-                # Store the model
-                filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
-                log.info('Writing {}'.format(filename))
-                self.model.write(str(filename), format='table', clobber = True)
-
-                filename = self.outdir + '/background_{}_group_{:03d}_image.fits.gz'.format(modeltype, group)
-                log.info('Writing {}'.format(filename))
-                self.model.write(str(filename), format='image', clobber= True)
+                model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
+                model.fill_obs(obs_table_group, self.data_store)
+                model.smooth()
+                model.compute_rate()
+                self.models3D.append(model)
 
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = Angle(np.linspace(0, 2.5, 100), "deg")
-                self.model = EnergyOffsetBackgroundModel(ebounds, offset)
-                self.model.fill_obs(obs_table_group, self.data_store, excluded_sources)
-                self.model.compute_rate()
-
-                # Store the model
-                filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
-                log.info('Writing {}'.format(filename))
-                self.model.write(str(filename), overwrite=True)
-
+                model = EnergyOffsetBackgroundModel(ebounds, offset)
+                model.fill_obs(obs_table_group, self.data_store, excluded_sources)
+                model.compute_rate()
+                self.models2D.append(model)
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
+
+    def save_model(self, modeltype, ngroup):
+        filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
+        if modeltype == "3D":
+            self.models3D[ngroup].write(str(filename), format='table', clobber=True)
+        if modeltype == "2D":
+            self.models2D[ngroup].write(str(filename), overwrite=True)
+
+    def save_models(self, modeltype):
+        for ngroup in range(self.ntot_group):
+            self.save_model(modeltype, ngroup)
