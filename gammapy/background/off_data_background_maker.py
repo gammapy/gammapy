@@ -54,6 +54,7 @@ class OffDataBackgroundMaker(object):
             self.group_table_filename = self.outdir + '/group-def.ecsv'
         else:
             self.group_table_filename = group_table_filename
+        self.model = None
 
     def define_obs_table(self):
         table = Table.read(self.run_list, format='ascii.csv')
@@ -166,31 +167,31 @@ class OffDataBackgroundMaker(object):
 
             # Build the model
             if modeltype == "3D":
-                model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
-                model.fill_obs(obs_table_group, self.data_store)
-                model.smooth()
-                model.compute_rate()
+                self.model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
+                self.model.fill_obs(obs_table_group, self.data_store)
+                self.model.smooth()
+                self.model.compute_rate()
 
                 # Store the model
                 filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
                 log.info('Writing {}'.format(filename))
-                model.write(str(filename), format='table', clobber = True)
+                self.model.write(str(filename), format='table', clobber = True)
 
                 filename = self.outdir + '/background_{}_group_{:03d}_image.fits.gz'.format(modeltype, group)
                 log.info('Writing {}'.format(filename))
-                model.write(str(filename), format='image', clobber= True)
+                self.model.write(str(filename), format='image', clobber= True)
 
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = Angle(np.linspace(0, 2.5, 100), "deg")
-                model = EnergyOffsetBackgroundModel(ebounds, offset)
-                model.fill_obs(obs_table_group, self.data_store, excluded_sources)
-                model.compute_rate()
+                self.model = EnergyOffsetBackgroundModel(ebounds, offset)
+                self.model.fill_obs(obs_table_group, self.data_store, excluded_sources)
+                self.model.compute_rate()
 
                 # Store the model
                 filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group)
                 log.info('Writing {}'.format(filename))
-                model.write(str(filename), overwrite=True)
+                self.model.write(str(filename), overwrite=True)
 
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
