@@ -66,8 +66,8 @@ class SkyMap(object):
             Name of the Fits file or ImageHDU object.
         """
         if isinstance(fobj, six.string_types):
-            data = fits.getdata(filename, *args, **kwargs)
-            header = fits.getheader(filename, *args, **kwargs)
+            data = fits.getdata(fob, *args, **kwargs)
+            header = fits.getheader(fobj, *args, **kwargs)
         elif isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
             data, header = fobj.data, fobj.header
         else:
@@ -110,8 +110,8 @@ class SkyMap(object):
             Coordinate system value at reference pixel for x axis. Default is 0.
         yref : float, optional
             Coordinate system value at reference pixel for y axis. Default is 0.
-        fill : float or 'checkerboard', optional
-            Creates checkerboard image or uniform image of any float
+        fill : float, optional
+            Fill sky map with constant value. Default is 0.
         proj : string, optional
             Any valid WCS projection type. Default is 'CAR' (cartesian).
         coordsys : {'CEL', 'GAL'}, optional
