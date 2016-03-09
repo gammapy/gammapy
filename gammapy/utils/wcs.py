@@ -8,7 +8,31 @@ from astropy.coordinates import Angle
 __all__ = [
     'linear_wcs_to_arrays',
     'linear_arrays_to_wcs',
+    'get_wcs_ctype'
 ]
+
+def get_wcs_ctype(wcs):
+    """
+    Get celestial coordinate type of WCS instance.
+
+    Parameters
+    ----------
+    wcs : `~astropy.wcs.WCS`
+        WCS transformation instance.
+
+    Returns
+    -------
+    ctype : {'galatic', 'icrs'}
+        String specifying the coordinate type, that can be used with
+        `~astropy.coordinates.SkyCoord` 
+    """
+    ctype = wcs.wcs.ctype
+    if 'GLON' in ctype[0] or 'GLON' in ctype[1]:
+        return 'galactic'
+    elif 'RA' in ctype[0] or 'RA' in ctype[1]:
+        return 'icrs'
+    else:
+        raise TypeError("Can't determine WCS coordinate type.")
 
 
 def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):

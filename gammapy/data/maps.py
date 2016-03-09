@@ -13,6 +13,7 @@ from astropy.units import Quantity
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header
+from ..utils.wcs import get_wcs_ctype
 
 __all__ = ['SkyMap', 'SkyMapCollection']
 
@@ -153,8 +154,8 @@ class SkyMap(object):
 
         Parameters
         ----------
-        origin : int
-            Pixel origin convention.
+        origin : {0, 1}
+            Pixel coordinate origin.
         mode : {'center', 'edges'}
             Return coordinate values at the pixels edges or pixel centers.
         """
@@ -170,18 +171,29 @@ class SkyMap(object):
     def lookup(self, position, interpolation=None, origin=0):
         """
         Lookup value at given sky position.
-
+        
         Parameters
         ----------
-        xsky :  
-            Celestial
+        position : tuple or `~astropy.coordinates.SkyCoord`
+            Position on the sky. Can be either an instance of
+            `~astropy.coordinates.SkyCoord` or a tuple of `~numpy.ndarray`
+            of the form (lon, lat) or (ra, dec), depending on the WCS
+            transformation that is set for the sky map.
+        interpolation : {'None'}
+            Interpolation mode.
+        origin : {0, 1}
+            Pixel coordinate origin.
         """
-        if isinstance(xsky, SkyCoord):
-            xsky, ysky = position
-        elif isinstance(xsky, (np.ndarray, float)):
-            xsky, ysky = position
-        x, y = wcs.wcs_world2pix(xsky, ysky, origin)
-        return self.data[y, x]
+        if isinstance(position, SkyCoord):
+            if get_wcs_ctype(self.wcs) == 'galactic':
+                xsky, ysky = position.galactic.l.value, position.galactic.b.value
+            else:
+                xsky, ysky = position.icrs.ra.value, position.icrs.dec.value
+        elif isinstance(position, (tuple, list)):
+            xsky, ysky = position[0], position[1]
+
+        x, y = self.wcs.wcs_world2pix(xsky, ysky, origin)
+        return self.data[y.astype('int'), x.astype('int')]
 
     def to_quantity(self):
         """
@@ -289,7 +301,6 @@ class SkyMap(object):
         info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
         info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         print(info)
-
 
 
 class SkyMapCollection(Bunch):
