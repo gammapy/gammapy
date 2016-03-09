@@ -66,7 +66,7 @@ class SkyMap(object):
             Name of the Fits file or ImageHDU object.
         """
         if isinstance(fobj, six.string_types):
-            data = fits.getdata(fob, *args, **kwargs)
+            data = fits.getdata(fobj, *args, **kwargs)
             header = fits.getheader(fobj, *args, **kwargs)
         elif isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
             data, header = fobj.data, fobj.header
