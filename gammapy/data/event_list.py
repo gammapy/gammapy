@@ -8,6 +8,8 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+
+from gammapy.utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
@@ -456,11 +458,23 @@ class EventList(Table):
         ax.imshow(count_image, interpolation='nearest', origin='low',
                   extent=[x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]])
 
-    def plot_energy_hist(self, ax=None):
+    def plot_energy_hist(self, ax=None, ebounds=None, **kwargs):
         """
-        A plot showing counts as a function of energy. Not implemented.
+        A plot showing counts as a function of energy.
+
+        Convert to a `~gammapy.spectrum.CountsSpectrum` internally
         """
-        raise NotImplementedError
+
+        if ebounds is None:
+            emin = np.min(self['ENERGY'].quantity)
+            emax = np.max(self['ENERGY'].quantity)
+            ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
+
+        from gammapy.spectrum import CountsSpectrum
+        spec = CountsSpectrum.from_eventlist(self, ebounds)
+        spec.plot(ax=ax, **kwargs)
+
+        return ax
 
     def plot_offset_hist(self, ax=None):
         """

@@ -7,6 +7,7 @@ import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
+
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml, make_path
@@ -196,6 +197,8 @@ class SpectrumFitResult(Result):
     def from_sherpa(cls, covar, filter, model):
         """Create `~gammapy.spectrum.results.SpectrumFitResult` from sherpa objects
         """
+        from gammapy.spectrum import SpectrumFit
+
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
         energy_range = EnergyBounds((el, eh), 'keV')
         if model.type == 'powlaw1d':
@@ -221,6 +224,7 @@ class SpectrumFitResult(Result):
             elif pname == 'ampl':
                 unit = Unit('cm-2 s-1 keV-1')
                 name = 'norm'
+                factor = SpectrumFit.FLUX_FACTOR
             elif pname == 'c1':
                 unit = Unit('')
                 name = 'alpha'
@@ -243,10 +247,13 @@ class SpectrumFitResult(Result):
             parameters[name] = par.val * unit
             parameter_errors[name] = 0 * unit
 
+        # Assumes that reference value is set to 1TeV
+        if not np.isclose(parameters['reference'].to('TeV').value, 1):
+            raise ValueError('Reference not at 1 TeV. Flux@1 TeV will be wrong')
         fluxes = Bunch()
-        fluxes['1TeV'] = model(1e9) * Unit('cm-2 s-1 keV-1')
+        fluxes['1TeV'] = parameters['norm']
         flux_errors = Bunch()
-        flux_errors['1TeV'] = 0 * Unit('cm-2 s-1 keV-1')
+        flux_errors['1TeV'] = parameter_errors['norm']
 
         return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,

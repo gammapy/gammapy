@@ -1,8 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import os
+
 import numpy as np
 from astropy.extern import six
+
+from gammapy.extern.pathlib import Path
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
 from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
@@ -26,6 +30,7 @@ class SpectrumFit(object):
         Observations to fit
     """
 
+    FLUX_FACTOR = 1e-20
     DEFAULT_STAT = 'wstat'
 
     def __init__(self, obs_list, stat=DEFAULT_STAT):
@@ -41,14 +46,14 @@ class SpectrumFit(object):
         self.n_pred = None
 
     @classmethod
-    def from_observation_table(cls, obs_table):
-        """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
+    def from_pha_list(cls, pha_list):
+        """Create `~gammapy.spectrum.SpectrumFit` from a list of PHA files
 
-        Required columns
-        - PHAFILE
+        Parameters
+        ----------
+        pha_list : list
+            list of PHA files
         """
-
-        pha_list = list(obs_table['PHAFILE'])
         obs_list = SpectrumObservationList()
         for temp in pha_list:
             f = str(make_path(temp))
@@ -56,6 +61,16 @@ class SpectrumFit(object):
             val.meta.phafile = f
             obs_list.append(val)
         return cls(obs_list)
+
+    @classmethod
+    def from_observation_table(cls, obs_table):
+        """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
+
+        Required columns
+        - PHAFILE
+        """
+        pha_list = list(obs_table['PHAFILE'])
+        return cls.from_pha_list(pha_list)
 
     @classmethod
     def from_configfile(cls, configfile):
@@ -83,7 +98,6 @@ class SpectrumFit(object):
         obs_table = ObservationTable.read(table_file)
         fit = SpectrumFit.from_observation_table(obs_table)
         fit.model = config['model']
-        fit.set_default_thresholds()
         return fit
 
     @property
@@ -91,6 +105,8 @@ class SpectrumFit(object):
         """
         Spectral model to be fit
         """
+        if self._model is None:
+            raise ValueError('No model specified')
         return self._model
 
     @model.setter
@@ -240,7 +256,23 @@ class SpectrumFit(object):
             self.energy_threshold_high)
         return ss
 
-    def run(self, method='sherpa'):
+    def run(self, method='sherpa', outdir=None):
+        """Run all steps
+
+        Parameters
+        ----------
+        method : str {sherpa}
+            Fit method to use
+        outdir : Path, str
+            directory to write results files to
+        """
+        cwd = Path.cwd()
+        outdir = cwd if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True)
+        os.chdir(str(outdir))
+
+        self.set_default_thresholds()
+
         if method == 'hspec':
             self._run_hspec_fit()
         elif method == 'sherpa':
@@ -252,6 +284,8 @@ class SpectrumFit(object):
         self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
         self.write_npred()
 
+        os.chdir(str(cwd))
+
     def _run_sherpa_fit(self):
         """Plain sherpa fit using the session object
         """
@@ -260,7 +294,10 @@ class SpectrumFit(object):
         log.info(self.info())
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
-        ds.set_source(self.model)
+
+        # Make model amplitude O(1e0)
+        model = self.model * self.FLUX_FACTOR
+        ds.set_source(model)
         thres_lo = self.energy_threshold_low.to('keV').value
         thres_hi = self.energy_threshold_high.to('keV').value
 
