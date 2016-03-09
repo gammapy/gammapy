@@ -10,17 +10,19 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.units import Quantity
+from astropy.extern import six
+
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header
 from ..utils.wcs import get_wcs_ctype
 
-__all__ = ['SkyMap', 'SkyMapCollection']
+__all__ = ['SkyMap', 'MapsBunch']
 
 log = logging.getLogger(__name__)
 
 
-# It might an option to inherit from `~astropy.nddata.NDData` later, but as
+# It might be a good option to inherit from `~astropy.nddata.NDData` later, but as
 # astropy.nddata is still in development, I decided to not inherit for now.
 
 # The class provides Fits I/O and generic methods, that are not specific to the
@@ -46,6 +48,7 @@ class SkyMap(object):
         Dictionary to store meta data.
     """
     def __init__(self, name, data, wcs, unit=None, meta=None):
+        # TODO: validate inputs
         self.name = name
         self.data = data
         self.wcs = wcs
@@ -53,20 +56,24 @@ class SkyMap(object):
         self.unit = unit
 
     @classmethod
-    def read(cls, filename, *args, **kwargs):
+    def read(cls, fobj, *args, **kwargs):
         """
         Read sky map from Fits file.
 
         Parameters
         ----------
-        filename : str
-            Name of the Fits file.
+        fobj : str or `~astropy.io.fits.ImageHDU`
+            Name of the Fits file or ImageHDU object.
         """
-        data = fits.getdata(filename, *args, **kwargs)
-        header = fits.getheader(filename, *args, **kwargs)
+        if isinstance(fobj, six.string_types):
+            data = fits.getdata(filename, *args, **kwargs)
+            header = fits.getheader(filename, *args, **kwargs)
+        elif isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
+            data, header = fobj.data, fobj.header
+        else:
+            raise TypeError("Can't read object of type {}".format(type(fobj)))
         wcs = WCS(header)
         meta = header
-        name = header.get('EXTNAME')
         name = header.get('HDUNAME')
         try:
             unit = header['BUNIT']
@@ -267,28 +274,33 @@ class SkyMap(object):
             import matplotlib.pyplot as plt    
             fig = plt.figure()
             axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
-            self.plot(axes, **kwargs)
+            self.plot(axes, fig, **kwargs)
             plt.show()
         elif viewer == 'ds9':
             with NamedTemporaryFile() as f:
                 self.write(f)
                 call(['ds9', f.name])
         else:
-            raise ValueError('Invalid image viewer option.')
+            raise ValueError("Invalid image viewer option, choose either"
+                             " 'mpl' or 'ds9'.")
 
-    def plot(self, axes, **kwargs):
+    def plot(self, axes=None, fig=None, **kwargs):
         """
         Plot sky map on matplotlib WCS axes.
+        
+        Parameters
+        ----------
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
+            WCS axis object to plot on.
         """
         caxes = axes.imshow(self.data, **kwargs)
-        cbar = axes._figure.colorbar(caxes, label='{0} ({1})'.format(self.name, self.unit))
+        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, self.unit))
         try:
             axes.coords['glon'].set_axislabel('Galactic Longitude')
             axes.coords['glat'].set_axislabel('Galactic Latitude')
         except KeyError:
             axes.coords['ra'].set_axislabel('Right Ascension')
             axes.coords['dec'].set_axislabel('Declination')
-
 
     def info(self):
         """
@@ -302,8 +314,14 @@ class SkyMap(object):
         info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         print(info)
 
+    def __array__(self):
+        """
+        Array representation of sky map.
+        """
+        return self.data 
 
-class SkyMapCollection(Bunch):
+
+class MapsBunch(Bunch):
     """
     Bunch with Fits I/O.
     
