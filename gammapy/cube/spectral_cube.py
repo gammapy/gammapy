@@ -102,6 +102,7 @@ class SpectralCube(object):
 
         return self._interpolate_cache
 
+
     @classmethod
     def read_hdu(cls, hdu_list):
         """Read spectral cube from HDU.
@@ -181,6 +182,16 @@ class SpectralCube(object):
 
         return cls(data, wcs, energy)
 
+    @classmethod
+    def empty_like(cls, skydata, energies=None):
+        """
+        Create empty spectral cube from given skymap or spectral cube.
+        """
+
+
+        return cls(data, wcs, energy)
+
+
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
 
@@ -247,6 +258,30 @@ class SpectralCube(object):
 
         return lon, lat
 
+    def to_sherpa_data3d(self):
+        """
+        Convert spectral cube to sherpa `Data3D` object.
+        """
+        from .sherpa_ import Data3D
+
+        # Energy axes
+        energies = self.energy.to("TeV").value
+        ebounds = EnergyBounds(Quantity(energies, 'TeV'))
+        elo = ebounds.lower_bounds.value
+        ehi = ebounds.upper_bounds.value  
+
+        ra, dec = self.spatial_coordinate_images
+       
+        n_ebins = len(elo)
+        ra_cube = np.tile(ra, (n_ebins, 1, 1))
+        dec_cube = np.tile(dec, (n_ebins, 1, 1))
+        elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra)
+        ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra)
+ 
+        return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),    
+                      dec_cube.ravel(), counts.data.value.ravel(),
+                      counts.data.value.shape)
+
 
     @property
     def solid_angle_image(self):
@@ -256,6 +291,7 @@ class SpectralCube(object):
         image_hdu.header['WCSAXES'] = 2
 
         return solid_angle(image_hdu).to('sr')
+
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -485,3 +521,9 @@ class SpectralCube(object):
                                                                  self.wcs.wcs.cunit[2])
         return s
 
+
+    def info(self):
+        """
+        Print summary info about the cube.
+        """
+        print(repr(self))
