@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import copy
 import logging
+import os
 
 import numpy as np
 from astropy.coordinates import Angle
@@ -78,12 +79,22 @@ class SpectrumExtraction(object):
 
         self._observations = None
 
-    def run(self):
+    def run(self, outdir=None):
         """Run all steps
 
         Extract spectrum, update observation table, filter observations, 
         write results to disk.
+
+        Parameters
+        ----------
+        outdir : Path, str
+            directory to write results files to
         """
+        cwd = Path.cwd()
+        outdir = cwd if outdir is None else make_path(outdir)
+        outdir.mkdir(exist_ok=True)
+        os.chdir(str(outdir))
+
         self.extract_spectrum()
         if self.bkg_method['type'] == 'reflected':
             self.filter_observations()
@@ -91,6 +102,8 @@ class SpectrumExtraction(object):
         self.observations.write_ogip()
         self.observations.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
         self.write_configfile()
+
+        os.chdir(str(cwd))
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
@@ -356,7 +369,8 @@ class SpectrumObservation(object):
 
     @classmethod
     def from_datastore(cls, obs, store, on_region, bkg_method, ebounds,
-                       exclusion, dry_run=False, calc_containment=False):
+                       exclusion, dry_run=False, calc_containment=False,
+                       event_list=None):
         """ Create Spectrum Observation from datastore
 
         Meta info is stored in the input astropy table row
@@ -379,10 +393,15 @@ class SpectrumObservation(object):
             Only process meta data, not actual spectra are extracted
         calc_containment : bool, optional
             Calculate containment fraction of the on region
+        event_list : `~gammapy.data.EventList`, optional
+            Use event list different from the one in the data store
         """
 
         obs_id = obs['OBS_ID']
-        event_list = store.load(obs_id=obs_id, filetype='events')
+
+        if event_list is None:
+            event_list = store.load(obs_id=obs_id, filetype='events')
+
         on = None
         off = None
         aeff = None
@@ -401,7 +420,7 @@ class SpectrumObservation(object):
         m = Bunch()
         m['obs_id'] = obs_id
         m['phafile'] = 'pha_run{}.fits'.format(obs_id)
-        m['ogip_dir'] = Path(Path.cwd() / 'ogip_data')
+        m['ogip_dir'] = Path.cwd() / 'ogip_data'
         m['offset'] = offset
         m['containment'] = 1
         m['livetime'] = livetime
