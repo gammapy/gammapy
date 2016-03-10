@@ -102,14 +102,20 @@ class ExclusionMask(SkyMap):
 
     @lazyproperty
     def distance_image(self):
-        """Map containting the distance to the nearest exclusion region"""
+        """Map containting the distance to the nearest exclusion region."""
         return exclusion_distance(self.mask)
 
     # Set alias for mask
-    # TODO: Add mask attribute to sky map class
+    # TODO: Add mask attribute to sky map class or rename self.mask to self.data
     @property
     def mask(self):
         return self.data
+
+    @classmethod    
+    def read(cls, fobj, *args, **kwargs):
+        # Check if extension name is given, else default to 'exclusion'
+        kwargs['extname'] = kwargs.get('extname', 'exclusion')
+        return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
 
 
 def make_tevcat_exclusion_mask():
@@ -121,13 +127,12 @@ def make_tevcat_exclusion_mask():
         Exclusion mask
     """
 
+    # TODO: make this a method ExclusionMask.from_catalog()?
     from gammapy.catalog import load_catalog_tevcat
 
     tevcat = load_catalog_tevcat()
-    all_sky_exclusion = make_empty_image(nxpix=3600, nypix=1800, binsz=0.1)
-    val = np.ones(shape=all_sky_exclusion.data.shape)
-    all_sky_exclusion.data = val
-    val_lon, val_lat = coordinates(all_sky_exclusion)
+    all_sky_exclusion = ExclusionMask.empty(nxpix=3600, nypix=1800, binsz=0.1, fill=1, dtype='int')
+    val_lon, val_lat = all_sky_exclusion.coordinates()
     lons = Longitude(val_lon, 'deg')
     lats = Latitude(val_lat, 'deg')
 
@@ -144,4 +149,4 @@ def make_tevcat_exclusion_mask():
         mask = lon_lat_circle_mask(lons, lats, lon, lat, rad)
         all_sky_exclusion.data[mask] = 0
 
-    return ExclusionMask.from_hdu(all_sky_exclusion)
+    return all_sky_exclusion

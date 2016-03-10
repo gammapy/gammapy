@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.convolution import Tophat2DKernel
 
 from ..detect import compute_lima_map, compute_lima_on_off_map
-from ..image import MapsBunch
+from ..image import SkyMapCollection
 
 __all__ = ['image_lima']
 
@@ -30,7 +30,7 @@ def image_lima(infile, outfile, theta, onoff, residual, overwrite):
 
     """
     log.info('Reading {0}'.format(infile))
-    data = MapsBunch.read(infile)
+    data = SkyMapCollection.read(infile)
     if residual:
         data.background += data.model
     

@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 
-from ..image import MapsBunch
+from ..image import SkyMapCollection
 from ..stats import significance, significance_on_off
 
 __all__ = ['compute_lima_map', 'compute_lima_on_off_map']
@@ -34,7 +34,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
 
     Returns
     -------
-    MapsBunch : `gammapy.data.maps.MapsBunch`
+    SkyMapCollection : `gammapy.data.maps.SkyMapCollection`
         Bunch of result maps.
 
 
@@ -56,7 +56,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
 
     significance_lima = significance(counts_, background_, method='lima') 
 
-    result = MapsBunch(significance=significance_lima,
+    result = SkyMapCollection(significance=significance_lima,
                        counts=counts_,
                        background=background_,
                        excess= counts_ - background_)
@@ -91,7 +91,7 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
     
     Returns
     -------
-    MapsBunch : `gammapy.data.maps.MapsBunch`
+    SkyMapCollection : `gammapy.data.maps.SkyMapCollection`
         Bunch of result maps.   
 
     See also
@@ -115,7 +115,7 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
     
-    result = MapsBunch(significance=significance_lima,
+    result = SkyMapCollection(significance=significance_lima,
                        n_on=n_on_,
                        background=background,
                        excess=n_on_ - background,

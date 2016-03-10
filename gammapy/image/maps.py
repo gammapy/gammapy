@@ -416,6 +416,12 @@ class SkyMapCollection(Bunch):
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
 
+    def set_reference_wcs(self):
+        """
+        Set reference WCS for all sky maps.
+        """
+        pass
+
     def __repr__(self):
         """
         String representation of the sky map collection.
