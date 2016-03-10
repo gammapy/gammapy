@@ -142,6 +142,29 @@ class SkyMap(object):
         wcs = WCS(header)
         return cls(name, data, wcs, unit, meta)
 
+    @classmethod
+    def empty_like(cls, skymap, name=None, unit=None, fill=0, meta=None):
+        """
+        Create an empty sky map with the same WCS specification as given sky map. 
+        
+        Parameters
+        ----------
+        skymap : `~gammapy.image.SkyMap`
+            Instance of `~gammapy.image.SkyMap`.
+        fill : float, optional
+            Fill sky map with constant value. Default is 0.
+        name : str
+            Name of the sky map.
+        unit : str
+            String specifying the data units.
+        meta : dict
+            Dictionary to store meta data.            
+        """ 
+        wcs = skymap.wcs.copy()
+        data = fill * np.ones_like(skymap.data)
+        return cls(name, data, wcs, unit, meta)
+
+
     def write(self, filename, *args, **kwargs):
         """
         Write sky map to Fits file.
@@ -238,7 +261,7 @@ class SkyMap(object):
 
     def to_image_hdu(self):
         """
-        Convert sky map to '~astropy.fits.ImageHDU'.
+        Convert sky map to `~astropy.fits.ImageHDU`.
         """
         header = self.wcs.to_header()
 

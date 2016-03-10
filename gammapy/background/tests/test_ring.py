@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
 from ...background import RingBgMaker, ring_r_out
-from ...data import MapsBunch
+from ...image import MapsBunch
 from ...utils.testing import requires_dependency
 
 

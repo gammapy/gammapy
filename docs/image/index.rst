@@ -11,10 +11,11 @@ Image processing and analysis tools (`gammapy.image`)
 Introduction
 ============
 
-`gammapy.image` contains some image processing and analysis methods that are not readily available elsewhere.
-
-The goal is to contribute most of these methods to `scipy.ndimage`, `scikit-image`_, `astropy`_ or `photutils`_,
-and to only keep gamma-ray analysis specific functionality here.
+`gammapy.image` contains data classes and methods for image based analysis
+of gamma-ray data. Currently it includes multi purpose image processing
+methods as well. The goal longterm goal is to contribute most of these methods
+to `scipy.ndimage`, `scikit-image`_, `astropy`_ or `photutils`_, and to only keep
+gamma-ray analysis specific functionality here.
 
 Getting Started
 ===============
@@ -39,6 +40,7 @@ If you'd like to learn more about using `gammapy.image`, read the following sub-
 .. toctree::
    :maxdepth: 1
 
+   skymaps
    plotting
    bounding_box
 
