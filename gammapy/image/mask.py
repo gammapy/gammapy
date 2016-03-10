@@ -5,12 +5,14 @@ from astropy.wcs import WCS
 from astropy.io import fits
 from ..utils.scripts import make_path
 from astropy.coordinates import Latitude, Longitude, Angle
+from astropy.utils import lazyproperty
 from ..image import (
     exclusion_distance,
     lon_lat_circle_mask,
     coordinates,
     make_empty_image,
 )
+from .maps import SkyMap
 
 __all__ = [
     'ExclusionMask',
@@ -18,19 +20,10 @@ __all__ = [
 ]
 
 
-class ExclusionMask(object):
+class ExclusionMask(SkyMap):
     """Exclusion mask
 
-    Parameters
-    ----------
-    mask : `~numpy.ndarray`
-         Exclusion mask
     """
-
-    def __init__(self, mask, wcs=None):
-        self.mask = np.array(mask, dtype=int)
-        self.wcs = wcs
-        self._distance_image = None
 
     @classmethod
     def create_random(cls, hdu, n=4, min_rad=0, max_rad=40):
@@ -62,34 +55,7 @@ class ExclusionMask(object):
             val = xd * xd + yd * yd <= r * r
             mask[val] = 0
 
-        return cls(mask, wcs)
-
-    @classmethod
-    def from_hdu(cls, hdu):
-        """Read exclusion mask from ImageHDU
-
-        Parameters
-        ----------
-        hdu : `~astropy.fits.ImageHDU`
-            ImageHDU containing only an exlcusion mask (int, bool)
-        """
-        mask = np.array(hdu.data)
-        wcs = WCS(hdu.header)
-        return cls(mask, wcs)
-
-    @classmethod
-    def from_fits(cls, excl_file):
-        """Read exclusion mask fits file
-
-        Parameters
-        ----------
-        excl_file : str
-            fits file containing an Exclusion extension
-        """
-        path = make_path(excl_file)
-        hdulist = fits.open(str(path))
-        hdu = hdulist['Exclusion']
-        return cls.from_hdu(hdu)
+        return cls(data=mask, wcs=wcs)
 
     @classmethod
     def from_ds9(cls, excl_file, hdu):
@@ -110,26 +76,10 @@ class ExclusionMask(object):
         val = r.get_mask(hdu=hdu)
         mask = np.invert(val)
         wcs = WCS(hdu.header)
-        return cls(mask, wcs)
+        return cls(data=mask, wcs=wcs)
 
-    def write(self, filename, **kwargs):
-        """Write Exclusion mask to file
-
-        Parameters
-        ----------
-        filename : str
-            File to write
-        """
-        self.to_hdu().writeto(filename, **kwargs)
-
-    def to_hdu(self):
-        """Create ImageHDU containting the exclusion mask
-        """
-        header = self.wcs.to_header()
-        return fits.ImageHDU(self.mask, header, name='Exclusion')
-
-    def plot(self, ax=None, **kwargs):
-        """Plot
+    def plot(self, ax=None, fig=None, **kwargs):
+        """Plot exclusion mask
 
         Parameters
         ----------
@@ -141,31 +91,25 @@ class ExclusionMask(object):
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object
         """
-
         from matplotlib import colors
-        import matplotlib.pyplot as plt
-        from wcsaxes import WCSAxes
-
-        if ax is None:
-            fig = plt.figure()
-            ax = WCSAxes(fig, [0.1, 0.1, 0.8, 0.8], wcs=self.wcs)
-            fig.add_axes(ax)
 
         if 'cmap' not in locals():
             cmap = colors.ListedColormap(['black', 'lightgrey'])
 
-        ax.imshow(self.mask, cmap=cmap, origin='lower')
+        kwargs['cmap'] = cmap
+        kwargs['origin'] = 'lower'
+        super(ExclusionMask, self).plot(ax, fig, **kwargs)
 
-        return ax
-
-    @property
+    @lazyproperty
     def distance_image(self):
         """Map containting the distance to the nearest exclusion region"""
+        return exclusion_distance(self.mask)
 
-        if self._distance_image is None:
-            self._distance_image = exclusion_distance(self.mask)
-
-        return self._distance_image
+    # Set alias for mask
+    # TODO: Add mask attribute to sky map class
+    @property
+    def mask(self):
+        return self.data
 
 
 def make_tevcat_exclusion_mask():

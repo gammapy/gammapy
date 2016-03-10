@@ -10,12 +10,14 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.units import Quantity, Unit
+from astropy.extern import six
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header
 from ..utils.wcs import get_wcs_ctype
+from ..utils.scripts import make_path
 
-__all__ = ['SkyMap', 'MapsBunch']
+__all__ = ['SkyMap', 'SkyMapCollection']
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +48,7 @@ class SkyMap(object):
     meta : dict
         Dictionary to store meta data.
     """
-    def __init__(self, name, data, wcs, unit=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
@@ -71,12 +73,16 @@ class SkyMap(object):
         if isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
             data, header = fobj.data, fobj.header
         else:
+            if isinstance(fobj, six.string_types):
+                fobj = str(make_path(fobj))
             data = fits.getdata(fobj, *args, **kwargs)
             header = fits.getheader(fobj, *args, **kwargs)
         wcs = WCS(header)
         meta = header
         #TODO: is header['HDUNAME'] always set, or can this fail?
         name = header.get('HDUNAME')
+        if name is None:
+            name = header.get('EXTNAME')
         try:
             # Valitade unit string
             unit = Unit(header['BUNIT']).to_string()
@@ -140,7 +146,7 @@ class SkyMap(object):
                          proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
-        return cls(name, data, wcs, unit, meta)
+        return cls(name=name, data=data, wcs=wcs, unit=unit, meta=meta)
 
     @classmethod
     def empty_like(cls, skymap, name=None, unit=None, fill=0, meta=None):
@@ -320,7 +326,8 @@ class SkyMap(object):
             WCS axis object to plot on.
         """
         caxes = axes.imshow(self.data, **kwargs)
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, self.unit))
+        unit = self.unit or 'A.E.'
+        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
         try:
             axes.coords['glon'].set_axislabel('Galactic Longitude')
             axes.coords['glat'].set_axislabel('Galactic Latitude')
@@ -353,23 +360,23 @@ class SkyMap(object):
         return self.data 
 
 
-class MapsBunch(Bunch):
+class SkyMapCollection(Bunch):
     """
-    Bunch with Fits I/O.
+    Collection of sky maps with Fits I/O.
     
     Here's an example:
 
     .. code-block:: python
     
-        from gammapy.data import MapsBunch
-        maps = MapsBunch.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+        from gammapy.data import SkyMapCollection
+        skymaps = SkyMapCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
-    Then try tab completion on the ``maps`` object.
+    Then try tab completion on the ``skymaps`` object.
     """
     @classmethod
     def read(cls, filename):
         """
-        Create Bunch of maps from Fits file.
+        Create collection of sky maps from Fits file.
 
         Parameters
         ----------
@@ -379,11 +386,14 @@ class MapsBunch(Bunch):
         hdulist = fits.open(filename)
         kwargs = {}
         _map_names = []  # list of map names to save order in fits file
-        kwargs['_ref_header'] = hdulist[0].header
-
+        
         for hdu in hdulist:
-            name =  hdu.header.get('HDUNAME', hdu.name.lower())
-            kwargs[name] = hdu.data
+            skymap = SkyMap.read(hdu)
+
+            # This forces lower case map names, but only on the collection object
+            # When writing to fits again the skymap.name attribute is used.
+            name = skymap.name.lower()
+            kwargs[name] = skymap
             _map_names.append(name)
         kwargs['_map_names'] = _map_names
         return cls(**kwargs)
@@ -401,8 +411,17 @@ class MapsBunch(Bunch):
             Reference header to be used for all maps. 
         """
         hdulist = fits.HDUList()
-        header = header or self.get('_ref_header')
         for name in self.get('_map_names', sorted(self)):
-            hdu = fits.ImageHDU(data=self[name], header=header, name=name)
+            hdu = self[name].to_image_hdu()
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
+
+    def __repr__(self):
+        """
+        String representation of the sky map collection.
+        """
+        info = ''
+        for name in self.get('_map_names', sorted(self)):
+            info += self[name].__repr__()
+            info += '\n'
+        return info

@@ -28,7 +28,7 @@ def test_spectrum_extraction(tmpdir):
 
     exclusion_file = gammapy_extra.filename(
         "datasets/exclusion_masks/tevcat_exclusion.fits")
-    excl = ExclusionMask.from_fits(exclusion_file)
+    excl = ExclusionMask.read(exclusion_file)
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
 
