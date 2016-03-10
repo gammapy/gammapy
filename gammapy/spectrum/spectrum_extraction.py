@@ -92,9 +92,10 @@ class SpectrumExtraction(object):
         """
         cwd = Path.cwd()
         outdir = cwd if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True)
+        outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
 
+        self.cutout_exclusion_mask()
         self.extract_spectrum()
         if self.bkg_method['type'] == 'reflected':
             self.filter_observations()
@@ -269,6 +270,32 @@ class SpectrumExtraction(object):
         log.info('Writing {}'.format(self.OBSTABLE_FILE))
         self.exclusion.write(self.EXCLUDEDREGIONS_FILE, clobber=True)
         self.obs_table.write(self.OBSTABLE_FILE, format='fits', overwrite=True)
+
+    def cutout_exclusion_mask(self, fov='9 deg'):
+        """Cutout appropriate part of exclusion mask
+
+        In many cases the exclusion mask is given as all-sky image, but only a
+        small fraction of that image is needed
+
+        Parameters
+        ----------
+        exclusion : `~gammapy.image.ExclusionMask`
+            Input exclusion mask
+        fov : `~astropy.coordinates.Angle`
+            Field of view
+        """
+        from astropy.nddata import Cutout2D
+        from astropy.nddata.utils import PartialOverlapError
+        fov = Angle(fov)
+        exclusion = self.exclusion
+        try:
+            c = Cutout2D(exclusion.mask, self.on_region.pos, fov,
+                         exclusion.wcs, copy=True, mode='strict')
+        except PartialOverlapError:
+            raise PartialOverlapError('FOV ({}) not completely contained '
+                                      'in exclusion mask'.format(fov))
+
+        self.exclusion = ExclusionMask(c.data, c.wcs)
 
     def info(self):
         """Print some information

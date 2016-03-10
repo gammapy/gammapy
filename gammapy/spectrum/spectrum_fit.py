@@ -63,12 +63,31 @@ class SpectrumFit(object):
         return cls(obs_list)
 
     @classmethod
+    def from_observation_table_file(cls, filename):
+        """Create `~gammapy.spectrum.SpectrumFit` using a observation table
+
+        Parameters
+        ----------
+        filename : str
+            Observation table file
+        """
+        obs_table = ObservationTable.read(filename)
+        return cls.from_observation_table(obs_table)
+
+    @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
 
         Required columns
         - PHAFILE
+
+        Parameters
+        ----------
+        obs_table : `~gammapy.data.ObservationTable`
         """
+        if not isinstance(obs_table, ObservationTable):
+            raise ValueError('Please provide an observation table')
+
         pha_list = list(obs_table['PHAFILE'])
         return cls.from_pha_list(pha_list)
 
