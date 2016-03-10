@@ -9,9 +9,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
-from astropy.units import Quantity
-from astropy.extern import six
-
+from astropy.units import Quantity, Unit
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header
@@ -26,8 +24,9 @@ log = logging.getLogger(__name__)
 # astropy.nddata is still in development, I decided to not inherit for now.
 
 # The class provides Fits I/O and generic methods, that are not specific to the
-# data it contains. Special data classes, such as an ExclusionMap or FluxMap should
-# inherit from this class and implement special, data related methods themselves. 
+# data it contains. Special data classes, such as an ExclusionMap, FluxMap or
+# CountsMap should inherit from this class and implement special, data related
+# methods themselves. 
 
 
 class SkyMap(object):
@@ -62,31 +61,35 @@ class SkyMap(object):
 
         Parameters
         ----------
-        fobj : str or `~astropy.io.fits.ImageHDU`
+        fobj : file like object or `~astropy.io.fits.ImageHDU` or `~astropy.io.fits.PrimaryHDU`
             Name of the Fits file or ImageHDU object.
+        *args : list
+            Arguments passed `~astropy.io.fits.gedata`.
+        **kwargs : dict
+            Keyword arguments passed `~astropy.io.fits.gedata`.
         """
-        if isinstance(fobj, six.string_types):
-            data = fits.getdata(fobj, *args, **kwargs)
-            header = fits.getheader(fobj, *args, **kwargs)
-        elif isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
+        if isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
             data, header = fobj.data, fobj.header
         else:
-            raise TypeError("Can't read object of type {}".format(type(fobj)))
+            data = fits.getdata(fobj, *args, **kwargs)
+            header = fits.getheader(fobj, *args, **kwargs)
         wcs = WCS(header)
         meta = header
+        #TODO: is header['HDUNAME'] always set, or can this fail?
         name = header.get('HDUNAME')
         try:
-            unit = header['BUNIT']
-        except KeyError:
+            # Valitade unit string
+            unit = Unit(header['BUNIT']).to_string()
+        except (KeyError, ValueError):
             unit = None
-            log.warn('No units found for extension {}'.format(name))
+            log.warn('No valid units found for extension {}'.format(name))
 
         return cls(name, data, wcs, unit, meta)
 
     @classmethod
-    def empty(cls, name=None, nxpix=200, nypix=200, binsz=0.02, xref=0, yref=0, fill=0,
-              proj='CAR', coordsys='GAL', xrefpix=None, yrefpix=None, dtype='float64',
-              unit=None, meta=None):
+    def empty(cls, name=None, nxpix=200, nypix=200, binsz=0.02, xref=0, yref=0,
+              fill=0, proj='CAR', coordsys='GAL', xrefpix=None, yrefpix=None,
+              dtype='float64', unit=None, meta=None):
         """
         Create an empty sky map from scratch.
 
@@ -279,7 +282,7 @@ class SkyMap(object):
         elif viewer == 'ds9':
             with NamedTemporaryFile() as f:
                 self.write(f)
-                call(['ds9', f.name])
+                call(['ds9', f.name, '-cmap', 'bb'])
         else:
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
@@ -306,13 +309,19 @@ class SkyMap(object):
         """
         Print summary info about the sky map.
         """
+        print(repr(self))
+
+    def __repr__(self):
+        """
+        String representation of the class.
+        """
         info = "Name: {}\n".format(self.name)
         info += "Data shape: {}\n".format(self.data.shape)
         info += "Data type: {}\n".format(self.data.dtype)
         info += "Data unit: {}\n".format(self.unit)
         info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
         info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
-        print(info)
+        return info
 
     def __array__(self):
         """
