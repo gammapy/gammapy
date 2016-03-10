@@ -6,3 +6,4 @@ from .profile import *
 from .plotting import *
 from .catalog import *
 from .mask import *
+from .maps import *
