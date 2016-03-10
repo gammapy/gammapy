@@ -174,7 +174,6 @@ class SpectrumFit(object):
         """
         energy = Energy(energy)
         shape = len(self.obs_list)
-        #import IPython; IPython.embed()
         if energy.shape is ():
             energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
         if (energy.shape[0]!=shape):
