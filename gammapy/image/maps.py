@@ -194,13 +194,13 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, type_='world', origin=0, mode='center'):
+    def coordinates(self, coord_type='world', origin=0, mode='center'):
         """
         Sky coordinate images.
 
         Parameters
         ----------
-        type_ : {'world', 'pix', 'skycoord'}
+        coord_type : {'world', 'pix', 'skycoord'}
             Which type of coordinates to return.
         origin : {0, 1}
             Pixel coordinate origin.
@@ -214,15 +214,15 @@ class SkyMap(object):
         else:
             raise ValueError('Invalid mode to compute coordinates.')
         
-        if type_ == 'pix':
+        if coord_type == 'pix':
             return x, y
         else:
             xsky, ysky = self.wcs.wcs_pix2world(x, y, origin)
             l, b = Longitude(xsky, unit='deg'), Latitude(ysky, unit='deg')
             l = l.wrap_at('180d')
-            if type_ == 'world':
+            if coord_type == 'world':
                 return l.degree, b.degree
-            elif type_ == 'skycoord': 
+            elif coord_type == 'skycoord': 
                 return l, b
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"

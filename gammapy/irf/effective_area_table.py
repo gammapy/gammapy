@@ -251,7 +251,7 @@ class EffectiveAreaTable(object):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        kwargs.setdefault('lw', '2')
+        kwargs.setdefault('lw', 2)
 
         energy = self.ebounds.log_centers if energy is None else Energy(energy)
         eff_area = self.evaluate(energy)

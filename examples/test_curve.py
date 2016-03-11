@@ -10,7 +10,7 @@ from gammapy.background import EnergyOffsetBackgroundModel
 from gammapy.utils.energy import EnergyBounds, Energy
 from gammapy.data import DataStore
 from gammapy.utils.axis import sqrt_space
-from gammapy.image import bin_events_in_image, make_empty_image, disk_correlate
+from gammapy.image import bin_events_in_image, disk_correlate, SkyMap
 from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
@@ -58,8 +58,8 @@ def make_image():
     table.pprint()
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
 
-    counts_image = make_empty_image(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
-                                    proj='TAN')
+    counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
+                                proj='TAN').to_image_hdu()
     bkg_image = counts_image.copy()
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 
