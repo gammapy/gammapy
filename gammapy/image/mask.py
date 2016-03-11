@@ -23,16 +23,13 @@ class ExclusionMask(SkyMap):
 
     """
 
-    @classmethod
-    def create_random(cls, hdu, n=4, min_rad=0, max_rad=40):
+    def fill_random_circles(self, n=4, min_rad=0, max_rad=40):
         """Create random exclusion mask (n circles) on a  given image
 
         This is useful for testing
 
         Parameters
         ----------
-        hdu : `~astropy.fits.ImageHDU`
-            ImageHDU
         n : int
             Number of circles to place
         min_rad : int
@@ -41,8 +38,7 @@ class ExclusionMask(SkyMap):
             Maximum circle radius in pixels
         """
         # TODO: is it worth to change this to take the radius in deg?
-        wcs = WCS(hdu.header)
-        mask = np.ones(hdu.data.shape, dtype=int)
+        mask = np.ones(self.data.shape, dtype=int)
         nx, ny = mask.shape
         xx = np.random.choice(np.arange(nx), n)
         yy = np.random.choice(np.arange(ny), n)
@@ -52,8 +48,7 @@ class ExclusionMask(SkyMap):
             xd, yd = np.ogrid[-x:nx - x, -y:ny - y]
             val = xd * xd + yd * yd <= r * r
             mask[val] = 0
-
-        return cls(data=mask, wcs=wcs)
+        self.data = mask
 
     @classmethod
     def from_ds9(cls, excl_file, hdu):

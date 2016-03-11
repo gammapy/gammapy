@@ -11,7 +11,6 @@ from ...image import (
     binary_disk,
     binary_ring,
     separation,
-    make_empty_image,
     make_header,
     contains,
     solid_angle,
@@ -44,8 +43,7 @@ def test_binary_ring():
 
 class TestImageCoordinates(object):
     def setup_class(self):
-        self.image = make_empty_image(nxpix=3, nypix=2,
-                                      binsz=10, proj='CAR')
+        self.image = SkyMap.empty(nxpix=3, nypix=2, binsz=10, proj='CAR').to_image_hdu()
         self.image.data = np.arange(3 * 2).reshape(self.image.data.shape)
 
     def test_separation(self):
@@ -121,7 +119,7 @@ class TestBlockReduceHDU():
         # Arbitrarily choose CAR projection as independent from tests
         projection = 'CAR'
         # Create test image
-        self.image = make_empty_image(12, 8, proj=projection)
+        self.image = SkyMap.empty(nxpix=12, nypix=8, proj=projection).to_image_hdu()
         self.image.data = np.ones(self.image.data.shape)
         # Create test cube
         self.indices = np.arange(4)
@@ -157,16 +155,16 @@ class TestBlockReduceHDU():
 
 @requires_dependency('skimage')
 def test_ref_pixel():
-    image = make_empty_image(101, 101, proj='CAR')
-    footprint = WCS(image.header).calc_footprint(center=False)
-    image_1 = block_reduce_hdu(image, (10, 10), func=np.sum)
+    image = SkyMap.empty(nxpix=101, nypix=101, proj='CAR')
+    footprint = image.wcs.calc_footprint(center=False)
+    image_1 = block_reduce_hdu(image.to_image_hdu(), (10, 10), func=np.sum)
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
     # Lower left corner shouldn't change
     assert_allclose(footprint[0], footprint_1[0])
 
 
 def test_cube_to_image():
-    layer = make_empty_image(fill=1)
+    layer = SkyMap.empty(nxpix=101, nypix=101, fill=1.).to_image_hdu()
     hdu_list = [layer, layer, layer, layer]
     cube = images_to_cube(hdu_list)
     case1 = cube_to_image(cube)

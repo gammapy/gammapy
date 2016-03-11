@@ -34,7 +34,6 @@ __all__ = [
     'images_to_cube',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
-    'make_empty_image',
     'make_header',
     'paste_cutout_into_image',
     'process_image_pixels',
@@ -892,62 +891,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     header.update(pars)
 
     return header
-
-
-def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
-                     proj='CAR', coordsys='GAL',
-                     xrefpix=None, yrefpix=None, dtype='float32'):
-    """Make an empty (i.e. values 0) image.
-
-    Uses the same parameter names as the Fermi tool gtbin
-    (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
-
-    If no reference pixel position is given it is assumed to be
-    at the center of the image.
-
-    Parameters
-    ----------
-    nxpix : int, optional
-        Number of pixels in x axis. Default is 100.
-    nypix : int, optional
-        Number of pixels in y axis. Default is 100.
-    binsz : float, optional
-        Bin size for x and y axes in units of degrees. Default is 0.1.
-    xref : float, optional
-        Coordinate system value at reference pixel for x axis. Default is 0.
-    yref : float, optional
-        Coordinate system value at reference pixel for y axis. Default is 0.
-    fill : float or 'checkerboard', optional
-        Creates checkerboard image or uniform image of any float
-    proj : string, optional
-        Projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}, optional
-        Coordinate system. Default is 'GAL' (Galactic).
-    xrefpix : float, optional
-        Coordinate system reference pixel for x axis. Default is None.
-    yrefpix: float, optional
-        Coordinate system reference pixel for y axis. Default is None.
-    dtype : str, optional
-        Data type, default is float32
-
-    Returns
-    -------
-    image : `~astropy.io.fits.ImageHDU`
-        Empty image
-    """
-    header = make_header(nxpix, nypix, binsz, xref, yref,
-                         proj, coordsys, xrefpix, yrefpix)
-
-    # Note that FITS and NumPy axis order are reversed
-    shape = (header['NAXIS2'], header['NAXIS1'])
-    if fill == 'checkerboard':
-        A = np.zeros(shape, dtype=dtype)
-        A[1::2, ::2] = 1
-        A[::2, 1::2] = 1
-        data = A
-    else:
-        data = fill * np.ones(shape, dtype=dtype)
-    return fits.ImageHDU(data, header)
 
 
 def crop_image(image, bounding_box):

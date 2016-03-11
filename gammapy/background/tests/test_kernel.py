@@ -7,7 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates.angles import Angle
 from ...utils.testing import requires_dependency, requires_data
 from ...background import GammaImages, IterativeKernelBackgroundEstimator
-from ...image import make_empty_image
+from ...image import SkyMap
 from ...stats import significance
 from ...datasets import FermiGalacticCenter
 
@@ -18,7 +18,7 @@ def test_GammaImages():
     This is the only method in GammaImages that actually calculates anything.
     """
     # Set up test counts and background
-    counts_hdu = make_empty_image(nxpix=10, nypix=10, binsz=1, fill=42)
+    counts_hdu = SkyMap.empty(nxpix=10, nypix=10, binsz=1, fill=42).to_image_hdu()
     counts_hdu.data[4][4] = 1000
     counts = counts_hdu.data
 
@@ -48,7 +48,7 @@ class TestIterativeKernelBackgroundEstimator(object):
         """
         from scipy.ndimage import convolve
         # Load/create example model images
-        counts_hdu = make_empty_image(nxpix=10, nypix=10, binsz=1, fill=42)
+        counts_hdu = SkyMap.empty(nxpix=10, nypix=10, binsz=1, fill=42).to_image_hdu()
         counts_hdu.data[4][4] = 1000
         counts = counts_hdu.data
         # Initial counts required by one of the tests.
