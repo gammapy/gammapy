@@ -9,8 +9,6 @@ from astropy.utils import lazyproperty
 from ..image import (
     exclusion_distance,
     lon_lat_circle_mask,
-    coordinates,
-    make_empty_image,
 )
 from .maps import SkyMap
 

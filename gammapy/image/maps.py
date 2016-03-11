@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
 from astropy.units import Quantity, Unit
 from astropy.extern import six
@@ -148,7 +148,7 @@ class SkyMap(object):
                          proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
-        return cls(name=name, data=data, wcs=wcs, unit=unit, meta=meta)
+        return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
     def empty_like(cls, skymap, name=None, unit=None, fill=0, meta=None):
@@ -157,7 +157,7 @@ class SkyMap(object):
         
         Parameters
         ----------
-        skymap : `~gammapy.image.SkyMap`
+        skymap : `~gammapy.image.SkyMap` or `~astropy.io.fits.ImageHDU`
             Instance of `~gammapy.image.SkyMap`.
         fill : float, optional
             Fill sky map with constant value. Default is 0.
@@ -167,10 +167,15 @@ class SkyMap(object):
             String specifying the data units.
         meta : dict
             Dictionary to store meta data.            
-        """ 
-        wcs = skymap.wcs.copy()
+        """
+        if isinstance(skymap, SkyMap): 
+            wcs = skymap.wcs.copy()
+        elif isinstance(skymap, (fits.ImageHDU, fits.PrimaryHDU)):
+            wcs = WCS(skymap.header)
+        else:
+            raise TypeError("Can't create sky map from type {}".format(type(skymap)))
         data = fill * np.ones_like(skymap.data)
-        return cls(name, data, wcs, unit, meta)
+        return cls(name, data, wcs, unit, meta=wcs.to_header())
 
 
     def write(self, filename, *args, **kwargs):
@@ -189,12 +194,14 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, origin=0, mode='center'):
+    def coordinates(self, type_='world', origin=0, mode='center'):
         """
         Sky coordinate images.
 
         Parameters
         ----------
+        type_ : {'world', 'pix', 'skycoord'}
+            Which type of coordinates to return.
         origin : {0, 1}
             Pixel coordinate origin.
         mode : {'center', 'edges'}
@@ -206,8 +213,20 @@ class SkyMap(object):
             raise NotImplementedError
         else:
             raise ValueError('Invalid mode to compute coordinates.')
-
-        return self.wcs.wcs_pix2world(x, y, origin)
+        
+        if type_ == 'pix':
+            return x, y
+        else:
+            xsky, ysky = self.wcs.wcs_pix2world(x, y, origin)
+            l, b = Longitude(xsky, unit='deg'), Latitude(ysky, unit='deg')
+            l = l.wrap_at('180d')
+            if type_ == 'world':
+                return l.degree, b.degree
+            elif type_ == 'skycoord': 
+                return l, b
+            else:
+                raise ValueError("Not a valid coordinate type. Choose either"
+                                 " 'world', 'pix' or 'skycoord'.")
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -234,7 +253,7 @@ class SkyMap(object):
             xsky, ysky = position[0], position[1]
 
         x, y = self.wcs.wcs_world2pix(xsky, ysky, origin)
-        return self.data[y.astype('int'), x.astype('int')]
+        return self.data[np.round(y).astype('int'), np.round(x).astype('int')]
 
     def to_quantity(self):
         """

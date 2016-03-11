@@ -6,15 +6,19 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian2D
 from ...utils.testing import requires_dependency
 from ...image import (measure_labeled_regions,
-                      make_empty_image, lookup,
                       measure_containment_radius,
                       measure_image_moments,
                       measure_containment,
-                      measure_curve_of_growth,
-                      coordinates)
+                      measure_curve_of_growth, SkyMap)
 
 BINSZ = 0.02
 
+
+
+#class TestMeasure(object):
+
+#    def setup(self):
+#        self.skymap = SkyMap.empty(nxpis=201, nypix=201, binsz=0.02)
 
 def generate_example_image():
     """
@@ -49,13 +53,12 @@ def generate_gaussian_image():
     """
     Generate some greyscale image to run the detection on.
     """
-    image = fits.ImageHDU(data=np.zeros((201, 201)))
-    image = set_header(image)
-    GLON, GLAT = coordinates(image, lon_sym=True)
+    skymap = SkyMap.empty(nxpix=201, nypix=201, binsz=0.02)
+    GLON, GLAT = skymap.coordinates()
     sigma = 0.2
     source = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
-    image.data += source(GLON, GLAT)
-    return image
+    skymap.data += source(GLON, GLAT)
+    return skymap.to_image_hdu()
 
 
 @requires_dependency('scipy')
@@ -97,15 +100,3 @@ def test_measure_curve_of_growth():
     containment_ana = 1 - np.exp(-0.5 * (radius / sigma) ** 2)
     assert_allclose(containment, containment_ana, rtol=0.1)
 
-
-class _TestImageCoordinates(object):
-    def setUp(self):
-        self.image = make_empty_image(nxpix=3, nypix=2,
-                                      binsz=10, proj='CAR')
-        self.image.dat = np.arange(3 * 2).reshape(self.image.dat.shape)
-
-    def test_lookup(self):
-        self.assertEqual(lookup(self.image, 1, 1, world=False), 0)
-        assert_equal(lookup(self.image, 5, 1, world=False), np.nan)
-        self.assertEqual(lookup(self.image, 3, 2, world=False), 5)
-        assert_equal(lookup(self.image, [1, 5], [1, 1], world=False), [0, np.nan])

@@ -7,21 +7,20 @@ from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.modeling import models
 from ...utils.testing import requires_dependency
 from ...background import fill_acceptance_image
-from ...image import make_empty_image, coordinates
+from ...image import make_empty_image, SkyMap
 
 
 @requires_dependency('scipy')
 def test_fill_acceptance_image():
+    # TODO: the code can be simplified, taking full advantage of the SkyMap class. 
     # create empty image
     # odd number of pixels needed for having the center in its own pixel
-    n_pix_x = 101
-    n_pix_y = 101
     bin_size = Angle(0.1, 'deg')
-    image = make_empty_image(n_pix_x, n_pix_y, bin_size.degree,
-                             xref=0, yref=0, fill=0,
-                             proj='CAR', coordsys='GAL',
-                             xrefpix=None, yrefpix=None, dtype='float32')
-
+    image = SkyMap.empty(nxpix=101, nypix=101, binsz=bin_size.degree,
+                         xref=0, yref=0, fill=0, proj='CAR', coordsys='GAL',
+                         xrefpix=None, yrefpix=None, dtype='float32')
+    image = image.to_image_hdu()
+    
     # define center coordinate of the image in wolrd and pixel coordinates
     lon = image.header['CRVAL1']
     lat = image.header['CRVAL2']
@@ -54,7 +53,7 @@ def test_fill_acceptance_image():
     # along the x axis
 
     # define grids of pixel coorinates
-    xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
+    xpix_coord_grid, ypix_coord_grid = SkyMap.read(image).coordinates('pix')
 
     # calculate pixel offset from center (in world coordinates)
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)

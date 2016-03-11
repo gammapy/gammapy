@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
-    coordinates,
+    SkyMap,
     compute_binning,
     image_profile,
 )
@@ -25,37 +25,34 @@ def test_compute_binning():
 @requires_data('gammapy-extra')
 def test_image_lat_profile():
     """Tests GLAT profile with image of 1s of known size and shape."""
-    image = FermiGalacticCenter.counts()
+    image = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
+    lons, lats = image.coordinates()
 
-    lons, lats = coordinates(image)
-    image.data = np.ones_like(image.data)
-
-    counts = FermiGalacticCenter.counts()
-    counts.data = np.ones_like(counts.data)
-
+    counts = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
+    
     mask = np.zeros_like(image.data)
     # Select Full Image
     lat = [lats.min(), lats.max()]
     lon = [lons.min(), lons.max()]
     # Pick minimum valid binning
     binsz = 0.5
-    mask_array = np.zeros_like(image.data)
+    mask_array = np.zeros_like(image.data, dtype='bool')
     # Test output
-    lat_profile1 = image_profile('lat', image, lat, lon, binsz, errors=True)
+    lat_profile1 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz, errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
     assert_allclose(lat_profile1['BIN_VALUE'].data.astype(float),
                     2000 * np.ones(39), rtol=1, atol=0.1)
     assert_allclose(lat_profile1['BIN_ERR'].data,
                     0.1 * lat_profile1['BIN_VALUE'].data)
 
-    lat_profile2 = image_profile('lat', image, lat, lon, binsz,
-                                 counts, errors=True)
+    lat_profile2 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
+                                 counts.to_image_hdu(), errors=True)
     # atol 0.1 is sufficient to check if correct number of pixels are included
     assert_allclose(lat_profile2['BIN_ERR'].data,
                     44.721359549995796 * np.ones(39), rtol=1, atol=0.1)
 
-    lat_profile3 = image_profile('lat', image, lat, lon, binsz, counts,
-                                 mask_array, errors=True)
+    lat_profile3 = image_profile('lat', image.to_image_hdu(), lat, lon, binsz,
+                                 counts.to_image_hdu(), mask_array, errors=True)
 
     assert_allclose(lat_profile3['BIN_VALUE'].data, np.zeros(39))
 
@@ -65,7 +62,7 @@ def test_image_lon_profile():
     """Tests GLON profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()
 
-    lons, lats = coordinates(image)
+    lons, lats = SkyMap.read(image).coordinates()
     image.data = np.ones_like(image.data)
 
     counts = FermiGalacticCenter.counts()

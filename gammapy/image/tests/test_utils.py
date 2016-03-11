@@ -8,7 +8,6 @@ from astropy.wcs import WCS
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
-    coordinates,
     binary_disk,
     binary_ring,
     separation,
@@ -20,8 +19,8 @@ from ...image import (
     cube_to_image,
     block_reduce_hdu,
     wcs_histogram2d,
-    lookup,
     lon_lat_rectangle_mask,
+    SkyMap
 )
 
 
@@ -48,12 +47,6 @@ class TestImageCoordinates(object):
         self.image = make_empty_image(nxpix=3, nypix=2,
                                       binsz=10, proj='CAR')
         self.image.data = np.arange(3 * 2).reshape(self.image.data.shape)
-
-    def test_coordinates(self):
-        lon, lat = coordinates(self.image)
-        x, y = coordinates(self.image)
-        lon_sym = coordinates(self.image, lon_sym=True)[0]
-        # TODO: assert
 
     def test_separation(self):
         actual = separation(self.image, (1, 0))
@@ -203,14 +196,14 @@ def test_wcs_histogram2d():
 
     print(type(image))
 
-    assert lookup(image, 0, 0, world=False) == 1 + 3
-    assert lookup(image, 1, 0, world=False) == 2
+    assert image.data[0, 0] == 1 + 3
+    assert image.data[0, 1] == 2
 
 
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
-    counts = FermiGalacticCenter.counts()
-    lons, lats = coordinates(counts)
+    counts = SkyMap.read(FermiGalacticCenter.counts())
+    lons, lats = counts.coordinates()
     mask = lon_lat_rectangle_mask(lons, lats, lon_min=-1,
                                   lon_max=1, lat_min=-1, lat_max=1)
     assert_allclose(mask.sum(), 400)

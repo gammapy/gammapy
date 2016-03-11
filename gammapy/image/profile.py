@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from ..image import coordinates
+from .maps import SkyMap
 
 __all__ = [
     'compute_binning',
@@ -242,7 +242,7 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
         boundaries, profile values and errors.
     """
 
-    lon, lat = coordinates(image)
+    lon, lat = SkyMap.read(image).coordinates()
     mask_init = (lats[0] <= lat) & (lat < lats[1])
     mask_bounds = mask_init & (lons[0] <= lon) & (lon < lons[1])
     if mask != None:

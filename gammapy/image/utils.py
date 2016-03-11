@@ -23,7 +23,6 @@ __all__ = [
     'binary_ring',
     'block_reduce_hdu',
     'contains',
-    'coordinates',
     'cube_to_image',
     'cube_to_spec',
     'crop_image',

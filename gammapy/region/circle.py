@@ -100,10 +100,9 @@ class PixCircleRegion(PixRegion):
         -------
         bool
         """
-        from ..image import lookup
         x, y = self.pos
         excl_dist = exclusion_mask.distance_image
-        val = lookup(excl_dist, x, y, world=False)
+        val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
         return val < self.radius
 
     def to_mpl_artist(self, **kwargs):
