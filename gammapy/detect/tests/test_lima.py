@@ -42,16 +42,16 @@ def test_compute_lima_on_off_map():
     """
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/survey/'
                                       'hess_survey_snippet.fits.gz')
-    data = SkyMapCollection.read(filename)
+    maps = SkyMapCollection.read(filename)
 
     kernel = Tophat2DKernel(5)
 
-    result_lima = compute_lima_on_off_map(data.on, data.off, data.onexposure,
-                                          data.offexposure, kernel)
+    result_lima = compute_lima_on_off_map(maps.on.data, maps.off.data, maps.onexposure.data,
+                                          maps.offexposure.data, kernel)
     
     # reproduce safe significance threshold from HESS software
     result_lima.significance[result_lima.n_on < 5] = 0
 
     # Set boundary to NaN in reference image
-    data.Significance[np.isnan(result_lima.significance)] = np.nan
-    assert_allclose(result_lima.significance, data.Significance, atol=1E-5)
+    maps.significance.data[np.isnan(result_lima.significance)] = np.nan
+    assert_allclose(result_lima.significance, maps.significance, atol=1E-5)

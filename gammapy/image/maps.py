@@ -22,14 +22,16 @@ __all__ = ['SkyMap', 'SkyMapCollection']
 log = logging.getLogger(__name__)
 
 
-# It might be a good option to inherit from `~astropy.nddata.NDData` later, but as
-# astropy.nddata is still in development, I decided to not inherit for now.
+# It might be a good option to inherit from `~astropy.nddata.NDData` later, but
+# as astropy.nddata is still in development, I decided to not inherit for now.
 
 # The class provides Fits I/O and generic methods, that are not specific to the
 # data it contains. Special data classes, such as an ExclusionMap, FluxMap or
 # CountsMap should inherit from this class and implement special, data related
 # methods themselves. 
 
+# Actually this class is generic enough to be rather in astropy and not in
+# gammapy and should maybe be moved to there...
 
 class SkyMap(object):
     """
@@ -79,7 +81,7 @@ class SkyMap(object):
             header = fits.getheader(fobj, *args, **kwargs)
         wcs = WCS(header)
         meta = header
-        #TODO: is header['HDUNAME'] always set, or can this fail?
+        
         name = header.get('HDUNAME')
         if name is None:
             name = header.get('EXTNAME')
@@ -298,8 +300,12 @@ class SkyMap(object):
         ----------
         viewer : {'mpl', 'ds9'}
             Which image viewer to use. Option 'ds9' requires ds9 to be installed.
+        options : list, optional
+            List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
+            Any valid ds9 command line option can be passed. 
+            See http://ds9.si.edu/doc/ref/command.html for details. 
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `~matplotlib.pyplot.imshow` or ds9.
         """
         if viewer == 'mpl':
             # TODO: replace by better MPL or web based image viewer 
@@ -311,7 +317,7 @@ class SkyMap(object):
         elif viewer == 'ds9':
             with NamedTemporaryFile() as f:
                 self.write(f)
-                call(['ds9', f.name, '-cmap', 'bb'])
+                call(['ds9', f.name, '-cmap', 'bb'] + kwargs.get('options', []))
         else:
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
@@ -362,13 +368,17 @@ class SkyMap(object):
 
 class SkyMapCollection(Bunch):
     """
-    Collection of sky maps with Fits I/O.
+    Container for a collection of sky maps.
+
+    This class bundles as set of SkyMaps in single data container and provides
+    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like 
+    handling of the data members. 
     
-    Here's an example:
+    Here's an example how to use it:
 
     .. code-block:: python
     
-        from gammapy.data import SkyMapCollection
+        from gammapy.image import SkyMapCollection
         skymaps = SkyMapCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
     Then try tab completion on the ``skymaps`` object.
@@ -383,7 +393,7 @@ class SkyMapCollection(Bunch):
         filename : str
             Fits file name.
         """
-        hdulist = fits.open(filename)
+        hdulist = fits.open(str(make_path(filename)))
         kwargs = {}
         _map_names = []  # list of map names to save order in fits file
         
@@ -420,7 +430,7 @@ class SkyMapCollection(Bunch):
         """
         Set reference WCS for all sky maps.
         """
-        pass
+        raise NotImplementedError
 
     def __repr__(self):
         """

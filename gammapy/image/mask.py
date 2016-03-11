@@ -42,7 +42,7 @@ class ExclusionMask(SkyMap):
         max_rad : int
             Maximum circle radius in pixels
         """
-
+        # TODO: is it worth to change this to take the radius in deg?
         wcs = WCS(hdu.header)
         mask = np.ones(hdu.data.shape, dtype=int)
         nx, ny = mask.shape
@@ -111,6 +111,9 @@ class ExclusionMask(SkyMap):
     def mask(self):
         return self.data
 
+    # TODO: right now the extension name is hardcoded to 'exclusion', because
+    # single image Fits file often contain a PrimaryHDU and an ImageHDU. Is there 
+    # a better / more flexible solution?
     @classmethod    
     def read(cls, fobj, *args, **kwargs):
         # Check if extension name is given, else default to 'exclusion'
@@ -131,7 +134,8 @@ def make_tevcat_exclusion_mask():
     from gammapy.catalog import load_catalog_tevcat
 
     tevcat = load_catalog_tevcat()
-    all_sky_exclusion = ExclusionMask.empty(nxpix=3600, nypix=1800, binsz=0.1, fill=1, dtype='int')
+    all_sky_exclusion = ExclusionMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
+                                            fill=1, dtype='int')
     val_lon, val_lat = all_sky_exclusion.coordinates()
     lons = Longitude(val_lon, 'deg')
     lats = Latitude(val_lat, 'deg')
