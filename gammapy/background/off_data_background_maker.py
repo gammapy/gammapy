@@ -43,7 +43,8 @@ class OffDataBackgroundMaker(object):
             Table of excluded sources.
             Required columns: RA, DEC, Radius
         """
-    def __init__(self, data_store, outdir=None, run_list=None, obs_table= None, excluded_sources=None):
+
+    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, excluded_sources=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -55,7 +56,7 @@ class OffDataBackgroundMaker(object):
         else:
             self.outdir = outdir
         self.obs_table = obs_table
-        self.excluded_sources =excluded_sources
+        self.excluded_sources = excluded_sources
 
         self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
         self.group_table_filename = self.outdir + '/group-def.ecsv'
@@ -234,4 +235,3 @@ class OffDataBackgroundMaker(object):
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
-
