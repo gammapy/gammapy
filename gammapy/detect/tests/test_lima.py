@@ -10,7 +10,7 @@ from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, compute_lima_map, compute_lima_on_off_map
 from ...datasets import load_poisson_stats_image, gammapy_extra
-from ...data import MapsBunch
+from ...image import MapsBunch
 
 from ...extern.pathlib import Path
 

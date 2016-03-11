@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from astropy.convolution import Tophat2DKernel
 
-from ..data import MapsBunch
+from ..image import MapsBunch
 from ..stats import significance, significance_on_off
 
 __all__ = ['compute_lima_map', 'compute_lima_on_off_map']

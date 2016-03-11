@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.convolution import Tophat2DKernel
 
 from ..detect import compute_lima_map, compute_lima_on_off_map
-from ..data import MapsBunch
+from ..image import MapsBunch
 
 __all__ = ['image_lima']
 

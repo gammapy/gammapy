@@ -15,4 +15,3 @@ from .obsgroup import *
 from .observers import *
 from .telarray import *
 from .utils import *
-from .maps import *
