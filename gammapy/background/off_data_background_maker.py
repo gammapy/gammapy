@@ -21,14 +21,12 @@ log = logging.getLogger(__name__)
 
 
 class OffDataBackgroundMaker(object):
-    def __init__(self, data_store, outdir=None, run_list=None, obs_table_grouped_filename=None,
-                 group_table_filename=None):
-        """OffDataBackgroundMaker class.
+    """OffDataBackgroundMaker class.
 
         Class that will select an OFF list run from a Data list and then group this runlist in group of
         zenithal angle and efficiency. Then for each group, it will compute the background rate model in
         3D *(X, Y, energy)* or 2D *(energy, offset)* via the class `~gammapy.background.CubeBackgroundModel` (3D) or
-         `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
+        `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
 
         Parameters
         ----------
@@ -38,12 +36,8 @@ class OffDataBackgroundMaker(object):
             filename where is store the OFF run list
         outdir : str
             directory where will go the output
-        obs_table_grouped_filename : str
-            filename of the `~astropy.table.Table` where the group number of each observation is indicated
-        group_table_filename : str
-            filename of the `~astropy.table.Table` where is store the grouping info
-
         """
+    def __init__(self, data_store, outdir=None, run_list=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -55,15 +49,9 @@ class OffDataBackgroundMaker(object):
         else:
             self.outdir = outdir
 
-        if not obs_table_grouped_filename:
-            self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
-        else:
-            self.obs_table_grouped_filename = obs_table_grouped_filename
+        self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
+        self.group_table_filename = self.outdir + '/group-def.ecsv'
 
-        if not group_table_filename:
-            self.group_table_filename = self.outdir + '/group-def.ecsv'
-        else:
-            self.group_table_filename = group_table_filename
         self.models3D = list()
         self.models2D = list()
         self.ntot_group = None
@@ -246,3 +234,4 @@ class OffDataBackgroundMaker(object):
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
+
