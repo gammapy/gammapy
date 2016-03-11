@@ -234,7 +234,7 @@ class DataStore(object):
             data_lists.append(data_list)
         return data_lists
 
-    def load_some_obs(self, list_obs, filetype):
+    def load_many(self, list_obs, filetype):
         """Load a given file type for certain observations in an obs_table
 
         Parameters
