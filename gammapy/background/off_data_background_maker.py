@@ -36,8 +36,14 @@ class OffDataBackgroundMaker(object):
             filename where is store the OFF run list
         outdir : str
             directory where will go the output
+        obs_table : `~astropy.table.Table`
+            observation table of the OFF run List used for the background modelling
+            require GROUP_ID column
+        excluded_sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
         """
-    def __init__(self, data_store, outdir=None, run_list=None):
+    def __init__(self, data_store, outdir=None, run_list=None, obs_table= None, excluded_sources=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -48,6 +54,8 @@ class OffDataBackgroundMaker(object):
             self.outdir = "out"
         else:
             self.outdir = outdir
+        self.obs_table = obs_table
+        self.excluded_sources =excluded_sources
 
         self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
         self.group_table_filename = self.outdir + '/group-def.ecsv'
@@ -152,13 +160,14 @@ class OffDataBackgroundMaker(object):
         filename = self.obs_table_grouped_filename
         log.info('Writing {}'.format(filename))
         obs_table.write(str(filename), format='ascii.ecsv')
+        self.obs_table = obs_table
 
         filename = self.group_table_filename
         log.info('Writing {}'.format(filename))
         obs_groups.obs_groups_table.write(str(filename), format='ascii.ecsv')
         self.ntot_group = obs_groups.n_groups
 
-    def make_model(self, modeltype, obs_table=None, excluded_sources=None):
+    def make_model(self, modeltype):
         """Make background models.
 
         Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
@@ -168,24 +177,15 @@ class OffDataBackgroundMaker(object):
         ----------
         modeltype : str
             type of the background modelisation: 3D or 2D
-        obs_table : `~astropy.table.Table`
-            observation table of the OFF run List used for the background modelling
-        excluded_sources : `~astropy.table.Table`
-            Table of excluded sources.
-            Required columns: RA, DEC, Radius
+
         """
 
-        if not obs_table:
-            filename = self.obs_table_grouped_filename
-            log.info('Reading {}'.format(filename))
-            obs_table = ObservationTable.read(str(filename), format='ascii.ecsv')
-
-        groups = sorted(np.unique(obs_table['GROUP_ID']))
+        groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
             # Get observations in the group
-            idx = np.where(obs_table['GROUP_ID'] == group)[0]
-            obs_table_group = obs_table[idx]
+            idx = np.where(self.obs_table['GROUP_ID'] == group)[0]
+            obs_table_group = self.obs_table[idx]
             log.info('Processing group {} with {} observations'.format(group, len(obs_table_group)))
 
             # Build the model
@@ -200,7 +200,7 @@ class OffDataBackgroundMaker(object):
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
-                model.fill_obs(obs_table_group, self.data_store, excluded_sources)
+                model.fill_obs(obs_table_group, self.data_store, self.excluded_sources)
                 model.compute_rate()
                 self.models2D.append(model)
             else:
