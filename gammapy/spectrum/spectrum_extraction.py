@@ -7,7 +7,7 @@ import os
 
 import numpy as np
 from astropy.coordinates import Angle
-from astropy.table import Column
+from astropy.table import Column, vstack
 from astropy.units import Quantity
 
 from . import CountsSpectrum
@@ -63,6 +63,10 @@ class SpectrumExtraction(object):
 
     OBSTABLE_FILE = 'observation_table.fits'
     EXCLUDEDREGIONS_FILE = 'excluded_regions.fits'
+    REGIONS_FILE = 'regions.txt'
+    TOTAL_STATS_FILE = 'total_spectrum_stats.yaml'
+    ONLIST_FILE = 'on_list.fits'
+    OFFLIST_FILE = 'off_list.fits'
 
     def __init__(self, datastore, obs_table, on_region, exclusion, bkg_method,
                  nobs=None, ebounds=None, **kwargs):
@@ -101,16 +105,25 @@ class SpectrumExtraction(object):
             self.filter_observations()
 
         self.observations.write_ogip()
-        self.observations.total_spectrum.spectrum_stats.to_yaml('total_spectrum_stats.yaml')
+        tot_stats = self.observations.total_spectrum.spectrum_stats
+        tot_stats.to_yaml(self.TOTAL_STATS_FILE)
         self.write_configfile()
-
+        self.write_regions()
+        self.write_total_onlist()
+        self.write_total_offlist()
         os.chdir(str(cwd))
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
+        n_min = self.bkg_method['n_min']
         obs = self.observations
-        mask = obs.filter_by_reflected_regions(self.bkg_method['n_min'])
+        mask = obs.filter_by_reflected_regions(n_min)
+        inv_mask = np.where([_ not in mask for _ in np.arange(len(mask + 1))])
+        excl_obs = self.obs_table[inv_mask[0]]['OBS_ID'].data
+        log.info('Excluding obs {} : Found less than {} reflected '
+                 'region(s)'.format(excl_obs, n_min))
         self._observations = SpectrumObservationList(np.asarray(obs)[mask])
+        self.obs_table = self.obs_table[mask]
 
     def extract_spectrum(self):
         """Extract 1D spectral information
@@ -270,6 +283,47 @@ class SpectrumExtraction(object):
         log.info('Writing {}'.format(self.OBSTABLE_FILE))
         self.exclusion.write(self.EXCLUDEDREGIONS_FILE, clobber=True)
         self.obs_table.write(self.OBSTABLE_FILE, format='fits', overwrite=True)
+
+    def write_regions(self):
+        """Write ON and OFF regions to disk"""
+        out = dict()
+        out['on_region'] = self.on_region.to_dict()
+        if self.bkg_method['type'] == 'reflected':
+            out['off_region'] = dict()
+            val = out['off_region']
+            for obs in self.observations:
+                val['obs_{}'.format(obs.meta.obs_id)] = obs.meta.off_region.to_dict()
+
+        log.info('Writing {}'.format(self.REGIONS_FILE))
+        write_yaml(out, self.REGIONS_FILE)
+
+    def write_total_onlist(self):
+        """Write event list containing ON events from all observations"""
+        on_lists = [o.meta.on_list for o in self.observations]
+
+        # Remove column TELMASK since raises an error when stacking it
+        # see https://github.com/gammasky/hess-host-analyses/issues/34
+        for l in on_lists:
+            l.remove_column('TELMASK')
+
+        total_list = vstack(on_lists, join_type='inner', metadata_conflicts='silent')
+        total_list.meta = None
+        log.info('Writing {}'.format(self.ONLIST_FILE))
+        total_list.write(self.ONLIST_FILE, overwrite=True)
+
+    def write_total_offlist(self):
+        """Write event list containing OFF events from all observations"""
+        off_lists = [o.meta.off_list for o in self.observations]
+
+        # Remove column TELMASK since raises an error when stacking it
+        # see https://github.com/gammasky/hess-host-analyses/issues/34
+        for l in off_lists:
+            l.remove_column('TELMASK')
+
+        total_list = vstack(off_lists, join_type='exact', metadata_conflicts='silent')
+        total_list.meta = None
+        log.info('Writing {}'.format(self.OFFLIST_FILE))
+        total_list.write(self.OFFLIST_FILE, overwrite=True)
 
     def cutout_exclusion_mask(self, fov='9 deg'):
         """Cutout appropriate part of exclusion mask
@@ -695,6 +749,7 @@ class SpectrumObservationList(list):
 
     def filter_by_reflected_regions(self, n_min):
         """Filter observation list according to number of reflected regions.
+       
         Condition: number of reflected regions >= nmin.
 
         Parameters
@@ -814,43 +869,4 @@ class BackgroundEstimator(object):
         self.off_vec = off_vec
 
 
-# Todo: move to spectrum analysis class
-
-def plot_exclusion_mask(self, size=None, **kwargs):
-    """Plot exclusion mask
-
-    The plot will be centered at the pointing position
-       
-    Parameters
-    ----------
-    size : `~astropy.coordinates.Angle`
-    Edge length of the plot
-    """
-    size = Angle('5 deg') if size is None else Angle(size)
-    ax = self.exclusion.plot(**kwargs)
-    self._set_ax_limits(ax, size)
-    #point = skycoord_to_pixel(self.meta.pointing, ax.wcs)
-    #ax.scatter(point[0], point[1], s=250, marker="+", color='black')
-    return ax
-
-def plot_on_region(self, ax=None, **kwargs):
-    """Plot target regions"""
-    ax = self.plot_exclusion_mask() if ax is None else ax
-    self.on_region.plot(ax, **kwargs)
-    return ax
-
-def _set_ax_limits(self, ax, extent):
-
-    if 'GLAT' in ax.wcs.to_header()['CTYPE2']:
-        center = self.meta.pointing.galactic
-        xlim = (center.l + extent / 2).value, (center.l - extent / 2).value
-        ylim = (center.b + extent / 2).value, (center.b - extent / 2).value
-    else:
-        center = self.meta.pointing.icrs
-        xlim = (center.ra + extent / 2).value, (center.ra - extent / 2).value
-        ylim = (center.dec + extent / 2).value, (center.dec - extent / 2).value
-
-    limits = ax.wcs.wcs_world2pix(xlim, ylim, 1)
-    ax.set_xlim(limits[0])
-    ax.set_ylim(limits[1])
 

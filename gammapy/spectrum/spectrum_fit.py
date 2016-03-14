@@ -215,7 +215,7 @@ class SpectrumFit(object):
         shape = len(self.obs_list)
         if energy.shape is ():
             energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
-        if (energy.shape[0]!=shape):
+        if energy.shape[0] != shape:
             raise ValueError('Dimension to not match: {} {}'.format(
                 self.obs_list, energy))
 
@@ -245,7 +245,7 @@ class SpectrumFit(object):
         if energy.shape is ():
             energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
 
-        if energy.shape[0] is not shape:
+        if energy.shape[0] != shape:
             raise ValueError('Dimensions to not match: {} {}'.format(
                 self.obs_list, energy))
 
