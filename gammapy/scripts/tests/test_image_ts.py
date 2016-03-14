@@ -50,8 +50,7 @@ def test_command_line_gammapy_image_ts(tmpdir):
     psf_filename = init_psf_file(tmpdir)
 
     output_filename = str(tmpdir / "output.fits")
-    #output_filename_without_nan = str(tmpdir / "output_without_nan.fits")
-    output_filename_without_nan = str(tmpdir / "expected_ts.fits")
+    output_filename_without_nan = str(tmpdir / "output_without_nan.fits")
 
     expected_filename = str(gammapy_extra.dir /
                          'test_datasets/unbundled/poisson_stats_image/expected_ts.fits')
