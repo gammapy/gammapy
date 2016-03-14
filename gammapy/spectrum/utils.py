@@ -4,7 +4,6 @@ from __future__ import absolute_import, division, print_function, \
 
 import numpy as np
 from astropy.units import Quantity
-from wcsaxes import WCSAxes
 
 from gammapy.region import SkyCircleRegion, SkyRegionList
 from ..utils.scripts import read_yaml
