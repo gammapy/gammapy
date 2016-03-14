@@ -27,7 +27,7 @@ def init_psf_file(tmpdir):
     psf_filename = str(tmpdir / 'psf.json')
 
     psf_pars = dict()
-    psf_pars['psf1'] = dict(ampl=0.0254647908947033, fwhm=5.8870501125773735)
+    psf_pars['psf1'] = dict(ampl=1., fwhm=11.7741002252)
     psf_pars['psf2'] = dict(ampl=0, fwhm=1E-5)
     psf_pars['psf3'] = dict(ampl=0, fwhm=1E-5)
     json.dump(psf_pars, open(psf_filename, "w"))
@@ -50,9 +50,11 @@ def test_command_line_gammapy_image_ts(tmpdir):
     psf_filename = init_psf_file(tmpdir)
 
     output_filename = str(tmpdir / "output.fits")
-    output_filename_without_nan = str(tmpdir / "output_without_nan.fits")
+    #output_filename_without_nan = str(tmpdir / "output_without_nan.fits")
+    output_filename_without_nan = str(tmpdir / "expected_ts.fits")
+
     expected_filename = str(gammapy_extra.dir /
-                         'test_datasets/unbundled/poisson_stats_image/expected_output.fits')
+                         'test_datasets/unbundled/poisson_stats_image/expected_ts.fits')
 
     scales_test_list = ['0.000', '0.050', '0.100', '0.200']
     image_ts_main([input_filename,
