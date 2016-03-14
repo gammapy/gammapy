@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.table import Table
-from ..models import CubeBackgroundModel
-from ..models import EnergyOffsetBackgroundModel
-from ...data import ObservationTable
-from ...data import DataStore
+from ...utils.testing import requires_dependency, requires_data
+from ...data import ObservationTable, DataStore
+from ..models import CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ..off_data_background_maker import OffDataBackgroundMaker
 
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 def test_background_model(tmpdir):
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     out_dir = tmpdir

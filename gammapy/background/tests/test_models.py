@@ -6,7 +6,6 @@ from numpy.testing import assert_equal
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 import astropy.units as u
-from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
@@ -18,8 +17,6 @@ from ...data import ObservationTable
 from ...data import DataStore, EventList
 from ...region import SkyCircleRegion
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
-from ...image import make_empty_image
-from ...image import coordinates, bin_events_in_image, make_empty_image
 
 
 @requires_dependency('scipy')
