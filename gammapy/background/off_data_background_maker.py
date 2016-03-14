@@ -83,16 +83,14 @@ class OffDataBackgroundMaker(object):
     def select_observations(self, selection, n_obs_max=None):
         """Make off run list for background models.
 
-        \b
         * selection='old' is the common subset of:
           - Old run list from HAP background model production
           - Runs available as FITS here
         * selection='new' is all runs where
           - FITS data is available here
-          - |GLAT| > 5 (i.e. not in the Galactic plane
+          - abs(GLAT) > 5 (i.e. not in the Galactic plane)
           - separation to a TeVCat source > 2 deg
 
-        \b
         Parameters
         ----------
         selection : {'offplane', 'debug', 'old-hap-hd'}
@@ -173,7 +171,7 @@ class OffDataBackgroundMaker(object):
 
         Parameters
         ----------
-        modeltype : str
+        Todeltype : str
             type of the background modelisation: 3D or 2D
         """
 
@@ -209,10 +207,9 @@ class OffDataBackgroundMaker(object):
         Parameters
         ----------
         modeltype : str
-            type of the background modelisation: 3D or 2D
+            Type of the background modelisation: 3D or 2D
         ngroup : int
-            group number
-
+            Number of groups
         """
         filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
 
@@ -222,13 +219,12 @@ class OffDataBackgroundMaker(object):
             self.models2D[ngroup].write(str(filename), overwrite=True)
 
     def save_models(self, modeltype):
-        """Save model to fits for all the groups in zenithal angle and efficiency
+        """Save model to fits for all the groups in zenithal angle and efficiency.
 
         Parameters
         ----------
         modeltype : str
-            type of the background modelisation: 3D or 2D
-
+            Type of the background modelisation: 3D or 2D
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
