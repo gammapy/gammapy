@@ -234,6 +234,27 @@ class DataStore(object):
             data_lists.append(data_list)
         return data_lists
 
+    def load_many(self, list_obs, filetype):
+        """Load a given file type for certain observations in an obs_table
+
+        Parameters
+        ----------
+        list_obs : list
+            list of observation number
+        filetype : {'events', 'aeff', 'edisp', 'psf', 'bkg'}
+            Type of file.
+
+        Returns
+        -------
+        list : python list of object
+            Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
+        """
+        data_lists = []
+        for obs_id in list_obs:
+            data_list = self.load(obs_id, filetype)
+            data_lists.append(data_list)
+        return data_lists
+
     def check_integrity(self, logger):
         """Check integrity, i.e. whether index table and files match.
         """

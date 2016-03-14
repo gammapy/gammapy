@@ -136,7 +136,7 @@ def background_list(selection, n_obs_max):
             log.info('Applying max. obs selection: {}'.format(n_obs_max))
             obs_common = obs_common[:n_obs_max]
 
-        table = Table(dict(OBS_ID=obs_common))
+        obs_table = Table(dict(OBS_ID=obs_common))
     else:
         raise ValueError('Invalid selection: {}'.format(selection))
 
