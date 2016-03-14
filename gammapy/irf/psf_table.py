@@ -19,7 +19,7 @@ DEFAULT_PSF_SPLINE_KWARGS = dict(k=1, s=0)
 
 
 class TablePSF(object):
-    r"""Radially-symmetric table PSF.
+    """Radially-symmetric table PSF.
 
     This PSF represents a :math:`PSF(\theta)=dP / d\Omega(\theta)`
     spline interpolation curve for a given set of offset :math:`\theta`
@@ -324,7 +324,7 @@ class TablePSF(object):
         self._compute_splines(self._spline_kwargs)
 
     def broaden(self, factor, normalize=True):
-        r"""Broaden PSF by scaling the offset array.
+        """Broaden PSF by scaling the offset array.
 
         For a broadening factor :math:`f` and the offset
         array :math:`\theta`, the offset array scaled
