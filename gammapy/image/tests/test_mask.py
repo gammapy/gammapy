@@ -2,17 +2,17 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.tests.helper import pytest
-from .. import ExclusionMask, make_empty_image
+from .. import ExclusionMask
 from ...utils.testing import requires_dependency
 
 
 @requires_dependency('scipy')
 def test_random_creation():
-    hdu = make_empty_image(nxpix=300, nypix=100)
-    mask = ExclusionMask.create_random(hdu, n=6, max_rad=10)
-    assert mask.mask.shape[0] == 100
+    exclusion = ExclusionMask.empty(nxpix=300, nypix=100)
+    exclusion.fill_random_circles(n=6, max_rad=10)
+    assert exclusion.mask.shape[0] == 100
 
-    excluded = np.where(mask.mask == 0)
+    excluded = np.where(exclusion.mask == 0)
     assert excluded[0].size != 0
 
 

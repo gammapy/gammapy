@@ -7,27 +7,31 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
 from astropy.units import Quantity, Unit
+from astropy.extern import six
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header
 from ..utils.wcs import get_wcs_ctype
+from ..utils.scripts import make_path
 
-__all__ = ['SkyMap', 'MapsBunch']
+__all__ = ['SkyMap', 'SkyMapCollection']
 
 log = logging.getLogger(__name__)
 
 
-# It might be a good option to inherit from `~astropy.nddata.NDData` later, but as
-# astropy.nddata is still in development, I decided to not inherit for now.
+# It might be a good option to inherit from `~astropy.nddata.NDData` later, but
+# as astropy.nddata is still in development, I decided to not inherit for now.
 
 # The class provides Fits I/O and generic methods, that are not specific to the
 # data it contains. Special data classes, such as an ExclusionMap, FluxMap or
 # CountsMap should inherit from this class and implement special, data related
 # methods themselves. 
 
+# Actually this class is generic enough to be rather in astropy and not in
+# gammapy and should maybe be moved to there...
 
 class SkyMap(object):
     """
@@ -46,7 +50,7 @@ class SkyMap(object):
     meta : dict
         Dictionary to store meta data.
     """
-    def __init__(self, name, data, wcs, unit=None, meta=None):
+    def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
@@ -71,12 +75,16 @@ class SkyMap(object):
         if isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
             data, header = fobj.data, fobj.header
         else:
+            if isinstance(fobj, six.string_types):
+                fobj = str(make_path(fobj))
             data = fits.getdata(fobj, *args, **kwargs)
             header = fits.getheader(fobj, *args, **kwargs)
         wcs = WCS(header)
         meta = header
-        #TODO: is header['HDUNAME'] always set, or can this fail?
+        
         name = header.get('HDUNAME')
+        if name is None:
+            name = header.get('EXTNAME')
         try:
             # Valitade unit string
             unit = Unit(header['BUNIT']).to_string()
@@ -140,7 +148,7 @@ class SkyMap(object):
                          proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
-        return cls(name, data, wcs, unit, meta)
+        return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
 
     @classmethod
     def empty_like(cls, skymap, name=None, unit=None, fill=0, meta=None):
@@ -149,7 +157,7 @@ class SkyMap(object):
         
         Parameters
         ----------
-        skymap : `~gammapy.image.SkyMap`
+        skymap : `~gammapy.image.SkyMap` or `~astropy.io.fits.ImageHDU`
             Instance of `~gammapy.image.SkyMap`.
         fill : float, optional
             Fill sky map with constant value. Default is 0.
@@ -159,10 +167,15 @@ class SkyMap(object):
             String specifying the data units.
         meta : dict
             Dictionary to store meta data.            
-        """ 
-        wcs = skymap.wcs.copy()
+        """
+        if isinstance(skymap, SkyMap): 
+            wcs = skymap.wcs.copy()
+        elif isinstance(skymap, (fits.ImageHDU, fits.PrimaryHDU)):
+            wcs = WCS(skymap.header)
+        else:
+            raise TypeError("Can't create sky map from type {}".format(type(skymap)))
         data = fill * np.ones_like(skymap.data)
-        return cls(name, data, wcs, unit, meta)
+        return cls(name, data, wcs, unit, meta=wcs.to_header())
 
 
     def write(self, filename, *args, **kwargs):
@@ -181,12 +194,14 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, origin=0, mode='center'):
+    def coordinates(self, coord_type='world', origin=0, mode='center'):
         """
         Sky coordinate images.
 
         Parameters
         ----------
+        coord_type : {'world', 'pix', 'skycoord'}
+            Which type of coordinates to return.
         origin : {0, 1}
             Pixel coordinate origin.
         mode : {'center', 'edges'}
@@ -198,8 +213,20 @@ class SkyMap(object):
             raise NotImplementedError
         else:
             raise ValueError('Invalid mode to compute coordinates.')
-
-        return self.wcs.wcs_pix2world(x, y, origin)
+        
+        if coord_type == 'pix':
+            return x, y
+        else:
+            xsky, ysky = self.wcs.wcs_pix2world(x, y, origin)
+            l, b = Longitude(xsky, unit='deg'), Latitude(ysky, unit='deg')
+            l = l.wrap_at('180d')
+            if coord_type == 'world':
+                return l.degree, b.degree
+            elif coord_type == 'skycoord': 
+                return l, b
+            else:
+                raise ValueError("Not a valid coordinate type. Choose either"
+                                 " 'world', 'pix' or 'skycoord'.")
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -226,7 +253,7 @@ class SkyMap(object):
             xsky, ysky = position[0], position[1]
 
         x, y = self.wcs.wcs_world2pix(xsky, ysky, origin)
-        return self.data[y.astype('int'), x.astype('int')]
+        return self.data[np.round(y).astype('int'), np.round(x).astype('int')]
 
     def to_quantity(self):
         """
@@ -292,8 +319,12 @@ class SkyMap(object):
         ----------
         viewer : {'mpl', 'ds9'}
             Which image viewer to use. Option 'ds9' requires ds9 to be installed.
+        options : list, optional
+            List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
+            Any valid ds9 command line option can be passed. 
+            See http://ds9.si.edu/doc/ref/command.html for details. 
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
+            Keyword arguments passed to `~matplotlib.pyplot.imshow` or ds9.
         """
         if viewer == 'mpl':
             # TODO: replace by better MPL or web based image viewer 
@@ -305,7 +336,7 @@ class SkyMap(object):
         elif viewer == 'ds9':
             with NamedTemporaryFile() as f:
                 self.write(f)
-                call(['ds9', f.name, '-cmap', 'bb'])
+                call(['ds9', f.name, '-cmap', 'bb'] + kwargs.get('options', []))
         else:
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
@@ -320,7 +351,8 @@ class SkyMap(object):
             WCS axis object to plot on.
         """
         caxes = axes.imshow(self.data, **kwargs)
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, self.unit))
+        unit = self.unit or 'A.E.'
+        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
         try:
             axes.coords['glon'].set_axislabel('Galactic Longitude')
             axes.coords['glat'].set_axislabel('Galactic Latitude')
@@ -353,37 +385,44 @@ class SkyMap(object):
         return self.data 
 
 
-class MapsBunch(Bunch):
+class SkyMapCollection(Bunch):
     """
-    Bunch with Fits I/O.
+    Container for a collection of sky maps.
+
+    This class bundles as set of SkyMaps in single data container and provides
+    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like 
+    handling of the data members. 
     
-    Here's an example:
+    Here's an example how to use it:
 
     .. code-block:: python
     
-        from gammapy.data import MapsBunch
-        maps = MapsBunch.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+        from gammapy.image import SkyMapCollection
+        skymaps = SkyMapCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
-    Then try tab completion on the ``maps`` object.
+    Then try tab completion on the ``skymaps`` object.
     """
     @classmethod
     def read(cls, filename):
         """
-        Create Bunch of maps from Fits file.
+        Create collection of sky maps from Fits file.
 
         Parameters
         ----------
         filename : str
             Fits file name.
         """
-        hdulist = fits.open(filename)
+        hdulist = fits.open(str(make_path(filename)))
         kwargs = {}
         _map_names = []  # list of map names to save order in fits file
-        kwargs['_ref_header'] = hdulist[0].header
-
+        
         for hdu in hdulist:
-            name =  hdu.header.get('HDUNAME', hdu.name.lower())
-            kwargs[name] = hdu.data
+            skymap = SkyMap.read(hdu)
+
+            # This forces lower case map names, but only on the collection object
+            # When writing to fits again the skymap.name attribute is used.
+            name = skymap.name.lower()
+            kwargs[name] = skymap
             _map_names.append(name)
         kwargs['_map_names'] = _map_names
         return cls(**kwargs)
@@ -401,8 +440,23 @@ class MapsBunch(Bunch):
             Reference header to be used for all maps. 
         """
         hdulist = fits.HDUList()
-        header = header or self.get('_ref_header')
         for name in self.get('_map_names', sorted(self)):
-            hdu = fits.ImageHDU(data=self[name], header=header, name=name)
+            hdu = self[name].to_image_hdu()
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
+
+    def set_reference_wcs(self):
+        """
+        Set reference WCS for all sky maps.
+        """
+        raise NotImplementedError
+
+    def __repr__(self):
+        """
+        String representation of the sky map collection.
+        """
+        info = ''
+        for name in self.get('_map_names', sorted(self)):
+            info += self[name].__repr__()
+            info += '\n'
+        return info

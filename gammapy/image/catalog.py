@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.table import Table
-from . import coordinates
+from .maps import SkyMap
 
 __all__ = [
     'catalog_image',
@@ -104,7 +104,7 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     # due to circular dependencies
     from ..cube import SpectralCube
 
-    lons, lats = coordinates(reference)
+    lons, lats = SkyMap.read(reference).coordinates()
     wcs = WCS(reference.header)
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack

@@ -4,7 +4,7 @@ import numpy as np
 from astropy.tests.helper import pytest
 from astropy.wcs import WCS
 from astropy.coordinates import Angle, SkyCoord
-from ...image import make_empty_image
+from ...image import SkyMap
 from ..circle import SkyCircleRegion, PixCircleRegion
 from numpy.testing import assert_allclose
 
@@ -12,9 +12,7 @@ from numpy.testing import assert_allclose
 @pytest.fixture
 def wcs():
     """Example WCS object for testing."""
-    hdu = make_empty_image(nxpix=201, nypix=101)
-    return WCS(hdu.header)
-
+    return SkyMap.empty(nxpix=201, nypix=101, binsz=0.1).wcs
 
 def test_sky_to_pix(wcs):
     pos = SkyCoord(2, 1, unit='deg', frame='galactic')
@@ -29,8 +27,8 @@ def test_sky_to_pix(wcs):
 
 
 def test_sky_to_pix2():
-    hdu = make_empty_image(nxpix=801, nypix=601, binsz=0.01,
-                           coordsys='CEL', xref=83.2, yref=22.7)
+    hdu = SkyMap.empty(nxpix=801, nypix=601, binsz=0.01,
+                       coordsys='CEL', xref=83.2, yref=22.7).to_image_hdu()
 
     pos = SkyCoord(182.2, -5.75, unit='deg', frame='galactic')
     radius = Angle(0.4, 'deg')

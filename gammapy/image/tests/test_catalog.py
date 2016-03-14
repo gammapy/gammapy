@@ -5,7 +5,7 @@ from astropy.units import Quantity
 from astropy.wcs import WCS
 from ...utils.testing import requires_dependency, requires_data
 from .. import catalog
-from ...image import make_empty_image
+from ...image import SkyMap
 from ...irf import EnergyDependentTablePSF
 from ...cube import SpectralCube
 from ...datasets import FermiGalacticCenter
@@ -18,7 +18,7 @@ def test_extended_image():
 
 @requires_data('gammapy-extra')
 def test_source_image():
-    reference_hdu = make_empty_image(10, 10, 1)
+    reference_hdu = SkyMap.empty(nxpix=10, nypix=10, binsz=1).to_image_hdu()
     reference_wcs = WCS(reference_hdu.header)
     energy = Quantity([10, 500], 'GeV')
     reference = SpectralCube(data=reference_hdu.data,
@@ -40,7 +40,7 @@ def test_source_image():
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_catalog_image():
-    reference_hdu = make_empty_image(10, 10, 1)
+    reference_hdu = SkyMap.empty(nxpix=10, nypix=10, binsz=1).to_image_hdu()
     reference_wcs = WCS(reference_hdu.header)
     energy = Quantity([10, 500], 'GeV')
 

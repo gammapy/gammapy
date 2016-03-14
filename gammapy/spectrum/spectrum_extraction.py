@@ -215,7 +215,7 @@ class SpectrumExtraction(object):
 
         # Exclusion
         excl_file = config['excluded_regions']['file']
-        exclusion = ExclusionMask.from_fits(excl_file)
+        exclusion = ExclusionMask.read(excl_file)
 
         return cls(datastore=store, obs_table=obs_table, on_region=on_region,
                    bkg_method=bkg_method, exclusion=exclusion,
