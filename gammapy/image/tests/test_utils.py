@@ -23,8 +23,7 @@ from ...image import (
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
-    SkyMap
-    bin_events_in_cube,
+    SkyMap,
 )
 
 
@@ -224,37 +223,12 @@ def test_bin_events_in_cube():
 
     events = data_store.load(obs_id=23523, filetype='events')
 
-    # Define WCS reference header
-    refheader = fits.Header()
-    refheader['WCSAXES'] = 3
-    refheader['NAXIS'] = 3
-    refheader['CRPIX1'] = 100.5
-    refheader['CRPIX2'] = 100.5
-    refheader['CRPIX3'] = 1.0
-    refheader['CDELT1'] = -0.02
-    refheader['CDELT2'] = 0.02
+    counts = SpectralCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
+                                nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                                yref=events.meta['DEC_OBJ'], dtype='int', 
+                                coordsys='CEL')
+    counts.fill(events)
+    assert counts.data.sum() == 1233
 
-    # shouldn't matter, but must contain sufficient number of digits,
-    # so that CDELT1 and CDELT2 are not truncated, when wcs.to_header() is called
-    # seems to be a bug...
-    refheader['CDELT3'] = 2.02  
 
-    refheader['CTYPE1'] = 'RA---CAR'
-    refheader['CTYPE2'] = 'DEC--CAR'
-    refheader['CTYPE3'] = 'log_Energy'  # shouldn't matter
-    refheader['CUNIT1'] = 'deg'
-    refheader['CUNIT2'] = 'deg'
-    refheader['CRVAL1'] = events.meta['RA_OBJ']
-    refheader['CRVAL2'] = events.meta['DEC_OBJ']
-    refheader['CRVAL3'] = 10.0  # shouldn't matter
 
-    energies = EnergyBounds.equal_log_spacing(0.5, 80, 8, 'TeV')
-    data = Quantity(np.zeros((len(energies), 200, 200)))
-    wcs = WCS(refheader)
-    refcube = SpectralCube(data, wcs, energy=energies)
-
-    # Counts cube
-    counts_hdu = bin_events_in_cube(events, refcube, energies)
-    counts = SpectralCube(Quantity(counts_hdu.data, 'count'), wcs, energies)
-
-    assert counts.data.sum().value == 1233

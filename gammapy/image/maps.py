@@ -13,7 +13,7 @@ from astropy.units import Quantity, Unit
 from astropy.extern import six
 
 from ..extern.bunch import Bunch
-from ..image.utils import make_header
+from ..image.utils import make_header, _bin_events_in_cube 
 from ..utils.wcs import get_wcs_ctype
 from ..utils.scripts import make_path
 
@@ -87,7 +87,7 @@ class SkyMap(object):
             name = header.get('EXTNAME')
         try:
             # Valitade unit string
-            unit = Unit(header['BUNIT']).to_string()
+            unit = Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
             log.warn('No valid units found for extension {}'.format(name))
@@ -178,6 +178,21 @@ class SkyMap(object):
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
 
+    def fill(self, events, origin=0):
+        """
+        Fill sky map with events.
+
+        Parameters
+        ----------
+        events : `~astropy.table.Table`
+            Event list table
+        origin : {0, 1}
+            Pixel coordinate origin.
+
+        """
+        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, origin=origin).sum(axis=0)
+
+
     def write(self, filename, *args, **kwargs):
         """
         Write sky map to Fits file.
@@ -210,7 +225,9 @@ class SkyMap(object):
         if mode == 'center':
             y, x = np.indices(self.data.shape)
         elif mode == 'edges':
-            raise NotImplementedError
+            shape = self.data.shape[0] + 1, self.data.shape[1] + 1 
+            y, x = np.indices(shape)
+            y, x = y - 0.5, x - 0.5
         else:
             raise ValueError('Invalid mode to compute coordinates.')
         
@@ -227,6 +244,15 @@ class SkyMap(object):
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"
                                  " 'world', 'pix' or 'skycoord'.")
+
+    def solid_angle(self):
+        """
+        Solid angle image
+        """
+        xsky, ysky = self.coordinates(mode='edges')
+        omega = -np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:]
+        return Quantity(omega, 'deg2').to('sr')
+
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -371,11 +397,13 @@ class SkyMap(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
-        info += "Data shape: {}\n".format(self.data.shape)
-        info += "Data type: {}\n".format(self.data.dtype)
-        info += "Data unit: {}\n".format(self.unit)
-        info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
-        info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
+        if not self.data is None:
+            info += "Data shape: {}\n".format(self.data.shape)
+            info += "Data type: {}\n".format(self.data.dtype)
+            info += "Data unit: {}\n".format(self.unit)
+            info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
+        if not self.wcs is None:
+            info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         return info
 
     def __array__(self):

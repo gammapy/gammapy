@@ -19,8 +19,10 @@ from astropy.wcs import WCS
 
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
-from ..image import cube_to_image, solid_angle
+from ..image import cube_to_image, solid_angle, SkyMap
+from ..image.utils import _bin_events_in_cube 
 from ..utils.fits import table_to_fits_table
+from ..utils.wcs import get_wcs_ctype
 
 __all__ = ['SpectralCube']
 
@@ -49,6 +51,8 @@ class SpectralCube(object):
 
     Parameters
     ----------
+    name : str
+        Name of the spectral cube.
     data : `~astropy.units.Quantity`
         Data array (3-dim)
     wcs : `~astropy.wcs.WCS`
@@ -77,12 +81,12 @@ class SpectralCube(object):
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
 
-    def __init__(self, data, wcs, energy):
+    def __init__(self, name=None, data=None, wcs=None, energy=None):
         # TODO: check validity of inputs
+        self.name = name
         self.data = data
         self.wcs = wcs
-        self.header = wcs.to_header()
-
+        
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
         self.energy_axis = LogEnergyAxis(energy)
@@ -133,13 +137,15 @@ class SpectralCube(object):
         return cls(data, wcs, energy)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, format='fermi'):
         """Read spectral cube from FITS file.
 
         Parameters
         ----------
         filename : str
             File name
+        format : {'fermi', 'fermi-counts'}
+            Fits file format.
 
         Returns
         -------
@@ -147,50 +153,76 @@ class SpectralCube(object):
             Spectral cube
         """
         data = fits.getdata(filename)
-        data = Quantity(data, '1 / (cm2 MeV s sr)')
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
-        wcs = WCS(header)
-        energy = Table.read(filename, 'ENERGIES')['Energy']
-        energy = Quantity(energy, 'MeV')
+        wcs = WCS(header).celestial
+        if format == 'fermi':
+            energy = Table.read(filename, 'ENERGIES')['Energy']
+            energy = Quantity(energy, 'MeV')
+            data = Quantity(data, '1 / (cm2 MeV s sr)')
+        elif format == 'fermi-counts':
+            energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
+            data = Quantity(data, 'counts')
+        else:
+            raise ValueError('Not a valid cube fits format')
+        return cls(data=data, wcs=wcs, energy=energy)
 
-        return cls(data, wcs, energy)
-
-    @classmethod
-    def read_counts(cls, filename):
-        """Read spectral cube of type "counts" from FITS file.
+    def fill(self, events, origin=0):
+        """
+        Fill spectral cube with events.
 
         Parameters
         ----------
-        filename : str
-            File name
+        events : `~astropy.table.Table`
+            Event list table
+        origin : {0, 1}
+            Pixel coordinate origin.
 
-        Returns
-        -------
-        spectral_cube : `SpectralCube`
-            Spectral cube
         """
-        data = fits.getdata(filename)
-        data = Quantity(data, '')
-        # Note: the energy axis of the FITS cube is unusable.
-        # We only use proj for LON, LAT and do ENERGY ourselves
-        header = fits.getheader(filename)
-        wcs = WCS(header)
-        energy=EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
-        #keV to match convention in Fermi ST and CTOOLS, TODO read from header
-
-        return cls(data, wcs, energy)
+        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy)
+        
+    @classmethod
+    def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
+        """
+        Create empty spectral cube with log equal energy binning from the scratch.
+        
+        Parameters
+        ----------
+        emin : float
+            Minimum energy.
+        emax : float
+            Maximum energy.
+        enbins : int
+            Number of energy bins.
+        eunit : str
+            Energy unit.
+        kwargs : dict
+            Keyword arguments passed to `~gammapy.image.SkyMap.empty` to create
+            the spatial part of the cube.
+        """
+        refmap = SkyMap.empty(**kwargs)
+        energies = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
+        data = refmap.data * np.ones(len(energies)).reshape((-1, 1, 1))
+        return cls(data=data, wcs=refmap.wcs, energy=energies)
 
     @classmethod
-    def empty_like(cls, skydata, energies=None):
+    def empty_like(cls, refcube, fill=0):
         """
-        Create empty spectral cube from given skymap or spectral cube.
+        Create an empty spectral cube with the same WCS and energy specification
+        as given spectral cube. 
+        
+        Parameters
+        ----------
+        refcube : `~gammapy.cube.SpectralCube`
+            Reference spectral cube.
+        fill : float, optional
+            Fill sky map with constant value. Default is 0.
         """
-
-
-        return cls(data, wcs, energy)
-
+        wcs = refcube.wcs.copy()
+        data = fill * np.ones_like(refcube.data)
+        energies = refcube.energies.copy()
+        return cls(data=data, wcs=wcs, energy=energies)        
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -235,7 +267,7 @@ class SpectralCube(object):
         lon, lat, energy
         """
         origin = 0  # convention for gammapy
-        lon, lat, _ = self.wcs.wcs_pix2world(x, y, 0, origin)
+        lon, lat = self.wcs.wcs_pix2world(x, y, origin)
         energy = self.energy_axis.pix2world(z)
 
         lon = Quantity(lon, 'deg')
@@ -508,7 +540,7 @@ class SpectralCube(object):
 
     def __repr__(self):
         # Copied from `spectral-cube` package
-        s = "SpectralCube with shape={0}".format(self.data.shape)
+        s = "Spectral cube {} with shape={0}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
             s += ":\n"
         else:

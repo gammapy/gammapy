@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 
 from ..maps import SkyMap
+from ...data import DataStore
 from ...datasets import load_poisson_stats_image
 from ...utils.testing import requires_dependency, requires_data
 
@@ -67,3 +68,17 @@ class TestSkyMapPoisson():
         empty = SkyMap.empty()
         assert empty.data.shape == (200, 200)
 
+
+    @requires_data('gammapy-extra')
+    def test_fill(self):
+        dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+        data_store = DataStore.from_dir(dirname)
+
+        events = data_store.load(obs_id=23523, filetype='events')
+
+        counts = SkyMap.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                              yref=events.meta['DEC_OBJ'], dtype='int', 
+                              coordsys='CEL')
+        counts.fill(events)
+        assert counts.data.sum() == 1233
+        assert counts.data.shape == (200, 200)
