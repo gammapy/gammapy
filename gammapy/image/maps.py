@@ -327,11 +327,9 @@ class SkyMap(object):
             Keyword arguments passed to `~matplotlib.pyplot.imshow` or ds9.
         """
         if viewer == 'mpl':
-            # TODO: replace by better MPL or web based image viewer 
-            import matplotlib.pyplot as plt    
-            fig = plt.figure()
-            axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
-            self.plot(axes, fig, **kwargs)
+            import matplotlib.pyplot as plt
+            # TODO: replace by better MPL or web based image viewer
+            self.plot(**kwargs)
             plt.show()
         elif viewer == 'ds9':
             with NamedTemporaryFile() as f:
@@ -341,7 +339,7 @@ class SkyMap(object):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, axes=None, fig=None, **kwargs):
+    def plot(self, ax=None, **kwargs):
         """
         Plot sky map on matplotlib WCS axes.
         
@@ -350,15 +348,23 @@ class SkyMap(object):
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
         """
-        caxes = axes.imshow(self.data, **kwargs)
-        unit = self.unit or 'A.E.'
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
+        import matplotlib.pyplot as plt
+
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
+
+        caxes = ax.imshow(self.data, **kwargs)
+        unit = self.unit or 'A.U.'
+        cbar = ax.figure.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
         try:
-            axes.coords['glon'].set_axislabel('Galactic Longitude')
-            axes.coords['glat'].set_axislabel('Galactic Latitude')
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
         except KeyError:
-            axes.coords['ra'].set_axislabel('Right Ascension')
-            axes.coords['dec'].set_axislabel('Declination')
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
+
+        return ax
 
     def info(self):
         """
