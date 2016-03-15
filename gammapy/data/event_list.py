@@ -8,6 +8,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
+from astropy.wcs.utils import skycoord_to_pixel
 
 from gammapy.utils.energy import EnergyBounds
 from ..utils.scripts import make_path
@@ -353,6 +354,35 @@ class EventList(Table):
             temp = np.where(separation < reg.radius)[0]
             mask = np.union1d(mask, temp)
         return mask
+
+    def fill_skymap(self, skymap):
+        """Fill events in sky map
+
+        Parameters
+        ----------
+        skymap : `~gammapy.image.SkyMap`
+            Sky map to fill
+
+        Returns
+        -------
+        filled_map : `~gammapy.image.SkyMap`
+            Sky map with events filled
+        """
+        from gammapy.image import SkyMap
+
+        shape = skymap.data.shape
+
+        coords = skycoord_to_pixel(self.radec, skymap.wcs)
+        x = np.array(np.around(coords[0]), dtype=int)
+        y = np.array(np.around(coords[1]), dtype=int)
+        xy_flat = np.ravel_multi_index((x,y), shape)
+        counts_flat = np.bincount(xy_flat)
+        counts = np.resize(counts_flat, shape)
+
+        data = skymap.data + counts
+
+        return SkyMap(data=data, name=skymap.name, wcs=skymap.wcs,
+                      unit=skymap.unit, meta=skymap.meta)
 
     def fill_counts_image(self, image):
         """Fill events in counts image.

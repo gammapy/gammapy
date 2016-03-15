@@ -99,7 +99,7 @@ class LogEnergyAxis(object):
 
 
 # Todo: find a better place for these functions (Spectrum analysis class?)
-def plot_empty_skymap(**kwargs):
+def get_empty_skymap(**kwargs):
     """Plot empty sky map
 
     It will have the same WCS specification as the exclusion mask.
@@ -110,39 +110,35 @@ def plot_empty_skymap(**kwargs):
 
     exclusion = SkyMap.read(SpectrumExtraction.EXCLUDEDREGIONS_FILE, 1)
     skymap = SkyMap.empty_like(exclusion)
-    ax = skymap.plot()
-    return ax
+    return skymap
 
 
-def plot_exclusion_contours(ax=None, **kwargs):
+def plot_exclusion_contours(ax, **kwargs):
     """Plot exclusion contours"""
     from gammapy.image import SkyMap
     from gammapy.spectrum import SpectrumExtraction
     import matplotlib.pyplot as plt
 
-    ax = plot_empty_skymap() if ax is None else ax
     exclusion = SkyMap.read(SpectrumExtraction.EXCLUDEDREGIONS_FILE)
     plt.contour(exclusion.data, [0.5], **kwargs)
 
     return ax
 
 
-def plot_on_region(ax=None, **kwargs):
+def plot_on_region(ax, **kwargs):
     """Plot target regions"""
     from gammapy.spectrum import SpectrumExtraction
 
-    ax = plot_empty_skymap() if ax is None else ax
     val = read_yaml(SpectrumExtraction.REGIONS_FILE)
     on_region = SkyCircleRegion.from_dict(val['on_region'])
     on_region.plot(ax, **kwargs)
     return ax
 
 
-def plot_off_region(ax=None, **kwargs):
+def plot_off_region(ax, **kwargs):
     """Plot off regions for all observations"""
     from gammapy.spectrum import SpectrumExtraction
 
-    ax = plot_empty_skymap() if ax is None else ax
     val = read_yaml(SpectrumExtraction.REGIONS_FILE)
     all_regions = SkyRegionList()
     for regions in val['off_region'].values():
@@ -151,22 +147,26 @@ def plot_off_region(ax=None, **kwargs):
     return ax
 
 
-def plot_observations_positions(ax=None, **kwargs):
+def plot_observations_positions(ax, **kwargs):
     from gammapy.data import ObservationTable
     from gammapy.spectrum import SpectrumExtraction
 
     kwargs.setdefault('marker', 'x')
     kwargs.setdefault('s', 150)
-    ax = plot_empty_skymap() if ax is None else ax
     obs_table = ObservationTable.read(SpectrumExtraction.OBSTABLE_FILE)
     ra = obs_table['RA_PNT']
     dec = obs_table['DEC_PNT']
     ax.scatter(ra, dec, transform=ax.get_transform('icrs'), **kwargs)
 
 
-def plot_events(**kwargs):
-    ax = plot_empty_skymap() if ax is None else ax
-    # TODO add plot eventlist
+def fill_off_events_in_skymap(skymap=None):
+    from gammapy.data import EventList
+    from gammapy.spectrum import SpectrumExtraction
+
+    skymap = get_empty_skymap() if skymap is None else skymap
+    off_events = EventList.read(SpectrumExtraction.OFFLIST_FILE)
+    filled_map = off_events.fill_skymap(skymap)
+    return filled_map
 
 def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     """Plot predicted and measured excess counts
