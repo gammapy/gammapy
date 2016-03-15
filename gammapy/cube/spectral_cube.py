@@ -163,7 +163,7 @@ class SpectralCube(object):
             data = Quantity(data, '1 / (cm2 MeV s sr)')
         elif format == 'fermi-counts':
             energy = EnergyBounds.from_ebounds(fits.open(filename)['EBOUNDS'], unit='keV')
-            data = Quantity(data, 'counts')
+            data = Quantity(data, 'count')
         else:
             raise ValueError('Not a valid cube fits format')
         return cls(data=data, wcs=wcs, energy=energy)
@@ -311,8 +311,8 @@ class SpectralCube(object):
         ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra)
  
         return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),    
-                      dec_cube.ravel(), counts.data.value.ravel(),
-                      counts.data.value.shape)
+                      dec_cube.ravel(), self.data.value.ravel(),
+                      self.data.value.shape)
 
 
     @property

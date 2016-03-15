@@ -725,10 +725,8 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
-    return np.histogramdd([zz, yy, xx], bins)[0]
+    return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
         
- 
-
 
 def threshold(array, threshold=5):
     """Set all pixels below threshold to zero.

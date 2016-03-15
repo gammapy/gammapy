@@ -8,10 +8,10 @@ from astropy.units import Quantity
 from astropy.wcs import WCS
 from ...utils.testing import requires_dependency
 from ...datasets import FermiGalacticCenter
-from ...data import SpectralCube, compute_npred_cube, convolve_cube
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
 from ...spectrum.powerlaw import power_law_evaluate
+from .. import SpectralCube, compute_npred_cube, convolve_cube
 
 
 @requires_dependency('scipy.interpolate.RegularGridInterpolator')

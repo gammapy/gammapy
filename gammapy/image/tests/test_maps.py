@@ -80,5 +80,5 @@ class TestSkyMapPoisson():
                               yref=events.meta['DEC_OBJ'], dtype='int', 
                               coordsys='CEL')
         counts.fill(events)
-        assert counts.data.sum() == 1233
+        assert counts.data.sum().value == 1233
         assert counts.data.shape == (200, 200)
