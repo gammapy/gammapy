@@ -119,7 +119,9 @@ The following plots are produced with a modified version of the
 :download:`wip_bg_cube_model_comparison.py
 <../../examples/wip_bg_cube_model_comparison.py>` example script:
 
-.. plot:: background/plot_bgcube_true_reco.py
+TODO: remove or fix these examples
+
+.. .. plot:: background/plot_bgcube_true_reco.py
 
 The input counts spectrum is a power-law with an index of 1.5, in
 order to have some counts at high energies with a reasonable amount

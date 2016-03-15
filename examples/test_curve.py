@@ -15,13 +15,13 @@ from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 # from gammapy.detect import compute_ts_map
-import pylab as pt
+import matplotlib.pyplot as plt
 
-pt.ion()
+plt.ion()
 
 
 def make_excluded_sources():
-    #centers = SkyCoord([84, 82], [23, 21], unit='deg')
+    # centers = SkyCoord([84, 82], [23, 21], unit='deg')
     centers = SkyCoord([83.63, 83.63], [22.01, 22.01], unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
     sources = SkyCircleRegion(pos=centers, radius=radius)
@@ -43,7 +43,7 @@ def make_model():
 
     multi_array = EnergyOffsetBackgroundModel(ebounds, offset)
     multi_array.fill_obs(obs_table, data_store, excluded_sources)
-    #multi_array.fill_obs(obs_table, data_store)
+    # multi_array.fill_obs(obs_table, data_store)
     multi_array.compute_rate()
     bgarray = multi_array.bg_rate
     energy_range = Energy([1, 10], 'TeV')
@@ -70,7 +70,7 @@ def make_image():
 
         counts_image.data += bin_events_in_image(events, counts_image).data
 
-        #interp_param = dict(bounds_error=False, fill_value=None)
+        # interp_param = dict(bounds_error=False, fill_value=None)
 
         acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"])
         acc = Quantity(acc_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
@@ -94,20 +94,19 @@ def make_significance_image():
     s_image.writeto("significance_image.fits", clobber=True)
 
 
-
 def plot_model():
     multi_array = EnergyOffsetBackgroundModel.read('energy_offset_array.fits')
     table = Table.read('acceptance_curve.fits')
-    pt.figure(1)
+    plt.figure(1)
     multi_array.counts.plot_image()
-    pt.figure(2)
+    plt.figure(2)
     multi_array.livetime.plot_image()
-    pt.figure(3)
+    plt.figure(3)
     multi_array.bg_rate.plot_image()
-    pt.figure(4)
-    pt.plot(table["offset"], table["Acceptance"])
-    pt.xlabel("offset (deg)")
-    pt.ylabel("Acceptance (s-1 sr-1)")
+    plt.figure(4)
+    plt.plot(table["offset"], table["Acceptance"])
+    plt.xlabel("offset (deg)")
+    plt.ylabel("Acceptance (s-1 sr-1)")
 
     input()
 

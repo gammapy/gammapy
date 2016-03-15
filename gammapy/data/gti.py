@@ -1,15 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import sys
 from astropy.units import Quantity
 from astropy.table import Table
 from ..time import time_ref_from_dict
+from ..utils.scripts import make_path
 
 __all__ = [
-    'GoodTimeIntervals',
+    'GTI',
 ]
 
 
-class GoodTimeIntervals(Table):
+class GTI(Table):
     """Good time intervals (GTI) `~astropy.table.Table`.
 
     Note: at the moment dead-time and live-time is in the
@@ -18,17 +20,32 @@ class GoodTimeIntervals(Table):
     """
 
     def __init__(self, *args, **kwargs):
-        super(GoodTimeIntervals, self).__init__(*args, **kwargs)
+        super(GTI, self).__init__(*args, **kwargs)
 
-    @property
-    def summary(self):
+    @classmethod
+    def read(cls, filename, **kwargs):
+        """Read from FITS file.
+
+        Parameters
+        ----------
+        filename : `~gammapy.extern.pathlib.Path`, str
+            Filename
+        """
+        filename = make_path(filename)
+        if 'hdu' not in kwargs:
+            kwargs.update(hdu='GTI')
+        return super(GTI, cls).read(str(filename), **kwargs)
+
+    def summary(self, file=None):
         """Summary info string."""
-        s = '---> Good time interval (GTI) info:\n'
-        s += '- Number of GTIs: {}\n'.format(len(self))
-        s += '- Duration: {}\n'.format(self.time_sum)
-        s += '- Start: {}\n'.format(self.time_start[0])
-        s += '- Stop: {}\n'.format(self.time_stop[-1])
-        return s
+        if not file:
+            file = sys.stdout
+
+        print('GTI info:', file=file)
+        print('- Number of GTIs: {}'.format(len(self)), file=file)
+        print('- Duration: {}'.format(self.time_sum), file=file)
+        print('- Start: {}'.format(self.time_start[0]), file=file)
+        print('- Stop: {}'.format(self.time_stop[-1]), file=file)
 
     @property
     def time_delta(self):

@@ -59,7 +59,7 @@ def test_EnergyDispersion_write(tmpdir):
 def test_EnergyDispersion2D():
     filename = gammapy_extra.filename(
         'test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
-    edisp = EnergyDispersion2D.read(filename)
+    edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
 
     # Check that nodes are evaluated correctly
     e_node = 12

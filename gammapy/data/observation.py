@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import sys
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
@@ -26,12 +27,12 @@ class ObservationTable(Table):
 
     @classmethod
     def read(cls, filename, **kwargs):
-        """Read :ref:`gadf:iact-events`
+        """Read an observation table from file.
 
         Parameters
         ----------
-        filename: `~gammapy.extern.pathlib.Path`, str
-            File to read
+        filename : `~gammapy.extern.pathlib.Path`, str
+            Filename
         """
         filename = make_path(filename)
         return super(ObservationTable, cls).read(str(filename), **kwargs)
@@ -47,7 +48,7 @@ class ObservationTable(Table):
         return SkyCoord(self['GLON_PNT'], self['GLAT_PNT'], unit='deg', frame='galactic')
 
     @lazyproperty
-    def index_dict(self):
+    def _index_dict(self):
         """Dict containing row index for all obs ids"""
         # TODO: Switch to http://astropy.readthedocs.org/en/latest/table/indexing.html once it is more stable
         temp = (zip(self['OBS_ID'], np.arange(len(self))))
@@ -68,7 +69,7 @@ class ObservationTable(Table):
         idx : list
             indices corresponding to obs_id
         """
-        idx = [self.index_dict[key] for key in np.atleast_1d(obs_id)]
+        idx = [self._index_dict[key] for key in np.atleast_1d(obs_id)]
         return idx
 
     def select_obs_id(self, obs_id):
@@ -83,27 +84,32 @@ class ObservationTable(Table):
         """
         return self[self.get_obs_idx(obs_id)]
 
-    @property
-    def summary(self):
+    def summary(self, file=None):
         """Info string (str)"""
-        ss = 'Observation table:\n'
+        if not file:
+            file = sys.stdout
 
-        obs_name = self.meta['OBSERVATORY_NAME']
-        ss += 'Observatory name: {}\n'.format(obs_name)
-        ss += 'Number of observations: {}\n'.format(len(self))
-        ontime = Quantity(self['ONTIME'].sum(),
-                          self['ONTIME'].unit)
+        print('Observation table:', file=file)
 
-        ss += 'Total observation time: {}\n'.format(ontime)
-        livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
-        ss += 'Total live time: {}\n'.format(livetime)
-        dtf = 100. * (1 - livetime / ontime)
-        ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
-        time_ref = time_ref_from_dict(self.meta)
-        time_ref_unit = time_ref_from_dict(self.meta).format
-        ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
+        if 'OBSERVATORY_NAME' in self.meta:
+            obs_name = self.meta['OBSERVATORY_NAME']
+            print('Observatory name: {}'.format(obs_name), file=file)
 
-        return ss
+        print('Number of observations: {}'.format(len(self)), file=file)
+
+        # TODO: clean this up. Make those properties?
+        # ontime = Quantity(self['ONTIME'].sum(), self['ONTIME'].unit)
+        #
+        # ss += 'Total observation time: {}\n'.format(ontime)
+        # livetime = Quantity(self['LIVETIME'].sum(), self['LIVETIME'].unit)
+        # ss += 'Total live time: {}\n'.format(livetime)
+        # dtf = 100. * (1 - livetime / ontime)
+        # ss += 'Average dead time fraction: {:5.2f}%\n'.format(dtf)
+        # time_ref = time_ref_from_dict(self.meta)
+        # time_ref_unit = time_ref_from_dict(self.meta).format
+        # ss += 'Time reference: {} {}'.format(time_ref, time_ref_unit)
+        #
+        # return ss
 
     def select_linspace_subset(self, num):
         """Select subset of observations.
@@ -229,38 +235,36 @@ class ObservationTable(Table):
           `~astropy.units.Quantity` object
 
         Allowed selection criteria are interpreted using the following
-        keywords in the **selection** dictionary:
+        keywords in the **selection** dictionary under the **type** key.
 
-        - **type**: ``sky_box``, ``sky_circle``, ``time_box``, ``par_box``
+        - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
+          on sky coordinates
 
-            - ``sky_box`` and ``sky_circle`` are 2D selection criteria acting
-              on sky coordinates
+            - ``sky_box`` is a squared region delimited by the **lon** and
+              **lat** keywords: both tuples of format (min, max); uses
+              `~gammapy.catalog.select_sky_box`
 
-                - ``sky_box`` is a squared region delimited by the **lon** and
-                  **lat** keywords: both tuples of format (min, max); uses
-                  `~gammapy.catalog.select_sky_box`
+            - ``sky_circle`` is a circular region centered in the coordinate
+              marked by the **lon** and **lat** keywords, and radius **radius**;
+              uses `~gammapy.catalog.select_sky_circle`
 
-                - ``sky_circle`` is a circular region centered in the coordinate
-                  marked by the **lon** and **lat** keywords, and radius **radius**;
-                  uses `~gammapy.catalog.select_sky_circle`
+          in each case, the coordinate system can be specified by the **frame**
+          keyword (built-in Astropy coordinate frames are supported, e.g.
+          ``icrs`` or ``galactic``); an aditional border can be defined using
+          the **border** keyword
 
-              in each case, the coordinate system can be specified by the **frame**
-              keyword (built-in Astropy coordinate frames are supported, e.g.
-              ``icrs`` or ``galactic``); an aditional border can be defined using
-              the **border** keyword
+        - ``time_box`` is a 1D selection criterion acting on the observation
+          start time (**TSTART**); the interval is set via the
+          **time_range** keyword; uses
+          `~gammapy.data.ObservationTable.select_time_range`
 
-            - ``time_box`` is a 1D selection criterion acting on the observation
-              start time (**TSTART**); the interval is set via the
-              **time_range** keyword; uses
-              `~gammapy.data.ObservationTable.select_time_range`
-
-            - ``par_box`` is a 1D selection criterion acting on any
-              parameter defined in the observation table that can be casted
-              into an `~astropy.units.Quantity` object; the parameter name
-              and interval can be specified using the keywords **variable** and
-              **value_range** respectively; min = max selects exact
-              values of the parameter; uses
-              `~gammapy.data.ObservationTable.select_range`
+        - ``par_box`` is a 1D selection criterion acting on any
+          parameter defined in the observation table that can be casted
+          into an `~astropy.units.Quantity` object; the parameter name
+          and interval can be specified using the keywords **variable** and
+          **value_range** respectively; min = max selects exact
+          values of the parameter; uses
+          `~gammapy.data.ObservationTable.select_range`
 
         In all cases, the selection can be inverted by activating the
         **inverted** flag, in which case, the selection is applied to keep all

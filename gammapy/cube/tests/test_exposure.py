@@ -4,8 +4,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency
-from ...utils.testing import requires_data
+from ...utils.testing import requires_dependency, requires_data
 from ...irf import exposure_cube
 from ...data import SpectralCube
 from ...irf import EffectiveAreaTable2D
@@ -18,7 +17,7 @@ def test_exposure_cube():
     aeff_filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
     ccube_filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/hess_events_simulated_023523_cntcube.fits')
 
-    pointing = SkyCoord(83.633, 21.514, frame='fk5', unit='deg')
+    pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
     aeff2d = EffectiveAreaTable2D.read(aeff_filename)
     count_cube = SpectralCube.read_counts(ccube_filename)

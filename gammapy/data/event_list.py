@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import sys
 from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
@@ -8,16 +9,14 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
-
 from gammapy.utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..image import wcs_histogram2d
 from ..time import time_ref_from_dict
-from .gti import GoodTimeIntervals
-from .telarray import TelescopeArray
-from . import InvalidDataError
+from .gti import GTI
 from .utils import _earth_location_from_dict
+from . import InvalidDataError
 
 __all__ = [
     'EventList',
@@ -36,13 +35,13 @@ class EventList(Table):
     are available as the following columns:
 
     - ``TIME`` - Mission elapsed time (sec)
-    - ``RA``, ``DEC`` - FK5 J2000 (or ICRS?) position (deg)
+    - ``RA``, ``DEC`` - ICRS system position (deg)
     - ``ENERGY`` - Energy (usually MeV for Fermi and TeV for IACTs)
 
     Other optional (columns) that are sometimes useful for high-level analysis:
 
     - ``GLON``, ``GLAT`` - Galactic coordinates (deg)
-    - ``DETX``, ``DETY`` - Field of view coordinates (radian?)
+    - ``DETX``, ``DETY`` - Field of view coordinates (deg)
 
     Note that when reading data for analysis you shouldn't use those
     values directly, but access them via properties which create objects
@@ -54,27 +53,18 @@ class EventList(Table):
     - `galactic` for ``GLON``, ``GLAT``
     """
 
-    @property
-    def summary(self):
+    def summary(self, file=None):
         """Summary info string."""
-        s = '---> Event list info:\n'
-        # TODO: Which telescope?
+        if not file:
+            file = sys.stdout
 
-        # When and how long was the observation?
-        s += '- Observation duration: {}\n'.format(self.observation_time_duration)
-        s += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
-
-        # TODO: Which target was observed?
-
-        s += '-- Event info:\n'
-        s += '- Number of events: {}\n'.format(len(self))
+        print('-- Event info:', file=file)
+        print('- Number of events: {}'.format(len(self)), file=file)
         # TODO: add time, RA, DEC and if present GLON, GLAT info ...
-        s += '- Median energy: {}\n'.format(np.median(self.energy))
+        print('- Median energy: {}'.format(np.median(self.energy)), file=file)
         # TODO: azimuth should be circular median
-        s += '- Median azimuth: {}\n'.format(np.median(self['AZ']))
-        s += '- Median altitude: {}\n'.format(np.median(self['ALT']))
-
-        return s
+        print('- Median azimuth: {}'.format(np.median(self['AZ'])), file=file)
+        print('- Median altitude: {}'.format(np.median(self['ALT'])), file=file)
 
     @property
     def time(self):
@@ -98,7 +88,7 @@ class EventList(Table):
         TODO: the `radec` and `galactic` properties should be cached as table columns
         """
         lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
     @property
     def galactic(self):
@@ -118,8 +108,8 @@ class EventList(Table):
 
         Parameters
         ----------
-        filename: `~gammapy.extern.pathlib.Path`, str
-            File to read
+        filename : `~gammapy.extern.pathlib.Path`, str
+            Filename
         """
         filename = make_path(filename)
         if 'hdu' not in kwargs:
@@ -140,51 +130,13 @@ class EventList(Table):
         self['GLON'] = galactic.l.degree
         self['GLAT'] = galactic.b.degree
 
-    @property
-    def altaz(self):
-        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        time = self.time
-        location = self.observatory_earth_location
-        altaz_frame = AltAz(obstime=time, location=location)
-
-        lon, lat = self['AZ'], self['ALT']
-        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
-
-    @property
-    def offset(self):
-        """Event offset (`~astropy.coordinates.Angle`)"""
-        position = self.radec
-        center = self.pointing_radec
-        offset = center.separation(position)
-        return Angle(offset, unit='deg')
-
-    @property
-    def energy(self):
-        """Event energies (`~astropy.units.Quantity`)"""
-        energy = self['ENERGY']
-        return Quantity(energy, self.meta['EUNIT'])
-
-    @property
-    def target_radec(self):
-        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        lon, lat = self.meta['RA_OBJ'], self.meta['DEC_OBJ']
-        return SkyCoord(lon, lat, unit='deg', frame='fk5')
-
-    @property
-    def pointing_radec(self):
-        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        lon, lat = self.meta['RA_PNT'], self.meta['DEC_PNT']
-        return SkyCoord(lon, lat, unit='deg', frame='fk5')
-
+    # TODO: the following properties are also present on the `DataStoreObservation` class.
+    # This duplication should be removed.
+    # Maybe the EventList or EventListDataset should have an `observation` object member?
     @property
     def observatory_earth_location(self):
         """Observatory location (`~astropy.coordinates.EarthLocation`)"""
         return _earth_location_from_dict(self.meta)
-
-    # TODO: I'm not sure how to best exposure header data
-    # as quantities ... maybe expose them on `meta` or
-    # a completely separate namespace?
-    # For now I'm taking very verbose names ...
 
     @property
     def observation_time_duration(self):
@@ -220,6 +172,38 @@ class EventList(Table):
         which in turn is used in the exposure and flux computation.
         """
         return 1 - self.meta['DEADC']
+
+    @property
+    def altaz(self):
+        """Event horizontal sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        time = self.time
+        location = self.observatory_earth_location
+        altaz_frame = AltAz(obstime=time, location=location)
+
+        lon, lat = self['AZ'], self['ALT']
+        return SkyCoord(lon, lat, unit='deg', frame=altaz_frame)
+
+    @property
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        info = self.meta
+        lon, lat = info['RA_PNT'], info['DEC_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @property
+    def offset(self):
+        """Event offset (`~astropy.coordinates.Angle`)"""
+        position = self.radec
+        center = self.pointing_radec
+        offset = center.separation(position)
+        return Angle(offset, unit='deg')
+        # return Angle(self['THETA'], unit='deg')
+
+    @property
+    def energy(self):
+        """Event energies (`~astropy.units.Quantity`)"""
+        energy = self['ENERGY']
+        return Quantity(energy, self.meta['EUNIT'])
 
     def select_energy(self, energy_band):
         """Select events in energy band.
@@ -520,10 +504,8 @@ class EventList(Table):
             from gammapy.data import DataStore
 
             ds = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-            event_list = ds.load(obs_id=23523, filetype='events')
-
-            event_list.plot_time_map()
-
+            events = ds.obs(obs_id=23523).events
+            events.plot_time_map()
             plt.show()
 
         """
@@ -560,18 +542,13 @@ class EventListDataset(object):
     ----------
     event_list : `~gammapy.data.EventList`
         Event list table
-    telescope_array : `~gammapy.data.TelescopeArray`
-        Telescope array info
-    good_time_intervals : `~gammapy.data.GoodTimeIntervals`
-        Observation time interval info
+    gti : `~gammapy.data.GTI`
+        Good time interval table
     """
 
-    def __init__(self, event_list,
-                 telescope_array=None,
-                 good_time_intervals=None):
+    def __init__(self, event_list, gti=None):
         self.event_list = event_list
-        self.telescope_array = telescope_array
-        self.good_time_intervals = good_time_intervals
+        self.gti = gti
 
     @classmethod
     def from_hdu_list(cls, hdu_list):
@@ -583,10 +560,9 @@ class EventListDataset(object):
         # back using Table.read()?
         raise NotImplementedError
         event_list = EventList.from_hdu(hdu_list['EVENTS'])
-        telescope_array = TelescopeArray.from_hdu(hdu_list['TELARRAY'])
-        good_time_intervals = GoodTimeIntervals.from_hdu(hdu_list['GTI'])
+        gti = GTI.from_hdu(hdu_list['GTI'])
 
-        return cls(event_list, telescope_array, good_time_intervals)
+        return cls(event_list=event_list, gti=gti)
 
     @classmethod
     def read(cls, filename):
@@ -594,18 +570,13 @@ class EventListDataset(object):
         """
         # return EventList.from_hdu_list(fits.open(filename))
         event_list = EventList.read(filename)
-        try:
-            telescope_array = TelescopeArray.read(filename, hdu='TELARRAY')
-        except KeyError:
-            telescope_array = None
-            # self.logger.debug('No TELARRAY extension')
 
         try:
-            good_time_intervals = GoodTimeIntervals.read(filename, hdu='GTI')
+            gti = GTI.read(filename, hdu='GTI')
         except KeyError:
-            good_time_intervals = None
+            gti = None
 
-        return cls(event_list, telescope_array, good_time_intervals)
+        return cls(event_list=event_list, gti=gti)
 
     @classmethod
     def vstack_from_files(cls, filenames, logger=None):
@@ -681,7 +652,7 @@ class EventListDataset(object):
         total_event_list.meta['EVTSTACK'] = 'yes'
         total_gti.meta['EVTSTACK'] = 'yes'
 
-        return cls(event_list=total_event_list, good_time_intervals=total_gti)
+        return cls(event_list=total_event_list, gti=total_gti)
 
     def write(self, *args, **kwargs):
         """Write to FITS file.
@@ -712,23 +683,21 @@ class EventListDataset(object):
         header.update(self.event_list.meta)
         hdu_list.append(fits.BinTableHDU(data=data, header=header, name='EVENTS'))
 
-        data = self.good_time_intervals.as_array()
+        data = self.gti.as_array()
         header = fits.Header()
-        header.update(self.good_time_intervals.meta)
+        header.update(self.gti.meta)
         hdu_list.append(fits.BinTableHDU(data, header=header, name='GTI'))
 
         return hdu_list
 
-    @property
-    def info(self):
+    def info(self, file=None):
         """Summary info string."""
-        s = '===> Event list dataset information:\n'
-        s += self.event_list.summary
-        s += self.telescope_array.summary
-        s += self.good_time_intervals.summary
-        s += '- telescopes: {}\n'.format(len(self.telescope_array))
-        s += '- good time intervals: {}\n'.format(len(self.good_time_intervals))
-        return s
+        if not file:
+            file = sys.stdout
+
+        print('Event list dataset info:', file=file)
+        self.event_list.summary(file=file)
+        self.gti.summary(file=file)
 
     def check(self, checks='all'):
         """Check if format and content is ok.
@@ -952,7 +921,6 @@ class EventListDatasetChecker(object):
     def _check_coordinates_altaz(self):
         """Check if ALT / AZ matches RA / DEC."""
         event_list = self.dset.event_list
-        telescope_array = self.dset.telescope_array
 
         for colname in ['RA', 'DEC', 'AZ', 'ALT']:
             if colname not in event_list.colnames:

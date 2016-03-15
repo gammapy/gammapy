@@ -8,10 +8,10 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
-from ..utils.fits import get_hdu_with_valid_name
-from ..irf import HESSMultiGaussPSF
 from ..utils.energy import Energy
 from ..utils.fits import table_to_fits_table
+from ..utils.scripts import make_path
+from ..irf import HESSMultiGaussPSF
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
@@ -52,9 +52,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDependentMultiGaussPSF
-        from gammapy.datasets import gammapy_extra
-        filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
-        psf = EnergyDependentMultiGaussPSF.read(filename)
+        filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/irfs/psf.fits'
+        psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
         psf.plot_containment(0.68, show_safe_energy=False)
         plt.show()
     """
@@ -81,7 +80,7 @@ class EnergyDependentMultiGaussPSF(object):
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, hdu='psf_3gauss'):
         """Create `EnergyDependentMultiGaussPSF` from FITS file.
 
         Parameters
@@ -89,10 +88,9 @@ class EnergyDependentMultiGaussPSF(object):
         filename : str
             File name
         """
-        hdu_list = fits.open(filename)
-        # TODO: improve this ... use HDUCLASS
-        valid_extnames = ['POINT SPREAD FUNCTION', 'PSF_2D', 'PSF_2D_GAUSS']
-        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames)
+        filename = make_path(filename)
+        hdu_list = fits.open(str(filename))
+        hdu = hdu_list[hdu]
         return cls.from_fits(hdu)
 
     @classmethod
@@ -102,7 +100,7 @@ class EnergyDependentMultiGaussPSF(object):
         Parameters
         ----------
         hdu : `~astropy.io.fits.BintableHDU`
-            HDU with serialised PSF.
+            HDU
         """
         energy_lo = Quantity(hdu.data['ENERG_LO'][0], 'TeV')
         energy_hi = Quantity(hdu.data['ENERG_HI'][0], 'TeV')

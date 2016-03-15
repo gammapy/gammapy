@@ -10,7 +10,8 @@ from astropy.coordinates import Angle
 from ..utils.energy import Energy, EnergyBounds
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
-from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
+from ..utils.fits import table_to_fits_table
+from ..utils.scripts import make_path
 
 __all__ = [
     'abramowski_effective_area',
@@ -344,7 +345,7 @@ class EffectiveAreaTable2D(object):
 
         dm = data_manager()
         ds = dm['hess-crab4-hd-hap-prod2']
-        aeff2D = ds.load(23523, filetype='aeff')
+        aeff2D = ds.obs(obs_id=23523).aeff
         aeff2D.plot_energy_dependence()
     """
 
@@ -378,19 +379,16 @@ class EffectiveAreaTable2D(object):
         self.interpolation_method = method
 
     @classmethod
-    def from_fits(cls, hdu_list, column='true'):
+    def from_fits(cls, hdu, column='true'):
         """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format HDU list.
 
         Parameters
         ----------
-        hdu_list : `~astropy.io.fits.HDUList`
-            HDU list with ``EFFECTIVE AREA`` extension.
+        hdu_list : `~astropy.io.fits.BinTableHDU`
+            HDU
         column : str {'true', 'reco'}
             Effective area column to be read
         """
-        # Locate an HDU with the right name or raise and error
-        hdu = get_hdu_with_valid_name(hdu_list, valid_extnames=['AEFF_2D', 'EFFECTIVE AREA'])
-
         data = hdu.data
         header = hdu.header
         thres_lo = Energy(header['LO_THRES'], 'TeV')
@@ -407,7 +405,7 @@ class EffectiveAreaTable2D(object):
         return cls(e_lo, e_hi, o_lo, o_hi, ef, thres_lo=thres_lo, thres_hi=thres_hi)
 
     @classmethod
-    def read(cls, filename, column='true'):
+    def read(cls, filename, hdu='aeff_2d', column='true'):
         """Create `EffectiveAreaTable2D` from ``GCTAAeff2D`` format FITS file.
 
         Parameters
@@ -417,8 +415,10 @@ class EffectiveAreaTable2D(object):
         column : str {'true', 'reco'}
             Effective area column to be read
         """
-        hdu_list = fits.open(filename)
-        return EffectiveAreaTable2D.from_fits(hdu_list, column=column)
+        filename = make_path(filename)
+        hdu_list = fits.open(str(filename))
+        hdu = hdu_list[hdu]
+        return EffectiveAreaTable2D.from_fits(hdu, column=column)
 
     @property
     def low_threshold(self):
