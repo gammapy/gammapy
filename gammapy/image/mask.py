@@ -105,8 +105,8 @@ class ExclusionMask(SkyMap):
         return self.data
 
     # TODO: right now the extension name is hardcoded to 'exclusion', because
-    # single image Fits file often contain a PrimaryHDU and an ImageHDU. Is there 
-    # a better / more flexible solution?
+    # single image Fits file often contain a PrimaryHDU and an ImageHDU.
+    # Is there a better / more flexible solution?
     @classmethod    
     def read(cls, fobj, *args, **kwargs):
         # Check if extension name is given, else default to 'exclusion'

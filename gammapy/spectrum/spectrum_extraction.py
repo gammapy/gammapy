@@ -349,7 +349,8 @@ class SpectrumExtraction(object):
             raise PartialOverlapError('FOV ({}) not completely contained '
                                       'in exclusion mask'.format(fov))
 
-        self.exclusion = ExclusionMask(c.data, c.wcs)
+        self.exclusion = ExclusionMask(name=exclusion.name, data=c.data,
+                                       wcs=c.wcs)
 
     def info(self):
         """Print some information
