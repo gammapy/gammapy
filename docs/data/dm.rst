@@ -36,6 +36,8 @@ observations of the Crab nebula. It also contains two index files:
 These files tell gammapy which observations are contained in the data set and where the event list and IRF files are
 located for each observation (for more information see :ref:`dm_formats`).
 
+.. _data_store:
+
 Data Store
 ++++++++++
 
@@ -69,6 +71,7 @@ actually load the data and IRFs and return objects of the appropriate class
     >>> obs.target_radec
     <SkyCoord (FK5: equinox=J2000.000): (ra, dec) in deg
 	(83.63333333, 22.01444444)>
+
 
 Data Manager
 ++++++++++++

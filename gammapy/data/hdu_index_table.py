@@ -8,14 +8,20 @@ from astropy.utils import lazyproperty
 from ..utils.scripts import make_path
 
 __all__ = [
-# TODO: should this be part of the public API?
     'HDULocation',
     'HDUIndexTable',
 ]
 
 
 class HDULocation(object):
-    """Helper class to localise and load a HDU.
+    """HDU localisation and loading.
+
+    This represents one row in `HDUIndexTable`.
+
+    It's more a helper class, that is wrapped by `~gammapy.data.DataStoreObservation`,
+    usually those objects will be used to access data.
+
+    See also :ref:`gadf:hdu-index`.
     """
 
     def __init__(self, obs_id, hdu_type, hdu_class, base_dir, file_dir, file_name, hdu_name):
@@ -141,9 +147,21 @@ class HDUIndexTable(Table):
         return make_path(self.meta['BASE_DIR'])
 
     def hdu_location(self, obs_id, hdu_type=None, hdu_class=None):
-        """Find HDU location.
+        """Create `HDULocation`.
 
-        Returns a Bunch with keys corresponding to the HDU index table columns.
+        Parameters
+        ----------
+        obs_id : int
+            Observation ID
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+
+        Returns
+        -------
+        location : `~gammapy.data.HDULocation`
+            HDU location
         """
         self._validate_selection(obs_id=obs_id, hdu_type=hdu_type, hdu_class=hdu_class)
 
@@ -187,8 +205,22 @@ class HDUIndexTable(Table):
         if obs_id not in self['OBS_ID']:
             raise IndexError('No entry available with OBS_ID = {}'.format(obs_id))
 
-    def row_idx(self, obs_id=None, hdu_type=None, hdu_class=None):
+    def row_idx(self, obs_id, hdu_type=None, hdu_class=None):
         """Table row indices for a given selection.
+
+        Parameters
+        ----------
+        obs_id : int
+            Observation ID
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+
+        Returns
+        -------
+        idx : list of int
+            List of row indices matching the selection.
         """
         # Working with the HDU_CLASS or HDU_TYPE column directly is difficult,
         # because those are padded strings (sometimes left-padded, sometimes right-padded).
@@ -197,10 +229,10 @@ class HDUIndexTable(Table):
 
         for idx in range(len(self)):
             if self['OBS_ID'][idx] == obs_id:
-                if hdu_class and self.hdu_class_stripped[idx] == hdu_class:
+                if hdu_class and self._hdu_class_stripped[idx] == hdu_class:
                     idx_list.append(idx)
 
-                if hdu_type and self.hdu_type_stripped[idx] == hdu_type:
+                if hdu_type and self._hdu_type_stripped[idx] == hdu_type:
                     idx_list.append(idx)
 
         return idx_list
@@ -219,13 +251,12 @@ class HDUIndexTable(Table):
         return location
 
     @lazyproperty
-    def hdu_class_stripped(self):
+    def _hdu_class_stripped(self):
         return [_.strip() for _ in self['HDU_CLASS']]
 
     @lazyproperty
-    def hdu_type_stripped(self):
+    def _hdu_type_stripped(self):
         return [_.strip() for _ in self['HDU_TYPE']]
-
 
     @lazyproperty
     def obs_id_unique(self):

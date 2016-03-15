@@ -22,10 +22,12 @@ log = logging.getLogger(__name__)
 
 
 class DataStore(object):
-    """Data store - convenient way to access and select data.
+    """IACT data store.
 
     The data selection and access happens an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
+
+    See :ref:`data_store`.
 
     Parameters
     ----------
@@ -37,8 +39,13 @@ class DataStore(object):
         Data store name
     """
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
+    """Default HDU table filename."""
+
     DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
+    """Default observation table filename."""
+
     DEFAULT_NAME = 'noname'
+    """Default data store name."""
 
     def __init__(self, hdu_table=None, obs_table=None, name=None):
         self.hdu_table = hdu_table
@@ -196,7 +203,10 @@ class DataStore(object):
 
         Parameters
         ----------
-        TODO
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
         Returns
         -------
@@ -213,6 +223,10 @@ class DataStore(object):
         ----------
         obs_ids : list
             List of observation IDs
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
         Returns
         -------
@@ -292,23 +306,9 @@ class DataStore(object):
 
 
 class DataStoreObservation(object):
-    """IACT observation dataset container.
+    """IACT data store observation.
 
-    TOOD: document
-
-    Examples
-    --------
-    Usually you'll use the `gammapy.data.DataStore` to load
-    IACT `gammapy.data.DataStoreObservation` datasets like this:
-
-    >>> from gammapy.data import DataStore
-    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
-    >>> obs = data_store.obs(obs_id=23037)
-    >>> obs.info()
-    TODO: prints summary output...
-    >>> obs.filename(filetype='events')
-    >>> events = obs.load(filetype='events')
-    >>> events = obs.events
+    See :ref:`data_store`
     """
 
     def __init__(self, obs_id, data_store):
@@ -323,6 +323,18 @@ class DataStoreObservation(object):
 
     def location(self, hdu_type=None, hdu_class=None):
         """HDU location object.
+
+        Parameters
+        ----------
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+
+        Returns
+        -------
+        location : `~gammapy.data.HDULocation`
+            HDU location
         """
         location = self.data_store.hdu_table.hdu_location(
             obs_id=self.obs_id,
@@ -336,16 +348,16 @@ class DataStoreObservation(object):
 
         Parameters
         ----------
-        hdu_type : {}
-            HDU type
-        hdu_class : {}
-            HDU class
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
         Returns
         -------
         object : object
             Object depends on type, e.g. for `events` it's a `~gammapy.data.EventList`.
-        """.format(HDUIndexTable.VALID_HDU_TYPE, HDUIndexTable.VALID_HDU_CLASS)
+        """
         location = self.location(hdu_type=hdu_type, hdu_class=hdu_class)
         return location.load()
 
