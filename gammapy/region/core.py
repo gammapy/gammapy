@@ -174,6 +174,25 @@ class SkyRegionList(list):
         for reg in self:
             reg.plot(ax, **kwargs)
 
+    def to_dict(self):
+        """Convert all regions to a list of dicts"""
+        out = list()
+        for reg in self:
+            out.append(reg.to_dict())
+        return out
+
+    @classmethod
+    def from_dict(cls, inlist):
+        """Read a list of regions from list of dicts
+
+        Only Circle regions are supported at the Moment
+        """
+        from .circle import SkyCircleRegion
+        reglist = list()
+        for reg in inlist:
+            reglist.append(SkyCircleRegion.from_dict(reg))
+        return cls(reglist)
+
 
 class PixRegionList(list):
     """List of pix regions.

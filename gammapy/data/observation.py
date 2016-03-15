@@ -37,14 +37,14 @@ class ObservationTable(Table):
         return super(ObservationTable, cls).read(str(filename), **kwargs)
 
     @property
-    def radec(self):
-        """ICRS sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        return SkyCoord(self['RA'], self['DEC'], unit='deg', frame='icrs')
+    def pointing_radec(self):
+        """Pointing positions as ICRS (`~astropy.coordinates.SkyCoord`)"""
+        return SkyCoord(self['RA_PNT'], self['DEC_PNT'], unit='deg', frame='icrs')
 
     @property
-    def galactic(self):
-        """Galactic sky coordinates (`~astropy.coordinates.SkyCoord`)"""
-        return SkyCoord(self['GLON'], self['GLAT'], unit='deg', frame='galactic')
+    def pointing_galactic(self):
+        """Pointing positions as Galactic (`~astropy.coordinates.SkyCoord`)"""
+        return SkyCoord(self['GLON_PNT'], self['GLAT_PNT'], unit='deg', frame='galactic')
 
     @lazyproperty
     def index_dict(self):

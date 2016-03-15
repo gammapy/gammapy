@@ -373,10 +373,12 @@ class EventList(Table):
         --------
         EventList.fill_counts_header
         """
+
         header = image.header
         lon, lat = self._get_lon_lat(header)
         counts_image = wcs_histogram2d(header, lon, lat)
-        image.data += counts_image.data
+        temp = image.data + counts_image.data
+        image.data = temp
         return image
 
     def fill_counts_header(self, header):

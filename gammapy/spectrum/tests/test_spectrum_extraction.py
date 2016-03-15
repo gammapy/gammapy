@@ -6,7 +6,7 @@ import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from numpy.testing import assert_allclose
 
-from ...data import DataStore, ObservationTable
+from ...data import DataStore, ObservationTable, EventList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...region import SkyCircleRegion
@@ -57,7 +57,7 @@ def test_spectrum_extraction_from_config(tmpdir):
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')
     extraction = SpectrumExtraction.from_configfile(configfile)
-    extraction.obs_table.remove_rows([1, 2, 3])
+    extraction.obs_table.remove_rows([2, 3])
     extraction.extract_spectrum()
     desired = extraction.observations
     configfile2 = str(tmpdir / 'config.yaml')
@@ -66,6 +66,11 @@ def test_spectrum_extraction_from_config(tmpdir):
     extraction2.extract_spectrum()
     actual = extraction2.observations
     assert actual[0].on_vector.total_counts == desired[0].on_vector.total_counts
+
+    #test total off list
+    extraction.write_total_offlist()
+    testlist = EventList.read(SpectrumExtraction.OFFLIST_FILE)
+    assert len(testlist) == np.sum([o.off_vector.total_counts for o in desired])
 
 @requires_data('gammapy-extra')
 def test_observation_stacking():
