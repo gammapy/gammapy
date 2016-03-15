@@ -56,7 +56,6 @@ def prepare_images():
 
     # Header is required for plotting, so returned here
     wcs = npred_cube.wcs
-    wcs = wcs.dropaxis(2)
     header = wcs.to_header()
 
     return model, gtmodel, ratio, counts, header

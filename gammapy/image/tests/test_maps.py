@@ -74,7 +74,7 @@ class TestSkyMapPoisson():
         dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
         data_store = DataStore.from_dir(dirname)
 
-        events = data_store.load(obs_id=23523, filetype='events')
+        events = data_store.obs(obs_id=23523).events
 
         counts = SkyMap.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
                               yref=events.meta['DEC_OBJ'], dtype='int', 

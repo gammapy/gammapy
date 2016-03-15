@@ -10,7 +10,6 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 
-from ..sherpa_ import Data3D, CombinedModel3D
 from .. import SpectralCube
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency
@@ -24,6 +23,7 @@ def test_sherpa_crab_fit():
     from sherpa.stats import Chi2ConstVar
     from sherpa.optmethods import LevMar
     from sherpa.fit import Fit
+    from ..sherpa_ import Data3D, CombinedModel3D
 
     filename = gammapy_extra.filename('experiments/sherpa_cube_analysis/counts.fits.gz')
     counts = SpectralCube.read(filename)

@@ -238,7 +238,7 @@ class SpectralCube(object):
         lon = lon.to('deg').value
         lat = lat.to('deg').value
         origin = 0  # convention for gammapy
-        x, y, _ = self.wcs.wcs_world2pix(lon, lat, 0, origin)
+        x, y = self.wcs.wcs_world2pix(lon, lat, origin)
 
         z = self.energy_axis.world2pix(energy)
 
@@ -499,9 +499,9 @@ class SpectralCube(object):
         except:
             pass
 
-        wcs_out = WCS(header_out)
+        wcs_out = WCS(header_out).celestial
 
-        return SpectralCube(new_cube, wcs_out, energy)
+        return SpectralCube(data=new_cube, wcs=wcs_out, energy=energy)
 
     def to_fits(self):
         """Writes SpectralCube to FITS hdu_list.
