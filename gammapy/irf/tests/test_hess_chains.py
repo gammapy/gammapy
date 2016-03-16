@@ -40,6 +40,8 @@ def test_hess_chains(data_manager, chain):
     ref_aeff = open(str(ref_file_aeff), 'r').read()
     ref_file_edisp = make_path(chain['edisp2D_reference_file'])
     ref_edisp = open(str(ref_file_edisp), 'r').read()
+    ref_file_psf = make_path(chain['psf_reference_file'])
+    ref_psf = open(str(ref_file_psf), 'r').read()
     ref_file_obs = make_path(chain['obs_reference_file'])
     ref_obs = open(str(ref_file_obs), 'r').read()
     ref_file_loc = make_path(chain['location_reference_file'])
@@ -68,9 +70,7 @@ def test_hess_chains(data_manager, chain):
     assert store.obs_table['OBS_ID'][obs_nr] == obs_id
     assert obs_info == ref_obs
 
-    aeff = obs.aeff
-    edisp = obs.edisp
-
-    assert aeff.info() == ref_aeff
-    assert edisp.info() == ref_edisp
+    assert obs.aeff.info() == ref_aeff
+    assert obs.edisp.info() == ref_edisp
+    assert obs.psf.info() == ref_psf
 
