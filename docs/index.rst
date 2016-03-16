@@ -29,14 +29,6 @@ Once you have it running, we suggest you head over to the 5 minute :ref:`getting
 News
 ----
 
-.. note::
-  :name: Announcement
-
-  Interested in Python, astronomy and `Google summer of code <https://developers.google.com/open-source/gsoc/>`__?
-
-  Check out the `Gammapy GSoC 2016 ideas page <https://github.com/gammapy/gammapy/wiki/Gammapy-GSoC-2016-ideas>`__!
-
-
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
 * November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
