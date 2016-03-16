@@ -907,31 +907,33 @@ putting this in ``docs/conf.py`` can also help sometimes::
     warnings.showwarning = warn_with_traceback
 
 
-Providing summary info for class instances
-------------------------------------------
+Object summary info string
+--------------------------
 
 If you want to add a method to provide some basic information about a class instance,
 you should use the Python ``__str__`` method.
 
 .. code-block:: python
 
-    class foo(object):
-        def __init__(self, a):
-            self.a = a
+    class Spam(object):
+        def __init__(self, ham):
+            self.ham = ham
 
         def __str__(self):
-            ss = 'Summary Info about class foo\n'
-            ss += '{:.2f}'.format(self.a)
+            ss = 'Summary Info about class Spam\n'
+            ss += '{:.2f}'.format(self.ham)
+            return ss
 
-If you want to add configurable info output, please provide a method ``summary``.
+If you want to add configurable info output, please provide a method ``summary``,
+like :func:`here <gammapy.catalog.SourceCatalogObjectHGPS.summary>`.
 In this case the ``__str__`` method should be a call to ``summary`` with default
 parameters. Do not use an ``info`` method, since this would lead to conflicts
 for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
 ``astropy.table.Table``.
 
 
-Validating output IRF files written by H.E.S.S. exporters
----------------------------------------------------------
+Validating H.E.S.S. Fits exporters
+----------------------------------
 
 The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:iact-irfs` format.
 The Gammapy tests contain a mechanism to track changes in these exporters.
