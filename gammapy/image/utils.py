@@ -7,6 +7,8 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+from ..utils.wcs import get_wcs_ctype
+from ..utils.energy import EnergyBounds
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
@@ -15,7 +17,6 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 __all__ = [
     'atrous_hdu',
     'atrous_image',
-    'bin_events_in_cube',
     'bin_events_in_image',
     'binary_dilation_circle',
     'binary_disk',
@@ -358,10 +359,9 @@ def atrous_hdu(hdu, n_levels):
 
 def coordinates(image, world=True, lon_sym=True, radians=False):
     """Get coordinate images for a given image.
-
     This function is useful if you want to compute
     an image with values that are a function of position.
-
+    
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU` or `~numpy.ndarray`
@@ -372,13 +372,13 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
     radians : bool, optional
         Return coordinates in radians or degrees?
-
+    
     Returns
     -------
     (lon, lat) : tuple of arrays
         Images as numpy arrays with values
         containing the position of the given pixel.
-
+    
     Examples
     --------
     >>> import numpy as np
@@ -684,51 +684,49 @@ def bin_events_in_image(events, reference_image):
     return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
 
 
-def bin_events_in_cube(events, reference_cube, energies):
-    """Bin events in LON-LAT-Energy cube.
 
+def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
+    """Bin events in LON-LAT-Energy cube.
     Parameters
     ----------
-    events : `~astropy.table.Table`
+    events : `~astropy.data.EventList`
         Event list table
-    reference_cube : `~astropy.io.fits.ImageHDU`
-        A cube defining the spatial bins.
-    energies : `~astropy.table.Table`
-        Table defining the energy bins.
+    wcs : `~astropy.wcs.WCS`
+        WCS instance defining celestial coordinates.
+    shape : tuple
+        Tuple defining the spatial shape.
+    energies : `~gammapy.utils.energy.EnergyBounds`
+        Energy bounds defining the binning. If None only one energy bin defined 
+        by the minimum and maximum event energy is used.
+    origin : {0, 1}
+        Pixel coordinate origin.
 
     Returns
     -------
-    count_cube : `~astropy.io.fits.ImageHDU`
-        Count cube
+    data : `~numpy.ndarray`
+        Counts cube.
     """
-    # TODO: this duplicates code from `bin_events_in_image`
-
-    if 'GLON' in reference_cube.header['CTYPE1']:
-        lon = events['GLON']
-        lat = events['GLAT']
+    if get_wcs_ctype(wcs) == 'galactic':
+        lon, lat = events['GLON'], events['GLAT']
     else:
-        lon = events['RA']
-        lat = events['DEC']
+        lon, lat = events['RA'], events['DEC']
 
-    # Get pixel coordinates
-    wcs = WCS(reference_cube.header)
-    # We're not interested in the energy axis, so we give a dummy value of 1
-    origin = 0  # convention for gammapy
-    xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)[:-1]
+    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
+    event_energies = events['ENERGY']
     
-    event_energies = events['Energy']
-    zz = np.searchsorted(event_energies, energies)
+    if energies is None:
+        emin = np.min(event_energies)
+        emax = np.max(event_energies)
+        energies = EnergyBounds.equal_log_spacing(emin, emax, nbins=1, unit='TeV')
+        shape = (2, ) + shape
 
+    zz = np.searchsorted(energies.value, event_energies.data)
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
-    shape = reference_cube.data.shape
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
-    data = np.histogramdd([zz, yy, xx], bins)[0]
-
-    hdu = fits.ImageHDU(data, reference_cube.header)
-    return hdu
-
+    return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
+        
 
 def threshold(array, threshold=5):
     """Set all pixels below threshold to zero.

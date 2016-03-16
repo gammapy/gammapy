@@ -5,8 +5,12 @@ from numpy.testing import assert_equal, assert_allclose
 from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.units import Quantity
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
+from ...data import DataStore
+from ...utils.energy import EnergyBounds
+from ...cube import SpectralCube
 from ...image import (
     binary_disk,
     binary_ring,
@@ -19,7 +23,7 @@ from ...image import (
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
-    SkyMap
+    SkyMap,
 )
 
 
@@ -210,3 +214,21 @@ def test_lon_lat_rectangle_mask():
                                   lon_max=None, lat_min=None,
                                   lat_max=None)
     assert_allclose(mask.sum(), 80601)
+
+
+@requires_data('gammapy-extra')
+def test_bin_events_in_cube():
+    dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
+    data_store = DataStore.from_dir(dirname)
+
+    events = data_store.obs(obs_id=23523).events
+
+    counts = SpectralCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
+                                nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                                yref=events.meta['DEC_OBJ'], dtype='int', 
+                                coordsys='CEL')
+    counts.fill(events)
+    assert counts.data.sum().value == 1233
+
+
+

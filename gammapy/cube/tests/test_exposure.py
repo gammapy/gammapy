@@ -5,10 +5,10 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency, requires_data
-from ...irf import exposure_cube
-from ...data import SpectralCube
 from ...irf import EffectiveAreaTable2D
 from ...datasets import gammapy_extra
+from .. import exposure_cube
+from .. import SpectralCube
 
 
 @requires_dependency('scipy')
@@ -20,12 +20,12 @@ def test_exposure_cube():
     pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
     aeff2d = EffectiveAreaTable2D.read(aeff_filename)
-    count_cube = SpectralCube.read_counts(ccube_filename)
+    count_cube = SpectralCube.read(ccube_filename, format='fermi-counts')
     exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube, offset_max=Angle(2.2, 'deg'))
     exp_ref = Quantity(4.7e8, 'm^2 s')
 
     assert np.shape(exp_cube.data)[1:] == np.shape(count_cube.data)[1:]
-    assert np.shape(exp_cube.data)[0] == np.shape(count_cube.data)[0] + 1
+    assert np.shape(exp_cube.data)[0] == np.shape(count_cube.data)[0]
     assert exp_cube.wcs == count_cube.wcs
     assert_equal(count_cube.energy, exp_cube.energy)
     assert_quantity_allclose(np.nanmax(exp_cube.data), exp_ref, rtol=100)

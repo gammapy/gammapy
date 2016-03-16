@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from .spectral_cube import SpectralCube
-
+from ..utils.energy import EnergyBounds
 
 __all__ = [
     'exposure_cube'
@@ -35,20 +35,16 @@ def exposure_cube(pointing,
     -------
     expcube : `~gammapy.data.SpectralCube`
         Exposure cube (3D)
-    """
-    # Delayed import to avoid circular import issues
-    # TODO: figure out if `gammapy.irf` is a good location for
-    # exposure computation functionality, or if this should be
-    # moved to `gammapy.data` or `gammapy.spectrum` or ...
-    
+    """    
     ny, nx = ref_cube.data.shape[1:]
     xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
     lon, lat, en = ref_cube.pix2world(xx, yy, 0)
     coord = SkyCoord(lon, lat, frame=ref_cube.wcs.wcs.radesys.lower())  # don't care about energy
-    offset = coord.separation(pointing)
+    offset = coord.separation(pointing)   
     offset = np.clip(offset, Angle(0, 'deg'), offset_max)
-
-    exposure = aeff2d.evaluate(offset, ref_cube.energy)
+    
+    energy = EnergyBounds(ref_cube.energy).log_centers
+    exposure = aeff2d.evaluate(offset, energy)
     exposure = np.rollaxis(exposure, 2)
     exposure *= livetime
 

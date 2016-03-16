@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from ..image.utils import coordinates
+from .utils import coordinates
 
 __all__ = [
     'BoundingBox',
