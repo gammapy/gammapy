@@ -2,6 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import sys
+
+from gammapy.utils.scripts import make_path
 from ..extern.pathlib import Path
 from .data_store import DataStore
 
@@ -47,7 +49,8 @@ class DataManager(object):
         filename : str
             YAML config file
         """
-        config = DataManager._load_config(filename)
+        filename = make_path(filename)
+        config = DataManager._load_config(str(filename))
         return cls(config=config)
 
     @staticmethod

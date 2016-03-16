@@ -465,11 +465,11 @@ class DataStoreObservation(object):
 
     def __str__(self):
         """Generate summary info string."""
-        ss = 'Info for OBS_ID = {}'.format(self.obs_id)
-        ss += '\n- Start time: {}'.format(self.tstart)
-        ss += '\n- Pointing pos: {}'.format(self.pointing_radec)
-        ss += '\n- Observation duration: {}'.format(self.observation_time_duration)
-        ss += '\n- Dead-time fraction: {:5.3f} %'.format(100 * self.observation_dead_time_fraction)
+        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
+        ss += '- Start time: {:.2f}\n'.format(self.tstart)
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
+        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
 
         # TODO: Which target was observed?
         # TODO: print info about available HDUs for this observation ...
