@@ -14,14 +14,7 @@ def test_datastore_hd_hap():
     """Test HESS HAP-HD data access."""
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 
-    # Check DataStore functionality
-    assert data_store.obs_table['OBS_ID'][0] == 23523
-
-    # Check DataStoreObservation functionality
     obs = data_store.obs(obs_id=23523)
-    obs.info()
-    filename = str(obs.location(hdu_type='events').path(abs_path=False))
-    assert filename == 'run023400-023599/run023523/hess_events_023523.fits.gz'
 
     assert str(type((obs.events))) == "<class 'gammapy.data.event_list.EventList'>"
     assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
@@ -31,9 +24,6 @@ def test_datastore_hd_hap():
     # TODO: no background model available yet
     # assert str(type(obs.bkg)) == ""
 
-    assert_quantity_allclose(obs.observation_time_duration, Quantity(1687, 's'))
-    assert_allclose(obs.observation_dead_time_fraction, 0.06239670515060425)
-
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -41,15 +31,7 @@ def test_datastore_pa():
     """Test HESS ParisAnalysis data access."""
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-pa')
 
-    # Check DataStore functionality
-    assert data_store.obs_table['OBS_ID'][0] == 23523
-
-    # Check DataStoreObservation functionality
-    # TODO: no simulated events available yet!
     obs = data_store.obs(obs_id=23523)
-    # obs.info()
-    filename = str(obs.location(hdu_type='events').path(abs_path=False))
-    assert filename == 'run23400-23599/run23523/events_23523.fits.gz'
     filename = str(obs.location(hdu_type='bkg').path(abs_path=False))
     assert filename == 'background/bgmodel_alt7_az0.fits.gz'
 

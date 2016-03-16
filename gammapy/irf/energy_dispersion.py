@@ -810,11 +810,19 @@ class EnergyDispersion2D(object):
         """Print some basic info.
         """
         ss = "\nSummary EnergyDispersion2D info\n"
-        ss += "----------------\n"
+        ss += "--------------------------------\n"
         # Summarise data members
         ss += array_stats_str(self.energy, 'energy')
         ss += array_stats_str(self.offset, 'offset')
         ss += array_stats_str(self.migra, 'migra')
         ss += array_stats_str(self.dispersion, 'dispersion')
+
+        energy = Energy('1 TeV')
+        e_reco = EnergyBounds([0.8, 1.2], 'TeV')
+        offset = Angle('0.5 deg')
+        p = self.get_response(offset, energy, e_reco)[0]
+
+        ss += 'Probability to reconstruct a {} photon in the range {} at {}' \
+              ' offset: {:.2f}'.format(energy, e_reco, offset, p)
 
         return ss
