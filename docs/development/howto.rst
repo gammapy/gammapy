@@ -907,6 +907,29 @@ putting this in ``docs/conf.py`` can also help sometimes::
     warnings.showwarning = warn_with_traceback
 
 
+Providing summary info for class instances
+------------------------------------------
+
+If you want to add a method to provide some basic information about a class instance,
+you should use the Python ``__str__`` method.
+
+.. code-block:: python
+
+    class foo(object):
+        def __init__(self, a):
+            self.a = a
+
+        def __str__(self):
+            ss = 'Summary Info about class foo\n'
+            ss += '{:.2f}'.format(self.a)
+
+If you want to add configurable info output, please provide a method ``summary``.
+In this case the ``__str__`` method should be a call to ``summary`` with default
+parameters. Do not use an ``info`` method, since this would lead to conflicts
+for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
+``astropy.table.Table``.
+
+
 Validating output IRF files written by H.E.S.S. exporters
 ---------------------------------------------------------
 
@@ -914,15 +937,16 @@ The H.E.S.S. experiment has 3 independent analysis chains, which all have export
 The Gammapy tests contain a mechanism to track changes in these exporters.
 
 
-In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads 
-IRF files from different chains and prints the output of the ``info`` function to a file. It also creates a YAML file 
+In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads
+IRF files from different chains and prints the output of the ``__str__`` method to a file. It also creates a YAML file
 holding information about the datastore used for each chain, the observations used, etc. 
 
 
 The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
-``info`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by 
+``__str__`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by
 Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script 
 again to ensure the passing of all Gammapy tests.
+
 
 If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to 
  manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
