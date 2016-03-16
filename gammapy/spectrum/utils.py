@@ -168,6 +168,17 @@ def fill_off_events_in_skymap(skymap=None):
     filled_map = off_events.fill_skymap(skymap)
     return filled_map
 
+def make_exclusion_debug_plot():
+    temp = get_empty_skymap()
+    skymap = fill_off_events_in_skymap(temp)
+    kwargs = dict()
+    kwargs['cmap'] = 'Blues'
+    kwargs['origin'] = 'lower'
+    ax = skymap.plot(**kwargs)
+    plot_observations_positions(ax=ax, color='red')
+    plot_off_region(ax=ax, edgecolor='blue', facecolor='None', alpha=0.7)
+    plot_on_region(ax=ax, color='green', alpha=0.7)
+
 def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     """Plot predicted and measured excess counts
 
