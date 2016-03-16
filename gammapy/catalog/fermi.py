@@ -2,7 +2,6 @@
 """Fermi catalog and source classes.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
 import tarfile
 import numpy as np
 from astropy.io import fits
@@ -214,6 +213,29 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
                 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
 
+    def __str__(self):
+        """Print default summary info string"""
+        return self.summary()
+
+    def summary(self):
+        """Print summary info."""
+        d = self.data
+
+        ss = 'Source: {}\n'.format(d['Source_Name'])
+        ss += '\n'
+
+        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
+        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
+        ss += 'GLON        : {}\n'.format(d['GLON'])
+        ss += 'GLAT        : {}\n'.format(d['GLAT'])
+        ss += '\n'
+
+        val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
+        ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
+        ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+
+        return ss
+
     def plot_lightcurve(self, ax=None):
         """Plot lightcurve.
         """
@@ -300,28 +322,34 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         return ax
 
-    def print_info(self, file=None):
-        """Print summary info."""
-        if not file:
-            file = sys.stdout
-
-        d = self.data
-
-        print(d['Source_Name'], file=file)
-        print('', file=file)
-        print('RA (J2000)  : {}'.format(d['RAJ2000']), file=file)
-        print('Dec (J2000) : {}'.format(d['DEJ2000']), file=file)
-        print('GLON        : {}'.format(d['GLON']), file=file)
-        print('GLAT        : {}'.format(d['GLAT']), file=file)
-        val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
-        print('Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1'.format(val, err), file=file)
-        print('Detection significance : {}'.format(d['Signif_Avg']), file=file)
-
 
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
     """
-    pass
+
+    def __str__(self):
+        """Print default summary info string"""
+        return self.summary()
+
+    def summary(self):
+        """Print summary info."""
+        # TODO: can we share code with 3FGL summary funtion?
+        d = self.data
+
+        ss = 'Source: {}\n'.format(d['Source_Name'])
+        ss += '\n'
+
+        ss += 'RA (J2000)  : {}\n'.format(d['RAJ2000'])
+        ss += 'Dec (J2000) : {}\n'.format(d['DEJ2000'])
+        ss += 'GLON        : {}\n'.format(d['GLON'])
+        ss += 'GLAT        : {}\n'.format(d['GLAT'])
+        ss += '\n'
+
+        # val, err = d['Energy_Flux100'], d['Unc_Energy_Flux100']
+        # ss += 'Energy flux (100 MeV - 100 GeV) : {} +- {} erg cm^-2 s^-1\n'.format(val, err)
+        # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
+
+        return ss
 
 
 class SourceCatalog3FGL(SourceCatalog):

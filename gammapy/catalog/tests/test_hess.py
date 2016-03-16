@@ -54,5 +54,7 @@ class TestSourceCatalogObjectHGPS:
     def test_pprint(self):
         self.source.pprint()
 
-    def test_print_info(self):
-        self.source.print_info()
+    def test_str(self):
+        ss = str(self.source)
+        assert 'Source name          : HESS J1825-137' in ss
+        assert 'Component HGPSC 064:' in ss

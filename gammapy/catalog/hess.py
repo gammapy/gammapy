@@ -12,7 +12,6 @@ TODO:
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
-import sys
 from collections import OrderedDict
 from astropy.io import fits
 from astropy.table import Table
@@ -57,31 +56,32 @@ class HGPSGaussComponent(object):
     def __str__(self):
         """Pretty-print source data"""
         d = self.data
-        ss = '\nComponent {}:\n'.format(d['Component_ID'])
+        ss = 'Component {}:\n'.format(d['Component_ID'])
         ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLON', d['GLON'],
-              d['GLON_Err'])
+                                                             d['GLON_Err'])
         ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLAT', d['GLAT'],
-              d['GLAT_Err'])
-        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} deg\n'.format(
-        'Size', d['Size'], d['Size_Err'])
+                                                             d['GLAT_Err'])
+        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} deg\n'.format('Size', d['Size'], d['Size_Err'])
         val, err = d['Flux_Map'], d['Flux_Map_Err']
         ss += '{:<20s} : ({:.2f} \u00B1 {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} \u00B1 {:.1f}) % Crab'.format(
             'Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        return ss
 
 
 class SourceCatalogObjectHGPS(SourceCatalogObject):
     """One object from the HGPS catalog.
     """
+
     def __str__(self):
         """Print default summary info string"""
         return self.summary()
 
-    def summary(self, info='basic'):
-        """Print summary info string
+    def summary(self, info='all'):
+        """Print summary info string.
 
         Parameters
         ----------
-        info : str {all, basic, map, spec, components, associations, references}
+        info : {'all', 'basic', 'map', 'spec', 'components', 'associations', 'references'}
             Comma separated list of options
         """
         if info == 'all':
@@ -90,19 +90,19 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = ''
         ops = info.split(',')
         if 'basic' in ops:
-            ss += self._info_basic()
+            ss += self._summary_basic()
         if 'map' in ops:
-            ss += self._info_map()
+            ss += self._summary_map()
         if 'spec' in ops:
-            ss += self._info_spec()
+            ss += self._summary_spec()
         if 'components' in ops:
-            ss += self._info_components()
+            ss += self._summary_components()
         if 'assiciations' in ops:
-            ss += self._info_associations()
+            ss += self._summary_associations()
 
         return ss
 
-    def _info_basic(self):
+    def _summary_basic(self):
         """Print basic info."""
         d = self.data
         ss = '\n*** Basic info ***\n\n'
@@ -116,7 +116,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += 'Catalog row index (zero-based) : {}\n'.format(d['catalog_row_index'])
         return ss
 
-    def _info_map(self):
+    def _summary_map(self):
         """Print info from map analysis."""
         d = self.data
         ss = '\n*** Info from map analysis ***\n\n'
@@ -155,24 +155,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val, err = d['Flux_Map'], d['Flux_Map_Err']
         ss += '{:<20s} : ({:.2f} \u00B1 {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
-        'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+            'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-        'Map measurement', d['Flux_Map_RSpec_Data'] / FF, d['Flux_Map_RSpec_Data'] * FLUX_TO_CRAB)
+            'Map measurement', d['Flux_Map_RSpec_Data'] / FF, d['Flux_Map_RSpec_Data'] * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-        'Total model', d['Flux_Map_RSpec_Total'] / FF, d['Flux_Map_RSpec_Total'] * FLUX_TO_CRAB)
+            'Total model', d['Flux_Map_RSpec_Total'] / FF, d['Flux_Map_RSpec_Total'] * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
             'Source model', d['Flux_Map_RSpec_Source'] / FF, d['Flux_Map_RSpec_Source'] * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-        'Other component model', d['Flux_Map_RSpec_Other'] / FF, d['Flux_Map_RSpec_Other'] * FLUX_TO_CRAB)
+            'Other component model', d['Flux_Map_RSpec_Other'] / FF, d['Flux_Map_RSpec_Other'] * FLUX_TO_CRAB)
 
         ss += '{:<30s} : {:.2f} x 10^-12 cm^-2 s^-1 = {:5.1f} % Crab\n'.format(
-        'Diffuse component model', d['Flux_Map_RSpec_Diffuse'] / FF, d['Flux_Map_RSpec_Diffuse'] * FLUX_TO_CRAB)
+            'Diffuse component model', d['Flux_Map_RSpec_Diffuse'] / FF, d['Flux_Map_RSpec_Diffuse'] * FLUX_TO_CRAB)
 
         ss += '{:<35s} : {:5.1f} %\n'.format('Containment in RSpec', 100 * d['Containment_RSpec'])
         ss += '{:<35s} : {:5.1f} %\n'.format('Contamination in RSpec', 100 * d['Contamination_RSpec'])
@@ -182,7 +182,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<35s} : {:5.1f} %\n'.format(label, val)
         return ss
 
-    def _info_spec(self):
+    def _summary_spec(self):
         """Print info from spectral analysis."""
         d = self.data
         ss = '\n*** Info from spectral analysis ***\n\n'
@@ -203,21 +203,18 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Lambda_Spec_ECPL']
         err = d['Lambda_Spec_ECPL_Err']
-        ss +='ECPL Lambda   : {:.3f} \u00B1 {:.3f}\n'.format(val, err)
+        ss += 'ECPL Lambda   : {:.3f} \u00B1 {:.3f}\n'.format(val, err)
         # TODO: change to catalog parameters here as soon as they are filled!
         # val = d['Energy_Cutoff_Spec_ECPL']
         # err = d['Energy_Cutoff_Spec_ECPL_Err']
         import uncertainties
         energy = 1 / uncertainties.ufloat(val, err)
         val, err = energy.nominal_value, energy.std_dev
-        ss +='ECPL E_cut    : {:.1f} \u00B1 {:.1f}\n'.format(val, err)
+        ss += 'ECPL E_cut    : {:.1f} \u00B1 {:.1f}\n'.format(val, err)
         return ss
 
-    def _info_components(self, file=None):
+    def _summary_components(self):
         """Print info about the components."""
-        if file is None:
-            file = sys.stdout
-
         if not hasattr(self, 'components'):
             return
 
@@ -227,15 +224,16 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         for component in self.components:
             ss += str(component)
+            ss += '\n\n'
         return ss
 
-    def _info_associations(self, file=None):
+    def _summary_associations(self):
         ss = '\n*** Source associations info ***\n\n'
         associations = ', '.join(self.associations)
         ss += 'List of associated objects: {}\n'.format(associations)
         return ss
 
-    def _info_references(self, file=None):
+    def _summary_references(self):
         ss = '\n*** Further source info ***\n\n'
         ss += self.data['TeVCat_Reference']
         ss += '\n'
@@ -282,7 +280,7 @@ class SourceCatalogHGPS(SourceCatalog):
         if source.data['Components'] != '':
             self._attach_component_info(source)
         self._attach_association_info(source)
-        #if source.data['Source_Class'] != 'Unid':
+        # if source.data['Source_Class'] != 'Unid':
         #    self._attach_identification_info(source)
         return source
 
@@ -298,5 +296,3 @@ class SourceCatalogHGPS(SourceCatalog):
         _ = source.data['Source_Name'] == self.associations['Source_Name']
 
         source.associations = list(self.associations['Association_Name'][_])
-
-
