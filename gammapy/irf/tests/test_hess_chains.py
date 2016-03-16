@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
+
 from astropy.tests.helper import pytest
 
 from ...datasets.core import GammapyExtraNotFoundError
@@ -34,14 +35,41 @@ def get_list_of_chains():
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_hess_chains(data_manager, chain):
+
     ref_file_aeff = make_path(chain['aeff2D_reference_file'])
     ref_aeff = open(str(ref_file_aeff), 'r').read()
     ref_file_edisp = make_path(chain['edisp2D_reference_file'])
     ref_edisp = open(str(ref_file_edisp), 'r').read()
+    ref_file_obs = make_path(chain['obs_reference_file'])
+    ref_obs = open(str(ref_file_obs), 'r').read()
+    ref_file_loc = make_path(chain['location_reference_file'])
+    ref_loc = open(str(ref_file_loc), 'r').read()
 
+    obs_nr = chain['obs']
+    obs_id = chain['obs_id']
 
     store = data_manager[chain['store']]
-    aeff = store.obs(obs_id=chain['obs']).aeff
+    obs = store.obs(obs_id=obs_id)
+
+    assert str(obs.location(hdu_type='events').path(abs_path=False)) == ref_loc
+
+    # Todo : Find a better way to capture stdout
+    # see http://stackoverflow.com/questions/5136611/capture-stdout-from-a-script-in-python/10743550#10743550
+    import sys
+    from StringIO import StringIO
+
+    backup = sys.stdout
+    sys.stdout = StringIO()
+    obs.info()
+    obs_info = sys.stdout.getvalue()
+    sys.stdout.close()
+    sys.stdout = backup
+
+    assert store.obs_table['OBS_ID'][obs_nr] == obs_id
+    assert obs_info == ref_obs
+
+    aeff = obs.aeff
+    edisp = obs.edisp
 
     assert aeff.info() == ref_aeff
     assert edisp.info() == ref_edisp
