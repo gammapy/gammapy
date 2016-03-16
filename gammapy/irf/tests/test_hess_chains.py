@@ -55,20 +55,8 @@ def test_hess_chains(data_manager, chain):
 
     assert str(obs.location(hdu_type='events').path(abs_path=False)) == ref_loc
 
-    # Todo : Find a better way to capture stdout
-    # see http://stackoverflow.com/questions/5136611/capture-stdout-from-a-script-in-python/10743550#10743550
-    import sys
-    from StringIO import StringIO
-
-    backup = sys.stdout
-    sys.stdout = StringIO()
-    obs.info()
-    obs_info = sys.stdout.getvalue()
-    sys.stdout.close()
-    sys.stdout = backup
-
     assert store.obs_table['OBS_ID'][obs_nr] == obs_id
-    assert obs_info == ref_obs
+    assert str(obs) == ref_obs
 
     assert obs.aeff.info() == ref_aeff
     assert obs.edisp.info() == ref_edisp

@@ -463,20 +463,24 @@ class DataStoreObservation(object):
         info = self._obs_info
         return 1 - info['DEADC']
 
+    def __str__(self):
+        """Generate summary info string."""
+        ss = 'Info for OBS_ID = {}'.format(self.obs_id)
+        ss += '\n- Start time: {}'.format(self.tstart)
+        ss += '\n- Pointing pos: {}'.format(self.pointing_radec)
+        ss += '\n- Observation duration: {}'.format(self.observation_time_duration)
+        ss += '\n- Dead-time fraction: {:5.3f} %'.format(100 * self.observation_dead_time_fraction)
+
+        # TODO: Which target was observed?
+        # TODO: print info about available HDUs for this observation ...
+        return ss
+
     def info(self, file=None):
-        """Print some summary info to stdout."""
+        """Print summary info to stdout or file."""
         if not file:
             file = sys.stdout
 
-        print('Info for OBS_ID = {}'.format(self.obs_id), file=file)
-        print('- Start time: {}'.format(self.tstart), file=file)
-        print('- Pointing pos: {}'.format(self.pointing_radec), file=file)
-        print('- Observation duration: {}'.format(self.observation_time_duration), file=file)
-        print('- Dead-time fraction: {:5.3f} %'.format(100 * self.observation_dead_time_fraction), file=file)
-
-        # TODO: Which target was observed?
-
-        # TODO: print info about available HDUs for this observation ...
+        print(str(self), file=file)
 
     def peek(self):
         """Quick-look plots in a few panels."""
