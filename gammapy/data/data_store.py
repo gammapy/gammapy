@@ -475,13 +475,6 @@ class DataStoreObservation(object):
         # TODO: print info about available HDUs for this observation ...
         return ss
 
-    def info(self, file=None):
-        """Print summary info to stdout or file."""
-        if not file:
-            file = sys.stdout
-
-        print(str(self), file=file)
-
     def peek(self):
         """Quick-look plots in a few panels."""
         raise NotImplementedError
