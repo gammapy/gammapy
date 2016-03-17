@@ -10,21 +10,18 @@ from .data_manage import *
 from .data_select import *
 from .data_show import *
 
-from .spectrum_pfspec import *
 from .spectrum_pfsim import *
 from .spectrum_regions import *
 
 from .image_bin import *
 from .image_coordinates import *
 from .image_cwt import *
-from .image_derived import *
+from .image_lima import *
 from .image_fit import *
 from .image_lookup import *
 from .image_model import *
 from .image_model_sherpa import *
 from .image_pipe import *
-from .image_residual import *
-from .image_significance import *
 from .image_ts import *
 from .image_pfmap import *
 

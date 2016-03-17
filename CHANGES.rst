@@ -18,7 +18,7 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released in late spring 2016.
+Gammapy 0.5 will be released in spring or summer 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
@@ -32,25 +32,19 @@ Pull requests
 
 .. _gammapy_0p4_release:
 
-0.4 (unreleased)
-----------------
+0.4 (February 21, 2016)
+-----------------------
 
 Summary
 +++++++
 
-Gammapy 0.4 will be released in early spring 2016.
-
-For plans and progress see https://github.com/gammapy/gammapy/milestones/0.4
-
-Summary
-+++++++
-
-- Support for Python 3.5 added, testing on Python 3.3 removed
-  (should still work, but will break eventually)
+- Released on February 21, 2016 (`Gammapy 0.4 on PyPI <https://pypi.python.org/pypi/gammapy/0.4>`__)
+- TODO contributors (TODO new)
+- 6 months of work (from August 13, 2015 to February 21, 2016)
+- TODO pull requests
+- Requires Python 2.7 or 3.4+, Numpy 1.8, Scipy 0.15, Astropy 1.0, Sherpa 4.8
 - Support for Windows added (testing on AppVeyor)
-- Gammapy now requires Numpy 1.8. Support for Numpy 1.6, 1.7 was dropped.
-- Gammapy now requires Scipy 0.15. Support for Scipy 0.14 was dropped.
-
+- TODO: summarise major new features
 
 Contributors
 ++++++++++++
@@ -64,10 +58,14 @@ Contributors
 - Lea Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
+- Olga Vorokh (new)
 
 Pull requests
 +++++++++++++
 
+- [#461] Pacman (Lea Jouvin)
+- [#456] Fix and improvements to TS map tool (Olga Vorokh)
+- [#447] Add King profile PSF class (Christoph Deil)
 - [#436] Restructure spectrum package and command line tool (Johannes King)
 - [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
 - [#421] Add spectrum fit serialisation code (Johannes King)
@@ -113,10 +111,10 @@ Summary
 +++++++
 
 - Released on August 13, 2015 (`Gammapy 0.3 on PyPI <https://pypi.python.org/pypi/gammapy/0.3>`__)
-- Requires Astropy version 1.0 or later.
 - 9 contributors (5 new)
 - 4 months of work (from April 13, 2014 to August 13, 2015)
 - 24 pull requests
+- Requires Astropy version 1.0 or later.
 - On-off likelihood spectral analysis was added in ``gammapy.hspec``,
   contributed by Regis Terrier and Ignasi Reichardt.
   It will be refactored and is thus not part of the public API.
@@ -172,12 +170,12 @@ Summary
 +++++++
 
 - Released on April 13, 2015 (`Gammapy 0.2 on PyPI <https://pypi.python.org/pypi/gammapy/0.2>`__)
-- Requires Astropy version 1.0 or later.
-- Gammapy now uses `Cython <http://cython.org/>`__,
-  i.e. requires a C compiler for end-users and in addition Cython for developers.
 - 4 contributors (1 new)
 - 8 months of work (from August 25, 2014 to April 13, 2015)
 - 40 pull requests
+- Requires Astropy version 1.0 or later.
+- Gammapy now uses `Cython <http://cython.org/>`__,
+  i.e. requires a C compiler for end-users and in addition Cython for developers.
 
 Contributors
 ++++++++++++
@@ -225,10 +223,10 @@ Summary
 +++++++
 
 - Released on August 25, 2014 (`Gammapy 0.1 on PyPI <https://pypi.python.org/pypi/gammapy/0.1>`__)
-- Requires Astropy version 0.4 or later.
 - 5 contributors
 - 15 months of work (from May 15, 2013 to August 25, 2014)
 - 82 pull requests
+- Requires Astropy version 0.4 or later.
 
 Contributors
 ++++++++++++

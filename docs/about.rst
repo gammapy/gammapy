@@ -83,15 +83,17 @@ The following people have contributed to Gammapy (first name alphabetical order)
 - Dirk Lennarz (`@dlennarz <https://github.com/dlennarz>`__)
 - Ellis Owen (`@ellisowen <https://github.com/ellisowen>`__)
 - Ignasi Reichardt (`@ignasi-reichardt <https://github.com/ignasi-reichardt>`__)
-- Johannes King (`@kingj90 <https://github.com/kingj90>`__)
+- Johannes King (`@joleroi <https://github.com/joleroi>`__)
 - Jonathan Harris (`@JonathanDHarris <https://github.com/JonathanDHarris>`__)
 - Lea Jouvin (`@JouvinLea <https://github.com/JouvinLea>`__)
 - Luigi Tibaldo (`@tibaldo <https://github.com/tibaldo>`__)
 - Manuel Paz Arribas (`@mapazarr <https://github.com/mapazarr>`__)
+- Olga Vorokh (`@OlgaVorokh <https://github.com/OlgaVorokh>`__)
 - Regis Terrier (`@registerrier <https://github.com/registerrier>`__)
 - Rolf Bühler (`@rbuehler <https://github.com/rbuehler>`__)
 - Stefan Klepser (`@klepser <https://github.com/klepser>`__)
 - Victor Zabalza (`@zblz <https://github.com/zblz>`__)
+
 
 A detailed listing of contributions is here: :ref:`changelog`.
 

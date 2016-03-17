@@ -7,9 +7,10 @@ import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
+
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
-from ..utils.scripts import read_yaml
+from ..utils.scripts import read_yaml, make_path
 
 __all__ = ['SpectrumStats',
            'SpectrumFitResult',
@@ -170,6 +171,13 @@ class SpectrumFitResult(Result):
             elif pname == 'E0':
                 unit = Unit('TeV')
                 name = 'reference'
+            elif pname == 'Alpha':
+                unit = Unit('')
+                name = 'alpha'
+            elif pname == 'Beta':
+                unit = Unit('')
+                name = 'beta'
+
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
             parameters[name] = par['value'] * unit
@@ -189,12 +197,16 @@ class SpectrumFitResult(Result):
     def from_sherpa(cls, covar, filter, model):
         """Create `~gammapy.spectrum.results.SpectrumFitResult` from sherpa objects
         """
+        from gammapy.spectrum import SpectrumFit
+
         el, eh = float(filter.split(':')[0]), float(filter.split(':')[1])
         energy_range = EnergyBounds((el, eh), 'keV')
         if model.type == 'powlaw1d':
             spectral_model = 'PowerLaw'
+        elif model.type == 'logparabola':
+            spectral_model = 'LogParabola'
         else:
-            raise ValueError("Model not understood: {}".format(model.name))
+            raise ValueError("Cannot read sherpa model: {}".format(model.name))
         parameters = Bunch()
         parameter_errors = Bunch()
 
@@ -205,16 +217,25 @@ class SpectrumFitResult(Result):
                                      covar.parmaxes):
             pname = pname.split('.')[-1]
             thawed_pars.append(pname)
+            factor = 1
             if pname == 'gamma':
                 name = 'index'
                 unit = Unit('')
             elif pname == 'ampl':
                 unit = Unit('cm-2 s-1 keV-1')
                 name = 'norm'
+                factor = SpectrumFit.FLUX_FACTOR
+            elif pname == 'c1':
+                unit = Unit('')
+                name = 'alpha'
+            elif pname == 'c2':
+                unit = Unit('')
+                name = 'beta'
+                factor = 1. / np.log(10)
             else:
                 raise ValueError('Unkown Parameter: {}'.format(pname))
-            parameters[name] = pval * unit
-            parameter_errors[name] = perr * unit
+            parameters[name] = pval * unit * factor
+            parameter_errors[name] = perr * unit * factor
 
         # Get fixed parameters from model (not stored in covar)
         for par in model.pars:
@@ -226,10 +247,13 @@ class SpectrumFitResult(Result):
             parameters[name] = par.val * unit
             parameter_errors[name] = 0 * unit
 
+        # Assumes that reference value is set to 1TeV
+        if not np.isclose(parameters['reference'].to('TeV').value, 1):
+            raise ValueError('Reference not at 1 TeV. Flux@1 TeV will be wrong')
         fluxes = Bunch()
-        fluxes['1TeV'] = model(1e9) * Unit('cm-2 s-1 keV-1')
+        fluxes['1TeV'] = parameters['norm']
         flux_errors = Bunch()
-        flux_errors['1TeV'] = 0 * Unit('cm-2 s-1 keV-1')
+        flux_errors['1TeV'] = parameter_errors['norm']
 
         return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
@@ -247,7 +271,13 @@ class SpectrumFitResult(Result):
                                           error=err.value,
                                           unit='{}'.format(par.unit))
         val['spectral_model'] = self.spectral_model
-
+        val['fluxes'] = dict()
+        for key in self.fluxes:
+            flux = self.fluxes[key]
+            flux_err = self.flux_errors[key]
+            val['fluxes'][key] = dict(value=flux.value,
+                                      error=flux_err.value,
+                                      unit='{}'.format(flux.unit))
         return val
 
     @classmethod
@@ -262,12 +292,26 @@ class SpectrumFitResult(Result):
             parameter_errors[par] = pars[par]['error'] * Unit(pars[par]['unit'])
         spectral_model = val['spectral_model']
 
+        try:
+            fl = val['fluxes']
+        except KeyError:
+            fluxes=None
+            flux_errors=None
+        else:
+            fluxes = Bunch()
+            flux_errors = Bunch()
+            for flu in fl:
+                fluxes[flu] = fl[flu]['value'] * Unit(fl[flu]['unit'])
+                flux_errors[flu] = fl[flu]['error'] * Unit(fl[flu]['unit'])
+
         return cls(fit_range=energy_range, parameters=parameters,
                    parameter_errors=parameter_errors,
-                   spectral_model=spectral_model)
+                   spectral_model=spectral_model, fluxes=fluxes,
+                   flux_errors=flux_errors)
 
     def to_table(self, **kwargs):
         t = Table()
+        t['model'] = [self.spectral_model]
         for par in self.parameters.keys():
             t[par] = Column(data=np.atleast_1d(self.parameters[par]), **kwargs)
             t['{}_err'.format(par)] = Column(
@@ -297,8 +341,16 @@ class SpectrumFitResult(Result):
             model.gamma = self.parameters.index.value
             model.ref = self.parameters.reference.to('keV').value
             model.ampl = self.parameters.norm.to('cm-2 s-1 keV-1').value
+        elif self.spectral_model == 'LogParabola':
+            model = m.LogParabola('logparabola.' + name)
+            model.c1 = self.parameters.alpha.value
+            # Sherpa models have log10 in the exponent, we want ln
+            model.c2 = self.parameters.beta.value * np.log(10)
+            model.ref = self.parameters.reference.to('keV').value
+            model.ampl = self.parameters.norm.to('cm-2 s-1 keV-1').value
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(
+                'to_sherpa_model for model {}'.format(self.spectral_model))
 
         return model
 
@@ -555,6 +607,7 @@ class SpectrumStats(Result):
             cols.append(Column(data=[d], **kwargs))
         t = Table(cols, names=names)
         t['energy_range'].unit = self.energy_range.unit
+        t['n_bkg'] = t['n_off'] * t['alpha']
         return t
 
 
@@ -654,12 +707,12 @@ class SpectrumResult(object):
         residuals : `~astropy.units.Quantity`
             Residuals
         residuals_err : `~astropy.units.Quantity`
-            Residual errirs
+            Residual errors
         """
         func = self.fit.to_sherpa_model()
-        x = self.flux_points['energy'].quantity
-        y = self.flux_points['flux'].quantity
-        y_err = self.flux_points['flux_err_hi'].quantity
+        x = self.points['energy'].quantity
+        y = self.points['flux'].quantity
+        y_err = self.points['flux_err_hi'].quantity
 
         func_y = func(x.to('keV').value) * Unit('s-1 cm-2 keV-1')
         residuals = (y - func_y) / y
@@ -708,21 +761,20 @@ class SpectrumResult(object):
         ax1.set_xscale('log')
 
         if fit_kwargs is None:
-            fit_kwargs = dict(label='Best Fit {}'.format(self.spectral_model),
-                              barsabove=True, capsize=0, alpha=0.4,
-                              color='cornflowerblue', ecolor='cornflowerblue')
+            fit_kwargs = dict(label='Best Fit {}'.format(
+                    self.fit.spectral_model), color='navy')
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        self.fit.plot_fit_function(energy_unit=energy_unit, flux_unit=flux_unit,
-                                   e_power=e_power, ax=ax0, **fit_kwargs)
-        self.points.plot_flux_points(energy_unit=energy_unit,
-                                     flux_unit=flux_unit,
-                                     e_power=e_power, ax=ax0, **point_kwargs)
+        
+        self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
+                      e_power=e_power, ax=ax0, **fit_kwargs)
+        self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
+                         e_power=e_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
-        plt.xlim(self.energy_range[0].to(energy_unit).value * 0.9,
-                 self.energy_range[1].to(energy_unit).value * 1.1)
+        plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,
+                 self.fit.fit_range[1].to(energy_unit).value * 1.1)
 
         ax0.legend(numpoints=1)
         return gs
@@ -748,8 +800,8 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        y, y_err = self.residuals()
-        x = self.flux_points['energy'].quantity
+        y, y_err = self.calculate_residuals()
+        x = self.points['energy'].quantity
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
 
@@ -794,18 +846,16 @@ class SpectrumResultDict(OrderedDict):
     def to_table(self, **kwargs):
         """Create overview `~astropy.table.Table`"""
 
-        val = self.keys()
+        val = list(self.keys())
         analyses = Column(val, name='analysis')
         l = list()
         for key in val:
             l.append(self[key].to_table(**kwargs))
         table = vstack(l, join_type='outer')
         table.add_column(analyses, index=0)
+
         return table
 
     def overplot_spectra(self):
         """Overplot spectra"""
         raise NotImplementedError
-
-
-

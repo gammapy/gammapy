@@ -588,8 +588,8 @@ In these cases, the following shorter format omitting the *Returns* section is r
 Usually the parameter description doesn't fit on the one line, so it's
 recommended to always keep this in the *Parameters* section.
 
-This is just a recommendation, e.g. for `gammapy.data.SpectralCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.data.SpectralCube.flux` we
+This is just a recommendation, e.g. for `gammapy.cube.SpectralCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.cube.SpectralCube.flux` we
 decided to stick with the more verbose format, because the return type and units
 didn't fit on the first line.
 
@@ -604,14 +604,14 @@ As an example see `gammapy.data.EventList.radec`, which is reproduced here:
         """Event RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`).
         """
         lon, lat = self['RA'], self['DEC']
-        return SkyCoord(lon, lat, unit='deg', frame='fk5')
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
 
 
 Class attributes
 ++++++++++++++++
 
 Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.data.SpectralCube` as an example.
+see `~gammapy.cube.SpectralCube` as an example.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
@@ -829,5 +829,129 @@ To see what is there, check out the ``gammapy/extern`` directory locally or on
 `Github <https://github.com/gammapy/gammapy/tree/master/gammapy/extern>`__.
 Notes on the bundled files are kept in the docstring of
 `gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
+
+
+Interpolation and extrapolation
+-------------------------------
+
+In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response functions (IRFs) on
+data grids, or to reproject diffuse models on data grids.
+
+The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
+(more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
+across all of parameter space would be needed).
+
+You should use this pattern to implement a function of method that does interpolation:
+
+.. code-block:: python
+
+    def do_something(..., interp_kwargs=None):
+        """Do something.
+
+        Parameters
+        ----------
+        interp_kwargs : dict or None
+            Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
+            If you pass ``None``, the default ``interp_params=dict(bounds_error=False)`` is used.
+        """
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False)
+
+        interpolator = RegularGridInterpolator(..., **interp_kwargs)
+
+Since the other defaults are ``method='linear'`` and ``fill_value=nan``, this implies that linear interpolation
+is used and `NaN`_ values are returned for points outside of the interpolation domain.
+This is a compromise between the alternatives:
+
+* ``bounds_error=True`` -- Very "safe", refuse to return results for any points if one of the points is outside the valid domain.
+  Can be annoying for the caller to not get any result.
+* ``bounds_error=False, fill_value=nan`` -- Medium "safe". Always return a result, but put NaN values to make it easy
+  for analysers to spot that there's an issue in their results (if pixels with NaN are used, that will usually lead
+  to NaN values in high-level analysis results.
+* ``bounds_error=False, fill_value=0`` or ``bounds_error=False, fill_value=None`` -- Least "safe".
+  Extrapolate with zero or edge values (this is what ``None`` means).
+  Can be very convenient for the caller, but can also lead to errors where e.g. stacked high-level analysis results
+  aren't quite correct because IRFs or background models or ... were used outside their valid range.
+
+Methods that use interpolation should provide an option to the caller to pass interpolation options on to
+``RegularGridInterpolator`` in case the default behaviour doesn't suit the application.
+
+TODO: we have some classes (aeff2d and edisp2d) that pre-compute an interpolator, currently in the constructor.
+In those cases the ``interp_kwargs`` would have to be exposed e.g. also on the `read` and other constructors.
+Do we want / need that?
+
+
+Locate origin of warnings
+-------------------------
+
+By default, warnings appear on the console, but often it's not clear where a given warning
+originates (e.g. when building the docs or running scripts or tests) or how to fix it.
+
+Sometimes putting this in ``gammapy/__init__.py`` can help::
+
+    import numpy as np
+    np.seterr(all='raise')
+
+Following the advice `here <http://stackoverflow.com/questions/22373927/get-traceback-of-warnings/22376126#22376126>`__,
+putting this in ``docs/conf.py`` can also help sometimes::
+
+    import traceback
+    import warnings
+    import sys
+
+    def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+        traceback.print_stack()
+        log = file if hasattr(file,'write') else sys.stderr
+        log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+    warnings.showwarning = warn_with_traceback
+
+
+Object summary info string
+--------------------------
+
+If you want to add a method to provide some basic information about a class instance,
+you should use the Python ``__str__`` method.
+
+.. code-block:: python
+
+    class Spam(object):
+        def __init__(self, ham):
+            self.ham = ham
+
+        def __str__(self):
+            ss = 'Summary Info about class Spam\n'
+            ss += '{:.2f}'.format(self.ham)
+            return ss
+
+If you want to add configurable info output, please provide a method ``summary``,
+like :func:`here <gammapy.catalog.SourceCatalogObjectHGPS.summary>`.
+In this case the ``__str__`` method should be a call to ``summary`` with default
+parameters. Do not use an ``info`` method, since this would lead to conflicts
+for some classes in Gammapy (e.g. classes that inherit the ``info`` method from
+``astropy.table.Table``.
+
+
+Validating H.E.S.S. Fits exporters
+----------------------------------
+
+The H.E.S.S. experiment has 3 independent analysis chains, which all have exporters to the :ref:`gadf:iact-irfs` format.
+The Gammapy tests contain a mechanism to track changes in these exporters.
+
+
+In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads
+IRF files from different chains and prints the output of the ``__str__`` method to a file. It also creates a YAML file
+holding information about the datastore used for each chain, the observations used, etc. 
+
+
+The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
+``__str__`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by
+Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script 
+again to ensure the passing of all Gammapy tests.
+
+
+If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to 
+ manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
+
 
 

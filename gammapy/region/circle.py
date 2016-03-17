@@ -6,7 +6,6 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
 from .core import SkyRegion, PixRegion
 
-
 __all__ = [
     'PixCircleRegion',
     'SkyCircleRegion',
@@ -101,10 +100,9 @@ class PixCircleRegion(PixRegion):
         -------
         bool
         """
-        from ..image import lookup
         x, y = self.pos
         excl_dist = exclusion_mask.distance_image
-        val = lookup(excl_dist, x, y, world=False)
+        val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
         return val < self.radius
 
     def to_mpl_artist(self, **kwargs):
@@ -146,19 +144,7 @@ class SkyCircleRegion(SkyRegion):
         val = 2 * np.pi * (1 - np.cos(self.radius))
         return val * u.steradian
 
-    def contains(self, coordinate):
-        """Checks if a given coordinate lies inside the circle.
-
-        Parameters
-        ----------
-        coordinate : `~astropy.coordinates.SkyCoord`
-            Coordinate to check for containment.
-
-        Returns
-        -------
-        contains : bool
-            Does this region contain the coordinate?
-        """
+    def __contains__(self, coordinate):
         return self.pos.separation(coordinate) <= self.radius
 
     def intersects(self, other):
@@ -253,3 +239,22 @@ class SkyCircleRegion(SkyRegion):
 
         ss = '{sys}; circle({l},{b},{r})\n'.format(**locals())
         return ss
+
+    def to_dict(self):
+        rtdict = dict()
+        rtdict['radius'] = '{}'.format(self.radius)
+        rtdict['center_x'] = '{}'.format(self.pos.icrs.ra)
+        rtdict['center_y'] = '{}'.format(self.pos.icrs.dec)
+        rtdict['system'] = 'icrs'
+        return rtdict
+
+    @classmethod
+    def from_dict(cls, dict):
+        radius = Angle(dict['radius'])
+        x = dict['center_x']
+        y = dict['center_y']
+        frame = dict['system']
+        center = SkyCoord(x, y, frame=frame)
+        return cls(center, radius)
+
+

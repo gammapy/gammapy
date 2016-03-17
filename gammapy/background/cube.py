@@ -9,8 +9,8 @@ from astropy.coordinates import Angle
 from astropy.table import Table
 from astropy.io import fits
 from astropy.wcs import WCS
-from ..utils.wcs import (linear_wcs_to_arrays,
-                         linear_arrays_to_wcs)
+from ..utils.scripts import make_path
+from ..utils.wcs import linear_wcs_to_arrays, linear_arrays_to_wcs
 from ..utils.fits import table_to_fits_table
 from ..utils.energy import Energy, EnergyBounds
 
@@ -128,12 +128,16 @@ class Cube(object):
         self.coordy_edges = coordy_edges
         self._energy_edges = EnergyBounds(energy_edges)
 
-        if data:
-            self.data = data
+        if data is None:
+            self.data = np.zeros((len(energy_edges) - 1,
+                                  len(coordy_edges) - 1,
+                                  len(coordx_edges) - 1))
         else:
-            raise NotImplementedError
+            self.data = data
+
+
             # TODO: make this consistent with have the 2d BCK class works
-            self.data = 'TODO'
+            # self.data = 'TODO'
 
         self.scheme = scheme
 
@@ -351,7 +355,7 @@ class Cube(object):
                    data=data, scheme=scheme)
 
     @classmethod
-    def read(cls, filename, format='table', scheme=None):
+    def read(cls, filename, format='table', scheme=None, hdu='bkg_3d'):
         """Read cube from fits file.
 
         Several input formats are accepted, depending on the value
@@ -376,12 +380,15 @@ class Cube(object):
         cube : `~gammapy.background.Cube`
             Cube object.
         """
+        filename = make_path(filename)
         scheme_dict = cls.define_scheme(scheme)
-        hdu = fits.open(filename)
+        hdu_list = fits.open(str(filename))
+
         if format == 'table':
-            return cls.from_fits_table(hdu[scheme_dict['hdu_fits_name']], scheme)
+            hdu = hdu_list[hdu]
+            return cls.from_fits_table(hdu, scheme)
         elif format == 'image':
-            return cls.from_fits_image(hdu['PRIMARY'], hdu['EBOUNDS'], scheme)
+            return cls.from_fits_image(hdu_list['PRIMARY'], hdu_list['EBOUNDS'], scheme)
         else:
             raise ValueError("Invalid format {}.".format(format))
 

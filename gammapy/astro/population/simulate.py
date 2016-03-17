@@ -7,12 +7,10 @@ from numpy import degrees, pi, arctan, exp
 from astropy.table import Table, Column
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord, spherical_to_cartesian
-
 from ...utils import coordinates as astrometry
-from ...utils.const import d_sun_to_galactic_center
+from ...utils.coordinates import D_SUN_TO_GALACTIC_CENTER
 from ...utils.distributions import draw, pdf
-from ...utils.random import (sample_sphere, sample_sphere_distance,
-                             get_random_state)
+from ...utils.random import sample_sphere, sample_sphere_distance, get_random_state
 from ...morphology.models import morph_types
 from ..source import SNR, SNRTrueloveMcKee, PWN, Pulsar
 from ..population import Exponential, FaucherSpiral, RMIN, RMAX, ZMIN, ZMAX, radial_distributions
@@ -437,7 +435,7 @@ def add_observed_source_parameters(table):
     return table
 
 
-def add_observed_parameters(table, obs_pos=[d_sun_to_galactic_center, 0, 0]):
+def add_observed_parameters(table, obs_pos=[D_SUN_TO_GALACTIC_CENTER, 0, 0]):
     """For a given observer position (default: earth)
     add observed parameters to the
     table for given physical parameters.

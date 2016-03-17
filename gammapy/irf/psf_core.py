@@ -116,7 +116,7 @@ class SherpaMultiGaussPSF(object):
         x_center, y_center = sau.get_psf().model.center
         x_center, y_center = x_center + 0.5, y_center + 0.5  # shift seen on image.
         x, y = sau.get_data().x0, sau.get_data().x1
-        # @note Here we have to use the source image, before I used
+        # Note: Here we have to use the source image, before I used
         # get_model_image(), which returns the PSF-convolved PSF image,
         # which is a factor of sqrt(2) ~ 1.4 too wide!!!
         p = sau.get_source_image().y.flatten()
@@ -199,12 +199,12 @@ class HESSMultiGaussPSF(object):
         @param binsz: Bin size (deg)
         @return: dict of Sherpa parameters
 
-        @note Sherpa uses the following function
+        Note: Sherpa uses the following function
         f(x,y) = f(r) = A exp[-f(r/F)^2]
         f = 2.7725887 = 4log2 relates the full-width
         at half-maximum F to the Gaussian sigma.
 
-        @note: The sigma parameters in this class are in
+        Note: The sigma parameters in this class are in
         deg, but in Sherpa we use pix, so we convert here.
 
         For further explanations on how to convert 1D to 2D Gaussian,
@@ -240,7 +240,7 @@ class HESSMultiGaussPSF(object):
     def to_MultiGauss2D(self, normalize=True):
         """Use this to compute containment angles and fractions.
 
-        @note: We have to set norm = 2 * A * sigma ^ 2, because in
+        Note: We have to set norm = 2 * A * sigma ^ 2, because in
         MultiGauss2D norm represents the integral, and in HESS A
         represents the amplitude at 0."""
         sigmas, norms = [], []

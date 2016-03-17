@@ -6,12 +6,12 @@ import astropy.units as u
 from aplpy import FITSFigure
 from gammapy.astro import population
 from gammapy.datasets import FermiGalacticCenter
-from gammapy.image import make_empty_image, catalog_image
+from gammapy.image import SkyMap, catalog_image
 from gammapy.irf import EnergyDependentTablePSF
 from gammapy.utils.random import sample_powerlaw
 
 # Create image of defined size
-reference = make_empty_image(nxpix=300, nypix=100, binsz=1)
+reference = SkyMap.empty(nxpix=300, nypix=100, binsz=1).to_image_hdu()
 
 psf_file = FermiGalacticCenter.filenames()['psf']
 psf = EnergyDependentTablePSF.read(psf_file)

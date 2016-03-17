@@ -67,10 +67,8 @@ The output files are created in the output directory:
   visualization using eg. ``DS9``. The table files contain also a
   counts (a.k.a. events) and a livetime correction data cubes.
 
-In order to compare 2 sets of background cube models, the following
-script in the ``examples`` directory can be used:
-:download:`plot_bg_cube_model_comparison.py
-<../../examples/plot_bg_cube_model_comparison.py>`
+In order to compare 2 sets of background cube models,
+the ``examples/wip_bg_cube_model_comparison.py`` can be used.
 
 .. _background_make_background_models_datasets_for_testing:
 
@@ -92,20 +90,20 @@ for producing the simulated dataset and the true background cube
 models, the reconstructed ones produced with
 ``gammapy-make-bg-cube-models`` should match the true ones.
 
-The example script :download:`make_bg_cube_models_true_reco.py
-<../../examples/make_bg_cube_models_true_reco.py>` can be used
+The example script :download:`wip_bg_cube_models_true_reco.py
+<../../examples/wip_bg_cube_models_true_reco.py>` can be used
 to produce a true cube bg model and a reco cube bg model using the
 same model (except for absolute normalization). The models can be
 used to test the cube bg model production and can be compared to each
-other using the :download:`plot_bg_cube_model_comparison.py
-<../../examples/plot_bg_cube_model_comparison.py>` example script.
+other using the :download:`wip_bg_cube_model_comparison.py
+<../../examples/wip_bg_cube_model_comparison.py>` example script.
 
 Comparing true-reco models
 **************************
 
 Two model files located in the ``gammapy-extra`` repository have been
-produced using the example script :download:`make_bg_cube_models_true_reco.py
-<../../examples/make_bg_cube_models_true_reco.py>`:
+produced using the example script :download:`wip_bg_cube_models_true_reco.py
+<../../examples/wip_bg_cube_models_true_reco.py>`:
 
 * `bg_cube_model_true.fits.gz
   <https://github.com/gammapy/gammapy-extra/blob/master/test_datasets/background/bg_cube_model_true.fits.gz>`_
@@ -118,10 +116,12 @@ produced using the example script :download:`make_bg_cube_models_true_reco.py
   with `~gammapy.datasets.make_test_dataset`.
 
 The following plots are produced with a modified version of the
-:download:`plot_bg_cube_model_comparison.py
-<../../examples/plot_bg_cube_model_comparison.py>` example script:
+:download:`wip_bg_cube_model_comparison.py
+<../../examples/wip_bg_cube_model_comparison.py>` example script:
 
-.. plot:: background/plot_bgcube_true_reco.py
+TODO: remove or fix these examples
+
+.. .. plot:: background/plot_bgcube_true_reco.py
 
 The input counts spectrum is a power-law with an index of 1.5, in
 order to have some counts at high energies with a reasonable amount

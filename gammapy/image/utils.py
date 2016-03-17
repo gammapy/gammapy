@@ -7,6 +7,8 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+from ..utils.wcs import get_wcs_ctype
+from ..utils.energy import EnergyBounds
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
@@ -15,7 +17,6 @@ from astropy.utils.exceptions import AstropyDeprecationWarning
 __all__ = [
     'atrous_hdu',
     'atrous_image',
-    'bin_events_in_cube',
     'bin_events_in_image',
     'binary_dilation_circle',
     'binary_disk',
@@ -23,7 +24,6 @@ __all__ = [
     'binary_ring',
     'block_reduce_hdu',
     'contains',
-    'coordinates',
     'cube_to_image',
     'cube_to_spec',
     'crop_image',
@@ -35,7 +35,6 @@ __all__ = [
     'images_to_cube',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
-    'make_empty_image',
     'make_header',
     'paste_cutout_into_image',
     'process_image_pixels',
@@ -360,10 +359,9 @@ def atrous_hdu(hdu, n_levels):
 
 def coordinates(image, world=True, lon_sym=True, radians=False):
     """Get coordinate images for a given image.
-
     This function is useful if you want to compute
     an image with values that are a function of position.
-
+    
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU` or `~numpy.ndarray`
@@ -374,13 +372,13 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
     radians : bool, optional
         Return coordinates in radians or degrees?
-
+    
     Returns
     -------
     (lon, lat) : tuple of arrays
         Images as numpy arrays with values
         containing the position of the given pixel.
-
+    
     Examples
     --------
     >>> import numpy as np
@@ -652,7 +650,6 @@ def wcs_histogram2d(header, lon, lat, weights=None):
     wcs = WCS(header)
     origin = 0  # convention for gammapy
     xx, yy = wcs.wcs_world2pix(lon, lat, origin)
-
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
@@ -669,7 +666,7 @@ def bin_events_in_image(events, reference_image):
 
     Parameters
     ----------
-    events : `~astropy.table.Table`
+    events : `~gammapy.events.data.EventList`
         Event list table
     reference_image : `~astropy.io.fits.ImageHDU`
         An image defining the spatial bins.
@@ -680,60 +677,56 @@ def bin_events_in_image(events, reference_image):
         Count image
     """
     if 'GLON' in reference_image.header['CTYPE1']:
-        lon = events['GLON']
-        lat = events['GLAT']
+        pos = events.galactic
     else:
-        lon = events['RA']
-        lat = events['DEC']
+        pos = events.radec
 
-    return wcs_histogram2d(reference_image.header, lon, lat)
+    return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
 
 
-def bin_events_in_cube(events, reference_cube, energies):
+
+def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     """Bin events in LON-LAT-Energy cube.
-
     Parameters
     ----------
-    events : `~astropy.table.Table`
+    events : `~astropy.data.EventList`
         Event list table
-    reference_cube : `~astropy.io.fits.ImageHDU`
-        A cube defining the spatial bins.
-    energies : `~astropy.table.Table`
-        Table defining the energy bins.
+    wcs : `~astropy.wcs.WCS`
+        WCS instance defining celestial coordinates.
+    shape : tuple
+        Tuple defining the spatial shape.
+    energies : `~gammapy.utils.energy.EnergyBounds`
+        Energy bounds defining the binning. If None only one energy bin defined 
+        by the minimum and maximum event energy is used.
+    origin : {0, 1}
+        Pixel coordinate origin.
 
     Returns
     -------
-    count_cube : `~astropy.io.fits.ImageHDU`
-        Count cube
+    data : `~numpy.ndarray`
+        Counts cube.
     """
-    # TODO: this duplicates code from `bin_events_in_image`
-
-    if 'GLON' in reference_cube.header['CTYPE1']:
-        lon = events['GLON']
-        lat = events['GLAT']
+    if get_wcs_ctype(wcs) == 'galactic':
+        lon, lat = events['GLON'], events['GLAT']
     else:
-        lon = events['RA']
-        lat = events['DEC']
+        lon, lat = events['RA'], events['DEC']
 
-    # Get pixel coordinates
-    wcs = WCS(reference_cube.header)
-    # We're not interested in the energy axis, so we give a dummy value of 1
-    origin = 0  # convention for gammapy
-    xx, yy = wcs.wcs_world2pix(lon, lat, 1, origin)[:-1]
+    xx, yy = wcs.wcs_world2pix(lon, lat, origin)
+    event_energies = events['ENERGY']
+    
+    if energies is None:
+        emin = np.min(event_energies)
+        emax = np.max(event_energies)
+        energies = EnergyBounds.equal_log_spacing(emin, emax, nbins=1, unit='TeV')
+        shape = (2, ) + shape
 
-    event_energies = events['Energy']
-    zz = np.searchsorted(event_energies, energies)
-
+    zz = np.searchsorted(energies.value, event_energies.data)
     # Histogram pixel coordinates with appropriate binning.
     # This was checked against the `ctskymap` ctool
     # http://cta.irap.omp.eu/ctools/
-    shape = reference_cube.data.shape
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
-    data = np.histogramdd([zz, yy, xx], bins)[0]
-
-    hdu = fits.ImageHDU(data, reference_cube.header)
-    return hdu
-
+    return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
+        
 
 def threshold(array, threshold=5):
     """Set all pixels below threshold to zero.
@@ -898,62 +891,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     return header
 
 
-def make_empty_image(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0, fill=0,
-                     proj='CAR', coordsys='GAL',
-                     xrefpix=None, yrefpix=None, dtype='float32'):
-    """Make an empty (i.e. values 0) image.
-
-    Uses the same parameter names as the Fermi tool gtbin
-    (see http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/help/gtbin.txt).
-
-    If no reference pixel position is given it is assumed to be
-    at the center of the image.
-
-    Parameters
-    ----------
-    nxpix : int, optional
-        Number of pixels in x axis. Default is 100.
-    nypix : int, optional
-        Number of pixels in y axis. Default is 100.
-    binsz : float, optional
-        Bin size for x and y axes in units of degrees. Default is 0.1.
-    xref : float, optional
-        Coordinate system value at reference pixel for x axis. Default is 0.
-    yref : float, optional
-        Coordinate system value at reference pixel for y axis. Default is 0.
-    fill : float or 'checkerboard', optional
-        Creates checkerboard image or uniform image of any float
-    proj : string, optional
-        Projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}, optional
-        Coordinate system. Default is 'GAL' (Galactic).
-    xrefpix : float, optional
-        Coordinate system reference pixel for x axis. Default is None.
-    yrefpix: float, optional
-        Coordinate system reference pixel for y axis. Default is None.
-    dtype : str, optional
-        Data type, default is float32
-
-    Returns
-    -------
-    image : `~astropy.io.fits.ImageHDU`
-        Empty image
-    """
-    header = make_header(nxpix, nypix, binsz, xref, yref,
-                         proj, coordsys, xrefpix, yrefpix)
-
-    # Note that FITS and NumPy axis order are reversed
-    shape = (header['NAXIS2'], header['NAXIS1'])
-    if fill == 'checkerboard':
-        A = np.zeros(shape, dtype=dtype)
-        A[1::2, ::2] = 1
-        A[::2, 1::2] = 1
-        data = A
-    else:
-        data = fill * np.ones(shape, dtype=dtype)
-    return fits.ImageHDU(data, header)
-
-
 def crop_image(image, bounding_box):
     """Crop an image (cut out a rectangular part).
 
@@ -1000,11 +937,9 @@ def cube_to_image(cube, slicepos=None):
     header = cube.header.copy()
     header['NAXIS'] = 2
 
-    for kword in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
-        try:
-            del header[kword]
-        except (KeyError, AstropyDeprecationWarning):
-            pass
+    for key in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
+        if key in header:
+            del header[key]
 
     if slicepos is None:
         data = cube.data.sum(0)

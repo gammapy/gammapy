@@ -50,7 +50,7 @@ class GeneralRandomArray(object):
         if return_flat_index:
             return indices
         else:
-            # @todo: vectorize unravel_index
+            # TODO: vectorize unravel_index
             # This for loop is a dirty hack and most likely is very slow.
             unraveled_indices = np.empty((n, self.ndim), dtype=np.int64)
             for i in np.arange(n):

@@ -4,10 +4,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.units import Quantity
-from ..utils.energy import EnergyBounds, Energy
 from astropy.table import Table
-from ..utils.fits import table_to_fits_table, get_hdu_with_valid_name
+from ..utils.energy import EnergyBounds, Energy
 from ..utils.array import array_stats_str
+from ..utils.scripts import make_path
 
 __all__ = [
     'EnergyDispersion',
@@ -305,13 +305,13 @@ class EnergyDispersion(object):
         f_chan = np.ndarray(dtype=np.object, shape=rows)
         n_chan = np.ndarray(dtype=np.object, shape=rows)
         matrix = np.ndarray(dtype=np.object, shape=rows)
-        
+
         # Make RMF type matrix
         for i, row in enumerate(self.pdf_matrix):
             subsets = 1
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
-            #add 1 to borders for correct behaviour of np.split
+            # add 1 to borders for correct behaviour of np.split
             groups = np.asarray(np.split(pos, borders + 1))
             n_grp_temp = groups.shape[0] if groups.size > 0 else 1
             n_chan_temp = np.asarray([val.size for val in groups])
@@ -401,6 +401,8 @@ class EnergyDispersion(object):
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, **kwargs):
+        """TODO: document me.
+        """
         import matplotlib.pyplot as plt
         from matplotlib.colors import PowerNorm
 
@@ -423,6 +425,8 @@ class EnergyDispersion(object):
         return ax
 
     def plot_bias(self, ax=None):
+        """TODO: document me.
+        """
         raise NotImplementedError
         import matplotlib.pyplot as plt
 
@@ -451,6 +455,9 @@ class EnergyDispersion2D(object):
         Offset lower bounds
     dispersion : `~numpy.ndarray`
         PDF matrix
+    interp_kwargs : dict or None
+        Interpolation parameter dict passed to `scipy.interpolate.RegularGridInterpolator`.
+        If you pass ``None``, the default ``interp_params=dict(bounds_error=False, fill_value=0)`` is used.
 
     Examples
     --------
@@ -462,10 +469,9 @@ class EnergyDispersion2D(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.datasets import gammapy_extra
-        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
-        edisp2D = EnergyDispersion2D.read(filename)
-        edisp2D.plot_migration()
+        filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
+        edisp.plot_migration()
         plt.xlim(0, 4)
 
 
@@ -480,13 +486,12 @@ class EnergyDispersion2D(object):
         from gammapy.irf import EnergyDispersion2D
         from gammapy.utils.energy import Energy
         from astropy.coordinates import Angle
-        from gammapy.datasets import gammapy_extra
-        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
-        edisp2D = EnergyDispersion2D.read(filename)
+        filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         migra = np.linspace(0.1,2,80)
         e_true = Energy.equal_log_spacing(0.13,60,60,'TeV')
         offset = Angle([0.554], 'deg')
-        edisp2D.plot_bias(offset=offset, e_true=e_true, migra=migra)
+        edisp.plot_bias(offset=offset, e_true=e_true, migra=migra)
         plt.xscale('log')
 
     Create RMF matrix
@@ -496,19 +501,18 @@ class EnergyDispersion2D(object):
 
         import matplotlib.pyplot as plt
         from gammapy.irf import EnergyDispersion2D
-        from gammapy.datasets import gammapy_extra
         from gammapy.utils.energy import EnergyBounds
-        filename = gammapy_extra.filename('test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz')
-        edisp2D = EnergyDispersion2D.read(filename)
+        filename = '$GAMMAPY_EXTRA/test_datasets/irf/hess/pa/hess_edisp_2d_023523.fits.gz'
+        edisp = EnergyDispersion2D.read(filename, hdu='ENERGY DISPERSION')
         e_axis = EnergyBounds.equal_log_spacing(0.1,20,60, 'TeV')
-        rmf = edisp2D.to_energy_dispersion('1.2 deg', e_reco = e_axis, e_true = e_axis)
+        rmf = edisp.to_energy_dispersion('1.2 deg', e_reco = e_axis, e_true = e_axis)
         rmf.plot_matrix()
         plt.loglog()
 
     """
 
     def __init__(self, etrue_lo, etrue_hi, migra_lo, migra_hi, offset_lo,
-                 offset_hi, dispersion):
+                 offset_hi, dispersion, interp_kwargs=None):
 
         if not isinstance(etrue_lo, Quantity) or not isinstance(etrue_hi, Quantity):
             raise ValueError("Energies must be Quantity objects.")
@@ -526,11 +530,14 @@ class EnergyDispersion2D(object):
         self.offset = (offset_hi + offset_lo) / 2
         self.migra = (migra_hi + migra_lo) / 2
 
-        self._prepare_linear_interpolator()
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False, fill_value=0)
+
+        self._prepare_linear_interpolator(interp_kwargs)
 
     @classmethod
     def from_fits(cls, hdu):
-        """Create `EnergyDispersion2D` from ``GCTAEdisp2D`` format HDU.
+        """Create from a FITS HDU.
 
         Parameters
         ----------
@@ -551,17 +558,19 @@ class EnergyDispersion2D(object):
         return cls(e_lo, e_hi, m_lo, m_hi, o_lo, o_hi, matrix)
 
     @classmethod
-    def read(cls, filename):
-        """Create `EnergyDispersion2D` from ``GCTAEdisp2D`` format FITS file.
+    def read(cls, filename, hdu='edisp_2d'):
+        """Read from FITS file.
+
+        See :ref:`gadf:edisp_2d`
 
         Parameters
         ----------
         filename : str
             File name
         """
-        hdulist = fits.open(filename)
-        valid_extnames = ['ENERGY DISPERSION', 'EDISP_2D']
-        hdu = get_hdu_with_valid_name(hdulist, valid_extnames)
+        filename = make_path(filename)
+        hdulist = fits.open(str(filename))
+        hdu = hdulist[hdu]
         return cls.from_fits(hdu)
 
     def evaluate(self, offset=None, e_true=None, migra=None):
@@ -786,30 +795,34 @@ class EnergyDispersion2D(object):
         plt.tight_layout()
         plt.show()
 
-    def _prepare_linear_interpolator(self):
-        """Linear interpolation in N dimensions
-
-        Values outside the bounds are set to 0
-        """
+    def _prepare_linear_interpolator(self, interp_kwargs):
         from scipy.interpolate import RegularGridInterpolator
 
         x = self.offset
         y = self.migra
         z = np.log10(self.energy.value)
-        data = self.dispersion
+        points = (x, y, z)
+        values = self.dispersion
 
-        self._linear = RegularGridInterpolator(
-            (x, y, z), data, bounds_error=False, fill_value=0)
+        self._linear = RegularGridInterpolator(points, values, **interp_kwargs)
 
     def info(self):
         """Print some basic info.
         """
         ss = "\nSummary EnergyDispersion2D info\n"
-        ss += "----------------\n"
+        ss += "--------------------------------\n"
         # Summarise data members
         ss += array_stats_str(self.energy, 'energy')
         ss += array_stats_str(self.offset, 'offset')
         ss += array_stats_str(self.migra, 'migra')
         ss += array_stats_str(self.dispersion, 'dispersion')
+
+        energy = Energy('1 TeV')
+        e_reco = EnergyBounds([0.8, 1.2], 'TeV')
+        offset = Angle('0.5 deg')
+        p = self.get_response(offset, energy, e_reco)[0]
+
+        ss += 'Probability to reconstruct a {} photon in the range {} at {}' \
+              ' offset: {:.2f}'.format(energy, e_reco, offset, p)
 
         return ss

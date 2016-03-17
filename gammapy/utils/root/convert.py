@@ -157,9 +157,9 @@ def TH2_to_FITS_data(hist, flipx=True):
     data : array
         Histogram data
     """
-    # @note: Numpy array index order is (y, x), whereas ROOT TH2 has (x, y)
+    # Note: Numpy array index order is (y, x), whereas ROOT TH2 has (x, y)
     nx, ny = hist.GetNbinsX(), hist.GetNbinsY()
-    # @todo This doesn't work properly:
+    # TODO: This doesn't work properly:
     # dtype = type(hist.GetBinContent(0))
     dtype = 'float32'
     array = np.empty((ny, nx), dtype=dtype)

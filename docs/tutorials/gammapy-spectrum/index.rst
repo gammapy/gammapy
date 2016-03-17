@@ -5,143 +5,164 @@
 Spectral fitting with ``gammapy-spectrum``
 ==========================================
 
-In this tutorial you will perform a spectra fit starting from an
-`~gammapy.data.EventList` and a set of 2D IRFs
-(`~gammapy.irf.EnergyDispersion2D`, `~gammapy.irf.EffectiveAreaTable2D`).
-The data used in this tutorial consist of 2 simulated
-Crab observations with the H.E.S.S. array. They are available in gammapy-extra.
+In this tutorial you will perform a spectra fit using 4 simulated
+Crab observations with the H.E.S.S. array. They data is available in the
+gammapy-extra repo.
 
-.. _tutorials-gammapy-spectrum-extract:
+Running the fit
+---------------
 
-Extracting 1D spectral information
-----------------------------------
-
-The first step on our way to the Crab spectrum is generating 1D spectral
-information, i.e. an on `~gammapy.spectrum.CountsSpectrum`, and off
-`~gammapy.spectrum.CountsSpectrum`, an `~gammapy.irf.EffectiveAreaTable`
-vector, and an `~gammapy.irf.EnergyDispersion` matrix. This is done with
-``gammapy-spectrum extract``. Below you find an example config file:
-
-
-.. literalinclude:: ./spectrum_extraction_example.yaml
-    :language: yaml
-    :linenos:
-
-
-In Detail:
-
-* Line 4-7 : Specify the `~gammapy.data.DataStore` to take the data from,
-  a list of observations (list or filename),
-  and the number of observations to analyse (0: all observations)
-* Line 9-13 : Define reconstructed energy binning, the true energy binning is
-  derived from the IRF files.
-* Line 15-20 : Define region to extract the spectrum from (on region)
-* Line 22-25 : Choose background estimation method.
-  For available methods see :ref:`spectrum_background_method`
-* Line 27-28 : Specify fits map containing exclusion regions. Here a map
-  excluding all `TevCat`_ sources is used.
-* Line 30-33 : Define output folder and files.
-
-To run the spectral extraction copy the above config file to your machine,
-to e.g. ``crab_config.yaml`` and run
+Create a new folder on your machine, e.g. `gammapy_crab_analysis` and put the
+following :download:`example config file <./spectrum_analysis_example.yaml>`
+into this folder
 
 .. code-block:: bash
 
-   gammapy-spectrum extract crab_config.yaml
+    mkdir gammapy_crab_analysis
+    cd gammapy_crab_analysis
+    wget https://gammapy.readthedocs.org/en/latest/_downloads/spectrum_analysis_example.yaml
 
-This creates the folder ``crab_analysis`` in you current working directory. In
-this folder you find the generated OGIP data in the folder ``ogip_data``.
-A detailed description of the OGIP files, can be found under :ref:`gadf:ogip`.
-The ``spectrum_stats.yaml`` file holds all results of the spectrum extration step.
-You can examine this file as explained in :ref:`tutorials-gammapy-spectrum-examine`.
-Furthermore, there is an ``observations.fits`` file holding an `~gammapy.data.ObservationTable`. It
-points to the OGIP data for each run, which serves as input for ``gammapy-spectrum fit``.
-Note that at the moment it is necessary to create OGIP files at the spectrum
-extraction step, the data cannot be transferred in-memory to ``gammapy-spectrum fit``
+Now run
 
-``gammapy-spectrum extract --interactive`` will drop you into an IPython session
-  after the extraction step, where you can interactively look at all analysis
-  results.
+.. code-block:: bash
 
-If you do not want to actually create all the 1D spectrum objects but only
-have a look at analysis parameters like the offset distribution you can run
-``gammapy-spectrum extract --interactive --dry-run``.
+    $ gammapy-spectrum all spectrum_analysis_example.yaml
 
-.. _tutorials-gammapy-spectrum-fit:
+and check out the result of the spectral fit
 
-Fitting a spectral model
+.. code-block:: bash
+
+    $ gammapy-spectrum display
+
+                    Spectrum Stats
+                    --------------
+    n_on n_off alpha n_bkg excess energy_range [2]
+                                        TeV
+    ---- ----- ----- ----- ------ ----------------
+     785   736 0.155   114    671    0.567 .. 99.1
+
+                    Spectral Fit
+                    ------------
+     model   index index_err      norm         norm_err    reference reference_err fit_range [2]   flux[1TeV]   flux_err[1TeV]
+                             1 / (m2 s TeV) 1 / (m2 s TeV)    TeV         TeV           TeV      1 / (m2 s TeV) 1 / (m2 s TeV)
+    -------- ----- --------- -------------- -------------- --------- ------------- ------------- -------------- --------------
+    PowerLaw  2.27    0.0486       2.34e-07       1.21e-08         1             0  0.722 .. 102       2.34e-07              0
+
+To plot the fitted spectrum use
+
+.. code-block:: bash
+
+    $ gammapy-spectrum plot
+    TODO: Implement
+
+Results files
+-------------
+To get a better idea of what happend in the analysis have a look
+at your analysis folder
+
+.. code-block:: bash
+
+    $ tree .
+    .
+    ├── fit_result_PowerLaw.yaml
+    ├── observation_table.fits
+    ├── ogip_data
+    │   ├── arf_run23523.fits
+    │   ├── arf_run23526.fits
+    │   ├── arf_run23559.fits
+    │   ├── arf_run23592.fits
+    │   ├── bkg_run23523.fits
+    │   ├── bkg_run23526.fits
+    │   ├── bkg_run23559.fits
+    │   ├── bkg_run23592.fits
+    │   ├── pha_run23523.pha
+    │   ├── pha_run23526.pha
+    │   ├── pha_run23559.pha
+    │   ├── pha_run23592.pha
+    │   ├── rmf_run23523.fits
+    │   ├── rmf_run23526.fits
+    │   ├── rmf_run23559.fits
+    │   └── rmf_run23592.fits
+    ├── spectrum_analysis_example.yaml
+    └── total_spectrum_stats.yaml
+
+
+``gammapy-spectrum`` has created a folder ``ogip_data`` holding the extracted
+spectrum for each observation and an ``observation_table.fits`` with meta
+information about each observation. The statistics of the total, i.e. stacked
+spectrum is stored in ``total_spectrum_stats.yaml``
+
+.. code-block:: bash
+
+    $ cat total_spectrum_stats.yaml
+    spectrum:
+      alpha: 0.15508291527313264
+      energy_range:
+        max: 99.0831944892862
+        min: 0.567081905662225
+        unit: TeV
+      excess: 670.8589743589744
+      n_off: 736
+      n_on: 785
+
+The result of the spectral fit is contained in ``fit_result_PowerLaw.yaml``
+
+.. code-block:: bash
+
+    $ cat fit_result_PowerLaw.yaml
+    fit_result:
+      fit_range:
+         max: 101.7654126750981
+        min: 0.7220744794075009
+        unit: TeV
+      fluxes:
+        1TeV:
+          error: 0.0
+          unit: 1 / (m2 s TeV)
+          value: 2.3400361534892314e-07
+      parameters:
+        index:
+          error: 0.04861329659992716
+          unit: ''
+          value: 2.269721726027529
+        norm:
+          error: 1.2070508525157752e-08
+          unit: 1 / (m2 s TeV)
+          value: 2.3400361534892314e-07
+        reference:
+          error: 0.0
+          unit: TeV
+          value: 0.9999999999999999
+      spectral_model: PowerLaw
+
+Running individual steps
 ------------------------
 
-After having generated OGIP file in the section above, you could in principle
-use fitting tools like XSPEC or Sherpa. There is, however,
-the ``gammapy-spectrum fit`` command line tool which provides some convenience
-for most use cases. This is an example config file
-
-.. literalinclude:: ./spectrum_fit_example.yaml
-    :language: yaml
-    :linenos:
-
-In Detail:
-
-* Line 4 : Directory to write results to
-* Line 5 : Input observation table, here we use the one created during
-  :ref:`tutorials-gammapy-spectrum-extract`.
-* Line 6 : Fitting backend
-* Line 7-9 : Spectral model specifications
-* Line 10 : Output file
-
-Append this config file to your ``crab_config.yaml`` file and run the fit via
+You can also run the individual steps of the analysis
 
 .. code-block:: bash
 
-   gammapy-spectrum extract crab_config.yaml
+    $ gammapy-spectrum --help
+    Usage: gammapy-spectrum [OPTIONS] COMMAND [ARGS]...
 
-This creates the file ``fitresult.yaml`` in the ``crab_analysis`` folder, which
-can be used as shown in :ref:`tutorials-gammapy-spectrum-examine`.
+    Gammapy tool for spectrum extraction and fitting.
 
-``gammapy-spectrum fit`` also has an ``--interactive`` flag.
+      Examples
+      --------
 
-If you do not care about intermediate analysis result you can use
-``gammapy-spectrum all`` to run the extraction and the fitting step in one go.
+      gammapy-spectrum extract config.yaml
+      gammapy-spectrum fit config.yaml
+      gammapy-spectrum all config.yaml
 
-.. _tutorials-gammapy-spectrum-examine:
+    Options:
+       -h, --help  Show this message and exit.
 
-Examining all results
----------------------
-
-``gammapy-spectrum`` features two tools to examine and compare fit results.
-
-* ``gammapy-spectrum display`` takes any number of results files as arguments
-  and prints a comparison table. :download:`This <./spectrum_stats_23592.yaml>`
-  file contains the `~gammapy.spectrum.results.SpectrumStats` for a Crab analysis
-  using only one of the runs. Copy it to your analysis directory to run the
-  following command
-
-.. code-block:: bash
-
-    gammapy-spectrum display crab_analysis/spectrum_stats.yaml spectrum_stats_23592.yaml
-                     analysis             n_off n_on excess energy_range [2] alpha
-                                                              TeV
-    --------------------------------- ----- ---- ------ ---------------- ------
-    crab_analysis/spectrum_stats.yaml   414  416    354      0.01 .. 300  0.149
-            spectrum_stats_23592.yaml   252  197    176      0.01 .. 300 0.0833
-
-If you want to customize this output table you could for example run
-
-.. code-block:: bash
-
-    gammapy-spectrum display crab_analysis/spectrum_stats.yaml spectrum_stats_23592.yaml --cols analysis,n_on,alpha --sort n_on --identifiers two_runs,one_run
-    analysis n_on alpha
-
-    -------- ---- ------
-     one_run  197 0.0833
-    two_runs  416  0.149
-
-The ``--browser`` flag lets you examine your comparison table in the browser
-
-* ``gammapy-spectrum plot`` can be used to plot fit results.
-
-TODO
+    Commands:
+      all      Fit spectral model to 1D spectrum
+      display  Display results of spectrum fit
+      extract  Extract 1D spectral information from event...
+      fit      Fit spectral model to 1D spectrum
+      plot     Plot spectrum results file
 
 
 

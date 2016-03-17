@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 from astropy.io import fits
-from ...background import Maps, RingBgMaker, ring_r_out
+from ...background import RingBgMaker, ring_r_out
+from ...image import SkyMapCollection
 from ...utils.testing import requires_dependency
 
 
 @requires_dependency('scipy')
-class TestRingBgMaker(unittest.TestCase):
+class TestRingBgMaker:
     def test_construction(self):
         r = RingBgMaker(0.3, 0.5)
         r.info()
@@ -23,9 +23,10 @@ class TestRingBgMaker(unittest.TestCase):
 
     def test_correlate_maps(self):
         n_on = np.ones((200, 200))
-        hdu = fits.ImageHDU(n_on, name='n_on')
-        maps = Maps([hdu])
-        maps['exclusion'].data[100:110, 100:110] = 0
+        maps = SkyMapCollection()
+        maps['n_on'] = n_on
+        maps['a_on'] = n_on
+        maps['exclusion'] = n_on[100:110, 100:110] = 0
         r = RingBgMaker(10, 13, 1)
         r.correlate_maps(maps)
 

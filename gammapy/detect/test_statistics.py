@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-Functions to compute TS maps
-
+Functions to compute TS maps.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
@@ -14,14 +13,14 @@ from astropy.convolution import Tophat2DKernel, Model2DKernel, Gaussian2DKernel
 from astropy.convolution.kernels import _round_up_to_odd_integer
 from astropy.nddata.utils import extract_array
 from astropy.io import fits
-from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
-                                      _cash_sum_cython, _f_cash_root_cython)
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.zeros import newton
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N)
+from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
+                                      _cash_sum_cython, _f_cash_root_cython)
 
 __all__ = [
     'compute_ts_map',
@@ -129,10 +128,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     ----------
     maps : `astropy.io.fits.HDUList`
         HDU list containing the data. The list must contain the following HDU extensions:
-            * 'On', Counts image
-            * 'Background', Background image
-            * 'Diffuse', Diffuse model image
-            * 'ExpGammaMap', Exposure image
+            * 'counts', Counts image
+            * 'background', Background image
+            * 'exposure', Exposure image
     psf_parameters : dict
         Dict defining the multi gauss PSF parameters.
         See `~gammapy.irf.multi_gauss_psf` for details.
@@ -206,10 +204,10 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
         # Compute TS map
         if residual:
-            background = (maps_['background'] + maps_['diffuse'] + maps_['onmodel'])
+            background = (maps_['background'] + maps_['onmodel'])
         else:
-            background = maps_['background']  # + maps_['diffuse']
-        ts_results = compute_ts_map(maps_['on'], background, maps_['expgammamap'],
+            background = maps_['background']
+        ts_results = compute_ts_map(maps_['counts'], background, maps_['exposure'],
                                     kernel, *args, **kwargs)
         log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
         ts_results['scale'] = scale
@@ -219,7 +217,6 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
                 ts_results[name] = upsample_2N(ts_results[name], factor,
                                                order=order, shape=shape)
         multiscale_result.append(ts_results)
-
 
     return multiscale_result
 
@@ -362,7 +359,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     wrap = partial(_ts_value, counts=counts, exposure=exposure,
                    background=background, C_0_map=C_0_map, kernel=kernel, flux=flux,
-                   method=method, optimizer=optimizer, threshold=threshold)
+                   method=method, threshold=threshold)
 
     if parallel:
         log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
@@ -375,11 +372,12 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     assert positions, ("Positions are empty: possibly kernel " +
                        "{} is larger than counts {}".format(kernel.shape, counts.shape))
+    
     # Set TS values at given positions
     j, i = zip(*positions)
-    TS = np.empty(counts.shape) * np.nan
-    amplitudes = np.empty(counts.shape) * np.nan
-    niter = np.empty(counts.shape) * np.nan
+    TS = np.ones(counts.shape) * np.nan
+    amplitudes = np.ones(counts.shape) * np.nan
+    niter = np.ones(counts.shape) * np.nan
     TS[j, i] = [_[0] for _ in results]
     amplitudes[j, i] = [_[1] for _ in results]
     niter[j, i] = [_[2] for _ in results]
@@ -387,13 +385,14 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     # Handle negative TS values
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
+
     # TODO: this is a dummy value for `scale` ... is there a better way to do this?
     return TSMapResult(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes, scale=0,
                        niter=niter, runtime=np.round(time() - t_0, 2))
 
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
-              method, optimizer, threshold):
+              method, threshold):
     """
     Compute TS value at a given pixel position i, j using the approach described
     in Stewart (2009).
@@ -431,7 +430,7 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     if threshold is not None:
         with np.errstate(invalid='ignore', divide='ignore'):
             C_1 = f_cash(flux[position], counts_, background_, model)
-        # Don't fit if pixel is low significant
+        # Don't fit if pixel significance is low
         if C_0 - C_1 < threshold:
             return C_0 - C_1, flux[position] * FLUX_FACTOR, 0
 
@@ -558,7 +557,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
     amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
     try:
         result = minimize_scalar(f_cash, bracket=(amplitude_min, amplitude_max),
-                                 args=args, method=optimizer, tol=10)
+                                 args=args, method=optimizer, tol=0.1)
         return result.x, result.nfev
     except ValueError:
         result = minimize_scalar(f_cash, args=args, method=optimizer, tol=0.1)

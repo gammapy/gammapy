@@ -36,6 +36,8 @@ observations of the Crab nebula. It also contains two index files:
 These files tell gammapy which observations are contained in the data set and where the event list and IRF files are
 located for each observation (for more information see :ref:`dm_formats`).
 
+.. _data_store:
+
 Data Store
 ++++++++++
 
@@ -52,7 +54,7 @@ Exploring the data using the DataStore class works like this
     base_dir: hess-crab4
     observations: 4
     files: 16
-    >>> data_store.filename(obs_id=23592, filetype='events')
+    >>> data_store.obs(obs_id=23592).location(hdu_class='events').path(abs_path=False)
     'hess-crab4/hess_events_simulated_023592.fits'
 
 In addition, the DataStore class has convenience properties and methods that
@@ -60,18 +62,25 @@ actually load the data and IRFs and return objects of the appropriate class
 
 .. code-block:: python
 
-    >>> aeff2d = data_store.load(obs_id=23592, filetype='aeff')
+    >>> event_list = data_store.obs(obs_id=23592).events
+    >>> type(event_list)
+    TODO
+    >>> aeff2d = data_store.obs(obs_id=23592).aeff
     >>> type(aeff2d)
     <class 'gammapy.irf.effective_area_table.EffectiveAreaTable2D'>
-    >>> event_list = data_store.load(obs_id=23592, filetype='events')
-    >>> event_list.target_radec
+    >>> obs.target_radec
     <SkyCoord (FK5: equinox=J2000.000): (ra, dec) in deg
 	(83.63333333, 22.01444444)>
+
 
 Data Manager
 ++++++++++++
 
-The data access is even more convenient with a DataManager. It is based one a data registry config file (YAML format) that specifies where data and index files are located on the user's machine. In other words, the data registry is a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files called ``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml`` in order to proceed with the example.
+The data access is even more convenient with a DataManager.It is based one a data registry config file (YAML format)
+that specifies where data and index files are located on the user's machine. In other words, the data registry is
+a list of datastores that can be accessed by name. By default, Gammapy looks for data registry config files called
+``data-register.yaml`` in the ``~/.gammapy`` folder. Thus, put the following in ``~/.gammapy/data-register.yaml``
+in order to proceed with the example.
 
 .. include:: ./example-data-register.yaml
     :code: yaml

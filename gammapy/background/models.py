@@ -3,17 +3,16 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
-from astropy.units import Quantity, UnitsError
-from ..data.data_store import _get_min_energy_threshold
+from astropy.units import Quantity
 from ..background import Cube
 from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
-from ..data import EventListDataset, DataStore
 from .cube import _make_bin_edges_array
+
 __all__ = [
     'GaussianBand2D',
     'CubeBackgroundModel',
@@ -21,6 +20,92 @@ __all__ = [
 ]
 
 DEFAULT_SPLINE_KWARGS = dict(k=1, s=0)
+
+
+def _add_column_and_sort_table(sources, pointing_position):
+    """Sort the table and add the column separation (offset from the source) and phi (position angle from the source)
+
+    Parameters
+    ----------
+    sources : `~astropy.table.Table`
+            Table of excluded sources.
+    pointing_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the pointing position
+
+    Returns
+    -------
+    sources : `~astropy.table.Table`
+        given sources table sorted with extra column "separation" and "phi"
+    """
+    sources = sources.copy()
+    source_pos = SkyCoord(sources["RA"], sources["DEC"], unit="deg")
+    sources["separation"] = pointing_position.separation(source_pos)
+    sources["phi"] = pointing_position.position_angle(source_pos)
+    sources.sort("separation")
+    return sources
+
+
+def _compute_pie_fraction(sources, pointing_position, fov_radius):
+    """Compute the fraction of the pie over a circle
+
+    Parameters
+    ----------
+    sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
+    pointing_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the pointing position
+    fov_radius : `~astropy.coordinates.Angle`
+            Field of view radius
+
+    Returns
+    -------
+    pie fraction : float
+        If 0: nothing is excluded
+    """
+    sources = _add_column_and_sort_table(sources, pointing_position)
+    radius = Angle(sources["Radius"])[0]
+    separation = Angle(sources["separation"])[0]
+    if separation > fov_radius:
+        return 0
+    else:
+        return (2 * np.arctan(radius / separation) / (2 * np.pi)).value
+
+
+def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
+    """The index table of the events outside the pie
+
+    Parameters
+    ----------
+    sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
+    events : `gammapy.data.EventList`
+            List of events for one observation
+    pointing_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the pointing position
+    fov_radius : `~astropy.coordinates.Angle`
+            Field of view radius
+
+    Returns
+    -------
+    idx : `~numpy.array`
+        coord of the events that are outside the pie
+
+    """
+    sources = _add_column_and_sort_table(sources, pointing_position)
+    radius = Angle(sources["Radius"])[0]
+    phi = Angle(sources["phi"])[0]
+    separation = Angle(sources["separation"])[0]
+    if separation > fov_radius:
+        return np.arange(len(events))
+    else:
+        phi_min = phi - np.arctan(radius / separation)
+        phi_max = phi + np.arctan(radius / separation)
+
+        phi_events = pointing_position.position_angle(events.radec)
+        idx = np.where((phi_events > phi_max) | (phi_events < phi_min))
+        return idx[0]
 
 
 class GaussianBand2D(object):
@@ -341,7 +426,7 @@ class CubeBackgroundModel(object):
             Data store
         """
         for obs in observation_table:
-            events = data_store.load(obs['OBS_ID'], 'events')
+            events = data_store.obs(obs_id=obs['OBS_ID']).events
 
             # TODO: filter out (mask) possible sources in the data
             #       for now, the observation table should not contain any
@@ -436,46 +521,89 @@ class CubeBackgroundModel(object):
 
 
 class EnergyOffsetBackgroundModel(object):
-    """EnergyOffsetArray background model."""
+    """EnergyOffsetArray background model.
+
+    Container class for `EnergyOffsetArray` background model *(energy, offset)*.
+    This class defines 3 `EnergyOffsetArray` of type `~gammapy.background.EnergyOffsetArray`
+
+    Parameters
+    ----------
+    energy : `~gammapy.utils.energy.EnergyBounds`
+         energy bin vector
+    offset : `~astropy.coordinates.Angle`
+        offset bin vector
+    counts : `~numpy.ndarray`, optional
+        data array (2D): store counts.
+    livetime : `~numpy.ndarray`, optional
+        data array (2D): store livetime correction
+    bg_rate : `~numpy.ndarray`, optional
+        data array (2D): store background model
+    """
 
     def __init__(self, energy, offset, counts=None, livetime=None, bg_rate=None):
-        self.energy = EnergyBounds(energy)
-        self.offset = Angle(offset)
         self.counts = EnergyOffsetArray(energy, offset, counts)
         self.livetime = EnergyOffsetArray(energy, offset, livetime, "s")
         self.bg_rate = EnergyOffsetArray(energy, offset, bg_rate, "MeV-1 sr-1 s-1")
 
     def write(self, filename, **kwargs):
-        self.to_table().write(filename, format='fits', overwrite=True, **kwargs)
+        """Write `EnergyOffsetBackgroundModel` to FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        """
+        self.to_table().write(filename, format='fits', **kwargs)
 
     def to_table(self):
+        """Convert `EnergyOffsetBackgroundModel` to astropy table format.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table containing the `EnergyOffsetBackgroundModel`: counts, livetime and bg_rate
+        """
         table = Table()
-        table['THETA_LO'] = Quantity([self.offset[:-1]], unit=self.offset.unit)
-        table['THETA_HI'] = Quantity([self.offset[1:]], unit=self.offset.unit)
-        table['ENERG_LO'] = Quantity([self.energy[:-1]], unit=self.energy.unit)
-        table['ENERG_HI'] = Quantity([self.energy[1:]], unit=self.energy.unit)
+        table['THETA_LO'] = Quantity([self.counts.offset[:-1]], unit=self.counts.offset.unit)
+        table['THETA_HI'] = Quantity([self.counts.offset[1:]], unit=self.counts.offset.unit)
+        table['ENERG_LO'] = Quantity([self.counts.energy[:-1]], unit=self.counts.energy.unit)
+        table['ENERG_HI'] = Quantity([self.counts.energy[1:]], unit=self.counts.energy.unit)
         table['counts'] = self.counts.to_table()['data']
         table['livetime'] = self.livetime.to_table()['data']
-        table['bg_rate'] = self.bg_rate.to_table()['data']
+        table['bkg'] = self.bg_rate.to_table()['data']
+        table.meta['HDUNAME'] = "bkg_2d"
         return table
 
     @classmethod
     def read(cls, filename):
+        """Create `EnergyOffsetBackgroundModel` from FITS file.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        """
         table = Table.read(filename)
         return cls.from_table(table)
 
     @classmethod
     def from_table(cls, table):
+        """Create `EnergyOffsetBackgroundModel` from `~astropy.table.Table`.
+
+        Parameters
+        ----------
+        table : `~astropy.table.Table`
+        """
         offset_edges = _make_bin_edges_array(table['THETA_LO'].squeeze(), table['THETA_HI'].squeeze())
         offset_edges = Angle(offset_edges, table['THETA_LO'].unit)
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
         counts = Quantity(table['counts'].squeeze(), table['counts'].unit)
         livetime = Quantity(table['livetime'].squeeze(), table['livetime'].unit)
-        bg_rate = Quantity(table['bg_rate'].squeeze(), table['bg_rate'].unit)
+        bg_rate = Quantity(table['bkg'].squeeze(), table['bkg'].unit)
         return cls(energy_edges, offset_edges, counts, livetime, bg_rate)
 
-    def fill_obs(self, observation_table, data_store):
+    def fill_obs(self, obs_ids, data_store, excluded_sources=None, fov_radius=Angle(2.5, "deg")):
         """Fill events and compute corresponding livetime.
 
         Get data files corresponding to the observation list, histogram
@@ -484,23 +612,33 @@ class EnergyOffsetBackgroundModel(object):
 
         Parameters
         ----------
-        observation_table : `~gammapy.data.ObservationTable`
-            Observation list to use for the histogramming.
+        obs_ids : list
+            List of observation IDs
         data_store : `~gammapy.data.DataStore`
             Data store
+        excluded_sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
+        fov_radius : `~astropy.coordinates.Angle`
+            Field of view radius
         """
-        for obs in observation_table:
-            events = data_store.load(obs['OBS_ID'], 'events')
+        for obs_id in obs_ids:
+            obs = data_store.obs(obs_id=obs_id)
+            events = obs.events
 
-            # TODO: filter out (mask) possible sources in the data
-            #       for now, the observation table should not contain any
-            #       run at or near an existing source
+            if excluded_sources:
+                pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
+
+                idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, fov_radius)
+                events = events[idx]
+            else:
+                pie_fraction = 0
 
             self.counts.fill_events([events])
-            self.livetime.data += events.observation_live_time_duration
+            self.livetime.data += obs.observation_live_time_duration * (1 - pie_fraction)
 
     def compute_rate(self):
-        """Compute background_cube from count_cube and livetime_cube.
+        """Compute background rate cube from count_cube and livetime_cube.
         """
         bg_rate = self.counts.data / self.livetime.data
 

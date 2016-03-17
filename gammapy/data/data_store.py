@@ -3,50 +3,67 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import sys
 import logging
 import numpy as np
+from collections import OrderedDict
 from astropy.table import Table
+from astropy.utils import lazyproperty
 from astropy.units import Quantity
-from astropy.io import fits
-from .observation import ObservationTable
+from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
-from ..extern.pathlib import Path
+from .observation import ObservationTable
+from .hdu_index_table import HDUIndexTable
+from .utils import _earth_location_from_dict
 
 __all__ = [
     'DataStore',
+    'DataStoreObservation',
 ]
 
 log = logging.getLogger(__name__)
 
 
 class DataStore(object):
-    """Data store - convenient way to access and select data.
+    """IACT data store.
+
+    The data selection and access happens an observation
+    and an HDU index file as described at :ref:`gadf:iact-storage`.
+
+    See :ref:`data_store`.
 
     Parameters
     ----------
-    base_dir : str
-        Base directory
-    hdu_table : `~astropy.table.Table`
-        File table
+    hdu_table : `~astropy.data.HDUIndexTable`
+        HDU index table
     obs_table : `~gammapy.data.ObservationTable`
-        Observation table
+        Observation index table
     name : str
         Data store name
     """
     DEFAULT_HDU_TABLE = 'hdu-index.fits.gz'
-    DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
-    DEFAULT_NAME = 'noname'
+    """Default HDU table filename."""
 
-    def __init__(self, base_dir, hdu_table=None, obs_table=None, name=None):
-        self.base_dir = make_path(base_dir)
+    DEFAULT_OBS_TABLE = 'obs-index.fits.gz'
+    """Default observation table filename."""
+
+    DEFAULT_NAME = 'noname'
+    """Default data store name."""
+
+    def __init__(self, hdu_table=None, obs_table=None, name=None):
         self.hdu_table = hdu_table
         self.obs_table = obs_table
-        self.name = name
+
+        if name:
+            self.name = name
+        else:
+            self.name = self.DEFAULT_NAME
 
     @classmethod
     def from_files(cls, base_dir, hdu_table_filename=None, obs_table_filename=None, name=None):
-        """Construct `DataStore` from file and obs table files."""
+        """Construct `DataStore` from HDU and observation index table files."""
         if hdu_table_filename:
             log.debug('Reading {}'.format(hdu_table_filename))
-            hdu_table = Table.read(str(hdu_table_filename), format='fits')
+            hdu_table = HDUIndexTable.read(str(hdu_table_filename), format='fits')
+
+            hdu_table.meta['BASE_DIR'] = base_dir
         else:
             hdu_table = None
 
@@ -57,32 +74,36 @@ class DataStore(object):
             obs_table = None
 
         return cls(
-            base_dir=base_dir,
             hdu_table=hdu_table,
             obs_table=obs_table,
             name=name,
         )
 
     @classmethod
-    def from_dir(cls, base_dir):
+    def from_dir(cls, base_dir, name=None):
         """Create a `DataStore` from a directory.
 
-        This assumes that the files and observations index tables
-        are in the default locations.
+        This assumes that the HDU and observations index tables
+        have the default filename.
         """
-        config = dict(base_dir=base_dir)
-        return cls.from_config(config)
+        base_dir = make_path(base_dir)
+        return cls.from_files(
+            base_dir=base_dir,
+            hdu_table_filename=base_dir / cls.DEFAULT_HDU_TABLE,
+            obs_table_filename=base_dir / cls.DEFAULT_OBS_TABLE,
+            name=name,
+        )
 
     @classmethod
     def from_config(cls, config):
         """Create a `DataStore` from a config dict."""
         base_dir = config['base_dir']
         name = config.get('name', cls.DEFAULT_NAME)
-        hdu_table_filename = config.get('files', cls.DEFAULT_HDU_TABLE)
-        obs_table_filename = config.get('observations', cls.DEFAULT_OBS_TABLE)
+        hdu_table_filename = config.get('hduindx', cls.DEFAULT_HDU_TABLE)
+        obs_table_filename = config.get('obsindx', cls.DEFAULT_OBS_TABLE)
 
-        hdu_table_filename = _find_file(hdu_table_filename, base_dir)
-        obs_table_filename = _find_file(obs_table_filename, base_dir)
+        hdu_table_filename = cls._find_file(hdu_table_filename, base_dir)
+        obs_table_filename = cls._find_file(obs_table_filename, base_dir)
 
         return cls.from_files(
             base_dir=base_dir,
@@ -90,6 +111,26 @@ class DataStore(object):
             obs_table_filename=obs_table_filename,
             name=name,
         )
+
+    @staticmethod
+    def _find_file(filename, dir):
+        """Find a file at an absolute or relative location.
+
+        - First tries ``Path(filename)``
+        - Second tries ``Path(dir) / filename``
+        - Raises ``OSError`` if both don't exist.
+        """
+        path1 = make_path(filename)
+        path2 = make_path(dir) / filename
+
+        if path1.is_file():
+            filename = path1
+        elif path2.is_file():
+            filename = path2
+        else:
+            raise OSError('File not found at {} or {}'.format(path1, path2))
+
+        return filename
 
     @classmethod
     def from_name(cls, name):
@@ -100,9 +141,10 @@ class DataStore(object):
         dm = DataManager()
         return dm[name]
 
+    # TODO: seems too magical. needed? remove?
     @classmethod
     def from_all(cls, val):
-        """Try different DataStore construtors.
+        """Try different DataStore constructors.
         
         Currently tried (in this order)
         - :func:`~gammapy.data.DataStore.from_dir`
@@ -125,117 +167,82 @@ class DataStore(object):
 
         return store
 
-    def info(self, stream=None):
+    def info(self, file=None):
         """Print some info"""
-        if not stream:
+        if not file:
             stream = sys.stdout
 
         print(file=stream)
-        print('Data store summary info:', file=stream)
-        print('name:       {}'.format(self.name), file=stream)
-        print('base_dir:   {}'.format(self.base_dir), file=stream)
-        print('obs table:  {}'.format(len(self.obs_table)), file=stream)
-        print('file table: {}'.format(len(self.hdu_table)), file=stream)
+        print('Data store summary info:', file=file)
+        print('name: {}'.format(self.name), file=file)
+        print('', file=file)
+        self.hdu_table.summary(file=file)
+        print('', file=file)
+        self.obs_table.summary(file=file)
 
-    def filename(self, obs_id, filetype, abspath=True):
-        """File name (relative to datastore `dir`).
-
-        Parameters
-        ----------
-        obs_id : int
-            Observation ID.
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
-            Type of file.
-        abspath : bool
-            Absolute path (including data store base_dir)?
-
-        Returns
-        -------
-        filename : str
-            Filename (including the full absolute path or relative to base_dir)
-
-        Examples
-        --------
-        TODO
-        """
-        _validate_filetype(filetype)
-
-        val = None
-        for row in self.hdu_table:
-            id = row['OBS_ID']
-            type = row['HDU_TYPE'].strip()
-            if id == obs_id and type == filetype:
-                val = row
-                break
-
-        if val is None:
-            msg = 'File not in table: OBS_ID = {}, TYPE = {}'.format(obs_id, filetype)
-            raise IndexError(msg)
-        else:
-            filedir = Path(val['FILE_DIR'].strip())
-            filename = filedir / val['FILE_NAME'].strip()
-
-        if abspath:
-            filename = self.base_dir / filename
-
-        return str(filename)
-
-    def load(self, obs_id, filetype):
-        """Load data file as appropriate object.
+    def obs(self, obs_id):
+        """Access a given `~gammapy.data.DataStoreObservation`.
 
         Parameters
         ----------
         obs_id : int
             Observation ID.
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
-            Type of file.
 
         Returns
         -------
-        object : object
-            Object depends on type, e.g. for `events` it's a `~gammapy.data.EventList`.
+        obs : `~gammapy.data.DataStoreObservation`
+            Observation container
         """
-        # Delayed imports to avoid circular import issues
-        # Do not move to the top of the file!
-        from ..data import EventList
-        from ..background import Cube
-        from .. import irf
+        return DataStoreObservation(
+            obs_id=obs_id,
+            data_store=self,
+        )
 
-        filename = self.filename(obs_id=obs_id, filetype=filetype)
-        if filetype == 'events':
-            return EventList.read(filename)
-        elif filetype == 'aeff':
-            return irf.EffectiveAreaTable2D.read(filename)
-        elif filetype == 'edisp':
-            return irf.EnergyDispersion2D.read(filename)
-        elif filetype == 'psf':
-            return irf.EnergyDependentMultiGaussPSF.read(filename)
-        elif filetype == 'background':
-            return Cube.read(filename)
-        else:
-            raise ValueError('Invalid filetype.')
-
-    def load_all(self, filetype):
+    def load_all(self, hdu_type=None, hdu_class=None):
         """Load a given file type for all observations
 
         Parameters
         ----------
-        filetype : {'events', 'aeff', 'edisp', 'psf', 'background'}
-            Type of file.
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
         Returns
         -------
         list : python list of object
             Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
         """
-        data_lists = []
-        for obs_id in self.obs_table['OBS_ID']:
-            data_list = self.load(obs_id, filetype)
-            data_lists.append(data_list)
-        return data_lists
+        obs_ids = self.obs_table['OBS_ID']
+        return self.load_many(obs_ids=obs_ids, hdu_type=hdu_type, hdu_class=hdu_class)
+
+    def load_many(self, obs_ids, hdu_type=None, hdu_class=None):
+        """Load a given file type for certain observations in an obs_table
+
+        Parameters
+        ----------
+        obs_ids : list
+            List of observation IDs
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
+
+        Returns
+        -------
+        list : list of object
+            Object depends on type, e.g. for `events` it is a list of `~gammapy.data.EventList`.
+        """
+        things = []
+        for obs_id in obs_ids:
+            obs = self.obs(obs_id=obs_id)
+            thing = obs.load(hdu_type=hdu_type, hdu_class=hdu_class)
+            things.append(thing)
+
+        return things
 
     def check_integrity(self, logger):
-        """Check integrity, i.e. whether index table and files match.
+        """Check integrity, i.e. whether index and observation table match.
         """
         logger.info('Checking event list files')
         available = self.check_available_event_lists(logger)
@@ -298,72 +305,183 @@ class DataStore(object):
         return file_available
 
 
-def _find_file(filename, dir):
-    """Find a file at an absolute or relative location.
+class DataStoreObservation(object):
+    """IACT data store observation.
 
-    - First tries Path(filename)
-    - Second tris Path(dir) / filename
-    - Raises OSError if both don't exist.
+    See :ref:`data_store`
     """
-    path1 = make_path(filename)
-    path2 = make_path(dir) / filename
-    if path1.is_file():
-        filename = path1
-    elif path2.is_file():
-        filename = path2
-    else:
-        raise OSError('File not found at {} or {}'.format(path1, path2))
-    return filename
 
+    def __init__(self, obs_id, data_store):
+        # Assert that `obs_id` is available
+        if obs_id not in data_store.obs_table['OBS_ID']:
+            raise ValueError('OBS_ID = {} not in obs index table.'.format(obs_id))
+        if obs_id not in data_store.hdu_table['OBS_ID']:
+            raise ValueError('OBS_ID = {} not in HDU index table.'.format(obs_id))
 
-def _validate_filetype(filetype):
-    VALID_FILETYPES = ['events', 'aeff', 'edisp', 'psf', 'background']
-    if not filetype in VALID_FILETYPES:
-        msg = "Invalid filetype: '{}'. ".format(filetype)
-        msg += 'Valid filetypes are: {}'.format(VALID_FILETYPES)
-        raise ValueError(msg)
+        self.obs_id = obs_id
+        self.data_store = data_store
 
+    def location(self, hdu_type=None, hdu_class=None):
+        """HDU location object.
 
-def _get_min_energy_threshold(observation_table, data_dir):
-    """Get minimum energy threshold from a list of observations.
+        Parameters
+        ----------
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
-    TODO: make this a method from ObservationTable or DataStore?
+        Returns
+        -------
+        location : `~gammapy.data.HDULocation`
+            HDU location
+        """
+        location = self.data_store.hdu_table.hdu_location(
+            obs_id=self.obs_id,
+            hdu_type=hdu_type,
+            hdu_class=hdu_class,
+        )
+        return location
 
-    Parameters
-    ----------
-    observation_table : `~gammapy.data.ObservationTable`
-        Observation list.
-    data_dir : str
-        Path to the data files.
+    def load(self, hdu_type=None, hdu_class=None):
+        """Load data file as appropriate object.
 
-    Parameters
-    ----------
-    min_energy_threshold : `~astropy.units.Quantity`
-        Minimum energy threshold.
-    """
-    observatory_name = observation_table.meta['OBSERVATORY_NAME']
-    if observatory_name == 'HESS':
-        scheme = 'HESS'
-    else:
-        s_error = "Warning! Storage scheme for {}".format(observatory_name)
-        s_error += "not implemented. Only H.E.S.S. scheme is available."
-        raise ValueError(s_error)
+        Parameters
+        ----------
+        hdu_type : str
+            HDU type (see `~gammapy.data.HDUIndexTable.VALID_HDU_TYPE`)
+        hdu_class : str
+            HDU class (see `~gammapy.data.HDUIndexTable.VALID_HDU_CLASS`)
 
-    data_store = DataStore(dir=data_dir, scheme=scheme)
-    aeff_table_files = data_store.make_table_of_files(observation_table,
-                                                      filetypes=['effective area'])
-    min_energy_threshold = Quantity(999., 'TeV')
+        Returns
+        -------
+        object : object
+            Object depends on type, e.g. for `events` it's a `~gammapy.data.EventList`.
+        """
+        location = self.location(hdu_type=hdu_type, hdu_class=hdu_class)
+        return location.load()
 
-    # loop over effective area files to get necessary infos from header
-    for i_aeff_file in aeff_table_files['filename']:
-        aeff_hdu = fits.open(i_aeff_file)['EFFECTIVE AREA']
-        # TODO: Gammapy needs a class that interprets IRF files!!!
-        if aeff_hdu.header.comments['LO_THRES'] == '[TeV]':
-            energy_threshold_unit = 'TeV'
-        energy_threshold = Quantity(aeff_hdu.header['LO_THRES'],
-                                    energy_threshold_unit)
-        # TODO: Aeff FITS files contain some header keywords,
-        # where the units are stored in comments -> hard to parse!!!
-        min_energy_threshold = min(min_energy_threshold, energy_threshold)
+    @lazyproperty
+    def events(self):
+        """Load `gammapy.data.EventList` object (lazy property)."""
+        return self.load(hdu_type='events')
 
-    return min_energy_threshold
+    @lazyproperty
+    def gti(self):
+        """Load `gammapy.data.GTI` object (lazy property)."""
+        return self.load(hdu_type='gti')
+
+    @lazyproperty
+    def aeff(self):
+        """Load effective area object (lazy property)."""
+        return self.load(hdu_type='aeff')
+
+    @lazyproperty
+    def edisp(self):
+        """Load energy dispersion object (lazy property)."""
+        return self.load(hdu_type='edisp')
+
+    @lazyproperty
+    def psf(self):
+        """Load point spread function object (lazy property)."""
+        return self.load(hdu_type='psf')
+
+    @lazyproperty
+    def bkg(self):
+        """Load background object (lazy property)."""
+        return self.load(hdu_type='bkg')
+
+    # TODO: maybe the obs table row info should be put in a separate object?
+    @lazyproperty
+    def _obs_info(self):
+        """Observation information"""
+        row = self.data_store.obs_table.select_obs_id(obs_id=self.obs_id)[0]
+        data = OrderedDict(zip(row.colnames, row.as_void()))
+        return data
+
+    @lazyproperty
+    def pointing_radec(self):
+        """Pointing RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        info = self._obs_info
+        lon, lat = info['RA_PNT'], info['DEC_PNT']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @lazyproperty
+    def tstart(self):
+        """Observation start time (`~astropy.time.Time`)."""
+        info = self._obs_info
+        return Quantity(info['TSTART'], 'second')
+
+    @lazyproperty
+    def target_radec(self):
+        """Target RA / DEC sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        info = self._obs_info
+        lon, lat = info['RA_OBJ'], info['DEC_OBJ']
+        return SkyCoord(lon, lat, unit='deg', frame='icrs')
+
+    @lazyproperty
+    def observatory_earth_location(self):
+        """Observatory location (`~astropy.coordinates.EarthLocation`)"""
+        info = self._obs_info
+        return _earth_location_from_dict(info)
+
+    @lazyproperty
+    def observation_time_duration(self):
+        """Observation time duration in seconds (`~astropy.units.Quantity`)
+
+        The wall time, including dead-time.
+        """
+        info = self._obs_info
+        return Quantity(info['ONTIME'], 'second')
+
+    @lazyproperty
+    def observation_live_time_duration(self):
+        """Live-time duration in seconds (`~astropy.units.Quantity`)
+
+        The dead-time-corrected observation time.
+
+        Computed as ``t_live = t_observation * (1 - f_dead)``
+        where ``f_dead`` is the dead-time fraction.
+        """
+        info = self._obs_info
+        return Quantity(info['LIVETIME'], 'second')
+
+    @lazyproperty
+    def observation_dead_time_fraction(self):
+        """Dead-time fraction (float)
+
+        Defined as dead-time over observation time.
+
+        Dead-time is defined as the time during the observation
+        where the detector didn't record events:
+        http://en.wikipedia.org/wiki/Dead_time
+        http://adsabs.harvard.edu/abs/2004APh....22..285F
+
+        The dead-time fraction is used in the live-time computation,
+        which in turn is used in the exposure and flux computation.
+        """
+        info = self._obs_info
+        return 1 - info['DEADC']
+
+    def __str__(self):
+        """Generate summary info string."""
+        ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
+        ss += '- Start time: {:.2f}\n'.format(self.tstart)
+        ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
+        ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
+        ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
+
+        # TODO: Which target was observed?
+        # TODO: print info about available HDUs for this observation ...
+        return ss
+
+    def peek(self):
+        """Quick-look plots in a few panels."""
+        raise NotImplementedError
+
+    def make_exposure_image(self, fov, energy_range):
+        """Make exposure image.
+
+        TODO: Do we want such methods here or as standalone functions that work with obs objects?
+        """
+        raise NotImplementedError

@@ -100,11 +100,14 @@ class Energy(Quantity):
             Energy unit
         """
 
-        if unit is None:
+        if unit is not None:
+            emin = Energy(emin, unit)
+            emax = Energy(emax, unit)
+        else:
+            emin = Energy(emin)
+            emax = Energy(emax)
             unit = emax.unit
-
-        emin = Energy(emin, unit)
-        emax = Energy(emax, unit)
+            emin = emin.to(unit) 
 
         x_min, x_max = np.log10([emin.value, emax.value])
         energy = np.logspace(x_min, x_max, nbins)

@@ -17,10 +17,7 @@ def test_powerlaw():
     I_unc, I_unc_err = powerlaw.I_with_err(e1, e2, e, f, f_err, g, g_err)
     f_unc, f_unc_err = powerlaw.f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
 
-    print('f (real):', f, f_err)
-    print('g (real):', g, g_err)
-    print('I (unc ):', I_unc, I_unc_err)
-    print('f (unc ):', f_unc, f_unc_err)
+    # TODO: add asserts
 
 
 def test_one():
@@ -29,6 +26,8 @@ def test_one():
     assert_allclose(I, 1)
 
 
+# TODO: failing assert at the moment -> fix!
+@pytest.mark.xfail
 @requires_dependency('uncertainties')
 def test_closure(g_error_mag=0):
     """This test passes for g_error_mag == 0,
@@ -56,20 +55,9 @@ def test_closure(g_error_mag=0):
     # I_err = unumpy.std_devs(f)
 
     f_val2, f_err2 = powerlaw.f_with_err(I_val, I_err, g_val, g_err)
-    try:
-        assert_allclose(f_val, f_val2)
-        assert_allclose(f_err, f_err2)
-    except AssertionError as err:
-        print(err)
-        m = 3
-        print('f_val:', f_val[:m])
-        print('f_err:', f_err[:m])
-        print('g_val:', g_val[:m])
-        print('g_err:', g_err[:m])
-        print('I_val:', I_val[:m])
-        print('I_err:', I_err[:m])
-        print('f_val2:', f_val2[:m])
-        print('f_err2:', f_err2[:m])
+
+    assert_allclose(f_val, f_val2)
+    assert_allclose(f_err, f_err2)
 
 
 def test_e_pivot():
@@ -136,7 +124,7 @@ def test_SED_error(I=1., e1=1, e2=10):
     from scipy.stats import gmean
     e = gmean([e1, e2])
     f = I / (e2 - e1)
-    e2f = e ** 2 * f  # @note: e ** 2 = e1 * e2 here.
+    e2f = e ** 2 * f  # Note: e ** 2 = e1 * e2 here.
     for Index in np.arange(1.5, 3.5, 0.5):
         f_correct = powerlaw.power_law_flux(I, Index, e, e1, e2)
         e2f_correct = e ** 2 * f_correct

@@ -57,10 +57,9 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
 
     The input ``data`` FITS file must contain the following HDU extensions:
 
-    * 'On' -- Counts image
-    * 'Background' -- Background image
-    * 'Diffuse' -- Diffuse model image
-    * 'ExpGammaMap' -- Exposure image
+    * 'counts' -- Counts image
+    * 'background' -- Background image
+    * 'exposure' -- Exposure image
     """
     # Execute script
     from astropy.io import fits

@@ -4,13 +4,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.io import fits
-from ..image.utils import coordinates
+from .utils import coordinates
 
 __all__ = [
     'BoundingBox',
     'bbox',
     'find_max',
-    'lookup',
     'lookup_max',
     'measure_containment_fraction',
     'measure_containment_radius',
@@ -257,57 +256,6 @@ def find_max(image):
     GLON, GLAT = proj.wcs_pix2world(x, y, origin)
     val = data[int(y), int(x)]
     return GLON, GLAT, val
-
-
-def _lookup_pix(image, x, y):
-    """Look up values in an image for given pixel coordinates.
-
-    image = numpy array
-    x, y = array_like of pixel coordinates (floats OK)
-    """
-    # Find the right pixel
-    x_int = np.round(x).astype(int)
-    y_int = np.round(y).astype(int)
-
-    # Return it's value
-    # Note that numpy has index order (y, x)
-    values = image[y_int, x_int]
-    return values
-
-
-def _lookup_world(image, lon, lat):
-    """Look up values in an image for given world coordinates.
-
-    image = astropy.io.fits.HDU
-    lon, lat = world coordinates (float OK)
-    """
-    from astropy.wcs import WCS
-    wcs = WCS(image.header)
-    origin = 0  # convention for gammapy
-    x, y = wcs.wcs_world2pix(lon, lat, origin)
-    return _lookup_pix(image.data, x, y)
-
-
-def lookup(image, x, y, world=True):
-    """Look up values in an image.
-
-    Parameters
-    ----------
-    image : array_like or astropy.io.fits.ImageHDU if world=False, astropy.io.fits.ImageHDU if world=True
-        Array or image to look up the value
-    x : array_like
-        Array of X lookup positions
-    y : array_like
-        Array of Y lookup positions
-    world : bool
-        Are (x, y) WCS coordinates?
-    """
-    if world:
-        return _lookup_world(image, x, y)
-    else:
-        if isinstance(image, fits.hdu.image._ImageBaseHDU):
-            image = image.data
-        return _lookup_pix(image, x, y)
 
 
 def lookup_max(image, GLON, GLAT, theta):

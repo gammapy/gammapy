@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from astropy.io import fits
 from astropy.table import Table
-from ..image.utils import bin_events_in_cube
+from ..cube import SpectralCube
 from ..utils.scripts import get_parser
 
 __all__ = ['cube_bin']
@@ -31,7 +31,7 @@ def cube_bin(event_file,
              overwrite):
     """Bin events into a LON-LAT-Energy cube."""
     events = Table.read(event_file)
-    reference_cube = fits.open(reference_file)
-    energies = Table.read(reference_file, 'ENERGIES')
-    out_cube = bin_events_in_cube(events, reference_cube, energies)
-    out_cube.writeto(out_file, clobber=overwrite)
+    refcube = SpectralCube.read(reference_file)
+    cube = SpectralCube.empty_like(refcube)
+    cube.fill(events)
+    cube.writeto(out_file, clobber=overwrite)

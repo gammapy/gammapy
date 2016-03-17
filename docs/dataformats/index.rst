@@ -38,15 +38,15 @@ Type              Format Name          Gammapy                                  
 ================= ==================== =========================================== ============================
 Events            EVENTS               `~gammapy.data.EventList`                   GEventList_
 ----------------- -------------------- ------------------------------------------- ----------------------------
-Counts            3D                   `~gammapy.data.SpectralCube`                `GCTAEventCube`_
+Counts            3D                   `~gammapy.cube.SpectralCube`                `GCTAEventCube`_
 Counts            Image                no class?                                   `GSkyMap`_
 Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`              `GPha`_
 ----------------- -------------------- ------------------------------------------- ----------------------------
-Exposure          EXPOSURE_3D          `~gammapy.data.SpectralCube`?               `GCTACubeExposure`_
+Exposure          EXPOSURE_3D          `~gammapy.cube.SpectralCube`?               `GCTACubeExposure`_
 ----------------- -------------------- ------------------------------------------- ----------------------------
 Background        BACKGROUND_3D        `~gammapy.background.CubeBackgroundModel`   `GCTABackground3D`_
 Background        BACKGROUND_1D        N/A                                         `GCTAModelRadialAcceptance`_
-Exposure          ???                  `~gammapy.data.SpectralCube`?               `GCTACubeBackground`_
+Exposure          ???                  `~gammapy.cube.SpectralCube`?               `GCTACubeBackground`_
 ----------------- -------------------- ------------------------------------------- ----------------------------
 PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF` `GCTAPsf2D`_
 PSF               PSF_2D_KING          N/A                                         `GCTAPsfKing`_
