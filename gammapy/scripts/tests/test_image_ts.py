@@ -14,7 +14,7 @@ from ...datasets.core import gammapy_extra
 
 def create_test_input_file(input_filename, data):
     maps = [data['counts'], data['background'], data['exposure']]
-    maps_names = ['On', 'Background', 'ExpGammaMap']
+    maps_names = ['Counts', 'Background', 'Exposure']
 
     hdu_list = fits.HDUList()
     for map_field, name in zip(maps, maps_names):
