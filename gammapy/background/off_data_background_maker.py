@@ -36,15 +36,17 @@ class OffDataBackgroundMaker(object):
             filename where is store the OFF run list
         outdir : str
             directory where will go the output
-        obs_table : `~astropy.table.Table`
+        obs_table :gamm `~astropy.table.Table`
             observation table of the OFF run List used for the background modelling
             require GROUP_ID column
+        ntot_group: int
+            Number of group in zenithal angle, efficiency
         excluded_sources : `~astropy.table.Table`
             Table of excluded sources.
             Required columns: RA, DEC, Radius
         """
 
-    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, excluded_sources=None):
+    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, ntot_group=None , excluded_sources=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -63,7 +65,7 @@ class OffDataBackgroundMaker(object):
 
         self.models3D = list()
         self.models2D = list()
-        self.ntot_group = None
+        self.ntot_group = ntot_group
 
     def define_obs_table(self):
         """Make an obs table for the OFF runs list.
