@@ -182,10 +182,10 @@ class OffDataBackgroundMaker(object):
             type of the background modelisation: 3D or 2D
 
         """
-
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
+            print(group)
             # Get observations in the group
             idx = np.where(self.obs_table['GROUP_ID'] == group)[0]
             obs_table_group = self.obs_table[idx]
@@ -198,13 +198,14 @@ class OffDataBackgroundMaker(object):
                 model.smooth()
                 model.compute_rate()
                 self.models3D.append(model)
-
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_table_group, self.data_store, self.excluded_sources)
+                print("Fill_obs")
                 model.compute_rate()
+                print("Compute_rate")
                 self.models2D.append(model)
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
