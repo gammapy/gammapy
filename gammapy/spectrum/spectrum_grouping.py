@@ -47,11 +47,10 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
     offmin, offmax = offset_range
     effmin, effmax = eff_range
     zenmin, zenmax = zen_range
-    coszenmin = np.cos(zenmax * np.pi / 180.)
-    coszenmax = np.cos(zenmin * np.pi / 180.)
     offtab = Angle(np.linspace(offmin, offmax, n_off_bin + 1), 'deg')
     efftab = Quantity(np.linspace(effmin, effmax, n_eff_bin + 1) / 100., '')
-    coszentab = Quantity(np.linspace(coszenmin, coszenmax, n_zen_bin + 1), '')
+    zentab = Quantity(np.linspace(zenmin, zenmax, n_zen_bin + 1), 'deg')
+    coszentab = np.cos(zentab)[::-1]
 
     val = list()
     val.append(ObservationGroupAxis('MUONEFF', efftab, 'edges'))
@@ -59,7 +58,6 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
     val.append(ObservationGroupAxis('OFFSET', offtab, 'edges'))
 
     obs_groups = ObservationGroups(val)
-    import IPython; IPython.embed()
     cos_zen = np.cos(obs_table['ZEN_PNT'].quantity.value * np.pi / 180.)
     obs_table.add_column(Column(cos_zen, 'COSZEN'))
     grouped_table = obs_groups.apply(obs_table)

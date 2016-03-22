@@ -301,7 +301,7 @@ class SpectrumExtraction(object):
         # see https://github.com/gammasky/hess-host-analyses/issues/34
 
         for l in on_lists:
-            if (l.colnames == 'TELMASK'):
+            if 'TELMASK' in l.colnames:
                 l.remove_column('TELMASK')
 
         total_list = vstack(on_lists, join_type='inner', metadata_conflicts='silent')
@@ -316,7 +316,7 @@ class SpectrumExtraction(object):
         # Remove column TELMASK since raises an error when stacking it
         # see https://github.com/gammasky/hess-host-analyses/issues/34
         for l in off_lists:
-            if (l.colnames == 'TELMASK'):
+            if 'TELMASK' in l.colnames:
                 l.remove_column('TELMASK')
 
         total_list = vstack(off_lists, join_type='exact', metadata_conflicts='silent')
