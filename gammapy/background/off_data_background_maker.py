@@ -85,19 +85,14 @@ class OffDataBackgroundMaker(object):
     def select_observations(self, selection, n_obs_max=None):
         """Make off run list for background models.
 
-        \b
-        * selection='old' is the common subset of:
-          - Old run list from HAP background model production
-          - Runs available as FITS here
-        * selection='new' is all runs where
-          - FITS data is available here
-          - |GLAT| > 5 (i.e. not in the Galactic plane
-          - separation to a TeVCat source > 2 deg
+        * selection='offplane' is all runs where
+          - Observation is available here
+          - abs(GLAT) > 5 (i.e. not in the Galactic plane)
+        * selection='all' -- all available observations
 
-        \b
         Parameters
         ----------
-        selection : {'offplane', 'debug', 'old-hap-hd'}
+        selection : {'offplane', 'all'}
             Observation selection method.
         n_obs_max : int, None
             Maximum number of observations (useful for quick testing)
@@ -108,32 +103,9 @@ class OffDataBackgroundMaker(object):
             mask = np.abs(obs_table['GLAT']) > min_glat
             obs_table = obs_table[mask]
             obs_table = obs_table[['OBS_ID']]
-        elif selection == 'debug':
+        elif selection == 'all':
             obs_table = self.data_store.obs_table[:n_obs_max]
             obs_table = obs_table[['OBS_ID']]
-        elif selection == 'old-hap-hd':
-            hessroot = os.environ['HESSROOT']
-            filename = Path(hessroot) / 'hddst/scripts/lookups/lists/acceptance_runs.csv'
-            log.info('Reading {}'.format(filename))
-            obs_hess = Table.read(str(filename), format='ascii')
-            obs_hess = obs_hess['Run'].data
-
-            filename = self.run_list
-            log.info('Reading {}'.format(filename))
-            obs_export = Table.read(str(filename), format='ascii')
-            obs_export = obs_export['col1'].data
-
-            obs_common = sorted(set(obs_hess) & set(obs_export))
-
-            log.info('Runs HESS:   {:6d}'.format(len(obs_hess)))
-            log.info('Runs export: {:6d}'.format(len(obs_export)))
-            log.info('Runs common: {:6d}'.format(len(obs_common)))
-
-            if n_obs_max:
-                log.info('Applying max. obs selection: {}'.format(n_obs_max))
-                obs_common = obs_common[:n_obs_max]
-
-            obs_table = Table(dict(OBS_ID=obs_common))
         else:
             raise ValueError('Invalid selection: {}'.format(selection))
 
@@ -149,10 +121,7 @@ class OffDataBackgroundMaker(object):
         obs_table = self.define_obs_table()
 
         # Define observation groups
-        # zenith_bins = np.array([0, 20, 30, 40, 50, 90])
-        zenith_bins = np.array([0, 49, 90])
-        # zenith_bins = np.array([0, 30, 90])  # for testing
-        axes = [ObservationGroupAxis('ZEN_PNT', zenith_bins, fmt='edges')]
+        axes = [ObservationGroupAxis('ZEN_PNT', [0, 49, 90], fmt='edges')]
         obs_groups = ObservationGroups(axes)
         log.info(obs_groups.info)
 
@@ -178,10 +147,10 @@ class OffDataBackgroundMaker(object):
 
         Parameters
         ----------
-        modeltype : str
-            type of the background modelisation: 3D or 2D
-
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
         """
+
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
@@ -203,9 +172,7 @@ class OffDataBackgroundMaker(object):
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_table_group, self.data_store, self.excluded_sources)
-                print("Fill_obs")
                 model.compute_rate()
-                print("Compute_rate")
                 self.models2D.append(model)
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
@@ -213,28 +180,27 @@ class OffDataBackgroundMaker(object):
     def save_model(self, modeltype, ngroup):
         """Save model to fits for one group in zenithal angle and efficiency.
 
-        Parameters
+          Parameters
         ----------
-        modeltype : str
-            type of the background modelisation: 3D or 2D
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
         ngroup : int
-            group number
-
+            Number of groups
         """
         filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
+
         if modeltype == "3D":
             self.models3D[ngroup].write(str(filename), format='table', clobber=True)
         if modeltype == "2D":
             self.models2D[ngroup].write(str(filename), overwrite=True)
 
     def save_models(self, modeltype):
-        """Save model to fits for all the groups in zenithal angle and efficiency
+        """Save model to fits for all the groups in zenithal angle and efficiency.
 
         Parameters
         ----------
-        modeltype : str
-            type of the background modelisation: 3D or 2D
-
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
