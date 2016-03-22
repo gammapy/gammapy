@@ -46,7 +46,7 @@ class OffDataBackgroundMaker(object):
             Required columns: RA, DEC, Radius
         """
 
-    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, ntot_group=None , excluded_sources=None):
+    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, ntot_group=None, excluded_sources=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -167,14 +167,14 @@ class OffDataBackgroundMaker(object):
                 model.fill_obs(obs_table_group, self.data_store)
                 model.smooth()
                 model.compute_rate()
-                self.models3D[str(group)]=model
+                self.models3D[str(group)] = model
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
-                self.models2D[str(group)]=model
+                self.models2D[str(group)] = model
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
@@ -191,9 +191,15 @@ class OffDataBackgroundMaker(object):
         filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
 
         if modeltype == "3D":
-            self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
+            if str(ngroup) in self.models3D.keys():
+                self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
+            else:
+                print("No run in the band {}".format(ngroup))
         if modeltype == "2D":
-            self.models2D[str(ngroup)].write(str(filename), overwrite=True)
+            if str(ngroup) in self.models2D.keys():
+                self.models2D[str(ngroup)].write(str(filename), overwrite=True)
+            else:
+                print("No run in the band {}".format(ngroup))
 
     def save_models(self, modeltype):
         """Save model to fits for all the groups in zenithal angle and efficiency.
@@ -204,8 +210,4 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         """
         for ngroup in range(self.ntot_group):
-            idx = np.where(self.obs_table['GROUP_ID'] == ngroup)[0]
-            if(len(idx) != 0):
-                self.save_model(modeltype, ngroup)
-            else:
-                print("No run in the band {}".format(ngroup))
+            self.save_model(modeltype, ngroup)
