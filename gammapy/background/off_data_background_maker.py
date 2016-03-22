@@ -169,7 +169,7 @@ class OffDataBackgroundMaker(object):
                 model.compute_rate()
                 self.models3D[str(group)] = model
             elif modeltype == "2D":
-                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
