@@ -394,7 +394,6 @@ class SpectrumObservation(object):
         f = make_path(phafile)
         base = f.parent
         on_vector = CountsSpectrum.read_pha(f)
-
         meta = on_vector.meta
         energy_dispersion = EnergyDispersion.read(str(base / meta.rmf))
         effective_area = EffectiveAreaTable.read(str(base / meta.arf))
@@ -615,6 +614,8 @@ class SpectrumObservation(object):
 
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
+        on_vec.meta['safe_energy_range'] = EnergyBounds([emin, emax])
+        #m['safe_energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.meta.obs_id for o in obs_list]
         m['alpha_method1'] = alpha_mean
         m['livetime'] = Quantity(livetime_tot, "s")

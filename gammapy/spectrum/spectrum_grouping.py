@@ -51,7 +51,8 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
 
     offtab = Angle(np.linspace(offmin, offmax, n_off_bin + 1), 'deg')
     efftab = Quantity(np.linspace(effmin, effmax, n_eff_bin + 1)/100., '')
-    coszentab = Quantity(np.linspace(zenmin, zenmax, n_zen_bin + 1), '')
+    #coszentab = Quantity(np.linspace(zenmin, zenmax, n_zen_bin + 1), '')
+    coszentab = Angle(np.linspace(zenmin, zenmax, n_zen_bin + 1), 'deg')
 
     val = list()
     val.append(ObservationGroupAxis('MUONEFF', efftab, 'edges'))
@@ -107,7 +108,6 @@ class SpectrumGrouping(object):
         """Create observation table for the stacked observations"""
         phafile = [str(o.meta.ogip_dir/o.meta.phafile) for o in self.stacked_observations]
         col1 = Column(data=phafile, name='PHAFILE')
-
         # Todo: Put meta information about the groups in the table
         self.stacked_obs_table = ObservationTable([col1])
 
