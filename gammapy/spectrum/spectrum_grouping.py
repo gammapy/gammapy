@@ -59,7 +59,8 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
     val.append(ObservationGroupAxis('OFFSET', offtab, 'edges'))
 
     obs_groups = ObservationGroups(val)
-    cos_zen = np.cos(obs_table['ZEN_PNT'].quantity)
+    import IPython; IPython.embed()
+    cos_zen = np.cos(obs_table['ZEN_PNT'].quantity.value * np.pi / 180.)
     obs_table.add_column(Column(cos_zen, 'COSZEN'))
     grouped_table = obs_groups.apply(obs_table)
 
