@@ -204,4 +204,8 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         """
         for ngroup in range(self.ntot_group):
-            self.save_model(modeltype, ngroup)
+            idx = np.where(self.obs_table['GROUP_ID'] == ngroup)[0]
+            if(len(idx) != 0):
+                self.save_model(modeltype, ngroup)
+            else:
+                print("No run in the band {}".format(ngroup))
