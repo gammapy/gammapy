@@ -63,8 +63,8 @@ class OffDataBackgroundMaker(object):
         self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
         self.group_table_filename = self.outdir + '/group-def.ecsv'
 
-        self.models3D = list()
-        self.models2D = list()
+        self.models3D = dict()
+        self.models2D = dict()
         self.ntot_group = ntot_group
 
     def define_obs_table(self):
@@ -167,14 +167,14 @@ class OffDataBackgroundMaker(object):
                 model.fill_obs(obs_table_group, self.data_store)
                 model.smooth()
                 model.compute_rate()
-                self.models3D.append(model)
+                self.models3D[str(group)]=model
             elif modeltype == "2D":
                 ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
-                self.models2D.append(model)
+                self.models2D[str(group)]=model
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
@@ -191,9 +191,9 @@ class OffDataBackgroundMaker(object):
         filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
 
         if modeltype == "3D":
-            self.models3D[ngroup].write(str(filename), format='table', clobber=True)
+            self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
         if modeltype == "2D":
-            self.models2D[ngroup].write(str(filename), overwrite=True)
+            self.models2D[str(ngroup)].write(str(filename), overwrite=True)
 
     def save_models(self, modeltype):
         """Save model to fits for all the groups in zenithal angle and efficiency.
