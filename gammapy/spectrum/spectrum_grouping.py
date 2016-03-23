@@ -5,7 +5,6 @@ from astropy.coordinates import Angle
 from astropy.table import Column
 from astropy.units import Quantity
 import numpy as np
-
 from gammapy.extern.pathlib import Path
 from ..spectrum import SpectrumObservationList, SpectrumObservation
 from ..data import ObservationGroupAxis, ObservationGroups, ObservationTable
@@ -48,17 +47,19 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
     offmin, offmax = offset_range
     effmin, effmax = eff_range
     zenmin, zenmax = zen_range
-
     offtab = Angle(np.linspace(offmin, offmax, n_off_bin + 1), 'deg')
-    efftab = Quantity(np.linspace(effmin, effmax, n_eff_bin + 1)/100., '')
-    coszentab = Quantity(np.linspace(zenmin, zenmax, n_zen_bin + 1), '')
+    efftab = Quantity(np.linspace(effmin, effmax, n_eff_bin + 1) / 100., '')
+    zentab = Quantity(np.linspace(zenmin, zenmax, n_zen_bin + 1), 'deg')
+    coszentab = np.cos(zentab)[::-1]
 
     val = list()
     val.append(ObservationGroupAxis('MUONEFF', efftab, 'edges'))
-    val.append(ObservationGroupAxis('ZEN_PNT', coszentab, 'edges'))
+    val.append(ObservationGroupAxis('COSZEN', coszentab, 'edges'))
     val.append(ObservationGroupAxis('OFFSET', offtab, 'edges'))
 
     obs_groups = ObservationGroups(val)
+    cos_zen = np.cos(obs_table['ZEN_PNT'].quantity)
+    obs_table.add_column(Column(cos_zen, 'COSZEN'))
     grouped_table = obs_groups.apply(obs_table)
 
     return grouped_table
@@ -105,9 +106,8 @@ class SpectrumGrouping(object):
 
     def make_observation_table(self):
         """Create observation table for the stacked observations"""
-        phafile = [str(o.meta.ogip_dir/o.meta.phafile) for o in self.stacked_observations]
+        phafile = [str(o.meta.ogip_dir / o.meta.phafile) for o in self.stacked_observations]
         col1 = Column(data=phafile, name='PHAFILE')
-
         # Todo: Put meta information about the groups in the table
         self.stacked_obs_table = ObservationTable([col1])
 
@@ -123,5 +123,3 @@ class SpectrumGrouping(object):
         self.stack_groups()
         self.make_observation_table()
         self.write()
-
-

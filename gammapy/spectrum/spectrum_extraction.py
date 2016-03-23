@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 import logging
 import os
-
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.table import Column, vstack
 from astropy.units import Quantity
-
 from . import CountsSpectrum
 from .results import SpectrumStats
 from ..background import ring_area_factor, Cube
@@ -21,7 +18,6 @@ from ..irf import EffectiveAreaTable, EnergyDispersion
 from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path, write_yaml
-
 
 __all__ = [
     'SpectrumExtraction',
@@ -150,7 +146,7 @@ class SpectrumExtraction(object):
 
         self._observations = SpectrumObservationList(observations)
 
-        #update meta info
+        # update meta info
         if 'OFFSET' not in t.colnames:
             offset = [_.meta.offset for _ in self.observations]
             t.add_column(Column(name='OFFSET', data=Angle(offset)))
@@ -158,7 +154,7 @@ class SpectrumExtraction(object):
             containment = [_.meta.containment for _ in self.observations]
             t.add_column(Column(name='CONTAINMENT', data=containment))
         if 'PHAFILE' not in t.colnames:
-            pha = [str(_.meta.ogip_dir/_.meta.phafile) for _ in self.observations]
+            pha = [str(_.meta.ogip_dir / _.meta.phafile) for _ in self.observations]
             t.add_column(Column(name='PHAFILE', data=pha))
 
     @property
@@ -303,8 +299,10 @@ class SpectrumExtraction(object):
 
         # Remove column TELMASK since raises an error when stacking it
         # see https://github.com/gammasky/hess-host-analyses/issues/34
+
         for l in on_lists:
-            l.remove_column('TELMASK')
+            if 'TELMASK' in l.colnames:
+                l.remove_column('TELMASK')
 
         total_list = vstack(on_lists, join_type='inner', metadata_conflicts='silent')
         total_list.meta = None
@@ -318,7 +316,8 @@ class SpectrumExtraction(object):
         # Remove column TELMASK since raises an error when stacking it
         # see https://github.com/gammasky/hess-host-analyses/issues/34
         for l in off_lists:
-            l.remove_column('TELMASK')
+            if 'TELMASK' in l.colnames:
+                l.remove_column('TELMASK')
 
         total_list = vstack(off_lists, join_type='exact', metadata_conflicts='silent')
         total_list.meta = None
@@ -391,7 +390,6 @@ class SpectrumObservation(object):
         f = make_path(phafile)
         base = f.parent
         on_vector = CountsSpectrum.read_pha(f)
-
         meta = on_vector.meta
         energy_dispersion = EnergyDispersion.read(str(base / meta.rmf))
         effective_area = EffectiveAreaTable.read(str(base / meta.arf))
@@ -447,7 +445,6 @@ class SpectrumObservation(object):
                                   effarea_unit='cm2', clobber=clobber)
         self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=clobber)
-
 
     @classmethod
     def from_datastore(cls, obs, store, on_region, bkg_method, ebounds,
@@ -588,7 +585,8 @@ class SpectrumObservation(object):
         arf = EffectiveAreaTable(ebounds, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
 
         # Stack rmf vector
-        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for o in obs_list]
+        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
+                    o in obs_list]
         rmf_band_tot = np.sum(rmf_band, axis=0)
         pdf_mat = rmf_band_tot / arf_band_tot
         etrue = obs_list[0].energy_dispersion.true_energy
@@ -612,6 +610,8 @@ class SpectrumObservation(object):
 
         m = Bunch()
         m['energy_range'] = EnergyBounds([emin, emax])
+        on_vec.meta['safe_energy_range'] = EnergyBounds([emin, emax])
+        # m['safe_energy_range'] = EnergyBounds([emin, emax])
         m['obs_ids'] = [o.meta.obs_id for o in obs_list]
         m['alpha_method1'] = alpha_mean
         m['livetime'] = Quantity(livetime_tot, "s")
@@ -869,6 +869,3 @@ class BackgroundEstimator(object):
         off_vec = CountsSpectrum(cnts.decompose(), self.ebounds, backscal=1)
         self.backscal = 1
         self.off_vec = off_vec
-
-
-
