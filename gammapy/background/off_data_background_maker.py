@@ -217,15 +217,15 @@ class OffDataBackgroundMaker(object):
 
         Parameters
         ----------
-        obs_table: `~gammapy.data.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Table for the runs for which ones we want to compute a background model
-        out_dir_background_model: str
+        out_dir_background_model:  str
             directory where are located the backgrounds models for each band in zenith and efficiency
-        indir: str
+        indir : str
             directory where are located the observations
         modeltype : {'3D', '2D'}
             Type of the background modelisation
-        filename_obs_group_table: str
+        filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
 
 
