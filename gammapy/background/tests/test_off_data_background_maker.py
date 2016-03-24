@@ -4,6 +4,8 @@ from ...utils.testing import requires_dependency, requires_data
 from ...data import ObservationTable, DataStore
 from ..models import CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ..off_data_background_maker import OffDataBackgroundMaker
+from ...datasets import gammapy_extra
+import os
 
 
 @requires_dependency('scipy')
@@ -33,3 +35,10 @@ def test_background_model(tmpdir):
     bgmaker.save_models("2D")
     model = EnergyOffsetBackgroundModel.read(str(tmpdir / 'background_2D_group_001_table.fits.gz'))
     assert model.counts.data.value.sum() == 1398
+
+    directory = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2/'
+    bgmaker.background_symlinks(data_store.obs_table, str(tmpdir), directory, "2D", None)
+    run023523 = os.readlink(directory + "run023400-023599/run023523/background_023523.fits.gz")
+    assert run023523 == str(tmpdir) + '/background_2D_group_001_table.fits.gz'
+    run023526 = os.readlink(directory + "run023400-023599/run023526/background_023526.fits.gz")
+    assert run023526 == str(tmpdir) + '/background_2D_group_000_table.fits.gz'

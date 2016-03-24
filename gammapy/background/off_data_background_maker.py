@@ -211,3 +211,55 @@ class OffDataBackgroundMaker(object):
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
+
+    def background_symlinks(self, obs_table, out_dir_background_model, indir, modeltype, filename_obs_group_table=None):
+        """Creates a link for each observation of the obs_table to the corresponding background model
+
+        Parameters
+        ----------
+        obs_table: `~gammapy.data.ObservationTable`
+            Table for the runs for which ones we want to compute a background model
+        out_dir_background_model: str
+            directory where are located the backgrounds models for each band in zenith and efficiency
+        indir: str
+            directory where are located the observations
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        filename_obs_group_table: str
+            name of the file containing the `~astropy.table.Table` with the group infos
+
+
+        """
+
+        if not filename_obs_group_table:
+            filename_obs_group_table = self.group_table_filename
+
+        table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
+        axes = ObservationGroups.table_to_axes(table_group)
+        groups = ObservationGroups(axes)
+        obs_table = ObservationTable(obs_table)
+        obs_table = groups.apply(obs_table)
+
+        for obs in obs_table:
+            try:
+                group_id = obs['GROUP_ID']
+            except IndexError:
+                print('Found no GROUP_ID for {}'.format(obs["OBS_ID"]))
+                continue
+            obs_id_min = obs["OBS_ID"] - (obs["OBS_ID"] % 200)
+            obs_id_max = obs_id_min + 199
+            obs_group_folder = Path('run{:06d}-{:06d}'.format(obs_id_min, obs_id_max))
+            obs_folder = Path('run{:06d}'.format(obs["OBS_ID"]))
+
+            filename = 'background_{:06d}.fits.gz'.format(obs["OBS_ID"])
+            source = Path(indir) / obs_group_folder / obs_folder / Path(filename)
+            target = Path(
+                out_dir_background_model + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id))
+
+            # If the symlink already exists, skip it (don't clobber)
+            if source.is_file() or source.is_symlink():
+                source.unlink()
+                print('Symlink already exists for ' + filename)
+
+            source.symlink_to(target)
+            print('Creating symlink for  ' + filename)
