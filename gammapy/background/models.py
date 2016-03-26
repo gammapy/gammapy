@@ -103,7 +103,7 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
         phi_min = phi - np.arctan(radius / separation)
         phi_max = phi + np.arctan(radius / separation)
         phi_events = pointing_position.position_angle(events.radec)
-        if(phi_max.degree >360):
+        if phi_max.degree > 360:
             phi_max = phi_max - Angle(360, "deg")
             idx = np.where((phi_events > phi_max) & (phi_events < phi_min))
         else:
@@ -639,7 +639,6 @@ class EnergyOffsetBackgroundModel(object):
 
             self.counts.fill_events([events])
             self.livetime.data += obs.observation_live_time_duration * (1 - pie_fraction)
-
 
     def compute_rate(self):
         """Compute background rate cube from count_cube and livetime_cube.
