@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import logging
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 import astropy.units as u
 from astropy.table import join as table_join
 from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
@@ -212,54 +212,58 @@ class OffDataBackgroundMaker(object):
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
 
-    def background_symlinks(self, obs_table, out_dir_background_model, indir, modeltype, filename_obs_group_table=None):
+    def background_symlinks(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
+                            filename_obs_group_table=None):
         """Creates a link for each observation of the obs_table to the corresponding background model
 
         Parameters
         ----------
-        obs_table : `~gammapy.data.ObservationTable`
-            Table for the runs for which ones we want to compute a background model
-        out_dir_background_model:  str
-            directory where are located the backgrounds models for each band in zenith and efficiency
-        indir : str
-            directory where are located the observations
+        data_store: `~gammapy.data.DataStore`
+            Create a `DataStore` for the runs for which ones we want to compute a background model
         modeltype : {'3D', '2D'}
             Type of the background modelisation
+        out_dir_background_model:  str
+            directory where are located the backgrounds models for each band in zenith and efficiency
+        outfile: str
+            name of the new HDU-index file that is an `~astropy.table.Table` with tha row for the background model
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
 
 
         """
-
+        obs_table = data_store.obs_table
         if not filename_obs_group_table:
             filename_obs_group_table = self.group_table_filename
-
+        if not out_dir_background_model:
+            out_dir_background_model = data_store.hdu_table.meta["BASE_DIR"]
+        if not outfile:
+            outfile = Path("hdu-index2.fits.gz")
         table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
         axes = ObservationGroups.table_to_axes(table_group)
         groups = ObservationGroups(axes)
         obs_table = ObservationTable(obs_table)
         obs_table = groups.apply(obs_table)
-
+        index_table_bkg = Table(names=("OBS_ID", "HDU_TYPE", "FILE_DIR", "FILE_NAME", "HDU_NAME", "HDU_CLASS"),
+                                dtype=('i4', 'S50', 'S50', 'S50', 'S50', 'S50'))
         for obs in obs_table:
             try:
                 group_id = obs['GROUP_ID']
             except IndexError:
                 print('Found no GROUP_ID for {}'.format(obs["OBS_ID"]))
                 continue
-            obs_id_min = obs["OBS_ID"] - (obs["OBS_ID"] % 200)
-            obs_id_max = obs_id_min + 199
-            obs_group_folder = Path('run{:06d}-{:06d}'.format(obs_id_min, obs_id_max))
-            obs_folder = Path('run{:06d}'.format(obs["OBS_ID"]))
+            row = dict()
+            row["OBS_ID"] = obs["OBS_ID"]
+            row["HDU_TYPE"] = "bkg"
+            row["FILE_DIR"] = str(out_dir_background_model)
+            row["FILE_NAME"] = 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+            if modeltype == "2D":
+                row["HDU_NAME"] = "bkg_2d"
+                row["HDU_CLASS"] = "bkg_2d"
+            # row["SIZE"]=0
+            # row["MTIME"]=0
+            # row["MD5"] =0
 
-            filename = 'background_{:06d}.fits.gz'.format(obs["OBS_ID"])
-            source = Path(indir) / obs_group_folder / obs_folder / Path(filename)
-            target = Path(
-                out_dir_background_model + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id))
+            index_table_bkg.add_row(row)
 
-            # If the symlink already exists, skip it (don't clobber)
-            if source.is_file() or source.is_symlink():
-                source.unlink()
-                print('Symlink already exists for ' + filename)
-
-            source.symlink_to(target)
-            print('Creating symlink for  ' + filename)
+        index_table_new = vstack([data_store.hdu_table, index_table_bkg])
+        index_table_new.write(str(data_store.hdu_table.meta["BASE_DIR"] / outfile), overwrite=True)
