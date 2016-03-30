@@ -218,8 +218,8 @@ class OffDataBackgroundMaker(object):
 
         Parameters
         ----------
-        data_store: `~gammapy.data.DataStore`
-            Create a `DataStore` for the runs for which ones we want to compute a background model
+        data_store : `~gammapy.data.DataStore`
+            Create a `~gammapy.data.DataStore` for the runs for which ones we want to compute a background model
         modeltype : {'3D', '2D'}
             Type of the background modelisation
         out_dir_background_model:  str
