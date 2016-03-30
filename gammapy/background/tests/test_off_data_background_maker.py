@@ -39,7 +39,7 @@ def test_background_model():
     assert model.counts.data.value.sum() == 1398
 
     directory = str(gammapy_extra.dir) + '/datasets/hess-crab4-hd-hap-prod2/'
-    bgmaker.background_symlinks(data_store, "2D", None, None, None)
+    bgmaker.background_links(data_store, "2D", None, None, None)
     index_table_new = Table.read(directory + "hdu-index2.fits.gz")
     table_bkg = index_table_new[np.where(index_table_new["HDU_NAME"] == "bkg_2d")]
     name_bkg_run023523 = table_bkg[np.where(table_bkg["OBS_ID"] == 23523)]["FILE_NAME"]

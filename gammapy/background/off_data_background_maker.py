@@ -212,7 +212,7 @@ class OffDataBackgroundMaker(object):
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
 
-    def background_symlinks(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
+    def background_links(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
                             filename_obs_group_table=None):
         """Creates a link for each observation of the obs_table to the corresponding background model
 
