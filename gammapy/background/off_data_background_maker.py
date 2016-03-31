@@ -225,9 +225,8 @@ class OffDataBackgroundMaker(object):
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
 
-    def background_links(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
-                         filename_obs_group_table=None):
-        """Modify the hdu-index table to add a link to the background model for each observation of the datastore
+    def make_bkg_model_link(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None):
+        """
 
         Parameters
         ----------
@@ -237,20 +236,21 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         out_dir_background_model:  str
             directory where are located the backgrounds models for each band in zenith and efficiency
-        outfile: str
-            name of the new HDU-index file that is an `~astropy.table.Table` with the row for the background model
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
 
 
+        Returns
+        -------
+        index_table_bkg : `~astropy.table.Table`
+            Index hdu table only for the background in order to associate a bkg model for each observation
         """
+
         obs_table = data_store.obs_table
         if not filename_obs_group_table:
             filename_obs_group_table = self.group_table_filename
         if not out_dir_background_model:
             out_dir_background_model = data_store.hdu_table.meta["BASE_DIR"]
-        if not outfile:
-            outfile = Path("hdu-index2.fits.gz")
         table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
         axes = ObservationGroups.table_to_axes(table_group)
         groups = ObservationGroups(axes)
@@ -275,5 +275,30 @@ class OffDataBackgroundMaker(object):
             data.append(row)
 
         index_table_bkg = Table(data)
+        return index_table_bkg
+
+    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None,
+                             filename_obs_group_table=None):
+        """Create a hdu-index table with a row containing the link to the background model for each observation
+
+        Parameters
+        ----------
+        data_store : `~gammapy.data.DataStore`
+            Create a `~gammapy.data.DataStore` for the runs for which ones we want to compute a background model
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        out_dir_background_model:  str
+            directory where are located the backgrounds models for each band in zenith and efficiency
+        filename_obs_group_table : str
+            name of the file containing the `~astropy.table.Table` with the group infos
+
+        Returns
+        -------
+        index_table_new : `~astropy.table.Table`
+            Index hdu table with a background row
+        """
+
+        index_table_bkg = self.make_bkg_model_link(data_store, modeltype, out_dir_background_model,
+                                                   filename_obs_group_table)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
-        index_table_new.write(str(data_store.hdu_table.meta["BASE_DIR"] / outfile), overwrite=True)
+        return index_table_new
