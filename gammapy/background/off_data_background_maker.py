@@ -201,7 +201,7 @@ class OffDataBackgroundMaker(object):
         ngroup : int
             Number of groups
         """
-        filename = self.outdir + self.filename(modeltype, ngroup)
+        filename = self.outdir + "/" + self.filename(modeltype, ngroup)
 
         if modeltype == "3D":
             if str(ngroup) in self.models3D.keys():
