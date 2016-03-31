@@ -178,6 +178,19 @@ class OffDataBackgroundMaker(object):
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
+    def filename(self, modeltype, group_id):
+        """Return the filename where is stored the background model for a certain groupid in zenith angle and efficiency
+
+        Parameters
+        ----------
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        group_id : int
+            number of the background model group
+
+        """
+        return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+
     def save_model(self, modeltype, ngroup):
         """Save model to fits for one group in zenithal angle and efficiency.
 
@@ -188,7 +201,7 @@ class OffDataBackgroundMaker(object):
         ngroup : int
             Number of groups
         """
-        filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
+        filename = self.outdir + self.filename(modeltype, ngroup)
 
         if modeltype == "3D":
             if str(ngroup) in self.models3D.keys():
@@ -225,7 +238,7 @@ class OffDataBackgroundMaker(object):
         out_dir_background_model:  str
             directory where are located the backgrounds models for each band in zenith and efficiency
         outfile: str
-            name of the new HDU-index file that is an `~astropy.table.Table` with tha row for the background model
+            name of the new HDU-index file that is an `~astropy.table.Table` with the row for the background model
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
 
@@ -255,7 +268,7 @@ class OffDataBackgroundMaker(object):
             row["OBS_ID"] = obs["OBS_ID"]
             row["HDU_TYPE"] = "bkg"
             row["FILE_DIR"] = str(out_dir_background_model)
-            row["FILE_NAME"] = 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+            row["FILE_NAME"] = self.filename(modeltype, group_id)
             if modeltype == "2D":
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
