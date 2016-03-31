@@ -259,9 +259,6 @@ class OffDataBackgroundMaker(object):
             if modeltype == "2D":
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
-            # row["SIZE"]=0
-            # row["MTIME"]=0
-            # row["MD5"] =0
 
             index_table_bkg.add_row(row)
 
