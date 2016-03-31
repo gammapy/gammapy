@@ -214,7 +214,7 @@ class OffDataBackgroundMaker(object):
 
     def background_links(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
                          filename_obs_group_table=None):
-        """Creates a link for each observation of the obs_table to the corresponding background model
+        """Modify the hdu-index table to add a link to the background model for each observation of the datastore
 
         Parameters
         ----------
@@ -260,7 +260,7 @@ class OffDataBackgroundMaker(object):
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
             data.append(row)
-            
+
         index_table_bkg = Table(data)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         index_table_new.write(str(data_store.hdu_table.meta["BASE_DIR"] / outfile), overwrite=True)
