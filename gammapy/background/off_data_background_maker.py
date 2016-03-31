@@ -213,7 +213,7 @@ class OffDataBackgroundMaker(object):
             self.save_model(modeltype, ngroup)
 
     def background_links(self, data_store, modeltype, out_dir_background_model=None, outfile=None,
-                            filename_obs_group_table=None):
+                         filename_obs_group_table=None):
         """Creates a link for each observation of the obs_table to the corresponding background model
 
         Parameters
@@ -243,8 +243,8 @@ class OffDataBackgroundMaker(object):
         groups = ObservationGroups(axes)
         obs_table = ObservationTable(obs_table)
         obs_table = groups.apply(obs_table)
-        index_table_bkg = Table(names=("OBS_ID", "HDU_TYPE", "FILE_DIR", "FILE_NAME", "HDU_NAME", "HDU_CLASS"),
-                                dtype=('i4', 'S50', 'S50', 'S50', 'S50', 'S50'))
+
+        data = []
         for obs in obs_table:
             try:
                 group_id = obs['GROUP_ID']
@@ -259,8 +259,8 @@ class OffDataBackgroundMaker(object):
             if modeltype == "2D":
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
-
-            index_table_bkg.add_row(row)
-
+            data.append(row)
+            
+        index_table_bkg = Table(data)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         index_table_new.write(str(data_store.hdu_table.meta["BASE_DIR"] / outfile), overwrite=True)
