@@ -37,7 +37,7 @@ def test_background_model(tmpdir):
     model = EnergyOffsetBackgroundModel.read(str(tmpdir / 'background_2D_group_001_table.fits.gz'))
     assert model.counts.data.value.sum() == 1398
 
-    index_table_new = bgmaker.make_bkg_index_table(data_store, "2D", None, None)
+    index_table_new = bgmaker.make_total_index_table(data_store, "2D", None, None)
     table_bkg = index_table_new[np.where(index_table_new["HDU_NAME"] == "bkg_2d")]
     name_bkg_run023523 = table_bkg[np.where(table_bkg["OBS_ID"] == 23523)]["FILE_NAME"]
     assert str(tmpdir) + "/" + name_bkg_run023523[0] == str(tmpdir) + '/background_2D_group_001_table.fits.gz'
