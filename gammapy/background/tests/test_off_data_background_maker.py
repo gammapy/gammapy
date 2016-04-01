@@ -1,17 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from astropy.table import Table
+import numpy as np
 from ...utils.testing import requires_dependency, requires_data
 from ...data import ObservationTable, DataStore
 from ..models import CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ..off_data_background_maker import OffDataBackgroundMaker
+from ...datasets import gammapy_extra
+import os
+from ...extern.pathlib import Path
 
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_background_model(tmpdir):
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-
-    bgmaker = OffDataBackgroundMaker(data_store, outdir=tmpdir)
+    bgmaker = OffDataBackgroundMaker(data_store, outdir=str(tmpdir))
 
     bgmaker.select_observations(selection='all')
     table = Table.read('run.lis', format='ascii.csv')
@@ -33,3 +36,10 @@ def test_background_model(tmpdir):
     bgmaker.save_models("2D")
     model = EnergyOffsetBackgroundModel.read(str(tmpdir / 'background_2D_group_001_table.fits.gz'))
     assert model.counts.data.value.sum() == 1398
+
+    index_table_new = bgmaker.make_total_index_table(data_store, "2D", None, None)
+    table_bkg = index_table_new[np.where(index_table_new["HDU_NAME"] == "bkg_2d")]
+    name_bkg_run023523 = table_bkg[np.where(table_bkg["OBS_ID"] == 23523)]["FILE_NAME"]
+    assert str(tmpdir) + "/" + name_bkg_run023523[0] == str(tmpdir) + '/background_2D_group_001_table.fits.gz'
+    name_bkg_run023526 = table_bkg[np.where(table_bkg["OBS_ID"] == 23526)]["FILE_NAME"]
+    assert str(tmpdir) + "/" + name_bkg_run023526[0] == str(tmpdir) + '/background_2D_group_000_table.fits.gz'

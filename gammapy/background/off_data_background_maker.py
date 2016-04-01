@@ -1,15 +1,17 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import os
 import logging
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 import astropy.units as u
 from astropy.table import join as table_join
-from ..data import ObservationGroupAxis, ObservationGroups
+from ..data import ObservationTable, ObservationGroupAxis, ObservationGroups
 from .models import CubeBackgroundModel
 from .models import EnergyOffsetBackgroundModel
 from ..utils.energy import EnergyBounds
 from ..utils.axis import sqrt_space
+from ..extern.pathlib import Path
 
 __all__ = [
     'OffDataBackgroundMaker',
@@ -21,28 +23,29 @@ log = logging.getLogger(__name__)
 class OffDataBackgroundMaker(object):
     """OffDataBackgroundMaker class.
 
-    Class that will select an OFF list run from a Data list and then group this runlist in group of
-    zenithal angle and efficiency. Then for each group, it will compute the background rate model in
-    3D *(X, Y, energy)* or 2D *(energy, offset)* via the class `~gammapy.background.CubeBackgroundModel` (3D) or
-    `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
+        Class that will select an OFF list run from a Data list and then group this runlist in group. Then for each
+        group, it will compute the background rate model in 3D *(X, Y, energy)* or 2D *(energy, offset)* via the class
+        `~gammapy.background.CubeBackgroundModel` (3D) or `~gammapy.background.EnergyOffsetBackgroundModel` (2D).
 
-    Parameters
-    ----------
-    data_store : `~gammapy.data.DataStore`
-        Data for the background model
-    run_list : str
-        filename where is store the OFF run list
-    outdir : str
-        directory where will go the output
-    obs_table : `~astropy.table.Table`
-        observation table of the OFF run List used for the background modelling
-        require GROUP_ID column
-    excluded_sources : `~astropy.table.Table`
-        Table of excluded sources.
-        Required columns: RA, DEC, Radius
-    """
+        Parameters
+        ----------
+        data_store : `~gammapy.data.DataStore`
+            Data for the background model
+        outdir : str
+            directory where will go the output
+        run_list : str
+            filename where is store the OFF run list
+        obs_table : `~gammapy.data.ObservationTable`
+            observation table of the OFF run List used for the background modelling
+            require GROUP_ID column
+        ntot_group : int
+            Number of group
+        excluded_sources : `~astropy.table.Table`
+            Table of excluded sources.
+            Required columns: RA, DEC, Radius
+        """
 
-    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, excluded_sources=None):
+    def __init__(self, data_store, outdir=None, run_list=None, obs_table=None, ntot_group=None, excluded_sources=None):
         self.data_store = data_store
         if not run_list:
             self.run_list = "run.lis"
@@ -53,16 +56,15 @@ class OffDataBackgroundMaker(object):
             self.outdir = "out"
         else:
             self.outdir = outdir
-
         self.obs_table = obs_table
         self.excluded_sources = excluded_sources
 
         self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
         self.group_table_filename = self.outdir + '/group-def.ecsv'
 
-        self.models3D = list()
-        self.models2D = list()
-        self.ntot_group = None
+        self.models3D = dict()
+        self.models2D = dict()
+        self.ntot_group = ntot_group
 
     def define_obs_table(self):
         """Make an obs table for the OFF runs list.
@@ -140,7 +142,7 @@ class OffDataBackgroundMaker(object):
         """Make background models.
 
         Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
-        `~gammapy.background.EnergyOffsetBackgroundModel` (2D)) for each group in zenithal angle and efficiency
+        `~gammapy.background.EnergyOffsetBackgroundModel` (2D)) for each group
 
         Parameters
         ----------
@@ -151,6 +153,7 @@ class OffDataBackgroundMaker(object):
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
+            print(group)
             # Get observations in the group
             idx = np.where(self.obs_table['GROUP_ID'] == group)[0]
             obs_table_group = self.obs_table[idx]
@@ -160,41 +163,58 @@ class OffDataBackgroundMaker(object):
             # Build the model
             if modeltype == "3D":
                 model = CubeBackgroundModel.define_cube_binning(obs_table_group, method='default')
-                # TODO: should adapt to pass `obs_ids` here like for 2D below
                 model.fill_obs(obs_table_group, self.data_store)
                 model.smooth()
                 model.compute_rate()
-                self.models3D.append(model)
-
+                self.models3D[str(group)] = model
             elif modeltype == "2D":
-                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 100, 'TeV')
+                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
                 offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
-                model = EnergyOffsetBackgroundModel(energy=ebounds, offset=offset)
+                model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
-                self.models2D.append(model)
+                self.models2D[str(group)] = model
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
-    def save_model(self, modeltype, ngroup):
-        """Save model to fits for one group in zenithal angle and efficiency.
+    def filename(self, modeltype, group_id):
+        """Filename for a given ``modeltype`` and ``group_id``.
 
         Parameters
+        ----------
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        group_id : int
+            number of the background model group
+
+        """
+        return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+
+    def save_model(self, modeltype, ngroup):
+        """Save model to fits for one group.
+
+          Parameters
         ----------
         modeltype : {'3D', '2D'}
             Type of the background modelisation
         ngroup : int
             Number of groups
         """
-        filename = self.outdir + '/background_{}_group_{:03d}_table.fits.gz'.format(modeltype, ngroup)
+        filename = self.outdir + "/" + self.filename(modeltype, ngroup)
 
         if modeltype == "3D":
-            self.models3D[ngroup].write(str(filename), format='table', clobber=True)
+            if str(ngroup) in self.models3D.keys():
+                self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
+            else:
+                print("No run in the band {}".format(ngroup))
         if modeltype == "2D":
-            self.models2D[ngroup].write(str(filename), overwrite=True)
+            if str(ngroup) in self.models2D.keys():
+                self.models2D[str(ngroup)].write(str(filename), overwrite=True)
+            else:
+                print("No run in the band {}".format(ngroup))
 
     def save_models(self, modeltype):
-        """Save model to fits for all the groups in zenithal angle and efficiency.
+        """Save model to fits for all the groups.
 
         Parameters
         ----------
@@ -203,3 +223,86 @@ class OffDataBackgroundMaker(object):
         """
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
+
+    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None):
+        """Make background model index table.
+
+        Parameters
+        ----------
+        data_store : `~gammapy.data.DataStore`
+            `DataStore` for the runs for which ones we want to compute a background model
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        out_dir_background_model :  str
+            directory where are located the backgrounds models for each group
+        filename_obs_group_table : str
+            name of the file containing the `~astropy.table.Table` with the group infos
+
+
+        Returns
+        -------
+        index_table_bkg : `~astropy.table.Table`
+            Index hdu table only for the background in order to associate a bkg model for each observation
+        """
+
+        obs_table = data_store.obs_table
+        if not filename_obs_group_table:
+            filename_obs_group_table = self.group_table_filename
+        if not out_dir_background_model:
+            out_dir_background_model = data_store.hdu_table.meta["BASE_DIR"]
+        table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
+        axes = ObservationGroups.table_to_axes(table_group)
+        groups = ObservationGroups(axes)
+        obs_table = ObservationTable(obs_table)
+        obs_table = groups.apply(obs_table)
+
+        data = []
+        for obs in obs_table:
+            try:
+                group_id = obs['GROUP_ID']
+            except IndexError:
+                print('Found no GROUP_ID for {}'.format(obs["OBS_ID"]))
+                continue
+            row = dict()
+            row["OBS_ID"] = obs["OBS_ID"]
+            row["HDU_TYPE"] = "bkg"
+            row["FILE_DIR"] = str(out_dir_background_model)
+            row["FILE_NAME"] = self.filename(modeltype, group_id)
+            if modeltype == "2D":
+                row["HDU_NAME"] = "bkg_2d"
+                row["HDU_CLASS"] = "bkg_2d"
+            elif modeltype == '3D':
+                row["HDU_NAME"] = "bkg_3d"
+                row["HDU_CLASS"] = "bkg_3d"
+            else:
+                raise ValueError('Invalid modeltype: {}'.format(modeltype))
+            data.append(row)
+
+        index_table_bkg = Table(data)
+        return index_table_bkg
+
+    def make_total_index_table(self, data_store, modeltype, out_dir_background_model=None,
+                               filename_obs_group_table=None):
+        """Create a hdu-index table with a row containing the link to the background model for each observation.
+
+        Parameters
+        ----------
+        data_store : `~gammapy.data.DataStore`
+             `DataStore` for the runs for which ones we want to compute a background model
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        out_dir_background_model :  str
+            directory where are located the backgrounds models for each group
+        filename_obs_group_table : str
+            name of the file containing the `~astropy.table.Table` with the group infos
+
+        Returns
+        -------
+        index_table_new : `~astropy.table.Table`
+            Index hdu table with a background row
+        """
+
+        index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
+                                                    filename_obs_group_table)
+        index_table_new = vstack([data_store.hdu_table, index_table_bkg])
+        return index_table_new

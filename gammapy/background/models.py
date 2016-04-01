@@ -102,9 +102,13 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
     else:
         phi_min = phi - np.arctan(radius / separation)
         phi_max = phi + np.arctan(radius / separation)
-
         phi_events = pointing_position.position_angle(events.radec)
-        idx = np.where((phi_events > phi_max) | (phi_events < phi_min))
+        if phi_max.degree > 360:
+            phi_max = phi_max - Angle(360, "deg")
+            idx = np.where((phi_events > phi_max) & (phi_events < phi_min))
+        else:
+            idx = np.where((phi_events > phi_max) | (phi_events < phi_min))
+
         return idx[0]
 
 
@@ -628,7 +632,6 @@ class EnergyOffsetBackgroundModel(object):
 
             if excluded_sources:
                 pie_fraction = _compute_pie_fraction(excluded_sources, events.pointing_radec, fov_radius)
-
                 idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, fov_radius)
                 events = events[idx]
             else:
