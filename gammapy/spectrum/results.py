@@ -271,13 +271,14 @@ class SpectrumFitResult(Result):
                                           error=err.value,
                                           unit='{}'.format(par.unit))
         val['spectral_model'] = self.spectral_model
-        val['fluxes'] = dict()
-        for key in self.fluxes:
-            flux = self.fluxes[key]
-            flux_err = self.flux_errors[key]
-            val['fluxes'][key] = dict(value=flux.value,
-                                      error=flux_err.value,
-                                      unit='{}'.format(flux.unit))
+        if self.fluxes is not None:
+            val['fluxes'] = dict()
+            for key in self.fluxes:
+                flux = self.fluxes[key]
+                flux_err = self.flux_errors[key]
+                val['fluxes'][key] = dict(value=flux.value,
+                                          error=flux_err.value,
+                                          unit='{}'.format(flux.unit))
         return val
 
     @classmethod
