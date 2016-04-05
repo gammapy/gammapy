@@ -79,4 +79,4 @@ def test_datastore_subset(tmpdir, data_manager):
     storedir = tmpdir / 'substore'
     data_store.create_new_store_from_obs_table(selected_runs, storedir)
 
-    substore = DataStore.from_dir(storedir)
+    #substore = DataStore.from_dir(storedir)

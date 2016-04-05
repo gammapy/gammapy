@@ -4,6 +4,8 @@ import sys
 import logging
 import numpy as np
 from collections import OrderedDict
+
+import subprocess
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
@@ -267,7 +269,7 @@ class DataStore(object):
             Table summarising info about files.
         """
         if observation_table is None:
-            observation_table = ObservationTable(self.index_table)
+            observation_table = ObservationTable(self.obs_table)
 
         data = []
         for observation in observation_table:
@@ -303,6 +305,25 @@ class DataStore(object):
                                    ''.format(obs_id, filename))
 
         return file_available
+
+    def create_new_store_from_obs_table(self, obs_table, outdir):
+        """Create a new `~gammapy.data.DataStore` containing a subset of observations
+
+        Parameters
+        ----------
+        obs_tabe : `~gammapy.data.ObservationTable`
+            Table of observation to create the subset
+        dir : str, Path
+            Directory for the new store
+        """
+        outdir = make_path(outdir)
+        obs_ids = obs_table['OBS_ID'].data
+        hdutable = self.hdu_table
+        hdutable.add_index('OBS_ID')
+        temp = hdutable.loc[obs_ids]
+        copydirs = set(temp['FILE_DIR'])
+        cmd = ['cp', '-r'] + list(copydirs) + [str(outdir)]
+        subprocess.call(cmd)
 
 
 class DataStoreObservation(object):
