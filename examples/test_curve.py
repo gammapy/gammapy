@@ -136,19 +136,29 @@ def make_bg_model_two_groups():
     bgmaker.make_model("2D")
     bgmaker.save_models("2D")
 
-    import IPython; IPython.embed()
+    fn = outdir2 + '/group-def.ecsv'
+    hdu_index_table = bgmaker.make_total_index_table(
+        data_store=data_store,
+        modeltype='2D',
+        out_dir_background_model=outdir2,
+        filename_obs_group_table=fn
+    )
+
+    fn = outdir + '/hdu-index.fits.gz'
+    hdu_index_table.write(fn, overwrite=True)
 
 
 def make_image_from_2d_bg():
-    table = Table.read('acceptance_curve.fits')
-    table.pprint()
+
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
 
-    import IPython; IPython.embed()
     counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
                                 proj='TAN').to_image_hdu()
     bkg_image = counts_image.copy()
-    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+    data_store = DataStore.from_dir('/Users/deil/temp/bg_model_image/')
+
+    bkg = data_store.obs(obs_id=23523).bkg
+    import IPython; IPython.embed()
 
     for obs in data_store.observations:
 
@@ -183,5 +193,5 @@ if __name__ == '__main__':
     # make_image()
     # make_significance_image()
 
-    make_bg_model_two_groups()
-    # make_image_from_2d_bg()
+    # make_bg_model_two_groups()
+    make_image_from_2d_bg()

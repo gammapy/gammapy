@@ -97,7 +97,7 @@ class HDULocation(object):
             return PSFKing.read(filename, hdu=hdu_name)
         elif hdu_class == 'bkg_2d':
             from ..background import EnergyOffsetArray
-            return EnergyOffsetArray.read(filename, hdu=hdu_name)
+            return EnergyOffsetArray.read(filename, hdu=hdu_name, data_name='bkg')
         elif hdu_class == 'bkg_3d':
             from ..background import Cube
             return Cube.read(filename, hdu=hdu_name)

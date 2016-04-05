@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os
 import logging
 import numpy as np
 from astropy.table import Table, vstack
@@ -11,7 +10,6 @@ from .models import CubeBackgroundModel
 from .models import EnergyOffsetBackgroundModel
 from ..utils.energy import EnergyBounds
 from ..utils.axis import sqrt_space
-from ..extern.pathlib import Path
 
 __all__ = [
     'OffDataBackgroundMaker',
@@ -153,7 +151,6 @@ class OffDataBackgroundMaker(object):
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
         log.info('Groups: {}'.format(groups))
         for group in groups:
-            print(group)
             # Get observations in the group
             idx = np.where(self.obs_table['GROUP_ID'] == group)[0]
             obs_table_group = self.obs_table[idx]
@@ -206,12 +203,12 @@ class OffDataBackgroundMaker(object):
             if str(ngroup) in self.models3D.keys():
                 self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
             else:
-                print("No run in the band {}".format(ngroup))
+                log.info("No run in the band {}".format(ngroup))
         if modeltype == "2D":
             if str(ngroup) in self.models2D.keys():
                 self.models2D[str(ngroup)].write(str(filename), overwrite=True)
             else:
-                print("No run in the band {}".format(ngroup))
+                log.info("No run in the band {}".format(ngroup))
 
     def save_models(self, modeltype):
         """Save model to fits for all the groups.
@@ -261,7 +258,7 @@ class OffDataBackgroundMaker(object):
             try:
                 group_id = obs['GROUP_ID']
             except IndexError:
-                print('Found no GROUP_ID for {}'.format(obs["OBS_ID"]))
+                log.warning('Found no GROUP_ID for {}'.format(obs["OBS_ID"]))
                 continue
             row = dict()
             row["OBS_ID"] = obs["OBS_ID"]
