@@ -1,5 +1,6 @@
 """Example how to make an acceptance curve and background model image.
 """
+import numpy as np
 from astropy.table import Table
 import astropy.units as u
 from astropy.io import fits
@@ -10,7 +11,7 @@ from gammapy.background import EnergyOffsetBackgroundModel
 from gammapy.utils.energy import EnergyBounds, Energy
 from gammapy.data import DataStore
 from gammapy.utils.axis import sqrt_space
-from gammapy.image import bin_events_in_image, disk_correlate, SkyMap
+from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask
 from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
@@ -21,6 +22,10 @@ import matplotlib.pyplot as plt
 from gammapy.utils.scripts import make_path
 
 plt.ion()
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 def make_excluded_sources():
@@ -151,37 +156,66 @@ def make_bg_model_two_groups():
 def make_image_from_2d_bg():
 
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
-
-    counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
-                                proj='TAN').to_image_hdu()
-    bkg_image = counts_image.copy()
+    energy_band = Energy([1, 10], 'TeV')
     data_store = DataStore.from_dir('/Users/deil/temp/bg_model_image/')
 
-    bkg = data_store.obs(obs_id=23523).bkg
-    import IPython; IPython.embed()
+    counts_image_total = SkyMap.empty(
+        nxpix=1000, nypix=1000, binsz=0.01,
+        xref=center.l.deg, yref=center.b.deg, proj='TAN'
+    )
+    bkg_image_total = SkyMap.empty_like(counts_image_total)
+    refheader = counts_image_total.to_image_hdu().header
 
-    for obs in data_store.observations:
+    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+    # import IPython; IPython.embed(); 1/0
 
-        bkg_image.fill(obs.background)
-        obs.bkg.fill(bkg_image)
-        fill_background(obs.background, bkg_image)
+    for obs_id in data_store.obs_table['OBS_ID'][:1]:
 
-    for events in data_store.load_all("events"):
-        center = events.pointing_radec.galactic
-        livetime = events.observation_live_time_duration
+        obs = data_store.obs(obs_id=obs_id)
+        counts_image = SkyMap.empty_like(counts_image_total)
+        bkg_image = SkyMap.empty_like(counts_image_total)
+
+        log.info('Processing OBS_ID = {}'.format(obs_id))
+
+        log.info('Processing EVENTS')
+        events = obs.events
+        log.debug('Number of events before selection: {}'.format(len(events)))
+        events = events.select_energy(energy_band)
+        log.debug('Number of events after selection: {}'.format(len(events)))
+        counts_image.fill(events=events)
+
+        log.info('Processing BKG')
+        center = obs.pointing_radec.galactic
+        livetime = obs.observation_live_time_duration
         solid_angle = Angle(0.01, "deg") ** 2
 
-        counts_image.data += bin_events_in_image(events, counts_image).data
+        table = obs.bkg.acceptance_curve_in_energy_band(energy_band=energy_band)
+        bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"])
+        bkg = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
+        bkg = bkg.decompose()
 
-        # interp_param = dict(bounds_error=False, fill_value=None)
+        counts_sum = np.sum(counts_image.data * exclusion_mask.data)
+        bkg_sum = np.sum(bkg_image.data * exclusion_mask.data)
+        scale = counts_sum / bkg_sum
+        bkg_image.data = scale * bkg
 
-        acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"])
-        acc = Quantity(acc_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
-        bkg_image.data += acc.decompose()
-        print(acc.decompose().sum())
+        log.debug('scale = {}'.format(scale))
+        a = np.sum(bkg_image.data * exclusion_mask.data)
+        log.debug('a = {}'.format(a))
+        log.debug('counts_sum = {}'.format(counts_sum))
 
-    counts_image.writeto("counts_image.fits", clobber=True)
-    bkg_image.writeto("bkg_image.fits", clobber=True)
+        # Stack counts and background in total skymaps
+        counts_image_total.data += counts_image.data
+        bkg_image_total.data += bkg_image.data
+
+    filename = 'counts_image.fits'
+    log.info('Writing {}'.format(filename))
+    counts_image_total.write(filename, clobber=True)
+
+    filename = 'bkg_image.fits'
+    log.info('Writing {}'.format(filename))
+    bkg_image_total.write(filename, clobber=True)
 
     # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
     #  maps['ExpGammaMap'].data, kernel)
