@@ -14,8 +14,11 @@ from gammapy.image import bin_events_in_image, disk_correlate, SkyMap
 from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
+from gammapy.background import OffDataBackgroundMaker
+from gammapy.data import ObservationTable
 # from gammapy.detect import compute_ts_map
 import matplotlib.pyplot as plt
+from gammapy.utils.scripts import make_path
 
 plt.ion()
 
@@ -111,8 +114,74 @@ def plot_model():
     input()
 
 
+def make_bg_model_two_groups():
+    from subprocess import call
+    outdir = '/Users/deil/temp/bg_model_image/'
+    outdir2 = outdir + '/background'
+
+    cmd = 'mkdir -p {}'.format(outdir2)
+    print('Executing: {}'.format(cmd))
+    call(cmd, shell=True)
+
+    cmd = 'cp -r $GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/ {}'.format(outdir)
+    print('Executing: {}'.format(cmd))
+    call(cmd, shell=True)
+
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+
+    bgmaker = OffDataBackgroundMaker(data_store, outdir=outdir2)
+
+    bgmaker.select_observations(selection='all')
+    bgmaker.group_observations()
+    bgmaker.make_model("2D")
+    bgmaker.save_models("2D")
+
+    import IPython; IPython.embed()
+
+
+def make_image_from_2d_bg():
+    table = Table.read('acceptance_curve.fits')
+    table.pprint()
+    center = SkyCoord(83.63, 22.01, unit='deg').galactic
+
+    import IPython; IPython.embed()
+    counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg, yref=center.b.deg,
+                                proj='TAN').to_image_hdu()
+    bkg_image = counts_image.copy()
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
+
+    for obs in data_store.observations:
+
+        bkg_image.fill(obs.background)
+        obs.bkg.fill(bkg_image)
+        fill_background(obs.background, bkg_image)
+
+    for events in data_store.load_all("events"):
+        center = events.pointing_radec.galactic
+        livetime = events.observation_live_time_duration
+        solid_angle = Angle(0.01, "deg") ** 2
+
+        counts_image.data += bin_events_in_image(events, counts_image).data
+
+        # interp_param = dict(bounds_error=False, fill_value=None)
+
+        acc_hdu = fill_acceptance_image(bkg_image.header, center, table["offset"], table["Acceptance"])
+        acc = Quantity(acc_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
+        bkg_image.data += acc.decompose()
+        print(acc.decompose().sum())
+
+    counts_image.writeto("counts_image.fits", clobber=True)
+    bkg_image.writeto("bkg_image.fits", clobber=True)
+
+    # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
+    #  maps['ExpGammaMap'].data, kernel)
+
+
 if __name__ == '__main__':
-    make_model()
-    plot_model()
-    make_image()
-    make_significance_image()
+    # make_model()
+    # plot_model()
+    # make_image()
+    # make_significance_image()
+
+    make_bg_model_two_groups()
+    # make_image_from_2d_bg()
