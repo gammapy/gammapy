@@ -40,3 +40,18 @@ class ImageAnalysis(object):
         log.info('Running analysis ...')
         print(self.config['general']['outdir'])
         print(self.config)
+
+    def make_counts(self):
+        log.info('Making counts image ...')
+
+    def make_exposure(self):
+        log.info('Making exposure image ...')
+
+    def make_background(self):
+        log.info('Making background image ...')
+
+    def make_psf(self):
+        log.info('Making PSF ...')
+
+    def fit_source(self):
+        log.info('Fitting image ...')
