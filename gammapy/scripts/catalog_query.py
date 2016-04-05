@@ -55,12 +55,15 @@ def plot_lightcurve(catalog, source):
     catalog = source_catalogs[catalog]
     source = catalog[source]
 
+    print()
+    print(source)
+    print()
     # Generic info dict
-    #source.pprint()
+    # source.pprint()
 
     # Specific source info print-out
-    if hasattr(source, 'print_info'):
-        source.print_info()
+    # if hasattr(source, 'print_info'):
+    #     source.print_info()
 
 
 @cli.command('table-info')

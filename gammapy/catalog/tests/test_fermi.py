@@ -46,8 +46,10 @@ class TestFermi3FGLObject:
     def test_plot_spectrum(self):
         self.source.plot_spectrum()
 
-    def test_print_info(self):
-        self.source.print_info()
+    def test_str(self):
+        ss = str(self.source)
+        assert 'Source: 3FGL J0534.5+2201' in ss
+        assert 'RA (J2000)  : 83.63' in ss
 
 
 @requires_data('gammapy-extra')
