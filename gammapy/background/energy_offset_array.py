@@ -5,6 +5,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
+from ..utils.scripts import make_path
 from .cube import _make_bin_edges_array
 from .cube import Cube
 
@@ -15,6 +16,8 @@ __all__ = [
 
 class EnergyOffsetArray(object):
     """Energy offset dependent array.
+
+    TODO: take quantity `data` in `__init__` instead of `data` and `data_units` separately.
 
     Parameters
     ----------
@@ -101,17 +104,21 @@ class EnergyOffsetArray(object):
         return ax
 
     @classmethod
-    def read(cls, filename, data_name="data"):
+    def read(cls, filename, hdu='bkg_2d', data_name="data"):
         """Create `EnergyOffsetArray` from  FITS file.
 
         Parameters
         ----------
         filename : str
             File name
+        hdu : str
+            HDU name
         data_name : str
             Name of the data column in the table
         """
-        table = Table.read(filename)
+        filename = make_path(filename)
+        # import IPython; IPython.embed()
+        table = Table.read(str(filename), hdu=hdu, format='fits')
         return cls.from_table(table, data_name)
 
     @classmethod
@@ -130,7 +137,7 @@ class EnergyOffsetArray(object):
         energy_edges = _make_bin_edges_array(table['ENERG_LO'].squeeze(), table['ENERG_HI'].squeeze())
         energy_edges = EnergyBounds(energy_edges, table['ENERG_LO'].unit)
         data = Quantity(table[data_name].squeeze(), table[data_name].unit)
-        return cls(energy_edges, offset_edges, data)
+        return cls(energy_edges, offset_edges, data, data_units=str(data.unit))
 
     def write(self, filename, data_name="data", **kwargs):
         """ Write `EnergyOffsetArray` to FITS file.

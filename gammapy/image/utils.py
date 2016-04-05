@@ -707,7 +707,8 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
         Counts cube.
     """
     if get_wcs_ctype(wcs) == 'galactic':
-        lon, lat = events['GLON'], events['GLAT']
+        galactic = events.galactic
+        lon, lat = galactic.l.deg, galactic.b.deg
     else:
         lon, lat = events['RA'], events['DEC']
 

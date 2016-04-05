@@ -43,7 +43,7 @@ def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None
     if not offset_max:
         offset_max = Angle(offset)[-1]
     if not interp_kwargs:
-        interp_kwargs = dict(bounds_error=None, fill_value=acceptance[0])
+        interp_kwargs = dict(bounds_error=False, fill_value=acceptance[0])
 
     # initialize WCS to the header of the image
     wcs = WCS(header)
@@ -56,7 +56,7 @@ def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None
     # calculate pixel offset from center (in world coordinates)
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
     pix_off = coord.separation(center)
-    
+
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
     image.data[pix_off >= offset_max] = 0
