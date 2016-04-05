@@ -13,7 +13,7 @@ from astropy.units import Quantity, Unit
 from astropy.extern import six
 
 from ..extern.bunch import Bunch
-from ..image.utils import make_header, _bin_events_in_cube 
+from ..image.utils import make_header, _bin_events_in_cube
 from ..utils.wcs import get_wcs_ctype
 from ..utils.scripts import make_path
 
@@ -50,6 +50,7 @@ class SkyMap(object):
     meta : dict
         Dictionary to store meta data.
     """
+
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
         self.name = name
@@ -81,7 +82,7 @@ class SkyMap(object):
             header = fits.getheader(fobj, *args, **kwargs)
         wcs = WCS(header)
         meta = header
-        
+
         name = header.get('HDUNAME')
         if name is None:
             name = header.get('EXTNAME')
@@ -145,7 +146,7 @@ class SkyMap(object):
             Empty sky map.
         """
         header = make_header(nxpix, nypix, binsz, xref, yref,
-                         proj, coordsys, xrefpix, yrefpix)
+                             proj, coordsys, xrefpix, yrefpix)
         data = fill * np.ones((nypix, nxpix), dtype=dtype)
         wcs = WCS(header)
         return cls(name=name, data=data, wcs=wcs, unit=unit, meta=header)
@@ -168,7 +169,7 @@ class SkyMap(object):
         meta : dict
             Dictionary to store meta data.            
         """
-        if isinstance(skymap, SkyMap): 
+        if isinstance(skymap, SkyMap):
             wcs = skymap.wcs.copy()
         elif isinstance(skymap, (fits.ImageHDU, fits.PrimaryHDU)):
             wcs = WCS(skymap.header)
@@ -176,7 +177,6 @@ class SkyMap(object):
             raise TypeError("Can't create sky map from type {}".format(type(skymap)))
         data = fill * np.ones_like(skymap.data)
         return cls(name, data, wcs, unit, meta=wcs.to_header())
-
 
     def fill(self, events, origin=0):
         """
@@ -191,7 +191,6 @@ class SkyMap(object):
 
         """
         self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, origin=origin).sum(axis=0)
-
 
     def write(self, filename, *args, **kwargs):
         """
@@ -225,12 +224,12 @@ class SkyMap(object):
         if mode == 'center':
             y, x = np.indices(self.data.shape)
         elif mode == 'edges':
-            shape = self.data.shape[0] + 1, self.data.shape[1] + 1 
+            shape = self.data.shape[0] + 1, self.data.shape[1] + 1
             y, x = np.indices(shape)
             y, x = y - 0.5, x - 0.5
         else:
             raise ValueError('Invalid mode to compute coordinates.')
-        
+
         if coord_type == 'pix':
             return x, y
         else:
@@ -239,7 +238,7 @@ class SkyMap(object):
             l = l.wrap_at('180d')
             if coord_type == 'world':
                 return l.degree, b.degree
-            elif coord_type == 'skycoord': 
+            elif coord_type == 'skycoord':
                 return l, b
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"
@@ -252,7 +251,6 @@ class SkyMap(object):
         xsky, ysky = self.coordinates(mode='edges')
         omega = -np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:]
         return Quantity(omega, 'deg2').to('sr')
-
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -297,7 +295,7 @@ class SkyMap(object):
             Sherpa data type.
         """
         from sherpa.data import Data2D, Data2DInt
-        
+
         if dstype == 'Data2D':
             x, y = self.coordinates(mode='center')
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
@@ -321,7 +319,7 @@ class SkyMap(object):
         # Add meta data
         header.update(self.meta)
         header['BUNIT'] = self.unit
-        return fits.ImageHDU(data=self.data, header=header, name=self.name) 
+        return fits.ImageHDU(data=self.data, header=header, name=self.name)
 
     def reproject(self, refheader, mode='interp', *args, **kwargs):
         """
@@ -370,7 +368,7 @@ class SkyMap(object):
         """
         if viewer == 'mpl':
             # TODO: replace by better MPL or web based image viewer 
-            import matplotlib.pyplot as plt    
+            import matplotlib.pyplot as plt
             fig = plt.figure()
             axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
             self.plot(axes, fig, **kwargs)
@@ -426,7 +424,22 @@ class SkyMap(object):
         """
         Array representation of sky map.
         """
-        return self.data 
+        return self.data
+
+    def binarize(self, threshold=0.5):
+        """Make binary mask (`~gammapy.image.ExclusionMask`).
+
+        TODO: this isn't working yet.
+        The ``wcs`` attribute isn't copied over!?
+
+        TODO: some docs and example
+        """
+        # TODO: Add test.
+        from .mask import ExclusionMask
+        map = ExclusionMask(self)
+        map.data = np.where(self.data > threshold, 0, 1)
+
+        return map
 
 
 class SkyMapCollection(Bunch):
@@ -446,6 +459,7 @@ class SkyMapCollection(Bunch):
 
     Then try tab completion on the ``skymaps`` object.
     """
+
     @classmethod
     def read(cls, filename):
         """
@@ -459,7 +473,7 @@ class SkyMapCollection(Bunch):
         hdulist = fits.open(str(make_path(filename)))
         kwargs = {}
         _map_names = []  # list of map names to save order in fits file
-        
+
         for hdu in hdulist:
             skymap = SkyMap.read(hdu)
 
@@ -470,7 +484,6 @@ class SkyMapCollection(Bunch):
             _map_names.append(name)
         kwargs['_map_names'] = _map_names
         return cls(**kwargs)
-
 
     def write(self, filename=None, header=None, **kwargs):
         """

@@ -11,7 +11,7 @@ from gammapy.background import EnergyOffsetBackgroundModel
 from gammapy.utils.energy import EnergyBounds, Energy
 from gammapy.data import DataStore
 from gammapy.utils.axis import sqrt_space
-from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask
+from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask, SkyMapCollection
 from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
@@ -168,9 +168,11 @@ def make_image_from_2d_bg():
 
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(refheader=refheader)
-    # import IPython; IPython.embed(); 1/0
 
-    for obs_id in data_store.obs_table['OBS_ID'][:1]:
+    # TODO: fix `binarize` implementation
+    # exclusion_mask = exclusion_mask.binarize()
+
+    for obs_id in data_store.obs_table['OBS_ID'][:2]:
 
         obs = data_store.obs(obs_id=obs_id)
         counts_image = SkyMap.empty_like(counts_image_total)
@@ -190,6 +192,7 @@ def make_image_from_2d_bg():
         livetime = obs.observation_live_time_duration
         solid_angle = Angle(0.01, "deg") ** 2
 
+        # TODO: this is broken at the moment ... the output image is full of NaNs
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=energy_band)
         bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"])
         bkg = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
@@ -209,13 +212,24 @@ def make_image_from_2d_bg():
         counts_image_total.data += counts_image.data
         bkg_image_total.data += bkg_image.data
 
-    filename = 'counts_image.fits'
-    log.info('Writing {}'.format(filename))
-    counts_image_total.write(filename, clobber=True)
+        import IPython; IPython.embed(); 1/0
 
-    filename = 'bkg_image.fits'
+    maps = SkyMapCollection()
+    maps['counts'] = counts_image_total
+    maps['bkg'] = bkg_image_total
+    maps['exclusion'] = exclusion_mask
+
+    filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
-    bkg_image_total.write(filename, clobber=True)
+    maps.write(filename, clobber=True)
+
+    # filename = 'counts_image.fits'
+    # log.info('Writing {}'.format(filename))
+    # counts_image_total.write(filename, clobber=True)
+    #
+    # filename = 'bkg_image.fits'
+    # log.info('Writing {}'.format(filename))
+    # bkg_image_total.write(filename, clobber=True)
 
     # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
     #  maps['ExpGammaMap'].data, kernel)
