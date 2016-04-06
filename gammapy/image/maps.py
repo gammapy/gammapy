@@ -497,6 +497,7 @@ class SkyMapCollection(Bunch):
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):
             hdu = self[name].to_image_hdu()
+            hdu.name = name
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
 

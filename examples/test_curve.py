@@ -222,16 +222,18 @@ def make_image_from_2d_bg():
     log.info('Writing {}'.format(filename))
     maps.write(filename, clobber=True)
 
-    # filename = 'counts_image.fits'
-    # log.info('Writing {}'.format(filename))
-    # counts_image_total.write(filename, clobber=True)
-    #
-    # filename = 'bkg_image.fits'
-    # log.info('Writing {}'.format(filename))
-    # bkg_image_total.write(filename, clobber=True)
+def make_significance_from_2d_bg():
+    SkyMapCollection.read('fov_bg_maps.fits')
+    """
+    counts_image = fits.open("counts_image.fits")[1]
+    bkg_image = fits.open("bkg_image.fits")[1]
+    counts = disk_correlate(counts_image.data, 10)
+    bkg = disk_correlate(bkg_image.data, 10)
+    s = significance(counts, bkg)
+    s_image = fits.ImageHDU(data=s, header=counts_image.header)
+    s_image.writeto("significance_image.fits", clobber=True)
+    """
 
-    # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
-    #  maps['ExpGammaMap'].data, kernel)
 
 
 if __name__ == '__main__':
@@ -242,3 +244,4 @@ if __name__ == '__main__':
 
     #make_bg_model_two_groups()
     make_image_from_2d_bg()
+    make_significance_from_2d_bg()
