@@ -121,7 +121,7 @@ def plot_model():
 
 def make_bg_model_two_groups():
     from subprocess import call
-    outdir = '/Users/deil/temp/bg_model_image/'
+    outdir = '/Users/jouvin/Desktop/these/temp/bg_model_image/'
     outdir2 = outdir + '/background'
 
     cmd = 'mkdir -p {}'.format(outdir2)
@@ -157,7 +157,7 @@ def make_image_from_2d_bg():
 
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
-    data_store = DataStore.from_dir('/Users/deil/temp/bg_model_image/')
+    data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
 
     counts_image_total = SkyMap.empty(
         nxpix=1000, nypix=1000, binsz=0.01,
@@ -195,13 +195,13 @@ def make_image_from_2d_bg():
         # TODO: this is broken at the moment ... the output image is full of NaNs
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=energy_band)
         bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"])
-        bkg = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
-        bkg = bkg.decompose()
+        bkg_image.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
+        bkg_image.data = bkg_image.data.decompose()
 
         counts_sum = np.sum(counts_image.data * exclusion_mask.data)
         bkg_sum = np.sum(bkg_image.data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
-        bkg_image.data = scale * bkg
+        bkg_image.data = scale * bkg_image.data
 
         log.debug('scale = {}'.format(scale))
         a = np.sum(bkg_image.data * exclusion_mask.data)
@@ -212,7 +212,6 @@ def make_image_from_2d_bg():
         counts_image_total.data += counts_image.data
         bkg_image_total.data += bkg_image.data
 
-        import IPython; IPython.embed(); 1/0
 
     maps = SkyMapCollection()
     maps['counts'] = counts_image_total
@@ -241,5 +240,5 @@ if __name__ == '__main__':
     # make_image()
     # make_significance_image()
 
-    # make_bg_model_two_groups()
+    #make_bg_model_two_groups()
     make_image_from_2d_bg()
