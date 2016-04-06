@@ -8,6 +8,7 @@ from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
 
+from gammapy.spectrum import DifferentialFluxPoints
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml, make_path
@@ -16,7 +17,6 @@ __all__ = ['SpectrumStats',
            'SpectrumFitResult',
            'SpectrumResult',
            'SpectrumResultDict',
-           'FluxPoints',
            ]
 
 @six.add_metaclass(abc.ABCMeta)
@@ -555,7 +555,7 @@ class SpectrumResult(object):
         Spectrum stats
     fit: `~gammapy.spectrum.results.SpectrumFitResult`, optional
         Spectrum fit result
-    points: `~gammapy.spectrum.results.FluxPoints`, optional
+    points: `~gammapy.spectrum.flux_points.DifferentialFluxPoints`, optional
         Flux points
     """
 
@@ -575,7 +575,7 @@ class SpectrumResult(object):
         except KeyError:
             fit = None
         try:
-            points = FluxPoints.from_fitspectrum_json(filename)
+            points = DifferentialFluxPoints.from_fitspectrum_json(filename)
         except KeyError:
             points = None
 

@@ -6,7 +6,9 @@ import logging
 import numpy as np
 from astropy.table import Table
 from astropy.units import Unit, Quantity
-from ..spectrum import compute_differential_flux_points
+
+from gammapy.utils.energy import EnergyBounds
+from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
 
 __all__ = [
     'SEDComponent',
@@ -328,12 +330,16 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
 
         emins = cube.energy[:-1]
         emaxs = cube.energy[1:]
-        table = compute_differential_flux_points(x_method='lafferty',
-                                                 y_method='power_law',
-                                                 spectral_index=spectral_index,
-                                                 energy_min=emins, energy_max=emaxs,
-                                                 int_flux=values,
-                                                 int_flux_err=errors * values)
+
+        values = Quantity(values, cube.data.unit)
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(emins, emaxs)
+        int_points = IntegralFluxPoints.from_arrays(ebounds=ebounds,
+                                                    int_flux=values,
+                                                    int_flux_err=errors * values)
+
+        table = int_points.compute_differential_flux_points(x_method='lafferty',
+                                                            y_method='power_law',
+                                                            spectral_index=spectral_index)
 
     else:
         raise ValueError('Unknown flux_type: {0}'.format(flux_type))

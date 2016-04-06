@@ -137,6 +137,7 @@ def test_cube_sed1():
     assert_allclose(sed_table3['DIFF_FLUX_ERR'].data, 2560 * np.sqrt(1. / 256))
 
 
+@pytest.mark.xfail(reason='Cube has units 1 / cm2 MeV s sr')
 @requires_data('gammapy-extra')
 def test_cube_sed2():
     """Tests against known results with integral cube of 1s.

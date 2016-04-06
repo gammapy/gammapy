@@ -90,12 +90,17 @@ class IntegralFluxPoints(Table):
     def from_arrays(cls, ebounds, int_flux, int_flux_err = None):
         """Create flux points table given some numpy arrays"""
         t = Table()
+        ebounds = EnergyBounds(ebounds)
+        int_flux = Quantity(int_flux)
+        if not int_flux.unit.is_equivalent('cm-2 s-1'):
+            raise ValueError('Flux (unit {}) not an integrated flux'.format(int_flux.unit))
         t['ENERGY_MIN'] = ebounds.lower_bounds
         t['ENERGY_MAX'] = ebounds.upper_bounds
-        t['INT_FLUX'] = Quantity(int_flux)
-        t['INT_FLUX_ERR_HI'] = Quantity(int_flux_err)
-        t['INT_FLUX_ERR_LO'] = Quantity(int_flux_err)
-        
+        t['INT_FLUX'] = int_flux
+        t['INT_FLUX_ERR_HI'] = int_flux_err
+        t['INT_FLUX_ERR_LO'] = int_flux_err
+        return cls(t)
+
     @property
     def ebounds(self):
         """Energy bounds"""
@@ -138,16 +143,17 @@ class IntegralFluxPoints(Table):
         For usage, see this tutorial: :ref:`tutorials-flux_point`.
         """
 
-        energy_min = self['ENERGY_MIN']
-        energy_max = self['ENERGY_MAX']
-        int_flux = self['INT_FLUX']
+        # Work with fixed units internally
+        energy_min = self['ENERGY_MIN'].to('TeV').value
+        energy_max = self['ENERGY_MAX'].to('TeV').value
+        int_flux = self['INT_FLUX'].to('cm-2 s-1').value
 
         # Compute x point
         if x_method == 'table':
             # This is only called if the provided table includes energies
-            energy = np.array(energy_table['ENERGY'])
+            energy = energy_table['ENERGY'].quantity.to('TeV').value
         elif x_method == 'log_center':
-            energy = self.ebounds.log_centers
+            energy = self.ebounds.log_centers.to('TeV').value
         elif x_method == 'lafferty':
             if y_method == 'power_law':
                 # Uses analytical implementation available for the power law case
@@ -180,6 +186,7 @@ class IntegralFluxPoints(Table):
 
         # Output table
         table = Table()
+        energy = Quantity(energy, 'TeV')
         table['ENERGY'] = energy
         table['ENERGY_ERR_HI'] = self.ebounds.upper_bounds - energy
         table['ENERGY_ERR_LO'] = energy - self.ebounds.lower_bounds
@@ -189,7 +196,7 @@ class IntegralFluxPoints(Table):
         try:
             # TODO: more rigorous implementation of error propagation should be implemented
             # I.e. based on MC simulation rather than gaussian error assumption
-            int_flux_err = self['INT_FLUX_ERR']
+            int_flux_err = self['INT_FLUX_ERR'].to('cm-2 s-1').value
             err = int_flux_err / int_flux
             diff_flux_err = err * diff_flux
             table['DIFF_FLUX_ERR_HI'] = diff_flux_err
@@ -247,6 +254,9 @@ def _integrate(xmin, xmax, function, segments=1e3):
         y_vals = function(x_vals)
         # Division by number of segments required for correct normalization
         y_values.append(np.trapz(y_vals) / segments)
+
+    # Todo : Remove assumption on unit
+    # In fact all of this can probably go ocne astropy.models or sherpa is ready
     return y_values
 
 
