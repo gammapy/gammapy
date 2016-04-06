@@ -136,7 +136,7 @@ class OffDataBackgroundMaker(object):
         obs_groups.obs_groups_table.write(str(filename), overwrite=True)
         self.ntot_group = obs_groups.n_groups
 
-    def make_model(self, modeltype):
+    def make_model(self, modeltype, ebounds=None, offset=None):
         """Make background models.
 
         Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
@@ -146,6 +146,10 @@ class OffDataBackgroundMaker(object):
         ----------
         modeltype : {'3D', '2D'}
             Type of the background modelisation
+        ebounds : `~gammapy.utils.energy.EnergyBounds`
+            Energy bounds vector (1D)
+        offset : `~astropy.coordinates.Angle`
+            Offset vector (1D)
         """
 
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
@@ -165,8 +169,10 @@ class OffDataBackgroundMaker(object):
                 model.compute_rate()
                 self.models3D[str(group)] = model
             elif modeltype == "2D":
-                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
-                offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
+                if not ebounds:
+                    ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
+                if not offset:
+                    offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
@@ -174,7 +180,7 @@ class OffDataBackgroundMaker(object):
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
-    def filename(self, modeltype, group_id, smooth= False):
+    def filename(self, modeltype, group_id, smooth=False):
         """Filename for a given ``modeltype`` and ``group_id``.
 
         Parameters
@@ -183,6 +189,8 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         group_id : int
             number of the background model group
+        smooth : str
+            True if you want to use the smooth bkg model
 
         """
         if smooth:
@@ -225,7 +233,7 @@ class OffDataBackgroundMaker(object):
             self.save_model(modeltype, ngroup)
 
     def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None,
-                             smooth= False):
+                             smooth=False):
         """Make background model index table.
 
         Parameters
@@ -238,6 +246,8 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
+        smooth : str
+            True if you want to use the smooth bkg model
 
 
         Returns
@@ -282,7 +292,7 @@ class OffDataBackgroundMaker(object):
         return index_table_bkg
 
     def make_total_index_table(self, data_store, modeltype, out_dir_background_model=None,
-                               filename_obs_group_table=None, smooth= False):
+                               filename_obs_group_table=None, smooth=False):
         """Create a hdu-index table with a row containing the link to the background model for each observation.
 
         Parameters
@@ -295,6 +305,8 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
+        smooth : str
+            True if you want to use the smooth bkg model
 
         Returns
         -------
@@ -303,8 +315,8 @@ class OffDataBackgroundMaker(object):
         """
 
         index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
-                                                    filename_obs_group_table)
-        index_bkg=np.where(data_store.hdu_table["HDU_CLASS"]=="bkg_3d")[0].tolist()
+                                                    filename_obs_group_table, smooth)
+        index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == "bkg_3d")[0].tolist()
         data_store.hdu_table.remove_rows(index_bkg)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         return index_table_new
