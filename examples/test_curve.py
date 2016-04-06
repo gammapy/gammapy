@@ -16,6 +16,7 @@ from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 from gammapy.background import OffDataBackgroundMaker
+from gammapy.scripts import ImageAnalysis
 from gammapy.data import ObservationTable
 # from gammapy.detect import compute_ts_map
 import matplotlib.pyplot as plt
@@ -222,6 +223,48 @@ def make_image_from_2d_bg():
     log.info('Writing {}'.format(filename))
     maps.write(filename, clobber=True)
 
+def make_image_from_2d_bg_class():
+
+    center = SkyCoord(83.63, 22.01, unit='deg').galactic
+    energy_band = Energy([1, 10], 'TeV')
+    data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
+
+    counts_image_total = SkyMap.empty(
+        nxpix=1000, nypix=1000, binsz=0.01,
+        xref=center.l.deg, yref=center.b.deg, proj='TAN'
+    )
+    bkg_image_total = SkyMap.empty_like(counts_image_total)
+    refheader = counts_image_total.to_image_hdu().header
+
+    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+
+    # TODO: fix `binarize` implementation
+    # exclusion_mask = exclusion_mask.binarize()
+
+    for obs_id in data_store.obs_table['OBS_ID'][:2]:
+
+
+        images = ImageAnalysis(center, energy_band, data_store)
+        log.info('Processing OBS_ID = {}'.format(obs_id))
+
+        images.make_counts(obs_id)
+        images.make_background_normalized(obs_id, exclusion_mask)
+
+        # Stack counts and background in total skymaps
+        counts_image_total.data += images.counts_image.data
+        bkg_image_total.data += images.bkg_image.data
+
+
+    maps = SkyMapCollection()
+    maps['counts'] = counts_image_total
+    maps['bkg'] = bkg_image_total
+    maps['exclusion'] = exclusion_mask
+
+    filename = 'fov_bg_maps_class.fits'
+    log.info('Writing {}'.format(filename))
+    maps.write(filename, clobber=True)
+
 def make_significance_from_2d_bg():
     maps = SkyMapCollection.read('fov_bg_maps.fits')
     counts_image = maps["counts"]
@@ -232,6 +275,16 @@ def make_significance_from_2d_bg():
     s_image = fits.ImageHDU(data=s, header=counts_image.to_image_hdu().header)
     s_image.writeto("significance_image.fits", clobber=True)
 
+def make_significance_from_2d_bg_class():
+    maps = SkyMapCollection.read('fov_bg_maps_class.fits')
+    counts_image = maps["counts"]
+    bkg_image = maps["bkg"]
+    counts = disk_correlate(counts_image.data, 10)
+    bkg = disk_correlate(bkg_image.data, 10)
+    s = significance(counts, bkg)
+    s_image = fits.ImageHDU(data=s, header=counts_image.to_image_hdu().header)
+    s_image.writeto("significance_image_class.fits", clobber=True)
+
 
 
 
@@ -241,6 +294,8 @@ if __name__ == '__main__':
     # make_image()
     # make_significance_image()
 
-    make_bg_model_two_groups()
+    #make_bg_model_two_groups()
     make_image_from_2d_bg()
     make_significance_from_2d_bg()
+    make_image_from_2d_bg_class()
+    make_significance_from_2d_bg_class()
