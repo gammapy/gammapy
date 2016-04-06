@@ -593,8 +593,9 @@ class SpectrumResult(object):
         data = read_yaml(str(filename))
 
         results = OrderedDict()
+        # The dict order has to mirror the output of Result.__subclass__()
+
         results['fit'] = None
-        results['points'] = None
         results['stats'] = None
 
         for i, _ in enumerate(Result.__subclasses__()):
