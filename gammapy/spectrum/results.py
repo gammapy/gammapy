@@ -47,10 +47,11 @@ class Result():
 
         Parameters
         ----------
-        filename : str
+        filename : str, Path
             File to read
         """
-        val = read_yaml(filename)
+        filename = make_path(filename)
+        val = read_yaml(str(filename))
         return cls.from_dict(val[cls.HIGH_LEVEL_KEY])
 
     def to_dict(self):
@@ -60,15 +61,15 @@ class Result():
         """
         raise NotImplementedError
 
-    def to_yaml(self, filename):
+    def to_yaml(self, filename, mode='w'):
         """Write YAML file
 
         Parameters
         ----------
         filename : str
             File to write
-        key : str
-            Highest level key to read
+        mode : str
+            Write mode
         """
 
         import yaml
@@ -77,7 +78,7 @@ class Result():
         d[self.HIGH_LEVEL_KEY] = self.to_dict()
         val = yaml.safe_dump(d, default_flow_style=False)
 
-        with open(str(filename), 'w') as outfile:
+        with open(str(filename), mode) as outfile:
             outfile.write(val)
 
     @classmethod
@@ -133,7 +134,7 @@ class SpectrumFitResult(Result):
         if fit_range is not None:
             self.fit_range = EnergyBounds(fit_range).to('TeV')
         else:
-            self.fit_range = EnergyBounds([0.01, 300], 'TeV')
+            self.fit_range = None
         self.fluxes = fluxes
         self.flux_errors = flux_errors
 
@@ -262,7 +263,8 @@ class SpectrumFitResult(Result):
 
     def to_dict(self):
         val = dict()
-        val['fit_range'] = self.fit_range.to_dict()
+        if self.fit_range is not None:
+            val['fit_range'] = self.fit_range.to_dict()
         val['parameters'] = dict()
         for key in self.parameters:
             par = self.parameters[key]
@@ -283,8 +285,11 @@ class SpectrumFitResult(Result):
 
     @classmethod
     def from_dict(cls, val):
-        erange = val['fit_range']
-        energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
+        try:
+            erange = val['fit_range']
+            energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
+        except KeyError:
+            energy_range = None
         pars = val['parameters']
         parameters = Bunch()
         parameter_errors = Bunch()
@@ -355,8 +360,8 @@ class SpectrumFitResult(Result):
 
         return model
 
-    def plot(self, ax=None, energy_unit='TeV',
-             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
+    def plot(self, ax=None, energy_unit='TeV', energy_range = None,
+             flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
         """Plot fit function
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
@@ -369,7 +374,7 @@ class SpectrumFitResult(Result):
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        e_power : int
+        energy_power : int
             Power of energy to multiply flux axis with
 
         Returns
@@ -383,14 +388,23 @@ class SpectrumFitResult(Result):
         ax = plt.gca() if ax is None else ax
 
         func = self.to_sherpa_model()
-        x_min = np.log10(self.fit_range[0].value)
-        x_max = np.log10(self.fit_range[1].value)
-        x = np.logspace(x_min, x_max, 100) * self.fit_range.unit
+        if energy_range is None:
+            if self.fit_range is None:
+                raise ValueError('No fit range specified. You have to give an '
+                                 'energy range for the plot.')
+            else:
+                energy_range = self.fit_range
+        else:
+            energy_range = EnergyBounds(energy_range)
+
+        x_min = np.log10(energy_range[0].value)
+        x_max = np.log10(energy_range[1].value)
+        x = np.logspace(x_min, x_max, 100) * energy_range.unit
         y = func(x.to('keV').value) * Unit('cm-2 s-1 keV-1')
         x = x.to(energy_unit).value
         y = y.to(flux_unit).value
-        y = y * np.power(x, e_power)
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
+        y = y * np.power(x, energy_power)
+        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
@@ -429,86 +443,6 @@ class SpectrumFitResult(Result):
         return x, butterfly
 
 
-class FluxPoints(Table, Result):
-    """Flux points table
-
-    For a complete documentation see :ref:`gadf:flux-points`
-    """
-
-    HIGH_LEVEL_KEY = 'flux_points'
-
-    @classmethod
-    def from_fitspectrum_json(cls, filename):
-        import json
-        with open(filename) as fh:
-            data = json.load(fh)
-
-        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
-        flux_points['energy'].unit = 'TeV'
-        flux_points['energy_err_hi'].unit = 'TeV'
-        flux_points['energy_err_lo'].unit = 'TeV'
-        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
-
-        return cls(flux_points)
-
-    def to_dict(self):
-        val = dict(flux_points = dict())
-        for col in self:
-            val['flux_points'][col] = [float(_) for _ in self[col]]
-            val['flux_points']['energy_unit'] = '{}'.format(self['energy'].unit)
-            val['flux_points']['flux_unit'] = '{}'.format(self['flux'].unit)
-
-    @classmethod
-    def from_dict(cls, val):
-        fp = val['flux_points']
-        e_unit = Unit(fp.pop('energy_unit'))
-        f_unit = Unit(fp.pop('flux_unit'))
-        flux_points = Table(val['flux_points'])
-        flux_points['energy'].unit = e_unit
-        flux_points['energy_err_hi'].unit = e_unit
-        flux_points['energy_err_lo'].unit = e_unit
-        flux_points['flux'].unit = f_unit
-        flux_points['flux_err_hi'].unit = f_unit
-        flux_points['flux_err_lo'].unit = f_unit
-
-    def plot(self, ax=None, energy_unit='TeV',
-             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
-        """Plot spectral points
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
-
-        Parameters
-        ----------
-        ax : `~matplolib.axes`, optional
-            Axis
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
-        e_power : int
-            Power of energy to multiply flux axis with
-
-        Returns
-        -------
-        ax : `~matplolib.axes`, optional
-            Axis
-        """
-        import matplotlib.pyplot as plt
-
-        kwargs.setdefault('fmt', 'o')
-        ax = plt.gca() if ax is None else ax
-        x = self['energy'].quantity.to(energy_unit).value
-        y = self['flux'].quantity.to(flux_unit).value
-        yh = self['flux_err_hi'].quantity.to(flux_unit).value
-        yl = self['flux_err_lo'].quantity.to(flux_unit).value
-        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, e_power)
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
-        ax.errorbar(x, y, yerr=(yh, yl), **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
-        return ax
 
 
 class SpectrumStats(Result):
@@ -655,7 +589,8 @@ class SpectrumResult(object):
         creates `~gammapy.spectrum.results.Result` instances depending
         on the available keys
         """
-        data = read_yaml(filename)
+        filename = make_path(filename)
+        data = read_yaml(str(filename))
 
         results = OrderedDict()
         results['fit'] = None
@@ -723,7 +658,7 @@ class SpectrumResult(object):
         return residuals.decompose(), residuals_err.decompose()
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      e_power=0, fit_kwargs=None, point_kwargs=None):
+                      energy_power=0, fit_kwargs=None, point_kwargs=None):
         """Plot full spectrum including flux points and residuals
 
         Parameters
@@ -734,7 +669,7 @@ class SpectrumResult(object):
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        e_power : int
+        energy_power : int
             Power of energy to multiply flux axis with
         fit_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_fit_function`
@@ -767,11 +702,10 @@ class SpectrumResult(object):
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        
         self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                      e_power=e_power, ax=ax0, **fit_kwargs)
+                      energy_power=energy_power, ax=ax0, **fit_kwargs)
         self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                         e_power=e_power, ax=ax0, **point_kwargs)
+                         energy_power=energy_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
         plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,

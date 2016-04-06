@@ -3,135 +3,203 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.table import Table
+from astropy.units import Unit, Quantity
+from gammapy.utils.energy import EnergyBounds
 from ..spectrum.powerlaw import power_law_flux
 
-__all__ = ['compute_differential_flux_points']
+__all__ = [
+    'DifferentialFluxPoints',
+    'IntegralFluxPoints',
+]
 
 
-def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
-                                     table=None, model=None,
-                                     spectral_index=None, energy_min=None,
-                                     energy_max=None, int_flux=None,
-                                     int_flux_err=None):
-    """Creates differential flux points table from integral flux points table.
+class DifferentialFluxPoints(Table):
+    """Differential flux points table
 
-    Parameters
-    ----------
-    table : `~astropy.table.Table`
-        Integral flux data table in energy bins, including columns
-        'ENERGY_MIN', 'ENERGY_MAX', 'INT_FLUX', 'INT_FLUX_ERR'
-    energy_min : float, array_like
-        If table not defined, minimum energy of bin(s) may be input
-        directly as either a float or array.
-    energy_max : float, array_like
-        If table not defined, maximum energy of bin(s) input directly.
-    int_flux : float, array_like
-        If table not defined, integral flux in bin(s) input directly. If array,
-        energy_min, energy_max must be either arrays of the same shape
-        (for differing energy bins) or floats (for the same energy bin).
-    int_flux_err : float, array_like
-        Type must be the same as for int_flux
-    x_method : {'lafferty', 'log_center', 'table'}
-        Flux point energy computation method; either Lafferty & Wyatt
-        model-based positioning, log bin center positioning
-        or user-defined `~astropy.table.Table` positioning
-        using column heading ['ENERGY']
-    y_method : {'power_law', 'model'}
-        Flux computation method assuming PowerLaw or user defined model function
-    model : callable
-        User-defined model function
-    spectral_index : float, array_like
-        Spectral index if default power law model is used. Either a float
+    Column names: ENERGY, ENERGY_ERR_HI, ENERGY_ERR_LO,
+    DIFF_FLUX, DIFF_FLUX_ERR_HI, DIFF_FLUX_ERR_LO
+
+    For a complete documentation see :ref:`gadf:flux-points`
+    """
+    @classmethod
+    def from_fitspectrum_json(cls, filename):
+        import json
+        with open(filename) as fh:
+            data = json.load(fh)
+
+        # TODO : Adjust column names
+
+        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
+        flux_points['energy'].unit = 'TeV'
+        flux_points['energy'].name = 'ENERGY'
+        flux_points['energy_err_hi'].unit = 'TeV'
+        flux_points['energy_err_lo'].unit = 'TeV'
+        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
+        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
+        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
+
+        return cls(flux_points)
+
+    def plot(self, ax=None, energy_unit='TeV',
+             flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
+        """Plot spectral points
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        energy_power : int
+            Power of energy to multiply flux axis with
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
+        """
+        import matplotlib.pyplot as plt
+
+        kwargs.setdefault('fmt', 'o')
+        ax = plt.gca() if ax is None else ax
+        x = self['energy'].quantity.to(energy_unit).value
+        y = self['flux'].quantity.to(flux_unit).value
+        yh = self['flux_err_hi'].quantity.to(flux_unit).value
+        yl = self['flux_err_lo'].quantity.to(flux_unit).value
+        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, energy_power)
+        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
+        ax.errorbar(x, y, yerr=(yl, yh), **kwargs)
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
+        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        return ax
+
+
+class IntegralFluxPoints(Table):
+    """Integral flux points table
+
+    Column names: ENERGY_MIN, ENERGY_MAX, INT_FLUX, INT_FLUX_ERR_HI, INT_FLUX_ERR_LO
+
+    For a complete documentation see :ref:`gadf:flux-points`
+    """
+
+    @classmethod
+    def from_arrays(cls, ebounds, int_flux, int_flux_err = None):
+        """Create flux points table given some numpy arrays"""
+        t = Table()
+        t['ENERGY_MIN'] = ebounds.lower_bounds
+        t['ENERGY_MAX'] = ebounds.upper_bounds
+        t['INT_FLUX'] = Quantity(int_flux)
+        t['INT_FLUX_ERR_HI'] = Quantity(int_flux_err)
+        t['INT_FLUX_ERR_LO'] = Quantity(int_flux_err)
+        
+    @property
+    def ebounds(self):
+        """Energy bounds"""
+        return EnergyBounds.from_lower_and_upper_bounds(
+            self['ENERGY_MIN'], self['ENERGY_MAX'])
+
+    def compute_differential_flux_points(self, x_method='lafferty',
+                                         y_method='power_law', model=None,
+                                         spectral_index=None, energy_table=None):
+        """Creates differential flux points table from integral flux points table.
+
+        TODO : Put this into the docs
+        - Flux point energy computation method either Lafferty & Wyatt
+        model-based positioning, log bin center positioning or user-defined
+        `~astropy.table.Table` positioning using column heading ['ENERGY'].
+        - Flux computation method assuming PowerLaw or user defined model function.
+        - Spectral index if default power law model is used. Either a float
         or array_like (in which case, energy_min, energy_max and int_flux
         must be floats to avoid ambiguity)
 
-    Returns
-    -------
-    differential_flux_table : `~astropy.table.Table`
-        Input table with appended columns 'ENERGY', 'DIFF_FLUX', 'DIFF_FLUX_ERR'
+        Parameters
+        ----------
+        x_method : {'lafferty', 'log_center', 'table'}
+            Flux point energy computation method
+        y_method : {'power_law', 'model'}
+            Flux computation method
+        model : callable
+            User-defined model function
+        spectral_index : float, array_like
+            Spectral index
+        energy_table : `astropy.table.Table`
+            Flux point energy table
 
-    Notes
-    -----
-    For usage, see this tutorial: :ref:`tutorials-flux_point`.
-    """
-    # Use input values if not initially provided with a table
-    # and broadcast quantities to arrays if required
-    if table is None:
-        spectral_index = np.array(spectral_index).reshape(np.array(spectral_index).size, )
-        energy_min = np.array(energy_min).reshape(np.array(energy_min).size, )
-        energy_max = np.array(energy_max).reshape(np.array(energy_max).size, )
-        int_flux = np.array(int_flux).reshape(np.array(int_flux).size, )
-        try:
-            int_flux_err = np.array(int_flux_err).reshape(np.array(int_flux_err).size, )
-        except:
-            pass
-        # TODO: Can a better implementation be found here?
-        lengths = dict(SPECTRAL_INDEX=len(spectral_index),
-                       ENERGY_MIN=len(energy_min),
-                       ENERGY_MAX=len(energy_max),
-                       FLUX=len(int_flux))
-        max_length = np.array(list(lengths.values())).max()
-        int_flux = np.array(int_flux) * np.ones(max_length)
-        spectral_index = np.array(spectral_index) * np.ones(max_length)
-        energy_min = np.array(energy_min) * np.ones(max_length)
-        energy_max = np.array(energy_max) * np.ones(max_length)
-        try:
-            int_flux_err = np.array(int_flux_err) * np.ones(max_length)
-        except:
-            pass
-    # Otherwise use the table provided
-    else:
-        energy_min = np.asanyarray(table['ENERGY_MIN'])
-        energy_max = np.asanyarray(table['ENERGY_MAX'])
-        int_flux = np.asanyarray(table['INT_FLUX'])
-        try:
-            int_flux_err = np.asanyarray(table['INT_FLUX_ERR'])
-        except:
-            pass
-    # Compute x point
-    if x_method == 'table':
-        # This is only called if the provided table includes energies
-        energy = np.array(table['ENERGY'])
-    elif x_method == 'log_center':
-        from scipy.stats import gmean
-        energy = np.array(gmean((energy_min, energy_max)))
-    elif x_method == 'lafferty':
-        if y_method == 'power_law':
-            # Uses analytical implementation available for the power law case
-            energy = _energy_lafferty_power_law(energy_min, energy_max,
-                                                spectral_index)
+        Returns
+        -------
+        differential_flux_points : `~gammapy.spectrum.DifferentialFluxPoints`
+
+        Notes
+        -----
+        For usage, see this tutorial: :ref:`tutorials-flux_point`.
+        """
+
+        energy_min = self['ENERGY_MIN']
+        energy_max = self['ENERGY_MAX']
+        int_flux = self['INT_FLUX']
+
+        # Compute x point
+        if x_method == 'table':
+            # This is only called if the provided table includes energies
+            energy = np.array(energy_table['ENERGY'])
+        elif x_method == 'log_center':
+            energy = self.ebounds.log_centers
+        elif x_method == 'lafferty':
+            if y_method == 'power_law':
+                # Uses analytical implementation available for the power law case
+                if spectral_index is None:
+                    raise ValueError('Need spectral index for x method {}'.format(y_method))
+                energy = _energy_lafferty_power_law(energy_min, energy_max,
+                                                    spectral_index)
+            else:
+                if model is None:
+                    raise ValueError('Need model for x method {}'.format(y_method))
+                energy = np.array(_x_lafferty(energy_min,
+                                              energy_max, model))
         else:
-            energy = np.array(_x_lafferty(energy_min,
-                                          energy_max, model))
-    else:
-        raise ValueError('Invalid x_method: {0}'.format(x_method))
-    # Compute y point
-    if y_method == 'power_law':
-        g = -1 * np.abs(spectral_index)
-        diff_flux = power_law_flux(int_flux, g, energy, energy_min, energy_max)
-    elif y_method == 'model':
-        diff_flux = _ydiff_excess_equals_expected(int_flux, energy_min,
-                                                  energy_max, energy, model)
-    else:
-        raise ValueError('Invalid y_method: {0}'.format(y_method))
-    # Add to table
-    table = Table()
-    table['ENERGY'] = energy
-    table['DIFF_FLUX'] = diff_flux
+            raise ValueError('Invalid x method: {0}'.format(x_method))
 
-    # Error processing if required
-    try:
-        # TODO: more rigorous implementation of error propagation should be implemented
-        # I.e. based on MC simulation rather than gaussian error assumption
-        err = int_flux_err / int_flux
-        diff_flux_err = err * diff_flux
-        table['DIFF_FLUX_ERR'] = diff_flux_err
-    except:
-        pass
+        # Compute y point
+        if y_method == 'power_law':
+            if spectral_index is None:
+                    raise ValueError('Need spectral index for y method {}'.format(y_method))
 
-    table.meta['spectral_index'] = spectral_index
-    table.meta['spectral_index_description'] = "Spectral index assumed in the DIFF_FLUX computation"
-    return table
+            g = -1 * np.abs(spectral_index)
+            diff_flux = power_law_flux(int_flux, g, energy, energy_min, energy_max)
+        elif y_method == 'model':
+            if model is None:
+                    raise ValueError('Need model for y method {}'.format(y_method))
+            diff_flux = _ydiff_excess_equals_expected(int_flux, energy_min,
+            energy_max, energy, model)
+        else:
+            raise ValueError('Invalid y method: {0}'.format(y_method))
+
+        # Output table
+        table = Table()
+        table['ENERGY'] = energy
+        table['ENERGY_ERR_HI'] = self.ebounds.upper_bounds - energy
+        table['ENERGY_ERR_LO'] = energy - self.ebounds.lower_bounds
+        table['DIFF_FLUX'] = diff_flux
+
+        # Error processing if required
+        try:
+            # TODO: more rigorous implementation of error propagation should be implemented
+            # I.e. based on MC simulation rather than gaussian error assumption
+            int_flux_err = self['INT_FLUX_ERR']
+            err = int_flux_err / int_flux
+            diff_flux_err = err * diff_flux
+            table['DIFF_FLUX_ERR_HI'] = diff_flux_err
+            table['DIFF_FLUX_ERR_LO'] = diff_flux_err
+        except:
+            pass
+
+        table.meta['spectral_index'] = spectral_index
+        table.meta['spectral_index_description'] = "Spectral index assumed in the DIFF_FLUX computation"
+        return DifferentialFluxPoints(table)
 
 
 def _x_lafferty(xmin, xmax, function):
