@@ -337,7 +337,7 @@ class DataStore(object):
             loc = subhdutable._location_info(ii)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            cmd = ['cp', '-r', str(loc.path()), str(targetdir)]
+            cmd = ['cp', str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
         subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits')
