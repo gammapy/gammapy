@@ -141,7 +141,7 @@ def make_bg_model_two_groups():
     bgmaker.make_model("2D")
     bgmaker.save_models("2D")
 
-    fn = outdir2 + '/group-def.ecsv'
+    fn = outdir2 + '/group-def.fits'
     hdu_index_table = bgmaker.make_total_index_table(
         data_store=data_store,
         modeltype='2D',
@@ -241,6 +241,6 @@ if __name__ == '__main__':
     # make_image()
     # make_significance_image()
 
-    #make_bg_model_two_groups()
-    #make_image_from_2d_bg()
+    make_bg_model_two_groups()
+    make_image_from_2d_bg()
     make_significance_from_2d_bg()

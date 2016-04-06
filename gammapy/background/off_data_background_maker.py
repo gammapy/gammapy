@@ -128,12 +128,12 @@ class OffDataBackgroundMaker(object):
         # Store the results
         filename = self.obs_table_grouped_filename
         log.info('Writing {}'.format(filename))
-        obs_table.write(str(filename))
+        obs_table.write(str(filename), overwrite=True)
         self.obs_table = obs_table
 
         filename = self.group_table_filename
         log.info('Writing {}'.format(filename))
-        obs_groups.obs_groups_table.write(str(filename))
+        obs_groups.obs_groups_table.write(str(filename), overwrite=True)
         self.ntot_group = obs_groups.n_groups
 
     def make_model(self, modeltype):
@@ -174,7 +174,7 @@ class OffDataBackgroundMaker(object):
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
-    def filename(self, modeltype, group_id):
+    def filename(self, modeltype, group_id, smooth= False):
         """Filename for a given ``modeltype`` and ``group_id``.
 
         Parameters
@@ -185,7 +185,10 @@ class OffDataBackgroundMaker(object):
             number of the background model group
 
         """
-        return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+        if smooth:
+            return 'smooth_background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+        else:
+            return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
 
     def save_model(self, modeltype, ngroup):
         """Save model to fits for one group.
@@ -221,7 +224,8 @@ class OffDataBackgroundMaker(object):
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
 
-    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None):
+    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None,
+                             smooth= False):
         """Make background model index table.
 
         Parameters
@@ -263,7 +267,7 @@ class OffDataBackgroundMaker(object):
             row["OBS_ID"] = obs["OBS_ID"]
             row["HDU_TYPE"] = "bkg"
             row["FILE_DIR"] = str(out_dir_background_model)
-            row["FILE_NAME"] = self.filename(modeltype, group_id)
+            row["FILE_NAME"] = self.filename(modeltype, group_id, smooth)
             if modeltype == "2D":
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
@@ -278,7 +282,7 @@ class OffDataBackgroundMaker(object):
         return index_table_bkg
 
     def make_total_index_table(self, data_store, modeltype, out_dir_background_model=None,
-                               filename_obs_group_table=None):
+                               filename_obs_group_table=None, smooth= False):
         """Create a hdu-index table with a row containing the link to the background model for each observation.
 
         Parameters
@@ -300,5 +304,7 @@ class OffDataBackgroundMaker(object):
 
         index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
                                                     filename_obs_group_table)
+        index_bkg=np.where(data_store.hdu_table["HDU_CLASS"]=="bkg_3d")[0].tolist()
+        data_store.hdu_table.remove_rows(index_bkg)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         return index_table_new
