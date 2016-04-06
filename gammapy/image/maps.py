@@ -341,6 +341,7 @@ class SkyMap(object):
         skymap : `SkyMap`
             Skymap reprojected onto ``refheader``.
         """
+
         from reproject import reproject_interp
         out = reproject_interp(input_data=self.to_image_hdu(),
                                output_projection=refheader, *args, **kwargs)
