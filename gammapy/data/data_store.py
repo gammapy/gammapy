@@ -243,15 +243,21 @@ class DataStore(object):
 
         return things
 
-    def check_integrity(self, logger):
+    def check_integrity(self, logger=None):
         """Check integrity, i.e. whether index and observation table match.
         """
+        # Todo: This is broken - remove or fix?
+        sane = True
+        if logger is None:
+            logger = logging.getLogger('default')
+
         logger.info('Checking event list files')
         available = self.check_available_event_lists(logger)
         if np.any(~available):
             logger.warning('Number of missing event list files: {}'.format(np.invert(available).sum()))
 
-            # TODO: implement better, more complete integrity checks.
+        # TODO: implement better, more complete integrity checks.
+        return sane
 
     def make_table_of_files(self, observation_table=None, filetypes=['events']):
         """Make list of files in the datastore directory.
@@ -293,7 +299,9 @@ class DataStore(object):
         file_available : `~numpy.ndarray`
             Boolean mask which files are available.
         """
-        observation_table = self.index_table
+        # Todo: This is broken. Remove (covered by HDUlocation class)?
+
+        observation_table = self.obs_table
         file_available = np.ones(len(observation_table), dtype='bool')
         for ii in range(len(observation_table)):
             obs_id = observation_table['OBS_ID'][ii]
@@ -306,24 +314,34 @@ class DataStore(object):
 
         return file_available
 
-    def create_new_store_from_obs_table(self, obs_table, outdir):
+    def copy_obs(self, obs_table, outdir):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations
 
         Parameters
         ----------
-        obs_tabe : `~gammapy.data.ObservationTable`
+        obs_table : `~gammapy.data.ObservationTable`
             Table of observation to create the subset
-        dir : str, Path
+        outdir : str, Path
             Directory for the new store
         """
         outdir = make_path(outdir)
         obs_ids = obs_table['OBS_ID'].data
+
         hdutable = self.hdu_table
         hdutable.add_index('OBS_ID')
-        temp = hdutable.loc[obs_ids]
-        copydirs = set(temp['FILE_DIR'])
-        cmd = ['cp', '-r'] + list(copydirs) + [str(outdir)]
-        subprocess.call(cmd)
+        subhdutable = hdutable.loc[obs_ids]
+        subobstable = self.obs_table.select_obs_id(obs_ids)
+
+        for ii in range(len(subhdutable)):
+            # Changes to the file structure could be made here
+            loc = subhdutable._location_info(ii)
+            targetdir = outdir / loc.file_dir
+            targetdir.mkdir(exist_ok=True, parents=True)
+            cmd = ['cp', '-r', str(loc.path()), str(targetdir)]
+            subprocess.call(cmd)
+
+        subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits')
+        subobstable.write(str(outdir/self.DEFAULT_OBS_TABLE), format='fits')
 
 
 class DataStoreObservation(object):

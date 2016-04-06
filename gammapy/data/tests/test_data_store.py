@@ -75,8 +75,19 @@ def test_datastore_load_all(data_manager):
 def test_datastore_subset(tmpdir, data_manager):
     """Test creating a datastore as subset of another datastore"""
     data_store = data_manager['hess-crab4-hd-hap-prod2']
-    selected_runs = data_store.obs_table.select_obs_id([23523, 23592])
+    selected_obs = data_store.obs_table.select_obs_id([23523, 23592])
     storedir = tmpdir / 'substore'
-    data_store.create_new_store_from_obs_table(selected_runs, storedir)
+    data_store.copy_obs(selected_obs, storedir)
 
-    #substore = DataStore.from_dir(storedir)
+    substore = DataStore.from_dir(storedir)
+
+    # Todo : This is broken, remove or fix?
+    # substore.check_integrity()
+
+    assert str(substore.hdu_table.base_dir) == str(storedir)
+    assert len(substore.obs_table) == 2
+
+    desired = data_store.obs(23523)
+    actual = substore.obs(23523)
+
+    assert str(actual.events) == str(desired.events)
