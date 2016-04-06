@@ -57,8 +57,8 @@ class OffDataBackgroundMaker(object):
         self.obs_table = obs_table
         self.excluded_sources = excluded_sources
 
-        self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
-        self.group_table_filename = self.outdir + '/group-def.ecsv'
+        self.obs_table_grouped_filename = self.outdir + '/obs.fits'
+        self.group_table_filename = self.outdir + '/group-def.fits'
 
         self.models3D = dict()
         self.models2D = dict()
@@ -128,12 +128,12 @@ class OffDataBackgroundMaker(object):
         # Store the results
         filename = self.obs_table_grouped_filename
         log.info('Writing {}'.format(filename))
-        obs_table.write(str(filename), format='ascii.ecsv')
+        obs_table.write(str(filename))
         self.obs_table = obs_table
 
         filename = self.group_table_filename
         log.info('Writing {}'.format(filename))
-        obs_groups.obs_groups_table.write(str(filename), format='ascii.ecsv')
+        obs_groups.obs_groups_table.write(str(filename))
         self.ntot_group = obs_groups.n_groups
 
     def make_model(self, modeltype):
@@ -241,13 +241,12 @@ class OffDataBackgroundMaker(object):
         index_table_bkg : `~astropy.table.Table`
             Index hdu table only for the background in order to associate a bkg model for each observation
         """
-
         obs_table = data_store.obs_table
         if not filename_obs_group_table:
             filename_obs_group_table = self.group_table_filename
         if not out_dir_background_model:
             out_dir_background_model = data_store.hdu_table.meta["BASE_DIR"]
-        table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
+        table_group = Table.read(filename_obs_group_table)
         axes = ObservationGroups.table_to_axes(table_group)
         groups = ObservationGroups(axes)
         obs_table = ObservationTable(obs_table)
