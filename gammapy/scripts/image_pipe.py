@@ -41,35 +41,21 @@ class ImageAnalysis(object):
         self.data_store = data_store
         self.center = center
         self.energy_band = energy_band
-        self.offset_band= offset_band
+        self.offset_band = offset_band
         if not counts_image:
             self.counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                         yref=self.center.b.deg, proj='TAN')
+                                             yref=self.center.b.deg, proj='TAN')
         if not bkg_image:
             self.bkg_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                      yref=self.center.b.deg, proj='TAN')
-        self.total_counts_image= SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                         yref=self.center.b.deg, proj='TAN')
-        self.total_bkg_image= SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                         yref=self.center.b.deg, proj='TAN')
+                                          yref=self.center.b.deg, proj='TAN')
+        self.total_counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
+                                               yref=self.center.b.deg, proj='TAN')
+        self.total_bkg_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
+                                            yref=self.center.b.deg, proj='TAN')
         self.header = self.counts_image.to_image_hdu().header
         self.solid_angle = Angle(0.01, "deg") ** 2
 
 
-    @classmethod
-    def from_yaml(cls, filename):
-        """Read config from YAML file."""
-        import yaml
-        log.info('Reading {}'.format(filename))
-        with open(filename) as fh:
-            config = yaml.safe_load(fh)
-        return cls(config)
-
-    def run(self):
-        """Run analysis chain."""
-        log.info('Running analysis ...')
-        print(self.config['general']['outdir'])
-        print(self.config)
 
     def make_counts(self, obs_id):
         """Fill the counts image for the events of one observation
@@ -97,9 +83,6 @@ class ImageAnalysis(object):
             self.make_counts(obs_id)
             self.total_counts_image.data += self.counts_image.data
 
-    def make_exposure(self):
-        log.info('Making exposure image ...')
-
     def make_background(self, obs_id):
         obs = self.data_store.obs(obs_id=obs_id)
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
@@ -112,7 +95,7 @@ class ImageAnalysis(object):
         log.info('Making background image ...')
 
     def make_background_normalized(self, obs_id, exclusion_mask):
-        """
+        """Normalized the background compare to te events in the counts maps outside the exclusion maps
 
         Parameters
         ----------
@@ -126,7 +109,6 @@ class ImageAnalysis(object):
         self.make_counts(obs_id)
         self.make_background(obs_id)
         counts_sum = np.sum(self.counts_image.data * exclusion_mask.data)
-        #print(counts_image.data.sum())
         bkg_sum = np.sum(self.bkg_image.data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
         self.bkg_image.data = scale * self.bkg_image.data
@@ -146,9 +128,8 @@ class ImageAnalysis(object):
             self.make_background_normalized(obs_id, exclusion_mask)
             self.total_bkg_image.data += self.bkg_image.data
 
-
     def make_images(self, exclusion_mask):
-        """
+        """Compute the counts, bkg and exlusion_mask images for a set of observation
 
         Parameters
         ----------
@@ -166,15 +147,14 @@ class ImageAnalysis(object):
         maps['exclusion'] = exclusion_mask
         return maps
 
-    def make_images(self):
-        maps = SkyMapCollection()
-        maps['counts'] = counts_image_total
-        maps['bkg'] = bkg_image_total
-        maps['exclusion'] = exclusion_mask
-        return mask
+    def make_significance(self,):
+        log.info('Making PSF ...')
 
     def make_psf(self):
         log.info('Making PSF ...')
+
+    def make_exposure(self):
+        log.info('Making exposure image ...')
 
     def fit_source(self):
         log.info('Fitting image ...')
