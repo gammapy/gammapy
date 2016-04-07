@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None, offset_max=None):
+def fill_acceptance_image(header, center, offset, acceptance, offset_max = Angle(2.5,"deg"), interp_kwargs=None):
     """Generate a 2D image of a radial acceptance curve.
 
     The radial acceptance curve is given as an array of values
@@ -40,8 +40,9 @@ def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None
         New image filled with radial acceptance.
     """
     from scipy.interpolate import interp1d
-    if not offset_max:
-        offset_max = Angle(offset)[-1]
+    if offset_max > Angle(offset)[-1]:
+        raise ValueError("Offset max used for the acceptance curve ({} deg) is "
+                         "inferior to the one you asked to fill the map ({} deg)".format(offset[-1],offset_max.value))
     if not interp_kwargs:
         interp_kwargs = dict(bounds_error=False, fill_value=acceptance[0])
 
@@ -52,7 +53,6 @@ def fill_acceptance_image(header, center, offset, acceptance, interp_kwargs=None
 
     # define grids of pixel coorinates
     xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
-
     # calculate pixel offset from center (in world coordinates)
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
     pix_off = coord.separation(center)

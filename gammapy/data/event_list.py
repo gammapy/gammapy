@@ -205,6 +205,7 @@ class EventList(Table):
         energy = self['ENERGY']
         return Quantity(energy, self.meta['EUNIT'])
 
+
     def select_energy(self, energy_band):
         """Select events in energy band.
 
@@ -229,6 +230,25 @@ class EventList(Table):
         energy = self.energy
         mask = (energy_band[0] <= energy)
         mask &= (energy < energy_band[1])
+        return self[mask]
+
+    def select_offset(self, offset_band):
+        """Select events in offset band.
+
+        Parameters
+        ----------
+        offset_band : `~astropy.coordinates.Angle`
+            offset band ``[offset_min, offset_max)``
+
+        Returns
+        -------
+        event_list : `EventList`
+            Copy of event list with selection applied.
+
+        """
+        offset = self.offset
+        mask = (offset_band[0] <= offset)
+        mask &= (offset < offset_band[1])
         return self[mask]
 
     def select_time(self, time_interval):
