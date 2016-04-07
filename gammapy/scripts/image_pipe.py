@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.units import Quantity
 from ..utils.scripts import get_parser
 from ..background import fill_acceptance_image
-from ..image import SkyMap
+from ..image import SkyMap, SkyMapCollection
 
 __all__ = ['ImageAnalysis']
 
@@ -55,6 +55,7 @@ class ImageAnalysis(object):
         self.header = self.counts_image.to_image_hdu().header
         self.solid_angle = Angle(0.01, "deg") ** 2
 
+
     @classmethod
     def from_yaml(cls, filename):
         """Read config from YAML file."""
@@ -81,19 +82,20 @@ class ImageAnalysis(object):
         """
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
-        events = events.select_offset(offset_band)
+        events = events.select_offset(self.offset_band)
         self.counts_image.fill(events=events)
         log.info('Making counts image ...')
 
     def make_total_counts(self):
-        """
+        """Stack the total count from the observation in the 'DataStore'
 
         Returns
         -------
 
         """
-        for obs_id in data_store.obs_table['OBS_ID']:
+        for obs_id in self.data_store.obs_table['OBS_ID']:
             self.make_counts(obs_id)
+            self.total_counts_image.data += self.counts_image.data
 
     def make_exposure(self):
         log.info('Making exposure image ...')
@@ -114,36 +116,55 @@ class ImageAnalysis(object):
 
         Parameters
         ----------
-        exclusion_mask : `~ggammapy.image.ExclusionMask`
+        exclusion_mask : `~gammapy.image.ExclusionMask`
 
         Returns
         -------
 
 
         """
+        self.make_counts(obs_id)
         self.make_background(obs_id)
         counts_sum = np.sum(self.counts_image.data * exclusion_mask.data)
+        #print(counts_image.data.sum())
         bkg_sum = np.sum(self.bkg_image.data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
         self.bkg_image.data = scale * self.bkg_image.data
+
+    def make_total_bkg(self, exclusion_mask):
+        """Stack the total bkg from the observation in the 'DataStore'
+
+        Parameters
+        ----------
+        exclusion_mask : `~gammapy.image.ExclusionMask`
+
+        Returns
+        -------
+
+        """
+        for obs_id in self.data_store.obs_table['OBS_ID']:
+            self.make_background_normalized(obs_id, exclusion_mask)
+            self.total_bkg_image.data += self.bkg_image.data
+
 
     def make_images(self, exclusion_mask):
         """
 
         Parameters
         ----------
-        obs_id
-        exclusion_mask
+        exclusion_mask : `~gammapy.image.ExclusionMask`
 
         Returns
         -------
-
+        maps : ~gammapy.image.SkyMapCollection`
         """
-        counts_image_total = SkyMap.empty_like(counts_image_total)
-        #bkg_image_total =
-        for obs_id in data_store.obs_table['OBS_ID']:
-            self.make_counts(obs_id)
-            self.make_background_normalized(obs_id, exclusion_mask)
+        self.make_total_counts()
+        self.make_total_bkg(exclusion_mask)
+        maps = SkyMapCollection()
+        maps['counts'] = self.total_counts_image
+        maps['bkg'] = self.total_bkg_image
+        maps['exclusion'] = exclusion_mask
+        return maps
 
     def make_images(self):
         maps = SkyMapCollection()

@@ -158,9 +158,8 @@ def make_image_from_2d_bg():
 
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
-    offset_band = Angle([0, 2.5], 'deg')
+    offset_band = Angle([0, 2.49], 'deg')
     data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
-
     counts_image_total = SkyMap.empty(
         nxpix=1000, nypix=1000, binsz=0.01,
         xref=center.l.deg, yref=center.b.deg, proj='TAN'
@@ -174,7 +173,7 @@ def make_image_from_2d_bg():
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
 
-    for obs_id in data_store.obs_table['OBS_ID'][:2]:
+    for obs_id in data_store.obs_table['OBS_ID']:
 
         obs = data_store.obs(obs_id=obs_id)
         counts_image = SkyMap.empty_like(counts_image_total)
@@ -204,13 +203,14 @@ def make_image_from_2d_bg():
         counts_sum = np.sum(counts_image.data * exclusion_mask.data)
         bkg_sum = np.sum(bkg_image.data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
+        print(counts_sum)
+        #print(counts_image.data.sum())
         bkg_image.data = scale * bkg_image.data
 
         log.debug('scale = {}'.format(scale))
         a = np.sum(bkg_image.data * exclusion_mask.data)
         log.debug('a = {}'.format(a))
         log.debug('counts_sum = {}'.format(counts_sum))
-
         # Stack counts and background in total skymaps
         counts_image_total.data += counts_image.data
         bkg_image_total.data += bkg_image.data
@@ -229,39 +229,23 @@ def make_image_from_2d_bg_class():
 
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
+    offset_band = Angle([0, 2.49], 'deg')
     data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
-
-    counts_image_total = SkyMap.empty(
-        nxpix=1000, nypix=1000, binsz=0.01,
-        xref=center.l.deg, yref=center.b.deg, proj='TAN'
-    )
-    bkg_image_total = SkyMap.empty_like(counts_image_total)
-    refheader = counts_image_total.to_image_hdu().header
-
-    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
-
-    for obs_id in data_store.obs_table['OBS_ID'][:2]:
-
-
-        images = ImageAnalysis(center, energy_band, data_store)
-        log.info('Processing OBS_ID = {}'.format(obs_id))
-
-        images.make_counts(obs_id)
-        images.make_background_normalized(obs_id, exclusion_mask)
-
-        # Stack counts and background in total skymaps
-        counts_image_total.data += images.counts_image.data
-        bkg_image_total.data += images.bkg_image.data
-
+    images = ImageAnalysis(center, energy_band, offset_band, data_store)
+    refheader = images.total_counts_image.to_image_hdu().header
+    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+    images.make_total_counts()
+    images.make_total_bkg(exclusion_mask)
 
     maps = SkyMapCollection()
-    maps['counts'] = counts_image_total
-    maps['bkg'] = bkg_image_total
+    maps['counts'] = images.total_counts_image
+    maps['bkg'] = images.total_bkg_image
     maps['exclusion'] = exclusion_mask
+
 
     filename = 'fov_bg_maps_class.fits'
     log.info('Writing {}'.format(filename))
@@ -297,7 +281,7 @@ if __name__ == '__main__':
     # make_significance_image()
 
     #make_bg_model_two_groups()
-    make_image_from_2d_bg()
-    make_significance_from_2d_bg()
-    #make_image_from_2d_bg_class()
-    #make_significance_from_2d_bg_class()
+    #make_image_from_2d_bg()
+    #make_significance_from_2d_bg()
+    make_image_from_2d_bg_class()
+    make_significance_from_2d_bg_class()
