@@ -158,6 +158,7 @@ def make_image_from_2d_bg():
 
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
+    offset_band = Angle([0, 2.5], 'deg')
     data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
 
     counts_image_total = SkyMap.empty(
@@ -185,6 +186,7 @@ def make_image_from_2d_bg():
         events = obs.events
         log.debug('Number of events before selection: {}'.format(len(events)))
         events = events.select_energy(energy_band)
+        events = events.select_offset(offset_band)
         log.debug('Number of events after selection: {}'.format(len(events)))
         counts_image.fill(events=events)
 
@@ -195,7 +197,7 @@ def make_image_from_2d_bg():
 
         # TODO: this is broken at the moment ... the output image is full of NaNs
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=energy_band)
-        bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"])
+        bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"], offset_band[1])
         bkg_image.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
         bkg_image.data = bkg_image.data.decompose()
 
@@ -297,5 +299,5 @@ if __name__ == '__main__':
     #make_bg_model_two_groups()
     make_image_from_2d_bg()
     make_significance_from_2d_bg()
-    make_image_from_2d_bg_class()
-    make_significance_from_2d_bg_class()
+    #make_image_from_2d_bg_class()
+    #make_significance_from_2d_bg_class()
