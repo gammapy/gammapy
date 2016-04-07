@@ -40,6 +40,32 @@ class DifferentialFluxPoints(Table):
 
         return cls(flux_points)
 
+    @classmethod
+    def from_3fgl(cls, sourcename):
+        """Get differential fluxpoints for a 3FGL source
+
+        Parameters
+        ----------
+        sourcename : str
+            3FGL source name
+        """
+        from gammapy.catalog import source_catalogs
+        cat_3fgl = source_catalogs['3fgl']
+        source = cat_3fgl[sourcename]
+        ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
+        fluxkeys = ['nuFnu100_300', 'nuFnu300_1000', 'nuFnu1000_3000', 'nuFnu3000_10000', 'nuFnu10000_100000']
+        temp_fluxes = [source.data[_] for _ in fluxkeys]
+
+        #fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
+        # For now take upper error as symmetric error
+        #temp_fluxes_err = [source.data[_][1] for _ in fluxerrkeys]
+
+        diff_fluxes = Quantity(temp_fluxes, 'erg cm-2 s-1')
+        #int_fluxes_err = Quantity(temp_fluxes_err, 'cm-2 s-1')
+
+        return cls
+
+
     def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
         """Plot spectral points
@@ -100,6 +126,31 @@ class IntegralFluxPoints(Table):
         t['INT_FLUX_ERR_HI'] = int_flux_err
         t['INT_FLUX_ERR_LO'] = int_flux_err
         return cls(t)
+
+    @classmethod
+    def from_3fgl(cls, sourcename):
+        """Get integral fluxpoints for a 3FGL source
+
+        Parameters
+        ----------
+        sourcename : str
+            3FGL source name
+        """
+        from gammapy.catalog import source_catalogs
+        cat_3fgl = source_catalogs['3fgl']
+        source = cat_3fgl[sourcename]
+        ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
+        fluxkeys = ['Flux100_300', 'Flux300_1000', 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
+        temp_fluxes = [source.data[_] for _ in fluxkeys]
+
+        fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
+        # For now take upper error as symmetric error
+        temp_fluxes_err = [source.data[_][1] for _ in fluxerrkeys]
+
+        int_fluxes = Quantity(temp_fluxes, 'cm-2 s-1')
+        int_fluxes_err = Quantity(temp_fluxes_err, 'cm-2 s-1')
+
+        return cls.from_arrays(ebounds, int_fluxes, int_fluxes_err)
 
     @property
     def ebounds(self):
@@ -188,8 +239,8 @@ class IntegralFluxPoints(Table):
         table = Table()
         energy = Quantity(energy, 'TeV')
         table['ENERGY'] = energy
-        table['ENERGY_ERR_HI'] = self.ebounds.upper_bounds - energy
-        table['ENERGY_ERR_LO'] = energy - self.ebounds.lower_bounds
+        table['ENERGY_ERR_HI'] = self.ebounds.upper_bounds.to('TeV') - energy
+        table['ENERGY_ERR_LO'] = energy - self.ebounds.lower_bounds.to('TeV')
         table['DIFF_FLUX'] = diff_flux
 
         # Error processing if required
