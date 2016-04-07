@@ -5,9 +5,11 @@ import logging
 import numpy as np
 from astropy.coordinates import Angle
 from astropy.units import Quantity
+from astropy.io import fits
 from ..utils.scripts import get_parser
 from ..background import fill_acceptance_image
-from ..image import SkyMap, SkyMapCollection
+from ..image import SkyMap, SkyMapCollection, disk_correlate
+from ..stats import significance
 
 __all__ = ['ImageAnalysis']
 
@@ -54,8 +56,6 @@ class ImageAnalysis(object):
                                             yref=self.center.b.deg, proj='TAN')
         self.header = self.counts_image.to_image_hdu().header
         self.solid_angle = Angle(0.01, "deg") ** 2
-
-
 
     def make_counts(self, obs_id):
         """Fill the counts image for the events of one observation
@@ -137,7 +137,7 @@ class ImageAnalysis(object):
 
         Returns
         -------
-        maps : ~gammapy.image.SkyMapCollection`
+        maps : `
         """
         self.make_total_counts()
         self.make_total_bkg(exclusion_mask)
@@ -147,8 +147,27 @@ class ImageAnalysis(object):
         maps['exclusion'] = exclusion_mask
         return maps
 
-    def make_significance(self,):
-        log.info('Making PSF ...')
+    def make_significance(self, counts_image, bkg_image, radius):
+        """
+
+        Parameters
+        ----------
+        counts_image : ~gammapy.image.SkyMap`
+            count image
+        bkg_image : ~gammapy.image.SkyMap`
+            bkg image
+        radius : float
+        Disk radius in pixels.
+
+        Returns
+        -------
+
+        """
+        counts = disk_correlate(counts_image.data, 10)
+        bkg = disk_correlate(bkg_image.data, 10)
+        s = significance(counts, bkg)
+        s_image = fits.ImageHDU(data=s, header=counts_image.to_image_hdu().header)
+        return s_image
 
     def make_psf(self):
         log.info('Making PSF ...')

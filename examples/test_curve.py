@@ -171,21 +171,12 @@ def make_image_from_2d_bg():
     # images.make_total_bkg(exclusion_mask)
 
     maps = images.make_images(exclusion_mask)
-
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
     maps.write(filename, clobber=True)
 
-
-def make_significance_from_2d_bg():
-    maps = SkyMapCollection.read('fov_bg_maps.fits')
-    counts_image = maps["counts"]
-    bkg_image = maps["bkg"]
-    counts = disk_correlate(counts_image.data, 10)
-    bkg = disk_correlate(bkg_image.data, 10)
-    s = significance(counts, bkg)
-    s_image = fits.ImageHDU(data=s, header=counts_image.to_image_hdu().header)
-    s_image.writeto("significance_image_class.fits", clobber=True)
+    s_image = images.make_significance(maps["counts"], maps["bkg"], 10.)
+    s_image.writeto("significance_image_class2.fits", clobber=True)
 
 
 if __name__ == '__main__':
@@ -196,4 +187,3 @@ if __name__ == '__main__':
 
     # make_bg_model_two_groups()
     make_image_from_2d_bg()
-    make_significance_from_2d_bg()
