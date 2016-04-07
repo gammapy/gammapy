@@ -162,8 +162,18 @@ class SpectrumFitResult(Result):
             parameter_errors['reference'] = Quantity(0, 'MeV')
             parameters['norm'] = Quantity(d['Flux_Density'], 'cm-2 s-1 MeV-1')
             parameter_errors['norm'] = Quantity(d['Unc_Flux_Density'], 'cm-2 s-1 MeV-1')
+        elif spectral_model == 'LogParabola':
+            parameters['alpha'] = Quantity(d['Spectral_Index'], '')
+            parameter_errors['alpha'] = Quantity(d['Unc_Spectral_Index'], '')
+            parameters['beta'] = Quantity(d['beta'], '')
+            parameter_errors['beta'] = Quantity(d['Unc_beta'], '')
+            parameters['reference'] = Quantity(d['Pivot_Energy'], 'MeV')
+            parameter_errors['reference'] = Quantity(0, 'MeV')
+            parameters['norm'] = Quantity(d['Flux_Density'], 'cm-2 s-1 MeV-1')
+            parameter_errors['norm'] = Quantity(d['Unc_Flux_Density'], 'cm-2 s-1 MeV-1')
         else:
-            raise NotImplementedError('Method not available for model {}'.format(spectral_model))
+            raise NotImplementedError('SpectrumFitResult.from_3fgl not available'
+                                      ' for model {}'.format(spectral_model))
 
         return cls(spectral_model, parameters, parameter_errors)
 
@@ -391,8 +401,16 @@ class SpectrumFitResult(Result):
             flux = models.PowerLaw1D.evaluate(x, self.parameters.norm,
                                               self.parameters.reference,
                                               self.parameters.index)
+        elif self.spectral_model == 'LogParabola':
+            #LogParabola evaluation does not work with arrays
+            flux = Quantity([models.LogParabola1D.evaluate(xx,
+                                                           self.parameters.norm,
+                                                           self.parameters.reference,
+                                                           self.parameters.alpha,
+                                                           self.parameters.beta)
+                             for xx in x])
         else:
-            raise NotImplementedError('Not implemented for model.'.format(self.spectral_model))
+            raise NotImplementedError('Not implemented for model {}.'.format(self.spectral_model))
 
         return flux.to(self.parameters.norm.unit)
 

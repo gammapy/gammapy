@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Unit, Quantity
-from gammapy.utils.energy import EnergyBounds
+from gammapy.utils.energy import EnergyBounds, Energy
 from ..spectrum.powerlaw import power_law_flux
 
 __all__ = [
@@ -28,7 +28,6 @@ class DifferentialFluxPoints(Table):
             data = json.load(fh)
 
         # TODO : Adjust column names
-
         flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
         flux_points['energy'].unit = 'TeV'
         flux_points['energy'].name = 'ENERGY'
@@ -41,30 +40,51 @@ class DifferentialFluxPoints(Table):
         return cls(flux_points)
 
     @classmethod
-    def from_3fgl(cls, sourcename):
+    def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
+                    energy_err_lo=None, diff_flux_err_hi=None,
+                    diff_flux_err_lo=None):
+        """Create flux points table given some numpy arrays"""
+        t = Table()
+        energy = Energy(energy)
+        diff_flux = Quantity(diff_flux)
+        if not diff_flux.unit.is_equivalent('TeV-1 cm-2 s-1'):
+            raise ValueError('Flux (unit {}) not a differential flux'.format(diff_flux.unit))
+
+        #Set errors to zero
+        def_f = np.zeros(len(energy)) * diff_flux.unit
+        def_e = np.zeros(len(energy)) * energy.unit
+        energy_err_hi = def_e if energy_err_hi is None else energy_err_hi
+        energy_err_lo = def_e if energy_err_lo is None else energy_err_lo
+        diff_flux_err_hi = def_f if diff_flux_err_hi is None else diff_flux_err_hi
+        diff_flux_err_lo = def_f if diff_flux_err_lo is None else diff_flux_err_lo
+
+        t['ENERGY'] = energy
+        t['ENERGY_ERR_HI'] = energy_err_hi
+        t['ENERGY_ERR_LO'] = energy_err_lo
+        t['DIFF_FLUX'] = diff_flux
+        t['DIFF_FLUX_ERR_HI'] = diff_flux_err_hi
+        t['DIFF_FLUX_ERR_LO'] = diff_flux_err_lo
+        return cls(t)
+
+    @classmethod
+    def from_3fgl(cls, source):
         """Get differential fluxpoints for a 3FGL source
 
         Parameters
         ----------
-        sourcename : str
-            3FGL source name
+        sourcename : dict
+            3FGL source
         """
-        from gammapy.catalog import source_catalogs
-        cat_3fgl = source_catalogs['3fgl']
-        source = cat_3fgl[sourcename]
         ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
+        # This is an assumption
+        energy = ebounds.log_centers
         fluxkeys = ['nuFnu100_300', 'nuFnu300_1000', 'nuFnu1000_3000', 'nuFnu3000_10000', 'nuFnu10000_100000']
         temp_fluxes = [source.data[_] for _ in fluxkeys]
+        energy_fluxes = Quantity(temp_fluxes, 'erg cm-2 s-1')
+        diff_fluxes = (energy_fluxes * energy ** -2).to('erg-1 cm-2 s-1')
 
-        #fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
-        # For now take upper error as symmetric error
-        #temp_fluxes_err = [source.data[_][1] for _ in fluxerrkeys]
-
-        diff_fluxes = Quantity(temp_fluxes, 'erg cm-2 s-1')
-        #int_fluxes_err = Quantity(temp_fluxes_err, 'cm-2 s-1')
-
-        return cls
-
+        # Flux Errors are not stored
+        return cls.from_arrays(energy=energy, diff_flux=diff_fluxes)
 
     def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
@@ -92,10 +112,10 @@ class DifferentialFluxPoints(Table):
 
         kwargs.setdefault('fmt', 'o')
         ax = plt.gca() if ax is None else ax
-        x = self['energy'].quantity.to(energy_unit).value
-        y = self['flux'].quantity.to(flux_unit).value
-        yh = self['flux_err_hi'].quantity.to(flux_unit).value
-        yl = self['flux_err_lo'].quantity.to(flux_unit).value
+        x = self['ENERGY'].quantity.to(energy_unit).value
+        y = self['DIFF_FLUX'].quantity.to(flux_unit).value
+        yh = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit).value
+        yl = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit).value
         y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, energy_power)
         flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
         ax.errorbar(x, y, yerr=(yl, yh), **kwargs)
@@ -128,17 +148,14 @@ class IntegralFluxPoints(Table):
         return cls(t)
 
     @classmethod
-    def from_3fgl(cls, sourcename):
+    def from_3fgl(cls, source):
         """Get integral fluxpoints for a 3FGL source
 
         Parameters
         ----------
-        sourcename : str
-            3FGL source name
+        source : dict
+            3FGL source
         """
-        from gammapy.catalog import source_catalogs
-        cat_3fgl = source_catalogs['3fgl']
-        source = cat_3fgl[sourcename]
         ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
         fluxkeys = ['Flux100_300', 'Flux300_1000', 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
         temp_fluxes = [source.data[_] for _ in fluxkeys]
@@ -241,7 +258,7 @@ class IntegralFluxPoints(Table):
         table['ENERGY'] = energy
         table['ENERGY_ERR_HI'] = self.ebounds.upper_bounds.to('TeV') - energy
         table['ENERGY_ERR_LO'] = energy - self.ebounds.lower_bounds.to('TeV')
-        table['DIFF_FLUX'] = diff_flux
+        table['DIFF_FLUX'] = diff_flux * Unit('cm-2 s-1 TeV-1')
 
         # Error processing if required
         try:
