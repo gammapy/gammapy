@@ -115,9 +115,13 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
 
 
 cdef extern from "math.h":
-    float log(float x)
+    float log2(float x)
 
 
+cdef np.float_t LOG2_TO_E = 0.69314718055994529
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
                  np.ndarray[np.float_t, ndim=2] model):
     """
@@ -139,10 +143,11 @@ def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
-                cash[j, i] = 2 * (model[j, i] - counts[j, i] * log(model[j, i]))
+                cash[j, i] = 2 * (model[j, i] - counts[j, i] * log2(model[j, i]) * LOG2_TO_E)
     return cash
 
-
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
                      np.ndarray[np.float_t, ndim=2] model):
     """
@@ -162,6 +167,6 @@ def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
-                sum += model[j, i] - counts[j, i] * log(model[j, i])
+                sum += model[j, i] - counts[j, i] * log2(model[j, i]) * LOG2_TO_E
     return 2 * sum
 

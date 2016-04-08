@@ -20,9 +20,13 @@ from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
 <<<<<<< HEAD
+<<<<<<< HEAD
                      shape_2N, SkyMapCollection)
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython)
+=======
+                     shape_2N)
+>>>>>>> add iterative least sqares to ts computation
 =======
                      shape_2N)
 >>>>>>> add iterative least sqares to ts computation
@@ -295,6 +299,11 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
 
+    # Parse data type
+    counts = counts.astype(float)
+    background = background.astype(float)
+    exposure = exposure.astype(float)
+
     # in some maps there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation
     # to fail, this is a temporary fix
@@ -314,7 +323,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
 
     # Compute null statistics for the whole map
-    C_0_map = _cash_cython(counts.astype(float), background.astype(float))
+    C_0_map = _cash_cython(counts, background)
 
     x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
     y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
@@ -325,9 +334,9 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         mask = exposure > 0
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
-    wrap = partial(_ts_value, counts=counts, exposure=exposure,
-                   background=background, C_0_map=C_0_map, kernel=kernel, flux=flux,
-                   method=method, threshold=threshold)
+    wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
+                   C_0_map=C_0_map, kernel=kernel, flux=flux, method=method,
+                   threshold=threshold)
 
     if parallel:
         log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
@@ -385,11 +394,27 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         TS value at the given pixel position.
     """
     # Get data slices
+<<<<<<< HEAD
+<<<<<<< HEAD
+    counts_ = _extract_array(counts, kernel.shape, position)
+    background_ = _extract_array(background, kernel.shape, position)
+    exposure_ = _extract_array(exposure, kernel.shape, position)
+    C_0_ = _extract_array(C_0_map, kernel.shape, position)
+    model = (exposure_ * kernel._array)
+=======
     counts_ = _extract_array(counts, kernel.shape, position).astype(float)
     background_ = _extract_array(background, kernel.shape, position).astype(float)
     exposure_ = _extract_array(exposure, kernel.shape, position).astype(float)
     C_0_ = _extract_array(C_0_map, kernel.shape, position)
     model = (exposure_ * kernel._array).astype(float)
+>>>>>>> add iterative least sqares to ts computation
+=======
+    counts_ = _extract_array(counts, kernel.shape, position)
+    background_ = _extract_array(background, kernel.shape, position)
+    exposure_ = _extract_array(exposure, kernel.shape, position)
+    C_0_ = _extract_array(C_0_map, kernel.shape, position)
+    model = (exposure_ * kernel._array)
+>>>>>>> Minor performace improvements to TS map computation
 
     C_0 = C_0_.sum()
 
@@ -400,7 +425,10 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         if C_0 - C_1 < threshold:
             return C_0 - C_1, flux[position] * FLUX_FACTOR, 0
 
-    if method == 'fit minuit':
+    if method == 'root brentq':
+        amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
+
+    elif method == 'fit minuit':
         amplitude, niter = _fit_amplitude_minuit(counts_, background_, model,
                                                  flux[position])
     elif method == 'fit scipy':
@@ -409,9 +437,15 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     elif method == 'root newton':
         amplitude, niter = _root_amplitude(counts_, background_, model,
                                            flux[position])
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
     elif method == 'root brentq':
         amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
 
+>>>>>>> add iterative least sqares to ts computation
+=======
+>>>>>>> Minor performace improvements to TS map computation
     elif method == 'leastsq iter':
         amplitude, niter = _leastsq_iter_amplitude(counts_, background_, model)
 
