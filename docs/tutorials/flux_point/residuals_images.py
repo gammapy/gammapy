@@ -2,8 +2,11 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from gammapy.spectrum.flux_point import compute_differential_flux_points
+from astropy.units import Quantity
+
+from gammapy.spectrum.flux_point import IntegralFluxPoints
 from gammapy.spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
+from gammapy.utils.energy import EnergyBounds
 
 
 def compute_flux_error(gamma_true, gamma_reco, method):
@@ -16,10 +19,17 @@ def compute_flux_error(gamma_true, gamma_reco, method):
     int_flux = power_law_integral_flux(diff_flux_ref, gamma_true,
                                        energy_ref, energy_min, energy_max)
     # Compute flux point
-    table = compute_differential_flux_points(method, 'power_law',
-                                             spectral_index=gamma_reco,
-                                             energy_min=energy_min, energy_max=energy_max,
-                                             int_flux=int_flux)
+    ebounds = EnergyBounds.from_lower_and_upper_bounds([energy_min], [energy_max],
+                                                       unit='TeV')
+    int_flux = Quantity(int_flux, 'cm-2 s-1')
+    int_flux_points = IntegralFluxPoints.from_arrays(ebounds, int_flux)
+
+    # Todo : Sphinx build fails here since int_flux has shape (6, 6)
+
+    table = int_flux_points.compute_differential_flux_points(x_method=method,
+                                                             y_method='power_law',
+                                                             spectral_index=gamma_reco)
+
     # Compute relative error of the flux point
     energy = table['ENERGY'].data
     flux_reco = table['DIFF_FLUX'].data

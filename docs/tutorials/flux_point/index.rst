@@ -4,7 +4,7 @@ Where to stick your Spectral Points?
 ====================================
 
 The `gammapy.spectrum` module offers a number of options for positioning data points within  an energy band. This example offers a comparison between
-the log center and Lafferty & Wyatt (described in [Lafferty1994]_) methods. See `gammapy.spectrum.compute_differential_flux_points` for documentation on usage.
+the log center and Lafferty & Wyatt (described in [Lafferty1994]_) methods. See `gammapy.spectrum.flux_points` for documentation on usage.
 
 Lafferty & Wyatt vs. Log Center
 -------------------------------

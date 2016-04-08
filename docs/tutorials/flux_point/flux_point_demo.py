@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.table import Table
-from gammapy.spectrum.flux_point import (compute_differential_flux_points,
+from gammapy.spectrum.flux_point import (IntegralFluxPoints,
                                          _x_lafferty, _integrate)
 from gammapy.spectrum.powerlaw import power_law_integral_flux
 
@@ -30,11 +30,16 @@ def my_spectrum(x):
 
 def get_flux_tables(table, y_method, function, spectral_index):
     table1 = table.copy()
-    lafferty_flux = compute_differential_flux_points('lafferty', y_method, table1,
-                                                     function, spectral_index)
-    table2 = table1.copy()
-    log_flux = compute_differential_flux_points('log_center', y_method, table2,
-                                                function, spectral_index)
+    table1['ENERGY_MIN'].unit = 'TeV'
+    table1['ENERGY_MAX'].unit = 'TeV'
+    table1['INT_FLUX'].unit = 'cm-2 s-1'
+    int_flux_points = IntegralFluxPoints(table1)
+    lafferty_flux = int_flux_points.compute_differential_flux_points(
+        x_method='lafferty', y_method=y_method, model=function,
+        spectral_index=spectral_index)
+    log_flux = int_flux_points.compute_differential_flux_points(
+        x_method='log_center', y_method=y_method, model=function,
+        spectral_index=spectral_index)
     return lafferty_flux, log_flux
 
 
