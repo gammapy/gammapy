@@ -87,8 +87,8 @@ def make_image():
         bkg_image.data += acc.decompose()
         print(acc.decompose().sum())
 
-    counts_image.writeto("counts_image.fits", clobber=True)
-    bkg_image.writeto("bkg_image.fits", clobber=True)
+    counts_image.writeto("counts_image_save.fits", clobber=True)
+    bkg_image.writeto("bkg_image_save.fits", clobber=True)
 
     # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
     #  maps['ExpGammaMap'].data, kernel)
@@ -163,21 +163,22 @@ def make_image_from_2d_bg():
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
-    images = ImageAnalysis(center, energy_band, offset_band, data_store)
-    refheader = images.total_counts_image.to_image_hdu().header
+    images = ImageAnalysis(nxpix = 1000, nypix = 1000, binsz = 0.01, xref=center.l.deg, yref=center.b.deg, proj= 'TAN',
+                           coordsys = 'GAL' ,energy_band = energy_band, offset_band =offset_band, data_store= data_store)
+    refheader = images.header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(refheader=refheader)
     # images.make_total_counts()
     # images.make_total_bkg(exclusion_mask)
 
-    maps = images.make_images(exclusion_mask)
+    images.make_maps(exclusion_mask, radius= 10.)
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
-    maps.write(filename, clobber=True)
 
-    s_image = images.make_significance(maps["counts"], maps["bkg"], 10.)
-    s_image.writeto("significance_image_class2.fits", clobber=True)
+    images.maps.write(filename, clobber=True)
 
+    #s_image = images.make_significance(maps["counts"], maps["bkg"], 10.)
+    #s_image.writeto("significance_image.fits", clobber=True)
 
 if __name__ == '__main__':
     # make_model()

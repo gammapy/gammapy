@@ -16,49 +16,59 @@ __all__ = ['ImageAnalysis']
 log = logging.getLogger(__name__)
 
 
-def image_pipe_main(args=None):
-    parser = get_parser(ImageAnalysis)
-    parser.add_argument('config_file', type=str,
-                        help='Config file in YAML format')
-    # TODO: add option to dump the default config file
-    args = parser.parse_args(args)
-    analysis = ImageAnalysis.from_yaml(args.config_file)
-    analysis.run()
-
 
 class ImageAnalysis(object):
     """Gammapy 2D image based analysis.
 
-    center : `astropy.coordinates.SkyCoord`
-        Center of the image
+    Parameters
+    ----------
+    nxpix : int, optional
+            Number of pixels in x axis. Default is 200.
+    nypix : int, optional
+            Number of pixels in y axis. Default is 200.
+    binsz : float, optional
+            Bin size for x and y axes in units of degrees. Default is 0.02.
+    xref : float, optional
+            Coordinate system value at reference pixel for x axis.
+    yref : float, optional
+            Coordinate system value at reference pixel for y axis.
+    proj : string, optional
+            Any valid WCS projection type. Default is 'CAR' (cartesian).
+    coordsys : {'CEL', 'GAL'}, optional
+            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
     energy_band : `~gammapy.utils.energy.Energy
         Energy band for which we want to compute the image
     offset_band :`astropy.coordinates.Angle`
         Offset Band where you compute the image
     data_store : `~gammapy.data.DataStore`
         `DataStore` where are situated the events
+    counts_image : ~gammapy.image.SkyMap`
+            count image
+    bkg_image : ~gammapy.image.SkyMap`
+            bkg image
     """
 
-    def __init__(self, center, energy_band, offset_band, data_store, counts_image=None, bkg_image=None):
-        self.data_store = data_store
-        self.center = center
-        self.energy_band = energy_band
-        self.offset_band = offset_band
-        if not counts_image:
-            self.counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                             yref=self.center.b.deg, proj='TAN')
-        if not bkg_image:
-            self.bkg_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                          yref=self.center.b.deg, proj='TAN')
-        self.total_counts_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                               yref=self.center.b.deg, proj='TAN')
-        self.total_bkg_image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=self.center.l.deg,
-                                            yref=self.center.b.deg, proj='TAN')
-        self.header = self.counts_image.to_image_hdu().header
-        self.solid_angle = Angle(0.01, "deg") ** 2
+    def __init__(self, nxpix =None, nypix=None, binsz=None, xref=None, yref=None, proj=None, coordsys=None, energy_band=None, offset_band=None,
+                 data_store=None, counts_image=None, bkg_image=None):
+        self.maps = SkyMapCollection()
+        if counts_image:
+            self.maps["total_counts"] = counts_image
+        else:
+            self.data_store = data_store
+            self.energy_band = energy_band
+            self.offset_band = offset_band
+
+            self.image=SkyMap.empty(nxpix=nxpix, nypix=nypix, binsz=binsz, xref=xref,
+                                             yref=yref, proj=proj, coordsys=coordsys)
+            self.header = self.image.to_image_hdu().header
+        if bkg_image:
+            self.maps["total_bkg"] = bkg_image
+
+
+
 
     def make_counts(self, obs_id):
-        """Fill the counts image for the events of one observation
+        """Fill the counts image for the events of one observation.
 
         Parameters
         ----------
@@ -66,52 +76,61 @@ class ImageAnalysis(object):
             Number of the observation
 
         """
+        self.maps["counts"] = SkyMap.empty_like(self.image)
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        self.counts_image.fill(events=events)
+        self.maps["counts"].fill(events=events)
+        self.maps["counts"].data = self.maps["counts"].data.value
         log.info('Making counts image ...')
 
     def make_total_counts(self):
         """Stack the total count from the observation in the 'DataStore'
 
-        Returns
-        -------
-
         """
+        self.maps["total_counts"] = SkyMap.empty_like(self.image)
         for obs_id in self.data_store.obs_table['OBS_ID']:
             self.make_counts(obs_id)
-            self.total_counts_image.data += self.counts_image.data
+            self.maps["total_counts"].data += self.maps["counts"].data
 
     def make_background(self, obs_id):
+        """Make the background map for one observation from a bkg model
+
+        Parameters
+        ----------
+        obs_id : int
+            Number of the observation
+
+        """
+        self.maps["bkg"] = SkyMap.empty_like(self.image)
         obs = self.data_store.obs(obs_id=obs_id)
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = obs.pointing_radec.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
         livetime = obs.observation_live_time_duration
-        self.bkg_image.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * self.solid_angle * livetime
-        self.bkg_image.data = self.bkg_image.data.decompose()
+        self.maps["bkg"].data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * self.maps["bkg"].solid_angle() * livetime
+        self.maps["bkg"].data = self.maps["bkg"].data.decompose()
+        self.maps["bkg"].data = self.maps["bkg"].data.value
 
         log.info('Making background image ...')
 
-    def make_background_normalized(self, obs_id, exclusion_mask):
+    def make_background_normalized_offcounts(self, obs_id, exclusion_mask):
         """Normalized the background compare to te events in the counts maps outside the exclusion maps
 
         Parameters
         ----------
         exclusion_mask : `~gammapy.image.ExclusionMask`
-
-        Returns
-        -------
+            Exclusion regions
 
 
         """
         self.make_counts(obs_id)
         self.make_background(obs_id)
-        counts_sum = np.sum(self.counts_image.data * exclusion_mask.data)
-        bkg_sum = np.sum(self.bkg_image.data * exclusion_mask.data)
+        counts_sum = np.sum(self.maps["counts"].data * exclusion_mask.data)
+        bkg_sum = np.sum(self.maps["bkg"] .data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
-        self.bkg_image.data = scale * self.bkg_image.data
+        self.maps["bkg"].data = scale * self.maps["bkg"].data
+        self.maps['exclusion'] = exclusion_mask
 
     def make_total_bkg(self, exclusion_mask):
         """Stack the total bkg from the observation in the 'DataStore'
@@ -119,88 +138,64 @@ class ImageAnalysis(object):
         Parameters
         ----------
         exclusion_mask : `~gammapy.image.ExclusionMask`
-
-        Returns
-        -------
+            Exclusion regions
 
         """
+        self.maps["total_bkg"] = SkyMap.empty_like(self.image)
         for obs_id in self.data_store.obs_table['OBS_ID']:
-            self.make_background_normalized(obs_id, exclusion_mask)
-            self.total_bkg_image.data += self.bkg_image.data
+            self.make_background_normalized_offcounts(obs_id, exclusion_mask)
+            self.maps["total_bkg"].data += self.maps["bkg"].data
 
-    def make_images(self, exclusion_mask):
-        """Compute the counts, bkg and exlusion_mask images for a set of observation
+    def make_significance(self, radius, counts_image = None, bkg_image = None):
+        """Make the dignificance image from the counts and kbg images.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+        counts_image : `~gammapy.image.SkyMap`
+            count image
+        bkg_image : `~gammapy.image.SkyMap`
+            bkg image
+
+        """
+
+        if not counts_image:
+            self.maps["significance"] = SkyMap.empty_like(self.image)
+            counts_image = self.maps["total_counts"]
+        else:
+            self.maps["significance"] = SkyMap.empty_like(counts_image)
+        if not bkg_image:
+            bkg_image = self.maps["total_bkg"]
+
+        counts = disk_correlate(counts_image.data, 10)
+        bkg = disk_correlate(bkg_image.data, 10)
+        s = significance(counts, bkg)
+        self.maps["significance"].data = s
+        log.info('Making significance image ...')
+
+
+    def make_maps(self, exclusion_mask, radius):
+        """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
         ----------
         exclusion_mask : `~gammapy.image.ExclusionMask`
+            Exclusion regions
+        radius : float
+            Disk radius in pixels for the significance map.
 
-        Returns
-        -------
-        maps : `
         """
         self.make_total_counts()
         self.make_total_bkg(exclusion_mask)
-        maps = SkyMapCollection()
-        maps['counts'] = self.total_counts_image
-        maps['bkg'] = self.total_bkg_image
-        maps['exclusion'] = exclusion_mask
-        return maps
+        self.make_significance(radius)
 
-    def make_significance(self, counts_image, bkg_image, radius):
-        """
-
-        Parameters
-        ----------
-        counts_image : ~gammapy.image.SkyMap`
-            count image
-        bkg_image : ~gammapy.image.SkyMap`
-            bkg image
-        radius : float
-        Disk radius in pixels.
-
-        Returns
-        -------
-
-        """
-        counts = disk_correlate(counts_image.data, 10)
-        bkg = disk_correlate(bkg_image.data, 10)
-        s = significance(counts, bkg)
-        s_image = fits.ImageHDU(data=s, header=counts_image.to_image_hdu().header)
-        return s_image
 
     def make_psf(self):
         log.info('Making PSF ...')
 
     def make_exposure(self):
-        """
-        ny, nx = ref_cube.data.shape[1:]
-        xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
-        lon, lat, en = ref_cube.pix2world(xx, yy, 0)
-        coord = SkyCoord(lon, lat, frame=ref_cube.wcs.wcs.radesys.lower())  # don't care about energy
-        offset = coord.separation(pointing)
-        offset = np.clip(offset, Angle(0, 'deg'), offset_max)
-
-        energy = EnergyBounds(ref_cube.energy).log_centers
-        exposure = aeff2d.evaluate(offset, energy)
-        exposure = np.rollaxis(exposure, 2)
-        exposure *= livetime
-
-        expcube = SpectralCube(data=exposure,
-                           wcs=ref_cube.wcs,
-                           energy=ref_cube.energy)
-        return expcube
-        """
-        wcs = WCS(self.header)
-        data = np.zeros((header["NAXIS2"], header["NAXIS1"]))
-        image = fits.ImageHDU(data=data, header=header)
-
-        # define grids of pixel coorinates
-        xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
-        # calculate pixel offset from center (in world coordinates)
-        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
-        pix_off = coord.separation(center)
-        log.info('Making exposure image ...')
+        log.info('Making Exposure ...')
 
     def fit_source(self):
         log.info('Fitting image ...')
