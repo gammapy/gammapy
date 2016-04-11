@@ -117,7 +117,6 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
 cdef extern from "math.h":
     float log2(float x)
 
-
 cdef np.float_t LOG2_TO_E = 0.69314718055994529
 
 @cython.cdivision(True)

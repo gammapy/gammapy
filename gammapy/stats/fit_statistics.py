@@ -75,9 +75,8 @@ def cash(n_observed, mu_observed):
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
     mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
 
-    stat = 2 * (mu_observed - n_observed * np.log(mu_observed))
-    stat = np.where(mu_observed > 0, stat, 0)
-
+    _ = mu_observed > 0
+    stat = 2 * (mu_observed[_] - n_observed[_] * np.log2(mu_observed[_]) * 0.69314718055994529)
     return stat
 
 
