@@ -165,6 +165,7 @@ def make_image_from_2d_bg():
     # exclusion_mask = exclusion_mask.binarize()
     image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg,
                          yref=center.b.deg, proj='TAN')
+    import IPython; IPython.embed()
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store)
     refheader = images.header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')

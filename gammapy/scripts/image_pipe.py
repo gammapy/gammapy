@@ -10,7 +10,7 @@ from ..utils.scripts import get_parser
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
-
+from ..image.utils import coordinates
 __all__ = ['ImageAnalysis']
 
 log = logging.getLogger(__name__)
@@ -153,8 +153,8 @@ class ImageAnalysis(object):
         if not bkg_image:
             bkg_image = self.maps["total_bkg"]
 
-        counts = disk_correlate(counts_image.data, 10)
-        bkg = disk_correlate(bkg_image.data, 10)
+        counts = disk_correlate(counts_image.data, radius)
+        bkg = disk_correlate(bkg_image.data, radius)
         s = significance(counts, bkg)
         self.maps["significance"].data = s
         log.info('Making significance image ...')
@@ -177,5 +177,4 @@ class ImageAnalysis(object):
     def make_psf(self):
         log.info('Making PSF ...')
 
-    def make_exposure(self):
-        log.info('Making Exposure ...')
+    def make_exposure_one_obs(self, obs_id):
