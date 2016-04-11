@@ -10,7 +10,8 @@ from ..spectrum.powerlaw import power_law_flux
 
 __all__ = [
     'DifferentialFluxPoints',
-    'compute_differential_flux_points'
+    'IntegralFluxPoints',
+    'compute_differential_flux_points',
 ]
 
 
@@ -134,6 +135,89 @@ class DifferentialFluxPoints(Table):
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         return ax
+
+
+class IntegralFluxPoints(Table):
+    """Integral flux points table
+
+    Column names: ENERGY_MIN, ENERGY_MAX, INT_FLUX, INT_FLUX_ERR_HI, INT_FLUX_ERR_LO
+    For a complete documentation see :ref:`gadf:flux-points`
+    """
+
+    @classmethod
+    def from_arrays(cls, ebounds, int_flux, int_flux_err_hi=None,
+                    int_flux_err_lo=None):
+        """Create `~gammapy.spectrum.IntegralFluxPoints` from numpy arrays"""
+        t = Table()
+        ebounds = EnergyBounds(ebounds)
+        int_flux = Quantity(int_flux)
+        if not int_flux.unit.is_equivalent('cm-2 s-1'):
+            raise ValueError('Flux (unit {}) not an integrated flux'.format(int_flux.unit))
+
+        # Set errors to zero by default
+        def_f = np.zeros(len(energy)) * int_flux.unit
+        int_flux_err_hi = def_f if int_flux_err_hi is None else int_flux_err_hi
+        int_flux_err_lo = def_f if int_flux_err_lo is None else int_flux_err_lo
+
+        t['ENERGY_MIN'] = ebounds.lower_bounds
+        t['ENERGY_MAX'] = ebounds.upper_bounds
+        t['INT_FLUX'] = int_flux
+        t['INT_FLUX_ERR_HI'] = int_flux_err_hi
+        t['INT_FLUX_ERR_LO'] = int_flux_err_lo
+        return cls(t)
+
+    @classmethod
+    def from_3fgl(cls, source):
+        """Get `~gammapy.spectrum.IntegralFluxPoints` for a 3FGL source
+
+        Parameters
+        ----------
+        source : dict
+            3FGL source
+        """
+        ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
+        fluxkeys = ['Flux100_300', 'Flux300_1000', 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
+        temp_fluxes = [source.data[_] for _ in fluxkeys]
+
+        fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
+
+        temp_fluxes_err_hi = [source.data[_][1] for _ in fluxerrkeys]
+        temp_fluxes_err_lo = [source.data[_][0] for _ in fluxerrkeys]
+
+        int_fluxes = Quantity(temp_fluxes, 'cm-2 s-1')
+        int_fluxes_err_hi = Quantity(temp_fluxes_err_hi, 'cm-2 s-1')
+        int_fluxes_err_lo = Quantity(temp_fluxes_err_lo, 'cm-2 s-1')
+
+        return cls.from_arrays(ebounds, int_fluxes, int_fluxes_err_hi,
+                               int_flux_err_lo)
+
+    @property
+    def ebounds(self):
+        """Energy bounds"""
+        return EnergyBounds.from_lower_and_upper_bounds(
+            self['ENERGY_MIN'], self['ENERGY_MAX'])
+
+    def to_differential_flux_points(self, x_method='lafferty',
+                                    y_method='power_law', model=None,
+                                    spectral_index=None):
+        """Create `~gammapy.spectrum.DifferentialFluxPoints`
+
+        see :func:`~gammapy.spectrum.compute_differential_flux_points`.
+        """
+        energy_min = self['ENERGY_MIN'].to('TeV').value
+        energy_max = self['ENERGY_MAX'].to('TeV').value
+        int_flux = self['INT_FLUX'].to('cm-2 s-1').value
+        # Use upper error as symmetric value
+        int_flux = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
+        diff_flux = compute_differential_flux_points(x_method=x_method,
+                                                     y_method=y_method,
+                                                     model=model,
+                                                     spectral_index=spectral_index,
+                                                     energy_min=energy_min,
+                                                     energy_max=energy_max,
+                                                     int_flux=int_flux,
+                                                     int_flux_err=int_flux_err)
+        return diff_flux
 
 
 def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
