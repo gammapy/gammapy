@@ -21,20 +21,8 @@ class ImageAnalysis(object):
 
     Parameters
     ----------
-    nxpix : int, optional
-            Number of pixels in x axis. Default is 200.
-    nypix : int, optional
-            Number of pixels in y axis. Default is 200.
-    binsz : float, optional
-            Bin size for x and y axes in units of degrees. Default is 0.02.
-    xref : float, optional
-            Coordinate system value at reference pixel for x axis.
-    yref : float, optional
-            Coordinate system value at reference pixel for y axis.
-    proj : string, optional
-            Any valid WCS projection type. Default is 'CAR' (cartesian).
-    coordsys : {'CEL', 'GAL'}, optional
-            Coordinate system, either Galactic ('GAL') or Equatorial ('CEL').
+    empty_image : `~gammapy.image.SkyMap`
+            ref to an empty image
     energy_band : `~gammapy.utils.energy.Energy
         Energy band for which we want to compute the image
     offset_band :`astropy.coordinates.Angle`
@@ -47,7 +35,7 @@ class ImageAnalysis(object):
             bkg image
     """
 
-    def __init__(self, nxpix=None, nypix=None, binsz=None, xref=None, yref=None, proj=None, coordsys=None,
+    def __init__(self, empty_image=None,
                  energy_band=None, offset_band=None,
                  data_store=None, counts_image=None, bkg_image=None):
         self.maps = SkyMapCollection()
@@ -58,9 +46,8 @@ class ImageAnalysis(object):
             self.energy_band = energy_band
             self.offset_band = offset_band
 
-            self.image = SkyMap.empty(nxpix=nxpix, nypix=nypix, binsz=binsz, xref=xref,
-                                      yref=yref, proj=proj, coordsys=coordsys)
-            self.header = self.image.to_image_hdu().header
+            self.empty_image = empty_image
+            self.header = self.empty_image.to_image_hdu().header
         if bkg_image:
             self.maps["total_bkg"] = bkg_image
 
@@ -73,7 +60,7 @@ class ImageAnalysis(object):
             Number of the observation
 
         """
-        self.maps["counts"] = SkyMap.empty_like(self.image)
+        self.maps["counts"] = SkyMap.empty_like(self.empty_image)
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
@@ -85,7 +72,7 @@ class ImageAnalysis(object):
         """Stack the total count from the observation in the 'DataStore'
 
         """
-        self.maps["total_counts"] = SkyMap.empty_like(self.image)
+        self.maps["total_counts"] = SkyMap.empty_like(self.empty_image)
         for obs_id in self.data_store.obs_table['OBS_ID']:
             self.make_counts(obs_id)
             self.maps["total_counts"].data += self.maps["counts"].data
@@ -99,7 +86,7 @@ class ImageAnalysis(object):
             Number of the observation
 
         """
-        self.maps["bkg"] = SkyMap.empty_like(self.image)
+        self.maps["bkg"] = SkyMap.empty_like(self.empty_image)
         obs = self.data_store.obs(obs_id=obs_id)
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = obs.pointing_radec.galactic
@@ -139,7 +126,7 @@ class ImageAnalysis(object):
             Exclusion regions
 
         """
-        self.maps["total_bkg"] = SkyMap.empty_like(self.image)
+        self.maps["total_bkg"] = SkyMap.empty_like(self.empty_image)
         for obs_id in self.data_store.obs_table['OBS_ID']:
             self.make_background_normalized_offcounts(obs_id, exclusion_mask)
             self.maps["total_bkg"].data += self.maps["bkg"].data
@@ -159,7 +146,7 @@ class ImageAnalysis(object):
         """
 
         if not counts_image:
-            self.maps["significance"] = SkyMap.empty_like(self.image)
+            self.maps["significance"] = SkyMap.empty_like(self.empty_image)
             counts_image = self.maps["total_counts"]
         else:
             self.maps["significance"] = SkyMap.empty_like(counts_image)
@@ -192,5 +179,3 @@ class ImageAnalysis(object):
 
     def make_exposure(self):
         log.info('Making Exposure ...')
-
-    
