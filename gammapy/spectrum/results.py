@@ -11,7 +11,7 @@ from astropy.modeling import models
 
 from gammapy.spectrum import DifferentialFluxPoints
 from ..extern.bunch import Bunch
-from ..utils.energy import EnergyBounds
+from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import read_yaml, make_path
 
 __all__ = ['SpectrumStats',
@@ -152,9 +152,10 @@ class SpectrumFitResult(Result):
     def from_3fgl(cls, source):
         """Retrieve spectral fit result from 3FGL source"""
         d = source.data
+
+        spectral_model = d['SpectrumType'].strip()
         parameters = dict()
         parameter_errors = dict()
-        spectral_model = d['SpectrumType'].strip()
         if spectral_model == 'PowerLaw':
             parameters['index'] = Quantity(d['Spectral_Index'], '')
             parameter_errors['index'] = Quantity(d['Unc_Spectral_Index'], '')
@@ -176,6 +177,43 @@ class SpectrumFitResult(Result):
                                       ' for model {}'.format(spectral_model))
 
         return cls(spectral_model, parameters, parameter_errors)
+
+    @classmethod
+    def from_2fhl(cls, source):
+        """Retrieve spectral fit result from 2FHL source"""
+        # Note: 2FHL sources are PowerLaws with the Integral between
+        # 50 GeV and 2 TeV as normalization
+        # see: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PowerLaw2
+
+        spectral_model = 'PowerLaw'
+        d = source.data
+
+        # Get normalization factor
+        gamma = d['Spectral_Index']
+        int_flux = d['Flux50'] * Unit('cm-2 s-1')
+        e1 = Energy('50 GeV')
+        e2 = Energy('2 TeV')
+
+        den = e2 ** (gamma + 1) - e1 ** (gamma +1)
+        num = int_flux * (gamma + 1)
+        diff_flux = (num/den)
+
+        # Multiply by E_0 ^ gamma to get units 'right'
+        e_0 = Energy('1 TeV')
+        diff_flux = diff_flux * e_0 ** gamma
+
+        parameters = dict()
+        parameter_errors = dict()
+        parameters['index'] = Quantity(gamma, '')
+        parameter_errors['index'] = Quantity(d['Unc_Spectral_Index'], '')
+        parameters['reference'] = e_0
+        parameter_errors['reference'] = Quantity(0, e_0.unit)
+        parameters['norm'] = Quantity(diff_flux)
+        # Todo : calculate error
+        parameter_errors['norm'] = Quantity(0, diff_flux.unit)
+
+        return cls(spectral_model, parameters, parameter_errors,
+                   fit_range=EnergyBounds([e1, e2]))
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
