@@ -173,6 +173,33 @@ class ImageAnalysis(object):
         log.info('Making PSF ...')
 
     def make_exposure(self):
+        """
+        ny, nx = ref_cube.data.shape[1:]
+        xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
+        lon, lat, en = ref_cube.pix2world(xx, yy, 0)
+        coord = SkyCoord(lon, lat, frame=ref_cube.wcs.wcs.radesys.lower())  # don't care about energy
+        offset = coord.separation(pointing)
+        offset = np.clip(offset, Angle(0, 'deg'), offset_max)
+
+        energy = EnergyBounds(ref_cube.energy).log_centers
+        exposure = aeff2d.evaluate(offset, energy)
+        exposure = np.rollaxis(exposure, 2)
+        exposure *= livetime
+
+        expcube = SpectralCube(data=exposure,
+                           wcs=ref_cube.wcs,
+                           energy=ref_cube.energy)
+        return expcube
+        """
+        wcs = WCS(self.header)
+        data = np.zeros((header["NAXIS2"], header["NAXIS1"]))
+        image = fits.ImageHDU(data=data, header=header)
+
+        # define grids of pixel coorinates
+        xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
+        # calculate pixel offset from center (in world coordinates)
+        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
+        pix_off = coord.separation(center)
         log.info('Making exposure image ...')
 
     def fit_source(self):
