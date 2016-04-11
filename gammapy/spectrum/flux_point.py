@@ -155,7 +155,7 @@ class IntegralFluxPoints(Table):
             raise ValueError('Flux (unit {}) not an integrated flux'.format(int_flux.unit))
 
         # Set errors to zero by default
-        def_f = np.zeros(len(energy)) * int_flux.unit
+        def_f = np.zeros(ebounds.nbins) * int_flux.unit
         int_flux_err_hi = def_f if int_flux_err_hi is None else int_flux_err_hi
         int_flux_err_lo = def_f if int_flux_err_lo is None else int_flux_err_lo
 
@@ -189,7 +189,7 @@ class IntegralFluxPoints(Table):
         int_fluxes_err_lo = Quantity(temp_fluxes_err_lo, 'cm-2 s-1')
 
         return cls.from_arrays(ebounds, int_fluxes, int_fluxes_err_hi,
-                               int_flux_err_lo)
+                               int_fluxes_err_lo)
 
     @property
     def ebounds(self):
@@ -208,15 +208,23 @@ class IntegralFluxPoints(Table):
         energy_max = self['ENERGY_MAX'].to('TeV').value
         int_flux = self['INT_FLUX'].to('cm-2 s-1').value
         # Use upper error as symmetric value
-        int_flux = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
-        diff_flux = compute_differential_flux_points(x_method=x_method,
-                                                     y_method=y_method,
-                                                     model=model,
-                                                     spectral_index=spectral_index,
-                                                     energy_min=energy_min,
-                                                     energy_max=energy_max,
-                                                     int_flux=int_flux,
-                                                     int_flux_err=int_flux_err)
+        int_flux_err = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
+        val = compute_differential_flux_points(x_method=x_method,
+                                               y_method=y_method,
+                                               model=model,
+                                               spectral_index=spectral_index,
+                                               energy_min=energy_min,
+                                               energy_max=energy_max,
+                                               int_flux=int_flux,
+                                               int_flux_err=int_flux_err)
+
+        e = val['ENERGY'] * Unit('TeV')
+        f = val['DIFF_FLUX'] * Unit('TeV-1 cm-2 s-1')
+        f_err = val['DIFF_FLUX_ERR'] * Unit('TeV-1 cm-2 s-1')
+        diff_flux = DifferentialFluxPoints.from_arrays(energy=e, diff_flux=f,
+                                                       diff_flux_err_lo=f_err,
+                                                       diff_flux_err_hi=f_err)
+
         return diff_flux
 
 

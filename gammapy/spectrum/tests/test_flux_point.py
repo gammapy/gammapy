@@ -5,10 +5,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.table import Table
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
 from ..flux_point import (_x_lafferty, _integrate, _ydiff_excess_equals_expected,
                           compute_differential_flux_points,
-                          _energy_lafferty_power_law)
+                          _energy_lafferty_power_law, DifferentialFluxPoints,
+                          IntegralFluxPoints)
 from ...spectrum.powerlaw import power_law_evaluate, power_law_integral_flux
 
 x_methods = ['table', 'lafferty', 'log_center']
@@ -182,3 +183,40 @@ def test_compute_differential_flux_points(x_method, y_method):
     actual = result_table['DIFF_FLUX_ERR'].data
     desired = 0.1 * result_table['DIFF_FLUX'].data
     assert_allclose(actual, desired, rtol=1e-3)
+
+
+@requires_data('gammapy-extra')
+def test_3fgl_flux_points():
+    """Test reading flux points from 3FGL and also conversion from int to diff points"""
+    from gammapy.catalog import source_catalogs
+    cat_3fgl = source_catalogs['3fgl']
+    source = cat_3fgl['3FGL J0018.9-8152']
+    index = source.data['Spectral_Index']
+
+    diff_points = DifferentialFluxPoints.from_3fgl(source)
+    fluxes = diff_points['DIFF_FLUX'].quantity
+    energies = diff_points['ENERGY'].quantity
+    eflux = fluxes * energies ** 2
+
+    actual = eflux.to('erg cm-2 s-1').value
+    diff_desired = [2.25564e-12, 1.32382e-12, 9.54129e-13, 8.63484e-13, 1.25145e-12]
+
+    assert_allclose(actual, diff_desired, rtol=1e-4)
+
+
+    int_points = IntegralFluxPoints.from_3fgl(source)
+    actual = int_points['INT_FLUX'].quantity.to('cm-2 s-1').value
+
+    int_desired = [9.45680e-09, 1.94538e-09, 4.00020e-10, 1.26891e-10, 7.24820e-11]
+
+    assert_allclose(actual, int_desired, rtol=1e-4)
+
+    diff2 = int_points.to_differential_flux_points(x_method='log_center',
+                                                   y_method='power_law',
+                                                   spectral_index=index)
+
+    actual = diff2['DIFF_FLUX'].quantity.to('TeV-1 cm-2 s-1').value
+    desired = fluxes.to('TeV-1 cm-2 s-1').value
+
+    # Todo : Is this precision good enough?
+    assert_allclose(actual, desired, rtol=1e-2)
