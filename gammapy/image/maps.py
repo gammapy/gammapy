@@ -342,13 +342,10 @@ class SkyMap(object):
             Skymap reprojected onto ``refheader``.
         """
         from reproject import reproject_interp
-        out = reproject_interp(
-            input_data=self.to_image_hdu(),
-            output_projection=refheader,
-            *args,
-            **kwargs,
-        )
-        map = SkyMap(name=self.name, data=out[0], wcs=self.wcs, unit=self.unit, meta=self.meta)
+        out = reproject_interp(input_data=self.to_image_hdu(),
+                               output_projection=refheader, *args, **kwargs)
+        map = SkyMap(name=self.name, data=out[0], wcs=self.wcs, unit=self.unit,
+                     meta=self.meta)
         return map
 
     def show(self, viewer='mpl', **kwargs):

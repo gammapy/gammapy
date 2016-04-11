@@ -68,3 +68,26 @@ def test_datastore_load_all(data_manager):
     event_lists = data_store.load_all(hdu_class='events')
     assert_allclose(event_lists[0]['ENERGY'][0], 1.1156039)
     assert_allclose(event_lists[-1]['ENERGY'][0], 1.0204216)
+
+
+@requires_data('gammapy-extra')
+@requires_dependency('yaml')
+def test_datastore_subset(tmpdir, data_manager):
+    """Test creating a datastore as subset of another datastore"""
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    selected_obs = data_store.obs_table.select_obs_id([23523, 23592])
+    storedir = tmpdir / 'substore'
+    data_store.copy_obs(selected_obs, storedir)
+
+    substore = DataStore.from_dir(storedir)
+
+    # Todo : This is broken, remove or fix?
+    # substore.check_integrity()
+
+    assert str(substore.hdu_table.base_dir) == str(storedir)
+    assert len(substore.obs_table) == 2
+
+    desired = data_store.obs(23523)
+    actual = substore.obs(23523)
+
+    assert str(actual.events) == str(desired.events)
