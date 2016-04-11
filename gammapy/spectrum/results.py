@@ -7,16 +7,17 @@ import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 from astropy.units import Unit, Quantity
+from astropy.modeling import models
 
+from gammapy.spectrum import DifferentialFluxPoints
 from ..extern.bunch import Bunch
-from ..utils.energy import EnergyBounds
+from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import read_yaml, make_path
 
 __all__ = ['SpectrumStats',
            'SpectrumFitResult',
            'SpectrumResult',
            'SpectrumResultDict',
-           'FluxPoints',
            ]
 
 @six.add_metaclass(abc.ABCMeta)
@@ -47,10 +48,11 @@ class Result():
 
         Parameters
         ----------
-        filename : str
+        filename : str, Path
             File to read
         """
-        val = read_yaml(filename)
+        filename = make_path(filename)
+        val = read_yaml(str(filename))
         return cls.from_dict(val[cls.HIGH_LEVEL_KEY])
 
     def to_dict(self):
@@ -60,15 +62,15 @@ class Result():
         """
         raise NotImplementedError
 
-    def to_yaml(self, filename):
+    def to_yaml(self, filename, mode='w'):
         """Write YAML file
 
         Parameters
         ----------
         filename : str
             File to write
-        key : str
-            Highest level key to read
+        mode : str
+            Write mode
         """
 
         import yaml
@@ -77,7 +79,7 @@ class Result():
         d[self.HIGH_LEVEL_KEY] = self.to_dict()
         val = yaml.safe_dump(d, default_flow_style=False)
 
-        with open(str(filename), 'w') as outfile:
+        with open(str(filename), mode) as outfile:
             outfile.write(val)
 
     @classmethod
@@ -133,7 +135,7 @@ class SpectrumFitResult(Result):
         if fit_range is not None:
             self.fit_range = EnergyBounds(fit_range).to('TeV')
         else:
-            self.fit_range = EnergyBounds([0.01, 300], 'TeV')
+            self.fit_range = None
         self.fluxes = fluxes
         self.flux_errors = flux_errors
 
@@ -146,6 +148,72 @@ class SpectrumFitResult(Result):
         self.parameters.reference = self.parameters.reference.to('TeV')
         self.parameter_errors.reference = self.parameter_errors.reference.to('TeV')
 
+    @classmethod
+    def from_3fgl(cls, source):
+        """Retrieve spectral fit result from 3FGL source"""
+        d = source.data
+
+        spectral_model = d['SpectrumType'].strip()
+        parameters = dict()
+        parameter_errors = dict()
+        if spectral_model == 'PowerLaw':
+            parameters['index'] = Quantity(d['Spectral_Index'], '')
+            parameter_errors['index'] = Quantity(d['Unc_Spectral_Index'], '')
+            parameters['reference'] = Quantity(d['Pivot_Energy'], 'MeV')
+            parameter_errors['reference'] = Quantity(0, 'MeV')
+            parameters['norm'] = Quantity(d['Flux_Density'], 'cm-2 s-1 MeV-1')
+            parameter_errors['norm'] = Quantity(d['Unc_Flux_Density'], 'cm-2 s-1 MeV-1')
+        elif spectral_model == 'LogParabola':
+            parameters['alpha'] = Quantity(d['Spectral_Index'], '')
+            parameter_errors['alpha'] = Quantity(d['Unc_Spectral_Index'], '')
+            parameters['beta'] = Quantity(d['beta'], '')
+            parameter_errors['beta'] = Quantity(d['Unc_beta'], '')
+            parameters['reference'] = Quantity(d['Pivot_Energy'], 'MeV')
+            parameter_errors['reference'] = Quantity(0, 'MeV')
+            parameters['norm'] = Quantity(d['Flux_Density'], 'cm-2 s-1 MeV-1')
+            parameter_errors['norm'] = Quantity(d['Unc_Flux_Density'], 'cm-2 s-1 MeV-1')
+        else:
+            raise NotImplementedError('SpectrumFitResult.from_3fgl not available'
+                                      ' for model {}'.format(spectral_model))
+
+        return cls(spectral_model, parameters, parameter_errors)
+
+    @classmethod
+    def from_2fhl(cls, source):
+        """Retrieve spectral fit result from 2FHL source"""
+        # Note: 2FHL sources are PowerLaws with the Integral between
+        # 50 GeV and 2 TeV as normalization
+        # see: http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html#PowerLaw2
+
+        spectral_model = 'PowerLaw'
+        d = source.data
+
+        # Get normalization factor
+        gamma = d['Spectral_Index']
+        int_flux = d['Flux50'] * Unit('cm-2 s-1')
+        e1 = Energy('50 GeV')
+        e2 = Energy('2 TeV')
+
+        den = e2 ** (gamma + 1) - e1 ** (gamma +1)
+        num = int_flux * (gamma + 1)
+        diff_flux = (num/den)
+
+        # Multiply by E_0 ^ gamma to get units 'right'
+        e_0 = Energy('1 TeV')
+        diff_flux = diff_flux * e_0 ** gamma
+
+        parameters = dict()
+        parameter_errors = dict()
+        parameters['index'] = Quantity(gamma, '')
+        parameter_errors['index'] = Quantity(d['Unc_Spectral_Index'], '')
+        parameters['reference'] = e_0
+        parameter_errors['reference'] = Quantity(0, e_0.unit)
+        parameters['norm'] = Quantity(diff_flux)
+        # Todo : calculate error
+        parameter_errors['norm'] = Quantity(0, diff_flux.unit)
+
+        return cls(spectral_model, parameters, parameter_errors,
+                   fit_range=EnergyBounds([e1, e2]))
 
     @classmethod
     def from_fitspectrum_json(cls, filename, model=0):
@@ -262,7 +330,8 @@ class SpectrumFitResult(Result):
 
     def to_dict(self):
         val = dict()
-        val['fit_range'] = self.fit_range.to_dict()
+        if self.fit_range is not None:
+            val['fit_range'] = self.fit_range.to_dict()
         val['parameters'] = dict()
         for key in self.parameters:
             par = self.parameters[key]
@@ -283,8 +352,11 @@ class SpectrumFitResult(Result):
 
     @classmethod
     def from_dict(cls, val):
-        erange = val['fit_range']
-        energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
+        try:
+            erange = val['fit_range']
+            energy_range = (erange['min'], erange['max']) * Unit(erange['unit'])
+        except KeyError:
+            energy_range = None
         pars = val['parameters']
         parameters = Bunch()
         parameter_errors = Bunch()
@@ -355,8 +427,78 @@ class SpectrumFitResult(Result):
 
         return model
 
-    def plot(self, ax=None, energy_unit='TeV',
-             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
+    def evaluate(self, x):
+        """Wrapper around astropy.modelling.models.evaluate
+
+        Parameters
+        ----------
+        x : `~gammapy.utils.energy.Energy`
+            Evaluation point
+        """
+        if self.spectral_model == 'PowerLaw':
+            flux = models.PowerLaw1D.evaluate(x, self.parameters.norm,
+                                              self.parameters.reference,
+                                              self.parameters.index)
+        elif self.spectral_model == 'LogParabola':
+            #LogParabola evaluation does not work with arrays
+            flux = Quantity([models.LogParabola1D.evaluate(xx,
+                                                           self.parameters.norm,
+                                                           self.parameters.reference,
+                                                           self.parameters.alpha,
+                                                           self.parameters.beta)
+                             for xx in x])
+        else:
+            raise NotImplementedError('Not implemented for model {}.'.format(self.spectral_model))
+
+        return flux.to(self.parameters.norm.unit)
+
+    def evaluate_butterfly(self, x, method='analytical'):
+        """Calculate butterfly
+
+        Disclaimer: Only available for PowerLaw assuming no correlation
+        TODO: Use uncertainties package
+
+        Parameters
+        ----------
+        x : `~gammapy.utils.energy.Energy`
+            Evaluation point
+        method : str {'analytical'}
+            Computation method
+
+        Returns
+        -------
+        butterfly : tuple
+            Lower, upper flux errors
+        """
+        if method == 'analytical':
+            return self._eval_butterfly_analytical(x)
+        else:
+            raise NotImplementedError('Method: {}'.format(method))
+
+    def _eval_butterfly_analytical(self, x):
+        """Evaluate butterfly using hard-coded formulas"""
+        if self.spectral_model == 'PowerLaw':
+            from gammapy.spectrum import df_over_f
+            f = self.evaluate(x)
+            x = x.to('TeV').value
+            e0 = self.parameters.reference.to('TeV').value
+            f0 = self.parameters.norm.to('cm-2 s-1 TeV-1').value
+            df0 = self.parameter_errors.norm.to('cm-2 s-1 TeV-1').value
+            dg = self.parameter_errors.index.value
+            # TODO: Fix this!
+            cov = 0
+            df_over_f = df_over_f(x, e0, f0, df0, dg, cov)
+            val = df_over_f * f
+            # Errors are symmetric
+            return (val, val)
+        else:
+            raise NotImplementedError('Analytical butterfly calculation'
+                                      ' not implemented for model {}'.format(
+                                      self.spectral_model))
+
+    def plot(self, ax=None, energy_unit='TeV', energy_range=None,
+             flux_unit='cm-2 s-1 TeV-1', energy_power=0, n_points=100,
+             **kwargs):
         """Plot fit function
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
@@ -367,10 +509,14 @@ class SpectrumFitResult(Result):
             Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
+        energy_range : `~gammapy.utils.energy.EnergyBounds`
+            Plot range, if fit range not set
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        e_power : int
+        energy_power : int
             Power of energy to multiply flux axis with
+        n_points : int
+            Number of evaluation nodes
 
         Returns
         -------
@@ -379,105 +525,23 @@ class SpectrumFitResult(Result):
         """
 
         import matplotlib.pyplot as plt
-
         ax = plt.gca() if ax is None else ax
 
-        func = self.to_sherpa_model()
-        x_min = np.log10(self.fit_range[0].value)
-        x_max = np.log10(self.fit_range[1].value)
-        x = np.logspace(x_min, x_max, 100) * self.fit_range.unit
-        y = func(x.to('keV').value) * Unit('cm-2 s-1 keV-1')
-        x = x.to(energy_unit).value
-        y = y.to(flux_unit).value
-        y = y * np.power(x, e_power)
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
+        xx = self._get_x(energy_range, n_points)
+        yy = self.evaluate(xx)
+        x = xx.to(energy_unit).value
+        y = yy.to(flux_unit).value
+        y = y * np.power(x, energy_power)
+        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         return ax
 
-    def analytical_butterfly(self):
-        """Calculate butterfly analytically
-
-        Disclaimer: Only available for PowerLaw assuming no correlation
-
-        Returns
-        -------
-        x : float
-            Energy array [TeV]
-        butterfly : float
-            Butterfly
-        """
-
-        from gammapy.spectrum import df_over_f
-        if self.spectral_model is not 'PowerLaw':
-            raise NotImplementedError('Analytical butterfly calculation'
-                                      'not implemented for model {}'.format(
-                                      self.spectral_model))
-
-        x_min = np.log10(self.fit_range[0].value)
-        x_max = np.log10(self.fit_range[1].value)
-        x = np.logspace(x_min, x_max, 1000) * self.energy_range.unit
-        x = x.to('TeV').value
-        e0 = self.parameters.reference.to('TeV').value
-        f0 = self.parameters.norm.to('cm-2 s-1 TeV-1').value
-        df0 = self.parameter_errors.norm.to('cm-2 s-1 TeV-1').value
-        dg = self.parameter_errors.index.value
-        cov = 0
-        butterfly = df_over_f(x, e0, f0, df0, dg, cov) * y
-
-        return x, butterfly
-
-
-class FluxPoints(Table, Result):
-    """Flux points table
-
-    For a complete documentation see :ref:`gadf:flux-points`
-    """
-
-    HIGH_LEVEL_KEY = 'flux_points'
-
-    @classmethod
-    def from_fitspectrum_json(cls, filename):
-        import json
-        with open(filename) as fh:
-            data = json.load(fh)
-
-        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
-        flux_points['energy'].unit = 'TeV'
-        flux_points['energy_err_hi'].unit = 'TeV'
-        flux_points['energy_err_lo'].unit = 'TeV'
-        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
-
-        return cls(flux_points)
-
-    def to_dict(self):
-        val = dict(flux_points = dict())
-        for col in self:
-            val['flux_points'][col] = [float(_) for _ in self[col]]
-            val['flux_points']['energy_unit'] = '{}'.format(self['energy'].unit)
-            val['flux_points']['flux_unit'] = '{}'.format(self['flux'].unit)
-
-    @classmethod
-    def from_dict(cls, val):
-        fp = val['flux_points']
-        e_unit = Unit(fp.pop('energy_unit'))
-        f_unit = Unit(fp.pop('flux_unit'))
-        flux_points = Table(val['flux_points'])
-        flux_points['energy'].unit = e_unit
-        flux_points['energy_err_hi'].unit = e_unit
-        flux_points['energy_err_lo'].unit = e_unit
-        flux_points['flux'].unit = f_unit
-        flux_points['flux_err_hi'].unit = f_unit
-        flux_points['flux_err_lo'].unit = f_unit
-
-    def plot(self, ax=None, energy_unit='TeV',
-             flux_unit='cm-2 s-1 TeV-1', e_power=0, **kwargs):
-        """Plot spectral points
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+    def plot_butterfly(self, ax=None, energy_unit='TeV', energy_range=None,
+                       flux_unit='cm-2 s-1 TeV-1', energy_power=0,
+                       n_points=1000, **kwargs):
+        """Plot butterfly
 
         Parameters
         ----------
@@ -485,30 +549,57 @@ class FluxPoints(Table, Result):
             Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
+        energy_range : `~gammapy.utils.energy.EnergyBounds`
+            Plot range, if fit range not set
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        e_power : int
+        energy_power : int
             Power of energy to multiply flux axis with
+        n_points : int
+            Number of evaluation nodes
 
         Returns
         -------
         ax : `~matplolib.axes`, optional
             Axis
         """
-        import matplotlib.pyplot as plt
 
-        kwargs.setdefault('fmt', 'o')
+        import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
-        x = self['energy'].quantity.to(energy_unit).value
-        y = self['flux'].quantity.to(flux_unit).value
-        yh = self['flux_err_hi'].quantity.to(flux_unit).value
-        yl = self['flux_err_lo'].quantity.to(flux_unit).value
-        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, e_power)
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), e_power)
-        ax.errorbar(x, y, yerr=(yh, yl), **kwargs)
+
+        xx = self._get_x(energy_range, n_points)
+        yy = self.evaluate(xx)
+        y_lo, y_hi = self.evaluate_butterfly(xx)
+        y_up = yy + y_hi
+        y_down = yy - y_lo
+
+        x = xx.to(energy_unit).value
+        y_up = y_up.to(flux_unit).value
+        y_down = y_down.to(flux_unit).value
+
+        y_up = y_up * np.power(x, energy_power)
+        y_down = y_down * np.power(x, energy_power)
+        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
+        ax.fill_between(x, y_down, y_up, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         return ax
+
+    def _get_x(self, energy_range, n_points):
+        """Helper function to proved x sampling"""
+        if energy_range is None:
+            if self.fit_range is not None:
+                energy_range = self.fit_range
+            else:
+                raise ValueError('Fit range not set. You have to specify an energy range')
+        else:
+            energy_range = EnergyBounds(energy_range)
+
+        x_min = np.log10(energy_range[0].to('TeV').value)
+        x_max = np.log10(energy_range[1].to('TeV').value)
+        x = np.logspace(x_min, x_max, n_points) * Unit('TeV')
+
+        return x
 
 
 class SpectrumStats(Result):
@@ -621,7 +712,7 @@ class SpectrumResult(object):
         Spectrum stats
     fit: `~gammapy.spectrum.results.SpectrumFitResult`, optional
         Spectrum fit result
-    points: `~gammapy.spectrum.results.FluxPoints`, optional
+    points: `~gammapy.spectrum.flux_points.DifferentialFluxPoints`, optional
         Flux points
     """
 
@@ -641,7 +732,7 @@ class SpectrumResult(object):
         except KeyError:
             fit = None
         try:
-            points = FluxPoints.from_fitspectrum_json(filename)
+            points = DifferentialFluxPoints.from_fitspectrum_json(filename)
         except KeyError:
             points = None
 
@@ -655,11 +746,13 @@ class SpectrumResult(object):
         creates `~gammapy.spectrum.results.Result` instances depending
         on the available keys
         """
-        data = read_yaml(filename)
+        filename = make_path(filename)
+        data = read_yaml(str(filename))
 
         results = OrderedDict()
+        # The dict order has to mirror the output of Result.__subclass__()
+
         results['fit'] = None
-        results['points'] = None
         results['stats'] = None
 
         for i, _ in enumerate(Result.__subclasses__()):
@@ -723,7 +816,7 @@ class SpectrumResult(object):
         return residuals.decompose(), residuals_err.decompose()
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      e_power=0, fit_kwargs=None, point_kwargs=None):
+                      energy_power=0, fit_kwargs=None, point_kwargs=None):
         """Plot full spectrum including flux points and residuals
 
         Parameters
@@ -734,7 +827,7 @@ class SpectrumResult(object):
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        e_power : int
+        energy_power : int
             Power of energy to multiply flux axis with
         fit_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_fit_function`
@@ -767,11 +860,10 @@ class SpectrumResult(object):
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        
         self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                      e_power=e_power, ax=ax0, **fit_kwargs)
+                      energy_power=energy_power, ax=ax0, **fit_kwargs)
         self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                         e_power=e_power, ax=ax0, **point_kwargs)
+                         energy_power=energy_power, ax=ax0, **point_kwargs)
         self.plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
 
         plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,
