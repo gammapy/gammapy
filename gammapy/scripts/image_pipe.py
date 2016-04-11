@@ -193,5 +193,4 @@ class ImageAnalysis(object):
     def make_exposure(self):
         log.info('Making Exposure ...')
 
-    def fit_source(self):
-        log.info('Fitting image ...')
+    
