@@ -16,7 +16,6 @@ __all__ = ['ImageAnalysis']
 log = logging.getLogger(__name__)
 
 
-
 class ImageAnalysis(object):
     """Gammapy 2D image based analysis.
 
@@ -48,7 +47,8 @@ class ImageAnalysis(object):
             bkg image
     """
 
-    def __init__(self, nxpix =None, nypix=None, binsz=None, xref=None, yref=None, proj=None, coordsys=None, energy_band=None, offset_band=None,
+    def __init__(self, nxpix=None, nypix=None, binsz=None, xref=None, yref=None, proj=None, coordsys=None,
+                 energy_band=None, offset_band=None,
                  data_store=None, counts_image=None, bkg_image=None):
         self.maps = SkyMapCollection()
         if counts_image:
@@ -58,14 +58,11 @@ class ImageAnalysis(object):
             self.energy_band = energy_band
             self.offset_band = offset_band
 
-            self.image=SkyMap.empty(nxpix=nxpix, nypix=nypix, binsz=binsz, xref=xref,
-                                             yref=yref, proj=proj, coordsys=coordsys)
+            self.image = SkyMap.empty(nxpix=nxpix, nypix=nypix, binsz=binsz, xref=xref,
+                                      yref=yref, proj=proj, coordsys=coordsys)
             self.header = self.image.to_image_hdu().header
         if bkg_image:
             self.maps["total_bkg"] = bkg_image
-
-
-
 
     def make_counts(self, obs_id):
         """Fill the counts image for the events of one observation.
@@ -108,7 +105,8 @@ class ImageAnalysis(object):
         center = obs.pointing_radec.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
         livetime = obs.observation_live_time_duration
-        self.maps["bkg"].data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * self.maps["bkg"].solid_angle() * livetime
+        self.maps["bkg"].data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * self.maps[
+            "bkg"].solid_angle() * livetime
         self.maps["bkg"].data = self.maps["bkg"].data.decompose()
         self.maps["bkg"].data = self.maps["bkg"].data.value
 
@@ -127,7 +125,7 @@ class ImageAnalysis(object):
         self.make_counts(obs_id)
         self.make_background(obs_id)
         counts_sum = np.sum(self.maps["counts"].data * exclusion_mask.data)
-        bkg_sum = np.sum(self.maps["bkg"] .data * exclusion_mask.data)
+        bkg_sum = np.sum(self.maps["bkg"].data * exclusion_mask.data)
         scale = counts_sum / bkg_sum
         self.maps["bkg"].data = scale * self.maps["bkg"].data
         self.maps['exclusion'] = exclusion_mask
@@ -146,7 +144,7 @@ class ImageAnalysis(object):
             self.make_background_normalized_offcounts(obs_id, exclusion_mask)
             self.maps["total_bkg"].data += self.maps["bkg"].data
 
-    def make_significance(self, radius, counts_image = None, bkg_image = None):
+    def make_significance(self, radius, counts_image=None, bkg_image=None):
         """Make the dignificance image from the counts and kbg images.
 
         Parameters
@@ -174,7 +172,6 @@ class ImageAnalysis(object):
         self.maps["significance"].data = s
         log.info('Making significance image ...')
 
-
     def make_maps(self, exclusion_mask, radius):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
@@ -189,7 +186,6 @@ class ImageAnalysis(object):
         self.make_total_counts()
         self.make_total_bkg(exclusion_mask)
         self.make_significance(radius)
-
 
     def make_psf(self):
         log.info('Making PSF ...')
