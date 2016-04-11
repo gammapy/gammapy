@@ -472,6 +472,7 @@ class SpectrumFitResult(Result):
              **kwargs):
         """Plot fit function
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
         Parameters
         ----------
         ax : `~matplolib.axes`, optional
@@ -486,6 +487,7 @@ class SpectrumFitResult(Result):
             Power of energy to multiply flux axis with
         n_points : int
             Number of evaluation nodes
+
         Returns
         -------
         ax : `~matplolib.axes`, optional
@@ -510,6 +512,7 @@ class SpectrumFitResult(Result):
                        flux_unit='cm-2 s-1 TeV-1', energy_power=0,
                        n_points=1000, **kwargs):
         """Plot butterfly
+
         Parameters
         ----------
         ax : `~matplolib.axes`, optional
@@ -524,6 +527,7 @@ class SpectrumFitResult(Result):
             Power of energy to multiply flux axis with
         n_points : int
             Number of evaluation nodes
+
         Returns
         -------
         ax : `~matplolib.axes`, optional

@@ -186,6 +186,7 @@ def test_compute_differential_flux_points(x_method, y_method):
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_3fgl_flux_points():
     """Test reading flux points from 3FGL and also conversion from int to diff points"""
     from gammapy.catalog import source_catalogs
