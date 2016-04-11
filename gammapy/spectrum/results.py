@@ -173,10 +173,14 @@ class SpectrumFitResult(Result):
             parameters['norm'] = Quantity(d['Flux_Density'], 'cm-2 s-1 MeV-1')
             parameter_errors['norm'] = Quantity(d['Unc_Flux_Density'],
                                                 'cm-2 s-1 MeV-1')
+
+        # Todo : Implement models PLExpCutoff, PLSuperExpCutoff
         else:
             raise NotImplementedError(
                 'SpectrumFitResult.from_3fgl not available'
                 ' for model {}'.format(spectral_model))
+
+
 
         return cls(spectral_model, parameters, parameter_errors)
 
@@ -393,7 +397,7 @@ class SpectrumFitResult(Result):
         return model
 
     def evaluate(self, x):
-        """Wrapper around astropy.modelling.models.evaluate
+        """Wrapper around the evaluate method on the Astropy model classes.
 
         Parameters
         ----------
@@ -405,7 +409,9 @@ class SpectrumFitResult(Result):
                                               self.parameters.reference,
                                               self.parameters.index)
         elif self.spectral_model == 'LogParabola':
-            #LogParabola evaluation does not work with arrays
+            # LogParabola evaluation does not work with arrays because
+            # there is bug when using '**' with Quantities
+            # see https://github.com/astropy/astropy/issues/4764
             flux = Quantity([models.LogParabola1D.evaluate(xx,
                                                            self.parameters.norm,
                                                            self.parameters.reference,
