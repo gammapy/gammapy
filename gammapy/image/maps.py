@@ -321,7 +321,7 @@ class SkyMap(object):
         header['BUNIT'] = self.unit
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
 
-    def reproject(self, refheader, mode='interp', *args, **kwargs):
+    def reproject(self, reference, mode='interp', *args, **kwargs):
         """
         Reproject sky map to given reference header.
 
@@ -331,23 +331,42 @@ class SkyMap(object):
 
         Parameters
         ----------
-        refheader : `~astropy.fits.Header`
-            Reference header to reproject the data on. 
+        reference : `~astropy.fits.Header` or `SkyMap`
+            Reference map specification to reproject the data on. 
         mode : {'interp', 'exact'}
             Interpolation mode.
+        *args : list
+            Arguments passed to `~reproject.reproject_interp` or 
+            `~reproject.reproject_exact`. 
+        **kwargs : dict
+            Keyword arguments passed to `~reproject.reproject_interp` or 
+            `~reproject.reproject_exact`.
 
         Returns
         -------
         skymap : `SkyMap`
-            Skymap reprojected onto ``refheader``.
+            Skymap reprojected onto ``reference``.
         """
 
-        from reproject import reproject_interp
-        out = reproject_interp(input_data=self.to_image_hdu(),
-                               output_projection=refheader, *args, **kwargs)
-        map = SkyMap(name=self.name, data=out[0], wcs=self.wcs, unit=self.unit,
-                     meta=self.meta)
-        return map
+        from reproject import reproject_interp, reproject_exact
+
+        if isinstance(reference, SkyMap):
+            wcs_reference = reference.wcs
+        elif isinstance(reference, fits.Header):
+            wcs_reference = WCS(reference)
+        else:
+            raise TypeError("Invalid reference must be either instance"
+                            "of `Header` or `SkyMap`.")
+
+        if mode == 'interp':
+            out = reproject_interp((self.data, wcs_reference), *args, **kwargs)
+        elif mode == 'exact':
+            out = reproject_exact((self.data, wcs_reference) *args, **kwargs)
+        else:
+            raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
+
+        return SkyMap(name=self.name, data=out[0], wcs=wcs_reference,
+                      unit=self.unit, meta=self.meta)
 
     def show(self, viewer='mpl', **kwargs):
         """
@@ -402,9 +421,9 @@ class SkyMap(object):
         """
         Print summary info about the sky map.
         """
-        print(repr(self))
+        print(str(self))
 
-    def __repr__(self):
+    def __str__(self):
         """
         String representation of the class.
         """
@@ -424,20 +443,26 @@ class SkyMap(object):
         """
         return self.data
 
-    def binarize(self, threshold=0.5):
-        """Make binary mask (`~gammapy.image.ExclusionMask`).
-
-        TODO: this isn't working yet.
-        The ``wcs`` attribute isn't copied over!?
-
-        TODO: some docs and example
+    def threshold(self, threshold):
         """
-        # TODO: Add test.
-        from .mask import ExclusionMask
-        map = ExclusionMask(self)
-        map.data = np.where(self.data > threshold, 0, 1)
+        Threshold sykmap data to cerate a `~gammapy.image.ExclusionMask`.
 
-        return map
+        Parameters
+        ----------
+        threshold : float
+            Threshold value.
+
+        Returns
+        -------
+        mask : `~gammapy.image.ExclusionMask`
+            Exclusion mask object.
+
+        TODO: some more docs and example
+        """
+        from .mask import ExclusionMask
+        mask = ExclusionMask.empty_like(self)
+        mask.data = np.where(self.data > threshold, 0, 1)
+        return mask
 
 
 class SkyMapCollection(Bunch):
