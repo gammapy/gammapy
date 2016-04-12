@@ -190,10 +190,10 @@ class EnergyBounds(Energy):
 
     @property
     def lin_centers(self):
-    """Log centers of the energy bounds
-    """
-    center = (self[:-1] + self[1:])/2
-    return center.view(Energy)
+        """Log centers of the energy bounds
+        """
+        center = (self[:-1] + self[1:])/2
+        return center.view(Energy)
 
     @property
     def log_centers(self):
