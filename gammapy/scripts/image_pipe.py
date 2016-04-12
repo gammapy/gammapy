@@ -3,11 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 import numpy as np
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
+from astropy.wcs.utils import pixel_to_skycoord
 from astropy.io import fits
 from ..utils.scripts import get_parser
 from ..background import fill_acceptance_image
+from ..utils.energy import EnergyBounds
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
 from ..image.utils import coordinates
@@ -29,6 +31,8 @@ class ImageAnalysis(object):
         Offset Band where you compute the image
     data_store : `~gammapy.data.DataStore`
         `DataStore` where are situated the events
+    exclusion_mask : `~gammapy.image.ExclusionMask`
+            Exclusion regions
     counts_image : ~gammapy.image.SkyMap`
             count image
     bkg_image : ~gammapy.image.SkyMap`
@@ -37,7 +41,7 @@ class ImageAnalysis(object):
 
     def __init__(self, empty_image=None,
                  energy_band=None, offset_band=None,
-                 data_store=None, counts_image=None, bkg_image=None):
+                 data_store=None, exclusion_mask = None, counts_image=None, bkg_image=None):
         self.maps = SkyMapCollection()
         if counts_image:
             self.maps["total_counts"] = counts_image
@@ -48,6 +52,8 @@ class ImageAnalysis(object):
 
             self.empty_image = empty_image
             self.header = self.empty_image.to_image_hdu().header
+            if exclusion_mask:
+                self.maps['exclusion'] = exclusion_mask
         if bkg_image:
             self.maps["total_bkg"] = bkg_image
 
@@ -99,36 +105,29 @@ class ImageAnalysis(object):
 
         log.info('Making background image ...')
 
-    def make_background_normalized_offcounts(self, obs_id, exclusion_mask):
+    def make_background_normalized_offcounts(self, obs_id):
         """Normalized the background compare to te events in the counts maps outside the exclusion maps
 
         Parameters
         ----------
-        exclusion_mask : `~gammapy.image.ExclusionMask`
-            Exclusion regions
-
+        obs_id : int
+            Number of the observation
 
         """
         self.make_counts(obs_id)
         self.make_background(obs_id)
-        counts_sum = np.sum(self.maps["counts"].data * exclusion_mask.data)
-        bkg_sum = np.sum(self.maps["bkg"].data * exclusion_mask.data)
+        counts_sum = np.sum(self.maps["counts"].data * self.maps['exclusion'].data)
+        bkg_sum = np.sum(self.maps["bkg"].data * self.maps['exclusion'].data)
         scale = counts_sum / bkg_sum
         self.maps["bkg"].data = scale * self.maps["bkg"].data
-        self.maps['exclusion'] = exclusion_mask
 
-    def make_total_bkg(self, exclusion_mask):
-        """Stack the total bkg from the observation in the 'DataStore'
 
-        Parameters
-        ----------
-        exclusion_mask : `~gammapy.image.ExclusionMask`
-            Exclusion regions
-
+    def make_total_bkg(self):
+        """Stack the total bkg from the observation in the 'DataStore'.
         """
         self.maps["total_bkg"] = SkyMap.empty_like(self.empty_image)
         for obs_id in self.data_store.obs_table['OBS_ID']:
-            self.make_background_normalized_offcounts(obs_id, exclusion_mask)
+            self.make_background_normalized_offcounts(obs_id)
             self.maps["total_bkg"].data += self.maps["bkg"].data
 
     def make_significance(self, radius, counts_image=None, bkg_image=None):
@@ -159,7 +158,7 @@ class ImageAnalysis(object):
         self.maps["significance"].data = s
         log.info('Making significance image ...')
 
-    def make_maps(self, exclusion_mask, radius):
+    def make_maps(self, radius):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
@@ -171,10 +170,61 @@ class ImageAnalysis(object):
 
         """
         self.make_total_counts()
-        self.make_total_bkg(exclusion_mask)
+        self.make_total_bkg()
         self.make_significance(radius)
 
     def make_psf(self):
         log.info('Making PSF ...')
 
-    def make_exposure_one_obs(self, obs_id):
+    def make_exposure_one_obs(self, obs_id, spectral_index):
+        """
+
+        Parameters
+        ----------
+        obs_id
+        spectral_index
+        Returns
+        -------
+
+        """
+        self.maps["exposure"] = SkyMap.empty_like(self.empty_image)
+        xpix_coord_grid, ypix_coord_grid = self.maps["exposure"].coordinates(coord_type='pix')
+        # calculate pixel offset from center (in world coordinates)
+        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, self.maps["exposure"].wcs, origin=0)
+        ##TODO:quoi prendre exactement comme centre de pixel pour retrouver exactement le crab
+        center = SkyCoord.from_pixel(self.header["NAXIS1"]/2., self.header["NAXIS2"]/2., self.maps["exposure"].wcs)
+        offset = coord.separation(center)
+        #offset = np.clip(pix_off, Angle(0, 'deg'), self.offset_band[1])
+
+        obs = self.data_store.obs(obs_id=obs_id)
+        livetime = obs.observation_live_time_duration
+
+        energy = EnergyBounds(np.linspace(self.energy_band[0].value, self.energy_band[1].value,100), self.energy_band.unit)
+        energy_band = energy.bands
+        energy_bin = energy.lin_centers
+        spectrum = energy_bin.value**(-spectral_index)
+        aeff2d = obs.aeff
+        for i in range(len(energy_bin)):
+            print(i)
+            self.maps["exposure"].data += aeff2d.evaluate(offset, energy_bin[i]).to("cm2") * spectrum[i]*energy_band[i]
+        self.maps["exposure"].data= self.maps["exposure"].data/np.sum(spectrum*energy_band)
+        self.maps["exposure"].data *= livetime
+        self.maps["exposure"].data[offset >= self.offset_band[1]] = 0
+        self.maps["exposure"].data = self.maps["exposure"].data.value
+
+
+    def make_total_exposure(self, spectral_index):
+        """
+
+        Parameters
+        ----------
+        spectral_index
+
+        Returns
+        -------
+
+        """
+        self.maps["total_exposure"] = SkyMap.empty_like(self.empty_image)
+        for obs_id in self.data_store.obs_table['OBS_ID']:
+                self.make_exposure_one_obs(obs_id, spectral_index)
+                self.maps["total_exposure"].data += self.maps["exposure"].data

@@ -164,21 +164,26 @@ def make_image_from_2d_bg():
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
     image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg,
-                         yref=center.b.deg, proj='TAN')
-    import IPython; IPython.embed()
-    images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store)
-    refheader = images.header
+                         yref=center.b.deg, proj='TAN', coordsys = 'GAL')
+
+    refheader = image.to_image_hdu().header
+    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+    images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+                           exclusion_mask = exclusion_mask)
+
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(refheader=refheader)
     # images.make_total_counts()
     # images.make_total_bkg(exclusion_mask)
 
-    images.make_maps(exclusion_mask, radius=10.)
-    filename = 'fov_bg_maps_save.fits'
+    images.make_maps(radius=10.)
+    filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
 
     images.maps.write(filename, clobber=True)
 
+    #images.make_total_exposure(2.3)
     # s_image = images.make_significance(maps["counts"], maps["bkg"], 10.)
     # s_image.writeto("significance_image.fits", clobber=True)
 
