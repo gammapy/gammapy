@@ -16,6 +16,7 @@ from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 from gammapy.background import OffDataBackgroundMaker
+from gammapy.scripts import ImageAnalysis
 from gammapy.data import ObservationTable
 # from gammapy.detect import compute_ts_map
 import matplotlib.pyplot as plt
@@ -24,6 +25,7 @@ from gammapy.utils.scripts import make_path
 plt.ion()
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
@@ -85,8 +87,8 @@ def make_image():
         bkg_image.data += acc.decompose()
         print(acc.decompose().sum())
 
-    counts_image.writeto("counts_image.fits", clobber=True)
-    bkg_image.writeto("bkg_image.fits", clobber=True)
+    counts_image.writeto("counts_image_save.fits", clobber=True)
+    bkg_image.writeto("bkg_image_save.fits", clobber=True)
 
     # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
     #  maps['ExpGammaMap'].data, kernel)
@@ -121,7 +123,7 @@ def plot_model():
 
 def make_bg_model_two_groups():
     from subprocess import call
-    outdir = '/Users/deil/temp/bg_model_image/'
+    outdir = '/Users/jouvin/Desktop/these/temp/bg_model_image/'
     outdir2 = outdir + '/background'
 
     cmd = 'mkdir -p {}'.format(outdir2)
@@ -141,7 +143,7 @@ def make_bg_model_two_groups():
     bgmaker.make_model("2D")
     bgmaker.save_models("2D")
 
-    fn = outdir2 + '/group-def.ecsv'
+    fn = outdir2 + '/group-def.fits'
     hdu_index_table = bgmaker.make_total_index_table(
         data_store=data_store,
         modeltype='2D',
@@ -154,85 +156,27 @@ def make_bg_model_two_groups():
 
 
 def make_image_from_2d_bg():
-
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
-    data_store = DataStore.from_dir('/Users/deil/temp/bg_model_image/')
-
-    counts_image_total = SkyMap.empty(
-        nxpix=1000, nypix=1000, binsz=0.01,
-        xref=center.l.deg, yref=center.b.deg, proj='TAN'
-    )
-    bkg_image_total = SkyMap.empty_like(counts_image_total)
-    refheader = counts_image_total.to_image_hdu().header
-
-    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+    offset_band = Angle([0, 2.49], 'deg')
+    data_store = DataStore.from_dir('/Users/jouvin/Desktop/these/temp/bg_model_image/')
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
+    image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg,
+                         yref=center.b.deg, proj='TAN', coordsys='GAL')
 
-    for obs_id in data_store.obs_table['OBS_ID'][:2]:
+    refheader = image.to_image_hdu().header
+    exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    exclusion_mask = exclusion_mask.reproject(refheader=refheader)
+    images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+                           exclusion_mask=exclusion_mask)
 
-        obs = data_store.obs(obs_id=obs_id)
-        counts_image = SkyMap.empty_like(counts_image_total)
-        bkg_image = SkyMap.empty_like(counts_image_total)
-
-        log.info('Processing OBS_ID = {}'.format(obs_id))
-
-        log.info('Processing EVENTS')
-        events = obs.events
-        log.debug('Number of events before selection: {}'.format(len(events)))
-        events = events.select_energy(energy_band)
-        log.debug('Number of events after selection: {}'.format(len(events)))
-        counts_image.fill(events=events)
-
-        log.info('Processing BKG')
-        center = obs.pointing_radec.galactic
-        livetime = obs.observation_live_time_duration
-        solid_angle = Angle(0.01, "deg") ** 2
-
-        # TODO: this is broken at the moment ... the output image is full of NaNs
-        table = obs.bkg.acceptance_curve_in_energy_band(energy_band=energy_band)
-        bkg_hdu = fill_acceptance_image(refheader, center, table["offset"], table["Acceptance"])
-        bkg = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * livetime
-        bkg = bkg.decompose()
-
-        counts_sum = np.sum(counts_image.data * exclusion_mask.data)
-        bkg_sum = np.sum(bkg_image.data * exclusion_mask.data)
-        scale = counts_sum / bkg_sum
-        bkg_image.data = scale * bkg
-
-        log.debug('scale = {}'.format(scale))
-        a = np.sum(bkg_image.data * exclusion_mask.data)
-        log.debug('a = {}'.format(a))
-        log.debug('counts_sum = {}'.format(counts_sum))
-
-        # Stack counts and background in total skymaps
-        counts_image_total.data += counts_image.data
-        bkg_image_total.data += bkg_image.data
-
-        import IPython; IPython.embed(); 1/0
-
-    maps = SkyMapCollection()
-    maps['counts'] = counts_image_total
-    maps['bkg'] = bkg_image_total
-    maps['exclusion'] = exclusion_mask
-
+    images.make_maps(radius=10.)
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
-    maps.write(filename, clobber=True)
 
-    # filename = 'counts_image.fits'
-    # log.info('Writing {}'.format(filename))
-    # counts_image_total.write(filename, clobber=True)
-    #
-    # filename = 'bkg_image.fits'
-    # log.info('Writing {}'.format(filename))
-    # bkg_image_total.write(filename, clobber=True)
-
-    # result = compute_ts_map(counts_stacked_image.data, bkg_stacked_image.data,
-    #  maps['ExpGammaMap'].data, kernel)
+    images.maps.write(filename, clobber=True)
 
 
 if __name__ == '__main__':

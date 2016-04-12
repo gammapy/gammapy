@@ -341,6 +341,7 @@ class SkyMap(object):
         skymap : `SkyMap`
             Skymap reprojected onto ``refheader``.
         """
+
         from reproject import reproject_interp
         out = reproject_interp(input_data=self.to_image_hdu(),
                                output_projection=refheader, *args, **kwargs)
@@ -496,6 +497,7 @@ class SkyMapCollection(Bunch):
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):
             hdu = self[name].to_image_hdu()
+            hdu.name = name
             hdulist.append(hdu)
         hdulist.writeto(filename, **kwargs)
 
