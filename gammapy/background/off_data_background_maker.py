@@ -57,8 +57,8 @@ class OffDataBackgroundMaker(object):
         self.obs_table = obs_table
         self.excluded_sources = excluded_sources
 
-        self.obs_table_grouped_filename = self.outdir + '/obs.ecsv'
-        self.group_table_filename = self.outdir + '/group-def.ecsv'
+        self.obs_table_grouped_filename = self.outdir + '/obs.fits'
+        self.group_table_filename = self.outdir + '/group-def.fits'
 
         self.models3D = dict()
         self.models2D = dict()
@@ -128,15 +128,15 @@ class OffDataBackgroundMaker(object):
         # Store the results
         filename = self.obs_table_grouped_filename
         log.info('Writing {}'.format(filename))
-        obs_table.write(str(filename), format='ascii.ecsv')
+        obs_table.write(str(filename), overwrite=True)
         self.obs_table = obs_table
 
         filename = self.group_table_filename
         log.info('Writing {}'.format(filename))
-        obs_groups.obs_groups_table.write(str(filename), format='ascii.ecsv')
+        obs_groups.obs_groups_table.write(str(filename), overwrite=True)
         self.ntot_group = obs_groups.n_groups
 
-    def make_model(self, modeltype):
+    def make_model(self, modeltype, ebounds=None, offset=None):
         """Make background models.
 
         Create the list of background model (`~gammapy.background.CubeBackgroundModel` (3D) or
@@ -146,6 +146,10 @@ class OffDataBackgroundMaker(object):
         ----------
         modeltype : {'3D', '2D'}
             Type of the background modelisation
+        ebounds : `~gammapy.utils.energy.EnergyBounds`
+            Energy bounds vector (1D)
+        offset : `~astropy.coordinates.Angle`
+            Offset vector (1D)
         """
 
         groups = sorted(np.unique(self.obs_table['GROUP_ID']))
@@ -165,8 +169,10 @@ class OffDataBackgroundMaker(object):
                 model.compute_rate()
                 self.models3D[str(group)] = model
             elif modeltype == "2D":
-                ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
-                offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
+                if not ebounds:
+                    ebounds = EnergyBounds.equal_log_spacing(0.1, 100, 15, 'TeV')
+                if not offset:
+                    offset = sqrt_space(start=0, stop=2.5, num=100) * u.deg
                 model = EnergyOffsetBackgroundModel(ebounds, offset)
                 model.fill_obs(obs_ids=obs_ids, data_store=self.data_store, excluded_sources=self.excluded_sources)
                 model.compute_rate()
@@ -174,7 +180,7 @@ class OffDataBackgroundMaker(object):
             else:
                 raise ValueError("Invalid model type: {}".format(modeltype))
 
-    def filename(self, modeltype, group_id):
+    def filename(self, modeltype, group_id, smooth=False):
         """Filename for a given ``modeltype`` and ``group_id``.
 
         Parameters
@@ -183,9 +189,14 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         group_id : int
             number of the background model group
+        smooth : bool
+            True if you want to use the smooth bkg model
 
         """
-        return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+        if smooth:
+            return 'smooth_background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
+        else:
+            return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
 
     def save_model(self, modeltype, ngroup):
         """Save model to fits for one group.
@@ -221,7 +232,8 @@ class OffDataBackgroundMaker(object):
         for ngroup in range(self.ntot_group):
             self.save_model(modeltype, ngroup)
 
-    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None):
+    def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None,
+                             smooth=False):
         """Make background model index table.
 
         Parameters
@@ -234,6 +246,8 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
+        smooth : bool
+            True if you want to use the smooth bkg model
 
 
         Returns
@@ -241,13 +255,12 @@ class OffDataBackgroundMaker(object):
         index_table_bkg : `~astropy.table.Table`
             Index hdu table only for the background in order to associate a bkg model for each observation
         """
-
         obs_table = data_store.obs_table
         if not filename_obs_group_table:
             filename_obs_group_table = self.group_table_filename
         if not out_dir_background_model:
             out_dir_background_model = data_store.hdu_table.meta["BASE_DIR"]
-        table_group = Table.read(filename_obs_group_table, format='ascii.ecsv')
+        table_group = Table.read(filename_obs_group_table)
         axes = ObservationGroups.table_to_axes(table_group)
         groups = ObservationGroups(axes)
         obs_table = ObservationTable(obs_table)
@@ -264,7 +277,7 @@ class OffDataBackgroundMaker(object):
             row["OBS_ID"] = obs["OBS_ID"]
             row["HDU_TYPE"] = "bkg"
             row["FILE_DIR"] = str(out_dir_background_model)
-            row["FILE_NAME"] = self.filename(modeltype, group_id)
+            row["FILE_NAME"] = self.filename(modeltype, group_id, smooth)
             if modeltype == "2D":
                 row["HDU_NAME"] = "bkg_2d"
                 row["HDU_CLASS"] = "bkg_2d"
@@ -279,7 +292,7 @@ class OffDataBackgroundMaker(object):
         return index_table_bkg
 
     def make_total_index_table(self, data_store, modeltype, out_dir_background_model=None,
-                               filename_obs_group_table=None):
+                               filename_obs_group_table=None, smooth=False):
         """Create a hdu-index table with a row containing the link to the background model for each observation.
 
         Parameters
@@ -292,6 +305,8 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
+        smooth : bool
+            True if you want to use the smooth bkg model
 
         Returns
         -------
@@ -300,6 +315,8 @@ class OffDataBackgroundMaker(object):
         """
 
         index_table_bkg = self.make_bkg_index_table(data_store, modeltype, out_dir_background_model,
-                                                    filename_obs_group_table)
+                                                    filename_obs_group_table, smooth)
+        index_bkg = np.where(data_store.hdu_table["HDU_CLASS"] == "bkg_3d")[0].tolist()
+        data_store.hdu_table.remove_rows(index_bkg)
         index_table_new = vstack([data_store.hdu_table, index_table_bkg])
         return index_table_new

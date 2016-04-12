@@ -21,9 +21,9 @@ def test_background_model(tmpdir):
     assert table['OBS_ID'][1] == 23526
 
     bgmaker.group_observations()
-    table = ObservationTable.read(str(tmpdir / 'obs.ecsv'), format='ascii.ecsv')
+    table = ObservationTable.read(str(tmpdir / 'obs.fits'))
     assert list(table['GROUP_ID']) == [0, 0, 0, 1]
-    table = ObservationTable.read(str(tmpdir / 'group-def.ecsv'), format='ascii.ecsv')
+    table = ObservationTable.read(str(tmpdir / 'group-def.fits'))
     assert list(table['ZEN_PNT_MAX']) == [49, 90]
 
     # TODO: Fix 3D code
