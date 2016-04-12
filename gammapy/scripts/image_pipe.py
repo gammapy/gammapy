@@ -103,10 +103,10 @@ class ImageAnalysis(object):
         self.maps["bkg"] = bkg_map
         if bkg_norm:
             self.make_counts(obs_id)
-            scale = self._background_norm_factor(obs_id, self.maps["counts"], bkg_map)
+            scale = self.background_norm_factor(obs_id, self.maps["counts"], bkg_map)
             self.maps["bkg"].data = scale * self.maps["bkg"].data
 
-    def _background_norm_factor(self, obs_id, counts, bkg):
+    def background_norm_factor(self, obs_id, counts, bkg):
         """Determine the scaling factor to apply to the background map by comparing the events in the counts maps
         and the bkg map outside the exclusion maps
 
@@ -144,7 +144,7 @@ class ImageAnalysis(object):
         self.maps["total_bkg"] = total_bkg
 
     def make_significance(self, radius):
-        """Make the significance image from the counts and kbg images.
+        """Make the significance image from the counts and bkg images.
 
         Parameters
         ----------
@@ -174,7 +174,7 @@ class ImageAnalysis(object):
         radius : float
             Disk radius in pixels for the significance map.
         bkg_norm : bool
-            If true, apply the scaling factor  to the bkg map
+            If true, apply the scaling factor to the bkg map
         """
         self.make_total_counts()
         self.make_total_bkg(bkg_norm)
