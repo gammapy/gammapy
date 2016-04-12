@@ -23,9 +23,9 @@ class ImageAnalysis(object):
     ----------
     empty_image : `~gammapy.image.SkyMap`
             ref to an empty image
-    energy_band : `~gammapy.utils.energy.Energy
+    energy_band : `~gammapy.utils.energy.Energy`
         Energy band for which we want to compute the image
-    offset_band :`astropy.coordinates.Angle`
+    offset_band : `astropy.coordinates.Angle`
         Offset Band where you compute the image
     data_store : `~gammapy.data.DataStore`
         `DataStore` where are situated the events
@@ -146,8 +146,6 @@ class ImageAnalysis(object):
 
         Parameters
         ----------
-        exclusion_mask : `~gammapy.image.ExclusionMask`
-            Exclusion regions
         radius : float
             Disk radius in pixels for the significance map.
 
