@@ -221,3 +221,8 @@ def test_3fgl_flux_points():
 
     # Todo : Is this precision good enough?
     assert_allclose(actual, desired, rtol=1e-2)
+
+    # Compare errors from 3 method to get diff points
+    method1 = diff_points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
+    method2 = diff2['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 TeV-1').value
+    assert_allclose(method1, method2, rtol=1e-2)

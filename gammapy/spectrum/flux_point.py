@@ -96,8 +96,18 @@ class DifferentialFluxPoints(Table):
         energy_fluxes = Quantity(temp_fluxes, 'erg cm-2 s-1')
         diff_fluxes = (energy_fluxes * energy ** -2).to('erg-1 cm-2 s-1')
 
-        # Flux Errors are not stored
-        return cls.from_arrays(energy=energy, diff_flux=diff_fluxes)
+        # Get relativ error on integral fluxes
+        int_flux_points = IntegralFluxPoints.from_3fgl(source)
+        val = int_flux_points['INT_FLUX'].quantity
+        rel_error_hi = int_flux_points['INT_FLUX_ERR_HI'] / val
+        rel_error_lo = int_flux_points['INT_FLUX_ERR_LO'] / val
+
+        diff_fluxes_err_hi = diff_fluxes * rel_error_hi
+        diff_fluxes_err_lo = diff_fluxes * rel_error_lo
+
+        return cls.from_arrays(energy=energy, diff_flux=diff_fluxes,
+                               diff_flux_err_lo=diff_fluxes_err_lo,
+                               diff_flux_err_hi=diff_fluxes_err_hi)
 
     def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
@@ -182,7 +192,7 @@ class IntegralFluxPoints(Table):
         fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
 
         temp_fluxes_err_hi = [source.data[_][1] for _ in fluxerrkeys]
-        temp_fluxes_err_lo = [source.data[_][0] for _ in fluxerrkeys]
+        temp_fluxes_err_lo = [-1 * source.data[_][0] for _ in fluxerrkeys]
 
         int_fluxes = Quantity(temp_fluxes, 'cm-2 s-1')
         int_fluxes_err_hi = Quantity(temp_fluxes_err_hi, 'cm-2 s-1')
