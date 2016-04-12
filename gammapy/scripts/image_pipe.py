@@ -3,11 +3,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import logging
 import numpy as np
-from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
-from astropy.wcs.utils import pixel_to_skycoord
 from ..background import fill_acceptance_image
-from ..utils.energy import EnergyBounds
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
 
@@ -59,71 +56,92 @@ class ImageAnalysis(object):
         Parameters
         ----------
         obs_id : int
-            Number of the observation
+            Observation ID
 
         """
-        self.maps["counts"] = SkyMap.empty_like(self.empty_image)
+        log.debug('Making counts image ...')
+        counts_map = SkyMap.empty_like(self.empty_image)
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        self.maps["counts"].fill(events=events)
-        self.maps["counts"].data = self.maps["counts"].data.value
-        log.info('Making counts image ...')
+        counts_map.fill(events=events)
+        counts_map.data = counts_map.data.value
+        self.maps["counts"] = counts_map
 
     def make_total_counts(self):
         """Stack the total count from the observation in the 'DataStore'
 
         """
-        self.maps["total_counts"] = SkyMap.empty_like(self.empty_image)
+        total_counts = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
             self.make_counts(obs_id)
-            self.maps["total_counts"].data += self.maps["counts"].data
+            total_counts.data += self.maps["counts"].data
+        self.maps["total_counts"] = total_counts
 
-    def make_background(self, obs_id):
+    def make_background(self, obs_id, bkg_norm=True):
         """Make the background map for one observation from a bkg model
 
         Parameters
         ----------
         obs_id : int
-            Number of the observation
+            Observation ID
+        bkg_norm : bool
+            If true, apply the scaling factor  to the bkg map
+
 
         """
-        self.maps["bkg"] = SkyMap.empty_like(self.empty_image)
+        log.debug('Making background image ...')
+        bkg_map = SkyMap.empty_like(self.empty_image)
         obs = self.data_store.obs(obs_id=obs_id)
         table = obs.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = obs.pointing_radec.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
         livetime = obs.observation_live_time_duration
-        self.maps["bkg"].data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * self.maps[
-            "bkg"].solid_angle() * livetime
-        self.maps["bkg"].data = self.maps["bkg"].data.decompose()
-        self.maps["bkg"].data = self.maps["bkg"].data.value
+        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * livetime
+        bkg_map.data = bkg_map.data.decompose()
+        bkg_map.data = bkg_map.data.value
+        self.maps["bkg"] = bkg_map
+        if bkg_norm:
+            self.make_counts(obs_id)
+            scale = self._background_norm_factor(obs_id, self.maps["counts"], bkg_map)
+            self.maps["bkg"].data = scale * self.maps["bkg"].data
 
-        log.info('Making background image ...')
-
-    def make_background_normalized_offcounts(self, obs_id):
-        """Normalized the background compare to te events in the counts maps outside the exclusion maps
+    def _background_norm_factor(self, obs_id, counts, bkg):
+        """Determine the scaling factor to apply to the background map by comparing the events in the counts maps
+        and the bkg map outside the exclusion maps
 
         Parameters
         ----------
         obs_id : int
-            Number of the observation
+            Observation ID
+        counts : `~gammapy.image.SkyMap`
+            counts image
+        bkg : `~gammapy.image.SkyMap`
+            bkg image
 
+        Returns
+        -------
+        scale : float
+            scaling factor between the counts and the bkg maps outside the exclusion region
         """
-        self.make_counts(obs_id)
-        self.make_background(obs_id)
-        counts_sum = np.sum(self.maps["counts"].data * self.maps['exclusion'].data)
-        bkg_sum = np.sum(self.maps["bkg"].data * self.maps['exclusion'].data)
+        counts_sum = np.sum(counts.data * self.maps['exclusion'].data)
+        bkg_sum = np.sum(bkg.data * self.maps['exclusion'].data)
         scale = counts_sum / bkg_sum
-        self.maps["bkg"].data = scale * self.maps["bkg"].data
+        return scale
 
-    def make_total_bkg(self):
+    def make_total_bkg(self, bkg_norm=True):
         """Stack the total bkg from the observation in the 'DataStore'.
+
+        Parameters
+        ----------
+        bkg_norm : bool
+            If true, apply the scaling factor  to the bkg map
         """
-        self.maps["total_bkg"] = SkyMap.empty_like(self.empty_image)
+        total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            self.make_background_normalized_offcounts(obs_id)
-            self.maps["total_bkg"].data += self.maps["bkg"].data
+            self.make_background(obs_id, bkg_norm)
+            total_bkg.data += self.maps["bkg"].data
+        self.maps["total_bkg"] = total_bkg
 
     def make_significance(self, radius):
         """Make the significance image from the counts and kbg images.
@@ -133,25 +151,33 @@ class ImageAnalysis(object):
         radius : float
             Disk radius in pixels.
 
+        Returns
+        -------
+        s_maps : `~gammapy.image.SkyMap`
+            significance map
+
         """
-        self.maps["significance"] = SkyMap.empty_like(self.empty_image)
+        log.debug('Making significance image ...')
+        s_maps = SkyMap.empty_like(self.empty_image)
         counts = disk_correlate(self.maps["total_counts"].data, radius)
         bkg = disk_correlate(self.maps["total_bkg"].data, radius)
         s = significance(counts, bkg)
-        self.maps["significance"].data = s
-        log.info('Making significance image ...')
+        s_maps.data = s
+        self.maps["significance"] = s_maps
+        return s_maps
 
-    def make_maps(self, radius):
+    def make_maps(self, radius, bkg_norm=True):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
         ----------
         radius : float
             Disk radius in pixels for the significance map.
-
+        bkg_norm : bool
+            If true, apply the scaling factor  to the bkg map
         """
         self.make_total_counts()
-        self.make_total_bkg()
+        self.make_total_bkg(bkg_norm)
         self.make_significance(radius)
 
     def make_psf(self):

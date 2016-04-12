@@ -189,7 +189,7 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         group_id : int
             number of the background model group
-        smooth : str
+        smooth : bool
             True if you want to use the smooth bkg model
 
         """
@@ -246,7 +246,7 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
-        smooth : str
+        smooth : bool
             True if you want to use the smooth bkg model
 
 
@@ -305,7 +305,7 @@ class OffDataBackgroundMaker(object):
             directory where are located the backgrounds models for each group
         filename_obs_group_table : str
             name of the file containing the `~astropy.table.Table` with the group infos
-        smooth : str
+        smooth : bool
             True if you want to use the smooth bkg model
 
         Returns
