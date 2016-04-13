@@ -310,15 +310,24 @@ class SkyMap(object):
         else:
             raise ValueError('Invalid sherpa data type.')
 
+    def copy(self):
+        """
+        Copy sky map.
+        """
+        return deepcopy(self)
+
     def to_image_hdu(self):
         """
         Convert sky map to `~astropy.fits.ImageHDU`.
         """
-        header = self.wcs.to_header()
+        if not self.wcs is None:
+            header = self.wcs.to_header()
 
-        # Add meta data
-        header.update(self.meta)
-        header['BUNIT'] = self.unit
+            # Add meta data
+            header.update(self.meta)
+            header['BUNIT'] = self.unit
+        else:
+            header = None
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
@@ -331,7 +340,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        reference : `~astropy.fits.Header` or `SkyMap`
+        reference : `~astropy.fits.Header`, `~astropy.wcs.WCS` or `SkyMap`
             Reference map specification to reproject the data on. 
         mode : {'interp', 'exact'}
             Interpolation mode.
@@ -352,11 +361,13 @@ class SkyMap(object):
 
         if isinstance(reference, SkyMap):
             wcs_reference = reference.wcs
+        elif isinstance(reference, WCS):
+            wcs_reference = reference
         elif isinstance(reference, fits.Header):
             wcs_reference = WCS(reference)
         else:
-            raise TypeError("Invalid reference must be either instance"
-                            "of `Header` or `SkyMap`.")
+            raise TypeError("Invalid reference map must be either instance"
+                            "of `Header`, `WCS` or `SkyMap`.")
 
         if mode == 'interp':
             out = reproject_interp((self.data, wcs_reference), *args, **kwargs)
@@ -445,7 +456,7 @@ class SkyMap(object):
 
     def threshold(self, threshold):
         """
-        Threshold sykmap data to cerate a `~gammapy.image.ExclusionMask`.
+        Threshold sykmap data to create a `~gammapy.image.ExclusionMask`.
 
         Parameters
         ----------
@@ -482,6 +493,32 @@ class SkyMapCollection(Bunch):
 
     Then try tab completion on the ``skymaps`` object.
     """
+    # Real class attributes have to be defined here
+    _map_names = []
+    name = None
+    meta = None
+    wcs = None
+
+    def __init__(self, *args, **kwargs):
+        # Set real class attributes 
+        self.meta = kwargs.pop('meta', None)
+        self.wcs = kwargs.pop('wcs', None)
+        self.name = kwargs.pop('name', None)
+        
+        # Everything else is stored as dict entries
+        for key in kwargs:
+            self[key] = kwargs[key]
+
+    def __setitem__(self, key, item):
+        """
+        Overwrite __setitem__ operator to remember order the sky maps are added
+        to the collection, by storing it in the _map_names list.
+        """
+        if isinstance(item, np.ndarray):
+            item = SkyMap(name=key, data=item, wcs=self.wcs)
+        if isinstance(item, SkyMap):
+            self._map_names.append(key)
+        super(SkyMapCollection, self).__setitem__(key, item)
 
     @classmethod
     def read(cls, filename):
@@ -505,8 +542,9 @@ class SkyMapCollection(Bunch):
             name = skymap.name.lower()
             kwargs[name] = skymap
             _map_names.append(name)
-        kwargs['_map_names'] = _map_names
-        return cls(**kwargs)
+        _ = cls(**kwargs)
+        _._map_names = _map_names
+        return _
 
     def write(self, filename=None, header=None, **kwargs):
         """
@@ -521,23 +559,22 @@ class SkyMapCollection(Bunch):
         """
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):
-            hdu = self[name].to_image_hdu()
-            hdu.name = name
-            hdulist.append(hdu)
+            if isinstance(self[name], SkyMap):
+                hdu = self[name].to_image_hdu()
+                # For now add common collection meta info to the single map headers
+                hdu.header.update(self.meta)
+                hdu.name = name
+                hdulist.append(hdu)
+            else:
+                log.warn("Can't save {} to file, not a sky map.".format(name))
         hdulist.writeto(filename, **kwargs)
 
-    def set_reference_wcs(self):
-        """
-        Set reference WCS for all sky maps.
-        """
-        raise NotImplementedError
-
-    def __repr__(self):
+    def __str__(self):
         """
         String representation of the sky map collection.
         """
         info = ''
         for name in self.get('_map_names', sorted(self)):
-            info += self[name].__repr__()
+            info += self[name].__str__()
             info += '\n'
         return info

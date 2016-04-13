@@ -18,7 +18,7 @@ from ..morphology import Shell2D
 from ..extern.zeros import newton
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     shape_2N)
+                     shape_2N, SkyMapCollection)
 from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _cash_sum_cython, _f_cash_root_cython)
 
@@ -34,66 +34,6 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1E-12
 MAX_NITER = 20
 CONTAINMENT = 0.8
-
-
-class TSMapResult(Bunch):
-    """
-    Represents the TS map computation result.
-
-    Attributes
-    ----------
-    ts : `~numpy.ndarray`
-        Estimated TS map
-    sqrt_ts : `~numpy.ndarray`
-        Estimated sqrt(TS) map
-    amplitude : `~numpy.ndarray`
-        Estimated best fit flux amplitude map
-    niter : `~numpy.ndarray`
-        Number of iterations map
-    runtime : float
-        Time needed to compute TS map.
-    scale : float
-        Scale parameter.
-    morphology : str
-        Source morphology assumption.
-    """
-
-    @classmethod
-    def read(cls, filename):
-        """
-        Read TS map result from file.
-        """
-        hdu_list = fits.open(filename)
-        ts = hdu_list['ts'].data.astype('float64')
-        sqrt_ts = hdu_list['sqrt_ts'].data.astype('float64')
-        amplitude = hdu_list['amplitude'].data.astype('float64')
-        niter = hdu_list['niter'].data.astype('float64')
-        scale = hdu_list[0].header['SCALE']
-        if scale == 'max':
-            scale = hdu_list['scale'].data
-        morphology = hdu_list[0].header.get('MORPH')
-        return cls(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitude, niter=niter,
-                   scale=scale, morphology=morphology)
-
-    def write(self, filename, header, overwrite=False):
-        """Write TS map results to file"""
-        header = header.copy()
-        hdu_list = fits.HDUList()
-        if 'MORPH' not in header and hasattr(self, 'morphology'):
-            header['MORPH'] = self.morphology, 'Source morphology assumption.'
-        if not np.isscalar(self.scale):
-            header['EXTNAME'] = 'scale'
-            header['HDUNAME'] = 'scale'
-            header['SCALE'] = 'max', 'Source morphology scale parameter.'
-            hdu_list.append(fits.ImageHDU(self.scale.astype('float64'), header))
-        else:
-            header['SCALE'] = self.scale, 'Source morphology scale parameter.'
-        for key in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
-            header['EXTNAME'] = key
-            header['HDUNAME'] = key
-            hdu_list.append(fits.ImageHDU(self[key].astype('float64'), header))
-
-        hdu_list.writeto(filename, clobber=overwrite)
 
 
 def f_cash(x, counts, background, model):
@@ -209,12 +149,12 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
             background = maps_['background']
         ts_results = compute_ts_map(maps_['counts'], background, maps_['exposure'],
                                     kernel, *args, **kwargs)
-        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.runtime))
-        ts_results['scale'] = scale
-        ts_results['morphology'] = morphology
+        log.info('TS map computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
+        ts_results.meta['scale'] = scale
+        ts_results.meta['morphology'] = morphology
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
-                ts_results[name] = upsample_2N(ts_results[name], factor,
+                ts_results[name] = upsample_2N(ts_results[name].data, factor,
                                                order=order, shape=shape)
         multiscale_result.append(ts_results)
 
@@ -254,8 +194,9 @@ def compute_maximum_ts_map(ts_map_results):
         niter_max[index] = niter[:, :, i][index]
         amplitude_max[index] = amplitude[:, :, i][index]
 
-    return TSMapResult(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
-                       morphology=ts_map_results[0].morphology, scale=scale_max)
+    meta = {'morphology': ts_map_results[0].morphology, 'scale': scale_max}
+    return SkyMapCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
+                            meta=meta)
 
 
 def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
@@ -386,10 +327,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
 
-    # TODO: this is a dummy value for `scale` ... is there a better way to do this?
-    return TSMapResult(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes, scale=0,
-                       niter=niter, runtime=np.round(time() - t_0, 2))
-
+    return SkyMapCollection(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes, 
+                            niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
               method, threshold):
