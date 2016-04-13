@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity
+from scipy.ndimage.filters import convolve
 from ..background import Cube
 from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
@@ -650,3 +651,26 @@ class EnergyOffsetBackgroundModel(object):
         bg_rate = bg_rate.to('MeV-1 sr-1 s-1')
 
         self.bg_rate.data = bg_rate
+
+    def smooth(self):
+        """Smooth the bkg rate with a gaussian 1D kernel.
+
+        """
+        for binE, E in enumerate(self.counts.energy[:-1]):
+            counts = self.counts.data[binE, :]
+            Nev = np.sum(counts).value
+            if (Nev > 0):
+                Np = len(counts)
+                # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma
+                Npix_sigma = (150 / Nev) * Np
+                # For high statistic, we impose a minimum of 4pixel/sigma
+                Npix_sigma = np.maximum(Npix_sigma, 4)
+                # For very low statistic, we impose a maximum lenght of the kernel equal of the number of bin
+                # in the counts histogram
+                Npix_sigma = np.minimum(Npix_sigma, Np / 6)
+                # kernel gaussian define between -3 and 3 sigma
+                x = np.linspace(-3, 3, 6 * Npix_sigma)
+                kernel = np.exp(-0.5 * x ** 2)
+                acceptance_convolve = convolve(self.bg_rate.data[binE, :], kernel / np.sum(kernel), mode="reflect")
+
+                self.bg_rate.data[binE, :] = Quantity(acceptance_convolve, self.bg_rate.data[binE, :].unit)

@@ -198,7 +198,7 @@ class OffDataBackgroundMaker(object):
         else:
             return 'background_{}_group_{:03d}_table.fits.gz'.format(modeltype, group_id)
 
-    def save_model(self, modeltype, ngroup):
+    def save_model(self, modeltype, ngroup, smooth=False):
         """Save model to fits for one group.
 
           Parameters
@@ -206,9 +206,9 @@ class OffDataBackgroundMaker(object):
         modeltype : {'3D', '2D'}
             Type of the background modelisation
         ngroup : int
-            Number of groups
+            Groups ID
         """
-        filename = self.outdir + "/" + self.filename(modeltype, ngroup)
+        filename = self.outdir + "/" + self.filename(modeltype, ngroup, smooth)
 
         if modeltype == "3D":
             if str(ngroup) in self.models3D.keys():
@@ -221,7 +221,7 @@ class OffDataBackgroundMaker(object):
             else:
                 log.info("No run in the band {}".format(ngroup))
 
-    def save_models(self, modeltype):
+    def save_models(self, modeltype, smooth=False):
         """Save model to fits for all the groups.
 
         Parameters
@@ -230,7 +230,46 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         """
         for ngroup in range(self.ntot_group):
-            self.save_model(modeltype, ngroup)
+            self.save_model(modeltype, ngroup, smooth)
+
+    def smooth_models(self, modeltype):
+        """Smooth the bkg model for each group
+
+        Parameters
+        ----------
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+
+        Returns
+        -------
+
+        """
+        for ngroup in range(self.ntot_group):
+            self.smooth_model(modeltype, ngroup)
+
+    def smooth_model(self, modeltype, ngroup):
+        """Smooth the nkg model for one group
+
+        Parameters
+        ----------
+        modeltype : {'3D', '2D'}
+            Type of the background modelisation
+        ngroup : int
+            Groups ID
+        Returns
+        -------
+
+        """
+        if modeltype == "3D":
+            if str(ngroup) in self.models3D.keys():
+                self.models3D[str(ngroup)].smooth()
+            else:
+                log.info("No run in the band {}".format(ngroup))
+        if modeltype == "2D":
+            if str(ngroup) in self.models2D.keys():
+                self.models2D[str(ngroup)].smooth()
+            else:
+                log.info("No run in the band {}".format(ngroup))
 
     def make_bkg_index_table(self, data_store, modeltype, out_dir_background_model=None, filename_obs_group_table=None,
                              smooth=False):
