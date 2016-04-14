@@ -252,6 +252,12 @@ class SkyMap(object):
         omega = -np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:]
         return Quantity(omega, 'deg2').to('sr')
 
+    def center(self):
+        """
+        Center coordinates of the sky map.
+        """
+        return SkyCoord.from_pixel(self.data.shape[0] / 2., self.data.shape[1] / 2., self.wcs)
+
     def lookup(self, position, interpolation=None, origin=0):
         """
         Lookup value at given sky position.
@@ -332,11 +338,7 @@ class SkyMap(object):
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
-        Reproject sky map to given reference header.
-
-        Calls `reproject.reproject.interp`, passing along ``args`` and ``kwargs``.
-
-        TODO: ``mode`` isn't use yet ... should dispatch to correct method.
+        Reproject sky map to given reference.
 
         Parameters
         ----------
@@ -499,11 +501,11 @@ class SkyMapCollection(Bunch):
     meta = None
     wcs = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name=None, wcs=None, meta=None, **kwargs):
         # Set real class attributes 
-        self.meta = kwargs.pop('meta', None)
-        self.wcs = kwargs.pop('wcs', None)
-        self.name = kwargs.pop('name', None)
+        self.name = name
+        self.wcs = wcs
+        self.meta = meta
         
         # Everything else is stored as dict entries
         for key in kwargs:
@@ -568,6 +570,12 @@ class SkyMapCollection(Bunch):
             else:
                 log.warn("Can't save {} to file, not a sky map.".format(name))
         hdulist.writeto(filename, **kwargs)
+
+    def info(self):
+        """
+        Print summary info about the sky map collection.
+        """
+        print(str(self))
 
     def __str__(self):
         """
