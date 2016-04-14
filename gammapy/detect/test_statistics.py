@@ -86,7 +86,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     Returns
     -------
     multiscale_result : list
-        List of `TSMapResult` objects.
+        List of `~gammapy.image.SkyMapCollection` objects.
     """
     BINSZ = abs(maps[0].header['CDELT1'])
     shape = maps[0].data.shape
@@ -162,17 +162,17 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
 def compute_maximum_ts_map(ts_map_results):
     """
-    Compute maximum TS map across a list of given `TSMapResult` objects.
+    Compute maximum TS map across a list of given ts maps.
 
     Parameters
     ----------
     ts_map_results : list
-        List of `TSMapResult` objects.
+        List of `~gammapy.image.SkyMapCollection` objects.
 
     Returns
     -------
-    TS : `TSMapResult`
-        `TSMapResult` object.
+    TS : `~gammapy.image.SkyMapCollection`
+        `~gammapy.image.SkyMapCollection` objects.
     """
 
     # Get data
@@ -236,8 +236,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Returns
     -------
-    TS : `TSMapResult`
-        `TSMapResult` object.
+    TS : `~gammapy.image.SkyMapCollection`
+        `~gammapy.image.SkyMapCollection` object.
 
 
     Notes
