@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
-
+from copy import deepcopy
 import numpy as np
 
 from astropy.io import fits
