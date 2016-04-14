@@ -9,6 +9,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
+from astropy.wcs.utils import pixel_to_skycoord 
 from astropy.units import Quantity, Unit
 from astropy.extern import six
 
@@ -208,13 +209,13 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, coord_type='world', origin=0, mode='center'):
+    def coordinates(self, coord_type='skycoord', origin=0, mode='center'):
         """
         Sky coordinate images.
 
         Parameters
         ----------
-        coord_type : {'world', 'pix', 'skycoord'}
+        coord_type : {'pix', 'skycoord', 'galactic'}
             Which type of coordinates to return.
         origin : {0, 1}
             Pixel coordinate origin.
@@ -232,17 +233,17 @@ class SkyMap(object):
 
         if coord_type == 'pix':
             return x, y
-        else:
-            xsky, ysky = self.wcs.wcs_pix2world(x, y, origin)
-            l, b = Longitude(xsky, unit='deg'), Latitude(ysky, unit='deg')
-            l = l.wrap_at('180d')
-            if coord_type == 'world':
-                return l.degree, b.degree
-            elif coord_type == 'skycoord':
+        else: 
+            coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
+            if coord_type == 'skycoord':
+                return coordinates
+            elif coord_type == 'galactic':
+                l = coordinates.galactic.l.wrap_at('180d')
+                b = coordinates.galactic.b 
                 return l, b
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"
-                                 " 'world', 'pix' or 'skycoord'.")
+                                 " 'pix' or 'skycoord'.")
 
     def solid_angle(self):
         """
@@ -256,7 +257,9 @@ class SkyMap(object):
         """
         Center coordinates of the sky map.
         """
-        return SkyCoord.from_pixel(self.data.shape[0] / 2., self.data.shape[1] / 2., self.wcs)
+        return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
+                                   (self.data.shape[1] - 1) / 2.,
+                                    self.wcs, origin=0)
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -303,11 +306,11 @@ class SkyMap(object):
         from sherpa.data import Data2D, Data2DInt
 
         if dstype == 'Data2D':
-            x, y = self.coordinates(mode='center')
+            x, y = self.coordinates('galactic', mode='center')
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
-            x, y = self.coordinates(mode='edges')
+            x, y = self.coordinates('galactic', mode='edges')
             xlo, xhi = x[:-1], x[1:]
             ylo, yhi = y[:-1], y[1:]
             return Data2DInt(self.name, xlo.ravel(), xhi.ravel(),

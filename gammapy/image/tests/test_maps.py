@@ -40,7 +40,7 @@ class TestSkyMapPoisson():
         assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
 
     def test_coordinates(self):
-        coordinates = self.skymap.coordinates()
+        coordinates = self.skymap.coordinates('galactic')
         assert coordinates[0][98, 98] == 0
         assert coordinates[1][98, 98] == 0
 
@@ -52,7 +52,7 @@ class TestSkyMapPoisson():
         refstring += "Data unit: None\n"
         refstring += "Data mean: 1.022e+00\n"
         refstring += "WCS type: ['GLON-CAR', 'GLAT-CAR']\n"
-        assert repr(self.skymap) == refstring
+        assert str(self.skymap) == refstring
 
     def test_to_quantity(self):
         q = self.skymap.to_quantity()

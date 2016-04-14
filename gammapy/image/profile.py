@@ -242,7 +242,8 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
         boundaries, profile values and errors.
     """
 
-    lon, lat = SkyMap.read(image).coordinates()
+    l, b = SkyMap.read(image).coordinates('galactic')
+    lon, lat = l.degree, b.degree
     mask_init = (lats[0] <= lat) & (lat < lats[1])
     mask_bounds = mask_init & (lons[0] <= lon) & (lon < lons[1])
     if mask != None:

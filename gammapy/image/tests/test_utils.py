@@ -205,12 +205,12 @@ def test_wcs_histogram2d():
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
     counts = SkyMap.read(FermiGalacticCenter.counts())
-    lons, lats = counts.coordinates()
-    mask = lon_lat_rectangle_mask(lons, lats, lon_min=-1,
+    lons, lats = counts.coordinates('galactic')
+    mask = lon_lat_rectangle_mask(lons.degree, lats.degree, lon_min=-1,
                                   lon_max=1, lat_min=-1, lat_max=1)
     assert_allclose(mask.sum(), 400)
 
-    mask = lon_lat_rectangle_mask(lons, lats, lon_min=None,
+    mask = lon_lat_rectangle_mask(lons.degree, lats.degree, lon_min=None,
                                   lon_max=None, lat_min=None,
                                   lat_max=None)
     assert_allclose(mask.sum(), 80601)

@@ -26,8 +26,9 @@ def test_compute_binning():
 def test_image_lat_profile():
     """Tests GLAT profile with image of 1s of known size and shape."""
     image = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
-    lons, lats = image.coordinates()
-
+    l, b = image.coordinates('galactic')
+    lons, lats = l.degree, b.degree
+    
     counts = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
     
     mask = np.zeros_like(image.data)
@@ -62,7 +63,8 @@ def test_image_lon_profile():
     """Tests GLON profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()
 
-    lons, lats = SkyMap.read(image).coordinates()
+    l, b = SkyMap.read(image).coordinates('galactic')
+    lons, lats = l.degree, b.degree
     image.data = np.ones_like(image.data)
 
     counts = FermiGalacticCenter.counts()

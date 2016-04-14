@@ -104,7 +104,6 @@ def catalog_image(reference, psf, catalog='1FHL', source_type='point',
     # due to circular dependencies
     from ..cube import SpectralCube
 
-    lons, lats = SkyMap.read(reference).coordinates()
     wcs = WCS(reference.header)
     # Uses dummy energy for now to construct spectral cube
     # TODO : Fix this hack

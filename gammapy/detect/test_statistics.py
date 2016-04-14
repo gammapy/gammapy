@@ -26,7 +26,6 @@ __all__ = [
     'compute_ts_map',
     'compute_ts_map_multiscale',
     'compute_maximum_ts_map',
-    'TSMapResult',
 ]
 
 log = logging.getLogger(__name__)
