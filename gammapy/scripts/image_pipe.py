@@ -72,7 +72,6 @@ class ImageAnalysis(object):
             counts_map.data = counts_map.data.value
             self.maps["counts"] = counts_map
         else:
-            print(obs_id)
             self.pass_run.append(obs_id)
 
     def make_total_counts(self):
