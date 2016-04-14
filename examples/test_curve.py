@@ -163,16 +163,18 @@ def make_image_from_2d_bg():
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
-    image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg,
+    image = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
                          yref=center.b.deg, proj='TAN', coordsys='GAL')
+
 
     refheader = image.to_image_hdu().header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(refheader=refheader)
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
-                           exclusion_mask=exclusion_mask)
+                           obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
 
     images.make_maps(radius=10.)
+    #images.make_total_exposure()
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
 
