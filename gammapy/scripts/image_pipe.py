@@ -94,17 +94,17 @@ class ImageAnalysis(object):
 
         Returns
         -------
-        int : {0, 1}
-            0 if there is no events for this observation for the energy range used to compute the image
+        bool :
+            False if there is no events for this observation for the energy range used to compute the image
 
         """
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
         if len(events) == 0:
-            return 0
+            return False
         else:
-            return 1
+            return True
 
     def make_total_counts(self):
         """Stack the total count from the observation in the 'DataStore'
@@ -175,7 +175,7 @@ class ImageAnalysis(object):
         """
         total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if self._has_counts(obs_id) == 0:
+            if not self._has_counts(obs_id):
                 self.maps["bkg"].data[:] = 0
             else:
                 self.make_background(obs_id, bkg_norm)
@@ -334,7 +334,7 @@ class ImageAnalysis(object):
         """
         exposure_map = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if self._has_counts(obs_id) == 0:
+            if not self._has_counts(obs_id):
                 self.maps["exposure"].data[:] = 0
             else:
                 if exposure_weighted_spectrum:
