@@ -20,6 +20,16 @@ log = logging.getLogger(__name__)
 class ImageAnalysis(object):
     """Gammapy 2D image based analysis.
 
+    Fill a `~gammapy.image.SkyMapCollection`:
+    counts : counts for one obs
+    bkg : bkg model for one obs
+    exposure : exposure for one obs
+    total_counts : total counts of all the observations
+    total_bkg : total bkg model for all the observations
+    total_exposure : total exposure for all the observations
+    total_excess : total excess for all the observations
+    significance : significance for all the observations
+
     Parameters
     ----------
     empty_image : `~gammapy.image.SkyMap`
@@ -34,6 +44,7 @@ class ImageAnalysis(object):
             Required columns: OBS_ID
     exclusion_mask : `~gammapy.image.ExclusionMask`
             Exclusion regions
+
     """
 
     def __init__(self, empty_image=None,
