@@ -5,7 +5,7 @@ import json
 import numpy as np
 from numpy.testing.utils import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import TSMapResult
+from ...image import SkyMapCollection
 from ...datasets import load_poisson_stats_image
 from ..image_ts import image_ts_main
 from astropy.io import fits
@@ -69,15 +69,8 @@ def test_command_line_gammapy_image_ts(tmpdir):
     for scale_test in scales_test_list:
         output_filename_ = output_filename.replace('.fits', '_{0}.fits'.format(scale_test))
         expected_filename_ = expected_filename.replace('.fits', '_{0}.fits'.format(scale_test))
-
-        read_console = TSMapResult.read(output_filename_)
-        for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
-                read_console[name] = np.nan_to_num(read_console[name])
-        output_filename_without_nan_ = output_filename_without_nan.replace('.fits',
-                                                                           '_{0}.fits'.format(scale_test))
-        read_console.write(output_filename_without_nan_, header=data['header'])
-
-        expected_hdu = fits.open(expected_filename_)[0]
-        console_hdu = fits.open(output_filename_without_nan_)[0]
-
-        assert_allclose(expected_hdu.data, console_hdu.data, rtol=1e-2, atol=1e-15)
+        actual = SkyMapCollection.read(output_filename_)
+        expected = SkyMapCollection.read(expected_filename_)
+        
+        for name in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
+            assert_allclose(np.nan_to_num(actual[name].data), expected[name].data, rtol=1e-2, atol=1e-15)

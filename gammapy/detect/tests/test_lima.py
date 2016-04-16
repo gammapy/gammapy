@@ -50,7 +50,7 @@ def test_compute_lima_on_off_map():
                                           maps.offexposure.data, kernel)
     
     # reproduce safe significance threshold from HESS software
-    result_lima.significance[result_lima.n_on < 5] = 0
+    result_lima.significance.data[result_lima.n_on.data < 5] = 0
 
     # Set boundary to NaN in reference image
     maps.significance.data[np.isnan(result_lima.significance)] = np.nan

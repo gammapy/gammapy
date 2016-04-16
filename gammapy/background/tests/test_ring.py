@@ -26,7 +26,9 @@ class TestRingBgMaker:
         maps = SkyMapCollection()
         maps['n_on'] = n_on
         maps['a_on'] = n_on
-        maps['exclusion'] = n_on[100:110, 100:110] = 0
+        exclusion = np.ones((200, 200))
+        exclusion[100:110, 100:110] = 0
+        maps['exclusion'] = exclusion
         r = RingBgMaker(10, 13, 1)
         r.correlate_maps(maps)
 

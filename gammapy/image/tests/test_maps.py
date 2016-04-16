@@ -33,16 +33,16 @@ class TestSkyMapPoisson():
         assert self.skymap.name == skymap.name
 
     def test_lookup(self):
-        assert self.skymap.lookup((0, 0)) == 8
+        assert self.skymap.lookup((0, 0)) == 5
 
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
         assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
 
     def test_coordinates(self):
-        coordinates = self.skymap.coordinates()
-        assert coordinates[0][98, 98] == 0
-        assert coordinates[1][98, 98] == 0
+        coordinates = self.skymap.coordinates('galactic')
+        assert_allclose(coordinates[0][100, 100].degree, 0.01)
+        assert_allclose(coordinates[1][100, 100].degree, 0.01)
 
     def test_info(self):
         refstring = ""
@@ -52,7 +52,7 @@ class TestSkyMapPoisson():
         refstring += "Data unit: None\n"
         refstring += "Data mean: 1.022e+00\n"
         refstring += "WCS type: ['GLON-CAR', 'GLAT-CAR']\n"
-        assert repr(self.skymap) == refstring
+        assert str(self.skymap) == refstring
 
     def test_to_quantity(self):
         q = self.skymap.to_quantity()
@@ -68,6 +68,10 @@ class TestSkyMapPoisson():
         empty = SkyMap.empty()
         assert empty.data.shape == (200, 200)
 
+    def test_center(self):
+        center = self.skymap.center()
+        assert center.galactic.l == 0
+        assert center.galactic.b == 0
 
     @requires_data('gammapy-extra')
     def test_fill(self):

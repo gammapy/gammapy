@@ -69,8 +69,8 @@ class RingBgMaker(object):
         n_on = maps['n_on']
         a_on = maps['a_on']
         exclusion = maps['exclusion']
-        maps['n_off'] = self.correlate(n_on * exclusion)
-        maps['a_off'] = self.correlate(a_on * exclusion)
+        maps['n_off'] = self.correlate(n_on.data * exclusion.data)
+        maps['a_off'] = self.correlate(a_on.data * exclusion.data)
         maps.is_off_correlated = True
 
 

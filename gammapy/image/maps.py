@@ -3,12 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
-
+from copy import deepcopy
 import numpy as np
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
+from astropy.wcs.utils import pixel_to_skycoord 
 from astropy.units import Quantity, Unit
 from astropy.extern import six
 
@@ -208,13 +209,13 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, coord_type='world', origin=0, mode='center'):
+    def coordinates(self, coord_type='skycoord', origin=0, mode='center'):
         """
         Sky coordinate images.
 
         Parameters
         ----------
-        coord_type : {'world', 'pix', 'skycoord'}
+        coord_type : {'pix', 'skycoord', 'galactic'}
             Which type of coordinates to return.
         origin : {0, 1}
             Pixel coordinate origin.
@@ -232,17 +233,17 @@ class SkyMap(object):
 
         if coord_type == 'pix':
             return x, y
-        else:
-            xsky, ysky = self.wcs.wcs_pix2world(x, y, origin)
-            l, b = Longitude(xsky, unit='deg'), Latitude(ysky, unit='deg')
-            l = l.wrap_at('180d')
-            if coord_type == 'world':
-                return l.degree, b.degree
-            elif coord_type == 'skycoord':
+        else: 
+            coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
+            if coord_type == 'skycoord':
+                return coordinates
+            elif coord_type == 'galactic':
+                l = coordinates.galactic.l.wrap_at('180d')
+                b = coordinates.galactic.b 
                 return l, b
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"
-                                 " 'world', 'pix' or 'skycoord'.")
+                                 " 'pix' or 'skycoord'.")
 
     def solid_angle(self):
         """
@@ -251,6 +252,14 @@ class SkyMap(object):
         xsky, ysky = self.coordinates(mode='edges')
         omega = -np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:]
         return Quantity(omega, 'deg2').to('sr')
+
+    def center(self):
+        """
+        Center coordinates of the sky map.
+        """
+        return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
+                                   (self.data.shape[1] - 1) / 2.,
+                                    self.wcs, origin=0)
 
     def lookup(self, position, interpolation=None, origin=0):
         """
@@ -297,11 +306,11 @@ class SkyMap(object):
         from sherpa.data import Data2D, Data2DInt
 
         if dstype == 'Data2D':
-            x, y = self.coordinates(mode='center')
+            x, y = self.coordinates('galactic', mode='center')
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
-            x, y = self.coordinates(mode='edges')
+            x, y = self.coordinates('galactic', mode='edges')
             xlo, xhi = x[:-1], x[1:]
             ylo, yhi = y[:-1], y[1:]
             return Data2DInt(self.name, xlo.ravel(), xhi.ravel(),
@@ -310,44 +319,70 @@ class SkyMap(object):
         else:
             raise ValueError('Invalid sherpa data type.')
 
+    def copy(self):
+        """
+        Copy sky map.
+        """
+        return deepcopy(self)
+
     def to_image_hdu(self):
         """
         Convert sky map to `~astropy.fits.ImageHDU`.
         """
-        header = self.wcs.to_header()
+        if not self.wcs is None:
+            header = self.wcs.to_header()
 
-        # Add meta data
-        header.update(self.meta)
-        header['BUNIT'] = self.unit
+            # Add meta data
+            header.update(self.meta)
+            header['BUNIT'] = self.unit
+        else:
+            header = None
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
 
-    def reproject(self, refheader, mode='interp', *args, **kwargs):
+    def reproject(self, reference, mode='interp', *args, **kwargs):
         """
-        Reproject sky map to given reference header.
-
-        Calls `reproject.reproject.interp`, passing along ``args`` and ``kwargs``.
-
-        TODO: ``mode`` isn't use yet ... should dispatch to correct method.
+        Reproject sky map to given reference.
 
         Parameters
         ----------
-        refheader : `~astropy.fits.Header`
-            Reference header to reproject the data on. 
+        reference : `~astropy.fits.Header`, `~astropy.wcs.WCS` or `SkyMap`
+            Reference map specification to reproject the data on. 
         mode : {'interp', 'exact'}
             Interpolation mode.
+        *args : list
+            Arguments passed to `~reproject.reproject_interp` or 
+            `~reproject.reproject_exact`. 
+        **kwargs : dict
+            Keyword arguments passed to `~reproject.reproject_interp` or 
+            `~reproject.reproject_exact`.
 
         Returns
         -------
         skymap : `SkyMap`
-            Skymap reprojected onto ``refheader``.
+            Skymap reprojected onto ``reference``.
         """
 
-        from reproject import reproject_interp
-        out = reproject_interp(input_data=self.to_image_hdu(),
-                               output_projection=refheader, *args, **kwargs)
-        map = SkyMap(name=self.name, data=out[0], wcs=self.wcs, unit=self.unit,
-                     meta=self.meta)
-        return map
+        from reproject import reproject_interp, reproject_exact
+
+        if isinstance(reference, SkyMap):
+            wcs_reference = reference.wcs
+        elif isinstance(reference, WCS):
+            wcs_reference = reference
+        elif isinstance(reference, fits.Header):
+            wcs_reference = WCS(reference)
+        else:
+            raise TypeError("Invalid reference map must be either instance"
+                            "of `Header`, `WCS` or `SkyMap`.")
+
+        if mode == 'interp':
+            out = reproject_interp((self.data, wcs_reference), *args, **kwargs)
+        elif mode == 'exact':
+            out = reproject_exact((self.data, wcs_reference) *args, **kwargs)
+        else:
+            raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
+
+        return SkyMap(name=self.name, data=out[0], wcs=wcs_reference,
+                      unit=self.unit, meta=self.meta)
 
     def show(self, viewer='mpl', **kwargs):
         """
@@ -402,9 +437,9 @@ class SkyMap(object):
         """
         Print summary info about the sky map.
         """
-        print(repr(self))
+        print(str(self))
 
-    def __repr__(self):
+    def __str__(self):
         """
         String representation of the class.
         """
@@ -424,20 +459,26 @@ class SkyMap(object):
         """
         return self.data
 
-    def binarize(self, threshold=0.5):
-        """Make binary mask (`~gammapy.image.ExclusionMask`).
-
-        TODO: this isn't working yet.
-        The ``wcs`` attribute isn't copied over!?
-
-        TODO: some docs and example
+    def threshold(self, threshold):
         """
-        # TODO: Add test.
-        from .mask import ExclusionMask
-        map = ExclusionMask(self)
-        map.data = np.where(self.data > threshold, 0, 1)
+        Threshold sykmap data to create a `~gammapy.image.ExclusionMask`.
 
-        return map
+        Parameters
+        ----------
+        threshold : float
+            Threshold value.
+
+        Returns
+        -------
+        mask : `~gammapy.image.ExclusionMask`
+            Exclusion mask object.
+
+        TODO: some more docs and example
+        """
+        from .mask import ExclusionMask
+        mask = ExclusionMask.empty_like(self)
+        mask.data = np.where(self.data > threshold, 0, 1)
+        return mask
 
 
 class SkyMapCollection(Bunch):
@@ -457,6 +498,32 @@ class SkyMapCollection(Bunch):
 
     Then try tab completion on the ``skymaps`` object.
     """
+    # Real class attributes have to be defined here
+    _map_names = []
+    name = None
+    meta = None
+    wcs = None
+
+    def __init__(self, name=None, wcs=None, meta=None, **kwargs):
+        # Set real class attributes 
+        self.name = name
+        self.wcs = wcs
+        self.meta = meta
+        
+        # Everything else is stored as dict entries
+        for key in kwargs:
+            self[key] = kwargs[key]
+
+    def __setitem__(self, key, item):
+        """
+        Overwrite __setitem__ operator to remember order the sky maps are added
+        to the collection, by storing it in the _map_names list.
+        """
+        if isinstance(item, np.ndarray):
+            item = SkyMap(name=key, data=item, wcs=self.wcs)
+        if isinstance(item, SkyMap):
+            self._map_names.append(key)
+        super(SkyMapCollection, self).__setitem__(key, item)
 
     @classmethod
     def read(cls, filename):
@@ -480,8 +547,9 @@ class SkyMapCollection(Bunch):
             name = skymap.name.lower()
             kwargs[name] = skymap
             _map_names.append(name)
-        kwargs['_map_names'] = _map_names
-        return cls(**kwargs)
+        _ = cls(**kwargs)
+        _._map_names = _map_names
+        return _
 
     def write(self, filename=None, header=None, **kwargs):
         """
@@ -496,23 +564,28 @@ class SkyMapCollection(Bunch):
         """
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):
-            hdu = self[name].to_image_hdu()
-            hdu.name = name
-            hdulist.append(hdu)
+            if isinstance(self[name], SkyMap):
+                hdu = self[name].to_image_hdu()
+                # For now add common collection meta info to the single map headers
+                hdu.header.update(self.meta)
+                hdu.name = name
+                hdulist.append(hdu)
+            else:
+                log.warn("Can't save {} to file, not a sky map.".format(name))
         hdulist.writeto(filename, **kwargs)
 
-    def set_reference_wcs(self):
+    def info(self):
         """
-        Set reference WCS for all sky maps.
+        Print summary info about the sky map collection.
         """
-        raise NotImplementedError
+        print(str(self))
 
-    def __repr__(self):
+    def __str__(self):
         """
         String representation of the sky map collection.
         """
         info = ''
         for name in self.get('_map_names', sorted(self)):
-            info += self[name].__repr__()
+            info += self[name].__str__()
             info += '\n'
         return info

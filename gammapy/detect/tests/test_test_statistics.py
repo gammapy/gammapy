@@ -4,10 +4,9 @@ import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
 from astropy.convolution import Gaussian2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import compute_ts_map, TSMapResult
+from ...detect import compute_ts_map
 from ...datasets import load_poisson_stats_image
 from ...image.utils import upsample_2N, downsample_2N
-
 
 @requires_dependency('scipy')
 @requires_dependency('skimage')
@@ -26,15 +25,8 @@ def test_compute_ts_map(tmpdir):
         result[name] = np.nan_to_num(result[name])
         result[name] = upsample_2N(result[name], 2, order=order)
 
-    assert_allclose(1705.840212274973, result.ts[99, 99], rtol=1e-3)
-    assert_allclose([[99], [99]], np.where(result.ts == result.ts.max()))
-    assert_allclose(6, result.niter[99, 99])
-    assert_allclose(1.0227934338735763e-09, result.amplitude[99, 99], rtol=1e-3)
+    assert_allclose(1705.840212274973, result.ts.data[99, 99], rtol=1e-3)
+    assert_allclose([[99], [99]], np.where(result.ts == result.ts.data.max()))
+    assert_allclose(6, result.niter.data[99, 99])
+    assert_allclose(1.0227934338735763e-09, result.amplitude.data[99, 99], rtol=1e-3)
 
-    # test write method
-    filename = str(tmpdir / 'ts_test.fits')
-    result.write(filename, header=data['header'])
-    read_result = TSMapResult.read(filename)
-    for _ in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
-        assert result[_].dtype == read_result[_].dtype
-        assert_equal(result[_], read_result[_])
