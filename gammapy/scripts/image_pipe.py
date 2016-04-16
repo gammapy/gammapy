@@ -90,7 +90,7 @@ class ImageAnalysis(object):
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        if (len(events) == 0):
+        if len(events) == 0:
             return 0
         else:
             return 1
@@ -130,17 +130,15 @@ class ImageAnalysis(object):
         self.maps["bkg"] = bkg_map
         if bkg_norm:
             self.make_counts(obs_id)
-            scale = self.background_norm_factor(obs_id, self.maps["counts"], bkg_map)
+            scale = self.background_norm_factor(self.maps["counts"], bkg_map)
             self.maps["bkg"].data = scale * self.maps["bkg"].data
 
-    def background_norm_factor(self, obs_id, counts, bkg):
+    def background_norm_factor(self, counts, bkg):
         """Determine the scaling factor to apply to the background map by comparing the events in the counts maps
         and the bkg map outside the exclusion maps
 
         Parameters
         ----------
-        obs_id : int
-            Observation ID
         counts : `~gammapy.image.SkyMap`
             counts image
         bkg : `~gammapy.image.SkyMap`
@@ -167,8 +165,9 @@ class ImageAnalysis(object):
         total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
             if self._has_counts(obs_id) == 0:
-                continue
-            self.make_background(obs_id, bkg_norm)
+                self.maps["bkg"].data[:] = 0
+            else:
+                self.make_background(obs_id, bkg_norm)
             total_bkg.data += self.maps["bkg"].data
         self.maps["total_bkg"] = total_bkg
 
@@ -206,6 +205,8 @@ class ImageAnalysis(object):
             If true, apply the scaling factor to the bkg map
         spectral_index : int
             spectral index of the source spectrum
+        exposure_weighted_spectrum : bool
+            True if you want that the total excess / exposure gives the integrated flux
         """
         self.make_total_counts()
         self.make_total_bkg(bkg_norm)
@@ -323,10 +324,11 @@ class ImageAnalysis(object):
         exposure_map = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
             if self._has_counts(obs_id) == 0:
-                continue
-            if exposure_weighted_spectrum:
-                self.make_exposure_weighted_spectrum(obs_id, spectral_index)
+                self.maps["exposure"].data[:] = 0
             else:
-                self.make_exposure(obs_id, spectral_index)
+                if exposure_weighted_spectrum:
+                    self.make_exposure_weighted_spectrum(obs_id, spectral_index)
+                else:
+                    self.make_exposure(obs_id, spectral_index)
             exposure_map.data += self.maps["exposure"].data
         self.maps["total_exposure"] = exposure_map
