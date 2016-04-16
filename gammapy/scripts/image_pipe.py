@@ -51,7 +51,6 @@ class ImageAnalysis(object):
         self.header = self.empty_image.to_image_hdu().header
         if exclusion_mask:
             self.maps['exclusion'] = exclusion_mask
-        self.pass_run = []
 
     def make_counts(self, obs_id):
         """Fill the counts image for the events of one observation.
@@ -72,7 +71,29 @@ class ImageAnalysis(object):
             counts_map.data = counts_map.data.value
             self.maps["counts"] = counts_map
         else:
-            self.pass_run.append(obs_id)
+            self.maps["counts"] = counts_map
+
+    def _has_counts(self, obs_id):
+        """Check if there are events for this observation after applying the offset and energy range
+
+        Parameters
+        ----------
+        obs_id: int
+            Observation ID
+
+        Returns
+        -------
+        int : {0, 1}
+            0 if there is no events for this observation for the energy range used to compute the image
+
+        """
+        obs = self.data_store.obs(obs_id=obs_id)
+        events = obs.events.select_energy(self.energy_band)
+        events = events.select_offset(self.offset_band)
+        if (len(events) == 0):
+            return 0
+        else:
+            return 1
 
     def make_total_counts(self):
         """Stack the total count from the observation in the 'DataStore'
@@ -145,7 +166,7 @@ class ImageAnalysis(object):
         """
         total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if obs_id in self.pass_run:
+            if self._has_counts(obs_id) == 0:
                 continue
             self.make_background(obs_id, bkg_norm)
             total_bkg.data += self.maps["bkg"].data
@@ -174,7 +195,7 @@ class ImageAnalysis(object):
         self.maps["significance"] = s_maps
         return s_maps
 
-    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3):
+    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum=False):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
@@ -190,7 +211,7 @@ class ImageAnalysis(object):
         self.make_total_bkg(bkg_norm)
         self.make_significance(radius)
         self.make_total_excess()
-        self.make_total_exposure()
+        self.make_total_exposure(spectral_index, exposure_weighted_spectrum)
 
     def make_psf(self):
         log.info('Making PSF ...')
@@ -201,7 +222,49 @@ class ImageAnalysis(object):
         excess = self.maps["total_counts"].data - self.maps["total_bkg"].data
         self.maps["total_excess"].data = excess
 
-    def make_exposure_one_obs(self, obs_id, spectral_index=2.3):
+    def make_exposure(self, obs_id, spectral_index=2.3):
+        """Compute the exposure map for one observation. Excess/exposure will give the differential flux
+        at the energy eref
+
+        Parameters
+        ----------
+        obs_id : int
+            Number of the observation
+        spectral_index : int
+
+        """
+        # TODO: should be re-implemented using the exposure_cube function
+        exposure = SkyMap.empty_like(self.empty_image)
+
+        # Determine offset value for each pixel of the map
+        xpix_coord_grid, ypix_coord_grid = exposure.coordinates(coord_type='pix')
+        # calculate pixel offset from center (in world coordinates)
+        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
+        center = SkyCoord.from_pixel(self.header["NAXIS1"] / 2., self.header["NAXIS2"] / 2., exposure.wcs)
+        offset = coord.separation(center)
+
+        obs = self.data_store.obs(obs_id=obs_id)
+        livetime = obs.observation_live_time_duration
+
+        # 2D Exposure computation on the self.energy_range and on an offset_tab
+        energy = EnergyBounds(np.linspace(self.energy_band[0].value, self.energy_band[1].value, 100),
+                              self.energy_band.unit)
+        energy_band = energy.bands
+        energy_bin = energy.lin_centers
+        eref = EnergyBounds(self.energy_band).log_centers
+        spectrum = (energy_bin / eref) ** (-spectral_index)
+        aeff2d = obs.aeff
+        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        exposure_tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+
+        # Interpolate for the offset of each pixel
+        f = interpolate.interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
+        exposure.data = f(offset)
+        exposure.data *= livetime
+        exposure.data[offset >= self.offset_band[1]] = 0
+        self.maps["exposure"] = exposure
+
+    def make_exposure_weighted_spectrum(self, obs_id, spectral_index=2.3):
         """Compute the exposure map for one observation. Excess/exposure will give the integrated flux
         over the self.energy_band
 
@@ -212,6 +275,8 @@ class ImageAnalysis(object):
         spectral_index : int
 
         """
+        ##TODO: should be re-implemented using the exposure_cube function and the
+        # spectral_cube.integral_flux_image method
         exposure = SkyMap.empty_like(self.empty_image)
 
         # Determine offset value for each pixel of the map
@@ -245,65 +310,23 @@ class ImageAnalysis(object):
         exposure.data[offset >= self.offset_band[1]] = 0
         self.maps["exposure"] = exposure
 
-    def make_exposure_one_obs2(self, obs_id, spectral_index=2.3):
-        """Compute the exposure map for one observation. Excess/exposure will give the differential flux
-        at the energy eref
-
-        Parameters
-        ----------
-        obs_id : int
-            Number of the observation
-        spectral_index : int
-
-        """
-
-        exposure = SkyMap.empty_like(self.empty_image)
-
-        # Determine offset value for each pixel of the map
-        xpix_coord_grid, ypix_coord_grid = exposure.coordinates(coord_type='pix')
-        # calculate pixel offset from center (in world coordinates)
-        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
-        center = SkyCoord.from_pixel(self.header["NAXIS1"] / 2., self.header["NAXIS2"] / 2., exposure.wcs)
-        offset = coord.separation(center)
-
-        obs = self.data_store.obs(obs_id=obs_id)
-        livetime = obs.observation_live_time_duration
-
-        # 2D Exposure computation on the self.energy_range and on an offset_tab
-        energy = EnergyBounds(np.linspace(self.energy_band[0].value, self.energy_band[1].value, 100),
-                              self.energy_band.unit)
-        energy_band = energy.bands
-        energy_bin = energy.lin_centers
-        eref = EnergyBounds(self.energy_band).log_centers
-        spectrum = (energy_bin / eref) ** (-spectral_index)
-        aeff2d = obs.aeff
-        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        exposure_tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
-
-        # Interpolate for the offset of each pixel
-        f = interpolate.interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
-        exposure.data = f(offset)
-        exposure.data *= livetime
-        exposure.data[offset >= self.offset_band[1]] = 0
-        self.maps["exposure2"] = exposure
-
-    def make_total_exposure(self, spectral_index=2.3):
+    def make_total_exposure(self, spectral_index=2.3, exposure_weighted_spectrum=False):
         """Compute the exposure map for all the observations in the obs_table.
 
         Parameters
         ----------
         spectral_index : int
             spectral index of the source spectrum
-
+        exposure_weighted_spectrum : bool
+            True if you want that the total excess / exposure gives the integrated flux
         """
         exposure_map = SkyMap.empty_like(self.empty_image)
-        exposure_map2 = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if obs_id in self.pass_run:
+            if self._has_counts(obs_id) == 0:
                 continue
-            self.make_exposure_one_obs(obs_id, spectral_index)
-            self.make_exposure_one_obs2(obs_id, spectral_index)
+            if exposure_weighted_spectrum:
+                self.make_exposure_weighted_spectrum(obs_id, spectral_index)
+            else:
+                self.make_exposure(obs_id, spectral_index)
             exposure_map.data += self.maps["exposure"].data
-            exposure_map2.data += self.maps["exposure2"].data
         self.maps["total_exposure"] = exposure_map
-        self.maps["total_exposure2"] = exposure_map2
