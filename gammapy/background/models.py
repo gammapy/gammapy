@@ -659,6 +659,8 @@ class EnergyOffsetBackgroundModel(object):
         for idx_energy in range(len(self.counts.energy) - 1):
             counts = self.counts.data[binE, :]
             Nev = np.sum(counts).value
+            # For zero counts, the background rate is zero and smoothing would not change it.
+            # For speed we're skipping the smoothing in that case
             if (Nev > 0):
                 Np = len(counts)
                 # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma

@@ -214,12 +214,12 @@ class OffDataBackgroundMaker(object):
             if str(ngroup) in self.models3D.keys():
                 self.models3D[str(ngroup)].write(str(filename), format='table', clobber=True)
             else:
-                log.info("No run in the band {}".format(ngroup))
+                log.info("No run in the group {}".format(ngroup))
         if modeltype == "2D":
             if str(ngroup) in self.models2D.keys():
                 self.models2D[str(ngroup)].write(str(filename), overwrite=True)
             else:
-                log.info("No run in the band {}".format(ngroup))
+                log.info("No run in the group {}".format(ngroup))
 
     def save_models(self, modeltype, smooth=False):
         """Save model to fits for all the groups.
