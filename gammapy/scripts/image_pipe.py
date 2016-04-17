@@ -318,6 +318,6 @@ class ImageAnalysis(object):
         for obs_id in self.obs_table['OBS_ID']:
             if not self._low_counts(obs_id):
                 continue
-            self.make_exposure_weighted_spectrum(obs_id, spectral_index, exposure_weighted_spectrum)
+            self.make_exposure(obs_id, spectral_index, exposure_weighted_spectrum)
             exposure_map.data += self.maps["exposure"].data
         self.maps["total_exposure"] = exposure_map
