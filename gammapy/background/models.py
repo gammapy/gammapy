@@ -8,7 +8,6 @@ from astropy.io import fits
 from astropy.modeling.models import Gaussian1D
 from astropy.table import Table
 from astropy.units import Quantity
-from scipy.ndimage.filters import convolve
 from ..background import Cube
 from ..background import EnergyOffsetArray
 from ..utils.energy import EnergyBounds
@@ -656,6 +655,7 @@ class EnergyOffsetBackgroundModel(object):
         """Smooth the bkg rate with a gaussian 1D kernel.
 
         """
+        from scipy.ndimage.filters import convolve
         for binE, E in enumerate(self.counts.energy[:-1]):
             counts = self.counts.data[binE, :]
             Nev = np.sum(counts).value
