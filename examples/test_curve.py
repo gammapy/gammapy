@@ -168,7 +168,7 @@ def make_image_from_2d_bg():
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                            obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
 
-    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum = True, ncounts_min = 5)
+    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum = True)
     # images.make_total_exposure()
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
