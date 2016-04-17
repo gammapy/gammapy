@@ -8,7 +8,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...irf import EffectiveAreaTable2D
 from ...datasets import gammapy_extra
 from .. import exposure_cube
-from .. import SpectralCube
+from .. import SkyCube
 
 
 @requires_dependency('scipy')
@@ -20,7 +20,7 @@ def test_exposure_cube():
     pointing = SkyCoord(83.633, 21.514, unit='deg')
     livetime = Quantity(1581.17, 's')
     aeff2d = EffectiveAreaTable2D.read(aeff_filename)
-    count_cube = SpectralCube.read(ccube_filename, format='fermi-counts')
+    count_cube = SkyCube.read(ccube_filename, format='fermi-counts')
     exp_cube = exposure_cube(pointing, livetime, aeff2d, count_cube, offset_max=Angle(2.2, 'deg'))
     exp_ref = Quantity(4.7e8, 'm^2 s')
 

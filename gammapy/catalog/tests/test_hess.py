@@ -12,13 +12,13 @@ class TestSourceCatalogHGPS:
 
     def test_source_table(self):
         assert self.cat.name == 'hgps'
-        assert len(self.cat.table) == 77
+        assert len(self.cat.table) == 79
 
     def test_component_table(self):
-        assert len(self.cat.components) == 97
+        assert len(self.cat.components) == 98
 
     def test_associations_table(self):
-        assert len(self.cat.associations) == 216
+        assert len(self.cat.associations) == 224
 
 
 @requires_data('hgps')
@@ -45,7 +45,7 @@ class TestSourceCatalogObjectHGPS:
         assert self.source.name == self.source_name
 
     def test_index(self):
-        assert self.source.index == 52
+        assert self.source.index == 54
 
     def test_data(self):
         data = self.source.data
@@ -57,4 +57,4 @@ class TestSourceCatalogObjectHGPS:
     def test_str(self):
         ss = str(self.source)
         assert 'Source name          : HESS J1825-137' in ss
-        assert 'Component HGPSC 064:' in ss
+        assert 'Component HGPSC 065:' in ss

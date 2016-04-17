@@ -53,7 +53,7 @@ def test_hdu_index():
 #     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2')
 #     obs_ids = data_store.obs_table['OBS_ID'][:3]
 #
-#     counts_cube = SpectralCube('binning specification')
+#     counts_cube = SkyCube('binning specification')
 #
 #     for obs_id in obs_ids:
 #         obs =

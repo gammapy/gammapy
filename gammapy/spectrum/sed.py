@@ -255,11 +255,11 @@ def add_crab(ax):
 
 def cube_sed(cube, mask=None, flux_type='differential', counts=None,
              errors=False, standard_error=0.1, spectral_index=2.3):
-    """Creates SED from SpectralCube within given lat and lon range.
+    """Creates SED from SkyCube within given lat and lon range.
 
     Parameters
     ----------
-    cube : `~gammapy.data.SpectralCube`
+    cube : `~gammapy.data.SkyCube`
         Spectral cube of either differential or integral fluxes (specified
         with flux_type)
     mask : array_like, optional
@@ -268,7 +268,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         while a mask value of False indicates a valid value.
     flux_type : {'differential', 'integral'}
         Specify whether input cube includes differential or integral fluxes.
-    counts :  `~gammapy.data.SpectralCube`, optional
+    counts :  `~gammapy.data.SkyCube`, optional
         Counts cube to allow Poisson errors to be calculated. If not provided,
         a standard_error should be provided, or zero errors will be returned.
     errors : bool
