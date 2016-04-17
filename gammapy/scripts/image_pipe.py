@@ -103,7 +103,7 @@ class ImageAnalysis(object):
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
         if len(events) <= self.ncounts_min:
-            log.warning('Skipping obs ' + str(obs_id) + ' because it only has ' + str(ncounts_min) + ' counts.')
+            log.warning('Skipping obs ' + str(obs_id) + ' because it only has ' + str(self.ncounts_min) + ' counts.')
             return False
         else:
             return True
@@ -253,9 +253,9 @@ class ImageAnalysis(object):
 
         .. math ::
 
-        EXPOSURE = \int A(E) \phi_{E} * time
+            EXPOSURE = \int A(E) \phi_{E} * time
 
-        assuming a power law : :math: `\phi_{E} = \phi_{Eref}*\frac{E}{E_ref}^{spectral_index}`
+        assuming a power law for the flux :math: `\phi_{E} = \phi_{Eref}*\frac{E}{E_ref}^{spectral_index}`.
 
         If exposure_weighted_spectrum is true, :math: `EXPOSURE = \int A(E) \phi_{E} * time dE / \int \phi_{E} dE`
 
