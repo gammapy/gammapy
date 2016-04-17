@@ -7,7 +7,7 @@ from scipy import interpolate
 from astropy.units import Quantity
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy.coordinates import SkyCoord, Angle
-from ..utils.energy import Energy, EnergyBounds
+from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
@@ -78,21 +78,19 @@ class ImageAnalysis(object):
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        if (len(events) != 0):
-            counts_map.fill(events=events)
-            counts_map.data = counts_map.data.value
-            self.maps["counts"] = counts_map
-        else:
-            self.maps["counts"] = counts_map
+        counts_map.fill(events=events)
+        counts_map.data = counts_map.data.value
+        self.maps["counts"] = counts_map
 
-    def _has_counts(self, obs_id):
+    def _low_counts(self, obs_id, ncounts_min=0):
         """Check if there are events for this observation after applying the offset and energy range
 
         Parameters
         ----------
         obs_id: int
             Observation ID
-
+        ncounts_min : int
+            Minimum counts required for one observation
         Returns
         -------
         bool :
@@ -102,17 +100,25 @@ class ImageAnalysis(object):
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        if len(events) == 0:
+        if len(events) <= ncounts_min:
+            log.warning('Skipping obs ' + str(obs_id) + ' because it only has ' + str(ncounts_min) + ' counts.')
             return False
         else:
             return True
 
-    def make_total_counts(self):
+    def make_total_counts(self, ncounts_min):
         """Stack the total count from the observation in the 'DataStore'
+
+        Parameters
+        ----------
+        ncounts_min : int
+            Minimum counts required for one observation
 
         """
         total_counts = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
+            if not self._low_counts(obs_id, ncounts_min):
+                continue
             self.make_counts(obs_id)
             total_counts.data += self.maps["counts"].data
         self.maps["total_counts"] = total_counts
@@ -166,20 +172,21 @@ class ImageAnalysis(object):
         scale = counts_sum / bkg_sum
         return scale
 
-    def make_total_bkg(self, bkg_norm=True):
+    def make_total_bkg(self, bkg_norm=True, ncounts_min=0):
         """Stack the total bkg from the observation in the 'DataStore'.
 
         Parameters
         ----------
         bkg_norm : bool
             If true, apply the scaling factor  to the bkg map
+        ncounts_min : int
+            Minimum counts required for one observation
         """
         total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if not self._has_counts(obs_id):
-                self.maps["bkg"].data[:] = 0
-            else:
-                self.make_background(obs_id, bkg_norm)
+            if not self._low_counts(obs_id, ncounts_min):
+                continue
+            self.make_background(obs_id, bkg_norm)
             total_bkg.data += self.maps["bkg"].data
         self.maps["total_bkg"] = total_bkg
 
@@ -206,7 +213,7 @@ class ImageAnalysis(object):
         self.maps["significance"] = s_maps
         return s_maps
 
-    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum=False):
+    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum=False, ncounts_min=0):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
@@ -219,12 +226,14 @@ class ImageAnalysis(object):
             spectral index of the source spectrum
         exposure_weighted_spectrum : bool
             True if you want that the total excess / exposure gives the integrated flux
+        ncounts_min : int
+            Minimum counts required for one observation
         """
-        self.make_total_counts()
-        self.make_total_bkg(bkg_norm)
+        self.make_total_counts(ncounts_min)
+        self.make_total_bkg(bkg_norm, ncounts_min)
         self.make_significance(radius)
         self.make_total_excess()
-        self.make_total_exposure(spectral_index, exposure_weighted_spectrum)
+        self.make_total_exposure(spectral_index, exposure_weighted_spectrum, ncounts_min)
 
     def make_psf(self):
         log.info('Making PSF ...')
@@ -323,7 +332,7 @@ class ImageAnalysis(object):
         exposure.data[offset >= self.offset_band[1]] = 0
         self.maps["exposure"] = exposure
 
-    def make_total_exposure(self, spectral_index=2.3, exposure_weighted_spectrum=False):
+    def make_total_exposure(self, spectral_index=2.3, exposure_weighted_spectrum=False, ncounts_min=0):
         """Compute the exposure map for all the observations in the obs_table.
 
         Parameters
@@ -332,15 +341,16 @@ class ImageAnalysis(object):
             spectral index of the source spectrum
         exposure_weighted_spectrum : bool
             True if you want that the total excess / exposure gives the integrated flux
+        ncounts_min : int
+            Minimum counts required for one observation
         """
         exposure_map = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if not self._has_counts(obs_id):
-                self.maps["exposure"].data[:] = 0
+            if not self._low_counts(obs_id, ncounts_min):
+                continue
+            if exposure_weighted_spectrum:
+                self.make_exposure_weighted_spectrum(obs_id, spectral_index)
             else:
-                if exposure_weighted_spectrum:
-                    self.make_exposure_weighted_spectrum(obs_id, spectral_index)
-                else:
-                    self.make_exposure(obs_id, spectral_index)
+                self.make_exposure(obs_id, spectral_index)
             exposure_map.data += self.maps["exposure"].data
         self.maps["total_exposure"] = exposure_map
