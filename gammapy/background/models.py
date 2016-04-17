@@ -655,8 +655,8 @@ class EnergyOffsetBackgroundModel(object):
         """Smooth the bkg rate with a gaussian 1D kernel.
 
         """
-        from scipy.ndimage.filters import convolve
-        for binE, E in enumerate(self.counts.energy[:-1]):
+        from scipy.ndimage import convolve
+        for idx_energy in range(len(self.counts.energy) - 1):
             counts = self.counts.data[binE, :]
             Nev = np.sum(counts).value
             if (Nev > 0):
@@ -671,6 +671,6 @@ class EnergyOffsetBackgroundModel(object):
                 # kernel gaussian define between -3 and 3 sigma
                 x = np.linspace(-3, 3, 6 * Npix_sigma)
                 kernel = np.exp(-0.5 * x ** 2)
-                acceptance_convolve = convolve(self.bg_rate.data[binE, :], kernel / np.sum(kernel), mode="reflect")
+                acceptance_convolve = convolve(self.bg_rate.data[idx_energy, :], kernel / np.sum(kernel), mode="reflect")
 
-                self.bg_rate.data[binE, :] = Quantity(acceptance_convolve, self.bg_rate.data[binE, :].unit)
+                self.bg_rate.data[idx_energy, :] = Quantity(acceptance_convolve, self.bg_rate.data[idx_energy, :].unit)
