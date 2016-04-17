@@ -284,10 +284,10 @@ class ImageAnalysis(object):
         livetime = obs.observation_live_time_duration
 
         # 2D Exposure computation on the self.energy_range and on an offset_tab
-        energy = EnergyBounds(np.linspace(self.energy_band[0].value, self.energy_band[1].value, 100),
-                              self.energy_band.unit)
+        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
+                                                self.energy_band.unit)
         energy_band = energy.bands
-        energy_bin = energy.lin_centers
+        energy_bin = energy.log_centers
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
         aeff2d = obs.aeff
