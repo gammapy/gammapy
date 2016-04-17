@@ -86,7 +86,7 @@ class ImageAnalysis(object):
         self.maps["counts"] = counts_map
 
     def _low_counts(self, obs_id):
-        """Check if there are events for this observation after applying the offset and energy range
+        """Check if there are events for this observation after applying the offset and energy range.
 
         Parameters
         ----------
@@ -96,37 +96,31 @@ class ImageAnalysis(object):
         Returns
         -------
         bool :
-            False if there is no events for this observation for the energy range used to compute the image
+            True if there is no events for this observation for the energy range used to compute the image
 
         """
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
         if len(events) <= self.ncounts_min:
-            log.warning('Skipping obs ' + str(obs_id) + ' because it only has ' + str(self.ncounts_min) + ' counts.')
-            return False
-        else:
+            log.warning('Skipping obs ' + str(obs_id) + ' because it only has ' + str(len(events)) + ' counts.')
             return True
+        else:
+            return False
 
     def make_total_counts(self):
-        """Stack the total count from the observation in the 'DataStore'
-
-        Parameters
-        ----------
-        ncounts_min : int
-            Minimum counts required for one observation
-
+        """Stack the total count from the observation in the 'DataStore'.
         """
         total_counts = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if not self._low_counts(obs_id):
+            if self._low_counts(obs_id):
                 continue
             self.make_counts(obs_id)
             total_counts.data += self.maps["counts"].data
         self.maps["total_counts"] = total_counts
 
     def make_background(self, obs_id, bkg_norm=True):
-        """Make the background map for one observation from a bkg model
+        """Make the background map for one observation from a bkg model.
 
         Parameters
         ----------
@@ -155,7 +149,7 @@ class ImageAnalysis(object):
 
     def background_norm_factor(self, counts, bkg):
         """Determine the scaling factor to apply to the background map by comparing the events in the counts maps
-        and the bkg map outside the exclusion maps
+        and the bkg map outside the exclusion maps.
 
         Parameters
         ----------
@@ -167,7 +161,7 @@ class ImageAnalysis(object):
         Returns
         -------
         scale : float
-            scaling factor between the counts and the bkg maps outside the exclusion region
+            scaling factor between the counts and the bkg maps outside the exclusion region.
         """
         counts_sum = np.sum(counts.data * self.maps['exclusion'].data)
         bkg_sum = np.sum(bkg.data * self.maps['exclusion'].data)
@@ -184,7 +178,7 @@ class ImageAnalysis(object):
         """
         total_bkg = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if not self._low_counts(obs_id):
+            if self._low_counts(obs_id):
                 continue
             self.make_background(obs_id, bkg_norm)
             total_bkg.data += self.maps["bkg"].data
@@ -243,21 +237,24 @@ class ImageAnalysis(object):
         self.maps["total_excess"].data = excess
 
     def make_exposure(self, obs_id, spectral_index=2.3, for_integral_flux=False):
-        """Compute the exposure map for one observation.
+        r"""Compute the exposure map for one observation.
 
         Excess/exposure will give the differential flux at the energy Eref at the middle of the self.energy_band
 
         If for_integral_flux is true, it will give the integrated flux over the self.energy_band
 
-        Exposure is define as fallow:
+        Exposure is define as follow:
 
         .. math ::
 
-            EXPOSURE = \int A(E) \phi(E) * time_{obs} \, dE
+            EXPOSURE = \int_{E_1}^{E_2} A(E) \phi(E) * T \, dE
 
-        assuming a power law for the flux :math:`\phi(E) = \phi_{Eref} \times \frac{E}{E_ref}^{spectral_index}`
+        with T the observation livetime, A(E) the surface area, the energy integration range :math: `[E_1,E_2]`=
+        self.energy_range and assuming a power law for the flux
+        :math:`\phi(E) = \phi_{Eref} \times \frac{E}{E_ref}^{\gamma}` with :math:
+        `\gamma` the spectral index of the assumed power law.
 
-        If for_integral_flux is true, :math:`EXPOSURE = \int A(E) \phi_{E} * time_{obs} \, dE / \int \phi_{E} \, dE`
+        If for_integral_flux is true, :math:`EXPOSURE = \int_{E_1}^{E_2} A(E) \phi_{E} * T \, dE / \int \phi_{E} \, dE`
 
 
         Parameters
@@ -316,7 +313,7 @@ class ImageAnalysis(object):
         """
         exposure_map = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
-            if not self._low_counts(obs_id):
+            if self._low_counts(obs_id):
                 continue
             self.make_exposure(obs_id, spectral_index, for_integral_flux)
             exposure_map.data += self.maps["exposure"].data
