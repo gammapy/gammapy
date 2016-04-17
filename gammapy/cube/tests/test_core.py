@@ -6,7 +6,7 @@ from astropy.coordinates import Angle
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from astropy.wcs import WCS
-from ...utils.testing import requires_dependency
+from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import make_header
 from ...irf import EnergyDependentTablePSF
@@ -14,6 +14,7 @@ from ...spectrum.powerlaw import power_law_evaluate
 from .. import SkyCube, compute_npred_cube, convolve_cube
 
 
+@requires_data('gammapy-extra')
 @requires_dependency('scipy')
 class TestSkyCube(object):
     def setup(self):
@@ -277,7 +278,7 @@ def test_convolve_cube():
 
 
 @pytest.mark.xfail
-@requires_dependency('scipy.interpolate.RegularGridInterpolator')
+@requires_dependency('scipy')
 @requires_dependency('reproject')
 def test_reproject_cube():
     # TODO: a better test can probably be implemented here to avoid
