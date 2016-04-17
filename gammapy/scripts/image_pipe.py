@@ -222,8 +222,8 @@ class ImageAnalysis(object):
             Disk radius in pixels for the significance map.
         bkg_norm : bool
             If true, apply the scaling factor to the bkg map
-        spectral_index : int
-            spectral index of the source spectrum
+        spectral_index : float
+            Assumed power-law spectral index
         exposure_weighted_spectrum : bool
             True if you want that the total excess / exposure gives the integrated flux
         ncounts_min : int
@@ -252,7 +252,8 @@ class ImageAnalysis(object):
         ----------
         obs_id : int
             Number of the observation
-        spectral_index : int
+        spectral_index : float
+            Assumed power-law spectral index
 
         """
         # TODO: should be re-implemented using the exposure_cube function
@@ -294,7 +295,8 @@ class ImageAnalysis(object):
         ----------
         obs_id : int
             Number of the observation
-        spectral_index : int
+        spectral_index : float
+            Assumed power-law spectral index
 
         """
         ##TODO: should be re-implemented using the exposure_cube function and the
@@ -337,8 +339,8 @@ class ImageAnalysis(object):
 
         Parameters
         ----------
-        spectral_index : int
-            spectral index of the source spectrum
+        spectral_index : float
+            Assumed power-law spectral index
         exposure_weighted_spectrum : bool
             True if you want that the total excess / exposure gives the integrated flux
         ncounts_min : int
