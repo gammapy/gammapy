@@ -112,6 +112,40 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
         return idx[0]
 
 
+def _poisson_gauss_smooth(counts, bkg):
+    """This method uses an adaptive Poisson method to compute the smoothing Kernel width from the available counts
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count histogram 1D in offset
+    bkg : `~numpy.ndarray`
+        Count histogram 1D in offset
+
+    Returns
+    -------
+    bkg_smooth : `~numpy.ndarray`
+        Count histogram 1D in offset
+
+    """
+    from scipy.ndimage import convolve
+
+    Np = len(counts)
+    # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma
+    Npix_sigma = (150 / Nev) * Np
+    # For high statistic, we impose a minimum of 4pixel/sigma
+    Npix_sigma = np.maximum(Npix_sigma, 4)
+    # For very low statistic, we impose a maximum lenght of the kernel equal of the number of bin
+    # in the counts histogram
+    Npix_sigma = np.minimum(Npix_sigma, Np / 6)
+    # kernel gaussian define between -3 and 3 sigma
+    x = np.linspace(-3, 3, 6 * Npix_sigma)
+    kernel = np.exp(-0.5 * x ** 2)
+    bkg_smooth = convolve(bkg, kernel / np.sum(kernel),
+                          mode="reflect")
+    return bkg_smooth
+
+
 class GaussianBand2D(object):
     """Gaussian band model.
 
@@ -654,25 +688,18 @@ class EnergyOffsetBackgroundModel(object):
     def smooth(self):
         """Smooth the bkg rate with a gaussian 1D kernel.
 
+        Calling this method modifies the ``bg_rate`` data member, replacing it with a smoothed version.
+
+
+        This method uses an adaptive Poisson method to compute the smoothing Kernel width
+        from the available counts (see code and inline comments for details).
         """
-        from scipy.ndimage import convolve
         for idx_energy in range(len(self.counts.energy) - 1):
-            counts = self.counts.data[binE, :]
+            counts = self.counts.data[idx_energy, :]
+            bkg = self.bg_rate.data[idx_energy, :]
             Nev = np.sum(counts).value
             # For zero counts, the background rate is zero and smoothing would not change it.
             # For speed we're skipping the smoothing in that case
             if (Nev > 0):
-                Np = len(counts)
-                # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma
-                Npix_sigma = (150 / Nev) * Np
-                # For high statistic, we impose a minimum of 4pixel/sigma
-                Npix_sigma = np.maximum(Npix_sigma, 4)
-                # For very low statistic, we impose a maximum lenght of the kernel equal of the number of bin
-                # in the counts histogram
-                Npix_sigma = np.minimum(Npix_sigma, Np / 6)
-                # kernel gaussian define between -3 and 3 sigma
-                x = np.linspace(-3, 3, 6 * Npix_sigma)
-                kernel = np.exp(-0.5 * x ** 2)
-                acceptance_convolve = convolve(self.bg_rate.data[idx_energy, :], kernel / np.sum(kernel), mode="reflect")
-
-                self.bg_rate.data[idx_energy, :] = Quantity(acceptance_convolve, self.bg_rate.data[idx_energy, :].unit)
+                acceptance_convolve = _poisson_gauss_smooth(counts, bkg)
+                self.bg_rate.data[idx_energy, :] = Quantity(acceptance_convolve, self.bg_rate.data.unit)

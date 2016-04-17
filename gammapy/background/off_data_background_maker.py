@@ -240,15 +240,12 @@ class OffDataBackgroundMaker(object):
         modeltype : {'3D', '2D'}
             Type of the background modelisation
 
-        Returns
-        -------
-
         """
         for ngroup in range(self.ntot_group):
             self.smooth_model(modeltype, ngroup)
 
     def smooth_model(self, modeltype, ngroup):
-        """Smooth the nkg model for one group
+        """Smooth the bkg model for one group
 
         Parameters
         ----------
@@ -256,8 +253,6 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         ngroup : int
             Groups ID
-        Returns
-        -------
 
         """
         if modeltype == "3D":
