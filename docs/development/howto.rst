@@ -111,24 +111,6 @@ Note that this means that in the definition of an "end-user namespace", e.g. in 
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
 modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package.
 
-.. _development-data_subclasses:
-
-Why we don't sub-class other data classes
------------------------------------------
-
-We have considered re-using data classes developed by others,
-namely `~astropy.nddata.NDData` and the
-`spectral_cube.SkyCube <http://spectral-cube.readthedocs.org/en/latest/index.html>`__
-classes.
-
-But in both cases, the data model didn't really fit our use cases for gamma-ray astronomy
-and so we decided to write our own data classes from scratch.
-
-Here's some issues where this was discussed:
-
-* https://github.com/radio-astro-tools/spectral-cube/issues/110
-* https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
-
 .. _development-result_object:
 
 Functions returning several values
