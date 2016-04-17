@@ -253,11 +253,11 @@ class ImageAnalysis(object):
 
         .. math ::
 
-            EXPOSURE = \int A(E) \phi_{E} * time
+            EXPOSURE = \int A(E) \phi(E) * time_{obs} \, dE
 
-        assuming a power law for the flux :math: `\phi_{E} = \phi_{Eref}*\frac{E}{E_ref}^{spectral_index}`.
+        assuming a power law for the flux :math:`\phi(E) = \phi_{Eref} \times \frac{E}{E_ref}^{spectral_index}`
 
-        If exposure_weighted_spectrum is true, :math: `EXPOSURE = \int A(E) \phi_{E} * time dE / \int \phi_{E} dE`
+        If exposure_weighted_spectrum is true, :math:`EXPOSURE = \int A(E) \phi_{E} * time_{obs} \, dE / \int \phi_{E} \, dE`
 
 
         Parameters
