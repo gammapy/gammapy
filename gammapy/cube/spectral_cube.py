@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Gamma-ray spectral cube: longitude, latitude and spectral axis.
 
-TODO: split `SpectralCube` into a base class ``SpectralCube`` and a few sub-classes:
+TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 
-* ``SpectralCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
-* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SpectralCube`` (``gtexpcube`` format)
-* ``SpectralCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
+* ``SkyCube`` to represent functions evaluated at grid points (diffuse model format ... what is there now).
+* ``ExposureCube`` should also be supported (same semantics, but different units / methods as ``SkyCube`` (``gtexpcube`` format)
+* ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
@@ -20,19 +20,19 @@ from astropy.wcs import WCS
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
 from ..image import cube_to_image, solid_angle, SkyMap
-from ..image.utils import _bin_events_in_cube 
+from ..image.utils import _bin_events_in_cube
 from ..utils.fits import table_to_fits_table
 from ..utils.wcs import get_wcs_ctype
 
-__all__ = ['SpectralCube']
+__all__ = ['SkyCube']
 
 
-class SpectralCube(object):
-    """Spectral cube for gamma-ray astronomy.
+class SkyCube(object):
+    """Sky cube with dimensions lon, lat and energy.
 
     Can be used e.g. for Fermi or GALPROP diffuse model cubes.
 
-    Note that there is a very nice ``SpectralCube`` implementation here:
+    Note that there is a very nice ``SkyCube`` implementation here:
     http://spectral-cube.readthedocs.org/en/latest/index.html
 
     Here is some discussion if / how it could be used:
@@ -40,7 +40,7 @@ class SpectralCube(object):
 
     For now we re-implement what we need here.
 
-    The order of the spectral cube axes can be very confusing ... this should help:
+    The order of the sky cube axes can be very confusing ... this should help:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
     * The ``wcs`` object axis order is ``(lon, lat, energy)``.
@@ -52,7 +52,7 @@ class SpectralCube(object):
     Parameters
     ----------
     name : str
-        Name of the spectral cube.
+        Name of the sky cube.
     data : `~astropy.units.Quantity`
         Data array (3-dim)
     wcs : `~astropy.wcs.WCS`
@@ -86,7 +86,7 @@ class SpectralCube(object):
         self.name = name
         self.data = data
         self.wcs = wcs
-        
+
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
         self.energy_axis = LogEnergyAxis(energy)
@@ -106,10 +106,9 @@ class SpectralCube(object):
 
         return self._interpolate_cache
 
-
     @classmethod
     def read_hdu(cls, hdu_list):
-        """Read spectral cube from HDU.
+        """Read sky cube from HDU.
 
         Parameters
         ----------
@@ -121,8 +120,8 @@ class SpectralCube(object):
 
         Returns
         -------
-        spectral_cube : `SpectralCube`
-            Spectral cube
+        sky_cube : `SkyCube`
+            Sky cube
         """
         object_hdu = hdu_list[0]
         energy_table_hdu = hdu_list[1]
@@ -138,7 +137,7 @@ class SpectralCube(object):
 
     @classmethod
     def read(cls, filename, format='fermi'):
-        """Read spectral cube from FITS file.
+        """Read sky cube from FITS file.
 
         Parameters
         ----------
@@ -149,8 +148,8 @@ class SpectralCube(object):
 
         Returns
         -------
-        spectral_cube : `SpectralCube`
-            Spectral cube
+        sky_cube : `SkyCube`
+            Sky cube
         """
         data = fits.getdata(filename)
         # Note: the energy axis of the FITS cube is unusable.
@@ -170,7 +169,7 @@ class SpectralCube(object):
 
     def fill(self, events, origin=0):
         """
-        Fill spectral cube with events.
+        Fill sky cube with events.
 
         Parameters
         ----------
@@ -181,11 +180,11 @@ class SpectralCube(object):
 
         """
         self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy)
-        
+
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
         """
-        Create empty spectral cube with log equal energy binning from the scratch.
+        Create empty sky cube with log equal energy binning from the scratch.
         
         Parameters
         ----------
@@ -209,20 +208,20 @@ class SpectralCube(object):
     @classmethod
     def empty_like(cls, refcube, fill=0):
         """
-        Create an empty spectral cube with the same WCS and energy specification
-        as given spectral cube. 
+        Create an empty sky cube with the same WCS and energy specification
+        as given sky cube.
         
         Parameters
         ----------
-        refcube : `~gammapy.cube.SpectralCube`
-            Reference spectral cube.
+        refcube : `~gammapy.cube.SkyCube`
+            Reference sky cube.
         fill : float, optional
             Fill sky map with constant value. Default is 0.
         """
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
         energies = refcube.energies.copy()
-        return cls(data=data, wcs=wcs, energy=energies)        
+        return cls(data=data, wcs=wcs, energy=energies)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -292,7 +291,7 @@ class SpectralCube(object):
 
     def to_sherpa_data3d(self):
         """
-        Convert spectral cube to sherpa `Data3D` object.
+        Convert sky cube to sherpa `Data3D` object.
         """
         from .sherpa_ import Data3D
 
@@ -300,20 +299,19 @@ class SpectralCube(object):
         energies = self.energy.to("TeV").value
         ebounds = EnergyBounds(Quantity(energies, 'TeV'))
         elo = ebounds.lower_bounds.value
-        ehi = ebounds.upper_bounds.value  
+        ehi = ebounds.upper_bounds.value
 
         ra, dec = self.spatial_coordinate_images
-       
+
         n_ebins = len(elo)
         ra_cube = np.tile(ra, (n_ebins, 1, 1))
         dec_cube = np.tile(dec, (n_ebins, 1, 1))
         elo_cube = elo.reshape(n_ebins, 1, 1) * np.ones_like(ra)
         ehi_cube = ehi.reshape(n_ebins, 1, 1) * np.ones_like(ra)
- 
-        return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),    
+
+        return Data3D('', elo_cube.ravel(), ehi_cube.ravel(), ra_cube.ravel(),
                       dec_cube.ravel(), self.data.value.ravel(),
                       self.data.value.shape)
-
 
     @property
     def solid_angle_image(self):
@@ -323,7 +321,6 @@ class SpectralCube(object):
         image_hdu.header['WCSAXES'] = 2
 
         return solid_angle(image_hdu).to('sr')
-
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -444,12 +441,11 @@ class SpectralCube(object):
         return hdu
 
     def reproject_to(self, reference_cube, projection_type='bicubic'):
-        """
-        Spatially reprojects a `SpectralCube` onto a reference cube.
+        """Spatially reprojects a `SkyCube` onto a reference cube.
 
         Parameters
         ----------
-        reference_cube : `SpectralCube`
+        reference_cube : `SkyCube`
             Reference cube with the desired spatial projection.
         projection_type : {'nearest-neighbor', 'bilinear',
             'biquadratic', 'bicubic', 'flux-conserving'}
@@ -457,7 +453,7 @@ class SpectralCube(object):
 
         Returns
         -------
-        reprojected_cube : `SpectralCube`
+        reprojected_cube : `SkyCube`
             Cube spatially reprojected to the reference cube.
         """
         from reproject import reproject_interp
@@ -501,10 +497,10 @@ class SpectralCube(object):
 
         wcs_out = WCS(header_out).celestial
 
-        return SpectralCube(data=new_cube, wcs=wcs_out, energy=energy)
+        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy)
 
     def to_fits(self):
-        """Writes SpectralCube to FITS hdu_list.
+        """Writes SkyCube to FITS hdu_list.
 
         Returns
         -------
@@ -529,7 +525,7 @@ class SpectralCube(object):
         return hdu_list
 
     def writeto(self, filename, **kwargs):
-        """Writes SpectralCube to FITS file.
+        """Writes SkyCube to FITS file.
 
         Parameters
         ----------
@@ -540,7 +536,7 @@ class SpectralCube(object):
 
     def __repr__(self):
         # Copied from `spectral-cube` package
-        s = "Spectral cube {} with shape={0}".format(self.name, self.data.shape)
+        s = "Sky cube {} with shape={0}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
             s += ":\n"
         else:
@@ -552,7 +548,6 @@ class SpectralCube(object):
         s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2],
                                                                  self.wcs.wcs.cunit[2])
         return s
-
 
     def info(self):
         """

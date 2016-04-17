@@ -9,7 +9,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
-from .spectral_cube import SpectralCube
+from .spectral_cube import SkyCube
 
 __all__ = ['compute_npred_cube', 'convolve_cube']
 
@@ -20,9 +20,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     Parameters
     ----------
-    flux_cube : `SpectralCube`
+    flux_cube : `SkyCube`
         Differential flux cube.
-    exposure_cube : `SpectralCube`
+    exposure_cube : `SkyCube`
         Instrument exposure cube.
     energy_bins : `~gammapy.utils.energy.EnergyBounds`
         An array of Quantities specifying the edges of the energy band
@@ -32,7 +32,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     Returns
     -------
-    npred_cube : `SpectralCube`
+    npred_cube : `SkyCube`
         Predicted counts cube in energy bins.
     """
     if flux_cube.data.shape[1:] != exposure_cube.data.shape[1:]:
@@ -56,9 +56,9 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
         npred_cube[i] = npred_image.to('')
     npred_cube = np.nan_to_num(npred_cube)
 
-    npred_cube = SpectralCube(data=npred_cube,
-                              wcs=wcs,
-                              energy=energy_bins)
+    npred_cube = SkyCube(data=npred_cube,
+                         wcs=wcs,
+                         energy=energy_bins)
     return npred_cube
 
 
@@ -68,7 +68,7 @@ def convolve_cube(cube, psf, offset_max):
 
     Parameters
     ----------
-    cube : `SpectralCube`
+    cube : `SkyCube`
         Counts cube in energy bins.
     psf : `~gammapy.irf.EnergyDependentTablePSF`
         Energy dependent PSF.
@@ -77,7 +77,7 @@ def convolve_cube(cube, psf, offset_max):
 
     Returns
     -------
-    convolved_cube : `SpectralCube`
+    convolved_cube : `SkyCube`
         PSF convolved predicted counts cube in energy bins.
     """
     from scipy.ndimage import convolve
@@ -92,7 +92,7 @@ def convolve_cube(cube, psf, offset_max):
         kernel_image = psf_at_energy.kernel(pixel_size, offset_max, normalize=True)
         convolved_cube[i] = convolve(cube.data[i], kernel_image,
                                      mode='mirror')
-    convolved_cube = SpectralCube(data=convolved_cube, wcs=cube.wcs,
-                                  energy=cube.energy)
+    convolved_cube = SkyCube(data=convolved_cube, wcs=cube.wcs,
+                             energy=cube.energy)
     return convolved_cube
 

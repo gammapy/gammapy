@@ -10,7 +10,7 @@ from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
 
-from .. import SpectralCube
+from .. import SkyCube
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency
 from ...utils.testing import requires_data
@@ -26,7 +26,7 @@ def test_sherpa_crab_fit():
     from ..sherpa_ import Data3D, CombinedModel3D
 
     filename = gammapy_extra.filename('experiments/sherpa_cube_analysis/counts.fits.gz')
-    counts = SpectralCube.read(filename)
+    counts = SkyCube.read(filename)
     cube = counts.to_sherpa_data3d()
 
     # Set up exposure table model

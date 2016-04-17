@@ -71,17 +71,17 @@ class FermiGalacticCenter(object):
 
     @staticmethod
     def diffuse_model():
-        """Diffuse model (`~gammapy.data.SpectralCube`)"""
-        from ..cube import SpectralCube
+        """Diffuse model (`~gammapy.data.SkyCube`)"""
+        from ..cube import SkyCube
         filename = FermiGalacticCenter.filenames()['diffuse_model']
-        return SpectralCube.read(filename)
+        return SkyCube.read(filename)
 
     @staticmethod
     def exposure_cube():
-        """Exposure cube (`~gammapy.data.SpectralCube`)"""
-        from ..cube import SpectralCube
+        """Exposure cube (`~gammapy.data.SkyCube`)"""
+        from ..cube import SkyCube
         filename = FermiGalacticCenter.filenames()['exposure_cube']
-        return SpectralCube.read(filename)
+        return SkyCube.read(filename)
 
 
 class FermiVelaRegion(object):
@@ -131,10 +131,10 @@ class FermiVelaRegion(object):
 
     @staticmethod
     def diffuse_model():
-        """Diffuse model (`~gammapy.data.SpectralCube`)"""
-        from ..cube import SpectralCube
+        """Diffuse model (`~gammapy.data.SkyCube`)"""
+        from ..cube import SkyCube
         filename = FermiVelaRegion.filenames()['diffuse_model']
-        return SpectralCube.read(filename)
+        return SkyCube.read(filename)
 
     @staticmethod
     def background_image():
@@ -169,10 +169,10 @@ class FermiVelaRegion(object):
 
     @staticmethod
     def exposure_cube():
-        """Exposure cube (`~gammapy.data.SpectralCube`)."""
-        from ..cube import SpectralCube
+        """Exposure cube (`~gammapy.data.SkyCube`)."""
+        from ..cube import SkyCube
         filename = FermiVelaRegion.filenames()['exposure_cube']
-        return SpectralCube.read(filename)
+        return SkyCube.read(filename)
 
     @staticmethod
     def livetime_cube():

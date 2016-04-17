@@ -7,7 +7,7 @@ from ...utils.testing import requires_dependency, requires_data
 from .. import catalog
 from ...image import SkyMap
 from ...irf import EnergyDependentTablePSF
-from ...cube import SpectralCube
+from ...cube import SkyCube
 from ...datasets import FermiGalacticCenter
 
 
@@ -21,8 +21,8 @@ def test_source_image():
     reference_hdu = SkyMap.empty(nxpix=10, nypix=10, binsz=1).to_image_hdu()
     reference_wcs = WCS(reference_hdu.header)
     energy = Quantity([10, 500], 'GeV')
-    reference = SpectralCube(data=reference_hdu.data,
-                             wcs=reference_wcs, energy=energy)
+    reference = SkyCube(data=reference_hdu.data,
+                        wcs=reference_wcs, energy=energy)
 
     psf_file = FermiGalacticCenter.filenames()['psf']
     psf = EnergyDependentTablePSF.read(psf_file)

@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
 from ...utils.energy import EnergyBounds
-from ...cube import SpectralCube
+from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
@@ -223,10 +223,10 @@ def test_bin_events_in_cube():
 
     events = data_store.obs(obs_id=23523).events
 
-    counts = SpectralCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
-                                nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                                yref=events.meta['DEC_OBJ'], dtype='int', 
-                                coordsys='CEL')
+    counts = SkyCube.empty(emin=0.5, emax=80, enbins=8, eunit='TeV',
+                           nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                           yref=events.meta['DEC_OBJ'], dtype='int',
+                           coordsys='CEL')
     counts.fill(events)
     assert counts.data.sum().value == 1233
 
