@@ -89,7 +89,8 @@ class SkyCube(object):
 
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
-        self.energy_axis = LogEnergyAxis(energy)
+        if energy:
+            self.energy_axis = LogEnergyAxis(energy)
 
         self._interpolate_cache = None
 
@@ -536,18 +537,20 @@ class SkyCube(object):
 
     def __repr__(self):
         # Copied from `spectral-cube` package
-        s = "Sky cube {} with shape={0}".format(self.name, self.data.shape)
+        ss = "Sky cube {} with shape={}".format(self.name, self.data.shape)
         if self.data.unit is u.dimensionless_unscaled:
-            s += ":\n"
+            ss += ":\n"
         else:
-            s += " and unit={0}:\n".format(self.data.unit)
-        s += " n_x: {0:5d}  type_x: {1:15s}  unit_x: {2}\n".format(self.data.shape[2], self.wcs.wcs.ctype[0],
-                                                                   self.wcs.wcs.cunit[0])
-        s += " n_y: {0:5d}  type_y: {1:15s}  unit_y: {2}\n".format(self.data.shape[1], self.wcs.wcs.ctype[1],
-                                                                   self.wcs.wcs.cunit[1])
-        s += " n_s: {0:5d}  type_s: {1:15s}  unit_s: {2}".format(self.data.shape[0], self.wcs.wcs.ctype[2],
-                                                                 self.wcs.wcs.cunit[2])
-        return s
+            ss += " and unit={}:\n".format(self.data.unit)
+
+        ss += " n_lon:    {:5d}  type_lon:    {:15s}  unit_lon:    {}\n".format(
+            self.data.shape[2], self.wcs.wcs.ctype[0], self.wcs.wcs.cunit[0])
+        ss += " n_lat:    {:5d}  type_lat:    {:15s}  unit_lat:    {}\n".format(
+            self.data.shape[1], self.wcs.wcs.ctype[1], self.wcs.wcs.cunit[1])
+        ss += " n_energy: {:5d}  unit_energy: {}".format(
+            len(self.energy), self.energy.unit)
+
+        return ss
 
     def info(self):
         """

@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
-from .spectral_cube import SkyCube
+from .core import SkyCube
 from ..utils.energy import EnergyBounds
 
 __all__ = [

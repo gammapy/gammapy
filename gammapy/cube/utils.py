@@ -9,7 +9,7 @@ import numpy as np
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
-from .spectral_cube import SkyCube
+from .core import SkyCube
 
 __all__ = ['compute_npred_cube', 'convolve_cube']
 
