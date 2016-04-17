@@ -213,7 +213,7 @@ class ImageAnalysis(object):
         self.maps["significance"] = s_maps
         return s_maps
 
-    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum=False):
+    def make_maps(self, radius, bkg_norm=True, spectral_index=2.3, for_integral_flux=False):
         """Compute the counts, bkg, exlusion_mask and significance images for a set of observation
 
         Parameters
@@ -224,14 +224,14 @@ class ImageAnalysis(object):
             If true, apply the scaling factor to the bkg map
         spectral_index : float
             Assumed power-law spectral index
-        exposure_weighted_spectrum : bool
+        for_integral_flux : bool
             True if you want that the total excess / exposure gives the integrated flux
         """
         self.make_total_counts()
         self.make_total_bkg(bkg_norm)
         self.make_significance(radius)
         self.make_total_excess()
-        self.make_total_exposure(spectral_index, exposure_weighted_spectrum)
+        self.make_total_exposure(spectral_index, for_integral_flux)
 
     def make_psf(self):
         log.info('Making PSF ...')
@@ -242,12 +242,12 @@ class ImageAnalysis(object):
         excess = self.maps["total_counts"].data - self.maps["total_bkg"].data
         self.maps["total_excess"].data = excess
 
-    def make_exposure(self, obs_id, spectral_index=2.3, exposure_weighted_spectrum=False):
+    def make_exposure(self, obs_id, spectral_index=2.3, for_integral_flux=False):
         """Compute the exposure map for one observation.
 
         Excess/exposure will give the differential flux at the energy Eref at the middle of the self.energy_band
 
-        If exposure_weighted_spectrum is true, it will give the integrated flux over the self.energy_band
+        If for_integral_flux is true, it will give the integrated flux over the self.energy_band
 
         Exposure is define as fallow:
 
@@ -257,7 +257,7 @@ class ImageAnalysis(object):
 
         assuming a power law for the flux :math:`\phi(E) = \phi_{Eref} \times \frac{E}{E_ref}^{spectral_index}`
 
-        If exposure_weighted_spectrum is true, :math:`EXPOSURE = \int A(E) \phi_{E} * time_{obs} \, dE / \int \phi_{E} \, dE`
+        If for_integral_flux is true, :math:`EXPOSURE = \int A(E) \phi_{E} * time_{obs} \, dE / \int \phi_{E} \, dE`
 
 
         Parameters
@@ -266,7 +266,7 @@ class ImageAnalysis(object):
             Number of the observation
         spectral_index : float
             Assumed power-law spectral index
-        exposure_weighted_spectrum : bool
+        for_integral_flux : bool
             True if you want that the total excess / exposure gives the integrated flux
 
         """
@@ -293,7 +293,7 @@ class ImageAnalysis(object):
         aeff2d = obs.aeff
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         exposure_tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
-        if exposure_weighted_spectrum:
+        if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
             exposure_tab /= norm
 
@@ -304,20 +304,20 @@ class ImageAnalysis(object):
         exposure.data[offset >= self.offset_band[1]] = 0
         self.maps["exposure"] = exposure
 
-    def make_total_exposure(self, spectral_index=2.3, exposure_weighted_spectrum=False):
+    def make_total_exposure(self, spectral_index=2.3, for_integral_flux=False):
         """Compute the exposure map for all the observations in the obs_table.
 
         Parameters
         ----------
         spectral_index : float
             Assumed power-law spectral index
-        exposure_weighted_spectrum : bool
+        for_integral_flux : bool
             True if you want that the total excess / exposure gives the integrated flux
         """
         exposure_map = SkyMap.empty_like(self.empty_image)
         for obs_id in self.obs_table['OBS_ID']:
             if not self._low_counts(obs_id):
                 continue
-            self.make_exposure(obs_id, spectral_index, exposure_weighted_spectrum)
+            self.make_exposure(obs_id, spectral_index, for_integral_flux)
             exposure_map.data += self.maps["exposure"].data
         self.maps["total_exposure"] = exposure_map
