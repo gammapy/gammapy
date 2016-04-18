@@ -86,11 +86,9 @@ class ExclusionMask(SkyMap):
         """
         from matplotlib import colors
 
-        if 'cmap' not in locals():
-            cmap = colors.ListedColormap(['black', 'lightgrey'])
+        kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
+        kwargs.setdefault('origin', 'lower')
 
-        kwargs['cmap'] = cmap
-        kwargs['origin'] = 'lower'
         super(ExclusionMask, self).plot(ax, fig, **kwargs)
 
     @lazyproperty

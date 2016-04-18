@@ -379,7 +379,7 @@ class SkyMap(object):
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
 
-    def plot(self, axes=None, fig=None, **kwargs):
+    def plot(self, ax=None, fig=None, **kwargs):
         """
         Plot sky map on matplotlib WCS axes.
         
@@ -388,15 +388,22 @@ class SkyMap(object):
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
         """
-        caxes = axes.imshow(self.data, **kwargs)
+        import matplotlib.pyplot as plt
+
+        if fig is None and ax is None:
+            fig = plt.gcf() 
+            ax = fig.add_subplot(1,1,1,projection=self.wcs)
+
+
+        caxes = ax.imshow(self.data, **kwargs)
         unit = self.unit or 'A.E.'
         cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
         try:
-            axes.coords['glon'].set_axislabel('Galactic Longitude')
-            axes.coords['glat'].set_axislabel('Galactic Latitude')
+            ax.coords['glon'].set_axislabel('Galactic Longitude')
+            ax.coords['glat'].set_axislabel('Galactic Latitude')
         except KeyError:
-            axes.coords['ra'].set_axislabel('Right Ascension')
-            axes.coords['dec'].set_axislabel('Declination')
+            ax.coords['ra'].set_axislabel('Right Ascension')
+            ax.coords['dec'].set_axislabel('Declination')
 
     def info(self):
         """
