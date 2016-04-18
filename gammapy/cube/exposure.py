@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
-from .spectral_cube import SpectralCube
+from .core import SkyCube
 from ..utils.energy import EnergyBounds
 
 __all__ = [
@@ -26,14 +26,14 @@ def exposure_cube(pointing,
         Livetime
     aeff2d : `~gammapy.irf.EffectiveAreaTable2D`
         Effective area table
-    ref_cube : `~gammapy.data.SpectralCube`
+    ref_cube : `~gammapy.data.SkyCube`
         Reference cube used to define geometry
     offset_max : `~astropy.coordinates.Angle`
         Maximum field of view offset.
 
     Returns
     -------
-    expcube : `~gammapy.data.SpectralCube`
+    expcube : `~gammapy.data.SkyCube`
         Exposure cube (3D)
     """    
     ny, nx = ref_cube.data.shape[1:]
@@ -48,9 +48,9 @@ def exposure_cube(pointing,
     exposure = np.rollaxis(exposure, 2)
     exposure *= livetime
 
-    expcube = SpectralCube(data=exposure,
-                           wcs=ref_cube.wcs,
-                           energy=ref_cube.energy)
+    expcube = SkyCube(data=exposure,
+                      wcs=ref_cube.wcs,
+                      energy=ref_cube.energy)
     return expcube
 
 
@@ -61,12 +61,12 @@ def obs_exposure_cube(obs, ref_cube=None):
     ----------
     obs : `gammapy.data.Observation`
         Observation
-    ref_cube : `~gammapy.data.SpectralCube`
+    ref_cube : `~gammapy.data.SkyCube`
         Reference cube used to define geometry
 
     Returns
     -------
-    expcube : `~gammapy.data.SpectralCube`
+    expcube : `~gammapy.data.SkyCube`
         3D exposure
     """
     # TODO: the observation class still needs to be implemented first!

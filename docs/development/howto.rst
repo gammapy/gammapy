@@ -111,24 +111,6 @@ Note that this means that in the definition of an "end-user namespace", e.g. in 
 ``gammapy/data/__init__.py`` file, the imports have to be sorted in a way such that
 modules in ``gammapy/data`` are loaded when imported from other modules in that sub-package.
 
-.. _development-data_subclasses:
-
-Why we don't sub-class other data classes
------------------------------------------
-
-We have considered re-using data classes developed by others,
-namely `~astropy.nddata.NDData` and the
-`spectral_cube.SpectralCube <http://spectral-cube.readthedocs.org/en/latest/index.html>`__
-classes.
-
-But in both cases, the data model didn't really fit our use cases for gamma-ray astronomy
-and so we decided to write our own data classes from scratch.
-
-Here's some issues where this was discussed:
-
-* https://github.com/radio-astro-tools/spectral-cube/issues/110
-* https://github.com/astropy/astropy/pull/2855#issuecomment-52610106
-
 .. _development-result_object:
 
 Functions returning several values
@@ -138,7 +120,7 @@ Functions that return more than a single value shouldn't return a list
 or dictionary of values but rather a Python Bunch result object. A Bunch
 is similar to a dict, except that it allows attribute access to the result
 values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
-An example of how Bunches are used in gammapy is given by the `~gammapy.detect.TSMapResult`
+An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyMapCollection`
 class.
 
 .. _development-python2and3:
@@ -588,8 +570,8 @@ In these cases, the following shorter format omitting the *Returns* section is r
 Usually the parameter description doesn't fit on the one line, so it's
 recommended to always keep this in the *Parameters* section.
 
-This is just a recommendation, e.g. for `gammapy.cube.SpectralCube.spectral_index`
-we decided to use this shorter format, but for `gammapy.cube.SpectralCube.flux` we
+This is just a recommendation, e.g. for `gammapy.cube.SkyCube.spectral_index`
+we decided to use this shorter format, but for `gammapy.cube.SkyCube.flux` we
 decided to stick with the more verbose format, because the return type and units
 didn't fit on the first line.
 
@@ -611,7 +593,7 @@ Class attributes
 ++++++++++++++++
 
 Class attributes (data members) and properties are currently a bit of a mess,
-see `~gammapy.cube.SpectralCube` as an example.
+see `~gammapy.cube.SkyCube` as an example.
 Attributes are listed in an *Attributes* section because I've listed them in a class-level
 docstring attributes section as recommended `here`__.
 Properties are listed in separate *Attributes summary* and *Attributes Documentation*
