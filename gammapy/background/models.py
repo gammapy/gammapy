@@ -129,7 +129,7 @@ def _poisson_gauss_smooth(counts, bkg):
 
     """
     from scipy.ndimage import convolve
-
+    Nev = np.sum(counts)
     Np = len(counts)
     # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma
     Npix_sigma = (150 / Nev) * Np
