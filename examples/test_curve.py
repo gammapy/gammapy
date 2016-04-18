@@ -1,6 +1,5 @@
 """Example how to make an acceptance curve and background model image.
 """
-import numpy as np
 from astropy.table import Table
 import astropy.units as u
 from astropy.io import fits
@@ -11,16 +10,13 @@ from gammapy.background import EnergyOffsetBackgroundModel
 from gammapy.utils.energy import EnergyBounds, Energy
 from gammapy.data import DataStore
 from gammapy.utils.axis import sqrt_space
-from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask, SkyMapCollection
+from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask
 from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 from gammapy.background import OffDataBackgroundMaker
 from gammapy.scripts import ImageAnalysis
-from gammapy.data import ObservationTable
-# from gammapy.detect import compute_ts_map
 import matplotlib.pyplot as plt
-from gammapy.utils.scripts import make_path
 
 plt.ion()
 
@@ -163,16 +159,17 @@ def make_image_from_2d_bg():
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
-    image = SkyMap.empty(nxpix=1000, nypix=1000, binsz=0.01, xref=center.l.deg,
+    image = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
                          yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     refheader = image.to_image_hdu().header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(refheader=refheader)
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
-                           exclusion_mask=exclusion_mask)
+                           obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
 
-    images.make_maps(radius=10.)
+    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, exposure_weighted_spectrum = True)
+    # images.make_total_exposure()
     filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
 
