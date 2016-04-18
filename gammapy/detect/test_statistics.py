@@ -40,7 +40,7 @@ def _extract_array(array, shape, position):
     """Helper function to extract parts of a larger array.
 
     Simple implementation of an array extract function , because
-    `~astropy.ndata.utils.extract_array` introduces to much overhead.`
+    `~astropy.ndata.utils.extract_array` introduces too much overhead.`
 
     Parameters
     ----------

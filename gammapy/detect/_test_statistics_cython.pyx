@@ -61,13 +61,11 @@ def _x_best_leastsq(np.ndarray[np.float_t, ndim=2] counts,
     weights : `~numpy.ndarray`
         Fit weights.
     """
-    cdef np.float_t sum
-    cdef np.float_t norm
+    cdef np.float_t sum = 0
+    cdef np.float_t norm = 0
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    sum = 0
-    norm = 0
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0 and weights[j, i] > 0:
@@ -114,10 +112,21 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR
 
 
-cdef extern from "math.h":
-    float log2(float x)
+IF UNAME_SYSNAME == "Windows":
+    # Windows fall back for log2, which was only introduced in MSVC 2010
+    cdef extern from "math.h":
+        float log(float x)
 
-cdef np.float_t LOG2_TO_E = 0.69314718055994529
+    cdef np.float_t LOG2_TO_E = 1.
+
+    def log2(x):
+        return log(x)
+ELSE:
+    cdef extern from "math.h":
+        float log2(float x)
+
+    cdef np.float_t LOG2_TO_E = 0.69314718055994529
+
 
 @cython.cdivision(True)
 @cython.boundscheck(False)

@@ -1,21 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import sys
-
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
-
 from astropy.convolution import Gaussian2DKernel
-from astropy.tests.helper import pytest
-
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map
 from ...datasets import load_poisson_stats_image
 from ...image.utils import upsample_2N, downsample_2N
 
-OS_WINDOWS = sys.platform.startswith('win') and sys.version_info < (3,0)
-
-@pytest.mark.skipif('OS_WINDOWS')
 @requires_dependency('scipy')
 @requires_dependency('skimage')
 @requires_data('gammapy-extra')
