@@ -20,8 +20,6 @@ from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N, SkyMapCollection)
-from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
-                                      _cash_sum_cython, _f_cash_root_cython)
 
 __all__ = [
     'compute_ts_map',

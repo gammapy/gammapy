@@ -7,6 +7,9 @@ cimport cython
 cdef np.float_t FLUX_FACTOR = 1E-12
 
 
+cdef extern from "math.h":
+    float log(float x)
+
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
@@ -26,11 +29,10 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    cdef np.float_t sum
+    cdef np.float_t sum = 0
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    sum = 0
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
@@ -112,22 +114,6 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR
 
 
-IF UNAME_SYSNAME == "Windows":
-    # Windows fall back for log2, which was only introduced in MSVC 2010
-    cdef extern from "math.h":
-        float log(float x)
-
-    cdef np.float_t LOG2_TO_E = 1.
-
-    def log2(x):
-        return log(x)
-ELSE:
-    cdef extern from "math.h":
-        float log2(float x)
-
-    cdef np.float_t LOG2_TO_E = 0.69314718055994529
-
-
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
@@ -146,12 +132,14 @@ def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    cdef np.ndarray[np.float_t, ndim=2] cash = np.zeros([nj, ni], dtype=float)
+    cdef np.ndarray[np.float_t, ndim=2] cash = np.empty([nj, ni], dtype=float)
 
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
-                cash[j, i] = 2 * (model[j, i] - counts[j, i] * log2(model[j, i]) * LOG2_TO_E)
+                cash[j, i] = 2 * (model[j, i] - counts[j, i] * log(model[j, i]))
+            else:
+                cash[j, i] = 0 
     return cash
 
 @cython.cdivision(True)
@@ -175,6 +163,6 @@ def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
-                sum += model[j, i] - counts[j, i] * log2(model[j, i]) * LOG2_TO_E
+                sum += model[j, i] - counts[j, i] * log(model[j, i])
     return 2 * sum
 

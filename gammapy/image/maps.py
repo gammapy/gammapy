@@ -84,9 +84,9 @@ class SkyMap(object):
         wcs = WCS(header)
         meta = header
 
-        name = header.get('HDUNAME')
+        name = header.get('EXTNAME')
         if name is None:
-            name = header.get('EXTNAME')
+            name = header.get('HDUNAME')
         try:
             # Valitade unit string
             unit = Unit(header['BUNIT'], format='fits').to_string()
@@ -335,6 +335,7 @@ class SkyMap(object):
             # Add meta data
             header.update(self.meta)
             header['BUNIT'] = self.unit
+            header['HDUNAME'] = self.name
         else:
             header = None
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
