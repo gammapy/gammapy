@@ -370,7 +370,7 @@ class EffectiveAreaTable2D(object):
         self._thres_hi = thres_hi
 
         if not interp_kwargs:
-            interp_kwargs = dict(bounds_error=False)
+            interp_kwargs = dict(bounds_error=False, fill_value = None)
 
         self._prepare_linear_interpolator(interp_kwargs)
         self._prepare_spline_interpolator()
