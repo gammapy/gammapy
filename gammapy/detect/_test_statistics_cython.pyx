@@ -7,6 +7,9 @@ cimport cython
 cdef np.float_t FLUX_FACTOR = 1E-12
 
 
+cdef extern from "math.h":
+    float log(float x)
+
 @cython.cdivision(True)
 @cython.boundscheck(False)
 def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
@@ -26,17 +29,51 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
-    cdef np.float_t sum
+    cdef np.float_t sum = 0
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    sum = 0
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
                 sum += (model[j, i] * (counts[j, i] / (x * FLUX_FACTOR * model[j, i]
                                                        + background[j, i]) - 1))
     return sum
+
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
+def _x_best_leastsq(np.ndarray[np.float_t, ndim=2] counts,
+                    np.ndarray[np.float_t, ndim=2] background,
+                    np.ndarray[np.float_t, ndim=2] model,
+                    np.ndarray[np.float_t, ndim=2] weights):
+    """
+    Best fit amplitude using weighted least squares fit.
+
+    For a single parameter amplitude fit this can be solved analytically.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Count map.
+    background : `~numpy.ndarray`
+        Background map.
+    model : `~numpy.ndarray`
+        Source template (multiplied with exposure).
+    weights : `~numpy.ndarray`
+        Fit weights.
+    """
+    cdef np.float_t sum = 0
+    cdef np.float_t norm = 0
+    cdef unsigned int i, j, ni, nj
+    ni = counts.shape[1]
+    nj = counts.shape[0]
+    for j in range(nj):
+        for i in range(ni):
+            if model[j, i] > 0 and weights[j, i] > 0:
+                sum += (counts[j, i] - background[j, i]) * model[j, i] / weights[j, i]
+                norm += model[j, i] * model[j, i] / weights[j, i]
+    return sum / norm
 
 
 @cython.cdivision(True)
@@ -77,10 +114,8 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR
 
 
-cdef extern from "math.h":
-    float log(float x)
-
-
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
                  np.ndarray[np.float_t, ndim=2] model):
     """
@@ -97,15 +132,18 @@ def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
-    cdef np.ndarray[np.float_t, ndim=2] cash = np.zeros([nj, ni], dtype=float)
+    cdef np.ndarray[np.float_t, ndim=2] cash = np.empty([nj, ni], dtype=float)
 
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
                 cash[j, i] = 2 * (model[j, i] - counts[j, i] * log(model[j, i]))
+            else:
+                cash[j, i] = 0 
     return cash
 
-
+@cython.cdivision(True)
+@cython.boundscheck(False)
 def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
                      np.ndarray[np.float_t, ndim=2] model):
     """
@@ -127,3 +165,4 @@ def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
             if model[j, i] > 0:
                 sum += model[j, i] - counts[j, i] * log(model[j, i])
     return 2 * sum
+

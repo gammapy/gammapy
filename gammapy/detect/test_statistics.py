@@ -9,18 +9,17 @@ from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
 import numpy as np
-from astropy.convolution import Tophat2DKernel, Model2DKernel, Gaussian2DKernel
+from astropy.convolution import Model2DKernel, Gaussian2DKernel
 from astropy.convolution.kernels import _round_up_to_odd_integer
-from astropy.nddata.utils import extract_array
 from astropy.io import fits
+from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
+                                      _cash_sum_cython, _f_cash_root_cython,
+                                      _x_best_leastsq)
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
-from ..extern.zeros import newton
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
                      shape_2N, SkyMapCollection)
-from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
-                                      _cash_sum_cython, _f_cash_root_cython)
 
 __all__ = [
     'compute_ts_map',
@@ -33,6 +32,31 @@ log = logging.getLogger(__name__)
 FLUX_FACTOR = 1E-12
 MAX_NITER = 20
 CONTAINMENT = 0.8
+
+
+def _extract_array(array, shape, position):
+    """Helper function to extract parts of a larger array.
+
+    Simple implementation of an array extract function , because
+    `~astropy.ndata.utils.extract_array` introduces too much overhead.`
+
+    Parameters
+    ----------
+    array : `~numpy.ndarray`
+        The array from which to extract.
+    shape : tuple or int
+        The shape of the extracted array.
+    position : tuple of numbers or number
+        The position of the small array's center with respect to the
+        large array.
+    """
+    x_width = shape[0] // 2
+    y_width = shape[0] // 2
+    y_lo = position[0] - y_width
+    y_hi = position[0] + y_width + 1
+    x_lo = position[1] - x_width
+    x_hi = position[1] + x_width + 1
+    return array[y_lo:y_hi, x_lo:x_hi]
 
 
 def f_cash(x, counts, background, model):
@@ -265,6 +289,11 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
 
+    # Parse data type
+    counts = counts.astype(float)
+    background = background.astype(float)
+    exposure = exposure.astype(float)
+
     # in some maps there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation
     # to fail, this is a temporary fix
@@ -276,17 +305,15 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         exposure[mask_] = 0
 
     if (flux is None and method != 'root brentq') or threshold is not None:
-        from scipy.ndimage import convolve
-        radius = _flux_correlation_radius(kernel)
-        tophat = Tophat2DKernel(radius, mode='oversample') * np.pi * radius ** 2
-        log.info('Using correlation radius of {0:.1f} pix to estimate'
-                 ' initial flux.'.format(radius))
+        from scipy.signal import fftconvolve
+
         with np.errstate(invalid='ignore', divide='ignore'):
             flux = (counts - background) / exposure / FLUX_FACTOR
-        flux = convolve(flux, tophat.array) / CONTAINMENT
+        flux[~np.isfinite(flux)] = 0
+        flux = fftconvolve(flux, kernel.array, mode='same') / np.sum(kernel.array ** 2)
 
     # Compute null statistics for the whole map
-    C_0_map = _cash_cython(counts.astype(float), background.astype(float))
+    C_0_map = _cash_cython(counts, background)
 
     x_min, x_max = kernel.shape[1] // 2, counts.shape[1] - kernel.shape[1] // 2
     y_min, y_max = kernel.shape[0] // 2, counts.shape[0] - kernel.shape[0] // 2
@@ -297,9 +324,9 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
         mask = exposure > 0
     positions = [(j, i) for j, i in positions if mask[j][i]]
 
-    wrap = partial(_ts_value, counts=counts, exposure=exposure,
-                   background=background, C_0_map=C_0_map, kernel=kernel, flux=flux,
-                   method=method, threshold=threshold)
+    wrap = partial(_ts_value, counts=counts, exposure=exposure, background=background,
+                   C_0_map=C_0_map, kernel=kernel, flux=flux, method=method,
+                   threshold=threshold)
 
     if parallel:
         log.info('Using {0} cores to compute TS map.'.format(cpu_count()))
@@ -357,11 +384,11 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         TS value at the given pixel position.
     """
     # Get data slices
-    counts_ = extract_array(counts, kernel.shape, position).astype(float)
-    background_ = extract_array(background, kernel.shape, position).astype(float)
-    exposure_ = extract_array(exposure, kernel.shape, position).astype(float)
-    C_0_ = extract_array(C_0_map, kernel.shape, position)
-    model = (exposure_ * kernel._array).astype(float)
+    counts_ = _extract_array(counts, kernel.shape, position)
+    background_ = _extract_array(background, kernel.shape, position)
+    exposure_ = _extract_array(exposure, kernel.shape, position)
+    C_0_ = _extract_array(C_0_map, kernel.shape, position)
+    model = (exposure_ * kernel._array)
 
     C_0 = C_0_.sum()
 
@@ -372,16 +399,21 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
         if C_0 - C_1 < threshold:
             return C_0 - C_1, flux[position] * FLUX_FACTOR, 0
 
-    if method == 'fit minuit':
+    if method == 'root brentq':
+        amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
+
+    elif method == 'fit minuit':
         amplitude, niter = _fit_amplitude_minuit(counts_, background_, model,
                                                  flux[position])
     elif method == 'fit scipy':
         amplitude, niter = _fit_amplitude_scipy(counts_, background_, model)
+
     elif method == 'root newton':
         amplitude, niter = _root_amplitude(counts_, background_, model,
                                            flux[position])
-    elif method == 'root brentq':
-        amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
+    elif method == 'leastsq iter':
+        amplitude, niter = _leastsq_iter_amplitude(counts_, background_, model)
+
     else:
         raise ValueError('Invalid fitting method.')
 
@@ -394,6 +426,42 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
 
     # Compute and return TS value
     return (C_0 - C_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
+
+
+def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.01):
+    """Fit amplitude using an iterative least squares algorithm.
+
+    Parameters
+    ----------
+    counts : `~numpy.ndarray`
+        Slice of count map.
+    background : `~numpy.ndarray`
+        Slice of background map.
+    model : `~numpy.ndarray`
+        Model template to fit.
+    maxiter : int 
+        Maximum number of iterations.
+    rtol : float
+        Relative flux error.
+
+    Returns
+    -------
+    amplitude : float
+        Fitted flux amplitude.
+    niter : int
+        Number of function evaluations needed for the fit.
+    """
+    weights = np.ones(model.shape)
+
+    x_old = 0
+    for i in range(maxiter):
+        x =_x_best_leastsq(counts, background, model, weights)
+        if abs((x - x_old) / x) < rtol:
+            return x / FLUX_FACTOR, i + 1
+        else:
+            weights = x * model + background
+            x_old = x
+    return x, MAX_NITER
 
 
 def _root_amplitude(counts, background, model, flux):
@@ -419,11 +487,13 @@ def _root_amplitude(counts, background, model, flux):
     niter : int
         Number of function evaluations needed for the fit.
     """
+    from scipy.optimize import newton
+
     args = (counts, background, model)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
-            return newton(_f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=0.1)
+            return newton(_f_cash_root_cython, flux, args=args, maxiter=MAX_NITER, tol=1E-2), 0
         except RuntimeError:
             # Where the root finding fails NaN is set as amplitude
             return np.nan, MAX_NITER
@@ -491,6 +561,7 @@ def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
         Number of function evaluations needed for the fit.
     """
     from scipy.optimize import minimize_scalar
+
     args = (counts, background, model)
     amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
     try:

@@ -20,13 +20,13 @@ def test_compute_ts_map(tmpdir):
         data[_] = downsample_2N(data[_], 2, func)
 
     result = compute_ts_map(data['counts'], data['background'], data['exposure'],
-                            kernel)
+                            kernel, method='leastsq iter')
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = np.nan_to_num(result[name])
         result[name] = upsample_2N(result[name], 2, order=order)
 
     assert_allclose(1705.840212274973, result.ts.data[99, 99], rtol=1e-3)
-    assert_allclose([[99], [99]], np.where(result.ts == result.ts.data.max()))
-    assert_allclose(6, result.niter.data[99, 99])
+    assert_allclose([[99], [99]], np.where(result.ts.data == result.ts.data.max()))
+    assert_allclose(3, result.niter.data[99, 99])
     assert_allclose(1.0227934338735763e-09, result.amplitude.data[99, 99], rtol=1e-3)
 

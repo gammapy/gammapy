@@ -77,7 +77,6 @@ def cash(n_observed, mu_observed):
 
     stat = 2 * (mu_observed - n_observed * np.log(mu_observed))
     stat = np.where(mu_observed > 0, stat, 0)
-
     return stat
 
 
