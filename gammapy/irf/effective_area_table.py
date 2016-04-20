@@ -582,7 +582,7 @@ class EffectiveAreaTable2D(object):
         offset : `~astropy.coordinates.Angle`
             Offset axis
         energy : `~gammapy.utils.energy.Energy`
-            Energy 
+            Energy
 
         Returns
         -------
@@ -650,7 +650,7 @@ class EffectiveAreaTable2D(object):
         ax.set_xlabel('Offset ({0})'.format(offset.unit))
         ax.set_ylabel('Energy ({0})'.format(energy.unit))
         ax.set_title('Effective Area ({0})'.format(aeff.unit))
-       
+
         ax.legend()
 
         return ax

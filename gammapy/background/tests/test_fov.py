@@ -13,7 +13,7 @@ from ...image import SkyMap
 
 @requires_dependency('scipy')
 def test_fill_acceptance_image():
-    # TODO: the code can be simplified, taking full advantage of the SkyMap class. 
+    # TODO: the code can be simplified, taking full advantage of the SkyMap class.
     # create empty image
     # odd number of pixels needed for having the center in its own pixel
     bin_size = Angle(0.1, 'deg')
@@ -21,7 +21,7 @@ def test_fill_acceptance_image():
                          xref=0, yref=0, fill=0, proj='CAR', coordsys='GAL',
                          xrefpix=None, yrefpix=None, dtype='float32')
     image = image.to_image_hdu()
-    
+
     # define center coordinate of the image in wolrd and pixel coordinates
     lon = image.header['CRVAL1']
     lat = image.header['CRVAL2']

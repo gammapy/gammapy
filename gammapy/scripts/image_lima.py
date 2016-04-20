@@ -33,7 +33,7 @@ def image_lima(infile, outfile, theta, onoff, residual, overwrite):
     data = SkyMapCollection.read(infile)
     if residual:
         data.background += data.model
-    
+
     for t in theta:
         # Convert theta to pix
         theta_pix = t / data._ref_header['CDELT2']

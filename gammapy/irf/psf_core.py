@@ -83,7 +83,7 @@ class SherpaMultiGaussPSF(object):
             for _ in ['psf1', 'psf2', 'psf3']:
                 par = sau.get_par(_ + '.xpos')
                 par.val = nx / 2.
-                
+
                 par = sau.get_par(_ + '.ypos')
                 par.val = ny / 2.
         except:
@@ -97,7 +97,7 @@ class SherpaMultiGaussPSF(object):
         sau.load_psf('psf', sau.get_model())
         self.center_psf()
         sau.set_psf('psf')
-        
+
     def evaluate(self, t, ampl1, fwhm1, ampl2, fwhm2, ampl3, fwhm3):
         """Hand-coded evaluate for debugging."""
         f = 4 * np.log(2)

@@ -12,7 +12,7 @@ from ..utils.energy import EnergyBounds
 # TODO:
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
- 
+
 
 __all__ = [
     'atrous_hdu',
@@ -208,7 +208,7 @@ def downsample_2N(image, factor, method=np.nansum, shape=None):
     if shape is not None:
         x_pad = (shape[1] - image.shape[1]) // 2
         y_pad = (shape[0] - image.shape[0]) // 2
-        #converting from unicode to ascii string as a workaround 
+        #converting from unicode to ascii string as a workaround
         #for https://github.com/numpy/numpy/issues/7112
         image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
     return block_reduce(image, (factor, factor), method)
@@ -361,7 +361,7 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
     """Get coordinate images for a given image.
     This function is useful if you want to compute
     an image with values that are a function of position.
-    
+
     Parameters
     ----------
     image : `~astropy.io.fits.ImageHDU` or `~numpy.ndarray`
@@ -372,13 +372,13 @@ def coordinates(image, world=True, lon_sym=True, radians=False):
         Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
     radians : bool, optional
         Return coordinates in radians or degrees?
-    
+
     Returns
     -------
     (lon, lat) : tuple of arrays
         Images as numpy arrays with values
         containing the position of the given pixel.
-    
+
     Examples
     --------
     >>> import numpy as np
@@ -696,7 +696,7 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     shape : tuple
         Tuple defining the spatial shape.
     energies : `~gammapy.utils.energy.EnergyBounds`
-        Energy bounds defining the binning. If None only one energy bin defined 
+        Energy bounds defining the binning. If None only one energy bin defined
         by the minimum and maximum event energy is used.
     origin : {0, 1}
         Pixel coordinate origin.
@@ -714,7 +714,7 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
 
     xx, yy = wcs.wcs_world2pix(lon, lat, origin)
     event_energies = events['ENERGY']
-    
+
     if energies is None:
         emin = np.min(event_energies)
         emax = np.max(event_energies)
@@ -727,7 +727,7 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     # http://cta.irap.omp.eu/ctools/
     bins = np.arange(shape[0]), np.arange(shape[1] + 1) - 0.5, np.arange(shape[2] + 1) - 0.5
     return Quantity(np.histogramdd([zz, yy, xx], bins)[0], 'count')
-        
+
 
 def threshold(array, threshold=5):
     """Set all pixels below threshold to zero.

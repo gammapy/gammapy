@@ -64,7 +64,7 @@ def image_fit(counts,
     log.info('Reading background: {0}'.format(background))
     sherpa.astro.ui.load_table_model('background', background)
 
-    if psf: 
+    if psf:
         log.info('Reading PSF: {0}'.format(psf))
         SherpaMultiGaussPSF(psf).set()
     else:

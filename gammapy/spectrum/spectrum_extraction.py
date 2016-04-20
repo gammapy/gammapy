@@ -82,7 +82,7 @@ class SpectrumExtraction(object):
     def run(self, outdir=None):
         """Run all steps
 
-        Extract spectrum, update observation table, filter observations, 
+        Extract spectrum, update observation table, filter observations,
         write results to disk.
 
         Parameters
@@ -406,7 +406,7 @@ class SpectrumObservation(object):
 
         The arf, rmf and bkg files are set in the :ref:`gadf:ogip-pha` FITS
         header. If no filenames are given, default names will be chosen.
-       
+
         Parameters
         ----------
         phafile : `~gammapy.extern.pathlib.Path`, str
@@ -751,7 +751,7 @@ class SpectrumObservationList(list):
 
     def filter_by_reflected_regions(self, n_min):
         """Filter observation list according to number of reflected regions.
-       
+
         Condition: number of reflected regions >= nmin.
 
         Parameters

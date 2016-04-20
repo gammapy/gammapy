@@ -28,9 +28,9 @@ def test_image_lat_profile():
     image = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
     l, b = image.coordinates('galactic')
     lons, lats = l.degree, b.degree
-    
+
     counts = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
-    
+
     mask = np.zeros_like(image.data)
     # Select Full Image
     lat = [lats.min(), lats.max()]

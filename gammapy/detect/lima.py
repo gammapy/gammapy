@@ -19,7 +19,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
     """
     Compute Li&Ma significance and flux maps for known background.
 
-    If exposure is given the corresponding flux map is computed and returned.  
+    If exposure is given the corresponding flux map is computed and returned.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
     background : `~numpy.ndarray`
         Background map
     kernel : `astropy.convolution.Kernel2D`
-        convolution kernel. 
+        convolution kernel.
     exposure : `~numpy.ndarray`
         Exposure map
 
@@ -54,7 +54,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
     counts_ = convolve(counts, kernel.array, mode='constant', cval=np.nan)
     background_ = convolve(background, kernel.array, mode='constant', cval=np.nan)
 
-    significance_lima = significance(counts_, background_, method='lima') 
+    significance_lima = significance(counts_, background_, method='lima')
 
     result = SkyMapCollection(significance=significance_lima,
                        counts=counts_,
@@ -85,14 +85,14 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
     a_off : `~numpy.ndarray`
         Relative background efficiency in the off region
     kernel : `astropy.convolution.Kernel2D`
-        convolution kernel. 
+        convolution kernel.
     exposure : `~numpy.ndarray`
         Exposure map.
-    
+
     Returns
     -------
     SkyMapCollection : `gammapy.data.maps.SkyMapCollection`
-        Bunch of result maps.   
+        Bunch of result maps.
 
     See also
     --------
@@ -114,7 +114,7 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
     background = alpha * n_off
 
     significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
-    
+
     result = SkyMapCollection(significance=significance_lima,
                        n_on=n_on_,
                        background=background,

@@ -29,7 +29,7 @@ def test_compute_lima_map():
     kernel.normalize('integral')
     result_ts = compute_ts_map(data['counts'], data['background'], data['exposure'],
                             kernel)
-    
+
     assert_allclose(result_ts.sqrt_ts, result_lima.significance, atol=1E-3)
     assert_allclose(result_ts.amplitude, result_lima.flux, atol=3E-12)
 
@@ -48,7 +48,7 @@ def test_compute_lima_on_off_map():
 
     result_lima = compute_lima_on_off_map(maps.on.data, maps.off.data, maps.onexposure.data,
                                           maps.offexposure.data, kernel)
-    
+
     # reproduce safe significance threshold from HESS software
     result_lima.significance.data[result_lima.n_on.data < 5] = 0
 

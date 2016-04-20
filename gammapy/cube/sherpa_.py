@@ -9,7 +9,7 @@ from sherpa.utils.err import DataErr, NotImplementedErr
 from sherpa.utils import SherpaFloat, NoNewAttributesAfterInit, \
      print_fields, create_expr, calc_total_error, bool_cast, \
      filter_bins, interpolate, linear_interp
-        
+
 
 
 # This class was copy pasted from sherpa.data.Data2D and modified to account
@@ -58,7 +58,7 @@ class Data3D(DataND):
 
     def get_x2(self, filter=False):
         return self.get_indep(filter)[2]
-    
+
     def get_axes(self):
         self._check_shape()
         # FIXME: how to filter an axis when self.mask is size of self.y?
@@ -123,20 +123,20 @@ class CombinedModel3D(ArithmeticModel):
     def __init__(self, name='cube-model', spatial_model=None, spectral_model=None):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
-        
+
         # Fix spectral ampl parameter
         spectral_model.ampl = 1
         spectral_model.ampl.freeze()
-        
+
         pars = []
         for _ in spatial_model.pars + spectral_model.pars:
             setattr(self, _.name, _)
             pars.append(_)
-        
+
         self._spatial_pars = slice(0, len(spatial_model.pars))
         self._spectral_pars = slice(len(spatial_model.pars), len(pars))
         ArithmeticModel.__init__(self, name, pars)
-        
+
     def calc(self, pars, elo, ehi, x, y):
         _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
         _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)

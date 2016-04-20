@@ -141,7 +141,7 @@ def _configure_root_logger(level='info', format=None):
 
 def read_yaml(filename, logger=None):
     """
-    Read config from YAML file 
+    Read config from YAML file
     """
     import yaml
     if logger is not None:

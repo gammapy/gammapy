@@ -105,7 +105,7 @@ class ExclusionMask(SkyMap):
     # TODO: right now the extension name is hardcoded to 'exclusion', because
     # single image Fits file often contain a PrimaryHDU and an ImageHDU.
     # Is there a better / more flexible solution?
-    @classmethod    
+    @classmethod
     def read(cls, fobj, *args, **kwargs):
         # Check if extension name is given, else default to 'exclusion'
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
@@ -114,7 +114,7 @@ class ExclusionMask(SkyMap):
 
 def make_tevcat_exclusion_mask():
     """Create an all-sky exclusion mask containing all TeVCat sources
-    
+
     Returns
     -------
     mask : `~gammapy.image.ExclusionMask`

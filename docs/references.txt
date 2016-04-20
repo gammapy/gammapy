@@ -49,6 +49,8 @@
 .. _Gamera: https://github.com/JoachimHahn/GAMERA
 .. _Gappa: https://pypi.python.org/pypi/gappa
 .. _gammatools: https://github.com/woodmd/gammatools
+.. _FLaapLUC: https://github.com/jlenain/flaapluc
+.. _pointlike: https://github.com/tburnett/Fermi-LAT
 .. _NaN: https://en.wikipedia.org/wiki/NaN
 
 .. _MPIK Heidelberg: http://www.mpi-hd.mpg.de/mpi/en/start/
@@ -62,6 +64,8 @@
 .. _Fermi-LAT: http://fermi.gsfc.nasa.gov/
 .. _FermiPy: https://github.com/fermiPy/fermipy
 .. _gadf: http://gamma-astro-data-formats.readthedocs.org/
+
+.. _April 2016 IACT data meeting: https://github.com/open-gamma-ray-astro/2016-04_IACT_DL3_Meeting/
 
 .. _Werner Hofmann: https://en.wikipedia.org/wiki/Werner_Hofmann_(physicist)
 .. _Jim Hinton: https://www.mpi-hd.mpg.de/mpi/en/hinton/home/
