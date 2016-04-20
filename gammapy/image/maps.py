@@ -342,12 +342,10 @@ class SkyMap(object):
         """
         if not self.wcs is None:
             header = self.wcs.to_header()
-
+        
             # Add meta data
             header.update(self.meta)
             header['BUNIT'] = self.unit
-            header['NAXIS1'] = self.data.shape[1]
-            header['NAXIS2'] = self.data.shape[0]
         else:
             header = None
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
@@ -399,7 +397,7 @@ class SkyMap(object):
         return SkyMap(name=self.name, data=out[0], wcs=wcs_reference,
                       unit=self.unit, meta=self.meta)
 
-    def show(self, viewer='mpl', **kwargs):
+    def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
         Show sky map in image viewer.
 
@@ -407,24 +405,25 @@ class SkyMap(object):
         ----------
         viewer : {'mpl', 'ds9'}
             Which image viewer to use. Option 'ds9' requires ds9 to be installed.
-        options : list, optional
+        ds9options : list, optional
             List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
             Any valid ds9 command line option can be passed. 
             See http://ds9.si.edu/doc/ref/command.html for details. 
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow` or ds9.
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         """
         if viewer == 'mpl':
             # TODO: replace by better MPL or web based image viewer 
             import matplotlib.pyplot as plt
-            fig = plt.figure()
+            fig = plt.gcf()
             axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
             self.plot(axes, fig, **kwargs)
             plt.show()
         elif viewer == 'ds9':
+            ds9options = ds9options or []
             with NamedTemporaryFile() as f:
                 self.write(f)
-                call(['ds9', f.name, '-cmap', 'bb'] + kwargs.get('options', []))
+                call(['ds9', f.name, '-cmap', 'bb'] + ds9options)
         else:
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
@@ -446,7 +445,11 @@ class SkyMap(object):
 
         caxes = ax.imshow(self.data, **kwargs)
         unit = self.unit or 'A.E.'
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
+        if unit == 'ct':
+            quantity = 'counts'
+        else:
+            quantity = Unit(self.unit).physical_type 
+        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')
