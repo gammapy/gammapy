@@ -149,7 +149,7 @@ setup(
       'Programming Language :: Python :: 3.5',
       'Programming Language :: Python :: Implementation :: CPython',
       'Topic :: Scientific/Engineering :: Astronomy',
-      'Development Status :: 3 - Beta',
+      'Development Status :: 3 - Alpha',
     ],
     cmdclass=cmdclassd,
     zip_safe=False,
