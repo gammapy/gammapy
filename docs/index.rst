@@ -24,7 +24,7 @@ install (see instructions on the :ref:`install` page).
 (Caveat: for modeling and fitting we use Sherpa at the moment, which is not available on
 Windows and porting to Python 3 is still work in progress.)
 
-Once you have it running, we suggest you head over to the 5 minute :ref:`getting-started` tutorial.
+Once you have it running, we suggest you head over to the :ref:`getting-started` tutorial.
 
 .. _gammapy_news:
 

@@ -76,6 +76,7 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
 
+- [#518] Fixes and cleanup for SkyMap (Axel Donath)
 - [#511] Add exposure image computation (Lea Jouvin)
 - [#510] Add acceptance curve smoothing method (Lea Jouvin)
 - [#507] Add Fermi catalog spectrum evaluation and plotting (Johannes King)
