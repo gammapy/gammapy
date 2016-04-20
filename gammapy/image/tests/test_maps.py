@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from astropy.coordinates import SkyCoord
@@ -73,8 +74,15 @@ class TestSkyMapPoisson():
         assert center.galactic.l == 0
         assert center.galactic.b == 0
 
+    def test_fill_float(self):
+        
+        skymap = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int', 
+                              coordsys='CEL')
+        skymap.fill(42)
+        assert_equal(skymap.data, np.full((200, 200), 42))
+
     @requires_data('gammapy-extra')
-    def test_fill(self):
+    def test_fill_events(self):
         dirname = '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2'
         data_store = DataStore.from_dir(dirname)
 
@@ -84,5 +92,14 @@ class TestSkyMapPoisson():
                               yref=events.meta['DEC_OBJ'], dtype='int', 
                               coordsys='CEL')
         counts.fill(events)
-        assert counts.data.sum().value == 1233
+        assert counts.data.sum() == 1233
         assert counts.data.shape == (200, 200)
+
+    @requires_dependency('reproject')
+    def test_reproject(self):
+        skymap_1 = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
+        skymap_2 = SkyMap.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
+                                coordsys='CEL')
+        skymap_1.fill(1)
+        skymap_1_repr = skymap_1.reproject(skymap_2)
+        assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
