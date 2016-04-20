@@ -447,8 +447,10 @@ class SkyMap(object):
         unit = self.unit or 'A.E.'
         if unit == 'ct':
             quantity = 'counts'
+        elif unit is 'A.E.':
+            quantity = 'Unknown'
         else:
-            quantity = Unit(self.unit).physical_type 
+            quantity = Unit(unit).physical_type 
         cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
