@@ -17,6 +17,7 @@ from ..extern.bunch import Bunch
 from ..image.utils import make_header, _bin_events_in_cube
 from ..utils.wcs import get_wcs_ctype
 from ..utils.scripts import make_path
+from ..data import EventList
 
 __all__ = ['SkyMap', 'SkyMapCollection']
 
@@ -84,9 +85,9 @@ class SkyMap(object):
         wcs = WCS(header)
         meta = header
 
-        name = header.get('EXTNAME')
+        name = header.get('HDUNAME')
         if name is None:
-            name = header.get('HDUNAME')
+            name = header.get('EXTNAME')
         try:
             # Valitade unit string
             unit = Unit(header['BUNIT'], format='fits').to_string()
@@ -179,19 +180,29 @@ class SkyMap(object):
         data = fill * np.ones_like(skymap.data)
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
-    def fill(self, events, origin=0):
+    def fill(self, value, origin=0):
         """
         Fill sky map with events.
 
         Parameters
         ----------
-        events : `~astropy.table.Table`
-            Event list table
+        value : float or `~gammapy.data.EventList`
+             Value to fill in the map. If an event list is given, events will be
+             binned in the map.
         origin : {0, 1}
             Pixel coordinate origin.
 
         """
-        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, origin=origin).sum(axis=0)
+        if isinstance(value, EventList):
+            counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
+                                         origin=origin).sum(axis=0)
+            self.data = counts.value
+            self.unit = 'ct'
+        elif np.isscalar(value):
+            self.data.fill(value)
+        else:
+            raise TypeError("Can't fill value of type {}".format(type(value)))
+
 
     def write(self, filename, *args, **kwargs):
         """
@@ -331,11 +342,10 @@ class SkyMap(object):
         """
         if not self.wcs is None:
             header = self.wcs.to_header()
-
+        
             # Add meta data
             header.update(self.meta)
             header['BUNIT'] = self.unit
-            header['HDUNAME'] = self.name
         else:
             header = None
         return fits.ImageHDU(data=self.data, header=header, name=self.name)
@@ -346,7 +356,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        reference : `~astropy.fits.Header`, `~astropy.wcs.WCS` or `SkyMap`
+        reference : `~astropy.fits.Header`, or `SkyMap`
             Reference map specification to reproject the data on. 
         mode : {'interp', 'exact'}
             Interpolation mode.
@@ -367,25 +377,27 @@ class SkyMap(object):
 
         if isinstance(reference, SkyMap):
             wcs_reference = reference.wcs
-        elif isinstance(reference, WCS):
-            wcs_reference = reference
+            shape_out = reference.data.shape
         elif isinstance(reference, fits.Header):
             wcs_reference = WCS(reference)
+            shape_out = (reference['NAXIS2'], reference['NAXIS1'])
         else:
             raise TypeError("Invalid reference map must be either instance"
                             "of `Header`, `WCS` or `SkyMap`.")
 
         if mode == 'interp':
-            out = reproject_interp((self.data, wcs_reference), *args, **kwargs)
+            out = reproject_interp((self.data, self.wcs), wcs_reference,
+                                    shape_out=shape_out, *args, **kwargs)
         elif mode == 'exact':
-            out = reproject_exact((self.data, wcs_reference) *args, **kwargs)
+            out = reproject_exact((self.data, self.wcs), wcs_reference,
+                                   shape_out=shape_out, *args, **kwargs)
         else:
             raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
 
         return SkyMap(name=self.name, data=out[0], wcs=wcs_reference,
                       unit=self.unit, meta=self.meta)
 
-    def show(self, viewer='mpl', **kwargs):
+    def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
         Show sky map in image viewer.
 
@@ -393,24 +405,25 @@ class SkyMap(object):
         ----------
         viewer : {'mpl', 'ds9'}
             Which image viewer to use. Option 'ds9' requires ds9 to be installed.
-        options : list, optional
+        ds9options : list, optional
             List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
             Any valid ds9 command line option can be passed. 
             See http://ds9.si.edu/doc/ref/command.html for details. 
         **kwargs : dict
-            Keyword arguments passed to `~matplotlib.pyplot.imshow` or ds9.
+            Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         """
         if viewer == 'mpl':
             # TODO: replace by better MPL or web based image viewer 
             import matplotlib.pyplot as plt
-            fig = plt.figure()
+            fig = plt.gcf()
             axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
             self.plot(axes, fig, **kwargs)
             plt.show()
         elif viewer == 'ds9':
+            ds9options = ds9options or []
             with NamedTemporaryFile() as f:
                 self.write(f)
-                call(['ds9', f.name, '-cmap', 'bb'] + kwargs.get('options', []))
+                call(['ds9', f.name, '-cmap', 'bb'] + ds9options)
         else:
             raise ValueError("Invalid image viewer option, choose either"
                              " 'mpl' or 'ds9'.")
@@ -428,12 +441,17 @@ class SkyMap(object):
 
         if fig is None and ax is None:
             fig = plt.gcf() 
-            ax = fig.add_subplot(1,1,1,projection=self.wcs)
-
+            ax = fig.add_subplot(1,1,1, projection=self.wcs)
 
         caxes = ax.imshow(self.data, **kwargs)
         unit = self.unit or 'A.E.'
-        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(self.name, unit))
+        if unit == 'ct':
+            quantity = 'counts'
+        elif unit is 'A.E.':
+            quantity = 'Unknown'
+        else:
+            quantity = Unit(unit).physical_type 
+        cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
             ax.coords['glat'].set_axislabel('Galactic Latitude')

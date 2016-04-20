@@ -12,7 +12,6 @@ from astropy.table import Table
 from gammapy.utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
-from ..image import wcs_histogram2d
 from ..time import time_ref_from_dict
 from .gti import GTI
 from .utils import _earth_location_from_dict
@@ -358,61 +357,6 @@ class EventList(Table):
             mask = np.union1d(mask, temp)
         return mask
 
-    def fill_counts_image(self, image):
-        """Fill events in counts image.
-
-        TODO: what's a good API here to support ImageHDU and Header as input?
-
-        Parameters
-        ----------
-        image : `~astropy.io.fits.ImageHDU`
-            Image HDU
-
-        Returns
-        -------
-        image : `~astropy.io.fits.ImageHDU`
-            Input image with changed data (event count added)
-
-        See also
-        --------
-        EventList.fill_counts_header
-        """
-
-        header = image.header
-        lon, lat = self._get_lon_lat(header)
-        counts_image = wcs_histogram2d(header, lon, lat)
-        temp = image.data + counts_image.data
-        image.data = temp
-        return image
-
-    def fill_counts_header(self, header):
-        """Fill events in counts image specified by a FITS header.
-
-        TODO: document. Is this a good API?
-
-        See also
-        --------
-        EventList.fill_counts_image
-        """
-        lon, lat = self._get_lon_lat(header)
-        counts_image = wcs_histogram2d(header, lon, lat)
-        return counts_image
-
-    def _get_lon_lat(self, header):
-        # TODO: this frame detection should be moved to a utility function
-        CTYPE1 = header['CTYPE1']
-        if 'RA' in CTYPE1:
-            pos = self.radec
-            lon = pos.ra.degree
-            lat = pos.dec.degree
-        elif 'GLON' in CTYPE1:
-            pos = self.galactic
-            lon = pos.l.degree
-            lat = pos.b.degree
-        else:
-            raise ValueError('CTYPE1 = {} is not supported.'.format(CTYPE1))
-
-        return lon, lat
 
     def peek(self):
         """Summary plots."""
