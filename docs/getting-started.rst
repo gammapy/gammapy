@@ -29,7 +29,7 @@ data to analyse, with which method and parameters.
 Getting set up
 --------------
 
-First, make sure you have Gammapy installed (see :ref:`installation`).
+First, make sure you have Gammapy installed (see :ref:`install`).
 
 You can use this command to make sure the Python package is available::
 
@@ -47,8 +47,15 @@ To check if ``gammapy-extra`` is available and the ``GAMMAPY_EXTRA`` shell envir
     $ echo $GAMMAPY_EXTRA
     $ ls $GAMMAPY_EXTRA/logo/gammapy_banner.png
 
-Stuck already?
-Ask for help on the `Gammapy mailing list`_!
+Need help?
+----------
+
+If you have any questions or issues with installation, setup or Gammapy usage,
+lease use the `Gammapy mailing list`_!
+
+Gammapy is a very young project, we know there are many missing features and issues.
+Please have some patience, and let us know what you want to do, so that we can set priorities.
+
 
 Using Gammapy as a Python package
 ---------------------------------
@@ -58,7 +65,7 @@ Here's a few very simple examples how to use Gammapy as a Python package.
 What's the statistical significance when 10 events have been observed with a known background level of 4.2
 according to [LiMa1983]_?
 
-Call the `~gammapy.stats.significance` function:
+Getting the answer from Gammapy is easy. You import and call the `gammapy.stats.significance` function:
 
 .. code-block:: python
 
@@ -66,33 +73,44 @@ Call the `~gammapy.stats.significance` function:
    >>> significance(n_observed=10, mu_background=4.2, method='lima')
    2.3979181291475453
 
-What's the differential gamma-ray flux and spectral index of the Crab nebula at 3 TeV
-according to [Meyer2010]_?
+As another example, here's how you can create `gammapy.data.DataStore` and `gammapy.data.EventList`
+objects and start exploring some properties of the (simulated) H.E.S.S. event data:
 
-Call the `~gammapy.spectrum.crab_flux` and `~gammapy.spectrum.crab_spectral_index` functions:
+... code-block:: python
 
-.. code-block:: python
+   >>> from gammapy.data import DataStore
+   >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+   >>> events = data_store.obs(obs_id=23523).events
+   >>> len(events)
+   1527
+   >>> events.energy.mean()
+   <Quantity 3.585395097732544 TeV>
 
-   >>> from gammapy.spectrum import crab_flux, crab_spectral_index
-   >>> crab_flux(energy=3, reference='meyer')
-   1.8993523278650278e-12
-   >>> crab_spectral_index(energy=3, reference='meyer')
-   2.6763224503600429
 
-All functionality is in subpackages (e.g. `gammapy.stats` or `gammapy.spectrum`).
-Just browse this documentation to see if the functionality you are looking for is available.
-You can try for example to find a suitable data structure to represent a counts vector,
-i.e. list of events binned in energy.
+How do you find something in Gammapy?
+
+Often using the full-text search field is the quickest and simplest way.
+As you get to know the package, you'll learn the names of the different sub-packages that are available,
+like `gammapy.stats` or `gammapy.data`, and what functionality they contain.
+
+Another good way is tutorials, IPython and Jupyter notebooks ...
 
 Using Gammapy from the Jupyter notebooks
 ----------------------------------------
 
-Next we encourage you to have a look at the
-`Gammapy Jupyter notebooks <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/Index.ipynb>`__.
+In the last section you've seen how to use Gammapy as a Python package.
+To become good at using it, you have to learn the Gammapy API (application programming interface).
+One way to do this is to read documentation. A more interactive (and arguably more fun)
+way is to play with Gammapy code and gamma-ray data in Jupyter notebooks.
 
 Jupyter notebooks are documents that combine code input and text and graphical output,
 and are wonderful tools to learn and explore (both programming and the data),
 and finally to share results with your colleagues.
+
+So now is a good time to have a look at the
+`Gammapy Jupyter notebooks <http://nbviewer.jupyter.org/github/gammapy/gammapy-extra/blob/master/notebooks/Index.ipynb>`__.
+Try executing the cells locally on your machine as you read through the text and code.
+
 
 Using Gammapy via command line tools
 ------------------------------------
@@ -140,8 +158,3 @@ To learn about some specific functionality that could be useful for your work,
 start browsing the "Getting Started" section of Gammapy sub-package that
 might be of interest to you (e.g. `gammapy.data`, `gammapy.catalog`, `gammapy.spectrum`, ...).
 
-Not sure if Gammapy has the feature you want or how to do what you want?
-Ask for help on the `Gammapy mailing list`_.
-
-.. _Crab nebula: http://en.wikipedia.org/wiki/Crab_Nebula
-.. _SIMBAD: http://simbad.u-strasbg.fr/simbad
