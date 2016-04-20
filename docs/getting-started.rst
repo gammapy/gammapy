@@ -76,7 +76,7 @@ Getting the answer from Gammapy is easy. You import and call the `gammapy.stats.
 As another example, here's how you can create `gammapy.data.DataStore` and `gammapy.data.EventList`
 objects and start exploring some properties of the (simulated) H.E.S.S. event data:
 
-... code-block:: python
+.. code-block:: python
 
    >>> from gammapy.data import DataStore
    >>> data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
