@@ -87,8 +87,8 @@ Besides Gammapy, there are two other major open-source analysis packages (that w
 for multi-mission gamma-ray likelihood analysis:
 
 - `Gammalib`_ /`ctools`_ is a C++ package with Python wrapper, similar to the Fermi-LAT ScienceTools,
-  that uses the same input file formats as Gammapy.
-- 3ML is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
+  that to a large degree uses the same input data formats as Gammapy.
+* `3ML`_ is a Python package that uses existing packages (e.g. the Fermi-LAT ScienceTools or the HAWC software)
   to deal with the data and IRFs and compute the likelihood for a given model.
 
 So there is some overlap of Gammapy with other efforts, but as mentioned in  :ref:`about-overview` the scope
@@ -98,17 +98,14 @@ a good thing when it comes to flexibility and the ability to cross-check results
 Make sure to also check out the following packages that contain very useful functionality for gamma-ray astronomy:
 
 * `Sherpa`_ --- X-ray modeling and fitting package by the Chandra X-ray Center
-* `gammalib`_ and `ctools`_ --- Gamma-ray data analysis library and tools by Jürgen Knödlseder
 * `ctapipe`_ --- CTA Python pipeline experimental version
-* `3ML`_ --- the multi-missing maximum likelihood framework by Giacomo Vianello and others from Stanford
-  (`code <https://github.com/giacomov/3ML>`__,
-  `example notebook <http://nbviewer.ipython.org/github/giacomov/3ML/blob/master/examples/090217206.ipynb>`__)
-* `FermiPy`_ --- Fermi Python analysis framework
+* `FermiPy`_ --- Fermi-LAT science tools high-level Python interface by Matthew Wood
 * `gammatools`_ --- Python tools for Fermi-LAT gamma-ray data analysis by Matthew Wood
+* `pointlike`_ -- Fermi-LAT science tools alternative by Toby Burnett
 * `naima`_ --- an SED modeling and fitting package by Victor Zabalza
 * `Gamera`_, `Gappa`_ --- a C++ gamma-ray source modeling package (SED, SNR model, Galactic population model) with a Python wrapper called Gappa by Joachim Hahn
+* `FLaapLUC`_ --- Fermi/LAT automatic aperture photometry Light C<->Urve pipeline by Jean-Philippe Lenain
 * http://voparis-cta-client.obspm.fr/ --- prototype web app for CTA data access / analysis, not open source.
-
 
 Some other projects:
 

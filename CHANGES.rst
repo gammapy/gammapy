@@ -32,19 +32,28 @@ Pull requests
 
 .. _gammapy_0p4_release:
 
-0.4 (February 21, 2016)
------------------------
+0.4 (April 20, 2016)
+--------------------
 
 Summary
 +++++++
 
-- Released on February 21, 2016 (`Gammapy 0.4 on PyPI <https://pypi.python.org/pypi/gammapy/0.4>`__)
-- TODO contributors (TODO new)
-- 6 months of work (from August 13, 2015 to February 21, 2016)
-- TODO pull requests
+- Released on April 20, 2016 (`Gammapy 0.4 on PyPI <https://pypi.python.org/pypi/gammapy/0.4>`__)
+- 10 contributors (5 new)
+- 8 months of work (from August 13, 2015 to April 20, 2016)
+- 108 pull requests (not all listed below)
 - Requires Python 2.7 or 3.4+, Numpy 1.8, Scipy 0.15, Astropy 1.0, Sherpa 4.8
 - Support for Windows added (testing on AppVeyor)
-- TODO: summarise major new features
+
+Highlights:
+
+- New: Women are hacking on Gammapy!
+- New: IACT data access via DataStore and HDU index tables
+- New: Radially-symmetric background modeling
+- Improved: 2-dim image analysis
+- New: 1-dim spectral analysis
+- New: Add sub-package gammapy.cube and start working on 3-dim cube analysis
+
 
 Contributors
 ++++++++++++
@@ -63,8 +72,30 @@ Contributors
 Pull requests
 +++++++++++++
 
+This list is incomplete. Many small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
+
+- [#511] Add exposure image computation (Lea Jouvin)
+- [#510] Add acceptance curve smoothing method (Lea Jouvin)
+- [#507] Add Fermi catalog spectrum evaluation and plotting (Johannes King)
+- [#506] Improve TS map computation performance (Axel Donath)
+- [#503] Add FOV background image modeling (Lea Jouvin)
+- [#502] Add DataStore subset method (Johannes King)
+- [#487] Add SkyMap class (Axel Donath)
+- [#485] Add OffDataBackgroundMaker (Lea Jouvin)
+- [#484] Add Sherpa cube analysis prototype (Axel Donath)
+- [#481] Add new gammapy.cube sub-package (Axel Donath)
+- [#478] Add observation stacking method for spectra (Lea Jouvin and Johannes King)
+- [#475] Add tests for TS map image computation (Olga Vorokh)
+- [#474] Improve significance image analysis (Axel Donath)
+- [#473] Improve tests for HESS data (Johannes King)
+- [#462] Misc cleanup (Christoph Deil)
 - [#461] Pacman (Lea Jouvin)
+- [#459] Add radially symmetric FOV background model (Lea Jouvin)
+- [#457] Improve data and observation handling (Christoph Deil)
 - [#456] Fix and improvements to TS map tool (Olga Vorokh)
+- [#455] Improve IRF interpolation and extrapolation (Christoph Deil)
 - [#447] Add King profile PSF class (Christoph Deil)
 - [#436] Restructure spectrum package and command line tool (Johannes King)
 - [#435] Add info about Gammapy contact points and gammapy-extra (Christoph Deil)
@@ -115,7 +146,7 @@ Summary
 - 4 months of work (from April 13, 2014 to August 13, 2015)
 - 24 pull requests
 - Requires Astropy version 1.0 or later.
-- On-off likelihood spectral analysis was added in ``gammapy.hspec``,
+- On-off likelihood spectral analysis was added in gammapy.hspec,
   contributed by Regis Terrier and Ignasi Reichardt.
   It will be refactored and is thus not part of the public API.
 - The Gammapy 0.3 release is the basis for an `ICRC 2015 poster contribution <https://indico.cern.ch/event/344485/session/142/contribution/695>`__

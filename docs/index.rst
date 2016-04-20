@@ -21,6 +21,8 @@ a link to the Gammapy proceeding from ICRC 2015.
 
 Gammapy works with Python 2 and 3, on Linux, Mac OS X and Windows and is easy to
 install (see instructions on the :ref:`install` page).
+(Caveat: for modeling and fitting we use Sherpa at the moment, which is not available on
+Windows and porting to Python 3 is still work in progress.)
 
 Once you have it running, we suggest you head over to the 5 minute :ref:`getting-started` tutorial.
 
@@ -31,6 +33,8 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
+* April 20, 2016 --- Gammapy **0.4** release. See changelog: :ref:`gammapy_0p4_release`
+* April 7, 2016 --- Gammapy presentation at the `April 2016 IACT data meeting`_
 * November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
 * August 13, 2015 --- Gammapy **0.3** release. See changelog: :ref:`gammapy_0p3_release`
 * August 2015 --- `Gammapy poster and proceeding at ICRC 2015`_
