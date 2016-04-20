@@ -147,7 +147,7 @@ class DataStore(object):
     @classmethod
     def from_all(cls, val):
         """Try different DataStore constructors.
-        
+
         Currently tried (in this order)
         - :func:`~gammapy.data.DataStore.from_dir`
         - :func:`~gammapy.data.DataStore.from_name`

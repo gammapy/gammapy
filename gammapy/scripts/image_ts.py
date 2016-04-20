@@ -82,18 +82,18 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
 
     filename = Path(output_file).name
     folder = Path(output_file).parent
-    
-    Path(folder).mkdir(exist_ok=True) 
-    
+
+    Path(folder).mkdir(exist_ok=True)
+
     # Write results to file
     header = maps[0].header
     if len(results) > 1:
         for scale, result in zip(scales, results):
             # TODO: this is unnecessarily complex
             # Simplify, e.g. by letting the user specify a `base_dir`.
-            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))          
+            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
             fn = Path(folder) / filename_
-            
+
             log.info('Writing {}'.format(fn))
             result.write(str(fn), header, clobber=overwrite)
     elif results:
@@ -101,4 +101,3 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
         results[0].write(output_file, header, clobber=overwrite)
     else:
         log.info("No results to write to file: all scales have failed")
-  

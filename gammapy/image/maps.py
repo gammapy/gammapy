@@ -9,7 +9,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord 
+from astropy.wcs.utils import pixel_to_skycoord
 from astropy.units import Quantity, Unit
 from astropy.extern import six
 
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 # The class provides Fits I/O and generic methods, that are not specific to the
 # data it contains. Special data classes, such as an ExclusionMap, FluxMap or
 # CountsMap should inherit from this class and implement special, data related
-# methods themselves. 
+# methods themselves.
 
 # Actually this class is generic enough to be rather in astropy and not in
 # gammapy and should maybe be moved to there...
@@ -156,8 +156,8 @@ class SkyMap(object):
     @classmethod
     def empty_like(cls, skymap, name=None, unit=None, fill=0, meta=None):
         """
-        Create an empty sky map with the same WCS specification as given sky map. 
-        
+        Create an empty sky map with the same WCS specification as given sky map.
+
         Parameters
         ----------
         skymap : `~gammapy.image.SkyMap` or `~astropy.io.fits.ImageHDU`
@@ -169,7 +169,7 @@ class SkyMap(object):
         unit : str
             String specifying the data units.
         meta : dict
-            Dictionary to store meta data.            
+            Dictionary to store meta data.
         """
         if isinstance(skymap, SkyMap):
             wcs = skymap.wcs.copy()
@@ -207,7 +207,7 @@ class SkyMap(object):
     def write(self, filename, *args, **kwargs):
         """
         Write sky map to Fits file.
-        
+
         Parameters
         ----------
         filename : str
@@ -244,13 +244,13 @@ class SkyMap(object):
 
         if coord_type == 'pix':
             return x, y
-        else: 
+        else:
             coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
             if coord_type == 'skycoord':
                 return coordinates
             elif coord_type == 'galactic':
                 l = coordinates.galactic.l.wrap_at('180d')
-                b = coordinates.galactic.b 
+                b = coordinates.galactic.b
                 return l, b
             else:
                 raise ValueError("Not a valid coordinate type. Choose either"
@@ -275,7 +275,7 @@ class SkyMap(object):
     def lookup(self, position, interpolation=None, origin=0):
         """
         Lookup value at given sky position.
-        
+
         Parameters
         ----------
         position : tuple or `~astropy.coordinates.SkyCoord`
@@ -357,14 +357,14 @@ class SkyMap(object):
         Parameters
         ----------
         reference : `~astropy.fits.Header`, or `SkyMap`
-            Reference map specification to reproject the data on. 
+            Reference map specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
         *args : list
-            Arguments passed to `~reproject.reproject_interp` or 
-            `~reproject.reproject_exact`. 
+            Arguments passed to `~reproject.reproject_interp` or
+            `~reproject.reproject_exact`.
         **kwargs : dict
-            Keyword arguments passed to `~reproject.reproject_interp` or 
+            Keyword arguments passed to `~reproject.reproject_interp` or
             `~reproject.reproject_exact`.
 
         Returns
@@ -407,13 +407,13 @@ class SkyMap(object):
             Which image viewer to use. Option 'ds9' requires ds9 to be installed.
         ds9options : list, optional
             List of options passed to ds9. E.g. ['-cmap', 'heat', '-scale', 'log'].
-            Any valid ds9 command line option can be passed. 
-            See http://ds9.si.edu/doc/ref/command.html for details. 
+            Any valid ds9 command line option can be passed.
+            See http://ds9.si.edu/doc/ref/command.html for details.
         **kwargs : dict
             Keyword arguments passed to `~matplotlib.pyplot.imshow`.
         """
         if viewer == 'mpl':
-            # TODO: replace by better MPL or web based image viewer 
+            # TODO: replace by better MPL or web based image viewer
             import matplotlib.pyplot as plt
             fig = plt.gcf()
             axes = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=self.wcs)
@@ -431,7 +431,7 @@ class SkyMap(object):
     def plot(self, ax=None, fig=None, **kwargs):
         """
         Plot sky map on matplotlib WCS axes.
-        
+
         Parameters
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`, optional
@@ -440,7 +440,7 @@ class SkyMap(object):
         import matplotlib.pyplot as plt
 
         if fig is None and ax is None:
-            fig = plt.gcf() 
+            fig = plt.gcf()
             ax = fig.add_subplot(1,1,1, projection=self.wcs)
 
         caxes = ax.imshow(self.data, **kwargs)
@@ -512,13 +512,13 @@ class SkyMapCollection(Bunch):
     Container for a collection of sky maps.
 
     This class bundles as set of SkyMaps in single data container and provides
-    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like 
-    handling of the data members. 
-    
+    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like
+    handling of the data members.
+
     Here's an example how to use it:
 
     .. code-block:: python
-    
+
         from gammapy.image import SkyMapCollection
         skymaps = SkyMapCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
@@ -531,11 +531,11 @@ class SkyMapCollection(Bunch):
     wcs = None
 
     def __init__(self, name=None, wcs=None, meta=None, **kwargs):
-        # Set real class attributes 
+        # Set real class attributes
         self.name = name
         self.wcs = wcs
         self.meta = meta
-        
+
         # Everything else is stored as dict entries
         for key in kwargs:
             self[key] = kwargs[key]
@@ -586,7 +586,7 @@ class SkyMapCollection(Bunch):
         filename : str
             Fits file name.
         header : `~astropy.io.fits.Header`
-            Reference header to be used for all maps. 
+            Reference header to be used for all maps.
         """
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):

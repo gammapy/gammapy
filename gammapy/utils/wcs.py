@@ -24,7 +24,7 @@ def get_wcs_ctype(wcs):
     -------
     ctype : {'galatic', 'icrs'}
         String specifying the coordinate type, that can be used with
-        `~astropy.coordinates.SkyCoord` 
+        `~astropy.coordinates.SkyCoord`
     """
     ctype = wcs.wcs.ctype
     if 'GLON' in ctype[0] or 'GLON' in ctype[1]:

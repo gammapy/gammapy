@@ -35,14 +35,14 @@ def exposure_cube(pointing,
     -------
     expcube : `~gammapy.data.SkyCube`
         Exposure cube (3D)
-    """    
+    """
     ny, nx = ref_cube.data.shape[1:]
     xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
     lon, lat, en = ref_cube.pix2world(xx, yy, 0)
     coord = SkyCoord(lon, lat, frame=ref_cube.wcs.wcs.radesys.lower())  # don't care about energy
-    offset = coord.separation(pointing)   
+    offset = coord.separation(pointing)
     offset = np.clip(offset, Angle(0, 'deg'), offset_max)
-    
+
     energy = EnergyBounds(ref_cube.energy).log_centers
     exposure = aeff2d.evaluate(offset, energy)
     exposure = np.rollaxis(exposure, 2)

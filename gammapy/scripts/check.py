@@ -93,4 +93,4 @@ def run_test_fitsexport(directory):
     fit, analysis = run_spectrum_analysis_using_config(config)
     res = SpectrumResult(fit=fit.result, stats=analysis.observations.total_spectrum.spectrum_stats)
     print(res.to_table())
-    
+

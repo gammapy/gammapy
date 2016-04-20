@@ -20,13 +20,13 @@ class TestSkyMapPoisson():
     def setup(self):
         f = load_poisson_stats_image(return_filenames=True)
         self.skymap = SkyMap.read(f)
-    
+
     def test_read_hdu(self):
         f = load_poisson_stats_image(return_filenames=True)
         hdulist = fits.open(f)
         skymap = SkyMap.read(hdulist[0])
-        assert_equal(skymap.data, self.skymap.data) 
-        
+        assert_equal(skymap.data, self.skymap.data)
+
     def test_io(self, tmpdir):
         filename = tmpdir / 'test_skymap.fits'
         self.skymap.write(str(filename))
@@ -89,7 +89,7 @@ class TestSkyMapPoisson():
         events = data_store.obs(obs_id=23523).events
 
         counts = SkyMap.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                              yref=events.meta['DEC_OBJ'], dtype='int', 
+                              yref=events.meta['DEC_OBJ'], dtype='int',
                               coordsys='CEL')
         counts.fill(events)
         assert counts.data.sum() == 1233

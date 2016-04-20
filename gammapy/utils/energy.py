@@ -107,7 +107,7 @@ class Energy(Quantity):
             emin = Energy(emin)
             emax = Energy(emax)
             unit = emax.unit
-            emin = emin.to(unit) 
+            emin = emin.to(unit)
 
         x_min, x_max = np.log10([emin.value, emax.value])
         energy = np.logspace(x_min, x_max, nbins)

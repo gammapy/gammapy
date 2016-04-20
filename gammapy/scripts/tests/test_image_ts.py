@@ -71,6 +71,6 @@ def test_command_line_gammapy_image_ts(tmpdir):
         expected_filename_ = expected_filename.replace('.fits', '_{0}.fits'.format(scale_test))
         actual = SkyMapCollection.read(output_filename_)
         expected = SkyMapCollection.read(expected_filename_)
-        
+
         for name in ['ts', 'sqrt_ts', 'amplitude', 'niter']:
             assert_allclose(np.nan_to_num(actual[name].data), expected[name].data, rtol=1e-2, atol=1e-15)

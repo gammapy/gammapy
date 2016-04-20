@@ -828,7 +828,7 @@ class SpectrumResult(object):
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        
+
         self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
                       energy_power=energy_power, ax=ax0, **fit_kwargs)
         self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,

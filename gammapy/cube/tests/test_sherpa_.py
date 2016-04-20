@@ -62,4 +62,4 @@ def test_sherpa_crab_fit():
                  0.036353759774770608,
                  1.1900312815970555)
 
-    assert_allclose(result.parvals, reference, rtol=1E-8) 
+    assert_allclose(result.parvals, reference, rtol=1E-8)

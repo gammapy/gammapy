@@ -186,7 +186,7 @@ class SkyCube(object):
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
         """
         Create empty sky cube with log equal energy binning from the scratch.
-        
+
         Parameters
         ----------
         emin : float
@@ -211,7 +211,7 @@ class SkyCube(object):
         """
         Create an empty sky cube with the same WCS and energy specification
         as given sky cube.
-        
+
         Parameters
         ----------
         refcube : `~gammapy.cube.SkyCube`

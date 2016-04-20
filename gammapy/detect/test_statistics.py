@@ -339,7 +339,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     assert positions, ("Positions are empty: possibly kernel " +
                        "{} is larger than counts {}".format(kernel.shape, counts.shape))
-    
+
     # Set TS values at given positions
     j, i = zip(*positions)
     TS = np.ones(counts.shape) * np.nan
@@ -353,7 +353,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
 
-    return SkyMapCollection(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes, 
+    return SkyMapCollection(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes,
                             niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
@@ -439,7 +439,7 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
         Slice of background map.
     model : `~numpy.ndarray`
         Model template to fit.
-    maxiter : int 
+    maxiter : int
         Maximum number of iterations.
     rtol : float
         Relative flux error.
