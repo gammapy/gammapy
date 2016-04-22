@@ -45,6 +45,10 @@ class TestSkyMapPoisson():
         assert_allclose(coordinates[0][100, 100].degree, 0.01)
         assert_allclose(coordinates[1][100, 100].degree, 0.01)
 
+    def test_solid_angle(self):
+        solid_angle=self.skymap.solid_angle()
+        assert_allclose(solid_angle.to("deg2")[0], 0.01**2)
+
     def test_info(self):
         refstring = ""
         refstring += "Name: None\n"
