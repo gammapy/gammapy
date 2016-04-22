@@ -78,8 +78,8 @@ class ImageAnalysis(object):
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        counts_map.fill(events=events)
-        counts_map.data = counts_map.data.value
+        counts_map.fill(value=events)
+        counts_map.data = counts_map.data
 
         self.maps["counts"] = counts_map
         return counts_map
