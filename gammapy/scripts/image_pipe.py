@@ -285,7 +285,7 @@ class ImageAnalysis(object):
         xpix_coord_grid, ypix_coord_grid = exposure.coordinates(coord_type='pix')
         # calculate pixel offset from center (in world coordinates)
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
-        center = SkyCoord.from_pixel(self.header["NAXIS1"] / 2., self.header["NAXIS2"] / 2., exposure.wcs)
+        center = exposure.center()
         offset = coord.separation(center)
 
         obs = self.data_store.obs(obs_id=obs_id)

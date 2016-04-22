@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 
 from ..maps import SkyMap
@@ -47,7 +47,7 @@ class TestSkyMapPoisson():
 
     def test_solid_angle(self):
         solid_angle=self.skymap.solid_angle()
-        assert_allclose(solid_angle.to("deg2")[0], 0.01**2)
+        assert_allclose(solid_angle.to("deg2")[0,0], Angle(0.02, "deg")**2)
 
     def test_info(self):
         refstring = ""
