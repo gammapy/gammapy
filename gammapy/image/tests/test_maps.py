@@ -127,4 +127,4 @@ class TestSkyMapCrab():
         center = self.skymap.center()
         assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
         assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
-        
+
