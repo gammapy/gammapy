@@ -107,3 +107,24 @@ class TestSkyMapPoisson():
         skymap_1.fill(1)
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
+
+@requires_data('gammapy-extra')
+class TestSkyMapCrab():
+    """
+    Test sky map class.
+    """
+    def Crab_coord(self):
+        coord = SkyCoord(83.63, 22.01, unit='deg').galactic
+        return coord
+
+    def setup(self):
+        center = self.Crab_coord()
+        self.skymap  = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+                         yref=center.b.deg, proj='TAN', coordsys='GAL')
+
+    def test_center(self):
+        crab_coord = self.Crab_coord()
+        center = self.skymap.center()
+        assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
+        assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
+        
