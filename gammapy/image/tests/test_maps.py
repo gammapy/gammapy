@@ -2,10 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
-
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
-
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -17,6 +15,7 @@ class TestSkyMapPoisson():
     """
     Test sky map class.
     """
+
     def setup(self):
         f = load_poisson_stats_image(return_filenames=True)
         self.skymap = SkyMap.read(f)
@@ -46,8 +45,8 @@ class TestSkyMapPoisson():
         assert_allclose(coordinates[1][100, 100].degree, 0.01)
 
     def test_solid_angle(self):
-        solid_angle=self.skymap.solid_angle()
-        assert_allclose(solid_angle.to("deg2")[0,0], Angle(0.02, "deg")**2)
+        solid_angle = self.skymap.solid_angle()
+        assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2)
 
     def test_info(self):
         refstring = ""
@@ -79,8 +78,7 @@ class TestSkyMapPoisson():
         assert center.galactic.b == 0
 
     def test_fill_float(self):
-        
-        skymap = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int', 
+        skymap = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
                               coordsys='CEL')
         skymap.fill(42)
         assert_equal(skymap.data, np.full((200, 200), 42))
@@ -108,23 +106,24 @@ class TestSkyMapPoisson():
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
+
 @requires_data('gammapy-extra')
 class TestSkyMapCrab():
     """
     Test sky map class.
     """
+
     def Crab_coord(self):
         coord = SkyCoord(83.63, 22.01, unit='deg').galactic
         return coord
 
     def setup(self):
         center = self.Crab_coord()
-        self.skymap  = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
-                         yref=center.b.deg, proj='TAN', coordsys='GAL')
+        self.skymap = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+                                   yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     def test_center(self):
         crab_coord = self.Crab_coord()
         center = self.skymap.center()
         assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
         assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
-
