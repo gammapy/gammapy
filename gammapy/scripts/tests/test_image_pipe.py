@@ -1,27 +1,17 @@
 """Example how to make an acceptance curve and background model image.
 """
-from astropy.table import Table
-import astropy.units as u
-from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.units import Quantity
-from gammapy.datasets import gammapy_extra
-from gammapy.background import EnergyOffsetBackgroundModel
-from gammapy.utils.energy import EnergyBounds, Energy
+from gammapy.utils.energy import Energy
 from gammapy.data import DataStore
-from gammapy.utils.axis import sqrt_space
-from gammapy.image import bin_events_in_image, disk_correlate, SkyMap, ExclusionMask
-from gammapy.background import fill_acceptance_image
-from gammapy.region import SkyCircleRegion
-from gammapy.stats import significance
+from gammapy.image import SkyMap, ExclusionMask
 from gammapy.background import OffDataBackgroundMaker
 from gammapy.scripts import ImageAnalysis
+from ...utils.testing import requires_data
 
 
-
-
+@requires_data('gammapy-extra')
 def test_image_pipe(tmpdir):
-    tmpdir=str(tmpdir)
+    tmpdir = str(tmpdir)
     from subprocess import call
     outdir = tmpdir
     outdir2 = outdir + '/background'
@@ -54,8 +44,8 @@ def test_image_pipe(tmpdir):
 
     fn = outdir + '/hdu-index.fits.gz'
     hdu_index_table.write(fn, overwrite=True)
-    
-    tmpdir=str(tmpdir)
+
+    tmpdir = str(tmpdir)
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
     offset_band = Angle([0, 2.49], 'deg')
@@ -72,5 +62,4 @@ def test_image_pipe(tmpdir):
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                            obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
 
-    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux = True)
-
+    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux=True)

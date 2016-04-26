@@ -107,7 +107,6 @@ class TestSkyMapPoisson():
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
 
-@requires_data('gammapy-extra')
 class TestSkyMapCrab():
     """
     Test sky map class.
