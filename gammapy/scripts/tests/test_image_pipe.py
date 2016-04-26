@@ -8,7 +8,7 @@ from gammapy.background import OffDataBackgroundMaker
 from gammapy.scripts import ImageAnalysis
 from ...utils.testing import requires_data
 
-
+@requires_dependency('reproject')
 @requires_data('gammapy-extra')
 def test_image_pipe(tmpdir):
     tmpdir = str(tmpdir)
