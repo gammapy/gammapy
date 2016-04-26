@@ -394,8 +394,13 @@ class TablePSF(object):
         # Here's a discussion on methods to compute the ppf
         # http://mail.scipy.org/pipermail/scipy-user/2010-May/025237.html
         x = self._offset.value
-        y = self._cdf_spline(x)
-        self._ppf_spline = UnivariateSpline(y, x, **spline_kwargs)
+        y = self.integral(Angle(0, 'rad'), self._offset)
+
+        # This is a hack to stabilize the univariate spline. Only use the first
+        # i entries, where the integral is srictly increasing, to build the spline. 
+        i = (np.diff(y) <= 0).argmax()
+        i = len(y) if i == 0 else i
+        self._ppf_spline = UnivariateSpline(y[:i], x[:i], **spline_kwargs)
 
     def _offset_clip(self, offset):
         """Clip to offset support range, because spline extrapolation is unstable."""

@@ -1,17 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+
 from astropy import log
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+
+from . import EnergyDependentTablePSF
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..utils.scripts import make_path
 from ..irf import HESSMultiGaussPSF
+
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
@@ -354,3 +358,46 @@ class EnergyDependentMultiGaussPSF(object):
                            "E = {2:4.1f}: {3:5.8f}\n"
                            "".format(100 * fraction, theta, energy, radius))
         return ss
+
+
+
+    def to_table_psf(self, theta=None, offset_max=None, binsz=0.01, exposure=None):
+        """
+        Convert triple Gaussian PSF ot table PSF.
+
+        Parameters
+        ----------
+        theta : `~astropy.coordinates.Angle`
+            Observation offset. Default theta = 0 deg.
+        offset_max : `~astropy.coordinates.Angle`
+            Maximum offset from PSF center. Default offset_max = 2.5 deg
+        binsz : float
+            Size of the spatial bins in deg / pixel. Default binsz = 0.01 deg
+        exposure : `~astropy.units.Quantity`
+            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
+
+        Returns
+        -------
+        tabe_psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Instance of `EnergyDependentTablePSF`.
+        """
+        # Convert energies to log center
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
+        energies = ebounds.log_centers
+        
+        # Default for exposure
+        exposure = exposure or Quantity(np.ones(len(energies)), 'cm^2 s')
+        theta = theta or Angle(0, 'deg')
+        offset_max = offset_max or Angle(2.5, 'deg')
+
+        offsets = Angle(np.arange(0, offset_max.degree, binsz), 'deg')
+
+        psf_value = Quantity(np.empty((len(energies), len(offsets))), 'deg^-2')
+
+        for i, energy in enumerate(energies):
+            psf_gauss = self.psf_at_energy_and_theta(energy, theta)
+            psf_value[i] = Quantity(psf_gauss(offsets, np.zeros_like(offsets)), 'deg^-2')
+
+        return EnergyDependentTablePSF(energy=energies, offset=offsets,
+                                       exposure=exposure, psf_value=psf_value)
+
