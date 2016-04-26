@@ -78,8 +78,8 @@ class ImageAnalysis(object):
         obs = self.data_store.obs(obs_id=obs_id)
         events = obs.events.select_energy(self.energy_band)
         events = events.select_offset(self.offset_band)
-        counts_map.fill(events=events)
-        counts_map.data = counts_map.data.value
+        counts_map.fill(value=events)
+        counts_map.data = counts_map.data
 
         self.maps["counts"] = counts_map
         return counts_map
@@ -285,7 +285,8 @@ class ImageAnalysis(object):
         xpix_coord_grid, ypix_coord_grid = exposure.coordinates(coord_type='pix')
         # calculate pixel offset from center (in world coordinates)
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
-        center = SkyCoord.from_pixel(self.header["NAXIS1"] / 2., self.header["NAXIS2"] / 2., exposure.wcs)
+        center = exposure.center()
+
         offset = coord.separation(center)
 
         obs = self.data_store.obs(obs_id=obs_id)

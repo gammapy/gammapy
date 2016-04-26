@@ -260,9 +260,9 @@ class SkyMap(object):
         """
         Solid angle image
         """
-        xsky, ysky = self.coordinates(mode='edges')
-        omega = -np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:]
-        return Quantity(omega, 'deg2').to('sr')
+        xsky, ysky = self.coordinates(coord_type='galactic', mode='edges')
+        omega = np.abs(np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:])
+        return omega.to('sr')
 
     def center(self):
         """
