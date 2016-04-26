@@ -20,10 +20,8 @@ def test_image_pipe(tmpdir):
     print('Executing: {}'.format(cmd))
     call(cmd, shell=True)
 
-    cmd = 'cp -r $GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/ {}'.format(outdir)
-    print('Executing: {}'.format(cmd))
-    call(cmd, shell=True)
-
+    ds = DataStore.from_dir("$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2")
+    ds.copy_obs(ds.obs_table, tmpdir)
     data_store = DataStore.from_dir(tmpdir)
 
     bgmaker = OffDataBackgroundMaker(data_store, outdir=outdir2)
