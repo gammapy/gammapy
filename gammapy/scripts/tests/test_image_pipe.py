@@ -6,7 +6,7 @@ from gammapy.data import DataStore
 from gammapy.image import SkyMap, ExclusionMask
 from gammapy.background import OffDataBackgroundMaker
 from gammapy.scripts import ImageAnalysis
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 
 @requires_dependency('reproject')
 @requires_data('gammapy-extra')
