@@ -11,7 +11,6 @@ from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
 
-
 __all__ = ['ImageAnalysis',
            'ObsImage',
            'MosaicImage']
@@ -48,6 +47,7 @@ class ObsImage(object):
     ncounts_min : int
             Minimum counts required for the observation
     """
+
     def __init__(self, events, data_store, empty_image,
                  energy_band, offset_band, exclusion_mask=None, ncounts_min=0):
         # Select the events in the given energy and offset ranfe
@@ -159,7 +159,7 @@ class ObsImage(object):
             norm = np.sum(spectrum * energy_band)
             exposure_tab /= norm
         livetime = self.livetime
-        exposure_tab*=livetime
+        exposure_tab *= livetime
 
         # Interpolate for the offset of each pixel
         f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
@@ -243,6 +243,7 @@ class MosaicImage(object):
     ncounts_min : int
             Minimum counts required for the observation
     """
+
     def __init__(self, empty_image=None,
                  energy_band=None, offset_band=None,
                  data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
@@ -326,4 +327,3 @@ class MosaicImage(object):
         total_excess = SkyMap.empty_like(self.empty_image)
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
-
