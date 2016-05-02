@@ -12,7 +12,8 @@ from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
 
 __all__ = ['ImageAnalysis',
-           'ObsImage']
+           'ObsImage',
+           'MosaicImage']
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +75,7 @@ class ObsImage(object):
             bkg_map.data = scale * bkg_map.data
 
         self.maps["bkg"] = bkg_map
+
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
         r"""Compute the exposure map for one observation.
 
@@ -159,6 +161,52 @@ class ObsImage(object):
         scale = counts_sum / bkg_sum
 
         return scale
+
+
+class MosaicImage(object):
+    def __init__(self, empty_image=None,
+                 energy_band=None, offset_band=None,
+                 data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
+
+        self.maps = SkyMapCollection()
+
+        self.data_store = data_store
+        self.obs_table = obs_table
+        self.energy_band = energy_band
+        self.offset_band = offset_band
+
+        self.empty_image = empty_image
+        self.header = self.empty_image.to_image_hdu().header
+        self.exclusion_mask =  exclusion_mask
+        if exclusion_mask:
+            self.maps['exclusion'] = exclusion_mask
+        self.ncounts_min = ncounts_min
+
+    def make_images(self, make_background_image = False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False):
+        total_counts = SkyMap.empty_like(self.empty_image)
+        if make_background_image:
+            total_bkg = SkyMap.empty_like(self.empty_image)
+            total_exposure = SkyMap.empty_like(self.empty_image)
+
+        for obs_id in self.obs_table['OBS_ID']:
+            events= self.data_store.obs(obs_id).events
+            obsimage=ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
+                              self.exclusion_mask, self.ncounts_min)
+            if len(obsimage.events) < self.ncounts_min:
+                continue
+            else:
+                obsimage.counts_map()
+                if make_background_image:
+                    obsimage.bkg_map(bkg_norm)
+                    obsimage.exposure_map(spectral_index, for_integral_flux)
+                total_counts.data += obsimage.maps["counts"].data
+                total_bkg.data += obsimage.maps["bkg"].data
+                total_exposure.data += obsimage.maps["exposure"].data
+
+        self.maps["counts"] = total_counts
+        self.maps["bkg"] = total_bkg
+        self.maps["exposure"] = total_exposure
+
 class ImageAnalysis(object):
     """Gammapy 2D image based analysis.
 
