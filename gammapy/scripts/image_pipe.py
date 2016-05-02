@@ -158,12 +158,12 @@ class ObsImage(object):
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
             exposure_tab /= norm
+        livetime = self.livetime
+        exposure_tab*=livetime
 
         # Interpolate for the offset of each pixel
         f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
         exposure.data = f(offset)
-        livetime = self.livetime
-        exposure.data *= livetime
         exposure.data[offset >= self.offset_band[1]] = 0
 
         self.maps["exposure"] = exposure
