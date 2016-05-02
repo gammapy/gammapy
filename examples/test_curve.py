@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-
 def make_bg_model_two_groups():
     from subprocess import call
     outdir = '/Users/jouvin/Desktop/these/temp/bg_model_image/'
@@ -66,10 +65,11 @@ def make_image_from_2d_bg():
     refheader = image.to_image_hdu().header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
-    mosaic_images=MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
-                           obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
-    mosaic_images.make_images(make_background_image = True, for_integral_flux = True, radius=10.)
-    import IPython; IPython.embed()
+    mosaic_images = MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+                                obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
+    mosaic_images.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
+    import IPython;
+    IPython.embed()
     filename = 'fov_bg_maps_test.fits'
     log.info('Writing {}'.format(filename))
     mosaic_images.maps.write(filename, clobber=True)
