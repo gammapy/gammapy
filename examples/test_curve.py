@@ -186,10 +186,10 @@ def make_image_from_2d_bg():
     images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux = True)
     mosaicimages=MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                            obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
-    mosaicimages.make_images(make_background_image = True, for_integral_flux = True)
+    mosaicimages.make_images(make_background_image = True, for_integral_flux = True, radius=10.)
     filename = 'fov_bg_maps_test.fits'
     log.info('Writing {}'.format(filename))
-
+    import IPython; IPython.embed()
     mosaicimages.maps.write(filename, clobber=True)
 
 

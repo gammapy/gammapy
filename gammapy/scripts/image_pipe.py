@@ -182,7 +182,9 @@ class MosaicImage(object):
             self.maps['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
 
-    def make_images(self, make_background_image = False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False):
+    def make_images(self, make_background_image = False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
+                    radius=10):
+
         total_counts = SkyMap.empty_like(self.empty_image)
         if make_background_image:
             total_bkg = SkyMap.empty_like(self.empty_image)
@@ -196,16 +198,48 @@ class MosaicImage(object):
                 continue
             else:
                 obsimage.counts_map()
+                total_counts.data += obsimage.maps["counts"].data
                 if make_background_image:
                     obsimage.bkg_map(bkg_norm)
                     obsimage.exposure_map(spectral_index, for_integral_flux)
-                total_counts.data += obsimage.maps["counts"].data
-                total_bkg.data += obsimage.maps["bkg"].data
-                total_exposure.data += obsimage.maps["exposure"].data
+                    total_bkg.data += obsimage.maps["bkg"].data
+                    total_exposure.data += obsimage.maps["exposure"].data
 
         self.maps["counts"] = total_counts
-        self.maps["bkg"] = total_bkg
-        self.maps["exposure"] = total_exposure
+        if make_background_image:
+            self.maps["bkg"] = total_bkg
+            self.maps["exposure"] = total_exposure
+            self.significance_image(radius)
+            self.excess_image()
+
+
+    def significance_image(self, radius):
+        """Make the significance image from the counts and bkg images.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+
+        Returns
+        -------
+        s_maps : `~gammapy.image.SkyMap`
+            significance map
+        """
+        s_map = SkyMap.empty_like(self.empty_image)
+        counts = disk_correlate(self.maps["counts"].data, radius)
+        bkg = disk_correlate(self.maps["bkg"].data, radius)
+        s = significance(counts, bkg)
+        s_map.data = s
+
+        self.maps["significance"] = s_map
+
+    def excess_image(self):
+        """Compute excess between counts and bkg map."""
+        total_excess = SkyMap.empty_like(self.empty_image)
+        total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
+        self.maps["excess"] = total_excess
+
 
 class ImageAnalysis(object):
     """Gammapy 2D image based analysis.
