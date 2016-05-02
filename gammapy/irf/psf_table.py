@@ -426,7 +426,11 @@ class EnergyDependentTablePSF(object):
         PSF (2-dim with axes: psf[energy_index, offset_index]
     """
 
-    def __init__(self, energy, offset, exposure, psf_value):
+    def __init__(self, energy, offset, exposure=None, psf_value=None):
+
+        # Default for exposure
+        exposure = exposure or Quantity(np.ones(len(energy)), 'cm^2 s')
+        
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
         if not isinstance(offset, Angle):

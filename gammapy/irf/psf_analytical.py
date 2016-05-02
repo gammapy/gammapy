@@ -153,7 +153,6 @@ class EnergyDependentMultiGaussPSF(object):
             table[name_] = [data_]
 
         # TODO: add units!?
-
         # Create hdu and hdu list
         hdu = table_to_fits_table(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
@@ -281,7 +280,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         return ax
 
-    def plot_containment_vs_energy(self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
+    def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
+                                   thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
         """Plot containment fraction as a function of energy.
         """
         import matplotlib.pyplot as plt
@@ -361,20 +361,20 @@ class EnergyDependentMultiGaussPSF(object):
 
 
 
-    def to_table_psf(self, theta=None, offset_max=None, binsz=0.01, exposure=None):
+    def to_table_psf(self, theta=None, offset=None, exposure=None):
         """
         Convert triple Gaussian PSF ot table PSF.
 
         Parameters
         ----------
         theta : `~astropy.coordinates.Angle`
-            Observation offset. Default theta = 0 deg.
-        offset_max : `~astropy.coordinates.Angle`
-            Maximum offset from PSF center. Default offset_max = 2.5 deg
-        binsz : float
-            Size of the spatial bins in deg / pixel. Default binsz = 0.01 deg
+            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid.
+            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
         exposure : `~astropy.units.Quantity`
             Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
+            Default exposure = 1.
 
         Returns
         -------
@@ -384,20 +384,17 @@ class EnergyDependentMultiGaussPSF(object):
         # Convert energies to log center
         ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
         energies = ebounds.log_centers
-        
-        # Default for exposure
-        exposure = exposure or Quantity(np.ones(len(energies)), 'cm^2 s')
+
+        # Defaults
         theta = theta or Angle(0, 'deg')
-        offset_max = offset_max or Angle(2.5, 'deg')
-
-        offsets = Angle(np.arange(0, offset_max.degree, binsz), 'deg')
-
-        psf_value = Quantity(np.empty((len(energies), len(offsets))), 'deg^-2')
+        offset = offset or Angle(np.arange(0, 1.5, 0.005), 'deg')
+        psf_value = Quantity(np.empty((len(energies), len(offset))), 'deg^-2')
 
         for i, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
-            psf_value[i] = Quantity(psf_gauss(offsets, np.zeros_like(offsets)), 'deg^-2')
+            psf_value[i] = Quantity(psf_gauss(offset, np.zeros_like(offset)), 'deg^-2')
 
-        return EnergyDependentTablePSF(energy=energies, offset=offsets,
+        return EnergyDependentTablePSF(energy=energies, offset=offset,
                                        exposure=exposure, psf_value=psf_value)
+
 

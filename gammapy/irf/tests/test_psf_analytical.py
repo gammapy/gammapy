@@ -15,7 +15,7 @@ from ...irf import EnergyDependentMultiGaussPSF
 from ...datasets import gammapy_extra
 
 
-ENERGIES = Quantity([0.5, 1, 10, 30], 'TeV')
+ENERGIES = Quantity([1, 10, 30], 'TeV')
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -51,17 +51,16 @@ def test_EnergyDependentMultiGaussPSF_write(tmpdir):
 @requires_data('gammapy-extra')
 @pytest.mark.parametrize(('energy'), ENERGIES)
 def test_to_table_psf(energy):
-    filename = gammapy_extra.filename('test_datasets/unbundled/irfs/psf.fits')
-    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='POINT SPREAD FUNCTION')
+    filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/'
+                                      'run023523/hess_psf_3gauss_023523.fits.gz')
+    psf = EnergyDependentMultiGaussPSF.read(filename, hdu='PSF_2D_GAUSS')
     theta = Angle(0, 'deg')
 
     table_psf = psf.to_table_psf(theta)
     table_psf_at_energy = table_psf.table_psf_at_energy(energy)
     psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
     
-    # Plot containment radius vs. containment
-    containment = np.linspace(0, 0.99, 10)
-
+    containment = np.linspace(0, 0.95, 10)
     desired = [psf_at_energy.containment_radius(_) for _ in containment]
     actual = table_psf_at_energy.containment_radius(containment)
 
