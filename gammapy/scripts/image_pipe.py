@@ -19,6 +19,34 @@ log = logging.getLogger(__name__)
 
 
 class ObsImage(object):
+    """Gammapy 2D image based analysis for one observation.
+
+    The computed images are stored in a ``maps`` attribute of type `~gammapy.image.SkyMapCollection`
+    with the following keys:
+
+    * counts : counts for one obs
+    * bkg : bkg model for one obs
+    * exposure : exposure for one obs
+    * excess : excess for one obs
+    * significance : significance for one obs
+
+    Parameters
+    ----------
+    events : `~gammapy.data.EventList`
+        Event Table of the observation
+    data_store : `~gammapy.data.DataStore`
+        `DataStore` where are situated the events
+    empty_image : `~gammapy.image.SkyMap`
+            ref to an empty image
+    energy_band : `~gammapy.utils.energy.Energy`
+        Energy band for which we want to compute the image
+    offset_band : `astropy.coordinates.Angle`
+        Offset Band where you compute the image
+    exclusion_mask : `~gammapy.image.ExclusionMask`
+            Exclusion regions
+    ncounts_min : int
+            Minimum counts required for the observation
+    """
     def __init__(self, events, data_store, empty_image,
                  energy_band, offset_band, exclusion_mask=None, ncounts_min=0):
         # Select the events in the given energy and offset ranfe
@@ -44,8 +72,9 @@ class ObsImage(object):
         self.livetime = data_store.obs(self.obs_id).observation_live_time_duration
 
     def counts_map(self):
+        """Fill the counts image for the events of one observation."""
         counts_map = SkyMap.empty_like(self.empty_image)
-        if (len(self.events) > self.ncounts_min):
+        if len(self.events) > self.ncounts_min:
             counts_map.fill(value=self.events)
         else:
             print("The total number of events {} is inferior to the requested minimal counts number".
@@ -58,7 +87,7 @@ class ObsImage(object):
         Parameters
         ----------
         bkg_norm : bool
-            If true, apply the scaling factor  to the bkg map
+            If true, apply the scaling factor from the number of counts outside the exclusion region to the bkg map
         """
         bkg_map = SkyMap.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
@@ -190,6 +219,34 @@ class ObsImage(object):
 
 
 class MosaicImage(object):
+    """Gammapy 2D image based analysis for a set of observations.
+
+    The computed images are stored in a ``maps`` attribute of type `~gammapy.image.SkyMapCollection`
+    with the following keys:
+
+    * counts : counts for the set of obs
+    * bkg : bkg model for the set of obs
+    * exposure : exposure for the set of obs
+    * excess : excess for the set of obs
+    * significance : significance for the set of obs
+
+    Parameters
+    ----------
+    empty_image : `~gammapy.image.SkyMap`
+            ref to an empty image
+    energy_band : `~gammapy.utils.energy.Energy`
+        Energy band for which we want to compute the image
+    offset_band : `astropy.coordinates.Angle`
+        Offset Band where you compute the image
+    data_store : `~gammapy.data.DataStore`
+        `DataStore` where are situated the events
+    obs_table : `~astropy.table.Table`
+            Required columns: OBS_ID
+    exclusion_mask : `~gammapy.image.ExclusionMask`
+            Exclusion regions
+    ncounts_min : int
+            Minimum counts required for the observation
+    """
     def __init__(self, empty_image=None,
                  energy_band=None, offset_band=None,
                  data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
@@ -210,6 +267,21 @@ class MosaicImage(object):
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
                     radius=10):
+        """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
+
+        Parameters
+        ----------
+        make_background_image : bool
+            True if you want to compute the background and exposure maps
+        bkg_norm : bool
+            If true, apply the scaling factor to the bkg map
+        spectral_index : float
+            Assumed power-law spectral index
+        for_integral_flux : bool
+            True if you want that the total excess / exposure gives the integrated flux
+        radius : float
+            Disk radius in pixels for the significance map.
+        """
 
         total_counts = SkyMap.empty_like(self.empty_image)
         if make_background_image:
@@ -217,6 +289,7 @@ class MosaicImage(object):
             total_exposure = SkyMap.empty_like(self.empty_image)
 
         for obs_id in self.obs_table['OBS_ID']:
+            print(obs_id)
             events = self.data_store.obs(obs_id).events
             obsimage = ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
                                 self.exclusion_mask, self.ncounts_min)
@@ -365,6 +438,7 @@ class ImageAnalysis(object):
         total_counts = SkyMap.empty_like(self.empty_image)
 
         for obs_id in self.obs_table['OBS_ID']:
+            print(obs_id)
             self.make_counts(obs_id)
             if self.maps["counts"].data.sum() < self.ncounts_min:
                 continue
