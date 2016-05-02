@@ -7,6 +7,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution.utils import discretize_oversample_2D
 from ..morphology import Gauss2DPDF
 from ..utils.array import array_stats_str
+from ..utils.energy import Energy, EnergyBounds
 
 __all__ = [
     'TablePSF',
@@ -502,26 +503,66 @@ class EnergyDependentTablePSF(object):
         """
         self.to_fits().writeto(*args, **kwargs)
 
-    def table_psf_at_energy(self, energy, **kwargs):
-        """TablePSF at a given energy.
+    def evaluate(self, energy=None, offset=None,
+                 interp_kwargs=None):
+        """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
 
-        Extra ``kwargs`` are passed to the `~gammapy.irf.TablePSF` constructor.
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            energy value
+        offset : `~astropy.coordinates.Angle`
+            offset value
+        interp_kwargs : dict
+            option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
+
+        Returns
+        -------
+        values : `~astropy.units.Quantity`
+            Interpolated value
+        """
+        if not interp_kwargs:
+            interp_kwargs = dict(bounds_error=False, fill_value=None)
+
+        from scipy.interpolate import RegularGridInterpolator
+        if energy is None:
+            energy = self.energy
+        if offset is None:
+            offset = self.offset
+
+        energy = Energy(energy).to('TeV')
+        offset = Angle(offset).to('deg')
+
+        energy_bin = self.energy.to('TeV')
+        offset_bin = self.offset.to('deg')
+        points = (energy_bin, offset_bin)
+        interpolator = RegularGridInterpolator(points, self.psf_value, **interp_kwargs)
+        ee, off = np.meshgrid(energy.value, offset.value, indexing='ij')
+        shape = ee.shape
+        pix_coords = np.column_stack([ee.flat, off.flat])
+
+        data_interp = interpolator(pix_coords)
+        return Quantity(data_interp.reshape(shape), self.psf_value.unit)
+
+    def table_psf_at_energy(self, energy, interp_kwargs=None, **kwargs):
+        """Evaluate the `EnergyOffsetArray` at one given energy.
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
             Energy
+        interp_kwargs : dict
+            Option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
         Returns
         -------
-        psf : `~gammapy.irf.TablePSF`
-            PSF
+        table : `~astropy.table.Table`
+            Table with two columns: offset, value
         """
-        if not isinstance(energy, Quantity):
-            raise ValueError("energy must be a Quantity object.")
+        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
+        table_psf = TablePSF(self.offset, psf_value, **kwargs)
 
-        energy_index = self._energy_index(energy)
-        return self._get_1d_table_psf(energy_index, **kwargs)
+        return table_psf
 
     def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.
