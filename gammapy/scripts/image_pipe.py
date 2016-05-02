@@ -10,6 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
+import time
 
 __all__ = ['ImageAnalysis',
            'ObsImage',
@@ -197,11 +198,6 @@ class ObsImage(object):
         ----------
         radius : float
             Disk radius in pixels.
-
-        Returns
-        -------
-        s_maps : `~gammapy.image.SkyMap`
-            significance map
         """
         s_map = SkyMap.empty_like(self.empty_image)
         counts = disk_correlate(self.maps["counts"].data, radius)
@@ -318,11 +314,6 @@ class MosaicImage(object):
         ----------
         radius : float
             Disk radius in pixels.
-
-        Returns
-        -------
-        s_maps : `~gammapy.image.SkyMap`
-            significance map
         """
         s_map = SkyMap.empty_like(self.empty_image)
         counts = disk_correlate(self.maps["counts"].data, radius)

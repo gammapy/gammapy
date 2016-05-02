@@ -5,8 +5,9 @@ from gammapy.utils.energy import Energy
 from gammapy.data import DataStore
 from gammapy.image import SkyMap, ExclusionMask
 from gammapy.background import OffDataBackgroundMaker
-from gammapy.scripts import ImageAnalysis
+from gammapy.scripts import MosaicImage
 from ...utils.testing import requires_data, requires_dependency
+
 
 @requires_dependency('reproject')
 @requires_data('gammapy-extra')
@@ -57,7 +58,8 @@ def test_image_pipe(tmpdir):
     refheader = image.to_image_hdu().header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
-    images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
-                           obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
-
-    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux=True)
+    #Pb with the load psftable for one of the run that is not implemented yet...
+    data_store.hdu_table.remove_row(14)
+    mosaic_images = MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
+                                obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
+    mosaic_images.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
