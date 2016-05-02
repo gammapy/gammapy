@@ -11,8 +11,7 @@ from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
 
-__all__ = ['ImageAnalysis',
-           'ObsImage',
+__all__ = ['ObsImage',
            'MosaicImage']
 
 log = logging.getLogger(__name__)
