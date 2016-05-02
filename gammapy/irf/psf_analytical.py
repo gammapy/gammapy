@@ -1,17 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+
 from astropy import log
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+
+from . import EnergyDependentTablePSF
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..utils.scripts import make_path
 from ..irf import HESSMultiGaussPSF
+
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
@@ -149,7 +153,6 @@ class EnergyDependentMultiGaussPSF(object):
             table[name_] = [data_]
 
         # TODO: add units!?
-
         # Create hdu and hdu list
         hdu = table_to_fits_table(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
@@ -277,7 +280,8 @@ class EnergyDependentMultiGaussPSF(object):
 
         return ax
 
-    def plot_containment_vs_energy(self, fractions=[0.68, 0.95], thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
+    def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
+                                   thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
         """Plot containment fraction as a function of energy.
         """
         import matplotlib.pyplot as plt
@@ -354,3 +358,43 @@ class EnergyDependentMultiGaussPSF(object):
                            "E = {2:4.1f}: {3:5.8f}\n"
                            "".format(100 * fraction, theta, energy, radius))
         return ss
+
+
+
+    def to_table_psf(self, theta=None, offset=None, exposure=None):
+        """
+        Convert triple Gaussian PSF ot table PSF.
+
+        Parameters
+        ----------
+        theta : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid.
+            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
+        exposure : `~astropy.units.Quantity`
+            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
+            Default exposure = 1.
+
+        Returns
+        -------
+        tabe_psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Instance of `EnergyDependentTablePSF`.
+        """
+        # Convert energies to log center
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
+        energies = ebounds.log_centers
+
+        # Defaults
+        theta = theta or Angle(0, 'deg')
+        offset = offset or Angle(np.arange(0, 1.5, 0.005), 'deg')
+        psf_value = Quantity(np.empty((len(energies), len(offset))), 'deg^-2')
+
+        for i, energy in enumerate(energies):
+            psf_gauss = self.psf_at_energy_and_theta(energy, theta)
+            psf_value[i] = Quantity(psf_gauss(offset, np.zeros_like(offset)), 'deg^-2')
+
+        return EnergyDependentTablePSF(energy=energies, offset=offset,
+                                       exposure=exposure, psf_value=psf_value)
+
+
