@@ -52,7 +52,6 @@ class ObsImage(object):
                   format(len(self.events)))
         self.maps["counts"] = counts_map
 
-
     def bkg_map(self, bkg_norm=True):
         """Make the background map for one observation from a bkg model.
 
@@ -162,6 +161,33 @@ class ObsImage(object):
 
         return scale
 
+    def significance_image(self, radius):
+        """Make the significance image from the counts and bkg images.
+
+        Parameters
+        ----------
+        radius : float
+            Disk radius in pixels.
+
+        Returns
+        -------
+        s_maps : `~gammapy.image.SkyMap`
+            significance map
+        """
+        s_map = SkyMap.empty_like(self.empty_image)
+        counts = disk_correlate(self.maps["counts"].data, radius)
+        bkg = disk_correlate(self.maps["bkg"].data, radius)
+        s = significance(counts, bkg)
+        s_map.data = s
+
+        self.maps["significance"] = s_map
+
+    def excess_image(self):
+        """Compute excess between counts and bkg map."""
+        total_excess = SkyMap.empty_like(self.empty_image)
+        total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
+        self.maps["excess"] = total_excess
+
 
 class MosaicImage(object):
     def __init__(self, empty_image=None,
@@ -177,12 +203,12 @@ class MosaicImage(object):
 
         self.empty_image = empty_image
         self.header = self.empty_image.to_image_hdu().header
-        self.exclusion_mask =  exclusion_mask
+        self.exclusion_mask = exclusion_mask
         if exclusion_mask:
             self.maps['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
 
-    def make_images(self, make_background_image = False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
+    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
                     radius=10):
 
         total_counts = SkyMap.empty_like(self.empty_image)
@@ -191,9 +217,9 @@ class MosaicImage(object):
             total_exposure = SkyMap.empty_like(self.empty_image)
 
         for obs_id in self.obs_table['OBS_ID']:
-            events= self.data_store.obs(obs_id).events
-            obsimage=ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
-                              self.exclusion_mask, self.ncounts_min)
+            events = self.data_store.obs(obs_id).events
+            obsimage = ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
+                                self.exclusion_mask, self.ncounts_min)
             if len(obsimage.events) < self.ncounts_min:
                 continue
             else:
@@ -211,7 +237,6 @@ class MosaicImage(object):
             self.maps["exposure"] = total_exposure
             self.significance_image(radius)
             self.excess_image()
-
 
     def significance_image(self, radius):
         """Make the significance image from the counts and bkg images.
