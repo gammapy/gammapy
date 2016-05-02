@@ -10,7 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
-import time
+
 
 __all__ = ['ImageAnalysis',
            'ObsImage',
@@ -285,7 +285,6 @@ class MosaicImage(object):
             total_exposure = SkyMap.empty_like(self.empty_image)
 
         for obs_id in self.obs_table['OBS_ID']:
-            print(obs_id)
             events = self.data_store.obs(obs_id).events
             obsimage = ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
                                 self.exclusion_mask, self.ncounts_min)
@@ -299,7 +298,6 @@ class MosaicImage(object):
                     obsimage.exposure_map(spectral_index, for_integral_flux)
                     total_bkg.data += obsimage.maps["bkg"].data
                     total_exposure.data += obsimage.maps["exposure"].data
-
         self.maps["counts"] = total_counts
         if make_background_image:
             self.maps["bkg"] = total_bkg
