@@ -15,7 +15,7 @@ from gammapy.background import fill_acceptance_image
 from gammapy.region import SkyCircleRegion
 from gammapy.stats import significance
 from gammapy.background import OffDataBackgroundMaker
-from gammapy.scripts import ImageAnalysis
+from gammapy.scripts import ImageAnalysis, ObsImage
 import matplotlib.pyplot as plt
 
 plt.ion()
@@ -168,12 +168,27 @@ def make_image_from_2d_bg():
     images = ImageAnalysis(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                            obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
 
-    images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux = True)
-    # images.make_total_exposure()
-    filename = 'fov_bg_maps.fits'
-    log.info('Writing {}'.format(filename))
+    #import IPython; IPython.embed()
+    events= data_store.obs(23526).events
+    obsimage=ObsImage(events, data_store, image, energy_band, offset_band, exclusion_mask, 0)
+    obsimage.counts_map()
+    obsimage.bkg_map()
+    obsimage.exposure_map()
 
-    images.maps.write(filename, clobber=True)
+    images.make_counts(23526)
+    images.make_background(23526)
+    images.make_exposure(23526)
+    import numpy as np
+    #import IPython; IPython.embed()
+    print(np.where(images.maps["counts"].data!=obsimage.maps["counts"].data))
+    print(np.where(images.maps["bkg"].data!=obsimage.maps["bkg"].data))
+    print(np.where(images.maps["exposure"].data!=obsimage.maps["exposure"].data))
+    #images.make_maps(radius=10., bkg_norm=True, spectral_index=2.3, for_integral_flux = True)
+    # images.make_total_exposure()
+    #filename = 'fov_bg_maps_test.fits'
+    #log.info('Writing {}'.format(filename))
+
+    #images.maps.write(filename, clobber=True)
 
 
 if __name__ == '__main__':
