@@ -564,6 +564,27 @@ class EnergyDependentTablePSF(object):
 
         return table_psf
 
+    def table_psf_at_energy_old(self, energy, **kwargs):
+        """TablePSF at a given energy.
+
+        Extra ``kwargs`` are passed to the `~gammapy.irf.TablePSF` constructor.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy
+
+        Returns
+        -------
+        psf : `~gammapy.irf.TablePSF`
+            PSF
+        """
+        if not isinstance(energy, Quantity):
+            raise ValueError("energy must be a Quantity object.")
+
+        energy_index = self._energy_index(energy)
+        return self._get_1d_table_psf(energy_index, **kwargs)
+
     def table_psf_in_energy_band(self, energy_band, spectral_index=2, spectrum=None, **kwargs):
         """Average PSF in a given energy band.
 

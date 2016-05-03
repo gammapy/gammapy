@@ -58,7 +58,8 @@ def test_to_table_psf(energy):
 
     table_psf = psf.to_table_psf(theta)
     interpol_param = dict(method='nearest', bounds_error=False)
-    table_psf_at_energy = table_psf.table_psf_at_energy(energy, interpol_param)
+    #table_psf_at_energy = table_psf.table_psf_at_energy(energy, interpol_param)
+    table_psf_at_energy = table_psf.table_psf_at_energy_old(energy)
     psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
     
     containment = np.linspace(0, 0.95, 10)
