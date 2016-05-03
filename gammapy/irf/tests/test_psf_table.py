@@ -100,7 +100,9 @@ def test_EnergyDependentTablePSF():
     # assert_quantity_allclose(actual, desired)
 
     psf1 = psf.table_psf_at_energy(energy)
-
+    containment = np.linspace(0, 0.95, 3)
+    containment_radius = psf1.containment_radius(containment)
+    assert_allclose(containment_radius, Angle([0,0.19426847,1.03806372], "deg"))
     # TODO: test average_psf
     # psf2 = psf.psf_in_energy_band(energy_band, spectrum)
 
