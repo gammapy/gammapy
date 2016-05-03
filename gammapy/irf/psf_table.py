@@ -636,7 +636,7 @@ class EnergyDependentTablePSF(object):
         # making a `TablePSF`.
         return TablePSF(self.offset, total_psf_value, **kwargs)
 
-    def containment_radius(self, energy, fraction):
+    def containment_radius(self, energy, fraction, interp_kwargs=None):
         """Containment radius.
 
         Parameters
@@ -652,7 +652,26 @@ class EnergyDependentTablePSF(object):
             Containment radius in deg
         """
         # TODO: useless at the moment ... support array inputs or remove!
-        psf = self.table_psf_at_energy(energy)
+        psf = self.table_psf_at_energy(energy, interp_kwargs)
+        return psf.containment_radius(fraction)
+
+    def containment_radius_old(self, energy, fraction):
+        """Containment radius.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy
+        fraction : float
+            Containment fraction in %
+
+        Returns
+        -------
+        radius : `~astropy.units.Quantity`
+            Containment radius in deg
+        """
+        # TODO: useless at the moment ... support array inputs or remove!
+        psf = self.table_psf_at_energy_old(energy)
         return psf.containment_radius(fraction)
 
     def integral(self, energy, offset_min, offset_max):
