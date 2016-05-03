@@ -15,7 +15,7 @@ from ...irf import EnergyDependentMultiGaussPSF
 from ...datasets import gammapy_extra
 
 
-ENERGIES = Quantity([1, 10, 30], 'TeV')
+ENERGIES = Quantity([1, 10, 25], 'TeV')
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -57,7 +57,8 @@ def test_to_table_psf(energy):
     theta = Angle(0, 'deg')
 
     table_psf = psf.to_table_psf(theta)
-    table_psf_at_energy = table_psf.table_psf_at_energy(energy)
+    interpol_param = dict(method='nearest', bounds_error=False)
+    table_psf_at_energy = table_psf.table_psf_at_energy(energy, interpol_param)
     psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
     
     containment = np.linspace(0, 0.95, 10)
