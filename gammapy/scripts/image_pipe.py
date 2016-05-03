@@ -31,10 +31,8 @@ class ObsImage(object):
 
     Parameters
     ----------
-    events : `~gammapy.data.EventList`
-        Event Table of the observation
-    data_store : `~gammapy.data.DataStore`
-        `DataStore` where are situated the events
+    obs : `~gammapy.data.DataStoreObservation`
+        `DataStoreObservation` for the observation
     empty_image : `~gammapy.image.SkyMap`
             ref to an empty image
     energy_band : `~gammapy.utils.energy.Energy`
@@ -47,11 +45,12 @@ class ObsImage(object):
             Minimum counts required for the observation
     """
 
-    def __init__(self, events, data_store, empty_image,
+    def __init__(self, obs, empty_image,
                  energy_band, offset_band, exclusion_mask=None, ncounts_min=0):
         # Select the events in the given energy and offset ranfe
         self.energy_band = energy_band
         self.offset_band = offset_band
+        events = obs.events
         self.obs_id = events.meta["OBS_ID"]
         events = events.select_energy(self.energy_band)
         self.events = events.select_offset(self.offset_band)
@@ -63,13 +62,12 @@ class ObsImage(object):
             self.maps['exclusion'] = exclusion_mask
 
         self.ncounts_min = ncounts_min
-        self.data_store = data_store
-        self.aeff = data_store.obs(self.obs_id).aeff
-        self.edisp = data_store.obs(self.obs_id).edisp
-        self.psf = data_store.obs(self.obs_id).psf
-        self.bkg = data_store.obs(self.obs_id).bkg
-        self.center = data_store.obs(self.obs_id).pointing_radec
-        self.livetime = data_store.obs(self.obs_id).observation_live_time_duration
+        self.aeff = obs.aeff
+        self.edisp = obs.edisp
+        self.psf = obs.psf
+        self.bkg = obs.bkg
+        self.center = obs.pointing_radec
+        self.livetime = obs.observation_live_time_duration
 
     def counts_map(self):
         """Fill the counts image for the events of one observation."""
@@ -93,8 +91,7 @@ class ObsImage(object):
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = self.center.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
-        livetime = self.livetime
-        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * livetime
+        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
         bkg_map.data = bkg_map.data.decompose()
         bkg_map.data = bkg_map.data.value
 
@@ -285,19 +282,19 @@ class MosaicImage(object):
             total_exposure = SkyMap.empty_like(self.empty_image)
 
         for obs_id in self.obs_table['OBS_ID']:
-            events = self.data_store.obs(obs_id).events
-            obsimage = ObsImage(events, self.data_store, self.empty_image, self.energy_band, self.offset_band,
+            obs = self.data_store.obs(obs_id)
+            obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
                                 self.exclusion_mask, self.ncounts_min)
-            if len(obsimage.events) < self.ncounts_min:
+            if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
-                obsimage.counts_map()
-                total_counts.data += obsimage.maps["counts"].data
+                obs_image.counts_map()
+                total_counts.data += obs_image.maps["counts"].data
                 if make_background_image:
-                    obsimage.bkg_map(bkg_norm)
-                    obsimage.exposure_map(spectral_index, for_integral_flux)
-                    total_bkg.data += obsimage.maps["bkg"].data
-                    total_exposure.data += obsimage.maps["exposure"].data
+                    obs_image.bkg_map(bkg_norm)
+                    obs_image.exposure_map(spectral_index, for_integral_flux)
+                    total_bkg.data += obs_image.maps["bkg"].data
+                    total_exposure.data += obs_image.maps["exposure"].data
         self.maps["counts"] = total_counts
         if make_background_image:
             self.maps["bkg"] = total_bkg
