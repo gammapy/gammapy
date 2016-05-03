@@ -431,7 +431,7 @@ class EnergyDependentTablePSF(object):
 
         # Default for exposure
         exposure = exposure or Quantity(np.ones(len(energy)), 'cm^2 s')
-        
+
         if not isinstance(energy, Quantity):
             raise ValueError("energy must be a Quantity object.")
         if not isinstance(offset, Angle):
@@ -540,7 +540,6 @@ class EnergyDependentTablePSF(object):
         ee, off = np.meshgrid(energy.value, offset.value, indexing='ij')
         shape = ee.shape
         pix_coords = np.column_stack([ee.flat, off.flat])
-
         data_interp = interpolator(pix_coords)
         return Quantity(data_interp.reshape(shape), self.psf_value.unit)
 
