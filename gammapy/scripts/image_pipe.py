@@ -47,7 +47,7 @@ class ObsImage(object):
 
     def __init__(self, obs, empty_image,
                  energy_band, offset_band, exclusion_mask=None, ncounts_min=0):
-        # Select the events in the given energy and offset ranfe
+        # Select the events in the given energy and offset range
         self.energy_band = energy_band
         self.offset_band = offset_band
         events = obs.events
@@ -75,8 +75,8 @@ class ObsImage(object):
         if len(self.events) > self.ncounts_min:
             counts_map.fill(value=self.events)
         else:
-            print("The total number of events {} is inferior to the requested minimal counts number".
-                  format(len(self.events)))
+            log.warn('Too few counts, there is only {} events and you requested a minimal counts number of {}'.
+                     format(len(self.events), self.ncounts_min))
         self.maps["counts"] = counts_map
 
     def bkg_map(self, bkg_norm=True):
@@ -284,7 +284,7 @@ class MosaicImage(object):
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
-                                self.exclusion_mask, self.ncounts_min)
+                                 self.exclusion_mask, self.ncounts_min)
             if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
