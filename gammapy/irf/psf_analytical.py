@@ -154,7 +154,6 @@ class EnergyDependentMultiGaussPSF(object):
             table[name_] = [data_]
             table[name_].unit = unit_
 
-        # TODO: add units!?
         # Create hdu and hdu list
         hdu = table_to_fits_table(table)
         hdu.header['LO_THRES'] = self.energy_thresh_lo.value
