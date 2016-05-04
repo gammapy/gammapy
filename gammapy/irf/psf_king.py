@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy import log
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy
+from ..utils.energy import Energy, EnergyBounds
 from ..utils.fits import table_to_fits_table
 from . import EnergyDependentTablePSF
 
@@ -39,7 +39,8 @@ class PSFKing(object):
         self.energy_lo = energy_lo.to('TeV')
         self.energy_hi = energy_hi.to('TeV')
         self.offset = Angle(offset)
-        self.energy = np.sqrt(self.energy_lo * self.energy_hi)
+        ebounds = EnergyBounds.from_lower_and_upper_bounds(energy_lo, energy_hi)
+        self.energy = ebounds.log_centers
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
 
