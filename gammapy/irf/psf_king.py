@@ -130,4 +130,18 @@ class PSFKing(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        raise NotImplementedError
+        energy = Energy(energy)
+        theta = Angle(theta)
+
+        # Find nearest energy value
+        i = np.argmin(np.abs(self.energy - energy))
+        j = np.argmin(np.abs(self.offset - offset))
+
+        # TODO: Use some kind of interpolation to get PSF
+        # parameters for every energy and theta
+
+        # Select correct gauss parameters for given energy and theta
+        sigma = self.sigma[j][i]
+        gamma = self.gamma[j][i]
+
+        return self.evaluate_direct(r, gamma, sigma)
