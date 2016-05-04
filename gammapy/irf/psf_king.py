@@ -226,7 +226,7 @@ class PSFKing(object):
 
         Returns
         -------
-        tabe_psf : `~gammapy.irf.EnergyDependentTablePSF`
+        table_psf : `~gammapy.irf.EnergyDependentTablePSF`
             Instance of `EnergyDependentTablePSF`.
         """
         # self.energy is already the logcenter
