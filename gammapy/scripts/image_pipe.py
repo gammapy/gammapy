@@ -101,6 +101,37 @@ class ObsImage(object):
 
         self.maps["bkg"] = bkg_map
 
+    def make_1d_exposure(self, spectral_index=2.3, for_integral_flux=False):
+        """Compute the 1D exposure table for one observation for an offset table
+
+        Parameters
+        ----------
+        obs_id : int
+            Number of the observation
+        spectral_index : float
+            Assumed power-law spectral index
+        for_integral_flux : bool
+            True if you want that the total excess / exposure gives the integrated flux
+
+        Returns
+        -------
+
+        """
+        # 2D Exposure computation on the self.energy_range and on an offset_tab
+        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
+                                                self.energy_band.unit)
+        energy_band = energy.bands
+        energy_bin = energy.log_centers
+        eref = EnergyBounds(self.energy_band).log_centers
+        spectrum = (energy_bin / eref) ** (-spectral_index)
+        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        exposure_tab = np.sum(self.aeff.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        exposure_tab *= self.livetime
+        if for_integral_flux:
+            norm = np.sum(spectrum * energy_band)
+            exposure_tab /= norm
+        return offset_tab,exposure_tab
+
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
         r"""Compute the exposure map for one observation.
 
@@ -141,23 +172,7 @@ class ObsImage(object):
         center = exposure.center()
         offset = coord.separation(center)
 
-        # 2D Exposure computation on the self.energy_range and on an offset_tab
-        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
-                                                self.energy_band.unit)
-        energy_band = energy.bands
-        energy_bin = energy.log_centers
-        eref = EnergyBounds(self.energy_band).log_centers
-        spectrum = (energy_bin / eref) ** (-spectral_index)
-        aeff2d = self.aeff
-        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        exposure_tab = np.sum(
-            aeff2d.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").transpose()
-            * spectrum * energy_band, axis=1)
-        if for_integral_flux:
-            norm = np.sum(spectrum * energy_band)
-            exposure_tab /= norm
-        livetime = self.livetime
-        exposure_tab *= livetime
+        offset_tab, exposure_tab = self.make_1d_exposure(spectral_index, for_integral_flux)
 
         # Interpolate for the offset of each pixel
         f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
@@ -211,6 +226,40 @@ class ObsImage(object):
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
 
+    def make_psf_time_area_time_flux_time_livetime(self, obs_id, spectral_index=2.3):
+        """
+
+        Parameters
+        ----------
+        obs_id
+        spectral_index
+
+        Returns
+        -------
+
+        """
+        obs = self.data_store.obs(obs_id=obs_id)
+        livetime = obs.observation_live_time_duration
+
+        # 2D Exposure computation on the self.energy_range and on an offset_tab
+        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
+                                                self.energy_band.unit)
+        energy_band = energy.bands
+        energy_bin = energy.log_centers
+        eref = EnergyBounds(self.energy_band).log_centers
+        spectrum = (energy_bin / eref) ** (-spectral_index)
+        aeff2d = obs.aeff
+        psf2d=obs.psf
+        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        psftab=np.zeros((len(offset_tab),len(energy_bin)))
+        for ioff,off in enumerate(offset_tab):
+            psf=psf2d.to_table_psf(off)
+            #Attention la method table_psf_at_energy() n interpole pas pour l instant mais prend le plus proche voisin
+            # il faut implementer cette interpolation
+            psftab[ioff,:]=psf.table_psf_at_energy(energy_bin)
+        tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        tab *= livetime
+        return offset_tab, tab
 
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
