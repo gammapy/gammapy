@@ -84,7 +84,7 @@ class EnergyDependentMultiGaussPSF(object):
         self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
     @classmethod
-    def read(cls, filename, hdu='psf_3gauss'):
+    def read(cls, filename, hdu='PSF_2D_GAUSS'):
         """Create `EnergyDependentMultiGaussPSF` from FITS file.
 
         Parameters
