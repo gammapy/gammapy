@@ -6,7 +6,6 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy import log
-
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
@@ -111,8 +110,6 @@ class PSFKing(object):
             log.warning('No safe energy thresholds found. Setting to default')
             return cls(energy_lo, energy_hi, offset, gamma, sigma)
 
-
-
     def to_fits(self):
         """
         Convert psf table data to FITS hdu list.
@@ -124,11 +121,11 @@ class PSFKing(object):
         """
         # Set up data
         names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
-                 'SIGMA','GAMMA']
+                 'SIGMA', 'GAMMA']
         units = ['TeV', 'TeV', 'deg', 'deg',
                  'deg', '']
         data = [self.energy_lo, self.energy_hi, self.offset, self.offset,
-                   self.sigma, self.gamma]
+                self.sigma, self.gamma]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
@@ -154,18 +151,24 @@ class PSFKing(object):
 
         Parameters
         ----------
-        TODO
+        r : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid
+        gamma : `~astropy.units.Quantity`
+            model parameter, no unit
+        sigma : `~astropy.coordinates.Angle`
+            model parameter
 
         Returns
         -------
-        TODO
+        king function : `~astropy.units.Quantity`
+            formula from here: :ref:`gadf:psf_king`
         """
         r2 = r * r
         sigma2 = sigma * sigma
 
         term1 = 1 / (2 * np.pi * sigma2)
         term2 = 1 - 1 / gamma
-        term3 = (1 + r2 / 2 * gamma * sigma2) ** (-gamma)
+        term3 = (1 + r2 / (2 * gamma * sigma2)) ** (-gamma)
 
         return term1 * term2 * term3
 
@@ -186,7 +189,7 @@ class PSFKing(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
-        param=dict()
+        param = dict()
         energy = Energy(energy)
         offset = Angle(offset)
 
@@ -207,7 +210,7 @@ class PSFKing(object):
 
     def to_table_psf(self, theta=None, offset=None, exposure=None):
         """
-        Convert triple Gaussian PSF ot table PSF.
+        Convert king PSF ot table PSF.
 
         Parameters
         ----------
@@ -239,4 +242,3 @@ class PSFKing(object):
 
         return EnergyDependentTablePSF(energy=energies, offset=offset,
                                        exposure=exposure, psf_value=psf_value)
-
