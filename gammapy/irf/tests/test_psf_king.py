@@ -72,13 +72,15 @@ def test_psf_king_to_table():
     filename = str(gammapy_extra.dir) + "/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523" \
                                         "/hess_psf_king_023523.fits.gz"
     psf_king = PSFKing.read(filename)
-    energy = Quantity(1, "TeV")
-    off1 = Angle(0, "deg")
-    off2 = Angle(1, "deg")
-    param_off1 = psf_king.evaluate(energy, off1)
-    param_off2 = psf_king.evaluate(energy, off2)
+    theta1 = Angle(0, "deg")
+    theta2 = Angle(1, "deg")
+    psf_king_table_off1 = psf_king.to_table_psf(theta=theta1)
+    psf_king_table_off2 = psf_king.to_table_psf(theta=theta2)
+    offset=Angle(1, "deg")
+    #energy = Quantity(1, "TeV") match with bin number 8
+    #offset equal 1 degre match with the bin 200 in the psf_table
+    value_off1=psf_king.evaluate_direct(offset, psf_king.gamma[0, 8], psf_king.sigma[0, 8])
+    value_off2=psf_king.evaluate_direct(offset, psf_king.gamma[2, 8], psf_king.sigma[2, 8])
 
-    assert_quantity_allclose(param_off1["gamma"], psf_king.gamma[0, 8])
-    assert_quantity_allclose(param_off2["gamma"], psf_king.gamma[2, 8])
-    assert_quantity_allclose(param_off1["sigma"], psf_king.sigma[0, 8])
-    assert_quantity_allclose(param_off2["sigma"], psf_king.sigma[2, 8])
+    assert_quantity_allclose(psf_king_table_off1.psf_value[8,200], value_off1)
+    assert_quantity_allclose(psf_king_table_off2.psf_value[8,200], value_off2)
