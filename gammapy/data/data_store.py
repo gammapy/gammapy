@@ -314,34 +314,44 @@ class DataStore(object):
 
         return file_available
 
-    def copy_obs(self, obs_table, outdir):
+    def copy_obs(self, obs_id, outdir, verbose=False, clobber=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations
 
         Parameters
         ----------
-        obs_table : `~gammapy.data.ObservationTable`
-            Table of observation to create the subset
+        obs_id : array-like, `~gammapy.data.ObservationTable`
+            List of observations to copy
         outdir : str, Path
             Directory for the new store
+        verbose : bool
+            Print copied files
+        clobber : bool
+            Overwrite
         """
+        # TODO : Does rsync give any benefits here?
+        
         outdir = make_path(outdir)
-        obs_ids = obs_table['OBS_ID'].data
-
+        if isinstance(obs_id, ObservationTable):
+            obs_id = obs_id['OBS_ID'].data
+        
         hdutable = self.hdu_table
         hdutable.add_index('OBS_ID')
-        subhdutable = hdutable.loc[obs_ids]
-        subobstable = self.obs_table.select_obs_id(obs_ids)
+        subhdutable = hdutable.loc[obs_id]
+        subobstable = self.obs_table.select_obs_id(obs_id)
 
         for ii in range(len(subhdutable)):
             # Changes to the file structure could be made here
             loc = subhdutable._location_info(ii)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            cmd = ['cp', str(loc.path()), str(targetdir)]
+            cmd = ['cp','-v'] if verbose else ['cp']
+            if not clobber:
+                cmd += ['-n']
+            cmd += [str(loc.path()), str(targetdir)]
             subprocess.call(cmd)
 
-        subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits')
-        subobstable.write(str(outdir/self.DEFAULT_OBS_TABLE), format='fits')
+        subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits', overwrite=clobber)
+        subobstable.write(str(outdir/self.DEFAULT_OBS_TABLE), format='fits', overwrite=clobber)
 
 
 class DataStoreObservation(object):
