@@ -3,18 +3,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from numpy.testing import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.table import Table
 import numpy as np
 from ...irf import PSFKing
 from ...utils.energy import Energy
 from ...utils.testing import requires_dependency, requires_data
+from ...datasets import gammapy_extra
+
 
 
 @requires_data('gammapy-extra')
-@requires_dependency('scipy')
 def test_psf_king_read():
-    filename="/Users/jouvin/Desktop/these/test_Gammapy/gammapy-extra/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_psf_king_023523.fits.gz"
-    #filename = "$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_psf_king_023523.fits.gz"
+    filename = str(gammapy_extra.dir)+"/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523" \
+                                      "/hess_psf_king_023523.fits.gz"
     psf_king = PSFKing.read(filename)
     table = Table.read(filename)
     elo = table["ENERG_LO"].squeeze()
@@ -31,7 +33,20 @@ def test_psf_king_read():
     sigma = Quantity(sigma, table['SIGMA'].unit)
 
 
-    assert_allclose(energy, psf_king.energy)
-    assert_allclose(offset, psf_king.offset)
-    assert_allclose(gamma, psf_king.gamma)
-    assert_allclose(sigma, psf_king.sigma)
+    assert_quantity_allclose(energy, psf_king.energy)
+    assert_quantity_allclose(offset, psf_king.offset)
+    assert_quantity_allclose(gamma, psf_king.gamma)
+    assert_quantity_allclose(sigma, psf_king.sigma)
+
+@requires_data('gammapy-extra')
+def test_psf_king_write():
+    filename = str(gammapy_extra.dir)+"/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523" \
+                                      "/hess_psf_king_023523.fits.gz"
+    psf_king = PSFKing.read(filename)
+    psf_king.write("king.fits")
+    psf_king2=PSFKing.read("king.fits")
+    assert_quantity_allclose(psf_king2.energy, psf_king.energy)
+    assert_quantity_allclose(psf_king2.offset, psf_king.offset)
+    assert_quantity_allclose(psf_king2.gamma, psf_king.gamma)
+    assert_quantity_allclose(psf_king2.sigma, psf_king.sigma)
+

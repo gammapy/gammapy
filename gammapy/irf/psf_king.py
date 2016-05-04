@@ -4,9 +4,13 @@ import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
+from astropy.io import fits
+from astropy import log
+
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy
+from ..utils.fits import table_to_fits_table
 from . import EnergyDependentTablePSF
 
 __all__ = ['PSFKing']
@@ -19,21 +23,29 @@ class PSFKing(object):
 
     Parameters
     ----------
+    energy_lo : `~astropy.units.Quantity`
+        Lower energy boundary of the energy bin.
+    energy_hi : `~astropy.units.Quantity`
+        Upper energy boundary of the energy bin.
     offset : `~astropy.coordinates.Angle`
         Offset nodes (1D)
-    energy : `~gammapy.utils.energy.Energy`
-        Energy nodes (1D)
     gamma : `~numpy.ndarray`
         PSF parameter (2D)
     sigma : `~astropy.coordinates.Angle`
         PSF parameter (2D)
     """
 
-    def __init__(self, offset, energy, gamma, sigma):
+    def __init__(self, energy_lo, energy_hi, offset, gamma, sigma, energy_thresh_lo=Quantity(0.1, 'TeV'),
+                 energy_thresh_hi=Quantity(100, 'TeV')):
+        self.energy_lo = energy_lo.to('TeV')
+        self.energy_hi = energy_hi.to('TeV')
         self.offset = Angle(offset)
-        self.energy = Energy(energy)
+        self.energy = np.sqrt(self.energy_lo * self.energy_hi)
         self.gamma = np.asanyarray(gamma)
         self.sigma = Angle(sigma)
+
+        self.energy_thresh_lo = energy_thresh_lo.to('TeV')
+        self.energy_thresh_hi = energy_thresh_hi.to('TeV')
 
     def info(self):
         """Print some basic info.
@@ -85,13 +97,56 @@ class PSFKing(object):
 
         energy_lo = table['ENERG_LO'].squeeze()
         energy_hi = table['ENERG_HI'].squeeze()
-        energy = np.sqrt(energy_lo * energy_hi)
-        energy = Energy(energy, unit=table['ENERG_LO'].unit)
+        energy_lo = Energy(energy_lo, unit=table['ENERG_LO'].unit)
+        energy_hi = Energy(energy_hi, unit=table['ENERG_HI'].unit)
 
         gamma = Quantity(table['GAMMA'].squeeze(), table['GAMMA'].unit)
         sigma = Quantity(table['SIGMA'].squeeze(), table['SIGMA'].unit)
 
-        return cls(offset, energy, gamma, sigma)
+        try:
+            energy_thresh_lo = Quantity(table.meta['LO_THRES'], 'TeV')
+            energy_thresh_hi = Quantity(table.meta['HI_THRES'], 'TeV')
+            return cls(energy_lo, energy_hi, offset, gamma, sigma, energy_thresh_lo, energy_thresh_hi)
+        except KeyError:
+            log.warning('No safe energy thresholds found. Setting to default')
+            return cls(energy_lo, energy_hi, offset, gamma, sigma)
+
+
+
+    def to_fits(self):
+        """
+        Convert psf table data to FITS hdu list.
+
+        Returns
+        -------
+        hdu_list : `~astropy.io.fits.HDUList`
+            PSF in HDU list format.
+        """
+        # Set up data
+        names = ['ENERG_LO', 'ENERG_HI', 'THETA_LO', 'THETA_HI',
+                 'SIGMA','GAMMA']
+        units = ['TeV', 'TeV', 'deg', 'deg',
+                 'deg', '']
+        data = [self.energy_lo, self.energy_hi, self.offset, self.offset,
+                   self.sigma, self.gamma]
+
+        table = Table()
+        for name_, data_, unit_ in zip(names, data, units):
+            table[name_] = [data_]
+            table[name_].unit = unit_
+
+        hdu = table_to_fits_table(table)
+        hdu.header['LO_THRES'] = self.energy_thresh_lo.value
+        hdu.header['HI_THRES'] = self.energy_thresh_hi.value
+
+        return fits.HDUList([fits.PrimaryHDU(), hdu])
+
+    def write(self, filename, *args, **kwargs):
+        """Write PSF to FITS file.
+
+        Calls `~astropy.io.fits.HDUList.writeto`, forwarding all arguments.
+        """
+        self.to_fits().writeto(filename, *args, **kwargs)
 
     @staticmethod
     def evaluate_direct(r, gamma, sigma):

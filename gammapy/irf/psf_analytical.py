@@ -143,14 +143,16 @@ class EnergyDependentMultiGaussPSF(object):
                  'SCALE', 'SIGMA_1', 'AMPL_2', 'SIGMA_2', 'AMPL_3', 'SIGMA_3']
         units = ['TeV', 'TeV', 'deg', 'deg',
                  '', 'deg', '', 'deg', '', 'deg']
+
         data = [self.energy_lo, self.energy_hi, self.theta, self.theta,
-                self.norms[0].flatten(), self.sigmas[0].flatten(),
-                self.norms[1].flatten(), self.sigmas[1].flatten(),
-                self.norms[2].flatten(), self.sigmas[2].flatten()]
+                self.norms[0], self.sigmas[0],
+                self.norms[1], self.sigmas[1],
+                self.norms[2], self.sigmas[2]]
 
         table = Table()
         for name_, data_, unit_ in zip(names, data, units):
             table[name_] = [data_]
+            table[name_].unit = unit_
 
         # TODO: add units!?
         # Create hdu and hdu list
