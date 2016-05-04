@@ -174,10 +174,10 @@ class PSFKing(object):
 
         Parameters
         ----------
-        offset : `~astropy.coordinates.Angle`
-            offset value
         energy : `~astropy.units.Quantity`
             energy value
+        offset : `~astropy.coordinates.Angle`
+            offset value
         interp_kwargs : dict
             option for interpolation for `~scipy.interpolate.RegularGridInterpolator`
 
