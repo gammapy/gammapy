@@ -4,9 +4,10 @@ import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-from ..utils.energy import Energy
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
+from ..utils.energy import Energy
+from . import EnergyDependentTablePSF
 
 __all__ = ['PSFKing']
 
@@ -113,7 +114,7 @@ class PSFKing(object):
 
         return term1 * term2 * term3
 
-    def evaluate(self, offset=None, energy=None, interp_kwargs=None):
+    def evaluate(self, energy=None, offset=None, interp_kwargs=None):
         """Interpolate the value of the `EnergyOffsetArray` at a given offset and Energy.
 
         Parameters
@@ -130,8 +131,9 @@ class PSFKing(object):
         values : `~astropy.units.Quantity`
             Interpolated value
         """
+        param=dict()
         energy = Energy(energy)
-        theta = Angle(theta)
+        offset = Angle(offset)
 
         # Find nearest energy value
         i = np.argmin(np.abs(self.energy - energy))
@@ -144,4 +146,42 @@ class PSFKing(object):
         sigma = self.sigma[j][i]
         gamma = self.gamma[j][i]
 
-        return self.evaluate_direct(r, gamma, sigma)
+        param["sigma"] = sigma
+        param["gamma"] = gamma
+        return param
+
+    def to_table_psf(self, theta=None, offset=None, exposure=None):
+        """
+        Convert triple Gaussian PSF ot table PSF.
+
+        Parameters
+        ----------
+        theta : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default theta = 0 deg
+        offset : `~astropy.coordinates.Angle`
+            Offset from PSF center used for evaluating the PSF on a grid.
+            Default offset = [0, 0.005, ..., 1.495, 1.5] deg.
+        exposure : `~astropy.units.Quantity`
+            Energy dependent exposure. Should be in units equivalent to 'cm^2 s'.
+            Default exposure = 1.
+
+        Returns
+        -------
+        tabe_psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Instance of `EnergyDependentTablePSF`.
+        """
+        # self.energy is already the logcenter
+        energies = self.energy
+
+        # Defaults
+        theta = theta or Angle(0, 'deg')
+        offset = offset or Angle(np.arange(0, 1.5, 0.005), 'deg')
+        psf_value = Quantity(np.empty((len(energies), len(offset))), 'deg^-2')
+
+        for i, energy in enumerate(energies):
+            param_king = self.evaluate(energy, theta)
+            psf_value[i] = Quantity(self.evaluate_direct(offset, param_king["gamma"], param_king["sigma"]), 'deg^-2')
+
+        return EnergyDependentTablePSF(energy=energies, offset=offset,
+                                       exposure=exposure, psf_value=psf_value)
+
