@@ -66,7 +66,7 @@ class ObsImage(object):
         self.edisp = obs.edisp
         self.psf = obs.psf
         self.bkg = obs.bkg
-        self.center = obs.pointing_radec
+        self.obs_center = obs.pointing_radec
         self.livetime = obs.observation_live_time_duration
 
     def counts_map(self):
@@ -89,7 +89,7 @@ class ObsImage(object):
         """
         bkg_map = SkyMap.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
-        center = self.center.galactic
+        center = self.obs_center.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
         bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
         bkg_map.data = bkg_map.data.decompose()
@@ -106,8 +106,6 @@ class ObsImage(object):
 
         Parameters
         ----------
-        obs_id : int
-            Number of the observation
         spectral_index : float
             Assumed power-law spectral index
         for_integral_flux : bool
@@ -169,8 +167,7 @@ class ObsImage(object):
         xpix_coord_grid, ypix_coord_grid = exposure.coordinates_pix()
         # calculate pixel offset from center (in world coordinates)
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
-        center = exposure.center()
-        offset = coord.separation(center)
+        offset = coord.separation(self.obs_center)
 
         offset_tab, exposure_tab = self.make_1d_exposure(spectral_index, for_integral_flux)
 
@@ -226,21 +223,17 @@ class ObsImage(object):
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
 
-    def make_psf_time_area_time_flux_time_livetime(self, obs_id, spectral_index=2.3):
+    def make_psf_time_area_time_flux_time_livetime(self, spectral_index=2.3):
         """
 
         Parameters
         ----------
-        obs_id
         spectral_index
 
         Returns
         -------
 
         """
-        obs = self.data_store.obs(obs_id=obs_id)
-        livetime = obs.observation_live_time_duration
-
         # 2D Exposure computation on the self.energy_range and on an offset_tab
         energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
                                                 self.energy_band.unit)
@@ -248,17 +241,14 @@ class ObsImage(object):
         energy_bin = energy.log_centers
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
-        aeff2d = obs.aeff
-        psf2d=obs.psf
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         psftab=np.zeros((len(offset_tab),len(energy_bin)))
         for ioff,off in enumerate(offset_tab):
-            psf=psf2d.to_table_psf(off)
-            #Attention la method table_psf_at_energy() n interpole pas pour l instant mais prend le plus proche voisin
-            # il faut implementer cette interpolation
+            psf=self.psf.to_table_psf(theta=off)
+            import IPython; IPython.embed()
             psftab[ioff,:]=psf.table_psf_at_energy(energy_bin)
-        tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
-        tab *= livetime
+        tab = np.sum(psftab*self.aeff.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        tab *= self.livetime
         return offset_tab, tab
 
 class MosaicImage(object):
@@ -310,7 +300,7 @@ class MosaicImage(object):
         self.ncounts_min = ncounts_min
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
-                    radius=10):
+                    radius=10, make_psf = False):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -325,6 +315,8 @@ class MosaicImage(object):
             True if you want that the total excess / exposure gives the integrated flux
         radius : float
             Disk radius in pixels for the significance map.
+        make_psf: bool
+            True if you want to compute the mean PSF for the set of run
         """
 
         total_counts = SkyMap.empty_like(self.empty_image)
@@ -352,6 +344,8 @@ class MosaicImage(object):
             self.maps["exposure"] = total_exposure
             self.significance_image(radius)
             self.excess_image()
+        if make_psf:
+            self.make_mean_psf(spectral_index)
 
     def significance_image(self, radius):
         """Make the significance image from the counts and bkg images.
@@ -374,3 +368,48 @@ class MosaicImage(object):
         total_excess = SkyMap.empty_like(self.empty_image)
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
+
+    def make_mean_psf(self, spectral_index=2.3):
+        """Compute the mean PSF for a set of observation
+        Parameters
+        ----------
+        spectral_index : float
+            Assumed power-law spectral index
+        """
+        from scipy.interpolate import interp1d
+
+        # TODO: should be re-implemented using the exposure_cube function
+        psf = SkyMap.empty_like(self.empty_image)
+
+        # Determine offset value for each pixel of the map
+        xpix_coord_grid, ypix_coord_grid = psf.coordinates(coord_type='pix')
+        # calculate pixel offset from center (in world coordinates)
+        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, psf.wcs, origin=0)
+        center = psf.center()
+
+        offset = coord.separation(center)
+        i=0
+        for obs_id in self.obs_table['OBS_ID']:
+            obs = self.data_store.obs(obs_id)
+            obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
+                                 self.exclusion_mask, self.ncounts_min)
+            if len(obs_image.events) < self.ncounts_min:
+                continue
+            else:
+                offset_tab, exposure_tab = obs_image.make_1d_exposure(spectral_index, False)
+                offset_tab, tab = obs_image.make_psf_time_area_time_flux_time_livetime(spectral_index)
+                if(i==0):
+                    exposure_tab_tot=exposure_tab
+                    tab_tot=tab
+                else:
+                    exposure_tab_tot+=exposure_tab
+                    tab_tot+=tab
+                i+=1
+        tab_tot/=exposure_tab_tot
+
+        # Interpolate for the offset of each pixel
+        f = interp1d(offset_tab, tab_tot, bounds_error=False, fill_value=0)
+        psf.data = f(offset)
+        psf.data[offset >= self.offset_band[1]] = 0
+        self.maps["PSF"] = psf
+
