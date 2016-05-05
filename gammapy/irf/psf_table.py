@@ -518,10 +518,8 @@ class EnergyDependentTablePSF(object):
             energy = self.energy
         if offset is None:
             offset = self.offset
-
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
-
         energy_bin = self.energy.to('TeV')
         offset_bin = self.offset.to('deg')
         points = (energy_bin, offset_bin)
@@ -547,7 +545,7 @@ class EnergyDependentTablePSF(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
+        psf_value = self.evaluate(energy, None, interp_kwargs)[0,:]
         table_psf = TablePSF(self.offset, psf_value, **kwargs)
 
         return table_psf

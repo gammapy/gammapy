@@ -223,12 +223,15 @@ class ObsImage(object):
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
 
-    def make_psf_time_area_time_flux_time_livetime(self, spectral_index=2.3):
+    def make_mean_psf(self, region_center, spectral_index=2.3):
         """
 
         Parameters
         ----------
-        spectral_index
+        region_center : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
+        spectral_index : float
+            Assumed power-law spectral index
 
         Returns
         -------
@@ -241,15 +244,18 @@ class ObsImage(object):
         energy_bin = energy.log_centers
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
-        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        psftab=np.zeros((len(offset_tab),len(energy_bin)))
-        for ioff,off in enumerate(offset_tab):
-            psf=self.psf.to_table_psf(theta=off)
-            import IPython; IPython.embed()
-            psftab[ioff,:]=psf.table_psf_at_energy(energy_bin)
-        tab = np.sum(psftab*self.aeff.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        #offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        offset=region_center.separation(self.obs_center)
+        psf_table=self.psf.to_table_psf(theta=offset)
+
+        psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
+        for iE,E in enumerate(energy_bin):
+            psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
+        tab = np.sum(psftab*self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
         tab *= self.livetime
-        return offset_tab, tab
+        exposure*=self.livetime
+        return psf_table.offset, tab, exposure
 
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
@@ -298,9 +304,11 @@ class MosaicImage(object):
         if exclusion_mask:
             self.maps['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
+        self.psfmeantab = None
+        self.thetapsf = None
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
-                    radius=10, make_psf = False):
+                    radius=10, make_psf = False, region_center = None):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -317,13 +325,15 @@ class MosaicImage(object):
             Disk radius in pixels for the significance map.
         make_psf: bool
             True if you want to compute the mean PSF for the set of run
+        region_center : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
         """
 
         total_counts = SkyMap.empty_like(self.empty_image)
         if make_background_image:
             total_bkg = SkyMap.empty_like(self.empty_image)
             total_exposure = SkyMap.empty_like(self.empty_image)
-
+        i=0
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -345,7 +355,7 @@ class MosaicImage(object):
             self.significance_image(radius)
             self.excess_image()
         if make_psf:
-            self.make_mean_psf(spectral_index)
+            self.make_mean_psf_tab(region_center, spectral_index)
 
     def significance_image(self, radius):
         """Make the significance image from the counts and bkg images.
@@ -369,10 +379,12 @@ class MosaicImage(object):
         total_excess.data = self.maps["counts"].data - self.maps["bkg"].data
         self.maps["excess"] = total_excess
 
-    def make_mean_psf(self, spectral_index=2.3):
+    def make_mean_psf_tab(self, region_center, spectral_index=2.3):
         """Compute the mean PSF for a set of observation
         Parameters
         ----------
+        region_center : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
         spectral_index : float
             Assumed power-law spectral index
         """
@@ -396,8 +408,7 @@ class MosaicImage(object):
             if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
-                offset_tab, exposure_tab = obs_image.make_1d_exposure(spectral_index, False)
-                offset_tab, tab = obs_image.make_psf_time_area_time_flux_time_livetime(spectral_index)
+                theta_psf_tab, tab, exposure_tab = obs_image.make_mean_psf(region_center,spectral_index)
                 if(i==0):
                     exposure_tab_tot=exposure_tab
                     tab_tot=tab
@@ -406,10 +417,6 @@ class MosaicImage(object):
                     tab_tot+=tab
                 i+=1
         tab_tot/=exposure_tab_tot
-
-        # Interpolate for the offset of each pixel
-        f = interp1d(offset_tab, tab_tot, bounds_error=False, fill_value=0)
-        psf.data = f(offset)
-        psf.data[offset >= self.offset_band[1]] = 0
-        self.maps["PSF"] = psf
+        self.psfmeantab = tab_tot
+        self.thetapsf = theta_psf_tab
 

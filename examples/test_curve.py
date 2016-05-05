@@ -67,8 +67,9 @@ def make_image_from_2d_bg():
     exclusion_mask = exclusion_mask.reproject(reference=refheader)
     mosaic_images = MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                                 obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
-    mosaic_images.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
-    filename = 'fov_bg_maps_test.fits'
+    mosaic_images.make_images(make_background_image=True, for_integral_flux=True, radius=10., make_psf = True,
+                              region_center=center)
+    filename = 'fov_bg_maps.fits'
     log.info('Writing {}'.format(filename))
     mosaic_images.maps.write(filename, clobber=True)
 
