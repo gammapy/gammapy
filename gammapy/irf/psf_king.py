@@ -211,7 +211,7 @@ class PSFKing(object):
 
     def to_table_psf(self, theta=None, offset=None, exposure=None):
         """
-        Convert king PSF ot table PSF.
+        Convert king PSF in table PSF.
 
         Parameters
         ----------
