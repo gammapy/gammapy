@@ -224,7 +224,7 @@ class ObsImage(object):
         self.maps["excess"] = total_excess
 
     def make_mean_psf(self, region_center, spectral_index=2.3):
-        """
+        """TODO:find a good description
 
         Parameters
         ----------
@@ -235,6 +235,7 @@ class ObsImage(object):
 
         Returns
         -------
+        TODO
 
         """
         # 2D Exposure computation on the self.energy_range and on an offset_tab
@@ -388,8 +389,6 @@ class MosaicImage(object):
         spectral_index : float
             Assumed power-law spectral index
         """
-        from scipy.interpolate import interp1d
-
         # TODO: should be re-implemented using the exposure_cube function
         psf = SkyMap.empty_like(self.empty_image)
 
