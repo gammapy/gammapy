@@ -414,6 +414,7 @@ class MosaicImage(object):
                 else:
                     exposure_tab_tot+=exposure_tab
                     tab_tot+=tab
+
                 i+=1
         tab_tot/=exposure_tab_tot
         self.psfmeantab = tab_tot
