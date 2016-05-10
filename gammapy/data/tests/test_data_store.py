@@ -94,8 +94,13 @@ def test_datastore_subset(tmpdir, data_manager):
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
-def test_datastore_misc(tmpdir, data_manager):
-    """Execute all functions to not let them break"""
+def test_data_summary(data_manager):
+    """Test data summary function"""
     
     data_store = data_manager['hess-crab4-hd-hap-prod2']
-    data_store.data_summary([23523, 23592])
+    t = data_store.data_summary([23523, 23592])
+    assert t[0]['events'] == 620975
+    assert t[1]['edisp_2d'] == 28931
+
+    t = data_store.data_summary([23523, 23592], summed=True)
+    assert t[0]['psf_3gauss'] == 6042

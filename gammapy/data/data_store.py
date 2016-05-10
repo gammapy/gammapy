@@ -357,13 +357,15 @@ class DataStore(object):
         subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits', overwrite=clobber)
         subobstable.write(str(outdir/self.DEFAULT_OBS_TABLE), format='fits', overwrite=clobber)
 
-    def data_summary(self, obs_id=None):
+    def data_summary(self, obs_id=None, summed=False):
         """Create a summary `~astropy.table.Table` with HDU size information
 
         Parameters
         ----------
         obs_id : array-like, `~gammapy.data.ObservationTable`
             Observations to create summary for
+        summed : bool
+            Add up file size over all obs
         """
         if obs_id is None:
             obs_id = self.obs_table['OBS_ID'].data
@@ -375,16 +377,24 @@ class DataStore(object):
         subhdut = hdut.loc[obs_id]
 
         subhdut_grpd = subhdut.group_by('OBS_ID')
-        rows = list()
         colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
+        temp = np.zeros(len(colnames))
+        rows = list()
         for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
-            # This is needed to get the row order right
+            # This is needed to get the column order right
             group.add_index('HDU_CLASS')
-            temp = group.loc[colnames]
-            rows.append(np.append(key['OBS_ID'], temp['SIZE'].data))
-        names = np.append(['OBS_ID'], colnames)
+            vals = group.loc[colnames]['SIZE'].data
+            if summed:
+                temp = temp + vals
+            else:
+                rows.append(np.append(key['OBS_ID'], vals)) 
+        if summed:
+            rows.append(temp)
+        else:
+            colnames = np.append(['OBS_ID'], colnames)
         
-        return Table(rows=rows, names=names)
+        return Table(rows=rows, names=colnames)
+
 
 class DataStoreObservation(object):
     """IACT data store observation.
