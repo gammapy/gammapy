@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 class DataStore(object):
     """IACT data store.
 
-    The data selection and access happens an observation
+    The data selection and access happens using an observation
     and an HDU index file as described at :ref:`gadf:iact-storage`.
 
     See :ref:`data_store`.
@@ -143,7 +143,6 @@ class DataStore(object):
         dm = DataManager()
         return dm[name]
 
-    # TODO: seems too magical. needed? remove?
     @classmethod
     def from_all(cls, val):
         """Try different DataStore constructors.
@@ -274,6 +273,9 @@ class DataStore(object):
         table : `~astropy.table.Table`
             Table summarising info about files.
         """
+        # TODO : remove or fix
+        raise NotImplementedError
+
         if observation_table is None:
             observation_table = ObservationTable(self.obs_table)
 
@@ -299,7 +301,8 @@ class DataStore(object):
         file_available : `~numpy.ndarray`
             Boolean mask which files are available.
         """
-        # Todo: This is broken. Remove (covered by HDUlocation class)?
+        # TODO: This is broken. Remove (covered by HDUlocation class)?
+        raise NotImplementedError
 
         observation_table = self.obs_table
         file_available = np.ones(len(observation_table), dtype='bool')
@@ -352,6 +355,44 @@ class DataStore(object):
 
         subhdutable.write(str(outdir/self.DEFAULT_HDU_TABLE), format='fits', overwrite=clobber)
         subobstable.write(str(outdir/self.DEFAULT_OBS_TABLE), format='fits', overwrite=clobber)
+
+    def data_summary(self, obs_id=None, summed=False):
+        """Create a summary `~astropy.table.Table` with HDU size information
+
+        Parameters
+        ----------
+        obs_id : array-like, `~gammapy.data.ObservationTable`
+            Observations to create summary for
+        summed : bool
+            Add up file size over all obs
+        """
+        if obs_id is None:
+            obs_id = self.obs_table['OBS_ID'].data
+        elif isinstance(obs_id, ObservationTable):
+            obs_id = obs_id['OBS_ID'].data
+        
+        hdut = self.hdu_table
+        hdut.add_index('OBS_ID')
+        subhdut = hdut.loc[obs_id]
+
+        subhdut_grpd = subhdut.group_by('OBS_ID')
+        colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
+        temp = np.zeros(len(colnames), dtype=int)
+        rows = list()
+        for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
+            # This is needed to get the column order right
+            group.add_index('HDU_CLASS')
+            vals = group.loc[colnames]['SIZE'].data
+            if summed:
+                temp = temp + vals
+            else:
+                rows.append(np.append(key['OBS_ID'], vals)) 
+        if summed:
+            rows.append(temp)
+        else:
+            colnames = np.append(['OBS_ID'], colnames)
+        
+        return Table(rows=rows, names=colnames)
 
 
 class DataStoreObservation(object):
