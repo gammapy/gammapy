@@ -376,9 +376,13 @@ class DataStore(object):
 
         subhdut_grpd = subhdut.group_by('OBS_ID')
         rows = list()
+        colnames = subhdut_grpd.groups[0]['HDU_CLASS'].data
         for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
-            rows.append(np.append(key['OBS_ID'], group['SIZE'].data))
-        names = np.append(['OBS_ID'], subhdut_grpd.groups[0]['HDU_CLASS'].data)
+            # This is needed to get the row order right
+            group.add_index('HDU_CLASS')
+            temp = group.loc[colnames]
+            rows.append(np.append(key['OBS_ID'], temp['SIZE'].data))
+        names = np.append(['OBS_ID'], colnames)
         
         return Table(rows=rows, names=names)
 
