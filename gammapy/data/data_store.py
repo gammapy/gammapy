@@ -143,7 +143,6 @@ class DataStore(object):
         dm = DataManager()
         return dm[name]
 
-    # TODO: seems too magical. needed? remove?
     @classmethod
     def from_all(cls, val):
         """Try different DataStore constructors.
