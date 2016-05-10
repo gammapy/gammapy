@@ -4,7 +4,6 @@ import sys
 import logging
 import numpy as np
 from collections import OrderedDict
-from itertools import izip
 
 import subprocess
 from astropy.table import Table
@@ -377,7 +376,7 @@ class DataStore(object):
 
         subhdut_grpd = subhdut.group_by('OBS_ID')
         rows = list()
-        for key, group in izip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
+        for key, group in zip(subhdut_grpd.groups.keys, subhdut_grpd.groups):
             rows.append(np.append(key['OBS_ID'], group['SIZE'].data))
         names = np.append(['OBS_ID'], subhdut_grpd.groups[0]['HDU_CLASS'].data)
         
