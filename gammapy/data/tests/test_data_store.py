@@ -83,9 +83,6 @@ def test_datastore_subset(tmpdir, data_manager):
 
     substore = DataStore.from_dir(storedir)
 
-    # Todo : This is broken, remove or fix?
-    # substore.check_integrity()
-
     assert str(substore.hdu_table.base_dir) == str(storedir)
     assert len(substore.obs_table) == 2
 
@@ -93,3 +90,12 @@ def test_datastore_subset(tmpdir, data_manager):
     actual = substore.obs(23523)
 
     assert str(actual.events) == str(desired.events)
+
+
+@requires_data('gammapy-extra')
+@requires_dependency('yaml')
+def test_datastore_misc(tmpdir, data_manager):
+    """Execute all functions to not let them break"""
+    
+    data_store = data_manager['hess-crab4-hd-hap-prod2']
+    data_store.data_summary([23523, 23592])
