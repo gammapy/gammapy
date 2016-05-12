@@ -5,7 +5,7 @@ import numpy as np
 from astropy.units import Quantity, Unit
 from astropy.table import Table, Column
 
-_all_ = [
+__all__ = [
     'NDDataArray',
     'DataAxis',
     'BinnedDataAxis',
@@ -15,10 +15,14 @@ _all_ = [
 class NDDataArray(object):
     """ND Data Array
 
-    This class represents an ND Data Array. The data stored as numpy array
-    attribute. The data axis are separate classes and this class has them as
-    members. The axis order follows numpy convention for arrays, i.e. the axis
-    added last is at index 0. For an example see nddata_demo.ipynb in
+    This class represents a n-dimensional data array. The data is stored as a 
+    `~numpy array`. The data axes are separate classes,
+    `~gammapy.utils.nddata.DataAxis` or 
+    `~gammapy.utils.nddata.BinnedDataAxis`.
+    After this class has been initialized any number of axes and a data array
+    can be added. The axis order follows numpy convention for arrays, i.e. the 
+    axis added last is at index 0. The array can be interpolated using several 
+    interpolation methods. For an example see nddata_demo.ipynb in
     ``gammapy-extra/notebooks``.
     """
     def __init__(self):
@@ -29,11 +33,12 @@ class NDDataArray(object):
     def add_axis(self, axis):
         """Add axis
 
-        This data array is set to None to avoid unwanted behaviour.
+        The ``data`` member is set to ``None`` in order to avoid unwanted
+        behaviour.
 
         Parameters
         ----------
-        axis : `DataAxis`
+        axis : `~gammapy.utils.nddata.DataAxis`
             axis
         """
         default_names = {0: 'x', 1: 'y', 2: 'z'}
@@ -41,18 +46,17 @@ class NDDataArray(object):
             axis.name = default_names[self.dim]
         self._axes = [axis] + self._axes
 
-        # Quick solution: delete data to prevent unwanted behaviour
         self._data = None
         self._lininterp = None
 
     @property
     def axes(self):
-        """Array holding all axes"""
+        """Array holding the axes"""
         return self._axes
 
     @property
     def data(self):
-        """Array holding the ND data"""
+        """Array holding the n-dimensional data"""
         return self._data
 
     @data.setter
@@ -84,11 +88,11 @@ class NDDataArray(object):
 
     @property
     def axis_names(self):
-        """Currently set axis names"""
+        """Axes names"""
         return [a.name for a in self.axes]
     
     def get_axis_index(self, name):
-        """Return axis index by it name
+        """Return axis index by its  name
 
         Parameters
         ----------
@@ -101,7 +105,7 @@ class NDDataArray(object):
         raise ValueError("No axis with name {}".format(name))
 
     def get_axis(self, name):
-        """Return axis by it name
+        """Return axis by its name
 
         Parameters
         ----------
@@ -194,13 +198,13 @@ class NDDataArray(object):
         """Evaluate NDData Array
 
         No interpolation, this is equivalent to ``evaluate(method='nearest')``
-        and will probably go away at some point.
 
         Parameters
         ----------
         kwargs : dict
             Axis names are keys, Quantity array are values
         """
+        # TODO : Remove?
         idx = self.find_node(**kwargs)
         data = self.data
         for i in np.arange(self.dim):
@@ -211,10 +215,9 @@ class NDDataArray(object):
     def evaluate(self, method='linear', **kwargs):
         """Evaluate NDData Array
 
-         This function provides a uniform interface to several interpolators
-
+        This function provides a uniform interface to several interpolators.
         Interpolators have to be added before this function can be used.
-        TODO : Do we want a default interpolator to be added on construction?
+        The evaluation nodes are given as ``kwargs``.
 
         Currently available:
         `~scipy.interpolate.RegularGridInterpolator`, methods: linear, nearest
@@ -230,6 +233,28 @@ class NDDataArray(object):
         -------
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import numpy as np
+            import astropy.units as u
+            from gammapy.utils.nddata import NDDataArray, DataAxis
+
+            x_axis = DataAxis(np.linspace(1,10,10),'m', name='distance')
+            y_axis = DataAxis(np.linspace(2,3,5),'s', name='time')
+            data = np.arange(50).reshape(5,10)
+
+            nddata = NDDataArray()
+            nddata.add_axis(x_axis)
+            nddata.add_axis(y_axis)
+            nddata.data = data
+            nddata.add_linear_interpolator()
+
+            nddata.evaluate(distance=[4, 5, 6,] * u.m, time=2 * u.s, method='nearest')
+            nddata.evaluate(distance=400 * u.cm, method='linear')
         """
         for key in kwargs.keys():
             if key not in self.axis_names:
@@ -411,16 +436,6 @@ class BinnedDataAxis(DataAxis):
 
     Axis values are interpreted as bin edges
     """
-    @classmethod
-    def linspace(cls, min, max, nbins, unit=None):
-        """Create linearly spaced axis"""
-        if unit is None:
-            raise NotImplementedError
-
-        data = np.linspace(min, max, nbins+1)
-        unit = Unit(unit)
-        return cls(data, unit)
-
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None):
         return super(EnergyBounds, cls).equal_log_spacing(

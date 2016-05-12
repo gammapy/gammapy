@@ -27,3 +27,4 @@ class EffectiveArea2D(NDDataArray):
 	offset = DataAxis(offset, name='offset')
 	self.add_axis(offset)
 	self.data = effective_area
+	self.add_linear_interpolator(bounds_error=False)
