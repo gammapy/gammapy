@@ -1,7 +1,6 @@
-import pytest
-import random
 import numpy as np
-from astropy.units import Unit as u
+import astropy.units as u
+from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency
 from ..nddata import NDDataArray, DataAxis, BinnedDataAxis
 
@@ -15,7 +14,7 @@ def get_2d_histo():
     hist.add_axis(x_axis)
     hist.add_axis(y_axis)
 
-    data = [random.expovariate(hist.axes[1][_].value + 1) for _ in range(10)]
+    data = np.random.exponential(hist.axes[1].nodes.value + 1)
     val = np.arange(1, 6)
     d = np.array(data)
     data_2d = np.tensordot(val, d, axes=0)
@@ -46,18 +45,18 @@ def test_1d_histo():
         hist.data = data
 
     # add correct data
-    data = [random.expovariate(hist.axes[0][_].value + 1) for _ in range(10)]
+    data = [np.random.exponential(hist.axes[0][_].value + 1) for _ in range(10)]
     hist.data = data
 
     # Find nodes on x-axis
     with pytest.raises(ValueError):
-        hist.find_node(x=[14 * u('s')])
+        hist.find_node(x=[14 * u.s])
 
-    idx = hist.get_axis('x').find_node(12 * u('m'))
+    idx = hist.get_axis('x').find_node(12 * u.m)
     assert idx[0] == 1
-    idx = hist.get_axis('x').find_node(1200 * u('cm'))
+    idx = hist.get_axis('x').find_node(1200 * u.cm)
     assert idx[0] == 1
-    vals = [13 * u('m'), 2500 * u('cm'), 600 * u('dm')]
+    vals = [13 * u.m, 2500 * u.cm, 600 * u.dm]
     idx = hist.get_axis('x').find_node(vals)
     assert idx[0] == np.array([1, 2, 6]).all()
 
@@ -65,22 +64,22 @@ def test_1d_histo():
         hist.find_node(energy=5)
 
     # Find nodes using array input
-    idx = hist.find_node(x=[12 * u('m'), 67 * u('m')])
+    idx = hist.find_node(x=[12 * u.m, 67 * u.m])
     assert idx[0][0] == 1
 
     # Use hand-written nearest neighbbour interpolation
-    eval_data = hist.evaluate_nearest(x=[32.52 * u('m')])
+    eval_data = hist.evaluate_nearest(x=[32.52 * u.m])
     assert eval_data == data[3]
 
     eval_data = hist.evaluate_nearest(
-        x=[32.52 * u('m'), 12 * u('m'), 61.1512 * u('m')])
+        x=[32.52 * u.m, 12 * u.m, 61.1512 * u.m])
     assert (eval_data == np.asarray(data)[np.array([3, 1, 6])]).all()
 
     # Interpolation (test only nearest here to check if setup works)
     hist.add_linear_interpolator()
 
     interp_data = hist.evaluate(
-        x=[32.52 * u('m'), 12 * u('m'), 61.1512 * u('m')],
+        x=[32.52 * u.m, 12 * u.m, 61.1512 * u.m],
         method='nearest')
 
     # Should give same result als evaluate_nearest
@@ -96,7 +95,7 @@ def test_2d_histo():
 
     # Data in wrong axis order (have to reset data first)
     hist._data = None
-    data = [random.expovariate(hist.axes[1][_].value + 1) for _ in range(10)]
+    data = np.random.exponential(hist.axes[1].nodes.value)
     val = np.arange(1, 6)
     d = np.array(data)
     data_2d = np.tensordot(d, val, axes=0)
@@ -109,8 +108,8 @@ def test_2d_histo():
     data_2d = data_2d.transpose()
     hist.data = data_2d
 
-    nodes = hist.find_node(x=[12 * u('m'), 23 * u('m')],
-                           weight=[1.2, 4.3, 3.5] * u('kg'))
+    nodes = hist.find_node(x=[12 * u.m, 23 * u.m],
+                           weight=[1.2, 4.3, 3.5] * u.kg)
 
     assert len(nodes) == 2
     assert len(nodes[0]) == 3
@@ -118,18 +117,18 @@ def test_2d_histo():
     assert nodes[1][1] == 2
     assert nodes[0][2] == 2
 
-    nodes = hist.find_node(x=[16 * u('m')])
+    nodes = hist.find_node(x=[16 * u.m])
     assert len(nodes) == 2
     assert nodes[0][4] == 4
 
-    eval_data = hist.evaluate_nearest(x=12 * u('m'), weight=3.2 * u('kg'))
+    eval_data = hist.evaluate_nearest(x=12 * u.m, weight=3.2 * u.kg)
     assert eval_data == data_2d[2, 1]
 
-    eval_data = hist.evaluate_nearest(x=[12, 34] * u('m'),
-                                      weight=[3.2, 2, 2.4] * u('kg'))
+    eval_data = hist.evaluate_nearest(x=[12, 34] * u.m,
+                                      weight=[3.2, 2, 2.4] * u.kg)
     assert eval_data.shape == (3, 2)
 
-    eval_data = hist.evaluate_nearest(weight=[3.2, 2, 2.4] * u('kg'))
+    eval_data = hist.evaluate_nearest(weight=[3.2, 2, 2.4] * u.kg)
     assert eval_data.shape == (3, 10)
 
 
@@ -151,16 +150,16 @@ def test_interpolation():
     hist = get_2d_histo()
     hist.add_linear_interpolator()
 
-    interp_data = hist.evaluate(x=[12, 34] * u('m'),
-                                weight=[3.2, 2, 2.4] * u('kg'))
+    interp_data = hist.evaluate(x=[12, 34] * u.m,
+                                weight=[3.2, 2, 2.4] * u.kg)
     assert interp_data.shape == (3, 2)
 
-    interp_data2 = hist.evaluate(x=[1200, 3400] * u('cm'),
-                                 weight=[3200, 2000, 2400] * u('g'))
+    interp_data2 = hist.evaluate(x=[1200, 3400] * u.cm,
+                                 weight=[3200, 2000, 2400] * u.g)
 
     assert (interp_data == interp_data2).all()
 
-    interp_data = hist.evaluate(x=[77] * u('m'))
+    interp_data = hist.evaluate(x=[77] * u.m)
 
     assert interp_data.shape == (5, 1)
 
@@ -169,12 +168,12 @@ def test_interpolation():
     assert (interp_data == hist.data).all()
 
     # check if hand-made nearest neighbour interpolation works
-    interp_data = hist.evaluate(x=[12, 34] * u('m'),
-                                weight=[3.2, 2, 2.4] * u('kg'),
+    interp_data = hist.evaluate(x=[12, 34] * u.m,
+                                weight=[3.2, 2, 2.4] * u.kg,
                                 method='nearest')
 
-    old_data = hist.evaluate_nearest(x=[12, 34] * u('m'),
-                                     weight=[3.2, 2, 2.4] * u('kg'))
+    old_data = hist.evaluate_nearest(x=[12, 34] * u.m,
+                                     weight=[3.2, 2, 2.4] * u.kg)
 
     assert (interp_data == old_data).all()
 
