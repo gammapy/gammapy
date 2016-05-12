@@ -14,6 +14,19 @@ from ...irf import EffectiveAreaTable, abramowski_effective_area
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data, data_manager
 
+def test_EffectiveArea2D():
+    from ...irf.effective_area import EffectiveArea2D
+    energy = Quantity(np.logspace(0,1,4), 'TeV') 
+    offset = Quantity([0.2, 0.3], 'deg') 
+    effective_area = Quantity(np.arange(6).reshape(2,3))
+    aeff = EffectiveArea2D(energy, offset, effective_area)
+   
+    #For now just test if subclass behaves correctly
+    e = Quantity(1.1, 'TeV')
+    o = Quantity(0.29, 'deg')
+    idx = aeff.find_node(energy=e, offset=o)
+    assert idx[0] == 1
+    assert idx[1] == 0
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')

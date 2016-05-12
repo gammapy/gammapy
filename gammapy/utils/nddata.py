@@ -24,7 +24,6 @@ class NDDataArray(object):
     def __init__(self):
         self._axes = list()
         self._data = None
-        # Todo: Should this be set on construction?
         self._lininterp = None
 
     def add_axis(self, axis):
