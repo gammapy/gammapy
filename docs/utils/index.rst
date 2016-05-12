@@ -117,3 +117,6 @@ Reference/API
 
 .. automodapi:: gammapy.utils.axis
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.utils.nddata
+    :no-inheritance-diagram:

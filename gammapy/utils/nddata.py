@@ -1,9 +1,15 @@
-"""Scratch for NDDataArray class"""
+# Licensed under a 3-clause BSD style license - see LICENSE.rst 
 
 import itertools
 import numpy as np
 from astropy.units import Quantity, Unit
 from astropy.table import Table, Column
+
+_all_ = [
+    'NDDataArray',
+    'DataAxis',
+    'BinnedDataAxis',
+]
 
 
 class NDDataArray(object):
@@ -12,7 +18,8 @@ class NDDataArray(object):
     This class represents an ND Data Array. The data stored as numpy array
     attribute. The data axis are separate classes and this class has them as
     members. The axis order follows numpy convention for arrays, i.e. the axis
-    added last is at index 0. For an example see NDData_demo.ipynb.
+    added last is at index 0. For an example see nddata_demo.ipynb in
+    ``gammapy-extra/notebooks``.
     """
     def __init__(self):
         self._axes = list()
@@ -241,11 +248,9 @@ class NDDataArray(object):
         # Bring in correct order
         values = [kwargs[_] for _ in self.axis_names]
 
-        # Apply log10 where necessary
-        # Todo : only calc log10 when needed
-        log_values = [np.log10(_) for _ in values]
-        loginterp = [a.log_interpolation for a in self.axes]
-        values = np.where(loginterp, log_values, values)
+        # Transform values for each axis to match interpolator 
+        for i in np.arange(self.dim):
+            values[i] = self.axes[i]._interp_values(values[i])
 
         if method == 'linear':
             return self._eval_linear(values, method='linear') * self.data.unit
@@ -258,9 +263,8 @@ class NDDataArray(object):
         """Add `~scipy.interpolate.RegularGridInterpolator`
 
         The interpolation behaviour of an individual axis can be adjusted by
-        setting the ``log_interpolation`` attribute to True. After that the
-        interpolator has to be setup anew. TODO: Make this somehow more
-        convenient?
+        setting the ``interpolation_mode`` property. Afterward the
+        interpolator has to be setup anew.
 
         http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
         """
@@ -289,57 +293,54 @@ class NDDataArray(object):
 
         return res
 
-    def plot_image(self, ax=None, plot_kwargs = {}, **kwargs):
-        """Plot image
-
-        Only avalable for 2D (after slicing)
-        """
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        data = self.evaluate(**kwargs)
-        if len(data.squeeze().shape) != 2:
-            raise ValueError('Data has shape {} after slicing. '
-                             'Need 2d data for image plot'.format(data.shape))
-
-        ax.set_xlabel('{} [{}]'.format(self.axes[0].name, self.axes[0].unit))
-        ax.set_ylabel('{} [{}]'.format(self.axes[1].name, self.axes[1].unit))
-        ax.imshow(data.transpose(), origin='lower', **plot_kwargs)
-
-    def plot_profile(self, axis, ax=None, **kwargs):
-        """Show data as function of one axis
-
-        Parameters
-        ----------
-        axis : DataAxis
-            data axis to use
-        """
-
-        raise NotImplementedError
-
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        ax_ind = self.get_axis_index(axis)
-        kwargs.setdefault(axis, self.axes[ax_ind])
-
-        x = kwargs.pop(axis)
-
-        y = self.evaluate(**kwargs)
-
 
 class DataAxis(Quantity):
-    """Data axis for unbinned values"""
-    def __new__(cls, energy, unit=None, dtype=None, copy=True, name=None):
-        self = super(DataAxis, cls).__new__(cls, energy, unit,
+    """Data axis to be used with NDDataArray
+
+    Axis values are interpreted as nodes. 
+    """
+    def __new__(cls, vals, unit=None, dtype=None, copy=True, name=None):
+        self = super(DataAxis, cls).__new__(cls, vals, unit,
                                             dtype=dtype, copy=copy)
 
         self.name = name
-        self.log_interpolation = False
+        self._interpolation_mode = 'linear'
         return self
 
     def __array_finalize__(self, obj):
         super(DataAxis, self).__array_finalize__(obj)
+
+    @classmethod
+    def logspace(cls, vmin, vmax, nbins, unit=None):
+        """Create axis with equally log-spaced nodes
+
+        if no unit is given, it will be taken from vmax
+
+        Parameters
+        ----------
+        vmin : `~astropy.units.Quantity`, float
+            Lowest value
+        emax : `~astropy.units.Quantity`, float
+            Highest value
+        bins : int
+            Number of bins
+        unit : `~astropy.units.UnitBase`, str
+            Unit           
+        """
+
+        if unit is not None:
+            vmin = Energy(vmin, unit)
+            vmax = Energy(vmax, unit)
+        else:
+            vmin = Energy(vmin)
+            vmax = Energy(vmax)
+            unit = vmax.unit
+            vmin = vmin.to(unit)
+
+        x_min, x_max = np.log10([vmin.value, vmax.value])
+        vals = np.logspace(x_min, x_max, nbins)
+
+        return cls(vals, unit, copy=False)
 
     def find_node(self, val):
         """Find next node
@@ -373,16 +374,44 @@ class DataAxis(Quantity):
         """Evaluation nodes"""
         return self
 
+    @property
+    def interpolation_mode(self):
+        """Interpolation mode
+
+        Available
+        - linear
+        - log
+        """
+        return self._interpolation_mode
+
+    @interpolation_mode.setter
+    def interpolation_mode(self, mode):
+        """Set interpolation mode"""
+        allowed_modes = ['linear', 'log']
+        if mode not in allowed_modes:
+            raise ValueError('Interpolation mode {} not supported'.format(mode))
+        self._interpolation_mode = mode 
+
     def _interp_nodes(self):
         """Nodes to be used for interpolation"""
-        if not self.log_interpolation:
-            return self.nodes.value
-        else:
+        if self.interpolation_mode == 'log':
             return np.log10(self.nodes.value)
+        else:
+            return self.nodes.value
+
+    def _interp_values(self, values):
+        """Transform values correctly for interpolation"""
+        if self.interpolation_mode == 'log':
+            return np.log10(values)
+        else:
+            return values
 
 
 class BinnedDataAxis(DataAxis):
-    """Data axis for binned values"""
+    """Data axis for binned axis
+
+    Axis values are interpreted as bin edges
+    """
     @classmethod
     def linspace(cls, min, max, nbins, unit=None):
         """Create linearly spaced axis"""
@@ -392,6 +421,11 @@ class BinnedDataAxis(DataAxis):
         data = np.linspace(min, max, nbins+1)
         unit = Unit(unit)
         return cls(data, unit)
+
+    @classmethod
+    def logspace(cls, emin, emax, nbins, unit=None):
+        return super(EnergyBounds, cls).equal_log_spacing(
+            emin, emax, nbins + 1, unit)
 
     @property
     def nbins(self):
