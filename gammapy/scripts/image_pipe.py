@@ -252,6 +252,7 @@ class ObsImage(object):
         psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
         for iE,E in enumerate(energy_bin):
             psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
+        psftab=Quantity(psftab, psf_table.psf_value.unit)
         tab = np.sum(psftab*self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
         exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
         tab *= self.livetime
