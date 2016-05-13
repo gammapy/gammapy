@@ -31,17 +31,18 @@ class NDDataArray(object):
         self._data = None
         self._lininterp = None
 
-	data = None
-	if 'data' in kwargs:
-	    data = kwargs.pop('data')
-	
-	for key, value in kwargs.items():
-	    if not isinstance(value, DataAxis):
-	        value = DataAxis(value)
-	    value.name = key
-	    self.add_axis(value)
-	if data is not None:
-	    self.data = data
+        data = None
+        if 'data' in kwargs.keys():
+            data = kwargs.pop('data')
+
+        for key, value in kwargs.items():
+	        if not isinstance(value, DataAxis):
+	            value = DataAxis(value)
+	        value.name = key
+	        self.add_axis(value)
+
+    	if data is not None:
+            self.data = data
 
     def add_axis(self, axis):
         """Add axis
@@ -154,22 +155,23 @@ class NDDataArray(object):
     def from_table(cls, table):
         """Create from astropy table
 
+        This function should be overwritten by subclasses.
         The table must represent the convention at
         http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html#bintable-hdu
+        The rightmost column is assumed to hold the data for this implementation. 
 
         Parameters
         ----------
         table : `~astropy.table`
             table
         """
-        nddata = cls()
         cols = table.columns
         data = cols.pop(cols.keys()[-1])
+        kwargs = dict(data=data)
         col_pairs = zip(cols[::2].values(), cols[1::2].values())
-        axes = [_data_axis_from_table_columns(cl, ch) for cl, ch in col_pairs]
-        nddata._axes = axes
-        nddata.data = data.squeeze()
-        return nddata
+        for cl, ch in col_pairs:
+            kwargs.update(_data_axis_from_table_columns(cl, ch))
+        return cls(**kwargs)
 
     @classmethod
     def read(cls, *args, **kwargs):
@@ -470,12 +472,14 @@ class BinnedDataAxis(DataAxis):
 
 
 def _data_axis_from_table_columns(col_lo, col_hi):
-    """Helper function to translate two table columns to a data axis"""
+    """Helper function to translate two table columns to a data axis dict"""
     if (col_lo.data == col_hi.data).all():
-        return DataAxis(col_lo.data[0], unit=col_lo.unit, name=col_lo.name[:-3])
+        ax = DataAxis(col_lo.data[0], unit=col_lo.unit, name=col_lo.name[:-3])
     else:
         data = np.append(col_lo.data[0], col_hi.data[0][-1])
-        return BinnedDataAxis(data, unit=col_lo.unit, name=col_lo.name[:-3])
+        ax = BinnedDataAxis(data, unit=col_lo.unit, name=col_lo.name[:-3])
+    name = ax.name
+    return {name:ax}
 
 
 def _table_columns_from_data_axis(axis):
@@ -499,4 +503,3 @@ def _table_columns_from_data_axis(axis):
     c_lo = Column(data=[data_lo], unit=axis.unit, name='{}_LO'.format(axis.name))
 
     return c_lo, c_hi
-
