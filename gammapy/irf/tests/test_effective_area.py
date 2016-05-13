@@ -15,11 +15,12 @@ from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data, data_manager
 
 def test_EffectiveArea2D():
+    # These are just some quick and dirty tests they should be removed later
     from ...irf.effective_area import EffectiveArea2D
     energy = Quantity(np.logspace(0,1,4), 'TeV') 
     offset = Quantity([0.2, 0.3], 'deg') 
     effective_area = Quantity(np.arange(6).reshape(2,3))
-    aeff = EffectiveArea2D(energy, offset, effective_area)
+    aeff = EffectiveArea2D(energy=energy, offset=offset, data=effective_area)
    
     #For now just test if subclass behaves correctly
     e = Quantity(1.1, 'TeV')
@@ -27,6 +28,10 @@ def test_EffectiveArea2D():
     idx = aeff.find_node(energy=e, offset=o)
     assert idx[0] == 1
     assert idx[1] == 0
+
+    filename = '/home/kingj/Software/gammapy-extra/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz' 
+    aeff = EffectiveArea2D.read(filename)
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')

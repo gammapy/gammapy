@@ -2,12 +2,12 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
-
+import numpy as np
 
 class EffectiveArea2D(NDDataArray):
     """2D effective area table
      
-    Axes: energy, offset
+    Axes: offset, energy
     
     Parameteres
     -----------
@@ -15,16 +15,25 @@ class EffectiveArea2D(NDDataArray):
 	Energy axis (binned)
     offset : `~astropy.units.Quantity`, `~gammapy.utils.DataAxis
 	Offset axis (unbinned)
-    effective_area : `~astropy.units.Quantity`
+    data : `~astropy.units.Quantity`
 	Effective area
     """
-    def __init__(self, energy, offset, effective_area):
+    def __init__(self, **kwargs):
+	# support array input for energy
+	if 'energy' in kwargs and isinstance(kwargs['energy'], np.ndarray):
+	    kwargs['energy'] = BinnedDataAxis(kwargs['energy'], name='energy')
 
-        super(EffectiveArea2D, self).__init__()
-	energy = BinnedDataAxis(energy, name='energy')
-	energy.interpolation_mode = 'log'
-	self.add_axis(energy)
-	offset = DataAxis(offset, name='offset')
-	self.add_axis(offset)
-	self.data = effective_area
+        super(EffectiveArea2D, self).__init__(**kwargs)
+	self.check_integrity()
 	self.add_linear_interpolator(bounds_error=False)
+
+    def check_integrity(self):
+	"""
+	Perform basic checks that the `~gammapy.irf.EffectiveArea2D` is valid
+	"""
+	if self.data is None:
+		raise ValueError("Data not set")
+	if self.axes[0].name != 'offset' or not isinstance(self.axes[0], DataAxis):
+		raise ValueError("Invalid offset axis: {}".format(self.axes[0]))
+	if self.axes[1].name != 'energy' or not isinstance(self.axes[1], BinnedDataAxis):
+		raise ValueError("Invalid energy axis: {}".format(self.axes[1]))

@@ -21,14 +21,27 @@ class NDDataArray(object):
     `~gammapy.utils.nddata.BinnedDataAxis`.
     After this class has been initialized any number of axes and a data array
     can be added. The axis order follows numpy convention for arrays, i.e. the 
-    axis added last is at index 0. The array can be interpolated using several 
-    interpolation methods. For an example see nddata_demo.ipynb in
+    axis added last is at index 0. The axes and data can also passed on
+    initialization as kwargs. The NDDataArray can be interpolated using several 
+    interpolation methods. For example see nddata_demo.ipynb in
     ``gammapy-extra/notebooks``.
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._axes = list()
         self._data = None
         self._lininterp = None
+
+	data = None
+	if 'data' in kwargs:
+	    data = kwargs.pop('data')
+	
+	for key, value in kwargs.items():
+	    if not isinstance(value, DataAxis):
+	        value = DataAxis(value)
+	    value.name = key
+	    self.add_axis(value)
+	if data is not None:
+	    self.data = data
 
     def add_axis(self, axis):
         """Add axis
@@ -353,11 +366,11 @@ class DataAxis(Quantity):
         """
 
         if unit is not None:
-            vmin = Energy(vmin, unit)
-            vmax = Energy(vmax, unit)
+            vmin = Quantity(vmin, unit)
+            vmax = Quantity(vmax, unit)
         else:
-            vmin = Energy(vmin)
-            vmax = Energy(vmax)
+            vmin = Quantity(vmin)
+            vmax = Quantity(vmax)
             unit = vmax.unit
             vmin = vmin.to(unit)
 
@@ -438,7 +451,7 @@ class BinnedDataAxis(DataAxis):
     """
     @classmethod
     def logspace(cls, emin, emax, nbins, unit=None):
-        return super(EnergyBounds, cls).equal_log_spacing(
+        return super(BinnedDataAxis, cls).logspace(
             emin, emax, nbins + 1, unit)
 
     @property

@@ -1,13 +1,14 @@
 import numpy as np
 import astropy.units as u
 from astropy.tests.helper import pytest
+from numpy.testing import assert_equal
 from ...utils.testing import requires_dependency
 from ..nddata import NDDataArray, DataAxis, BinnedDataAxis
 
 def get_2d_histo():
 
     hist = NDDataArray()
-    x_axis = BinnedDataAxis.linspace(0, 100, 10, 'm')
+    x_axis = BinnedDataAxis(np.linspace(0, 100, 11), 'm')
     y_axis = DataAxis(np.arange(1, 6), 'kg')
     y_axis.name = 'weight'
 
@@ -22,13 +23,106 @@ def get_2d_histo():
 
     return hist
 
+def test_data_axis():
+    # Explicit constructor call
+    energy = DataAxis([1, 3, 6, 8, 12], 'TeV')
+    actual = str(energy.__class__)
+    desired = "<class 'gammapy.utils.nddata.DataAxis'>"
+    assert_equal(actual, desired)
+
+    val = u.Quantity([1, 3, 6, 8, 12], 'TeV')
+    actual = DataAxis(val, 'GeV')
+    desired = DataAxis((1, 3, 6, 8, 12), 'TeV')
+    assert_equal(actual, desired)
+
+    # View casting
+    energy = val.view(DataAxis)
+    actual = type(energy).__module__
+    desired = 'gammapy.utils.nddata'
+    assert_equal(actual, desired)
+
+    # New from template
+    energy = DataAxis([0, 1, 2, 3, 4, 5], 'eV')
+    energy2 = energy[1:3]
+    actual = energy2
+    desired = DataAxis([1, 2], 'eV')
+    assert_equal(actual, desired)
+
+    actual = energy2.nbins
+    desired = 2
+    assert_equal(actual, desired)
+
+    actual = energy2.unit
+    desired = u.eV
+    assert_equal(actual, desired)
+
+    # Equal log spacing
+    energy = DataAxis.logspace(1 * u.GeV, 10 * u.TeV, 6)
+    actual = energy[0]
+    desired = DataAxis(1 * u.GeV, 'TeV')
+    assert_equal(actual, desired)
+
+    energy = DataAxis.logspace(2, 6, 3, 'GeV')
+    actual = energy.nbins
+    desired = 3
+    assert_equal(actual, desired)
+
+
+def test_binned_data_axis():
+    val = BinnedDataAxis([1, 2, 3, 4, 5], 'TeV')
+    actual = val.nbins
+    desired = 4
+    assert_equal(actual, desired)
+
+    # Equal log spacing
+    energy = BinnedDataAxis.logspace(1 * u.TeV, 10 * u.TeV, 10)
+    actual = energy.nbins
+    desired = 10
+    assert_equal(actual, desired)
+
+#    # Log centers
+#    center = energy.log_centers
+#    actual = type(center).__module__
+#    desired = 'gammapy.utils.energy'
+#    assert_equal(actual, desired)
+#
+#    # Upper/lower bounds
+#    actual = energy.upper_bounds
+#    desired = energy[1:]
+#    assert_equal(actual, desired)
+#
+#    actual = energy.lower_bounds
+#    desired = energy[:-1]
+#    assert_equal(actual, desired)
+#
+#    lower = [1, 3, 4, 5]
+#    upper = [3, 4, 5, 8]
+#    actual = EnergyBounds.from_lower_and_upper_bounds(lower, upper, 'TeV')
+#    desired = EnergyBounds([1, 3, 4, 5, 8], 'TeV')
+#    assert_equal(actual, desired)
+#
+#    # Range
+#    erange = energy.range
+#    actual = erange[0]
+#    desired = energy[0]
+#    assert_equal(actual, desired)
+#    actual = erange[1]
+#    desired = energy[-1]
+#    assert_equal(actual, desired)
+#
+#    # Bands
+#    bands = energy.bands
+#    actual = bands[0]
+#    desired = energy[1] - energy[0]
+#    assert_equal(actual, desired)
+
 @requires_dependency('scipy')
 def test_1d_histo():
 
     hist = NDDataArray()
     assert hist.dim == 0
 
-    x_axis = BinnedDataAxis.linspace(0, 100, 10, 'm')
+    x_axis = BinnedDataAxis(np.linspace(0, 100, 11), 'm')
     hist.add_axis(x_axis)
     assert hist.dim == 1
 
@@ -85,6 +179,18 @@ def test_1d_histo():
     # Should give same result als evaluate_nearest
     assert (interp_data == eval_data).all()
 
+    # construction using __init__
+    x = np.arange(6) * u.cm
+    data = np.arange(10,70,10)
+    hist = NDDataArray(data=data, distance=x)
+    assert hist.axes[0].name == 'distance'
+    assert isinstance(hist.axes[0], DataAxis)
+
+    x = BinnedDataAxis([4,5,6,7], 's', name='spam')
+    data = np.arange(3)
+    hist = NDDataArray(data=data, velocity=x)
+    assert hist.axes[0].name == 'velocity'
+    assert isinstance(hist.axes[0], BinnedDataAxis)
 
 def test_2d_histo():
     hist = get_2d_histo()
