@@ -33,7 +33,7 @@ class SkyCube(object):
     Can be used e.g. for Fermi or GALPROP diffuse model cubes.
 
     Note that there is a very nice ``SkyCube`` implementation here:
-    http://spectral-cube.readthedocs.org/en/latest/index.html
+    http://spectral-cube.readthedocs.io/en/latest/index.html
 
     Here is some discussion if / how it could be used:
     https://github.com/radio-astro-tools/spectral-cube/issues/110

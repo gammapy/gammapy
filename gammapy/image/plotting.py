@@ -232,7 +232,7 @@ class GalacticPlaneSurveyPanelPlot(object):
     TODO: describe how the callbacks work
 
     References:
-    http://aplpy.readthedocs.org/en/latest/howto_subplot.html
+    http://aplpy.readthedocs.io/en/latest/howto_subplot.html
 
     Attributes:
 

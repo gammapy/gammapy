@@ -62,22 +62,22 @@ setup_cfg = dict(conf.items('metadata'))
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
-intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
-intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.org/en/latest/', None)
+intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
+intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
 
 # Extend intersphinx_mapping with packages we use in gammapy
 intersphinx_mapping['uncertainties'] = ('http://pythonhosted.org/uncertainties/', None)
 intersphinx_mapping['pandas'] = ('http://pandas.pydata.org/pandas-docs/stable/', None)
 intersphinx_mapping['skimage'] = ('http://scikit-image.org/docs/stable/', None)
 intersphinx_mapping['sklearn'] = ('http://scikit-learn.org/stable/', None)
-intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.org/en/latest/', None)
-intersphinx_mapping['wcsaxes'] = ('http://wcsaxes.readthedocs.org/en/latest/', None)
-intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.org/en/latest/', None)
-intersphinx_mapping['naima'] = ('http://naima.readthedocs.org/en/latest/', None)
-intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.org/en/latest/', None)
-intersphinx_mapping['gwcs'] = ('http://gwcs.readthedocs.org/en/latest/', None)
-intersphinx_mapping['astroplan'] = ('http://astroplan.readthedocs.org/en/latest/', None)
-# intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.org/en/latest/', None)
+intersphinx_mapping['photutils'] = ('http://photutils.readthedocs.io/en/latest/', None)
+intersphinx_mapping['wcsaxes'] = ('http://wcsaxes.readthedocs.io/en/latest/', None)
+intersphinx_mapping['aplpy'] = ('http://aplpy.readthedocs.io/en/latest/', None)
+intersphinx_mapping['naima'] = ('http://naima.readthedocs.io/en/latest/', None)
+intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
+intersphinx_mapping['gwcs'] = ('http://gwcs.readthedocs.io/en/latest/', None)
+intersphinx_mapping['astroplan'] = ('http://astroplan.readthedocs.io/en/latest/', None)
+# intersphinx_mapping['astroquery'] = ('http://astroquery.readthedocs.io/en/latest/', None)
 # intersphinx_mapping['astroml'] = ('http://www.astroml.org/', None)
 
 

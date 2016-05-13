@@ -20,7 +20,7 @@ into this folder
 
     mkdir gammapy_crab_analysis
     cd gammapy_crab_analysis
-    wget https://gammapy.readthedocs.org/en/latest/_downloads/spectrum_analysis_example.yaml
+    wget http://docs.gammapy.org/en/latest/_downloads/spectrum_analysis_example.yaml
 
 Now run
 

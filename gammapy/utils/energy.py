@@ -237,7 +237,7 @@ class EnergyBounds(Energy):
         """
 
         # np.append renders Quantities dimensionless
-        # http://astropy.readthedocs.org/en/latest/known_issues.html#quantity-issues
+        # http://docs.astropy.org/en/latest/known_issues.html#quantity-issues
 
         lower = cls(lower, unit)
         upper = cls(upper, unit)

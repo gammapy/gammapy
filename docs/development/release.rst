@@ -45,7 +45,7 @@ Pre release
 
    This can be used to take notes and discuss any release-related issues.
 
-#. Follow the instructions `here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#updating-to-the-latest-template-files>`__
+#. Follow the instructions `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#updating-to-the-latest-template-files>`__
    to check that the astropy-helpers sub-module in Gammapy is pointing to the latest stable astropy-helpers release
    and whether there have been any fixes / changes to the Astropy
    `package-template <https://github.com/astropy/package-template/blob/master/TEMPLATE_CHANGES.md>`__
@@ -77,10 +77,10 @@ These are the steps you should do on the day of the release:
 #. Update the Gammapy version in the :ref:`install` section.
 #. Mention release in the :ref:`gammapy_news` section.
 #. Follow the instructions how to release an Astropy affiliated package
-   `here <http://astropy.readthedocs.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
+   `here <http://docs.astropy.org/en/latest/development/affiliated-packages.html#releasing-an-affiliated-package>`__.
 #. Check that the tarball and description (which is from ``LONG_DESCRIPTION.rst``) on PyPI is OK.
 #. Update the Gammapy stable branch to point to the new tag
-   as described `here <http://astropy.readthedocs.org/en/latest/development/releasing.html>`__.
+   as described `here <http://docs.astropy.org/en/latest/development/releasing.html>`__.
 #. Add the new version on readthedocs.
 #. Make a pull request that updates the Gammapy version number in this file to trigger a conda package build:
    https://github.com/astropy/conda-builder-affiliated/blob/master/requirements.txt

@@ -34,7 +34,7 @@ help:
 	@echo ' More info:'
 	@echo ''
 	@echo ' * Gammapy code: https://github.com/gammapy/gammapy'
-	@echo ' * Gammapy docs: https://gammapy.readthedocs.org/'
+	@echo ' * Gammapy docs: http://docs.gammapy.org/'
 	@echo ''
 	@echo ' Environment:'
 	@echo ''

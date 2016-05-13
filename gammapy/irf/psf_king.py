@@ -72,7 +72,7 @@ class PSFKing(object):
         """
         filename = str(make_path(filename))
         # TODO: implement it so that HDUCLASS is used
-        # http://gamma-astro-data-formats.readthedocs.org/en/latest/data_storage/hdu_index/index.html
+        # http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
 
         table = Table.read(filename, hdu=hdu)
         return cls.from_table(table)

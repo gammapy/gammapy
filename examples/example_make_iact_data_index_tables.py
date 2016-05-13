@@ -1,7 +1,7 @@
 """Example how to construct index tables.
 
-* Observation index: http://gamma-astro-data-formats.readthedocs.org/en/latest/data_storage/obs_index/index.html
-* HDU index: http://gamma-astro-data-formats.readthedocs.org/en/latest/data_storage/hdu_index/index.html
+* Observation index: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/obs_index/index.html
+* HDU index: http://gamma-astro-data-formats.readthedocs.io/en/latest/data_storage/hdu_index/index.html
 * Dataset examples:
   * https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4-hd-hap-prod2
   * https://github.com/gammapy/gammapy-extra/tree/master/datasets/hess-crab4-pa

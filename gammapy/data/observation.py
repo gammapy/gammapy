@@ -50,7 +50,7 @@ class ObservationTable(Table):
     @lazyproperty
     def _index_dict(self):
         """Dict containing row index for all obs ids"""
-        # TODO: Switch to http://astropy.readthedocs.org/en/latest/table/indexing.html once it is more stable
+        # TODO: Switch to http://docs.astropy.org/en/latest/table/indexing.html once it is more stable
         temp = (zip(self['OBS_ID'], np.arange(len(self))))
         return dict(temp)
 

@@ -132,13 +132,13 @@ Before inventing our own, let's look at what kinds of representations others hav
 
   As for `scipy.ndimage`, as far as I can see, ``bbox`` is not used elsewhere in `skimage`.
 
-* `photutils` has this `coordinate convention <http://photutils.readthedocs.org/en/latest/photutils/overview.html#coordinate-conventions>`__.
+* `photutils` has this `coordinate convention <http://photutils.readthedocs.io/en/latest/photutils/overview.html#coordinate-conventions>`__.
   Looking at the `photutils.aperture_photometry` implementation, it looks like they don't have an official ``bbox`` representation,
   but simply compute ``(x_min, x_max, y_min, y_max)`` where needed and then use ``data[y_min:y_max, x_min:x_max]`` views.
   TODO: update once this is in: https://github.com/astropy/astropy/issues/2607
 
-* `imutils <http://imutils.readthedocs.org/en/latest/>`__ has a
-  `Cutout <http://imutils.readthedocs.org/en/latest/api/imutils.Cutout.html>`__ class.
+* `imutils <http://imutils.readthedocs.io/en/latest/>`__ has a
+  `Cutout <http://imutils.readthedocs.io/en/latest/api/imutils.Cutout.html>`__ class.
 
 I also found
 `this <http://stackoverflow.com/questions/9525313/rectangular-bounding-box-around-blobs-in-a-monochrome-image-using-python>`__

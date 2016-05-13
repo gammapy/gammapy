@@ -55,7 +55,7 @@ class ExclusionMask(SkyMap):
         """Create exclusion mask from ds9 regions file
 
         Uses the pyregion package
-        (http://pyregion.readthedocs.org/en/latest/index.html)
+        (http://pyregion.readthedocs.io/en/latest/index.html)
 
         Parameters
         ----------

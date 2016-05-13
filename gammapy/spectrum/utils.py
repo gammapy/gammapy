@@ -26,7 +26,7 @@ class LogEnergyAxis(object):
       and ``pix=0.3`` is ``0.5 * (0.3 * x[0] + 0.7 * x[1])``
 
     .. note::
-        The `specutils.Spectrum1DLookupWCS <http://specutils.readthedocs.org/en/latest/api/specutils.wcs.specwcs.Spectrum1DLookupWCS.html>`__
+        The `specutils.Spectrum1DLookupWCS <http://specutils.readthedocs.io/en/latest/api/specutils.wcs.specwcs.Spectrum1DLookupWCS.html>`__
         class is similar (only that it doesn't include the ``log`` transformation and the API is different.
         Also see this Astropy feature request: https://github.com/astropy/astropy/issues/2362
 

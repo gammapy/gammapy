@@ -11,10 +11,10 @@
 .. _Numpy: http://www.numpy.org/
 .. _Astropy: http://astropy.org
 .. _affiliated package: http://www.astropy.org/affiliated/index.html
-.. _reproject: http://reproject.readthedocs.org
-.. _photutils: http://photutils.readthedocs.org
-.. _astroplan: http://astroplan.readthedocs.org
-.. _gwcs: http://gwcs.readthedocs.org
+.. _reproject: http://reproject.readthedocs.io
+.. _photutils: http://photutils.readthedocs.io
+.. _astroplan: http://astroplan.readthedocs.io
+.. _gwcs: http://gwcs.readthedocs.io
 .. _wcsaxes: https://github.com/astrofrog/wcsaxes
 .. _iminuit: https://github.com/iminuit/iminuit
 .. _probfit: https://github.com/iminuit/probfit
@@ -33,7 +33,7 @@
 .. _pip: https://pip.pypa.io/en/stable/
 .. _conda: http://conda.pydata.org/
 .. _PyFACT: http://adsabs.harvard.edu/abs/2012AIPC.1505..789R
-.. _healpy: https://healpy.readthedocs.org/en/latest/
+.. _healpy: https://healpy.readthedocs.io/en/latest/
 .. _PyYAML: https://pypi.python.org/pypi/PyYAML/
 .. _emcee: http://dan.iel.fm/emcee/current/
 .. _ctapipe: https://github.com/cta-observatory/ctapipe
@@ -63,7 +63,7 @@
 .. _MAGIC: https://magic.mpp.mpg.de/
 .. _Fermi-LAT: http://fermi.gsfc.nasa.gov/
 .. _FermiPy: https://github.com/fermiPy/fermipy
-.. _gadf: http://gamma-astro-data-formats.readthedocs.org/
+.. _gadf: http://gamma-astro-data-formats.readthedocs.io/
 
 .. _April 2016 IACT data meeting: https://github.com/open-gamma-ray-astro/2016-04_IACT_DL3_Meeting/
 
@@ -78,9 +78,9 @@
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
-.. _Gammapy documentation: https://gammapy.readthedocs.org/
+.. _Gammapy documentation: http://docs.gammapy.org/
 .. _Gammapy project summary on Open HUB: https://www.openhub.net/p/gammapy
-.. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy 
+.. _Gammapy page on PyPI: https://pypi.python.org/pypi/gammapy
 .. _Gammapy contributors page on Github: https://github.com/gammapy/gammapy/graphs/contributors
 .. _Slack: https://slack.com/
 .. _Gammapy on Slack: https://gammapy.slack.com

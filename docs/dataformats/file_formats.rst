@@ -4,7 +4,7 @@ File formats
 ============
 
 .. note:: This section is not very useful for astronomers trying to get some analysis done.
-    If this is you, maybe try to use the search field to find the specific info / method you want? 
+    If this is you, maybe try to use the search field to find the specific info / method you want?
     The info is for developers or advanced users that are writing analysis scripts.
 
 This section gives an introdution to the various file formats used in various
@@ -20,7 +20,7 @@ Introduction
 ------------
 
 In Gammapy we use existing file formats by
-`Fermi-LAT <http://fermi.gsfc.nasa.gov/>`__ and 
+`Fermi-LAT <http://fermi.gsfc.nasa.gov/>`__ and
 `CTA <https://www.cta-observatory.org/>`__ where available.
 
 This increases inter-operability with the
@@ -44,17 +44,17 @@ Or we could define a JSON file format for fit results:
 .. code-block:: json
 
    {
-       "convergence": true, 
+       "convergence": true,
        "sources": [
            {
-               "type": "point", 
+               "type": "point",
                "parameters": { "y": 3.2, "x": 4.9, "flux": 99 }
-           }, 
+           },
            {
-               "type": "gauss", 
+               "type": "gauss",
                "parameters": { "y": -2.3, "x": 3.3, "stddev": 0.13, "flux": 49 }
            }
-       ], 
+       ],
        "likelihood": 4.2
    }
 
@@ -64,7 +64,7 @@ we can store and exchange any information between tools written in any programmi
 All we have to do it agree on the structure
 (e.g. to use XML and the fact that there's ``psf`` and ``parameter`` elements,
 and that ``parameter`` elements have ``name`` and ``value`` attributes)
-and semantics (e.g. that the ``stddev`` parameter of the ``gauss`` PSF is the Gaussian width in degrees). 
+and semantics (e.g. that the ``stddev`` parameter of the ``gauss`` PSF is the Gaussian width in degrees).
 
 If we don't write the structure down somewhere everyone will invent their own format,
 severly limiting our ability as a community to share results and scripts and build up analysis pipelines
@@ -101,7 +101,7 @@ encounter at some point in your life as a gamma-ray astronomer.
 ====== ========= ==== ===== ===== ===== ======
 Format File type Supported data content Schema
 ------ --------- ---------------------- ------
-\                Meta Table Array Tree 
+\                Meta Table Array Tree
 ====== ========= ==== ===== ===== ===== ======
 INI    text      Yes  No    No    No    Yes
 CSV    text      No   Yes   No    No    Yes
@@ -114,7 +114,7 @@ ROOT   binary    No   Yes   Yes   Yes   No
 
 Almost all entries in the above table are debatable ... here's some caveats:
 
-* The definition of "text" or "binary" file type given here should be read as 
+* The definition of "text" or "binary" file type given here should be read as
   "are files of this type in gamma-ray astronomy commonly opened up in text editors"?
   In reality the distinction is not always clear, e.g. XML can contain binary data
   and FITS contains text headers.
@@ -136,7 +136,7 @@ INI
 are the most easy to write and edit for humans and can contain ``#`` comments
 and are thus a good for configuration files.
 file extensions of ``.ini``, ``.conf`` and ``.cfg`` are common.
-Astropy bundles `configobj <http://configobj.readthedocs.org/>`__ to read, write and validate
+Astropy bundles `configobj <http://configobj.readthedocs.io/>`__ to read, write and validate
 INI files ... to use it in your code
 
 .. code-block:: python
@@ -161,7 +161,7 @@ as well as astronomy table programs such as e.g.
 `TOPCAT <http://www.star.bris.ac.uk/~mbt/topcat/>`__.
 Since it's a simple text format it's easy to read or edit in any text editor or
 put under version control (using e.g. `git <http://git-scm.com/>`__ or
-`SVN <http://en.wikipedia.org/wiki/Apache_Subversion>`__). 
+`SVN <http://en.wikipedia.org/wiki/Apache_Subversion>`__).
 CSV files are not standardised (there's many variants which causes problems in practice),
 don't support metadata (e.g. units or descriptions of columns).
 
@@ -170,7 +170,7 @@ been defined with a clear CSV format specification and associated metadata in an
 (see also `here <https://github.com/astropy/astropy-APEs/pull/7>`__).
 
 To read and write CSV data from Python you can use the extensible `astropy.io.ascii` methods
-via the `unified Astropy table I/O interface <http://astropy.readthedocs.org/en/latest/io/unified.html>`__
+via the `unified Astropy table I/O interface <http://docs.astropy.org/en/latest/io/unified.html>`__
 
 .. code-block:: python
 
@@ -179,7 +179,7 @@ via the `unified Astropy table I/O interface <http://astropy.readthedocs.org/en/
    table.write('measurements.tex', format='latex')
 
 There's also the
-`Python standard library csv module <http://pymotw.com/2/csv/>`__ as well as the 
+`Python standard library csv module <http://pymotw.com/2/csv/>`__ as well as the
 `numpy text I/O methods <http://docs.scipy.org/doc/numpy/reference/routines.io.html#text-files>`__ and the
 `pandas text I/O methods <http://pandas.pydata.org/pandas-docs/stable/io.html>`__ ...
 each have certain advantages / disadvantages (e.g. availability, features, speed).
@@ -221,7 +221,7 @@ possible to exchange those files and read them from C++, Python (via
 `PyROOT <http://root.cern.ch/drupal/content/pyroot>`__ or  `rootpy <http://www.rootpy.org/>`__).
 Access to your own serialised C++ objects is only possible if you distribute ROOT and
 a C++ library ... but storing data this way is anyways a bad idea
-(see e.g. `here <https://www.youtube.com/watch?v=7KnfGDajDQw>`__).  
+(see e.g. `here <https://www.youtube.com/watch?v=7KnfGDajDQw>`__).
 
 TODO: give examples how to read / convert ROOT data (e.g. to FITS).
 
@@ -301,7 +301,7 @@ The following tools are available for schema validation of the file formats list
 use of such schemas
 
 * http://embray.github.io/PyFITS/schema/users_guide/users_schema.html
-* https://groups.google.com/d/msg/astropy-dev/CFGnVguRlgs/yObfzPTWvNkJ 
+* https://groups.google.com/d/msg/astropy-dev/CFGnVguRlgs/yObfzPTWvNkJ
 * http://spacetelescope.github.io/understanding-json-schema/index.html
 
 With Gammapy
@@ -312,7 +312,7 @@ data formats (e.g. event lists, ...).
 
 Useful links
 ------------
- 
-* http://sedfitter.readthedocs.org/en/stable/creating_model_packages.html#sed-files
+
+* http://sedfitter.readthedocs.io/en/stable/creating_model_packages.html#sed-files
 * http://fits.gsfc.nasa.gov/fits_registry.html
- 
+
