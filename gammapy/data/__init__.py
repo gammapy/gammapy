@@ -15,3 +15,4 @@ from .observation import *
 from .obsgroup import *
 from .observers import *
 from .utils import *
+from .observation_summary import *
