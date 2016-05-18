@@ -29,7 +29,7 @@ class ObservationTableSummary(object):
         self.target_pos = target_pos
 
     @property
-    def _offset(self):
+    def offset(self):
         """
         Compute offsets of the different observations
         
@@ -98,7 +98,7 @@ class ObservationTableSummary(object):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
         
-        offset = self._offset
+        offset = self.offset
 
         if bins is None:
             bins = np.linspace(0, offset.max()+0.5, 10)
@@ -121,7 +121,7 @@ class ObservationTableSummary(object):
         zenith = self.obs_table['ZEN_PNT']
         ss += 'Zenith angle: (mean={:.2f}, std={:.2f})\n'.format(zenith.mean(),
                                                                  zenith.std())    
-        offset = self._offset
+        offset = self.offset
         ss += 'Offset: (mean={:.2f}, std={:.2f})\n'.format(offset.mean(),
                                                            offset.std())  
         
