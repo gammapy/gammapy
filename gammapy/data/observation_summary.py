@@ -35,7 +35,7 @@ class ObservationTableSummary(object):
         
         Returns
         -------
-        vector : `~numpy.array`
+        vector : `~astropy.Angle`
             Offsets
         """
         pnt_pos = SkyCoord(self.obs_table['RA_PNT'],
