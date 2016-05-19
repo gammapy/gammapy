@@ -30,7 +30,8 @@ class ObservationTableSummary(object):
 
     @property
     def offset(self):
-        """Offset of observations relative to the 
+        """
+        Offset of observations relative to the 
         target position (`astropy.coordinates.Angle`).
         """
         pnt_pos = SkyCoord(self.obs_table['RA_PNT'],
@@ -85,7 +86,7 @@ class ObservationTableSummary(object):
             If None, uses the current `~matplotlib.axes.Axes`.
         bins : integer or array_like, optional
             Binning specification, passed to `matplotlib.pyplot.hist`.
-            By default, 30 bins from 0 deg to max zenith + 5 deg is used.
+            By default, 10 bins from 0 deg to max offset + 0.5 deg is used.
 
         Returns
         -------
