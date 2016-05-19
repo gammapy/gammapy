@@ -31,9 +31,9 @@ class EffectiveArea2D(NDDataArray):
 
         filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
         aeff2D = EffectiveAreaTable2D.read(filename)
-        energy = np.logspace(0, 1, 50) * u.TeV   
+        energy = np.logspace(0, 1, 50) * u.TeV
         offset = 0.3 * u.deg
-        aeff2D.evaluate(THETA=offset, ENERG=energy, method='linear') 
+        aeff2D.evaluate(THETA=offset, ENERG=energy, method='linear')
     """
     def __init__(self, **kwargs):
         if 'energy' in kwargs and 'offset' in kwargs and 'effective_area' in kwargs:
@@ -48,7 +48,7 @@ class EffectiveArea2D(NDDataArray):
         self.axes[1].interpolation_mode = 'log'
         self.add_linear_interpolator(bounds_error=False)
 
-    @staticmethod 
+    @staticmethod
     def _kwargs_to_arrays(kwargs):
         """Convert kwargs to useful info for NDData.__init__()"""
 
@@ -85,3 +85,4 @@ class EffectiveArea2D(NDDataArray):
         if 'EFFAREA_RECO' in t.colnames:
             t.remove_column('EFFAREA_RECO')
         return super(EffectiveArea2D, cls).from_table(t)
+

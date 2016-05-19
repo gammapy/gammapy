@@ -1,9 +1,10 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst 
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
 from collections import OrderedDict
 import numpy as np
-from astropy.units import Quantity, Unit
+from astropy.units import Quantity
 from astropy.table import Table, Column
 
 __all__ = [
@@ -16,9 +17,9 @@ __all__ = [
 class NDDataArray(object):
     """ND Data Array
 
-    This class represents a n-dimensional data array. The data is stored as a 
+    This class represents a n-dimensional data array. The data is stored as a
     `~numpy array`. The data axes are separate classes,
-    `~gammapy.utils.nddata.DataAxis` or 
+    `~gammapy.utils.nddata.DataAxis` or
     `~gammapy.utils.nddata.BinnedDataAxis`.
     After this class has been initialized any number of axes and a data array
     can be added. The axis order follows numpy convention for arrays, i.e. the
@@ -43,12 +44,12 @@ class NDDataArray(object):
 
         if axes is not None:
             for key, value in axes.items():
-	            if not isinstance(value, DataAxis):
-	                value = DataAxis(value)
-	            value.name = key
-	            self.add_axis(value)
+                if not isinstance(value, DataAxis):
+                    value = DataAxis(value)
+                value.name = key
+                self.add_axis(value)
 
-    	if data is not None:
+        if data is not None:
             self.data = data
 
     def add_axis(self, axis):
@@ -92,26 +93,25 @@ class NDDataArray(object):
             Data array
         """
         data = np.array(data)
-        d = len(data.shape)
-        if d != self.dim:
+        dimension = len(data.shape)
+        if dimension != self.dim:
             raise ValueError('Overall dimensions to not match. '
-                             'Data: {}, Hist: {}'.format(d, self.dim))
+                             'Data: {}, Hist: {}'.format(dimension, self.dim))
 
         for dim in np.arange(self.dim):
             if self.axes[dim].nbins != data.shape[dim]:
-                a = self.axes[dim]
-                raise ValueError('Data shape does not match in dimension {d}\n'
-                                 'Axis "{n}": {sa}, Data {sd}'.format(
-                                 d=dim, n=a.name, sa=a.nbins,
-                                 sd=data.shape[dim]))
-
+                axis = self.axes[dim]
+                msg = 'Data shape does not match in dimension {d}\n'
+                msg += 'Axis "{n}":{sa}, Data {sd}'
+                raise ValueError(msg.format(d=dim, n=axis.name, sa=axis.nbins,
+                                            sd=data.shape[dim]))
         self._data = Quantity(data)
 
     @property
     def axis_names(self):
         """Axes names"""
         return [a.name for a in self.axes]
-    
+
     def get_axis_index(self, name):
         """Return axis index by its  name
 
@@ -120,9 +120,9 @@ class NDDataArray(object):
         name : str
             Valid axis name
         """
-        for a in self.axes:
-            if a.name == name:
-                return self.axes.index(a)
+        for axis in self.axes:
+            if axis.name == name:
+                return self.axes.index(axis)
         raise ValueError("No axis with name {}".format(name))
 
     def get_axis(self, name):
@@ -147,8 +147,8 @@ class NDDataArray(object):
         pairs = [_table_columns_from_data_axis(a) for a in self.axes[::-1]]
         cols = [_ for pair in pairs for _ in pair]
         cols.append(Column(data=[self.data.value], name='data', unit=self.data.unit))
-        t = Table(cols)
-        return t
+        table = Table(cols)
+        return table
 
     def write(self, *args, **kwargs):
         """Write to disk
@@ -165,7 +165,7 @@ class NDDataArray(object):
         This function can be overwritten by subclasses.
         The table must represent the convention at
         http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html#bintable-hdu
-        The rightmost column is assumed to hold the data for this implementation. 
+        The rightmost column is assumed to hold the data for this implementation.
 
         Parameters
         ----------
@@ -176,8 +176,8 @@ class NDDataArray(object):
         data = cols.pop(cols.keys()[-1]).data.squeeze()
         col_pairs = zip(cols[::2].values(), cols[1::2].values())
         axes = OrderedDict()
-        for cl, ch in col_pairs:
-            axes.update(_data_axis_from_table_columns(cl, ch))
+        for clow, chigh in col_pairs:
+            axes.update(_data_axis_from_table_columns(clow, chigh))
         return cls(axes=axes, data=data)
 
     @classmethod
@@ -187,8 +187,8 @@ class NDDataArray(object):
         Calling astropy I/O interface
         see http://docs.astropy.org/en/stable/io/unified.html
         """
-        t = Table.read(*args, **kwargs)
-        return cls.from_table(t)
+        table = Table.read(*args, **kwargs)
+        return cls.from_table(table)
 
     def __str__(self):
         """String representation"""
@@ -210,9 +210,9 @@ class NDDataArray(object):
             kwargs.setdefault(name, val.nodes)
 
         nodes = list()
-        for a in self.axes:
-            value = kwargs[a.name]
-            nodes.append(a.find_node(value))
+        for axis in self.axes:
+            value = kwargs[axis.name]
+            nodes.append(axis.find_node(value))
 
         return nodes
 
@@ -294,7 +294,7 @@ class NDDataArray(object):
         # Bring in correct order
         values = [kwargs[_] for _ in self.axis_names]
 
-        # Transform values for each axis to match interpolator 
+        # Transform values for each axis to match interpolator
         for i in np.arange(self.dim):
             values[i] = self.axes[i]._interp_values(values[i])
 
@@ -343,7 +343,7 @@ class NDDataArray(object):
 class DataAxis(Quantity):
     """Data axis to be used with NDDataArray
 
-    Axis values are interpreted as nodes. 
+    Axis values are interpreted as nodes.
     """
     def __new__(cls, vals, unit=None, dtype=None, copy=True, name=None):
         self = super(DataAxis, cls).__new__(cls, vals, unit,
@@ -371,7 +371,7 @@ class DataAxis(Quantity):
         bins : int
             Number of bins
         unit : `~astropy.units.UnitBase`, str
-            Unit           
+            Unit
         """
 
         if unit is not None:
@@ -436,7 +436,7 @@ class DataAxis(Quantity):
         allowed_modes = ['linear', 'log']
         if mode not in allowed_modes:
             raise ValueError('Interpolation mode {} not supported'.format(mode))
-        self._interpolation_mode = mode 
+        self._interpolation_mode = mode
 
     def _interp_nodes(self):
         """Nodes to be used for interpolation"""
@@ -481,12 +481,12 @@ class BinnedDataAxis(DataAxis):
 def _data_axis_from_table_columns(col_lo, col_hi):
     """Helper function to translate two table columns to a data axis dict"""
     if (col_lo.data == col_hi.data).all():
-        ax = DataAxis(col_lo.data[0], unit=col_lo.unit, name=col_lo.name[:-3])
+        axis = DataAxis(col_lo.data[0], unit=col_lo.unit, name=col_lo.name[:-3])
     else:
         data = np.append(col_lo.data[0], col_hi.data[0][-1])
-        ax = BinnedDataAxis(data, unit=col_lo.unit, name=col_lo.name[:-3])
-    name = ax.name
-    return {name:ax}
+        axis = BinnedDataAxis(data, unit=col_lo.unit, name=col_lo.name[:-3])
+    name = axis.name
+    return {name:axis}
 
 
 def _table_columns_from_data_axis(axis):
