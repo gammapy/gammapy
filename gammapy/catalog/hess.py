@@ -218,7 +218,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Lambda_Spec_ECPL']
         err = d['Lambda_Spec_ECPL_Err']
-        ss += '{:<20s} : {:.3f} \u00B1 {:.3f}\n'.format('ECPL Lambda', val, err)
+        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} TeV^-1\n'.format('ECPL Lambda', val, err)
         
         val = d['Energy_Cutoff_Spec_ECPL']
         err = d['Energy_Cutoff_Spec_ECPL_Err']
@@ -226,7 +226,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         import uncertainties
         energy = 1 / uncertainties.ufloat(val, err)
         val, err = energy.nominal_value, energy.std_dev
-        ss += '{:<20s} : {:.1f} \u00B1 {:.1f}\n'.format('ECPL E_cut', val, err)
+        ss += '{:<20s} : {:.1f} \u00B1 {:.1f} TeV\n'.format('ECPL E_cut', val, err)
         
         val = d['TS_ECPL_over_PL']
         ss += '{:<20s} : {:.1f}\n'.format('TS ECPL over PL', val)
@@ -274,7 +274,7 @@ class SourceCatalogHGPS(SourceCatalog):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/HGPS_v0.3.1.fits'
+            filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
         self.filename = str(filename)
         self.hdu_list = fits.open(str(filename))
         table = Table(self.hdu_list['HGPS_SOURCES'].data)
