@@ -91,6 +91,12 @@ def test_datastore_subset(tmpdir, data_manager):
 
     assert str(actual.events) == str(desired.events)
 
+    #Copy only certain HDU classes
+    storedir = tmpdir / 'substore2'
+    data_store.copy_obs(obs_id, storedir, hdu_class = ['events'])
+    
+    substore = DataStore.from_dir(storedir)
+    assert len(substore.hdu_table) == 2
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')

@@ -317,7 +317,7 @@ class DataStore(object):
 
         return file_available
 
-    def copy_obs(self, obs_id, outdir, verbose=False, clobber=False):
+    def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, clobber=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations
 
         Parameters
@@ -326,6 +326,8 @@ class DataStore(object):
             List of observations to copy
         outdir : str, Path
             Directory for the new store
+        hdu_class : list
+            HDU classes to copy
         verbose : bool
             Print copied files
         clobber : bool
@@ -339,7 +341,12 @@ class DataStore(object):
         
         hdutable = self.hdu_table
         hdutable.add_index('OBS_ID')
-        subhdutable = hdutable.loc[obs_id]
+        with hdutable.index_mode('discard_on_copy'):
+            subhdutable = hdutable.loc[obs_id]
+        if hdu_class is not None:
+            subhdutable.add_index('HDU_CLASS')
+            with subhdutable.index_mode('discard_on_copy'):
+                subhdutable = subhdutable.loc[hdu_class]
         subobstable = self.obs_table.select_obs_id(obs_id)
 
         for ii in range(len(subhdutable)):
