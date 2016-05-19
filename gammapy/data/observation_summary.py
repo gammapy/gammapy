@@ -16,11 +16,11 @@ class ObservationTableSummary(object):
     Class allowing to summarize informations contained in 
     Observation index table (`~gammapy.data.ObservationTable`)
 
-    Parameters:
-    -----------
-    obs_table:  `~gammapy.data.ObservationTable`
+    Parameters
+    ----------
+    obs_table : `~gammapy.data.ObservationTable`
         Observation index table
-    target_pos: `~astropy.coordinates.SkyCoord`
+    target_pos : `~astropy.coordinates.SkyCoord`
         Target position
     """
 
@@ -55,7 +55,7 @@ class ObservationTableSummary(object):
 
         Returns
         --------
-        ax : `~matplolib.axes`
+        ax : `~matplolib.axes.Axes`
             Axis
         """
         import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ class ObservationTableSummary(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplolib.axes.Axes`
             Axis
         """
         import matplotlib.pyplot as plt
