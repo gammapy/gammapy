@@ -13,7 +13,7 @@ __all__ = [
 class ObservationTableSummary(object):
     """Observation table summary.
 
-    Class allowing to summarize informations conatained in 
+    Class allowing to summarize informations contained in 
     Observation index table (`~gammapy.data.ObservationTable`)
 
     Parameters:
@@ -30,13 +30,8 @@ class ObservationTableSummary(object):
 
     @property
     def offset(self):
-        """
-        Compute offsets of the different observations
-        
-        Returns
-        -------
-        vector : `~astropy.Angle`
-            Offsets
+        """Offset of observations relative to the 
+        target position (`astropy.coordinates.Angle`).
         """
         pnt_pos = SkyCoord(self.obs_table['RA_PNT'],
                            self.obs_table['DEC_PNT'],
@@ -44,7 +39,7 @@ class ObservationTableSummary(object):
 
         offset = pnt_pos.separation(self.target_pos)
         
-        return offset.degree
+        return offset
     
     def plot_zenith_distribution(self, ax=None, bins=None):
         """
@@ -52,12 +47,11 @@ class ObservationTableSummary(object):
         
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
-            Axis
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
         bins : integer
             number of bins, optional
-        range : `range`
-            range of the x axis, optional
 
         Returns
         --------
@@ -85,8 +79,9 @@ class ObservationTableSummary(object):
         
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
-            Axis
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
         bins : integer
             number of bins, optional
 
@@ -101,8 +96,8 @@ class ObservationTableSummary(object):
         offset = self.offset
 
         if bins is None:
-            bins = np.linspace(0, offset.max()+0.5, 10)
-        ax.hist(offset, bins=bins)
+            bins = np.linspace(0, offset.degree.max()+0.5, 10)
+        ax.hist(offset.degree, bins=bins)
         ax.set_title('Offset distribution')
         ax.set_xlabel('Offset (Deg)')
         ax.set_ylabel('#Entries')

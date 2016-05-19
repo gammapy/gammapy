@@ -1,17 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from astropy.coordinates import Angle, SkyCoord
+from astropy.coordinates import SkyCoord
 
-from gammapy.data import DataStore
-from gammapy.data import ObservationTable
-from gammapy.data import ObservationTableSummary
+from ...data import DataStore, ObservationTable, ObservationTableSummary
 
 from ...utils.testing import data_manager, requires_data, requires_dependency
 
-from ...datasets import gammapy_extra
-
 def init_summary():
-    """Init summary table with test gammapy-extra data
+    """Init summary table with gammapy-extra data
 
     Returns
     -------
@@ -19,10 +15,17 @@ def init_summary():
         Summary table 
     """
     
-    datas_tore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
-    observations = datastore.obs_table
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    observations = data_store.obs_table
     summary = ObservationTableSummary(observations,SkyCoord.from_name('crab'))
     return summary
+
+@requires_data('gammapy-extra')
+def test_str():
+    """Test if str is well computed"""
+    summary = init_summary()
+    text = str(summary)
+    assert 'Observation summary' in text
 
 @requires_data('gammapy-extra')
 def test_offset():
@@ -30,20 +33,20 @@ def test_offset():
     summary = init_summary()
     offset = summary.offset
 
-    assert ((offset.mean() - 1.0) <1.e-6 and (offset.std() - 0.5) <1.e-6)
+    assert ((offset.degree.mean() - 1.0) <1.e-3 and (offset.degree.std() - 0.5) <1.e-3)
 
 @requires_data('gammapy-extra')
-def test_plot():
-    """Test if plots are done"""
-    import matplotlib.pyplot as plt
+@requires_dependency('matplotlib')
+def test_plot_zenith():
+    """Test if zenith plot is done"""
     
     summary = init_summary()
-
-    plt.figure()
     summary.plot_zenith_distribution()
-    plt.savefig('output/plot_zenith_distribution.pdf')
 
-    plt.figure()
+@requires_data('gammapy-extra')
+@requires_dependency('matplotlib')
+def test_plot_offset():
+    """Test if offset plot is done"""
+    
+    summary = init_summary()
     summary.plot_offset_distribution()
-    plt.savefig('output/plot_offset_distribution.pdf')
-
