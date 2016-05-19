@@ -12,7 +12,7 @@ class TestSourceCatalogHGPS:
 
     def test_source_table(self):
         assert self.cat.name == 'hgps'
-        assert len(self.cat.table) == 79
+        assert len(self.cat.table) == 78
 
     def test_component_table(self):
         assert len(self.cat.components) == 98
@@ -55,6 +55,6 @@ class TestSourceCatalogObjectHGPS:
         self.source.pprint()
 
     def test_str(self):
-        ss = str(self.source)
+        ss = self.source.__str__()
         assert 'Source name          : HESS J1825-137' in ss
         assert 'Component HGPSC 065:' in ss

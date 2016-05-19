@@ -31,6 +31,7 @@ FF = 1e-12
 # Here we use the same Crab reference that's used in the HGPS paper
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
+FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
 
 class HGPSGaussComponent(object):
@@ -85,7 +86,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             Comma separated list of options
         """
         if info == 'all':
-            info = 'basic,maps,spec,components,associations,references'
+            info = 'basic,map,spec,components,associations,references'
 
         ss = ''
         ops = info.split(',')
@@ -97,9 +98,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             ss += self._summary_spec()
         if 'components' in ops:
             ss += self._summary_components()
-        if 'assiciations' in ops:
+        if 'associations' in ops:
             ss += self._summary_associations()
-
+        if 'references' in ops:
+            ss += self._summary_references()
         return ss
 
     def _summary_basic(self):
@@ -189,41 +191,60 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_PL_Int_1TeV']
         err = d['Flux_Spec_PL_Int_1TeV_Err']
-        ss += 'PL   Flux(>1 TeV) : {:.1f} \u00B1 {:.1f}\n'.format(val / FF, err / FF)
+        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+              'PL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+
         val = d['Flux_Spec_ECPL_Int_1TeV']
         err = d['Flux_Spec_ECPL_Int_1TeV_Err']
-        ss += 'ECPL Flux(>1 TeV) : {:.1f} \u00B1 {:.1f}\n'.format(val / FF, err / FF)
+        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+              'ECPL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        
+        val = d['Flux_Spec_PL_Diff_1TeV']
+        err = d['Flux_Spec_PL_Diff_1TeV_Err']
+        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+              'PL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
+        
+        val = d['Flux_Spec_ECPL_Diff_1TeV']
+        err = d['Flux_Spec_ECPL_Diff_1TeV_Err']
+        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+              'ECPL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)       
 
         val = d['Index_Spec_PL']
         err = d['Index_Spec_PL_Err']
-        ss += 'PL   Index    : {:.2f} \u00B1 {:.2f}\n'.format(val, err)
+        ss += '{:<20s} : {:.2f} \u00B1 {:.2f}\n'.format('PL   Index', val, err)
         val = d['Index_Spec_ECPL']
         err = d['Index_Spec_ECPL_Err']
-        ss += 'ECPL Index    : {:.2f} \u00B1 {:.2f}\n'.format(val, err)
+        ss += '{:<20s} : {:.2f} \u00B1 {:.2f}\n'.format('ECPL Index', val, err)
 
         val = d['Lambda_Spec_ECPL']
         err = d['Lambda_Spec_ECPL_Err']
-        ss += 'ECPL Lambda   : {:.3f} \u00B1 {:.3f}\n'.format(val, err)
-        # TODO: change to catalog parameters here as soon as they are filled!
-        # val = d['Energy_Cutoff_Spec_ECPL']
-        # err = d['Energy_Cutoff_Spec_ECPL_Err']
+        ss += '{:<20s} : {:.3f} \u00B1 {:.3f}\n'.format('ECPL Lambda', val, err)
+        
+        val = d['Energy_Cutoff_Spec_ECPL']
+        err = d['Energy_Cutoff_Spec_ECPL_Err']
+        
         import uncertainties
         energy = 1 / uncertainties.ufloat(val, err)
         val, err = energy.nominal_value, energy.std_dev
-        ss += 'ECPL E_cut    : {:.1f} \u00B1 {:.1f}\n'.format(val, err)
+        ss += '{:<20s} : {:.1f} \u00B1 {:.1f}\n'.format('ECPL E_cut', val, err)
+        
+        val = d['TS_ECPL_over_PL']
+        ss += '{:<20s} : {:.1f}\n'.format('TS ECPL over PL', val)
+
         return ss
 
     def _summary_components(self):
         """Print info about the components."""
         if not hasattr(self, 'components'):
-            return
+            return ''
 
         ss = '\n*** Gaussian component info ***\n\n'
         ss += 'Number of components: {}\n'.format(len(self.components))
         ss += '{:<20s} : {}\n\n'.format('Spatial components', self.data['Components'])
 
         for component in self.components:
-            ss += str(component)
+            # Call __str__ directly to 
+            ss += component.__str__()
             ss += '\n\n'
         return ss
 
