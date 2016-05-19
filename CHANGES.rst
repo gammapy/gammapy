@@ -18,17 +18,31 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released in spring or summer 2016.
+Gammapy 0.5 will be released in June or July 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
 Contributors
 ++++++++++++
 
+- Axel Donath
+- Johannes King
+- Julien Lefaucheur (new)
+- Léa Jouvin
 
 Pull requests
 +++++++++++++
 
+This list is incomplete. Many small improvements and bug fixes are not listed here.
+
+See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
+
+- [#531] Add ObservationTableSummary class (Julien Lefaucheur)
+- [#529] Add data_summary method to DataStore (Johannes King)
+- [#526] Add King PSD evaluate and to_table_psf methods (Léa Jouvin)
+- [#524] Improve image pipe class (Léa Jouvin)
+- [#523] Add Gauss PSF to_table_psf method (Axel Donath)
+- [#521] Fix image pipe class (Léa Jouvin)
 
 .. _gammapy_0p4_release:
 
@@ -64,7 +78,7 @@ Contributors
 - Dirk Lennarz (new)
 - Johannes King
 - Jonathan Harris
-- Lea Jouvin (new)
+- Léa Jouvin (new)
 - Luigi Tibaldo (new)
 - Manuel Paz Arribas
 - Olga Vorokh (new)
@@ -77,23 +91,23 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 See the complete `Gammapy 0.4 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.4+is%3Amerged+>`__.
 
 - [#518] Fixes and cleanup for SkyMap (Axel Donath)
-- [#511] Add exposure image computation (Lea Jouvin)
-- [#510] Add acceptance curve smoothing method (Lea Jouvin)
+- [#511] Add exposure image computation (Léa Jouvin)
+- [#510] Add acceptance curve smoothing method (Léa Jouvin)
 - [#507] Add Fermi catalog spectrum evaluation and plotting (Johannes King)
 - [#506] Improve TS map computation performance (Axel Donath)
-- [#503] Add FOV background image modeling (Lea Jouvin)
+- [#503] Add FOV background image modeling (Léa Jouvin)
 - [#502] Add DataStore subset method (Johannes King)
 - [#487] Add SkyMap class (Axel Donath)
-- [#485] Add OffDataBackgroundMaker (Lea Jouvin)
+- [#485] Add OffDataBackgroundMaker (Léa Jouvin)
 - [#484] Add Sherpa cube analysis prototype (Axel Donath)
 - [#481] Add new gammapy.cube sub-package (Axel Donath)
-- [#478] Add observation stacking method for spectra (Lea Jouvin and Johannes King)
+- [#478] Add observation stacking method for spectra (Léa Jouvin and Johannes King)
 - [#475] Add tests for TS map image computation (Olga Vorokh)
 - [#474] Improve significance image analysis (Axel Donath)
 - [#473] Improve tests for HESS data (Johannes King)
 - [#462] Misc cleanup (Christoph Deil)
-- [#461] Pacman (Lea Jouvin)
-- [#459] Add radially symmetric FOV background model (Lea Jouvin)
+- [#461] Pacman (Léa Jouvin)
+- [#459] Add radially symmetric FOV background model (Léa Jouvin)
 - [#457] Improve data and observation handling (Christoph Deil)
 - [#456] Fix and improvements to TS map tool (Olga Vorokh)
 - [#455] Improve IRF interpolation and extrapolation (Christoph Deil)
@@ -110,7 +124,7 @@ See the complete `Gammapy 0.4 merged pull requests list on Github <https://githu
 - [#394] Move some data specs to gamma-astro-data-formats (Christoph Deil)
 - [#392] Use external ci-helpers (Brigitta Sipocz)
 - [#387] Improve Gammapy catalog query and browser (Christoph Deil)
-- [#383] Add EnergyOffsetArray (Lea Jouvin)
+- [#383] Add EnergyOffsetArray (Léa Jouvin)
 - [#379] Add gammapy.region and reflected region computation (Johannes King)
 - [#375] Misc cleanup of scripts and docs (Christoph Deil)
 - [#371] Improve catalog utils (Christoph Deil)
@@ -148,7 +162,7 @@ Summary
 - 24 pull requests
 - Requires Astropy version 1.0 or later.
 - On-off likelihood spectral analysis was added in gammapy.hspec,
-  contributed by Regis Terrier and Ignasi Reichardt.
+  contributed by Régis Terrier and Ignasi Reichardt.
   It will be refactored and is thus not part of the public API.
 - The Gammapy 0.3 release is the basis for an `ICRC 2015 poster contribution <https://indico.cern.ch/event/344485/session/142/contribution/695>`__
 
@@ -162,7 +176,7 @@ Contributors
 - Johannes King (new)
 - Stefan Klepser (new)
 - Ignasi Reichardt (new)
-- Regis Terrier
+- Régis Terrier
 - Victor Zabalza (new)
 
 Pull requests
@@ -187,7 +201,7 @@ Pull requests
 - [#278] Document observation tables and improve gammapy.obs (Manuel Paz Arribas)
 - [#276] Add EffectiveAreaTable exporter to EffectiveAreaTable2D (Johannes King)
 - [#273] Fix TS map header writing and temp file handling (Axel Donath)
-- [#264] Add hspec - spectral analysis using Sherpa (Regis Terrier, Ignasi Reichardt, Christoph Deil)
+- [#264] Add hspec - spectral analysis using Sherpa (Régis Terrier, Ignasi Reichardt, Christoph Deil)
 - [#262] Add SNRCat dataset access function (Christoph Deil)
 - [#261] Fix spiral arm model bar radius (Stefan Klepser)
 - [#260] Add offset-dependent effective area IRF class (Johannes King)
@@ -267,7 +281,7 @@ Contributors
 - Christoph Deil
 - Axel Donath
 - Ellis Owen
-- Regis Terrier
+- Régis Terrier
 
 Pull requests
 +++++++++++++
@@ -307,7 +321,7 @@ i.e. for some things there is no pull request we can list here.
 - [#58] Add per-pixel solid angle function in image utils (Ellis Owen)
 - [#48] Add sphere and power-law sampling functions (Christoph Deil)
 - [#34] Rename tevpy to gammapy (Christoph Deil)
-- [#25] Add continuous wavelet transform class (Regis Terrier)
+- [#25] Add continuous wavelet transform class (Régis Terrier)
 - [#12] Add coverage reports to continuous integration on coveralls (Christoph Deil)
 - [#11] Add blob detection (Axel Donath)
 - Rename tevpy to gammapy in `commit 7e955f <https://github.com/cdeil/gammapy/commit/7e955ffae71353f7b10c9de4a69b977e7c036c6d>`__ on Aug 19, 2013 (Christoph Deil)
