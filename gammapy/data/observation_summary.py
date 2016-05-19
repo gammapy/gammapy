@@ -50,8 +50,9 @@ class ObservationTableSummary(object):
         ax : `~matplotlib.axes.Axes` or None, optional.
             The `~matplotlib.axes.Axes` object to be drawn on.
             If None, uses the current `~matplotlib.axes.Axes`.
-        bins : integer
-            number of bins, optional
+        bins : integer or array_like, optional
+            Binning specification, passed to `matplotlib.pyplot.hist`.
+            By default, 30 bins from 0 deg to max zenith + 5 deg is used.
 
         Returns
         --------
@@ -82,8 +83,9 @@ class ObservationTableSummary(object):
         ax : `~matplotlib.axes.Axes` or None, optional.
             The `~matplotlib.axes.Axes` object to be drawn on.
             If None, uses the current `~matplotlib.axes.Axes`.
-        bins : integer
-            number of bins, optional
+        bins : integer or array_like, optional
+            Binning specification, passed to `matplotlib.pyplot.hist`.
+            By default, 30 bins from 0 deg to max zenith + 5 deg is used.
 
         Returns
         -------

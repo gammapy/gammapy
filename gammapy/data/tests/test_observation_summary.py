@@ -9,6 +9,8 @@ from ...data import DataStore, ObservationTable, ObservationTableSummary
 
 from ...utils.testing import data_manager, requires_data, requires_dependency
 
+from numpy.testing import assert_allclose
+
 @requires_data('gammapy-extra')
 @pytest.fixture
 def summary():    
@@ -16,22 +18,19 @@ def summary():
     target_pos = SkyCoord(83.633083, 22.0145, unit='deg')
     return ObservationTableSummary(data_store.obs_table, target_pos)
 
-@requires_data('gammapy-extra')
-def test_str():
-    text = str(summary())
-    assert 'Observation summary' in text
+def test_str(summary):
+    text = str(summary)
+    assert('Observation summary' in text)
 
-@requires_data('gammapy-extra')
-def test_offset():
-    offset = summary().offset
-    assert ((offset.degree.mean() - 1.0) <1.e-3 and (offset.degree.std() - 0.5) <1.e-3)
+def test_offset(summary):
+    offset = summary.offset
+    assert_allclose(offset.degree.mean(),1.,rtol=1.e-2,atol=0.)
+    assert_allclose(offset.degree.std(),0.5,rtol=1.e-2,atol=0.)
 
-@requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
-def test_plot_zenith():
-    summary().plot_zenith_distribution()
+def test_plot_zenith(summary):
+    summary.plot_zenith_distribution()
 
-@requires_data('gammapy-extra')
 @requires_dependency('matplotlib')
-def test_plot_offset():
-    summary().plot_offset_distribution()
+def test_plot_offset(summary):
+    summary.plot_offset_distribution()
