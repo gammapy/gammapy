@@ -21,7 +21,6 @@ __all__ = [
     'EventList',
     'EventListDataset',
     'EventListDatasetChecker',
-    'event_lists_to_counts_image',
 ]
 
 log = logging.getLogger(__name__)
@@ -917,37 +916,3 @@ class EventListDatasetChecker(object):
             return False
         else:
             return True
-
-
-def event_lists_to_counts_image(header, table_of_files, logger=None):
-    """Make count image from event lists (like gtbin).
-
-    TODO: what's a good API and location for this?
-
-    Parameters
-    ----------
-    header : `~astropy.io.fits.Header`
-        FITS header
-    table_of_files : `~astropy.table.Table`
-        Table of event list filenames
-    logger : `logging.Logger` or None
-        Logger to use
-
-    Returns
-    -------
-    image : `~astropy.io.fits.ImageHDU`
-        Count image
-    """
-    shape = (header['NAXIS2'], header['NAXIS1'])
-    data = np.zeros(shape, dtype='int')
-
-    for row in table_of_files:
-        if row['filetype'] != 'events':
-            continue
-        ds = EventListDataset.read(row['filename'])
-        if logger:
-            logger.info('Processing OBS_ID = {:06d} with {:6d} events.'
-                        ''.format(row['OBS_ID'], len(ds.event_list)))
-            # TODO: fill events in image.
-
-    return fits.ImageHDU(data=data, header=header)
