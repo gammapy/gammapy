@@ -93,7 +93,6 @@ def make_counts_image(energy_band):
     print('Filling counts image ...')
     header = fits.getheader(REF_IMAGE)
     image = event_list.fill_counts_header(header)
-    # image = event_lists_to_counts_image(header, TOTAL_EVENTS_FILE)
 
     print('Writing {}'.format(COUNTS_IMAGE))
     image.writeto(COUNTS_IMAGE, clobber=True)
