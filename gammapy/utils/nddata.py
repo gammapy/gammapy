@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst 
 
 import itertools
+from collections import OrderedDict
 import numpy as np
 from astropy.units import Quantity, Unit
 from astropy.table import Table, Column
@@ -20,26 +21,32 @@ class NDDataArray(object):
     `~gammapy.utils.nddata.DataAxis` or 
     `~gammapy.utils.nddata.BinnedDataAxis`.
     After this class has been initialized any number of axes and a data array
-    can be added. The axis order follows numpy convention for arrays, i.e. the 
-    axis added last is at index 0. The axes and data can also passed on
-    initialization as kwargs. The NDDataArray can be interpolated using several 
+    can be added. The axis order follows numpy convention for arrays, i.e. the
+    first index of the data array is the first axis. The axes and data can also
+    passed on initialization. The NDDataArray can be interpolated using several
     interpolation methods. For example see nddata_demo.ipynb in
     ``gammapy-extra/notebooks``.
+
+    Parameters
+    ----------
+    axes : OrderedDict, optional
+        Key: axis name, Value: array-like, `~gammapy.utils.nddata.DataAxis`
+    data : array-like, optional
+        Data
+    kwargs : dict
+        Use be subclasses to provide convenient constructors
     """
-    def __init__(self, **kwargs):
+    def __init__(self, axes=None, data=None, **kwargs):
         self._axes = list()
         self._data = None
         self._lininterp = None
 
-        data = None
-        if 'data' in kwargs.keys():
-            data = kwargs.pop('data')
-
-        for key, value in kwargs.items():
-	        if not isinstance(value, DataAxis):
-	            value = DataAxis(value)
-	        value.name = key
-	        self.add_axis(value)
+        if axes is not None:
+            for key, value in axes.items():
+	            if not isinstance(value, DataAxis):
+	                value = DataAxis(value)
+	            value.name = key
+	            self.add_axis(value)
 
     	if data is not None:
             self.data = data
@@ -137,7 +144,7 @@ class NDDataArray(object):
     def to_table(self):
         """Convert to astropy.Table"""
 
-        pairs = [_table_columns_from_data_axis(a) for a in self.axes]
+        pairs = [_table_columns_from_data_axis(a) for a in self.axes[::-1]]
         cols = [_ for pair in pairs for _ in pair]
         cols.append(Column(data=[self.data.value], name='data', unit=self.data.unit))
         t = Table(cols)
@@ -155,7 +162,7 @@ class NDDataArray(object):
     def from_table(cls, table):
         """Create from astropy table
 
-        This function should be overwritten by subclasses.
+        This function can be overwritten by subclasses.
         The table must represent the convention at
         http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html#bintable-hdu
         The rightmost column is assumed to hold the data for this implementation. 
@@ -166,12 +173,12 @@ class NDDataArray(object):
             table
         """
         cols = table.columns
-        data = cols.pop(cols.keys()[-1])
-        kwargs = dict(data=data)
+        data = cols.pop(cols.keys()[-1]).data.squeeze()
         col_pairs = zip(cols[::2].values(), cols[1::2].values())
+        axes = OrderedDict()
         for cl, ch in col_pairs:
-            kwargs.update(_data_axis_from_table_columns(cl, ch))
-        return cls(**kwargs)
+            axes.update(_data_axis_from_table_columns(cl, ch))
+        return cls(axes=axes, data=data)
 
     @classmethod
     def read(cls, *args, **kwargs):

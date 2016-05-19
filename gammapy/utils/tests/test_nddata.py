@@ -1,5 +1,6 @@
 import numpy as np
 import astropy.units as u
+from collections import OrderedDict
 from astropy.tests.helper import pytest
 from numpy.testing import assert_equal
 from ...utils.testing import requires_dependency
@@ -181,14 +182,16 @@ def test_1d_histo():
 
     # construction using __init__
     x = np.arange(6) * u.cm
+    axes = OrderedDict(distance = x)
     data = np.arange(10,70,10)
-    hist = NDDataArray(data=data, distance=x)
+    hist = NDDataArray(data=data, axes=axes)
     assert hist.axes[0].name == 'distance'
     assert isinstance(hist.axes[0], DataAxis)
 
     x = BinnedDataAxis([4,5,6,7], 's', name='spam')
+    axes = OrderedDict(velocity=x)
     data = np.arange(3)
-    hist = NDDataArray(data=data, velocity=x)
+    hist = NDDataArray(data=data, axes=axes)
     assert hist.axes[0].name == 'velocity'
     assert isinstance(hist.axes[0], BinnedDataAxis)
 

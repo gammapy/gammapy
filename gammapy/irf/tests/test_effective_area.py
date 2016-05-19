@@ -8,30 +8,36 @@ from astropy.io import fits
 from astropy.tests.helper import pytest
 from astropy.units import Quantity
 from numpy.testing import assert_allclose, assert_equal
+from collections import OrderedDict
 
 from ...datasets import gammapy_extra
 from ...irf import EffectiveAreaTable, abramowski_effective_area
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data, data_manager
 
-def test_EffectiveArea2D():
+@requires_data('gammapy-extra')
+def test_EffectiveArea2D(tmpdir):
     # These are just some quick and dirty tests they should be removed later
     from ...irf.effective_area import EffectiveArea2D
     energy = Quantity(np.logspace(0,1,4), 'TeV') 
     offset = Quantity([0.2, 0.3], 'deg') 
-    effective_area = Quantity(np.arange(6).reshape(2,3))
-    aeff = EffectiveArea2D(energy=energy, offset=offset, data=effective_area)
+    effective_area = Quantity(np.arange(6).reshape(3,2))
+    aeff = EffectiveArea2D(energy=energy, offset=offset, effective_area=effective_area)
    
     #For now just test if subclass behaves correctly
     e = Quantity(1.1, 'TeV')
     o = Quantity(0.29, 'deg')
-    idx = aeff.find_node(energy=e, offset=o)
-    assert idx[0] == 1
-    assert idx[1] == 0
+    idx = aeff.find_node(ENERG=e, THETA=o)
+    assert idx[0] == 0
+    assert idx[1] == 1
 
-    filename = '/home/kingj/Software/gammapy-extra/datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz' 
-    aeff = EffectiveArea2D.read(filename)
-
+    #Check that read/write works roughly (no header info)
+    filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
+    aeff = EffectiveArea2D.read(str(filename))
+    assert aeff.check_integrity()
+    aeff.write(str(tmpdir / 'test.fits'))
+    aeff2 = EffectiveArea2D.read(str(tmpdir / 'test.fits'))
+    assert aeff2.check_integrity()
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
