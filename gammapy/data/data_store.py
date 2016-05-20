@@ -317,7 +317,7 @@ class DataStore(object):
 
         return file_available
 
-    def copy_obs(self, obs_id, outdir, verbose=False, clobber=False):
+    def copy_obs(self, obs_id, outdir, hdu_class=None, verbose=False, clobber=False):
         """Create a new `~gammapy.data.DataStore` containing a subset of observations
 
         Parameters
@@ -326,28 +326,35 @@ class DataStore(object):
             List of observations to copy
         outdir : str, Path
             Directory for the new store
+        hdu_class : list of str
+            see :attr:`gammapy.data.HDUIndexTable.VALID_HDU_CLASS`
         verbose : bool
             Print copied files
         clobber : bool
             Overwrite
         """
         # TODO : Does rsync give any benefits here?
-        
+
         outdir = make_path(outdir)
         if isinstance(obs_id, ObservationTable):
             obs_id = obs_id['OBS_ID'].data
-        
+
         hdutable = self.hdu_table
         hdutable.add_index('OBS_ID')
-        subhdutable = hdutable.loc[obs_id]
+        with hdutable.index_mode('discard_on_copy'):
+            subhdutable = hdutable.loc[obs_id]
+        if hdu_class is not None:
+            subhdutable.add_index('HDU_CLASS')
+            with subhdutable.index_mode('discard_on_copy'):
+                subhdutable = subhdutable.loc[hdu_class]
         subobstable = self.obs_table.select_obs_id(obs_id)
 
-        for ii in range(len(subhdutable)):
+        for idx in range(len(subhdutable)):
             # Changes to the file structure could be made here
-            loc = subhdutable._location_info(ii)
+            loc = subhdutable._location_info(idx)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
-            cmd = ['cp','-v'] if verbose else ['cp']
+            cmd = ['cp', '-v'] if verbose else ['cp']
             if not clobber:
                 cmd += ['-n']
             cmd += [str(loc.path()), str(targetdir)]
@@ -370,7 +377,7 @@ class DataStore(object):
             obs_id = self.obs_table['OBS_ID'].data
         elif isinstance(obs_id, ObservationTable):
             obs_id = obs_id['OBS_ID'].data
-        
+
         hdut = self.hdu_table
         hdut.add_index('OBS_ID')
         subhdut = hdut.loc[obs_id]
@@ -386,12 +393,12 @@ class DataStore(object):
             if summed:
                 temp = temp + vals
             else:
-                rows.append(np.append(key['OBS_ID'], vals)) 
+                rows.append(np.append(key['OBS_ID'], vals))
         if summed:
             rows.append(temp)
         else:
             colnames = np.append(['OBS_ID'], colnames)
-        
+
         return Table(rows=rows, names=colnames)
 
 
