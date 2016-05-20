@@ -17,6 +17,7 @@ from astropy.table import Table
 from astropy.coordinates import Angle
 from ..extern.pathlib import Path
 from .core import SourceCatalog, SourceCatalogObject
+from ..spectrum import SpectrumFitResult
 
 __all__ = [
     'SourceCatalogHGPS',
@@ -298,6 +299,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         associations = ', '.join(self.associations)
         ss += 'List of associated objects: {}\n'.format(associations)
         return ss
+
+    @property
+    def spectrum(self):
+        """
+        SpectralFitResult object.
+        """
+        model = 'PowerLaw'
+        parameters = {}
+        parameters['index'] = self.data['Index_Spec']
+        parameters['reference'] = self.data['Energy_Spec_Pivot']
+        parameters['norm'] = self.data['Flux_Spec_Diff_Pivot']
+
+        parameter_errors = {}
+        parameters_errors['index'] = self.data['Index_Spec_Err']
+        parameters_errors['reference'] = self.data['Energy_Spec_Pivot']
+        parameters_errors['norm'] = self.data['Flux_Spec_Diff_Pivot_Err']
+
+        return SpectrumFitResult(model, parameters, parameters_errors)
 
 
 class SourceCatalogHGPS(SourceCatalog):
