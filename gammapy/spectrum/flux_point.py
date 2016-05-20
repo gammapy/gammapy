@@ -144,6 +144,8 @@ class DifferentialFluxPoints(Table):
         ax.errorbar(x, y, yerr=(yl, yh), **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
         return ax
 
 

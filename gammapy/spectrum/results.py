@@ -506,6 +506,8 @@ class SpectrumFitResult(Result):
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
         return ax
 
     def plot_butterfly(self, ax=None, energy_unit='TeV', energy_range=None,

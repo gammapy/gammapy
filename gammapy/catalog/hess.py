@@ -12,12 +12,12 @@ TODO:
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 from collections import OrderedDict
+from astropy.units import Quantity
 from astropy.io import fits
 from astropy.table import Table
 from astropy.coordinates import Angle
 from ..extern.pathlib import Path
 from .core import SourceCatalog, SourceCatalogObject
-from ..spectrum import SpectrumFitResult
 
 __all__ = [
     'SourceCatalogHGPS',
@@ -305,18 +305,34 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         """
         SpectralFitResult object.
         """
+        from ..spectrum import SpectrumFitResult
+
         model = 'PowerLaw'
         parameters = {}
-        parameters['index'] = self.data['Index_Spec']
-        parameters['reference'] = self.data['Energy_Spec_Pivot']
-        parameters['norm'] = self.data['Flux_Spec_Diff_Pivot']
+        parameters['index'] = Quantity(self.data['Index_Spec_PL'], '')
+        parameters['reference'] = Quantity(self.data['Energy_Spec_PL_Pivot'], 'TeV')
+        parameters['norm'] = Quantity(self.data['Flux_Spec_PL_Diff_Pivot'],
+                                      's^-1 cm^-2 TeV^-1')
 
         parameter_errors = {}
-        parameters_errors['index'] = self.data['Index_Spec_Err']
-        parameters_errors['reference'] = self.data['Energy_Spec_Pivot']
-        parameters_errors['norm'] = self.data['Flux_Spec_Diff_Pivot_Err']
+        parameter_errors['index'] = Quantity(self.data['Index_Spec_PL_Err'], '')
+        parameter_errors['norm'] = Quantity(self.data['Flux_Spec_PL_Diff_Pivot_Err'],
+                                            's^-1 cm^-2 TeV^-1')
+        parameter_errors['reference'] = Quantity(0, 'TeV')
+        return SpectrumFitResult(model, parameters, parameter_errors)
 
-        return SpectrumFitResult(model, parameters, parameters_errors)
+    @property
+    def flux_points(self):
+        from ..spectrum import DifferentialFluxPoints
+        energy = Quantity(self.data['Flux_Points_Energy'], 'TeV')
+        diff_flux = Quantity(self.data['Flux_Points_Flux'], 's^-1 cm^-2 TeV^-1')
+        energy_err_hi = Quantity(self.data['Flux_Points_Energy_Err_Hi'], 'TeV')
+        energy_err_lo = Quantity(self.data['Flux_Points_Energy_Err_Lo'], 'TeV')
+        diff_flux_err_hi = Quantity(self.data['Flux_Points_Flux_Err_Hi'], 's^-1 cm^-2 TeV^-1')
+        diff_flux_err_lo = Quantity(self.data['Flux_Points_Flux_Err_Lo'], 's^-1 cm^-2 TeV^-1')
+        return DifferentialFluxPoints.from_arrays(energy, diff_flux, energy_err_hi,
+                                                  energy_err_lo, diff_flux_err_hi,
+                                                  diff_flux_err_lo)
 
 
 class SourceCatalogHGPS(SourceCatalog):
