@@ -247,25 +247,36 @@ class ObsImage(object):
         spectrum = (energy_bin / eref) ** (-spectral_index)
         #offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         offset=region_center.separation(self.obs_center)
+        """
         psf_table=self.psf.to_table_psf(theta=offset)
 
         psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
         for iE,E in enumerate(energy_bin):
             psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
         psftab=Quantity(psftab, psf_table.psf_value.unit)
-        tab = np.sum(psftab*self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
-        exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
-        tab *= self.livetime
-        exposure*=self.livetime
+        """
+        if(offset>self.aeff.offset_hi[-1]):
+            return False, False, False
+        else:
+            psf_table=self.psf.to_table_psf(theta=offset)
 
+            psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
+            for iE,E in enumerate(energy_bin):
+                psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
+            psftab=Quantity(psftab, psf_table.psf_value.unit)
+            tab = np.sum(psftab*self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+            exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
+            tab *= self.livetime
+            exposure  *=self.livetime
+            return psf_table.offset, tab, exposure
+        """
         if np.isnan(tab[0]):
             print("LE RUN "+str(self.obs_id)+"presente des nan pour psf")
+            print("offset "+str(offset.to("deg").value))
         if(exposure==0):
             print("Le run "+str(self.obs_id)+"presente une exposure nulle")
-        if(self.obs_id==20978):
-            import IPython; IPython.embed()
         return psf_table.offset, tab, exposure
-
+        """
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
 
@@ -416,6 +427,8 @@ class MosaicImage(object):
                 continue
             else:
                 theta_psf_tab, tab, exposure_tab = obs_image.make_mean_psf(region_center,spectral_index)
+                if not tab:
+                    continue
                 if(i==0):
                     exposure_tab_tot=exposure_tab
                     tab_tot=tab
