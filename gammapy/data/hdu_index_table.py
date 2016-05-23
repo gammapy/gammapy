@@ -147,7 +147,7 @@ class HDUIndexTable(Table):
         return make_path(self.meta['BASE_DIR'])
 
     def hdu_location(self, obs_id, hdu_type=None, hdu_class=None):
-        """Create `HDULocation`.
+        """Create `HDULocation` for a given selection.
 
         Parameters
         ----------
@@ -177,7 +177,7 @@ class HDUIndexTable(Table):
             # TODO: should we emit a warning
             idx = idx[0]
 
-        return self._location_info(idx)
+        return self.location_info(idx)
 
     def _validate_selection(self, obs_id, hdu_type, hdu_class):
         """Validate HDU selection.
@@ -237,7 +237,8 @@ class HDUIndexTable(Table):
 
         return idx_list
 
-    def _location_info(self, idx):
+    def location_info(self, idx):
+        """Create `HDULocation` for a given row index."""
         row = self[idx]
         location = HDULocation(
             obs_id=row['OBS_ID'],

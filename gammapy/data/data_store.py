@@ -351,7 +351,7 @@ class DataStore(object):
 
         for idx in range(len(subhdutable)):
             # Changes to the file structure could be made here
-            loc = subhdutable._location_info(idx)
+            loc = subhdutable.location_info(idx)
             targetdir = outdir / loc.file_dir
             targetdir.mkdir(exist_ok=True, parents=True)
             cmd = ['cp', '-v'] if verbose else ['cp']
