@@ -58,3 +58,12 @@ class TestSourceCatalogObjectHGPS:
         ss = self.source.__str__()
         assert 'Source name          : HESS J1825-137' in ss
         assert 'Component HGPSC 065:' in ss
+
+    def test_spectrum(self):
+        source = self.cat['HESS J1825-137']
+        reference = ('Fit result info \n--------------- \nModel: PowerLaw'
+                     ' \nParameters: \n\t index     : 2.38 +/- 0.03 \n\t norm'
+                     '      : (17.17 +/- 0.57) x 1e-12 / (cm2 s TeV)\n\t reference'
+                     ' : 1.16 +/- 0.00 TeV\n')
+
+        assert str(source.spectrum) == reference

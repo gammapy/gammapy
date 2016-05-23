@@ -76,38 +76,6 @@ class DifferentialFluxPoints(Table):
         t['DIFF_FLUX_ERR_LO'] = diff_flux_err_lo
         return cls(t)
 
-    @classmethod
-    def from_3fgl(cls, source, x_method='log_center'):
-        """Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
-
-        Parameters
-        ----------
-        sourcename : dict
-            3FGL source
-        """
-        ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
-
-        if x_method == 'log_center':
-            energy = ebounds.log_centers
-        else:
-            raise ValueError('Undefined x method: {}'.format(x_method))
-        fluxkeys = ['nuFnu100_300', 'nuFnu300_1000', 'nuFnu1000_3000', 'nuFnu3000_10000', 'nuFnu10000_100000']
-        temp_fluxes = [source.data[_] for _ in fluxkeys]
-        energy_fluxes = Quantity(temp_fluxes, 'erg cm-2 s-1')
-        diff_fluxes = (energy_fluxes * energy ** -2).to('erg-1 cm-2 s-1')
-
-        # Get relativ error on integral fluxes
-        int_flux_points = IntegralFluxPoints.from_3fgl(source)
-        val = int_flux_points['INT_FLUX'].quantity
-        rel_error_hi = int_flux_points['INT_FLUX_ERR_HI'] / val
-        rel_error_lo = int_flux_points['INT_FLUX_ERR_LO'] / val
-
-        diff_fluxes_err_hi = diff_fluxes * rel_error_hi
-        diff_fluxes_err_lo = diff_fluxes * rel_error_lo
-
-        return cls.from_arrays(energy=energy, diff_flux=diff_fluxes,
-                               diff_flux_err_lo=diff_fluxes_err_lo,
-                               diff_flux_err_hi=diff_fluxes_err_hi)
 
     def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
@@ -140,10 +108,16 @@ class DifferentialFluxPoints(Table):
         yh = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit).value
         yl = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit).value
         y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, energy_power)
+
+        xh = self['ENERGY_ERR_HI'].quantity.to(energy_unit).value
+        xl = self['ENERGY_ERR_LO'].quantity.to(energy_unit).value
+
         flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
-        ax.errorbar(x, y, yerr=(yl, yh), **kwargs)
+        ax.errorbar(x, y, yerr=(yl, yh), xerr=(xl, xh), **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
         return ax
 
 
@@ -174,32 +148,10 @@ class IntegralFluxPoints(Table):
         t['INT_FLUX'] = int_flux
         t['INT_FLUX_ERR_HI'] = int_flux_err_hi
         t['INT_FLUX_ERR_LO'] = int_flux_err_lo
+
+        t['INT_FLUX_ERR_HI_%'] = 100 * int_flux_err_hi / int_flux
+        t['INT_FLUX_ERR_LO_%'] = 100 * int_flux_err_lo / int_flux
         return cls(t)
-
-    @classmethod
-    def from_3fgl(cls, source):
-        """Get `~gammapy.spectrum.IntegralFluxPoints` for a 3FGL source
-
-        Parameters
-        ----------
-        source : dict
-            3FGL source
-        """
-        ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
-        fluxkeys = ['Flux100_300', 'Flux300_1000', 'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
-        temp_fluxes = [source.data[_] for _ in fluxkeys]
-
-        fluxerrkeys = ['Unc_Flux100_300', 'Unc_Flux300_1000', 'Unc_Flux1000_3000', 'Unc_Flux3000_10000', 'Unc_Flux10000_100000']
-
-        temp_fluxes_err_hi = [source.data[_][1] for _ in fluxerrkeys]
-        temp_fluxes_err_lo = [-1 * source.data[_][0] for _ in fluxerrkeys]
-
-        int_fluxes = Quantity(temp_fluxes, 'cm-2 s-1')
-        int_fluxes_err_hi = Quantity(temp_fluxes_err_hi, 'cm-2 s-1')
-        int_fluxes_err_lo = Quantity(temp_fluxes_err_lo, 'cm-2 s-1')
-
-        return cls.from_arrays(ebounds, int_fluxes, int_fluxes_err_hi,
-                               int_fluxes_err_lo)
 
     @classmethod
     def from_2fhl(cls, source):

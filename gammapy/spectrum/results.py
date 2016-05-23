@@ -506,6 +506,8 @@ class SpectrumFitResult(Result):
         ax.plot(x, y, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
         return ax
 
     def plot_butterfly(self, ax=None, energy_unit='TeV', energy_range=None,
@@ -570,6 +572,33 @@ class SpectrumFitResult(Result):
         x = np.logspace(x_min, x_max, n_points) * Unit('TeV')
 
         return x
+
+    def __str__(self):
+        """
+        Summary info string.
+        """
+        info = 'Fit result info \n'
+        info += '--------------- \n'
+        info += 'Model: {} \n'.format(self.spectral_model)
+        info += 'Parameters: \n'
+
+        for name in sorted(self.parameters):
+            val = self.parameters[name]
+            err = self.parameter_errors[name]
+            _ = dict(name=name, val=val, err=err)
+            if name == 'norm':
+                _['val'] = _['val'].to('1e-12 cm^-2 TeV^-1 s^-1')
+                _['err'] = _['err'].to('1e-12 TeV^-1 cm^-2 s^-1')
+                info += '\t {name:10s}: ({val.value:.2f} +/- {err.value:.2f}) x {val.unit}\n'.format(**_)
+            else:
+                info += '\t {name:10s}: {val.value:.2f} +/- {err.value:.2f} {val.unit}\n'.format(**_)
+        return info
+
+    def info(self):
+        """
+        Print summary info.
+        """
+        print(str(self))
 
 
 class SpectrumStats(Result):
