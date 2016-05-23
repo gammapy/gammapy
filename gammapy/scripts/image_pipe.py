@@ -257,6 +257,13 @@ class ObsImage(object):
         exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
         tab *= self.livetime
         exposure*=self.livetime
+
+        if np.isnan(tab[0]):
+            print("LE RUN "+str(self.obs_id)+"presente des nan pour psf")
+        if(exposure==0):
+            print("Le run "+str(self.obs_id)+"presente une exposure nulle")
+        if(self.obs_id==20978):
+            import IPython; IPython.embed()
         return psf_table.offset, tab, exposure
 
 class MosaicImage(object):
@@ -420,4 +427,5 @@ class MosaicImage(object):
         tab_tot/=exposure_tab_tot
         self.psfmeantab = tab_tot
         self.thetapsf = theta_psf_tab
+        return theta_psf_tab, tab_tot
 
