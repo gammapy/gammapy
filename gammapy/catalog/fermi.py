@@ -201,17 +201,11 @@ def fetch_fermi_extended_sources(catalog):
 
 
 class SourceCatalogObject3FGL(SourceCatalogObject):
-    """One source from the Fermi-LAT 3FGL catalog.
     """
-
-    x_bins_edges = Quantity([30, 100, 300, 1000, 3000, 10000, 100000], 'MeV')
-
-    x_bins = Quantity(x_bins_edges, 'MeV')
-
-    x_cens = EnergyBounds(x_bins).log_centers
-
-    y_labels = ['Flux30_100', 'Flux100_300', 'Flux300_1000',
-                'Flux1000_3000', 'Flux3000_10000', 'Flux10000_100000']
+    One source from the Fermi-LAT 3FGL catalog.
+    """
+    _ebounds = EnergyBounds(Quantity([100, 300, 1000, 3000, 10000, 100000], 'MeV'))
+    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000'] 
 
     def __str__(self):
         """Print default summary info string"""
@@ -236,6 +230,57 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         return ss
 
+    @property
+    def spectrum(self):
+        raise NotImplementedError
+
+    @property
+    def flux_points_differential(self):
+        """
+        Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
+        """
+        from ..spectrum import DifferentialFluxPoints
+        
+        energy = self._ebounds.log_centers
+        
+        nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
+        diff_flux = (nuFnu * energy ** -2).to('erg-1 cm-2 s-1')
+
+        # Get relativ error on integral fluxes
+        int_flux_points = self.flux_points_integral
+        diff_flux_err_hi = diff_flux * int_flux_points['INT_FLUX_ERR_HI_%'] / 100
+        diff_flux_err_lo = diff_flux * int_flux_points['INT_FLUX_ERR_LO_%'] / 100
+
+        return DifferentialFluxPoints.from_arrays(energy=energy, diff_flux=diff_flux,
+                                                  diff_flux_err_lo=diff_flux_err_lo,
+                                                  diff_flux_err_hi=diff_flux_err_hi)
+
+    @property
+    def flux_points_integral(self):
+        """
+        Get `~gammapy.spectrum.IntegralFluxPoints` for a 3FGL source
+
+        Parameters
+        ----------
+        source : dict
+            3FGL source
+        """
+        from ..spectrum import IntegralFluxPoints
+        
+        flux = self._get_flux_values()
+        flux_err = self._get_flux_values('Unc_Flux')
+        
+        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
+                                              flux + flux_err[:, 0])
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
+            raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
+
+        values = [self.data[prefix + _] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+
     def plot_lightcurve(self, ax=None):
         """Plot lightcurve.
         """
@@ -243,6 +288,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         ax = plot_fermi_3fgl_light_curve(self.name, ax=ax)
         return ax
+
 
     def plot_spectrum(self, ax=None):
         """Plot spectrum.

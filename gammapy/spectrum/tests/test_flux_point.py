@@ -194,7 +194,7 @@ def test_3fgl_flux_points():
     source = cat_3fgl['3FGL J0018.9-8152']
     index = source.data['Spectral_Index']
 
-    diff_points = DifferentialFluxPoints.from_3fgl(source)
+    diff_points = source.flux_points_differential
     fluxes = diff_points['DIFF_FLUX'].quantity
     energies = diff_points['ENERGY'].quantity
     eflux = fluxes * energies ** 2
@@ -205,7 +205,7 @@ def test_3fgl_flux_points():
     assert_allclose(actual, diff_desired, rtol=1e-4)
 
 
-    int_points = IntegralFluxPoints.from_3fgl(source)
+    int_points = source.flux_points_integral
     actual = int_points['INT_FLUX'].quantity.to('cm-2 s-1').value
 
     int_desired = [9.45680e-09, 1.94538e-09, 4.00020e-10, 1.26891e-10, 7.24820e-11]
