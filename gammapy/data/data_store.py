@@ -33,7 +33,7 @@ class DataStore(object):
 
     Parameters
     ----------
-    hdu_table : `~astropy.data.HDUIndexTable`
+    hdu_table : `~gammapy.data.HDUIndexTable`
         HDU index table
     obs_table : `~gammapy.data.ObservationTable`
         Observation index table
