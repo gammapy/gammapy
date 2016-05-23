@@ -2,10 +2,12 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 import itertools
-from collections import OrderedDict
 import numpy as np
+import abc
 from astropy.units import Quantity
 from astropy.table import Table, Column
+from astropy.extern import six
+from .array import array_stats_str
 
 __all__ = [
     'NDDataArray',
@@ -13,67 +15,37 @@ __all__ = [
     'BinnedDataAxis',
 ]
 
-
+six.add_metaclass(abc.ABCMeta)
 class NDDataArray(object):
-    """ND Data Array
+    """ND Data Array Base class
 
-    This class represents a n-dimensional data array. The data is stored as a
-    `~numpy array`. The data axes are separate classes,
-    `~gammapy.utils.nddata.DataAxis` or
-    `~gammapy.utils.nddata.BinnedDataAxis`.
-    After this class has been initialized any number of axes and a data array
-    can be added. The axis order follows numpy convention for arrays, i.e. the
-    first index of the data array is the first axis. The axes and data can also
-    passed on initialization. The NDDataArray can be interpolated using several
-    interpolation methods. For example see nddata_demo.ipynb in
-    ``gammapy-extra/notebooks``.
-
-    Parameters
-    ----------
-    axes : OrderedDict, optional
-        Key: axis name, Value: array-like, `~gammapy.utils.nddata.DataAxis`
-    data : array-like, optional
-        Data
-    kwargs : dict
-        Use be subclasses to provide convenient constructors
+    TODO: Document
     """
-    def __init__(self, axes=None, data=None, **kwargs):
+    axis_names = ()
+    """Axis names. This specifies the axis order"""
+
+    interp_kwargs = dict(bounds_error=False)
+    """Interpolation kwargs used to initialize the
+    `scipy.interpolate.RegularGridInterpolator`.  The interpolation behaviour
+    of an individual axis ('log', 'linear') can be passed to the axis on
+    initialization."""
+
+    def __init__(self, **kwargs):
+
+        # TODO : Dynamically generate function signature
+        # https://github.com/astropy/astropy/blob/ffc0a89b2c42fd440eb19bcb2f93db90cab3c98b/astropy/utils/codegen.py#L30
+        self._data = kwargs.pop('data', None)
+
         self._axes = list()
-        self._data = None
-        self._lininterp = None
-
-        if axes is not None:
-            for key, value in axes.items():
-                if not isinstance(value, DataAxis):
-                    value = DataAxis(value)
-                value.name = key
-                self.add_axis(value)
-
-        if data is not None:
-            self.data = data
-
-    def add_axis(self, axis):
-        """Add axis
-
-        The ``data`` member is set to ``None`` in order to avoid unwanted
-        behaviour.
-
-        Parameters
-        ----------
-        axis : `~gammapy.utils.nddata.DataAxis`
-            axis
-        """
-        default_names = {0: 'x', 1: 'y', 2: 'z'}
-        if axis.name is None:
-            axis.name = default_names[self.dim]
-        self._axes = [axis] + self._axes
-
-        self._data = None
-        self._lininterp = None
+        for axis_name in self.axis_names:
+            value = kwargs.pop(axis_name)
+            axis = getattr(self, axis_name)
+            axis.data = Quantity(value)
+            self._axes.append(axis)
 
     @property
     def axes(self):
-        """Array holding the axes"""
+        """Array holding the axes in correct order"""
         return self._axes
 
     @property
@@ -108,41 +80,14 @@ class NDDataArray(object):
         self._data = Quantity(data)
 
     @property
-    def axis_names(self):
-        """Axes names"""
-        return [a.name for a in self.axes]
-
-    def get_axis_index(self, name):
-        """Return axis index by its  name
-
-        Parameters
-        ----------
-        name : str
-            Valid axis name
-        """
-        for axis in self.axes:
-            if axis.name == name:
-                return self.axes.index(axis)
-        raise ValueError("No axis with name {}".format(name))
-
-    def get_axis(self, name):
-        """Return axis by its name
-
-        Parameters
-        ----------
-        name : str
-            Valid axis name
-        """
-        idx = self.get_axis_index(name)
-        return self.axes[idx]
-
-    @property
     def dim(self):
         """Dimension (number of axes)"""
         return len(self.axes)
 
     def to_table(self):
         """Convert to astropy.Table"""
+
+        raise NotImplementedError("Broken")
 
         pairs = [_table_columns_from_data_axis(a) for a in self.axes[::-1]]
         cols = [_ for pair in pairs for _ in pair]
@@ -160,25 +105,8 @@ class NDDataArray(object):
 
     @classmethod
     def from_table(cls, table):
-        """Create from astropy table
-
-        This function can be overwritten by subclasses.
-        The table must represent the convention at
-        http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html#bintable-hdu
-        The rightmost column is assumed to hold the data for this implementation.
-
-        Parameters
-        ----------
-        table : `~astropy.table`
-            table
-        """
-        cols = table.columns
-        data = cols.pop(cols.keys()[-1]).data.squeeze()
-        col_pairs = zip(cols[::2].values(), cols[1::2].values())
-        axes = OrderedDict()
-        for clow, chigh in col_pairs:
-            axes.update(_data_axis_from_table_columns(clow, chigh))
-        return cls(axes=axes, data=data)
+        """Fits Reader"""
+        raise NotImplementedError('')
 
     @classmethod
     def read(cls, *args, **kwargs):
@@ -192,53 +120,16 @@ class NDDataArray(object):
 
     def __str__(self):
         """String representation"""
-        return str(self.to_table())
-
-    def find_node(self, **kwargs):
-        """Find nearest node
-
-        Parameters
-        ----------
-        kwargs : dict
-            Search values
-        """
-        for key in kwargs.keys():
-            if key not in self.axis_names:
-                raise ValueError('No axis for key {}'.format(key))
-
-        for name, val in zip(self.axis_names, self.axes):
-            kwargs.setdefault(name, val.nodes)
-
-        nodes = list()
-        for axis in self.axes:
-            value = kwargs[axis.name]
-            nodes.append(axis.find_node(value))
-
-        return nodes
-
-    def evaluate_nearest(self, **kwargs):
-        """Evaluate NDData Array
-
-        No interpolation, this is equivalent to ``evaluate(method='nearest')``
-
-        Parameters
-        ----------
-        kwargs : dict
-            Axis names are keys, Quantity array are values
-        """
-        # TODO : Remove?
-        idx = self.find_node(**kwargs)
-        data = self.data
-        for i in np.arange(self.dim):
-            data = np.take(data, idx[i], axis=i)
-
-        return data
+        ss = 'Data array summary info\n'
+        for axis, axname in zip(self.axes, self.axis_names):
+            ss += array_stats_str(axis.data, axname)
+        ss += array_stats_str(self.data, 'Data')
+        return ss
 
     def evaluate(self, method='linear', **kwargs):
         """Evaluate NDData Array
 
         This function provides a uniform interface to several interpolators.
-        Interpolators have to be added before this function can be used.
         The evaluation nodes are given as ``kwargs``.
 
         Currently available:
@@ -255,106 +146,69 @@ class NDDataArray(object):
         -------
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
-
-        Examples
-        --------
-
-        .. code-block:: python
-
-            import numpy as np
-            import astropy.units as u
-            from gammapy.utils.nddata import NDDataArray, DataAxis
-
-            x_axis = DataAxis(np.linspace(1,10,10),'m', name='distance')
-            y_axis = DataAxis(np.linspace(2,3,5),'s', name='time')
-            data = np.arange(50).reshape(5,10)
-
-            nddata = NDDataArray()
-            nddata.add_axis(x_axis)
-            nddata.add_axis(y_axis)
-            nddata.data = data
-            nddata.add_linear_interpolator()
-
-            nddata.evaluate(distance=[4, 5, 6,] * u.m, time=2 * u.s, method='nearest')
-            nddata.evaluate(distance=400 * u.cm, method='linear')
         """
-        for key in kwargs.keys():
-            if key not in self.axis_names:
-                raise ValueError('No axis for key {}'.format(key))
+        values = np.zeros(self.dim)
 
-        # Use nodes on unspecified axes
-        for name, val in zip(self.axis_names, self.axes):
-            kwargs.setdefault(name, val.nodes)
-
-        # Put in correct units
-        for key in kwargs:
-            val = Quantity(kwargs[key], unit=self.get_axis(key).unit)
-            kwargs[key] = np.atleast_1d(val).value
-
-        # Bring in correct order
-        values = [kwargs[_] for _ in self.axis_names]
-
-        # Transform values for each axis to match interpolator
-        for i in np.arange(self.dim):
-            values[i] = self.axes[i]._interp_values(values[i])
+        for _ in range(len(values)):
+            # Extract values for each axis, default: nodes
+            axname = self.axis_names[_]
+            axis = self.axes[_]
+            temp = kwargs.pop(axname, axis.nodes)
+            # Transform to correct unit
+            temp = temp.to(axis.unit)
+            # Transform to match interpolation behaviour of axis
+            values[_] = axis._interp_values(temp)
 
         if method == 'linear':
-            return self._eval_linear(values, method='linear') * self.data.unit
+            return self._eval_regular_grid_interp(
+                values, method='linear') * self.data.unit
         elif method == 'nearest':
-            return self._eval_linear(values, method='nearest') * self.data.unit
+            return self._eval_regular_grid_interp(
+                values, method='nearest') * self.data.unit
         else:
             raise ValueError('Interpolator {} not available'.format(method))
 
-    def add_linear_interpolator(self, **kwargs):
-        """Add `~scipy.interpolate.RegularGridInterpolator`
+    def _eval_regular_grid_interp(self, values, method='linear'):
+        """Evaluate linear interpolator
 
-        The interpolation behaviour of an individual axis can be adjusted by
-        setting the ``interpolation_mode`` property. Afterward the
-        interpolator has to be setup anew.
+        Input: list of values to evaluate, in correct units and correct order.
+        """
+        if self._regular_grid_interp is None:
+            self._add_regular_grid_interp()
+
+        shapes = [np.shape(_)[0] for _ in values]
+        points = list(itertools.product(*values))
+        res = self._regular_grid_interp(points, method=method)
+        res = np.reshape(res, shapes)
+
+        return res
+
+    def _add_regular_grid_interp(self):
+        """Add `~scipy.interpolate.RegularGridInterpolator`
 
         http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
         """
-        kwargs.setdefault('bounds_error', False)
-
         from scipy.interpolate import RegularGridInterpolator
 
         points = [a._interp_nodes() for a in self.axes]
         values = self.data.value
 
-        self._lininterp = RegularGridInterpolator(points, values, **kwargs)
-
-    def _eval_linear(self, values, method='linear'):
-        """Evaluate linear interpolator
-
-        Input: list of values to evaluate, in correct units and correct order.
-        """
-        if self._lininterp is None:
-            raise ValueError('Linear interpolation requested but no linear '
-                             'interpolator initialized')
-
-        shapes = [np.shape(_)[0] for _ in values]
-        points = list(itertools.product(*values))
-        res = self._lininterp(points, method=method)
-        res = np.reshape(res, shapes)
-
-        return res
+        self._regular_grid_interp = RegularGridInterpolator(points, values, self.interp_kwargs)
 
 
-class DataAxis(Quantity):
+class DataAxis(object):
     """Data axis to be used with NDDataArray
 
     Axis values are interpreted as nodes.
     """
-    def __new__(cls, vals, unit=None, dtype=None, copy=True, name=None):
-        self = super(DataAxis, cls).__new__(cls, vals, unit,
-                                            dtype=dtype, copy=copy)
+    def __init__(self, data=None, interpolation_mode='linear'):
+        self.data = data
+        self._interpolation_mode = interpolation_mode
 
-        self.name = name
-        self._interpolation_mode = 'linear'
-        return self
-
-    def __array_finalize__(self, obj):
-        super(DataAxis, self).__array_finalize__(obj)
+    @property
+    def unit(self):
+        """Axis unit"""
+        return self.data.unit
 
     @classmethod
     def logspace(cls, vmin, vmax, nbins, unit=None):
@@ -386,7 +240,7 @@ class DataAxis(Quantity):
         x_min, x_max = np.log10([vmin.value, vmax.value])
         vals = np.logspace(x_min, x_max, nbins)
 
-        return cls(vals, unit, copy=False)
+        return cls(vals * unit, interpolation_mode='log')
 
     def find_node(self, val):
         """Find next node
@@ -402,7 +256,7 @@ class DataAxis(Quantity):
             raise ValueError('Units {} and {} do not match'.format(
                 val.unit, self.unit))
 
-        val = val.to(self.unit)
+        val = val.to(self.data.unit)
         val = np.atleast_1d(val)
         x1 = np.array([val] * self.nbins).transpose()
         x2 = np.array([self.nodes] * len(val))
@@ -413,7 +267,7 @@ class DataAxis(Quantity):
     @property
     def nbins(self):
         """Number of bins"""
-        return self.size
+        return self.data.size
 
     @property
     def nodes(self):
@@ -423,20 +277,8 @@ class DataAxis(Quantity):
     @property
     def interpolation_mode(self):
         """Interpolation mode
-
-        Available
-        - linear
-        - log
         """
         return self._interpolation_mode
-
-    @interpolation_mode.setter
-    def interpolation_mode(self, mode):
-        """Set interpolation mode"""
-        allowed_modes = ['linear', 'log']
-        if mode not in allowed_modes:
-            raise ValueError('Interpolation mode {} not supported'.format(mode))
-        self._interpolation_mode = mode
 
     def _interp_nodes(self):
         """Nodes to be used for interpolation"""
@@ -466,27 +308,27 @@ class BinnedDataAxis(DataAxis):
     @property
     def nbins(self):
         """Number of bins"""
-        return self.size - 1
+        return self.data.size - 1
 
     @property
     def nodes(self):
-        """Evaluation nodes"""
-        return self.lin_center()
+        """Evaluation nodes
+
+        Depending on the interpolation mode, either log or lin center are
+        returned
+        """
+        if self.interpolation_mode == 'log':
+            return self.log_center()
+        else:
+            return self.lin_center()
 
     def lin_center(self):
         """Linear bin centers"""
-        return DataAxis(self[:-1] + self[1:]) / 2
+        return (self.data[:-1] + self.data[1:]) / 2
 
-
-def _data_axis_from_table_columns(col_lo, col_hi):
-    """Helper function to translate two table columns to a data axis dict"""
-    if (col_lo.data == col_hi.data).all():
-        axis = DataAxis(col_lo.data[0], unit=col_lo.unit, name=col_lo.name[:-3])
-    else:
-        data = np.append(col_lo.data[0], col_hi.data[0][-1])
-        axis = BinnedDataAxis(data, unit=col_lo.unit, name=col_lo.name[:-3])
-    name = axis.name
-    return {name:axis}
+    def log_center(self):
+        """Logarithmic bin centers"""
+        return np.sqrt(self.data[:-1] * self.data[1:])
 
 
 def _table_columns_from_data_axis(axis):
@@ -496,13 +338,13 @@ def _table_columns_from_data_axis(axis):
     This satisfies the format definition here
     http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html
     """
-
+    # BROKEN!
     if isinstance(axis, BinnedDataAxis):
-        data_hi = axis.value[1:]
-        data_lo = axis.value[:-1]
+        data_hi = axis.data.value[1:]
+        data_lo = axis.data.value[:-1]
     elif isinstance(axis, DataAxis):
-        data_hi = axis.value
-        data_lo = axis.value
+        data_hi = axis.data.value
+        data_lo = axis.data.value
     else:
         raise ValueError('Invalid axis type')
 
