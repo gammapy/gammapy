@@ -303,7 +303,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def spectrum(self):
         """
-        SpectralFitResult object.
+        `SpectralFitResult` object.
         """
         from ..spectrum import SpectrumFitResult
 
@@ -319,11 +319,20 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         parameter_errors['norm'] = Quantity(self.data['Flux_Spec_PL_Diff_Pivot_Err'],
                                             's^-1 cm^-2 TeV^-1')
         parameter_errors['reference'] = Quantity(0, 'TeV')
-        return SpectrumFitResult(model, parameters, parameter_errors)
+
+        ebounds = Quantity([self.data['Energy_Range_Spec_Lo'],
+                            self.data['Energy_Range_Spec_Hi']], 'TeV')
+        
+        return SpectrumFitResult(model, parameters, parameter_errors,
+                                 fit_range=ebounds)
 
     @property
     def flux_points(self):
+        """
+        Flux points.
+        """
         from ..spectrum import DifferentialFluxPoints
+
         energy = Quantity(self.data['Flux_Points_Energy'], 'TeV')
         diff_flux = Quantity(self.data['Flux_Points_Flux'], 's^-1 cm^-2 TeV^-1')
         energy_err_hi = Quantity(self.data['Flux_Points_Energy_Err_Hi'], 'TeV')
