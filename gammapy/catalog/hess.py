@@ -371,10 +371,10 @@ class SourceCatalogHGPS(SourceCatalog):
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
         self.filename = str(filename)
         self.hdu_list = fits.open(str(filename))
-        table = Table(self.hdu_list['HGPS_SOURCES'].data)
-        self.components = Table(self.hdu_list['HGPS_COMPONENTS'].data)
-        self.associations = Table(self.hdu_list['HGPS_ASSOCIATIONS'].data)
-        self.identifications = Table(self.hdu_list['HGPS_IDENTIFICATIONS'].data)
+        table = Table.read(self.hdu_list['HGPS_SOURCES'])
+        self.components = Table.read(self.hdu_list['HGPS_COMPONENTS'])
+        self.associations = Table.read(self.hdu_list['HGPS_ASSOCIATIONS'])
+        self.identifications = Table.read(self.hdu_list['HGPS_IDENTIFICATIONS'])
         super(SourceCatalogHGPS, self).__init__(table=table)
 
     def _make_source_object(self, index):

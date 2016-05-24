@@ -68,7 +68,7 @@ def table_to_fits_table(table):
     # Copy over column meta-data
     for colname in table.colnames:
         if table[colname].unit is not None:
-            hdu.columns[colname].unit = str(table[colname].unit)
+            hdu.columns[colname].unit = table[colname].unit.to_string('fits')
 
     # TODO: this method works fine but the order of keywords in the table
     # header is not logical: for instance, list of keywords with column
