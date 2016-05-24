@@ -10,9 +10,10 @@ TODO:
 - [ ] Take units automatically from table?
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
 from collections import OrderedDict
-from astropy.units import Quantity
+from astropy.units import Quantity, Unit
 from astropy.io import fits
 from astropy.table import Table
 from astropy.coordinates import Angle
@@ -32,7 +33,6 @@ FF = 1e-12
 # CRAB = crab_integral_flux(energy_min=1, reference='hess_ecpl')
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
-
 
 class HGPSGaussComponent(object):
     """One Gaussian component from the HGPS catalog.
@@ -58,13 +58,13 @@ class HGPSGaussComponent(object):
         """Pretty-print source data"""
         d = self.data
         ss = 'Component {}:\n'.format(d['Component_ID'])
-        ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLON', d['GLON'],
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLON', d['GLON'],
                                                              d['GLON_Err'])
-        ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLAT', d['GLAT'],
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLAT', d['GLAT'],
                                                              d['GLAT_Err'])
-        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} deg\n'.format('Size', d['Size'], d['Size_Err'])
+        ss += '{:<20s} : {:.3f} +/- {:.3f} deg\n'.format('Size', d['Size'], d['Size_Err'])
         val, err = d['Flux_Map'], d['Flux_Map_Err']
-        ss += '{:<20s} : ({:.2f} \u00B1 {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} \u00B1 {:.1f}) % Crab'.format(
+        ss += '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'.format(
             'Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
         return ss
 
@@ -128,41 +128,36 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {:8.3f} deg = {}\n'.format('RA', d['RAJ2000'], ra_str)
         ss += '{:<20s} : {:8.3f} deg = {}\n'.format('DEC', d['DEJ2000'], dec_str)
 
-        ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLON', d['GLON'], d['GLON_Err'])
-        ss += '{:<20s} : {:8.3f} \u00B1 {:.3f} deg\n'.format('GLAT', d['GLAT'], d['GLAT_Err'])
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLON', d['GLON'], d['GLON_Err'])
+        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLAT', d['GLAT'], d['GLAT_Err'])
 
         ss += '{:<20s} : {:.3f} deg\n'.format('Position Error (68%)', d['Pos_Err_68'])
         ss += '{:<20s} : {:.3f} deg\n'.format('Position Error (95%)', d['Pos_Err_95'])
 
-        ss += '{:<20s} : {}\n'.format('ROI number', d['ROI_Number'])
+        ss += '{:<20s} : {:.0f}\n'.format('ROI number', d['ROI_Number'])
         ss += '{:<20s} : {}\n'.format('Spatial model', d['Spatial_Model'])
         ss += '{:<20s} : {}\n'.format('Spatial components', d['Components'])
 
         ss += '{:<20s} : {:.1f}\n'.format('TS', d['Sqrt_TS'] ** 2)
         ss += '{:<20s} : {:.1f}\n'.format('sqrt(TS)', d['Sqrt_TS'])
 
-        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} (UL: {:.3f}) deg\n'.format(
+        ss += '{:<20s} : {:.3f} +/- {:.3f} (UL: {:.3f}) deg\n'.format(
             'Size', d['Size'], d['Size_Err'], d['Size_UL'])
 
         ss += '{:<20s} : {:.3f} deg\n'.format('R70', d['R70'])
         ss += '{:<20s} : {:.3f} deg\n'.format('RSpec', d['RSpec'])
 
         ss += '{:<20s} : {:.1f}\n'.format('Total model excess', d['Excess_Model_Total'])
-        ss += '{:<20s} : {:.1f}\n'.format('Excess in r_spec', d['Excess_RSpec'])
+        ss += '{:<20s} : {:.1f}\n'.format('Excess in RSpec', d['Excess_RSpec'])
+        ss += '{:<20s} : {:.1f}\n'.format('Model Excess in RSpec', d['Excess_RSpec_Model'])
+        ss += '{:<20s} : {:.1f}\n'.format('Background in RSpec', d['Background_RSpec'])
 
-        # TODO: listed in paper, but not present in catalog:
-        # ss += '{:<20s} : {:.1f}\n'.format('Excess_RSpec_Model', d['Excess_RSpec_Model'])
+        ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime'])
 
-        ss += '{:<20s} : {:.1f}\n'.format('Background in r_spec', d['Background_RSpec'])
-
-        # TODO: listed in paper, but not present in catalog:
-        # ss += '{:<20s} : {:.1f} hours\n'.format('Livetime', d['Livetime'])
-
-        # TODO: listed in paper, but not present in catalog:
-        # ss += '{:<20s} : {:.1f} TeV\n'.format('Energy threshold', d['Energy_Threshold'])
+        ss += '{:<20s} : {:.1f} TeV\n'.format('Energy threshold', d['Energy_Threshold'])
 
         val, err = d['Flux_Map'], d['Flux_Map_Err']
-        ss += '{:<20s} : ({:.2f} \u00B1 {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'Source flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         ss += '\nFluxes in RSpec (> 1 TeV):\n'
@@ -200,7 +195,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         lo = d['Energy_Range_Spec_Lo']
         hi = d['Energy_Range_Spec_Hi']
-        ss += '{:<20s} : {:.1f} TeV\n'.format('Energy range: {} to {}', lo, hi)
+        ss += '{:<20s} : {:.1f} to {:.1f} TeV\n'.format('Energy range:', lo, hi)
 
         ss += '{:<20s} : {:.1f}\n'.format('Background', d['Background_Spec'])
         ss += '{:<20s} : {:.1f}\n'.format('Excess', d['Excess_Spec'])
@@ -218,22 +213,22 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_PL_Diff_Pivot']
         err = d['Flux_Spec_PL_Diff_Pivot_Err']
-        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'Flux at pivot energy', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_PL_Int_1TeV']
         err = d['Flux_Spec_PL_Int_1TeV_Err']
-        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'PL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Flux_Spec_PL_Diff_1TeV']
         err = d['Flux_Spec_PL_Diff_1TeV_Err']
-        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'PL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Index_Spec_PL']
         err = d['Index_Spec_PL_Err']
-        ss += '{:<20s} : {:.2f} \u00B1 {:.2f}\n'.format('PL   Index', val, err)
+        ss += '{:<20s} : {:.2f} +/- {:.2f}\n'.format('PL   Index', val, err)
 
         return ss
 
@@ -244,21 +239,21 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         val = d['Flux_Spec_ECPL_Diff_1TeV']
         err = d['Flux_Spec_ECPL_Diff_1TeV_Err']
-        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1 TeV^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'ECPL   Flux(@ 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB_DIFF)
 
         val = d['Flux_Spec_ECPL_Int_1TeV']
         err = d['Flux_Spec_ECPL_Int_1TeV_Err']
-        ss += '{:<20s} : ({:.1f} \u00B1 {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} \u00B1 {:.1f}) % Crab\n'.format(
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
             'ECPL   Flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
 
         val = d['Index_Spec_ECPL']
         err = d['Index_Spec_ECPL_Err']
-        ss += '{:<20s} : {:.2f} \u00B1 {:.2f}\n'.format('ECPL Index', val, err)
+        ss += '{:<20s} : {:.2f} +/- {:.2f}\n'.format('ECPL Index', val, err)
 
         val = d['Lambda_Spec_ECPL']
         err = d['Lambda_Spec_ECPL_Err']
-        ss += '{:<20s} : {:.3f} \u00B1 {:.3f} TeV^-1\n'.format('ECPL Lambda', val, err)
+        ss += '{:<20s} : {:.3f} +/- {:.3f} TeV^-1\n'.format('ECPL Lambda', val, err)
 
         val = d['Energy_Cutoff_Spec_ECPL']
         err = d['Energy_Cutoff_Spec_ECPL_Err']
@@ -266,7 +261,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         import uncertainties
         energy = 1 / uncertainties.ufloat(val, err)
         val, err = energy.nominal_value, energy.std_dev
-        ss += '{:<20s} : {:.1f} \u00B1 {:.1f} TeV\n'.format('ECPL E_cut', val, err)
+        ss += '{:<20s} : {:.1f} +/- {:.1f} TeV\n'.format('ECPL E_cut', val, err)
 
         val = d['TS_ECPL_over_PL']
         ss += '{:<20s} : {:.1f}\n'.format('TS ECPL over PL', val)
@@ -276,8 +271,24 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     def _summary_flux_points(self):
         """Print flux point results"""
         d = self.data
-        ss = '\n*** TODO: print flux points info ***\n\n'
-        return ss
+        ss = '\n*** Flux points info ***\n\n'
+        ss += 'Number of flux points: {}\n'.format(d['N_Flux_Points'])
+        ss += 'Flux points table: \n\n\t'
+        
+        flux_points = self.flux_points['ENERGY', 'DIFF_FLUX', 'DIFF_FLUX_ERR_HI',
+                                       'DIFF_FLUX_ERR_LO' ][:int(d['N_Flux_Points'])]
+        
+        flux_points['ENERGY'].format = '.3f'
+
+        flux_unit = Unit('1E-12 cm^-2 s^-1 TeV^-1')
+        for _ in ['DIFF_FLUX', 'DIFF_FLUX_ERR_HI', 'DIFF_FLUX_ERR_LO']:
+            flux_points[_] = flux_points[_].to(flux_unit)
+            flux_points[_].format = '.3f'
+            flux_points[_].unit = flux_unit
+
+        # convert table to string
+        ss += '\n\t'.join(flux_points.pformat(-1))
+        return ss + '\n'
 
     def _summary_components(self):
         """Print info about the components."""
