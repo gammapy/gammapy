@@ -15,6 +15,9 @@ __all__ = [
     'BinnedDataAxis',
 ]
 
+# Note: test for this class are implemented in
+# gammapy/irf/tests/test_effective_area2.py.
+
 six.add_metaclass(abc.ABCMeta)
 class NDDataArray(object):
     """ND Data Array Base class
@@ -42,6 +45,8 @@ class NDDataArray(object):
             axis = getattr(self, axis_name)
             axis.data = Quantity(value)
             self._axes.append(axis)
+
+        self._regular_grid_interp = None
 
     @property
     def axes(self):
@@ -147,17 +152,15 @@ class NDDataArray(object):
         array : `~astropy.units.Quantity`
             Interpolated values, axis order is the same as for the NDData array
         """
-        values = np.zeros(self.dim)
 
-        for _ in range(len(values)):
+        values = list()
+        for axname, axis in zip(self.axis_names, self.axes):
             # Extract values for each axis, default: nodes
-            axname = self.axis_names[_]
-            axis = self.axes[_]
             temp = kwargs.pop(axname, axis.nodes)
             # Transform to correct unit
-            temp = temp.to(axis.unit)
+            temp = temp.to(axis.unit).value
             # Transform to match interpolation behaviour of axis
-            values[_] = axis._interp_values(temp)
+            values.append(np.atleast_1d(axis._interp_values(temp)))
 
         if method == 'linear':
             return self._eval_regular_grid_interp(
@@ -176,15 +179,18 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        shapes = [np.shape(_)[0] for _ in values]
+        shapes = np.append(*[np.shape(_) for _ in values])
+        # Flatten in order to support 2D array input
+        values = [_.flatten() for _ in values]
         points = list(itertools.product(*values))
         res = self._regular_grid_interp(points, method=method)
-        res = np.reshape(res, shapes)
+        res = np.reshape(res, shapes).squeeze()
 
         return res
 
     def _add_regular_grid_interp(self):
         """Add `~scipy.interpolate.RegularGridInterpolator`
+
 
         http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
         """
@@ -193,7 +199,8 @@ class NDDataArray(object):
         points = [a._interp_nodes() for a in self.axes]
         values = self.data.value
 
-        self._regular_grid_interp = RegularGridInterpolator(points, values, self.interp_kwargs)
+        self._regular_grid_interp = RegularGridInterpolator(points, values,
+                                                            **self.interp_kwargs)
 
 
 class DataAxis(object):
@@ -272,7 +279,7 @@ class DataAxis(object):
     @property
     def nodes(self):
         """Evaluation nodes"""
-        return self
+        return self.data
 
     @property
     def interpolation_mode(self):
