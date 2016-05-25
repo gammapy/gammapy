@@ -936,4 +936,10 @@ If you want to compare the IRF files between two different datastores (to compar
  manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
 
 
+Using the NDData base class
+---------------------------
+
+Gammapy has a base class for n-dimensional data arrays,  
+`~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array should
+subclass this base class. See `~gammapy.irf.EffectiveArea2D` as an example.
 

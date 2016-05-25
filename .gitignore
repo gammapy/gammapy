@@ -37,6 +37,7 @@ distribute-*.tar.gz
 
 # Other
 .*.swp
+.*.swo
 *~
 
 # Mac OSX
@@ -64,4 +65,3 @@ dev/crab
 *.png
 *.fits
 *.root
-
