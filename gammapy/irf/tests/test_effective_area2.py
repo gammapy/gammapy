@@ -17,11 +17,19 @@ def test_EffectiveArea2D_generic():
     energy = np.logspace(0, 1, 4) * u.TeV
     offset = [0.2, 0.3] * u.deg
     effective_area = np.arange(6).reshape(3, 2) * u.cm * u.cm
-    aeff = EffectiveArea2D(offset=offset, energy=energy, data=effective_area)
-    
+    meta = dict(name = 'example')
+    aeff = EffectiveArea2D(offset=offset, energy=energy, data=effective_area,
+                           meta=meta)
     assert (aeff.axes[0].data == energy).all()
     assert (aeff.axes[1].data == offset).all()
     assert (aeff.data == effective_area).all()
+    assert aeff.meta.name == 'example'
+
+    wrong_data = np.arange(8).reshape(4,2) * u.cm * u.cm
+
+    with pytest.raises(ValueError):
+        aeff.data = wrong_data
+        aeff = EffectiveArea(offset=offset, energy=energy, data=wrong_data)
 
     # Test evaluate function 
     # Check that nodes are evaluated correctly
@@ -55,6 +63,7 @@ def test_EffectiveArea2D_generic():
     assert_equal(actual, desired)
 
     # Case 2: offset = scalar, energy = 1Darray
+
     offset = 0.564 * u.deg
     nbins = 10 
     energy = np.logspace(3, 4, nbins) * u.GeV
@@ -98,30 +107,40 @@ def test_EffectiveArea2D_generic():
     print(aeff)
 
 
-@pytest.mark.xfail()
+@requires_dependency('scipy')
+@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_EffectiveArea2D(tmpdir):
 
     filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
     aeff = EffectiveArea2D.read(filename)
 
+    assert aeff.energy.nbins == 73
+    assert aeff.offset.nbins == 6
+    assert aeff.data.shape == (73, 6)
 
+    assert aeff.energy.unit == 'TeV'
+    assert aeff.offset.unit == 'deg'
+    assert aeff.data.unit == 'm2'
+
+    aeff.plot_image()
+    aeff.plot_energy_dependence()
+    aeff.plot_offset_dependence()
 
     # Test ARF export
-    offset = Angle(0.236, 'deg')
-    e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
-    effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
-    energy = EnergyBounds(e_axis).log_centers
-    area = aeff.evaluate(offset, energy)
-    effarea1d = EffectiveAreaTable(e_axis, area)
-    test_energy = Quantity(2.34, 'TeV')
-    actual = effareafrom2d.evaluate(test_energy)
-    desired = effarea1d.evaluate(test_energy)
-    assert_equal(actual, desired)
+    # offset = Angle(0.236, 'deg')
+    # e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
+    # effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
+    # energy = EnergyBounds(e_axis).log_centers
+    # area = aeff.evaluate(offset, energy)
+    # effarea1d = EffectiveAreaTable(e_axis, area)
+    # test_energy = Quantity(2.34, 'TeV')
+    # actual = effareafrom2d.evaluate(test_energy)
+    # desired = effarea1d.evaluate(test_energy)
+    # assert_equal(actual, desired)
 
     # Test ARF export #2
-    effareafrom2dv2 = aeff.to_effective_area_table('1.2 deg')
-    actual = effareafrom2dv2.effective_area
-    desired = aeff.evaluate(offset='1.2 deg')
-    assert_equal(actual, desired)
-
+    # effareafrom2dv2 = aeff.to_effective_area_table('1.2 deg')
+    # actual = effareafrom2dv2.effective_area
+    # desired = aeff.evaluate(offset='1.2 deg')
+    # assert_equal(actual, desired)

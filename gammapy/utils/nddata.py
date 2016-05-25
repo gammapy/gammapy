@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 import numpy as np
 import abc
+from ..extern.bunch import Bunch
 from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.extern import six
@@ -37,7 +38,11 @@ class NDDataArray(object):
 
         # TODO : Dynamically generate function signature
         # https://github.com/astropy/astropy/blob/ffc0a89b2c42fd440eb19bcb2f93db90cab3c98b/astropy/utils/codegen.py#L30
-        self._data = kwargs.pop('data', None)
+        data = kwargs.pop('data', None)
+
+        meta = kwargs.pop('meta', None)
+        if meta is not None:
+            self.meta = Bunch(meta)
 
         self._axes = list()
         for axis_name in self.axis_names:
@@ -46,6 +51,7 @@ class NDDataArray(object):
             axis.data = Quantity(value)
             self._axes.append(axis)
 
+        self.data = data
         self._regular_grid_interp = None
 
     @property
@@ -69,20 +75,19 @@ class NDDataArray(object):
         data : `~astropy.units.Quantity`, array-like
             Data array
         """
-        data = np.array(data)
         dimension = len(data.shape)
         if dimension != self.dim:
             raise ValueError('Overall dimensions to not match. '
                              'Data: {}, Hist: {}'.format(dimension, self.dim))
 
         for dim in np.arange(self.dim):
-            if self.axes[dim].nbins != data.shape[dim]:
-                axis = self.axes[dim]
+            axis = self.axes[dim]
+            if axis.nbins != data.shape[dim]:
                 msg = 'Data shape does not match in dimension {d}\n'
-                msg += 'Axis "{n}":{sa}, Data {sd}'
-                raise ValueError(msg.format(d=dim, n=axis.name, sa=axis.nbins,
-                                            sd=data.shape[dim]))
-        self._data = Quantity(data)
+                msg += 'Axis {n} : {sa}, Data {sd}'
+                raise ValueError(msg.format(d=dim, n=self.axis_names[dim],
+                                            sa=axis.nbins, sd=data.shape[dim]))
+        self._data = data
 
     @property
     def dim(self):
@@ -90,7 +95,7 @@ class NDDataArray(object):
         return len(self.axes)
 
     def to_table(self):
-        """Convert to astropy.Table"""
+        """Convert to `~astropy.table.Table`"""
 
         raise NotImplementedError("Broken")
 
