@@ -39,7 +39,6 @@ __all__ = [
     'paste_cutout_into_image',
     'process_image_pixels',
     'ring_correlate',
-    'separation',
     'shape_2N',
     'solid_angle',
     'threshold',
@@ -427,40 +426,6 @@ def dict_to_hdulist(image_dict, header):
     for name, image in image_dict.items():
         hdu_list.append(fits.ImageHDU(image, header, name.upper()))
     return hdu_list
-
-
-def separation(image, center, world=True, radians=False):
-    """Compute distance image from a given center point.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Input image
-    center : (x, y) tuple
-        Center position
-    world : bool, optional
-        Use world coordinates (or pixel coordinates)?
-    radians : bool, optional
-        Return distance in radians or degrees?
-        (only applicable for world coordinates).
-
-    Returns
-    -------
-    separation : array
-        Image of pixel separation to ``center``.
-    """
-    x_center, y_center = center
-    x, y = coordinates(image, world=world, radians=radians)
-
-    if world:
-        from ..utils.coordinates import separation as sky_dist
-        d = sky_dist(x, y, x_center, y_center)
-        if radians:
-            d = np.radians(d)
-    else:
-        d = np.sqrt((x - x_center) ** 2 + (y - y_center) ** 2)
-
-    return d
 
 
 def process_image_pixels(images, kernel, out, pixel_function):
