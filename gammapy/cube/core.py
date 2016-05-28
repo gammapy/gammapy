@@ -19,7 +19,7 @@ from astropy.wcs import WCS
 
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
-from ..image import cube_to_image, solid_angle, SkyMap
+from ..image import cube_to_image, SkyMap
 from ..image.utils import _bin_events_in_cube
 from ..utils.fits import table_to_fits_table
 from ..utils.wcs import get_wcs_ctype
@@ -321,7 +321,8 @@ class SkyCube(object):
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2
 
-        return solid_angle(image_hdu).to('sr')
+        sky_map = SkyMap.read(image_hdu)
+        return sky_map.solid_angle()
 
     def flux(self, lon, lat, energy):
         """Differential flux.

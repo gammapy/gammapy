@@ -17,7 +17,6 @@ from ...image import (
     separation,
     make_header,
     contains,
-    solid_angle,
     images_to_cube,
     cube_to_image,
     block_reduce_hdu,
@@ -78,15 +77,6 @@ class TestImageCoordinates(object):
         x = y = np.zeros((3, 2))
         inside = contains(self.image, x, y)
         assert_equal(inside, np.ones((3, 2), dtype=bool))
-
-    # TODO: this works on my machine, but fails for unknown reasons
-    # with an IndexError with the `numpy` used here:
-    # https://travis-ci.org/gammapy/gammapy/jobs/26836201#L1123
-    @pytest.mark.xfail
-    def test_image_area(self):
-        actual = solid_angle(self.image)
-        expected = 99.61946869
-        assert_allclose(actual, expected)
 
 
 @pytest.mark.xfail

@@ -7,6 +7,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
+from .maps import SkyMap
 from ..utils.wcs import get_wcs_ctype
 from ..utils.energy import EnergyBounds
 # TODO:
@@ -41,7 +42,6 @@ __all__ = [
     'ring_correlate',
     'separation',
     'shape_2N',
-    'solid_angle',
     'threshold',
     'upsample_2N',
     'wcs_histogram2d',
@@ -800,35 +800,6 @@ def binary_opening_circle(input, radius):
     return binary_opening(input, structure)
 
 
-def solid_angle(image):
-    """Compute the solid angle of each pixel.
-
-    This will only give correct results for CAR maps!
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Input image
-
-    Returns
-    -------
-    area_image : `~astropy.units.Quantity`
-        Solid angle image (matching the input image) in steradians.
-    """
-    # Area of one pixel at the equator
-    cdelt0 = image.header['CDELT1']
-    cdelt1 = image.header['CDELT2']
-    equator_area = Quantity(abs(cdelt0 * cdelt1), 'deg2')
-
-    # Compute image with fraction of pixel area at equator
-    glat = coordinates(image)[1]
-    area_fraction = np.cos(np.radians(glat))
-
-    result = area_fraction * equator_area.to('sr')
-
-    return result
-
-
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
                 proj='CAR', coordsys='GAL',
                 xrefpix=None, yrefpix=None):
@@ -969,7 +940,8 @@ def cube_to_spec(cube, mask, weighting='none'):
         Summed spectrum of pixels in the mask.
     """
     value = cube.dat
-    A = solid_angle(cube)
+    sky_map = SkyMap.read(cube)
+    A = sky_map.solid_angle()
     # Note that this is the correct way to get an average flux:
 
     spec = (value * A).sum(-1).sum(-1)
