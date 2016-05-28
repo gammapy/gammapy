@@ -82,14 +82,28 @@ class SkyMap(object):
                 fobj = str(make_path(fobj))
             data = fits.getdata(fobj, *args, **kwargs)
             header = fits.getheader(fobj, *args, **kwargs)
-        wcs = WCS(header)
-        meta = header
 
+        image_hdu = fits.ImageHDU(data, header)
+        return cls.from_image_hdu(image_hdu)
+
+    @classmethod
+    def from_image_hdu(cls, image_hdu):
+        """
+        Read sky map from ImageHDU.
+        Parameters
+        ----------
+        image_hdu: `astropy.io.fits.ImageHDU`
+            Source image HDU.
+        """
+        data = image_hdu.data
+        header = image_hdu.header
+        wcs = WCS(image_hdu.header)
+        meta = header
         name = header.get('HDUNAME')
         if name is None:
             name = header.get('EXTNAME')
         try:
-            # Valitade unit string
+            # Validate unit string
             unit = Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
