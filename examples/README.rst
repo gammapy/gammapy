@@ -14,4 +14,4 @@ All code and tests should eventually go in the Gammapy package.
 Note that we also have example scripts in the `docs` folder and example IPython notebooks
 in the `gammapy-extra` repo.
 
-See info at: https://gammapy.readthedocs.org/
+See info at: http://docs.gammapy.org/

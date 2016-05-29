@@ -66,11 +66,11 @@ It's possible to learn the basics within a day and to become productive within a
 * Tom Robitaille Python for scientists workshop –– http://www2.mpia-hd.mpg.de/~robitaille/PY4SCI_SS_2015/
 * Scientific Python lecture notes –– https://scipy-lectures.github.io/
 * Practical Python for astronomers — http://python4astronomers.github.io
-* MPIK Astropy workshop — https://astropy4mpik.readthedocs.org/
+* MPIK Astropy workshop — https://astropy4mpik.readthedocs.io/
 * CEA Python for astronomers workshop –– https://github.com/kosack/CEAPythonWorkshopForAstronomers
 * ctools — http://cta.irap.omp.eu/ctools-devel/
 * Astropy tutorials — http://www.astropy.org/astropy-tutorials/
-* Naima examples — http://naima.readthedocs.org/en/latest/
+* Naima examples — http://naima.readthedocs.io/en/latest/
 * Fermi ScienceTools analysis threads ––– http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/
 * CIAO Sherpa threads ––– http://cxc.harvard.edu/sherpa/threads/index.html
 * `Astropy tutorial by Axel Donath from December 2013

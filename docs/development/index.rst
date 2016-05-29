@@ -9,7 +9,7 @@ Developer documentation
 The developer documentation is a collection of notes for Gammapy developers and maintainers.
 
 If something is not covered here, have a look at the very extensive Astropy developer documentation
-`here <http://astropy.readthedocs.org/en/latest/#developer-documentation>`__,
+`here <http://docs.astropy.org/en/latest/#developer-documentation>`__,
 we do most things the same way.
 
 But you don't have to read all this stuff if you want to contribute something to Gammapy.

@@ -131,7 +131,7 @@ Python 2 and 3 support
 We support Python 2.7 and 3.4 or later using a single code base.
 This is the strategy adopted by most scientific Python projects and a good starting point to learn about it is
 `here <http://python3porting.com/noconv.html>`__ and
-`here <http://astropy.readthedocs.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
+`here <http://docs.astropy.org/en/latest/development/codeguide.html#writing-portable-code-for-python-2-and-3>`__.
 
 For developers, it would have been nice to only support Python 3 in Gammapy.
 But the CIAO and Fermi Science tools software are distributed with Python 2.7
@@ -152,7 +152,7 @@ weren't available for testing on travis-ci.
 Wipe readthedocs
 ----------------
 
-As described `here <http://read-the-docs.readthedocs.org/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__,
+As described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__,
 if the docs on readthedocs show old stuff, you need to first log in `here <https://readthedocs.org/accounts/login/>`__
 and then wipe it to create a fresh / clean version by hitting this URL::
 
@@ -355,7 +355,7 @@ Pixel coordinate convention
 
 All code in Gammapy should follow the Astropy pixel coordinate convention that the center of the first pixel
 has pixel coordinates ``(0, 0)`` (and not ``(1, 1)`` as shown e.g. in ds9).
-It's currently documented `here <http://photutils.readthedocs.org/en/latest/photutils/overview.html#coordinate-conventions>`__
+It's currently documented `here <http://photutils.readthedocs.io/en/latest/photutils/overview.html#coordinate-conventions>`__
 but I plan to document it in the Astropy docs soon (see `issue 2607 <https://github.com/astropy/astropy/issues/2607>`__).
 
 You should use ``origin=0`` when calling any of the pixel to world or world to pixel coordinate transformations in `astropy.wcs`.
@@ -705,7 +705,7 @@ the unicode literals warnings to clean up the output of the tool:
     click.disable_unicode_literals_warning = True
 
 See `here <http://click.pocoo.org/5/python3/#unicode-literals>`_ for further
-information.  
+information.
 
 
 BSD or GPL license?
@@ -923,16 +923,16 @@ The Gammapy tests contain a mechanism to track changes in these exporters.
 
 In the ``gammapy-extra`` repository there is a script ``test_datasets/reference/make_reference_files.py`` that reads
 IRF files from different chains and prints the output of the ``__str__`` method to a file. It also creates a YAML file
-holding information about the datastore used for each chain, the observations used, etc. 
+holding information about the datastore used for each chain, the observations used, etc.
 
 
 The test ``gammapy/irf/tests/test_hess_chains.py`` load exactly the same files as the script and compares the output of the
 ``__str__`` function to the reference files on disk. That way all changes in the exporters or the way the IRF files are read by
-Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script 
+Gammapy can be tracked. So, if you made changes to the H.E.S.S. IRF exporters you have to run the ``make_reference_files.py`` script
 again to ensure the passing of all Gammapy tests.
 
 
-If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to 
+If you want to compare the IRF files between two different datastores (to compare between to chains or fits productions) you have to
  manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
 
 
