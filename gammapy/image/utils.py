@@ -7,7 +7,6 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
 from astropy.wcs import WCS
-from .maps import SkyMap
 from ..utils.wcs import get_wcs_ctype
 from ..utils.energy import EnergyBounds
 # TODO:
@@ -940,6 +939,7 @@ def cube_to_spec(cube, mask, weighting='none'):
         Summed spectrum of pixels in the mask.
     """
     value = cube.dat
+    from .maps import SkyMap
     sky_map = SkyMap.read(cube)
     A = sky_map.solid_angle()
     # Note that this is the correct way to get an average flux:
