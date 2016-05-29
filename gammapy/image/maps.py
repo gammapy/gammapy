@@ -89,15 +89,24 @@ class SkyMap(object):
     @classmethod
     def from_image_hdu(cls, image_hdu):
         """
-        Read sky map from ImageHDU.
+        Create sky map from ImageHDU.
+
         Parameters
         ----------
-        image_hdu: `astropy.io.fits.ImageHDU`
+        image_hdu : `astropy.io.fits.ImageHDU`
             Source image HDU.
+
+        Examples
+        --------
+        >>> from astropy.io import fits
+        >>> from gammapy.image import SkyMap
+        >>> hdu_list = fits.open('data.fits')
+        >>> sky_map = SkyMap.from_image_hdu(hdu_list['myimage'])
         """
         data = image_hdu.data
         header = image_hdu.header
         wcs = WCS(image_hdu.header)
+
         meta = header
         name = header.get('HDUNAME')
         if name is None:
