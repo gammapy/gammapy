@@ -32,14 +32,17 @@ class TestSourceCatalogObjectHGPS:
     def test_single_gauss(self):
         source = self.cat['HESS J1930+188']
         assert source.data['Spatial_Model'] == 'Gaussian'
+        assert 'Spatial components   : HGPSC 097' in str(source)
 
     def test_multi_gauss(self):
         source = self.cat['HESS J1825-137']
         assert source.data['Spatial_Model'] == '3-Gaussian'
+        assert 'Spatial components   : HGPSC 065, HGPSC 066, HGPSC 067' in str(source)
 
     def test_snr(self):
         source = self.cat['HESS J1713-397']
         assert source.data['Spatial_Model'] == 'Shell'
+        assert 'Source name          : HESS J1713-397' in str(source)
 
     def test_name(self):
         assert self.source.name == self.source_name

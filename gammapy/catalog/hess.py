@@ -34,6 +34,7 @@ FF = 1e-12
 FLUX_TO_CRAB = 100 / 2.26e-11
 FLUX_TO_CRAB_DIFF = 100 / 3.5060459323111307e-11
 
+
 class HGPSGaussComponent(object):
     """One Gaussian component from the HGPS catalog.
     """
@@ -58,14 +59,14 @@ class HGPSGaussComponent(object):
         """Pretty-print source data"""
         d = self.data
         ss = 'Component {}:\n'.format(d['Component_ID'])
-        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLON', d['GLON'],
-                                                             d['GLON_Err'])
-        ss += '{:<20s} : {:8.3f} +/- {:.3f} deg\n'.format('GLAT', d['GLAT'],
-                                                             d['GLAT_Err'])
-        ss += '{:<20s} : {:.3f} +/- {:.3f} deg\n'.format('Size', d['Size'], d['Size_Err'])
+        fmt = '{:<20s} : {:8.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('GLON', d['GLON'], d['GLON_Err'])
+        ss += fmt.format('GLAT', d['GLAT'], d['GLAT_Err'])
+        fmt = '{:<20s} : {:.3f} +/- {:.3f} deg\n'
+        ss += fmt.format('Size', d['Size'], d['Size_Err'])
         val, err = d['Flux_Map'], d['Flux_Map_Err']
-        ss += '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'.format(
-            'Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+        fmt = '{:<20s} : ({:.2f} +/- {:.2f}) x 10^-12 cm^-2 s^-1 = ({:.1f} +/- {:.1f}) % Crab'
+        ss += fmt.format('Flux (>1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
         return ss
 
 
@@ -273,10 +274,10 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss = '\n*** Flux points info ***\n\n'
         ss += 'Number of flux points: {}\n'.format(d['N_Flux_Points'])
         ss += 'Flux points table: \n\n\t'
-        
+
         flux_points = self.flux_points['ENERGY', 'DIFF_FLUX', 'DIFF_FLUX_ERR_HI',
-                                       'DIFF_FLUX_ERR_LO' ][:int(d['N_Flux_Points'])]
-        
+                                       'DIFF_FLUX_ERR_LO'][:int(d['N_Flux_Points'])]
+
         flux_points['ENERGY'].format = '.3f'
 
         flux_unit = Unit('1E-12 cm^-2 s^-1 TeV^-1')
@@ -332,7 +333,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
 
         ebounds = Quantity([self.data['Energy_Range_Spec_Lo'],
                             self.data['Energy_Range_Spec_Hi']], 'TeV')
-        
+
         return SpectrumFitResult(model, parameters, parameter_errors,
                                  fit_range=ebounds)
 
@@ -390,7 +391,6 @@ class SourceCatalogHGPS(SourceCatalog):
             Source object
         """
         source = super(SourceCatalogHGPS, self)._make_source_object(index)
-
         if source.data['Components'] != '':
             self._attach_component_info(source)
         self._attach_association_info(source)
