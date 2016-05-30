@@ -5,7 +5,7 @@ import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import pytest
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_dependency, requires_data
+from ...utils.testing import requires_dependency, requires_data, data_manager
 from ...irf.effective_area import (
     EffectiveArea2D, EffectiveArea, abramowski_effective_area
 )
@@ -150,12 +150,23 @@ def test_EffectiveArea2D(tmpdir):
     desired = aeff.evaluate(offset=offset)
     assert_equal(actual, desired)
 
+
 @requires_dependency('scipy')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
-def test_EffectiveArea(tmpdir):
-    pass
+def test_EffectiveArea(tmpdir, data_manager):
+    store = data_manager['hess-crab4-hd-hap-prod2']
+    aeff = store.obs(obs_id=23523).aeff
+    arf = aeff.to_effective_area_table(offset = 0.3 * u.deg)
 
+    assert (arf.evaluate() == arf.effective_area).all()
+
+    filename = str(tmpdir / 'effarea_test.fits')
+    arf.write(filename)
+
+    arf2 = EffectiveArea.read(filename)
+
+    assert (arf.evaluate() == arf2.evaluate()).all()
 
 def test_abramowski_effective_area():
     energy = 100 * u.GeV

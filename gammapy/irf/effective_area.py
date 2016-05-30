@@ -81,15 +81,28 @@ class EffectiveArea(NDDataArray):
     
     @classmethod
     def from_table(cls, table):
-        raise NotImplementedError()
+        """ARF reader"""
+        energy_col = 'ENERG'
+        data_col = 'SPECRESP'
+
+        energy_lo = table['{}_LO'.format(energy_col)].quantity
+        energy_hi = table['{}_HI'.format(energy_col)].quantity
+        energy = np.append(energy_lo.value, energy_hi[-1].value) * energy_lo.unit
+        data = table['{}'.format(data_col)].quantity
+
+        return cls(energy=energy, data=data)
 
     def to_table(self):
-        """Convert to `~astropy.table.Table`"""
+        """Convert to `~astropy.table.Table`
+        
+        see http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/effective_area/index.html#aeff-2d-format
+        """
+
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
         meta = dict()
-        return Table([e_lo, e_hi, self.data], names=names, meta=meta)
+        return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
 
 
 class EffectiveArea2D(NDDataArray):
