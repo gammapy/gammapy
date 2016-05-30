@@ -14,7 +14,6 @@ from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
-    separation,
     make_header,
     contains,
     solid_angle,
@@ -49,11 +48,6 @@ class TestImageCoordinates(object):
     def setup_class(self):
         self.image = SkyMap.empty(nxpix=3, nypix=2, binsz=10, proj='CAR').to_image_hdu()
         self.image.data = np.arange(3 * 2).reshape(self.image.data.shape)
-
-    def test_separation(self):
-        actual = separation(self.image, (1, 0))
-        actual = separation(self.image, (0, 90))
-        # TODO: assert
 
     @pytest.mark.xfail
     def test_contains(self):
