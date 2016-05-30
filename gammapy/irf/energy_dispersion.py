@@ -794,6 +794,7 @@ class EnergyDispersion2D(object):
 
         plt.tight_layout()
         plt.show()
+        return fig
 
     def _prepare_linear_interpolator(self, interp_kwargs):
         from scipy.interpolate import RegularGridInterpolator
