@@ -34,7 +34,18 @@ class EffectiveArea(NDDataArray):
     """Energy Axis"""
     axis_names = ['energy']
 
-    def plot(self, ax=None, energy=None, show_safe_energy=False, **kwargs):
+    @property
+    def low_threshold(self):
+
+        """Low energy threshold"""
+        return self.meta.low_theshold
+
+    @property
+    def high_threshold(self):
+        """High energy threshold"""
+        return self.meta.high_threshold
+
+    def plot(self, ax=None, energy=None, show_threshold=False, **kwargs):
         """Plot effective area
 
         Parameters
@@ -62,7 +73,7 @@ class EffectiveArea(NDDataArray):
         eff_area = self.evaluate(energy=energy)
 
         ax.plot(energy, eff_area, **kwargs)
-        if show_safe_energy:
+        if show_threshold:
             ymin, ymax = ax.get_ylim()
             line_kwargs = dict(lw=2, color='black')
             ax.vlines(self.energy_thresh_lo.value, ymin, ymax, linestyle='dashed',
@@ -89,7 +100,6 @@ class EffectiveArea(NDDataArray):
         energy_hi = table['{}_HI'.format(energy_col)].quantity
         energy = np.append(energy_lo.value, energy_hi[-1].value) * energy_lo.unit
         data = table['{}'.format(data_col)].quantity
-
         return cls(energy=energy, data=data)
 
     def to_table(self):
@@ -155,12 +165,12 @@ class EffectiveArea2D(NDDataArray):
     def low_threshold(self):
 
         """Low energy threshold"""
-        return self.meta.low_theshold
+        return self.meta.LO_THRES
 
     @property
-    def high_treshold(self):
+    def high_threshold(self):
         """High energy threshold"""
-        return self.meta.high_threshold
+        return self.meta.HI_THRES
 
     @classmethod
     def from_table(cls, table):
@@ -177,8 +187,7 @@ class EffectiveArea2D(NDDataArray):
         offset = table['{}_HI'.format(offset_col)].quantity[0]
         # see https://github.com/gammasky/hess-host-analyses/issues/32
         data = table['{}'.format(data_col)].quantity[0].transpose()
-
-        return cls(offset=offset, energy=energy, data=data)
+        return cls(offset=offset, energy=energy, data=data, meta=table.meta)
 
     def to_effective_area(self, offset, energy=None):
         """Evaluate at a given offset and return `~gammapy.irf.EffectiveArea` 

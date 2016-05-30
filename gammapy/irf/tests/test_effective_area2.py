@@ -125,6 +125,14 @@ def test_EffectiveArea2D(tmpdir):
     assert aeff.offset.unit == 'deg'
     assert aeff.data.unit == 'm2'
 
+    assert_allclose(aeff.high_threshold, 99.083, atol=1e-2)
+    assert_allclose(aeff.low_threshold, 0.603, atol=1e-2)
+    
+    test_e = 14 * u.TeV
+    test_o = 0.2 * u.deg
+    test_val = aeff.evaluate(energy=test_e, offset=test_o)
+    assert_allclose(test_val.value, 740929.645, atol=1e-2)
+
     aeff.plot_image()
     aeff.plot_energy_dependence()
     aeff.plot_offset_dependence()
@@ -160,6 +168,8 @@ def test_EffectiveArea(tmpdir, data_manager):
     arf = aeff.to_effective_area_table(offset = 0.3 * u.deg)
 
     assert (arf.evaluate() == arf.effective_area).all()
+    
+    arf.plot()
 
     filename = str(tmpdir / 'effarea_test.fits')
     arf.write(filename)
