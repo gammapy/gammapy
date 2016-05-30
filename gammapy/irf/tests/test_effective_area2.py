@@ -6,7 +6,9 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import pytest
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
-from ...irf.effective_area import EffectiveArea2D
+from ...irf.effective_area import (
+    EffectiveArea2D, EffectiveArea, abramowski_effective_area
+)
 
 
 @requires_dependency('scipy')
@@ -134,7 +136,7 @@ def test_EffectiveArea2D(tmpdir):
 
     energy = np.sqrt(e_axis[:-1] * e_axis[1:])
     area = aeff.evaluate(offset=offset, energy=energy)
-    effarea1d = EffectiveAreaTable(e_axis, area)
+    effarea1d = EffectiveArea(energy=e_axis, data=area)
 
     test_energy = 2.34 * u.TeV
     actual = effareafrom2d.evaluate(energy=test_energy)
@@ -143,9 +145,9 @@ def test_EffectiveArea2D(tmpdir):
 
     # Test ARF export #2
     offset = 1.2 * u.deg
-    effareafrom2dv2 = aeff.to_effective_area(offset)
+    effareafrom2dv2 = aeff.to_effective_area(offset=offset)
     actual = effareafrom2dv2.data
-    desired = aeff.evaluate(offset='1.2 deg')
+    desired = aeff.evaluate(offset=offset)
     assert_equal(actual, desired)
 
 @requires_dependency('scipy')
@@ -154,3 +156,18 @@ def test_EffectiveArea2D(tmpdir):
 def test_EffectiveArea(tmpdir):
     pass
 
+
+def test_abramowski_effective_area():
+    energy = 100 * u.GeV
+    area_ref = 1.65469579e+07 * u.cm * u.cm 
+
+    area = abramowski_effective_area(energy, 'HESS')
+    assert_allclose(area, area_ref)
+    assert area.unit == area_ref.unit
+
+    energy = [0.1, 2] * u.TeV
+    area_ref = [1.65469579e+07, 1.46451957e+09] * u.cm * u.cm
+
+    area = abramowski_effective_area(energy, 'HESS')
+    assert_allclose(area, area_ref)
+    assert area.unit == area_ref.unit

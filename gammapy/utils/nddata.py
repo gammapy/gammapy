@@ -176,7 +176,11 @@ class NDDataArray(object):
         if self._regular_grid_interp is None:
             self._add_regular_grid_interp()
 
-        shapes = np.append(*[np.shape(_) for _ in values])
+        # This is necessary since np.append does not support the 1D case
+        if self.dim > 1:
+            shapes = np.append(*[np.shape(_) for _ in values])
+        else:
+            shapes = values[0].shape
         # Flatten in order to support 2D array input
         values = [_.flatten() for _ in values]
         points = list(itertools.product(*values))

@@ -85,7 +85,6 @@ class EffectiveArea(NDDataArray):
 
     def to_table(self):
         """Convert to `~astropy.table.Table`"""
-        # TODO : Consider putting this into the base class
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
@@ -155,7 +154,6 @@ class EffectiveArea2D(NDDataArray):
         """This is a reader for the format specified at
         http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/effective_area/index.html#aeff-2d-format
         """
-        # TODO: only define columns here, move actual reader to the base class
         energy_col = 'ENERG'
         offset_col = 'THETA'
         data_col = 'EFFAREA'
@@ -176,15 +174,17 @@ class EffectiveArea2D(NDDataArray):
         ----------
         offset : `~astropy.coordinates.Angle`
             Offset
-        ebounds : `~astropy.units.Quantity`
-            Energy axis
+        energy : `~astropy.units.Quantity`
+            Energy axis bin edges
         """
         if energy is None:
-            energy = self.energy.nodes
+            energy = self.energy
+        else:
+            energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
-        area = self.evaluate(offset=offset, energy=energy)
+        area = self.evaluate(offset=offset, energy=energy.nodes)
         meta = dict()
-        return EffectiveArea(energy=self.energy, data=area, meta=meta)
+        return EffectiveArea(energy=energy.data, data=area, meta=meta)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.
@@ -275,7 +275,7 @@ class EffectiveArea2D(NDDataArray):
         return ax
 
     def plot_image(self, ax=None, offset=None, energy=None, **kwargs):
-        """Plot effective area image (x=offset, y=energy).
+        """Plot effective area image. 
         """
         import matplotlib.pyplot as plt
 
@@ -320,6 +320,7 @@ class EffectiveArea2D(NDDataArray):
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
         plt.show()
+        return fig
 
 
 def abramowski_effective_area(energy, instrument='HESS'):
@@ -363,4 +364,4 @@ def abramowski_effective_area(energy, instrument='HESS'):
     g2 = pars[instrument][1]
     g3 = -pars[instrument][2]
     value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-    return Quantity(value, 'cm^2')
+    return value * u.cm * u.cm
