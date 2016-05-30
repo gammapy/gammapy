@@ -4,13 +4,97 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
 import numpy as np
 import astropy.units as u
+from astropy.table import Table
 
 __all__ = [
+    'EffectiveArea',
     'EffectiveArea2D',
+    'abramowski_effective_area',
 ]
 
+class EffectiveArea(NDDataArray):
+    """Effective Area Table
+    
+    **Disclaimer**: This is an experimental class to test the usage of the
+    `~gammapy.utils.nddata.NDDataArray` base class. It is meant to replace
+    `~gammapy.irf.EffectiveAreaTable` in the future but is currently not used
+    anywhere in gammapy.
+
+    Parameters
+    -----------
+    energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        Bin edges of energy axis
+    data : `~astropy.units.Quantity`
+        Effective area
+    meta : dict
+        Optional meta information,
+        supported: ``low_threshold``, ``high_threshold``
+    """
+    energy = BinnedDataAxis(interpolation_mode='log')
+    """Energy Axis"""
+    axis_names = ['energy']
+
+    def plot(self, ax=None, energy=None, show_safe_energy=False, **kwargs):
+        """Plot effective area
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy : `~astropy.units.Quantity`
+            Energy nodes 
+        show_safe_energy : bool
+            Show safe energy range on the plot
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        kwargs.setdefault('lw', 2)
+
+        if energy is None:
+            energy = self.energy.nodes
+        eff_area = self.evaluate(energy=energy)
+
+        ax.plot(energy, eff_area, **kwargs)
+        if show_safe_energy:
+            ymin, ymax = ax.get_ylim()
+            line_kwargs = dict(lw=2, color='black')
+            ax.vlines(self.energy_thresh_lo.value, ymin, ymax, linestyle='dashed',
+                      label='Low energy threshold {:.2f}'.format(self.energy_thresh_lo),
+                      **line_kwargs)
+            ax.vlines(self.energy_thresh_hi.value, ymin, ymax, linestyle='dotted',
+                      label='High energy threshold {:.2f}'.format(self.energy_thresh_hi),
+                      **line_kwargs)
+            ax.legend(loc='upper left')
+
+        ax.set_xscale('log')
+        ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
+        ax.set_ylabel('Effective Area [{}]'.format(self.data.unit))
+
+        return ax
+    
+    @classmethod
+    def from_table(cls, table):
+        raise NotImplementedError()
+
+    def to_table(self):
+        """Convert to `~astropy.table.Table`"""
+        # TODO : Consider putting this into the base class
+        ener_lo = self.energy.data[:-1]
+        ener_hi = self.energy.data[1:]
+        names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
+        meta = dict()
+        return Table([e_lo, e_hi, self.data], names=names, meta=meta)
+
+
 class EffectiveArea2D(NDDataArray):
-    """2D effective area table
+    """2D Effective Area Table
 
     **Disclaimer**: This is an experimental class to test the usage of the
     `~gammapy.utils.nddata.NDDataArray` base class. It is meant to replace
@@ -23,8 +107,10 @@ class EffectiveArea2D(NDDataArray):
         Bin edges of energy axis
     offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.DataAxis`
         Nodes of Offset axis
+
     data : `~astropy.units.Quantity`
         Effective area
+
     meta : dict
         Optional meta information,
         supported: ``low_threshold``, ``high_threshold``
@@ -65,7 +151,7 @@ class EffectiveArea2D(NDDataArray):
         return self.meta.high_threshold
 
     @classmethod
-    def from_table(cls, t):
+    def from_table(cls, table):
         """This is a reader for the format specified at
         http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/effective_area/index.html#aeff-2d-format
         """
@@ -74,18 +160,31 @@ class EffectiveArea2D(NDDataArray):
         offset_col = 'THETA'
         data_col = 'EFFAREA'
 
-        energy_lo = t['{}_LO'.format(energy_col)].quantity[0]
-        energy_hi = t['{}_HI'.format(energy_col)].quantity[0]
+        energy_lo = table['{}_LO'.format(energy_col)].quantity[0]
+        energy_hi = table['{}_HI'.format(energy_col)].quantity[0]
         energy = np.append(energy_lo.value, energy_hi[-1].value) * energy_lo.unit
-        offset = t['{}_HI'.format(offset_col)].quantity[0]
+        offset = table['{}_HI'.format(offset_col)].quantity[0]
         # see https://github.com/gammasky/hess-host-analyses/issues/32
-        data = t['{}'.format(data_col)].quantity[0].transpose()
+        data = table['{}'.format(data_col)].quantity[0].transpose()
 
         return cls(offset=offset, energy=energy, data=data)
 
-    def to_effective_area(self):
-        """Create effective area table"""
-        raise NotImplementedError
+    def to_effective_area(self, offset, energy=None):
+        """Evaluate at a given offset and return `~gammapy.irf.EffectiveArea` 
+
+        Parameters
+        ----------
+        offset : `~astropy.coordinates.Angle`
+            Offset
+        ebounds : `~astropy.units.Quantity`
+            Energy axis
+        """
+        if energy is None:
+            energy = self.energy.nodes
+
+        area = self.evaluate(offset=offset, energy=energy)
+        meta = dict()
+        return EffectiveArea(energy=self.energy, data=area, meta=meta)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.
@@ -104,6 +203,7 @@ class EffectiveArea2D(NDDataArray):
         Returns
         -------
         ax : `~matplolib.axes`
+
             Axis
         """
         import matplotlib.pyplot as plt
@@ -220,3 +320,47 @@ class EffectiveArea2D(NDDataArray):
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
         plt.show()
+
+
+def abramowski_effective_area(energy, instrument='HESS'):
+    """IACT effective area parametrization
+
+    Parametrizations of the effective areas of different Cherenkov telescopes
+    taken from Appendix B of Abramowski et al. (2010), see
+    http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
+
+    .. math::
+        A_{eff}(E) = g_1 \\left(\\frac{E}{\\mathrm{MeV}}\\right)^{-g_2}\\exp{\\left(-\\frac{g_3}{E}\\right)}
+
+    Parameters
+    ----------
+    energy : `~astropy.units.Quantity`
+        Energy
+    instrument : {'HESS', 'HESS2', 'CTA'}
+        Instrument name
+
+    Returns
+    -------
+    effective_area : `~astropy.units.Quantity`
+        Effective area in cm^2
+    """
+    # Put the parameters g in a dictionary.
+    # Units: g1 (cm^2), g2 (), g3 (MeV)
+    # Note that whereas in the paper the parameter index is 1-based,
+    # here it is 0-based
+    pars = {'HESS': [6.85e9, 0.0891, 5e5],
+            'HESS2': [2.05e9, 0.0891, 1e5],
+            'CTA': [1.71e11, 0.0891, 1e5]}
+
+    energy = energy.to('MeV').value
+
+    if instrument not in pars.keys():
+        ss = 'Unknown instrument: {0}\n'.format(instrument)
+        ss += 'Valid instruments: HESS, HESS2, CTA'
+        raise ValueError(ss)
+
+    g1 = pars[instrument][0]
+    g2 = pars[instrument][1]
+    g3 = -pars[instrument][2]
+    value = g1 * energy ** (-g2) * np.exp(g3 / energy)
+    return Quantity(value, 'cm^2')

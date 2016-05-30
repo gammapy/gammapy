@@ -14,7 +14,6 @@ from ..utils.fits import table_to_fits_table
 from ..utils.scripts import make_path
 
 __all__ = [
-    'abramowski_effective_area',
     'EffectiveAreaTable',
     'EffectiveAreaTable2D',
 ]
@@ -710,46 +709,3 @@ class EffectiveAreaTable2D(object):
         self._spline = RectBivariateSpline(x, y, self.eff_area.value)
 
 
-def abramowski_effective_area(energy, instrument='HESS'):
-    """Simple IACT effective area parametrizations from Abramowski et al. (2010).
-
-    TODO: give formula
-
-    Parametrizations of the effective areas of Cherenkov telescopes
-    taken from Appendix B of http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
-
-    Parameters
-    ----------
-    energy : `~astropy.units.Quantity`
-        Energy
-    instrument : {'HESS', 'HESS2', 'CTA'}
-        Instrument name
-
-    Returns
-    -------
-    effective_area : `~astropy.units.Quantity`
-        Effective area in cm^2
-    """
-    # Put the parameters g in a dictionary.
-    # Units: g1 (cm^2), g2 (), g3 (MeV)
-    # Note that whereas in the paper the parameter index is 1-based,
-    # here it is 0-based
-    pars = {'HESS': [6.85e9, 0.0891, 5e5],
-            'HESS2': [2.05e9, 0.0891, 1e5],
-            'CTA': [1.71e11, 0.0891, 1e5]}
-
-    if not isinstance(energy, Quantity):
-        raise ValueError("energy must be a Quantity object.")
-
-    energy = energy.to('MeV').value
-
-    if instrument not in pars.keys():
-        ss = 'Unknown instrument: {0}\n'.format(instrument)
-        ss += 'Valid instruments: HESS, HESS2, CTA'
-        raise ValueError(ss)
-
-    g1 = pars[instrument][0]
-    g2 = pars[instrument][1]
-    g3 = -pars[instrument][2]
-    value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-    return Quantity(value, 'cm^2')

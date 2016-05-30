@@ -51,7 +51,8 @@ class NDDataArray(object):
             axis.data = Quantity(value)
             self._axes.append(axis)
 
-        self.data = data
+        if data is not None:
+            self.data = data
         self._regular_grid_interp = None
 
     @property
@@ -95,15 +96,7 @@ class NDDataArray(object):
         return len(self.axes)
 
     def to_table(self):
-        """Convert to `~astropy.table.Table`"""
-
-        raise NotImplementedError("Broken")
-
-        pairs = [_table_columns_from_data_axis(a) for a in self.axes[::-1]]
-        cols = [_ for pair in pairs for _ in pair]
-        cols.append(Column(data=[self.data.value], name='data', unit=self.data.unit))
-        table = Table(cols)
-        return table
+        raise NotImplementedError('This must be implemented by subclasses')
 
     def write(self, *args, **kwargs):
         """Write to disk
@@ -115,8 +108,7 @@ class NDDataArray(object):
 
     @classmethod
     def from_table(cls, table):
-        """Fits Reader"""
-        raise NotImplementedError('')
+        raise NotImplementedError('This must be implemented by subclasses')
 
     @classmethod
     def read(cls, *args, **kwargs):
@@ -232,7 +224,7 @@ class DataAxis(object):
         ----------
         vmin : `~astropy.units.Quantity`, float
             Lowest value
-        emax : `~astropy.units.Quantity`, float
+        vmax : `~astropy.units.Quantity`, float
             Highest value
         bins : int
             Number of bins
@@ -341,26 +333,3 @@ class BinnedDataAxis(DataAxis):
     def log_center(self):
         """Logarithmic bin centers"""
         return np.sqrt(self.data[:-1] * self.data[1:])
-
-
-def _table_columns_from_data_axis(axis):
-    """Helper function to translate a data axis to two table columns
-
-    The first column contains the lower bounds, the second the upper bounds.
-    This satisfies the format definition here
-    http://gamma-astro-data-formats.readthedocs.io/en/latest/info/fits-arrays.html
-    """
-    # BROKEN!
-    if isinstance(axis, BinnedDataAxis):
-        data_hi = axis.data.value[1:]
-        data_lo = axis.data.value[:-1]
-    elif isinstance(axis, DataAxis):
-        data_hi = axis.data.value
-        data_lo = axis.data.value
-    else:
-        raise ValueError('Invalid axis type')
-
-    c_hi = Column(data=[data_hi], unit=axis.unit, name='{}_HI'.format(axis.name))
-    c_lo = Column(data=[data_lo], unit=axis.unit, name='{}_LO'.format(axis.name))
-
-    return c_lo, c_hi

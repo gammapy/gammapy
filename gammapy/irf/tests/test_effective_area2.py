@@ -128,19 +128,29 @@ def test_EffectiveArea2D(tmpdir):
     aeff.plot_offset_dependence()
 
     # Test ARF export
-    # offset = Angle(0.236, 'deg')
-    # e_axis = Quantity(np.logspace(0, 1, 20), 'TeV')
-    # effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
-    # energy = EnergyBounds(e_axis).log_centers
-    # area = aeff.evaluate(offset, energy)
-    # effarea1d = EffectiveAreaTable(e_axis, area)
-    # test_energy = Quantity(2.34, 'TeV')
-    # actual = effareafrom2d.evaluate(test_energy)
-    # desired = effarea1d.evaluate(test_energy)
-    # assert_equal(actual, desired)
+    offset = 0.236  * u.deg
+    e_axis = np.logspace(0, 1, 20) * u.TeV
+    effareafrom2d = aeff.to_effective_area(offset, e_axis)
+
+    energy = np.sqrt(e_axis[:-1] * e_axis[1:])
+    area = aeff.evaluate(offset=offset, energy=energy)
+    effarea1d = EffectiveAreaTable(e_axis, area)
+
+    test_energy = 2.34 * u.TeV
+    actual = effareafrom2d.evaluate(energy=test_energy)
+    desired = effarea1d.evaluate(energy=test_energy)
+    assert_equal(actual, desired)
 
     # Test ARF export #2
-    # effareafrom2dv2 = aeff.to_effective_area_table('1.2 deg')
-    # actual = effareafrom2dv2.effective_area
-    # desired = aeff.evaluate(offset='1.2 deg')
-    # assert_equal(actual, desired)
+    offset = 1.2 * u.deg
+    effareafrom2dv2 = aeff.to_effective_area(offset)
+    actual = effareafrom2dv2.data
+    desired = aeff.evaluate(offset='1.2 deg')
+    assert_equal(actual, desired)
+
+@requires_dependency('scipy')
+@requires_dependency('matplotlib')
+@requires_data('gammapy-extra')
+def test_EffectiveArea(tmpdir):
+    pass
+
