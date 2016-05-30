@@ -790,7 +790,7 @@ class EnergyDispersion2D(object):
         self.plot_bias(ax=axes[0])
         self.plot_migration(ax=axes[1])
         edisp = self.to_energy_dispersion(offset='1 deg')
-        edisp.plot('matrix', ax=axes[2])
+        edisp.plot_matrix(ax=axes[2])
 
         plt.tight_layout()
         plt.show()
