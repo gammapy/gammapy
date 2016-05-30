@@ -9,6 +9,7 @@ from astropy.units import Quantity
 from astropy.table import Table, Column
 from astropy.extern import six
 from .array import array_stats_str
+from .scripts import make_path
 
 __all__ = [
     'NDDataArray',
@@ -104,7 +105,9 @@ class NDDataArray(object):
         Calling astropy I/O interface
         see http://docs.astropy.org/en/stable/io/unified.html
         """
-        self.to_table().write(*args, **kwargs)
+        temp = list(args)
+        temp[0] = str(make_path(args[0]))
+        self.to_table().write(*temp, **kwargs)
 
     @classmethod
     def from_table(cls, table):
@@ -117,7 +120,10 @@ class NDDataArray(object):
         Calling astropy I/O interface
         see http://docs.astropy.org/en/stable/io/unified.html
         """
-        table = Table.read(*args, **kwargs)
+        # Support Path input
+        temp = list(args)
+        temp[0] = str(make_path(args[0]))
+        table = Table.read(*temp, **kwargs)
         return cls.from_table(table)
 
     def __str__(self):

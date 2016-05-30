@@ -7,12 +7,12 @@ import astropy.units as u
 from astropy.table import Table
 
 __all__ = [
-    'EffectiveArea',
-    'EffectiveArea2D',
+    'EffectiveAreaTable',
+    'EffectiveAreaTable2D',
     'abramowski_effective_area',
 ]
 
-class EffectiveArea(NDDataArray):
+class EffectiveAreaTable(NDDataArray):
     """Effective Area Table
     
     **Disclaimer**: This is an experimental class to test the usage of the
@@ -38,12 +38,12 @@ class EffectiveArea(NDDataArray):
     def low_threshold(self):
 
         """Low energy threshold"""
-        return self.meta.low_theshold
+        return self.meta.LO_THRES * u.TeV
 
     @property
     def high_threshold(self):
         """High energy threshold"""
-        return self.meta.high_threshold
+        return self.meta.HI_THRES * u.TeV
 
     def plot(self, ax=None, energy=None, show_threshold=False, **kwargs):
         """Plot effective area
@@ -111,11 +111,11 @@ class EffectiveArea(NDDataArray):
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
-        meta = dict()
+        meta = dict(name='SPECRESP', hduclas1='RESPONSE')
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
 
 
-class EffectiveArea2D(NDDataArray):
+class EffectiveAreaTable2D(NDDataArray):
     """2D Effective Area Table
 
     **Disclaimer**: This is an experimental class to test the usage of the
@@ -139,15 +139,15 @@ class EffectiveArea2D(NDDataArray):
 
     Examples
     --------
-    Create `~gammapy.irf.EffectiveArea2D` from scratch
+    Create `~gammapy.irf.EffectiveAreaTable2D` from scratch
 
-    >>> from gammapy.irf import EffectiveArea2D
+    >>> from gammapy.irf import EffectiveAreaTable2D
     >>> import astropy.units as u
     >>> import numpy as np
     >>> energy = np.logspace(0,1,11) * u.TeV
     >>> offset = np.linspace(0,1,4) * u.deg
     >>> data = np.ones(shape=(10,4)) * u.cm * u.cm
-    >>> eff_area = EffectiveArea2D(energy=energy, offset=offset, data= data)
+    >>> eff_area = EffectiveAreaTable2D(energy=energy, offset=offset, data= data)
     >>> print(eff_area)
     Data array summary info
     energy         : size =    11, min =  1.000 TeV, max = 10.000 TeV
@@ -165,12 +165,12 @@ class EffectiveArea2D(NDDataArray):
     def low_threshold(self):
 
         """Low energy threshold"""
-        return self.meta.LO_THRES
+        return self.meta.LO_THRES * u.TeV
 
     @property
     def high_threshold(self):
         """High energy threshold"""
-        return self.meta.HI_THRES
+        return self.meta.HI_THRES * u.TeV
 
     @classmethod
     def from_table(cls, table):
@@ -189,8 +189,8 @@ class EffectiveArea2D(NDDataArray):
         data = table['{}'.format(data_col)].quantity[0].transpose()
         return cls(offset=offset, energy=energy, data=data, meta=table.meta)
 
-    def to_effective_area(self, offset, energy=None):
-        """Evaluate at a given offset and return `~gammapy.irf.EffectiveArea` 
+    def to_effective_area_table(self, offset, energy=None):
+        """Evaluate at a given offset and return `~gammapy.irf.EffectiveAreaTable` 
 
         Parameters
         ----------
@@ -205,8 +205,9 @@ class EffectiveArea2D(NDDataArray):
             energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
         area = self.evaluate(offset=offset, energy=energy.nodes)
-        meta = dict()
-        return EffectiveArea(energy=energy.data, data=area, meta=meta)
+        copy_keys = ['LO_THRES', 'HI_THRES']
+        meta = dict((key, self.meta[key]) for key in copy_keys)
+        return EffectiveAreaTable(energy=energy.data, data=area, meta=meta)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.

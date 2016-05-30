@@ -441,8 +441,11 @@ class SpectrumObservation(object):
         self.on_vector.write(str(outdir / phafile), bkg=str(bkgfile), arf=str(arffile),
                              rmf=str(rmffile), clobber=clobber)
         self.off_vector.write(str(outdir / bkgfile), clobber=clobber)
-        self.effective_area.write(str(outdir / arffile), energy_unit='keV',
-                                  effarea_unit='cm2', clobber=clobber)
+        
+        # Write in keV and cm2
+        self.effective_area.data = self.effective_area.data.to('cm2')
+        self.effective_area.energy.data = self.effective_area.energy.data.to('keV')
+        self.effective_area.write(outdir/arffile, overwrite=clobber)
         self.energy_dispersion.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=clobber)
 
@@ -528,7 +531,7 @@ class SpectrumObservation(object):
 
         aeff2d = store.obs(obs_id=obs_id).aeff
         arf_vec = aeff2d.to_effective_area_table(offset)
-        elo, ehi = arf_vec.energy_thresh_lo, arf_vec.energy_thresh_hi
+        elo, ehi = arf_vec.low_threshold, arf_vec.high_threshold
         m['safe_energy_range'] = EnergyBounds([elo, ehi])
 
         edisp2d = store.obs(obs_id=obs_id).edisp
@@ -577,15 +580,17 @@ class SpectrumObservation(object):
         off_vec = np.sum([o.off_vector for o in obs_list])
 
         # Stack arf vector
-        arf_band = [o.effective_area.effective_area * o.meta.livetime.value for o in obs_list]
+        arf_band = [o.effective_area.data * o.meta.livetime.value for o in obs_list]
         arf_band_tot = np.sum(arf_band, axis=0)
         livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
         arf_vec = arf_band_tot / livetime_tot
-        ebounds = obs_list[0].effective_area.ebounds
-        arf = EffectiveAreaTable(ebounds, Quantity(arf_vec, obs_list[0].effective_area.effective_area.unit))
+        energy = obs_list[1].effective_area.energy.data
+        data = arf_vec * obs_list[0].effective_area.data.unit
 
+        arf = EffectiveAreaTable(energy=energy, data=data) 
+                                 
         # Stack rmf vector
-        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.effective_area.value * o.meta.livetime.value for
+        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.data.value * o.meta.livetime.value for
                     o in obs_list]
         rmf_band_tot = np.sum(rmf_band, axis=0)
         pdf_mat = rmf_band_tot / arf_band_tot
