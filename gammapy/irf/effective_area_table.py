@@ -664,6 +664,7 @@ class EffectiveAreaTable2D(object):
         self.plot_offset_dependence(ax=axes[2])
         plt.tight_layout()
         plt.show()
+        return fig
 
     def info(self):
         """Print some basic info.
