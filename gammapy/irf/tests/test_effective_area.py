@@ -106,7 +106,7 @@ def test_EffectiveAreaTable2D_generic():
     assert_equal(actual, desired)
 
     # Misc functions
-    print(aeff)
+    assert 'EffectiveAreaTable2D' in str(aeff)
 
 
 @requires_dependency('scipy')
@@ -125,8 +125,8 @@ def test_EffectiveAreaTable2D(tmpdir):
     assert aeff.offset.unit == 'deg'
     assert aeff.data.unit == 'm2'
 
-    assert_allclose(aeff.high_threshold, 99.083, atol=1e-2)
-    assert_allclose(aeff.low_threshold, 0.603, atol=1e-2)
+    assert_allclose(aeff.high_threshold.value, 99.083, atol=1e-2)
+    assert_allclose(aeff.low_threshold.value, 0.603, atol=1e-2)
     
     test_e = 14 * u.TeV
     test_o = 0.2 * u.deg

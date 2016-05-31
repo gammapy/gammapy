@@ -34,7 +34,6 @@ def test_spectrum(tmpdir):
     actual = SpectrumFitResult.from_yaml(fres)
     desired = SpectrumFitResult.from_yaml(fref)
 
-    print(tmpdir)
-    1/0
+    print('TEMPDIR',tmpdir)
     assert str(actual.to_table(format='.3g')) == str(desired.to_table(format='.3g'))
 

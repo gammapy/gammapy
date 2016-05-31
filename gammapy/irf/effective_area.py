@@ -104,14 +104,17 @@ class EffectiveAreaTable(NDDataArray):
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
-        
-        see http://gamma-astro-data-formats.readthedocs.io/en/latest/irfs/effective_area/index.html#aeff-2d-format
+
+        http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file 
         """
 
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
-        meta = dict(name='SPECRESP', hduclas1='RESPONSE')
+        meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
+                    hduclas2='SPECRESP')
+        meta.update(LO_THRES=self.low_threshold.to('TeV').value)
+        meta.update(HI_THRES=self.high_threshold.to('TeV').value)
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
 
 

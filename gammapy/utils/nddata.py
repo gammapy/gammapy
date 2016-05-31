@@ -128,7 +128,7 @@ class NDDataArray(object):
 
     def __str__(self):
         """String representation"""
-        ss = 'Data array summary info\n'
+        ss = '{} summary info\n'.format(type(self).__name__)
         for axis, axname in zip(self.axes, self.axis_names):
             ss += array_stats_str(axis.data, axname)
         ss += array_stats_str(self.data, 'Data')

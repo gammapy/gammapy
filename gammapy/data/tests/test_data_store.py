@@ -18,7 +18,7 @@ def test_datastore_hd_hap():
 
     assert str(type((obs.events))) == "<class 'gammapy.data.event_list.EventList'>"
     assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
-    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area_table.EffectiveAreaTable2D'>"
+    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
     assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_analytical.EnergyDependentMultiGaussPSF'>"
     # TODO: no background model available yet
@@ -39,7 +39,7 @@ def test_datastore_pa():
     # TODO: GTI is not listed in PA HDU index table.
     # For now maybe add a workaround to find it in the same file as the events HDU?
     # assert str(type(obs.gti)) == "<class 'gammapy.data.gti.GTI'>"
-    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area_table.EffectiveAreaTable2D'>"
+    assert str(type(obs.aeff)) == "<class 'gammapy.irf.effective_area.EffectiveAreaTable2D'>"
     assert str(type(obs.edisp)) == "<class 'gammapy.irf.energy_dispersion.EnergyDispersion2D'>"
     assert str(type(obs.psf)) == "<class 'gammapy.irf.psf_king.PSFKing'>"
 
