@@ -398,9 +398,9 @@ class EffectiveAreaTable2D(object):
         o_lo = Angle(data['THETA_LO'].squeeze(), 'deg')
         o_hi = Angle(data['THETA_HI'].squeeze(), 'deg')
         if column == 'reco':
-            ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
-        else:
             ef = Quantity(data['EFFAREA_RECO'].squeeze(), 'm^2')
+        else:
+            ef = Quantity(data['EFFAREA'].squeeze(), 'm^2')
 
         return cls(e_lo, e_hi, o_lo, o_hi, ef, thres_lo=thres_lo, thres_hi=thres_hi)
 
