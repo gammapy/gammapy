@@ -150,7 +150,9 @@ class ObsImage(object):
         spectrum = (energy_bin / eref) ** (-spectral_index)
         aeff2d = self.aeff
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        exposure_tab = np.sum(aeff2d.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        exposure_tab = np.sum(
+            aeff2d.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").transpose()
+            * spectrum * energy_band, axis=1)
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
             exposure_tab /= norm
