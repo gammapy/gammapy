@@ -48,8 +48,13 @@ class NDDataArray(object):
         self._axes = list()
         for axis_name in self.axis_names:
             value = kwargs.pop(axis_name)
+            if isinstance(value, DataAxis):
+                value = value.data
+            if not isinstance(value, Quantity):
+                raise ValueError('Input for axis "{}" has no unit').format(
+                    axis_name)
             axis = getattr(self, axis_name)
-            axis.data = Quantity(value)
+            axis.data = value
             self._axes.append(axis)
 
         if data is not None:
