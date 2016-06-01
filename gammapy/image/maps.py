@@ -581,7 +581,7 @@ class SkyMapCollection(Bunch):
         _map_names = []  # list of map names to save order in fits file
 
         for hdu in hdulist:
-            skymap = SkyMap.read(hdu)
+            skymap = SkyMap.from_image_hdu(hdu)
 
             # This forces lower case map names, but only on the collection object
             # When writing to fits again the skymap.name attribute is used.

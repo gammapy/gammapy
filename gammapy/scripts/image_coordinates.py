@@ -54,7 +54,7 @@ def image_coordinates(infile,
         out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 
     if make_distance_map:
-        excl = ExclusionMask.read(hdu)
+        excl = ExclusionMask.from_image_hdu(hdu)
         log.info('Computing DIST map')
         dist = excl.exclusion_distance
         out_hdus.append(fits.ImageHDU(dist, hdu.header, 'DIST'))

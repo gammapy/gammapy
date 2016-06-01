@@ -16,7 +16,7 @@ def mask():
     """Example mask for testing."""
     testfile = gammapy_extra.filename('datasets/exclusion_masks/tevcat_exclusion.fits')
     hdu = fits.open(testfile)[1]
-    return ExclusionMask.read(hdu)
+    return ExclusionMask.from_image_hdu(hdu)
 
 
 @requires_dependency('scipy')

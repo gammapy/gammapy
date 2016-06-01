@@ -63,7 +63,7 @@ def test_image_lon_profile():
     """Tests GLON profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()
 
-    l, b = SkyMap.read(image).coordinates('galactic')
+    l, b = SkyMap.from_image_hdu(image).coordinates('galactic')
     lons, lats = l.degree, b.degree
     image.data = np.ones_like(image.data)
 
