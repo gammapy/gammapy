@@ -106,8 +106,6 @@ class Result():
 class SpectrumFitResult(Result):
     """Class representing the result of a spectral fit
 
-    For a complete documentation see :ref:`spectrum-fit-result`
-
     Parameters
     ----------
     spectral_model : str
