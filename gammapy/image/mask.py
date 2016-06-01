@@ -111,13 +111,6 @@ class ExclusionMask(SkyMap):
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
         return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
 
-    @classmethod
-    def from_image_hdu(cls, fobj, *args, **kwargs):
-        # Check if extension name is given, else default to 'exclusion'
-        kwargs['extname'] = kwargs.get('extname', 'exclusion')
-        return super(ExclusionMask, cls).from_image_hdu(fobj, *args, **kwargs)
-
-
 
 def make_tevcat_exclusion_mask():
     """Create an all-sky exclusion mask containing all TeVCat sources
