@@ -6,6 +6,7 @@
 class InvalidDataError(Exception):
     """Invalid data found."""
 
+from .target import *
 from .data_manager import *
 from .data_store import *
 from .event_list import *

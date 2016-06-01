@@ -107,7 +107,6 @@ class EffectiveAreaTable(NDDataArray):
 
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html#arf-file 
         """
-
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
