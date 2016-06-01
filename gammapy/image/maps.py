@@ -62,27 +62,19 @@ class SkyMap(object):
         self.unit = unit
 
     @classmethod
-    def read(cls, fobj, *args, **kwargs):
-        """
-        Read sky map from Fits file.
+    def read(cls, filename, **kwargs):
+        """Read sky map from FITS file.
 
         Parameters
         ----------
-        fobj : file like object or `~astropy.io.fits.ImageHDU` or `~astropy.io.fits.PrimaryHDU`
-            Name of the Fits file or ImageHDU object.
-        *args : list
-            Arguments passed `~astropy.io.fits.gedata`.
+        filename : str
+            FITS file name
         **kwargs : dict
-            Keyword arguments passed `~astropy.io.fits.gedata`.
+            Keyword arguments passed `~astropy.io.fits.getdata`.
         """
-        if isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
-            data, header = fobj.data, fobj.header
-        else:
-            if isinstance(fobj, six.string_types):
-                fobj = str(make_path(fobj))
-            data = fits.getdata(fobj, *args, **kwargs)
-            header = fits.getheader(fobj, *args, **kwargs)
-
+        filename = str(make_path(filename))
+        data = fits.getdata(filename, **kwargs)
+        header = fits.getheader(filename, **kwargs)
         image_hdu = fits.ImageHDU(data, header)
         return cls.from_image_hdu(image_hdu)
 
