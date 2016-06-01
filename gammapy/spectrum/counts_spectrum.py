@@ -175,7 +175,7 @@ class CountsSpectrum(object):
         m = fit.to_sherpa_model()
 
         # Get differential flux at true energy log bin center
-        ebounds = obs.effective_area.ebounds
+        ebounds = EnergyBounds(obs.effective_area.energy.data)
         x = ebounds.log_centers.to('keV')
         diff_flux = Quantity(m(x), 'cm-2 s-1 keV-1')
 
@@ -183,7 +183,7 @@ class CountsSpectrum(object):
         int_flux = (diff_flux * ebounds.bands).decompose()
 
         # Apply ARF and RMF to get n_pred
-        temp = int_flux * obs.meta.livetime * obs.effective_area.effective_area
+        temp = int_flux * obs.meta.livetime * obs.effective_area.data
         counts = obs.energy_dispersion.pdf_matrix.transpose().dot(temp)
 
         e_reco = obs.energy_dispersion.reco_energy

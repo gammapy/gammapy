@@ -44,8 +44,7 @@ def exposure_cube(pointing,
     offset = np.clip(offset, Angle(0, 'deg'), offset_max)
 
     energy = EnergyBounds(ref_cube.energy).log_centers
-    exposure = aeff2d.evaluate(offset, energy)
-    exposure = np.rollaxis(exposure, 2)
+    exposure = aeff2d.evaluate(offset=offset, energy=energy)
     exposure *= livetime
 
     expcube = SkyCube(data=exposure,
