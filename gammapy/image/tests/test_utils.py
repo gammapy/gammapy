@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
 from ...utils.energy import EnergyBounds
-from ...cube import SkyCube
+from ...cube import SkyCube, cube_to_image
 from ...image import (
     binary_disk,
     binary_ring,
