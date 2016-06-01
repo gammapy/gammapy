@@ -17,7 +17,6 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 
-from .utils import cube_to_image
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
 from ..image import SkyMap
@@ -318,6 +317,8 @@ class SkyCube(object):
     def solid_angle_image(self):
         """Solid angle image in steradian (`~astropy.units.Quantity`)"""
         cube_hdu = fits.ImageHDU(self.data, self.wcs.to_header())
+
+        from .utils import cube_to_image
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2
 
