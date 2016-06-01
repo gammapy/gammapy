@@ -6,12 +6,19 @@ Cube analysis utility functions.
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
+from astropy.io.fits import ImageHDU
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 
 from .core import SkyCube
+from ..image.maps import SkyMap
 
-__all__ = ['compute_npred_cube', 'convolve_cube']
+
+__all__ = ['compute_npred_cube',
+           'convolve_cube',
+           'cube_to_image',
+           'cube_to_spec',
+           ]
 
 
 def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
@@ -95,4 +102,63 @@ def convolve_cube(cube, psf, offset_max):
     convolved_cube = SkyCube(data=convolved_cube, wcs=cube.wcs,
                              energy=cube.energy)
     return convolved_cube
+
+
+def cube_to_image(cube, slicepos=None):
+    """Slice or project 3-dim cube into a 2-dim image.
+
+    Parameters
+    ----------
+    cube : `~astropy.io.fits.ImageHDU`
+        3-dim FITS cube
+    slicepos : int or None, optional
+        Slice position (None means to sum along the spectral axis)
+
+    Returns
+    -------
+    image : `~astropy.io.fits.ImageHDU`
+        2-dim FITS image
+    """
+    header = cube.header.copy()
+    header['NAXIS'] = 2
+
+    for key in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
+        if key in header:
+            del header[key]
+
+    if slicepos is None:
+        data = cube.data.sum(0)
+    else:
+        data = cube.data[slicepos]
+    return ImageHDU(data, header)
+
+
+def cube_to_spec(cube, mask, weighting='none'):
+    """Integrate spatial dimensions of a FITS cube to give a spectrum.
+
+    TODO: give formulas.
+
+    Parameters
+    ----------
+    cube : `~astropy.io.fits.ImageHDU`
+        3-dim FITS cube
+    mask : numpy.array
+        2-dim mask array.
+    weighting : {'none', 'solid_angle'}, optional
+        Weighting factor to use.
+
+    Returns
+    -------
+    spectrum : numpy.array
+        Summed spectrum of pixels in the mask.
+    """
+
+    # TODO: clean up API and implementation and add test
+    value = cube.dat
+    sky_map = SkyMap.read(cube)
+    A = sky_map.solid_angle()
+    # Note that this is the correct way to get an average flux:
+
+    spec = (value * A).sum(-1).sum(-1)
+    return spec
 

@@ -18,7 +18,6 @@ from ...image import (
     make_header,
     contains,
     images_to_cube,
-    cube_to_image,
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
@@ -155,18 +154,6 @@ def test_ref_pixel():
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
     # Lower left corner shouldn't change
     assert_allclose(footprint[0], footprint_1[0])
-
-
-def test_cube_to_image():
-    layer = SkyMap.empty(nxpix=101, nypix=101, fill=1.).to_image_hdu()
-    hdu_list = [layer, layer, layer, layer]
-    cube = images_to_cube(hdu_list)
-    case1 = cube_to_image(cube)
-    case2 = cube_to_image(cube, slicepos=1)
-    # Check that layers are summed if no layer is specified (case1),
-    # or only a specified layer is extracted (case2)
-    assert_allclose(case1.data, 4 * layer.data)
-    assert_allclose(case2.data, layer.data)
 
 
 def test_wcs_histogram2d():

@@ -24,8 +24,6 @@ __all__ = [
     'binary_ring',
     'block_reduce_hdu',
     'contains',
-    'cube_to_image',
-    'cube_to_spec',
     'crop_image',
     'dict_to_hdulist',
     'disk_correlate',
@@ -887,65 +885,6 @@ def crop_image(image, bounding_box):
     # TODO: fix header keywords and test against ftcopy
 
     return fits.ImageHDU(data=data, header=header)
-
-
-def cube_to_image(cube, slicepos=None):
-    """Slice or project 3-dim cube into a 2-dim image.
-
-    Parameters
-    ----------
-    cube : `~astropy.io.fits.ImageHDU`
-        3-dim FITS cube
-    slicepos : int or None, optional
-        Slice position (None means to sum along the spectral axis)
-
-    Returns
-    -------
-    image : `~astropy.io.fits.ImageHDU`
-        2-dim FITS image
-    """
-    from astropy.io.fits import ImageHDU
-    header = cube.header.copy()
-    header['NAXIS'] = 2
-
-    for key in ['NAXIS3', 'CRVAL3', 'CDELT3', 'CTYPE3', 'CRPIX3', 'CUNIT3']:
-        if key in header:
-            del header[key]
-
-    if slicepos is None:
-        data = cube.data.sum(0)
-    else:
-        data = cube.data[slicepos]
-    return ImageHDU(data, header)
-
-
-def cube_to_spec(cube, mask, weighting='none'):
-    """Integrate spatial dimensions of a FITS cube to give a spectrum.
-
-    TODO: give formulas.
-
-    Parameters
-    ----------
-    cube : `~astropy.io.fits.ImageHDU`
-        3-dim FITS cube
-    mask : numpy.array
-        2-dim mask array.
-    weighting : {'none', 'solid_angle'}, optional
-        Weighting factor to use.
-
-    Returns
-    -------
-    spectrum : numpy.array
-        Summed spectrum of pixels in the mask.
-    """
-    value = cube.dat
-    from .maps import SkyMap
-    sky_map = SkyMap.read(cube)
-    A = sky_map.solid_angle()
-    # Note that this is the correct way to get an average flux:
-
-    spec = (value * A).sum(-1).sum(-1)
-    return spec
 
 
 def contains(image, x, y, world=True):

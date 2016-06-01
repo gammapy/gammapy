@@ -17,12 +17,12 @@ from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
 
+from .utils import cube_to_image
 from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
-from ..image import cube_to_image, SkyMap
+from ..image import SkyMap
 from ..image.utils import _bin_events_in_cube
 from ..utils.fits import table_to_fits_table
-from ..utils.wcs import get_wcs_ctype
 
 __all__ = ['SkyCube']
 
