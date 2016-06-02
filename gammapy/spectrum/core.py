@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from astropy.table import Table
 from ..utils.nddata import NDDataArray, BinnedDataAxis
+from ..utils.scripts import make_path
 from ..data import EventList
 from ..extern.pathlib import Path
 import astropy.units as u
@@ -237,7 +238,8 @@ class SpectrumObservation(object):
     def read(cls, phafile):
         """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files.
 
-        BKG file, ARF, and RMF must be set in the PHA header.
+        BKG file, ARF, and RMF must be set in the PHA header and be present in
+        the same folder.
 
         Parameters
         ----------
@@ -249,12 +251,11 @@ class SpectrumObservation(object):
 
         f = make_path(phafile)
         base = f.parent
-        on_vector = CountsSpectrum.read_pha(f)
-        meta = on_vector.meta
-        energy_dispersion = EnergyDispersion.read(str(base / meta.rmf))
-        effective_area = EffectiveAreaTable.read(str(base / meta.arf))
-        off_vector = CountsSpectrum.read_bkg(str(base / meta.bkg),
-                                             str(base / meta.rmf))
+        on_vector = OnCountsSpectrum.read(f)
+        rmf, arf, bkg  = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+        energy_dispersion = EnergyDispersion.read(str(base / rmf))
+        effective_area = EffectiveAreaTable.read(str(base / arf))
+        off_vector = CountsSpectrum.read_bkg(str(base / bkg))
 
         meta.update(phafile=phafile)
         return cls(on_vector, off_vector, energy_dispersion, effective_area,
@@ -377,31 +378,18 @@ class SpectrumObservationList(list):
     List of `~gammapy.spectrum.SpectrumObservation`.
     """
 
-    def get_obslist_from_ids(self, id_list):
-        """Return an subset of the observation list
+    def obs(self, obs_id):
+        """Return one observation
 
         Parameters
         ----------
-        id_list : list of int
-            List of Observation Id (runnumber)
-
-        Returns
-        -------
-        observation : `~gammapy.spectrum.SpectrumObservationList`
-            Subset of observations
+        obs_id : int
+            Identifier
         """
-        new_list = list()
-
-        for id in id_list:
-            ids = [o.meta.obs_id for o in self]
-            try:
-                i = ids.index(id)
-            except ValueError:
-                raise ValueError("Observation {} not in list".format(id))
-
-            new_list.append(self[i])
-
-        return SpectrumObservationList(new_list)
+        obs_id_list = [o.obs_id for o in self]
+        print(obs_id_list)
+        idx = obs_id_list.index(obs_id)
+        return self[idx]
 
     @property
     def total_spectrum(self):
@@ -409,6 +397,7 @@ class SpectrumObservationList(list):
         return SpectrumObservation.stack_observation_list(self)
 
     def info(self):
+
         """Info string"""
         ss = " *** SpectrumObservationList ***"
         ss += "\n\nNumber of observations: {}".format(len(self))
@@ -432,6 +421,7 @@ class SpectrumObservationList(list):
             Indices of element fulfilling the condition
         """
         val = [o.off_vector.meta.backscal for o in self]
+
         condition = np.array(val) >= n_min
         idx = np.nonzero(condition)
         return idx[0]
@@ -447,6 +437,7 @@ class SpectrumObservationList(list):
         for obs in self:
             obs.write(outdir=outdir, **kwargs)
 
+    # TODO: This should probably go away
     @classmethod
     def from_observation_table(cls, obs_table):
         """Create `~gammapy.spectrum.SpectrumObservationList` from an
@@ -457,7 +448,7 @@ class SpectrumObservationList(list):
         obs_table : `~gammapy.data.ObservationTable`
             Observation table with column ``PHAFILE``
         """
-        obs = [SpectrumObservation.read_ogip(_) for _ in obs_table['PHAFILE']]
+        obs = [SpectrumObservation.read(_) for _ in obs_table['PHAFILE']]
 
         return cls(obs)
 

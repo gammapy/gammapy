@@ -18,8 +18,8 @@ def test_spectral_fit():
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/ogip_data/pha_run23592.fits")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/ogip_data/pha_run23526.fits")
 
-    obs1 = SpectrumObservation.read_ogip(pha1)
-    obs2 = SpectrumObservation.read_ogip(pha2)
+    obs1 = SpectrumObservation.read(pha1)
+    obs2 = SpectrumObservation.read(pha2)
     obs_list = SpectrumObservationList([obs1, obs2])
     fit = SpectrumFit(obs_list)
     fit.model = 'PL'

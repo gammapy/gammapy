@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import copy
 import logging
 import os
 import numpy as np
-from astropy.coordinates import Angle
-from astropy.table import Column
 import astropy.units as u
 from . import (
     CountsSpectrum,
@@ -14,8 +11,6 @@ from . import (
     SpectrumObservationList,
 )
 from .results import SpectrumStats
-from ..background import ring_area_factor, Cube
-from ..data import DataStore, ObservationTable
 from ..extern.bunch import Bunch
 from ..extern.pathlib import Path
 from ..image import ExclusionMask
@@ -78,24 +73,11 @@ class SpectrumExtraction(object):
         outdir : Path, str
             directory to write results files to
         """
-        raise NotImplementedError("")
         cwd = Path.cwd()
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
-
-        self.cutout_exclusion_mask()
-        self.extract_spectrum()
-        if self.bkg_method['type'] == 'reflected':
-            self.filter_observations()
-
-        self.observations.write_ogip()
-        tot_stats = self.observations.total_spectrum.spectrum_stats
-        tot_stats.to_yaml(self.TOTAL_STATS_FILE)
-        self.write_configfile()
-        self.write_regions()
-        self.write_total_onlist()
-        self.write_total_offlist()
+        self.observations.write()
         os.chdir(str(cwd))
 
     def filter_observations(self):
@@ -118,7 +100,8 @@ class SpectrumExtraction(object):
         """
 
         spectrum_observations = []
-
+        if self.target.background is None:
+            raise ValueError("No background estimate for target {}".format(self.target))
         for obs, bkg in zip(self.target.obs, self.target.background):
             log.info('Extracting spectrum for observation {}'.format(obs))
             idx = self.target.on_region.contains(obs.events.radec)
@@ -131,9 +114,9 @@ class SpectrumExtraction(object):
             off_vec = CountsSpectrum(energy=self.e_reco)
             off_vec.fill(bkg.off_events)
 
-            offset = obs.pointing_radec.separation(self.target.position) 
-            arf = obs.aeff.to_effective_area_table(offset) 
-            rmf = obs.edisp.to_energy_dispersion(offset) 
+            offset = obs.pointing_radec.separation(self.target.position)
+            arf = obs.aeff.to_effective_area_table(offset)
+            rmf = obs.edisp.to_energy_dispersion(offset)
 
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
@@ -143,5 +126,4 @@ class SpectrumExtraction(object):
     def write(self):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
-        
 

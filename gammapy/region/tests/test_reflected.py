@@ -6,7 +6,7 @@ from astropy.tests.helper import pytest
 
 from ..reflected import find_reflected_regions
 from ...image import ExclusionMask
-from ..circle import SkyCircleRegion
+from regions.shapes import CircleSkyRegion
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 
@@ -24,7 +24,7 @@ def mask():
 def test_find_reflected_regions(mask):
     pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
     radius = Angle(0.4, 'deg')
-    region = SkyCircleRegion(pos=pos, radius=radius)
+    region = CircleSkyRegion(pos, radius)
     center = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
     regions = find_reflected_regions(region, center, mask)
 

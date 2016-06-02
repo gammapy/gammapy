@@ -11,20 +11,16 @@ def test_targetsummary(data_manager):
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
-    target = Target(pos, on_region, name='Test Target')
+    target = Target(pos, on_region, name='Test Target', obs_id=[23523, 23592])
     
     data_store = data_manager['hess-crab4-hd-hap-prod2']
-    obs_ids = [23523, 23592]
-    obs = [data_store.obs(_) for _ in obs_ids]
-    
-    summary = TargetSummary(target, obs)
-    with pytest.raises(ValueError):
-        summary.stats
+    target.add_obs_from_store(data_store) 
 
     irad = 0.5 * u.deg
     orad = 0.7 * u.deg
-    summary.estimate_background(method='ring', inner_radius=irad,
-                                outer_radius=orad)
+    target.estimate_background(method='ring', inner_radius=irad, outer_radius=orad)
+
+    summary = TargetSummary(target)
 
     stats = summary.stats
     assert stats.n_on == 432
