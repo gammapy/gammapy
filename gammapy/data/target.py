@@ -1,6 +1,7 @@
 # licensed under a 3-clause bsd style license - see license.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from ..stats import Stats
 from astropy.table import vstack as table_vstack
 
 __all__ = [
@@ -24,12 +25,30 @@ class Target(object):
     tag : str, optional
         Target identifier
     """
-    def __init__(self, position, on_region, background=None, name='Target', tag='target'):
+    def __init__(self, position, on_region, background=None, obs_id=None, 
+                 name='Target', tag='target'):
         self.position = position
         self.on_region = on_region
         self.background = background
         self.name = name
         self.tag = tag
+        self.obs_id = obs_id
+
+    def add_obs_from_store(self, data_store):
+        """Add a list of `~gammapy.data.DataStoreObservations`"""
+        self.obs = [data_store.obs(_) for _ in self.obs_id]
+
+    def estimate_background(self, method='ring', **kwargs):
+        """Wrapper for different background estimators"""
+
+        if method == 'ring':
+            from gammapy.background import ring_background_estimate as ring
+            pos = self.position
+            on_radius = self.on_region.radius
+            inner_radius = kwargs['inner_radius']
+            outer_radius = kwargs['outer_radius']
+            self.background  = [ring(pos, on_radius, inner_radius, outer_radius,
+                                     _.events) for _ in self.obs] 
 
 
 class TargetSummary(object):
@@ -43,35 +62,25 @@ class TargetSummary(object):
         List of observations
     """ 
 
-    def __init__(self, target, obs):
+    def __init__(self, target):
         self.target = target
-        self.obs = obs
-        self.background = None
 
     @property
     def stats(self):
         """Calculate `~gammapy.stats.Stats`"""
-        if self.background is None:
-            raise ValueError("Need Background estimate")
+        if self.target.background is None:
+            raise ValueError("Need Background estimate for target" )
     
-        from gammapy.stats import Stats
         idx = self.target.on_region.contains(self.events.radec)
-        on_events = self.events[idx]
+        on_events = self.target.events[idx]
         n_on = len(on_events)
+
         n_off = len(self.background.off_events)
         alpha = self.background.alpha
         return Stats(n_on, n_off, 1, alpha)
 
 
-    def estimate_background(self, method='ring', **kwargs):
-        """Wrapper for different background estimators"""
-
-        if method != 'ring':
-            raise NotImplementedError
-        from gammapy.background import ring_background_estimate
-        self.background = ring_background_estimate(self.target, self.events, **kwargs)
-
     @property
     def events(self):
         """All events"""
-        return table_vstack([_.events for _ in self.obs])
+        return table_vstack([_.events for _ in self.target.obs])

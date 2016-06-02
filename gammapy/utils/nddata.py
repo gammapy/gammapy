@@ -41,21 +41,28 @@ class NDDataArray(object):
         # https://github.com/astropy/astropy/blob/ffc0a89b2c42fd440eb19bcb2f93db90cab3c98b/astropy/utils/codegen.py#L30
         data = kwargs.pop('data', None)
 
+        # Extract meta dict
         meta = kwargs.pop('meta', None)
         if meta is not None:
             self.meta = Bunch(meta)
 
+        # Set axes
         self._axes = list()
         for axis_name in self.axis_names:
-            value = kwargs.pop(axis_name)
-            if isinstance(value, DataAxis):
+            value = kwargs.pop(axis_name, None)
+            if value is None:
+                raise ValueError('No input for axis "{}"'.format(axis_name))
+            elif isinstance(value, DataAxis):
                 value = value.data
-            if not isinstance(value, Quantity):
-                raise ValueError('Input for axis "{}" has no unit').format(
-                    axis_name)
+            elif not isinstance(value, Quantity):
+                raise ValueError('No unit for axis "{}"'.format(axis_name))
             axis = getattr(self, axis_name)
             axis.data = value
             self._axes.append(axis)
+
+        # Set remaining kwargs as attributes
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
         if data is not None:
             self.data = data
