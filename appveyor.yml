@@ -35,7 +35,7 @@ install:
     - ps: |
          if ($env:FETCH_GAMMAPY_EXTRA -match "True") 
          {
-             git clone https://github.com/gammapy/gammapy-extra.git
+             git clone https://github.com/gammapy/gammapy-extra.git 2> $null
              $env:GAMMAPY_EXTRA="c:\projects\gammapy-extra"
          }
 
