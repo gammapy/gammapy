@@ -10,7 +10,7 @@ from numpy.testing import assert_allclose
 from ...data import DataStore, ObservationTable, EventList, Target
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
-from regions.shapes import CircleSkyRegion
+from ...extern.regions.shapes import CircleSkyRegion
 from ...spectrum import (
     SpectrumExtraction,
     SpectrumObservation,

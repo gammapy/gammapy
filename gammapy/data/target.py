@@ -5,7 +5,7 @@ import numpy as np
 from ..stats import Stats
 from astropy.table import vstack as table_vstack
 from astropy.coordinates import SkyCoord
-from regions.shapes import CircleSkyRegion
+from ..extern.regions.shapes import CircleSkyRegion
 import astropy.units as u
 
 __all__ = [

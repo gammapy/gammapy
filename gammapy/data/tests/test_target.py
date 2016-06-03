@@ -4,7 +4,7 @@ from .. import Target, TargetSummary
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import pytest
 import astropy.units as u
-from regions.shapes import CircleSkyRegion
+from ...extern.regions.shapes import CircleSkyRegion
 from ...utils.testing import data_manager
 
 def test_targetsummary(data_manager):

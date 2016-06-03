@@ -6,7 +6,7 @@ from astropy.tests.helper import pytest
 
 from ..reflected import find_reflected_regions
 from ...image import ExclusionMask
-from regions.shapes import CircleSkyRegion
+from ...extern.regions.shapes import CircleSkyRegion
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 
