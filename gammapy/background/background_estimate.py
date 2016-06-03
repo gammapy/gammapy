@@ -12,13 +12,13 @@ __all__ = [
 
 
 class BackgroundEstimate(object):
-    """Cointainer class for background estimate
+    """Container class for background estimate
 
     This is meant to hold the result from a region based background estimation
     for one observation.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     off_events : `~gammapy.data.EventList`
         Background events
     off_region : `~astropy.regions.SkyRegion`
@@ -29,10 +29,10 @@ class BackgroundEstimate(object):
         Background estimation method
     """
     def __init__(self, off_region, off_events, alpha, tag='default'):
-        self.tag = tag
         self.off_region = off_region
         self.off_events = off_events
         self.alpha = alpha
+        self.tag = tag
 
 
 def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events):

@@ -16,7 +16,13 @@ __all__ = [
 class Target(object):
     """Observation Target.
 
-        This class represents an observation target
+    This class represents an observation target. It serves as input for several
+    analysis classes, e.g. `~gammapy.spectrum.SpectrumExtraction` and
+    `~gammapy.data.TargetSummary`. Some analyses, e.g. background estimation,
+    are functions on the ``Target`` class, but should be refactored as separate
+    analysis classes. Each analysis class can add attributes to the ``Target``
+    instance in order to make some analysis steps, e.g. background estimation
+    reusable.
 
     Parameters
     ----------
@@ -55,6 +61,7 @@ class Target(object):
         """
         obs_id = config['obs']
         if not isinstance(obs_id, list):
+
             from . import ObservationTable
             obs_table = ObservationTable.read(obs_id)
             obs_id = obs_table['OBS_ID'].data
