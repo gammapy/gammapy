@@ -465,6 +465,30 @@ class EnergyDependentTablePSF(object):
 
         return cls(energy, offset, exposure, psf_value)
 
+    @classmethod
+    def from_psf_table_fits(cls, hdu_list, offset):
+        """Create `EnergyDependentTablePSF` from ``psf_table`` format HDU list at a given offset.
+
+        Parameters
+        ----------
+        hdu_list : `~astropy.io.fits.HDUList`
+            HDU list with ``THETA`` and ``PSF`` extensions.
+        offset : `~astropy.coordinates.Angle`
+            offset value
+        """
+        theta = Angle(hdu_list['PSF_2D_TABLE'].data['THETA_LO'], 'deg')
+        offset_lo = Angle(hdu_list['PSF_2D_TABLE'].data['RAD_LO'], 'deg').squeeze()
+        offset_hi = Angle(hdu_list['PSF_2D_TABLE'].data['RAD_HI'], 'deg').squeeze()
+        offset_ce = Angle(np.sqrt((offset_lo**2+offset_hi**2)/2))
+        offset_index = np.argmin(np.abs(theta-offset))
+        energy_lo = Quantity(hdu_list['PSF_2D_TABLE'].data['ENERGY_LO'], 'TeV').squeeze()
+        energy_hi = Quantity(hdu_list['PSF_2D_TABLE'].data['ENERGY_HI'], 'TeV').squeeze()
+        energy_ce = 10**((np.log10(energy_lo/Quantity(1, 'TeV')) + np.log10(energy_hi/Quantity(1, 'TeV')))/2) * Quantity(1, 'TeV')
+        exposure = None
+        psf_value = Quantity(hdu_list['PSF_2D_TABLE'].data['RPSF'], 'deg^-2').squeeze()
+
+        return cls(energy_ce, offset_ce, exposure, psf_value[:,offset_index])
+
     def to_fits(self):
         """Convert to FITS HDU list format.
 
@@ -495,6 +519,21 @@ class EnergyDependentTablePSF(object):
         """
         hdu_list = fits.open(filename)
         return cls.from_fits(hdu_list)
+
+    @classmethod
+    def read_psf_table(cls, filename, offset):
+        """Create `EnergyDependentTablePSF` from ``psf-table``-format FITS file at a given offset.
+
+        Parameters
+        ----------
+        filename : str
+            File name
+        offset : `~astropy.coordinates.Angle`
+            offset value
+        """
+        
+        hdu_list = fits.open(filename)
+        return cls.from_psf_table_fits(hdu_list, Angle(offset, 'deg'))
 
     def write(self, *args, **kwargs):
         """Write to FITS file.
