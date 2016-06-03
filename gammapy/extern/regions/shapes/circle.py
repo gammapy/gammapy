@@ -113,21 +113,8 @@ class CircleSkyRegion(SkyRegion):
         if tolerance is not None:
             raise NotImplementedError()
 
-        wcsframe = wcs.utils._wcs_to_celestial_frame_builtin(mywcs)
-        center_in_wcsframe = self.center.transform_to(wcsframe)
-
-        xpix, ypix = mywcs.wcs_world2pix(center_in_wcsframe.spherical.lon,
-                                         center_in_wcsframe.spherical.lat, 0)
-
-        if self.radius.unit.physical_type == 'angle':
-            central_pos = coordinates.SkyCoord([mywcs.celestialwcs.crval],
-                                               frame=self.center.name,
-                                               unit=wcs.wcs.cunit)
-            xc, yc, scale, angle = skycoord_to_pixel_scale_angle(central_pos,
-                                                                 wcs)
-            radius_pix = (scale * self.radius).to(u.pixel).value
-        else:  # pixel: this should not be possible.
-            radius_pix = self.radius.value
+        xc, yc, scale, angle = skycoord_to_pixel_scale_angle(self.center, mywcs)
+        radius_pix = (self.radius * scale).to(u.pixel).value
 
         pixel_positions = np.array([xc, yc]).transpose()
 
