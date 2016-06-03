@@ -46,7 +46,8 @@ class SpectrumExtraction(object):
     def __init__(self, target, e_reco=None, e_true=None):
 
         self.target = target
-        self.e_reco = e_reco or np.logspace(0, 1, 10) * u.TeV
+        # This is the 14 bpd setup used in HAP Fitspectrum
+        self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
         self._observations = None
 
     @property
@@ -77,7 +78,7 @@ class SpectrumExtraction(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
-        self.observations.write()
+        self.write()
         os.chdir(str(cwd))
 
     def filter_observations(self):
@@ -126,4 +127,5 @@ class SpectrumExtraction(object):
     def write(self):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
+        # TODO : add more debug plots etc. here
 

@@ -141,7 +141,7 @@ class CountsSpectrum(NDDataArray):
         plt.xscale('log')
         plt.show()
 
-    # Todo move to standalone function
+    # TODO : move to standalone function and fix
     @classmethod
     def get_npred(cls, fit, obs):
         """Get N_pred vector from spectral fit
@@ -157,19 +157,20 @@ class CountsSpectrum(NDDataArray):
         m = fit.to_sherpa_model()
 
         # Get differential flux at true energy log bin center
-        ebounds = EnergyBounds(obs.effective_area.energy.data)
-        x = ebounds.log_centers.to('keV')
-        diff_flux = Quantity(m(x), 'cm-2 s-1 keV-1')
+        energy = obs.aeff.energy
+        x = energy.nodes.to('keV')
+        diff_flux = m(x) * u.Unit('cm-2 s-1 keV-1')
 
         # Multiply with bin width = integration
-        int_flux = (diff_flux * ebounds.bands).decompose()
+        bands = energy.data[:-1] - energy.data[1:]
+        int_flux = (diff_flux * bands).decompose()
 
         # Apply ARF and RMF to get n_pred
-        temp = int_flux * obs.meta.livetime * obs.effective_area.data
-        counts = obs.energy_dispersion.pdf_matrix.transpose().dot(temp)
+        temp = int_flux * obs.on_vector.livetime * obs.aeff.data
+        counts = obs.edisp.pdf_matrix.transpose().dot(temp)
 
-        e_reco = obs.energy_dispersion.reco_energy
-        return cls(counts.decompose(), e_reco)
+        e_reco = obs.edisp.reco_energy
+        return cls(data=counts.decompose(), energy=e_reco)
 
 
 class OnCountsSpectrum(CountsSpectrum):
@@ -198,9 +199,22 @@ class OnCountsSpectrum(CountsSpectrum):
         table = super(OnCountsSpectrum, self).to_table()
         meta = dict(name='SPECTRUM', hduclass='OGIP', hduclas1 = 'SPECTRUM',
                     backfile=self.bkgfile, respfile=self.rmffile,
-                    ancrfile=self.arffile )
+                    ancrfile=self.arffile, obs_id=self.obs_id,
+                    exposure=self.livetime.to('s').value)
         table.meta = meta
         return table
+
+    @classmethod
+    def from_table(cls, table):
+        """Read"""
+        spec = CountsSpectrum.from_table(table)
+        spec.obs_id = table.meta['OBS_ID'] 
+        spec.rmffile = table.meta['RESPFILE']
+        spec.arffile = table.meta['ANCRFILE']
+        spec.bkgfile = table.meta['BACKFILE']
+        spec.livetime = table.meta['EXPOSURE'] * u.s
+        spec.__class__ = cls
+        return spec
 
 
 class SpectrumObservation(object):
@@ -218,16 +232,16 @@ class SpectrumObservation(object):
         On vector
     off_vector : `~gammapy.spectrum.CountsSpectrum`
         Off vector
-    arf : `~gammapy.irg.EffectiveAreaTable`
+    aeff : `~gammapy.irg.EffectiveAreaTable`
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion matrix
     """
 
-    def __init__(self, on_vector, off_vector, arf, edisp):
+    def __init__(self, on_vector, off_vector, aeff, edisp):
         self.on_vector = on_vector
         self.off_vector = off_vector
-        self.arf = arf
+        self.aeff = aeff
         self.edisp = edisp
 
     @property
@@ -255,11 +269,9 @@ class SpectrumObservation(object):
         rmf, arf, bkg  = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
         energy_dispersion = EnergyDispersion.read(str(base / rmf))
         effective_area = EffectiveAreaTable.read(str(base / arf))
-        off_vector = CountsSpectrum.read_bkg(str(base / bkg))
+        off_vector = CountsSpectrum.read(str(base / bkg))
 
-        meta.update(phafile=phafile)
-        return cls(on_vector, off_vector, energy_dispersion, effective_area,
-                   meta)
+        return cls(on_vector, off_vector, effective_area, energy_dispersion)
 
     def write(self, outdir=None, overwrite=True):
         """Write OGIP files
@@ -286,9 +298,9 @@ class SpectrumObservation(object):
         self.on_vector.write(outdir / phafile, overwrite=overwrite)
         self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
         # Write in keV and cm2
-        self.arf.data = self.arf.data.to('cm2')
-        self.arf.energy.data = self.arf.energy.data.to('keV')
-        self.arf.write(outdir/arffile, overwrite=overwrite)
+        self.aeff.data = self.aeff.data.to('cm2')
+        self.aeff.energy.data = self.aeff.energy.data.to('keV')
+        self.aeff.write(outdir/arffile, overwrite=overwrite)
         self.edisp.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=overwrite)
 

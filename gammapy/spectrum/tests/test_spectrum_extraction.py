@@ -11,10 +11,15 @@ from ...data import DataStore, ObservationTable, EventList, Target
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from regions.shapes import CircleSkyRegion
-from ...spectrum import SpectrumExtraction
-from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
+from ...spectrum import (
+    SpectrumExtraction,
+    SpectrumObservation,
+    SpectrumObservationList,
+    OnCountsSpectrum,
+)
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
+from ...utils.scripts import read_yaml
 
 
 @requires_dependency('scipy')
@@ -51,27 +56,17 @@ def test_spectrum_extraction(tmpdir):
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
 
-@pytest.mark.xfail(reason='Should this still be supported?')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_extraction_from_config(tmpdir):
     configfile = gammapy_extra.filename(
         'test_datasets/spectrum/spectrum_analysis_example.yaml')
-    extraction = SpectrumExtraction.from_configfile(configfile)
-    extraction.obs_table.remove_rows([2, 3])
-    extraction.extract_spectrum()
-    desired = extraction.observations
-    configfile2 = str(tmpdir / 'config.yaml')
-    extraction.write_configfile(configfile2)
-    extraction2 = SpectrumExtraction.from_configfile(configfile2)
-    extraction2.extract_spectrum()
-    actual = extraction2.observations
-    assert actual[0].on_vector.total_counts == desired[0].on_vector.total_counts
 
-    #test total off list
-    extraction.write_total_offlist()
-    testlist = EventList.read(SpectrumExtraction.OFFLIST_FILE)
-    assert len(testlist) == np.sum([o.off_vector.total_counts for o in desired])
+    config = read_yaml(configfile)
+    target = Target.from_config(config)
+    target.run_spectral_analysis(outdir=tmpdir)
+    on_vec = OnCountsSpectrum.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
+    assert on_vec.total_counts.value == 234
 
 @pytest.mark.xfail(reason='This needs regeneration of the test OGIP files')
 @requires_data('gammapy-extra')

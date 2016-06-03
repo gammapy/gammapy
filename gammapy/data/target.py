@@ -4,6 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from ..stats import Stats
 from astropy.table import vstack as table_vstack
+from astropy.coordinates import SkyCoord
+from regions.shapes import CircleSkyRegion
+import astropy.units as u
 
 __all__ = [
     'Target',
@@ -13,7 +16,7 @@ __all__ = [
 class Target(object):
     """Observation Target.
 
-    This class represents an observation target
+        This class represents an observation target
 
     Parameters
     ----------
@@ -35,18 +38,27 @@ class Target(object):
         self.tag = tag
         self.obs_id = obs_id
         self.background = None
+
+    def __str__(self):
+        ss = "Target: {}\n".format(self.name)
+        ss += "Tag: {}\n".format(self.tag)
+        ss += "Position: {}\n".format(self.position)
+        ss += "On region: {}\n".format(self.on_region)
+        return ss
     
     @classmethod
     def from_config(cls, config):
         """Initialize target
 
-        The config dict is stored as attribute for later use by the analysis
+        The config dict is stored as attribute for later use by other analysis
         classes
         """
         obs_id = config['obs']
         if not isinstance(obs_id, list):
-            obs_table = ObservationTable.read(obs_id, format='ascii.csv')
-            obs_id = obs_table['obs_id'].data
+            from . import ObservationTable
+            obs_table = ObservationTable.read(obs_id)
+            obs_id = obs_table['OBS_ID'].data
+        # TODO : This should also accept also Galactic coordinates
         pos = SkyCoord(config['ra'], config['dec'], unit='deg')
         on_radius = config['on_size'] * u.deg
         on_region = CircleSkyRegion(pos, on_radius)
@@ -83,16 +95,30 @@ class Target(object):
         else:
             raise NotImplementedError('{}'.format(method))
 
-    def run_spectral_analysis(self):
+    def run_spectral_analysis(self, outdir=None):
         """Run spectral analysis
 
         This runs a spectral analysis with the parameters attached as config
         dict
+
+        Parameters
+        ----------
+        outdir : Path
+            Analysis dir
         """ 
-        self.add_obs_from_store(self.config['datastore'])
+        from . import DataStore
+        from ..image import ExclusionMask
+        from ..spectrum import SpectrumExtraction
 
-
-
+        conf = self.config
+        data_store = DataStore.from_all(conf['datastore'])
+        self.add_obs_from_store(data_store)
+        exclusion = ExclusionMask.read(conf['exclusion_mask']) or None
+        conf.update(exclusion=exclusion)
+        self.estimate_background(method=conf['background_method'], **conf)
+        # Use default energy binning
+        self.extraction = SpectrumExtraction(self)
+        self.extraction.run(outdir=outdir)
 
 class TargetSummary(object):
     """Summary Info for an observation Target
@@ -123,7 +149,6 @@ class TargetSummary(object):
         # FIXME : This is only true for the ring bg
         alpha = self.target.background[0].alpha
         return Stats(n_on, n_off, 1, alpha)
-
 
     @property
     def events(self):

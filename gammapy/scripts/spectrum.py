@@ -11,6 +11,7 @@ from ..spectrum.results import SpectrumResult, SpectrumFitResult
 from ..spectrum.results import SpectrumResultDict
 from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from ..utils.scripts import read_yaml, make_path
+from ..data import Target
 
 __all__ = [
            'SpectrumFitResult',
@@ -46,11 +47,12 @@ def cli():
 @click.argument('configfile')
 def extract_spectrum(configfile, interactive, dry_run):
     """Extract 1D spectral information from event list and 2D IRFs"""
-    analysis = SpectrumExtraction.from_configfile(configfile)
+    config = read_yaml(configfile)
+    target = Target.from_config(config)
     if dry_run:
-        return analysis
+        return target
     else:
-        analysis.run()
+        target.run_spectral_analysis()
 
     if interactive:
         import IPython;
