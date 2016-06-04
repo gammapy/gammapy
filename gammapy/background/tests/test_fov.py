@@ -54,7 +54,7 @@ def test_fill_acceptance_image():
     # along the x axis
 
     # define grids of pixel coorinates
-    xpix_coord_grid, ypix_coord_grid = SkyMap.read(image).coordinates('pix')
+    xpix_coord_grid, ypix_coord_grid = SkyMap.from_image_hdu(image).coordinates('pix')
 
     # calculate pixel offset from center (in world coordinates)
     coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)

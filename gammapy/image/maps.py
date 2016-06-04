@@ -62,34 +62,49 @@ class SkyMap(object):
         self.unit = unit
 
     @classmethod
-    def read(cls, fobj, *args, **kwargs):
-        """
-        Read sky map from Fits file.
+    def read(cls, filename, **kwargs):
+        """Read sky map from FITS file.
 
         Parameters
         ----------
-        fobj : file like object or `~astropy.io.fits.ImageHDU` or `~astropy.io.fits.PrimaryHDU`
-            Name of the Fits file or ImageHDU object.
-        *args : list
-            Arguments passed `~astropy.io.fits.gedata`.
+        filename : str
+            FITS file name
         **kwargs : dict
-            Keyword arguments passed `~astropy.io.fits.gedata`.
+            Keyword arguments passed `~astropy.io.fits.getdata`.
         """
-        if isinstance(fobj, (fits.ImageHDU, fits.PrimaryHDU)):
-            data, header = fobj.data, fobj.header
-        else:
-            if isinstance(fobj, six.string_types):
-                fobj = str(make_path(fobj))
-            data = fits.getdata(fobj, *args, **kwargs)
-            header = fits.getheader(fobj, *args, **kwargs)
-        wcs = WCS(header)
-        meta = header
+        filename = str(make_path(filename))
+        data = fits.getdata(filename, **kwargs)
+        header = fits.getheader(filename, **kwargs)
+        image_hdu = fits.ImageHDU(data, header)
+        return cls.from_image_hdu(image_hdu)
 
+    @classmethod
+    def from_image_hdu(cls, image_hdu):
+        """
+        Create sky map from ImageHDU.
+
+        Parameters
+        ----------
+        image_hdu : `astropy.io.fits.ImageHDU`
+            Source image HDU.
+
+        Examples
+        --------
+        >>> from astropy.io import fits
+        >>> from gammapy.image import SkyMap
+        >>> hdu_list = fits.open('data.fits')
+        >>> sky_map = SkyMap.from_image_hdu(hdu_list['myimage'])
+        """
+        data = image_hdu.data
+        header = image_hdu.header
+        wcs = WCS(image_hdu.header)
+
+        meta = header
         name = header.get('HDUNAME')
         if name is None:
             name = header.get('EXTNAME')
         try:
-            # Valitade unit string
+            # Validate unit string
             unit = Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
@@ -566,7 +581,7 @@ class SkyMapCollection(Bunch):
         _map_names = []  # list of map names to save order in fits file
 
         for hdu in hdulist:
-            skymap = SkyMap.read(hdu)
+            skymap = SkyMap.from_image_hdu(hdu)
 
             # This forces lower case map names, but only on the collection object
             # When writing to fits again the skymap.name attribute is used.

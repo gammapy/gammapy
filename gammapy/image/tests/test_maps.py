@@ -23,7 +23,7 @@ class TestSkyMapPoisson():
     def test_read_hdu(self):
         f = load_poisson_stats_image(return_filenames=True)
         hdulist = fits.open(f)
-        skymap = SkyMap.read(hdulist[0])
+        skymap = SkyMap.from_image_hdu(hdulist[0])
         assert_equal(skymap.data, self.skymap.data)
 
     def test_io(self, tmpdir):
