@@ -128,7 +128,7 @@ class ObsImage(object):
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
             exposure_tab /= norm
-        return offset_tab,exposure_tab
+        return offset_tab, exposure_tab
 
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
         r"""Compute the exposure map for one observation.
@@ -159,7 +159,6 @@ class ObsImage(object):
             True if you want that the total excess / exposure gives the integrated flux
         """
         from scipy.interpolate import interp1d
-
         # TODO: should be re-implemented using the exposure_cube function
         exposure = SkyMap.empty_like(self.empty_image)
 
@@ -245,38 +244,24 @@ class ObsImage(object):
         energy_bin = energy.log_centers
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
-        #offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        offset=region_center.separation(self.obs_center)
-        """
-        psf_table=self.psf.to_table_psf(theta=offset)
-
-        psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
-        for iE,E in enumerate(energy_bin):
-            psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
-        psftab=Quantity(psftab, psf_table.psf_value.unit)
-        """
-        if(offset>self.aeff.offset_hi[-1]):
+        # offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        offset = region_center.separation(self.obs_center)
+        if (offset > self.aeff.offset_hi[-1]):
             return False, False, False
         else:
-            psf_table=self.psf.to_table_psf(theta=offset)
+            psf_table = self.psf.to_table_psf(theta=offset)
 
-            psftab=np.zeros((len(psf_table.offset),len(energy_bin)))
-            for iE,E in enumerate(energy_bin):
-                psftab[:,iE]=psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
-            psftab=Quantity(psftab, psf_table.psf_value.unit)
-            tab = np.sum(psftab*self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+            psftab = np.zeros((len(psf_table.offset), len(energy_bin)))
+            for iE, E in enumerate(energy_bin):
+                psftab[:, iE] = psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
+            psftab = Quantity(psftab, psf_table.psf_value.unit)
+            tab = np.sum(psftab * self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
             exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
             tab *= self.livetime
-            exposure  *=self.livetime
+            exposure *= self.livetime
             return psf_table.offset, tab, exposure
-        """
-        if np.isnan(tab[0]):
-            print("LE RUN "+str(self.obs_id)+"presente des nan pour psf")
-            print("offset "+str(offset.to("deg").value))
-        if(exposure==0):
-            print("Le run "+str(self.obs_id)+"presente une exposure nulle")
-        return psf_table.offset, tab, exposure
-        """
+
+
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
 
@@ -328,7 +313,7 @@ class MosaicImage(object):
         self.thetapsf = None
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
-                    radius=10, make_psf = False, region_center = None):
+                    radius=10, make_psf=False, region_center=None):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -353,7 +338,7 @@ class MosaicImage(object):
         if make_background_image:
             total_bkg = SkyMap.empty_like(self.empty_image)
             total_exposure = SkyMap.empty_like(self.empty_image)
-        i=0
+        i = 0
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -408,17 +393,7 @@ class MosaicImage(object):
         spectral_index : float
             Assumed power-law spectral index
         """
-        # TODO: should be re-implemented using the exposure_cube function
-        psf = SkyMap.empty_like(self.empty_image)
-
-        # Determine offset value for each pixel of the map
-        xpix_coord_grid, ypix_coord_grid = psf.coordinates(coord_type='pix')
-        # calculate pixel offset from center (in world coordinates)
-        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, psf.wcs, origin=0)
-        center = psf.center()
-
-        offset = coord.separation(center)
-        i=0
+        i = 0
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -426,19 +401,18 @@ class MosaicImage(object):
             if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
-                theta_psf_tab, tab, exposure_tab = obs_image.make_mean_psf(region_center,spectral_index)
+                theta_psf_tab, tab, exposure_tab = obs_image.make_mean_psf(region_center, spectral_index)
                 if not tab:
                     continue
-                if(i==0):
-                    exposure_tab_tot=exposure_tab
-                    tab_tot=tab
+                if (i == 0):
+                    exposure_tab_tot = exposure_tab
+                    tab_tot = tab
                 else:
-                    exposure_tab_tot+=exposure_tab
-                    tab_tot+=tab
+                    exposure_tab_tot += exposure_tab
+                    tab_tot += tab
 
-                i+=1
-        tab_tot/=exposure_tab_tot
+                i += 1
+        tab_tot /= exposure_tab_tot
         self.psfmeantab = tab_tot
         self.thetapsf = theta_psf_tab
         return theta_psf_tab, tab_tot
-
