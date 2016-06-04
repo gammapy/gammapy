@@ -21,10 +21,10 @@ Most easily a `~gammapy.image.SkyMap` can be created from a fits file:
     from gammapy.image import SkyMap
     from gammapy.datasets import load_poisson_stats_image
 
-    f = load_poisson_stats_image(return_filenames=True)
-    skymap = SkyMap.read(f)
+    filename = load_poisson_stats_image(return_filenames=True)
+    skymap = SkyMap.read(filename)
 
-Alternatively an empty sky map cen be created from the scratch, by specifying the
+Alternatively an empty sky map can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyMap.empty` for a detailed description of
 the parameters):
 
@@ -59,7 +59,7 @@ The sky map can be easily displayed with an image viewer, by calling ``skymap.sh
         from gammapy.image import SkyMap
         from gammapy.datasets import load_poisson_stats_image
 
-        f = load_poisson_stats_image(return_filenames=True)
-        counts = SkyMap.read(f)
+        filename = load_poisson_stats_image(return_filenames=True)
+        counts = SkyMap.read(filename)
         counts.name = 'Counts'
         counts.show()

@@ -322,7 +322,7 @@ class SkyCube(object):
         image_hdu = cube_to_image(cube_hdu)
         image_hdu.header['WCSAXES'] = 2
 
-        sky_map = SkyMap.read(image_hdu)
+        sky_map = SkyMap.from_image_hdu(image_hdu)
         return sky_map.solid_angle()
 
     def flux(self, lon, lat, energy):
