@@ -10,15 +10,13 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
 from ...utils.energy import EnergyBounds
-from ...cube import SkyCube
+from ...cube import SkyCube, cube_to_image
 from ...image import (
     binary_disk,
     binary_ring,
     make_header,
     contains,
-    solid_angle,
     images_to_cube,
-    cube_to_image,
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
@@ -72,15 +70,6 @@ class TestImageCoordinates(object):
         x = y = np.zeros((3, 2))
         inside = contains(self.image, x, y)
         assert_equal(inside, np.ones((3, 2), dtype=bool))
-
-    # TODO: this works on my machine, but fails for unknown reasons
-    # with an IndexError with the `numpy` used here:
-    # https://travis-ci.org/gammapy/gammapy/jobs/26836201#L1123
-    @pytest.mark.xfail
-    def test_image_area(self):
-        actual = solid_angle(self.image)
-        expected = 99.61946869
-        assert_allclose(actual, expected)
 
 
 @pytest.mark.xfail
@@ -159,18 +148,6 @@ def test_ref_pixel():
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
     # Lower left corner shouldn't change
     assert_allclose(footprint[0], footprint_1[0])
-
-
-def test_cube_to_image():
-    layer = SkyMap.empty(nxpix=101, nypix=101, fill=1.).to_image_hdu()
-    hdu_list = [layer, layer, layer, layer]
-    cube = images_to_cube(hdu_list)
-    case1 = cube_to_image(cube)
-    case2 = cube_to_image(cube, slicepos=1)
-    # Check that layers are summed if no layer is specified (case1),
-    # or only a specified layer is extracted (case2)
-    assert_allclose(case1.data, 4 * layer.data)
-    assert_allclose(case2.data, layer.data)
 
 
 def test_wcs_histogram2d():
