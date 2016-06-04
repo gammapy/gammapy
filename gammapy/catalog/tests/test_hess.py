@@ -18,7 +18,7 @@ class TestSourceCatalogHGPS:
         assert len(self.cat.components) == 98
 
     def test_associations_table(self):
-        assert len(self.cat.associations) == 224
+        assert len(self.cat.associations) == 223
 
 
 @requires_data('hgps')
