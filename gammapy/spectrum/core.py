@@ -36,8 +36,8 @@ class CountsSpectrum(NDDataArray):
         import numpy as np
         import astropy.units as u
 
-        ebounds = np.logspace(0,1,10) * u.TeV
-        counts = [6,3,8,4,9,5,9,5,5,1]
+        ebounds = np.logspace(0,1,11) * u.TeV
+        counts = [6,3,8,4,9,5,9,5,5,1] * u.ct
         spec = CountsSpectrum(data=counts, energy=ebounds)
         spec.plot()
     """

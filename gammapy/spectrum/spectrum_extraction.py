@@ -39,12 +39,30 @@ class SpectrumExtraction(object):
         Observation target
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
+
+    Examples
+    --------
+    >>> from gammapy.data import Target
+    >>> config = {
+    ... 'obs': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/obs-index.fits.gz',
+    ... 'ra': 83.633,
+    ... 'dec': 22.015,
+    ... 'on_size': 0.3,
+    ... 'name': 'Crab Nebula',
+    ... 'tag': 'crab_test',
+    ... 'datastore': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2',
+    ... 'background_method': 'reflected',
+    ... 'exclusion_mask': '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
+    ... }
+    >>> target = Target.from_config(config)
+    >>> target.run_spectral_analysis()
+    >>> type(target.extraction)
+    <class 'gammapy.spectrum.SpectrumExtraction'>
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
 
     def __init__(self, target, e_reco=None, e_true=None):
-
         self.target = target
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
@@ -63,7 +81,6 @@ class SpectrumExtraction(object):
         return self._observations
 
     def run(self, outdir=None):
-
         """Run all steps
 
         Extract spectrum, update observation table, filter observations,
@@ -99,7 +116,6 @@ class SpectrumExtraction(object):
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
         """
-
         spectrum_observations = []
         if self.target.background is None:
             raise ValueError("No background estimate for target {}".format(self.target))
