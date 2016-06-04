@@ -36,6 +36,55 @@ class Target(object):
         Target name
     tag : str, optional
         Target identifier
+
+    Examples
+    --------
+    Initialize target and define observations
+
+    >>> import astropy.units as u
+    >>> from astropy.coordinates import SkyCoord
+    >>> from gammapy.extern.regions.shapes import CircleSkyRegion
+    >>> from gammapy.data import Target
+    >>> pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
+    >>> on_size = 0.3 * u.deg
+    >>> on_region = CircleSkyRegion(pos, on_size)
+    >>> target = Target(pos, on_region, name='Crab Nebula', tag='crab')
+    >>> print(target)
+    Target: Crab Nebula
+    Tag: crab
+    Position: <SkyCoord (ICRS): (ra, dec) in deg
+        (83.63, 22.01)>
+    On region: CircleSkyRegion
+        Center:<SkyCoord (ICRS): (ra, dec) in deg
+            (83.63, 22.01)>
+        Radius:0.3 deg
+
+    Add data and background estimate
+
+    >>> from gammapy.data import DataStore
+    >>> store_dir = "$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2")
+    >>> data_store = DataStore.from_dir(store_dir)
+    >>> target.obs_id = [23523, 23592]
+    >>> target.add_obs_from_store(data_store)
+    >>> print(target.obs[0])
+    Info for OBS_ID = 23523
+    - Start time: 53343.92 s
+    - Pointing pos: RA 83.63 deg / Dec 21.51 deg
+    - Observation duration: 1687.0 s
+    - Dead-time fraction: 6.240 %
+    >>> target.estimate_background(method='ring', inner_radius=inner_radius, outer_radius=outer_radius)
+    >>> print(len(target.background[0].off_events))
+    37
+
+    Create `~gammapy.data.TargetSummary` and `~gammapy.stats.data.Stats`
+
+    >>> summary = target.summary
+    >>> type(summary)
+    <class 'gammapy.data.target.TargetSummary'>
+    >>> stats = summary.stats
+    >>> type(stats)
+    <class 'gammapy.stats.data.Stats'>
+
     """
     def __init__(self, position, on_region, obs_id=None, name='Target', tag='target'):
         self.position = position
@@ -43,21 +92,26 @@ class Target(object):
         self.name = name
         self.tag = tag
         self.obs_id = obs_id
-        self.background = None
 
     def __str__(self):
+        """String representation"""
         ss = "Target: {}\n".format(self.name)
         ss += "Tag: {}\n".format(self.tag)
         ss += "Position: {}\n".format(self.position)
         ss += "On region: {}\n".format(self.on_region)
         return ss
     
+    @property
+    def summary(self):
+        """`~gammapy.data.TargetSummary`"""
+        return TargetSummary(self)
+
     @classmethod
     def from_config(cls, config):
-        """Initialize target
+        """Initialize target from config
 
         The config dict is stored as attribute for later use by other analysis
-        classes
+        classes.
         """
         obs_id = config['obs']
         if not isinstance(obs_id, list):
@@ -73,7 +127,7 @@ class Target(object):
                      name=config['name'], tag=config['tag'])
         target.config = config
         return target
-    
+
     def add_obs_from_store(self, data_store):
         """Add a list of `~gammapy.data.DataStoreObservations`"""
         if self.obs_id is None:
@@ -90,8 +144,8 @@ class Target(object):
             on_radius = self.on_region.radius
             inner_radius = kwargs['inner_radius']
             outer_radius = kwargs['outer_radius']
-            self.background  = [ring(pos, on_radius, inner_radius, outer_radius,
-                                     _.events) for _ in self.obs] 
+            self.background = [ring(pos, on_radius, inner_radius, outer_radius,
+                                     _.events) for _ in self.obs]
         elif method == 'reflected':
             on_region = self.on_region
             exclusion = kwargs['exclusion']
@@ -112,7 +166,7 @@ class Target(object):
         ----------
         outdir : Path
             Analysis dir
-        """ 
+        """
         from . import DataStore
         from ..image import ExclusionMask
         from ..spectrum import SpectrumExtraction
@@ -127,27 +181,27 @@ class Target(object):
         self.extraction = SpectrumExtraction(self)
         self.extraction.run(outdir=outdir)
 
+
 class TargetSummary(object):
     """Summary Info for an observation Target
     
+    For an examples see `~gammapy.data.Target`
+
     Parameters
     ----------
     target : `~gammapy.data.Target`
         Observation target
-    obs : list of `~gammapy.data.DataStoreObservation`
-        List of observations
-    """ 
+    """
 
     def __init__(self, target):
-
         self.target = target
 
     @property
     def stats(self):
         """Total `~gammapy.stats.Stats`"""
         if self.target.background is None:
-            raise ValueError("Need Background estimate for target" )
-    
+            raise ValueError("Need Background estimate for target")
+
         idx = self.target.on_region.contains(self.events.radec)
         on_events = self.events[idx]
         n_on = len(on_events)
