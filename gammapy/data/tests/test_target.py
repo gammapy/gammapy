@@ -5,8 +5,9 @@ from astropy.coordinates import SkyCoord
 from astropy.tests.helper import pytest
 import astropy.units as u
 from ...extern.regions.shapes import CircleSkyRegion
-from ...utils.testing import data_manager
+from ...utils.testing import data_manager, requires_data
 
+@requires_data('gammapy-extra')
 def test_targetsummary(data_manager):
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     on_size = 0.3 * u.deg
