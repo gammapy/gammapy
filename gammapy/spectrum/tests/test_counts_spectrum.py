@@ -37,8 +37,6 @@ def test_CountsSpectrum(tmpdir):
     desired = False
     assert_equal(actual, desired)
     
-    spec.plot()
-
     test_e = bins[2] + 0.1 * u.TeV
     test_eval = spec.evaluate(energy=test_e, method='nearest')
     assert_allclose(test_eval, spec.data[2])
