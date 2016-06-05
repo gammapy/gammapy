@@ -15,6 +15,7 @@ from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
 
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_CountsSpectrum(tmpdir):
     # create from scratch
