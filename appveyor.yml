@@ -44,4 +44,4 @@ install:
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py test -V"
+  - "%CMD_IN_ENV% python test.py"
