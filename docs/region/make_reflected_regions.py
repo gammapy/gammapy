@@ -1,7 +1,8 @@
 from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS
 
-from gammapy.region import find_reflected_regions, SkyCircleRegion
+from gammapy.region import find_reflected_regions
+from gammapy.extern.regions.shapes import CircleSkyRegion
 from gammapy.image import ExclusionMask
 from gammapy.utils.testing import requires_data
 
@@ -11,7 +12,7 @@ mask.fill_random_circles(n=8, min_rad=30, max_rad=80)
 
 pos = SkyCoord(80.2, 23.5, unit='deg', frame='icrs')
 radius = Angle(0.4, 'deg')
-test_region = SkyCircleRegion(pos=pos, radius=radius)
+test_region = CircleSkyRegion(pos, radius)
 center = SkyCoord(82.8, 22.5, unit='deg', frame='icrs')
 regions = find_reflected_regions(test_region, center, mask)
 

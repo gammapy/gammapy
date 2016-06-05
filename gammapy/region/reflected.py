@@ -44,8 +44,10 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
     pix_region = region.to_pixel(wcs)
     val = center.to_pixel(wcs, origin=1)
     pix_center = (float(val[0]), float(val[1]))
-    offset = pix_region.offset(pix_center)
-    angle = pix_region.angle(pix_center)
+    dx = pix_region.center[0] - pix_center[0]
+    dy = pix_region.center[1] - pix_center[1]
+    offset = np.hypot(dx, dy)
+    angle = Angle(np.arctan2(dx, dy), 'rad')
     min_ang = Angle(2 * pix_region.radius / offset, 'rad') + min_distance
     max_angle = angle + Angle('360deg') - min_ang - min_distance_input
 

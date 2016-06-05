@@ -9,7 +9,7 @@ from astropy.extern import six
 from gammapy.extern.pathlib import Path
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
-from ..spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
+from ..spectrum import SpectrumObservationList, SpectrumObservation
 from ..data import ObservationTable
 from ..utils.scripts import make_path
 

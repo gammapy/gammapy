@@ -11,6 +11,7 @@ from ..spectrum.results import SpectrumResult, SpectrumFitResult
 from ..spectrum.results import SpectrumResultDict
 from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from ..utils.scripts import read_yaml, make_path
+from ..data import Target
 
 __all__ = [
            'SpectrumFitResult',
@@ -46,11 +47,12 @@ def cli():
 @click.argument('configfile')
 def extract_spectrum(configfile, interactive, dry_run):
     """Extract 1D spectral information from event list and 2D IRFs"""
-    analysis = SpectrumExtraction.from_configfile(configfile)
+    config = read_yaml(configfile)
+    target = Target.from_config(config)
     if dry_run:
-        return analysis
+        return target
     else:
-        analysis.run()
+        target.run_spectral_analysis()
 
     if interactive:
         import IPython;
@@ -77,42 +79,3 @@ def all_spectrum(ctx, configfile):
     """Run all steps"""
     ctx.invoke(extract_spectrum, configfile=configfile)
     ctx.invoke(fit_spectrum, configfile=configfile)
-    ctx.invoke(display_spectrum)
-    ctx.invoke(plot_spectrum)
-
-
-@cli.command('display')
-def display_spectrum():
-    """Display results of spectrum fit"""
-    stats = SpectrumResult.from_yaml('total_spectrum_stats.yaml')
-    stats_table = stats.to_table()['n_on', 'n_off', 'alpha', 'n_bkg', 'excess', 'energy_range']
-    files = [str(l) for l in Path.cwd().glob('fit*.yaml')]
-    fit = SpectrumResultDict.from_files(files)
-    fit_table = fit.to_table()
-    fit_table.remove_column('analysis')
-
-    print('\n\n')
-    print('\t\tSpectrum Stats')
-    print('\t\t--------------')
-    print(stats_table)
-    print('\n\n')
-    print('\t\tSpectral Fit')
-    print('\t\t------------')
-    print(fit_table)
-    print('\n\n')
-
-
-@cli.command('plot')
-def plot_spectrum():
-    """Make default plots"""
-
-    # Todo: Move to spectrum analysis class
-    import matplotlib.pyplot as plt
-    #from gammapy.spectrum.utils import plot_npred_vs_excess
-    #outdir = Path('plots')
-    #outdir.mkdir(exist_ok=True)
-
-    #f = str(outdir/'npred_vs_excess.png')
-    #log.info('Writing file {}'.format(f))
-    #plot_npred_vs_excess()
-    #plt.savefig(f)
