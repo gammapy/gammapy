@@ -22,10 +22,10 @@ class BackgroundEstimate(object):
 
     Parameters
     ----------
-    off_events : `~gammapy.data.EventList`
-        Background events
     off_region : `~gammapy.extern.regions.SkyRegion`
         Background extraction region
+    off_events : `~gammapy.data.EventList`
+        Background events
     alpha : float
         Background scaling factor
     tag : str
