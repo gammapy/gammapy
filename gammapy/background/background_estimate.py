@@ -66,7 +66,7 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
 
 def reflected_regions_background_estimate(on_region, pointing, exclusion, events):
     """Reflected regions background estimate
-    
+
     Parameters
     ----------
     on_region : `~gammapy.extern.regions.CircleSkyRegion`
@@ -80,6 +80,6 @@ def reflected_regions_background_estimate(on_region, pointing, exclusion, events
     """
     off_region = find_reflected_regions(on_region, pointing, exclusion)
     off_events = events.select_circular_region(off_region)
-    alpha = len(off_region)
+    alpha = 1. / len(off_region)
 
     return BackgroundEstimate(off_region, off_events, alpha, tag='reflected')
