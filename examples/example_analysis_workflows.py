@@ -33,8 +33,6 @@ To be discussed:
 
 - When are results attached to analysis or container classes?
   And when split out into separate "results" classes?
-- OK to rename `SpectrumExtraction` to `SpectrumMaker`
-  (to have uniform names with the `ImageMaker` and `CubeMaker`)?
 - At the moment we use "image" and "map" to mean the same thing.
   Should we commit to one term?
 """
@@ -86,7 +84,8 @@ def run_spectral_analysis():
     - nice to have: access total stats, e.g. total significance
     - nice to have: access run-wise results
     """
-    from gammapy.spectrum import SpectrumExtraction, SpectrumFit, SpectrumFitResult, SpectrumGrouping, \
+    # Note: `SpectrumMaker` is currently called `SpectrumExtraction`
+    from gammapy.spectrum import SpectrumMaker, SpectrumFit, SpectrumFitResult, SpectrumGrouping, \
         SpectrumObservation, SpectrumObservationList, SpectrumResult, SpectrumResultDict, SpectrumStats
     from gammapy.spectrum import PowerLaw
     from gammapy.data import Target, TargetSummary, DataStore
@@ -104,8 +103,8 @@ def run_spectral_analysis():
     # bg_estimator.background_estimate.write(dir='temp')
     # bg_estimate = BackgroundEstimate.read(dir='temp')
 
-    spectrum_extraction = SpectrumExtraction(bg_estimate, observations, target, **config)
-    spectrum_extraction.run()
+    spectrum_maker = SpectrumMaker(bg_estimate, observations, target, **config)
+    spectrum_maker.run()
 
     # spectrum_extraction.make_reflected_regions()
     # spectrum_extraction.bg_estimate
@@ -113,7 +112,7 @@ def run_spectral_analysis():
     # stats_table = spectrum_extraction.make_stats_table()
 
     # If you want, the `SpectrumObservationList` is serialisable
-    spectrum_extraction.spectrum_observation_list.write(dir='temp')
+    spectrum_maker.spectrum_observation_list.write(dir='temp')
     spectrum_obs_list = SpectrumObservationList.read(dir='temp')
 
     # Compute new stacked spectra with a given grouping
@@ -128,6 +127,7 @@ def run_spectral_analysis():
     spectrum_fit.spectrum_result.write(dir='temp')
     spectrum_fit_result = SpectrumFitResult.read(dir='temp')
 
+    # TODO: need code to compute flux points
 
     # analysis = GtAnalysis(observations, config)
     # analysis.setup()
@@ -164,6 +164,9 @@ def run_cube_analysis():
     observations = get_observations()
 
 
+    # TODO: at the end, add the option to compute flux points
+
+
 def analyse_target_list():
     """Example how to process multiple targets.
 
@@ -184,3 +187,11 @@ def analyse_target_list():
         analysis.setup(data_store, target)
         analysis.run()
         analysis.save()
+
+
+def make_light_curve():
+    """Example how ot make a lightcurve.
+
+    TODO: should this run one of the other analyses in each time bin,
+    or do something special like a simplified flux point computation.
+    """
