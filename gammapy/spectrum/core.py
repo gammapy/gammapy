@@ -166,7 +166,7 @@ class CountsSpectrum(NDDataArray):
         int_flux = (diff_flux * bands).decompose()
 
         # Apply ARF and RMF to get n_pred
-        temp = int_flux * obs.on_vector.livetime * obs.aeff.data
+        temp = int_flux * obs.on_vector.exposure * obs.aeff.data
         counts = obs.edisp.pdf_matrix.transpose().dot(temp)
 
         e_reco = obs.edisp.reco_energy
@@ -211,7 +211,7 @@ class PHACountsSpectrum(CountsSpectrum):
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
                     obs_id=self.obs_id,
-                    exposure=self.livetime.to('s').value,
+                    exposure=self.exposure.to('s').value,
                     backscal=self.backscal,
                     corrscal='',
                     areascal=1,
@@ -304,8 +304,8 @@ class SpectrumObservation(object):
     def write(self, outdir=None, overwrite=True):
         """Write OGIP files
 
-        The files are given default names and referenced in
-        the :ref:`gadf:ogip-pha` FITS header. 
+        The files are meant to be used in Sherpa. The units are therefore
+        hardcoded to 'keV' and 'cm2'.
 
         Parameters
         ----------
@@ -323,12 +323,17 @@ class SpectrumObservation(object):
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
 
-        self.on_vector.write(outdir / phafile, overwrite=overwrite)
-        self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
         # Write in keV and cm2
+        self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
+        self.on_vector.write(outdir / phafile, overwrite=overwrite)
+
+        self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+        self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
+
         self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
         self.aeff.write(outdir/arffile, overwrite=overwrite)
+
         self.edisp.write(str(outdir / rmffile), energy_unit='keV',
                                      clobber=overwrite)
 

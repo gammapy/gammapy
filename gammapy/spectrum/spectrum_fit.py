@@ -351,7 +351,7 @@ class SpectrumFit(object):
         self.n_pred = dict()
         for obs in self.obs_list:
             temp = CountsSpectrum.get_npred(self.result, obs)
-            self.n_pred[obs.meta.obs_id] = temp
+            self.n_pred[obs.obs_id] = temp
 
     def write_npred(self, outdir=None):
         """Write predicted counts PHA file
@@ -363,4 +363,4 @@ class SpectrumFit(object):
             self.make_npred()
         for key, val in self.n_pred.items():
             filename = "npred_run{}.fits".format(key)
-            val.write(str(outdir / filename), clobber=True)
+            val.write(str(outdir / filename), overwrite=True)
