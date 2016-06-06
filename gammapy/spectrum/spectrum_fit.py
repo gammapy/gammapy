@@ -254,7 +254,7 @@ class SpectrumFit(object):
     @property
     def pha_list(self):
         """Comma-separate list of PHA files"""
-        file_list = [o.meta.phafile for o in self.obs_list]
+        file_list = [str(o.phafile) for o in self.obs_list]
         ret = ','.join(file_list)
         return ret
 
@@ -288,8 +288,6 @@ class SpectrumFit(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
-
-        self.set_default_thresholds()
 
         if method == 'hspec':
             self._run_hspec_fit()

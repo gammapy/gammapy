@@ -11,7 +11,7 @@ import numpy as np
 
 __all__ = [
     'CountsSpectrum',
-    'OnCountsSpectrum',
+    'PHACountsSpectrum',
     'SpectrumObservation',
     'SpectrumObservationList',
 ]
@@ -60,8 +60,8 @@ class CountsSpectrum(NDDataArray):
         
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html
         """
-        counts = self.data
-        channel = np.arange(1, self.energy.nbins + 1, 1)
+        channel = np.arange(1, self.energy.nbins + 1, 1, dtype=np.int16)
+        counts = np.array(self.data.value, dtype=np.int32)
         # This is how sherpa save energy information in PHA files
         # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
         bin_lo = self.energy.data[:-1]
@@ -173,34 +173,57 @@ class CountsSpectrum(NDDataArray):
         return cls(data=counts.decompose(), energy=e_reco)
 
 
-class OnCountsSpectrum(CountsSpectrum):
+class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent
     
+    The ``bkg`` flag controls wheater the PHA counts spectrum represents a
+    background estimate or not (this slightly affectes the FITS header
+    information when writing to disk).
+
     Parameters
     ----------
     data : `~numpy.array`, list
         Counts
     energy : `~gammapy.utils.energy.EnergyBounds`
         Bin edges of energy axis
-    livetime : `~astropy.units.Quantity`
-        Observation live time
     obs_id : int
         Unique identifier
+    exposure : `~astropy.units.Quantity`
+        Observation live time
+    backscal : float
+        Scaling factor
+    is_bkg : bool, optional
+        Background or soure spectrum, default: False
     """
     def __init__(self, **kwargs):
+        kwargs.setdefault('is_bkg', False)
         super(CountsSpectrum, self).__init__(**kwargs)
-        self.phafile = 'pha_obs{}.fits'.format(self.obs_id)
-        self.arffile = self.phafile.replace('pha', 'arf')
-        self.rmffile = self.phafile.replace('pha', 'rmf')
-        self.bkgfile = self.phafile.replace('pha', 'bkg')
+        if not self.is_bkg:
+            self.phafile = 'pha_obs{}.fits'.format(self.obs_id)
+            self.arffile = self.phafile.replace('pha', 'arf')
+            self.rmffile = self.phafile.replace('pha', 'rmf')
+            self.bkgfile = self.phafile.replace('pha', 'bkg')
 
     def to_table(self):
         """Write"""
-        table = super(OnCountsSpectrum, self).to_table()
-        meta = dict(name='SPECTRUM', hduclass='OGIP', hduclas1 = 'SPECTRUM',
-                    backfile=self.bkgfile, respfile=self.rmffile,
-                    ancrfile=self.arffile, obs_id=self.obs_id,
-                    exposure=self.livetime.to('s').value)
+        table = super(PHACountsSpectrum, self).to_table()
+        meta = dict(name='SPECTRUM',
+                    hduclass='OGIP',
+                    hduclas1='SPECTRUM',
+                    obs_id=self.obs_id,
+                    exposure=self.livetime.to('s').value,
+                    backscal=self.backscal,
+                    corrscal='',
+                    areascal=1,
+                    chantype='PHA',
+                    detchans=self.energy.nbins,
+                    filter=None,
+                    corrfile='',
+                    poisserr=True
+                   )
+        if not self.is_bkg: meta.update(backfile=self.bkgfile,
+                                        respfile=self.rmffile,
+                                        ancrfile=self.arffile)
         table.meta = meta
         return table
 
@@ -208,13 +231,13 @@ class OnCountsSpectrum(CountsSpectrum):
     def from_table(cls, table):
         """Read"""
         spec = CountsSpectrum.from_table(table)
-        spec.obs_id = table.meta['OBS_ID'] 
-        spec.rmffile = table.meta['RESPFILE']
-        spec.arffile = table.meta['ANCRFILE']
-        spec.bkgfile = table.meta['BACKFILE']
-        spec.livetime = table.meta['EXPOSURE'] * u.s
-        spec.__class__ = cls
-        return spec
+
+        meta = dict(
+            obs_id = table.meta['OBS_ID'],
+            exposure = table.meta['EXPOSURE'] * u.s,
+            backscal = table.meta['BACKSCAL']
+        )
+        return cls(energy=spec.energy, data=spec.data, **meta)
 
 
 class SpectrumObservation(object):
@@ -228,9 +251,9 @@ class SpectrumObservation(object):
 
     Parameters
     ----------
-    on_vector : `~gammapy.spectrum.OnCountsSpectrum`
+    on_vector : `~gammapy.spectrum.PHACountsSpectrum`
         On vector
-    off_vector : `~gammapy.spectrum.CountsSpectrum`
+    off_vector : `~gammapy.spectrum.PHACountsSpectrum`
         Off vector
     aeff : `~gammapy.irg.EffectiveAreaTable`
         Effective Area
@@ -265,13 +288,18 @@ class SpectrumObservation(object):
 
         f = make_path(phafile)
         base = f.parent
-        on_vector = OnCountsSpectrum.read(f)
+        on_vector = PHACountsSpectrum.read(f)
         rmf, arf, bkg  = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
         energy_dispersion = EnergyDispersion.read(str(base / rmf))
         effective_area = EffectiveAreaTable.read(str(base / arf))
         off_vector = CountsSpectrum.read(str(base / bkg))
 
-        return cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
+        # This is needed for know since when passing a SpectrumObservation to
+        # the fitting class actually the PHA file is loaded again
+        # TODO : remove one spectrumfit is updated
+        retval.phafile = phafile
+        return retval
 
     def write(self, outdir=None, overwrite=True):
         """Write OGIP files
@@ -399,7 +427,6 @@ class SpectrumObservationList(list):
             Identifier
         """
         obs_id_list = [o.obs_id for o in self]
-        print(obs_id_list)
         idx = obs_id_list.index(obs_id)
         return self[idx]
 
