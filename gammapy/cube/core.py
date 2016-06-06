@@ -177,9 +177,8 @@ class SkyCube(object):
             Event list table
         origin : {0, 1}
             Pixel coordinate origin.
-
         """
-        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy)
+        self.data = _bin_events_in_cube(events, self.wcs, self.data.shape, self.energy, origin=origin)
 
     @classmethod
     def empty(cls, emin=0.5, emax=100, enbins=10, eunit='TeV', **kwargs):
