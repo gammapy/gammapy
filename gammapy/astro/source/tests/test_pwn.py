@@ -6,7 +6,6 @@ from astropy.units import Quantity
 from ....utils.testing import requires_dependency
 from ...source import PWN
 
-
 t = Quantity([0, 1, 10, 100, 1000, 10000, 100000], 'yr')
 pwn = PWN()
 
