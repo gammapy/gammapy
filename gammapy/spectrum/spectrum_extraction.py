@@ -125,7 +125,7 @@ class SpectrumExtraction(object):
             on_events = obs.events[idx]
 
             counts_kwargs = dict(energy=self.e_reco,
-                                 livetime = obs.observation_live_time_duration,
+                                 exposure = obs.observation_live_time_duration,
                                  obs_id=obs.obs_id)
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
