@@ -20,7 +20,7 @@ def get_random_state(init):
     to initialise a `~numpy.random.RandomState` instance,
     a.k.a. a random number generator (``rng``).
 
-    See :ref:`development_random` for usage examples and further information.
+    See :ref:`dev_random` for usage examples and further information.
 
     Parameters
     ----------
