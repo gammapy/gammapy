@@ -275,7 +275,8 @@ class EnergyDispersion(object):
 
         header['DETCHANS'] = self._e_reco.nbins, 'Total number of detector PHA channels'
         header['TLMIN4'] = 0, 'First legal channel number'
-        header['TLMAX4'] = len(self._e_reco) - 1, 'Highest legal channel number'
+        # E_reco nbins - 1 
+        header['TLMAX4'] = len(self._e_reco) - 2, 'Highest legal channel number'
         numgrp, numelt = 0, 0
         for val, val2 in zip(hdu.data['N_GRP'], hdu.data['N_CHAN']):
             numgrp += np.sum(val)
