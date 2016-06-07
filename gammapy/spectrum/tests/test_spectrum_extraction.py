@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import pytest
+import astropy.units as u
 from numpy.testing import assert_allclose
 
 from ...data import DataStore, ObservationTable, Target, ObservationList
@@ -61,6 +62,8 @@ def test_spectrum_extraction(tmpdir):
     new_list = [obslist.obs(_) for _ in [23523, 23592]]
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
+    ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
+    assert_allclose(ana.observations[0].lo_threshold,1*u.TeV)
 
 
 @pytest.mark.xfail(reason='This needs some changes to the API')

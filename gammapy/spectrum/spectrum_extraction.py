@@ -193,3 +193,6 @@ class SpectrumExtraction(object):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
         # TODO : add more debug plots etc. here
+
+
+from
