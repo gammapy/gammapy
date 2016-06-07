@@ -35,29 +35,17 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    target : `~gammapy.data.Target`
-        Observation target
+    on_region : `~gammapy.extern.regions.SkyRegion`
+        On region
+    obs: `~gammapy.data.ObservationList`
+        Observations to process
+    background : `~gammapy.data.BackgroundEstimate`, dict
+        Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
 
     Examples
     --------
-    >>> from gammapy.data import Target
-    >>> config = {
-    ... 'obs': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/obs-index.fits.gz',
-    ... 'ra': 83.633,
-    ... 'dec': 22.015,
-    ... 'on_size': 0.3,
-    ... 'name': 'Crab Nebula',
-    ... 'tag': 'crab_test',
-    ... 'datastore': '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2',
-    ... 'background_method': 'reflected',
-    ... 'exclusion_mask': '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits'
-    ... }
-    >>> target = Target.from_config(config)
-    >>> target.run_spectral_analysis()
-    >>> type(target.extraction)
-    <class 'gammapy.spectrum.SpectrumExtraction'>
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
@@ -67,6 +55,9 @@ class SpectrumExtraction(object):
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
         self._observations = None
+
+    def estimate_background(selfi, *args, **kwargs):
+        self.background = BackgroundEstimate(...)
 
     @property
     def observations(self):
