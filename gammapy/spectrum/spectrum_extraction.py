@@ -158,7 +158,34 @@ class SpectrumExtraction(object):
             spectrum_observations.append(temp)
 
         self._observations = SpectrumObservationList(spectrum_observations)
-    
+
+    def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None , **kwargs):
+        """Set the hi and lo Ethreshold for each observation based on implemented method in gammapy or on a function that
+        you define on the IRFs on each observations and that take an observation object as parameters.
+
+        Parameters
+        ----------
+        method_lo_threshold : {"AreaMax", "Myfunc"}
+            method implemented to define a low energy threshold
+        func_lo_threshold : function name
+            Name of the function you define on the IRFs of the observation to define a low energy threshold
+        kwargs : argument to the defined method or the function
+
+        """
+        for obs in self._observations:
+
+            if method_lo_threshold == "AreaMax":
+                self.on_vector.lo_threshold = obs.effective_area.area_max(**kwargs)
+            elif method_lo_threshold == "Myfunc":
+                if not func_lo_threshold:
+                    log.info('You have to give a function do define the energy threshold')
+                    break
+                else:
+                    self.on_vector.lo_threshold = func_lo_threshold(obs, **kwargs)
+            elif not method_lo_threshold:
+                log.info('You have to give a method name to define the energy threshold')
+                break
+
     def write(self):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
