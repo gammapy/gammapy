@@ -271,6 +271,10 @@ class SpectrumObservation(object):
     def obs_id(self):
         return self.on_vector.obs_id
 
+    @property
+    def e_threshold(self):
+        return self.on_vector.e_threshold
+
     @classmethod
     def read(cls, phafile):
         """Read `~gammapy.spectrum.SpectrumObservation` from OGIP files.
