@@ -11,11 +11,16 @@ from . import (
     SpectrumObservationList,
 )
 from .results import SpectrumStats
+from ..data import Target
+from ..background import (
+    BackgroundEstimate,
+    reflected_regions_background_estimate,
+)
 from ..extern.bunch import Bunch
 from ..extern.pathlib import Path
+from ..extern.regions.shapes import CircleSkyRegion
 from ..image import ExclusionMask
 from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..region import SkyCircleRegion, find_reflected_regions
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.scripts import make_path, write_yaml
 
@@ -35,11 +40,11 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    on_region : `~gammapy.extern.regions.SkyRegion`
-        On region
+    target : `~gammapy.data.Target` or `~gammapy.extern.regions.SkyRegion`
+        Observation target
     obs: `~gammapy.data.ObservationList`
         Observations to process
-    background : `~gammapy.data.BackgroundEstimate`, dict
+    background : `~gammapy.data.BackgroundEstimate` or dict
         Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
@@ -49,15 +54,16 @@ class SpectrumExtraction(object):
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
-
-    def __init__(self, target, e_reco=None):
+    def __init__(self, target, obs, background, e_reco=None, e_true=None):
+        if isinstance(target, CircleSkyRegion):
+            target = Target(target)
+        self.obs = obs
+        self.background=background
         self.target = target
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
+        self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
         self._observations = None
-
-    def estimate_background(selfi, *args, **kwargs):
-        self.background = BackgroundEstimate(...)
 
     @property
     def observations(self):
@@ -86,9 +92,26 @@ class SpectrumExtraction(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
+        if not isinstance(self.background, BackgroundEstimate):
+            log.info('Estimate background with config {}'.format(self.background))
+            self.estimate_background()
+        self.extract_spectrum()
         self.write()
         os.chdir(str(cwd))
 
+    def estimate_background(self):
+        method = self.background.pop('method')
+        if method == 'reflected':
+            exclusion = self.background.pop('exclusion', None)
+            bkg = [reflected_regions_background_estimate(
+                self.target.on_region,
+                _.pointing_radec,
+                exclusion,
+                _.events) for _ in self.obs]
+        else:
+            raise NotImplementedError("Method: {}".format(method))
+        self.background = bkg
+        
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
         n_min = self.bkg_method['n_min']
@@ -108,9 +131,9 @@ class SpectrumExtraction(object):
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
         """
         spectrum_observations = []
-        if self.target.background is None:
-            raise ValueError("No background estimate for target {}".format(self.target))
-        for obs, bkg in zip(self.target.obs, self.target.background):
+        if not isinstance(self.background, list):
+            raise ValueError("Invalid background estimate: {}".format(self.background))
+        for obs, bkg in zip(self.obs, self.background):
             log.info('Extracting spectrum for observation {}'.format(obs))
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
@@ -125,17 +148,18 @@ class SpectrumExtraction(object):
             on_vec.fill(on_events)
             off_vec.fill(bkg.off_events)
 
-            offset = obs.pointing_radec.separation(self.target.position)
-            arf = obs.aeff.to_effective_area_table(offset)
-            rmf = obs.edisp.to_energy_dispersion(offset, e_reco=self.e_reco)
+            offset = obs.pointing_radec.separation(self.target.on_region.center)
+            arf = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
+            rmf = obs.edisp.to_energy_dispersion(offset,
+                                                 e_reco=self.e_reco,
+                                                 e_true=self.e_true)
 
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
 
         self._observations = SpectrumObservationList(spectrum_observations)
-
+    
     def write(self):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
         # TODO : add more debug plots etc. here
-

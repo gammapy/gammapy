@@ -18,6 +18,7 @@ from .utils import _earth_location_from_dict
 __all__ = [
     'DataStore',
     'DataStoreObservation',
+    'ObservationList',
 ]
 
 log = logging.getLogger(__name__)

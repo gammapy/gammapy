@@ -7,7 +7,7 @@ from ..region import find_reflected_regions
 __all__ = [
     'BackgroundEstimate',
     'ring_background_estimate',
-    'reflected_regions_background_estimate',
+    'reflected_regions_background_estimate'
 ]
 
 
