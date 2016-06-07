@@ -9,9 +9,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord
+from astropy.wcs.utils import pixel_to_skycoord, proj_plane_pixel_scales, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.extern import six
+from astropy.nddata.utils import extract_array, add_array, _round
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header, _bin_events_in_cube
@@ -52,6 +53,7 @@ class SkyMap(object):
     meta : dict
         Dictionary to store meta data.
     """
+    wcs_origin = 0
 
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
@@ -195,7 +197,7 @@ class SkyMap(object):
         data = fill * np.ones_like(skymap.data)
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
-    def fill(self, value, origin=0):
+    def fill(self, value):
         """
         Fill sky map with events.
 
@@ -204,13 +206,10 @@ class SkyMap(object):
         value : float or `~gammapy.data.EventList`
              Value to fill in the map. If an event list is given, events will be
              binned in the map.
-        origin : {0, 1}
-            Pixel coordinate origin.
-
         """
         if isinstance(value, EventList):
             counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
-                                         origin=origin).sum(axis=0)
+                                         origin=self.wcs_origin).sum(axis=0)
             self.data = counts.value
             self.unit = 'ct'
         elif np.isscalar(value):
@@ -238,6 +237,7 @@ class SkyMap(object):
     def coordinates_pix(self, mode='center'):
         """
         Pixel sky coordinate images.
+
         Parameters
         ----------
         mode : {'center', 'edges'}
@@ -255,7 +255,6 @@ class SkyMap(object):
             y, x = y - 0.5, x - 0.5
         else:
             raise ValueError('Invalid mode to compute coordinates.')
-
         return x, y
 
     def coordinates(self, origin=0, mode='center'):
@@ -275,6 +274,81 @@ class SkyMap(object):
         x, y = self.coordinates_pix(mode=mode)
         coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
         return coordinates
+    
+    def paste(self, cutout, method='sum'):
+        """
+        Paste cutout into sky map. 
+
+        The WCS of the skymap and the cutout have to be aligned.
+
+        Parameters
+        ----------
+        skymap: `SkyMap`
+            Smaller sky map to paste.
+        method : {'sum', 'replace'}, optional
+            Sum or replace total values with cutout values.
+
+        """
+        if not np.allclose(self.wcs.wcs.cdelt, skymap.wcs.wcs.cdelt):
+            raise ValueError('Pixel sizes not compatible.')
+
+        # find offset
+        lon, lat = cutout.wcs.wcs_pix2world(0, 0, origin)
+        x, y = self.wcs.wcs_world2pix(lon, lat, origin)
+        x, y = int(np.round(x)), int(np.round(y))
+        dy, dx = cutout.data.shape
+
+        if method == 'sum':
+            self.data[y: y + dy, x: x + dx] += cutout.data
+        elif method == 'replace':
+            self.data[y: y + dy, x: x + dx] = cutout.data
+        else:
+            raise ValueError('Invalid method: {0}'.format(method))
+
+    def cutout(self, position, width, height=None):
+        """
+        Cut out rectangular piece of a sky map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position of the center of the sky map to cut out.
+        width : `~astropy.units.Angle`
+            Width of the cut out skymap.
+        height : `~astropy.units.Angle`
+            Height of the cut out skymap (default height = width).
+        
+        Returns
+        -------
+        cutout : `SkyMap`
+            Cut out sky map.
+        """
+        height = width or height
+        xbinsz, ybinsz = proj_plane_pixel_scales(self.wcs) 
+        dx, dy = (width / xbinsz).value, (height / ybinsz).value
+        
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        ref = pixel_to_skycoord(_round(x), _round(y), self.wcs, self.wcs_origin)
+        
+        cutout = SkyMap.empty(nxpix=_round(dx), nypix=_round(dy),
+                              xref=ref.galactic.l.deg, yref=ref.galactic.b.deg)
+        
+        cutout.data = extract_array(self.data, (dy, dx), (y, x))
+        return cutout
+
+    def lookup_max(self):
+        """
+        Find position of maximum in a skymap.
+
+        Returns
+        -------
+        value: `~astropy.coordinates.SkyCoord`
+            Position of the maximum.
+        """
+        idx = np.nanargmax(self.data)
+        y, x = np.unravel_index(idx, self.data.shape)
+        pos = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
+        return pos, self.data[y, x]
 
     def solid_angle(self):
         """
@@ -292,9 +366,9 @@ class SkyMap(object):
         """
         return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
                                    (self.data.shape[1] - 1) / 2.,
-                                    self.wcs, origin=0)
+                                    self.wcs, origin=self.wcs_origin)
 
-    def lookup(self, position, interpolation=None, origin=0):
+    def lookup(self, position, interpolation=None):
         """
         Lookup value at given sky position.
 
@@ -307,8 +381,6 @@ class SkyMap(object):
             transformation that is set for the sky map.
         interpolation : {'None'}
             Interpolation mode.
-        origin : {0, 1}
-            Pixel coordinate origin.
         """
         if isinstance(position, SkyCoord):
             if get_wcs_ctype(self.wcs) == 'galactic':
@@ -318,7 +390,7 @@ class SkyMap(object):
         elif isinstance(position, (tuple, list)):
             xsky, ysky = position[0], position[1]
 
-        x, y = self.wcs.wcs_world2pix(xsky, ysky, origin)
+        x, y = self.wcs.wcs_world2pix(xsky, ysky, self.wcs_origin)
         return self.data[np.round(y).astype('int'), np.round(x).astype('int')]
 
     def to_quantity(self):
@@ -469,11 +541,12 @@ class SkyMap(object):
             fig = plt.gcf()
             ax = fig.add_subplot(1,1,1, projection=self.wcs)
 
+        kwargs['origin'] = kwargs.get('origin', 'lower')
         caxes = ax.imshow(self.data, **kwargs)
-        unit = self.unit or 'A.E.'
+        unit = self.unit or 'A.U.'
         if unit == 'ct':
             quantity = 'counts'
-        elif unit is 'A.E.':
+        elif unit is 'A.U.':
             quantity = 'Unknown'
         else:
             quantity = Unit(unit).physical_type 
@@ -484,6 +557,8 @@ class SkyMap(object):
         except KeyError:
             ax.coords['ra'].set_axislabel('Right Ascension')
             ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
 
     def info(self):
         """

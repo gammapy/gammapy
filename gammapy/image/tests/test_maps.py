@@ -106,6 +106,14 @@ class TestSkyMapPoisson():
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
+    def test_paste(self):
+        from .test_measure import generate_gaussian_image
+
+        cutout = generate_gaussian_image()
+
+        empty = SkyMap.empty(nxpix=401, nypix=401, binsz=0.02)
+        empty.paste(cutout)
+        
 
 class TestSkyMapCrab():
     """
