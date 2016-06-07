@@ -131,8 +131,8 @@ class EffectiveAreaTable(NDDataArray):
             Energy threshold
         """
         area_max = self.data.max()
-        i_thres = np.where(self.data > (percent_area_max / 100) * area_max)
-        ethreshold = self.energy[i_thres[0]]
+        i_thres = np.where(self.data > (percent_area_max / 100) * area_max)[0]
+        ethreshold = self.energy.data[i_thres[0]]
         return ethreshold
 
 
