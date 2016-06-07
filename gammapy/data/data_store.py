@@ -18,6 +18,7 @@ from .utils import _earth_location_from_dict
 __all__ = [
     'DataStore',
     'DataStoreObservation',
+    'ObservationList',
 ]
 
 log = logging.getLogger(__name__)
@@ -582,3 +583,10 @@ class DataStoreObservation(object):
         TODO: Do we want such methods here or as standalone functions that work with obs objects?
         """
         raise NotImplementedError
+
+
+class ObservationList(list):
+    """List of `~gammapy.data.DataStoreObservation`
+
+    Could be extended to hold a more generic class of observations
+    """
