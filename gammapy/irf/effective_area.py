@@ -116,6 +116,27 @@ class EffectiveAreaTable(NDDataArray):
         meta.update(HI_THRES=self.high_threshold.to('TeV').value)
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
 
+    def define_ethreshold(self, percent_area_max):
+        """The energy threshold is the energy for which one the Area is superior to percent_area_max*AreaMax
+
+        Parameters
+        ----------
+        percent_area_max: int
+            percentage of the maximal Area value between 1 and 100
+
+        Returns
+        -------
+        energy: `~astropy.units.Quantity`
+            Energy threshold
+        """
+        area_max=self.data.max()
+        i_thres = np.where(self.data > (percent_area_max/100)*area_max)
+        ethreshold = self.energy[i_thres[0]]
+        return ethreshold
+
+
+
+
 
 class EffectiveAreaTable2D(NDDataArray):
     """2D Effective Area Table

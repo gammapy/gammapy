@@ -220,6 +220,7 @@ class PHACountsSpectrum(CountsSpectrum):
                     filter=None,
                     corrfile='',
                     poisserr=True
+                    e_threshold=self.e_threshold
                    )
         if not self.is_bkg: meta.update(backfile=self.bkgfile,
                                         respfile=self.rmffile,
