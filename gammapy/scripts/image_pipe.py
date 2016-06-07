@@ -10,6 +10,7 @@ from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
+from ..irf import EnergyDependentTablePSF, TablePSF
 
 __all__ = ['ObsImage',
            'MosaicImage']
@@ -123,7 +124,8 @@ class ObsImage(object):
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        exposure_tab = np.sum(self.aeff.evaluate(offset_tab, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
+        arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").T
+        exposure_tab = np.sum(arf * spectrum * energy_band, axis=1)
         exposure_tab *= self.livetime
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
@@ -246,20 +248,19 @@ class ObsImage(object):
         spectrum = (energy_bin / eref) ** (-spectral_index)
         # offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         offset = region_center.separation(self.obs_center)
-        if (offset > self.aeff.offset_hi[-1]):
-            return False, False, False
+        if (offset > self.aeff.offset.data[-1]):
+            return False
         else:
-            psf_table = self.psf.to_table_psf(theta=offset)
-
-            psftab = np.zeros((len(psf_table.offset), len(energy_bin)))
-            for iE, E in enumerate(energy_bin):
-                psftab[:, iE] = psf_table.table_psf_at_energy(E).evaluate(psf_table.offset)
-            psftab = Quantity(psftab, psf_table.psf_value.unit)
-            tab = np.sum(psftab * self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band, axis=1)
-            exposure = np.sum(self.aeff.evaluate(offset, energy_bin).to("cm2") * spectrum * energy_band)
-            tab *= self.livetime
+            theta = self.psf.to_table_psf(theta=offset).offset
+            psf_tab = self.psf.to_table_psf(theta=offset).evaluate(energy_bin)
+            arf = self.aeff.evaluate(offset=offset, energy=energy_bin).to("cm2").T
+            tab = psf_tab.T * arf.value * spectrum * energy_band.value
+            exposure = arf * spectrum * energy_band.value
+            tab *= self.livetime.value
             exposure *= self.livetime
-            return psf_table.offset, tab, exposure
+            energy_dependant_psftab = EnergyDependentTablePSF(energy=energy_bin, offset=theta, exposure=exposure,
+                                                              psf_value=tab)
+            return energy_dependant_psftab
 
 
 class MosaicImage(object):
@@ -401,18 +402,17 @@ class MosaicImage(object):
             if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
-                theta_psf_tab, tab, exposure_tab = obs_image.make_mean_psf(region_center, spectral_index)
-                if not tab:
+                energy_dependant_psftab = obs_image.make_mean_psf2(region_center, spectral_index)
+                if not energy_dependant_psftab:
                     continue
                 if (i == 0):
-                    exposure_tab_tot = exposure_tab
-                    tab_tot = tab
+                    exposure_tab_tot = np.sum(energy_dependant_psftab.exposure)
+                    tab_tot = np.sum(energy_dependant_psftab.psf_value, axis=1)
                 else:
-                    exposure_tab_tot += exposure_tab
-                    tab_tot += tab
+                    exposure_tab_tot += np.sum(energy_dependant_psftab.exposure)
+                    tab_tot += np.sum(energy_dependant_psftab.psf_value, axis=1)
 
                 i += 1
-        tab_tot /= exposure_tab_tot
-        self.psfmeantab = tab_tot
-        self.thetapsf = theta_psf_tab
-        return theta_psf_tab, tab_tot
+        tab_tot /= exposure_tab_tot.value
+        psftable = TablePSF(energy_dependant_psftab.offset, tab_tot)
+        return psftable
