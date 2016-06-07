@@ -15,7 +15,7 @@ from ...spectrum import (
     SpectrumExtraction,
     SpectrumObservation,
     SpectrumObservationList,
-    OnCountsSpectrum,
+    PHACountsSpectrum,
 )
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
@@ -65,10 +65,10 @@ def test_spectrum_extraction_from_config(tmpdir):
     config = read_yaml(configfile)
     target = Target.from_config(config)
     target.run_spectral_analysis(outdir=tmpdir)
-    on_vec = OnCountsSpectrum.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
+    on_vec = PHACountsSpectrum.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
     assert on_vec.total_counts.value == 234
 
-@pytest.mark.xfail(reason='This needs regeneration of the test OGIP files')
+@pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')
 def test_observation_stacking():
     obs_table_file = gammapy_extra.filename(

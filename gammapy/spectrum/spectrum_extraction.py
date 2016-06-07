@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from . import (
     CountsSpectrum,
-    OnCountsSpectrum,
+    PHACountsSpectrum,
     SpectrumObservation,
     SpectrumObservationList,
 )
@@ -62,7 +62,7 @@ class SpectrumExtraction(object):
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
 
-    def __init__(self, target, e_reco=None, e_true=None):
+    def __init__(self, target, e_reco=None):
         self.target = target
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
@@ -123,17 +123,20 @@ class SpectrumExtraction(object):
             log.info('Extracting spectrum for observation {}'.format(obs))
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
-            livetime = obs.observation_live_time_duration
-            on_vec = OnCountsSpectrum(energy=self.e_reco, livetime=livetime,
-                                      obs_id=obs.obs_id)
-            on_vec.fill(on_events)
 
-            off_vec = CountsSpectrum(energy=self.e_reco)
+            counts_kwargs = dict(energy=self.e_reco,
+                                 exposure = obs.observation_live_time_duration,
+                                 obs_id=obs.obs_id)
+
+            on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
+            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True, **counts_kwargs)
+
+            on_vec.fill(on_events)
             off_vec.fill(bkg.off_events)
 
             offset = obs.pointing_radec.separation(self.target.position)
             arf = obs.aeff.to_effective_area_table(offset)
-            rmf = obs.edisp.to_energy_dispersion(offset)
+            rmf = obs.edisp.to_energy_dispersion(offset, e_reco=self.e_reco)
 
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)

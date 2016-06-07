@@ -254,7 +254,7 @@ class SpectrumFit(object):
     @property
     def pha_list(self):
         """Comma-separate list of PHA files"""
-        file_list = [o.meta.phafile for o in self.obs_list]
+        file_list = [str(o.phafile) for o in self.obs_list]
         ret = ','.join(file_list)
         return ret
 
@@ -288,8 +288,6 @@ class SpectrumFit(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
-
-        self.set_default_thresholds()
 
         if method == 'hspec':
             self._run_hspec_fit()
@@ -353,7 +351,7 @@ class SpectrumFit(object):
         self.n_pred = dict()
         for obs in self.obs_list:
             temp = CountsSpectrum.get_npred(self.result, obs)
-            self.n_pred[obs.meta.obs_id] = temp
+            self.n_pred[obs.obs_id] = temp
 
     def write_npred(self, outdir=None):
         """Write predicted counts PHA file
@@ -365,4 +363,4 @@ class SpectrumFit(object):
             self.make_npred()
         for key, val in self.n_pred.items():
             filename = "npred_run{}.fits".format(key)
-            val.write(str(outdir / filename), clobber=True)
+            val.write(str(outdir / filename), overwrite=True)

@@ -208,8 +208,8 @@ class TargetSummary(object):
 
         n_off = np.sum([len(_.off_events) for _ in self.target.background])
         # FIXME : This is only true for the ring bg
-        alpha = self.target.background[0].alpha
-        return Stats(n_on, n_off, 1, alpha)
+        bkg = self.target.background[0]
+        return Stats(n_on, n_off, bkg.a_on, bkg.a_off)
 
     @property
     def events(self):

@@ -26,15 +26,18 @@ class BackgroundEstimate(object):
         Background extraction region
     off_events : `~gammapy.data.EventList`
         Background events
-    alpha : float
-        Background scaling factor
+    a_on : float
+        Relative background exposure of the on region
+    a_off : float
+        Relative background exposure of the off region
     tag : str
         Background estimation method
     """
-    def __init__(self, off_region, off_events, alpha, tag='default'):
+    def __init__(self, off_region, off_events, a_on, a_off, tag='default'):
         self.off_region = off_region
         self.off_events = off_events
-        self.alpha = alpha
+        self.a_on = a_on
+        self.a_off = a_off
         self.tag = tag
 
 
@@ -60,9 +63,10 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     """
     off_events = events.select_sky_ring(pos, inner_radius, outer_radius)
     off_region = dict(inner=inner_radius, outer=outer_radius)
-    alpha = ring_area_factor(on_radius, inner_radius, outer_radius)
+    a_on = 1
+    a_off = ring_area_factor(on_radius, inner_radius, outer_radius)
 
-    return BackgroundEstimate(off_region, off_events, alpha, tag='ring')
+    return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
 
 def reflected_regions_background_estimate(on_region, pointing, exclusion, events):
     """Reflected regions background estimate
@@ -80,6 +84,7 @@ def reflected_regions_background_estimate(on_region, pointing, exclusion, events
     """
     off_region = find_reflected_regions(on_region, pointing, exclusion)
     off_events = events.select_circular_region(off_region)
-    alpha = 1. / len(off_region)
+    a_on = 1
+    a_off = len(off_region)
 
-    return BackgroundEstimate(off_region, off_events, alpha, tag='reflected')
+    return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='reflected')
