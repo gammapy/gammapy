@@ -2,10 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
-
 import numpy as np
 from astropy.extern import six
-
 from gammapy.extern.pathlib import Path
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
@@ -258,13 +256,6 @@ class SpectrumFit(object):
         ret = ','.join(file_list)
         return ret
 
-    def set_default_thresholds(self):
-        """Set energy threshold to the value in the PHA headers"""
-        lo_thres = [o.meta.safe_energy_range[0] for o in self.obs_list]
-        hi_thres = [o.meta.safe_energy_range[1] for o in self.obs_list]
-        self.energy_threshold_low = lo_thres
-        self.energy_threshold_high = hi_thres
-
     def info(self):
         """Print some basic info"""
         ss = 'Model\n'
@@ -314,12 +305,16 @@ class SpectrumFit(object):
         # Make model amplitude O(1e0)
         model = self.model * self.FLUX_FACTOR
         ds.set_source(model)
-        thres_lo = self.energy_threshold_low.to('keV').value
-        thres_hi = self.energy_threshold_high.to('keV').value
+        thres_lo = self._thres_lo.to('keV').value
+        thres_hi = self._thres_hi.to('keV').value
 
         namedataset = []
         for i in range(len(ds.datasets)):
-            datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
+            if self.obs_list[i].lo_threshold > thres_lo:
+                thres_lo = self.obs_list[i].lo_threshold.to('keV').value
+            if self.obs_list[i].hi_threshold < thres_hi:
+                thres_hi = self.obs_list[i].hi_threshold.to('keV').value
+            datastack.notice_id(i + 1, thres_lo, thres_hi)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
         ds.fit(*namedataset)

@@ -139,7 +139,7 @@ class SpectrumExtraction(object):
             on_events = obs.events[idx]
 
             counts_kwargs = dict(energy=self.e_reco,
-                                 exposure = obs.observation_live_time_duration,
+                                 exposure=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id)
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
@@ -153,6 +153,7 @@ class SpectrumExtraction(object):
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
+            # TODO: choose if we want this high default value or to use the one given in the area file in the exporter
             on_vec.hi_threshold = "1000 TeV"
             on_vec.lo_threshold = arf.low_threshold
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
@@ -160,7 +161,7 @@ class SpectrumExtraction(object):
 
         self._observations = SpectrumObservationList(spectrum_observations)
 
-    def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None , **kwargs):
+    def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None, **kwargs):
         """Set the hi and lo Ethreshold for each observation based on implemented method in gammapy or on a function that
         you define on the IRFs on each observations and that take an observation object as parameters.
 
@@ -174,7 +175,7 @@ class SpectrumExtraction(object):
 
         """
         for obs in self._observations:
-            #TODO: define method for the high energy threshold
+            # TODO: define method for the high energy threshold
             self.on_vector.hi_threshold = "1000 TeV"
             if method_lo_threshold == "AreaMax":
                 self.on_vector.lo_threshold = obs.effective_area.area_max(**kwargs)
