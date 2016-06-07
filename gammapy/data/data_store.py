@@ -582,3 +582,10 @@ class DataStoreObservation(object):
         TODO: Do we want such methods here or as standalone functions that work with obs objects?
         """
         raise NotImplementedError
+
+
+class ObservationList(list):
+    """List of `~gammapy.data.DataStoreObservation`
+
+    Could be extended to hold a more generic class of observations
+    """
