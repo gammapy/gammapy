@@ -179,7 +179,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     assert (arf.evaluate() == arf2.evaluate()).all()
 
     elo_threshold = arf.area_max(10)
-    assert_allclose(elo_threshold, 0.4477441608905792 * u.TeV)
+    assert_allclose(elo_threshold, 0.4122628148393689 * u.TeV)
 
 
 def test_abramowski_effective_area():
