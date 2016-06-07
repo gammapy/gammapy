@@ -13,7 +13,7 @@ def test_targetsummary(data_manager):
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
-    target = Target(pos, on_region, name='Test Target', obs_id=[23523, 23592])
+    target = Target(on_region, name='Test Target', obs_id=[23523, 23592])
     
     data_store = data_manager['hess-crab4-hd-hap-prod2']
     target.add_obs_from_store(data_store) 

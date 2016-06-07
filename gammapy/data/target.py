@@ -88,7 +88,7 @@ class Target(object):
     """
     def __init__(self, on_region, position=None, obs_id=None, name='Target', tag='target'):
         self.on_region = on_region
-        self.position = position
+        self.position = position or on_region.center
         self.obs_id = obs_id
         self.name = name
         self.tag = tag

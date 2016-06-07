@@ -46,7 +46,8 @@ def test_spectrum_cmd(tmpdir):
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_spectrum(tmpdir, data_manager):
-    # Minimal version
+    # Minimal version executing all steps
+    # This could go into a script accessible to the user and/or an example
     store = data_manager['hess-crab4-hd-hap-prod2']
     obs_id = [23523, 23592]    
     obs = ObservationList([store.obs(_) for _ in obs_id])
@@ -62,6 +63,4 @@ def test_spectrum(tmpdir, data_manager):
 
     extraction.run(outdir=tmpdir)
 
-    assert extraction.observations[0].obs_id == 23523
-    # Using target and external background estimate
-    # TODO
+

@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 import astropy.units as u
 from astropy.io import fits
 from ...utils.testing import requires_data
@@ -171,4 +171,4 @@ def test_EnergyBounds_write(tmpdir):
     ebounds2 = EnergyBounds.from_ebounds(hdulist[1])
     actual = ebounds2
     desired = ebounds
-    assert_equal(actual, desired)
+    assert_allclose(actual, desired)
