@@ -219,8 +219,9 @@ class PHACountsSpectrum(CountsSpectrum):
                     detchans=self.energy.nbins,
                     filter=None,
                     corrfile='',
-                    poisserr=True
-                    e_threshold=self.e_threshold
+                    poisserr=True,
+                    lo_threshold=self.lo_threshold,
+                    hi_threshold=self.hi_threshold
                    )
         if not self.is_bkg: meta.update(backfile=self.bkgfile,
                                         respfile=self.rmffile,
@@ -273,8 +274,11 @@ class SpectrumObservation(object):
         return self.on_vector.obs_id
 
     @property
-    def e_threshold(self):
-        return self.on_vector.e_threshold
+    def lo_threshold(self):
+        return self.on_vector.lo_threshold
+
+    def hi_threshold(self):
+        return self.on_vector.hi_threshold
 
     @classmethod
     def read(cls, phafile):
