@@ -5,11 +5,12 @@
 Usage: pname [options] <directory>
        pname -h | --help
  
-       possible plotting styles are semilogx, loglog, default style is linear
 
 
 Options:
- -r --r68=<double limit>    plot histogram of psf parameterizations where r68 > limit
+ -g --3gauss                Create containment radius plots for triple gauss parametrisation
+ -k --king                  Create containment radius plots for king profile parametrisation
+ -t --table                 Create containment radius plots for psf_table representation
  -h --help                  Show this message and exit
 """
 
@@ -43,10 +44,7 @@ def king_containment_radius(psf, energy, theta, fraction=0.68):
         radius[idx_theta][idx_energy] = np.nan
         continue
 
-      print gamma, sigma
       radius[idx_theta][idx_energy] = sigma * np.sqrt(2*gamma*((1-fraction)**(1/(1-gamma))-1)) 
-      print  radius[idx_theta][idx_energy]
-      
 
   return Angle(radius, 'deg')
 
@@ -73,15 +71,14 @@ def plot_containment_king(psf, fraction=0.68, ax=None, show_safe_energy=False,
   # kwargs.setdefault('vmin', 0.1)
   # kwargs.setdefault('vmax', 0.2)
 
-        # Set up and compute data
+  # Set up and compute data
   containment = king_containment_radius(psf, psf.energy, psf.offset)
 
   extent = [
     psf.offset[0].value, psf.offset[-1].value,
     psf.energy[0].value, psf.energy[-1].value,
     ]
-  print "Extend: ", containment.T.value
-        # Plotting
+  # Plotting
   ax.imshow(containment.T.value, extent=extent, **kwargs)
 
   if show_safe_energy:
@@ -139,14 +136,18 @@ def peek_king(psf, figsize=(15, 5)):
   plot_containment_king(psf, fraction=0.95, ax=axes[1])
   plot_containment_vs_energy_king(psf, ax=axes[2])
 
-  # TODO: implement this plot
-  # psf = self.psf_at_energy_and_theta(energy='1 TeV', theta='1 deg')
-  # psf.plot_components(ax=axes[2])
-
   plt.tight_layout()
   plt.show()
 
 def plot_containment_table(filename, theta, fraction=0.68, ax=None, **kwargs):
+  """
+  Plot containment image with energy and theta axes.
+
+  Parameters
+  ----------
+  fraction : float
+  Containment fraction between 0 and 1.
+  """
   from gammapy.irf import EnergyDependentTablePSF
   from matplotlib.colors import PowerNorm
   import numpy as np
@@ -161,7 +162,6 @@ def plot_containment_table(filename, theta, fraction=0.68, ax=None, **kwargs):
       ]
     
     for e in range(psf.energy.size):
-      print "Next"
       skip = False
       for v in psf.psf_value[e]:
         if np.isnan(v) or v.value == 0:
@@ -169,11 +169,8 @@ def plot_containment_table(filename, theta, fraction=0.68, ax=None, **kwargs):
           break
       if skip:
         continue
-      try:
-        a[e] = psf.containment_radius(psf.energy[e], fraction).degree
-        print theta[i], a[e]
-      except ValueError:
-        a[e] = 0
+
+      a[e] = psf.containment_radius(psf.energy[e], fraction).degree
     radii[i]=a
 
   for x in np.nditer(radii, op_flags=['readwrite']):
@@ -205,6 +202,9 @@ def plot_containment_vs_energy_table(filename, fractions=[0.68, 0.95],
                                    thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
   """Plot containment fraction as a function of energy.
   """
+
+  #TODO: currently not working due to NaN entries in psf
+  
   import matplotlib.pyplot as plt
   from gammapy.utils.energy import Energy, EnergyBounds
   from gammapy.irf import EnergyDependentTablePSF
@@ -283,16 +283,20 @@ obs_ids = data_store.obs_table['OBS_ID'].data
 print 'Number of observations: ', obs_ids.size
 
 for obs_id in obs_ids:
-    print obs_id
+    print "Observation: ", obs_id
     psf_gauss = data_store.obs(obs_id=obs_id).load(hdu_class='psf_3gauss')
-    psf_king = data_store.obs(obs_id=obs_id).load(hdu_class='psf_king')
-    
-    #plot_table_containment(data_store.obs(obs_id=obs_id).location(hdu_class="psf_table").path(), psf_gauss.theta)
+    if args['--3gauss']:
+      psf_gauss.peek()
+    if args['--king']:
+      psf_king = data_store.obs(obs_id=obs_id).load(hdu_class='psf_king')
+      peek_king(psf_king)
+    if args['--table']:
+      peek_table(str(data_store.obs(obs_id=obs_id).location(hdu_class="psf_table").path()), psf_gauss.theta)
 
-    peek_table('run018400-018599/run018417/hess_psf_table_018417.fits.gz', psf_gauss.theta)
 
-    break
+    continue
 
+#TODO Do some tests
 
     radii = psf_gauss.containment_radius(psf_gauss.energy_hi, psf_gauss.theta)
     #radii2 = king_containment_radius(psf_king, psf_king.energy, psf_king.offset)
@@ -326,6 +330,3 @@ for obs_id in obs_ids:
 
     print over_limits
     print differences
-    print psf_king
-    
-    print psf_gauss.theta
