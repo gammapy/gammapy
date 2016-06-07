@@ -153,7 +153,8 @@ class SpectrumExtraction(object):
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
-
+            on_vec.hi_threshold = "1000 TeV"
+            on_vec.lo_threshold = arf.low_threshold
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
 
@@ -173,7 +174,8 @@ class SpectrumExtraction(object):
 
         """
         for obs in self._observations:
-
+            #TODO: define method for the high energy threshold
+            self.on_vector.hi_threshold = "1000 TeV"
             if method_lo_threshold == "AreaMax":
                 self.on_vector.lo_threshold = obs.effective_area.area_max(**kwargs)
             elif method_lo_threshold == "Myfunc":
