@@ -340,7 +340,7 @@ class SkyMap(object):
         if region:
             mask = region.contains(self.coordinates())
         else:
-            mask =np.ones_like(self.data)
+            mask = np.ones_like(self.data)
 
         idx = np.nanargmax(self.data * mask)
         y, x = np.unravel_index(idx, self.data.shape)
