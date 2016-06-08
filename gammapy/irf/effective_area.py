@@ -130,7 +130,7 @@ class EffectiveAreaTable(NDDataArray):
         energy: `~astropy.units.Quantity`
             Energy threshold
         """
-        area_max = self.data.max()
+        area_max = self.data[np.where(~np.isnan(self.data))].max()
         area_thres = (percent_area_max / 100) * area_max
         i_thres = np.where(self.data > area_thres)[0][0]
         a = (self.energy.data[i_thres] - self.energy.data[i_thres - 1]) / (self.data[i_thres] - self.data[i_thres - 1])

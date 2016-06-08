@@ -210,13 +210,6 @@ class SpectrumFit(object):
             Low energy threshold
         """
         energy = Energy(energy)
-        shape = len(self.obs_list)
-        if energy.shape is ():
-            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
-        if energy.shape[0] != shape:
-            raise ValueError('Dimension to not match: {} {}'.format(
-                self.obs_list, energy))
-
         self._thres_lo = Energy(energy)
 
     @property
@@ -239,14 +232,6 @@ class SpectrumFit(object):
             High energy threshold
         """
         energy = Energy(energy)
-        shape = len(self.obs_list)
-        if energy.shape is ():
-            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
-
-        if energy.shape[0] != shape:
-            raise ValueError('Dimensions to not match: {} {}'.format(
-                self.obs_list, energy))
-
         self._thres_hi = Energy(energy)
 
     @property
@@ -305,15 +290,19 @@ class SpectrumFit(object):
         # Make model amplitude O(1e0)
         model = self.model * self.FLUX_FACTOR
         ds.set_source(model)
-        thres_lo = self._thres_lo.to('keV').value
-        thres_hi = self._thres_hi.to('keV').value
 
         namedataset = []
         for i in range(len(ds.datasets)):
-            if self.obs_list[i].lo_threshold > thres_lo:
+            if self.obs_list[i].lo_threshold > self._thres_lo:
                 thres_lo = self.obs_list[i].lo_threshold.to('keV').value
-            if self.obs_list[i].hi_threshold < thres_hi:
+            else:
+                thres_lo = self._thres_lo.to('keV').value
+            if self.obs_list[i].hi_threshold < self._thres_hi:
                 thres_hi = self.obs_list[i].hi_threshold.to('keV').value
+            else:
+                thres_hi = self._thres_hi.to('keV').value
+            import IPython;
+            IPython.embed()
             datastack.notice_id(i + 1, thres_lo, thres_hi)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)

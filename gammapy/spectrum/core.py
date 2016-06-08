@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 from astropy.table import Table
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
@@ -15,6 +14,7 @@ __all__ = [
     'SpectrumObservation',
     'SpectrumObservationList',
 ]
+
 
 class CountsSpectrum(NDDataArray):
     """Generic counts spectrum
@@ -45,15 +45,16 @@ class CountsSpectrum(NDDataArray):
     """Energy axis"""
     axis_names = ['energy']
     # Use nearest neighbour interpolation for counts
-    interp_kwargs = dict(bounds_error=False, method='nearest') 
+    interp_kwargs = dict(bounds_error=False, method='nearest')
 
     @classmethod
     def from_table(cls, table):
         """Read OGIP format table"""
         counts = table['COUNTS'].quantity
-        energy_unit = table['BIN_LO'].quantity.unit
-        energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
-        return cls(data=counts, energy=energy*energy_unit)
+        # energy_unit = table['BIN_LO'].quantity.unit
+        # energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
+        # return cls(data=counts, energy=energy*energy_unit)
+        return cls(data=counts)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
@@ -64,11 +65,13 @@ class CountsSpectrum(NDDataArray):
         counts = np.array(self.data.value, dtype=np.int32)
         # This is how sherpa save energy information in PHA files
         # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
-        bin_lo = self.energy.data[:-1]
-        bin_hi = self.energy.data[1:]
-        names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
+        # bin_lo = self.energy.data[:-1]
+        # bin_hi = self.energy.data[1:]
+        # names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
+        names = ['CHANNEL', 'COUNTS']
         meta = dict()
-        return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
+        # return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
+        return Table([channel, counts], names=names, meta=meta)
 
     def fill(self, events):
         """Fill with list of events 
@@ -84,7 +87,7 @@ class CountsSpectrum(NDDataArray):
 
         energy = events.to(self.energy.unit)
         binned_val = np.histogram(energy.value, self.energy.data.value)[0]
-        self.data = binned_val * u.ct 
+        self.data = binned_val * u.ct
 
     @property
     def total_counts(self):
@@ -195,6 +198,7 @@ class PHACountsSpectrum(CountsSpectrum):
     is_bkg : bool, optional
         Background or soure spectrum, default: False
     """
+
     def __init__(self, **kwargs):
         kwargs.setdefault('is_bkg', False)
         super(CountsSpectrum, self).__init__(**kwargs)
@@ -220,12 +224,17 @@ class PHACountsSpectrum(CountsSpectrum):
                     filter=None,
                     corrfile='',
                     poisserr=True,
-                    lo_threshold=self.lo_threshold,
-                    hi_threshold=self.hi_threshold
-                   )
-        if not self.is_bkg: meta.update(backfile=self.bkgfile,
-                                        respfile=self.rmffile,
-                                        ancrfile=self.arffile)
+                    )
+        if not self.is_bkg:
+            meta.update(backfile=self.bkgfile,
+                        respfile=self.rmffile,
+                        ancrfile=self.arffile,
+                        lo_threshold=self.lo_threshold.to("TeV").value,
+                        hi_threshold=self.hi_threshold.to("TeV").value,
+                        hduclas2='TOTAL', )
+        else:
+            meta.update(hduclas2='BKG', )
+
         table.meta = meta
         return table
 
@@ -233,12 +242,14 @@ class PHACountsSpectrum(CountsSpectrum):
     def from_table(cls, table):
         """Read"""
         spec = CountsSpectrum.from_table(table)
-
         meta = dict(
-            obs_id = table.meta['OBS_ID'],
-            exposure = table.meta['EXPOSURE'] * u.s,
-            backscal = table.meta['BACKSCAL']
+            obs_id=table.meta['OBS_ID'],
+            exposure=table.meta['EXPOSURE'] * u.s,
+            backscal=table.meta['BACKSCAL']
         )
+        if table.meta["HDUCLAS2"] == "TOTAL":
+            meta.update(lo_threshold=table.meta['lo_threshold'] * u.TeV,
+                        hi_threshold=table.meta['hi_threshold'] * u.TeV)
         return cls(energy=spec.energy, data=spec.data, **meta)
 
 
@@ -277,8 +288,13 @@ class SpectrumObservation(object):
     def lo_threshold(self):
         return self.on_vector.lo_threshold
 
+    @property
     def hi_threshold(self):
         return self.on_vector.hi_threshold
+
+    @property
+    def phafile(self):
+        return self._phafile
 
     @classmethod
     def read(cls, phafile):
@@ -298,16 +314,15 @@ class SpectrumObservation(object):
         f = make_path(phafile)
         base = f.parent
         on_vector = PHACountsSpectrum.read(f)
-        rmf, arf, bkg  = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
+        rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
         energy_dispersion = EnergyDispersion.read(str(base / rmf))
         effective_area = EffectiveAreaTable.read(str(base / arf))
         off_vector = CountsSpectrum.read(str(base / bkg))
-
-        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
-        retval.phafile = phafile
+        retval._phafile = phafile
         return retval
 
     def write(self, outdir=None, overwrite=True):
@@ -331,7 +346,7 @@ class SpectrumObservation(object):
         bkgfile = self.on_vector.bkgfile
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
-
+        self._phafile = outdir / phafile
         # Write in keV and cm2
         self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
         self.on_vector.write(outdir / phafile, overwrite=overwrite)
@@ -341,10 +356,10 @@ class SpectrumObservation(object):
 
         self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
-        self.aeff.write(outdir/arffile, overwrite=overwrite)
+        self.aeff.write(outdir / arffile, overwrite=overwrite)
 
         self.edisp.write(str(outdir / rmffile), energy_unit='keV',
-                                     clobber=overwrite)
+                         clobber=overwrite)
 
     @property
     def excess_vector(self):
@@ -450,7 +465,6 @@ class SpectrumObservationList(list):
         return SpectrumObservation.stack_observation_list(self)
 
     def info(self):
-
         """Info string"""
         ss = " *** SpectrumObservationList ***"
         ss += "\n\nNumber of observations: {}".format(len(self))
@@ -507,83 +521,83 @@ class SpectrumObservationList(list):
 
 
 def stack(cls, specobs, group_id=None):
-        """Stack `~gammapy.spectrum.SpectrumObservation`
+    """Stack `~gammapy.spectrum.SpectrumObservation`
 
-        Observation stacking is implemented as follows
-        Averaged exposure ratio between ON and OFF regions, arf and rmf
-        :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
-        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
-        .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
-        .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot livetime_i}
+    Observation stacking is implemented as follows
+    Averaged exposure ratio between ON and OFF regions, arf and rmf
+    :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
+    .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
+    .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
+    .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot livetime_i}
 
-        Parameters
-        ----------
-        obs_list : list of `~gammapy.spectrum.SpectrumObservations`
-            Observations to stack
-        group_id : int, optional
-            ID for stacked observations
-    
-        Returns
-        ------- 
-        stacked_obs : `~gammapy.spectrum.SpectrumObservations`
-        """
+    Parameters
+    ----------
+    obs_list : list of `~gammapy.spectrum.SpectrumObservations`
+        Observations to stack
+    group_id : int, optional
+        ID for stacked observations
 
-        group_id = obs_list[0].meta.obs_id if group_id is None else group_id
+    Returns
+    -------
+    stacked_obs : `~gammapy.spectrum.SpectrumObservations`
+    """
 
-        # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
-        on_vec = np.sum([o.on_vector for o in obs_list])
+    group_id = obs_list[0].meta.obs_id if group_id is None else group_id
 
-        # If obs_list contains only on element np.sum does not call the
-        #  _add__ method which lead to a faulty meta object
-        if len(obs_list) == 1:
-            on_vec.meta = Bunch(livetime=obs_list[0].meta.livetime,
-                                backscal=1)
+    # Stack ON and OFF vector using the _add__ method in the CountSpectrum class
+    on_vec = np.sum([o.on_vector for o in obs_list])
 
-        on_vec.meta.update(obs_id=group_id)
+    # If obs_list contains only on element np.sum does not call the
+    #  _add__ method which lead to a faulty meta object
+    if len(obs_list) == 1:
+        on_vec.meta = Bunch(livetime=obs_list[0].meta.livetime,
+                            backscal=1)
 
-        off_vec = np.sum([o.off_vector for o in obs_list])
+    on_vec.meta.update(obs_id=group_id)
 
-        # Stack arf vector
-        arf_band = [o.effective_area.data * o.meta.livetime.value for o in obs_list]
-        arf_band_tot = np.sum(arf_band, axis=0)
-        livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
-        arf_vec = arf_band_tot / livetime_tot
-        energy = obs_list[1].effective_area.energy.data
-        data = arf_vec * obs_list[0].effective_area.data.unit
+    off_vec = np.sum([o.off_vector for o in obs_list])
 
-        arf = EffectiveAreaTable(energy=energy, data=data) 
-                                 
-        # Stack rmf vector
-        rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.data.value * o.meta.livetime.value for
-                    o in obs_list]
-        rmf_band_tot = np.sum(rmf_band, axis=0)
-        pdf_mat = rmf_band_tot / arf_band_tot
-        etrue = obs_list[0].energy_dispersion.true_energy
-        ereco = obs_list[0].energy_dispersion.reco_energy
-        inan = np.isnan(pdf_mat)
-        pdf_mat[inan] = 0
-        rmf = EnergyDispersion(pdf_mat.T, etrue, ereco)
+    # Stack arf vector
+    arf_band = [o.effective_area.data * o.meta.livetime.value for o in obs_list]
+    arf_band_tot = np.sum(arf_band, axis=0)
+    livetime_tot = np.sum([o.meta.livetime.value for o in obs_list])
+    arf_vec = arf_band_tot / livetime_tot
+    energy = obs_list[1].effective_area.energy.data
+    data = arf_vec * obs_list[0].effective_area.data.unit
 
-        # Calculate average alpha
-        alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
-        alpha_band_tot = np.sum(alpha_band)
-        off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
-        alpha_mean = alpha_band_tot / off_tot
-        off_vec.meta.backscal = 1. / alpha_mean
+    arf = EffectiveAreaTable(energy=energy, data=data)
 
-        # Calculate energy range
-        # TODO: for the moment we take the minimal safe energy range
-        # Taking the whole range requires an energy dependent lifetime
-        emin = max([_.meta.safe_energy_range[0] for _ in obs_list])
-        emax = min([_.meta.safe_energy_range[1] for _ in obs_list])
+    # Stack rmf vector
+    rmf_band = [o.energy_dispersion.pdf_matrix.T * o.effective_area.data.value * o.meta.livetime.value for
+                o in obs_list]
+    rmf_band_tot = np.sum(rmf_band, axis=0)
+    pdf_mat = rmf_band_tot / arf_band_tot
+    etrue = obs_list[0].energy_dispersion.true_energy
+    ereco = obs_list[0].energy_dispersion.reco_energy
+    inan = np.isnan(pdf_mat)
+    pdf_mat[inan] = 0
+    rmf = EnergyDispersion(pdf_mat.T, etrue, ereco)
 
-        m = Bunch()
-        m['energy_range'] = EnergyBounds([emin, emax])
-        on_vec.meta['safe_energy_range'] = EnergyBounds([emin, emax])
-        # m['safe_energy_range'] = EnergyBounds([emin, emax])
-        m['obs_ids'] = [o.meta.obs_id for o in obs_list]
-        m['alpha_method1'] = alpha_mean
-        m['livetime'] = Quantity(livetime_tot, "s")
-        m['group_id'] = group_id
+    # Calculate average alpha
+    alpha_band = [o.alpha * o.off_vector.total_counts for o in obs_list]
+    alpha_band_tot = np.sum(alpha_band)
+    off_tot = np.sum([o.off_vector.total_counts for o in obs_list])
+    alpha_mean = alpha_band_tot / off_tot
+    off_vec.meta.backscal = 1. / alpha_mean
 
-        return cls(on_vec, off_vec, rmf, arf, meta=m)
+    # Calculate energy range
+    # TODO: for the moment we take the minimal safe energy range
+    # Taking the whole range requires an energy dependent lifetime
+    emin = max([_.meta.safe_energy_range[0] for _ in obs_list])
+    emax = min([_.meta.safe_energy_range[1] for _ in obs_list])
+
+    m = Bunch()
+    m['energy_range'] = EnergyBounds([emin, emax])
+    on_vec.meta['safe_energy_range'] = EnergyBounds([emin, emax])
+    # m['safe_energy_range'] = EnergyBounds([emin, emax])
+    m['obs_ids'] = [o.meta.obs_id for o in obs_list]
+    m['alpha_method1'] = alpha_mean
+    m['livetime'] = Quantity(livetime_tot, "s")
+    m['group_id'] = group_id
+
+    return cls(on_vec, off_vec, rmf, arf, meta=m)

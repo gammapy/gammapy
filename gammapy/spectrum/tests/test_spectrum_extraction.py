@@ -27,6 +27,7 @@ from ...utils.scripts import read_yaml
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_extraction(tmpdir):
+    print(tmpdir)
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
     on_region = CircleSkyRegion(center, radius)
@@ -45,13 +46,15 @@ def test_spectrum_extraction(tmpdir):
     orad = Angle('0.6 deg')
     bk = [ring_background_estimate(
         center, radius, irad, orad, _.events) for _ in obs]
+    #bk = dict(method='reflected', n_min=2, exclusion=excl)
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
     etrue = EnergyBounds.equal_log_spacing(0.1, 30, 100, unit='TeV')
 
     ana = SpectrumExtraction(target, obs, bk, e_reco=bounds,
                              e_true=etrue)
-
+    ana.run(outdir=tmpdir)
+    #ana.run()
     # test methods on SpectrumObservationList
     obslist = ana.observations
 
@@ -62,6 +65,7 @@ def test_spectrum_extraction(tmpdir):
     new_list = [obslist.obs(_) for _ in [23523, 23592]]
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
+
     ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
     assert_allclose(ana.observations[0].lo_threshold,0.4230466456851681*u.TeV)
 

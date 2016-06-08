@@ -4,6 +4,7 @@ import logging
 import os
 import numpy as np
 import astropy.units as u
+from astropy.units import Quantity
 from . import (
     CountsSpectrum,
     PHACountsSpectrum,
@@ -93,7 +94,7 @@ class SpectrumExtraction(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
-        if not isinstance(self.background, BackgroundEstimate):
+        if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background()
         self.extract_spectrum()
@@ -155,7 +156,7 @@ class SpectrumExtraction(object):
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
             # TODO: choose if we want this high default value or to use the one given in the area file in the exporter
-            on_vec.hi_threshold = "1000 TeV"
+            on_vec.hi_threshold = Quantity(1000, "TeV")
             on_vec.lo_threshold = arf.low_threshold
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
@@ -175,9 +176,9 @@ class SpectrumExtraction(object):
         kwargs : argument to the defined method or the function
 
         """
+        # TODO: implement new methods for calculating this threshold and remove the callback function...
         for i, obs in enumerate(self._observations):
             # TODO: define method for the high energy threshold
-            self._observations[i].on_vector.hi_threshold = "1000 TeV"
             if method_lo_threshold == "AreaMax":
                 self._observations[i].on_vector.lo_threshold = obs.aeff.area_max(**kwargs)
             elif method_lo_threshold == "Myfunc":
