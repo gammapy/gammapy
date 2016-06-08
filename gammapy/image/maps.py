@@ -275,7 +275,7 @@ class SkyMap(object):
         coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
         return coordinates
     
-    def paste(self, cutout, method='sum'):
+    def paste(self, skymap, method='sum'):
         """
         Paste cutout into sky map. 
 
@@ -286,6 +286,14 @@ class SkyMap(object):
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
         """
+        lo = pixel_to_skycoord(0, 0, skymap.wcs, skymap.wcs_origin)
+        xlo, ylo = skycoord_to_pixel(lo, self.wcs, self.wcs_origin)
+
+        hi = pixel_to_skycoord(-1, -1, skymap.wcs, skymap.wcs_origin)
+        xhi, yhi = skycoord_to_pixel(hi, self.wcs, self.wcs_origin)
+
+        self.data[ylo:yhi, xlo:xhi] = cutout.data
+
         if not getattr(cutout, '_parent_skymap_id', 0) == id(self):
             raise TypeError('Can only paste into sky map, the smaller sky map was'
                             ' cut out from.')

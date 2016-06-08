@@ -122,23 +122,20 @@ class TestSkyMapPoisson():
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
     def test_cutout_paste(self):
+        positions = SkyCoord([0, 0, 0, 2, -2], [0, 2, -2, 0, 0],
+                           unit='deg', frame='galactic')
         BINSZ = 0.02
-        sigma = 0.2
-        ampl = 1. / (2 * np.pi * (sigma / BINSZ) ** 2)
-        sources = [Gaussian2D(ampl, 0, 0, sigma, sigma),
-                   Gaussian2D(ampl, 1.9, 0, sigma, sigma),
-                   Gaussian2D(ampl, 0, -1.9, sigma, sigma)]
+        lon_all = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+        lat_all = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+        lon_all.data = lon_all.coordinates().galactic.l.deg
+        lon_all.data = lon_all.coordinates().galactic.b.deg
 
-        skymap_all = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
         skymap_cutout = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
-        for source in sources:
+        for pos in positions:
             # Evaluate on whole image
             l, b = skymap_all.coordinates('galactic')
-            skymap_all.data += source(l.deg, b.deg)
-
+            
             # Evaluate on cut out
-            pos = SkyCoord(source.x_mean, source.y_mean,
-                           unit='deg', frame='galactic')
             cutout = skymap_cutout.cutout(pos, size=(2 * u.deg, 2 * u.deg))
             l, b = cutout.coordinates('galactic')
             cutout.data = source(l.deg, b.deg)

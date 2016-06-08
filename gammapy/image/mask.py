@@ -1,16 +1,19 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
-from ..utils.scripts import make_path
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
+
+from ..utils.scripts import make_path
 from ..image import (
     exclusion_distance,
     lon_lat_circle_mask,
 )
 from .maps import SkyMap
+
 
 __all__ = [
     'ExclusionMask',
