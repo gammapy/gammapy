@@ -54,11 +54,12 @@ class SpectrumExtraction(object):
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
+
     def __init__(self, target, obs, background, e_reco=None, e_true=None):
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
-        self.background=background
+        self.background = background
         self.target = target
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
@@ -111,7 +112,7 @@ class SpectrumExtraction(object):
         else:
             raise NotImplementedError("Method: {}".format(method))
         self.background = bkg
-        
+
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
         n_min = self.bkg_method['n_min']
@@ -174,17 +175,17 @@ class SpectrumExtraction(object):
         kwargs : argument to the defined method or the function
 
         """
-        for obs in self._observations:
+        for i, obs in enumerate(self._observations):
             # TODO: define method for the high energy threshold
-            self.on_vector.hi_threshold = "1000 TeV"
+            self._observations[i].on_vector.hi_threshold = "1000 TeV"
             if method_lo_threshold == "AreaMax":
-                self.on_vector.lo_threshold = obs.effective_area.area_max(**kwargs)
+                self._observations[i].on_vector.lo_threshold = obs.aeff.area_max(**kwargs)
             elif method_lo_threshold == "Myfunc":
                 if not func_lo_threshold:
                     log.info('You have to give a function do define the energy threshold')
                     break
                 else:
-                    self.on_vector.lo_threshold = func_lo_threshold(obs, **kwargs)
+                    self._observations[i].on_vector.lo_threshold = func_lo_threshold(obs, **kwargs)
             elif not method_lo_threshold:
                 log.info('You have to give a method name to define the energy threshold')
                 break
@@ -193,6 +194,3 @@ class SpectrumExtraction(object):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)
         # TODO : add more debug plots etc. here
-
-
-

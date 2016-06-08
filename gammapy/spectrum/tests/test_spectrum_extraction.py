@@ -63,7 +63,7 @@ def test_spectrum_extraction(tmpdir):
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
     ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
-    assert_allclose(ana.observations[0].lo_threshold,1*u.TeV)
+    assert_allclose(ana.observations[0].lo_threshold,0.4230466456851681*u.TeV)
 
 
 @pytest.mark.xfail(reason='This needs some changes to the API')
