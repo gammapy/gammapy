@@ -9,7 +9,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord, proj_plane_pixel_scales, skycoord_to_pixel
+from astropy.wcs.utils import pixel_to_skycoord
 from astropy.units import Quantity, Unit
 from astropy.extern import six
 from astropy.nddata.utils import Cutout2D
@@ -279,8 +279,6 @@ class SkyMap(object):
         """
         Paste cutout into sky map. 
 
-        The WCS of the skymap and the cutout have to be aligned.
-
         Parameters
         ----------
         skymap: `SkyMap`
@@ -325,7 +323,7 @@ class SkyMap(object):
         skymap._parent_skymap_id = id(self)
         return skymap
 
-    def lookup_max(self):
+    def lookup_max(self, mask=None):
         """
         Find position of maximum in a skymap.
 

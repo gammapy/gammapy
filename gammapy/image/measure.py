@@ -9,7 +9,6 @@ from .utils import coordinates
 __all__ = [
     'BoundingBox',
     'bbox',
-    'find_max',
     'lookup_max',
     'measure_containment_fraction',
     'measure_containment_radius',
@@ -233,29 +232,7 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
     return table
 
 
-def find_max(image):
-    """Find position of maximum in an image.
 
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Input image
-
-    Returns
-    -------
-    lon, lat, value : float
-        Maximum value and its position
-    """
-    from scipy.ndimage import maximum_position
-    from astropy.wcs import WCS
-    proj = WCS(image.header)
-    data = image.data
-    data[np.isnan(data)] = -np.inf
-    y, x = maximum_position(data)
-    origin = 0  # convention for gammapy
-    GLON, GLAT = proj.wcs_pix2world(x, y, origin)
-    val = data[int(y), int(x)]
-    return GLON, GLAT, val
 
 
 def lookup_max(image, GLON, GLAT, theta):
