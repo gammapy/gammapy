@@ -61,18 +61,19 @@ class CountsSpectrum(NDDataArray):
         
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html
         """
-        channel = np.arange(1, self.energy.nbins + 1, 1, dtype=np.int16)
+        channel = np.arange(self.energy.nbins, dtype=np.int16)
         counts = np.array(self.data.value, dtype=np.int32)
         # This is how sherpa save energy information in PHA files
         # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
-        # bin_lo = self.energy.data[:-1]
-        # bin_hi = self.energy.data[1:]
-        # names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
+        #bin_lo = self.energy.data[:-1]
+        #bin_hi = self.energy.data[1:]
+        #names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
+        #meta = dict()
+        #return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
         names = ['CHANNEL', 'COUNTS']
         meta = dict()
-        # return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
         return Table([channel, counts], names=names, meta=meta)
-
+        
     def fill(self, events):
         """Fill with list of events 
         
