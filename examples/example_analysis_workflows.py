@@ -141,20 +141,39 @@ def run_image_analysis():
     # from gammapy.scripts import MosaicImage, ObsImage
     # ObsImage is equivalent to SpectrumObservation
     # MosaicImage is equivalent to SpectrumObservationList and SpectrumObservation
+    # Mo
+
+    from gammapy.data import Target
+    from gammapy.irf import PSF
     from gammapy.image import SkyMap
     from gammapy.image import MapMaker, MapFitter, SkyMaps
 
+    target = Target()
     observations = get_observations()
+    # observations is a `gammapy.data.ObservationList` object
 
     ref_map = SkyMap.empty('dummy')
 
-    config = dict(method='ring')
+    config = dict(method='dummy')
     maker = MapMaker(observations, ref_map, **config)
-    maker.run()
+    maker.make_images(**config)
 
-    maker.images
+    maker.maps.write('maps.fits')
+    maps = SkyMaps.read('maps.fits')
 
-    stats_table = maker.make_stats_table()
+    for target in targets:
+
+        observations = []
+
+        observations.make_psf(target, maps.energy_band)
+        maker.psf.write('psf.fits')
+        psf = PSF.read('psf.fits')
+
+        config = dict(method='dummy')
+        fitter = MapFitter(maps=maps, psf=psf, **config)
+        fitter.run(**config)
+        print(fitter.results)
+
 
 
 def run_cube_analysis():
@@ -187,6 +206,33 @@ def analyse_target_list():
         analysis.setup(data_store, target)
         analysis.run()
         analysis.save()
+
+
+def run_image_analysis_multiple_targets():
+    """Run 2-dim image analysis for multiple targets.
+
+    - Want one set of images
+    - Want multiple PSF and further analysis steps
+
+    """
+    from gammapy.image import SkyMap
+    from gammapy.image import MapMaker, MapFitter, SkyMaps
+
+    observations = get_observations()
+
+    ref_map = SkyMap.empty('dummy')
+
+    config = dict(method='dummy')
+    maker = MapMaker(observations, ref_map, **config)
+    maker.make_images(**config)
+
+    maker.maps.write('maps.fits')
+    maps = SkyMaps.read('maps.fits')
+
+    config = dict(method='dummy')
+    fitter = MapFitter(maps=maps, **config)
+    fitter.run(**config)
+    print(fitter.results)
 
 
 def make_light_curve():
