@@ -40,6 +40,9 @@ class SpectrumExtraction(object):
     and off counts vectors as well as an effective area vector and an energy
     dispersion matrix.  For more info see :ref:`spectral_fitting`.
 
+    For point sources analyzed with 'full containement' IRFs, a correction for PSF
+    leakage out of the circular ON region can be applied.
+
     Parameters
     ----------
     target : `~gammapy.data.Target` or `~gammapy.extern.regions.SkyRegion`
@@ -50,13 +53,15 @@ class SpectrumExtraction(object):
         Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
+    containment_correction : bool
+        Flag to apply containment correction for point sources and circular ON regions.
 
     Examples
     --------
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
-    def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction = False):
+    def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction=False):
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
@@ -166,16 +171,17 @@ class SpectrumExtraction(object):
             # If required, correct arf for psf leakage
             if self.containment_correction:
                 # First need psf
-                angles = Angle(np.linspace(0.,1.5,150)*u.deg)
+                angles = np.linspace(0., 1.5, 150) * u.deg
                 psf = obs.psf.to_table_psf(offset,angles)
 
                 center_energies = arf.energy.nodes
-                for index,energy in enumerate(center_energies):
+                for index, energy in enumerate(center_energies):
                     try:
-                        correction =  psf.integral(energy,Angle(0.,'deg'),Angle(self.target.on_region.radius))
+                        correction = psf.integral(energy, 0. * u.deg, self.target.on_region.radius)
                     except:
                         correction = np.nan
-                    arf.data[index] = arf.data[index]*correction
+
+                    arf.data[index] = arf.data[index] * correction
                     
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
