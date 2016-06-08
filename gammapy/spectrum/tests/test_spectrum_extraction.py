@@ -58,8 +58,10 @@ def test_spectrum_extraction(pars,results,tmpdir):
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
     etrue = EnergyBounds.equal_log_spacing(0.1, 30, 100, unit='TeV')
 
-    ana = SpectrumExtraction(target, obs, bk, e_reco=bounds,
-                             e_true=etrue,containment_correction=pars['containment_correction'])
+    ana = SpectrumExtraction(target, obs, bk,
+                             e_reco=bounds,
+                             e_true=etrue,
+                             containment_correction=pars['containment_correction'])
 
     ana.run(outdir=tmpdir)
 
