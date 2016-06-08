@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
+import astropy.units as u
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -111,6 +112,13 @@ class TestSkyMapPoisson():
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
+    def test_lookup_max_region(self):
+        from ...extern.regions.shapes import CircleSkyRegion
+        center = SkyCoord(0, 0, unit='deg', frame='galactic')
+        circle = CircleSkyRegion(center, radius=1 * u.deg)
+        pos, value = self.skymap.lookup_max(circle) 
+        assert value == 15
+        assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
 class TestSkyMapCrab():
     """

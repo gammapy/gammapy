@@ -323,16 +323,26 @@ class SkyMap(object):
         skymap._parent_skymap_id = id(self)
         return skymap
 
-    def lookup_max(self, mask=None):
+    def lookup_max(self, region=None):
         """
         Find position of maximum in a skymap.
+
+        Parameters
+        ----------
+        region : `~gammapy.extern.regions.core.SkyRegion` (optional)
+            Limit lookup of maximum to that given sky region.
 
         Returns
         -------
         (position, value): `~astropy.coordinates.SkyCoord`, float
             Position and value of the maximum.
         """
-        idx = np.nanargmax(self.data)
+        if region:
+            mask = region.contains(self.coordinates())
+        else:
+            mask =np.ones_like(self.data)
+
+        idx = np.nanargmax(self.data * mask)
         y, x = np.unravel_index(idx, self.data.shape)
         pos = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
         return pos, self.data[y, x]

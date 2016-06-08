@@ -9,7 +9,6 @@ from .utils import coordinates
 __all__ = [
     'BoundingBox',
     'bbox',
-    'lookup_max',
     'measure_containment_fraction',
     'measure_containment_radius',
     'measure_image_moments',
@@ -230,33 +229,6 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
         table.add_column(Column(data=mean, name=tag + '_MEAN'))
 
     return table
-
-
-
-
-
-def lookup_max(image, GLON, GLAT, theta):
-    """Look up the max image values within a circle of radius theta
-    around lists of given positions (nan if outside)"""
-    from .utils import coordinates
-    GLON = np.asarray(GLON)
-    GLON = np.where(GLON > 180, GLON - 360, GLON)
-    GLAT = np.asarray(GLAT)
-    n_pos = len(GLON)
-    theta = np.asarray(theta) * np.ones(n_pos, dtype='float32')
-
-    ll, bb = coordinates(image)
-
-    val = np.nan * np.ones(n_pos, dtype='float32')
-    for ii in range(n_pos):
-        mask = ((GLON[ii] - ll) ** 2 +
-                (GLAT[ii] - bb) ** 2 <=
-                theta[ii] ** 2)
-        try:
-            val[ii] = image.data[mask].max()
-        except ValueError:
-            pass
-    return val
 
 
 def measure_image_moments(image):
