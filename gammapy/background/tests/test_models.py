@@ -15,7 +15,7 @@ from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackg
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore, EventList
-from ...region import SkyCircleRegion
+from ...extern.regions.shapes import CircleSkyRegion
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
 
 
@@ -156,7 +156,7 @@ def make_test_array_oneobs(excluded_sources=None, fov_radius=Angle(2.5, "deg")):
 def make_excluded_sources():
     centers = SkyCoord([1, 0], [2, 1], unit='deg')
     radius = Angle('0.3 deg')
-    sources = SkyCircleRegion(pos=centers, radius=radius)
+    sources = CircleSkyRegion(centers, radius)
     catalog = Table()
     catalog["RA"] = sources.pos.data.lon
     catalog["DEC"] = sources.pos.data.lat
@@ -167,7 +167,7 @@ def make_excluded_sources():
 def make_source_nextCrab():
     center = SkyCoord([84, 89], [23, 20], unit='deg', frame='icrs')
     radius = Angle('0.3 deg')
-    sources = SkyCircleRegion(pos=center, radius=radius)
+    sources = CircleSkyRegion(center, radius)
     catalog = Table()
     catalog["RA"] = sources.pos.data.lon
     catalog["DEC"] = sources.pos.data.lat

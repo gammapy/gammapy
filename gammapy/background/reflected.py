@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from . import PixRegionList, PixCircleRegion
+from ..extern.regions.shapes import CirclePixelRegion
 from astropy.coordinates import Angle
 
 __all__ = [
@@ -39,7 +39,7 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
     min_distance = Angle('0 rad') if min_distance is None else Angle(min_distance)
     min_distance_input = Angle('0 rad') if min_distance_input is None else Angle(min_distance_input)
 
-    reflected_regions_pix = PixRegionList()
+    reflected_regions_pix = list()
     wcs = exclusion_mask.wcs
     pix_region = region.to_pixel(wcs)
     val = center.to_pixel(wcs, origin=1)
@@ -54,14 +54,14 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
     curr_angle = angle + min_ang + min_distance_input
     while curr_angle < max_angle:
         test_pos = _compute_xy(pix_center, offset, curr_angle)
-        test_reg = PixCircleRegion(test_pos, pix_region.radius)
-        if not test_reg.is_inside_exclusion(exclusion_mask):
+        test_reg = CirclePixelRegion(test_pos, pix_region.radius)
+        if not _is_inside_exclusion(test_reg, exclusion_mask):
             reflected_regions_pix.append(test_reg)
             curr_angle = curr_angle + min_ang
         else:
             curr_angle = curr_angle + angle_increment
 
-    reflected_regions = reflected_regions_pix.to_sky(wcs)
+    reflected_regions = [_.to_sky(wcs) for _ in reflected_regions_pix]
     return reflected_regions
 
 
@@ -75,3 +75,11 @@ def _compute_xy(pix_center, offset, angle):
     x = pix_center[0] + dx
     y = pix_center[1] + dy
     return x, y
+
+# TODO :Copied from gammapy.region.PixCircleList (deleted), find better place
+def _is_inside_exclusion(pixreg, exclusion):
+    x, y = pixreg.center
+    excl_dist = exclusion.distance_image
+    val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
+    return val < pixreg.radius
+

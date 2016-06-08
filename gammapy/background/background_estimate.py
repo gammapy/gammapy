@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .ring import ring_area_factor
-from ..region import find_reflected_regions
+from .reflected import find_reflected_regions
 
 __all__ = [
     'BackgroundEstimate',
@@ -51,8 +51,6 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     Parameters
     ----------
     pos : `~astropy.coordinates.SkyCoord`
-        Target position
-    on_radius : `~astropy.coordinates.Angle`
         On region radius
     inner_radius : `~astropy.coordinates.Angle`
         Inner ring radius
