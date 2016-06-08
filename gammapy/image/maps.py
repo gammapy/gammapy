@@ -12,7 +12,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord, proj_plane_pixel_scales, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.extern import six
-from astropy.nddata.utils import extract_array, add_array, _round
+from astropy.nddata.utils import Cutout2D
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header, _bin_events_in_cube
@@ -287,25 +287,18 @@ class SkyMap(object):
             Smaller sky map to paste.
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
-
         """
-        if not np.allclose(self.wcs.wcs.cdelt, skymap.wcs.wcs.cdelt):
-            raise ValueError('Pixel sizes not compatible.')
-
-        # find offset
-        lon, lat = cutout.wcs.wcs_pix2world(0, 0, origin)
-        x, y = self.wcs.wcs_world2pix(lon, lat, origin)
-        x, y = int(np.round(x)), int(np.round(y))
-        dy, dx = cutout.data.shape
-
+        if not getattr(cutout, '_parent_skymap_id', 0) == id(self):
+            raise TypeError('Can only paste into sky map, the smaller sky map was'
+                            ' cut out from.')
         if method == 'sum':
-            self.data[y: y + dy, x: x + dx] += cutout.data
+            self.data[cutout._bbox_original] += cutout.data[cutout._bbox_cutout]
         elif method == 'replace':
-            self.data[y: y + dy, x: x + dx] = cutout.data
+            self.data[cutout._bbox_original] = cutout.data[cutout._bbox_cutout]
         else:
             raise ValueError('Invalid method: {0}'.format(method))
 
-    def cutout(self, position, width, height=None):
+    def cutout(self, position, size):
         """
         Cut out rectangular piece of a sky map.
 
@@ -313,28 +306,24 @@ class SkyMap(object):
         ----------
         position : `~astropy.coordinates.SkyCoord`
             Position of the center of the sky map to cut out.
-        width : `~astropy.units.Angle`
-            Width of the cut out skymap.
-        height : `~astropy.units.Angle`
-            Height of the cut out skymap (default height = width).
-        
+        size : tuple
+            Tuple of `~astropy.units.Angle`, specifying the size of
+            the cutout.
+
         Returns
         -------
         cutout : `SkyMap`
             Cut out sky map.
         """
-        height = width or height
-        xbinsz, ybinsz = proj_plane_pixel_scales(self.wcs) 
-        dx, dy = (width / xbinsz).value, (height / ybinsz).value
-        
-        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
-        ref = pixel_to_skycoord(_round(x), _round(y), self.wcs, self.wcs_origin)
-        
-        cutout = SkyMap.empty(nxpix=_round(dx), nypix=_round(dy),
-                              xref=ref.galactic.l.deg, yref=ref.galactic.b.deg)
-        
-        cutout.data = extract_array(self.data, (dy, dx), (y, x))
-        return cutout
+        cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
+                          copy=True)
+        skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
+
+        # Attach bbox information to cutout for paste later
+        skymap._bbox_cutout = [slice(*_) for _ in cutout.bbox_cutout]
+        skymap._bbox_original = [slice(*_) for _ in cutout.bbox_original]
+        skymap._parent_skymap_id = id(self)
+        return skymap
 
     def lookup_max(self):
         """
@@ -342,8 +331,8 @@ class SkyMap(object):
 
         Returns
         -------
-        value: `~astropy.coordinates.SkyCoord`
-            Position of the maximum.
+        (position, value): `~astropy.coordinates.SkyCoord`, float
+            Position and value of the maximum.
         """
         idx = np.nanargmax(self.data)
         y, x = np.unravel_index(idx, self.data.shape)
