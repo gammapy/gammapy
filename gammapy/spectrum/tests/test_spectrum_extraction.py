@@ -42,7 +42,7 @@ def test_spectrum_extraction(pars,results,tmpdir):
     on_region = CircleSkyRegion(center, radius)
     target = Target(on_region)
 
-    obs_id = [23523, 23592]    
+    obs_id = [23523, 23592]
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
     obs = ObservationList([ds.obs(_) for _ in obs_id])
@@ -76,18 +76,18 @@ def test_spectrum_extraction(pars,results,tmpdir):
     assert_allclose(ana.observations[1].stats.sigma,
                     results['sigma'],
                     atol=1e-2)
-    
+
     # Write on set of output files to gammapy-extra as input for other tests
     # and check I/O
     if not pars['containment_correction']:
         outdir = gammapy_extra.filename("datasets/hess-crab4_pha")
         ana.observations.write(outdir)
-        testobs = SpectrumObservation.read(make_path(outdir)/'pha_obs23523.fits') 
+        testobs = SpectrumObservation.read(make_path(outdir)/'pha_obs23523.fits')
         assert_quantity_allclose(testobs.aeff.data,
-                                 ana.observations[0].aeff.data) 
+                                 ana.observations[0].aeff.data)
         assert_quantity_allclose(testobs.on_vector.data,
-                                 ana.observations[0].on_vector.data) 
+                                 ana.observations[0].on_vector.data)
         assert_quantity_allclose(testobs.on_vector.energy.nodes,
-                                 ana.observations[0].on_vector.energy.nodes) 
+                                 ana.observations[0].on_vector.energy.nodes)
 
-    
+
