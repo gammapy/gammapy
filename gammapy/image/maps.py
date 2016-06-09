@@ -8,8 +8,8 @@ import numpy as np
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord
+from astropy.wcs import WCS, WcsError
+from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.extern import six
 from astropy.nddata.utils import Cutout2D
@@ -275,9 +275,32 @@ class SkyMap(object):
         coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
         return coordinates
     
+    def _get_boundaries(self, skymap_ref, skymap):
+        """
+        Get boundary coordinates of one sky map in the pixel coordinate system
+        of another reference sky map.
+        """
+        ymax, xmax = skymap.data.shape
+        ymax_ref, xmax_ref = skymap_ref.data.shape
+
+        # transform boundaries in world coordinates
+        bounds = skymap.wcs.wcs_pix2world([0, xmax], [0, ymax], skymap.wcs_origin)
+        
+        # transform to pixel coordinats in the reference skymap
+        bounds_ref = skymap_ref.wcs.wcs_world2pix(bounds[0], bounds[1], skymap_ref.wcs_origin)
+
+        # round to nearest integer and clip at the boundaries
+        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
+        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
+        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
+        return xlo, xhi, ylo, yhi
+
     def paste(self, skymap, method='sum'):
         """
-        Paste cutout into sky map. 
+        Paste smaller skymap into sky map. 
+
+        WCS specifications of both skymaps must be aligned. If not call
+        `SkyMap.reproject()` on one of the maps first.
 
         Parameters
         ----------
@@ -286,21 +309,13 @@ class SkyMap(object):
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
         """
-        lo = pixel_to_skycoord(0, 0, skymap.wcs, skymap.wcs_origin)
-        xlo, ylo = skycoord_to_pixel(lo, self.wcs, self.wcs_origin)
+        xlo, xhi, ylo, yhi = self._get_boundaries(self, skymap)
+        xlo_c, xhi_c, ylo_c, yhi_c = self._get_boundaries(skymap, self)
 
-        hi = pixel_to_skycoord(-1, -1, skymap.wcs, skymap.wcs_origin)
-        xhi, yhi = skycoord_to_pixel(hi, self.wcs, self.wcs_origin)
-
-        self.data[ylo:yhi, xlo:xhi] = cutout.data
-
-        if not getattr(cutout, '_parent_skymap_id', 0) == id(self):
-            raise TypeError('Can only paste into sky map, the smaller sky map was'
-                            ' cut out from.')
         if method == 'sum':
-            self.data[cutout._bbox_original] += cutout.data[cutout._bbox_cutout]
+            self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
         elif method == 'replace':
-            self.data[cutout._bbox_original] = cutout.data[cutout._bbox_cutout]
+            self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
         else:
             raise ValueError('Invalid method: {0}'.format(method))
 
@@ -324,11 +339,6 @@ class SkyMap(object):
         cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
                           copy=True)
         skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
-
-        # Attach bbox information to cutout for paste later
-        skymap._bbox_cutout = [slice(*_) for _ in cutout.bbox_cutout]
-        skymap._bbox_original = [slice(*_) for _ in cutout.bbox_original]
-        skymap._parent_skymap_id = id(self)
         return skymap
 
     def lookup_max(self, region=None):
