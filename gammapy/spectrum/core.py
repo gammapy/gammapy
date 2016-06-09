@@ -212,6 +212,9 @@ class PHACountsSpectrum(CountsSpectrum):
     def to_table(self):
         """Write"""
         table = super(PHACountsSpectrum, self).to_table()
+        # Remove BIN_LO and BIN_HI columns for now
+        # see https://github.com/gammapy/gammapy/issues/561
+        table.remove_columns(['BIN_LO', 'BIN_HI'])
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
@@ -242,7 +245,11 @@ class PHACountsSpectrum(CountsSpectrum):
     @classmethod
     def from_table(cls, table):
         """Read"""
-        spec = CountsSpectrum.from_table(table)
+        # This will fail since BIN_LO and BIN_HI are not present
+        # spec = CountsSpectrum.from_table(table)
+        counts = table['COUNTS'].quantity
+        # FIXME : set energy to CHANNELS * u.eV, WRONG 
+        energy = np.append([0], table['CHANNEL'].data) * u.eV
         meta = dict(
             obs_id=table.meta['OBS_ID'],
             exposure=table.meta['EXPOSURE'] * u.s,
@@ -251,7 +258,7 @@ class PHACountsSpectrum(CountsSpectrum):
         if table.meta["HDUCLAS2"] == "TOTAL":
             meta.update(lo_threshold=table.meta['lo_threshold'] * u.TeV,
                         hi_threshold=table.meta['hi_threshold'] * u.TeV)
-        return cls(energy=spec.energy, data=spec.data, **meta)
+        return cls(energy=energy, data=counts, **meta)
 
 
 class SpectrumObservation(object):
