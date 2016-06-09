@@ -106,8 +106,8 @@ class ObservationStats(Stats):
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from an observation list 
-        (`~gammapy.data.ObservationList`) and returns a new instance 
+        """Stack statistics from a list of 
+        `~gammapy.data.ObservationStats` and returns a new instance 
         of `~gammapy.data.ObservationStats`
 
         Parameters
