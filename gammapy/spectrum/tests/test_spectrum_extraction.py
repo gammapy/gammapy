@@ -27,8 +27,8 @@ from ...utils.scripts import read_yaml
 
 
 @pytest.mark.parametrize("pars,results",[
-    (dict(containment_correction=False),dict(n_on=95, aeff=549861.8268659255*u.m**2)),
-    (dict(containment_correction=True), dict(n_on=95, aeff=393356.18322397786*u.m**2)),
+    (dict(containment_correction=False),dict(n_on=95, aeff=549861.8268659255*u.m**2, ethresh=0.4230466456851681*u.TeV)),
+    (dict(containment_correction=True), dict(n_on=95, aeff=393356.18322397786*u.m**2, ethresh=0.6005317540449035*u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -75,7 +75,7 @@ def test_spectrum_extraction(pars,results,tmpdir):
     assert new_list[1].obs_id == 23592
 
     ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
-    assert_allclose(ana.observations[0].lo_threshold,0.4230466456851681*u.TeV)
+    assert_allclose(ana.observations[0].lo_threshold,results['ethresh'])
 
     assert_quantity_allclose(obs23523.aeff.evaluate(energy=5*u.TeV),results['aeff'])
 
