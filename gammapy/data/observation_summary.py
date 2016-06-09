@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 
 __all__ = [
     'ObservationTableSummary',
+    #'ObservationSummary',
 ]
 
 
@@ -125,3 +126,33 @@ class ObservationTableSummary(object):
         """Make HTML file and images in tmp dir, open in browser.
         """
         raise NotImplementedError
+
+
+# class ObservationSummary(object):
+#     """Summary of observation.
+    
+#     Class allowing to summarise informations contained in 
+#     a list of observations (`~gammapy.data.ObservationList`)
+    
+#     Parameters
+#     ----------
+#     obs_list : `~gammapy.data.ObservationList`
+#         Observation list
+#     """
+    
+#     def __init__(self, obs_list, on_region, bkg_method = None, mask = None):
+#         self.obs_list = obs_list
+#         self.on_region = on_region
+#         self.bkg_method = bkg_method
+#         self.bkg_method = mask
+
+
+#     def obs_wise_summary():
+#         """
+        
+#         """
+#         bob = 0
+
+#     def __str__(self):
+#         bob = 0
+        

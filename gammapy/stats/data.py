@@ -30,10 +30,10 @@ class Stats(object):
     # TODO: add gamma exposure
 
     def __init__(self, n_on, n_off, a_on, a_off):
-        self.n_on = float(n_on)
-        self.n_off = float(n_off)
-        self.a_on = float(a_on)
-        self.a_off = float(a_off)
+        self.n_on = n_on   
+        self.n_off = n_off
+        self.a_on = a_on
+        self.a_off = a_off
 
     @property
     def alpha(self):
@@ -63,7 +63,9 @@ class Stats(object):
         keys = ['n_on', 'n_off', 'a_on', 'a_off',
                 'alpha', 'background', 'excess']
         values = [self.n_on, self.n_off, self.a_on, self.a_off,
-                  self.alpha, self.background(), self.excess()]
+#                  self.alpha, self.background(), self.excess()]
+                  ### JLK
+                  self.alpha, self.background, self.excess]
         return '\n'.join(['%s = %s' % (k, v)
                           for (k, v) in zip(keys, values)])
 
