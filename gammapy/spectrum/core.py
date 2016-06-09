@@ -220,7 +220,7 @@ class PHACountsSpectrum(CountsSpectrum):
                     hduclas1='SPECTRUM',
                     obs_id=self.obs_id,
                     exposure=self.exposure.to('s').value,
-                    backscal=self.backscal,
+                    backscal=float(self.backscal),
                     corrscal='',
                     areascal=1,
                     chantype='PHA',
@@ -325,11 +325,12 @@ class SpectrumObservation(object):
         rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
         energy_dispersion = EnergyDispersion.read(str(base / rmf))
         effective_area = EffectiveAreaTable.read(str(base / arf))
-        off_vector = CountsSpectrum.read(str(base / bkg))
-        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
+        off_vector = PHACountsSpectrum.read(str(base / bkg))
+
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
+        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
         retval._phafile = phafile
         return retval
 
@@ -510,6 +511,7 @@ class SpectrumObservationList(list):
             Output directory, default: pwd
         """
         for obs in self:
+            print (obs.off_vector.backscal)
             obs.write(outdir=outdir, **kwargs)
 
     # TODO: This should probably go away
