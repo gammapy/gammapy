@@ -269,7 +269,7 @@ class SkyMap(object):
             Return coordinate values at the pixels edges or pixel centers.
         Returns
         -------
-        coordinates : tuple or `~astropy.coordinates.SkyCoord`
+        coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky. Can be either an instance of
             `~astropy.coordinates.SkyCoord` or a tuple of `~numpy.ndarray`
             of the form (lon, lat) or (ra, dec), depending on the WCS
