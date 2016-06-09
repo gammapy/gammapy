@@ -51,6 +51,9 @@ class ObservationStats(Stats):
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
         """
+        Auxiliary constructor from an osbervation, a target
+        a background estimate
+
         Parameters
         ----------
         obs_table : `~gammapy.data.ObservationTable`
@@ -103,8 +106,8 @@ class ObservationStats(Stats):
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from an observations list 
-        (`~gammapy.data.ObservationList`) and returns new instance 
+        """Stack statistics from an observation list 
+        (`~gammapy.data.ObservationList`) and returns a new instance 
         of `~gammapy.data.ObservationStats`
 
         Parameters
