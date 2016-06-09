@@ -235,18 +235,17 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, coord_type='skycoord', origin=0, mode='center'):
+    def coordinates_pix(self, mode='center'):
         """
-        Sky coordinate images.
-
+        Pixel sky coordinate images.
         Parameters
         ----------
-        coord_type : {'pix', 'skycoord', 'galactic'}
-            Which type of coordinates to return.
-        origin : {0, 1}
-            Pixel coordinate origin.
         mode : {'center', 'edges'}
             Return coordinate values at the pixels edges or pixel centers.
+        Returns
+        -------
+        x, y : tuple
+            Return arrays representing the coordinates of a sky grid.
         """
         if mode == 'center':
             y, x = np.indices(self.data.shape)
@@ -257,25 +256,33 @@ class SkyMap(object):
         else:
             raise ValueError('Invalid mode to compute coordinates.')
 
-        if coord_type == 'pix':
-            return x, y
-        else:
-            coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
-            if coord_type == 'skycoord':
-                return coordinates
-            elif coord_type == 'galactic':
-                l = coordinates.galactic.l.wrap_at('180d')
-                b = coordinates.galactic.b
-                return l, b
-            else:
-                raise ValueError("Not a valid coordinate type. Choose either"
-                                 " 'pix' or 'skycoord'.")
+        return x, y
+
+    def coordinates(self, origin=0, mode='center'):
+        """
+        Sky coordinate images.
+        Parameters
+        ----------
+        origin : {0, 1}
+            Pixel coordinate origin.
+        mode : {'center', 'edges'}
+            Return coordinate values at the pixels edges or pixel centers.
+        Returns
+        -------
+        coordinates : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        """
+        x, y = self.coordinates_pix(mode=mode)
+        coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
+        return coordinates
 
     def solid_angle(self):
         """
         Solid angle image
         """
-        xsky, ysky = self.coordinates(coord_type='galactic', mode='edges')
+        coordinates = self.coordinates(mode='edges')
+        xsky = coordinates.data.lon
+        ysky = coordinates.data.lat
         omega = np.abs(np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:])
         return omega.to('sr')
 
@@ -332,11 +339,15 @@ class SkyMap(object):
         from sherpa.data import Data2D, Data2DInt
 
         if dstype == 'Data2D':
-            x, y = self.coordinates('galactic', mode='center')
+            coordinates = self.coordinates(mode='center')
+            x = coordinates.data.lon
+            y = coordinates.data.lat
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
-            x, y = self.coordinates('galactic', mode='edges')
+            coordinates = self.coordinates(mode='edges')
+            x = coordinates.data.lon
+            y = coordinates.data.lat
             xlo, xhi = x[:-1], x[1:]
             ylo, yhi = y[:-1], y[1:]
             return Data2DInt(self.name, xlo.ravel(), xhi.ravel(),

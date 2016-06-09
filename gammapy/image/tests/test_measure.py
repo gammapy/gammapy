@@ -54,7 +54,9 @@ def generate_gaussian_image():
     Generate some greyscale image to run the detection on.
     """
     skymap = SkyMap.empty(nxpix=201, nypix=201, binsz=0.02)
-    l, b = skymap.coordinates('galactic')
+    coordinates = skymap.coordinates()
+    l = coordinates.data.lon.wrap_at("180d")
+    b = coordinates.data.lat
     sigma = 0.2
     source = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
     skymap.data += source(l.degree, b.degree)
