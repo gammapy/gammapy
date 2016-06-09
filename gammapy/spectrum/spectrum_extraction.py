@@ -4,6 +4,7 @@ import logging
 import os
 import numpy as np
 import astropy.units as u
+from astropy.units import Quantity
 from . import (
     CountsSpectrum,
     PHACountsSpectrum,
@@ -54,11 +55,12 @@ class SpectrumExtraction(object):
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
+
     def __init__(self, target, obs, background, e_reco=None, e_true=None):
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
-        self.background=background
+        self.background = background
         self.target = target
         # This is the 14 bpd setup used in HAP Fitspectrum
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
@@ -92,7 +94,7 @@ class SpectrumExtraction(object):
         outdir = cwd if outdir is None else make_path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
         os.chdir(str(outdir))
-        if not isinstance(self.background, BackgroundEstimate):
+        if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
             self.estimate_background()
         self.extract_spectrum()
@@ -111,7 +113,7 @@ class SpectrumExtraction(object):
         else:
             raise NotImplementedError("Method: {}".format(method))
         self.background = bkg
-        
+
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
         n_min = self.bkg_method['n_min']
@@ -139,7 +141,7 @@ class SpectrumExtraction(object):
             on_events = obs.events[idx]
 
             counts_kwargs = dict(energy=self.e_reco,
-                                 exposure = obs.observation_live_time_duration,
+                                 exposure=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id)
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
@@ -153,12 +155,42 @@ class SpectrumExtraction(object):
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
-
+            # TODO: choose if we want this high default value or to use the one given in the area file in the exporter
+            on_vec.hi_threshold = Quantity(1000, "TeV")
+            on_vec.lo_threshold = arf.low_threshold
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
 
         self._observations = SpectrumObservationList(spectrum_observations)
-    
+
+    def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None, **kwargs):
+        """Set the hi and lo Ethreshold for each observation based on implemented method in gammapy or on a function that
+        you define on the IRFs on each observations and that take an observation object as parameters.
+
+        Parameters
+        ----------
+        method_lo_threshold : {"AreaMax", "Myfunc"}
+            method implemented to define a low energy threshold
+        func_lo_threshold : function name
+            Name of the function you define on the IRFs of the observation to define a low energy threshold
+        kwargs : argument to the defined method or the function
+
+        """
+        # TODO: implement new methods for calculating this threshold and remove the callback function...
+        for i, obs in enumerate(self._observations):
+            # TODO: define method for the high energy threshold
+            if method_lo_threshold == "AreaMax":
+                self._observations[i].on_vector.lo_threshold = obs.aeff.area_max(**kwargs)
+            elif method_lo_threshold == "Myfunc":
+                if not func_lo_threshold:
+                    log.info('You have to give a function do define the energy threshold')
+                    break
+                else:
+                    self._observations[i].on_vector.lo_threshold = func_lo_threshold(obs, **kwargs)
+            elif not method_lo_threshold:
+                log.info('You have to give a method name to define the energy threshold')
+                break
+
     def write(self):
         """Write results to disk"""
         self.observations.write(self.OGIP_FOLDER)

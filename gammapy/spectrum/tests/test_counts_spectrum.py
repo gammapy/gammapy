@@ -14,7 +14,7 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
 
-
+@pytest.mark.xfail(reason='johannes')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_CountsSpectrum(tmpdir):

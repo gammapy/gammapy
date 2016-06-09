@@ -2,10 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
-
 import numpy as np
 from astropy.extern import six
-
 from gammapy.extern.pathlib import Path
 from ..utils.energy import Energy
 from ..spectrum import CountsSpectrum
@@ -212,13 +210,6 @@ class SpectrumFit(object):
             Low energy threshold
         """
         energy = Energy(energy)
-        shape = len(self.obs_list)
-        if energy.shape is ():
-            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
-        if energy.shape[0] != shape:
-            raise ValueError('Dimension to not match: {} {}'.format(
-                self.obs_list, energy))
-
         self._thres_lo = Energy(energy)
 
     @property
@@ -241,14 +232,6 @@ class SpectrumFit(object):
             High energy threshold
         """
         energy = Energy(energy)
-        shape = len(self.obs_list)
-        if energy.shape is ():
-            energy = Energy(np.ones(shape=shape) * energy.value, energy.unit)
-
-        if energy.shape[0] != shape:
-            raise ValueError('Dimensions to not match: {} {}'.format(
-                self.obs_list, energy))
-
         self._thres_hi = Energy(energy)
 
     @property
@@ -257,13 +240,6 @@ class SpectrumFit(object):
         file_list = [str(o.phafile) for o in self.obs_list]
         ret = ','.join(file_list)
         return ret
-
-    def set_default_thresholds(self):
-        """Set energy threshold to the value in the PHA headers"""
-        lo_thres = [o.meta.safe_energy_range[0] for o in self.obs_list]
-        hi_thres = [o.meta.safe_energy_range[1] for o in self.obs_list]
-        self.energy_threshold_low = lo_thres
-        self.energy_threshold_high = hi_thres
 
     def info(self):
         """Print some basic info"""
@@ -314,12 +290,20 @@ class SpectrumFit(object):
         # Make model amplitude O(1e0)
         model = self.model * self.FLUX_FACTOR
         ds.set_source(model)
-        thres_lo = self.energy_threshold_low.to('keV').value
-        thres_hi = self.energy_threshold_high.to('keV').value
 
         namedataset = []
         for i in range(len(ds.datasets)):
-            datastack.notice_id(i + 1, thres_lo[i], thres_hi[i])
+            if self.obs_list[i].lo_threshold > self._thres_lo:
+                thres_lo = self.obs_list[i].lo_threshold.to('keV').value
+            else:
+                thres_lo = self._thres_lo.to('keV').value
+            if self.obs_list[i].hi_threshold < self._thres_hi:
+                thres_hi = self.obs_list[i].hi_threshold.to('keV').value
+            else:
+                thres_hi = self._thres_hi.to('keV').value
+            import IPython;
+            IPython.embed()
+            datastack.notice_id(i + 1, thres_lo, thres_hi)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
         ds.fit(*namedataset)

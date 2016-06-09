@@ -12,6 +12,7 @@ __all__ = [
     'abramowski_effective_area',
 ]
 
+
 class EffectiveAreaTable(NDDataArray):
     """Effective Area Table
     
@@ -89,7 +90,7 @@ class EffectiveAreaTable(NDDataArray):
         ax.set_ylabel('Effective Area [{}]'.format(self.data.unit))
 
         return ax
-    
+
     @classmethod
     def from_table(cls, table):
         """ARF reader"""
@@ -115,6 +116,27 @@ class EffectiveAreaTable(NDDataArray):
         meta.update(LO_THRES=self.low_threshold.to('TeV').value)
         meta.update(HI_THRES=self.high_threshold.to('TeV').value)
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
+
+    def area_max(self, percent_area_max):
+        """The energy threshold is the energy for which one the Area is superior to percent_area_max*AreaMax
+
+        Parameters
+        ----------
+        percent_area_max: int
+            percentage of the maximal Area value between 1 and 100
+
+        Returns
+        -------
+        energy: `~astropy.units.Quantity`
+            Energy threshold
+        """
+        area_max = self.data[np.where(~np.isnan(self.data))].max()
+        area_thres = (percent_area_max / 100) * area_max
+        i_thres = np.where(self.data > area_thres)[0][0]
+        a = (self.energy.data[i_thres] - self.energy.data[i_thres - 1]) / (self.data[i_thres] - self.data[i_thres - 1])
+        b = self.energy.data[i_thres]
+        ethreshold = a * (area_thres - self.data[i_thres]) + b
+        return ethreshold
 
 
 class EffectiveAreaTable2D(NDDataArray):
