@@ -125,23 +125,29 @@ class TestSkyMapPoisson():
         positions = SkyCoord([0, 0, 0, 2, -2], [0, 2, -2, 0, 0],
                            unit='deg', frame='galactic')
         BINSZ = 0.02
-        lon_all = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
-        lat_all = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
-        lon_all.data = lon_all.coordinates().galactic.l.deg
-        lon_all.data = lon_all.coordinates().galactic.b.deg
 
-        skymap_cutout = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+        # setup coordinate images
+        lon = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+        lat = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+
+        c = lon.coordinates()
+        lon.data = c.galactic.l.deg
+        lat.data = c.galactic.b.deg
+
         for pos in positions:
-            # Evaluate on whole image
-            l, b = skymap_all.coordinates('galactic')
+            cutout = lon.cutout(pos, size=(2 * u.deg, 2 * u.deg))
             
-            # Evaluate on cut out
-            cutout = skymap_cutout.cutout(pos, size=(2 * u.deg, 2 * u.deg))
-            l, b = cutout.coordinates('galactic')
-            cutout.data = source(l.deg, b.deg)
-            skymap_cutout.paste(cutout)
+            # recompute coordinates and paste into coordinate images
+            c = cutout.coordinates()
+            cutout.data = c.galactic.l.deg
+            lon.paste(cutout, method='replace')
 
-        assert_allclose(skymap_all, skymap_cutout, atol=1E-8, rtol=0)
+            cutout.data = c.galactic.b.deg
+            lat.paste(cutout, method='replace')
+
+        c = lon.coordinates()
+        assert_allclose(lon.data, c.galactic.l.deg)
+        assert_allclose(lat.data, c.galactic.b.deg)
 
 class TestSkyMapCrab():
     """

@@ -236,7 +236,7 @@ class SkyMap(object):
 
     def coordinates_pix(self, mode='center'):
         """
-        Pixel sky coordinate images.
+        Pixel coordinate images.
 
         Parameters
         ----------
@@ -257,22 +257,22 @@ class SkyMap(object):
             raise ValueError('Invalid mode to compute coordinates.')
         return x, y
 
-    def coordinates(self, origin=0, mode='center'):
+    def coordinates(self, mode='center'):
         """
         Sky coordinate images.
+
         Parameters
         ----------
-        origin : {0, 1}
-            Pixel coordinate origin.
         mode : {'center', 'edges'}
             Return coordinate values at the pixels edges or pixel centers.
+
         Returns
         -------
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
         x, y = self.coordinates_pix(mode=mode)
-        coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
+        coordinates = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
         return coordinates
     
     def _get_boundaries(self, skymap_ref, skymap):
@@ -290,7 +290,6 @@ class SkyMap(object):
         bounds_ref = skymap_ref.wcs.wcs_world2pix(bounds[0], bounds[1], skymap_ref.wcs_origin)
 
         # round to nearest integer and clip at the boundaries
-        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
         xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
         ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
         return xlo, xhi, ylo, yhi
@@ -330,6 +329,10 @@ class SkyMap(object):
         size : tuple
             Tuple of `~astropy.units.Angle`, specifying the size of
             the cutout.
+
+        Examples
+        --------
+
 
         Returns
         -------
@@ -377,7 +380,7 @@ class SkyMap(object):
 
     def center(self):
         """
-        Center coordinates of the sky map.
+        Center sky coordinates of the sky map.
         """
         return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
                                    (self.data.shape[1] - 1) / 2.,
@@ -406,7 +409,7 @@ class SkyMap(object):
             xsky, ysky = position[0], position[1]
 
         x, y = self.wcs.wcs_world2pix(xsky, ysky, self.wcs_origin)
-        return self.data[np.round(y).astype('int'), np.round(x).astype('int')]
+        return self.data[np.rint(y), np.rint(x)]
 
     def to_quantity(self):
         """
