@@ -5,6 +5,7 @@ import os
 import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
+from astropy.coordinates import Angle
 from . import (
     CountsSpectrum,
     PHACountsSpectrum,
@@ -39,6 +40,9 @@ class SpectrumExtraction(object):
     and off counts vectors as well as an effective area vector and an energy
     dispersion matrix.  For more info see :ref:`spectral_fitting`.
 
+    For point sources analyzed with 'full containement' IRFs, a correction for PSF
+    leakage out of the circular ON region can be applied.
+
     Parameters
     ----------
     target : `~gammapy.data.Target` or `~gammapy.extern.regions.SkyRegion`
@@ -49,14 +53,15 @@ class SpectrumExtraction(object):
         Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
+    containment_correction : bool
+        Flag to apply containment correction for point sources and circular ON regions.
 
     Examples
     --------
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
-
-    def __init__(self, target, obs, background, e_reco=None, e_true=None):
+    def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction=False):
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
@@ -66,7 +71,11 @@ class SpectrumExtraction(object):
         self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
         self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
         self._observations = None
+        self.containment_correction = containment_correction
+        if self.containment_correction and not isinstance(target.on_region,CircleSkyRegion):
+            raise TypeError("Incorrect region type for containment correction. Should be CircleSkyRegion.")
 
+        
     @property
     def observations(self):
         """List of `~gammapy.spectrum.SpectrumObservation`
@@ -155,9 +164,26 @@ class SpectrumExtraction(object):
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
+
             # TODO: choose if we want this high default value or to use the one given in the area file in the exporter
             on_vec.hi_threshold = Quantity(1000, "TeV")
             on_vec.lo_threshold = arf.low_threshold
+
+            # If required, correct arf for psf leakage
+            if self.containment_correction:
+                # First need psf
+                angles = np.linspace(0., 1.5, 150) * u.deg
+                psf = obs.psf.to_table_psf(offset,angles)
+
+                center_energies = arf.energy.nodes
+                for index, energy in enumerate(center_energies):
+                    try:
+                        correction = psf.integral(energy, 0. * u.deg, self.target.on_region.radius)
+                    except:
+                        correction = np.nan
+
+                    arf.data[index] = arf.data[index] * correction
+                    
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
 

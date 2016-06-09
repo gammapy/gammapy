@@ -14,7 +14,9 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
 
-@pytest.mark.xfail(reason='johannes')
+# TODO for Johannes:
+# https://travis-ci.org/gammapy/gammapy/jobs/136111773#L938
+@pytest.mark.xfail(reason='BIN_LO and BIN_HI have been removed')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_CountsSpectrum(tmpdir):

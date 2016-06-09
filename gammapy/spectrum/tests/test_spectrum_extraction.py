@@ -3,10 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import pytest
 import astropy.units as u
 from numpy.testing import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose
 
 from ...data import DataStore, ObservationTable, Target, ObservationList
 from ...datasets import gammapy_extra
@@ -24,12 +26,17 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.scripts import read_yaml
 
 
+@pytest.mark.parametrize("pars,results",[
+    (dict(containment_correction=False),dict(n_on=95, aeff=549861.8268659255*u.m**2, ethresh=0.4230466456851681*u.TeV)),
+    (dict(containment_correction=True), dict(n_on=95, aeff=393356.18322397786*u.m**2, ethresh=0.6005317540449035*u.TeV)),
+])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_spectrum_extraction(tmpdir):
-    print(tmpdir)
+
+def test_spectrum_extraction(pars,results,tmpdir):
+
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
-    radius = Angle('0.3 deg')
+    radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center, radius)
     target = Target(on_region)
 
@@ -52,24 +59,27 @@ def test_spectrum_extraction(tmpdir):
     etrue = EnergyBounds.equal_log_spacing(0.1, 30, 100, unit='TeV')
 
     ana = SpectrumExtraction(target, obs, bk, e_reco=bounds,
-                             e_true=etrue)
+                             e_true=etrue,containment_correction=pars['containment_correction'])
+
     ana.run(outdir=tmpdir)
-    #ana.run()
+
     # test methods on SpectrumObservationList
     obslist = ana.observations
 
     assert len(obslist) == 2
     obs23523 = obslist.obs(23523)
 
-    assert obs23523.on_vector.total_counts.value == 123
+    assert obs23523.on_vector.total_counts.value == results['n_on']
     new_list = [obslist.obs(_) for _ in [23523, 23592]]
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
 
     ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
-    assert_allclose(ana.observations[0].lo_threshold,0.4230466456851681*u.TeV)
+    assert_allclose(ana.observations[0].lo_threshold,results['ethresh'])
 
+    assert_quantity_allclose(obs23523.aeff.evaluate(energy=5*u.TeV),results['aeff'])
 
+    
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')
 def test_observation_stacking():
