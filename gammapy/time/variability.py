@@ -1,7 +1,8 @@
 def exptest_for_run2(time_delta=[]):
     """Compute Mr value, the level of variability for a certain period of time.
 
-    Longer description: A single Mr value can be calculated, which shows the level of variability for the whole period, or the Mr value for each run can be shown.
+    Longer description: A single Mr value can be calculated, which shows the level of variability
+                        for the whole period, or the Mr value for each run can be shown.
 
 
     Ref:Prah(1999).A fast unbinned test on event clustering in Poisson processes.astro-ph/9909399
