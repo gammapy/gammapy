@@ -1,7 +1,6 @@
 def exptest_for_run2(time_delta=[]):
-    """
+    """Compute Mr value, the level of variability for a certain period of time.
 
-    Short description: To compute the Mr value, which shows the level of variability for a certain period of time
     Longer description: A single Mr value can be calculated, which shows the level of variability for the whole period, or the Mr value for each run can be shown.
 
 
@@ -9,11 +8,12 @@ def exptest_for_run2(time_delta=[]):
 
     Parameters
     ----------
-    run: run number for each event
+    run : list of int
+        Run number for each event
     event_time : list of times for each event
     expCount: the acceptance for each run according to the observation conditions
 
-     Returns
+    Returns
     -------
     Mr : float
         Level of variability
