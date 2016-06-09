@@ -75,6 +75,7 @@ class SpectrumExtraction(object):
         if self.containment_correction and not isinstance(target.on_region,CircleSkyRegion):
             raise TypeError("Incorrect region type for containment correction. Should be CircleSkyRegion.")
 
+        
     @property
     def observations(self):
         """List of `~gammapy.spectrum.SpectrumObservation`
