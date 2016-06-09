@@ -270,10 +270,7 @@ class SkyMap(object):
         Returns
         -------
         coordinates : `~astropy.coordinates.SkyCoord`
-            Position on the sky. Can be either an instance of
-            `~astropy.coordinates.SkyCoord` or a tuple of `~numpy.ndarray`
-            of the form (lon, lat) or (ra, dec), depending on the WCS
-            transformation that is set for the sky map.
+            Position on the sky.
         """
         x, y = self.coordinates_pix(mode=mode)
         coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
