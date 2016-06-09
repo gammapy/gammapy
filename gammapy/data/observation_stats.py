@@ -17,12 +17,21 @@ class ObservationStats(Stats):
 
     Parameters
     ----------
-    obs_table : `~gammapy.data.ObservationTable`
-        Observation index table
-    target_pos : `~astropy.coordinates.SkyCoord`
-        Target position
-    bg_method : str
-        Background estimation method
+    n_on : int
+        number of on events
+    n_off : int
+        number of on events
+    a_on : float
+        number of on events
+    a_off : float
+        number of on events
+    obs_id : int
+        number of on events
+    livetime : float
+        number of on events
+    alpha : float
+        number of on events
+
     """
 
     def __init__(self,
@@ -41,6 +50,16 @@ class ObservationStats(Stats):
 
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
+        """
+        Parameters
+        ----------
+        obs_table : `~gammapy.data.ObservationTable`
+            Observation index table
+        target_pos : `~astropy.coordinates.SkyCoord`
+            Target position
+        bg_method : str
+            Background estimation method
+        """
         n_on = cls._get_on_events(obs, target)
         n_off = len(bg_estimate.off_events)
         a_on = bg_estimate.a_on
@@ -60,15 +79,14 @@ class ObservationStats(Stats):
 
     @property
     def alpha(self):
-        """ Override member function from `~gammapy.stats.Stats`
+        """Override member function from `~gammapy.stats.Stats`
         to take into account weighted alpha by number of Off events
         """
         return self.alpha_obs
 
     @property
     def sigma(self):
-        """ Override member function from `~gammapy.stats.Stats`
-        to take into account weighted alpha by number of Off events
+        """Li-Ma significance for observation statistics (`float`)
         """
         sigma = significance_on_off(
             self.n_on, self.n_off, self.alpha, method='lima')
@@ -76,7 +94,7 @@ class ObservationStats(Stats):
 
     @staticmethod
     def _get_on_events(obs, target):
-        """ Number of ON events in the region of interest (`int`)
+        """Number of ON events in the region of interest (`int`)
         """
         print(target)
         idx = target.on_region.contains(obs.events.radec)
@@ -85,8 +103,19 @@ class ObservationStats(Stats):
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from an observations list (`~gammapy.data.ObservationList`)
-        and returns new instance of `~gammapy.data.ObservationStats`
+        """Stack statistics from an observations list 
+        (`~gammapy.data.ObservationList`) and returns new instance 
+        of `~gammapy.data.ObservationStats`
+
+        Parameters
+        ----------
+        stats_list : list
+            List of observation statistics `~gammapy.data.ObservationStats`
+      
+        Returns
+        -------
+        total_stats : `~gammapy.data.ObservationStats`
+            Statistics for stacked observation 
         """
         n_on = 0
         n_off = 0
