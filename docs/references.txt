@@ -74,7 +74,9 @@
 
 .. _GSoC 2015: https://www.google-melange.com/gsoc/homepage/google/gsoc2015
 .. _Manuel Paz Arribas GSoC 2015 on observation handling and cube background modeling: http://mapaz-gsoc2015-blog.blogspot.de/
+.. _Olga Vorokh GSoC 2016 on image analysis and source detection: http://alcyonegammapy.blogspot.de/
 .. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
+.. _First Gammapy coding sprint: https://github.com/gammapy/gammapy/wiki/PyGamma-coding-sprint-1
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy

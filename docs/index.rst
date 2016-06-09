@@ -33,6 +33,8 @@ News
 
 To get notifications for Gammapy releases, join the `Gammapy mailing list`_.
 
+* June 2016 --- `First Gammapy coding sprint`_ at MPIK, Heidelberg
+* May - August 2016 --- `Olga Vorokh GSoC 2016 on image analysis and source detection`_
 * April 20, 2016 --- Gammapy **0.4** release. See changelog: :ref:`gammapy_0p4_release`
 * April 7, 2016 --- Gammapy presentation at the `April 2016 IACT data meeting`_
 * November 16 - 20, 2015 --- `Python for gamma-ray astronomy 2015`_ workshop at MPIK, Heidelberg
