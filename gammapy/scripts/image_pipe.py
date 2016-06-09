@@ -263,6 +263,38 @@ class ObsImage(object):
             return energy_dependant_psftab
 
 
+    def make_psf(self, source_position, energy_band):
+        """TODO:find a good description
+
+        Parameters
+        ----------
+        source_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
+        energy_band: `~astropy.units.Quantity`
+            Energy band on which you cant to define the new `~gammapy.irf.EnergyDependentTablePSF`
+
+        Returns
+        -------
+        energy_dependant_psftab : `~gammapy.irf.EnergyDependentTablePSF`
+            Energy dependent psf table on you energy range
+        """
+        # 2D Exposure computation on the self.energy_range and on an offset_tab
+        energy = EnergyBounds.equal_log_spacing(energy_band[0].value, energy_band[1].value, 100,
+                                                energy_band.unit)
+
+        energy_bin = energy.log_centers
+        offset = source_position.separation(self.obs_center)
+        theta = self.psf.to_table_psf(theta=offset).offset
+        psf_tab = self.psf.to_table_psf(theta=offset).evaluate(energy_bin)
+        arf = self.aeff.evaluate(offset=offset, energy=energy_bin).to("cm2").T
+        tab = psf_tab.T * arf.value
+        exposure = arf
+        tab *= self.livetime.value
+        exposure *= self.livetime
+        energy_dependant_psftab = EnergyDependentTablePSF(energy=energy_bin, offset=theta, exposure=exposure,
+                                                          psf_value=tab)
+        return energy_dependant_psftab
+
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
 
@@ -402,7 +434,7 @@ class MosaicImage(object):
             if len(obs_image.events) < self.ncounts_min:
                 continue
             else:
-                energy_dependant_psftab = obs_image.make_mean_psf2(region_center, spectral_index)
+                energy_dependant_psftab = obs_image.make_mean_psf(region_center, spectral_index)
                 if not energy_dependant_psftab:
                     continue
                 if (i == 0):
@@ -416,3 +448,72 @@ class MosaicImage(object):
         tab_tot /= exposure_tab_tot.value
         psftable = TablePSF(energy_dependant_psftab.offset, tab_tot)
         return psftable
+
+    def make_energydependant_psf(self, obs_table, source_position, energy_band):
+        """Compute the mean PSF for a set of observation
+        Parameters
+        ----------
+        obs_table: `~gammapy.data.ObservationTable`
+            Observation Table you want to use to compute the mean psf
+        source_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
+        energy_band: `~astropy.units.Quantity`
+            Energy band on which you cant to define the new `~gammapy.irf.EnergyDependentTablePSF`
+
+        Returns
+        -------
+        energy_dependant_psftab : `~gammapy.irf.EnergyDependentTablePSF`
+            Energy dependent psf table on you energy range
+        """
+        i = 0
+        obs = self.data_store.obs(obs_table['OBS_ID'][0])
+        obs_image = ObsImage(obs, self.empty_image, energy_band, self.offset_band,
+                                 self.exclusion_mask, self.ncounts_min)
+        energy_dependant_psftab = obs_image.make_psf(source_position, energy_band)
+        energy=energy_dependant_psftab.energy
+        offset=energy_dependant_psftab.offset
+        exposure_tab_tot = energy_dependant_psftab.exposure
+        tab_tot = energy_dependant_psftab.psf_value
+        for obs_id in obs_table['OBS_ID']:
+            obs = self.data_store.obs(obs_id)
+            obs_image = ObsImage(obs, self.empty_image, energy_band, self.offset_band,
+                                 self.exclusion_mask, self.ncounts_min)
+            energy_dependant_psftab = obs_image.make_psf(source_position, energy_band)
+            exposure_tab_tot += energy_dependant_psftab.exposure
+            tab_tot += energy_dependant_psftab.psf_value
+
+
+        energy_dependant_psftab = EnergyDependentTablePSF(energy=energy, offset=offset, exposure=exposure_tab_tot,
+                                                          psf_value=tab_tot)
+        return energy_dependant_psftab
+
+
+    def make_psftable(self, source_position, obs_table, energy_band, spectral_index=2.3):
+        """Compute the mean PSF for a set of observation
+        Parameters
+        ----------
+        obs_table: `~gammapy.data.ObservationTable`
+            Observation Table you want to use to compute the mean psf
+        source_position : `~astropy.coordinates.SkyCoord`
+            Coordinates of the interest region for which we want to calculate the psf
+        energy_band: `~astropy.units.Quantity`
+            Energy band on which you cant to define the new `~gammapy.irf.EnergyDependentTablePSF`
+        spectral_index : float
+            Assumed power-law spectral index
+
+        Returns
+        -------
+        psf_table : `~gammapy.irf.TablePSF`
+            PSF table mean on your set of observations and energy range
+        """
+        energy = EnergyBounds.equal_log_spacing(energy_band[0].value, energy_band[1].value, 100,
+                                                self.energy_band.unit)
+        energy_bands = energy.bands
+        energy_bin = energy.log_centers
+        eref = EnergyBounds(energy_band).log_centers
+        spectrum = (energy_bin / eref) ** (-spectral_index)
+        psf_energydependent = self.make_energydependant_psf(obs_table, source_position,energy_band)
+        mean_psf=np.sum(psf_energydependent.psf_value* spectrum *energy_bands, axis=1)/\
+                  np.sum(psf_energydependent.exposure.value* spectrum *energy_bands)
+        psf_table=TablePSF(psf_energydependent.offset, mean_psf)
+        return psf_table
