@@ -8,6 +8,7 @@ __all__ = [
     'ObservationStats',
 ]
 
+
 class ObservationStats(Stats):
     """Observation statistics.
 
@@ -25,38 +26,37 @@ class ObservationStats(Stats):
     """
 
     def __init__(self,
-                 n_on = None, n_off = None, a_on = None, a_off = None,
-                 obs_id = None, livetime = None, alpha = None):
+                 n_on=None, n_off=None, a_on=None, a_off=None,
+                 obs_id=None, livetime=None, alpha=None):
         super(ObservationStats, self).__init__(
-            n_on = n_on,
-            n_off = n_off,
-            a_on = a_on,
-            a_off = a_off
+            n_on=n_on,
+            n_off=n_off,
+            a_on=a_on,
+            a_off=a_off
         )
-        
+
         self.obs_id = obs_id
         self.livetime = livetime
         self.alpha_obs = alpha
 
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
-        n_on=cls._get_on_events(obs, target)
-        n_off=len(bg_estimate.off_events)
-        a_on =bg_estimate.a_on
-        a_off=bg_estimate.a_off
-        
+        n_on = cls._get_on_events(obs, target)
+        n_off = len(bg_estimate.off_events)
+        a_on = bg_estimate.a_on
+        a_off = bg_estimate.a_off
+
         obs_id = obs.obs_id
         livetime = obs.observation_live_time_duration
         alpha = a_on / a_off
         stats = cls(n_on=n_on,
                     n_off=n_off,
-                    a_on = a_on,
-                    a_off = a_off,
-                    obs_id = obs_id,
-                    livetime = livetime,
-                    alpha = alpha)
+                    a_on=a_on,
+                    a_off=a_off,
+                    obs_id=obs_id,
+                    livetime=livetime,
+                    alpha=alpha)
         return stats
-
 
     @property
     def alpha(self):
@@ -64,6 +64,15 @@ class ObservationStats(Stats):
         to take into account weighted alpha by number of Off events
         """
         return self.alpha_obs
+
+    @property
+    def sigma(self):
+        """ Override member function from `~gammapy.stats.Stats`
+        to take into account weighted alpha by number of Off events
+        """
+        sigma = significance_on_off(
+            self.n_on, self.n_off, self.alpha, method='lima')
+        return sigma
 
     @staticmethod
     def _get_on_events(obs, target):
@@ -73,10 +82,10 @@ class ObservationStats(Stats):
         idx = target.on_region.contains(obs.events.radec)
         on_events = obs.events[idx]
         return len(on_events)
-        
+
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from an observations list
+        """Stack statistics from an observations list (`~gammapy.data.ObservationList`)
         and returns new instance of `~gammapy.data.ObservationStats`
         """
         n_on = 0
@@ -104,22 +113,22 @@ class ObservationStats(Stats):
         a_on /= n_off
         a_off /= n_off
         alpha /= n_off
-            
+
         # if no off events the weighting of alpha is done
         # with the livetime
         if n_off == 0:
             alpha = alpha_backup / livetime.value
             a_on_backup = a_on_backup / livetime.value
             a_off_backup = a_off_backup / livetime.value
-            
+
         total_stats = cls(
-            n_on = n_on,
-            n_off = n_off,
-            a_on = a_on,
-            a_off = a_off,
-            obs_id = obs_id,
-            livetime = livetime,
-            alpha = alpha
+            n_on=n_on,
+            n_off=n_off,
+            a_on=a_on,
+            a_off=a_off,
+            obs_id=obs_id,
+            livetime=livetime,
+            alpha=alpha
         )
         return total_stats
 
@@ -128,25 +137,21 @@ class ObservationStats(Stats):
         and returns new instance of `~gammapy.data.ObservationStats`
         """
         return ObservationStats.stack(self, other)
-        
+
     def __str__(self):
         """Observation statistics report (`str`)
         """
         ss = '*** Observation summary report ***\n'
-        ss+= 'Observation Id: {}\n'.format(self.obs_id)
-        ss+= 'Livetime: {}\n'.format(self.livetime.to(u.h))
-        ss+= 'On events: {}\n'.format(self.n_on)
-        ss+= 'Off events: {}\n'.format(self.n_off)
-        ss+= 'Alpha: {}\n'.format(self.alpha)
-        ss+= 'Bkg events in On region: {}\n'.format(self.background)
-        ss+= 'Excess: {}\n'.format(self.excess)
-        ss+= 'Gamma rate: {}\n'.format(self.n_on / self.livetime.to(u.min))
-        ss+= 'Bkg rate rate: {}\n'.format(self.background / self.livetime.to(u.min))
-        ss+= 'Sigma: {}\n'.format(significance_on_off(self.n_on,
-                                                      self.n_off,
-                                                      self.alpha,
-                                                      method='lima'))
+        ss += 'Observation Id: {}\n'.format(self.obs_id)
+        ss += 'Livetime: {}\n'.format(self.livetime.to(u.h))
+        ss += 'On events: {}\n'.format(self.n_on)
+        ss += 'Off events: {}\n'.format(self.n_off)
+        ss += 'Alpha: {}\n'.format(self.alpha)
+        ss += 'Bkg events in On region: {}\n'.format(self.background)
+        ss += 'Excess: {}\n'.format(self.excess)
+        ss += 'Gamma rate: {}\n'.format(self.n_on / self.livetime.to(u.min))
+        ss += 'Bkg rate rate: {}\n'.format(self.background /
+                                           self.livetime.to(u.min))
+        ss += 'Sigma: {}\n'.format(self.sigma)
 
         return ss
-
-    
