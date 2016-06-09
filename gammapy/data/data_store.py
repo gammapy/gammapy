@@ -586,15 +586,15 @@ class DataStoreObservation(object):
         raise NotImplementedError
 
     def make_psf(self, source_position, energy=None, theta=None):
-        """Evaluating the energydependent psf for a given energy array or theta array
+        """Make energy-dependent PSF for a given source position.
 
         Parameters
         ----------
         source_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the interest region for which we want to calculate the psf
-        energy: `~astropy.units.Quantity`
+            Coordinates of the source position for which we want to calculate the psf
+        energy : `~astropy.units.Quantity`
             1D Energy Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
-        theta: `~astropy.coordinates.Angle`
+        theta : `~astropy.coordinates.Angle`
             1D Angle Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF` (offset in the FOV)
 
         Returns
@@ -608,13 +608,12 @@ class DataStoreObservation(object):
             energy = self.psf.to_table_psf(theta=offset).energy
         if not theta:
             theta = self.psf.to_table_psf(theta=offset).offset
-        psf_tab = self.psf.to_table_psf(theta=offset).evaluate(energy)
+        psf_value = self.psf.to_table_psf(theta=offset).evaluate(energy)
         arf = self.aeff.evaluate(offset=offset, energy=energy).to("cm2")
-        exposure = arf
-        exposure *= self.observation_live_time_duration
-        energy_dependant_psftab = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
-                                                          psf_value=psf_tab)
-        return energy_dependant_psftab
+        exposure = arf * self.observation_live_time_duration
+        psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
+                                                          psf_value=psf_value)
+        return psf
 
 
 class ObservationList(list):
@@ -623,15 +622,16 @@ class ObservationList(list):
     Could be extended to hold a more generic class of observations
     """
 
-    def make_energydependant_psf(self, source_position, energy=None, theta=None):
-        """Compute the mean PSF for a set of observation
+    def make_psf(self, source_position, energy=None, theta=None):
+        """Make energy-dependent PSF for a given source position and a set of observations
+
         Parameters
         ----------
         source_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the interest region for which we want to calculate the psf
-        energy: `~astropy.units.Quantity`
+            Coordinates of the source position for which we want to calculate the psf
+        energy : `~astropy.units.Quantity`
             1D Energy Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
-        theta: `~astropy.coordinates.Angle`
+        theta : `~astropy.coordinates.Angle`
             1D Angle Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
 
         Returns
@@ -650,29 +650,8 @@ class ObservationList(list):
         psf_tab_tot /= exposure_tab_tot
         if not theta:
             theta = energy_dependant_psftab.offset
-        psf_total = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
+        psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
                                             psf_value=psf_tab_tot.T)
-        return psf_total
+        return psf
 
-    def make_psftable(self, source_position, energy, theta=None, spectral_index=2.3):
-        """Compute the mean PSF for a set of observation
-        Parameters
-        ----------
-        source_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the interest region for which we want to calculate the psf
-        energy: `~astropy.units.Quantity`
-            1D Energy Array (log space) on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
-        theta: `~astropy.coordinates.Angle`
-            1D Angle Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
-        spectral_index : float
-            Assumed power-law spectral index
 
-        Returns
-        -------
-        psf_table : `~gammapy.irf.TablePSF`
-            PSF table mean on your set of observations and energy range
-        """
-        energy_band = Energy([energy[0].value, energy[-1].value], energy.unit)
-        psf_energydependent = self.make_energydependant_psf(source_position, energy, theta)
-        psf_table = psf_energydependent.table_psf_in_energy_band(energy_band, spectral_index)
-        return psf_table

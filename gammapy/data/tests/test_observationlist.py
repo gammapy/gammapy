@@ -11,7 +11,7 @@ from ...data import DataStore, ObservationList
 
 @requires_data('gammapy-extra')
 def test_make_psftable():
-    """Test creating a datastore as subset of another datastore"""
+
     center = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)

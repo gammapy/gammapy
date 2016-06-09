@@ -275,7 +275,7 @@ class MosaicImage(object):
         self.psfmeantab = None
         self.thetapsf = None
 
-    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
+    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3,
                     radius=10, make_psf=False, region_center=None):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
@@ -301,7 +301,6 @@ class MosaicImage(object):
         if make_background_image:
             total_bkg = SkyMap.empty_like(self.empty_image)
             total_exposure = SkyMap.empty_like(self.empty_image)
-        i = 0
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
@@ -322,8 +321,6 @@ class MosaicImage(object):
             self.maps["exposure"] = total_exposure
             self.significance_image(radius)
             self.excess_image()
-        if make_psf:
-            self.make_mean_psf_tab(region_center, spectral_index)
 
     def significance_image(self, radius):
         """Make the significance image from the counts and bkg images.
