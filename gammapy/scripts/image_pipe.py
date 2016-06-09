@@ -490,7 +490,7 @@ class MosaicImage(object):
         if not theta:
             theta=energy_dependant_psftab.offset
         psf_total = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
-                                                          psf_value=psf_tab_tot)
+                                                          psf_value=psf_tab_tot.T)
         return psf_total
 
     def make_psftable(self, source_position, obs_table, energy, theta=None, spectral_index=2.3):
@@ -515,13 +515,8 @@ class MosaicImage(object):
         """
         #energy = EnergyBounds.equal_log_spacing(energy_band[0].value, energy_band[1].value, 100,
         #                                        self.energy_band.unit)
-        energy_bands = energy.bands
         energy_bin = energy.log_centers
         energy_band =  Energy([energy[0].value , energy[-1].value],energy.unit)
-        eref = EnergyBounds(energy_band).log_centers
-        spectrum = (energy_bin / eref) ** (-spectral_index)
         psf_energydependent = self.make_energydependant_psf(obs_table, source_position, energy_bin, theta)
-        mean_psf = np.sum(psf_energydependent.psf_value * spectrum * energy_bands*psf_energydependent.exposure, axis=1) / \
-                   np.sum(psf_energydependent.exposure * spectrum * energy_bands)
-        psf_table = TablePSF(psf_energydependent.offset, mean_psf)
-        return psf_table
+        psf_table2=psf_energydependent.table_psf_in_energy_band(self.energy_band,spectral_index)
+        return psf_table, psf_table2
