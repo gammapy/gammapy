@@ -1,11 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from ...datasets import make_test_observation_table
 from ...catalog import skycoord_from_table
-
+from ...datasets import gammapy_extra
+from ...utils.testing import requires_data
+from ...data import DataStore
 
 def common_sky_region_select_test_routines(obs_table, selection):
     """Common routines for the tests of sky_box/sky_circle selection of obs tables."""
@@ -171,3 +174,17 @@ def test_select_sky_regions():
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
+
+
+@requires_data('gammapy-extra')
+def test_makepsf():
+    """Test creating a datastore as subset of another datastore"""
+    center = SkyCoord(83.63, 22.01, unit='deg')
+    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
+    data_store = DataStore.from_dir(store)
+    psftab = data_store.obs(23523).make_psf(center)
+    i=np.where(~np.isnan(psftab.psf_value))
+    obs_pointing_position = data_store.obs(23523).pointing_radec
+    offset = center.separation(obs_pointing_position)
+    psftab2 = data_store.obs(23523).psf.to_table_psf(theta=offset)
+    assert_allclose(psftab2.psf_value[i], psftab.psf_value[i])
