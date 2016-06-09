@@ -40,9 +40,9 @@ class TestSkyMapPoisson():
         assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
 
     def test_coordinates(self):
-        coordinates = self.skymap.coordinates('galactic')
-        assert_allclose(coordinates[0][100, 100].degree, 0.01)
-        assert_allclose(coordinates[1][100, 100].degree, 0.01)
+        coordinates = self.skymap.coordinates()
+        assert_allclose(coordinates.data.lon[100, 100].degree, 0.01)
+        assert_allclose(coordinates.data.lat[100, 100].degree, 0.01)
 
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()

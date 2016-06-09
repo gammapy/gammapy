@@ -135,7 +135,7 @@ class ObsImage(object):
         exposure = SkyMap.empty_like(self.empty_image)
 
         # Determine offset value for each pixel of the map
-        xpix_coord_grid, ypix_coord_grid = exposure.coordinates(coord_type='pix')
+        xpix_coord_grid, ypix_coord_grid = exposure.coordinates_pix()
         # calculate pixel offset from center (in world coordinates)
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
         center = exposure.center()

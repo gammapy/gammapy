@@ -176,7 +176,9 @@ def test_wcs_histogram2d():
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
     counts = SkyMap.from_image_hdu(FermiGalacticCenter.counts())
-    lons, lats = counts.coordinates('galactic')
+    coordinates = counts.coordinates()
+    lons = coordinates.data.lon.wrap_at('180d')
+    lats = coordinates.data.lat
     mask = lon_lat_rectangle_mask(lons.degree, lats.degree, lon_min=-1,
                                   lon_max=1, lat_min=-1, lat_max=1)
     assert_allclose(mask.sum(), 400)
