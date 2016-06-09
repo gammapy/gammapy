@@ -3,9 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
-from astropy.modeling.models import Gaussian2D
 from astropy.io import fits
-import astropy.units as u
+from astropy.units import Quantity
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -116,7 +115,7 @@ class TestSkyMapPoisson():
     def test_lookup_max_region(self):
         from ...extern.regions.shapes import CircleSkyRegion
         center = SkyCoord(0, 0, unit='deg', frame='galactic')
-        circle = CircleSkyRegion(center, radius=1 * u.deg)
+        circle = CircleSkyRegion(center, radius=Quantity(1, 'deg'))
         pos, value = self.skymap.lookup_max(circle) 
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
@@ -134,8 +133,9 @@ class TestSkyMapPoisson():
         lon.data = c.galactic.l.deg
         lat.data = c.galactic.b.deg
 
+        size = Quantity([2, 2], 'deg')
         for pos in positions:
-            cutout = lon.cutout(pos, size=(2 * u.deg, 2 * u.deg))
+            cutout = lon.cutout(pos, size=size)
             
             # recompute coordinates and paste into coordinate images
             c = cutout.coordinates()
