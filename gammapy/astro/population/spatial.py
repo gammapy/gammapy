@@ -504,24 +504,24 @@ class ValleeSpiral(LogSpiral):
     Reference: http://adsabs.harvard.edu/abs/2008AJ....135.1301V
     """
     # Model parameters
-    p = 12.8  # pitch angle in deg
+    p = Quantity(12.8, 'deg')  # pitch angle in deg
     m = 4  # number of spiral arms
-    r_sun = 7.6  # distance sun to Galactic center in kpc
-    r_0 = 2.1  # spiral inner radius in kpc
-    theta_0 = -20  # Norma spiral arm start angle
-    bar_radius = 3.0  # Radius of the galactic bar (not equal r_0!)
+    r_sun = Quantity(7.6, 'kpc')  # distance sun to Galactic center in kpc
+    r_0 = Quantity(2.1, 'kpc')   # spiral inner radius in kpc
+    theta_0 = Quantity(-20, 'deg')  # Norma spiral arm start angle
+    bar_radius = Quantity(3.0, 'kpc')   # Radius of the galactic bar (not equal r_0!)
 
     spiralarms = np.array(['Norma', 'Perseus', 'Carina Sagittarius', 'Crux Scutum'])
 
     def __init__(self):
         self.r_0 = self.r_0 * np.ones(4)
-        self.theta_0 = self.theta_0 + np.array([0, 90, 180, 270])
-        self.k = 1. / np.tan(np.radians(self.p)) * np.ones(4)
+        self.theta_0 = self.theta_0 + Quantity([0, 90, 180, 270], 'deg')
+        self.k = Quantity(1. / np.tan(np.radians(self.p.value)) * np.ones(4), 'rad')
 
         # Compute start and end point of the bar
         x_0, y_0 = self.xy_position(radius=self.bar_radius, spiralarm_index=0)
         x_1, y_1 = self.xy_position(radius=self.bar_radius, spiralarm_index=2)
-        self.bar = dict(x=np.array([x_0, x_1]), y=np.array([y_0, y_1]))
+        self.bar = dict(x=Quantity([x_0, x_1]), y=Quantity([y_0, y_1]))
 
 
 # TODO: this is not picked up in the HTML docs ... don't know why.
