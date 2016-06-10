@@ -3,9 +3,12 @@
 Lightcurve and elementary temporal functions
 """
 from astropy.table import Table
+
+__all__ = ['LightCurve']
+
 class LightCurve(Table):
 
-	''' 
+	""" 
 	LightCurve class  
 		Contains all data in the tabular form with columns 
 		tstart, tstop, flux, flux error, time bin (opt). 
@@ -14,7 +17,7 @@ class LightCurve(Table):
 	units:
 		time - secs
 		flux - 1 / cm^2 sec
-	'''	
+	"""	
 	def __init__(self, table):
         	self.table = table
 
