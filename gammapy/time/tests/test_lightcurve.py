@@ -8,5 +8,9 @@ from ..lightcurve import LightCurve, make_example_lightcurve
 
 def test_lightcurve():
     lc = make_example_lightcurve()	
-    flux_mean = lc.flux_mean() 
+    flux_mean = lc['FLUX'].mean() 
     assert_quantity_allclose(flux_mean, Quantity(5.25,'cm^-2 s^-1'))
+
+def test_lightcurve_plot():
+    lc = make_example_lightcurve()	
+    lc.lc_plot()
