@@ -2,11 +2,9 @@
 """
 Lightcurve and elementary temporal functions
 """
-from astropy.table import Table
 from astropy.table import QTable
 from astropy.units import Quantity
 import astropy.units as u
-
 
 __all__ = [
     'LightCurve',
@@ -25,12 +23,12 @@ class LightCurve(QTable):
     to do: specification of format is work in progress ; will add link
     """
 
-#    def __init__(self, table):
-#	super(LightCurve,self).__init__(table)    
+    #    def __init__(self, table):
+    #	super(LightCurve,self).__init__(table)
 
     def lc_plot(self):
         """Plots the Lightcurve. 
-	
+
         The flux as a function of time.
         Here, time for each bin is equal to the center of the bin, 
         i.e. the average of tstart and tstop	 
@@ -47,6 +45,7 @@ class LightCurve(QTable):
         plt.xlabel("Time (secs)")
         plt.ylabel("Flux ($cm^{-2} sec^{-1}$)")
         plt.title("Lightcurve")
+
 
 def make_example_lightcurve():
     """ Make an example lightcurve.
