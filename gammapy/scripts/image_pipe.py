@@ -275,8 +275,8 @@ class MosaicImage(object):
         self.psfmeantab = None
         self.thetapsf = None
 
-    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3,
-                    radius=10, make_psf=False, region_center=None):
+    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux = False,
+                    radius=10, region_center=None):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters

@@ -174,17 +174,3 @@ def test_select_sky_regions():
                      lon=lon_cen, lat=lat_cen,
                      radius=radius, border=border)
     common_sky_region_select_test_routines(obs_table, selection)
-
-
-@requires_data('gammapy-extra')
-def test_makepsf():
-    
-    center = SkyCoord(83.63, 22.01, unit='deg')
-    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
-    data_store = DataStore.from_dir(store)
-    psftab = data_store.obs(23523).make_psf(center)
-    i=np.where(~np.isnan(psftab.psf_value))
-    obs_pointing_position = data_store.obs(23523).pointing_radec
-    offset = center.separation(obs_pointing_position)
-    psftab2 = data_store.obs(23523).psf.to_table_psf(theta=offset)
-    assert_allclose(psftab2.psf_value[i], psftab.psf_value[i])

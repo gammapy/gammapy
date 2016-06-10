@@ -623,7 +623,7 @@ class ObservationList(list):
     """
 
     def make_psf(self, source_position, energy=None, theta=None):
-        """Make energy-dependent PSF for a given source position and a set of observations
+        """Make energy-dependent PSF for a given source position and a set of observations.
 
         Parameters
         ----------
