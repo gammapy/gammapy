@@ -294,7 +294,7 @@ class SkyMap(object):
         x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
-    def _get_boundaries(self, skymap_ref, skymap):
+    def _get_boundaries(self, skymap_ref, skymap, wcs_check):
         """
         Get boundary coordinates of one sky map in the pixel coordinate system
         of another reference sky map.
@@ -311,9 +311,14 @@ class SkyMap(object):
         # round to nearest integer and clip at the boundaries
         xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
         ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
+        
+        if wcs_check:
+            if not np.allclose(bounds_ref, np.rint(bounds_ref)):
+                raise WcsError('World coordinate systems not aligned. Try to call'
+                               ' .reproject() on one of the maps first.')
         return xlo, xhi, ylo, yhi
 
-    def paste(self, skymap, method='sum'):
+    def paste(self, skymap, method='sum', wcs_check=True):
         """
         Paste smaller skymap into sky map. 
 
@@ -327,20 +332,20 @@ class SkyMap(object):
             Smaller sky map to paste.
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
+        wcs_check : bool
+            Check if both WCS are aligned. Raises `~astropy.wcs.WcsError` if not.
+            Disable for performance critical computations.
         """
-        xlo, xhi, ylo, yhi = self._get_boundaries(self, skymap)
-        xlo_c, xhi_c, ylo_c, yhi_c = self._get_boundaries(skymap, self)
+        xlo, xhi, ylo, yhi = self._get_boundaries(self, skymap, wcs_check)
+        xlo_c, xhi_c, ylo_c, yhi_c = self._get_boundaries(skymap, self, wcs_check)
 
-        try:
-            if method == 'sum':
-                self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
-            elif method == 'replace':
-                self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
-            else:
-                raise ValueError('Invalid method: {}'.format(method))
-        except ValueError:
-            raise WcsError('World coordinate systems not aligned. Try to call'
-                           ' .reproject() on one of the maps first.')
+        if method == 'sum':
+            self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
+        elif method == 'replace':
+            self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
 
     def cutout(self, position, size):
         """

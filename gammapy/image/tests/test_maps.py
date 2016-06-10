@@ -5,6 +5,8 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.tests.helper import pytest
+from astropy.wcs import WcsError
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -149,6 +151,14 @@ class TestSkyMapPoisson():
         c = lon.coordinates()
         assert_allclose(lon.data, c.galactic.l.deg)
         assert_allclose(lat.data, c.galactic.b.deg)
+
+    def test_cutout_paste_wcs_error(self):
+        # setup coordinate images
+        skymap = SkyMap.empty(nxpix=7, nypix=7, binsz=0.02)
+        cutout = SkyMap.empty(nxpix=4, nypix=4, binsz=0.02)
+        with pytest.raises(WcsError):
+            skymap.paste(cutout)
+            
 
 class TestSkyMapCrab():
     """
