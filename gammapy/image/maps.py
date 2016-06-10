@@ -236,12 +236,13 @@ class SkyMap(object):
 
     def coordinates_pix(self, mode='center'):
         """
-        Pixel coordinate images.
+        Pixel sky coordinate images.
 
         Parameters
         ----------
         mode : {'center', 'edges'}
             Return coordinate values at the pixels edges or pixel centers.
+
         Returns
         -------
         x, y : tuple
