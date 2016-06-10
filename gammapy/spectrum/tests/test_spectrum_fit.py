@@ -33,5 +33,5 @@ def test_spectral_fit():
     fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
     assert fit.result.spectral_model == 'PowerLaw'
-
-
+    print (fit.result)
+    1/0

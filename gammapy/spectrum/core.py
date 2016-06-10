@@ -51,10 +51,9 @@ class CountsSpectrum(NDDataArray):
     def from_table(cls, table):
         """Read OGIP format table"""
         counts = table['COUNTS'].quantity
-        # energy_unit = table['BIN_LO'].quantity.unit
-        # energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
-        # return cls(data=counts, energy=energy*energy_unit)
-        return cls(data=counts)
+        energy_unit = table['BIN_LO'].quantity.unit
+        energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
+        return cls(data=counts, energy=energy*energy_unit)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
@@ -63,16 +62,14 @@ class CountsSpectrum(NDDataArray):
         """
         channel = np.arange(self.energy.nbins, dtype=np.int16)
         counts = np.array(self.data.value, dtype=np.int32)
+
         # This is how sherpa save energy information in PHA files
         # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
-        #bin_lo = self.energy.data[:-1]
-        #bin_hi = self.energy.data[1:]
-        #names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
-        #meta = dict()
-        #return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
-        names = ['CHANNEL', 'COUNTS']
+        bin_lo = self.energy.data[:-1]
+        bin_hi = self.energy.data[1:]
+        names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
         meta = dict()
-        return Table([channel, counts], names=names, meta=meta)
+        return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
         
     def fill(self, events):
         """Fill with list of events 
@@ -212,12 +209,15 @@ class PHACountsSpectrum(CountsSpectrum):
     def to_table(self):
         """Write"""
         table = super(PHACountsSpectrum, self).to_table()
+        # Remove BIN_LO and BIN_HI columns for now
+        # see https://github.com/gammapy/gammapy/issues/561
+        table.remove_columns(['BIN_LO', 'BIN_HI'])
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
                     obs_id=self.obs_id,
                     exposure=self.exposure.to('s').value,
-                    backscal=self.backscal,
+                    backscal=float(self.backscal),
                     corrscal='',
                     areascal=1,
                     chantype='PHA',
@@ -242,7 +242,11 @@ class PHACountsSpectrum(CountsSpectrum):
     @classmethod
     def from_table(cls, table):
         """Read"""
-        spec = CountsSpectrum.from_table(table)
+        # This will fail since BIN_LO and BIN_HI are not present
+        # spec = CountsSpectrum.from_table(table)
+        counts = table['COUNTS'].quantity
+        # FIXME : set energy to CHANNELS * u.eV, WRONG 
+        energy = np.append([0], table['CHANNEL'].data) * u.eV
         meta = dict(
             obs_id=table.meta['OBS_ID'],
             exposure=table.meta['EXPOSURE'] * u.s,
@@ -251,7 +255,7 @@ class PHACountsSpectrum(CountsSpectrum):
         if table.meta["HDUCLAS2"] == "TOTAL":
             meta.update(lo_threshold=table.meta['lo_threshold'] * u.TeV,
                         hi_threshold=table.meta['hi_threshold'] * u.TeV)
-        return cls(energy=spec.energy, data=spec.data, **meta)
+        return cls(energy=energy, data=counts, **meta)
 
 
 class SpectrumObservation(object):
@@ -318,11 +322,12 @@ class SpectrumObservation(object):
         rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
         energy_dispersion = EnergyDispersion.read(str(base / rmf))
         effective_area = EffectiveAreaTable.read(str(base / arf))
-        off_vector = CountsSpectrum.read(str(base / bkg))
-        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
+        off_vector = PHACountsSpectrum.read(str(base / bkg))
+
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
+        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
         retval._phafile = phafile
         return retval
 
@@ -503,6 +508,7 @@ class SpectrumObservationList(list):
             Output directory, default: pwd
         """
         for obs in self:
+            print (obs.off_vector.backscal)
             obs.write(outdir=outdir, **kwargs)
 
     # TODO: This should probably go away
