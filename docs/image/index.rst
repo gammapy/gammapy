@@ -42,7 +42,6 @@ If you'd like to learn more about using `gammapy.image`, read the following sub-
 
    skymaps
    plotting
-   bounding_box
 
 
 Reference/API
