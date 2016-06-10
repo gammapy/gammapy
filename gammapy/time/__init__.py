@@ -6,3 +6,4 @@ from .plot import *
 from .simulate import *
 from .utils import *
 from .lightcurve import *
+from .exptest import *
