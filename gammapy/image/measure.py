@@ -7,7 +7,6 @@ from astropy.io import fits
 from .utils import coordinates
 
 __all__ = [
-    'bbox',
     'measure_containment_fraction',
     'measure_containment_radius',
     'measure_image_moments',

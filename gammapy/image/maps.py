@@ -275,7 +275,25 @@ class SkyMap(object):
         x, y = self.coordinates_pix(mode=mode)
         coordinates = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
         return coordinates
-    
+
+    def contains(self, position):
+        """
+        Check if given position on the sky is contained in the sky map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
+
+        Returns
+        -------
+        containment : array
+            Bool array
+        """
+        ny, nx = self.data.shape
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
+
     def _get_boundaries(self, skymap_ref, skymap):
         """
         Get boundary coordinates of one sky map in the pixel coordinate system
@@ -415,23 +433,12 @@ class SkyMap(object):
 
         Parameters
         ----------
-        position : tuple or `~astropy.coordinates.SkyCoord`
-            Position on the sky. Can be either an instance of
-            `~astropy.coordinates.SkyCoord` or a tuple of `~numpy.ndarray`
-            of the form (lon, lat) or (ra, dec), depending on the WCS
-            transformation that is set for the sky map.
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
         interpolation : {'None'}
             Interpolation mode.
         """
-        if isinstance(position, SkyCoord):
-            if get_wcs_ctype(self.wcs) == 'galactic':
-                xsky, ysky = position.galactic.l.value, position.galactic.b.value
-            else:
-                xsky, ysky = position.icrs.ra.value, position.icrs.dec.value
-        elif isinstance(position, (tuple, list)):
-            xsky, ysky = position[0], position[1]
-
-        x, y = self.wcs.wcs_world2pix(xsky, ysky, self.wcs_origin)
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
         return self.data[np.rint(y), np.rint(x)]
 
     def to_quantity(self):

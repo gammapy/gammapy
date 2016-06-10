@@ -23,7 +23,6 @@ __all__ = [
     'binary_opening_circle',
     'binary_ring',
     'block_reduce_hdu',
-    'contains',
     'dict_to_hdulist',
     'disk_correlate',
     'downsample_2N',
@@ -821,36 +820,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     header.update(pars)
 
     return header
-
-
-def contains(image, x, y, world=True):
-    """Check if given pixel or world positions are in an image.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        2-dim FITS image
-    x : float
-        x coordinate in the image
-    y : float
-        y coordinate in the image
-    world : bool, optional
-        Are x and y in world coordinates (or pixel coordinates)?
-
-    Returns
-    -------
-    containment : array
-        Bool array
-    """
-    header = image.header
-
-    if world:
-        wcs = WCS(header)
-        origin = 0  # convention for gammapy
-        x, y = wcs.wcs_world2pix(x, y, origin)
-
-    nx, ny = header['NAXIS2'], header['NAXIS1']
-    return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
 
 def block_reduce_hdu(input_hdu, block_size, func, cval=0):

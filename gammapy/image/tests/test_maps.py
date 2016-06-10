@@ -34,12 +34,9 @@ class TestSkyMapPoisson():
         skymap = SkyMap.read(str(filename))
         assert self.skymap.name == skymap.name
 
-    def test_lookup(self):
-        assert self.skymap.lookup((0, 0)) == 5
-
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
+        assert self.skymap.lookup(position) == 5
 
     def test_coordinates(self):
         coordinates = self.skymap.coordinates()
@@ -49,6 +46,10 @@ class TestSkyMapPoisson():
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
         assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2)
+
+    def test_contains(self):
+        position = SkyCoord(0, 0, frame='galactic', unit='deg')
+        assert self.skymap.contains(position)        
 
     def test_info(self):
         refstring = ""
