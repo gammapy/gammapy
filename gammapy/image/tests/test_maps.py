@@ -51,7 +51,14 @@ class TestSkyMapPoisson():
 
     def test_contains(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.contains(position)        
+        assert self.skymap.contains(position)
+
+        position = SkyCoord([42, 0, -42], [11, 0, -11], frame='galactic', unit='deg')
+        assert_equal(self.skymap.contains(position), [False, True, False])
+
+        coordinates = self.skymap.coordinates()
+        assert np.all(self.skymap.contains(coordinates[2:5, 2:5]))
+
 
     def test_info(self):
         refstring = ""
