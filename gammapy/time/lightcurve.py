@@ -3,8 +3,15 @@
 Lightcurve and elementary temporal functions
 """
 from astropy.table import Table
+from astropy.table import QTable
+from astropy.units import Quantity
+import astropy.units as u
 
-__all__ = ['LightCurve']
+
+__all__ = [
+    'LightCurve',
+    'make_example_lightcurve',
+]
 
 
 class LightCurve(Table):
@@ -44,11 +51,11 @@ class LightCurve(Table):
         i.e. the average of tstart and tstop	 
         """
         import matplotlib.pyplot as plt
-        tstart = self.table['TSTART'].to('s')
-        tstop = self.table['TSTOP'].to('s')
+        tstart = self.table['TIME_MIN'].to('s')
+        tstop = self.table['TIME_MAX'].to('s')
         time = (tstart + tstop) / 2.0
         flux = self.table['FLUX'].to('cm-2 s-1')
-        errors = self.table['ERRORS'].to('cm-2 s-1')
+        errors = self.table['FLUX_ERR'].to('cm-2 s-1')
         plt.errorbar(time.value, flux.value,
                      yerr=errors.value, linestyle="None")
         plt.scatter(time, flux)
@@ -56,3 +63,14 @@ class LightCurve(Table):
         plt.ylabel("Flux ($cm^{-2} sec^{-1}$)")
         plt.title("Lightcurve")
         plt.show()
+
+def make_example_lightcurve():
+    """ Make an example lightcurve.
+    """
+    table = QTable()
+    table['TIME_MIN'] = [1, 4, 7, 9] * u.s
+    table['TIME_MAX'] = [1, 4, 7, 9] * u.s
+    table['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
+    table['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
+
+    return table
