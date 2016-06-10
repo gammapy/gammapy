@@ -102,7 +102,7 @@ class ObsImage(object):
 
         self.maps["bkg"] = bkg_map
 
-    def make_1d_exposure(self, spectral_index=2.3, for_integral_flux=False):
+    def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
         """Compute the 1D exposure table for one observation for an offset table
 
         Parameters
@@ -114,9 +114,12 @@ class ObsImage(object):
 
         Returns
         -------
+        offset_tab: `numpy.array`
+            1D offset array in the FOV
+        exposure_tab: `numpy.array`
+            1D exposure array for the previous offset
 
         """
-        # 2D Exposure computation on the self.energy_range and on an offset_tab
         energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
                                                 self.energy_band.unit)
         energy_band = energy.bands
@@ -170,7 +173,7 @@ class ObsImage(object):
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
         offset = coord.separation(self.obs_center)
 
-        offset_tab, exposure_tab = self.make_1d_exposure(spectral_index, for_integral_flux)
+        offset_tab, exposure_tab = self.make_1d_expected_counts(spectral_index, for_integral_flux)
 
         # Interpolate for the offset of each pixel
         f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
@@ -276,7 +279,7 @@ class MosaicImage(object):
         self.thetapsf = None
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux = False,
-                    radius=10, region_center=None):
+                    radius=10):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
         Parameters
@@ -291,10 +294,6 @@ class MosaicImage(object):
             True if you want that the total excess / exposure gives the integrated flux
         radius : float
             Disk radius in pixels for the significance map.
-        make_psf: bool
-            True if you want to compute the mean PSF for the set of run
-        region_center : `~astropy.coordinates.SkyCoord`
-            Coordinates of the interest region for which we want to calculate the psf
         """
 
         total_counts = SkyMap.empty_like(self.empty_image)
