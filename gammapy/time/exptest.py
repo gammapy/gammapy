@@ -1,3 +1,10 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+__all__ = [
+    'exptest_for_run',
+]
+
 def exptest_for_run(time_delta=[]):
    """Compute Mr value, the level of variability for a certain period of time.
 
