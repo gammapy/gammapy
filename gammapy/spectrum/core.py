@@ -51,10 +51,9 @@ class CountsSpectrum(NDDataArray):
     def from_table(cls, table):
         """Read OGIP format table"""
         counts = table['COUNTS'].quantity
-        # energy_unit = table['BIN_LO'].quantity.unit
-        # energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
-        # return cls(data=counts, energy=energy*energy_unit)
-        return cls(data=counts)
+        energy_unit = table['BIN_LO'].quantity.unit
+        energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
+        return cls(data=counts, energy=energy*energy_unit)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
@@ -63,16 +62,14 @@ class CountsSpectrum(NDDataArray):
         """
         channel = np.arange(self.energy.nbins, dtype=np.int16)
         counts = np.array(self.data.value, dtype=np.int32)
+
         # This is how sherpa save energy information in PHA files
         # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
-        #bin_lo = self.energy.data[:-1]
-        #bin_hi = self.energy.data[1:]
-        #names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
-        #meta = dict()
-        #return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
-        names = ['CHANNEL', 'COUNTS']
+        bin_lo = self.energy.data[:-1]
+        bin_hi = self.energy.data[1:]
+        names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
         meta = dict()
-        return Table([channel, counts], names=names, meta=meta)
+        return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
         
     def fill(self, events):
         """Fill with list of events 
