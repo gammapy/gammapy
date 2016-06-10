@@ -72,5 +72,5 @@ def make_example_lightcurve():
     table['TIME_MAX'] = [1, 4, 7, 9] * u.s
     table['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
     table['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
-
-    return table
+    lc = LightCurve(table)  
+    return lc
