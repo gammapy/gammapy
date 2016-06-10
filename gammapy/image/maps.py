@@ -299,11 +299,12 @@ class SkyMap(object):
         Paste smaller skymap into sky map. 
 
         WCS specifications of both skymaps must be aligned. If not call
-        `SkyMap.reproject()` on one of the maps first.
+        `SkyMap.reproject()` on one of the maps first. See :ref:`skymap-cutpaste`
+        more for information how to cut and paste sky images.
 
         Parameters
         ----------
-        skymap: `SkyMap`
+        skymap : `SkyMap`
             Smaller sky map to paste.
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
@@ -316,23 +317,40 @@ class SkyMap(object):
         elif method == 'replace':
             self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
         else:
-            raise ValueError('Invalid method: {0}'.format(method))
+            raise ValueError('Invalid method: {}'.format(method))
 
     def cutout(self, position, size):
         """
         Cut out rectangular piece of a sky map.
 
+        See :ref:`skymap-cutpaste` for more information how to cut and paste
+        sky images.
+
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
             Position of the center of the sky map to cut out.
-        size : tuple
-            Tuple of `~astropy.units.Angle`, specifying the size of
-            the cutout.
+        size : int, array-like, `~astropy.units.Quantity`
+            The size of the cutout array along each axis.  If ``size``
+            is a scalar number or a scalar `~astropy.units.Quantity`,
+            then a square cutout of ``size`` will be created.  If
+            ``size`` has two elements, they should be in ``(ny, nx)``
+            order.  Scalar numbers in ``size`` are assumed to be in
+            units of pixels.  ``size`` can also be a
+            `~astropy.units.Quantity` object or contain
+            `~astropy.units.Quantity` objects.  Such
+            `~astropy.units.Quantity` objects must be in pixel or
+            angular units.  For all cases, ``size`` will be converted to
+            an integer number of pixels, rounding the the nearest
+            integer.  See the ``mode`` keyword for additional details on
+            the final cutout size.
 
-        Examples
-        --------
-
+            .. note::
+                If ``size`` is in angular units, the cutout size is
+                converted to pixels using the pixel scales along each
+                axis of the image at the ``CRPIX`` location.  Projection
+                and other non-linear distortions are not taken into
+                account.
 
         Returns
         -------

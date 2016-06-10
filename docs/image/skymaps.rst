@@ -65,12 +65,14 @@ The sky map can be easily displayed with an image viewer, by calling ``skymap.sh
         counts.show()
 
 
-Working with the cutout and paste method
-----------------------------------------
+.. _skymap-cutpaste:
+
+Cutout and paste
+----------------
 
 The `~gammapy.image.SkyMap` class offers `.paste()` and `.cutout()`
 methods, that can be used to cut out smaller parts of a sky map.
-Here we cut out a 2 deg x 2 deg patch out of an example image:
+Here we cut out a 1 deg x 1 deg patch out of an example image:
 
 .. plot::
     :include-source:

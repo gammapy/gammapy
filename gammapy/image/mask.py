@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
 
-from ..utils.scripts import make_path
 from ..image import (
     exclusion_distance,
     lon_lat_circle_mask,
