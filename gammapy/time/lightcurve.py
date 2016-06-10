@@ -15,24 +15,23 @@ __all__ = [
 
 
 class LightCurve(QTable):
+    """LightCurve class.
 
-    """ 
-    LightCurve class  
-            Contains all data in the tabular form with columns 
-            tstart, tstop, flux, flux error, time bin (opt). 
-            Possesses functions allowing plotting data, saving as txt 
-            and elementary stats like mean & variance.
-    units:
-            time - secs
-            flux - 1 / cm^2 sec
+    Contains all data in the tabular form with columns 
+    tstart, tstop, flux, flux error, time bin (opt). 
+    Possesses functions allowing plotting data, saving as txt 
+    and elementary stats like mean & std dev.
+    
+    to do: specification of format is work in progress ; will add link
     """
 
 #    def __init__(self, table):
 #	super(LightCurve,self).__init__(table)    
 
     def lc_plot(self):
-        """
-        Plots the Lightcurve i.e. the flux as a function of time.
+        """Plots the Lightcurve. 
+	
+        The flux as a function of time.
         Here, time for each bin is equal to the center of the bin, 
         i.e. the average of tstart and tstop	 
         """
