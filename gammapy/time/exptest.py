@@ -1,12 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 
 __all__ = [
     'exptest_for_run',
 ]
 
 def exptest_for_run(time_delta=[]):
-   """Compute Mr value, the level of variability for a certain period of time.
+    """Compute Mr value, the level of variability for a certain period of time.
 
     Longer description: A single Mr value can be calculated, which shows the level of variability
                         for the whole period, or the Mr value for each run can be shown.
@@ -40,5 +41,5 @@ def exptest_for_run(time_delta=[]):
     sum_time_all = np.sum([sum_time])
     if len(time_delta)!=0:
         M_value = sum_time_all / len(time_delta)
-        Mr = (M_value - (1 / 2.71828 - 0.189 / len(time_delta))) / (0.2427 / math.sqrt(len(time_delta)))
+        Mr = (M_value - (1 / 2.71828 - 0.189 / len(time_delta))) / (0.2427 / np.sqrt(len(time_delta)))
     return Mr
