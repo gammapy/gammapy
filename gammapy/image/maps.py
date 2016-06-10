@@ -313,12 +313,16 @@ class SkyMap(object):
         xlo, xhi, ylo, yhi = self._get_boundaries(self, skymap)
         xlo_c, xhi_c, ylo_c, yhi_c = self._get_boundaries(skymap, self)
 
-        if method == 'sum':
-            self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
-        elif method == 'replace':
-            self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
-        else:
-            raise ValueError('Invalid method: {}'.format(method))
+        try:
+            if method == 'sum':
+                self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
+            elif method == 'replace':
+                self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
+            else:
+                raise ValueError('Invalid method: {}'.format(method))
+        except ValueError:
+            raise WcsError('World coordinate systems not aligned. Try to call'
+                           ' .reproject() on one of the maps first.')
 
     def cutout(self, position, size):
         """
