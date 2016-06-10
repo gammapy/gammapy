@@ -4,10 +4,12 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
+from astropy.units import Quantity
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
 from ...utils.testing import requires_dependency, requires_data
+from ...extern.regions.shapes import CircleSkyRegion
 
 
 @requires_data('gammapy-extra')
@@ -106,6 +108,46 @@ class TestSkyMapPoisson():
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
+    def test_lookup_max(self):
+        pos, value = self.skymap.lookup_max() 
+        assert value == 15
+        assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
+
+    def test_lookup_max_region(self):
+        center = SkyCoord(0, 0, unit='deg', frame='galactic')
+        circle = CircleSkyRegion(center, radius=Quantity(1, 'deg'))
+        pos, value = self.skymap.lookup_max(circle) 
+        assert value == 15
+        assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
+
+    def test_cutout_paste(self):
+        positions = SkyCoord([0, 0, 0, 0.4, -0.4], [0, 0.4, -0.4, 0, 0],
+                           unit='deg', frame='galactic')
+        BINSZ = 0.02
+
+        # setup coordinate images
+        lon = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
+        lat = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
+
+        c = lon.coordinates()
+        lon.data = c.galactic.l.deg
+        lat.data = c.galactic.b.deg
+
+        size = Quantity([0.3, 0.3], 'deg')
+        for pos in positions:
+            cutout = lon.cutout(pos, size=size)
+            
+            # recompute coordinates and paste into coordinate images
+            c = cutout.coordinates()
+            cutout.data = c.galactic.l.deg
+            lon.paste(cutout, method='replace')
+
+            cutout.data = c.galactic.b.deg
+            lat.paste(cutout, method='replace')
+
+        c = lon.coordinates()
+        assert_allclose(lon.data, c.galactic.l.deg)
+        assert_allclose(lat.data, c.galactic.b.deg)
 
 class TestSkyMapCrab():
     """

@@ -60,7 +60,7 @@ def generate_gaussian_image():
     sigma = 0.2
     source = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
     skymap.data += source(l.degree, b.degree)
-    return skymap.to_image_hdu()
+    return skymap
 
 
 @requires_dependency('scipy')
@@ -74,14 +74,14 @@ def test_measure():
 
 def test_measure_image_moments():
     """Test measure_image_moments function"""
-    image = generate_gaussian_image()
+    image = generate_gaussian_image().to_image_hdu()
     moments = measure_image_moments(image)
     assert_almost_equal(moments, [1, 0, 0, 0.2, 0.2, 0.2])
 
 
 def test_measure_containment():
     """Test measure_containment function"""
-    image = generate_gaussian_image()
+    image = generate_gaussian_image().to_image_hdu()
     frac = measure_containment(image, 0, 0, 0.2 * np.sqrt(2 * np.log(5)))
     assert_allclose(frac, 0.8, rtol=0.01)
 
@@ -89,14 +89,14 @@ def test_measure_containment():
 @requires_dependency('scipy')
 def test_measure_containment_radius():
     """Test measure_containment_radius function"""
-    image = generate_gaussian_image()
+    image = generate_gaussian_image().to_image_hdu()
     rad = measure_containment_radius(image, 0, 0, 0.8)
     assert_allclose(rad, 0.2 * np.sqrt(2 * np.log(5)), rtol=0.01)
 
 
 def test_measure_curve_of_growth():
     """Test measure_curve_of_growth function"""
-    image = generate_gaussian_image()
+    image = generate_gaussian_image().to_image_hdu()
     radius, containment = measure_curve_of_growth(image, 0, 0, 0.6, 0.05)
     sigma = 0.2
     containment_ana = 1 - np.exp(-0.5 * (radius / sigma) ** 2)

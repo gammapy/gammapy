@@ -9,8 +9,6 @@ from .utils import coordinates
 __all__ = [
     'BoundingBox',
     'bbox',
-    'find_max',
-    'lookup_max',
     'measure_containment_fraction',
     'measure_containment_radius',
     'measure_image_moments',
@@ -231,55 +229,6 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
         table.add_column(Column(data=mean, name=tag + '_MEAN'))
 
     return table
-
-
-def find_max(image):
-    """Find position of maximum in an image.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Input image
-
-    Returns
-    -------
-    lon, lat, value : float
-        Maximum value and its position
-    """
-    from scipy.ndimage import maximum_position
-    from astropy.wcs import WCS
-    proj = WCS(image.header)
-    data = image.data
-    data[np.isnan(data)] = -np.inf
-    y, x = maximum_position(data)
-    origin = 0  # convention for gammapy
-    GLON, GLAT = proj.wcs_pix2world(x, y, origin)
-    val = data[int(y), int(x)]
-    return GLON, GLAT, val
-
-
-def lookup_max(image, GLON, GLAT, theta):
-    """Look up the max image values within a circle of radius theta
-    around lists of given positions (nan if outside)"""
-    from .utils import coordinates
-    GLON = np.asarray(GLON)
-    GLON = np.where(GLON > 180, GLON - 360, GLON)
-    GLAT = np.asarray(GLAT)
-    n_pos = len(GLON)
-    theta = np.asarray(theta) * np.ones(n_pos, dtype='float32')
-
-    ll, bb = coordinates(image)
-
-    val = np.nan * np.ones(n_pos, dtype='float32')
-    for ii in range(n_pos):
-        mask = ((GLON[ii] - ll) ** 2 +
-                (GLAT[ii] - bb) ** 2 <=
-                theta[ii] ** 2)
-        try:
-            val[ii] = image.data[mask].max()
-        except ValueError:
-            pass
-    return val
 
 
 def measure_image_moments(image):
