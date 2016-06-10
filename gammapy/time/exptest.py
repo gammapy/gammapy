@@ -1,4 +1,4 @@
-def exptest_for_run2(time_delta=[]):
+def exptest_for_run(time_delta=[]):
    """Compute Mr value, the level of variability for a certain period of time.
 
     Longer description: A single Mr value can be calculated, which shows the level of variability
