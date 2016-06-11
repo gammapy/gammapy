@@ -17,12 +17,6 @@ from ...image import (measure_labeled_regions,
 BINSZ = 0.02
 
 
-
-#class TestMeasure(object):
-
-#    def setup(self):
-#        self.skymap = SkyMap.empty(nxpis=201, nypix=201, binsz=0.02)
-
 def generate_example_image():
     """
     Generate some greyscale image to run the detection on.
@@ -30,25 +24,6 @@ def generate_example_image():
     x = y = np.linspace(0, 3 * np.pi, 100)
     X, Y = np.meshgrid(x, y)
     image = X * Y * np.sin(X) ** 2 * np.sin(Y) ** 2
-    return image
-
-
-def set_header(image):
-    image.header['SIMPLE'] = 'T'
-    image.header['BITPIX'] = -64
-    image.header['NAXIS'] = 2
-    image.header['NAXIS1'] = 201
-    image.header['NAXIS2'] = 201
-    image.header['CTYPE1'] = 'GLON-CAR'
-    image.header['CTYPE2'] = 'GLAT-CAR'
-    image.header['CRPIX1'] = 100
-    image.header['CRPIX2'] = 100
-    image.header['CRVAL1'] = 0
-    image.header['CRVAL2'] = 0
-    image.header['CDELT1'] = -BINSZ
-    image.header['CDELT2'] = BINSZ
-    image.header['CUNIT1'] = 'deg'
-    image.header['CUNIT2'] = 'deg'
     return image
 
 
