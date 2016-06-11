@@ -113,6 +113,23 @@ class ExclusionMask(SkyMap):
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
         return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
 
+    def contains(self, position):
+        """
+        Check if given position on the sky is inside the exclusion region.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
+
+        Returns
+        -------
+        containment : array
+            Bool array
+        """
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        return self.data[y, x]
+
 
 def make_tevcat_exclusion_mask():
     """Create an all-sky exclusion mask containing all TeVCat sources

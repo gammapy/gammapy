@@ -5,6 +5,8 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.units import Quantity
+from astropy.tests.helper import pytest
+from astropy.wcs import WcsError
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -34,12 +36,9 @@ class TestSkyMapPoisson():
         skymap = SkyMap.read(str(filename))
         assert self.skymap.name == skymap.name
 
-    def test_lookup(self):
-        assert self.skymap.lookup((0, 0)) == 5
-
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
+        assert self.skymap.lookup(position) == 5
 
     def test_coordinates(self):
         coordinates = self.skymap.coordinates()
@@ -49,6 +48,17 @@ class TestSkyMapPoisson():
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
         assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2)
+
+    def test_contains(self):
+        position = SkyCoord(0, 0, frame='galactic', unit='deg')
+        assert self.skymap.contains(position)
+
+        position = SkyCoord([42, 0, -42], [11, 0, -11], frame='galactic', unit='deg')
+        assert_equal(self.skymap.contains(position), [False, True, False])
+
+        coordinates = self.skymap.coordinates()
+        assert np.all(self.skymap.contains(coordinates[2:5, 2:5]))
+
 
     def test_info(self):
         refstring = ""
@@ -148,6 +158,14 @@ class TestSkyMapPoisson():
         c = lon.coordinates()
         assert_allclose(lon.data, c.galactic.l.deg)
         assert_allclose(lat.data, c.galactic.b.deg)
+
+    def test_cutout_paste_wcs_error(self):
+        # setup coordinate images
+        skymap = SkyMap.empty(nxpix=7, nypix=7, binsz=0.02)
+        cutout = SkyMap.empty(nxpix=4, nypix=4, binsz=0.02)
+        with pytest.raises(WcsError):
+            skymap.paste(cutout)
+            
 
 class TestSkyMapCrab():
     """
