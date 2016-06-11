@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_allclose
+from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data
@@ -8,7 +9,7 @@ from ...utils.energy import EnergyBounds, Energy
 from ...data import DataStore, ObservationList
 
 
-@pytest.mark.xfail
+# @pytest.mark.xfail
 @requires_data('gammapy-extra')
 def test_make_psftable():
     center = SkyCoord(83.63, 22.01, unit='deg')
@@ -26,8 +27,8 @@ def test_make_psftable():
     obslist = ObservationList(list)
     psf_tot = obslist.make_psf(source_position=center, energy=energy)
     psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectral_index=2.3)
-    assert_allclose(psf_tot_int.containment_radius(0.68), psf1_int.containment_radius(0.68), rtol=1e-3)
-    assert_allclose(psf_tot_int.containment_radius(0.68), psf2_int.containment_radius(0.68), rtol=1e-3)
-    assert_allclose(psf_tot_int._dp_domega, psf2_int._dp_domega, rtol=1e-1)
-    assert_allclose(psf_tot_int._dp_domega, psf1_int._dp_domega, rtol=1e-1)
-    # voir si on peut pas assert qu'il que las valeur de psf_tot sont comprises entre psf1 et psf2...
+    # Check that the mean PSF is consistent with the individual PSFs
+    # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
+    assert_quantity_allclose(psf1_int.containment_radius(0.68), Angle(0.11645282474146176, 'deg'))
+    assert_quantity_allclose(psf2_int.containment_radius(0.68), Angle(0.14232666985400985, 'deg'))
+    assert_quantity_allclose(psf_tot_int.containment_radius(0.68), Angle(0.12588112016412742, 'deg'))
