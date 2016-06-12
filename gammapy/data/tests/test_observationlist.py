@@ -4,12 +4,12 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds, Energy
 from ...data import DataStore, ObservationList
 
 
-# @pytest.mark.xfail
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_make_psftable():
     center = SkyCoord(83.63, 22.01, unit='deg')
