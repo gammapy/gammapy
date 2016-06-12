@@ -63,8 +63,6 @@ class Stats(object):
         keys = ['n_on', 'n_off', 'a_on', 'a_off',
                 'alpha', 'background', 'excess']
         values = [self.n_on, self.n_off, self.a_on, self.a_off,
-#                  self.alpha, self.background(), self.excess()]
-                  ### JLK
                   self.alpha, self.background, self.excess]
         return '\n'.join(['%s = %s' % (k, v)
                           for (k, v) in zip(keys, values)])

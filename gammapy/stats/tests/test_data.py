@@ -12,6 +12,12 @@ def test_Stats():
     assert_allclose(stats.background, a_on / a_off * n_off)
     assert_allclose(stats.excess, n_on - a_on / a_off * n_off)
 
+def test_str():
+    data  = Stats(10, 10, 1, 10)
+    text = str(data)
+    assert ('alpha = 0.1' in text)
+    assert ('background = 1.0' in text)
+    assert ('excess = 9.0' in text)
 
 def test_make_stats():
     pass

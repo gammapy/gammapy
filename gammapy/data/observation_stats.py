@@ -6,6 +6,7 @@ from gammapy.stats import significance_on_off
 
 __all__ = [
     'ObservationStats',
+    'ObservationStatsList'
 ]
 
 
@@ -18,25 +19,29 @@ class ObservationStats(Stats):
     Parameters
     ----------
     n_on : int
-        number of on events
+        Number of on events
     n_off : int
-        number of on events
+        Number of off events
     a_on : float
-        number of on events
+        Relative background exposure of the on region
     a_off : float
-        number of on events
+        Relative background exposure of the off region
     obs_id : int
-        number of on events
+        Id of the obervation
     livetime : float
-        number of on events
+        Livetime of the observation
     alpha : float
-        number of on events
-
+        Normalisation between the on and the off exposure
+    bg_rate : float
+        Background rate (/min)
+    gamma_rate : float
+        Gamma rate (/min)
     """
 
     def __init__(self,
                  n_on=None, n_off=None, a_on=None, a_off=None,
-                 obs_id=None, livetime=None, alpha=None):
+                 obs_id=None, livetime=None, alpha=None,
+                 gamma_rate=None, bg_rate=None):
         super(ObservationStats, self).__init__(
             n_on=n_on,
             n_off=n_off,
@@ -47,6 +52,8 @@ class ObservationStats(Stats):
         self.obs_id = obs_id
         self.livetime = livetime
         self.alpha_obs = alpha
+        self.gamma_rate = gamma_rate
+        self.bg_rate = bg_rate
 
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
@@ -71,13 +78,18 @@ class ObservationStats(Stats):
         obs_id = obs.obs_id
         livetime = obs.observation_live_time_duration
         alpha = a_on / a_off
+
+        gamma_rate = n_on / livetime.to(u.min)
+        bg_rate = (alpha * n_off) / livetime.to(u.min)
         stats = cls(n_on=n_on,
                     n_off=n_off,
                     a_on=a_on,
                     a_off=a_off,
                     obs_id=obs_id,
                     livetime=livetime,
-                    alpha=alpha)
+                    alpha=alpha,
+                    gamma_rate=gamma_rate,
+                    bg_rate=bg_rate)
         return stats
 
     @property
@@ -99,7 +111,6 @@ class ObservationStats(Stats):
     def _get_on_events(obs, target):
         """Number of ON events in the region of interest (`int`)
         """
-        print(target)
         idx = target.on_region.contains(obs.events.radec)
         on_events = obs.events[idx]
         return len(on_events)
@@ -114,7 +125,7 @@ class ObservationStats(Stats):
         ----------
         stats_list : list
             List of observation statistics `~gammapy.data.ObservationStats`
-      
+
         Returns
         -------
         total_stats : `~gammapy.data.ObservationStats`
@@ -126,10 +137,12 @@ class ObservationStats(Stats):
         a_on_backup = 0
         a_off = 0
         a_off_backup = 0
+        obs_id = list()
+        livetime = 0
         alpha = 0
         alpha_backup = 0
-        livetime = 0
-        obs_id = list()
+        gamma_rate = 0
+        bg_rate = 0
         for stats in stats_list:
             livetime += stats.livetime
             n_on += stats.n_on
@@ -141,6 +154,8 @@ class ObservationStats(Stats):
             alpha += stats.alpha * stats.n_off
             alpha_backup += stats.alpha * stats.livetime.value
             obs_id.append(stats.obs_id)
+            gamma_rate += stats.n_on - stats.alpha * stats.n_off
+            bg_rate += stats.n_off * stats.alpha
 
         a_on /= n_off
         a_off /= n_off
@@ -150,8 +165,11 @@ class ObservationStats(Stats):
         # with the livetime
         if n_off == 0:
             alpha = alpha_backup / livetime.value
-            a_on_backup = a_on_backup / livetime.value
-            a_off_backup = a_off_backup / livetime.value
+            a_on = a_on_backup / livetime.value
+            a_off = a_off_backup / livetime.value
+
+        gamma_rate /= livetime.to(u.min)
+        bg_rate /= livetime.to(u.min)
 
         total_stats = cls(
             n_on=n_on,
@@ -160,7 +178,9 @@ class ObservationStats(Stats):
             a_off=a_off,
             obs_id=obs_id,
             livetime=livetime,
-            alpha=alpha
+            alpha=alpha,
+            gamma_rate=gamma_rate,
+            bg_rate=bg_rate
         )
         return total_stats
 
@@ -174,16 +194,24 @@ class ObservationStats(Stats):
         """Observation statistics report (`str`)
         """
         ss = '*** Observation summary report ***\n'
-        ss += 'Observation Id: {}\n'.format(self.obs_id)
+        if len(self.obs_id) == 1:
+            obs_str = '{}'.format(self.obs_id[0])
+        else:
+            obs_str = '[{0}-{1}]'.format(self.obs_id[0], self.obs_id[-1])
+        ss += 'Observation Id: {}\n'.format(obs_str)
         ss += 'Livetime: {}\n'.format(self.livetime.to(u.h))
         ss += 'On events: {}\n'.format(self.n_on)
         ss += 'Off events: {}\n'.format(self.n_off)
         ss += 'Alpha: {}\n'.format(self.alpha)
         ss += 'Bkg events in On region: {}\n'.format(self.background)
         ss += 'Excess: {}\n'.format(self.excess)
-        ss += 'Gamma rate: {}\n'.format(self.n_on / self.livetime.to(u.min))
-        ss += 'Bkg rate rate: {}\n'.format(self.background /
-                                           self.livetime.to(u.min))
+        ss += 'Gamma rate: {}\n'.format(self.gamma_rate)
+        ss += 'Bkg rate: {}\n'.format(self.bg_rate)
         ss += 'Sigma: {}\n'.format(self.sigma)
 
         return ss
+
+
+class ObservationStatsList(list):
+    """List of `~gammapy.data.ObservationList`
+    """
