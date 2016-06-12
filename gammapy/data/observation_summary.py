@@ -179,8 +179,6 @@ class ObservationSummary(object):
             self.excess[index] = stack.excess
             self.sigma[index] = stack.sigma
 
-            print(stack)
-
     def obs_wise_summary(self):
         """
         Observation wise summary report (`str`).
@@ -336,4 +334,4 @@ class ObservationSummary(object):
         return ax
 
     def __str__(self):
-        raise NotImplementedError
+        self.summary()

@@ -106,3 +106,9 @@ def test_plot_gamma_rate(obs_summary):
 @requires_dependency('matplotlib')
 def test_plot_background_rate(obs_summary):
     obs_summary.plot_background_rate()
+
+
+@requires_data('gammapy-extra')
+def test_obs_str(obs_summary):
+    text = str(obs_summary)
+    assert ('Observation summary' in text)
