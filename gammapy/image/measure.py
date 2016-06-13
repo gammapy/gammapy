@@ -3,6 +3,7 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.units import Quantity
 from astropy.io import fits
 from .utils import coordinates
 
@@ -88,14 +89,19 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
     return table
 
 
+def _wrapped_coordinates(image):
+    coords = image.coordinates()
+    return coords.data.lon.wrap_at('180d'), coords.data.lat
+
 def measure_image_moments(image):
-    """Compute 0th, 1st and 2nd moments of an image.
+    """
+    Compute 0th, 1st and 2nd moments of an image.
 
     NaN values are ignored in the computation.
 
     Parameters
     ----------
-    image :`astropy.io.fits.ImageHDU`
+    image :`gammapy.image.SkyMap`
         Image to measure on.
 
     Returns
@@ -104,7 +110,7 @@ def measure_image_moments(image):
         List of image moments:
         [A, x_cms, y_cms, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
     """
-    x, y = coordinates(image, lon_sym=True)
+    x, y = _wrapped_coordinates(image)
     A = image.data[np.isfinite(image.data)].sum()
 
     # Center of mass
@@ -120,87 +126,84 @@ def measure_image_moments(image):
     return A, x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
 
 
-def measure_containment(image, glon, glat, radius):
+def measure_containment(image, position, radius):
     """
     Measure containment in a given circle around the source position.
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image :`gammapy.image.SkyMap`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
     radius : float
         Radius of the region to measure the containment in.
     """
-    GLON, GLAT = coordinates(image, lon_sym=True)
-    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
-    return measure_containment_fraction(radius, rr, image.data)
+    separation = image.coordinates().separation(position)
+    return measure_containment_fraction(image.data, radius, separation)
 
 
-def measure_containment_radius(image, glon, glat, containment_fraction=0.8):
-    """Measure containment radius.
+def measure_containment_radius(image, position, containment_fraction=0.8):
+    """
+    Measure containment radius of a source.
+
+
 
     Uses `scipy.optimize.brentq`.
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image :`gammapy.image.SkyMap`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
     containment_fraction : float (default 0.8)
         Containment fraction
 
     Returns
     -------
-    containment_radius : float
+    containment_radius : 
         Containment radius (pix)
     """
     from scipy.optimize import brentq
 
-    GLON, GLAT = coordinates(image, lon_sym=True)
-    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
+    separation = image.coordinates().separation(position)
 
     # Normalize image
-    image.data = image.data / image.data[np.isfinite(image.data)].sum()
+    data = image.data / image.data[np.isfinite(image.data)].sum()
 
     def func(r):
-        return measure_containment_fraction(r, rr, image.data) - containment_fraction
+        return measure_containment_fraction(data, r, separation.value) - containment_fraction
 
-    containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
-    return containment_radius
+    containment_radius = brentq(func, a=0, b=separation.max().value)
+    return Quantity(containment_radius, separation.unit)
 
 
-def measure_containment_fraction(r, rr, image):
+def measure_containment_fraction(image, radius, separation):
     """Measure containment fraction.
 
     Parameters
     ----------
-    r : float
+    image :`gammapy.image.SkyMap`
+        Image to measure on.
+    radius : `~astropy.units.Quantity`
         Containment radius.
-    rr : array
-        Squared radius array.
-    image : array
-        The image has to be normalized! I.e. image.sum() = 1.
-
+    separation : `~astropy.coordinates.Angle`
+         Separation from the source position array.
+    
     Returns
     -------
     containment_fraction : float
         Containment fraction
     """
     # Set up indices and containment mask
-    containment_mask = rr < r ** 2
+    containment_mask = separation < radius
     mask = np.logical_and(np.isfinite(image), containment_mask)
     containment_fraction = image[mask].sum()
     return containment_fraction
 
 
-def measure_curve_of_growth(image, glon, glat, r_max=0.2, delta_r=0.01):
+def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     """
     Measure the curve of growth for a given source position.
 
@@ -211,27 +214,26 @@ def measure_curve_of_growth(image, glon, glat, r_max=0.2, delta_r=0.01):
     ----------
     image : `astropy.io.fits.ImageHDU`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
-    r_max : float (default 0.2)
-        Maximal radius, up to which the containment is measured in degree.
-    delta_r : int (default 10)
-        Stepsize for the radius grid in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
+    radius_max : `~astropy.units.Quantity`
+        Maximal radius, up to which the containment is measured (default 0.2 deg).
+    radius_n : int
+        Number of radius steps.
 
     Returns
     -------
-    radii : array
+    radii : `~astropy.units.Quantity`
         Radii where the containment was measured.
-    containment : array
+    containment : `~astropy.units.Quantity`
         Corresponding contained flux.
     """
+    radius_max = radius_max or Quantity(0.2, 'deg')
     containment = []
-    radii = np.arange(0, r_max, delta_r)
+    radii = Quantity(np.linspace(0, radius_max.value, radius_n), radius_max.unit)
     for radius in radii:
-        containment.append(measure_containment(image, glon, glat, radius))
-    return radii, np.array(containment)
+        containment.append(measure_containment(image, position, radius))
+    return radii, Quantity(containment)
 
 
 def _split_xys(pos):
