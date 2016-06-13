@@ -4,8 +4,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
-from astropy.io import fits
-from .utils import coordinates
 
 __all__ = [
     'measure_containment_fraction',
@@ -93,6 +91,7 @@ def _wrapped_coordinates(image):
     coords = image.coordinates()
     return coords.data.lon.wrap_at('180d'), coords.data.lat
 
+
 def measure_image_moments(image):
     """
     Compute 0th, 1st and 2nd moments of an image.
@@ -101,7 +100,7 @@ def measure_image_moments(image):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyMap`
+    image : `gammapy.image.SkyMap`
         Image to measure on.
 
     Returns
