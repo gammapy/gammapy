@@ -1,11 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
 from astropy.time import Time
 from ...datasets import make_test_observation_table
 from ...catalog import skycoord_from_table
-
+from ...datasets import gammapy_extra
+from ...utils.testing import requires_data
+from ...data import DataStore
 
 def common_sky_region_select_test_routines(obs_table, selection):
     """Common routines for the tests of sky_box/sky_circle selection of obs tables."""

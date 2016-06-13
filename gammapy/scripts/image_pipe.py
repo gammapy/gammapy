@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 import numpy as np
 from astropy.units import Quantity
+from astropy.table import QTable, Column
 from astropy.wcs.utils import pixel_to_skycoord
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
@@ -66,7 +67,7 @@ class ObsImage(object):
         self.edisp = obs.edisp
         self.psf = obs.psf
         self.bkg = obs.bkg
-        self.center = obs.pointing_radec
+        self.obs_center = obs.pointing_radec
         self.livetime = obs.observation_live_time_duration
 
     def counts_map(self):
@@ -89,7 +90,7 @@ class ObsImage(object):
         """
         bkg_map = SkyMap.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
-        center = self.center.galactic
+        center = self.obs_center.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
         bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
         bkg_map.data = bkg_map.data.decompose()
@@ -100,6 +101,40 @@ class ObsImage(object):
             bkg_map.data = scale * bkg_map.data
 
         self.maps["bkg"] = bkg_map
+
+    def make_1d_expected_counts(self, spectral_index=2.3, for_integral_flux=False):
+        """Compute the 1D exposure table for one observation for an offset table
+
+        Parameters
+        ----------
+        spectral_index : float
+            Assumed power-law spectral index
+        for_integral_flux : bool
+            True if you want that the total excess / exposure gives the integrated flux
+
+        Returns
+        -------
+        table : `astropy.table.Table`
+            Two columns: offset in the FOV "theta" and expected counts "npred"
+
+        """
+        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
+                                                self.energy_band.unit)
+        energy_band = energy.bands
+        energy_bin = energy.log_centers
+        eref = EnergyBounds(self.energy_band).log_centers
+        spectrum = (energy_bin / eref) ** (-spectral_index)
+        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).T
+        npred_tab = np.sum(arf * spectrum * energy_band, axis=1)
+        npred_tab *= self.livetime
+        if for_integral_flux:
+            norm = np.sum(spectrum * energy_band)
+            npred_tab /= norm
+        table = QTable()
+        table['theta'] = offset_tab
+        table['npred'] = npred_tab
+        return table
 
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
         r"""Compute the exposure map for one observation.
@@ -130,40 +165,20 @@ class ObsImage(object):
             True if you want that the total excess / exposure gives the integrated flux
         """
         from scipy.interpolate import interp1d
-
         # TODO: should be re-implemented using the exposure_cube function
-        exposure = SkyMap.empty_like(self.empty_image)
+        table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
+        exposure = SkyMap.empty_like(self.empty_image, unit=table["npred"].unit)
 
         # Determine offset value for each pixel of the map
         xpix_coord_grid, ypix_coord_grid = exposure.coordinates_pix()
         # calculate pixel offset from center (in world coordinates)
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
-        center = exposure.center()
-        offset = coord.separation(center)
-
-        # 2D Exposure computation on the self.energy_range and on an offset_tab
-        energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
-                                                self.energy_band.unit)
-        energy_band = energy.bands
-        energy_bin = energy.log_centers
-        eref = EnergyBounds(self.energy_band).log_centers
-        spectrum = (energy_bin / eref) ** (-spectral_index)
-        aeff2d = self.aeff
-        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        exposure_tab = np.sum(
-            aeff2d.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").transpose()
-            * spectrum * energy_band, axis=1)
-        if for_integral_flux:
-            norm = np.sum(spectrum * energy_band)
-            exposure_tab /= norm
-        livetime = self.livetime
-        exposure_tab *= livetime
+        offset = coord.separation(self.obs_center)
 
         # Interpolate for the offset of each pixel
-        f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
+        f = interp1d(table["theta"], table["npred"], bounds_error=False, fill_value=0)
         exposure.data = f(offset)
         exposure.data[offset >= self.offset_band[1]] = 0
-
         self.maps["exposure"] = exposure
 
     def background_norm_factor(self, counts, bkg):
@@ -259,6 +274,8 @@ class MosaicImage(object):
         if exclusion_mask:
             self.maps['exclusion'] = exclusion_mask
         self.ncounts_min = ncounts_min
+        self.psfmeantab = None
+        self.thetapsf = None
 
     def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
                     radius=10):
@@ -282,7 +299,6 @@ class MosaicImage(object):
         if make_background_image:
             total_bkg = SkyMap.empty_like(self.empty_image)
             total_exposure = SkyMap.empty_like(self.empty_image)
-
         for obs_id in self.obs_table['OBS_ID']:
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
