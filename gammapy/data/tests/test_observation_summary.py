@@ -25,7 +25,7 @@ def table_summary():
 @requires_data('gammapy-extra')
 def test_str(table_summary):
     text = str(table_summary)
-    assert ('Observation summary' in text)
+    assert 'Observation summary' in text
 
 
 @requires_data('gammapy-extra')
@@ -111,4 +111,4 @@ def test_plot_background_rate(obs_summary):
 @requires_data('gammapy-extra')
 def test_obs_str(obs_summary):
     text = str(obs_summary)
-    assert ('Observation summary' in text)
+    assert 'Observation summary' in text

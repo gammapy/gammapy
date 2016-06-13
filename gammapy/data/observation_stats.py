@@ -14,7 +14,7 @@ class ObservationStats(Stats):
     """Observation statistics.
 
     Class allowing to summarize observation 
-    (`~gammapy.data.DataStoreObservation) statistics
+    (`~gammapy.data.DataStoreObservation`) statistics
 
     Parameters
     ----------

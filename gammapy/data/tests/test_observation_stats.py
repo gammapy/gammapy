@@ -27,8 +27,8 @@ def get_obs(id):
         if run.obs_id == id:
             return run
 
-
-def get_target():
+@pytest.fixture
+def target():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
@@ -49,23 +49,23 @@ def get_mask():
 
 
 @requires_data('gammapy-extra')
-def test_str():
+def test_str(target):
     run = get_obs(23523)
-    bg = refl(get_target().on_region,
+    bg = refl(target.on_region,
               run.pointing_radec, get_mask(), run.events)
-    stats = ObservationStats.from_target(run, get_target(), bg)
+    stats = ObservationStats.from_target(run, target, bg)
     text = str(stats)
-    assert ('Observation summary report' in text)
+    assert 'Observation summary report' in text
 
 
 @requires_data('gammapy-extra')
-def test_stack():
+def test_stack(target):
     obs_list = get_obs_list()
     obs_stats = list()
     for run in obs_list:
-        bg = refl(get_target().on_region,
+        bg = refl(target.on_region,
                   run.pointing_radec, get_mask(), run.events)
-        obs_stats.append(ObservationStats.from_target(run, get_target(), bg))
+        obs_stats.append(ObservationStats.from_target(run, target, bg))
     sum_obs_stats = ObservationStats.stack(obs_stats)
     assert_allclose(sum_obs_stats.alpha, 0.284, rtol=1.e-2)
     assert_allclose(sum_obs_stats.sigma, 23.48, rtol=1.e-3)
