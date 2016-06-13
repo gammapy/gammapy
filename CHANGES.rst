@@ -28,6 +28,8 @@ Contributors
 - Axel Donath
 - Brigitta Sipocz
 - Christoph Deil
+- Domenico Tiziani (new)
+- Helen Poon (new)
 - Johannes King
 - Julien Lefaucheur (new)
 - Léa Jouvin
@@ -43,9 +45,11 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
 - [#569] Add detection utilities à la BgStats (Julien Lefaucheur)
+- [#565] Add exptest time variability test (Helen Poon)
 - [#564] Add LightCurve class (Nachiketa Chakraborty)
 - [#559] Add paste, cutout and look_up methods to SkyMap class (Axel Donath)
 - [#557] Add spectrum point source containment correction option (Régis Terrier)
+- [#556] Add offset-dependent table PSF class (Domenico Tiziani)
 - [#549] Add mean PSF computation (Léa Jouvin)
 - [#547] Add astropy.regions to gammapy.extern (Johannes King)
 - [#546] Add Target class (Johannes King)
