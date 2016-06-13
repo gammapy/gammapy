@@ -65,8 +65,8 @@ def test_image_pipe(tmpdir):
                          obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
     mosaic.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
     # TODO: this fails on some machines, for unknown reasons.
-    #assert_equal(mosaic.maps['counts'].data.sum(), 2334.0)
-    #assert_almost_equal(mosaic.maps['bkg'].data.sum(), 1987.2088283446637)
-    #assert_almost_equal(mosaic.maps['exposure'].data.sum(), 5.9292301086257267e17)
-    #assert_almost_equal(mosaic.maps['significance'].lookup(center), 33.699068269123039)
-    #assert_almost_equal(mosaic.maps['excess'].data.sum(), 346.79117165533626)
+    assert_equal(mosaic.maps['counts'].data.sum(), 2334.0)
+    assert_almost_equal(mosaic.maps['bkg'].data.sum(), 1987.1513636663785)
+    assert_almost_equal(mosaic.maps['exposure'].data.sum(), 54190569251987.68)
+    assert_almost_equal(mosaic.maps['significance'].lookup(center), 33.707901541600634)
+    assert_almost_equal(mosaic.maps['excess'].data.sum(), 346.8486363336217)
