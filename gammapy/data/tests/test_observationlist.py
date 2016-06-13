@@ -28,6 +28,6 @@ def test_make_psftable():
     psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     # Check that the mean PSF is consistent with the individual PSFs
     # (in this case the R68 of the mean PSF is in between the R68 of the individual PSFs)
-    assert_quantity_allclose(psf1_int.containment_radius(0.68), Angle(0.11645282474146176, 'deg'))
-    assert_quantity_allclose(psf2_int.containment_radius(0.68), Angle(0.14232666985400985, 'deg'))
-    assert_quantity_allclose(psf_tot_int.containment_radius(0.68), Angle(0.12588112016412742, 'deg'))
+    assert_quantity_allclose(psf1_int.containment_radius(0.68), Angle(0.06012802199573515, 'deg'))
+    assert_quantity_allclose(psf2_int.containment_radius(0.68), Angle(0.05637627703540551, 'deg'))
+    assert_quantity_allclose(psf_tot_int.containment_radius(0.68), Angle(0.05818540290833362, 'deg'))

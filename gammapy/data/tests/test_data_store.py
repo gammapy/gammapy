@@ -117,6 +117,8 @@ def test_data_summary(data_manager):
     assert t[0]['psf_3gauss'] == 6042
 
 
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
 @pytest.mark.parametrize("pars,result", [
     (dict(energy=None, theta=None),
      dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.05 * u.deg,
@@ -131,17 +133,15 @@ def test_data_summary(data_manager):
      dict(energy_shape=101, theta_shape=1000, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
           psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(27987.773313506143, "1/sr"))),
 ])
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
 def test_make_psf(pars, result):
     center = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)
     obs1 = data_store.obs(23523)
     psf = obs1.make_psf(source_position=center, energy=pars["energy"], theta=pars["theta"])
-    assert_allclose(len(psf.offset), result["theta_shape"])
-    assert_allclose(len(psf.energy), result["energy_shape"])
-    assert_allclose(len(psf.exposure), result["energy_shape"])
+    assert_allclose(psf.offset.shape, result["theta_shape"])
+    assert_allclose(psf.energy.shape, result["energy_shape"])
+    assert_allclose(psf.exposure.shape, result["energy_shape"])
     assert_allclose(psf.psf_value.shape, (result["energy_shape"], result["theta_shape"]))
     assert_quantity_allclose(psf.offset[10], result["psf_theta"])
     assert_quantity_allclose(psf.energy[10], result["psf_energy"])

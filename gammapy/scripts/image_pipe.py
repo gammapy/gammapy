@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import Table, Column
+from astropy.table import QTable, Column
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
@@ -131,11 +131,9 @@ class ObsImage(object):
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
             npred_tab /= norm
-        table = Table()
-        c1 = Column(offset_tab, name='theta', unit=offset_tab.unit)
-        c2 = Column(npred_tab, name='npred', unit=npred_tab.unit)
-        table.add_column(c1)
-        table.add_column(c2)
+        table = QTable()
+        table['theta'] = offset_tab
+        table['npred'] = npred_tab
         return table
 
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
