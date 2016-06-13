@@ -114,7 +114,7 @@ class ObsImage(object):
 
         Returns
         -------
-        table: `astropy.table.Table`
+        table : `astropy.table.Table`
             Two columns: offset in the FOV "theta" and expected counts "npred"
 
         """
