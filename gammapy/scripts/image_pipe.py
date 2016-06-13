@@ -4,13 +4,13 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 import numpy as np
 from astropy.units import Quantity
+from astropy.table import Table, Column
 from astropy.wcs.utils import pixel_to_skycoord
-from astropy.coordinates import SkyCoord, Angle
-from ..utils.energy import EnergyBounds, Energy
+from astropy.coordinates import Angle
+from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
 from ..image import SkyMap, SkyMapCollection, disk_correlate
 from ..stats import significance
-from ..irf import EnergyDependentTablePSF, TablePSF
 
 __all__ = ['ObsImage',
            'MosaicImage']
@@ -114,10 +114,8 @@ class ObsImage(object):
 
         Returns
         -------
-        offset_tab: `numpy.array`
-            1D offset array in the FOV
-        exposure_tab: `numpy.array`
-            1D exposure array for the previous offset
+        table: `astropy.table.Table`
+            Two columns: offset in the FOV "theta" and expected counts "npred"
 
         """
         energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
@@ -128,12 +126,17 @@ class ObsImage(object):
         spectrum = (energy_bin / eref) ** (-spectral_index)
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
         arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").T
-        exposure_tab = np.sum(arf * spectrum * energy_band, axis=1)
-        exposure_tab *= self.livetime
+        npred_tab = np.sum(arf * spectrum * energy_band, axis=1)
+        npred_tab *= self.livetime
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
-            exposure_tab /= norm
-        return offset_tab, exposure_tab
+            npred_tab /= norm
+        table = Table()
+        c1 = Column(offset_tab, name='theta', unit=offset_tab.unit)
+        c2 = Column(npred_tab, name='npred', unit=npred_tab.unit)
+        table.add_column(c1)
+        table.add_column(c2)
+        return table
 
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
         r"""Compute the exposure map for one observation.
@@ -173,10 +176,10 @@ class ObsImage(object):
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
         offset = coord.separation(self.obs_center)
 
-        offset_tab, exposure_tab = self.make_1d_expected_counts(spectral_index, for_integral_flux)
+        table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
 
         # Interpolate for the offset of each pixel
-        f = interp1d(offset_tab, exposure_tab, bounds_error=False, fill_value=0)
+        f = interp1d(table["theta"], table["npred"], bounds_error=False, fill_value=0)
         exposure.data = f(offset)
         exposure.data[offset >= self.offset_band[1]] = 0
 
@@ -278,7 +281,7 @@ class MosaicImage(object):
         self.psfmeantab = None
         self.thetapsf = None
 
-    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux = False,
+    def make_images(self, make_background_image=False, bkg_norm=True, spectral_index=2.3, for_integral_flux=False,
                     radius=10):
         """Compute the counts, bkg, exposure, excess and significance images for a set of observation.
 
