@@ -231,7 +231,7 @@ class SkyMap(object):
         **kwargs : dict
             Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
         """
-        hdu = self.to_image_hdu()
+        hdu = self.to_image_hdu(primary=True)
         hdu.writeto(filename, *args, **kwargs)
 
     def coordinates_pix(self, mode='center'):
@@ -487,19 +487,32 @@ class SkyMap(object):
         """
         return deepcopy(self)
 
-    def to_image_hdu(self):
+    def to_image_hdu(self, primary=False):
         """
-        Convert sky map to `~astropy.fits.ImageHDU`.
-        """
-        if not self.wcs is None:
-            header = self.wcs.to_header()
+        Convert sky map to `~astropy.fits.ImageHDU` or `~astropy.fits.PrimaryHDU`
         
-            # Add meta data
-            header.update(self.meta)
-            header['BUNIT'] = self.unit
+        Parameters
+        ----------
+        primary : bool
+            Create a `~astropy.fits.PrimaryHDU` object, instead of an `~astropy.fits.ImageHDU`
+        """
+        if self.wcs is not None:
+            header = self.wcs.to_header()
         else:
-            header = None
-        return fits.ImageHDU(data=self.data, header=header, name=self.name)
+            header = fits.Header()
+
+        # Add meta data
+        header.update(self.meta)
+        if self.unit is not None:
+            header['BUNIT'] = Unit(self.unit).to_string('fits')
+        if self.name is not None:
+            header['EXTNAME'] = self.name
+            header['HDUNAME'] = self.name
+        if primary:
+            hdu = fits.PrimaryHDU(data=self.data, header=header)
+        else:
+            hdu = fits.ImageHDU(data=self.data, header=header, name=self.name)
+        return hdu
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
@@ -624,12 +637,12 @@ class SkyMap(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
-        if not self.data is None:
+        if self.data is not None:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
-        if not self.wcs is None:
+        if self.wcs is not None:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         return info
 
@@ -743,9 +756,11 @@ class SkyMapCollection(Bunch):
             Reference header to be used for all maps.
         """
         hdulist = fits.HDUList()
-        for name in self.get('_map_names', sorted(self)):
+        for idx, name in enumerate(self.get('_map_names', sorted(self))):
             if isinstance(self[name], SkyMap):
-                hdu = self[name].to_image_hdu()
+                primary = True if idx == 0 else False
+                hdu = self[name].to_image_hdu(primary=primary)
+
                 # For now add common collection meta info to the single map headers
                 hdu.header.update(self.meta)
                 hdu.name = name
