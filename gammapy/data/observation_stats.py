@@ -6,7 +6,7 @@ from ..stats import significance_on_off
 
 __all__ = [
     'ObservationStats',
-    'ObservationStatsList'
+    'ObservationStatsList',
 ]
 
 
@@ -213,5 +213,5 @@ class ObservationStats(Stats):
 
 
 class ObservationStatsList(list):
-    """List of `~gammapy.data.ObservationList`
+    """List of `~gammapy.data.ObservationStats`
     """
