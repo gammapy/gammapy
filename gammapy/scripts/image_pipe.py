@@ -168,7 +168,8 @@ class ObsImage(object):
         """
         from scipy.interpolate import interp1d
         # TODO: should be re-implemented using the exposure_cube function
-        exposure = SkyMap.empty_like(self.empty_image)
+        table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
+        exposure = SkyMap.empty_like(self.empty_image, unit=table["npred"].unit)
 
         # Determine offset value for each pixel of the map
         xpix_coord_grid, ypix_coord_grid = exposure.coordinates_pix()
@@ -176,13 +177,10 @@ class ObsImage(object):
         coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
         offset = coord.separation(self.obs_center)
 
-        table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
-
         # Interpolate for the offset of each pixel
         f = interp1d(table["theta"], table["npred"], bounds_error=False, fill_value=0)
         exposure.data = f(offset)
         exposure.data[offset >= self.offset_band[1]] = 0
-
         self.maps["exposure"] = exposure
 
     def background_norm_factor(self, counts, bkg):
@@ -321,6 +319,8 @@ class MosaicImage(object):
         if make_background_image:
             self.maps["bkg"] = total_bkg
             self.maps["exposure"] = total_exposure
+            self.maps["exposure"].unit = obs_image.maps["exposure"].unit
+            import IPython; IPython.embed()
             self.significance_image(radius)
             self.excess_image()
 
