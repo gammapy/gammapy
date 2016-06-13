@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 from ..stats import Stats
-from gammapy.stats import significance_on_off
+from ..stats import significance_on_off
 
 __all__ = [
     'ObservationStats',
@@ -46,7 +46,7 @@ class ObservationStats(Stats):
             n_on=n_on,
             n_off=n_off,
             a_on=a_on,
-            a_off=a_off
+            a_off=a_off,
         )
 
         self.obs_id = obs_id
@@ -58,7 +58,7 @@ class ObservationStats(Stats):
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
         """
-        Auxiliary constructor from an osbervation, a target
+        Auxiliary constructor from an observation, a target
         a background estimate
 
         Parameters

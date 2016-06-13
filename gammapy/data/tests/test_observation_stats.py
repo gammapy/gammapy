@@ -27,6 +27,7 @@ def get_obs(id):
         if run.obs_id == id:
             return run
 
+
 @pytest.fixture
 def target():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')

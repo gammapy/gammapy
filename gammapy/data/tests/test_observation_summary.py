@@ -68,7 +68,6 @@ def obs_summary():
     obs_stats = ObservationStatsList()
 
     for index, run in enumerate(obs_list):
-
         bkg = refl(on_region, run.pointing_radec, mask, run.events)
 
         obs_stats.append(ObservationStats.from_target(run, target, bkg))
