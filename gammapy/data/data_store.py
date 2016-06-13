@@ -608,7 +608,7 @@ class DataStoreObservation(object):
             energy = self.psf.to_table_psf(theta=offset).energy
         if not theta:
             theta = self.psf.to_table_psf(theta=offset).offset
-        psf_value = self.psf.to_table_psf(theta=offset).evaluate(energy)
+        psf_value = self.psf.to_table_psf(theta=offset, offset=theta).evaluate(energy)
         arf = self.aeff.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
         psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,

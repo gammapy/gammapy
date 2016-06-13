@@ -319,8 +319,8 @@ class MosaicImage(object):
         if make_background_image:
             self.maps["bkg"] = total_bkg
             self.maps["exposure"] = total_exposure
-            self.maps["exposure"].unit = obs_image.maps["exposure"].unit
-            import IPython; IPython.embed()
+            #self.maps["exposure"].unit = obs_image.maps["exposure"].unit
+            #import IPython; IPython.embed()
             self.significance_image(radius)
             self.excess_image()
 
