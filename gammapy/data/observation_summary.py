@@ -189,14 +189,6 @@ class ObservationSummary(object):
 
         return ss
 
-    def summary(self):
-        """Observation wise summary report (`str`).
-        """
-        stack = ObservationStats.stack(self.obs_stats)
-        ss = '*** Observation summary ***\n'
-        ss += '{}\n'.format(stack)
-        return ss
-
     def plot_significance_vs_livetime(self, ax=None, **kwargs):
         """Plot significance as a function of livetime
 
@@ -334,4 +326,9 @@ class ObservationSummary(object):
         return ax
 
     def __str__(self):
-        self.summary()
+        """Observation summary report (`str`)
+        """
+        stack = ObservationStats.stack(self.obs_stats)
+        ss = '*** Observation summary ***\n'
+        ss += '{}\n'.format(stack)
+        return ss
