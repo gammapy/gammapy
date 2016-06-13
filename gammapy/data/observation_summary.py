@@ -1,11 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
+from .observation_stats import ObservationStats, ObservationStatsList
 
 __all__ = [
     'ObservationTableSummary',
+    'ObservationSummary',
 ]
 
 
@@ -41,7 +44,7 @@ class ObservationTableSummary(object):
 
     def plot_zenith_distribution(self, ax=None, bins=None):
         """Construct the zenith distribution of the observations.
-        
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None, optional.
@@ -73,7 +76,7 @@ class ObservationTableSummary(object):
 
     def plot_offset_distribution(self, ax=None, bins=None):
         """Construct the offset distribution of the observations.
-        
+
         Parameters
         ----------
         ax : `~matplotlib.axes.Axes` or None, optional.
@@ -125,3 +128,207 @@ class ObservationTableSummary(object):
         """Make HTML file and images in tmp dir, open in browser.
         """
         raise NotImplementedError
+
+
+class ObservationSummary(object):
+    """Summary of observations.
+
+    Class allowing to summarise informations contained in 
+    a list of observations (`~gammapy.data.ObservationStatsList`)
+
+    Parameters
+    ----------
+    obs_stats : `~gammapy.data.ObservationStatsList`
+        List of observation statistics
+    """
+
+    def __init__(self, obs_stats):
+        self.obs_stats = obs_stats
+
+        self.obs_id = np.zeros(len(self.obs_stats))
+        self.livetime = np.zeros(len(self.obs_stats)) * u.s
+        self.n_on = np.zeros(len(self.obs_stats))
+        self.n_off = np.zeros(len(self.obs_stats))
+        self.alpha = np.zeros(len(self.obs_stats))
+        self.background = np.zeros(len(self.obs_stats))
+        self.excess = np.zeros(len(self.obs_stats))
+        self.sigma = np.zeros(len(self.obs_stats))
+        self.gamma_rate = np.zeros(len(self.obs_stats)) / u.min
+        self.bg_rate = np.zeros(len(self.obs_stats)) / u.min
+
+        self._init_values()
+
+    def _init_values(self):
+        """ Initialise vector attributs for plotting methods
+        """
+        cumul_obs = ObservationStatsList()
+        for index, obs in enumerate(self.obs_stats):
+            # per observation stat
+            self.obs_id[index] = obs.obs_id  # keep track of the observation
+            self.gamma_rate[index] = obs.gamma_rate
+            self.bg_rate[index] = obs.bg_rate
+
+            # cumulative information
+            cumul_obs.append(obs)
+            stack = ObservationStats.stack(cumul_obs)
+            self.livetime[index] = stack.livetime
+            self.n_on[index] = stack.n_on
+            self.n_off[index] = stack.n_off
+            self.alpha[index] = stack.alpha
+            self.background[index] = stack.background
+            self.excess[index] = stack.excess
+            self.sigma[index] = stack.sigma
+
+    def obs_wise_summary(self):
+        """
+        Observation wise summary report (`str`).
+        """
+        ss = '*** Observation Wise summary ***\n'
+        for obs in self.obs_stats:
+            ss = '{}\n'.format(obs)
+
+        return ss
+
+    def plot_significance_vs_livetime(self, ax=None, **kwargs):
+        """Plot significance as a function of livetime
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+        ax.plot(self.livetime.to(u.h), self.sigma, "o", **kwargs)
+
+        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_ylabel('Significance ($\sigma$)')
+        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
+                 0., np.amax(self.sigma) * 1.2])
+        ax.set_title('Significance evolution')
+        return ax
+
+    def plot_excess_vs_livetime(self, ax=None, **kwargs):
+        """Plot excess as a function of livetime
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+        ax.plot(self.livetime.to(u.h), self.excess, "o", **kwargs)
+
+        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_ylabel('Excess')
+        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
+                 0., np.amax(self.excess) * 1.2])
+        ax.set_title('Excess evolution')
+        return ax
+
+    def plot_background_vs_livetime(self, ax=None, **kwargs):
+        """Plot background as a function of livetime
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+        ax.plot(self.livetime.to(u.h), self.background, "o", **kwargs)
+
+        ax.set_xlabel('Livetime ({0})'.format(u.h))
+        ax.set_ylabel('Background')
+        ax.axis([0., np.amax(self.livetime.to(u.h).value) * 1.2,
+                 0., np.amax(self.background) * 1.2])
+        ax.set_title('Background evolution')
+        return ax
+
+    def plot_gamma_rate(self, ax=None, **kwargs):
+        """Plot gamma rate for each observation
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+        labels = list()
+        values = list()
+        for index in range(len(self.gamma_rate)):
+            labels.append(str(int(self.obs_id[index])))
+            values.append(index + 0.5)
+
+        ax.plot(values, self.gamma_rate, "o", **kwargs)
+        ax.set_xlabel('Observation Ids')
+
+        ax.set_xticks(values)
+        ax.set_xticklabels(labels, rotation=-22.5)
+        ax.set_ylabel('$\gamma$ rate ({})'.format(self.gamma_rate.unit))
+        ax.axis([0, len(self.gamma_rate),
+                 0., np.amax(self.gamma_rate.value) * 1.2])
+        ax.set_title('$\gamma$ rates')
+        return ax
+
+    def plot_background_rate(self, ax=None, **kwargs):
+        """Plot background rate for each observation
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+
+        Returns
+        -------
+        ax : `~matplolib.axes`
+            Axis
+        """
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+        labels = list()
+        values = list()
+        for index in range(len(self.bg_rate)):
+            labels.append(str(int(self.obs_id[index])))
+            values.append(index + 0.5)
+
+        ax.plot(values, self.bg_rate, "o", **kwargs)
+        ax.set_xlabel('Observation Ids')
+
+        ax.set_xticks(values)
+        ax.set_xticklabels(labels, rotation=-22.5)
+        ax.set_ylabel('Background rate ({})'.format(self.bg_rate.unit))
+        ax.axis([0, len(self.bg_rate),
+                 0., np.amax(self.bg_rate.value) * 1.2])
+        ax.set_title('Background rates')
+        return ax
+
+    def __str__(self):
+        """Observation summary report (`str`)
+        """
+        stack = ObservationStats.stack(self.obs_stats)
+        ss = '*** Observation summary ***\n'
+        ss += '{}\n'.format(stack)
+        return ss
