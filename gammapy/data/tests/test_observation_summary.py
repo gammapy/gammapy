@@ -47,9 +47,9 @@ def test_plot_offset(table_summary):
     table_summary.plot_offset_distribution()
 
 
+@pytest.fixture
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
-@pytest.fixture
 def obs_summary():
     datastore = DataStore.from_dir(
         '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
