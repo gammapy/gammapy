@@ -117,29 +117,21 @@ def test_data_summary(data_manager):
     assert t[0]['psf_3gauss'] == 6042
 
 
-@pytest.mark.parametrize("pars,result", [(dict(energy=None, theta=None),
-                                          dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV,
-                                               psf_theta=0.05 * u.deg,
-                                               psf_exposure=Quantity(6878545291473.34, "cm2 s"),
-                                               psf_value=Quantity(205215.42446175334, "1/sr"))),
-                                         (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=None),
-                                          dict(energy_shape=101, theta_shape=300, psf_energy=1.2589254117941673 * u.TeV,
-                                               psf_theta=0.05 * u.deg,
-                                               psf_exposure=Quantity(4622187644084.735, "cm2 s"),
-                                               psf_value=Quantity(119662.71915415104, "1/sr"))),
-                                         (dict(energy=None, theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-                                          dict(energy_shape=18, theta_shape=1000, psf_energy=2.5178505859375 * u.TeV,
-                                               psf_theta=0.02 * u.deg,
-                                               psf_exposure=Quantity(6878545291473.34, "cm2 s"),
-                                               psf_value=Quantity(23082.369133891403, "1/sr"))),
-                                         (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"),
-                                               theta=Angle(np.arange(0, 2, 0.002), 'deg')),
-                                          dict(energy_shape=101, theta_shape=1000,
-                                               psf_energy=1.2589254117941673 * u.TeV,
-                                               psf_theta=0.02 * u.deg,
-                                               psf_exposure=Quantity(4622187644084.735, "cm2 s"),
-                                               psf_value=Quantity(27987.773313506143, "1/sr"))),
-                                         ])
+@pytest.mark.parametrize("pars,result", [
+    (dict(energy=None, theta=None),
+     dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(205215.42446175334, "1/sr"))),
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=None),
+     dict(energy_shape=101, theta_shape=300, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(119662.71915415104, "1/sr"))),
+    (dict(energy=None, theta=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=18, theta_shape=1000, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(23082.369133891403, "1/sr"))),
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=101, theta_shape=1000, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(27987.773313506143, "1/sr"))),
+])
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_make_psf(pars, result):
     center = SkyCoord(83.63, 22.01, unit='deg')

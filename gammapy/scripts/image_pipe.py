@@ -125,7 +125,7 @@ class ObsImage(object):
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
         offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).to("cm2").T
+        arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).T
         npred_tab = np.sum(arf * spectrum * energy_band, axis=1)
         npred_tab *= self.livetime
         if for_integral_flux:
@@ -319,8 +319,6 @@ class MosaicImage(object):
         if make_background_image:
             self.maps["bkg"] = total_bkg
             self.maps["exposure"] = total_exposure
-            #self.maps["exposure"].unit = obs_image.maps["exposure"].unit
-            #import IPython; IPython.embed()
             self.significance_image(radius)
             self.excess_image()
 
