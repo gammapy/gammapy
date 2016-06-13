@@ -585,17 +585,19 @@ class DataStoreObservation(object):
         """
         raise NotImplementedError
 
-    def make_psf(self, source_position, energy=None, theta=None):
+    def make_psf(self, position, energy=None, theta=None):
         """Make energy-dependent PSF for a given source position.
 
         Parameters
         ----------
-        source_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the source position for which we want to calculate the psf
+        position : `~astropy.coordinates.SkyCoord`
+            Position at which to compute the PSF
         energy : `~astropy.units.Quantity`
-            1D Energy Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
+            1-dim energy array for the output PSF.
+            If none is given, the energy array of the PSF from the observation is used.
         theta : `~astropy.coordinates.Angle`
-            1D Angle Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF` (offset in the FOV)
+            1-dim offset array for the output PSF.
+            If none is given, the offset array of the PSF from the observation is used.
 
         Returns
         -------
@@ -603,14 +605,16 @@ class DataStoreObservation(object):
             Energy dependent psf table
         """
 
-        offset = source_position.separation(self.pointing_radec)
+        offset = position.separation(self.pointing_radec)
         if not energy:
             energy = self.psf.to_table_psf(theta=offset).energy
         if not theta:
             theta = self.psf.to_table_psf(theta=offset).offset
+
         psf_value = self.psf.to_table_psf(theta=offset, offset=theta).evaluate(energy)
         arf = self.aeff.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
+
         psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
                                       psf_value=psf_value)
         return psf
@@ -622,34 +626,39 @@ class ObservationList(list):
     Could be extended to hold a more generic class of observations
     """
 
-    def make_psf(self, source_position, energy=None, theta=None):
-        """Make energy-dependent PSF for a given source position and a set of observations.
+    def make_psf(self, position, energy=None, theta=None):
+        """Make energy-dependent mean PSF for a given position and a set of observations.
 
         Parameters
         ----------
-        source_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the source position for which we want to calculate the psf
+        position : `~astropy.coordinates.SkyCoord`
+            Position at which to compute the PSF
         energy : `~astropy.units.Quantity`
-            1D Energy Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
+            1-dim energy array for the output PSF.
+            If none is given, the energy array of the PSF from the first observation is used.
         theta : `~astropy.coordinates.Angle`
-            1D Angle Array on which you want to define the new `~gammapy.irf.EnergyDependentTablePSF`
+            1-dim offset array for the output PSF.
+            If none is given, the energy array of the PSF from the first observation is used.
 
         Returns
         -------
-        psf_tot : `~gammapy.irf.EnergyDependentTablePSF`
-            Energy dependent psf table on you energy range
+        psf : `~gammapy.irf.EnergyDependentTablePSF`
+            Mean PSF
         """
 
-        psf = self[0].make_psf(source_position, energy, theta)
-        exposure_tab_tot = psf.exposure
-        psf_tab_tot = psf.psf_value.T * psf.exposure
-        for obs in self[1:]:
-            psf = obs.make_psf(source_position, energy, theta)
-            exposure_tab_tot += psf.exposure
-            psf_tab_tot += psf.psf_value.T * psf.exposure
-        psf_tab_tot /= exposure_tab_tot
+        psf = self[0].make_psf(position, energy, theta)
         if not theta:
             theta = psf.offset
-        psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
-                                          psf_value=psf_tab_tot.T)
+
+        exposure = psf.exposure
+        psf_value = psf.psf_value.T * psf.exposure
+
+        for obs in self[1:]:
+            psf = obs.make_psf(position, energy, theta)
+            exposure += psf.exposure
+            psf_value += psf.psf_value.T * psf.exposure
+
+        psf_value /= exposure
+        psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
+                                          psf_value=psf_value.T)
         return psf_tot

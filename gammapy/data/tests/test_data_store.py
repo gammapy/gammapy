@@ -134,15 +134,18 @@ def test_data_summary(data_manager):
           psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(27987.773313506143, "1/sr"))),
 ])
 def test_make_psf(pars, result):
-    center = SkyCoord(83.63, 22.01, unit='deg')
+    position = SkyCoord(83.63, 22.01, unit='deg')
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     data_store = DataStore.from_dir(store)
+
     obs1 = data_store.obs(23523)
-    psf = obs1.make_psf(source_position=center, energy=pars["energy"], theta=pars["theta"])
+    psf = obs1.make_psf(position=position, energy=pars["energy"], theta=pars["theta"])
+
     assert_allclose(psf.offset.shape, result["theta_shape"])
     assert_allclose(psf.energy.shape, result["energy_shape"])
     assert_allclose(psf.exposure.shape, result["energy_shape"])
     assert_allclose(psf.psf_value.shape, (result["energy_shape"], result["theta_shape"]))
+
     assert_quantity_allclose(psf.offset[10], result["psf_theta"])
     assert_quantity_allclose(psf.energy[10], result["psf_energy"])
     assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])

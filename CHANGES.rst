@@ -46,6 +46,7 @@ See the complete `Gammapy 0.5 merged pull requests list on Github <https://githu
 - [#564] Add LightCurve class (Nachiketa Chakraborty)
 - [#559] Add paste, cutout and look_up methods to SkyMap class (Axel Donath)
 - [#557] Add spectrum point source containment correction option (Régis Terrier)
+- [#549] Add mean PSF computation (Léa Jouvin)
 - [#547] Add astropy.regions to gammapy.extern (Johannes King)
 - [#546] Add Target class (Johannes King)
 - [#545] Add PointingInfo class (Christoph Deil)

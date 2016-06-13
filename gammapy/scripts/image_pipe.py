@@ -114,9 +114,8 @@ class ObsImage(object):
 
         Returns
         -------
-        table : `astropy.table.Table`
+        table : `astropy.table.QTable`
             Two columns: offset in the FOV "theta" and expected counts "npred"
-
         """
         energy = EnergyBounds.equal_log_spacing(self.energy_band[0].value, self.energy_band[1].value, 100,
                                                 self.energy_band.unit)
@@ -124,16 +123,19 @@ class ObsImage(object):
         energy_bin = energy.log_centers
         eref = EnergyBounds(self.energy_band).log_centers
         spectrum = (energy_bin / eref) ** (-spectral_index)
-        offset_tab = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
-        arf = self.aeff.evaluate(offset=offset_tab, energy=energy_bin).T
-        npred_tab = np.sum(arf * spectrum * energy_band, axis=1)
-        npred_tab *= self.livetime
+        offset = Angle(np.linspace(self.offset_band[0].value, self.offset_band[1].value, 10), self.offset_band.unit)
+        arf = self.aeff.evaluate(offset=offset, energy=energy_bin).T
+        npred = np.sum(arf * spectrum * energy_band, axis=1)
+        npred *= self.livetime
+
         if for_integral_flux:
             norm = np.sum(spectrum * energy_band)
-            npred_tab /= norm
+            npred /= norm
+
         table = QTable()
-        table['theta'] = offset_tab
-        table['npred'] = npred_tab
+        table['theta'] = offset
+        table['npred'] = npred
+
         return table
 
     def exposure_map(self, spectral_index=2.3, for_integral_flux=False):
