@@ -5,7 +5,7 @@ from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from ...data import DataStore, ObservationList, ObservationStats, Target
-from ...utils.testing import requires_data
+from ...utils.testing import requires_data, requires_dependency
 from ...extern.regions.shapes import CircleSkyRegion
 from ...background import reflected_regions_background_estimate as refl
 from ...image import ExclusionMask
@@ -50,6 +50,7 @@ def get_mask():
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_str(target):
     run = get_obs(23523)
     bg = refl(target.on_region,
@@ -60,6 +61,7 @@ def test_str(target):
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_stack(target):
     obs_list = get_obs_list()
     obs_stats = list()
