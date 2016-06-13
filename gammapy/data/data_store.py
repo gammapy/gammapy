@@ -599,7 +599,7 @@ class DataStoreObservation(object):
 
         Returns
         -------
-        energy_dependant_psftab : `~gammapy.irf.EnergyDependentTablePSF`
+        psf : `~gammapy.irf.EnergyDependentTablePSF`
             Energy dependent psf table
         """
 
@@ -609,10 +609,10 @@ class DataStoreObservation(object):
         if not theta:
             theta = self.psf.to_table_psf(theta=offset).offset
         psf_value = self.psf.to_table_psf(theta=offset).evaluate(energy)
-        arf = self.aeff.evaluate(offset=offset, energy=energy).to("cm2")
+        arf = self.aeff.evaluate(offset=offset, energy=energy)
         exposure = arf * self.observation_live_time_duration
         psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure,
-                                                          psf_value=psf_value)
+                                      psf_value=psf_value)
         return psf
 
 
@@ -636,22 +636,20 @@ class ObservationList(list):
 
         Returns
         -------
-        energy_dependant_psftab : `~gammapy.irf.EnergyDependentTablePSF`
+        psf_tot : `~gammapy.irf.EnergyDependentTablePSF`
             Energy dependent psf table on you energy range
         """
 
-        energy_dependant_psftab = self[0].make_psf(source_position, energy, theta)
-        exposure_tab_tot = energy_dependant_psftab.exposure
-        psf_tab_tot = energy_dependant_psftab.psf_value.T * energy_dependant_psftab.exposure
+        psf = self[0].make_psf(source_position, energy, theta)
+        exposure_tab_tot = psf.exposure
+        psf_tab_tot = psf.psf_value.T * psf.exposure
         for obs in self[1:]:
-            energy_dependant_psftab = obs.make_psf(source_position, energy, theta)
-            exposure_tab_tot += energy_dependant_psftab.exposure
-            psf_tab_tot += energy_dependant_psftab.psf_value.T * energy_dependant_psftab.exposure
+            psf = obs.make_psf(source_position, energy, theta)
+            exposure_tab_tot += psf.exposure
+            psf_tab_tot += psf.psf_value.T * psf.exposure
         psf_tab_tot /= exposure_tab_tot
         if not theta:
-            theta = energy_dependant_psftab.offset
-        psf = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
-                                            psf_value=psf_tab_tot.T)
-        return psf
-
-
+            theta = psf.offset
+        psf_tot = EnergyDependentTablePSF(energy=energy, offset=theta, exposure=exposure_tab_tot,
+                                          psf_value=psf_tab_tot.T)
+        return psf_tot

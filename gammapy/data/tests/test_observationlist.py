@@ -23,8 +23,7 @@ def test_make_psftable():
     psf2 = obs2.make_psf(source_position=center, energy=energy, theta=None)
     psf1_int = psf1.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     psf2_int = psf2.table_psf_in_energy_band(energy_band, spectral_index=2.3)
-    list = [obs1, obs2]
-    obslist = ObservationList(list)
+    obslist = ObservationList([obs1, obs2])
     psf_tot = obslist.make_psf(source_position=center, energy=energy)
     psf_tot_int = psf_tot.table_psf_in_energy_band(energy_band, spectral_index=2.3)
     # Check that the mean PSF is consistent with the individual PSFs
