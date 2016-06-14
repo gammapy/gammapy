@@ -1,7 +1,7 @@
 """Example how to make an acceptance curve and background model image.
 """
 from astropy.coordinates import SkyCoord, Angle
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import assert_allclose
 from gammapy.utils.energy import Energy
 from gammapy.data import DataStore
 from gammapy.image import SkyMap, ExclusionMask
@@ -64,8 +64,8 @@ def test_image_pipe(tmpdir):
     mosaic = MosaicImage(image, energy_band=energy_band, offset_band=offset_band, data_store=data_store,
                          obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
     mosaic.make_images(make_background_image=True, for_integral_flux=True, radius=10.)
-    assert_equal(mosaic.maps['counts'].data.sum(), 2334.0, atol=3)
-    assert_almost_equal(mosaic.maps['bkg'].data.sum(), 1987.1513636663785, atol=3)
-    assert_almost_equal(mosaic.maps['exposure'].data.sum(), 54190569251987.68, atol=3)
-    assert_almost_equal(mosaic.maps['significance'].lookup(center), 33.707901541600634, atol=3)
-    assert_almost_equal(mosaic.maps['excess'].data.sum(), 346.8486363336217, atol=3)
+    assert_allclose(mosaic.maps['counts'].data.sum(), 2334.0, atol=3)
+    assert_allclose(mosaic.maps['bkg'].data.sum(), 1987.1513636663785, atol=3)
+    assert_allclose(mosaic.maps['exposure'].data.sum(), 54190569251987.68, atol=3)
+    assert_allclose(mosaic.maps['significance'].lookup(center), 33.707901541600634, atol=3)
+    assert_allclose(mosaic.maps['excess'].data.sum(), 346.8486363336217, atol=3)
