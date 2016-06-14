@@ -13,8 +13,6 @@ from ...background import reflected_regions_background_estimate as refl
 from ...image import ExclusionMask
 
 
-@requires_data('gammapy-extra')
-@pytest.fixture
 def table_summary():
     data_store = DataStore.from_dir(
         '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
@@ -23,33 +21,28 @@ def table_summary():
 
 
 @requires_data('gammapy-extra')
-def test_str(table_summary):
-    text = str(table_summary)
-    assert 'Observation summary' in text
+class TestObservationSummaryTable():
+    def setup(self):
+        self.table_summary = table_summary()
+
+    def test_str(self):
+        text = str(self.table_summary)
+        assert 'Observation summary' in text
+
+    def test_offset(self):
+        offset = self.table_summary.offset
+        assert_allclose(offset.degree.mean(), 1., rtol=1.e-2)
+        assert_allclose(offset.degree.std(), 0.5, rtol=1.e-2)
+
+    @requires_dependency('matplotlib')
+    def test_plot_zenith(self):
+        self.table_summary.plot_zenith_distribution()
+
+    @requires_dependency('matplotlib')
+    def test_plot_offset(self):
+        self.table_summary.plot_offset_distribution()
 
 
-@requires_data('gammapy-extra')
-def test_offset(table_summary):
-    offset = table_summary.offset
-    assert_allclose(offset.degree.mean(), 1., rtol=1.e-2)
-    assert_allclose(offset.degree.std(), 0.5, rtol=1.e-2)
-
-
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_zenith(table_summary):
-    table_summary.plot_zenith_distribution()
-
-
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_offset(table_summary):
-    table_summary.plot_offset_distribution()
-
-
-@pytest.fixture
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
 def obs_summary():
     datastore = DataStore.from_dir(
         '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
@@ -77,38 +70,31 @@ def obs_summary():
 
     return summary
 
-
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 @requires_dependency('matplotlib')
-def test_plot_significance(obs_summary):
-    obs_summary.plot_significance_vs_livetime()
+class TestObservationSummary():
+    """
+    Test observation summary.
+    """
+    def setup(self):
+        self.obs_summary = obs_summary()
 
+    def test_plot_significance(self):
+        self.obs_summary.plot_significance_vs_livetime()
 
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_excess(obs_summary):
-    obs_summary.plot_excess_vs_livetime()
+    def test_plot_excess(self):
+        self.obs_summary.plot_excess_vs_livetime()
 
+    def test_plot_background(self):
+        self.obs_summary.plot_background_vs_livetime()
 
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_background(obs_summary):
-    obs_summary.plot_background_vs_livetime()
+    def test_plot_gamma_rate(self):
+        self.obs_summary.plot_gamma_rate()
 
+    def test_plot_background_rate(self):
+        self.obs_summary.plot_background_rate()
 
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_gamma_rate(obs_summary):
-    obs_summary.plot_gamma_rate()
-
-
-@requires_data('gammapy-extra')
-@requires_dependency('matplotlib')
-def test_plot_background_rate(obs_summary):
-    obs_summary.plot_background_rate()
-
-
-@requires_data('gammapy-extra')
-def test_obs_str(obs_summary):
-    text = str(obs_summary)
-    assert 'Observation summary' in text
+    def test_obs_str(self):
+        text = str(self.obs_summary)
+        assert 'Observation summary' in text
