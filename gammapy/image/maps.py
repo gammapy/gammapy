@@ -231,7 +231,7 @@ class SkyMap(object):
         **kwargs : dict
             Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
         """
-        hdu = self.to_image_hdu(primary=True)
+        hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
     def coordinates_pix(self, mode='center'):
@@ -487,14 +487,14 @@ class SkyMap(object):
         """
         return deepcopy(self)
 
-    def to_image_hdu(self, primary=False):
+    def to_image_hdu(self):
         """
-        Convert sky map to `~astropy.fits.ImageHDU` or `~astropy.fits.PrimaryHDU`
+        Convert sky map to `~astropy.fits.PrimaryHDU`.
         
-        Parameters
-        ----------
-        primary : bool
-            Create a `~astropy.fits.PrimaryHDU` object, instead of an `~astropy.fits.ImageHDU`
+        Returns
+        -------
+        primaryhdu : `~astropy.fits.PrimaryHDU`
+            Primary image hdu object.
         """
         if self.wcs is not None:
             header = self.wcs.to_header()
@@ -508,11 +508,7 @@ class SkyMap(object):
         if self.name is not None:
             header['EXTNAME'] = self.name
             header['HDUNAME'] = self.name
-        if primary:
-            hdu = fits.PrimaryHDU(data=self.data, header=header)
-        else:
-            hdu = fits.ImageHDU(data=self.data, header=header, name=self.name)
-        return hdu
+        return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
@@ -756,10 +752,9 @@ class SkyMapCollection(Bunch):
             Reference header to be used for all maps.
         """
         hdulist = fits.HDUList()
-        for idx, name in enumerate(self.get('_map_names', sorted(self))):
+        for name in self.get('_map_names', sorted(self)):
             if isinstance(self[name], SkyMap):
-                primary = True if idx == 0 else False
-                hdu = self[name].to_image_hdu(primary=primary)
+                hdu = self[name].to_image_hdu()
 
                 # For now add common collection meta info to the single map headers
                 hdu.header.update(self.meta)
