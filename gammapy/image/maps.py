@@ -489,17 +489,26 @@ class SkyMap(object):
 
     def to_image_hdu(self):
         """
-        Convert sky map to `~astropy.fits.ImageHDU`.
-        """
-        if not self.wcs is None:
-            header = self.wcs.to_header()
+        Convert sky map to `~astropy.fits.PrimaryHDU`.
         
-            # Add meta data
-            header.update(self.meta)
-            header['BUNIT'] = self.unit
+        Returns
+        -------
+        primaryhdu : `~astropy.fits.PrimaryHDU`
+            Primary image hdu object.
+        """
+        if self.wcs is not None:
+            header = self.wcs.to_header()
         else:
-            header = None
-        return fits.ImageHDU(data=self.data, header=header, name=self.name)
+            header = fits.Header()
+
+        # Add meta data
+        header.update(self.meta)
+        if self.unit is not None:
+            header['BUNIT'] = Unit(self.unit).to_string('fits')
+        if self.name is not None:
+            header['EXTNAME'] = self.name
+            header['HDUNAME'] = self.name
+        return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
@@ -624,12 +633,12 @@ class SkyMap(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
-        if not self.data is None:
+        if self.data is not None:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
-        if not self.wcs is None:
+        if self.wcs is not None:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         return info
 
@@ -746,6 +755,7 @@ class SkyMapCollection(Bunch):
         for name in self.get('_map_names', sorted(self)):
             if isinstance(self[name], SkyMap):
                 hdu = self[name].to_image_hdu()
+
                 # For now add common collection meta info to the single map headers
                 hdu.header.update(self.meta)
                 hdu.name = name

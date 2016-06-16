@@ -36,6 +36,13 @@ class TestSkyMapPoisson():
         skymap = SkyMap.read(str(filename))
         assert self.skymap.name == skymap.name
 
+    def test_unit_io(self, tmpdir):
+        filename = tmpdir / 'test_skymap_unit.fits'
+        skymap_ref = SkyMap(data=np.zeros((3, 3)), unit='1 / cm2')
+        skymap_ref.write(str(filename))
+        skymap = SkyMap.read(str(filename))
+        assert skymap.unit == skymap_ref.unit
+
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
         assert self.skymap.lookup(position) == 5
