@@ -152,3 +152,27 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     plt.xscale('log')
 
     return ax
+
+
+def integrate_loglog(func, xmin, xmax, ndecade=100):
+    """
+    Integrate 1d function using log-log integration. 
+    
+    Parameters
+    ----------
+    func : callable
+        Function to integrate.
+    xmin : 
+
+    xmax : 
+
+    ndecade : int
+        Number of grid points per decade used for the integration.
+    """
+    from naima.utils import trapz_loglog
+    logmin = np.log10(emin)
+    logmax = np.log10(emax)
+
+    n = (logmax - logmin) * ndecade
+    x = np.logspace(logmin, logmax, n)  # 100 points per decade
+    return trapz_loglog(func(x), x)
