@@ -418,11 +418,29 @@ class SkyMap(object):
         """
         Solid angle image
         """
-        coordinates = self.coordinates(mode='edges')
-        xsky = coordinates.data.lon
-        ysky = coordinates.data.lat
-        omega = np.abs(np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:])
-        return omega.to('sr')
+
+    def solid_angle(self):
+        """
+        Solid angle image
+        TODO: description
+        """
+        import sys
+        print (sys.stderr, "SOLID ANGLE")
+        coordinates = self.coordinates()
+        lon = coordinates.data.lon
+        lat = coordinates.data.lat
+
+        # Convert to radians
+        lon = np.radians(lon)
+        lat = np.radians(lat)
+        # Find the dx and dy arrays
+        from astropy.coordinates.angle_utilities import angular_separation
+        dx = angular_separation(lon[:, :-1], lat[:, :-1],
+                                lon[:, 1:], lat[:, :-1])
+
+        dy = angular_separation(lon[:-1, :], lat[:-1, :],
+                                lon[1:, :], lat[1:, :])
+        return dx[1:, :] * dy[:, 1:]
 
     def center(self):
         """

@@ -54,7 +54,7 @@ class TestSkyMapPoisson():
 
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
-        assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2)
+        assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2, rtol=1e-5)
 
     def test_contains(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
