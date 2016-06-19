@@ -417,16 +417,11 @@ class SkyMap(object):
     def solid_angle(self):
         """
         Solid angle image
-        """
-
-    def solid_angle(self):
-        """
-        Solid angle image
         TODO: description
         """
         import sys
         print (sys.stderr, "SOLID ANGLE")
-        coordinates = self.coordinates()
+        coordinates = self.coordinates(mode='edges')
         lon = coordinates.data.lon
         lat = coordinates.data.lat
 
@@ -440,6 +435,7 @@ class SkyMap(object):
 
         dy = angular_separation(lon[:-1, :], lat[:-1, :],
                                 lon[1:, :], lat[1:, :])
+        print ('DX-DY', dx.shape, dy.shape)
         return dx[1:, :] * dy[:, 1:]
 
     def center(self):
