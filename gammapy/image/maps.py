@@ -8,6 +8,7 @@ import numpy as np
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
@@ -416,26 +417,17 @@ class SkyMap(object):
 
     def solid_angle(self):
         """
-        Solid angle image
-        TODO: description
+        Solid angle image (2-dim `astropy.units.Quantity` in `sr`).
         """
-        import sys
-        print (sys.stderr, "SOLID ANGLE")
         coordinates = self.coordinates(mode='edges')
-        lon = coordinates.data.lon
-        lat = coordinates.data.lat
+        lon = coordinates.data.lon.radian
+        lat = coordinates.data.lat.radian
 
-        # Convert to radians
-        lon = np.radians(lon)
-        lat = np.radians(lat)
-        # Find the dx and dy arrays
-        from astropy.coordinates.angle_utilities import angular_separation
         dx = angular_separation(lon[:, :-1], lat[:, :-1],
-                                lon[:, 1:], lat[:, :-1])
+                                    lon[:, 1:], lat[:, :-1])
 
         dy = angular_separation(lon[:-1, :], lat[:-1, :],
                                 lon[1:, :], lat[1:, :])
-        print ('DX-DY', dx.shape, dy.shape)
         return dx[1:, :] * dy[:, 1:]
 
     def center(self):
