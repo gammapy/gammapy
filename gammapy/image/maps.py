@@ -444,7 +444,7 @@ class SkyMap(object):
             Interpolation mode.
         """
         x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
-        return self.data[np.rint(y), np.rint(x)]
+        return self.data[np.rint(y).astype('int'), np.rint(x).astype('int')]
 
     def to_quantity(self):
         """
