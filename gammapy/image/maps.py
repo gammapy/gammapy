@@ -428,7 +428,7 @@ class SkyMap(object):
 
         dy = angular_separation(lon[:-1, :], lat[:-1, :],
                                 lon[1:, :], lat[1:, :])
-        return dx[1:, :] * dy[:, 1:]
+        return Quantity(dx[1:, :] * dy[:, 1:], "sr")
 
     def center(self):
         """
