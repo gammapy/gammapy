@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.units import Quantity
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
 from ..maps import SkyMap
 from ...data import DataStore
@@ -54,7 +54,7 @@ class TestSkyMapPoisson():
 
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
-        assert_allclose(solid_angle[0, 0].value, 1.21774218981e-07, rtol=1e-3)
+        assert_quantity_allclose(solid_angle[0, 0], Angle(0.02, "deg") ** 2, rtol=1e-3)
 
     def test_contains(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')

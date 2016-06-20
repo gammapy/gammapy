@@ -423,12 +423,17 @@ class SkyMap(object):
         lon = coordinates.data.lon.radian
         lat = coordinates.data.lat.radian
 
-        dx = angular_separation(lon[:, :-1], lat[:, :-1],
-                                    lon[:, 1:], lat[:, :-1])
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
+        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
+        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
 
-        dy = angular_separation(lon[:-1, :], lat[:-1, :],
-                                lon[1:, :], lat[1:, :])
-        return Quantity(dx[1:, :] * dy[:, 1:], "sr")
+        dx = angular_separation(*ylo_xlo, *ylo_xhi)
+        dy = angular_separation(*ylo_xlo, *yhi_xlo)
+        omega = Quantity(dx * dy, 'sr')
+        return omega
 
     def center(self):
         """
