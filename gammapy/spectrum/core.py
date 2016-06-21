@@ -128,10 +128,10 @@ class CountsSpectrum(NDDataArray):
         counts = self.data.value
         enodes = self.energy.nodes.to(energy_unit)
         ebins = self.energy.data.to(energy_unit)
-        plt.hist(enodes, bins=ebins, weights=counts, **kwargs)
-        plt.xlabel('Energy [{0}]'.format(energy_unit))
-        plt.ylabel('Counts')
-        plt.semilogx()
+        ax.hist(enodes, bins=ebins, weights=counts, **kwargs)
+        ax.set_xlabel('Energy [{0}]'.format(energy_unit))
+        ax.set_ylabel('Counts')
+        ax.set_xscale('log')
         return ax
 
     def peek(self, figsize=(5, 5)):
@@ -290,6 +290,10 @@ class SpectrumObservation(object):
         return self.on_vector.obs_id
 
     @property
+    def livetime(self):
+        return self.on_vector.livetime
+
+    @property
     def lo_threshold(self):
         return self.on_vector.lo_threshold
 
@@ -373,6 +377,26 @@ class SpectrumObservation(object):
         Excess = n_on - alpha * n_off
         """
         return self.on_vector + self.off_vector * self.alpha * -1
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
+        self.on_vector.plot(ax=ax1, facecolor='None', edgecolor='red',
+                            label='n_on')
+        self.off_vector.plot(ax=ax1, facecolor='None', edgecolor='blue',
+                             label='n_off')
+        ax1.legend(numpoints=1)
+        ax1.set_title('Counts')
+        ax2.text(0.2, 0.9, 'Livetime: {}'.format(self.livetime))
+        ax2.axis('off')
+        ax2.set_title('Meta information')
+        self.aeff.plot(ax=ax3)
+        ax3.set_title('Effective Area')
+        self.edisp.plot_matrix(ax=ax4)
+        ax4.set_title('Energy Dispersion')
+        plt.show()
+        return fig
 
     @property
     def spectrum_stats(self):
