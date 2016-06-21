@@ -273,7 +273,7 @@ class SpectrumObservation(object):
         On vector
     off_vector : `~gammapy.spectrum.PHACountsSpectrum`
         Off vector
-    aeff : `~gammapy.irg.EffectiveAreaTable`
+    aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion matrix
