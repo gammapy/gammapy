@@ -178,6 +178,11 @@ class SourceCatalog(object):
             Source data dict
         """
         row = self.table[index]
-        data = OrderedDict(zip(row.colnames, row.as_void()))
+        # Note: calling `filled()` on `row.as_void()` here was needed to avoid a ValueError
+        # from Numpy masked array code for array-valued columns in one application.
+        row_data = row.as_void()
+        if hasattr(row_data, 'filled'):
+            row_data = row_data.filled()
+        data = OrderedDict(zip(row.colnames, row_data))
         data[self._source_index_key] = index
         return data
