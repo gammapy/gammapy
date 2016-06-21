@@ -8,6 +8,7 @@ import numpy as np
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
+from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
@@ -416,13 +417,23 @@ class SkyMap(object):
 
     def solid_angle(self):
         """
-        Solid angle image
+        Solid angle image (2-dim `astropy.units.Quantity` in `sr`).
         """
         coordinates = self.coordinates(mode='edges')
-        xsky = coordinates.data.lon
-        ysky = coordinates.data.lat
-        omega = np.abs(np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:])
-        return omega.to('sr')
+        lon = coordinates.data.lon.radian
+        lat = coordinates.data.lat.radian
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
+        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
+        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        omega = Quantity(dx * dy, 'sr')
+        return omega
 
     def center(self):
         """
