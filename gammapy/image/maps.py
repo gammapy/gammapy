@@ -430,8 +430,8 @@ class SkyMap(object):
         ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
         yhi_xlo = lon[1:, :-1], lat[1:, :-1]
 
-        dx = angular_separation(*ylo_xlo, *ylo_xhi)
-        dy = angular_separation(*ylo_xlo, *yhi_xlo)
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
         omega = Quantity(dx * dy, 'sr')
         return omega
 
