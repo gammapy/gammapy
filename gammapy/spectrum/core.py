@@ -185,7 +185,7 @@ class PHACountsSpectrum(CountsSpectrum):
     ----------
     data : `~numpy.array`, list
         Counts
-    energy : `~gammapy.utils.energy.EnergyBounds`
+    energy : `~astropy.units.Quantity
         Bin edges of energy axis
     obs_id : int
         Unique identifier
@@ -193,6 +193,10 @@ class PHACountsSpectrum(CountsSpectrum):
         Observation live time
     backscal : float
         Scaling factor
+    lo_threshold : `~astropy.units.Quantity`
+        Low energy threshold, not needed for background spectrum
+    hi_threshold : `~astropy.units.Quantity`
+        High energy threshold, not needed for background spectrum
     is_bkg : bool, optional
         Background or soure spectrum, default: False
     """
@@ -230,8 +234,8 @@ class PHACountsSpectrum(CountsSpectrum):
             meta.update(backfile=self.bkgfile,
                         respfile=self.rmffile,
                         ancrfile=self.arffile,
-                        lo_threshold=self.lo_threshold.to("TeV").value,
-                        hi_threshold=self.hi_threshold.to("TeV").value,
+                        lo_thres=self.lo_threshold.to("TeV").value,
+                        hi_thres=self.hi_threshold.to("TeV").value,
                         hduclas2='TOTAL', )
         else:
             meta.update(hduclas2='BKG', )
@@ -290,8 +294,12 @@ class SpectrumObservation(object):
         return self.on_vector.obs_id
 
     @property
-    def livetime(self):
-        return self.on_vector.livetime
+    def exposure(self):
+        return self.on_vector.exposure
+
+    @property
+    def alpha(self):
+        return self.on_vector.backscal / self.off_vector.backscal
 
     @property
     def lo_threshold(self):
@@ -331,7 +339,7 @@ class SpectrumObservation(object):
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
-        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
         retval._phafile = phafile
         return retval
 
@@ -381,20 +389,29 @@ class SpectrumObservation(object):
     def peek(self, figsize=(15, 5)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
+        plt.style.use('ggplot') 
+
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
-        self.on_vector.plot(ax=ax1, facecolor='None', edgecolor='red',
-                            label='n_on')
-        self.off_vector.plot(ax=ax1, facecolor='None', edgecolor='blue',
-                             label='n_off')
+        self.on_vector.plot(ax=ax1, label='Total counts', histtype='step',
+                            color='darkred', alpha=0.8, lw=2)
+        self.off_vector.plot(ax=ax1, label='Background estimate',
+                             histtype='step', color='darkblue',
+                             alpha=0.8, lw=2)
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
-        ax2.text(0.2, 0.9, 'Livetime: {}'.format(self.livetime))
+        # TODO: Replace with total spectrum stats
+        ax2.text(0.2, 0.9, 'Exposure: {}'.format(self.exposure))
+        ax2.text(0.2, 0.85, 'Alpha: {}'.format(self.alpha))
         ax2.axis('off')
-        ax2.set_title('Meta information')
+        ax2.set_title('Spectrum Stats')
         self.aeff.plot(ax=ax3)
         ax3.set_title('Effective Area')
         self.edisp.plot_matrix(ax=ax4)
         ax4.set_title('Energy Dispersion')
+
+        import seaborn as sns
+        sns.despine(fig) 
+
         plt.show()
         return fig
 
