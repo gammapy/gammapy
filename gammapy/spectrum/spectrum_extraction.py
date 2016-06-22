@@ -165,9 +165,10 @@ class SpectrumExtraction(object):
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
 
-            # TODO: choose if we want this high default value or to use the one given in the area file in the exporter
+            # TODO: choose if we want this high default value or to use the
+            # one given in the area file in the exporter
             on_vec.hi_threshold = Quantity(1000, "TeV")
-            on_vec.lo_threshold = arf.low_threshold
+            on_vec.lo_threshold = obs.aeff.low_threshold
 
             # If required, correct arf for psf leakage
             if self.containment_correction:
@@ -178,7 +179,9 @@ class SpectrumExtraction(object):
                 center_energies = arf.energy.nodes
                 for index, energy in enumerate(center_energies):
                     try:
-                        correction = psf.integral(energy, 0. * u.deg, self.target.on_region.radius)
+                        correction = psf.integral(energy,
+                                                  0. * u.deg,
+                                                  self.target.on_region.radius)
                     except:
                         correction = np.nan
 
@@ -190,8 +193,13 @@ class SpectrumExtraction(object):
         self._observations = SpectrumObservationList(spectrum_observations)
 
     def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None, **kwargs):
-        """Set the hi and lo Ethreshold for each observation based on implemented method in gammapy or on a function that
-        you define on the IRFs on each observations and that take an observation object as parameters.
+        """Set energy threshold
+        
+        Set the hi and lo Ethreshold for each observation based on implemented
+        method in gammapy or on a function that you define on the IRFs on each
+        observations and that take an observation object as parameters.
+
+        TODO: Refactor
 
         Parameters
         ----------

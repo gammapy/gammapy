@@ -128,10 +128,10 @@ class CountsSpectrum(NDDataArray):
         counts = self.data.value
         enodes = self.energy.nodes.to(energy_unit)
         ebins = self.energy.data.to(energy_unit)
-        plt.hist(enodes, bins=ebins, weights=counts, **kwargs)
-        plt.xlabel('Energy [{0}]'.format(energy_unit))
-        plt.ylabel('Counts')
-        plt.semilogx()
+        ax.hist(enodes, bins=ebins, weights=counts, **kwargs)
+        ax.set_xlabel('Energy [{0}]'.format(energy_unit))
+        ax.set_ylabel('Counts')
+        ax.set_xscale('log')
         return ax
 
     def peek(self, figsize=(5, 5)):
@@ -185,7 +185,7 @@ class PHACountsSpectrum(CountsSpectrum):
     ----------
     data : `~numpy.array`, list
         Counts
-    energy : `~gammapy.utils.energy.EnergyBounds`
+    energy : `~astropy.units.Quantity`
         Bin edges of energy axis
     obs_id : int
         Unique identifier
@@ -193,6 +193,10 @@ class PHACountsSpectrum(CountsSpectrum):
         Observation live time
     backscal : float
         Scaling factor
+    lo_threshold : `~astropy.units.Quantity`
+        Low energy threshold, not needed for background spectrum
+    hi_threshold : `~astropy.units.Quantity`
+        High energy threshold, not needed for background spectrum
     is_bkg : bool, optional
         Background or soure spectrum, default: False
     """
@@ -230,8 +234,8 @@ class PHACountsSpectrum(CountsSpectrum):
             meta.update(backfile=self.bkgfile,
                         respfile=self.rmffile,
                         ancrfile=self.arffile,
-                        lo_threshold=self.lo_threshold.to("TeV").value,
-                        hi_threshold=self.hi_threshold.to("TeV").value,
+                        lo_thres=self.lo_threshold.to("TeV").value,
+                        hi_thres=self.hi_threshold.to("TeV").value,
                         hduclas2='TOTAL', )
         else:
             meta.update(hduclas2='BKG', )
@@ -287,19 +291,45 @@ class SpectrumObservation(object):
 
     @property
     def obs_id(self):
+        """Unique identifier"""
         return self.on_vector.obs_id
 
     @property
+    def exposure(self):
+        """Dead-time corrected observation time"""
+        return self.on_vector.exposure
+
+    @property
+    def alpha(self):
+        """Exposure ratio between signal and background regions"""
+        return self.on_vector.backscal / self.off_vector.backscal
+
+    @property
     def lo_threshold(self):
+        """Low energy threshold"""
         return self.on_vector.lo_threshold
 
     @property
     def hi_threshold(self):
+        """High energy threshold"""
         return self.on_vector.hi_threshold
 
     @property
     def phafile(self):
-        return self._phafile
+        """PHA file associated to this observation
+
+        This is needed since when passing a SpectrumObservation to a
+        ``~gammapy.spectrum.SpectrumFit``, since sherpa internally loads the
+        data again from disk. Note that the SpectrumObservation **has to be
+        loaded from disk** in order for this property to be available.
+
+        TODO: Remove and translate SpectrumObservation directly to Sherpa
+        objects
+        """
+        try:
+            return self._phafile
+        except(AttributeError):
+            raise ValueError('No PHA file associated to this observation')
 
     @classmethod
     def read(cls, phafile):
@@ -327,7 +357,7 @@ class SpectrumObservation(object):
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
-        retval =  cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
         retval._phafile = phafile
         return retval
 
@@ -373,6 +403,31 @@ class SpectrumObservation(object):
         Excess = n_on - alpha * n_off
         """
         return self.on_vector + self.off_vector * self.alpha * -1
+
+    def peek(self, figsize=(15, 5)):
+        """Quick-look summary plots."""
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot') 
+
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
+        self.on_vector.plot(ax=ax1, label='Total counts', histtype='step',
+                            color='darkred', alpha=0.8, lw=2)
+        self.off_vector.plot(ax=ax1, label='Background estimate',
+                             histtype='step', color='darkblue',
+                             alpha=0.8, lw=2)
+        ax1.legend(numpoints=1)
+        ax1.set_title('Counts')
+        # TODO: Replace with total spectrum stats
+        ax2.text(0.2, 0.9, 'Exposure: {}'.format(self.exposure))
+        ax2.text(0.2, 0.85, 'Alpha: {}'.format(self.alpha))
+        ax2.axis('off')
+        ax2.set_title('Spectrum Stats')
+        self.aeff.plot(ax=ax3)
+        ax3.set_title('Effective Area')
+        self.edisp.plot_matrix(ax=ax4)
+        ax4.set_title('Energy Dispersion')
+
+        return fig
 
     @property
     def spectrum_stats(self):
