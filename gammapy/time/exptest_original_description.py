@@ -20,6 +20,13 @@ def exptest_for_run(time_delta):
     time_delta : list of float
         the time difference between two adjacent events
 
+    run : list of int
+        Run number for each event
+    event_time : list of float
+        times for each event
+    expCount: list of float
+        the acceptance for each run according to the observation conditions
+
     Returns
     -------
     Mr : float
