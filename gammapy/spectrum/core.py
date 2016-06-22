@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.table import Table
+from .. import version
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
 from ..data import EventList
@@ -199,6 +200,12 @@ class PHACountsSpectrum(CountsSpectrum):
         High energy threshold, not needed for background spectrum
     is_bkg : bool, optional
         Background or soure spectrum, default: False
+    telescope : str, optional
+        Mission name
+    instrument : str, optional
+        Instrument, detector
+    creator : str, optional
+        Software used to produce the PHA file
     """
 
     def __init__(self, **kwargs):
@@ -216,6 +223,7 @@ class PHACountsSpectrum(CountsSpectrum):
         # Remove BIN_LO and BIN_HI columns for now
         # see https://github.com/gammapy/gammapy/issues/561
         table.remove_columns(['BIN_LO', 'BIN_HI'])
+        
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
@@ -226,11 +234,23 @@ class PHACountsSpectrum(CountsSpectrum):
                     areascal=1,
                     chantype='PHA',
                     detchans=self.energy.nbins,
-                    filter=None,
+                    filter='None',
                     corrfile='',
                     poisserr=True,
+                    telescop=getattr(self, 'telescope', 'HESS'),
+                    instrume=getattr(self, 'instrument', 'CT1234'),
+                    creator=getattr(self, 'creator', 'Gammapy {}'.format(
+                        version.version)),
+                    hduclas3='COUNT',
+                    hduclas4='TYPE:1'
                     )
         if not self.is_bkg:
+            # Flag channels outside save range as bad
+            flag = np.zeros(self.energy.nbins, dtype=np.int16)
+            idx = np.where((self.energy.data[:-1] < self.lo_threshold) |
+                           (self.energy.data[1:] > self.hi_threshold))
+            flag[idx] = 1
+            table['QUALITY'] = flag
             meta.update(backfile=self.bkgfile,
                         respfile=self.rmffile,
                         ancrfile=self.arffile,
