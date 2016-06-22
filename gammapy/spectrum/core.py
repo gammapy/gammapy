@@ -185,7 +185,7 @@ class PHACountsSpectrum(CountsSpectrum):
     ----------
     data : `~numpy.array`, list
         Counts
-    energy : `~astropy.units.Quantity
+    energy : `~astropy.units.Quantity`
         Bin edges of energy axis
     obs_id : int
         Unique identifier
