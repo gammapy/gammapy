@@ -111,7 +111,6 @@ class SkyMap(object):
             unit = Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
-            log.warn('No valid units found for extension {}'.format(name))
 
         return cls(name, data, wcs, unit, meta)
 
@@ -305,14 +304,14 @@ class SkyMap(object):
 
         # transform boundaries in world coordinates
         bounds = skymap.wcs.wcs_pix2world([0, xmax], [0, ymax], skymap.wcs_origin)
-        
+
         # transform to pixel coordinats in the reference skymap
         bounds_ref = skymap_ref.wcs.wcs_world2pix(bounds[0], bounds[1], skymap_ref.wcs_origin)
 
         # round to nearest integer and clip at the boundaries
         xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
         ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
-        
+
         if wcs_check:
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
                 raise WcsError('World coordinate systems not aligned. Try to call'
@@ -622,7 +621,7 @@ class SkyMap(object):
         elif unit is 'A.U.':
             quantity = 'Unknown'
         else:
-            quantity = Unit(unit).physical_type 
+            quantity = Unit(unit).physical_type
         cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
