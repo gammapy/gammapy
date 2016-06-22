@@ -197,9 +197,7 @@ class EffectiveAreaTable2D(NDDataArray):
             energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
         area = self.evaluate(offset=offset, energy=energy.nodes)
-        copy_keys = ['LO_THRES', 'HI_THRES']
-        meta = dict((key, self.meta[key]) for key in copy_keys)
-        return EffectiveAreaTable(energy=energy.data, data=area, meta=meta)
+        return EffectiveAreaTable(energy=energy.data, data=area)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.

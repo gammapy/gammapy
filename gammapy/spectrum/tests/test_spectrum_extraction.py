@@ -27,8 +27,12 @@ from ...utils.scripts import read_yaml
 
 
 @pytest.mark.parametrize("pars,results",[
-    (dict(containment_correction=False),dict(n_on=95, aeff=549861.8268659255*u.m**2, ethresh=0.4230466456851681*u.TeV)),
-    (dict(containment_correction=True), dict(n_on=95, aeff=393356.18322397786*u.m**2, ethresh=0.6005317540449035*u.TeV)),
+    (dict(containment_correction=False),dict(n_on=95,
+                                             aeff=549861.8268659255*u.m**2,
+                                             ethresh=0.4230466456851681*u.TeV)),
+    (dict(containment_correction=True), dict(n_on=95,
+                                             aeff=393356.18322397786*u.m**2,
+                                             ethresh=0.6005317540449035*u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')

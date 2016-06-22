@@ -291,27 +291,45 @@ class SpectrumObservation(object):
 
     @property
     def obs_id(self):
+        """Unique identifier"""
         return self.on_vector.obs_id
 
     @property
     def exposure(self):
+        """Dead-time corrected observation time"""
         return self.on_vector.exposure
 
     @property
     def alpha(self):
+        """Exposure ratio between signal and background regions"""
         return self.on_vector.backscal / self.off_vector.backscal
 
     @property
     def lo_threshold(self):
+        """Low energy threshold"""
         return self.on_vector.lo_threshold
 
     @property
     def hi_threshold(self):
+        """High energy threshold"""
         return self.on_vector.hi_threshold
 
     @property
     def phafile(self):
-        return self._phafile
+        """PHA file associated to this observation
+
+        This is needed since when passing a SpectrumObservation to a
+        ``~gammapy.spectrum.SpectrumFit``, since sherpa internally loads the
+        data again from disk. Note that the SpectrumObservation **has to be
+        loaded from disk** in order for this property to be available.
+
+        TODO: Remove and translate SpectrumObservation directly to Sherpa
+        objects
+        """
+        try:
+            return self._phafile
+        except(AttributeError):
+            raise ValueError('No PHA file associated to this observation')
 
     @classmethod
     def read(cls, phafile):
@@ -409,10 +427,6 @@ class SpectrumObservation(object):
         self.edisp.plot_matrix(ax=ax4)
         ax4.set_title('Energy Dispersion')
 
-        import seaborn as sns
-        sns.despine(fig) 
-
-        plt.show()
         return fig
 
     @property
