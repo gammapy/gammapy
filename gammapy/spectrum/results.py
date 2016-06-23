@@ -798,15 +798,15 @@ class SpectrumResult(object):
         residuals_err : `~astropy.units.Quantity`
             Residual errors
         """
-        func = self.fit.to_sherpa_model()
-        x = self.points['energy'].quantity
-        y = self.points['flux'].quantity
-        y_err = self.points['flux_err_hi'].quantity
+        x = self.points['ENERGY'].quantity
+        y = self.points['DIFF_FLUX'].quantity
+        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity
 
-        func_y = func(x.to('keV').value) * Unit('s-1 cm-2 keV-1')
+        func_y = self.fit.evaluate(x)
+        err_y = self.fit.evaluate_butterfly(x)
         residuals = (y - func_y) / y
         # Todo: add correct formular (butterfly)
-        residuals_err = y_err / y
+        residuals_err = np.sqrt(y_err ** 2 + err_y[0] ** 2) / y
 
         return residuals.decompose(), residuals_err.decompose()
 
@@ -816,8 +816,6 @@ class SpectrumResult(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
-            Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -825,14 +823,16 @@ class SpectrumResult(object):
         energy_power : int
             Power of energy to multiply flux axis with
         fit_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_fit_function`
+            forwarded to :func:`gammapy.spectrum.SpectrumFitResult.plot`
         point_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.results.SpectrumFitResult.plot_points`
+            forwarded to :func:`gammapy.spectrum.DifferentialFluxPoints.plot`
 
         Returns
         -------
-        ax : `~matplolib.axes`, optional
-            Axis
+        ax0 : `~matplolib.axes`
+            Spectrum plot axis
+        ax1 : `~matplolib.axes`
+            Residuals plot axis
         """
         from matplotlib import gridspec
         import matplotlib.pyplot as plt
@@ -851,7 +851,7 @@ class SpectrumResult(object):
 
         if fit_kwargs is None:
             fit_kwargs = dict(label='Best Fit {}'.format(
-                    self.fit.spectral_model), color='navy')
+                    self.fit.spectral_model), color='navy', lw=2)
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
@@ -866,7 +866,7 @@ class SpectrumResult(object):
                  self.fit.fit_range[1].to(energy_unit).value * 1.1)
 
         ax0.legend(numpoints=1)
-        return gs
+        return ax0, ax1
 
     def plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):
         """Plot residuals
@@ -890,7 +890,7 @@ class SpectrumResult(object):
         kwargs.setdefault('fmt', 'o')
 
         y, y_err = self.calculate_residuals()
-        x = self.points['energy'].quantity
+        x = self.points['ENERGY'].quantity
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
 
