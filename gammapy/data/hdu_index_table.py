@@ -87,8 +87,8 @@ class HDULocation(object):
             from ..irf import EnergyDispersion2D
             return EnergyDispersion2D.read(filename, hdu=hdu_name)
         elif hdu_class == 'psf_table':
-            # TODO: implement this format
-            raise NotImplementedError
+            from ..irf import PSF3D
+            return PSF3D.read(filename, hdu=hdu_name)
         elif hdu_class == 'psf_3gauss':
             from ..irf import EnergyDependentMultiGaussPSF
             return EnergyDependentMultiGaussPSF.read(filename, hdu=hdu_name)
