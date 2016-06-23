@@ -24,7 +24,8 @@ six.add_metaclass(abc.ABCMeta)
 class NDDataArray(object):
     """ND Data Array Base class
 
-    TODO: Document
+    This is an abstract base class for n-dimensional data arrays. It handles
+    interpolation and I/O. See :ref:`use-nddata`.
     """
     axis_names = ()
     """Axis names. This specifies the axis order"""

@@ -112,11 +112,6 @@ class EffectiveAreaTable(NDDataArray):
 class EffectiveAreaTable2D(NDDataArray):
     """2D Effective Area Table
 
-    **Disclaimer**: This is an experimental class to test the usage of the
-    `~gammapy.utils.nddata.NDDataArray` base class. It is meant to replace
-    `~gammapy.irf.EffectiveAreaTable2D` in the future but is currently not used
-    anywhere in gammapy.
-
     Parameters
     -----------
     energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`

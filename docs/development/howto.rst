@@ -812,12 +812,16 @@ To see what is there, check out the ``gammapy/extern`` directory locally or on
 Notes on the bundled files are kept in the docstring of
 `gammapy/extern/__init__.py <https://github.com/gammapy/gammapy/blob/master/gammapy/extern/__init__.py>`__.
 
+.. _interpolation-extrapolation:
 
 Interpolation and extrapolation
 -------------------------------
 
 In Gammapy, we use interpolation a lot, e.g. to evaluate instrument response functions (IRFs) on
 data grids, or to reproject diffuse models on data grids.
+
+Note: For some use cases that require interpolation the
+`~gammapy.utils.nddata.NDDataArray` base class might be useful. 
 
 The default interpolator we use is `scipy.interpolate.RegularGridInterpolator` because it's fast and robust
 (more fancy interpolation schemes can lead to unstable response in some cases, so more careful checking
@@ -936,10 +940,23 @@ If you want to compare the IRF files between two different datastores (to compar
  manually edit the YAML file written by ``make_reference_files.py`` and include the info which datastore should be compared to which reference file.
 
 
+.. _use-nddata:
+
 Using the NDData base class
 ---------------------------
 
-Gammapy has a base class for n-dimensional data arrays,  
-`~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array should
-subclass this base class. See `~gammapy.irf.EffectiveAreaTable2D` as an example.
+Gammapy has a base class for n-dimensional data arrays,
+`~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array
+should subclass this base class. The goal is to reuse code for interpolation
+and have an coherent I/O interface, mainly in `~gammapy.irf`. Below you
+find a list of  classes currently using the
+`~gammapy.utils.nddata.NDDataArray`.  If you want to add a new class using the
+`~gammapy.utils.nddata.NDDataArray` as base class, you can look at these
+examples.
 
+* `~gammapy.irf.EffectiveAreaTable`
+* `~gammapy.irf.EffectiveAreaTable2D`
+* `~gammapy.spectrum.CountsSpectrum`
+
+Also, consult :ref:`interpolation-extrapolation` if you are not sure how to
+setup your interpolator. 
