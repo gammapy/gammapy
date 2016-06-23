@@ -365,6 +365,7 @@ class TablePSF(object):
         plt.loglog()
         plt.xlabel('Offset ({0})'.format(x.unit))
         plt.ylabel('PSF ({0})'.format(y.unit))
+        plt.show()
 
     def _compute_splines(self, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
         """Compute two splines representing the PSF.
@@ -760,11 +761,27 @@ class EnergyDependentTablePSF(object):
         return self._table_psf_cache[energy_index]
 
 class PSF3D(object):
-    """Table PSF.
+    """This class implements the format described here: :ref:`gadf:psf_table`.
 
     Parameters
     ----------
-    
+    energy_lo : `~astropy.units.Quantity`
+        Energy bins lower edges (1-dim)
+    energy_hi : `~astropy.units.Quantity`
+        Energy bins upper edges (1-dim)
+    offset : `~astropy.coordinates.Angle`
+        Offset angle (1-dim)
+    rad_lo : `~astropy.coordinates.Angle`
+        Offset angle bins lower edges
+    rad_hi : `~astropy.coordinates.Angle`
+        Offset angle bins upper edges
+    psf_value : `~astropy.units.Quantity`
+        PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
+    energy_thresh_lo : `~astropy.units.Quantity`
+        Lower energy threshold. Default energy_thresh_lo = 100 GeV
+    energy_thqresh_hi : `~astropy.units.Quantity`
+        Upper energy threshold. Default energy_thresh_hi = 100 TeV
+     
     """
     
     def __init__(self, energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, energy_thresh_lo=Quantity(0.1, 'TeV'),
@@ -1063,34 +1080,20 @@ class PSF3D(object):
         ax.set_xlabel('Energy (TeV)')
         ax.set_ylabel('Containment radius (deg)')
 
-    def plot_psf_vs_rad(self, filename=None, theta=Angle(0, 'deg'), energy=Quantity(1, 'TeV')):
+    def plot_psf_vs_rad(self, theta=Angle(0, 'deg'), energy=Quantity(1, 'TeV')):
         """Plot PSF vs rad.
 
         Parameters
         ----------
-        TODO
+        energy : `~astropy.units.Quantity`
+            Energy. Default energy = 1 TeV
+        theta : `~astropy.coordinates.Angle`
+            Offset in the field of view. Default theta = 0 deg
         """
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(6, 4))
 
-
-        psf = self.evaluate(energy, theta).squeeze()
-        #label = '{0} GeV'.format(1e-3 * energy)
-        #x = np.hstack([-self.theta[::-1], self.theta])
-        plt.plot(self.rad_center(), psf, lw=2)
-        
-        # plt.semilogy()
-        # plt.loglog()
-        #plt.legend()
-        plt.xlim(0.0, self.rad_center()[-1].degree)
-        plt.xlabel('Offset (deg)')
-        plt.ylabel('PSF (1e-6 sr^-1)')
-        plt.tight_layout()
-
-        if filename != None:
-            plt.savefig(filename)
-
-        plt.show()
+        table = self.to_table_psf(energy=energy, theta=theta)
+        table.plot_psf_vs_theta()
+        return
 
 
     def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
