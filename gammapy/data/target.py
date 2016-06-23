@@ -26,10 +26,10 @@ class Target(object):
 
     Parameters
     ----------
-    position : `~astropy.coordinates.SkyCoord`
-        Target position
     on_region : `~astropy.regions.SkyRegion`
         Signal extraction region
+    position : `~astropy.coordinates.SkyCoord`, optional
+        Target position
     obs_id : int, optional
         Observatinos for this target
     name : str, optional
@@ -86,18 +86,17 @@ class Target(object):
     <class 'gammapy.stats.data.Stats'>
 
     """
-    def __init__(self, position, on_region, obs_id=None, name='Target', tag='target'):
-        self.position = position
+    def __init__(self, on_region, position=None, obs_id=None, name='Target', tag='target'):
         self.on_region = on_region
+        self.position = position or on_region.center
+        self.obs_id = obs_id
         self.name = name
         self.tag = tag
-        self.obs_id = obs_id
 
     def __str__(self):
         """String representation"""
         ss = "Target: {}\n".format(self.name)
         ss += "Tag: {}\n".format(self.tag)
-        ss += "Position: {}\n".format(self.position)
         ss += "On region: {}\n".format(self.on_region)
         return ss
     

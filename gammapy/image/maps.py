@@ -8,10 +8,12 @@ import numpy as np
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord
+from astropy.coordinates.angle_utilities import angular_separation
+from astropy.wcs import WCS, WcsError
+from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.extern import six
+from astropy.nddata.utils import Cutout2D
 
 from ..extern.bunch import Bunch
 from ..image.utils import make_header, _bin_events_in_cube
@@ -52,6 +54,7 @@ class SkyMap(object):
     meta : dict
         Dictionary to store meta data.
     """
+    wcs_origin = 0
 
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
@@ -108,7 +111,6 @@ class SkyMap(object):
             unit = Unit(header['BUNIT'], format='fits').to_string()
         except (KeyError, ValueError):
             unit = None
-            log.warn('No valid units found for extension {}'.format(name))
 
         return cls(name, data, wcs, unit, meta)
 
@@ -195,7 +197,7 @@ class SkyMap(object):
         data = fill * np.ones_like(skymap.data)
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
-    def fill(self, value, origin=0):
+    def fill(self, value):
         """
         Fill sky map with events.
 
@@ -204,13 +206,10 @@ class SkyMap(object):
         value : float or `~gammapy.data.EventList`
              Value to fill in the map. If an event list is given, events will be
              binned in the map.
-        origin : {0, 1}
-            Pixel coordinate origin.
-
         """
         if isinstance(value, EventList):
             counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
-                                         origin=origin).sum(axis=0)
+                                         origin=self.wcs_origin).sum(axis=0)
             self.data = counts.value
             self.unit = 'ct'
         elif np.isscalar(value):
@@ -235,18 +234,19 @@ class SkyMap(object):
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 
-    def coordinates(self, coord_type='skycoord', origin=0, mode='center'):
+    def coordinates_pix(self, mode='center'):
         """
-        Sky coordinate images.
+        Pixel sky coordinate images.
 
         Parameters
         ----------
-        coord_type : {'pix', 'skycoord', 'galactic'}
-            Which type of coordinates to return.
-        origin : {0, 1}
-            Pixel coordinate origin.
         mode : {'center', 'edges'}
             Return coordinate values at the pixels edges or pixel centers.
+
+        Returns
+        -------
+        x, y : tuple
+            Return arrays representing the coordinates of a sky grid.
         """
         if mode == 'center':
             y, x = np.indices(self.data.shape)
@@ -256,63 +256,205 @@ class SkyMap(object):
             y, x = y - 0.5, x - 0.5
         else:
             raise ValueError('Invalid mode to compute coordinates.')
+        return x, y
 
-        if coord_type == 'pix':
-            return x, y
+    def coordinates(self, mode='center'):
+        """
+        Sky coordinate images.
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Return coordinate values at the pixels edges or pixel centers.
+
+        Returns
+        -------
+        coordinates : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
+        """
+        x, y = self.coordinates_pix(mode=mode)
+        coordinates = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
+        return coordinates
+
+    def contains(self, position):
+        """
+        Check if given position on the sky is contained in the sky map.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
+
+        Returns
+        -------
+        containment : array
+            Bool array
+        """
+        ny, nx = self.data.shape
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
+
+    def _get_boundaries(self, skymap_ref, skymap, wcs_check):
+        """
+        Get boundary coordinates of one sky map in the pixel coordinate system
+        of another reference sky map.
+        """
+        ymax, xmax = skymap.data.shape
+        ymax_ref, xmax_ref = skymap_ref.data.shape
+
+        # transform boundaries in world coordinates
+        bounds = skymap.wcs.wcs_pix2world([0, xmax], [0, ymax], skymap.wcs_origin)
+
+        # transform to pixel coordinats in the reference skymap
+        bounds_ref = skymap_ref.wcs.wcs_world2pix(bounds[0], bounds[1], skymap_ref.wcs_origin)
+
+        # round to nearest integer and clip at the boundaries
+        xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
+        ylo, yhi = np.rint(np.clip(bounds_ref[1], 0, ymax_ref))
+
+        if wcs_check:
+            if not np.allclose(bounds_ref, np.rint(bounds_ref)):
+                raise WcsError('World coordinate systems not aligned. Try to call'
+                               ' .reproject() on one of the maps first.')
+        return xlo, xhi, ylo, yhi
+
+    def paste(self, skymap, method='sum', wcs_check=True):
+        """
+        Paste smaller skymap into sky map. 
+
+        WCS specifications of both skymaps must be aligned. If not call
+        `SkyMap.reproject()` on one of the maps first. See :ref:`skymap-cutpaste`
+        more for information how to cut and paste sky images.
+
+        Parameters
+        ----------
+        skymap : `SkyMap`
+            Smaller sky map to paste.
+        method : {'sum', 'replace'}, optional
+            Sum or replace total values with cutout values.
+        wcs_check : bool
+            Check if both WCS are aligned. Raises `~astropy.wcs.WcsError` if not.
+            Disable for performance critical computations.
+        """
+        xlo, xhi, ylo, yhi = self._get_boundaries(self, skymap, wcs_check)
+        xlo_c, xhi_c, ylo_c, yhi_c = self._get_boundaries(skymap, self, wcs_check)
+
+        if method == 'sum':
+            self.data[ylo:yhi, xlo:xhi] += skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
+        elif method == 'replace':
+            self.data[ylo:yhi, xlo:xhi] = skymap.data[ylo_c:yhi_c, xlo_c:xhi_c]
         else:
-            coordinates = pixel_to_skycoord(x, y, self.wcs, origin)
-            if coord_type == 'skycoord':
-                return coordinates
-            elif coord_type == 'galactic':
-                l = coordinates.galactic.l.wrap_at('180d')
-                b = coordinates.galactic.b
-                return l, b
-            else:
-                raise ValueError("Not a valid coordinate type. Choose either"
-                                 " 'pix' or 'skycoord'.")
+            raise ValueError('Invalid method: {}'.format(method))
+
+
+    def cutout(self, position, size):
+        """
+        Cut out rectangular piece of a sky map.
+
+        See :ref:`skymap-cutpaste` for more information how to cut and paste
+        sky images.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position of the center of the sky map to cut out.
+        size : int, array-like, `~astropy.units.Quantity`
+            The size of the cutout array along each axis.  If ``size``
+            is a scalar number or a scalar `~astropy.units.Quantity`,
+            then a square cutout of ``size`` will be created.  If
+            ``size`` has two elements, they should be in ``(ny, nx)``
+            order.  Scalar numbers in ``size`` are assumed to be in
+            units of pixels.  ``size`` can also be a
+            `~astropy.units.Quantity` object or contain
+            `~astropy.units.Quantity` objects.  Such
+            `~astropy.units.Quantity` objects must be in pixel or
+            angular units.  For all cases, ``size`` will be converted to
+            an integer number of pixels, rounding the the nearest
+            integer.  See the ``mode`` keyword for additional details on
+            the final cutout size.
+
+            .. note::
+                If ``size`` is in angular units, the cutout size is
+                converted to pixels using the pixel scales along each
+                axis of the image at the ``CRPIX`` location.  Projection
+                and other non-linear distortions are not taken into
+                account.
+
+        Returns
+        -------
+        cutout : `SkyMap`
+            Cut out sky map.
+        """
+        cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
+                          copy=True)
+        skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
+        return skymap
+
+    def lookup_max(self, region=None):
+        """
+        Find position of maximum in a skymap.
+
+        Parameters
+        ----------
+        region : `~gammapy.extern.regions.core.SkyRegion` (optional)
+            Limit lookup of maximum to that given sky region.
+
+        Returns
+        -------
+        (position, value): `~astropy.coordinates.SkyCoord`, float
+            Position and value of the maximum.
+        """
+        if region:
+            mask = region.contains(self.coordinates())
+        else:
+            mask = np.ones_like(self.data)
+
+        idx = np.nanargmax(self.data * mask)
+        y, x = np.unravel_index(idx, self.data.shape)
+        pos = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
+        return pos, self.data[y, x]
 
     def solid_angle(self):
         """
-        Solid angle image
+        Solid angle image (2-dim `astropy.units.Quantity` in `sr`).
         """
-        xsky, ysky = self.coordinates(coord_type='galactic', mode='edges')
-        omega = np.abs(np.diff(xsky, axis=1)[1:, :] * np.diff(ysky, axis=0)[:, 1:])
-        return omega.to('sr')
+        coordinates = self.coordinates(mode='edges')
+        lon = coordinates.data.lon.radian
+        lat = coordinates.data.lat.radian
+
+        # Compute solid angle using the approximation that it's
+        # the product between angular separation of pixel corners.
+        # First index is "y", second index is "x"
+        ylo_xlo = lon[:-1, :-1], lat[:-1, :-1]
+        ylo_xhi = lon[:-1, 1:], lat[:-1, 1:]
+        yhi_xlo = lon[1:, :-1], lat[1:, :-1]
+
+        dx = angular_separation(*(ylo_xlo + ylo_xhi))
+        dy = angular_separation(*(ylo_xlo + yhi_xlo))
+        omega = Quantity(dx * dy, 'sr')
+        return omega
 
     def center(self):
         """
-        Center coordinates of the sky map.
+        Center sky coordinates of the sky map.
         """
         return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
                                    (self.data.shape[1] - 1) / 2.,
-                                    self.wcs, origin=0)
+                                    self.wcs, origin=self.wcs_origin)
 
-    def lookup(self, position, interpolation=None, origin=0):
+    def lookup(self, position, interpolation=None):
         """
         Lookup value at given sky position.
 
         Parameters
         ----------
-        position : tuple or `~astropy.coordinates.SkyCoord`
-            Position on the sky. Can be either an instance of
-            `~astropy.coordinates.SkyCoord` or a tuple of `~numpy.ndarray`
-            of the form (lon, lat) or (ra, dec), depending on the WCS
-            transformation that is set for the sky map.
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
         interpolation : {'None'}
             Interpolation mode.
-        origin : {0, 1}
-            Pixel coordinate origin.
         """
-        if isinstance(position, SkyCoord):
-            if get_wcs_ctype(self.wcs) == 'galactic':
-                xsky, ysky = position.galactic.l.value, position.galactic.b.value
-            else:
-                xsky, ysky = position.icrs.ra.value, position.icrs.dec.value
-        elif isinstance(position, (tuple, list)):
-            xsky, ysky = position[0], position[1]
-
-        x, y = self.wcs.wcs_world2pix(xsky, ysky, origin)
-        return self.data[np.round(y).astype('int'), np.round(x).astype('int')]
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        return self.data[np.rint(y).astype('int'), np.rint(x).astype('int')]
 
     def to_quantity(self):
         """
@@ -332,11 +474,15 @@ class SkyMap(object):
         from sherpa.data import Data2D, Data2DInt
 
         if dstype == 'Data2D':
-            x, y = self.coordinates('galactic', mode='center')
+            coordinates = self.coordinates(mode='center')
+            x = coordinates.data.lon
+            y = coordinates.data.lat
             return Data2D(self.name, x.ravel(), y.ravel(), self.data.ravel(),
                           self.data.shape)
         elif dstype == 'Data2DInt':
-            x, y = self.coordinates('galactic', mode='edges')
+            coordinates = self.coordinates(mode='edges')
+            x = coordinates.data.lon
+            y = coordinates.data.lat
             xlo, xhi = x[:-1], x[1:]
             ylo, yhi = y[:-1], y[1:]
             return Data2DInt(self.name, xlo.ravel(), xhi.ravel(),
@@ -353,17 +499,26 @@ class SkyMap(object):
 
     def to_image_hdu(self):
         """
-        Convert sky map to `~astropy.fits.ImageHDU`.
-        """
-        if not self.wcs is None:
-            header = self.wcs.to_header()
+        Convert sky map to `~astropy.fits.PrimaryHDU`.
         
-            # Add meta data
-            header.update(self.meta)
-            header['BUNIT'] = self.unit
+        Returns
+        -------
+        primaryhdu : `~astropy.fits.PrimaryHDU`
+            Primary image hdu object.
+        """
+        if self.wcs is not None:
+            header = self.wcs.to_header()
         else:
-            header = None
-        return fits.ImageHDU(data=self.data, header=header, name=self.name)
+            header = fits.Header()
+
+        # Add meta data
+        header.update(self.meta)
+        if self.unit is not None:
+            header['BUNIT'] = Unit(self.unit).to_string('fits')
+        if self.name is not None:
+            header['EXTNAME'] = self.name
+            header['HDUNAME'] = self.name
+        return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
         """
@@ -458,14 +613,15 @@ class SkyMap(object):
             fig = plt.gcf()
             ax = fig.add_subplot(1,1,1, projection=self.wcs)
 
+        kwargs['origin'] = kwargs.get('origin', 'lower')
         caxes = ax.imshow(self.data, **kwargs)
-        unit = self.unit or 'A.E.'
+        unit = self.unit or 'A.U.'
         if unit == 'ct':
             quantity = 'counts'
-        elif unit is 'A.E.':
+        elif unit is 'A.U.':
             quantity = 'Unknown'
         else:
-            quantity = Unit(unit).physical_type 
+            quantity = Unit(unit).physical_type
         cbar = fig.colorbar(caxes, label='{0} ({1})'.format(quantity, unit))
         try:
             ax.coords['glon'].set_axislabel('Galactic Longitude')
@@ -473,6 +629,8 @@ class SkyMap(object):
         except KeyError:
             ax.coords['ra'].set_axislabel('Right Ascension')
             ax.coords['dec'].set_axislabel('Declination')
+        except AttributeError:
+            log.info("Can't set coordinate axes. No WCS information available.")
 
     def info(self):
         """
@@ -485,12 +643,12 @@ class SkyMap(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
-        if not self.data is None:
+        if self.data is not None:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
-        if not self.wcs is None:
+        if self.wcs is not None:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
         return info
 
@@ -607,6 +765,7 @@ class SkyMapCollection(Bunch):
         for name in self.get('_map_names', sorted(self)):
             if isinstance(self[name], SkyMap):
                 hdu = self[name].to_image_hdu()
+
                 # For now add common collection meta info to the single map headers
                 hdu.header.update(self.meta)
                 hdu.name = name

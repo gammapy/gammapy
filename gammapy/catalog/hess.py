@@ -256,11 +256,11 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         err = d['Lambda_Spec_ECPL_Err']
         ss += '{:<20s} : {:.3f} +/- {:.3f} TeV^-1\n'.format('ECPL Lambda', val, err)
 
-        # import uncertainties
-        # energy = 1 / uncertainties.ufloat(val, err)
-        # val, err = energy.nominal_value, energy.std_dev
-        val = d['Energy_Cutoff_Spec_ECPL']
-        err = d['Energy_Cutoff_Spec_ECPL_Err']
+        # Use Gaussian analytical error propagation, tested against the
+        # uncertainties package
+        err = err / val ** 2
+        val = 1. / val
+
         ss += '{:<20s} : {:.1f} +/- {:.1f} TeV\n'.format('ECPL E_cut', val, err)
 
         val = d['TS_ECPL_over_PL']

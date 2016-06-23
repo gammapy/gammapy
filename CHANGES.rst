@@ -18,7 +18,7 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released in June or July 2016.
+Gammapy 0.5 will be released on July 7, 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
@@ -26,9 +26,16 @@ Contributors
 ++++++++++++
 
 - Axel Donath
+- Brigitta Sipocz
+- Christoph Deil
+- Domenico Tiziani (new)
+- Helen Poon (new)
 - Johannes King
 - Julien Lefaucheur (new)
 - Léa Jouvin
+- Nachiketa Chakraborty (new)
+- Olga Vorokh
+- Régis Terrier
 
 Pull requests
 +++++++++++++
@@ -37,9 +44,24 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#569] Add detection utilities à la BgStats (Julien Lefaucheur)
+- [#565] Add exptest time variability test (Helen Poon)
+- [#564] Add LightCurve class (Nachiketa Chakraborty)
+- [#559] Add paste, cutout and look_up methods to SkyMap class (Axel Donath)
+- [#557] Add spectrum point source containment correction option (Régis Terrier)
+- [#556] Add offset-dependent table PSF class (Domenico Tiziani)
+- [#549] Add mean PSF computation (Léa Jouvin)
+- [#547] Add astropy.regions to gammapy.extern (Johannes King)
+- [#546] Add Target class (Johannes King)
+- [#545] Add PointingInfo class (Christoph Deil)
+- [#544] Improve SkyMap.coordinates (Olga Vorokh)
+- [#541] Refactor effective area IRFs to use NDDataArray (Johannes King)
+- [#535] Add spectrum and flux points to HGPS catalog (Axel Donath)
 - [#531] Add ObservationTableSummary class (Julien Lefaucheur)
+- [#530] Update readthedocs links from .org to .io (Brigitta Sipocz)
 - [#529] Add data_summary method to DataStore (Johannes King)
-- [#526] Add King PSD evaluate and to_table_psf methods (Léa Jouvin)
+- [#527] Add n-dim data base class for gammapy.irf (Johannes King)
+- [#526] Add King PSF evaluate and to_table_psf methods (Léa Jouvin)
 - [#524] Improve image pipe class (Léa Jouvin)
 - [#523] Add Gauss PSF to_table_psf method (Axel Donath)
 - [#521] Fix image pipe class (Léa Jouvin)

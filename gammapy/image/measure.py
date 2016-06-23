@@ -3,14 +3,9 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.io import fits
-from .utils import coordinates
+from astropy.units import Quantity
 
 __all__ = [
-    'BoundingBox',
-    'bbox',
-    'find_max',
-    'lookup_max',
     'measure_containment_fraction',
     'measure_containment_radius',
     'measure_image_moments',
@@ -18,147 +13,6 @@ __all__ = [
     'measure_containment',
     'measure_curve_of_growth'
 ]
-
-
-class BoundingBox(object):
-    """Rectangular bounding box.
-
-    TODO: Link to bounding box docs.
-
-    Parameters
-    ----------
-    x_start, y_start : float
-        Start pixel coordinates (0-based indexing, inclusive)
-    x_stop, y_stop : float
-        Stop pixel coordinates (0-based indexing, exclusive)
-    """
-
-    def __init__(self, x_start, y_start, x_stop, y_stop):
-        self.x_start = x_start
-        self.y_start = y_start
-        self.x_stop = x_stop
-        self.y_stop = y_stop
-
-    @classmethod
-    def for_circle(cls, x, y, radius):
-        """Compute bounding box for a circle.
-
-        Parameters
-        ----------
-        x, y : float
-            Circle center position
-        radius : float
-            Circle radius (pix)
-
-        Returns
-        -------
-        bounding_box : BoundingBox
-            Bounding box
-        """
-        x, y, radius = int(x), int(y), int(radius)
-        x_start = x - radius
-        y_start = y - radius
-        x_stop = x + radius
-        y_stop = y + radius
-        return cls(x_start, y_start, x_stop, y_stop)
-
-    def __str__(self):
-        ss = 'x = ({x_start}, {x_stop}), '.format(**self)
-        ss += 'y = ({y_start}, {y_stop}) '.format(**self)
-        return ss
-
-    def intersection(self, other):
-        """Compute intersection of two bounding boxes.
-
-        Parameters
-        ----------
-        other : `BoundingBox`
-            Other bounding box.
-
-        Returns
-        -------
-        intersection : `BoundingBox`
-            New intersection bounding box
-
-        Examples
-        --------
-        >>> b1 = BoundingBox(1, 5, 10, 11)
-        >>> b2 = BoundingBox(2, 4, 13, 9)
-        >>> b1.intersection(b2)
-        TODO
-        """
-        x_start = max(self.x_start, other.x_start)
-        x_stop = min(self.x_stop, other.x_stop)
-        y_start = max(self.y_start, other.y_start)
-        y_stop = min(self.x_stop, other.x_stop)
-        return BoundingBox(x_start, y_start, x_stop, y_stop)
-
-    def overlaps(self, other):
-        """Does this bounding box overlap the other bounding box?
-
-        Parameters
-        ----------
-        other : `BoundingBox`
-            Other bounding box
-
-        Returns
-        -------
-        overlaps : bool
-            True of there is overlap
-
-        Examples
-        --------
-        TODO
-        """
-        return self.intersection(other).is_empty
-
-    def __eq__(self, other):
-        return self.slice == other.slice
-
-    @property
-    def ftcopy_string(self):
-        """Bounding box in ftcopy string format (str)
-
-        The output is given as [x_start:x_stop,y_start:y_stop]
-
-        Examples
-        --------
-        >>> from gammapy.image import BoundingBox
-        >>> bounding_box = BoundingBox(7, 9, 43, 44)
-        >>> bounding_box.ftcopy_string
-        TODO
-        """
-        return '[{x_start}:{x_stop},{y_start}:{y_stop}]'.format(**self)
-
-    @property
-    def slice(self):
-        """Bounding box in slice format (y, x) (tuple)
-
-        Examples
-        --------
-        >>> from gammapy.image import BoundingBox
-        >>> bounding_box = BoundingBox(7, 9, 43, 44)
-        >>> bounding_box.slice
-        TODO
-        """
-        return (self.y_slice, self.x_slice)
-
-    @property
-    def x_slice(self):
-        """Bounding box X component in slice format (slice)"""
-        return slice(self.x_start, self.x_stop)
-
-    @property
-    def y_slice(self):
-        """Bounding box Y component in slice format (slice)"""
-        return slice(self.y_start, self.y_stop)
-
-    @property
-    def is_empty(self):
-        """Check if the bounding box is empty (bool)"""
-        x_is_empty = (self.x_start >= self.x_stop)
-        y_is_empty = (self.y_start >= self.y_stop)
-        return x_is_empty or y_is_empty
 
 
 def bbox(mask, margin, binsz):
@@ -233,63 +87,20 @@ def measure_labeled_regions(data, labels, tag='IMAGE',
     return table
 
 
-def find_max(image):
-    """Find position of maximum in an image.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Input image
-
-    Returns
-    -------
-    lon, lat, value : float
-        Maximum value and its position
-    """
-    from scipy.ndimage import maximum_position
-    from astropy.wcs import WCS
-    proj = WCS(image.header)
-    data = image.data
-    data[np.isnan(data)] = -np.inf
-    y, x = maximum_position(data)
-    origin = 0  # convention for gammapy
-    GLON, GLAT = proj.wcs_pix2world(x, y, origin)
-    val = data[int(y), int(x)]
-    return GLON, GLAT, val
-
-
-def lookup_max(image, GLON, GLAT, theta):
-    """Look up the max image values within a circle of radius theta
-    around lists of given positions (nan if outside)"""
-    from .utils import coordinates
-    GLON = np.asarray(GLON)
-    GLON = np.where(GLON > 180, GLON - 360, GLON)
-    GLAT = np.asarray(GLAT)
-    n_pos = len(GLON)
-    theta = np.asarray(theta) * np.ones(n_pos, dtype='float32')
-
-    ll, bb = coordinates(image)
-
-    val = np.nan * np.ones(n_pos, dtype='float32')
-    for ii in range(n_pos):
-        mask = ((GLON[ii] - ll) ** 2 +
-                (GLAT[ii] - bb) ** 2 <=
-                theta[ii] ** 2)
-        try:
-            val[ii] = image.data[mask].max()
-        except ValueError:
-            pass
-    return val
+def _wrapped_coordinates(image):
+    coords = image.coordinates()
+    return coords.data.lon.wrap_at('180d'), coords.data.lat
 
 
 def measure_image_moments(image):
-    """Compute 0th, 1st and 2nd moments of an image.
+    """
+    Compute 0th, 1st and 2nd moments of an image.
 
     NaN values are ignored in the computation.
 
     Parameters
     ----------
-    image :`astropy.io.fits.ImageHDU`
+    image : `gammapy.image.SkyMap`
         Image to measure on.
 
     Returns
@@ -298,7 +109,7 @@ def measure_image_moments(image):
         List of image moments:
         [A, x_cms, y_cms, x_sigma, y_sigma, sqrt(x_sigma * y_sigma)]
     """
-    x, y = coordinates(image, lon_sym=True)
+    x, y = _wrapped_coordinates(image)
     A = image.data[np.isfinite(image.data)].sum()
 
     # Center of mass
@@ -314,87 +125,84 @@ def measure_image_moments(image):
     return A, x_cms, y_cms, x_sigma, y_sigma, np.sqrt(x_sigma * y_sigma)
 
 
-def measure_containment(image, glon, glat, radius):
+def measure_containment(image, position, radius):
     """
     Measure containment in a given circle around the source position.
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image :`gammapy.image.SkyMap`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
     radius : float
         Radius of the region to measure the containment in.
     """
-    GLON, GLAT = coordinates(image, lon_sym=True)
-    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
-    return measure_containment_fraction(radius, rr, image.data)
+    separation = image.coordinates().separation(position)
+    return measure_containment_fraction(image.data, radius, separation)
 
 
-def measure_containment_radius(image, glon, glat, containment_fraction=0.8):
-    """Measure containment radius.
+def measure_containment_radius(image, position, containment_fraction=0.8):
+    """
+    Measure containment radius of a source.
+
+
 
     Uses `scipy.optimize.brentq`.
 
     Parameters
     ----------
-    image : `astropy.io.fits.ImageHDU`
+    image :`gammapy.image.SkyMap`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
     containment_fraction : float (default 0.8)
         Containment fraction
 
     Returns
     -------
-    containment_radius : float
+    containment_radius : 
         Containment radius (pix)
     """
     from scipy.optimize import brentq
 
-    GLON, GLAT = coordinates(image, lon_sym=True)
-    rr = (GLON - glon) ** 2 + (GLAT - glat) ** 2
+    separation = image.coordinates().separation(position)
 
     # Normalize image
-    image.data = image.data / image.data[np.isfinite(image.data)].sum()
+    data = image.data / image.data[np.isfinite(image.data)].sum()
 
     def func(r):
-        return measure_containment_fraction(r, rr, image.data) - containment_fraction
+        return measure_containment_fraction(data, r, separation.value) - containment_fraction
 
-    containment_radius = brentq(func, a=0, b=np.sqrt(rr.max()))
-    return containment_radius
+    containment_radius = brentq(func, a=0, b=separation.max().value)
+    return Quantity(containment_radius, separation.unit)
 
 
-def measure_containment_fraction(r, rr, image):
+def measure_containment_fraction(image, radius, separation):
     """Measure containment fraction.
 
     Parameters
     ----------
-    r : float
+    image :`gammapy.image.SkyMap`
+        Image to measure on.
+    radius : `~astropy.units.Quantity`
         Containment radius.
-    rr : array
-        Squared radius array.
-    image : array
-        The image has to be normalized! I.e. image.sum() = 1.
-
+    separation : `~astropy.coordinates.Angle`
+         Separation from the source position array.
+    
     Returns
     -------
     containment_fraction : float
         Containment fraction
     """
     # Set up indices and containment mask
-    containment_mask = rr < r ** 2
+    containment_mask = separation < radius
     mask = np.logical_and(np.isfinite(image), containment_mask)
     containment_fraction = image[mask].sum()
     return containment_fraction
 
 
-def measure_curve_of_growth(image, glon, glat, r_max=0.2, delta_r=0.01):
+def measure_curve_of_growth(image, position, radius_max=None, radius_n=10):
     """
     Measure the curve of growth for a given source position.
 
@@ -405,27 +213,26 @@ def measure_curve_of_growth(image, glon, glat, r_max=0.2, delta_r=0.01):
     ----------
     image : `astropy.io.fits.ImageHDU`
         Image to measure on.
-    glon : float
-        Source longitude in degree.
-    glat : float
-        Source latitude in degree.
-    r_max : float (default 0.2)
-        Maximal radius, up to which the containment is measured in degree.
-    delta_r : int (default 10)
-        Stepsize for the radius grid in degree.
+    position : `~astropy.coordinates.SkyCoord`
+        Source position on the sky.
+    radius_max : `~astropy.units.Quantity`
+        Maximal radius, up to which the containment is measured (default 0.2 deg).
+    radius_n : int
+        Number of radius steps.
 
     Returns
     -------
-    radii : array
+    radii : `~astropy.units.Quantity`
         Radii where the containment was measured.
-    containment : array
+    containment : `~astropy.units.Quantity`
         Corresponding contained flux.
     """
+    radius_max = radius_max or Quantity(0.2, 'deg')
     containment = []
-    radii = np.arange(0, r_max, delta_r)
+    radii = Quantity(np.linspace(0, radius_max.value, radius_n), radius_max.unit)
     for radius in radii:
-        containment.append(measure_containment(image, glon, glat, radius))
-    return radii, np.array(containment)
+        containment.append(measure_containment(image, position, radius))
+    return radii, Quantity(containment)
 
 
 def _split_xys(pos):

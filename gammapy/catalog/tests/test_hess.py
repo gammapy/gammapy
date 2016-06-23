@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ...utils.testing import requires_data
+from numpy.testing.utils import assert_allclose
+from ...utils.testing import requires_data, requires_dependency
 from ..hess import SourceCatalogHGPS
 
 
@@ -70,3 +71,13 @@ class TestSourceCatalogObjectHGPS:
                      ' : 1.16 +/- 0.00 TeV\n')
 
         assert str(source.spectrum) == reference
+
+    @requires_dependency('uncertainties')
+    def test_ecut_error(self):
+        import uncertainties
+        val = self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL']
+        err = self.cat['HESS J1825-137'].data['Lambda_Spec_ECPL']
+        energy = 1 / uncertainties.ufloat(val, err)
+
+        energy_err = err / val ** 2
+        assert_allclose(err, energy.std_dev)

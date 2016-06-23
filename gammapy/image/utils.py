@@ -23,8 +23,6 @@ __all__ = [
     'binary_opening_circle',
     'binary_ring',
     'block_reduce_hdu',
-    'contains',
-    'crop_image',
     'dict_to_hdulist',
     'disk_correlate',
     'downsample_2N',
@@ -34,7 +32,6 @@ __all__ = [
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
     'make_header',
-    'paste_cutout_into_image',
     'process_image_pixels',
     'ring_correlate',
     'shape_2N',
@@ -823,99 +820,6 @@ def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,
     header.update(pars)
 
     return header
-
-
-def crop_image(image, bounding_box):
-    """Crop an image (cut out a rectangular part).
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        Image
-    bounding_box : `~gammapy.image.BoundingBox`
-        Bounding box
-
-    Returns
-    -------
-    new_image : `~astropy.io.fits.ImageHDU`
-        Cropped image
-
-    See Also
-    --------
-    paste_cutout_into_image
-    """
-    data = image.data[bounding_box.slice]
-    header = image.header.copy()
-
-    # TODO: fix header keywords and test against ftcopy
-
-    return fits.ImageHDU(data=data, header=header)
-
-
-def contains(image, x, y, world=True):
-    """Check if given pixel or world positions are in an image.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU`
-        2-dim FITS image
-    x : float
-        x coordinate in the image
-    y : float
-        y coordinate in the image
-    world : bool, optional
-        Are x and y in world coordinates (or pixel coordinates)?
-
-    Returns
-    -------
-    containment : array
-        Bool array
-    """
-    header = image.header
-
-    if world:
-        wcs = WCS(header)
-        origin = 0  # convention for gammapy
-        x, y = wcs.wcs_world2pix(x, y, origin)
-
-    nx, ny = header['NAXIS2'], header['NAXIS1']
-    return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
-
-
-def paste_cutout_into_image(total, cutout, method='sum'):
-    """Paste cutout into a total image.
-
-    Parameters
-    ----------
-    total, cutout : `~astropy.io.fits.ImageHDU`
-        Total and cutout image.
-    method : {'sum', 'replace'}, optional
-        Sum or replace total values with cutout values.
-
-    Returns
-    -------
-    total : `~astropy.io.fits.ImageHDU`
-        A reference to the total input HDU that was modified in-place.
-
-    See Also
-    --------
-    crop_image
-    """
-    # find offset
-    origin = 0  # convention for gammapy
-    lon, lat = WCS(cutout.header).wcs_pix2world(0, 0, origin)
-    x, y = WCS(total.header).wcs_world2pix(lon, lat, origin)
-    x, y = int(np.round(x)), int(np.round(y))
-    dy, dx = cutout.shape
-
-    if method == 'sum':
-        total.data[y: y + dy, x: x + dx] += cutout.data
-    elif method == 'replace':
-        total.data[y: y + dy, x: x + dx] = cutout.data
-    else:
-        raise ValueError('Invalid method: {0}'.format(method))
-
-    return total
 
 
 def block_reduce_hdu(input_hdu, block_size, func, cval=0):

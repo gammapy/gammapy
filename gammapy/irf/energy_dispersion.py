@@ -245,7 +245,7 @@ class EnergyDispersion(object):
                          unit='{}'.format(cols[0].unit))
         c1 = fits.Column(name=cols[1].name, format='E', array=cols[1],
                          unit='{}'.format(cols[1].unit))
-        c2 = fits.Column(name=cols[2].name, format='J', array=cols[2])
+        c2 = fits.Column(name=cols[2].name, format='I', array=cols[2])
         c3 = fits.Column(name=cols[3].name, format='PI()', array=cols[3])
         c4 = fits.Column(name=cols[4].name, format='PI()', array=cols[4])
         c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
@@ -258,7 +258,7 @@ class EnergyDispersion(object):
             header['EXTNAME'] = 'MATRIX', 'name of this binary table extension'
             header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
             header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
-            header['FILTER'] = 'NONE', 'Filter information'
+            header['FILTER'] = '', 'Filter information'
             header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
             header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
             header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
@@ -275,13 +275,14 @@ class EnergyDispersion(object):
 
         header['DETCHANS'] = self._e_reco.nbins, 'Total number of detector PHA channels'
         header['TLMIN4'] = 0, 'First legal channel number'
-        header['TLMAX4'] = hdu.data[3].__len__(), 'Highest legal channel number'
+        # E_reco nbins - 1 
+        header['TLMAX4'] = len(self._e_reco) - 2, 'Highest legal channel number'
         numgrp, numelt = 0, 0
-        for val, val2 in zip(hdu.data['N_GRP'], hdu.data['N_CHAN']):
-            numgrp += np.sum(val)
-            numelt += np.sum(val2)
-        header['NUMGRP'] = numgrp, 'Total number of channel subsets'
-        header['NUMELT'] = numelt, 'Total number of response elements'
+        #for val, val2 in zip(hdu.data['N_GRP'], hdu.data['N_CHAN']):
+        #    numgrp += np.sum(val)
+        #    numelt += np.sum(val2)
+        #header['NUMGRP'] = numgrp, 'Total number of channel subsets'
+        #header['NUMELT'] = numelt, 'Total number of response elements'
         header['LO_THRES'] = self.pdf_threshold, 'Lower probability density threshold for matrix'
         hdu.header = header
 
@@ -327,11 +328,10 @@ class EnergyDispersion(object):
 
         table['ENERG_LO'] = self._e_true.lower_bounds
         table['ENERG_HI'] = self._e_true.upper_bounds
-        table['N_GRP'] = np.asarray(n_grp)
+        table['N_GRP'] = np.asarray(n_grp, dtype=np.int16)
         table['F_CHAN'] = f_chan
         table['N_CHAN'] = n_chan
         table['MATRIX'] = matrix
-
         return table
 
     def __call__(self, energy_true, energy_reco, method='step'):

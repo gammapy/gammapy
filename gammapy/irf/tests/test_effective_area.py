@@ -19,15 +19,15 @@ def test_EffectiveAreaTable2D_generic():
     energy = np.logspace(0, 1, 4) * u.TeV
     offset = [0.2, 0.3] * u.deg
     effective_area = np.arange(6).reshape(3, 2) * u.cm * u.cm
-    meta = dict(name = 'example')
+    meta = dict(name='example')
     aeff = EffectiveAreaTable2D(offset=offset, energy=energy, data=effective_area,
-                           meta=meta)
+                                meta=meta)
     assert (aeff.axes[0].data == energy).all()
     assert (aeff.axes[1].data == offset).all()
     assert (aeff.data == effective_area).all()
     assert aeff.meta.name == 'example'
 
-    wrong_data = np.arange(8).reshape(4,2) * u.cm * u.cm
+    wrong_data = np.arange(8).reshape(4, 2) * u.cm * u.cm
 
     with pytest.raises(ValueError):
         aeff.data = wrong_data
@@ -35,7 +35,7 @@ def test_EffectiveAreaTable2D_generic():
 
     # Test evaluate function 
     # Check that nodes are evaluated correctly
-    e_node = 1 
+    e_node = 1
     off_node = 0
     offset = aeff.offset.nodes[off_node]
     energy = aeff.energy.nodes[e_node]
@@ -67,7 +67,7 @@ def test_EffectiveAreaTable2D_generic():
     # Case 2: offset = scalar, energy = 1Darray
 
     offset = 0.564 * u.deg
-    nbins = 10 
+    nbins = 10
     energy = np.logspace(3, 4, nbins) * u.GeV
     actual = aeff.evaluate(offset=offset, energy=energy).shape
     desired = np.zeros(nbins).shape
@@ -113,8 +113,8 @@ def test_EffectiveAreaTable2D_generic():
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_EffectiveAreaTable2D(tmpdir):
-
-    filename = gammapy_extra.filename('datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
+    filename = gammapy_extra.filename(
+        'datasets/hess-crab4-hd-hap-prod2/run023400-023599/run023523/hess_aeff_2d_023523.fits.gz')
     aeff = EffectiveAreaTable2D.read(filename)
 
     assert aeff.energy.nbins == 73
@@ -127,7 +127,7 @@ def test_EffectiveAreaTable2D(tmpdir):
 
     assert_allclose(aeff.high_threshold.value, 99.083, atol=1e-2)
     assert_allclose(aeff.low_threshold.value, 0.603, atol=1e-2)
-    
+
     test_e = 14 * u.TeV
     test_o = 0.2 * u.deg
     test_val = aeff.evaluate(energy=test_e, offset=test_o)
@@ -138,7 +138,7 @@ def test_EffectiveAreaTable2D(tmpdir):
     aeff.plot_offset_dependence()
 
     # Test ARF export
-    offset = 0.236  * u.deg
+    offset = 0.236 * u.deg
     e_axis = np.logspace(0, 1, 20) * u.TeV
     effareafrom2d = aeff.to_effective_area_table(offset, e_axis)
 
@@ -165,10 +165,10 @@ def test_EffectiveAreaTable2D(tmpdir):
 def test_EffectiveAreaTable(tmpdir, data_manager):
     store = data_manager['hess-crab4-hd-hap-prod2']
     aeff = store.obs(obs_id=23523).aeff
-    arf = aeff.to_effective_area_table(offset = 0.3 * u.deg)
+    arf = aeff.to_effective_area_table(offset=0.3 * u.deg)
 
     assert (arf.evaluate() == arf.data).all()
-    
+
     arf.plot()
 
     filename = str(tmpdir / 'effarea_test.fits')
@@ -178,9 +178,13 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
 
     assert (arf.evaluate() == arf2.evaluate()).all()
 
+    elo_threshold = arf.area_max(10)
+    assert_allclose(elo_threshold, 0.4122628148393689 * u.TeV)
+
+
 def test_abramowski_effective_area():
     energy = 100 * u.GeV
-    area_ref = 1.65469579e+07 * u.cm * u.cm 
+    area_ref = 1.65469579e+07 * u.cm * u.cm
 
     area = abramowski_effective_area(energy, 'HESS')
     assert_allclose(area, area_ref)

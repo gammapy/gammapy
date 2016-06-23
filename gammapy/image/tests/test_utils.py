@@ -15,7 +15,6 @@ from ...image import (
     binary_disk,
     binary_ring,
     make_header,
-    contains,
     images_to_cube,
     block_reduce_hdu,
     wcs_histogram2d,
@@ -40,36 +39,6 @@ def test_binary_ring():
                         [False, True, True, True, False],
                         [False, False, True, False, False]])
     assert_equal(actual, desired)
-
-
-class TestImageCoordinates(object):
-    def setup_class(self):
-        self.image = SkyMap.empty(nxpix=3, nypix=2, binsz=10, proj='CAR').to_image_hdu()
-        self.image.data = np.arange(3 * 2).reshape(self.image.data.shape)
-
-    @pytest.mark.xfail
-    def test_contains(self):
-        # world coordinates
-        assert contains(self.image, 0, 0) == True
-        assert contains(self.image, 14.9, -9.9) == True
-        assert contains(self.image, 20, 0) == False
-        assert contains(self.image, 0, -15) == False
-
-        # pixel coordinates
-        assert contains(self.image, 0.6, 0.6, world=False) == True
-        assert contains(self.image, 3.4, 2.4, world=False) == True
-        assert contains(self.image, 0.4, 0, world=False) == False
-        assert contains(self.image, 0, 2.6, world=False) == False
-
-        # one-dimensional arrays
-        x, y = np.arange(4), np.arange(4)
-        inside = contains(self.image, x, y, world=False)
-        assert_equal(inside, np.array([False, True, True, False]))
-
-        # two-dimensional arrays
-        x = y = np.zeros((3, 2))
-        inside = contains(self.image, x, y)
-        assert_equal(inside, np.ones((3, 2), dtype=bool))
 
 
 @pytest.mark.xfail
@@ -176,7 +145,9 @@ def test_wcs_histogram2d():
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
     counts = SkyMap.from_image_hdu(FermiGalacticCenter.counts())
-    lons, lats = counts.coordinates('galactic')
+    coordinates = counts.coordinates()
+    lons = coordinates.data.lon.wrap_at('180d')
+    lats = coordinates.data.lat
     mask = lon_lat_rectangle_mask(lons.degree, lats.degree, lon_min=-1,
                                   lon_max=1, lat_min=-1, lat_max=1)
     assert_allclose(mask.sum(), 400)

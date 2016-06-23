@@ -12,40 +12,22 @@ __all__ = [
     'abramowski_effective_area',
 ]
 
+
 class EffectiveAreaTable(NDDataArray):
     """Effective Area Table
     
-    **Disclaimer**: This is an experimental class to test the usage of the
-    `~gammapy.utils.nddata.NDDataArray` base class. It is meant to replace
-    `~gammapy.irf.EffectiveAreaTable` in the future but is currently not used
-    anywhere in gammapy.
-
     Parameters
     -----------
     energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Effective area
-    meta : dict
-        Optional meta information,
-        supported: ``low_threshold``, ``high_threshold``
     """
     energy = BinnedDataAxis(interpolation_mode='log')
     """Energy Axis"""
     axis_names = ['energy']
 
-    @property
-    def low_threshold(self):
-
-        """Low energy threshold"""
-        return self.meta.LO_THRES * u.TeV
-
-    @property
-    def high_threshold(self):
-        """High energy threshold"""
-        return self.meta.HI_THRES * u.TeV
-
-    def plot(self, ax=None, energy=None, show_threshold=False, **kwargs):
+    def plot(self, ax=None, energy=None, **kwargs):
         """Plot effective area
 
         Parameters
@@ -54,8 +36,6 @@ class EffectiveAreaTable(NDDataArray):
             Axis
         energy : `~astropy.units.Quantity`
             Energy nodes 
-        show_safe_energy : bool
-            Show safe energy range on the plot
 
         Returns
         -------
@@ -73,23 +53,12 @@ class EffectiveAreaTable(NDDataArray):
         eff_area = self.evaluate(energy=energy)
 
         ax.plot(energy, eff_area, **kwargs)
-        if show_threshold:
-            ymin, ymax = ax.get_ylim()
-            line_kwargs = dict(lw=2, color='black')
-            ax.vlines(self.energy_thresh_lo.value, ymin, ymax, linestyle='dashed',
-                      label='Low energy threshold {:.2f}'.format(self.energy_thresh_lo),
-                      **line_kwargs)
-            ax.vlines(self.energy_thresh_hi.value, ymin, ymax, linestyle='dotted',
-                      label='High energy threshold {:.2f}'.format(self.energy_thresh_hi),
-                      **line_kwargs)
-            ax.legend(loc='upper left')
-
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.unit))
 
         return ax
-    
+
     @classmethod
     def from_table(cls, table):
         """ARF reader"""
@@ -112,9 +81,32 @@ class EffectiveAreaTable(NDDataArray):
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
         meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
                     hduclas2='SPECRESP')
-        meta.update(LO_THRES=self.low_threshold.to('TeV').value)
-        meta.update(HI_THRES=self.high_threshold.to('TeV').value)
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
+
+    def area_max(self, percent_area_max):
+        """Calculate energy threshold
+        
+        The energy threshold is the energy for which one the Area is superior
+        to percent_area_max*AreaMax
+        TODO: Refactor
+
+        Parameters
+        ----------
+        percent_area_max: int
+            percentage of the maximal Area value between 1 and 100
+
+        Returns
+        -------
+        energy: `~astropy.units.Quantity`
+            Energy threshold
+        """
+        area_max = self.data[np.where(~np.isnan(self.data))].max()
+        area_thres = (percent_area_max / 100) * area_max
+        i_thres = np.where(self.data > area_thres)[0][0]
+        a = (self.energy.data[i_thres] - self.energy.data[i_thres - 1]) / (self.data[i_thres] - self.data[i_thres - 1])
+        b = self.energy.data[i_thres]
+        ethreshold = a * (area_thres - self.data[i_thres]) + b
+        return ethreshold
 
 
 class EffectiveAreaTable2D(NDDataArray):
@@ -131,12 +123,10 @@ class EffectiveAreaTable2D(NDDataArray):
         Bin edges of energy axis
     offset : `~astropy.units.Quantity`, `~gammapy.utils.nddata.DataAxis`
         Nodes of Offset axis
-
     data : `~astropy.units.Quantity`
         Effective area
-
     meta : dict
-        Optional meta information,
+        Optional meta information, TODO: Replace with real arguments
         supported: ``low_threshold``, ``high_threshold``
 
     Examples
@@ -207,9 +197,7 @@ class EffectiveAreaTable2D(NDDataArray):
             energy = BinnedDataAxis(data=energy, interpolation_mode='log')
 
         area = self.evaluate(offset=offset, energy=energy.nodes)
-        copy_keys = ['LO_THRES', 'HI_THRES']
-        meta = dict((key, self.meta[key]) for key in copy_keys)
-        return EffectiveAreaTable(energy=energy.data, data=area, meta=meta)
+        return EffectiveAreaTable(energy=energy.data, data=area)
 
     def plot_energy_dependence(self, ax=None, offset=None, energy=None, **kwargs):
         """Plot effective area versus energy for a given offset.

@@ -1,11 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.coordinates import Angle, SkyCoord
 from astropy.units import Quantity
+import astropy.units as u
 from ...data import DataStore, DataManager
 from ...utils.testing import data_manager, requires_data, requires_dependency
 from ...datasets import gammapy_extra
+from ...utils.energy import EnergyBounds
 
 
 @requires_dependency('scipy')
@@ -91,18 +95,19 @@ def test_datastore_subset(tmpdir, data_manager):
 
     assert str(actual.events) == str(desired.events)
 
-    #Copy only certain HDU classes
+    # Copy only certain HDU classes
     storedir = tmpdir / 'substore2'
-    data_store.copy_obs(obs_id, storedir, hdu_class = ['events'])
-    
+    data_store.copy_obs(obs_id, storedir, hdu_class=['events'])
+
     substore = DataStore.from_dir(storedir)
     assert len(substore.hdu_table) == 2
+
 
 @requires_data('gammapy-extra')
 @requires_dependency('yaml')
 def test_data_summary(data_manager):
     """Test data summary function"""
-    
+
     data_store = data_manager['hess-crab4-hd-hap-prod2']
     t = data_store.data_summary([23523, 23592])
     assert t[0]['events'] == 620975
@@ -110,3 +115,38 @@ def test_data_summary(data_manager):
 
     t = data_store.data_summary([23523, 23592], summed=True)
     assert t[0]['psf_3gauss'] == 6042
+
+
+@requires_dependency('scipy')
+@requires_data('gammapy-extra')
+@pytest.mark.parametrize("pars,result", [
+    (dict(energy=None, theta=None),
+     dict(energy_shape=18, theta_shape=300, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(205215.42446175334, "1/sr"))),
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=None),
+     dict(energy_shape=101, theta_shape=300, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.05 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(119662.71915415104, "1/sr"))),
+    (dict(energy=None, theta=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=18, theta_shape=1000, psf_energy=2.5178505859375 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(6878545291473.34, "cm2 s"), psf_value=Quantity(23082.369133891403, "1/sr"))),
+    (dict(energy=EnergyBounds.equal_log_spacing(1, 10, 100, "TeV"), theta=Angle(np.arange(0, 2, 0.002), 'deg')),
+     dict(energy_shape=101, theta_shape=1000, psf_energy=1.2589254117941673 * u.TeV, psf_theta=0.02 * u.deg,
+          psf_exposure=Quantity(4622187644084.735, "cm2 s"), psf_value=Quantity(27987.773313506143, "1/sr"))),
+])
+def test_make_psf(pars, result):
+    position = SkyCoord(83.63, 22.01, unit='deg')
+    store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
+    data_store = DataStore.from_dir(store)
+
+    obs1 = data_store.obs(23523)
+    psf = obs1.make_psf(position=position, energy=pars["energy"], theta=pars["theta"])
+
+    assert_allclose(psf.offset.shape, result["theta_shape"])
+    assert_allclose(psf.energy.shape, result["energy_shape"])
+    assert_allclose(psf.exposure.shape, result["energy_shape"])
+    assert_allclose(psf.psf_value.shape, (result["energy_shape"], result["theta_shape"]))
+
+    assert_quantity_allclose(psf.offset[10], result["psf_theta"])
+    assert_quantity_allclose(psf.energy[10], result["psf_energy"])
+    assert_quantity_allclose(psf.exposure[10], result["psf_exposure"])
+    assert_quantity_allclose(psf.psf_value[10, 50], result["psf_value"])

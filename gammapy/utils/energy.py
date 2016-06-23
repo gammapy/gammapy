@@ -363,9 +363,9 @@ class EnergyBounds(Energy):
 
         table = Table()
 
-        table['CHANNEL'] = np.arange(self.nbins)
-        table['E_MIN'] = self.lower_bounds.to(unit)
-        table['E_MAX'] = self.upper_bounds.to(unit)
+        table['CHANNEL'] = np.arange(self.nbins, dtype=np.int16)
+        table['E_MIN'] = Quantity(self.lower_bounds, unit=unit, dtype=np.float32)
+        table['E_MAX'] = Quantity(self.upper_bounds, unit=unit, dtype=np.float32)
 
         return table
 
@@ -379,12 +379,11 @@ class EnergyBounds(Energy):
         """
 
         hdu = table_to_fits_table(self.to_table(unit))
-
         header = hdu.header
         header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
         header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
         header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
-        header['FILTER'] = 'NONE', 'Filter information'
+        header['FILTER'] = '', 'Filter information'
         header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
         header['DETCHANS'] = self.nbins, 'Total number of detector PHA channels'
         header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'

@@ -1,16 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 import numpy as np
 from astropy.wcs import WCS
 from astropy.io import fits
-from ..utils.scripts import make_path
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
+
 from ..image import (
     exclusion_distance,
     lon_lat_circle_mask,
 )
 from .maps import SkyMap
+
 
 __all__ = [
     'ExclusionMask',
@@ -110,6 +112,23 @@ class ExclusionMask(SkyMap):
         # Check if extension name is given, else default to 'exclusion'
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
         return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
+
+    def contains(self, position):
+        """
+        Check if given position on the sky is inside the exclusion region.
+
+        Parameters
+        ----------
+        position : `~astropy.coordinates.SkyCoord`
+            Position on the sky. 
+
+        Returns
+        -------
+        containment : array
+            Bool array
+        """
+        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        return self.data[y, x]
 
 
 def make_tevcat_exclusion_mask():

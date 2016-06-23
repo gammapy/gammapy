@@ -4,6 +4,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
+import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution.utils import discretize_oversample_2D
 from astropy import log
@@ -35,9 +36,9 @@ class TablePSF(object):
 
     Parameters
     ----------
-    offset : `~astropy.coordinates.Angle`
+    offset : `~astropy.units.Quantity` with angle units
         Offset angle array
-    dp_domega : `~astropy.units.Quantity`
+    dp_domega : `~astropy.units.Quantity` with sr^-1 units
         PSF value array
     spline_kwargs : dict
         Keyword arguments passed to `~scipy.interpolate.UnivariateSpline`
@@ -59,20 +60,15 @@ class TablePSF(object):
     * TODO: ``__call__`` doesn't show up in the html API docs, but it should:
       https://github.com/astropy/astropy/pull/2135
     """
-
     def __init__(self, offset, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
-        if not isinstance(dp_domega, Quantity):
-            raise ValueError("dp_domega must be a Quantity object.")
+        self._offset = Angle(offset).to('radian')
+        self._dp_domega = Quantity(dp_domega).to('sr^-1')
 
-        assert offset.ndim == dp_domega.ndim == 1
-        assert offset.shape == dp_domega.shape
+        assert self._offset.ndim == self._dp_domega.ndim == 1
+        assert self._offset.shape == self._dp_domega.shape
 
         # Store input arrays as quantities in default internal units
-        self._offset = offset.to('radian')
-        self._dp_domega = dp_domega.to('sr^-1')
         self._dp_dtheta = (2 * np.pi * self._offset * self._dp_domega).to('radian^-1')
         self._spline_kwargs = spline_kwargs
 
@@ -88,9 +84,9 @@ class TablePSF(object):
         ----------
         shape : {'disk', 'gauss'}
             PSF shape.
-        width : `~astropy.coordinates.Angle`
+        width : `~astropy.units.Quantity` with angle units
             PSF width angle (radius for disk, sigma for Gauss).
-        offset : `~astropy.coordinates.Angle`
+        offset : `~astropy.units.Quantity` with angle units
             Offset angle
 
         Returns
@@ -106,10 +102,8 @@ class TablePSF(object):
         >>> make_table_psf(shape='gauss', width=Angle(0.2, 'deg'),
         ...                offset=Angle(np.linspace(0, 0.7, 100), 'deg'))
         """
-        if not isinstance(width, Angle):
-            raise ValueError("width must be an Angle object.")
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        width = Angle(width)
+        offset = Angle(offset)
 
         if shape == 'disk':
             amplitude = 1 / (np.pi * width.radian ** 2)
@@ -117,7 +111,9 @@ class TablePSF(object):
         elif shape == 'gauss':
             gauss2d_pdf = Gauss2DPDF(sigma=width.radian)
             psf_value = gauss2d_pdf(offset.radian)
-
+        else:
+            raise ValueError('Invalid shape: disk or gauss. Input was: {}'.format(shape))
+            
         psf_value = Quantity(psf_value, 'sr^-1')
 
         return cls(offset, psf_value)
@@ -218,6 +214,7 @@ class TablePSF(object):
         else:
             return array
 
+
     def evaluate(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
 
@@ -243,8 +240,7 @@ class TablePSF(object):
         psf_value : `~astropy.units.Quantity`
             PSF value
         """
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
+        offset = Angle(offset)
 
         shape = offset.shape
         x = np.array(offset.radian).flat
@@ -268,7 +264,7 @@ class TablePSF(object):
 
         Parameters
         ----------
-        offset_min, offset_max : `~astropy.coordinates.Angle`
+        offset_min, offset_max : `~astropy.units.Quantity` with angle units 
             Offset angle range
 
         Returns
@@ -279,14 +275,12 @@ class TablePSF(object):
         if offset_min is None:
             offset_min = self._offset[0]
         else:
-            if not isinstance(offset_min, Angle):
-                raise ValueError("offset_min must be an Angle object.")
+            offset_min = Angle(offset_min)
 
         if offset_max is None:
             offset_max = self._offset[-1]
         else:
-            if not isinstance(offset_max, Angle):
-                raise ValueError("offset_max must be an Angle object.")
+            offset_max = Angle(offset_max)
 
         offset_min = self._offset_clip(offset_min)
         offset_max = self._offset_clip(offset_max)
@@ -424,9 +418,9 @@ class EnergyDependentTablePSF(object):
     ----------
     energy : `~astropy.units.Quantity`
         Energy (1-dim)
-    offset : `~astropy.coordinates.Angle`
+    offset : `~astropy.units.Quantity` with angle units
         Offset angle (1-dim)
-    exposure : `~astropy.units.Quantity`
+    exposure : `~astropy.units.Quantity` 
         Exposure (1-dim)
     psf_value : `~astropy.units.Quantity`
         PSF (2-dim with axes: psf[energy_index, offset_index]
@@ -434,22 +428,17 @@ class EnergyDependentTablePSF(object):
 
     def __init__(self, energy, offset, exposure=None, psf_value=None):
 
-        # Default for exposure
-        exposure = exposure or Quantity(np.ones(len(energy)), 'cm^2 s')
-
-        if not isinstance(energy, Quantity):
-            raise ValueError("energy must be a Quantity object.")
-        if not isinstance(offset, Angle):
-            raise ValueError("offset must be an Angle object.")
-        if not isinstance(exposure, Quantity):
-            raise ValueError("exposure must be a Quantity object.")
-        if not isinstance(psf_value, Quantity):
-            raise ValueError("psf_value must be a Quantity object.")
-
-        self.energy = energy.to('GeV')
-        self.offset = offset.to('radian')
-        self.exposure = exposure.to('cm^2 s')
-        self.psf_value = psf_value.to('sr^-1')
+        self.energy = Quantity(energy).to('GeV')
+        self.offset = Quantity(offset).to('radian')
+        if not exposure:
+            self.exposure = Quantity(np.ones(len(energy)), 'cm^2 s')
+        else:
+            self.exposure = Quantity(exposure).to('cm^2 s')
+            
+        if not psf_value:
+            self.psf_value = Quantity(np.zeros(len(energy),len(offset)),'sr^-1')
+        else:
+            self.psf_value = Quantity(psf_value).to('sr^-1')
 
         # Cache for TablePSF at each energy ... only computed when needed
         self._table_psf_cache = [None] * len(self.energy)
@@ -534,10 +523,8 @@ class EnergyDependentTablePSF(object):
             energy = self.energy
         if offset is None:
             offset = self.offset
-
         energy = Energy(energy).to('TeV')
         offset = Angle(offset).to('deg')
-
         energy_bin = self.energy.to('TeV')
         offset_bin = self.offset.to('deg')
         points = (energy_bin, offset_bin)
@@ -563,7 +550,7 @@ class EnergyDependentTablePSF(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
+        psf_value = self.evaluate(energy, None, interp_kwargs)[0,:]
         table_psf = TablePSF(self.offset, psf_value, **kwargs)
 
         return table_psf
@@ -655,6 +642,7 @@ class EnergyDependentTablePSF(object):
             Containment fraction (in range 0 .. 1)
         """
         # TODO: useless at the moment ... support array inputs or remove!
+        
         psf = self.table_psf_at_energy(energy)
         return psf.integral(offset_min, offset_max)
 

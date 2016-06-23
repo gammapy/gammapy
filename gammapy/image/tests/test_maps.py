@@ -4,10 +4,14 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
+from astropy.units import Quantity
+from astropy.tests.helper import pytest, assert_quantity_allclose
+from astropy.wcs import WcsError
 from ..maps import SkyMap
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
 from ...utils.testing import requires_dependency, requires_data
+from ...extern.regions.shapes import CircleSkyRegion
 
 
 @requires_data('gammapy-extra')
@@ -32,21 +36,36 @@ class TestSkyMapPoisson():
         skymap = SkyMap.read(str(filename))
         assert self.skymap.name == skymap.name
 
-    def test_lookup(self):
-        assert self.skymap.lookup((0, 0)) == 5
+    def test_unit_io(self, tmpdir):
+        filename = tmpdir / 'test_skymap_unit.fits'
+        skymap_ref = SkyMap(data=np.zeros((3, 3)), unit='1 / cm2')
+        skymap_ref.write(str(filename))
+        skymap = SkyMap.read(str(filename))
+        assert skymap.unit == skymap_ref.unit
 
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.lookup(position) == self.skymap.lookup((0, 0))
+        assert self.skymap.lookup(position) == 5
 
     def test_coordinates(self):
-        coordinates = self.skymap.coordinates('galactic')
-        assert_allclose(coordinates[0][100, 100].degree, 0.01)
-        assert_allclose(coordinates[1][100, 100].degree, 0.01)
+        coordinates = self.skymap.coordinates()
+        assert_allclose(coordinates.data.lon[100, 100].degree, 0.01)
+        assert_allclose(coordinates.data.lat[100, 100].degree, 0.01)
 
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
-        assert_allclose(solid_angle.to("deg2")[0, 0], Angle(0.02, "deg") ** 2)
+        assert_quantity_allclose(solid_angle[0, 0], Angle(0.02, "deg") ** 2, rtol=1e-3)
+
+    def test_contains(self):
+        position = SkyCoord(0, 0, frame='galactic', unit='deg')
+        assert self.skymap.contains(position)
+
+        position = SkyCoord([42, 0, -42], [11, 0, -11], frame='galactic', unit='deg')
+        assert_equal(self.skymap.contains(position), [False, True, False])
+
+        coordinates = self.skymap.coordinates()
+        assert np.all(self.skymap.contains(coordinates[2:5, 2:5]))
+
 
     def test_info(self):
         refstring = ""
@@ -106,6 +125,54 @@ class TestSkyMapPoisson():
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
+    def test_lookup_max(self):
+        pos, value = self.skymap.lookup_max() 
+        assert value == 15
+        assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
+
+    def test_lookup_max_region(self):
+        center = SkyCoord(0, 0, unit='deg', frame='galactic')
+        circle = CircleSkyRegion(center, radius=Quantity(1, 'deg'))
+        pos, value = self.skymap.lookup_max(circle) 
+        assert value == 15
+        assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
+
+    def test_cutout_paste(self):
+        positions = SkyCoord([0, 0, 0, 0.4, -0.4], [0, 0.4, -0.4, 0, 0],
+                           unit='deg', frame='galactic')
+        BINSZ = 0.02
+
+        # setup coordinate images
+        lon = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
+        lat = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
+
+        c = lon.coordinates()
+        lon.data = c.galactic.l.deg
+        lat.data = c.galactic.b.deg
+
+        size = Quantity([0.3, 0.3], 'deg')
+        for pos in positions:
+            cutout = lon.cutout(pos, size=size)
+            
+            # recompute coordinates and paste into coordinate images
+            c = cutout.coordinates()
+            cutout.data = c.galactic.l.deg
+            lon.paste(cutout, method='replace')
+
+            cutout.data = c.galactic.b.deg
+            lat.paste(cutout, method='replace')
+
+        c = lon.coordinates()
+        assert_allclose(lon.data, c.galactic.l.deg)
+        assert_allclose(lat.data, c.galactic.b.deg)
+
+    def test_cutout_paste_wcs_error(self):
+        # setup coordinate images
+        skymap = SkyMap.empty(nxpix=7, nypix=7, binsz=0.02)
+        cutout = SkyMap.empty(nxpix=4, nypix=4, binsz=0.02)
+        with pytest.raises(WcsError):
+            skymap.paste(cutout)
+            
 
 class TestSkyMapCrab():
     """

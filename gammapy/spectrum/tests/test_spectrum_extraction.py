@@ -3,13 +3,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import numpy as np
+import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import pytest
+import astropy.units as u
 from numpy.testing import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose
 
-from ...data import DataStore, ObservationTable, EventList, Target
+from ...data import DataStore, ObservationTable, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
+from ...background import ring_background_estimate
 from ...extern.regions.shapes import CircleSkyRegion
 from ...spectrum import (
     SpectrumExtraction,
@@ -22,52 +26,66 @@ from ...utils.testing import requires_dependency, requires_data
 from ...utils.scripts import read_yaml
 
 
+@pytest.mark.parametrize("pars,results",[
+    (dict(containment_correction=False),dict(n_on=95,
+                                             aeff=549861.8268659255*u.m**2,
+                                             ethresh=0.4230466456851681*u.TeV)),
+    (dict(containment_correction=True), dict(n_on=95,
+                                             aeff=393356.18322397786*u.m**2,
+                                             ethresh=0.6005317540449035*u.TeV)),
+])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-def test_spectrum_extraction(tmpdir):
-    # Construct w/o config file
+
+def test_spectrum_extraction(pars,results,tmpdir):
+
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
-    radius = Angle('0.3 deg')
+    radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center, radius)
+    target = Target(on_region)
 
-    target = Target(center, on_region)
-    target.obs_id = [23523, 23592]
-
+    obs_id = [23523, 23592]    
     store = gammapy_extra.filename("datasets/hess-crab4-hd-hap-prod2")
     ds = DataStore.from_dir(store)
-    target.add_obs_from_store(ds)
+    obs = ObservationList([ds.obs(_) for _ in obs_id])
 
     exclusion_file = gammapy_extra.filename(
         "datasets/exclusion_masks/tevcat_exclusion.fits")
     excl = ExclusionMask.read(exclusion_file)
 
-    target.estimate_background(method='reflected', exclusion = excl)
+    irad = Angle('0.5 deg')
+    orad = Angle('0.6 deg')
+    bk = [ring_background_estimate(
+        center, radius, irad, orad, _.events) for _ in obs]
+    #bk = dict(method='reflected', n_min=2, exclusion=excl)
 
     bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
+    etrue = EnergyBounds.equal_log_spacing(0.1, 30, 100, unit='TeV')
 
-    ana = SpectrumExtraction(target, e_reco=bounds)
+    ana = SpectrumExtraction(target, obs, bk,
+                             e_reco=bounds,
+                             e_true=etrue,
+                             containment_correction=pars['containment_correction'])
+
+    ana.run(outdir=tmpdir)
 
     # test methods on SpectrumObservationList
     obslist = ana.observations
+
     assert len(obslist) == 2
     obs23523 = obslist.obs(23523)
-    assert obs23523.on_vector.total_counts.value == 123
+
+    assert obs23523.on_vector.total_counts.value == results['n_on']
     new_list = [obslist.obs(_) for _ in [23523, 23592]]
     assert new_list[0].obs_id == 23523
     assert new_list[1].obs_id == 23592
 
-@requires_dependency('scipy')
-@requires_data('gammapy-extra')
-def test_spectrum_extraction_from_config(tmpdir):
-    configfile = gammapy_extra.filename(
-        'test_datasets/spectrum/spectrum_analysis_example.yaml')
+    ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
+    assert_allclose(ana.observations[0].lo_threshold,results['ethresh'])
 
-    config = read_yaml(configfile)
-    target = Target.from_config(config)
-    target.run_spectral_analysis(outdir=tmpdir)
-    on_vec = PHACountsSpectrum.read(tmpdir / 'ogip_data' / 'pha_obs23523.fits')
-    assert on_vec.total_counts.value == 234
+    assert_quantity_allclose(obs23523.aeff.evaluate(energy=5*u.TeV),results['aeff'])
 
+    
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')
 def test_observation_stacking():
