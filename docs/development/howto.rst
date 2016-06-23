@@ -941,5 +941,5 @@ Using the NDData base class
 
 Gammapy has a base class for n-dimensional data arrays,  
 `~gammapy.utils.nddata.NDDataArray`. Classes that represent such an array should
-subclass this base class. See `~gammapy.irf.EffectiveArea2D` as an example.
+subclass this base class. See `~gammapy.irf.EffectiveAreaTable2D` as an example.
 
