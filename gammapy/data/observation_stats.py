@@ -51,9 +51,9 @@ class ObservationStats(Stats):
 
         self.obs_id = obs_id
         self.livetime = livetime
-        self.alpha_obs = alpha
-        self.gamma_rate = gamma_rate
-        self.bg_rate = bg_rate
+        self.alpha_obs = alpha or a_on / a_off
+        self.gamma_rate = gamma_rate or n_on / livetime
+        self.bg_rate = bg_rate or self.alpha_obs * n_off / livetime
 
     @classmethod
     def from_target(cls, obs, target, bg_estimate):

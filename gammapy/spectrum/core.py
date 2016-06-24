@@ -11,6 +11,7 @@ from ..utils.fits import (
 )
 from ..data import EventList
 from ..extern.pathlib import Path
+from ..data import ObservationStats
 import astropy.units as u
 import numpy as np
 
@@ -34,7 +35,6 @@ class CountsSpectrum(NDDataArray):
 
     Examples
     --------
-
     .. plot::
         :include-source:
 
@@ -145,14 +145,14 @@ class CountsSpectrum(NDDataArray):
         ax.set_xlabel('Energy [{0}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
+        ax.set_ylim(0, max(self.data.value) * 1.1)
         return ax
 
-    def peek(self, figsize=(5, 5)):
+    def peek(self, figsize=(5, 10)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
         ax = plt.figure(figsize=figsize)
         self.plot(ax=ax)
-        plt.xscale('log')
         plt.show()
 
     # TODO : move to standalone function and fix
@@ -311,6 +311,20 @@ class SpectrumObservation(object):
         Effective Area
     edisp : `~gammapy.irf.EnergyDispersion`
         Energy dispersion matrix
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        from gammapy.spectrum import SpectrumObservation 
+        from gammapy.datasets import gammapy_extra
+        import matplotlib.pyplot as plt
+
+        phafile = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
+        obs = SpectrumObservation.read(phafile)
+        obs.peek()
+        plt.show()
     """
 
     def __init__(self, on_vector, off_vector, aeff, edisp):
@@ -360,6 +374,31 @@ class SpectrumObservation(object):
             return self._phafile
         except(AttributeError):
             raise ValueError('No PHA file associated to this observation')
+
+    @property
+    def background_vector(self):
+        """Background `~gammapy.spectrum.CountsSpectrum`
+
+        bkg = alpha * n_off
+        """
+        energy = self.off_vector.energy
+        data = self.off_vector.data * self.alpha
+        return CountsSpectrum(data=data, energy=energy)
+
+    @property
+    def stats(self):
+        """Return `~gammapy.data.ObservationStats`"""
+        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
+        # in order to add spectrum specific information
+        kwargs = dict(
+            n_on = self.on_vector.total_counts.value,
+            n_off = self.off_vector.total_counts.value,
+            a_on = self.on_vector.backscal,
+            a_off = self.off_vector.backscal,
+            obs_id = self.obs_id,
+            livetime = self.exposure,
+        )
+        return ObservationStats(**kwargs)
 
     @classmethod
     def read(cls, phafile):
@@ -427,51 +466,28 @@ class SpectrumObservation(object):
         self.edisp.write(str(outdir / rmffile), energy_unit='keV',
                          clobber=overwrite)
 
-    @property
-    def excess_vector(self):
-        """Excess vector
-        Excess = n_on - alpha * n_off
-        """
-        return self.on_vector + self.off_vector * self.alpha * -1
 
-    def peek(self, figsize=(15, 5)):
+    def peek(self, figsize=(15, 15)):
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
         plt.style.use('ggplot') 
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
+        self.background_vector.plot(ax=ax1, label='Background estimate',
+                                    histtype='step', color='darkblue',
+                                    alpha=0.8, lw=2)
         self.on_vector.plot(ax=ax1, label='Total counts', histtype='step',
                             color='darkred', alpha=0.8, lw=2)
-        self.off_vector.plot(ax=ax1, label='Background estimate',
-                             histtype='step', color='darkblue',
-                             alpha=0.8, lw=2)
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
-        # TODO: Replace with total spectrum stats
-        ax2.text(0.2, 0.9, 'Exposure: {}'.format(self.exposure))
-        ax2.text(0.2, 0.85, 'Alpha: {}'.format(self.alpha))
+        ax2.text(0, 0, '{}'.format(self.stats), fontsize=18)
         ax2.axis('off')
-        ax2.set_title('Spectrum Stats')
         self.aeff.plot(ax=ax3)
         ax3.set_title('Effective Area')
         self.edisp.plot_matrix(ax=ax4)
         ax4.set_title('Energy Dispersion')
-
+        plt.tight_layout()
         return fig
-
-    @property
-    def spectrum_stats(self):
-        """`~gammapy.spectrum.results.SpectrumStats`
-        """
-        n_on = self.on_vector.total_counts
-        n_off = self.off_vector.total_counts
-        val = dict()
-        val['n_on'] = n_on
-        val['n_off'] = n_off
-        val['alpha'] = self.alpha
-        val['excess'] = float(n_on) - float(n_off) * self.alpha
-        val['energy_range'] = self.meta.energy_range
-        return SpectrumStats(**val)
 
     def apply_energy_cut(self, energy_range=None, method='binned'):
         """Restrict to a given energy range
