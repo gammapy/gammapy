@@ -11,27 +11,24 @@ from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from astropy.utils.compat import NUMPY_LT_1_9
 
 
-#TODO : PHACount should not expect a BIN_LO and BIN_HI columns
-#https://travis-ci.org/gammapy/gammapy/jobs/136170992#L939 
-@pytest.mark.xfail(reason='BIN_LO and BIN_HI columns in the pha file must be removed')
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
-@pytest.mark.xfail
 def test_spectral_fit():
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
-
     obs1 = SpectrumObservation.read(pha1)
     obs2 = SpectrumObservation.read(pha2)
     obs_list = SpectrumObservationList([obs1, obs2])
+
     fit = SpectrumFit(obs_list)
-    #fit = SpectrumFit(SpectrumObservationList([obs1]))
+    
     fit.model = 'PL'
     fit.energy_threshold_low = '1 TeV'
     fit.energy_threshold_high = '10 TeV'
+
     fit.run(method='sherpa')
     assert fit.result.spectral_model == 'PowerLaw'
-    print (fit.result)
-    1/0
+    
+    #TODO: add real asserts here

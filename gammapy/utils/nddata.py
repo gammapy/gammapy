@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 import numpy as np
 import abc
+import copy
 from ..extern.bunch import Bunch
 from astropy.units import Quantity
 from astropy.table import Table, Column
@@ -59,8 +60,12 @@ class NDDataArray(object):
                 value = value.data
             elif not isinstance(value, Quantity):
                 raise ValueError('No unit for axis "{}"'.format(axis_name))
-            axis = getattr(self, axis_name)
+            # This is needed to transform the class level axis attribute to an
+            # instance level attribute
+            template_axis = getattr(self, axis_name)
+            axis = copy.deepcopy(template_axis)
             axis.data = value
+            setattr(self, axis_name, axis)
             self._axes.append(axis)
 
         # Set remaining kwargs as attributes

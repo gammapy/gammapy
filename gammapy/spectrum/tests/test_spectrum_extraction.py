@@ -91,10 +91,13 @@ def test_spectrum_extraction(pars,results,tmpdir):
         outdir = gammapy_extra.filename("datasets/hess-crab4_pha")
         ana.observations.write(outdir)
         testobs = SpectrumObservation.read(make_path(outdir)/'pha_obs23523.fits') 
-        assert str(testobs.aeff) == str(obs23523.aeff) 
-        assert str(testobs.on_vector) == str(obs23523.on_vector) 
-        assert str(testobs.off_vector) == str(obs23523.off_vector) 
-        assert str(testobs.edisp) == str(obs23523.edisp) 
+        assert_quantity_allclose(testobs.aeff.data,
+                                 obs23523.aeff.data) 
+        assert_quantity_allclose(testobs.on_vector.data,
+                                 obs23523.on_vector.data) 
+        assert_quantity_allclose(testobs.on_vector.energy.nodes,
+                                 obs23523.on_vector.energy.nodes) 
+
     
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')

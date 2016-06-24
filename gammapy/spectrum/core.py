@@ -275,9 +275,9 @@ class PHACountsSpectrum(CountsSpectrum):
     @classmethod
     def from_hdulist(cls, hdulist):
         """Read"""
-        spec = CountsSpectrum.from_hdulist(hdulist)
-        counts = spec.data
-        energy = spec.energy
+        counts_table = fits_table_to_table(hdulist[1])
+        counts = counts_table['COUNTS'] * u.ct
+        ebounds = ebounds_to_energy_axis(hdulist[2])
         meta = dict(
             obs_id=hdulist[1].header['OBS_ID'],
             exposure=hdulist[1].header['EXPOSURE'] * u.s,
@@ -289,7 +289,7 @@ class PHACountsSpectrum(CountsSpectrum):
                         is_bkg = False)
         elif hdulist[1].header['HDUCLAS2'] == 'BKG':
             meta.update(is_bkg = True)
-        return cls(energy=energy, data=counts, **meta)
+        return cls(energy=ebounds, data=counts, **meta)
 
 
 class SpectrumObservation(object):

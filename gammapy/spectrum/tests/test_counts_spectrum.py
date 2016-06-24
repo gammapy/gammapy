@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import numpy as np
 import astropy.units as u
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from numpy.testing import assert_equal, assert_allclose
 
 from .. import CountsSpectrum, SpectrumExtraction, SpectrumFitResult, \
@@ -14,9 +14,6 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
 
-# TODO for Johannes:
-# https://travis-ci.org/gammapy/gammapy/jobs/136111773#L938
-@pytest.mark.xfail(reason='BIN_LO and BIN_HI have been removed')
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_CountsSpectrum(tmpdir):
@@ -48,8 +45,8 @@ def test_CountsSpectrum(tmpdir):
     f = tmpdir / 'test.fits'
     spec.write(f)
     spec2 = CountsSpectrum.read(f)
-
-    assert (spec.energy.data == spec2.energy.data).all()
+    assert_quantity_allclose(spec2.energy.data,
+                             EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV'))
 
     #add two spectra
     bins = spec.energy.nbins
@@ -59,6 +56,7 @@ def test_CountsSpectrum(tmpdir):
     desired = spec.data[5] + counts[5]
     actual = pha_sum.data[5]
     assert_equal(actual, desired)
+
 
 @pytest.mark.xfail(reason='broken')
 @requires_dependency('sherpa')

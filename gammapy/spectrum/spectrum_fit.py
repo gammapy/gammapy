@@ -301,8 +301,6 @@ class SpectrumFit(object):
                 thres_hi = self.obs_list[i].hi_threshold.to('keV').value
             else:
                 thres_hi = self._thres_hi.to('keV').value
-            import IPython;
-            IPython.embed()
             datastack.notice_id(i + 1, thres_lo, thres_hi)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
@@ -347,4 +345,4 @@ class SpectrumFit(object):
             self.make_npred()
         for key, val in self.n_pred.items():
             filename = "npred_run{}.fits".format(key)
-            val.write(str(outdir / filename), overwrite=True)
+            val.write(str(outdir / filename), clobber=True)

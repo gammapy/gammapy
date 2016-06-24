@@ -150,7 +150,8 @@ def ebounds_to_energy_axis(ebounds):
     """
     from .nddata import BinnedDataAxis
     table = fits_table_to_table(ebounds)
-    energy = np.append(table['E_MIN'], table['E_MAX'][-1])
-
+    emin = table['E_MIN'].quantity
+    emax = table['E_MAX'].quantity
+    energy = np.append(emin.value, emax.value[-1]) * emin.unit
     return BinnedDataAxis(data=energy)
 
