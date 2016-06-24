@@ -1,5 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import string
 import itertools
 import re
@@ -10,7 +10,8 @@ from astropy import log
 from ..shapes import circle, rectangle, polygon, ellipse, point
 from ..core import PixCoord
 
-__all__ = ['read_ds9']
+__all__ = ['read_ds9', 'region_list_to_objects']
+
 
 def read_ds9(filename):
     """
@@ -44,7 +45,7 @@ def parse_coordinate(string_rep, unit):
             ang = float(string_rep)
             return coordinates.Angle(ang, u.deg)
     elif unit.is_equivalent(u.deg):
-        #return coordinates.Angle(string_rep, unit=unit)
+        # return coordinates.Angle(string_rep, unit=unit)
         if ':' in string_rep:
             ang = tuple([float(x) for x in string_rep.split(":")])
         else:
@@ -53,11 +54,12 @@ def parse_coordinate(string_rep, unit):
     else:
         return u.Quantity(float(string_rep), unit)
 
+
 unit_mapping = {'"': u.arcsec,
                 "'": u.arcmin,
                 'r': u.rad,
                 'i': u.dimensionless_unscaled,
-               }
+                }
 
 
 def parse_angular_length_quantity(string_rep):
@@ -75,6 +77,7 @@ def parse_angular_length_quantity(string_rep):
     else:
         return u.Quantity(float(string_rep), unit=u.deg)
 
+
 # these are the same function, just different names
 radius = parse_angular_length_quantity
 width = parse_angular_length_quantity
@@ -86,17 +89,17 @@ coordinate = parse_coordinate
 language_spec = {'point': (coordinate, coordinate),
                  'circle': (coordinate, coordinate, radius),
                  # This is a special case to deal with n elliptical annuli
-                 'ellipse': itertools.chain((coordinate, coordinate), itertools.cycle((radius, ))),
+                 'ellipse': itertools.chain((coordinate, coordinate), itertools.cycle((radius,))),
                  'box': (coordinate, coordinate, width, height, angle),
-                 'polygon': itertools.cycle((coordinate, )),
-                }
+                 'polygon': itertools.cycle((coordinate,)),
+                 }
 
 coordinate_systems = ['fk5', 'fk4', 'icrs', 'galactic', 'wcs', 'physical', 'image', 'ecliptic']
 coordinate_systems += ['wcs{0}'.format(letter) for letter in string.ascii_lowercase]
 
 coordsys_name_mapping = dict(zip(coordinates.frame_transform_graph.get_names(),
                                  coordinates.frame_transform_graph.get_names()))
-coordsys_name_mapping['ecliptic'] = 'geocentrictrueecliptic' # needs expert attention TODO
+coordsys_name_mapping['ecliptic'] = 'geocentrictrueecliptic'  # needs expert attention TODO
 
 hour_or_deg = 'hour_or_deg'
 coordinate_units = {'fk5': (hour_or_deg, u.deg),
@@ -107,13 +110,14 @@ coordinate_units = {'fk5': (hour_or_deg, u.deg),
                     'physical': (u.dimensionless_unscaled, u.dimensionless_unscaled),
                     'image': (u.dimensionless_unscaled, u.dimensionless_unscaled),
                     'wcs': (u.dimensionless_unscaled, u.dimensionless_unscaled),
-                   }
+                    }
 for letter in string.ascii_lowercase:
     coordinate_units['wcs{0}'.format(letter)] = (u.dimensionless_unscaled, u.dimensionless_unscaled)
 
 region_type_or_coordsys_re = re.compile("^#? *(-?)([a-zA-Z0-9]+)")
 
 paren = re.compile("[()]")
+
 
 def strip_paren(string_rep):
     return paren.sub("", string_rep)
@@ -195,7 +199,7 @@ def ds9_parser(filename):
     regions = []
     composite_region = None
 
-    with open(filename,'r') as fh:
+    with open(filename, 'r') as fh:
         for line_ in fh:
             # ds9 regions can be split on \n or ;
             for line in line_.split(";"):
@@ -250,7 +254,7 @@ def line_parser(line, coordsys=None):
         return
 
     if region_type in coordinate_systems:
-        return region_type # outer loop has to do something with the coordinate system information
+        return region_type  # outer loop has to do something with the coordinate system information
     elif region_type in language_spec:
         if coordsys is None:
             raise ValueError("No coordinate system specified and a region has been found.")
@@ -276,7 +280,7 @@ def line_parser(line, coordsys=None):
 
             # Reset iterator for ellipse annulus
             if region_type == 'ellipse':
-                language_spec[region_type] = itertools.chain((coordinate, coordinate), itertools.cycle((radius, )))
+                language_spec[region_type] = itertools.chain((coordinate, coordinate), itertools.cycle((radius,)))
 
             parsed_angles = [(x, y) for x, y in zip(parsed[:-1:2],
                                                     parsed[1::2])
@@ -284,12 +288,12 @@ def line_parser(line, coordsys=None):
                              isinstance(x, coordinates.Angle)]
             frame = coordinates.frame_transform_graph.lookup_name(coordsys_name_mapping[coordsys])
 
-            lon,lat = zip(*parsed_angles)
+            lon, lat = zip(*parsed_angles)
             lon, lat = u.Quantity(lon), u.Quantity(lat)
             sphcoords = coordinates.UnitSphericalRepresentation(lon, lat)
             coords = frame(sphcoords)
 
-            return region_type, [coords] + parsed[len(coords)*2:], parsed_meta, composite, include
+            return region_type, [coords] + parsed[len(coords) * 2:], parsed_meta, composite, include
         else:
             parsed = type_parser(coords_etc, language_spec[region_type],
                                  coordsys)
@@ -300,11 +304,11 @@ def line_parser(line, coordsys=None):
             else:
                 parsed = [_.value for _ in parsed]
                 coord = PixCoord(parsed[0], parsed[1])
-                parsed_return = [coord]+parsed[2:]
+                parsed_return = [coord] + parsed[2:]
 
             # Reset iterator for ellipse annulus
             if region_type == 'ellipse':
-                language_spec[region_type] = itertools.chain((coordinate, coordinate), itertools.cycle((radius, )))
+                language_spec[region_type] = itertools.chain((coordinate, coordinate), itertools.cycle((radius,)))
 
             return region_type, parsed_return, parsed_meta, composite, include
 
@@ -350,11 +354,12 @@ def type_parser(string_rep, specification, coordsys):
 # be followed by another one
 meta_token = re.compile("([a-zA-Z]+)(=)([^= ]+) ?")
 
-#meta_spec = {'color': color,
+
+# meta_spec = {'color': color,
 #            }
 # global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
 # ruler(+175:07:14.900,+50:56:21.236,+175:06:52.643,+50:56:11.190) ruler=physical physical color=white font="helvetica 12 normal roman" text={Ruler}
-    
+
 
 
 def meta_parser(meta_str):
@@ -366,8 +371,8 @@ def meta_parser(meta_str):
     """
     meta_token_split = [x for x in meta_token.split(meta_str.strip()) if x]
     equals_inds = [i for i, x in enumerate(meta_token_split) if x is '=']
-    result = {meta_token_split[ii-1]:
-              " ".join(meta_token_split[ii+1:jj-1 if jj is not None else None])
-              for ii,jj in zip(equals_inds, equals_inds[1:]+[None])}
+    result = {meta_token_split[ii - 1]:
+                  " ".join(meta_token_split[ii + 1:jj - 1 if jj is not None else None])
+              for ii, jj in zip(equals_inds, equals_inds[1:] + [None])}
 
     return result
