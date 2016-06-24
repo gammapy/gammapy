@@ -7,9 +7,11 @@ import abc
 from ..extern.bunch import Bunch
 from astropy.units import Quantity
 from astropy.table import Table, Column
+from astropy.io import fits
 from astropy.extern import six
 from .array import array_stats_str
 from .scripts import make_path
+from .fits import table_to_fits_table, fits_table_to_table
 
 __all__ = [
     'NDDataArray',
@@ -111,6 +113,20 @@ class NDDataArray(object):
 
     def to_table(self):
         raise NotImplementedError('This must be implemented by subclasses')
+   
+    def to_hdulist(self):
+        """Convert to HDUList
+
+        Default: One extension containing the output of ``to_table``
+        
+        Returns
+        -------
+        hdulist : `~astropy.io.fits.HDUList`
+            HDU list
+        """
+        hdu = table_to_fits_table(self.to_table()) 
+        prim_hdu = fits.PrimaryHDU()
+        return fits.HDUList([prim_hdu, hdu])
 
     def write(self, *args, **kwargs):
         """Write to disk
@@ -120,11 +136,20 @@ class NDDataArray(object):
         """
         temp = list(args)
         temp[0] = str(make_path(args[0]))
-        self.to_table().write(*temp, **kwargs)
+        self.to_hdulist().writeto(*temp, **kwargs)
 
     @classmethod
     def from_table(cls, table):
         raise NotImplementedError('This must be implemented by subclasses')
+    
+    @classmethod
+    def from_hdulist(cls, hdulist):
+        """Read from disk
+        
+        Default: Read first extension as BinTableHDU
+        """
+        table = fits_table_to_table(hdulist[1])
+        return cls.from_table(table)
 
     @classmethod
     def read(cls, *args, **kwargs):
@@ -136,8 +161,8 @@ class NDDataArray(object):
         # Support Path input
         temp = list(args)
         temp[0] = str(make_path(args[0]))
-        table = Table.read(*temp, **kwargs)
-        return cls.from_table(table)
+        hdulist  = fits.open(*temp, **kwargs)
+        return cls.from_hdulist(hdulist)
 
     def __str__(self):
         """String representation"""

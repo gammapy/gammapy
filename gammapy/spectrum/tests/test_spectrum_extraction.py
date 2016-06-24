@@ -23,7 +23,7 @@ from ...spectrum import (
 )
 from ...utils.energy import EnergyBounds
 from ...utils.testing import requires_dependency, requires_data
-from ...utils.scripts import read_yaml
+from ...utils.scripts import read_yaml, make_path
 
 
 @pytest.mark.parametrize("pars,results",[
@@ -84,7 +84,17 @@ def test_spectrum_extraction(pars,results,tmpdir):
     assert_allclose(ana.observations[0].lo_threshold,results['ethresh'])
 
     assert_quantity_allclose(obs23523.aeff.evaluate(energy=5*u.TeV),results['aeff'])
-
+    
+    # Write on set of output files to gammapy-extra as input for other tests
+    # and check I/O
+    if not pars['containment_correction']:
+        outdir = gammapy_extra.filename("datasets/hess-crab4_pha")
+        ana.observations.write(outdir)
+        testobs = SpectrumObservation.read(make_path(outdir)/'pha_obs23523.fits') 
+        assert str(testobs.aeff) == str(obs23523.aeff) 
+        assert str(testobs.on_vector) == str(obs23523.on_vector) 
+        assert str(testobs.off_vector) == str(obs23523.off_vector) 
+        assert str(testobs.edisp) == str(obs23523.edisp) 
     
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')

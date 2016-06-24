@@ -104,8 +104,8 @@ class EnergyDispersion(object):
         ss += 'PDF matrix threshold: {0}\n'.format(self.pdf_threshold)
         m = self._pdf_matrix
         ss += 'PDF matrix filling factor: {0}\n'.format(np.sum(m > 0) / m.size)
-        ss += 'True energy range: {0}\n'.format(self.energy_range('true'))
-        ss += 'Reco energy range: {0}\n'.format(self.energy_range('reco'))
+        ss += 'True energy min: {:.2f}\n'.format(self.reco_energy[0])
+        ss += 'Reco energy min: {:.2f}\n'.format(self.true_energy[0])
         return ss
 
     @classmethod
