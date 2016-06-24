@@ -4,6 +4,11 @@ from astropy.table import Table
 from .. import version
 from ..utils.nddata import NDDataArray, BinnedDataAxis
 from ..utils.scripts import make_path
+from ..utils.fits import (
+    energy_axis_to_ebounds,
+    fits_table_to_table,
+    ebounds_to_energy_axis,
+)
 from ..data import EventList
 from ..extern.pathlib import Path
 import astropy.units as u
@@ -49,12 +54,12 @@ class CountsSpectrum(NDDataArray):
     interp_kwargs = dict(bounds_error=False, method='nearest')
 
     @classmethod
-    def from_table(cls, table):
-        """Read OGIP format table"""
-        counts = table['COUNTS'].quantity
-        energy_unit = table['BIN_LO'].quantity.unit
-        energy = np.append(table['BIN_LO'].data, table['BIN_HI'].data[-1])
-        return cls(data=counts, energy=energy*energy_unit)
+    def from_hdulist(cls, hdulist):
+        """Read OGIP format hdulist"""
+        counts_table = fits_table_to_table(hdulist[1])
+        counts = counts_table['COUNTS'] * u.ct
+        ebounds = ebounds_to_energy_axis(hdulist[2])
+        return cls(data=counts, energy=ebounds)
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
@@ -64,14 +69,21 @@ class CountsSpectrum(NDDataArray):
         channel = np.arange(self.energy.nbins, dtype=np.int16)
         counts = np.array(self.data.value, dtype=np.int32)
 
-        # This is how sherpa save energy information in PHA files
-        # https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L643
-        bin_lo = self.energy.data[:-1]
-        bin_hi = self.energy.data[1:]
-        names = ['CHANNEL', 'COUNTS', 'BIN_LO', 'BIN_HI']
+        names = ['CHANNEL', 'COUNTS']
         meta = dict()
-        return Table([channel, counts, bin_lo, bin_hi], names=names, meta=meta)
-        
+        return Table([channel, counts], names=names, meta=meta)
+
+    def to_hdulist(self):
+        """Convert to `~astropy.io.fits.HDUList`
+
+        This adds an ``EBOUNDS`` extension to the ``BinTableHDU`` produced by 
+        ``to_table``, in order to store the energy axis
+        """
+        hdulist = super(CountsSpectrum, self).to_hdulist()
+        ebounds = energy_axis_to_ebounds(self.energy)
+        hdulist.append(ebounds)
+        return hdulist
+
     def fill(self, events):
         """Fill with list of events 
         
@@ -220,9 +232,6 @@ class PHACountsSpectrum(CountsSpectrum):
     def to_table(self):
         """Write"""
         table = super(PHACountsSpectrum, self).to_table()
-        # Remove BIN_LO and BIN_HI columns for now
-        # see https://github.com/gammapy/gammapy/issues/561
-        table.remove_columns(['BIN_LO', 'BIN_HI'])
         
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
@@ -264,22 +273,23 @@ class PHACountsSpectrum(CountsSpectrum):
         return table
 
     @classmethod
-    def from_table(cls, table):
+    def from_hdulist(cls, hdulist):
         """Read"""
-        # This will fail since BIN_LO and BIN_HI are not present
-        # spec = CountsSpectrum.from_table(table)
-        counts = table['COUNTS'].quantity
-        # FIXME : set energy to CHANNELS * u.eV, WRONG 
-        energy = np.append([0], table['CHANNEL'].data) * u.eV
+        counts_table = fits_table_to_table(hdulist[1])
+        counts = counts_table['COUNTS'] * u.ct
+        ebounds = ebounds_to_energy_axis(hdulist[2])
         meta = dict(
-            obs_id=table.meta['OBS_ID'],
-            exposure=table.meta['EXPOSURE'] * u.s,
-            backscal=table.meta['BACKSCAL']
+            obs_id=hdulist[1].header['OBS_ID'],
+            exposure=hdulist[1].header['EXPOSURE'] * u.s,
+            backscal=hdulist[1].header['BACKSCAL']
         )
-        if table.meta["HDUCLAS2"] == "TOTAL":
-            meta.update(lo_threshold=table.meta['lo_threshold'] * u.TeV,
-                        hi_threshold=table.meta['hi_threshold'] * u.TeV)
-        return cls(energy=energy, data=counts, **meta)
+        if hdulist[1].header['HDUCLAS2'] == 'TOTAL':
+            meta.update(lo_threshold=hdulist[1].header['LO_THRES'] * u.TeV,
+                        hi_threshold=hdulist[1].header['HI_THRES'] * u.TeV,
+                        is_bkg = False)
+        elif hdulist[1].header['HDUCLAS2'] == 'BKG':
+            meta.update(is_bkg = True)
+        return cls(energy=ebounds, data=counts, **meta)
 
 
 class SpectrumObservation(object):
@@ -405,14 +415,14 @@ class SpectrumObservation(object):
         self._phafile = outdir / phafile
         # Write in keV and cm2
         self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
-        self.on_vector.write(outdir / phafile, overwrite=overwrite)
+        self.on_vector.write(outdir / phafile, clobber=overwrite)
 
         self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
-        self.off_vector.write(outdir / bkgfile, overwrite=overwrite)
+        self.off_vector.write(outdir / bkgfile, clobber=overwrite)
 
         self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
-        self.aeff.write(outdir / arffile, overwrite=overwrite)
+        self.aeff.write(outdir / arffile, clobber=overwrite)
 
         self.edisp.write(str(outdir / rmffile), energy_unit='keV',
                          clobber=overwrite)

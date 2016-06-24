@@ -150,7 +150,6 @@ class EffectiveAreaTable2D(NDDataArray):
 
     @property
     def low_threshold(self):
-
         """Low energy threshold"""
         return self.meta.LO_THRES * u.TeV
 

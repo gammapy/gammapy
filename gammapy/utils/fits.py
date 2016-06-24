@@ -2,6 +2,7 @@
 """FITS utility functions.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 
@@ -9,6 +10,7 @@ __all__ = [
     'get_hdu',
     'table_to_fits_table',
     'fits_table_to_table',
+    'energy_axis_to_ebounds',
 ]
 
 
@@ -110,3 +112,46 @@ def fits_table_to_table(tbhdu):
         table[colname].unit = tbhdu.columns[colname].unit
 
     return table
+
+
+def energy_axis_to_ebounds(energy):
+    """Convert energy `~gammapy.utils.nddata.BinnedEnergyAxis` to OGIP
+    ``EBOUNDS`` extension 
+
+    see
+    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/memos/cal_gen_92_002/cal_gen_92_002.html#tth_sEc3.2
+    """
+    table = Table()
+
+    table['CHANNEL'] = np.arange(energy.nbins, dtype=np.int16)
+    table['E_MIN'] = energy.data[:-1] 
+    table['E_MAX'] = energy.data[1:]
+
+    hdu = table_to_fits_table(table)
+    
+    header = hdu.header
+    header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
+    header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
+    header['INSTRUME'] = 'DUMMY', 'Instrument/detector'
+    header['FILTER'] = 'None', 'Filter information'
+    header['CHANTYPE'] = 'PHA', 'Type of channels (PHA, PI etc)'
+    header['DETCHANS'] = energy.nbins, 'Total number of detector PHA channels'
+    header['HDUCLASS'] = 'OGIP', 'Organisation devising file format'
+    header['HDUCLAS1'] = 'RESPONSE', 'File relates to response of instrument'
+    header['HDUCLAS2'] = 'EBOUNDS', 'This is an EBOUNDS extension'
+    header['HDUVERS'] = '1.2.0', 'Version of file format'
+
+    return hdu
+
+
+def ebounds_to_energy_axis(ebounds):
+    """Convert ``EBOUNDS`` extension to energy
+    `~gammapy.utils.nddata.BinnedEnergyAxis`
+    """
+    from .nddata import BinnedDataAxis
+    table = fits_table_to_table(ebounds)
+    emin = table['E_MIN'].quantity
+    emax = table['E_MAX'].quantity
+    energy = np.append(emin.value, emax.value[-1]) * emin.unit
+    return BinnedDataAxis(data=energy)
+
