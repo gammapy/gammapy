@@ -4,9 +4,9 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from ...extern.regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats, Target
 from ...utils.testing import requires_data, requires_dependency
-from ...extern.regions.shapes import CircleSkyRegion
 from ...background import reflected_regions_background_estimate as refl
 from ...image import ExclusionMask
 

@@ -7,15 +7,15 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
-from ..maps import SkyMap
+from ...extern.regions import CircleSkyRegion
+from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
-from ...utils.testing import requires_dependency, requires_data
-from ...extern.regions.shapes import CircleSkyRegion
+from ..maps import SkyMap
 
 
 @requires_data('gammapy-extra')
-class TestSkyMapPoisson():
+class TestSkyMapPoisson:
     """
     Test sky map class.
     """
@@ -65,7 +65,6 @@ class TestSkyMapPoisson():
 
         coordinates = self.skymap.coordinates()
         assert np.all(self.skymap.contains(coordinates[2:5, 2:5]))
-
 
     def test_info(self):
         refstring = ""
@@ -126,20 +125,20 @@ class TestSkyMapPoisson():
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
 
     def test_lookup_max(self):
-        pos, value = self.skymap.lookup_max() 
+        pos, value = self.skymap.lookup_max()
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
     def test_lookup_max_region(self):
         center = SkyCoord(0, 0, unit='deg', frame='galactic')
         circle = CircleSkyRegion(center, radius=Quantity(1, 'deg'))
-        pos, value = self.skymap.lookup_max(circle) 
+        pos, value = self.skymap.lookup_max(circle)
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
     def test_cutout_paste(self):
         positions = SkyCoord([0, 0, 0, 0.4, -0.4], [0, 0.4, -0.4, 0, 0],
-                           unit='deg', frame='galactic')
+                             unit='deg', frame='galactic')
         BINSZ = 0.02
 
         # setup coordinate images
@@ -153,7 +152,7 @@ class TestSkyMapPoisson():
         size = Quantity([0.3, 0.3], 'deg')
         for pos in positions:
             cutout = lon.cutout(pos, size=size)
-            
+
             # recompute coordinates and paste into coordinate images
             c = cutout.coordinates()
             cutout.data = c.galactic.l.deg
@@ -172,24 +171,24 @@ class TestSkyMapPoisson():
         cutout = SkyMap.empty(nxpix=4, nypix=4, binsz=0.02)
         with pytest.raises(WcsError):
             skymap.paste(cutout)
-            
 
-class TestSkyMapCrab():
+
+class TestSkyMapCrab:
     """
     Test sky map class.
     """
 
-    def Crab_coord(self):
+    def crab_coord(self):
         coord = SkyCoord(83.63, 22.01, unit='deg').galactic
         return coord
 
     def setup(self):
-        center = self.Crab_coord()
+        center = self.crab_coord()
         self.skymap = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
                                    yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     def test_center(self):
-        crab_coord = self.Crab_coord()
+        crab_coord = self.crab_coord()
         center = self.skymap.center()
         assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
         assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)

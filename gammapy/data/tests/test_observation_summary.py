@@ -4,24 +4,23 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from ...extern.regions import CircleSkyRegion
 from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats, ObservationStatsList, ObservationList
 from ...data import Target
 from ...utils.testing import requires_data, requires_dependency
-from ...extern.regions.shapes import CircleSkyRegion
 from ...background import reflected_regions_background_estimate as refl
 from ...image import ExclusionMask
 
 
 def table_summary():
-    data_store = DataStore.from_dir(
-        '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     target_pos = SkyCoord(83.633083, 22.0145, unit='deg')
     return ObservationTableSummary(data_store.obs_table, target_pos)
 
 
 @requires_data('gammapy-extra')
-class TestObservationSummaryTable():
+class TestObservationSummaryTable:
     def setup(self):
         self.table_summary = table_summary()
 
@@ -44,8 +43,7 @@ class TestObservationSummaryTable():
 
 
 def obs_summary():
-    datastore = DataStore.from_dir(
-        '$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
+    datastore = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     run_list = [23523, 23526, 23559, 23592]
 
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
@@ -55,8 +53,7 @@ def obs_summary():
     target = Target(position=pos, on_region=on_region,
                     name='Crab Nebula', tag='crab')
 
-    mask = ExclusionMask.read(
-        '$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
     obs_list = ObservationList([datastore.obs(_) for _ in run_list])
     obs_stats = ObservationStatsList()
@@ -70,13 +67,15 @@ def obs_summary():
 
     return summary
 
+
 @requires_data('gammapy-extra')
 @requires_dependency('scipy')
 @requires_dependency('matplotlib')
-class TestObservationSummary():
+class TestObservationSummary:
     """
     Test observation summary.
     """
+
     def setup(self):
         self.obs_summary = obs_summary()
 

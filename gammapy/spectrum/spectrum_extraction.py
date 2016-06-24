@@ -5,26 +5,16 @@ import os
 import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
-from astropy.coordinates import Angle
+from ..extern.pathlib import Path
+from ..extern.regions.shapes import CircleSkyRegion
+from ..utils.scripts import make_path
+from ..data import Target
+from ..background import reflected_regions_background_estimate
 from . import (
-    CountsSpectrum,
     PHACountsSpectrum,
     SpectrumObservation,
     SpectrumObservationList,
 )
-from .results import SpectrumStats
-from ..data import Target
-from ..background import (
-    BackgroundEstimate,
-    reflected_regions_background_estimate,
-)
-from ..extern.bunch import Bunch
-from ..extern.pathlib import Path
-from ..extern.regions.shapes import CircleSkyRegion
-from ..image import ExclusionMask
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..utils.energy import EnergyBounds, Energy
-from ..utils.scripts import make_path, write_yaml
 
 __all__ = [
     'SpectrumExtraction',
@@ -45,7 +35,7 @@ class SpectrumExtraction(object):
 
     Parameters
     ----------
-    target : `~gammapy.data.Target` or `~gammapy.extern.regions.SkyRegion`
+    target : `~gammapy.data.Target` or `~regions.SkyRegion`
         Observation target
     obs: `~gammapy.data.ObservationList`
         Observations to process
@@ -61,6 +51,7 @@ class SpectrumExtraction(object):
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
+
     def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction=False):
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
@@ -72,10 +63,9 @@ class SpectrumExtraction(object):
         self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
         self._observations = None
         self.containment_correction = containment_correction
-        if self.containment_correction and not isinstance(target.on_region,CircleSkyRegion):
+        if self.containment_correction and not isinstance(target.on_region, CircleSkyRegion):
             raise TypeError("Incorrect region type for containment correction. Should be CircleSkyRegion.")
 
-        
     @property
     def observations(self):
         """List of `~gammapy.spectrum.SpectrumObservation`
@@ -174,7 +164,7 @@ class SpectrumExtraction(object):
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg
-                psf = obs.psf.to_table_psf(offset,angles)
+                psf = obs.psf.to_table_psf(offset, angles)
 
                 center_energies = arf.energy.nodes
                 for index, energy in enumerate(center_energies):
@@ -186,7 +176,7 @@ class SpectrumExtraction(object):
                         correction = np.nan
 
                     arf.data[index] = arf.data[index] * correction
-                    
+
             temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
             spectrum_observations.append(temp)
 

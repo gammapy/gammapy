@@ -4,8 +4,9 @@ from .. import Target, TargetSummary
 from astropy.coordinates import SkyCoord
 from astropy.tests.helper import pytest
 import astropy.units as u
-from ...extern.regions.shapes import CircleSkyRegion
+from ...extern.regions import CircleSkyRegion
 from ...utils.testing import data_manager, requires_data, requires_dependency
+
 
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
@@ -14,9 +15,9 @@ def test_targetsummary(data_manager):
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
     target = Target(on_region, name='Test Target', obs_id=[23523, 23592])
-    
+
     data_store = data_manager['hess-crab4-hd-hap-prod2']
-    target.add_obs_from_store(data_store) 
+    target.add_obs_from_store(data_store)
 
     irad = 0.5 * u.deg
     orad = 0.7 * u.deg
