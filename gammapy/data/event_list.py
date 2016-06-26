@@ -350,7 +350,7 @@ class EventList(Table):
         position = self.radec
         mask = np.array([], dtype=int)
         for reg in region:
-            separation = reg.pos.separation(position)
+            separation = reg.center.separation(position)
             temp = np.where(separation < reg.radius)[0]
             mask = np.union1d(mask, temp)
         return mask

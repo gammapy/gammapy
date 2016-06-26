@@ -9,13 +9,13 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
+from ...extern.regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore, EventList
-from ...extern.regions import CircleSkyRegion
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
 
 
@@ -158,8 +158,8 @@ def make_excluded_sources():
     radius = Angle('0.3 deg')
     sources = CircleSkyRegion(centers, radius)
     catalog = Table()
-    catalog["RA"] = sources.pos.data.lon
-    catalog["DEC"] = sources.pos.data.lat
+    catalog["RA"] = sources.center.data.lon
+    catalog["DEC"] = sources.center.data.lat
     catalog["Radius"] = sources.radius
     return catalog
 
@@ -169,8 +169,8 @@ def make_source_nextCrab():
     radius = Angle('0.3 deg')
     sources = CircleSkyRegion(center, radius)
     catalog = Table()
-    catalog["RA"] = sources.pos.data.lon
-    catalog["DEC"] = sources.pos.data.lat
+    catalog["RA"] = sources.center.data.lon
+    catalog["DEC"] = sources.center.data.lat
     catalog["Radius"] = sources.radius
     return catalog
 

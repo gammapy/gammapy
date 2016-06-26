@@ -1,25 +1,28 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose
-from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import pytest
 import astropy.units as u
-from ...utils.testing import requires_dependency, requires_data
+from astropy.coordinates import SkyCoord, Angle
+from astropy.tests.helper import assert_quantity_allclose
+from ...extern.regions.shapes import CircleSkyRegion
 from ...utils.energy import EnergyBounds
+from ...utils.scripts import make_path
+from ...utils.testing import requires_dependency, requires_data
+from ...background import ring_background_estimate
 from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
-from ...background import ring_background_estimate
-from ...extern.regions import CircleSkyRegion
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 
 
 @pytest.mark.parametrize("pars,results", [
     (dict(containment_correction=False), dict(n_on=95,
+                                              sigma=19.70,
                                               aeff=549861.8268659255 * u.m ** 2,
                                               ethresh=0.4230466456851681 * u.TeV)),
     (dict(containment_correction=True), dict(n_on=95,
+                                             sigma=19.70,
                                              aeff=393356.18322397786 * u.m ** 2,
                                              ethresh=0.6005317540449035 * u.TeV)),
 ])
