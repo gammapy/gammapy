@@ -203,7 +203,6 @@ class EventList(Table):
         energy = self['ENERGY']
         return Quantity(energy, self.meta['EUNIT'])
 
-
     def select_energy(self, energy_band):
         """Select events in energy band.
 
@@ -318,7 +317,7 @@ class EventList(Table):
 
         Parameters
         ----------
-        region : `~gammapy.region.SkyRegionList`, `~gammapy.region.SkyCircleRegion`
+        region : `~regions.CircleSkyRegion` or list of `~regions.CircleSkyRegion`
             (List of) sky region(s)
 
         Returns
@@ -339,23 +338,22 @@ class EventList(Table):
 
         Parameters
         ----------
-        region : `~gammapy.region.SkyRegionList`
+        region : list of `~region.SkyRegion`
             List of sky regions
 
         Returns
         -------
         index_array : `np.array`
-            Index array of seleced events
+            Index array of selected events
         """
 
         position = self.radec
         mask = np.array([], dtype=int)
         for reg in region:
-            separation = reg.pos.separation(position)
+            separation = reg.center.separation(position)
             temp = np.where(separation < reg.radius)[0]
             mask = np.union1d(mask, temp)
         return mask
-
 
     def peek(self):
         """Summary plots."""

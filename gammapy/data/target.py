@@ -1,17 +1,17 @@
 # licensed under a 3-clause bsd style license - see license.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from ..stats import Stats
 from astropy.table import vstack as table_vstack
 from astropy.coordinates import SkyCoord
-from ..extern.regions.shapes import CircleSkyRegion
 import astropy.units as u
+from ..extern.regions import CircleSkyRegion
+from ..stats import Stats
 
 __all__ = [
     'Target',
     'TargetSummary',
 ]
+
 
 class Target(object):
     """Observation Target.
@@ -26,12 +26,12 @@ class Target(object):
 
     Parameters
     ----------
-    on_region : `~astropy.regions.SkyRegion`
+    on_region : `~regions.SkyRegion`
         Signal extraction region
     position : `~astropy.coordinates.SkyCoord`, optional
         Target position
     obs_id : int, optional
-        Observatinos for this target
+        Observations for this target
     name : str, optional
         Target name
     tag : str, optional
@@ -43,7 +43,7 @@ class Target(object):
 
     >>> import astropy.units as u
     >>> from astropy.coordinates import SkyCoord
-    >>> from gammapy.extern.regions.shapes import CircleSkyRegion
+    >>> from gammapy.extern.regions import CircleSkyRegion
     >>> from gammapy.data import Target
     >>> pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     >>> on_size = 0.3 * u.deg
@@ -86,6 +86,7 @@ class Target(object):
     <class 'gammapy.stats.data.Stats'>
 
     """
+
     def __init__(self, on_region, position=None, obs_id=None, name='Target', tag='target'):
         self.on_region = on_region
         self.position = position or on_region.center
@@ -99,7 +100,7 @@ class Target(object):
         ss += "Tag: {}\n".format(self.tag)
         ss += "On region: {}\n".format(self.on_region)
         return ss
-    
+
     @property
     def summary(self):
         """`~gammapy.data.TargetSummary`"""
@@ -114,7 +115,6 @@ class Target(object):
         """
         obs_id = config['obs']
         if not isinstance(obs_id, list):
-
             from . import ObservationTable
             obs_table = ObservationTable.read(obs_id)
             obs_id = obs_table['OBS_ID'].data
@@ -144,7 +144,7 @@ class Target(object):
             inner_radius = kwargs['inner_radius']
             outer_radius = kwargs['outer_radius']
             self.background = [ring(pos, on_radius, inner_radius, outer_radius,
-                                     _.events) for _ in self.obs]
+                                    _.events) for _ in self.obs]
         elif method == 'reflected':
             on_region = self.on_region
             exclusion = kwargs['exclusion']

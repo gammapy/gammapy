@@ -5,20 +5,16 @@ from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
 import numpy as np
-
 from astropy.io import fits
-from astropy.coordinates import SkyCoord, Longitude, Latitude
+from astropy.coordinates import SkyCoord
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
-from astropy.extern import six
 from astropy.nddata.utils import Cutout2D
-
 from ..extern.bunch import Bunch
-from ..image.utils import make_header, _bin_events_in_cube
-from ..utils.wcs import get_wcs_ctype
 from ..utils.scripts import make_path
+from ..image.utils import make_header, _bin_events_in_cube
 from ..data import EventList
 
 __all__ = ['SkyMap', 'SkyMapCollection']
@@ -396,7 +392,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        region : `~gammapy.extern.regions.core.SkyRegion` (optional)
+        region : `~regions.SkyRegion` (optional)
             Limit lookup of maximum to that given sky region.
 
         Returns

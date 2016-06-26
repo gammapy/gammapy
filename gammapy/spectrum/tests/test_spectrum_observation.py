@@ -1,22 +1,21 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
+from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
-from astropy.tests.helper import assert_quantity_allclose, pytest
+from astropy.tests.helper import pytest
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
-from ...extern.regions.shapes import CircleSkyRegion
-from ...spectrum import (
-    SpectrumObservation,
-)
+from ...data import ObservationTable
+from ...spectrum import SpectrumObservation, SpectrumObservationList
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('matplotlib')
 def test_spectrum_observation():
     phafile = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
     obs = SpectrumObservation.read(phafile)
     obs.peek()
+
 
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')

@@ -1,15 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # (taken from photutils: should probably migrate into astropy.wcs)
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import UnitSphericalRepresentation
-from astropy.wcs.utils import skycoord_to_pixel, pixel_to_skycoord
+from astropy.wcs.utils import skycoord_to_pixel
 
 skycoord_to_pixel_mode = 'all'
 
 
-def skycoord_to_pixel_scale_angle(coords, wcs, small_offset=1*u.arcsec):
+def skycoord_to_pixel_scale_angle(coords, wcs, small_offset=1 * u.arcsec):
     """
     Convert a set of SkyCoord coordinates into pixel coordinates, pixel
     scales, and position angles.

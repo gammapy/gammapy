@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from .ring import ring_area_factor
-from ..region import find_reflected_regions
+from .reflected import find_reflected_regions
 
 __all__ = [
     'BackgroundEstimate',
@@ -22,7 +22,7 @@ class BackgroundEstimate(object):
 
     Parameters
     ----------
-    off_region : `~gammapy.extern.regions.SkyRegion`
+    off_region : `~regions.SkyRegion`
         Background extraction region
     off_events : `~gammapy.data.EventList`
         Background events
@@ -33,6 +33,7 @@ class BackgroundEstimate(object):
     tag : str
         Background estimation method
     """
+
     def __init__(self, off_region, off_events, a_on, a_off, tag='default'):
         self.off_region = off_region
         self.off_events = off_events
@@ -51,8 +52,6 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     Parameters
     ----------
     pos : `~astropy.coordinates.SkyCoord`
-        Target position
-    on_radius : `~astropy.coordinates.Angle`
         On region radius
     inner_radius : `~astropy.coordinates.Angle`
         Inner ring radius
@@ -68,12 +67,13 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
 
     return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
 
+
 def reflected_regions_background_estimate(on_region, pointing, exclusion, events):
     """Reflected regions background estimate
 
     Parameters
     ----------
-    on_region : `~gammapy.extern.regions.CircleSkyRegion`
+    on_region : `~regions.CircleSkyRegion`
         On region
     pointing : `~astropy.coordinates.SkyCoord`
         Pointing position

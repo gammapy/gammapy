@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, print_function, \
 import numpy as np
 from astropy.units import Quantity
 
-from gammapy.region import SkyCircleRegion, SkyRegionList
 from ..utils.scripts import read_yaml
 
 __all__ = [
@@ -117,51 +116,6 @@ def plot_exclusion_mask(**kwargs):
     ax = exclusion.plot(**kwargs)
     return ax
 
-
-def plot_on_region(ax=None, **kwargs):
-    """Plot target regions"""
-    from gammapy.spectrum import SpectrumExtraction
-
-    ax = plot_exclusion_mask() if ax is None else ax
-    val = read_yaml(SpectrumExtraction.REGIONS_FILE)
-    on_region = SkyCircleRegion.from_dict(val['on_region'])
-    on_region.plot(ax, **kwargs)
-    return ax
-
-
-def plot_off_region(ax=None, **kwargs):
-    """Plot off regions for all observations"""
-    from gammapy.spectrum import SpectrumExtraction
-
-    ax = plot_exclusion_mask() if ax is None else ax
-    val = read_yaml(SpectrumExtraction.REGIONS_FILE)
-    all_regions = SkyRegionList()
-    for regions in val['off_region'].values():
-        all_regions.append(SkyRegionList.from_dict(regions))
-    all_regions.plot(ax, **kwargs)
-    return ax
-
-
-def plot_observations_positions(ax=None, **kwargs):
-    from gammapy.data import ObservationTable
-    from gammapy.spectrum import SpectrumExtraction
-
-    kwargs.setdefault('marker', 'x')
-    kwargs.setdefault('s', 150)
-    ax = plot_exclusion_mask() if ax is None else ax
-    obs_table = ObservationTable.read(SpectrumExtraction.OBSTABLE_FILE)
-    ra = obs_table['RA_PNT']
-    dec = obs_table['DEC_PNT']
-    ax.scatter(ra, dec, transform=ax.get_transform('icrs'), **kwargs)
-
-
-def plot_events(**kwargs):
-    pass
-    # TODO : wait for SkyMap Class
-    # Steps
-    # - make empty image like exclusion mask
-    # - fill on off events
-    # - plot exclusion mask as contours
 
 def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     """Plot predicted and measured excess counts
