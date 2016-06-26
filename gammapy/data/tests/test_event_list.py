@@ -5,7 +5,7 @@ from astropy.coordinates import Angle, SkyCoord
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import gammapy_extra
-from ...extern.regions.shapes import CircleSkyRegion
+from ...extern.regions import CircleSkyRegion
 
 
 @requires_data('gammapy-extra')
@@ -42,6 +42,7 @@ def test_EventList_region():
     assert_allclose(filtered_list[4]['RA'], 81, rtol=1)
     assert_allclose(filtered_list[2]['DEC'], 21, rtol=1)
     assert len(filtered_list) == 5
+
 
 @requires_data('gammapy-extra')
 def test_EventListDataset():

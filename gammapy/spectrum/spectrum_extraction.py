@@ -6,7 +6,7 @@ import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
 from ..extern.pathlib import Path
-from ..extern.regions.shapes import CircleSkyRegion
+from ..extern.regions import CircleSkyRegion
 from ..utils.scripts import make_path
 from ..data import Target
 from ..background import reflected_regions_background_estimate

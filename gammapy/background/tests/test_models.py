@@ -15,7 +15,7 @@ from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackg
 from ...utils.energy import EnergyBounds
 from ...data import ObservationTable
 from ...data import DataStore, EventList
-from ...extern.regions.shapes import CircleSkyRegion
+from ...extern.regions import CircleSkyRegion
 from ...background.models import _compute_pie_fraction, _select_events_outside_pie
 
 
