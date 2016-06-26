@@ -10,6 +10,7 @@ from ...spectrum import SpectrumObservation, SpectrumObservationList
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('matplotlib')
 def test_spectrum_observation():
     phafile = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
     obs = SpectrumObservation.read(phafile)
