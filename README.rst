@@ -42,7 +42,3 @@ Status shields
 * .. image:: http://img.shields.io/pypi/v/gammapy.svg?text=version
     :target: https://pypi.python.org/pypi/gammapy/
     :alt: Latest release
-
-* .. image:: http://img.shields.io/pypi/dm/gammapy.svg
-    :target: https://pypi.python.org/pypi/gammapy/
-    :alt: Downloads per month
