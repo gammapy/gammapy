@@ -10,6 +10,7 @@ from ..utils.scripts import read_yaml
 __all__ = [
     'LogEnergyAxis',
     'plot_npred_vs_excess',
+    'integrate_loglog',
 ]
 
 
@@ -156,23 +157,23 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
 
 def integrate_loglog(func, xmin, xmax, ndecade=100):
     """
-    Integrate 1d function using log-log integration. 
+    Integrate 1d function using log-log trapezoidal rule. 
     
     Parameters
     ----------
     func : callable
         Function to integrate.
-    xmin : 
-
-    xmax : 
-
+    xmin : `~astropy.units.Quantity`
+        Integration range minimum
+    xmax : `~astropy.units.Quantity`
+        Integration range minimum
     ndecade : int
         Number of grid points per decade used for the integration.
     """
     from naima.utils import trapz_loglog
-    logmin = np.log10(emin)
-    logmax = np.log10(emax)
+    logmin = np.log10(xmin.value)
+    logmax = np.log10(xmax.to(xmin.unit).value)
 
     n = (logmax - logmin) * ndecade
-    x = np.logspace(logmin, logmax, n)  # 100 points per decade
+    x = Quantity(np.logspace(logmin, logmax, n), xmin.unit)
     return trapz_loglog(func(x), x)
