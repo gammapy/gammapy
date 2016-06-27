@@ -232,7 +232,14 @@ class PHACountsSpectrum(CountsSpectrum):
     def to_table(self):
         """Write"""
         table = super(PHACountsSpectrum, self).to_table()
-        
+
+        # Flag channels outside save range as bad
+        flag = np.zeros(self.energy.nbins, dtype=np.int16)
+        idx = np.where((self.energy.data[:-1] < self.lo_threshold) |
+                       (self.energy.data[1:] > self.hi_threshold))
+        flag[idx] = 1
+        table['QUALITY'] = flag
+
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
@@ -254,14 +261,10 @@ class PHACountsSpectrum(CountsSpectrum):
                     hduclas4='TYPE:1'
                     )
         if not self.is_bkg:
-            # Flag channels outside save range as bad
-            flag = np.zeros(self.energy.nbins, dtype=np.int16)
-            idx = np.where((self.energy.data[:-1] < self.lo_threshold) |
-                           (self.energy.data[1:] > self.hi_threshold))
-            flag[idx] = 1
-            table['QUALITY'] = flag
+            if self.rmffile is not None:
+                meta.update(respfile=self.rmffile)
+
             meta.update(backfile=self.bkgfile,
-                        respfile=self.rmffile,
                         ancrfile=self.arffile,
                         lo_thres=self.lo_threshold.to("TeV").value,
                         hi_thres=self.hi_threshold.to("TeV").value,
@@ -309,7 +312,7 @@ class SpectrumObservation(object):
         Off vector
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective Area
-    edisp : `~gammapy.irf.EnergyDispersion`
+    edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy dispersion matrix
 
     Examples
@@ -327,11 +330,13 @@ class SpectrumObservation(object):
         plt.show()
     """
 
-    def __init__(self, on_vector, off_vector, aeff, edisp):
+    def __init__(self, on_vector, off_vector, aeff, edisp=None):
         self.on_vector = on_vector
         self.off_vector = off_vector
         self.aeff = aeff
         self.edisp = edisp
+        if edisp is None:
+            self.on_vector.rmffile = None
 
     @property
     def obs_id(self):
@@ -386,13 +391,27 @@ class SpectrumObservation(object):
         return CountsSpectrum(data=data, energy=energy)
 
     @property
-    def stats(self):
+    def total_stats(self):
         """Return `~gammapy.data.ObservationStats`"""
         # TODO: Introduce SpectrumStats class inheriting from ObservationStats
         # in order to add spectrum specific information
         kwargs = dict(
-            n_on = self.on_vector.total_counts.value,
-            n_off = self.off_vector.total_counts.value,
+            n_on = int(self.on_vector.total_counts.value),
+            n_off = int(self.off_vector.total_counts.value),
+            a_on = self.on_vector.backscal,
+            a_off = self.off_vector.backscal,
+            obs_id = self.obs_id,
+            livetime = self.exposure,
+        )
+        return ObservationStats(**kwargs)
+
+    def stats(self, nbin):
+        """Return `~gammapy.data.ObservationStats` for one bin"""
+        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
+        # in order to add spectrum specific information
+        kwargs = dict(
+            n_on = int(self.on_vector.data.value[nbin]),
+            n_off = int(self.off_vector.data.value[nbin]),
             a_on = self.on_vector.backscal,
             a_off = self.off_vector.backscal,
             obs_id = self.obs_id,
@@ -419,7 +438,11 @@ class SpectrumObservation(object):
         base = f.parent
         on_vector = PHACountsSpectrum.read(f)
         rmf, arf, bkg = on_vector.rmffile, on_vector.arffile, on_vector.bkgfile
-        energy_dispersion = EnergyDispersion.read(str(base / rmf))
+        try:
+            energy_dispersion = EnergyDispersion.read(str(base / rmf))
+        except IOError:
+            # TODO : Add logger and echo warning
+            energy_dispersion = None 
         effective_area = EffectiveAreaTable.read(str(base / arf))
         off_vector = PHACountsSpectrum.read(str(base / bkg))
 
@@ -463,8 +486,10 @@ class SpectrumObservation(object):
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
         self.aeff.write(outdir / arffile, clobber=overwrite)
 
-        self.edisp.write(str(outdir / rmffile), energy_unit='keV',
-                         clobber=overwrite)
+        if self.edisp is not None:
+            self.edisp.write(str(outdir / rmffile),
+                             energy_unit='keV',
+                             clobber=overwrite)
 
 
     def peek(self, figsize=(15, 15)):
@@ -480,12 +505,13 @@ class SpectrumObservation(object):
                             color='darkred', alpha=0.8, lw=2)
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
-        ax2.text(0, 0, '{}'.format(self.stats), fontsize=18)
+        ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
         ax2.axis('off')
-        self.aeff.plot(ax=ax3)
         ax3.set_title('Effective Area')
-        self.edisp.plot_matrix(ax=ax4)
+        self.aeff.plot(ax=ax3)
         ax4.set_title('Energy Dispersion')
+        if self.edisp is not None:
+            self.edisp.plot_matrix(ax=ax4)
         plt.tight_layout()
         return fig
 
