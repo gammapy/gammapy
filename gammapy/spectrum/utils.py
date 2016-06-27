@@ -11,6 +11,7 @@ __all__ = [
     'LogEnergyAxis',
     'plot_npred_vs_excess',
     'integrate_loglog',
+    'integrate_loglog_unc',
 ]
 
 
@@ -155,7 +156,7 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     return ax
 
 
-def integrate_loglog(func, xmin, xmax, ndecade=100):
+def integrate_loglog(func, xmin, xmax, ndecade=100, **kwargs):
     """
     Integrate 1d function using log-log trapezoidal rule. 
     
@@ -169,11 +170,48 @@ def integrate_loglog(func, xmin, xmax, ndecade=100):
         Integration range minimum
     ndecade : int
         Number of grid points per decade used for the integration.
+    kwargs : dict
+        Keyword arguments passed to `naima.utils.trapz_loglog`
     """
     from naima.utils import trapz_loglog
+
     logmin = np.log10(xmin.value)
     logmax = np.log10(xmax.to(xmin.unit).value)
-
     n = (logmax - logmin) * ndecade
     x = Quantity(np.logspace(logmin, logmax, n), xmin.unit)
-    return trapz_loglog(func(x), x)
+    return trapz_loglog(func(x), x, **kwargs)
+
+
+def integrate_loglog_unc(func, xmin, xmax, ndecade=100, **kwargs):
+    """
+    Integrate 1d function using log-log trapezoidal rule.
+
+    Can be used with the uncertanties package. 
+    
+    Parameters
+    ----------
+    func : callable
+        Function to integrate.
+    xmin : float
+        Integration range minimum
+    xmax : float
+        Integration range minimum
+    ndecade : int
+        Number of grid points per decade used for the integration.
+    kwargs : dict
+        Keyword arguments passed to `naima.utils.trapz_loglog`
+    """
+    from naima.utils import trapz_loglog
+    from uncertainties.unumpy import log10
+
+    logmin = np.log10(xmin)
+    logmax = np.log10(xmax)
+    n = (logmax - logmin) * ndecade
+    x = np.logspace(logmin, logmax, n)
+
+    # TODO: Can this local overide of np.log10 cause any unforeseen issues? 
+    _ = np.log10
+    np.log10 = log10
+    val = trapz_loglog(func(x), x, **kwargs)
+    np.log10 = _
+    return val
