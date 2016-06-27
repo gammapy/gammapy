@@ -3,11 +3,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import logging
 import os
 import numpy as np
+import astropy.units as u
 from astropy.extern import six
-from gammapy.extern.pathlib import Path
+from ..extern.pathlib import Path
 from ..utils.energy import Energy
-from ..spectrum import CountsSpectrum
-from ..spectrum import SpectrumObservationList, SpectrumObservation
+from ..spectrum import SpectrumObservationList, SpectrumObservation, CountsSpectrum
 from ..data import ObservationTable
 from ..utils.scripts import make_path
 
@@ -20,28 +20,55 @@ log = logging.getLogger(__name__)
 
 class SpectrumFit(object):
     """
-    Spectral Fit
+    Spectral Fit using Sherpa
+
+    Disclaimer: Gammapy classes cannot be translated to Sherpa classes yet.
+    Therefore the input data must have been written to disk in order to be read
+    in directly by Sherpa.
 
     Parameters
     ----------
     obs_list : SpectrumObservationList
         Observations to fit
+
+
+    Examples
+    --------
+    .. plot::
+        :include-source:
+
+        from gammapy.spectrum import SpectrumObservation, SpectrumFit
+        from gammapy.datasets import gammapy_extra
+        import matplotlib.pyplot as plt
+
+        phafile = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
+        obs = SpectrumObservation.read(phafile)
+
+        fit = SpectrumFit(obs)
+        fit.run()
+        fit.result.plot_fit()
+        plt.show()
     """
 
     FLUX_FACTOR = 1e-20
     DEFAULT_STAT = 'wstat'
+    DEFAULT_MODEL = 'PowerLaw'
 
-    def __init__(self, obs_list, stat=DEFAULT_STAT):
+    def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
+        if isinstance(obs_list, SpectrumObservation):
+            obs_list = SpectrumObservationList([obs_list])
         if not isinstance(obs_list, SpectrumObservationList):
             raise ValueError('Wrong input format {}\nUse SpectrumObservation'
                              'List'.format(type(obs_list)))
 
         self.obs_list = obs_list
-        self._model = None
-        self._thres_lo = None
-        self._thres_hi = None
+        self.model = model
         self.statistic = stat
-        self.n_pred = None
+        self._fit_range = None
+        # FIXME : This is only true for one observation
+        # The ON and OFF counts sould be stacked for more than on obs
+        from gammapy.spectrum import SpectrumResult
+        self._result = SpectrumResult(obs=obs_list[0])
 
     @classmethod
     def from_pha_list(cls, pha_list):
@@ -60,62 +87,10 @@ class SpectrumFit(object):
             obs_list.append(val)
         return cls(obs_list)
 
-    @classmethod
-    def from_observation_table_file(cls, filename):
-        """Create `~gammapy.spectrum.SpectrumFit` using a observation table
-
-        Parameters
-        ----------
-        filename : str
-            Observation table file
-        """
-        obs_table = ObservationTable.read(filename)
-        return cls.from_observation_table(obs_table)
-
-    @classmethod
-    def from_observation_table(cls, obs_table):
-        """Create `~gammapy.spectrum.SpectrumFit` using a `~gammapy.data.ObservationTable`
-
-        Required columns
-        - PHAFILE
-
-        Parameters
-        ----------
-        obs_table : `~gammapy.data.ObservationTable`
-        """
-        if not isinstance(obs_table, ObservationTable):
-            raise ValueError('Please provide an observation table')
-
-        pha_list = list(obs_table['PHAFILE'])
-        return cls.from_pha_list(pha_list)
-
-    @classmethod
-    def from_configfile(cls, configfile):
-        """Create `~gammapy.spectrum.SpectrumFit` from configfile
-
-        Parameters
-        ----------
-        configfile : str
-            YAML config file
-        """
-        import yaml
-        with open(configfile) as fh:
-            config = yaml.safe_load(fh)
-
-        return cls.from_config(config)
-
-    @classmethod
-    def from_config(cls, config):
-        """Create `~gammapy.spectrum.SpectrumFit` using a config dict
-
-        The spectrum extraction step has to have run before
-        """
-        config = config['fit']
-        table_file = 'observation_table.fits'
-        obs_table = ObservationTable.read(table_file)
-        fit = SpectrumFit.from_observation_table(obs_table)
-        fit.model = config['model']
-        return fit
+    @property
+    def result(self):
+        """`~gammapy.spectrum.SpectrumResult`"""
+        return self._result
 
     @property
     def model(self):
@@ -190,49 +165,18 @@ class SpectrumFit(object):
         self._stat = stat
 
     @property
-    def energy_threshold_low(self):
+    def fit_range(self):
         """
-        Low energy threshold of the spectral fit
+        Energy range of the fit
+        """
+        return self._fit_range
 
-        If a list of observations is fit at the same time, this is a list with
-        the theshold for each observation.
+    @fit_range.setter
+    def fit_range(self, fit_range):
         """
-        return self._thres_lo
-
-    @energy_threshold_low.setter
-    def energy_threshold_low(self, energy):
+        Energy range of the fit 
         """
-        Low energy threshold setter
-
-        Parameters
-        ----------
-        energy : `~gammapy.utils.energy.Energy`, str
-            Low energy threshold
-        """
-        energy = Energy(energy)
-        self._thres_lo = Energy(energy)
-
-    @property
-    def energy_threshold_high(self):
-        """
-        High energy threshold of the spectral fit
-        If a list of observations is fit at the same time, this is a list with
-        the threshold for each observation.
-        """
-        return self._thres_hi
-
-    @energy_threshold_high.setter
-    def energy_threshold_high(self, energy):
-        """
-        High energy threshold setter
-
-        Parameters
-        ----------
-        energy : `~gammapy.utils.energy.Energy`, str
-            High energy threshold
-        """
-        energy = Energy(energy)
-        self._thres_hi = Energy(energy)
+        self._fit_range = fit_range
 
     @property
     def pha_list(self):
@@ -241,13 +185,10 @@ class SpectrumFit(object):
         ret = ','.join(file_list)
         return ret
 
-    def info(self):
-        """Print some basic info"""
+    def __str__(self):
+        """String repr"""
         ss = 'Model\n'
         ss += str(self.model)
-        ss += '\nEnergy Range\n'
-        ss += str(self.energy_threshold_low) + ' - ' + str(
-            self.energy_threshold_high)
         return ss
 
     def run(self, method='sherpa', outdir=None):
@@ -265,17 +206,13 @@ class SpectrumFit(object):
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
 
-        if method == 'hspec':
-            self._run_hspec_fit()
-        elif method == 'sherpa':
+        if method == 'sherpa':
             self._run_sherpa_fit()
         else:
             raise ValueError('Undefined fitting method')
 
-        modelname = self.result.spectral_model
-        self.result.to_yaml('fit_result_{}.yaml'.format(modelname))
-        self.write_npred()
-
+        modelname = self.result.fit.spectral_model
+        self.result.fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
 
     def _run_sherpa_fit(self):
@@ -283,7 +220,8 @@ class SpectrumFit(object):
         """
         from sherpa.astro import datastack
         log.info("Starting SHERPA")
-        log.info(self.info())
+        log.info(str(self))
+
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
 
@@ -293,56 +231,25 @@ class SpectrumFit(object):
 
         namedataset = []
         for i in range(len(ds.datasets)):
-            if self.obs_list[i].lo_threshold > self._thres_lo:
-                thres_lo = self.obs_list[i].lo_threshold.to('keV').value
-            else:
-                thres_lo = self._thres_lo.to('keV').value
-            if self.obs_list[i].hi_threshold < self._thres_hi:
-                thres_hi = self.obs_list[i].hi_threshold.to('keV').value
-            else:
-                thres_hi = self._thres_hi.to('keV').value
-            datastack.notice_id(i + 1, thres_lo, thres_hi)
+            datastack.ignore_bad(i + 1)
+            datastack.ignore_bad(i + 1, i + 1)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
         ds.fit(*namedataset)
         datastack.covar(*namedataset)
         covar = datastack.get_covar_results()
         efilter = datastack.get_filter()
-
-        # First go on calculation flux points following
-        # http://cxc.harvard.edu/sherpa/faq/phot_plot.html
-        # This should be split out and improved
-        xx = datastack.get_fit_plot().dataplot.x
-        dd = datastack.get_fit_plot().dataplot.y
-        ee = datastack.get_fit_plot().dataplot.yerr
-        mm = datastack.get_fit_plot().modelplot.y
-        src = datastack.get_source()(xx)
-        points = dd / mm * src
-        errors = ee / mm * src
-        flux_graph = dict(energy=xx, flux=points, flux_err_hi=errors,
-                          flux_err_lo=errors)
+        fitresult = datastack.get_fit_results()
+        model = datastack.get_model()
+        # TODO : Calculate Pivot energy
 
         from gammapy.spectrum.results import SpectrumFitResult
-        self.result = SpectrumFitResult.from_sherpa(covar, efilter, self.model)
+        self._result.fit = SpectrumFitResult.from_sherpa(covar,
+                                                         efilter,
+                                                         model,
+                                                         fitresult)
+
         ds.clear_stack()
         ds.clear_models()
 
-    def make_npred(self):
-        """Create `~gammapy.spectrum.CountsSpectrum` of predicted on counts
-        """
-        self.n_pred = dict()
-        for obs in self.obs_list:
-            temp = CountsSpectrum.get_npred(self.result, obs)
-            self.n_pred[obs.obs_id] = temp
 
-    def write_npred(self, outdir=None):
-        """Write predicted counts PHA file
-        """
-        outdir = make_path('n_pred') if outdir is None else make_path(outdir)
-        outdir.mkdir(exist_ok=True)
-
-        if self.n_pred is None:
-            self.make_npred()
-        for key, val in self.n_pred.items():
-            filename = "npred_run{}.fits".format(key)
-            val.write(str(outdir / filename), clobber=True)
