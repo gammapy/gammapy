@@ -265,9 +265,7 @@ class SpectrumFit(object):
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
 
-        if method == 'hspec':
-            self._run_hspec_fit()
-        elif method == 'sherpa':
+        if method == 'sherpa':
             self._run_sherpa_fit()
         else:
             raise ValueError('Undefined fitting method')

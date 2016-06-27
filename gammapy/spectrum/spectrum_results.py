@@ -14,7 +14,6 @@ TODO;
 - [ ] Read butterfly, energy resolution matrix, ....
 - [ ] Plot spectrum
 - [ ] Compute butterfly from covariance matrix here
-- [ ] Interface these classes to Sherpa results ... make it easy to compare, i.e. cross-check `hspec` against `FitSpectrum`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
