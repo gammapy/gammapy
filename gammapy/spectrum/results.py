@@ -613,28 +613,22 @@ class SpectrumResult(object):
         plt.setp(ax0.get_xticklabels(), visible=False)
 
         self.obs.background_vector.plot(ax=ax0,
-                                        histtype='step',
                                         label='Background estimate',
-                                        energy_unit='TeV',
-                                        lw=2) 
+                                        energy_unit='TeV')
 
         self.expected_on_vector.plot(ax=ax0,
-                                     histtype='step',
-                                     label='Predicted ON counts',
-                                     lw=2)  
+                                     show_poisson_errors=True,
+                                     label='Predicted ON counts')
 
         self.obs.on_vector.plot(ax=ax0,
-                                histtype='step',
                                 label='Deteced ON counts',
-                                energy_unit='TeV',
-                                lw=2)
+                                energy_unit='TeV')
 
         ax0.legend(numpoints=1)
 
         res = self.expected_on_vector.data - self.obs.on_vector.data
-        x = self.obs.on_vector.energy.nodes
-        x = x.to('TeV').value
-        ax1.plot(x, res, '.', color='black', ms=25, mew=2, marker='_')
+        resspec = CountsSpectrum(data=res, energy=self.obs.on_vector.energy)
+        resspec.plot(ax=ax1, color='black')
 
         xx = ax1.get_xlim()
         yy = [0, 0]

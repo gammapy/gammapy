@@ -43,9 +43,9 @@ class CountsSpectrum(NDDataArray):
         import astropy.units as u
 
         ebounds = np.logspace(0,1,11) * u.TeV
-        counts = [6,3,8,4,9,5,9,5,5,1] * u.ct
+        counts = np.arange(10) * u.ct
         spec = CountsSpectrum(data=counts, energy=ebounds)
-        spec.plot()
+        spec.plot(show_poisson_errors=True)
     """
     energy = BinnedDataAxis(interpolation_mode='log')
     """Energy axis"""
@@ -120,15 +120,20 @@ class CountsSpectrum(NDDataArray):
         temp = self.data * other
         return CountsSpectrum(data=temp, energy=self.energy)
 
-    def plot(self, ax=None, energy_unit='TeV', **kwargs):
+    def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
+             **kwargs):
         """Plot
 
-        kwargs are forwarded to matplotlib.pyplot.hist
+        kwargs are forwarded to matplotlib.pyplot.errorbar
 
         Parameters
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        show_poisson_errors : bool, optional
+            Show poisson errors on the plot
 
         Returns
         -------
@@ -139,16 +144,20 @@ class CountsSpectrum(NDDataArray):
 
         ax = plt.gca() if ax is None else ax
         counts = self.data.value
-        enodes = self.energy.nodes.to(energy_unit)
-        ebins = self.energy.data.to(energy_unit)
-        ax.hist(enodes, bins=ebins, weights=counts, **kwargs)
+        x = self.energy.nodes.to(energy_unit).value
+        bounds = self.energy.data.to(energy_unit).value
+        xerr = [x-bounds[:-1], bounds[1:] - x] 
+        yerr = np.sqrt(counts) if show_poisson_errors else 0
+        kwargs.setdefault('fmt', 'o')
+        ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs) 
         ax.set_xlabel('Energy [{0}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
-        ax.set_ylim(0, max(self.data.value) * 1.1)
         return ax
 
+
     def peek(self, figsize=(5, 10)):
+
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
         ax = plt.figure(figsize=figsize)
@@ -499,10 +508,8 @@ class SpectrumObservation(object):
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
         self.background_vector.plot(ax=ax1, label='Background estimate',
-                                    histtype='step', color='darkblue',
-                                    alpha=0.8, lw=2)
-        self.on_vector.plot(ax=ax1, label='Total counts', histtype='step',
-                            color='darkred', alpha=0.8, lw=2)
+                                    color='darkblue')
+        self.on_vector.plot(ax=ax1, label='Total counts', color='darkred')
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
         ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
