@@ -199,15 +199,16 @@ class ObservationStats(Stats):
         else:
             obs_str = '{}'.format(self.obs_id)
         ss += 'Observation Id: {}\n'.format(obs_str)
-        ss += 'Livetime: {}\n'.format(self.livetime.to(u.h))
+        ss += 'Livetime: {:.3f}\n'.format(self.livetime.to(u.h))
         ss += 'On events: {}\n'.format(self.n_on)
         ss += 'Off events: {}\n'.format(self.n_off)
-        ss += 'Alpha: {}\n'.format(self.alpha)
-        ss += 'Bkg events in On region: {}\n'.format(self.background)
-        ss += 'Excess: {}\n'.format(self.excess)
-        ss += 'Gamma rate: {}\n'.format(self.gamma_rate)
-        ss += 'Bkg rate: {}\n'.format(self.bg_rate)
-        ss += 'Sigma: {}\n'.format(self.sigma)
+        ss += 'Alpha: {:.3f}\n'.format(self.alpha)
+        ss += 'Bkg events in On region: {:.2f}\n'.format(self.background)
+        ss += 'Excess: {:.2f}\n'.format(self.excess)
+        ss += 'Excess / Background: {:.2f}\n'.format(self.excess / self.background)
+        ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
+        ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
+        ss += 'Sigma: {:.2f}\n'.format(self.sigma)
 
         return ss
 

@@ -64,9 +64,8 @@ def test_spectrum_extraction(pars, results, tmpdir):
     assert_quantity_allclose(ana.observations[0].lo_threshold, results['ethresh'])
     assert_quantity_allclose(ana.observations[0].aeff.evaluate(
         energy=5 * u.TeV), results['aeff'])
-    assert ana.observations[0].stats.n_on == results['n_on']
-    assert_allclose(ana.observations[1].stats.sigma,
-                    results['sigma'],
+    assert ana.observations[0].total_stats.n_on == results['n_on']
+    assert_allclose(ana.observations[1].total_stats.sigma, results['sigma'],
                     atol=1e-2)
 
     # Write on set of output files to gammapy-extra as input for other tests

@@ -7,7 +7,7 @@ from ...datasets import gammapy_extra
 from ...data import ObservationList
 from ...image import ExclusionMask
 from ...utils.testing import data_manager, requires_dependency, requires_data, run_cli
-from ...spectrum.results import SpectrumStats, SpectrumFitResult
+from ...spectrum.results import SpectrumFitResult
 from ...spectrum import SpectrumExtraction
 from ..spectrum import cli
 

@@ -15,6 +15,14 @@ from . import (
     SpectrumObservation,
     SpectrumObservationList,
 )
+from ..data import Target
+from ..extern.bunch import Bunch
+from ..extern.pathlib import Path
+from ..extern.regions.shapes import CircleSkyRegion
+from ..image import ExclusionMask
+from ..irf import EffectiveAreaTable, EnergyDispersion
+from ..utils.energy import EnergyBounds, Energy
+from ..utils.scripts import make_path, write_yaml
 
 __all__ = [
     'SpectrumExtraction',
@@ -139,9 +147,12 @@ class SpectrumExtraction(object):
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
 
+
             counts_kwargs = dict(energy=self.e_reco,
                                  exposure=obs.observation_live_time_duration,
-                                 obs_id=obs.obs_id)
+                                 obs_id=obs.obs_id,
+                                 hi_threshold=obs.aeff.high_threshold,
+                                 lo_threshold=obs.aeff.low_threshold)
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
             off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True, **counts_kwargs)
@@ -154,11 +165,6 @@ class SpectrumExtraction(object):
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
                                                  e_true=self.e_true)
-
-            # TODO: choose if we want this high default value or to use the
-            # one given in the area file in the exporter
-            on_vec.hi_threshold = Quantity(1000, "TeV")
-            on_vec.lo_threshold = obs.aeff.low_threshold
 
             # If required, correct arf for psf leakage
             if self.containment_correction:

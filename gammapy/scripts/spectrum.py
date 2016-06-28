@@ -8,7 +8,6 @@ click.disable_unicode_literals_warning = True
 from ..spectrum import SpectrumExtraction
 from ..spectrum.spectrum_fit import SpectrumFit
 from ..spectrum.results import SpectrumResult, SpectrumFitResult
-from ..spectrum.results import SpectrumResultDict
 from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from ..utils.scripts import read_yaml, make_path
 from ..data import Target
