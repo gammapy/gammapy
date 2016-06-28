@@ -103,15 +103,15 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
 
 
 def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
-    """
+    r"""
     Compute energy flux between e1 and e2 for a given integral flux.
 
     The analytical solution for the powerlaw case is given by:
 
     .. math::
 
-        G(E_1, E_2) = I(\\epsilon, \\infty) \\, \\frac{1-\\Gamma}
-        {2-\\Gamma} \\, \\frac{E_1^{2-\\Gamma} - E_2^{2-\\Gamma}}{\\epsilon^{1-\\Gamma}}
+        G(E_1, E_2) = I(\epsilon, \infty) \, \frac{1-\Gamma}
+        {2-\Gamma} \, \frac{E_1^{2-\Gamma} - E_2^{2-\Gamma}}{\epsilon^{1-\Gamma}}
 
     Parameters
     ----------

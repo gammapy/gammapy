@@ -5,8 +5,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_dependency
-from ...spectrum import (powerlaw, power_law_flux, power_law_energy_flux,
-                         power_law_evaluate, integrate_loglog)
+from ...spectrum import powerlaw, power_law_flux, power_law_energy_flux
 
 
 @pytest.mark.xfail
@@ -28,12 +27,10 @@ def test_one():
     assert_allclose(I, 1)
 
 
-@requires_dependency('naima')
 def test_powerlaw_energy_flux():
     """
     Test energy flux computation for power law against numerical solution.
     """
-    from naima.utils import trapz_loglog
     e1 = Quantity(1, 'TeV')
     e2 = Quantity(10, 'TeV')
     einf = Quantity(1E10, 'TeV')
@@ -41,13 +38,9 @@ def test_powerlaw_energy_flux():
     g = 2.3
     I  = Quantity(1E-12, 'cm-2 s-1')
     
-    eflux = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
-
-    norm = power_law_flux(I=I, g=g, e=e, e1=e1, e2=einf)
-    f = lambda x: x * power_law_evaluate(x, norm, g, e)
-    val = integrate_loglog(f, e1, e2)
-
-    assert_quantity_allclose(val, eflux)
+    val = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
+    ref = Quantity(2.1615219876151536e-12, 'TeV cm-2 s-1')
+    assert_quantity_allclose(val, ref)
 
 
 # TODO: failing assert at the moment -> fix!

@@ -7,7 +7,8 @@ from astropy.tests.helper import assert_quantity_allclose
 from astropy.time import Time
 from astropy.table import Table
 from ...utils.testing import requires_dependency
-from ...spectrum import LogEnergyAxis
+from ...spectrum import (LogEnergyAxis, integrate_spectrum, power_law_energy_flux,
+                         power_law_evaluate, power_law_flux)
 
 
 @requires_dependency('scipy')
@@ -25,3 +26,42 @@ def test_LogEnergyAxis():
 
     world = energy_axis.pix2world(pix)
     assert_quantity_allclose(world, energy)
+
+
+def test_integrate_spectrum():
+    """
+    Test numerical integration against analytical solution.
+    """
+    e1 = Quantity(1, 'TeV')
+    e2 = Quantity(10, 'TeV')
+    einf = Quantity(1E10, 'TeV')
+    e = Quantity(1, 'TeV')
+    g = 2.3
+    I  = Quantity(1E-12, 'cm-2 s-1')
+    
+    ref = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
+    norm = power_law_flux(I=I, g=g, e=e, e1=e1, e2=einf)
+    f = lambda x: x * power_law_evaluate(x, norm, g, e)
+    val = integrate_spectrum(f, e1, e2) 
+    assert_quantity_allclose(val, ref)
+
+@requires_dependency('uncertainties')
+def test_integrate_spectrum():
+    """
+    Test numerical integration against analytical solution.
+    """
+    from uncertainties import unumpy
+    e1 = 1.
+    e2 = 10.
+    einf = 1E10
+    e = 1.
+    g = unumpy.uarray(2.3, 0.2)
+    I = unumpy.uarray(1E-12, 1E-13)
+    
+    ref = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
+    norm = power_law_flux(I=I, g=g, e=e, e1=e1, e2=einf)
+    f = lambda x: x * power_law_evaluate(x, norm, g, e)
+    val = integrate_spectrum(f, e1, e2) 
+
+    assert_allclose(unumpy.nominal_values(val), unumpy.nominal_values(ref))
+    assert_allclose(unumpy.std_devs(val), unumpy.std_devs(ref))

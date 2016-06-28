@@ -10,8 +10,7 @@ from ..utils.scripts import read_yaml
 __all__ = [
     'LogEnergyAxis',
     'plot_npred_vs_excess',
-    'integrate_loglog',
-    'integrate_loglog_unc',
+    'integrate_spectrum',
 ]
 
 
@@ -156,62 +155,114 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
     return ax
 
 
-def integrate_loglog(func, xmin, xmax, ndecade=100, **kwargs):
+def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
     """
-    Integrate 1d function using log-log trapezoidal rule. 
+    Integrate 1d function using the log-log trapezoidal rule. 
     
     Parameters
     ----------
     func : callable
         Function to integrate.
-    xmin : `~astropy.units.Quantity`
+    xmin : `~astropy.units.Quantity` or float
         Integration range minimum
-    xmax : `~astropy.units.Quantity`
-        Integration range minimum
-    ndecade : int
-        Number of grid points per decade used for the integration.
-    kwargs : dict
-        Keyword arguments passed to `naima.utils.trapz_loglog`
-    """
-    from naima.utils import trapz_loglog
-
-    logmin = np.log10(xmin.value)
-    logmax = np.log10(xmax.to(xmin.unit).value)
-    n = (logmax - logmin) * ndecade
-    x = Quantity(np.logspace(logmin, logmax, n), xmin.unit)
-    return trapz_loglog(func(x), x, **kwargs)
-
-
-def integrate_loglog_unc(func, xmin, xmax, ndecade=100, **kwargs):
-    """
-    Integrate 1d function using log-log trapezoidal rule.
-
-    Can be used with the uncertanties package. 
-    
-    Parameters
-    ----------
-    func : callable
-        Function to integrate.
-    xmin : float
-        Integration range minimum
-    xmax : float
+    xmax : `~astropy.units.Quantity` or float
         Integration range minimum
     ndecade : int
         Number of grid points per decade used for the integration.
+        Default ndecade = 100.
     kwargs : dict
-        Keyword arguments passed to `naima.utils.trapz_loglog`
-    """
-    from naima.utils import trapz_loglog
-    from uncertainties.unumpy import log10
-
-    logmin = np.log10(xmin)
-    logmax = np.log10(xmax)
-    n = (logmax - logmin) * ndecade
-    x = np.logspace(logmin, logmax, n)
-
-    # TODO: Can this local overide of np.log10 cause any unforeseen issues? 
-    _ = np.log10
-    np.log10 = log10
-    val = trapz_loglog(func(x), x, **kwargs)
-    np.log10 = _
+        Keyword arguments passed to `trapz_loglog`
+    """   
+    try:
+        logmin = np.log10(xmin.value)
+        logmax = np.log10(xmax.to(xmin.unit).value)
+        n = (logmax - logmin) * ndecade
+        x = Quantity(np.logspace(logmin, logmax, n), xmin.unit)
+        y = func(x)
+        val = _trapz_loglog(y, x, **kwargs)
+    except AttributeError:
+        logmin = np.log10(xmin)
+        logmax = np.log10(xmax)
+        n = (logmax - logmin) * ndecade
+        x = np.logspace(logmin, logmax, n)
+        y = func(x)
+        val = _trapz_loglog(y, x, ulog10=True, **kwargs)
     return val
+
+
+# This function is copied over from https://github.com/zblz/naima/blob/master/naima/utils.py#L261
+# and slightly modified to allow use with the uncertainties package
+
+def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
+    """
+    Integrate along the given axis using the composite trapezoidal rule in
+    loglog space.
+    
+    Integrate `y` (`x`) along given axis in loglog space.
+    
+    Parameters
+    ----------
+    y : array_like
+        Input array to integrate.
+    x : array_like, optional
+        Independent variable to integrate over.
+    axis : int, optional
+        Specify the axis.
+    ulog10 : bool
+        Use `~uncertainties.unumpy.log10` to allow uarrays for y and do error
+        propagation for the integral value.
+
+    Returns
+    -------
+    trapz : float
+        Definite integral as approximated by trapezoidal rule in loglog space.
+    """
+    log10 = np.log10
+
+    if ulog10:
+        from uncertainties.unumpy import log10
+
+    try:
+        y_unit = y.unit
+        y = y.value
+    except AttributeError:
+        y_unit = 1.
+    try:
+        x_unit = x.unit
+        x = x.value
+    except AttributeError:
+        x_unit = 1.
+
+    y = np.asanyarray(y)
+    x = np.asanyarray(x)
+
+    slice1 = [slice(None)] * y.ndim
+    slice2 = [slice(None)] * y.ndim
+    slice1[axis] = slice(None, -1)
+    slice2[axis] = slice(1, None)
+
+    if x.ndim == 1:
+        shape = [1] * y.ndim
+        shape[axis] = x.shape[0]
+        x = x.reshape(shape)
+
+    with np.errstate(invalid='ignore', divide='ignore'):
+        # Compute the power law indices in each integration bin
+        b = log10(y[slice2] / y[slice1]) / log10(x[slice2] / x[slice1])
+
+        # if local powerlaw index is -1, use \int 1/x = log(x); otherwise use normal
+        # powerlaw integration
+        trapzs = np.where(
+            np.abs(b + 1.) > 1e-10, (y[slice1] * (
+                x[slice2] * (x[slice2] / x[slice1])**b - x[slice1])) / (b + 1),
+            x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
+
+    tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
+    trapzs[tozero] = 0.
+
+    if intervals:
+        return trapzs * x_unit * y_unit
+
+    ret = np.add.reduce(trapzs, axis) * x_unit * y_unit
+
+    return ret
