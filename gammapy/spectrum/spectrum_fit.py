@@ -2,13 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
-import numpy as np
-import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
-from ..utils.energy import Energy
-from ..spectrum import SpectrumObservationList, SpectrumObservation, CountsSpectrum
-from ..data import ObservationTable
+from ..spectrum import SpectrumObservationList, SpectrumObservation
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -31,20 +27,18 @@ class SpectrumFit(object):
     obs_list : SpectrumObservationList
         Observations to fit
 
-
     Examples
     --------
 
     Example how to run a spectral analysis and have a quick look at the results.
 
-    .. code-block::
+    ::
 
         from gammapy.spectrum import SpectrumObservation, SpectrumFit
-        from gammapy.datasets import gammapy_extra
         import matplotlib.pyplot as plt
 
-        phafile = gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs23523.fits')
-        obs = SpectrumObservation.read(phafile)
+        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
+        obs = SpectrumObservation.read(filename)
 
         fit = SpectrumFit(obs)
         fit.run()
@@ -255,5 +249,3 @@ class SpectrumFit(object):
 
         ds.clear_stack()
         ds.clear_models()
-
-
