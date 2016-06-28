@@ -1,4 +1,4 @@
-import numpy as np
+"""Short script for testing the PSF3D class"""
 from astropy.coordinates import Angle
 from astropy.units import Quantity
 from gammapy.irf import PSF3D
@@ -13,6 +13,8 @@ def load_psf():
     
 
 if __name__ == '__main__':
+    """Produce some debugging plots"""
     psf = load_psf()
+    print(psf.info())
     psf.plot_psf_vs_rad(theta=Angle(0, 'deg'), energy=Quantity(1, 'TeV'))
     psf.peek()
