@@ -761,7 +761,7 @@ class EnergyDependentTablePSF(object):
         return self._table_psf_cache[energy_index]
 
 class PSF3D(object):
-    """This class implements the format described here: :ref:`gadf:psf_table`.
+    """This class implements the format described here: :ref:`gadf:psf-table`.
 
     Parameters
     ----------
@@ -779,7 +779,7 @@ class PSF3D(object):
         PSF (3-dim with axes: psf[rad_index, offset_index, energy_index]
     energy_thresh_lo : `~astropy.units.Quantity`
         Lower energy threshold. Default energy_thresh_lo = 100 GeV
-    energy_thqresh_hi : `~astropy.units.Quantity`
+    energy_thresh_hi : `~astropy.units.Quantity`
         Upper energy threshold. Default energy_thresh_hi = 100 TeV
      
     """
@@ -1121,7 +1121,6 @@ class PSF3D(object):
 
         # Set up and compute data
         containment = self.containment_radius(self.energy_logcenter(), self.offset, fraction)
-        print(containment)
 
         extent = [
             self.offset[0].value, self.offset[-1].value,
