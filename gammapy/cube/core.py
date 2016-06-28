@@ -324,20 +324,22 @@ class SkyCube(object):
         sky_map = SkyMap.from_image_hdu(image_hdu)
         return sky_map.solid_angle()
 
-    def sky_image(self, slicepos, copy=True):
+    def sky_image(self, idx_energy, copy=True):
         """Slice 3-dim cube into a 2-dim `~gammapy.image.SkyMap` along slicepos.
 
         Parameters
         ----------
-        slicepos : int
-            Slice position
+        ind_energy : int
+            Energy slice index
+        copy : bool (default True)
+            Whether to make deep copy of returned object
 
         Returns
         -------
         image : `~gammapy.image.SkyMap`
             2-dim SkyMap image
         """
-        skymap = SkyMap(self.name, Quantity(self.data[slicepos], self.data.unit), self.wcs)
+        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
         return skymap.copy() if copy else skymap
     
     def flux(self, lon, lat, energy):
