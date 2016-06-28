@@ -2,8 +2,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from astropy.tests.helper import pytest
-
+from astropy.tests.helper import pytest, assert_quantity_allclose
+import astropy.units as u
+from numpy.testing import assert_allclose 
 from ...datasets import gammapy_extra
 from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
 from ...spectrum.spectrum_fit import SpectrumFit
@@ -24,11 +25,8 @@ def test_spectral_fit():
 
     fit = SpectrumFit(obs_list)
     
-    fit.model = 'PL'
-    fit.energy_threshold_low = '1 TeV'
-    fit.energy_threshold_high = '10 TeV'
-
-    fit.run(method='sherpa')
-    assert fit.result.spectral_model == 'PowerLaw'
-    
-    #TODO: add real asserts here
+    fit.run()
+    assert fit.result.fit.spectral_model == 'PowerLaw'
+    assert_allclose(fit.result.fit.statval, 100.433, rtol=1e-3)
+    assert_quantity_allclose(fit.result.fit.parameters.index,
+                             2.402 * u.Unit(''), rtol=1e-3)

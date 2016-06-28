@@ -232,7 +232,7 @@ class SpectrumFit(object):
         namedataset = []
         for i in range(len(ds.datasets)):
             datastack.ignore_bad(i + 1)
-            datastack.ignore_bad(i + 1, i + 1)
+            datastack.ignore_bad(i + 1, 1)
             namedataset.append(i + 1)
         datastack.set_stat(self.statistic)
         ds.fit(*namedataset)
