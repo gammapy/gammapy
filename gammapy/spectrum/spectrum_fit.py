@@ -34,8 +34,10 @@ class SpectrumFit(object):
 
     Examples
     --------
-    .. plot::
-        :include-source:
+
+    Example how to run a spectral analysis and have a quick look at the results.
+
+    .. code-block::
 
         from gammapy.spectrum import SpectrumObservation, SpectrumFit
         from gammapy.datasets import gammapy_extra
@@ -48,6 +50,8 @@ class SpectrumFit(object):
         fit.run()
         fit.result.plot_fit()
         plt.show()
+
+    TODO: put output image in gammapy-extra and show it here.
     """
 
     FLUX_FACTOR = 1e-20
