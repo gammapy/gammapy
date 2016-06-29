@@ -8,20 +8,17 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 * ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-
 from astropy.io import fits
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
-
-from ..spectrum import LogEnergyAxis, powerlaw
 from ..utils.energy import EnergyBounds
+from ..utils.fits import table_to_fits_table
 from ..image import SkyMap
 from ..image.utils import _bin_events_in_cube
-from ..utils.fits import table_to_fits_table
+from ..spectrum import LogEnergyAxis, powerlaw
 
 __all__ = ['SkyCube']
 
@@ -329,7 +326,7 @@ class SkyCube(object):
 
         Parameters
         ----------
-        ind_energy : int
+        inx_energy : int
             Energy slice index
         copy : bool (default True)
             Whether to make deep copy of returned object
@@ -341,7 +338,7 @@ class SkyCube(object):
         """
         skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
         return skymap.copy() if copy else skymap
-    
+
     def flux(self, lon, lat, energy):
         """Differential flux.
 
