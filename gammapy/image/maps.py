@@ -414,6 +414,7 @@ class SkyMap(object):
         """
         Solid angle image (2-dim `astropy.units.Quantity` in `sr`).
         """
+
         coordinates = self.coordinates(mode='edges')
         lon = coordinates.data.lon.radian
         lat = coordinates.data.lat.radian

@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.coordinates import SkyCoord, Angle
@@ -12,6 +13,20 @@ from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
 from ..maps import SkyMap
+
+
+class TestSmallImages():
+    """
+    Tests image utils with 6 small images in different projections(CAR, TAN, AIT) and coordinate systems(GAL, CEL).
+    """
+
+    @classmethod
+    def setup_images(cls):
+        images = [SkyMap.empty(nxpix=6, nypix=3, binsz=60, proj=proj, coordsys=coordsys).to_image_hdu()
+                  for proj in ['CAR', 'TAN', 'AIT'] for coordsys in ['GAL', 'CEL']]
+        for image in images:
+            image.data = np.arange(6 * 3).reshape(image.data.shape)
+        return images
 
 
 @requires_data('gammapy-extra')
@@ -55,6 +70,48 @@ class TestSkyMapPoisson:
     def test_solid_angle(self):
         solid_angle = self.skymap.solid_angle()
         assert_quantity_allclose(solid_angle[0, 0], Angle(0.02, "deg") ** 2, rtol=1e-3)
+        
+    @pytest.mark.parametrize("image,expected_solid_angle",
+                             zip(TestSmallImages.setup_images(),
+                                 [[[6.41223565e-17, 6.41223565e-17, 6.41223565e-17,
+                                    6.41223565e-17, 6.41223565e-17, 6.41223565e-17],
+                                   [9.37937979e-01, 9.37937979e-01, 9.37937979e-01,
+                                    9.37937979e-01, 9.37937979e-01, 9.37937979e-01],
+                                   [9.37937979e-01, 9.37937979e-01, 9.37937979e-01,
+                                    9.37937979e-01, 9.37937979e-01, 9.37937979e-01]],
+                                  [[6.41223565e-17, 6.41223565e-17, 6.41223565e-17,
+                                    6.41223565e-17, 6.41223565e-17, 6.41223565e-17],
+                                   [9.37937979e-01, 9.37937979e-01, 9.37937979e-01,
+                                    9.37937979e-01, 9.37937979e-01, 9.37937979e-01],
+                                   [9.37937979e-01, 9.37937979e-01, 9.37937979e-01,
+                                    9.37937979e-01, 9.37937979e-01, 9.37937979e-01]],
+                                  [[0.0550423, 0.1237768, 0.24543235, 0.26718079, 0.15893573,
+                                    0.07152397],
+                                   [0.04705624, 0.1458036, 0.51902542, 0.72151642, 0.22800053,
+                                    0.06629376],
+                                   [0.04289254, 0.12258361, 0.35831704, 0.3900685, 0.15740361,
+                                    0.05573613]],
+                                  [[0.0550423, 0.1237768, 0.24543235, 0.26718079, 0.15893573,
+                                    0.07152397],
+                                   [0.04705624, 0.1458036, 0.51902542, 0.72151642, 0.22800053,
+                                    0.06629376],
+                                   [0.04289254, 0.12258361, 0.35831704, 0.3900685, 0.15740361,
+                                    0.05573613]],
+                                  [[nan, nan, nan, nan, nan,
+                                    nan],
+                                   [nan, 0.96302079, 1.02533278, 1.06937617, 1.11576917,
+                                    nan],
+                                   [nan, nan, nan, nan, nan,
+                                    nan]],
+                                  [[nan, nan, nan, nan, nan,
+                                    nan],
+                                   [nan, 0.96302079, 1.02533278, 1.06937617, 1.11576917,
+                                    nan],
+                                   [nan, nan, nan, nan, nan,
+                                    nan]]]))
+    def test_solid_angle_with_small_images(self, image, expected_solid_angle):
+        solid_angle = SkyMap.from_image_hdu(image).solid_angle()
+        assert_allclose(solid_angle.value, expected_solid_angle, rtol=1e-6)
 
     def test_contains(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
