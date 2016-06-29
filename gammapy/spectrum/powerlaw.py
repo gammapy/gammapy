@@ -11,6 +11,7 @@ __all__ = [
     'power_law_pivot_energy',
     'df_over_f',
     'power_law_flux',
+    'power_law_energy_flux',
     'power_law_integral_flux',
     'g_from_f',
     'g_from_points',
@@ -101,6 +102,37 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     return I / _conversion_factor(g, e, e1, e2)
 
 
+def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
+    r"""
+    Compute energy flux between e1 and e2 for a given integral flux.
+
+    The analytical solution for the powerlaw case is given by:
+
+    .. math::
+
+        G(E_1, E_2) = I(\epsilon, \infty) \, \frac{1-\Gamma}
+        {2-\Gamma} \, \frac{E_1^{2-\Gamma} - E_2^{2-\Gamma}}{\epsilon^{1-\Gamma}}
+
+    Parameters
+    ----------
+    I : array_like
+        Integral flux in ``energy_min``, ``energy_max`` band
+    g : array_like
+        Power law spectral index
+    e : array_like
+        Energy at above which the integral flux is given.
+    e1 : array_like
+        Energy band minimum
+    e2 : array_like
+        Energy band maximum
+
+    """
+    g1     = 1. - g
+    g2     = 2. - g
+    factor = g1 / g2 * (e1 ** g2 - e2 ** g2) / e ** g1
+    return I * factor
+
+
 def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     """Compute integral flux for a given differential flux.
 
@@ -123,6 +155,9 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
         Integral flux in ``energy_min``, ``energy_max`` band
     """
     return f * _conversion_factor(g, e, e1, e2)
+
+
+
 
 
 def g_from_f(e, f, de=1):
