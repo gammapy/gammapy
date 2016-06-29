@@ -202,6 +202,19 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {:.1f}\n'.format('Excess', d['Excess_Spec'])
         ss += '{:<20s} : {}\n'.format('Spectral model', d['Spectral_Model'])
 
+        val = d['TS_ECPL_over_PL']
+        ss += '{:<20s} : {:.1f}\n'.format('TS ECPL over PL', val)
+
+        val = d['Flux_Spec_Int_1TeV']
+        err = d['Flux_Spec_Int_1TeV_Err']
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 cm^-2 s^-1  = ({:.1f} +/- {:.1f}) % Crab\n'.format(
+            'Best-fit model flux(> 1 TeV)', val / FF, err / FF, val * FLUX_TO_CRAB, err * FLUX_TO_CRAB)
+
+        val = d['Flux_Spec_Energy_1_10_TeV']
+        err = d['Flux_Spec_Energy_1_10_TeV_Err']
+        ss += '{:<20s} : ({:.1f} +/- {:.1f}) x 10^-12 erg cm^-2 s^-1\n'.format(
+            'Best-fit model energy flux(1 to 10 TeV)', val / FF, err / FF)
+
         # TODO: can we just use the Gammapy model classes here instead of duplicating the code?
         ss += self._summary_spec_pl()
         ss += self._summary_spec_ecpl()
@@ -262,9 +275,6 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         val = 1. / val
 
         ss += '{:<20s} : {:.1f} +/- {:.1f} TeV\n'.format('ECPL E_cut', val, err)
-
-        val = d['TS_ECPL_over_PL']
-        ss += '{:<20s} : {:.1f}\n'.format('TS ECPL over PL', val)
 
         return ss
 

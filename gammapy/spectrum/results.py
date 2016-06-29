@@ -552,9 +552,14 @@ class SpectrumFitResult(object):
             else:
                 info += '\t {name:10s}: {val.value:.3f} +/- {err.value:.3f} {val.unit}\n'.format(**_)
 
-        info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
-        info += '\nCovariance:\n {}'.format(self.covariance)
-        info += '\nFit Range: {}'.format(self.fit_range)
+        if self.statval is not None:
+            info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
+
+        if self.covariance is not None:
+            info += '\nCovariance:\n {}'.format(self.covariance)
+
+        if self.fit_range is not None:
+            info += '\nFit Range: {}'.format(self.fit_range)
         
         return info
 
