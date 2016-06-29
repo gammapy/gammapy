@@ -127,8 +127,8 @@ def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
         Energy band maximum
 
     """
-    g1     = 1. - g
-    g2     = 2. - g
+    g1 = 1. - g
+    g2 = 2. - g
     factor = g1 / g2 * (e1 ** g2 - e2 ** g2) / e ** g1
     return I * factor
 
@@ -155,9 +155,6 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
         Integral flux in ``energy_min``, ``energy_max`` band
     """
     return f * _conversion_factor(g, e, e1, e2)
-
-
-
 
 
 def g_from_f(e, f, de=1):

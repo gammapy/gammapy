@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import numpy as np
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.time import Time
-from astropy.table import Table
 from ...utils.testing import requires_dependency
 from ...spectrum import (LogEnergyAxis, integrate_spectrum, power_law_energy_flux,
                          power_law_evaluate, power_law_flux)
@@ -37,13 +34,14 @@ def test_integrate_spectrum():
     einf = Quantity(1E10, 'TeV')
     e = Quantity(1, 'TeV')
     g = 2.3
-    I  = Quantity(1E-12, 'cm-2 s-1')
-    
+    I = Quantity(1E-12, 'cm-2 s-1')
+
     ref = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
     norm = power_law_flux(I=I, g=g, e=e, e1=e1, e2=einf)
     f = lambda x: x * power_law_evaluate(x, norm, g, e)
-    val = integrate_spectrum(f, e1, e2) 
+    val = integrate_spectrum(f, e1, e2)
     assert_quantity_allclose(val, ref)
+
 
 @requires_dependency('uncertainties')
 def test_integrate_spectrum():
@@ -57,11 +55,11 @@ def test_integrate_spectrum():
     e = 1.
     g = unumpy.uarray(2.3, 0.2)
     I = unumpy.uarray(1E-12, 1E-13)
-    
+
     ref = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
     norm = power_law_flux(I=I, g=g, e=e, e1=e1, e2=einf)
     f = lambda x: x * power_law_evaluate(x, norm, g, e)
-    val = integrate_spectrum(f, e1, e2) 
+    val = integrate_spectrum(f, e1, e2)
 
     assert_allclose(unumpy.nominal_values(val), unumpy.nominal_values(ref))
     assert_allclose(unumpy.std_devs(val), unumpy.std_devs(ref))

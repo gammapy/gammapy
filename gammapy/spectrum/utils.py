@@ -1,11 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.units import Quantity
-
-from ..utils.scripts import read_yaml
 
 __all__ = [
     'LogEnergyAxis',
@@ -143,7 +139,7 @@ def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
 
     # Need to give RMF file for reco energy binning
     id = obs[0].meta.obs_id
-    rmf = str(ogip_dir/ 'rmf_run{}.fits'.format(id))
+    rmf = str(ogip_dir / 'rmf_run{}.fits'.format(id))
     val = [CountsSpectrum.read_bkg(_, rmf) for _ in n_pred_dir.glob('*.fits')]
     npred = np.sum(val)
 
@@ -171,8 +167,8 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
         Number of grid points per decade used for the integration.
         Default ndecade = 100.
     kwargs : dict
-        Keyword arguments passed to `trapz_loglog`
-    """   
+        Keyword arguments passed to ``trapz_loglog``
+    """
     try:
         logmin = np.log10(xmin.value)
         logmax = np.log10(xmax.to(xmin.unit).value)
@@ -187,6 +183,7 @@ def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
         x = np.logspace(logmin, logmax, n)
         y = func(x)
         val = _trapz_loglog(y, x, ulog10=True, **kwargs)
+
     return val
 
 
@@ -254,7 +251,7 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
         # powerlaw integration
         trapzs = np.where(
             np.abs(b + 1.) > 1e-10, (y[slice1] * (
-                x[slice2] * (x[slice2] / x[slice1])**b - x[slice1])) / (b + 1),
+                x[slice2] * (x[slice2] / x[slice1]) ** b - x[slice1])) / (b + 1),
             x[slice1] * y[slice1] * np.log(x[slice2] / x[slice1]))
 
     tozero = (y[slice1] == 0.) + (y[slice2] == 0.) + (x[slice1] == x[slice2])
