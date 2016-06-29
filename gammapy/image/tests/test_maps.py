@@ -52,7 +52,18 @@ class TestImage:
 
     @staticmethod
     def _make_solid_angle(proj):
-        """Solid angle reference results."""
+        """Solid angle reference results.
+
+        Note: the first and last row isn't the same, because the solid angle algorithm
+        isn't symmetric (uses lower-left pixel), so for CAR the pixel solid angle is
+        approximately zero, because the lower-left and lower-right pixel are both
+        at the pole.
+        A more precise method would be e.g. to call
+        http://spacetelescope.github.io/sphere/api/spherical_geometry.polygon.SphericalPolygon.html#spherical_geometry.polygon.SphericalPolygon.area
+        and then for CAR the solid angle
+        - in the first and last row should be the same
+        - sum should be `4 * pi` because the image covers the whole sphere
+        """
         if proj == 'CAR':
             return [
                 [6.4122356457393e-17, 6.412235645739299e-17, 6.412235645739299e-17,
