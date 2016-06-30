@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
 from ...utils.energy import EnergyBounds
-from ...cube import SkyCube, cube_to_image
+from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
@@ -98,7 +98,7 @@ class TestBlockReduceHDU():
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_cube(self, operation):
         for index in self.indices:
-            image = cube_to_image(self.cube, index)
+            image = self.cube.sky_image(index)
             layer = self.cube.data[index]
             layer_hdu = fits.ImageHDU(data=layer, header=image.header)
             image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
