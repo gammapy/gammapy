@@ -41,13 +41,13 @@ __all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat',
 N_OBSERVED_MIN = 1e-25
 
 
-def cash(n_observed, mu_observed):
+def cash(n_observed, mu_predicted):
     r"""Cash statistic, for Poisson data.
 
     The Cash statistic is defined as:
 
     .. math::
-        C = 2 \left[ n_{observed} - n_{observed} \log \mu_{observed} \right]
+        C = 2 \left( n_{observed} - n_{observed} \log \mu_{prediced} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
 
@@ -55,7 +55,7 @@ def cash(n_observed, mu_observed):
     ----------
     n_observed : array_like
         Observed counts
-    mu_observed : array_like
+    mu_predicted : array_like
         Expected counts
 
     Returns
@@ -73,34 +73,35 @@ def cash(n_observed, mu_observed):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
+    mu_predicted = np.asanyarray(mu_prediced, dtype=np.float64)
 
-    stat = 2 * (mu_observed - n_observed * np.log(mu_observed))
-    stat = np.where(mu_observed > 0, stat, 0)
+    stat = 2 * (mu_predicted - n_observed * np.log(mu_prediced))
+    stat = np.where(mu_predicted > 0, stat, 0)
     return stat
 
 
-def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
+def cstat(n_observed, mu_predicted, n_observed_min=N_OBSERVED_MIN):
     r"""C statistic, for Poisson data.
 
     The C statistic is defined as
 
     .. math::
-        C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}
-            (\log(n_{observed}) - log(\mu_{observed}) \right]
+        C = 2 \left[ \mu_{prediced} - n_{observed} + n_{observed}
+            (\log(n_{observed}) - log(\mu_{prediced}) \right]
 
     and :math:`C = 0` where :math:`\mu_{observed} <= 0`.
 
-    TODO: explain how ``n_observed_min`` is handled (as in Sherpa).
+    ``n_observed_min`` handles the case where ``n_observed`` is 0 or less and
+    the log cannot be taken.
 
     Parameters
     ----------
     n_observed : array_like
         Observed counts
-    mu_observed : array_like
+    mu_predicted : array_like
         Expected counts
-    mu_observed_min : array_like
-        Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min.
+    n_observed_min : array_like
+        ``n_observed`` = ``n_observed_min`` where ``n_observed`` <= ``n_observed_min.``
 
     Returns
     -------
@@ -117,24 +118,92 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
+    mu_predicted = np.asanyarray(mu_prediced, dtype=np.float64)
     n_observed_min = np.asanyarray(n_observed_min, dtype=np.float64)
 
     n_observed = np.where(n_observed <= n_observed_min, n_observed_min, n_observed)
 
-    term1 = np.log(n_observed) - np.log(mu_observed)
-    stat = 2 * (mu_observed - n_observed + n_observed * term1)
-    stat = np.where(mu_observed > 0, stat, 0)
+    term1 = np.log(n_observed) - np.log(mu_predicted)
+    stat = 2 * (mu_predicted - n_observed + n_observed * term1)
+    stat = np.where(mu_predicted > 0, stat, 0)
 
     return stat
 
 
-def wstat():
+def wstat(n_on, n_bkg, mu_signal):
     r"""W statistic, for Poisson data with Poisson background.
 
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    Consult the reference page for a definition of WStat.
+
+    Parameters
+    ----------
+    n_on : array_like
+        Total observed counts
+    n_bkg : array_like
+        Background counts
+    mu_signal : array_like
+        Signal expected counts
+
+    Returns
+    -------
+    stat : ndarray
+        Statistic per bin
+
+    References
+    ----------
+    * `XSPEC page on Poisson data with Poisson background
+    <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
-    pass
+    # Mute numpy errors since they are expected and treated in the end
+    original_state = np.geterr()
+    np.seterr(all='ignore')
+
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_bkg = np.asanyarray(n_bkg, dtype=np.float64)
+    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
+
+    # variable names are geared to the names on the XSPEC reference page
+    d_term1 = 2 * mu_signal - n_on - n_bkg
+    d_term2 = 8 * n_on * mu_signal
+    d = np.sqrt(d_term1**2 + d_term2)
+
+    f_temp = n_on + n_bkg - 2 * mu_signal
+    f_temp_plus = f_temp + d
+    f_temp_minus = f_temp - d
+
+    f_num = np.where(f_temp_plus > 0, f_temp_plus, f_temp_minus)
+    f_den = 4
+    mu_background = f_num / f_den
+
+    term1 = mu_signal + 2 * mu_background
+    term2 = n_on * np.log(mu_signal + mu_background)
+    term3 = n_bkg * np.log(mu_background)
+    term4 = n_on * (1-np.log(n_on)) + n_bkg * (1-np.log(n_bkg))
+
+    stat = term1 - term2 - term3 - term4
+    # This may contain nan values where n_on or n_bkg are zero 
+
+    np.seterr(**original_state)
+    idx = np.isnan(stat)
+    if idx.any():
+        stat[idx] = 0
+        special_cases = np.zeros(len(stat))
+        for pos in np.where(idx)[0]:
+            if n_on[pos] == 0:
+                statval = mu_signal[pos] - n_bkg[pos] * np.log(0.5)
+            elif n_bkg[pos] == 0:
+                if mu_signal[pos] < (n_on[pos] / 2):
+                    statval = - mu_signal[pos] - n_on[pos] * np.log(0.5)
+                else:
+                    temp = (np.log(n_on[pos]) - np.log(mu_signal[pos]) - 1)
+                    statval = mu_signal[pos] + n_on[pos] * temp
+            else:
+                raise ValueError("This should never be reached")
+            special_cases[pos] = statval
+
+    stat = stat + special_cases
+
+    return stat
 
 
 def lstat():
