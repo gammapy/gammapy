@@ -188,38 +188,32 @@ class SpectrumExtraction(object):
 
         self._observations = SpectrumObservationList(spectrum_observations)
 
-    def define_ethreshold(self, method_lo_threshold=None, func_lo_threshold=None, **kwargs):
+    def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
         """Set energy threshold
         
-        Set the hi and lo Ethreshold for each observation based on implemented
-        method in gammapy or on a function that you define on the IRFs on each
-        observations and that take an observation object as parameters.
+        Set the high and low energy threshold for each observation based on a
+        choosen method. 
+        
+        Available methods for setting the low energy threshold
+        * area_max : Set energy threshold at x percent of the maximum effective
+                     area (x given as kwargs['percent'])
 
-        TODO: Refactor
+        Available methods for setting the high energy threshold
+        * TBD
 
         Parameters
         ----------
-        method_lo_threshold : {"AreaMax", "Myfunc"}
-            method implemented to define a low energy threshold
-        func_lo_threshold : function name
-            Name of the function you define on the IRFs of the observation to define a low energy threshold
-        kwargs : argument to the defined method or the function
-
+        method_lo_threshold : {'area_max'}
+            method for defining the low energy threshold
         """
-        # TODO: implement new methods for calculating this threshold and remove the callback function...
-        for i, obs in enumerate(self._observations):
-            # TODO: define method for the high energy threshold
-            if method_lo_threshold == "AreaMax":
-                self._observations[i].on_vector.lo_threshold = obs.aeff.area_max(**kwargs)
-            elif method_lo_threshold == "Myfunc":
-                if not func_lo_threshold:
-                    log.info('You have to give a function do define the energy threshold')
-                    break
-                else:
-                    self._observations[i].on_vector.lo_threshold = func_lo_threshold(obs, **kwargs)
-            elif not method_lo_threshold:
-                log.info('You have to give a method name to define the energy threshold')
-                break
+        # TODO: define method for the high energy threshold
+        for obs in self.observations:
+            if method_lo_threshold == 'area_max':
+                obs.on_vector.lo_threshold = obs.aeff.find_energy(
+                    kwargs['percent'] / 100 * obs.aeff.max_area)
+            else:
+                raise ValueError('Undefine method for low threshold: {}'.format(
+                    method_lo_threshold))
 
     def write(self):
         """Write results to disk"""

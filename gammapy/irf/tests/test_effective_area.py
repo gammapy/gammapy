@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 import astropy.units as u
 from numpy.testing import assert_allclose, assert_equal
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data, data_manager
 from ...irf.effective_area import (
@@ -178,8 +178,16 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
 
     assert (arf.evaluate() == arf2.evaluate()).all()
 
-    elo_threshold = arf.area_max(10)
-    assert_allclose(elo_threshold, 0.4122628148393689 * u.TeV)
+    test_aeff = 0.6 * arf.max_area
+    node_above = np.where(arf.data > test_aeff)[0][0]
+    ener_above = arf.energy.nodes[node_above]
+    ener_below = arf.energy.nodes[node_above - 1]
+    test_ener = arf.find_energy(test_aeff)
+
+    assert ener_below < test_ener and test_ener < ener_above
+
+    elo_threshold = arf.find_energy(0.1 * arf.max_area)
+    assert_quantity_allclose(elo_threshold, 0.4367 * u.TeV, rtol=1e-3)
 
 
 def test_abramowski_effective_area():

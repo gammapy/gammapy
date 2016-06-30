@@ -20,11 +20,11 @@ from ...spectrum import SpectrumExtraction, SpectrumObservation
     (dict(containment_correction=False), dict(n_on=95,
                                               sigma=19.70,
                                               aeff=549861.8268659255 * u.m ** 2,
-                                              ethresh=0.4230466456851681 * u.TeV)),
+                                              ethresh=0.4353353353 * u.TeV)),
     (dict(containment_correction=True), dict(n_on=95,
                                              sigma=19.70,
                                              aeff=393356.18322397786 * u.m ** 2,
-                                             ethresh=0.6005317540449035 * u.TeV)),
+                                             ethresh=0.6179 * u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -59,9 +59,10 @@ def test_spectrum_extraction(pars, results, tmpdir):
 
     ana.run(outdir=tmpdir)
 
-    ana.define_ethreshold(method_lo_threshold="AreaMax", percent_area_max=10)
+    ana.define_energy_threshold(method_lo_threshold="area_max", percent=10)
 
-    assert_quantity_allclose(ana.observations[0].lo_threshold, results['ethresh'])
+    assert_quantity_allclose(ana.observations[0].lo_threshold,
+                             results['ethresh'], rtol=1e-3)
     assert_quantity_allclose(ana.observations[0].aeff.evaluate(
         energy=5 * u.TeV), results['aeff'])
     assert ana.observations[0].total_stats.n_on == results['n_on']

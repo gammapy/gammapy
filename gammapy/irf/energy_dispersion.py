@@ -47,13 +47,9 @@ class EnergyDispersion(object):
         if e_reco is None:
             e_reco = e_true
 
-        if not isinstance(e_true, EnergyBounds) or not isinstance(
-                e_reco, EnergyBounds):
-            raise ValueError("Energies must be Energy objects")
-
         self._pdf_matrix = np.asarray(pdf_matrix)
-        self._e_true = e_true
-        self._e_reco = e_reco
+        self._e_true = EnergyBounds(e_true)
+        self._e_reco = EnergyBounds(e_reco)
 
         self._pdf_threshold = 0
         self.pdf_threshold = pdf_threshold
@@ -400,7 +396,7 @@ class EnergyDispersion(object):
         y = self.reco_energy.range.value
         return x[0], x[1], y[0], y[1]
 
-    def plot_matrix(self, ax=None, **kwargs):
+    def plot_matrix(self, ax=None, show_energy=None, **kwargs):
         """TODO: document me.
         """
         import matplotlib.pyplot as plt
@@ -415,9 +411,14 @@ class EnergyDispersion(object):
 
         image = self.pdf_matrix
         ax.imshow(image, extent=self._extent(), **kwargs)
+        if show_energy is not None:
+            ener_val = Quantity(show_energy).to(self.reco_energy.unit).value
+            ax.hlines(ener_val, 0, 200200,
+                      linestyles='dashed')
         ax.set_xlabel('True energy (TeV)')
         ax.set_ylabel('Reco energy (TeV)')
-
+        ax.set_xscale('log')
+        ax.set_yscale('log')
         # TODO: better colorbar formatting
         # plt.colorbar()
         # plt.tight_layout()

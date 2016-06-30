@@ -27,7 +27,7 @@ class EffectiveAreaTable(NDDataArray):
     """Energy Axis"""
     axis_names = ['energy']
 
-    def plot(self, ax=None, energy=None, **kwargs):
+    def plot(self, ax=None, energy=None, show_energy=None, **kwargs):
         """Plot effective area
 
         Parameters
@@ -36,6 +36,8 @@ class EffectiveAreaTable(NDDataArray):
             Axis
         energy : `~astropy.units.Quantity`
             Energy nodes 
+        show_energy : `~astropy.units.Quantity`, optional
+            Show energy, e.g. threshold, as vertical line
 
         Returns
         -------
@@ -51,8 +53,13 @@ class EffectiveAreaTable(NDDataArray):
         if energy is None:
             energy = self.energy.nodes
         eff_area = self.evaluate(energy=energy)
-
-        ax.plot(energy, eff_area, **kwargs)
+        xerr = (energy.value - self.energy.data[:-1].value,
+                self.energy.data[1:].value - energy.value)
+        ax.errorbar(energy.value, eff_area.value, xerr=xerr, **kwargs)
+        if show_energy is not None:
+            ener_val = u.Quantity(show_energy).to(self.energy.unit).value
+            ax.vlines(ener_val, 0, 1.1 * self.max_area.value,
+                      linestyles='dashed')
         ax.set_xscale('log')
         ax.set_xlabel('Energy [{}]'.format(self.energy.unit))
         ax.set_ylabel('Effective Area [{}]'.format(self.data.unit))
@@ -83,30 +90,35 @@ class EffectiveAreaTable(NDDataArray):
                     hduclas2='SPECRESP')
         return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
 
-    def area_max(self, percent_area_max):
-        """Calculate energy threshold
+    @property
+    def max_area(self):
+        """Maximum effective area"""
+        return self.data[np.where(~np.isnan(self.data))].max() 
+
+    def find_energy(self, aeff):
+        """Find energy for given effective area
         
-        The energy threshold is the energy for which one the Area is superior
-        to percent_area_max*AreaMax
-        TODO: Refactor
+        A linear interpolation is performed between the two nodes closest to
+        the desired effective area value.
 
         Parameters
         ----------
-        percent_area_max: int
-            percentage of the maximal Area value between 1 and 100
+        aeff: `~astropy.units.Quantity`
+            Effective area value
 
         Returns
         -------
         energy: `~astropy.units.Quantity`
-            Energy threshold
+            Energy corresponing to aeff 
         """
-        area_max = self.data[np.where(~np.isnan(self.data))].max()
-        area_thres = (percent_area_max / 100) * area_max
-        i_thres = np.where(self.data > area_thres)[0][0]
-        a = (self.energy.data[i_thres] - self.energy.data[i_thres - 1]) / (self.data[i_thres] - self.data[i_thres - 1])
-        b = self.energy.data[i_thres]
-        ethreshold = a * (area_thres - self.data[i_thres]) + b
-        return ethreshold
+        # TODO: Move to base class?
+        idx = np.where(self.data > aeff)[0][0]
+
+        # Linear interpolation between two energy nodes
+        energy = np.interp(aeff.value,
+                           (self.data[[idx-1, idx]].value),
+                           (self.energy.nodes[[idx-1, idx]].value))
+        return energy * self.energy.unit
 
 
 class EffectiveAreaTable2D(NDDataArray):

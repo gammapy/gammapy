@@ -245,9 +245,19 @@ class NDDataArray(object):
         http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
         """
         from scipy.interpolate import RegularGridInterpolator
-
+        
         points = [a._interp_nodes() for a in self.axes]
         values = self.data.value
+
+        # If values contains nan, only setup interpolator in valid range
+        if np.isnan(values).any():
+            if self.dim > 1:
+                raise NotImplementedError('Data grid contains nan. This is not'
+                                          'supported for arrays dimension > 1')
+            else:
+                mask = np.isfinite(values)
+                points = [points[0][mask]]
+                values = values[mask]
 
         self._regular_grid_interp = RegularGridInterpolator(points, values,
                                                             **self.interp_kwargs)
