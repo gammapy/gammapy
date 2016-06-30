@@ -73,9 +73,9 @@ def cash(n_observed, mu_predicted):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_predicted = np.asanyarray(mu_prediced, dtype=np.float64)
+    mu_predicted = np.asanyarray(mu_predicted, dtype=np.float64)
 
-    stat = 2 * (mu_predicted - n_observed * np.log(mu_prediced))
+    stat = 2 * (mu_predicted - n_observed * np.log(mu_predicted))
     stat = np.where(mu_predicted > 0, stat, 0)
     return stat
 
@@ -118,7 +118,7 @@ def cstat(n_observed, mu_predicted, n_observed_min=N_OBSERVED_MIN):
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
     n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_predicted = np.asanyarray(mu_prediced, dtype=np.float64)
+    mu_predicted = np.asanyarray(mu_predicted, dtype=np.float64)
     n_observed_min = np.asanyarray(n_observed_min, dtype=np.float64)
 
     n_observed = np.where(n_observed <= n_observed_min, n_observed_min, n_observed)
@@ -164,9 +164,9 @@ def wstat(n_on, n_bkg, mu_signal):
 
     # variable names are geared to the names on the XSPEC reference page
     d_term1 = 2 * mu_signal - n_on - n_bkg
-    d_term2 = 8 * n_on * mu_signal
+    d_term2 = 8 * n_bkg * mu_signal
     d = np.sqrt(d_term1**2 + d_term2)
-
+    
     f_temp = n_on + n_bkg - 2 * mu_signal
     f_temp_plus = f_temp + d
     f_temp_minus = f_temp - d
@@ -180,7 +180,7 @@ def wstat(n_on, n_bkg, mu_signal):
     term3 = n_bkg * np.log(mu_background)
     term4 = n_on * (1-np.log(n_on)) + n_bkg * (1-np.log(n_bkg))
 
-    stat = term1 - term2 - term3 - term4
+    stat = 2 * (term1 - term2 - term3 - term4)
     # This may contain nan values where n_on or n_bkg are zero 
 
     np.seterr(**original_state)
@@ -201,7 +201,7 @@ def wstat(n_on, n_bkg, mu_signal):
                 raise ValueError("This should never be reached")
             special_cases[pos] = statval
 
-    stat = stat + special_cases
+        stat = stat + special_cases
 
     return stat
 
