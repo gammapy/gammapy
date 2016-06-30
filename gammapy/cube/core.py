@@ -447,9 +447,7 @@ class SkyCube(object):
 
         integral_flux = integral_flux.sum(axis=0)
 
-        # TODO: get rid of the `str` calls once this `WCS.sub` issue is fixed:
-        # https://github.com/astropy/astropy/issues/3356
-        axes = [str('longitude'), str('latitude')]
+        axes = ['longitude', 'latitude']
         header = self.wcs.sub(axes).to_header()
 
         hdu = fits.ImageHDU(data=integral_flux,
