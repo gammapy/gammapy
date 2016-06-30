@@ -7,7 +7,6 @@ from ...utils.testing import requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import lon_lat_rectangle_mask
 from ...spectrum import SED, add_spec, cube_sed
-from ...spectrum.models import PowerLaw, PLExpCutoff
 
 
 @pytest.mark.xfail
