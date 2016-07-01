@@ -1,36 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Common fit statistics used in gamma-ray astronomy.
 
-References
-----------
-
-Results were tested against results from the
-`Sherpa <http://cxc.harvard.edu/sherpa/>`_ and
-`XSpec <https://heasarc.gsfc.nasa.gov/xanadu/xspec/>`_
-X-ray analysis packages.
-
-Each function contains references for the implemented formulae,
-to get an overview have a look at the
-`Sherpa statistics page <http://cxc.cfa.harvard.edu/sherpa/statistics>`_ or the
-`XSpec manual statistics page <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_.
-
-Examples
---------
-
-All functions compute per-bin statistics.
-If you want the summed statistics for all bins,
-call sum on the output array yourself.
-Here's an example for the `~cash` statistic::
-
->>> from gammapy.stats import cash
->>> data = [3, 5, 9]
->>> model = [3.3, 6.8, 9.2]
->>> cash(data, model)
-array([ -0.56353481,  -5.56922612, -21.54566271])
->>> cash(data, model).sum()
--27.678423645645118
-
+see :ref:`fit-statistics`
 """
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
@@ -52,6 +25,7 @@ def cash(n_on, mu_on):
         C = 2 \left( n_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
+    For more information see :ref:`fit-statistics`
 
     Parameters
     ----------
@@ -95,6 +69,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
 
     ``n_on_min`` handles the case where ``n_on`` is 0 or less and
     the log cannot be taken.
+    For more information see :ref:`fit-statistics`
 
     Parameters
     ----------
@@ -135,7 +110,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
 def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
     r"""W statistic, for Poisson data with Poisson background.
 
-    Consult the references for a definition of WStat.
+    For a definition of the WStat see :ref:`fit-statistics`
 
     Parameters
     ----------
@@ -158,7 +133,6 @@ def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
 
     References
     ----------
-    * Statistics page :ref:`stats`
     * `Habilitation M. de Naurois, p. 141
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
     * `XSPEC page on Poisson data with Poisson background
