@@ -50,7 +50,11 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#599] Move powerlaw utility functions to separate namespace (Christoph Deil)
+- [#594] Fix setup.py and docs/conf.py configparser import (Christoph Deil)
+- [#593] Remove gammapy/hspec (Christoph Deil)
 - [#591] Add spectrum energy flux computation (Axel Donath)
+- [#582] Add SkyImageList (Olga Vorokh)
 - [#558] Finish change to use gammapy.extern.regions (Johannes King and Christoph Deil)
 - [#569] Add detection utilities à la BgStats (Julien Lefaucheur)
 - [#565] Add exptest time variability test (Helen Poon)
