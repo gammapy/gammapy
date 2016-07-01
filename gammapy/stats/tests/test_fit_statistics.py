@@ -16,6 +16,7 @@ def get_test_data():
     off_vec = random_state.poisson(0.7 * model)
     return data, model, staterror, off_vec
 
+# TODO : Produce reference numbers outside of test (avoid sherpa dependency)
 
 @requires_dependency('sherpa')
 def test_cstat():
@@ -41,24 +42,48 @@ def test_cash():
     assert_allclose(actual, desired) 
 
 
-@pytest.mark.xfail(reason='values do not match, under investigation')
+# Note: There is an independent implementation of the XSPEC  wstat that can
+# be used for debugging: gammapy/dev/sherpa/stats/xspec_stats.py    
+@pytest.mark.xfail(reason="Sherpa implementation is different")
 @requires_dependency('sherpa')
 def test_wstat():
     import sherpa.stats as ss
     sherpa_stat = ss.WStat()
     data, model, staterror, off_vec = get_test_data()
-    alpha = 0.2
-    bkg_vec = alpha * off_vec
+    alpha = np.ones(len(data)) * 0.2
+    
+    statsvec = gammapy_stats.wstat(n_on=data,
+                                   mu_signal=model,
+                                   n_off=off_vec,
+                                   alpha=alpha)
+
     # This is how sherpa wants the background (found by trial and error)
     bkg = dict(bkg=off_vec,
                exposure_time=[1, 1],
-               backscale_ratio=[1./alpha] * len(data),
+               backscale_ratio=1./alpha,
                data_size=len(data)
               )
+
+    # Check for one bin first
+    test_bin = 0
+    bkg_testbin = dict(bkg=off_vec[test_bin],
+                      exposure_time=[1,1],
+                      backscale_ratio=1./alpha[test_bin],
+                      data_size=1)
+
+    desired_testbin, fvec  = sherpa_stat.calc_stat(data[test_bin],
+                                                  model[test_bin],
+                                                  staterror=staterror[test_bin],
+                                                  bkg=bkg_testbin)
+
+    actual_testbin = statsvec[test_bin]
+#    assert_allclose(actual_testbin, desired_testbin) 
+
+    # Now check total stat for all bins
     desired, fvec  = sherpa_stat.calc_stat(data, model, staterror=staterror,
                                            bkg=bkg)
         
-    statsvec = gammapy_stats.wstat(n_on=data, mu_signal=model, n_bkg=bkg_vec)
     actual = np.sum(statsvec)
+    print(fvec)
     assert_allclose(actual, desired) 
 

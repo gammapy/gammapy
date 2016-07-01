@@ -130,19 +130,21 @@ def cstat(n_observed, mu_predicted, n_observed_min=N_OBSERVED_MIN):
     return stat
 
 
-def wstat(n_on, n_bkg, mu_signal):
+def wstat(mu_signal, n_on, n_off, alpha):
     r"""W statistic, for Poisson data with Poisson background.
 
-    Consult the reference page for a definition of WStat.
+    Consult the references for a definition of WStat.
 
     Parameters
     ----------
-    n_on : array_like
-        Total observed counts
-    n_bkg : array_like
-        Background counts
     mu_signal : array_like
         Signal expected counts
+    n_on : array_like
+        Total observed counts
+    n_off : array_like
+        Total observed background counts
+    alpha : array_like
+        Exposure ratio between on and off region
 
     Returns
     -------
@@ -151,57 +153,35 @@ def wstat(n_on, n_bkg, mu_signal):
 
     References
     ----------
+    * Statistics page :ref:`stats`
+    * `Habilitation M. de Naurois, p. 141
+      <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
     * `XSPEC page on Poisson data with Poisson background
-    <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
+      <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
-    # Mute numpy errors since they are expected and treated in the end
-    original_state = np.geterr()
-    np.seterr(all='ignore')
-
-    n_on = np.asanyarray(n_on, dtype=np.float64)
-    n_bkg = np.asanyarray(n_bkg, dtype=np.float64)
-    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
-
-    # variable names are geared to the names on the XSPEC reference page
-    d_term1 = 2 * mu_signal - n_on - n_bkg
-    d_term2 = 8 * n_bkg * mu_signal
-    d = np.sqrt(d_term1**2 + d_term2)
     
-    f_temp = n_on + n_bkg - 2 * mu_signal
-    f_temp_plus = f_temp + d
-    f_temp_minus = f_temp - d
+    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_off = np.asanyarray(n_off, dtype=np.float64)
+    alpha = np.asanyarray(alpha, dtype=np.float64)
+   
+    # Get mu_backgroud
+    C = alpha * ( n_on + n_off ) - (1 + alpha) * mu_signal
+    D = np.sqrt(C ** 2 + 4 * alpha * ( alpha + 1) * n_off * mu_signal) 
 
-    f_num = np.where(f_temp_plus > 0, f_temp_plus, f_temp_minus)
-    f_den = 4
-    mu_background = f_num / f_den
-
-    term1 = mu_signal + 2 * mu_background
-    term2 = n_on * np.log(mu_signal + mu_background)
-    term3 = n_bkg * np.log(mu_background)
-    term4 = n_on * (1-np.log(n_on)) + n_bkg * (1-np.log(n_bkg))
-
-    stat = 2 * (term1 - term2 - term3 - term4)
-    # This may contain nan values where n_on or n_bkg are zero 
-
-    np.seterr(**original_state)
-    idx = np.isnan(stat)
-    if idx.any():
-        stat[idx] = 0
-        special_cases = np.zeros(len(stat))
-        for pos in np.where(idx)[0]:
-            if n_on[pos] == 0:
-                statval = mu_signal[pos] - n_bkg[pos] * np.log(0.5)
-            elif n_bkg[pos] == 0:
-                if mu_signal[pos] < (n_on[pos] / 2):
-                    statval = - mu_signal[pos] - n_on[pos] * np.log(0.5)
-                else:
-                    temp = (np.log(n_on[pos]) - np.log(mu_signal[pos]) - 1)
-                    statval = mu_signal[pos] + n_on[pos] * temp
-            else:
-                raise ValueError("This should never be reached")
-            special_cases[pos] = statval
-
-        stat = stat + special_cases
+    # TODO : Investigate this
+    # For n_off = 0, mu_background = 0. Effect?
+    # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
+    # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
+    # mu_background = np.where(temp_plus > 0, temp_plus, temp_minus)
+    mu_background = (C + D)/ (2 * alpha * (alpha + 1))
+    
+    # calc stat
+    term1 = n_on * np.log(mu_signal + alpha * mu_background)
+    term2 = n_off * np.log(mu_background)
+    term3 = (1 + alpha) * mu_background + mu_signal
+    
+    stat = -2 * (term1 + term2 - term3)
 
     return stat
 
