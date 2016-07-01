@@ -132,21 +132,24 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     return stat
 
 
-def wstat(mu_signal, n_on, n_off, alpha):
+def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
     r"""W statistic, for Poisson data with Poisson background.
 
     Consult the references for a definition of WStat.
 
     Parameters
     ----------
-    mu_signal : array_like
-        Signal expected counts
     n_on : array_like
         Total observed counts
     n_off : array_like
         Total observed background counts
     alpha : array_like
         Exposure ratio between on and off region
+    mu_signal : array_like
+        Signal expected counts
+    extra_terms : bool, optional
+        Add model independent terms to convert stat into goodness-of-fit
+        parameter
 
     Returns
     -------
@@ -161,12 +164,35 @@ def wstat(mu_signal, n_on, n_off, alpha):
     * `XSPEC page on Poisson data with Poisson background
       <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
+    # Note: This is equivalent to what's defined on the XSPEC page under the
+    # following assumptions
+    # t_s * m_i = mu_signal
+    # t_b * m_b = mu_background
+    # t_s / t_b = alpha
 
-    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
     n_on = np.asanyarray(n_on, dtype=np.float64)
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
+    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
+   
+    mu_background = _get_wstat_background(n_on, n_off, alpha, mu_signal)
 
+    
+    term1 = mu_signal + (1 + alpha) * mu_background 
+    term2 = - n_on * np.log(mu_signal + alpha * mu_background)
+    term3 = - n_off * np.log(mu_background) 
+    
+    stat = 2 * (term1 + term2 + term3)
+
+    if extra_terms:
+        term = _get_wstat_extra_terms(n_on, n_off)
+        stat += term 
+
+    return stat
+
+def _get_wstat_background(n_on, n_off, alpha, mu_signal):
+    """Calculate nuisance parameter mu_background (profile likelihood)
+    """
     # Get mu_backgroud
     C = alpha * (n_on + n_off) - (1 + alpha) * mu_signal
     D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_signal)
@@ -176,22 +202,23 @@ def wstat(mu_signal, n_on, n_off, alpha):
     # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
     # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
     # mu_background = np.where(temp_plus > 0, temp_plus, temp_minus)
-    mu_background = (C + D) / (2 * alpha * (alpha + 1))
+    mu_background = (C + D)/ (2 * alpha * (alpha + 1))
+    return mu_background
 
-    # calc stat
-    term1 = n_on * np.log(mu_signal + alpha * mu_background)
-    term2 = n_off * np.log(mu_background)
-    term3 = (1 + alpha) * mu_background + mu_signal
+def _get_wstat_extra_terms(n_on, n_off):
+    """Calculate additional term that can be added to wstat
 
-    stat = -2 * (term1 + term2 - term3)
-
-    return stat
-
+    see:
+    https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    """
+    term = - n_on*(1-np.log(n_on)) - n_off*(1-np.log(n_off))
+    return 2 * term
 
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
 
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+
     """
     pass
 
