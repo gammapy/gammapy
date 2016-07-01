@@ -26,8 +26,8 @@ Variable          Definition
 ``n_off``         Total observed counts in the off region
 ``mu_on``         Total expected counts in the on region
 ``mu_off``        Total expected counts in the off region
-``mu_signal``     Signal expected counts in the on region
-``mu_background`` Background expected counts in the on region
+``mu_sig``        Signal expected counts in the on region
+``mu_bkg``        Background expected counts in the on region
 ``a_on``          Relative background efficiency in the on region
 ``a_off``         Relative background efficiency in the off region
 ``alpha``         Background efficiency ratio ``a_on`` / ``a_off``
@@ -55,14 +55,8 @@ the maximum likelihood estimate of a signal excess is
    n_{excess} = n_{on} - n_{bkg}.
 
 When the background is known and there is only an "on" region (sometimes also called "source region"),
-we use the variable names ``n_observed``, ``mu_expected``, ``mu_signal`` and ``mu_background``.
+we use the variable names ``n_on``, ``mu_on``, ``mu_sig`` and ``mu_bkg``.
 
-================= ====================================================
-Variable          Definition
-================= ====================================================
-``n_observed``    Observed counts
-``mu_expected``   Expected counts (signal + background)
-================= ====================================================
 
 These are references describing the available methods:
 [LiMa1983]_, [Cash1979]_, [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
