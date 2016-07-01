@@ -110,7 +110,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
 def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
     r"""W statistic, for Poisson data with Poisson background.
 
-    For a definition of the WStat see :ref:`fit-statistics`
+    For a definition of WStat see :ref:`wstat`.
 
     Parameters
     ----------

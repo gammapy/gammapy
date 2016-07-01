@@ -20,13 +20,13 @@ All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself. Here's an example for the
 `~cash` statistic:: 
 
->>> from gammapy.stats import cash
->>> data = [3, 5, 9] 
->>> model = [3.3, 6.8, 9.2]
->>> cash(data, model)
-array([ -0.56353481,  -5.56922612, -21.54566271])
->>> cash(data, model).sum()
--27.678423645645118
+    >>> from gammapy.stats import cash
+    >>> data = [3, 5, 9] 
+    >>> model = [3.3, 6.8, 9.2]
+    >>> cash(data, model)
+    array([ -0.56353481,  -5.56922612, -21.54566271])
+    >>> cash(data, model).sum()
+    -27.678423645645118
 
 Gaussian data
 -------------
