@@ -40,11 +40,7 @@ class SkyCube(object):
     The order of the sky cube axes can be very confusing ... this should help:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
-    * The ``wcs`` object axis order is ``(lon, lat, energy)``.
-    * Methods use the ``wcs`` order of ``(lon, lat, energy)``,
-      but internally when accessing the data often the reverse order is used.
-      We use ``(xx, yy, zz)`` as pixel coordinates for ``(lon, lat, energy)``,
-      as that matches the common definition of ``x`` and ``y`` in image viewers.
+    * The ``wcs`` object is a two dimensional celestial WCS with axis order ``(lon, lat)``.
 
     Parameters
     ----------
@@ -539,6 +535,14 @@ class SkyCube(object):
         hdu_list = fits.HDUList([image, energies])
 
         return hdu_list
+
+
+    def to_image_list(self):
+        """ Writes SkyCube to `gammapy.image.SkyImageList` as a list of `gammapy.image.SkyMap` objects.
+        """
+        skymaps = [self.sky_image(slicepos) for slicepos in range(len(self.data))]
+        from gammapy.image.lists import SkyImageList
+        return SkyImageList(self.name, skymaps, self.wcs, self.energy)
 
     def writeto(self, filename, **kwargs):
         """Writes SkyCube to FITS file.
