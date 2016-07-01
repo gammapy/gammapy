@@ -59,7 +59,7 @@ def background_error(n_off, alpha):
 
     .. math::
 
-          \Delta\mu_{background} = \alpha \times \sqrt{n_{off}}
+          \Delta\mu_{bkg} = \alpha \times \sqrt{n_{off}}
 
     Parameters
     ----------
@@ -164,35 +164,35 @@ def excess_error(n_on, n_off, alpha):
 # It currently has the same name as the `gammapy/stats/significance.py`
 # and shadows in in `gammapy/stats/__init.py`
 # Maybe `significance_poisson`?
-def significance(n_observed, mu_background, method='lima', n_observed_min=1):
+def significance(n_on, mu_bkg, method='lima', n_on_min=1):
     r"""Compute significance for an observed number of counts and known background.
 
     The simple significance estimate :math:`S_{simple}` is given by
 
     .. math ::
 
-        S_{simple} = (n_{observed} - \mu_{background}) / \sqrt{\mu_{background}}
+        S_{simple} = (n_{on} - \mu_{bkg}) / \sqrt{\mu_{bkg}}
 
     The Li & Ma significance estimate corresponds to the Li & Ma formula (17)
-    in the limiting case of known background :math:`\mu_{background} = \alpha \times n_{off}`
+    in the limiting case of known background :math:`\mu_{bkg} = \alpha \times n_{off}`
     with :math:`\alpha \to 0`.
     The following formula for :math:`S_{lima}` was obtained with Mathematica:
 
     .. math ::
 
-        S_{lima} = \left[ 2 n_{observed} \log \left( \frac{n_{observed}}{\mu_{background}} \right) - n_{observed} + \mu_{background} \right] ^ {1/2}
+        S_{lima} = \left[ 2 n_{on} \log \left( \frac{n_{on}}{\mu_{bkg}} \right) - n_{on} + \mu_{bkg} \right] ^ {1/2}
 
 
     Parameters
     ----------
-    n_observed : array_like
+    n_on : array_like
         Observed number of counts
-    mu_background : array_like
+    mu_bkg : array_like
         Known background level
     method : str
         Select method: 'lima' or 'simple'
-    n_observed_min : float
-        Minimum ``n_observed`` (return ``NaN`` for smaller values)
+    n_on_min : float
+        Minimum ``n_on`` (return ``NaN`` for smaller values)
 
     Returns
     -------
@@ -210,17 +210,17 @@ def significance(n_observed, mu_background, method='lima', n_observed_min=1):
 
     Examples
     --------
-    >>> significance(n_observed=11, mu_background=9, method='lima')
+    >>> significance(n_on=11, mu_bkg=9, method='lima')
     0.64401498442763649
-    >>> significance(n_observed=11, mu_background=9, method='simple')
+    >>> significance(n_on=11, mu_bkg=9, method='simple')
     0.66666666666666663
-    >>> significance(n_observed=7, mu_background=9, method='lima')
+    >>> significance(n_on=7, mu_bkg=9, method='lima')
     -0.69397262486881672
-    >>> significance(n_observed=7, mu_background=9, method='simple')
+    >>> significance(n_on=7, mu_bkg=9, method='simple')
     -0.66666666666666663
     """
-    n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_background = np.asanyarray(mu_background, dtype=np.float64)
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
 
     if method == 'simple':
         func = _significance_simple
@@ -231,40 +231,40 @@ def significance(n_observed, mu_background, method='lima', n_observed_min=1):
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
-    # For low `n_observed` values, don't try to compute a significance and return `NaN`.
-    n_observed = np.atleast_1d(n_observed)
-    mu_background = np.atleast_1d(mu_background)
-    mask = (n_observed >= n_observed_min)
-    s = np.ones_like(n_observed) * np.nan
-    s[mask] = func(n_observed[mask], mu_background[mask])
+    # For low `n_on` values, don't try to compute a significance and return `NaN`.
+    n_on = np.atleast_1d(n_on)
+    mu_bkg = np.atleast_1d(mu_bkg)
+    mask = (n_on >= n_on_min)
+    s = np.ones_like(n_on) * np.nan
+    s[mask] = func(n_on[mask], mu_bkg[mask])
 
     return s
 
 
-def _significance_simple(n_observed, mu_background):
+def _significance_simple(n_on, mu_bkg):
     # TODO: check this formula against ???
-    excess = n_observed - mu_background
-    background_error = sqrt(mu_background)
-    return excess / background_error
+    excess = n_on - mu_bkg
+    bkg_err = sqrt(mu_bkg)
+    return excess / bkg_err
 
 
-def _significance_lima(n_observed, mu_background):
+def _significance_lima(n_on, mu_bkg):
     # import IPython; IPython.embed()
-    term_a = sign(n_observed - mu_background) * sqrt(2)
-    term_b = sqrt(n_observed * log(n_observed / mu_background) - n_observed + mu_background)
+    term_a = sign(n_on - mu_bkg) * sqrt(2)
+    term_b = sqrt(n_on * log(n_on / mu_bkg) - n_on + mu_bkg)
     return term_a * term_b
 
 
-def _significance_direct(n_observed, mu_background):
+def _significance_direct(n_on, mu_bkg):
     """Compute significance directly via Poisson probability.
 
-    Use this method for small n_observed < 10.
+    Use this method for small ``n_on < 10``.
     In this case the Li & Ma formula isn't correct any more.
 
     TODO: add large unit test coverage (where is it numerically precise enough)?
     TODO: check coverage with MC simulation
 
-    I'm getting a positive significance for zero observed counts and small mu_background.
+    I'm getting a positive significance for zero observed counts and small mu_bkg.
     That doesn't make too much sense ...
 
     >>> stats.poisson._significance_direct(0, 2)
@@ -277,7 +277,7 @@ def _significance_direct(n_observed, mu_background):
     from scipy.stats import norm, poisson
 
     # Compute tail probability to see n_on or more counts
-    probability = poisson.sf(n_observed, mu_background)
+    probability = poisson.sf(n_on, mu_bkg)
 
     # Convert probability to a significance
     significance = norm.isf(probability)
@@ -331,20 +331,20 @@ def significance_on_off(n_on, n_off, alpha, method='lima',
 
     if method == 'simple':
         if neglect_background_uncertainty:
-            mu_background = background(n_off, alpha)
-            return _significance_simple(n_on, mu_background)
+            mu_bkg = background(n_off, alpha)
+            return _significance_simple(n_on, mu_bkg)
         else:
             return _significance_simple_on_off(n_on, n_off, alpha)
     elif method == 'lima':
         if neglect_background_uncertainty:
-            mu_background = background(n_off, alpha)
-            return _significance_lima(n_on, mu_background)
+            mu_bkg = background(n_off, alpha)
+            return _significance_lima(n_on, mu_bkg)
         else:
             return _significance_lima_on_off(n_on, n_off, alpha)
     elif method == 'direct':
         if neglect_background_uncertainty:
-            mu_background = background(n_off, alpha)
-            return _significance_direct(n_on, mu_background)
+            mu_bkg = background(n_off, alpha)
+            return _significance_direct(n_on, mu_bkg)
         else:
             return _significance_direct_on_off(n_on, n_off, alpha)
     else:
@@ -416,14 +416,15 @@ def _significance_direct_on_off(n_on, n_off, alpha):
     return significance
 
 
-def sensitivity(mu_background, significance, quantity='excess', method='lima'):
+def sensitivity(mu_bkg, significance, quantity='excess', method='lima'):
     r"""Compute sensitivity.
+
+    TODO: document what "sensitivity" is ... excess or n_on.
+    Use `quantity` parameter or decide on one quanity and remove that option.
 
     Parameters
     ----------
-    n_observed : array_like
-        Observed number of counts
-    mu_background : array_like
+    mu_bkg : array_like
         Known background level
     quantity : {'excess', 'n_on'}
         Select output quantity
@@ -441,27 +442,27 @@ def sensitivity(mu_background, significance, quantity='excess', method='lima'):
 
     Examples
     --------
-    >>> # sensitivity(mu_background=0.2, significance=5, method='lima')
+    >>> # sensitivity(mu_bkg=0.2, significance=5, method='lima')
     TODO
-    >>> # sensitivity(mu_background=0.2, significance=5, method='simple')
+    >>> # sensitivity(mu_bkg=0.2, significance=5, method='simple')
     TODO
     """
-    mu_background = np.asanyarray(mu_background, dtype=np.float64)
+    mu_bkg = np.asanyarray(mu_bkg, dtype=np.float64)
     significance = np.asanyarray(significance, dtype=np.float64)
 
     if method == 'simple':
-        return _sensitivity_simple(mu_background, significance)
+        return _sensitivity_simple(mu_bkg, significance)
     elif method == 'lima':
-        return _sensitivity_lima(mu_background, significance)
+        return _sensitivity_lima(mu_bkg, significance)
     else:
         raise ValueError('Invalid method: {0}'.format(method))
 
 
-def _sensitivity_simple(mu_background, significance):
+def _sensitivity_simple(mu_bkg, significance):
     raise NotImplementedError
 
 
-def _sensitivity_lima(mu_background, significance):
+def _sensitivity_lima(mu_bkg, significance):
     raise NotImplementedError
 
 
