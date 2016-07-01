@@ -309,7 +309,7 @@ class SkyCube(object):
     @property
     def solid_angle_image(self):
         """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        skymap = self.sky_image()
+        skymap = self.sky_image(idx_energy=0)
         return skymap.solid_angle()
 
     def sky_image(self, idx_energy=None, copy=True):
@@ -327,11 +327,7 @@ class SkyCube(object):
         image : `~gammapy.image.SkyMap`
             2-dim SkyMap image
         """
-        if idx_energy is None:
-            data = self.data.sum(0)
-        else:
-            data = self.data[idx_energy]
-        skymap = SkyMap(self.name, Quantity(data, self.data.unit), self.wcs)
+        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
         return skymap.copy() if copy else skymap
 
     def flux(self, lon, lat, energy):
