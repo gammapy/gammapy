@@ -5,7 +5,21 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.units import Quantity
 from ...utils.testing import requires_dependency
-from ...spectrum import powerlaw
+from ..powerlaw import (
+    power_law_evaluate,
+    power_law_pivot_energy,
+    power_law_df_over_f,
+    power_law_flux,
+    power_law_energy_flux,
+    power_law_integral_flux,
+    power_law_g_from_f,
+    power_law_g_from_points,
+    power_law_I_from_points,
+    power_law_f_from_points,
+    power_law_f_with_err,
+    power_law_I_with_err,
+    power_law_compatibility,
+)
 
 
 @pytest.mark.xfail
@@ -15,15 +29,15 @@ def test_powerlaw():
     f, f_err = 1, 0.1
     g, g_err = 2, 0.1
 
-    I_unc, I_unc_err = powerlaw.I_with_err(e1, e2, e, f, f_err, g, g_err)
-    f_unc, f_unc_err = powerlaw.f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
+    I_unc, I_unc_err = power_law_I_with_err(e1, e2, e, f, f_err, g, g_err)
+    f_unc, f_unc_err = power_law_f_with_err(e1, e2, e, I_unc, I_unc_err, g, g_err)
 
     # TODO: add asserts
 
 
 def test_one():
     """Test one case"""
-    I = powerlaw.power_law_integral_flux(f=1, g=2)
+    I = power_law_integral_flux(f=1, g=2)
     assert_allclose(I, 1)
 
 
@@ -37,7 +51,7 @@ def test_powerlaw_energy_flux():
     g = 2.3
     I = Quantity(1E-12, 'cm-2 s-1')
 
-    val = powerlaw.power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
+    val = power_law_energy_flux(I=I, g=g, e=e, e1=e1, e2=e2)
     ref = Quantity(2.1615219876151536e-12, 'TeV cm-2 s-1')
     assert_quantity_allclose(val, ref)
 
@@ -66,11 +80,11 @@ def test_closure(g_error_mag=0):
     g_err = g_val * random_state.normal(1, 0.1, npoints)
     # g = unumpy.uarray((g_val, g_err))
 
-    I_val, I_err = powerlaw.I_with_err(f_val, f_err, g_val, g_err)
+    I_val, I_err = power_law_I_with_err(f_val, f_err, g_val, g_err)
     # I_val = unumpy.nominal_values(f)
     # I_err = unumpy.std_devs(f)
 
-    f_val2, f_err2 = powerlaw.f_with_err(I_val, I_err, g_val, g_err)
+    f_val2, f_err2 = power_law_f_with_err(I_val, I_err, g_val, g_err)
 
     assert_allclose(f_val, f_val2)
     assert_allclose(f_err, f_err2)
@@ -84,7 +98,7 @@ def test_e_pivot():
     d_gamma = 0.0318377
     cov = 6.56889442e-14
 
-    e_pivot = powerlaw.power_law_pivot_energy(e0, f0, d_gamma, cov)
+    e_pivot = power_law_pivot_energy(e0, f0, d_gamma, cov)
     assert_allclose(e_pivot, 3.3540034240210987)
 
 
@@ -117,7 +131,7 @@ def test_compatibility():
     par_hess = (e_hess, f_hess, f_err_hess, g_hess, g_err_hess)
 
     g_match, sigma_low, sigma_high, sigma_comb = \
-        powerlaw.compatibility(par_fermi, par_hess)
+        power_law_compatibility(par_fermi, par_hess)
 
 
 @requires_dependency('scipy')
@@ -142,7 +156,7 @@ def test_SED_error(I=1., e1=1, e2=10):
     f = I / (e2 - e1)
     e2f = e ** 2 * f  # Note: e ** 2 = e1 * e2 here.
     for Index in np.arange(1.5, 3.5, 0.5):
-        f_correct = powerlaw.power_law_flux(I, Index, e, e1, e2)
+        f_correct = power_law_flux(I, Index, e, e1, e2)
         e2f_correct = e ** 2 * f_correct
         # We compute ratios, which corresponds to differences
         # on a log scale

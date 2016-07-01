@@ -36,3 +36,6 @@ Reference/API
 
 .. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
+
+.. automodapi:: gammapy.spectrum.powerlaw
+    :no-inheritance-diagram:

@@ -10,7 +10,6 @@ from .fitter import *
 from .fitting_utils import *
 from .flux_point import *
 from .isrf import *
-from .powerlaw import *
 from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *

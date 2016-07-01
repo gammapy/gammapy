@@ -18,7 +18,8 @@ from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyMap
 from ..image.utils import _bin_events_in_cube
-from ..spectrum import LogEnergyAxis, powerlaw
+from ..spectrum import LogEnergyAxis
+from ..spectrum.powerlaw import power_law_I_from_points
 
 __all__ = ['SkyCube']
 
@@ -443,7 +444,7 @@ class SkyCube(object):
         flux2 = flux[1:, :, :]
         energy1 = energy1[:, np.newaxis, np.newaxis].value
         energy2 = energy2[:, np.newaxis, np.newaxis].value
-        integral_flux = powerlaw.I_from_points(energy1, energy2, flux1, flux2)
+        integral_flux = power_law_I_from_points(energy1, energy2, flux1, flux2)
 
         integral_flux = integral_flux.sum(axis=0)
 
