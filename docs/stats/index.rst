@@ -31,6 +31,7 @@ Variable          Definition
 ``a_on``          Relative background efficiency in the on region
 ``a_off``         Relative background efficiency in the off region
 ``alpha``         Background efficiency ratio ``a_on`` / ``a_off``
+``n_bkg``         Background estimate in the on region
 ================= ====================================================
 
 The following formulae show how an on-off measurement :math:`(n_{on}, n_{off})`
@@ -42,22 +43,28 @@ is related to the quantities in the above table:
 
     n_{off} \sim Pois(\mu_{off})\text{ with }\mu_{off} = \mu_b / \alpha\text{ with }\alpha = a_{on} / a_{off}
 
-The maximum likelihood estimate of a signal excess is
+With the background estimate in the on region
 
 .. math::
-   n_{excess} = n_{on} - \alpha\ n_{off}.
+
+   n_{bkg} = \alpha\ n_{off},
+
+the maximum likelihood estimate of a signal excess is
+
+.. math::
+   n_{excess} = n_{on} - n_{bkg}.
 
 When the background is known and there is only an "on" region (sometimes also called "source region"),
-we use the variable names ``n_observed``, ``mu_observed``, ``mu_signal`` and ``mu_background``.
+we use the variable names ``n_observed``, ``mu_expected``, ``mu_signal`` and ``mu_background``.
 
 ================= ====================================================
 Variable          Definition
 ================= ====================================================
 ``n_observed``    Observed counts
-``mu_observed``   Expected counts (signal + background)
+``mu_expected``   Expected counts (signal + background)
 ================= ====================================================
 
-Here's some references describing the available methods:
+These are references describing the available methods:
 [LiMa1983]_, [Cash1979]_, [Stewart2009]_, [Rolke2005]_, [Feldman1998]_, [Cousins2007]_.
 
 Getting Started
