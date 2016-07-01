@@ -18,7 +18,8 @@ from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyMap
 from ..image.utils import _bin_events_in_cube
-from ..spectrum import LogEnergyAxis, powerlaw
+from ..spectrum import LogEnergyAxis
+from ..spectrum.powerlaw import power_law_I_from_points
 
 __all__ = ['SkyCube']
 
@@ -39,11 +40,7 @@ class SkyCube(object):
     The order of the sky cube axes can be very confusing ... this should help:
 
     * The ``data`` array axis order is ``(energy, lat, lon)``.
-    * The ``wcs`` object axis order is ``(lon, lat, energy)``.
-    * Methods use the ``wcs`` order of ``(lon, lat, energy)``,
-      but internally when accessing the data often the reverse order is used.
-      We use ``(xx, yy, zz)`` as pixel coordinates for ``(lon, lat, energy)``,
-      as that matches the common definition of ``x`` and ``y`` in image viewers.
+    * The ``wcs`` object is a two dimensional celestial WCS with axis order ``(lon, lat)``.
 
     Parameters
     ----------
@@ -320,7 +317,7 @@ class SkyCube(object):
 
         Parameters
         ----------
-        idx_energy : int or None (default None)
+        idx_energy : int
             Energy slice index
         copy : bool (default True)
             Whether to make deep copy of returned object
@@ -376,6 +373,7 @@ class SkyCube(object):
         lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
+            Energy
         """
         raise NotImplementedError
         # Compute flux at `z = log(energy)`
@@ -441,13 +439,11 @@ class SkyCube(object):
         flux2 = flux[1:, :, :]
         energy1 = energy1[:, np.newaxis, np.newaxis].value
         energy2 = energy2[:, np.newaxis, np.newaxis].value
-        integral_flux = powerlaw.I_from_points(energy1, energy2, flux1, flux2)
+        integral_flux = power_law_I_from_points(energy1, energy2, flux1, flux2)
 
         integral_flux = integral_flux.sum(axis=0)
 
-        # TODO: get rid of the `str` calls once this `WCS.sub` issue is fixed:
-        # https://github.com/astropy/astropy/issues/3356
-        axes = [str('longitude'), str('latitude')]
+        axes = ['longitude', 'latitude']
         header = self.wcs.sub(axes).to_header()
 
         hdu = fits.ImageHDU(data=integral_flux,
@@ -539,13 +535,20 @@ class SkyCube(object):
 
         return hdu_list
 
+    def to_image_list(self):
+        """Convert sky cube to a `gammapy.image.SkyImageList`.
+        """
+        from ..image.lists import SkyImageList
+        skymaps = [self.sky_image(idx) for idx in range(len(self.data))]
+        return SkyImageList(self.name, skymaps, self.wcs, self.energy)
+
     def writeto(self, filename, **kwargs):
         """Writes SkyCube to FITS file.
 
         Parameters
         ----------
-        filename : string
-            Name of output file (.fits)
+        filename : str
+            Filename
         """
         self.to_fits().writeto(filename, **kwargs)
 

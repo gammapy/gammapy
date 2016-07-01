@@ -1,7 +1,30 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Power law spectrum helper functions.
 
-Convert differential and integral fluxes with error propagation.
+This `gammapy.spectrum.powerlaw` module contains a bunch of helper functions for computations
+concerning power laws that are standalone and in their separate namespace
+(i.e. not imported into the `gammapy.spectrum` namespace).
+Their main purpose is to serve as building blocks for implementing other code in Gammapy
+that depends on power laws, e.g. interpolation or extrapolation or integration
+of spectra or spectral cubes.
+
+End users will rarely need to use the functions here, the `gammapy.spectrum.models.PowerLaw` class,
+which is a `gammapy.spectrum.models.SpectralModel` sub-class provides the common functionality
+with a convenient API, that can be somewhat slower though than the functions here, because it
+uses `~astropy.units.Quantity` objects.
+
+TODO: probably it doesn't make sense to keep ``power_law_evaluate`` here ... it's a direct duplication
+of the staticmethod ``PowerLaw.evaluate``.
+
+Examples
+--------
+
+All the functions contain the ``powerlaw_`` prefix and are pretty long,
+so we suggest importing them directly and using them like this:
+
+>>> from gammapy.spectrum.powerlaw import power_law_evaluate
+>>> power_law_evaluate(energy=42, norm=4.2e-11, gamma=2.3, energy_ref=1)
+7.758467093729267e-15
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
@@ -9,21 +32,32 @@ import numpy as np
 __all__ = [
     'power_law_evaluate',
     'power_law_pivot_energy',
-    'df_over_f',
+    'power_law_df_over_f',
     'power_law_flux',
     'power_law_energy_flux',
     'power_law_integral_flux',
-    'g_from_f',
-    'g_from_points',
-    'I_from_points',
-    'f_from_points',
-    'f_with_err',
-    'I_with_err',
-    'compatibility',
+    'power_law_g_from_f',
+    'power_law_g_from_points',
+    'power_law_I_from_points',
+    'power_law_f_from_points',
+    'power_law_f_with_err',
+    'power_law_I_with_err',
+    'power_law_compatibility',
 ]
 
-E_INF = 1e10  # practically infinitely high flux
+E_INF = 1e10
+"""
+Practically infinitely high energy.
+
+Whoa!
+"""
+
 g_DEFAULT = 2
+"""Default spectral index.
+
+Use this if you don't know a better one.
+:-)
+"""
 
 
 def power_law_evaluate(energy, norm, gamma, energy_ref):
@@ -54,7 +88,7 @@ def power_law_pivot_energy(energy_ref, f0, d_gamma, cov):
     return pivot_energy
 
 
-def df_over_f(e, e0, f0, df0, dg, cov):
+def power_law_df_over_f(e, e0, f0, df0, dg, cov):
     """Compute relative flux error at any given energy.
 
     Used to draw butterflies.
@@ -67,7 +101,7 @@ def df_over_f(e, e0, f0, df0, dg, cov):
     return np.sqrt(term1 - term2 + term3)
 
 
-def _conversion_factor(g, e, e1, e2):
+def _power_law_conversion_factor(g, e, e1, e2):
     """Conversion factor between differential and integral flux."""
     # In gamma-ray astronomy only falling power-laws are used.
     # Here we force this, i.e. give "correct" input even if the
@@ -99,7 +133,7 @@ def power_law_flux(I=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     flux : `numpy.array`
         Differential flux at ``energy``.
     """
-    return I / _conversion_factor(g, e, e1, e2)
+    return I / _power_law_conversion_factor(g, e, e1, e2)
 
 
 def power_law_energy_flux(I, g=g_DEFAULT, e=1, e1=1, e2=10):
@@ -154,30 +188,30 @@ def power_law_integral_flux(f=1, g=g_DEFAULT, e=1, e1=1, e2=E_INF):
     flux : `numpy.array`
         Integral flux in ``energy_min``, ``energy_max`` band
     """
-    return f * _conversion_factor(g, e, e1, e2)
+    return f * _power_law_conversion_factor(g, e, e1, e2)
 
 
-def g_from_f(e, f, de=1):
+def power_law_g_from_f(e, f, de=1):
     """Spectral index at a given energy e for a given function f(e)"""
     e1, e2 = e, e + de
     f1, f2 = f(e1), f(e2)
-    return g_from_points(e1, e2, f1, f2)
+    return power_law_g_from_points(e1, e2, f1, f2)
 
 
-def g_from_points(e1, e2, f1, f2):
+def power_law_g_from_points(e1, e2, f1, f2):
     """Spectral index for two given differential flux points"""
     return -np.log(f2 / f1) / np.log(e2 / e1)
 
 
-def I_from_points(e1, e2, f1, f2):
+def power_law_I_from_points(e1, e2, f1, f2):
     """Integral flux in energy bin for power law"""
-    g = g_from_points(e1, e2, f1, f2)
+    g = power_law_g_from_points(e1, e2, f1, f2)
     pl_int_flux = (f1 * e1 / (-g + 1) *
                    ((e2 / e1) ** (-g + 1) - 1))
     return pl_int_flux
 
 
-def f_from_points(e1, e2, f1, f2, e):
+def power_law_f_from_points(e1, e2, f1, f2, e):
     """Linear interpolation"""
     e1 = np.asarray(e1, float)
     e2 = np.asarray(e2, float)
@@ -191,8 +225,8 @@ def f_from_points(e1, e2, f1, f2, e):
     return np.exp(logy)
 
 
-def f_with_err(I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0,
-               e=1, e1=1, e2=E_INF):
+def power_law_f_with_err(I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0,
+                         e=1, e1=1, e2=E_INF):
     """Wrapper for f so the user doesn't have to know about
     the uncertainties module"""
     from uncertainties import unumpy
@@ -204,8 +238,8 @@ def f_with_err(I_val=1, I_err=0, g_val=g_DEFAULT, g_err=0,
     return f_val, f_err
 
 
-def I_with_err(f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0,
-               e=1, e1=1, e2=E_INF):
+def power_law_I_with_err(f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0,
+                         e=1, e1=1, e2=E_INF):
     """Wrapper for f so the user doesn't have to know about
     the uncertainties module"""
     from uncertainties import unumpy
@@ -217,7 +251,7 @@ def I_with_err(f_val=1, f_err=0, g_val=g_DEFAULT, g_err=0,
     return I_val, I_err
 
 
-def compatibility(par_low, par_high):
+def power_law_compatibility(par_low, par_high):
     """Quantify spectral compatibility of power-law
     measurements in two energy bands.
 
