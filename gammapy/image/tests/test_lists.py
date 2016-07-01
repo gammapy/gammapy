@@ -1,8 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from gammapy.utils.testing import requires_data
-from gammapy.datasets import FermiGalacticCenter
 from numpy.testing import assert_array_equal
+from ...utils.testing import requires_data
+from ...datasets import FermiGalacticCenter
 
 
 @requires_data("gammapy-extra")

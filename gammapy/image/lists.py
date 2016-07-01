@@ -8,6 +8,7 @@ __all__ = ['SkyImageList']
 class SkyImageList(object):
     """
     Class to represent connection between `~gammapy.image.SkyMap` and `~gammapy.cube.SkyCube`.
+
     Keeps list of images and has methods to convert between them and SkyCube.
 
     Parameters
@@ -23,13 +24,13 @@ class SkyImageList(object):
     """
 
     def __init__(self, name=None, skymaps=None, wcs=None, energy=None):
-        self.name = None
+        self.name = name
         self.skymaps = skymaps
         self.wcs = wcs
         self.energy = energy
 
     def to_cube(self):
-        """Convert a list of image HDUs into one cube.
+        """Convert a list of image HDUs into one `~gammapy.cube.SkyCube`.
         """
         from ..cube import SkyCube
         data = Quantity([skymap.data for skymap in self.skymaps],

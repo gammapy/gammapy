@@ -323,7 +323,7 @@ class SkyCube(object):
 
         Parameters
         ----------
-        inx_energy : int
+        idx_energy : int
             Energy slice index
         copy : bool (default True)
             Whether to make deep copy of returned object
@@ -375,6 +375,7 @@ class SkyCube(object):
         lat : `~astropy.coordinates.Angle`
             Latitude
         energy : `~astropy.units.Quantity`
+            Energy
         """
         raise NotImplementedError
         # Compute flux at `z = log(energy)`
@@ -536,12 +537,11 @@ class SkyCube(object):
 
         return hdu_list
 
-
     def to_image_list(self):
-        """ Writes SkyCube to `gammapy.image.SkyImageList` as a list of `gammapy.image.SkyMap` objects.
+        """Convert sky cube to a `gammapy.image.SkyImageList`.
         """
-        skymaps = [self.sky_image(slicepos) for slicepos in range(len(self.data))]
-        from gammapy.image.lists import SkyImageList
+        from ..image.lists import SkyImageList
+        skymaps = [self.sky_image(idx) for idx in range(len(self.data))]
         return SkyImageList(self.name, skymaps, self.wcs, self.energy)
 
     def writeto(self, filename, **kwargs):
@@ -549,8 +549,8 @@ class SkyCube(object):
 
         Parameters
         ----------
-        filename : string
-            Name of output file (.fits)
+        filename : str
+            Filename
         """
         self.to_fits().writeto(filename, **kwargs)
 
