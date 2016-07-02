@@ -137,7 +137,7 @@ class TestSkyCube(object):
                     ('NAXIS2', 21), ('CRVAL1', 0), ('CRVAL2', 0)]
 
         for key, value in expected:
-            assert_allclose(np.abs(image.header[key]), value)
+            assert_allclose(np.abs(image.meta[key]), value)
 
     # TODO: fix this test.
     # It's currently failing. Dont' know which number (if any) is correct.
