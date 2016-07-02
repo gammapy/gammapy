@@ -275,10 +275,10 @@ class SkyCube(object):
         Returns two separate objects for the arrays of longitude
         and latitude pixel coordinates.
         """
-        n_lon = self.data.shape[2]
-        n_lat = self.data.shape[1]
-        i_lat, i_lon = np.indices((n_lat, n_lon))
-        lon, lat, _ = self.pix2world(i_lon, i_lat, 0)
+        skymap = self.sky_image(0)
+        coordinates = skymap.coordinates(mode='center')
+        lon = coordinates.data.lon
+        lat = coordinates.data.lat
 
         return lon, lat
 
