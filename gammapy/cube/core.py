@@ -14,12 +14,13 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+
 from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyMap
 from ..image.utils import _bin_events_in_cube
 from ..spectrum import LogEnergyAxis
-from ..spectrum.powerlaw import power_law_I_from_points
+from ..spectrum.powerlaw import power_law_I_from_points, power_law_g_from_points
 
 __all__ = ['SkyCube']
 
@@ -377,7 +378,6 @@ class SkyCube(object):
         energy : `~astropy.units.Quantity`
             Energy
         """
-        raise NotImplementedError
         # Compute flux at `z = log(energy)`
         pix_coord = self.world2pix(lon, lat, energy, combine=True)
         flux1 = self._interpolate(pix_coord)
@@ -392,7 +392,7 @@ class SkyCube(object):
         # spectral_index = d_log_flux / dz
         energy1 = energy
         energy2 = (1. + dz) * energy
-        spectral_index = powerlaw.g_from_points(energy1, energy2, flux1, flux2)
+        spectral_index = power_law_g_from_points(energy1, energy2, flux1, flux2)
 
         return spectral_index
 
