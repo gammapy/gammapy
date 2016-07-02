@@ -77,7 +77,7 @@ class TestBlockReduceHDU():
 
         # Create test image
         self.skymap = SkyMap.empty(nxpix=12, nypix=8, proj=projection)
-        self.skymap.data = np.ones(self.image.data.shape)
+        self.skymap.data = np.ones(self.skymap.data.shape)
         self.image = self.skymap.to_image_hdu()
 
         # Create test cube
