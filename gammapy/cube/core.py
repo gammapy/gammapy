@@ -66,6 +66,9 @@ class SkyCube(object):
         Energy array
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
+    meta : dict
+        Dictionary to store meta data.
+
 
     Notes
     -----
@@ -77,11 +80,12 @@ class SkyCube(object):
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
 
-    def __init__(self, name=None, data=None, wcs=None, energy=None):
+    def __init__(self, name=None, data=None, wcs=None, energy=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
         self.data = data
         self.wcs = wcs
+        self.meta = meta
 
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
@@ -130,7 +134,8 @@ class SkyCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        return cls(data, wcs, energy)
+        meta = header
+        return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     @classmethod
     def read(cls, filename, format='fermi'):
@@ -153,6 +158,7 @@ class SkyCube(object):
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header).celestial
+        meta = header
         if format == 'fermi':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy = Quantity(energy, 'MeV')
@@ -162,7 +168,7 @@ class SkyCube(object):
             data = Quantity(data, 'count')
         else:
             raise ValueError('Not a valid cube fits format')
-        return cls(data=data, wcs=wcs, energy=energy)
+        return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     def fill(self, events, origin=0):
         """
@@ -199,12 +205,12 @@ class SkyCube(object):
         refmap = SkyMap.empty(**kwargs)
         energies = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
         data = refmap.data * np.ones(len(energies)).reshape((-1, 1, 1))
-        return cls(data=data, wcs=refmap.wcs, energy=energies)
+        return cls(data=data, wcs=refmap.wcs, energy=energies, meta=refmap.meta)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
         """
-        Create an empty sky cube with the same WCS and energy specification
+        Create an empty sky cube with the same WCS, energy specification and meta
         as given sky cube.
 
         Parameters
@@ -217,7 +223,7 @@ class SkyCube(object):
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
         energies = refcube.energies.copy()
-        return cls(data=data, wcs=wcs, energy=energies)
+        return cls(data=data, wcs=wcs, energy=energies, meta=refcube.meta)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -336,7 +342,7 @@ class SkyCube(object):
         image : `~gammapy.image.SkyMap`
             2-dim SkyMap image
         """
-        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
+        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs, self.meta)
         return skymap.copy() if copy else skymap
 
     def flux(self, lon, lat, energy):
