@@ -43,7 +43,7 @@ def test_docstring_examples():
     assert_allclose(result, 3.6850322025333071)
 
     # Check that the Li & Ma limit formula is correct
-    actual = significance(n_observed=1300, mu_background=1100, method='lima')
+    actual = significance(n_on=1300, mu_bkg=1100, method='lima')
     assert_allclose(actual, 5.8600870406703329)
     actual = significance_on_off(n_on=1300, n_off=1100 / 1.e-8, alpha=1e-8, method='lima')
     assert_allclose(actual, 5.8600864348078519)

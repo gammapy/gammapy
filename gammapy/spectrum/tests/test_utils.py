@@ -4,8 +4,8 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
 from ...utils.testing import requires_dependency
-from ...spectrum import (LogEnergyAxis, integrate_spectrum, power_law_energy_flux,
-                         power_law_evaluate, power_law_flux)
+from ...spectrum import LogEnergyAxis, integrate_spectrum
+from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
 
 
 @requires_dependency('scipy')

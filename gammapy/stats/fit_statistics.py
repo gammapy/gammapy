@@ -22,40 +22,42 @@ If you want the summed statistics for all bins,
 call sum on the output array yourself.
 Here's an example for the `~cash` statistic::
 
-    >>> from gammapy.stats import cash
-    >>> data = [3, 5, 9]
-    >>> model = [3.3, 6.8, 9.2]
-    >>> cash(data, model)
-    array([ -0.56353481,  -5.56922612, -21.54566271])
-    >>> cash(data, model).sum()
-    -27.678423645645118
+>>> from gammapy.stats import cash
+>>> data = [3, 5, 9]
+>>> model = [3.3, 6.8, 9.2]
+>>> cash(data, model)
+array([ -0.56353481,  -5.56922612, -21.54566271])
+>>> cash(data, model).sum()
+-27.678423645645118
+
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
-__all__ = ['cash', 'cstat', 'wstat', 'lstat', 'pgstat',
-           'chi2', 'chi2constvar', 'chi2datavar',
-           'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
-           ]
+__all__ = [
+    'cash', 'cstat', 'wstat', 'lstat', 'pgstat',
+    'chi2', 'chi2constvar', 'chi2datavar',
+    'chi2gehrels', 'chi2modvar', 'chi2xspecvar',
+]
 
-N_OBSERVED_MIN = 1e-25
+N_ON_MIN = 1e-25
 
 
-def cash(n_observed, mu_observed):
+def cash(n_on, mu_on):
     r"""Cash statistic, for Poisson data.
 
     The Cash statistic is defined as:
 
     .. math::
-        C = 2 \left[ n_{observed} - n_{observed} \log \mu_{observed} \right]
+        C = 2 \left( n_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
 
     Parameters
     ----------
-    n_observed : array_like
+    n_on : array_like
         Observed counts
-    mu_observed : array_like
+    mu_on : array_like
         Expected counts
 
     Returns
@@ -72,35 +74,36 @@ def cash(n_observed, mu_observed):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-    n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    mu_on = np.asanyarray(mu_on, dtype=np.float64)
 
-    stat = 2 * (mu_observed - n_observed * np.log(mu_observed))
-    stat = np.where(mu_observed > 0, stat, 0)
+    stat = 2 * (mu_on - n_on * np.log(mu_on))
+    stat = np.where(mu_on > 0, stat, 0)
     return stat
 
 
-def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
+def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     r"""C statistic, for Poisson data.
 
     The C statistic is defined as
 
     .. math::
-        C = 2 \left[ \mu_{observed} - n_{observed} + n_{observed}
-            (\log(n_{observed}) - log(\mu_{observed}) \right]
+        C = 2 \left[ \mu_{on} - n_{on} + n_{on}
+            (\log(n_{on}) - log(\mu_{on}) \right]
 
-    and :math:`C = 0` where :math:`\mu_{observed} <= 0`.
+    and :math:`C = 0` where :math:`\mu_{on} <= 0`.
 
-    TODO: explain how ``n_observed_min`` is handled (as in Sherpa).
+    ``n_on_min`` handles the case where ``n_on`` is 0 or less and
+    the log cannot be taken.
 
     Parameters
     ----------
-    n_observed : array_like
+    n_on : array_like
         Observed counts
-    mu_observed : array_like
+    mu_on : array_like
         Expected counts
-    mu_observed_min : array_like
-        Clip to mu_observed = mu_observed_min where mu_observed <= mu_observed_min.
+    n_on_min : array_like
+        ``n_on`` = ``n_on_min`` where ``n_on`` <= ``n_on_min.``
 
     Returns
     -------
@@ -116,25 +119,73 @@ def cstat(n_observed, mu_observed, n_observed_min=N_OBSERVED_MIN):
     * `Cash 1979, ApJ 228, 939
       <http://adsabs.harvard.edu/abs/1979ApJ...228..939C>`_
     """
-    n_observed = np.asanyarray(n_observed, dtype=np.float64)
-    mu_observed = np.asanyarray(mu_observed, dtype=np.float64)
-    n_observed_min = np.asanyarray(n_observed_min, dtype=np.float64)
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    mu_on = np.asanyarray(mu_on, dtype=np.float64)
+    n_on_min = np.asanyarray(n_on_min, dtype=np.float64)
 
-    n_observed = np.where(n_observed <= n_observed_min, n_observed_min, n_observed)
+    n_on = np.where(n_on <= n_on_min, n_on_min, n_on)
 
-    term1 = np.log(n_observed) - np.log(mu_observed)
-    stat = 2 * (mu_observed - n_observed + n_observed * term1)
-    stat = np.where(mu_observed > 0, stat, 0)
+    term1 = np.log(n_on) - np.log(mu_on)
+    stat = 2 * (mu_on - n_on + n_on * term1)
+    stat = np.where(mu_on > 0, stat, 0)
 
     return stat
 
 
-def wstat():
+def wstat(mu_signal, n_on, n_off, alpha):
     r"""W statistic, for Poisson data with Poisson background.
 
-    Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    Consult the references for a definition of WStat.
+
+    Parameters
+    ----------
+    mu_signal : array_like
+        Signal expected counts
+    n_on : array_like
+        Total observed counts
+    n_off : array_like
+        Total observed background counts
+    alpha : array_like
+        Exposure ratio between on and off region
+
+    Returns
+    -------
+    stat : ndarray
+        Statistic per bin
+
+    References
+    ----------
+    * Statistics page :ref:`stats`
+    * `Habilitation M. de Naurois, p. 141
+      <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
+    * `XSPEC page on Poisson data with Poisson background
+      <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
-    pass
+
+    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
+    n_on = np.asanyarray(n_on, dtype=np.float64)
+    n_off = np.asanyarray(n_off, dtype=np.float64)
+    alpha = np.asanyarray(alpha, dtype=np.float64)
+
+    # Get mu_backgroud
+    C = alpha * (n_on + n_off) - (1 + alpha) * mu_signal
+    D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_signal)
+
+    # TODO : Investigate this
+    # For n_off = 0, mu_background = 0. Effect?
+    # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
+    # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
+    # mu_background = np.where(temp_plus > 0, temp_plus, temp_minus)
+    mu_background = (C + D) / (2 * alpha * (alpha + 1))
+
+    # calc stat
+    term1 = n_on * np.log(mu_signal + alpha * mu_background)
+    term2 = n_off * np.log(mu_background)
+    term3 = (1 + alpha) * mu_background + mu_signal
+
+    stat = -2 * (term1 + term2 - term3)
+
+    return stat
 
 
 def lstat():
