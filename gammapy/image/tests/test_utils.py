@@ -99,7 +99,7 @@ class TestBlockReduceHDU():
         for index in self.indices:
             image = self.cube.sky_image(index)
             layer = self.cube.data[index]
-            layer_hdu = fits.ImageHDU(data=layer, header=image.header)
+            layer_hdu = fits.ImageHDU(data=layer, header=image.wcs.to_header())
             image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
                 ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
