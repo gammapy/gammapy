@@ -107,7 +107,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     return stat
 
 
-def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
+def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
     r"""W statistic, for Poisson data with Poisson background.
 
     For a definition of WStat see :ref:`wstat`.
@@ -120,7 +120,7 @@ def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
         Total observed background counts
     alpha : array_like
         Exposure ratio between on and off region
-    mu_signal : array_like
+    mu_sig : array_like
         Signal expected counts
     extra_terms : bool, optional
         Add model independent terms to convert stat into goodness-of-fit
@@ -140,44 +140,43 @@ def wstat(n_on, n_off, alpha, mu_signal, extra_terms=False):
     """
     # Note: This is equivalent to what's defined on the XSPEC page under the
     # following assumptions
-    # t_s * m_i = mu_signal
-    # t_b * m_b = mu_background
+    # t_s * m_i = mu_sig
+    # t_b * m_b = mu_bkg
     # t_s / t_b = alpha
 
     n_on = np.asanyarray(n_on, dtype=np.float64)
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
-    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
+    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
    
-    mu_background = _get_wstat_background(n_on, n_off, alpha, mu_signal)
+    mu_bkg = _get_wstat_background(n_on, n_off, alpha, mu_sig)
 
     
-    term1 = mu_signal + (1 + alpha) * mu_background 
-    term2 = - n_on * np.log(mu_signal + alpha * mu_background)
-    term3 = - n_off * np.log(mu_background) 
+    term1 = mu_sig + (1 + alpha) * mu_bkg 
+    term2 = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    term3 = - n_off * np.log(mu_bkg) 
     
     stat = 2 * (term1 + term2 + term3)
 
     if extra_terms:
-        term = _get_wstat_extra_terms(n_on, n_off)
-        stat += term 
+        stat += _get_wstat_extra_terms(n_on, n_off)
 
     return stat
 
-def _get_wstat_background(n_on, n_off, alpha, mu_signal):
-    """Calculate nuisance parameter mu_background (profile likelihood)
+def _get_wstat_background(n_on, n_off, alpha, mu_sig):
+    """Calculate nuisance parameter mu_bkg (profile likelihood)
     """
     # Get mu_backgroud
-    C = alpha * (n_on + n_off) - (1 + alpha) * mu_signal
-    D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_signal)
+    C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
+    D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
 
     # TODO : Investigate this
-    # For n_off = 0, mu_background = 0. Effect?
+    # For n_off = 0, mu_bkg = 0. Effect?
     # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
     # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
-    # mu_background = np.where(temp_plus > 0, temp_plus, temp_minus)
-    mu_background = (C + D)/ (2 * alpha * (alpha + 1))
-    return mu_background
+    # mu_bkg = np.where(temp_plus > 0, temp_plus, temp_minus)
+    mu_bkg = (C + D)/ (2 * alpha * (alpha + 1))
+    return mu_bkg
 
 def _get_wstat_extra_terms(n_on, n_off):
     """Calculate additional term that can be added to wstat

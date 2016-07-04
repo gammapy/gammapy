@@ -18,7 +18,7 @@ X-ray analysis packages.
 
 All functions compute per-bin statistics. If you want the summed statistics for
 all bins, call sum on the output array yourself. Here's an example for the
-`~cash` statistic:: 
+`~gammapy.stats.cash` statistic:: 
 
     >>> from gammapy.stats import cash
     >>> data = [3, 5, 9] 
