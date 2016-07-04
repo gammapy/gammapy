@@ -510,7 +510,8 @@ class SkyCube(object):
 
         wcs_out = WCS(header_out).celestial
 
-        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy)
+        # TODO: how to fill 'meta' in better way?
+        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=header_out)
 
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.
