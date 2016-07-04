@@ -46,18 +46,22 @@ likelihood formula as
 
 .. math::
 
-    L = \frac{(\mu_{sig}+\alpha \mu_{bkg})^{n_{on}}}{n_{on} !}
-        \exp{(-(\mu_{sig}-\alpha \mu_{bkg}))}\times 
-        \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-mu_{bkg})},
+    L (n_{on}, n_{off}, \alpha; \mu_{sig}, \mu_{bkg}) =
+         \frac{(\mu_{sig}+\alpha \mu_{bkg})^{n_{on}}}{n_{on} !}
+        \exp{(-(\mu_{sig}+\alpha \mu_{bkg}))}\times 
+        \frac{(\mu_{bkg})^{n_{off}}}{n_{off} !}\exp{(-\mu_{bkg})},
 
 where :math:`\mu_{sig}` is the number of expected counts in the signal regions,
-and :math:`\mu_{bkg}` is the number of expected counts in the background region,
-as defined in the :ref:`stats-introduction`. Or rewriting it as ``-2 log L``:
+and :math:`\mu_{bkg}` is the number of expected counts in the background
+region, as defined in the :ref:`stats-introduction`. By taking two time the
+negative log likelihood and neglecting model independent and thus constant
+terms, we define the **WStat**.
 
 .. math::
 
-    -2 log L = -2( n_{on} log(\mu_{sig}+\alpha \mu_{bkg}) - (\mu_{sig}+\alpha \mu_{bkg})
-               n_{off} log(\mu_{bkg}) - \mu_{bkg})   
+    W = 2 (\mu_{sig} + (1 + \alpha)\mu_{bkg}
+    - n_{on} \log{(\mu_{sig} + \alpha \mu_{bkg})}
+    - n_{off} \log{(\mu_{bkg})})
 
 Most of the times you probably won't have a model in order to get
 :math:`\mu_{bkg}`. The strategy in this case is to treat :math:`\mu_{bkg}` as
@@ -68,7 +72,7 @@ analytically minimizing the likelihood function. This is called 'profile
 likelihood'.
 
 .. math::
-    \frac{\mathrm d log L}{\mathrm d \mu_{bkg}} = 0
+    \frac{\mathrm d \log L}{\mathrm d \mu_{bkg}} = 0
     
 This yields a quadratic equation for :math:`\mu_{bkg}` 
 
@@ -90,25 +94,29 @@ where
     D^2 = C^2 + 4 (\alpha+1)\alpha n_{off} \mu_{sig}
 
 
-By inserting this into the original likelihood formula we define the **WStat**.
+The best-fit value of the WStat as defined now contains no information about
+the goodness of the fit. In order to provide such an estimate, we can add a
+constant term to the WStat, namely twice the log likelihood of the data
+``n_on`` and ``n_off`` under the expectation of ``n_on`` and ``n_off``,
 
 .. math::
 
-    W = 2 (\mu_{sig} + (1 + \alpha)\mu_{bkg}
-    - n_{on} \log{(\mu_{sig} + \alpha \mu_{bkg})}
-    - n_{off} \log{(\mu_{bkg})}
+     2 \log L (n_{on}, n_{off}; n_{on}, n_{off}) =
+         2 (n_{on} ( \log n_{on} - 1 ) + n_{off} ( \log n_{off} - 1))
 
-To provide an estimate of goodness-of-fit, we can add a constant to the log likelihood, namely the likelihood of the data ``n_on`` and
-``n_off`` under the expectation of ``n_on`` and ``n_off``. Doing so, we are computing the likelihood ratio:
+
+In doing so, we are computing the likelihood ratio:
 
 .. math::
 
-    -2 log \frac{L(n_{on},n_{off}; \mu_{sig},\mu_{bkg})}{L(n_{on},n_{off};n_{on},n_{off})}
+    -2 \log \frac{L(n_{on},n_{off},\alpha; \mu_{sig},\mu_{bkg})}
+        {L(n_{on},n_{off};n_{on},n_{off})}
 
-Intuitively, this log-likelihood ratio should asymptotically behave like a chi-square with ``m-n``degrees-of-freedom, where ``m`` is the
-number of measurements and ``n`` the number of model parameters.
+Intuitively, this log-likelihood ratio should asymptotically behave like a
+chi-square with ``m-n`` degrees of freedom, where ``m`` is the number of
+measurements and ``n`` the number of model parameters.
 
-Hence, we rewrite WStat:
+Hence, we rewrite WStat as:
 
 .. math::
 
@@ -116,6 +124,8 @@ Hence, we rewrite WStat:
     - n_{on} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{on})}})
     - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})}))
 
+
+TODO: Explain how to handle corner cases
 
 
 Further references
