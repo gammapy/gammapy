@@ -13,7 +13,7 @@ from ... import stats as gammapy_stats
 def get_test_data():
     random_state = get_random_state(3)
     # put factor to 100 to not run into special cases in WStat
-    model = random_state.rand(10) * 10
+    model = random_state.rand(10) * 100
     data = random_state.poisson(model)
     staterror = np.sqrt(data)
     off_vec = random_state.poisson(0.7 * model)
@@ -21,6 +21,10 @@ def get_test_data():
 
 
 # TODO : Produce reference numbers outside of test (avoid sherpa dependency)
+# Note: There is an independent implementation of the XSPEC  wstat that can
+# be used for debugging: gammapy/dev/sherpa/stats/xspec_stats.py    
+# Also there is the script dev/sherpa/stats/compare_stats.py that is very
+# usefull for debugging
 
 @requires_dependency('sherpa')
 def test_cstat():
@@ -46,9 +50,6 @@ def test_cash():
     assert_allclose(actual, desired)
 
 
-# Note: There is an independent implementation of the XSPEC  wstat that can
-# be used for debugging: gammapy/dev/sherpa/stats/xspec_stats.py    
-@pytest.mark.xfail(reason="Sherpa implementation is different")
 @requires_dependency('sherpa')
 def test_wstat():
     import sherpa.stats as ss
@@ -57,9 +58,10 @@ def test_wstat():
     alpha = np.ones(len(data)) * 0.2
 
     statsvec = gammapy_stats.wstat(n_on=data,
-                                   mu_signal=model,
+                                   mu_sig=model,
                                    n_off=off_vec,
-                                   alpha=alpha)
+                                   alpha=alpha,
+                                   extra_terms=True)
 
     # This is how sherpa wants the background (found by trial and error)
     bkg = dict(bkg=off_vec,

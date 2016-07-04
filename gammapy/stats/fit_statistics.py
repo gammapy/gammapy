@@ -1,36 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """Common fit statistics used in gamma-ray astronomy.
 
-References
-----------
-
-Results were tested against results from the
-`Sherpa <http://cxc.harvard.edu/sherpa/>`_ and
-`XSpec <https://heasarc.gsfc.nasa.gov/xanadu/xspec/>`_
-X-ray analysis packages.
-
-Each function contains references for the implemented formulae,
-to get an overview have a look at the
-`Sherpa statistics page <http://cxc.cfa.harvard.edu/sherpa/statistics>`_ or the
-`XSpec manual statistics page <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_.
-
-Examples
---------
-
-All functions compute per-bin statistics.
-If you want the summed statistics for all bins,
-call sum on the output array yourself.
-Here's an example for the `~cash` statistic::
-
->>> from gammapy.stats import cash
->>> data = [3, 5, 9]
->>> model = [3.3, 6.8, 9.2]
->>> cash(data, model)
-array([ -0.56353481,  -5.56922612, -21.54566271])
->>> cash(data, model).sum()
--27.678423645645118
-
+see :ref:`fit-statistics`
 """
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 
@@ -52,6 +25,7 @@ def cash(n_on, mu_on):
         C = 2 \left( n_{on} - n_{on} \log \mu_{on} \right)
 
     and :math:`C = 0` where :math:`\mu <= 0`.
+    For more information see :ref:`fit-statistics`
 
     Parameters
     ----------
@@ -95,6 +69,7 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
 
     ``n_on_min`` handles the case where ``n_on`` is 0 or less and
     the log cannot be taken.
+    For more information see :ref:`fit-statistics`
 
     Parameters
     ----------
@@ -132,21 +107,24 @@ def cstat(n_on, mu_on, n_on_min=N_ON_MIN):
     return stat
 
 
-def wstat(mu_signal, n_on, n_off, alpha):
+def wstat(n_on, n_off, alpha, mu_sig, extra_terms=False):
     r"""W statistic, for Poisson data with Poisson background.
 
-    Consult the references for a definition of WStat.
+    For a definition of WStat see :ref:`wstat`.
 
     Parameters
     ----------
-    mu_signal : array_like
-        Signal expected counts
     n_on : array_like
         Total observed counts
     n_off : array_like
         Total observed background counts
     alpha : array_like
         Exposure ratio between on and off region
+    mu_sig : array_like
+        Signal expected counts
+    extra_terms : bool, optional
+        Add model independent terms to convert stat into goodness-of-fit
+        parameter
 
     Returns
     -------
@@ -155,43 +133,65 @@ def wstat(mu_signal, n_on, n_off, alpha):
 
     References
     ----------
-    * Statistics page :ref:`stats`
     * `Habilitation M. de Naurois, p. 141
       <http://inspirehep.net/record/1122589/files/these_short.pdf>`_
     * `XSPEC page on Poisson data with Poisson background
       <http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html>`_
     """
+    # Note: This is equivalent to what's defined on the XSPEC page under the
+    # following assumptions
+    # t_s * m_i = mu_sig
+    # t_b * m_b = mu_bkg
+    # t_s / t_b = alpha
 
-    mu_signal = np.asanyarray(mu_signal, dtype=np.float64)
     n_on = np.asanyarray(n_on, dtype=np.float64)
     n_off = np.asanyarray(n_off, dtype=np.float64)
     alpha = np.asanyarray(alpha, dtype=np.float64)
+    mu_sig = np.asanyarray(mu_sig, dtype=np.float64)
+   
+    mu_bkg = _get_wstat_background(n_on, n_off, alpha, mu_sig)
 
-    # Get mu_backgroud
-    C = alpha * (n_on + n_off) - (1 + alpha) * mu_signal
-    D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_signal)
+    
+    term1 = mu_sig + (1 + alpha) * mu_bkg 
+    term2 = - n_on * np.log(mu_sig + alpha * mu_bkg)
+    term3 = - n_off * np.log(mu_bkg) 
+    
+    stat = 2 * (term1 + term2 + term3)
 
-    # TODO : Investigate this
-    # For n_off = 0, mu_background = 0. Effect?
-    # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
-    # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
-    # mu_background = np.where(temp_plus > 0, temp_plus, temp_minus)
-    mu_background = (C + D) / (2 * alpha * (alpha + 1))
-
-    # calc stat
-    term1 = n_on * np.log(mu_signal + alpha * mu_background)
-    term2 = n_off * np.log(mu_background)
-    term3 = (1 + alpha) * mu_background + mu_signal
-
-    stat = -2 * (term1 + term2 - term3)
+    if extra_terms:
+        stat += _get_wstat_extra_terms(n_on, n_off)
 
     return stat
 
+def _get_wstat_background(n_on, n_off, alpha, mu_sig):
+    """Calculate nuisance parameter mu_bkg (profile likelihood)
+    """
+    # Get mu_backgroud
+    C = alpha * (n_on + n_off) - (1 + alpha) * mu_sig
+    D = np.sqrt(C ** 2 + 4 * alpha * (alpha + 1) * n_off * mu_sig)
+
+    # TODO : Investigate this
+    # For n_off = 0, mu_bkg = 0. Effect?
+    # temp_plus = (C + D) / (2 * alpha * (alpha + 1))
+    # temp_minus = (C - D) / (2 * alpha * (alpha + 1))
+    # mu_bkg = np.where(temp_plus > 0, temp_plus, temp_minus)
+    mu_bkg = (C + D)/ (2 * alpha * (alpha + 1))
+    return mu_bkg
+
+def _get_wstat_extra_terms(n_on, n_off):
+    """Calculate additional term that can be added to wstat
+
+    see:
+    https://heasarc.gsfc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+    """
+    term = - n_on*(1-np.log(n_on)) - n_off*(1-np.log(n_off))
+    return 2 * term
 
 def lstat():
     r"""L statistic, for Poisson data with Poisson background (Bayesian).
 
     Reference: http://heasarc.nasa.gov/xanadu/xspec/manual/XSappendixStatistics.html
+
     """
     pass
 
