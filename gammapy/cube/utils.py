@@ -16,7 +16,6 @@ from ..image.maps import SkyMap
 
 __all__ = ['compute_npred_cube',
            'convolve_cube',
-           'cube_to_image',
            'cube_to_spec',
            ]
 

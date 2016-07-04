@@ -309,16 +309,10 @@ class SkyCube(object):
     @property
     def solid_angle_image(self):
         """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        cube_hdu = fits.ImageHDU(self.data, self.wcs.to_header())
+        skymap = self.sky_image(idx_energy=0)
+        return skymap.solid_angle()
 
-        from .utils import cube_to_image
-        image_hdu = cube_to_image(cube_hdu)
-        image_hdu.header['WCSAXES'] = 2
-
-        sky_map = SkyMap.from_image_hdu(image_hdu)
-        return sky_map.solid_angle()
-
-    def sky_image(self, idx_energy, copy=True):
+    def sky_image(self, idx_energy=None, copy=True):
         """Slice 3-dim cube into a 2-dim `~gammapy.image.SkyMap` along slicepos.
 
         Parameters

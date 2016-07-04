@@ -10,7 +10,7 @@ from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
 from ...utils.energy import EnergyBounds
-from ...cube import SkyCube, cube_to_image
+from ...cube import SkyCube
 from ...image import (
     binary_disk,
     binary_ring,
@@ -20,7 +20,7 @@ from ...image import (
     wcs_histogram2d,
     lon_lat_rectangle_mask,
     SkyMap,
-)
+    SkyImageList)
 
 
 def test_binary_disk():
@@ -74,17 +74,16 @@ class TestBlockReduceHDU():
     def setup_class(self):
         # Arbitrarily choose CAR projection as independent from tests
         projection = 'CAR'
+
         # Create test image
-        self.image = SkyMap.empty(nxpix=12, nypix=8, proj=projection).to_image_hdu()
-        self.image.data = np.ones(self.image.data.shape)
+        self.skymap = SkyMap.empty(nxpix=12, nypix=8, proj=projection)
+        self.skymap.data = np.ones(self.skymap.data.shape)
+        self.image = self.skymap.to_image_hdu()
+
         # Create test cube
         self.indices = np.arange(4)
-        self.cube_images = []
-        for _ in self.indices:
-            layer = np.ones(self.image.data.shape)
-            self.cube_images.append(fits.ImageHDU(data=layer, header=self.image.header))
-        self.cube = images_to_cube(self.cube_images)
-        self.cube.data = np.ones(self.cube.data.shape)
+        self.cube_skymaps = [self.skymap for _ in self.indices]
+        self.cube = SkyImageList(skymaps=self.cube_skymaps, wcs=self.skymap.wcs).to_cube()
 
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_image(self, operation):
@@ -98,9 +97,9 @@ class TestBlockReduceHDU():
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_cube(self, operation):
         for index in self.indices:
-            image = cube_to_image(self.cube, index)
+            image = self.cube.sky_image(index)
             layer = self.cube.data[index]
-            layer_hdu = fits.ImageHDU(data=layer, header=image.header)
+            layer_hdu = fits.ImageHDU(data=layer, header=image.wcs.to_header())
             image_1 = block_reduce_hdu(layer_hdu, (2, 4), func=operation)
             if operation == np.sum:
                 ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
