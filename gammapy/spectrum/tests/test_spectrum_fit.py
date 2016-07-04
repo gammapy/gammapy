@@ -29,4 +29,4 @@ def test_spectral_fit():
     assert fit.result.fit.spectral_model == 'PowerLaw'
     assert_allclose(fit.result.fit.statval, 100.433, rtol=1e-3)
     assert_quantity_allclose(fit.result.fit.parameters.index,
-                             2.402 * u.Unit(''), rtol=1e-3)
+                             2.405 * u.Unit(''), rtol=1e-3)

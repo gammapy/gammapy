@@ -118,13 +118,13 @@ class SpectrumFit(object):
                 model = sherpa.models.PowLaw1D('powlaw1d.' + name)
                 model.gamma = 2
                 model.ref = 1e9
-                model.ampl = 1e-20
+                model.ampl = 1
             elif model == 'LOGPAR' or model == 'LogParabola':
                 model = sherpa.models.LogParabola('logparabola.' + name)
                 model.c1 = 2
                 model.c2 = 0
                 model.ref = 1e9
-                model.ampl = 1e-20
+                model.ampl = 1
             else:
                 raise ValueError("Undefined model string: {}".format(model))
 
