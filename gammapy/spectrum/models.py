@@ -9,6 +9,7 @@ __all__ = [
     'ExponentialCutoffPowerLaw',
 ]
 
+# Note: Consider to move stuff from _models_old.py here
 
 class SpectralModel(object):
     """Spectral model base class.
@@ -17,8 +18,19 @@ class SpectralModel(object):
 
 class PowerLaw(SpectralModel):
     """Spectral power-law model.
+    
+    Parameters
+    ----------
+    index : float, `~astropy.units.Quantity`
     """
+    def __init__(self, index, amplitude, reference):
+        self.index = index
+        self.amplitude = amplitude
+        self.reference = reference
 
+
+    def evaluate(self):
+        pass
 
 class ExponentialCutoffPowerLaw(SpectralModel):
     """Spectral exponential cutoff power-law model.
