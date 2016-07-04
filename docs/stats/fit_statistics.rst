@@ -52,7 +52,12 @@ likelihood formula as
 
 where :math:`\mu_{sig}` is the number of expected counts in the signal regions,
 and :math:`\mu_{bkg}` is the number of expected counts in the background region,
-as defined in the :ref:`stats-introduction`.
+as defined in the :ref:`stats-introduction`. Or rewriting it as ``-2 log L``:
+
+.. math::
+
+    -2 log L = -2( n_{on} log(\mu_{sig}+\alpha \mu_{bkg}) - (\mu_{sig}+\alpha \mu_{bkg})
+               n_{off} log(\mu_{bkg}) - \mu_{bkg})   
 
 Most of the times you probably won't have a model in order to get
 :math:`\mu_{bkg}`. The strategy in this case is to treat :math:`\mu_{bkg}` as
@@ -63,7 +68,7 @@ analytically minimizing the likelihood function. This is called 'profile
 likelihood'.
 
 .. math::
-    \frac{\mathrm d L}{\mathrm d \mu_{bkg}} = 0
+    \frac{\mathrm d log L}{\mathrm d \mu_{bkg}} = 0
     
 This yields a quadratic equation for :math:`\mu_{bkg}` 
 
@@ -93,7 +98,24 @@ By inserting this into the original likelihood formula we define the **WStat**.
     - n_{on} \log{(\mu_{sig} + \alpha \mu_{bkg})}
     - n_{off} \log{(\mu_{bkg})}
 
-TODO: Explaing extra terms and show example table
+To provide an estimate of goodness-of-fit, we can add a constant to the log likelihood, namely the likelihood of the data ``n_on`` and
+``n_off`` under the expectation of ``n_on`` and ``n_off``. Doing so, we are computing the likelihood ratio:
+
+.. math::
+
+    -2 log \frac{L(n_{on},n_{off}; \mu_{sig},\mu_{bkg})}{L(n_{on},n_{off};n_{on},n_{off})}
+
+Intuitively, this log-likelihood ratio should asymptotically behave like a chi-square with ``m-n``degrees-of-freedom, where ``m`` is the
+number of measurements and ``n`` the number of model parameters.
+
+Hence, we rewrite WStat:
+
+.. math::
+
+    W = 2 (\mu_{sig} + (1 + \alpha)\mu_{bkg} - n_{on} - n_{off}
+    - n_{on} (\log{(\mu_{sig} + \alpha \mu_{bkg}) - \log{(n_{on})}})
+    - n_{off} (\log{(\mu_{bkg})} - \log{(n_{off})}))
+
 
 
 Further references
