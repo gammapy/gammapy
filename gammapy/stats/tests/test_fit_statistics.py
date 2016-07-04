@@ -58,7 +58,7 @@ def test_wstat():
     alpha = np.ones(len(data)) * 0.2
 
     statsvec = gammapy_stats.wstat(n_on=data,
-                                   mu_signal=model,
+                                   mu_sig=model,
                                    n_off=off_vec,
                                    alpha=alpha,
                                    extra_terms=True)
