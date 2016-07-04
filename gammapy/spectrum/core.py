@@ -164,37 +164,6 @@ class CountsSpectrum(NDDataArray):
         self.plot(ax=ax)
         plt.show()
 
-    # TODO : move to standalone function and fix
-    @classmethod
-    def get_npred(cls, fit, obs):
-        """Get N_pred vector from spectral fit
-
-        Parameters
-        ----------
-        fit : SpectrumFitResult
-            Fitted spectrum
-        obs : SpectrumObservationList
-            Spectrum observation holding the irfs
-        """
-
-        m = fit.to_sherpa_model()
-
-        # Get differential flux at true energy log bin center
-        energy = obs.aeff.energy
-        x = energy.nodes.to('keV')
-        diff_flux = m(x) * u.Unit('cm-2 s-1 keV-1')
-
-        # Multiply with bin width = integration
-        bands = energy.data[:-1] - energy.data[1:]
-        int_flux = (diff_flux * bands).decompose()
-
-        # Apply ARF and RMF to get n_pred
-        temp = int_flux * obs.on_vector.exposure * obs.aeff.data
-        counts = obs.edisp.pdf_matrix.transpose().dot(temp)
-
-        e_reco = obs.edisp.reco_energy
-        return cls(data=counts.decompose(), energy=e_reco)
-
 
 class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent

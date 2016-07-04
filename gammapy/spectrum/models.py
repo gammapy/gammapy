@@ -32,8 +32,6 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        reco_energy : `~astropy.units.Quantity`
-            Reconstruced energy binning
         livetime : `~astropy.units.Quantity`
             Observation duration
         aeff : `~gammapy.irf.EffectiveAreaTable`
