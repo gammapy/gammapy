@@ -312,8 +312,8 @@ class SkyCube(object):
         skymap = self.sky_image(idx_energy=0)
         return skymap.solid_angle()
 
-    def sky_image(self, idx_energy=None, copy=True):
-        """Slice 3-dim cube into a 2-dim `~gammapy.image.SkyMap` along slicepos.
+    def sky_image(self, idx_energy, copy=True):
+        """Slice a 2-dim `~gammapy.image.SkyMap` from the cube.
 
         Parameters
         ----------
@@ -325,7 +325,7 @@ class SkyCube(object):
         Returns
         -------
         image : `~gammapy.image.SkyMap`
-            2-dim SkyMap image
+            2-dim sky image
         """
         skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
         return skymap.copy() if copy else skymap
