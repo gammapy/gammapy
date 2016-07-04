@@ -37,6 +37,10 @@ class SkyImageList(object):
         """Convert a list of image HDUs into one `~gammapy.cube.SkyCube`.
         """
         from ..cube import SkyCube
+        if hasattr(self.skymaps[0].data, 'unit'):
+            unit = self.skymaps[0].data.unit
+        else:
+            unit = None
         data = Quantity([skymap.data for skymap in self.skymaps],
-                        self.skymaps[0].data.unit)
+                        unit)
         return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy, meta=self.meta)

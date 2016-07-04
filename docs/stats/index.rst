@@ -6,6 +6,8 @@ Statistics tools (``gammapy.stats``)
 
 .. currentmodule:: gammapy.stats
 
+.. _stats-introduction:
+
 Introduction
 ============
 
@@ -111,6 +113,7 @@ Using `gammapy.stats`
    :maxdepth: 1
 
    feldman_cousins
+   fit_statistics
 
 Reference/API
 =============

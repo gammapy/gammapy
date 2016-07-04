@@ -6,7 +6,7 @@ from gammapy.utils.random import get_random_state
 def get_test_data():
     n_bins = 1
     random_state = get_random_state(3)
-    model = random_state.rand(n_bins) * 10
+    model = random_state.rand(n_bins) * 20
     data = random_state.poisson(model)
     staterror = np.sqrt(data) 
     off_vec = random_state.poisson(0.7 * model)
@@ -32,6 +32,16 @@ def calc_wstat_sherpa():
 def calc_wstat_gammapy():
     data, model, staterr, off_vec, alpha = get_test_data()
     from gammapy.stats import wstat
+    from gammapy.stats.fit_statistics import (
+        _get_wstat_background,
+        _get_wstat_extra_terms,
+    )
+
+    # background estimate
+    bkg = _get_wstat_background(data, off_vec, alpha, model)
+    print("Gammapy mu_bkg: {}".format(bkg))
+
+
     statsvec = wstat(n_on=data,
                      mu_signal=model,
                      n_off=off_vec,
@@ -40,18 +50,35 @@ def calc_wstat_gammapy():
     print("Gammapy stat: {}".format(np.sum(statsvec)))
     print("Gammapy statsvec: {}".format(statsvec))
 
+    print("---> with extra terms")
+    extra_terms = _get_wstat_extra_terms(data, off_vec)
+    print("Gammapy extra terms: {}".format(extra_terms))
+
+    statsvec = wstat(n_on=data,
+                     mu_signal=model,
+                     n_off=off_vec,
+                     alpha=alpha, extra_terms=True)
+
+    print("Gammapy stat: {}".format(np.sum(statsvec)))
+    print("Gammapy statsvec: {}".format(statsvec))
+
 def calc_wstat_xspec():
     data, model, staterr, off_vec, alpha = get_test_data()
     from xspec_stats import xspec_wstat as wstat
-    
-    # Assume t_b = alpha * t_s
-    # I think this is what Sherpa does
+    from xspec_stats import xspec_wstat_f, xspec_wstat_d
+
+    # alpha = t_s / t_b
     t_b = 1. / alpha
     t_s = 1
+
+    d = xspec_wstat_d(t_s, t_b, model, data, off_vec)
+    f = xspec_wstat_f(data, off_vec, t_s, t_b, model, d)
+    bkg = f * t_b
     stat = wstat(t_s, t_b, model, data, off_vec)
 
-    print("XSPEC stat: {}".format(stat))
 
+    print("XSPEC mu_bkg (f * t_b): {}".format(bkg))
+    print("XSPEC stat: {}".format(stat))
 
 if __name__ == "__main__":
     data, model, staterr, off_vec, alpha = get_test_data()
