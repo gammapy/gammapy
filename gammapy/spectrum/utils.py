@@ -87,9 +87,9 @@ class LogEnergyAxis(object):
             for ii in range(energy.size):
                 # print ii, e[ii], np.where(e[ii] >= self.e)
                 pix1[ii] = np.where(energy[ii] >= self.energy)[0][-1]
-                pix2 = pix1 + 1
-                energy1 = self.energy[pix1]
-                energy2 = self.energy[pix2]
+        pix2 = pix1 + 1
+        energy1 = self.energy[pix1]
+        energy2 = self.energy[pix2]
 
         return pix1, pix2, energy1, energy2
 
