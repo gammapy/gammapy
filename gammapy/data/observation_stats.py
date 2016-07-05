@@ -58,18 +58,19 @@ class ObservationStats(Stats):
     @classmethod
     def from_target(cls, obs, target, bg_estimate):
         """
-        Auxiliary constructor from an observation, a target
-        a background estimate
+        Auxiliary constructor from an observation, a target, and a background
+        estimate
 
         Parameters
         ----------
-        obs_table : `~gammapy.data.ObservationTable`
+        obs : `~gammapy.data.DataStoreObservation`
             Observation index table
-        target_pos : `~astropy.coordinates.SkyCoord`
-            Target position
-        bg_method : str
-            Background estimation method
+        target : `~gammapy.data.Target`
+            Target
+        bg_estimate : `~gammapy.background.BackgroundEstimate`
+            Background estimate 
         """
+        # TODO: add as property to DataStoreObservation
         n_on = cls._get_on_events(obs, target)
         n_off = len(bg_estimate.off_events)
         a_on = bg_estimate.a_on
