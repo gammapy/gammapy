@@ -39,4 +39,4 @@ def test_spectral_fit():
                      amplitude=fit.result.fit.parameters.norm
                     )
     npred = obs1.predicted_counts(model)
-    assert_allclose(fit.result.fit.n_pred, npred, rtol=1e-3)
+    assert_allclose(fit.result.fit.n_pred, npred.data, rtol=1e-3)
