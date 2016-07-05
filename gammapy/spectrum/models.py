@@ -49,11 +49,11 @@ class SpectralModel(object):
         
 
 class PowerLaw(SpectralModel):
-    """Spectral power-law model.
+    r"""Spectral power-law model.
     
     .. math:: 
 
-        F(E) = F_0 \\cdot \\left( \\frac{E}{E_0} \\right)^{\Gamma}
+        F(E) = F_0 \cdot \left( \frac{E}{E_0} \right)^{\Gamma}
 
     Parameters
     ----------
