@@ -8,6 +8,7 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 * ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from  collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -63,7 +64,7 @@ class SkyCube(object):
         Energy array
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
-    meta : dict
+    meta : '~collections.OrderedDict'
         Dictionary to store meta data.
 
 
@@ -155,7 +156,7 @@ class SkyCube(object):
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header).celestial
-        meta = header
+        meta = OrderedDict(header)
         if format == 'fermi':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy = Quantity(energy, 'MeV')
@@ -511,7 +512,8 @@ class SkyCube(object):
         wcs_out = WCS(header_out).celestial
 
         # TODO: how to fill 'meta' in better way?
-        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=header_out)
+        meta = OrderedDict(header_out)
+        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=meta)
 
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.
