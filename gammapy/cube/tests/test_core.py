@@ -133,8 +133,8 @@ class TestSkyCube(object):
         assert_allclose(new_image.data, image.data)
 
         # Test Header Keys
-        expected = [('CDELT1', 0.5), ('CDELT2', 0.5), ('NAXIS1', 61),
-                    ('NAXIS2', 21), ('CRVAL1', 0), ('CRVAL2', 0)]
+        expected = [('CDELT1', 0.5), ('CDELT2', 0.5),
+                    ('CRVAL1', 0), ('CRVAL2', 0)]
 
         for key, value in expected:
             assert_allclose(np.abs(image.meta[key]), value)

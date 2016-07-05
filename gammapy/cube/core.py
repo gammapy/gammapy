@@ -448,10 +448,12 @@ class SkyCube(object):
         axes = ['longitude', 'latitude']
         header = self.wcs.sub(axes).to_header()
 
-        hdu = fits.ImageHDU(data=integral_flux,
-                            header=header, name='integral_flux')
-
-        return SkyMap.from_image_hdu(hdu)
+        image = SkyMap(name='flux',
+                       data=integral_flux,
+                       wcs=self.wcs.sub(axes),
+                       unit='cm^-2 s^-1 sr^-1',
+                       meta=header)
+        return image
 
     def reproject_to(self, reference_cube, projection_type='bicubic'):
         """Spatially reprojects a `SkyCube` onto a reference cube.
