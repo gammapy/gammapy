@@ -6,6 +6,7 @@ from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.units import Quantity
+from ..utils import _shape_2N
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
@@ -118,6 +119,12 @@ def test_ref_pixel():
     assert_allclose(footprint[0], footprint_1[0])
 
 
+def test_shape_2N():
+    shape = (34, 89, 120, 444)
+    expected_shape = (40, 96, 128, 448)
+    assert expected_shape == _shape_2N(shape=shape, N=3)
+
+
 def test_wcs_histogram2d():
     # A simple test case that can by checked by hand:
     header = make_header(nxpix=2, nypix=1, binsz=10, xref=0, yref=0, proj='CAR')
@@ -170,6 +177,5 @@ def test_bin_events_in_cube():
                            coordsys='CEL')
     counts.fill(events)
     assert counts.data.sum().value == 1233
-
 
 
