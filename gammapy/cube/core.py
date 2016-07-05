@@ -445,12 +445,11 @@ class SkyCube(object):
 
         integral_flux = integral_flux.sum(axis=0)
 
-        axes = ['longitude', 'latitude']
-        header = self.wcs.sub(axes).to_header()
+        header = self.wcs.to_header()
 
         image = SkyMap(name='flux',
                        data=integral_flux,
-                       wcs=self.wcs.sub(axes),
+                       wcs=self.wcs,
                        unit='cm^-2 s^-1 sr^-1',
                        meta=header)
         return image
