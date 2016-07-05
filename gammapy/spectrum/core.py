@@ -396,6 +396,20 @@ class SpectrumObservation(object):
             livetime = self.exposure,
         )
         return ObservationStats(**kwargs)
+    
+    def predicted_counts(self, model):
+        """Calculated npred given a model
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Spectral model
+        """
+        from . import calculate_predicted_counts
+        return calculate_predicted_counts(model=model,
+                                          edisp=self.edisp,
+                                          aeff=self.aeff,
+                                          livetime=self.exposure)
 
     @classmethod
     def read(cls, phafile):

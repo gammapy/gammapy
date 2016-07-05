@@ -23,37 +23,13 @@ class SpectralModel(object):
         kwargs.update(energy=energy)
         return self.evaluate(**kwargs)
 
-    def predicted_counts(self, livetime, aeff, edisp):
-        """Get npred 
-        
-        The true and reco energy binning are inferred from the provided IRFs.
-        TODO: make energy binning optional once `~gammapy.irf.EnergyDispersion`
-        has an evaluate method.
-
-        Parameters
-        ----------
-        livetime : `~astropy.units.Quantity`
-            Observation duration
-        aeff : `~gammapy.irf.EffectiveAreaTable`
-            EffectiveArea
-        edisp : `~gammapy.irf.EnergyDispersion`, optional
-            EnergyDispersion
-        """
-        
-        true_energy = aeff.energy.data
-        flux = self.integral(true_energy[:-1], true_energy[1:]) 
-        counts = flux * livetime * aeff.evaluate()
-        counts = counts.decompose()
-        counts = edisp.apply(counts.decompose())
-        return CountsSpectrum(data=counts, energy=edisp.reco_energy)
-        
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
     
     .. math:: 
 
-        F(E) = F_0 \cdot \left( \frac{E}{E_0} \right)^{\Gamma}
+        F(E) = F_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
 
     Parameters
     ----------
@@ -71,13 +47,13 @@ class PowerLaw(SpectralModel):
         
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
-        return amplitude * ( energy / reference ) ** index
+        return amplitude * ( energy / reference ) ** (-1 * index)
 
     def integral(self, emin, emax):
         """Integrate using analytic formula"""
         pars = self.parameters 
         
-        val = pars.index + 1
+        val = -1 * pars.index + 1
         prefactor = pars.amplitude * pars.reference / val
         upper = (emax / pars.reference) ** val
         lower = (emin / pars.reference) ** val

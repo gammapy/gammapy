@@ -5,7 +5,7 @@ from astropy.units import Quantity
 
 __all__ = [
     'LogEnergyAxis',
-    'plot_npred_vs_excess',
+    'calculate_predicted_counts',
     'integrate_spectrum',
 ]
 
@@ -87,70 +87,43 @@ class LogEnergyAxis(object):
             for ii in range(energy.size):
                 # print ii, e[ii], np.where(e[ii] >= self.e)
                 pix1[ii] = np.where(energy[ii] >= self.energy)[0][-1]
-        pix2 = pix1 + 1
-        energy1 = self.energy[pix1]
-        energy2 = self.energy[pix2]
+                pix2 = pix1 + 1
+                energy1 = self.energy[pix1]
+                energy2 = self.energy[pix2]
 
         return pix1, pix2, energy1, energy2
 
 
-# Todo: find a better place for these functions (Spectrum analysis class?)
-def plot_exclusion_mask(**kwargs):
-    """Plot exclusion mask
+def calculate_predicted_counts(model, aeff, edisp, livetime):
+    """Get npred 
 
-    The plot will be centered at the pointing position
+    The true and reco energy binning are inferred from the provided IRFs.
 
-    Parameters
-    ----------
-    size : `~astropy.coordinates.Angle`
-    Edge length of the plot
-    """
-    from gammapy.image import ExclusionMask
-    from gammapy.spectrum import SpectrumExtraction
-    # Todo: plot exclusion mask as contours with skymap class
-
-    exclusion = ExclusionMask.from_fits(SpectrumExtraction.EXCLUDEDREGIONS_FILE)
-    ax = exclusion.plot(**kwargs)
-    return ax
-
-
-def plot_npred_vs_excess(ogip_dir='ogip_data', npred_dir='n_pred', ax=None):
-    """Plot predicted and measured excess counts
+    TODO: make energy binning optional once `~gammapy.irf.EnergyDispersion`
+    has an evaluate method.
 
     Parameters
     ----------
-    npred_dir : str, Path
-        Directory holding npred fits files
-    ogip_dir : str, Path
-        Directory holding OGIP data
+    model : `~gammapy.spectrum.models.SpectralModel`
+        Spectral model
+    livetime : `~astropy.units.Quantity`
+        Observation duration
+    aeff : `~gammapy.irf.EffectiveAreaTable`
+        EffectiveArea
+    edisp : `~gammapy.irf.EnergyDispersion`, optional
+        EnergyDispersion
     """
-    from ..spectrum.spectrum_extraction import SpectrumObservationList
-    from ..spectrum import CountsSpectrum
-    from ..utils.scripts import make_path
+    from . import CountsSpectrum
 
-    import matplotlib.pyplot as plt
-    ax = plt.gca() if ax is None else ax
+    true_energy = aeff.energy.data
+    flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:]) 
+    counts = flux * livetime * aeff.evaluate()
+    counts = counts.decompose()
+    counts = edisp.apply(counts.decompose())
+    return CountsSpectrum(data=counts, energy=edisp.reco_energy)
+        
 
-    ogip_dir = make_path(ogip_dir)
-    n_pred_dir = make_path(npred_dir)
-
-    obs = SpectrumObservationList.read_ogip(ogip_dir)
-    excess = np.sum([o.excess_vector for o in obs])
-
-    # Need to give RMF file for reco energy binning
-    id = obs[0].meta.obs_id
-    rmf = str(ogip_dir / 'rmf_run{}.fits'.format(id))
-    val = [CountsSpectrum.read_bkg(_, rmf) for _ in n_pred_dir.glob('*.fits')]
-    npred = np.sum(val)
-
-    npred.plot(ax=ax, color='red', alpha=0.7, label='Predicted counts')
-    excess.plot(ax=ax, color='green', alpha=0.7, label='Excess counts')
-    ax.legend(numpoints=1)
-    plt.xscale('log')
-
-    return ax
-
-
+# TODO: Move to gammapy.spectrum.models
 def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
     """
     Integrate 1d function using the log-log trapezoidal rule. 

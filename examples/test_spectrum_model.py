@@ -10,6 +10,7 @@ from gammapy.irf import (
     EnergyDispersion
 )
 from gammapy.utils.energy import EnergyBounds
+from gammapy.spectrum import calculate_predicted_counts
 
 
 # TODO clean up and add to gammapy.irf
@@ -45,7 +46,11 @@ def test_model(model):
     edisp_data = make_perfect_resolution(e_true, e_reco)
     edisp = EnergyDispersion(edisp_data, EnergyBounds(e_true),
                              EnergyBounds(e_reco))
-    print(model.predicted_counts(livetime, aeff, edisp))
+    npred = calculate_predicted_counts(model=model,
+                                       livetime=livetime,
+                                       aeff=aeff,
+                                       edisp=edisp)
+    print(npred.data)
     # fit -- to_sherpa, do later
     # flux points -- later
 

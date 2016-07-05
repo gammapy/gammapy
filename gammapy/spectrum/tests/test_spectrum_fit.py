@@ -30,3 +30,13 @@ def test_spectral_fit():
     assert_allclose(fit.result.fit.statval, 100.433, rtol=1e-3)
     assert_quantity_allclose(fit.result.fit.parameters.index,
                              2.405 * u.Unit(''), rtol=1e-3)
+    
+    # Compare Npred vectors
+    # TODO: Read model from FitResult
+    from gammapy.spectrum.models import PowerLaw
+    model = PowerLaw(index=fit.result.fit.parameters.index,
+                     reference=fit.result.fit.parameters.reference,
+                     amplitude=fit.result.fit.parameters.norm
+                    )
+    npred = obs1.predicted_counts(model)
+    assert_allclose(fit.result.fit.n_pred, npred, rtol=1e-3)
