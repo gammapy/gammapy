@@ -49,7 +49,7 @@ def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
 
     energy_centers = energy_bins.log_centers
     wcs = exposure_cube.wcs
-    coordinates = exposure_cube.spatial_coordinate_images
+    coordinates = exposure_cube.spatial_coordinate_images()
     lon = coordinates.data.lon
     lat = coordinates.data.lat
 

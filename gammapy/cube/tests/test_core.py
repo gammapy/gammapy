@@ -150,7 +150,7 @@ class TestSkyCube(object):
         assert_quantity_allclose(actual, expected, rtol=1e-4)
 
     def test_spatial_coordinate_images(self):
-        coordinates = self.sky_cube.spatial_coordinate_images
+        coordinates = self.sky_cube.spatial_coordinate_images()
         lon = coordinates.data.lon
         lat = coordinates.data.lat
 

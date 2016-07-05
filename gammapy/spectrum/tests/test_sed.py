@@ -119,7 +119,7 @@ def test_cube_sed1():
     counts = FermiGalacticCenter.diffuse_model()
     counts.data = np.ones_like(counts.data)
 
-    coordinates = spec_cube.spatial_coordinate_images
+    coordinates = spec_cube.spatial_coordinate_images()
     lons = coordinates.data.lon
     lats = coordinates.data.lat
 
@@ -148,7 +148,7 @@ def test_cube_sed2():
     counts = FermiGalacticCenter.diffuse_model()
     counts.data = np.ones_like(counts.data[:-1])
 
-    coordinates = spec_cube.spatial_coordinate_images
+    coordinates = spec_cube.spatial_coordinate_images()
     lons = coordinates.data.lon
     lats = coordinates.data.lat
 

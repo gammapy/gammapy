@@ -268,7 +268,6 @@ class SkyCube(object):
 
         return lon, lat, energy
 
-    @property
     def spatial_coordinate_images(self, mode='center'):
         """Spatial coordinate images.
         Wrapper of `~gammapy.image.SkyMap.coordinates`
@@ -299,7 +298,7 @@ class SkyCube(object):
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        coordinates = self.spatial_coordinate_images
+        coordinates = self.spatial_coordinate_images()
         ra = coordinates.data.lon
         dec = coordinates.data.lat
 
