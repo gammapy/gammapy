@@ -270,7 +270,8 @@ class SkyCube(object):
 
     def spatial_coordinate_images(self, mode='center'):
         """Spatial coordinate images.
-        Wrapper of `~gammapy.image.SkyMap.coordinates`
+
+        Wrapper of `gammapy.image.SkyMap.coordinates`
 
         Parameters
         ----------
