@@ -184,7 +184,7 @@ class ObservationSummary(object):
         """
         ss = '*** Observation Wise summary ***\n'
         for obs in self.obs_stats:
-            ss = '{}\n'.format(obs)
+            ss += '{}\n'.format(obs)
 
         return ss
 
