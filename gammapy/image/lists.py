@@ -21,13 +21,17 @@ class SkyImageList(object):
         Word coordinate system transformation
     energy : `~astropy.units.Quantity`
         Energy array
+    meta : dict
+        Dictionary to store meta data.
+
     """
 
-    def __init__(self, name=None, skymaps=None, wcs=None, energy=None):
+    def __init__(self, name=None, skymaps=None, wcs=None, energy=None, meta=None):
         self.name = name
         self.skymaps = skymaps
         self.wcs = wcs
         self.energy = energy
+        self.meta = meta
 
     def to_cube(self):
         """Convert a list of image HDUs into one `~gammapy.cube.SkyCube`.
@@ -39,4 +43,4 @@ class SkyImageList(object):
             unit = None
         data = Quantity([skymap.data for skymap in self.skymaps],
                         unit)
-        return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy)
+        return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy, meta=self.meta)

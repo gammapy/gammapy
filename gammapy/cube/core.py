@@ -8,6 +8,7 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 * ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
+from  collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
@@ -63,6 +64,9 @@ class SkyCube(object):
         Energy array
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
+    meta : '~collections.OrderedDict'
+        Dictionary to store meta data.
+
 
     Notes
     -----
@@ -74,11 +78,12 @@ class SkyCube(object):
     http://fermi.gsfc.nasa.gov/ssc/data/analysis/software/aux/gal_2yearp7v6_v0.fits
     """
 
-    def __init__(self, name=None, data=None, wcs=None, energy=None):
+    def __init__(self, name=None, data=None, wcs=None, energy=None, meta=None):
         # TODO: check validity of inputs
         self.name = name
         self.data = data
         self.wcs = wcs
+        self.meta = meta
 
         # TODO: decide whether we want to use an EnergyAxis object or just use the array directly.
         self.energy = energy
@@ -127,7 +132,8 @@ class SkyCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        return cls(data, wcs, energy)
+        meta = OrderedDict(header)
+        return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     @classmethod
     def read(cls, filename, format='fermi'):
@@ -150,6 +156,7 @@ class SkyCube(object):
         # We only use proj for LON, LAT and do ENERGY ourselves
         header = fits.getheader(filename)
         wcs = WCS(header).celestial
+        meta = OrderedDict(header)
         if format == 'fermi':
             energy = Table.read(filename, 'ENERGIES')['Energy']
             energy = Quantity(energy, 'MeV')
@@ -159,7 +166,7 @@ class SkyCube(object):
             data = Quantity(data, 'count')
         else:
             raise ValueError('Not a valid cube fits format')
-        return cls(data=data, wcs=wcs, energy=energy)
+        return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     def fill(self, events, origin=0):
         """
@@ -194,14 +201,14 @@ class SkyCube(object):
             the spatial part of the cube.
         """
         refmap = SkyMap.empty(**kwargs)
-        energies = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
-        data = refmap.data * np.ones(len(energies)).reshape((-1, 1, 1))
-        return cls(data=data, wcs=refmap.wcs, energy=energies)
+        energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
+        data = refmap.data * np.ones(len(energy)).reshape((-1, 1, 1))
+        return cls(data=data, wcs=refmap.wcs, energy=energy)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
         """
-        Create an empty sky cube with the same WCS and energy specification
+        Create an empty sky cube with the same WCS, energy specification and meta
         as given sky cube.
 
         Parameters
@@ -214,7 +221,7 @@ class SkyCube(object):
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
         energies = refcube.energies.copy()
-        return cls(data=data, wcs=wcs, energy=energies)
+        return cls(data=data, wcs=wcs, energy=energies, meta=refcube.meta)
 
     def world2pix(self, lon, lat, energy, combine=False):
         """Convert world to pixel coordinates.
@@ -327,7 +334,9 @@ class SkyCube(object):
         image : `~gammapy.image.SkyMap`
             2-dim sky image
         """
-        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs)
+        # TODO: should we pass something in SkyMap (we speak about meta)?
+        data = Quantity(self.data[idx_energy], self.data.unit)
+        skymap = SkyMap(name=self.name, data=data, wcs=self.wcs)
         return skymap.copy() if copy else skymap
 
     def flux(self, lon, lat, energy):
@@ -505,7 +514,9 @@ class SkyCube(object):
 
         wcs_out = WCS(header_out).celestial
 
-        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy)
+        # TODO: how to fill 'meta' in better way?
+        meta = OrderedDict(header_out)
+        return SkyCube(data=new_cube, wcs=wcs_out, energy=energy, meta=meta)
 
     def to_fits(self):
         """Writes SkyCube to FITS hdu_list.

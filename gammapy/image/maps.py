@@ -4,6 +4,7 @@ import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
+from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -47,7 +48,7 @@ class SkyMap(object):
         WCS transformation object.
     unit : str
         String specifying the data units.
-    meta : dict
+    meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
     wcs_origin = 0
@@ -98,7 +99,6 @@ class SkyMap(object):
         header = image_hdu.header
         wcs = WCS(image_hdu.header)
 
-        meta = header
         name = header.get('HDUNAME')
         if name is None:
             name = header.get('EXTNAME')
@@ -108,6 +108,7 @@ class SkyMap(object):
         except (KeyError, ValueError):
             unit = None
 
+        meta = OrderedDict(header)
         return cls(name, data, wcs, unit, meta)
 
     @classmethod
@@ -152,7 +153,7 @@ class SkyMap(object):
             Data type, default is float32
         unit : str
             Data unit.
-        meta : dict
+        meta : `~collections.OrderedDict`
             Meta data attached to the sky map.
 
         Returns
@@ -181,7 +182,7 @@ class SkyMap(object):
             Name of the sky map.
         unit : str
             String specifying the data units.
-        meta : dict
+        meta : `~collections.OrderedDict`
             Dictionary to store meta data.
         """
         if isinstance(skymap, SkyMap):
