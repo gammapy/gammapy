@@ -275,19 +275,24 @@ class SkyCube(object):
 
         return lon, lat, energy
 
-    @property
-    def spatial_coordinate_images(self):
-        """Spatial coordinate images (2x `~astropy.units.Quantity`)
+    def spatial_coordinate_images(self, mode='center'):
+        """Spatial coordinate images.
 
-        Returns two separate objects for the arrays of longitude
-        and latitude pixel coordinates.
+        Wrapper of `gammapy.image.SkyMap.coordinates`
+
+        Parameters
+        ----------
+        mode : {'center', 'edges'}
+            Return coordinate values at the pixels edges or pixel centers.
+
+        Returns
+        -------
+        coordinates : `~astropy.coordinates.SkyCoord`
+            Position on the sky.
         """
-        n_lon = self.data.shape[2]
-        n_lat = self.data.shape[1]
-        i_lat, i_lon = np.indices((n_lat, n_lon))
-        lon, lat, _ = self.pix2world(i_lon, i_lat, 0)
-
-        return lon, lat
+        skymap = self.sky_image(0)
+        coordinates = skymap.coordinates(mode)
+        return coordinates
 
     def to_sherpa_data3d(self):
         """
@@ -301,7 +306,9 @@ class SkyCube(object):
         elo = ebounds.lower_bounds.value
         ehi = ebounds.upper_bounds.value
 
-        ra, dec = self.spatial_coordinate_images
+        coordinates = self.spatial_coordinate_images()
+        ra = coordinates.data.lon
+        dec = coordinates.data.lat
 
         n_ebins = len(elo)
         ra_cube = np.tile(ra, (n_ebins, 1, 1))

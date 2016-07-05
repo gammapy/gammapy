@@ -289,8 +289,6 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         differential flux errors. Units as those input.
     """
 
-    lon, lat = cube.spatial_coordinate_images
-
     values = []
     for i in np.arange(cube.data.shape[0]):
         if mask is None:
