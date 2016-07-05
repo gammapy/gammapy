@@ -140,12 +140,12 @@ class TestSkyCube(object):
     # E        x: array(7.615363001210512e-05)
     # E        y: array(0.00015230870989335428)
     @pytest.mark.xfail
-    def test_solid_angle_image(self):
+    def test_solid_angle(self):
         actual = self.sky_cube.solid_angle[10][30]
         expected = Quantity(self.sky_cube.wcs.wcs.cdelt[:-1].prod(), 'deg2')
         assert_quantity_allclose(actual, expected, rtol=1e-4)
 
-    def test_spatial_coordinate_images(self):
+    def test_coordinates(self):
         coordinates = self.sky_cube.coordinates()
         lon = coordinates.data.lon
         lat = coordinates.data.lat
