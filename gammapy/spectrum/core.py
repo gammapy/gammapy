@@ -642,7 +642,6 @@ class SpectrumObservationList(list):
             Output directory, default: pwd
         """
         for obs in self:
-            print (obs.off_vector.backscal)
             obs.write(outdir=outdir, **kwargs)
 
     # TODO: This should probably go away
