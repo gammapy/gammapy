@@ -405,7 +405,7 @@ class SkyCube(object):
 
         Returns
         -------
-        image : `~astropy.io.fits.ImageHDU`
+        image : `~gammapy.image.SkyMap`
             Integral flux image (1 / (cm^2 s sr))
         """
         if isinstance(energy_bins, int):
@@ -439,13 +439,14 @@ class SkyCube(object):
 
         integral_flux = integral_flux.sum(axis=0)
 
-        axes = ['longitude', 'latitude']
-        header = self.wcs.sub(axes).to_header()
+        header = self.wcs.to_header()
 
-        hdu = fits.ImageHDU(data=integral_flux,
-                            header=header, name='integral_flux')
-
-        return hdu
+        image = SkyMap(name='flux',
+                       data=integral_flux,
+                       wcs=self.wcs,
+                       unit='cm^-2 s^-1 sr^-1',
+                       meta=header)
+        return image
 
     def reproject_to(self, reference_cube, projection_type='bicubic'):
         """Spatially reprojects a `SkyCube` onto a reference cube.

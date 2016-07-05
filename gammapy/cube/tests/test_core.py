@@ -132,12 +132,8 @@ class TestSkyCube(object):
         new_image = self.sky_cube.integral_flux_image(energy_band_check)
         assert_allclose(new_image.data, image.data)
 
-        # Test Header Keys
-        expected = [('CDELT1', 0.5), ('CDELT2', 0.5), ('NAXIS1', 61),
-                    ('NAXIS2', 21), ('CRVAL1', 0), ('CRVAL2', 0)]
+        assert new_image.wcs.axis_type_names == ['GLON', 'GLAT']
 
-        for key, value in expected:
-            assert_allclose(np.abs(image.header[key]), value)
 
     # TODO: fix this test.
     # It's currently failing. Dont' know which number (if any) is correct.
