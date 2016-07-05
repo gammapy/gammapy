@@ -102,7 +102,9 @@ class SpectrumFitResult(object):
         
         TODO : Move to gammapy.catalog
         """
+        from astropy.units import Quantity
         d = source.data
+
         parameters = dict()
         parameter_errors = dict()
         spectral_model = d['SpectrumType'].strip()
@@ -368,6 +370,7 @@ class SpectrumFitResult(object):
                                               self.parameters.reference,
                                               self.parameters.index)
         elif self.spectral_model == 'LogParabola':
+            from astropy.units import Quantity
             # LogParabola evaluation does not work with arrays because
             # there is bug when using '**' with Quantities
             # see https://github.com/astropy/astropy/issues/4764
@@ -408,7 +411,7 @@ class SpectrumFitResult(object):
     def _eval_butterfly_analytical(self, x):
         """Evaluate butterfly using hard-coded formulas"""
         if self.spectral_model == 'PowerLaw':
-            from gammapy.spectrum import df_over_f
+            from gammapy.spectrum.powerlaw import power_law_df_over_f
             f = self.evaluate(x)
             x = x.to('TeV').value
             e0 = self.parameters.reference.to('TeV').value
@@ -417,7 +420,7 @@ class SpectrumFitResult(object):
             dg = self.parameter_errors.index.value
             # TODO: Fix this!
             cov = 0
-            df_over_f = df_over_f(x, e0, f0, df0, dg, cov)
+            df_over_f = power_law_df_over_f(x, e0, f0, df0, dg, cov)
             val = df_over_f * f
             # Errors are symmetric
             return (val, val)
