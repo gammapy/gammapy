@@ -48,7 +48,7 @@ class SkyMap(object):
         WCS transformation object.
     unit : str
         String specifying the data units.
-    meta : dict
+    meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
     wcs_origin = 0
@@ -153,7 +153,7 @@ class SkyMap(object):
             Data type, default is float32
         unit : str
             Data unit.
-        meta : dict
+        meta : `~collections.OrderedDict`
             Meta data attached to the sky map.
 
         Returns
@@ -182,7 +182,7 @@ class SkyMap(object):
             Name of the sky map.
         unit : str
             String specifying the data units.
-        meta : dict
+        meta : `~collections.OrderedDict`
             Dictionary to store meta data.
         """
         if isinstance(skymap, SkyMap):

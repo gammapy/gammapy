@@ -132,7 +132,7 @@ class SkyCube(object):
         wcs = WCS(header)
         energy = energy_table_hdu.data['Energy']
         energy = Quantity(energy, 'MeV')
-        meta = header
+        meta = OrderedDict(header)
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     @classmethod
@@ -201,9 +201,9 @@ class SkyCube(object):
             the spatial part of the cube.
         """
         refmap = SkyMap.empty(**kwargs)
-        energies = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
-        data = refmap.data * np.ones(len(energies)).reshape((-1, 1, 1))
-        return cls(data=data, wcs=refmap.wcs, energy=energies, meta=refmap.meta)
+        energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
+        data = refmap.data * np.ones(len(energy)).reshape((-1, 1, 1))
+        return cls(data=data, wcs=refmap.wcs, energy=energy)
 
     @classmethod
     def empty_like(cls, refcube, fill=0):
@@ -334,7 +334,9 @@ class SkyCube(object):
         image : `~gammapy.image.SkyMap`
             2-dim sky image
         """
-        skymap = SkyMap(self.name, Quantity(self.data[idx_energy], self.data.unit), self.wcs, self.meta)
+        # TODO: should we pass something in SkyMap (we speak about meta)?
+        data = Quantity(self.data[idx_energy], self.data.unit)
+        skymap = SkyMap(name=self.name, data=data, wcs=self.wcs)
         return skymap.copy() if copy else skymap
 
     def flux(self, lon, lat, energy):
