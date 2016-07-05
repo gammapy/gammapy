@@ -150,12 +150,24 @@ class TestSkyCube(object):
         assert_quantity_allclose(actual, expected, rtol=1e-4)
 
     def test_spatial_coordinate_images(self):
-        lon, lat = self.sky_cube.spatial_coordinate_images
+        coordinates = self.sky_cube.spatial_coordinate_images
+        lon = coordinates.data.lon
+        lat = coordinates.data.lat
 
         assert lon.shape == (21, 61)
         assert lat.shape == (21, 61)
 
-        # TODO assert the four corner values
+        assert_allclose(lon[0, 0], Angle("344d45m00s"))
+        assert_allclose(lat[0, 0], Angle(" -5d15m00s"))
+
+        assert_allclose(lon[0, -1], Angle("14d45m00s"))
+        assert_allclose(lat[0, -1], Angle("-5d15m00s"))
+
+        assert_allclose(lon[-1, 0], Angle("344d45m00s"))
+        assert_allclose(lat[-1, 0], Angle("4d45m00s"))
+
+        assert_allclose(lon[-1, -1], Angle("14d45m00s"))
+        assert_allclose(lat[-1, -1], Angle("4d45m00s"))
 
 
 @pytest.mark.xfail
