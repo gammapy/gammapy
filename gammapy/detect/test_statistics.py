@@ -19,7 +19,8 @@ from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     _shape_2N, SkyMapCollection)
+                     SkyMapCollection)
+from ..image.utils import _shape_2N
 
 __all__ = [
     'compute_ts_map',
