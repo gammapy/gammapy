@@ -404,6 +404,11 @@ class SpectrumObservation(object):
         ----------
         model : `~gammapy.spectrum.models.SpectralModel`
             Spectral model
+
+        Returns
+        -------
+        npred : `~gammapy.spectrum.CountsSpectrum`
+            Predicted counts
         """
         from . import calculate_predicted_counts
         return calculate_predicted_counts(model=model,

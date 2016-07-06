@@ -17,11 +17,14 @@ __all__ = [
 
 class SpectralModel(object):
     """Spectral model base class.
+
+    Derived classes should store their parameters as ``Bunch`` in an instance
+    attribute called ``parameters``, see for example
+    `~gammapy.spectrum.models.PowerLaw`.
     """
     def __call__(self, energy):
-        kwargs = self.parameters
-        kwargs.update(energy=energy)
-        return self.evaluate(**kwargs)
+        """Call evaluate method of derived classes"""
+        return self.evaluate(energy, **self.parameters)
 
 
 class PowerLaw(SpectralModel):
@@ -35,7 +38,7 @@ class PowerLaw(SpectralModel):
     ----------
     index : float, `~astropy.units.Quantity`
         :math:`\Gamma`
-    amplitude: float, `~astropy.units.Quantity` 
+    amplitude : float, `~astropy.units.Quantity` 
         :math:`F_0`
     reference : float, `~astropy.units.Quantity` 
         :math:`E_0`

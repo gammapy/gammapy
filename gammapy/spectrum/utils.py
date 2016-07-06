@@ -110,8 +110,13 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
         Observation duration
     aeff : `~gammapy.irf.EffectiveAreaTable`
         EffectiveArea
-    edisp : `~gammapy.irf.EnergyDispersion`, optional
+    edisp : `~gammapy.irf.EnergyDispersion`
         EnergyDispersion
+
+    Returns
+    -------
+    counts : `~gammapy.spectrum.CountsSpectrum`
+        Predicted counts
     """
     from . import CountsSpectrum
 
