@@ -325,7 +325,7 @@ class SkyMap(object):
             y_pad = (shape[0] - self.data.shape[0]) // 2
             #converting from unicode to ascii string as a workaround
             #for https://github.com/numpy/numpy/issues/7112
-            data = np.pad(self.data, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
+            data = np.pad(self.data, ((0, y_pad), (0, x_pad)), mode=str('reflect'))
         else:
             data = self.data
         new_data = block_reduce(data, (factor, factor), method)
@@ -555,12 +555,11 @@ class SkyMap(object):
         if not np.log2(factor).is_integer():
             raise ValueError('Up sampling factor must be power of 2.')
         factor = int(factor)
-        new_data = zoom(self.data, factor, order=order)
+
+        data = self.data.astype(float)
+        new_data = zoom(data, zoom=factor, order=order)
         if shape is not None:
-            x_crop = (factor * self.data.shape[1] - shape[1]) // 2
-            y_crop = (factor * self.data.shape[0] - shape[0]) // 2
-            # Sample up result and crop to original size
-            new_data = new_data[y_crop:-y_crop, x_crop:-x_crop]
+            new_data = new_data[0:shape[0], 0:shape[1]]
         return SkyMap(data=new_data)
 
 

@@ -99,6 +99,26 @@ def test_image(request):
     return TestImage(*request.param)
 
 
+def test_upsample():
+    image = TestImage().input_image
+    upsample_image = image.upsample(factor=2, order=0)
+    expected_data = [[0., 0., 1., 1., 2., 2., 3., 3., 4., 4., 5., 5.],
+                     [0., 0., 1., 1., 2., 2., 3., 3., 4., 4., 5., 5.],
+                     [6., 6., 7., 7., 8., 8., 9., 9., 10., 10., 11., 11.],
+                     [6., 6., 7., 7., 8., 8., 9., 9., 10., 10., 11., 11.],
+                     [12., 12., 13., 13., 14., 14., 15., 15., 16., 16., 17., 17.],
+                     [12., 12., 13., 13., 14., 14., 15., 15., 16., 16., 17., 17.]]
+    assert_allclose(upsample_image.data, expected_data)
+
+
+def test_downsample():
+    image = TestImage().input_image
+    downsample_image = image.downsample(factor=2)
+    expexted_data = [[14., 22., 30.],
+                     [25., 29., 33.]]
+    assert_allclose(downsample_image.data, expexted_data)
+
+
 @requires_data('gammapy-extra')
 class TestSkyMapPoisson:
     """
