@@ -46,8 +46,8 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
     random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)
-
-    scale = (1 / rate).to('second').value
+    scale = 1
+#    scale = (1 / rate).to('second').value
     time_delta = random_state.exponential(scale=scale, size=size)
 
     time_delta = TimeDelta(time_delta, format='sec')

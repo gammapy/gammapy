@@ -22,7 +22,7 @@ def exptest(time_delta):
 
     Returns
     -------
-    Mr : float
+    mr : float
         Level of variability
     """
     mean_time = np.mean(time_delta)
@@ -31,13 +31,9 @@ def exptest(time_delta):
 
     mask = normalized_time_delta < 1
     sum_time = 1 - normalized_time_delta[mask] / 1
-    """
-    for i in range(len(normalized_time_delta)):
-        if normalized_time_delta[i] < 1:
-            sum_time.append(1 - normalized_time_delta[i] / 1.0)
-    """   
     mean_normalized_time=np.mean(normalized_time_delta)
     sum_time_all = np.sum([sum_time])
-    M_value = sum_time_all / len(time_delta)
-    Mr = (M_value - (1 / 2.71828 - 0.189 / len(time_delta))) / (0.2427 / np.sqrt(len(time_delta)))
-    return Mr
+    m_value = sum_time_all / len(time_delta)
+    # the numbers are from Prahl(1999), derived from simulations
+    mr = (m_value - (1 / 2.71828 - 0.189 / len(time_delta))) / (0.2427 / np.sqrt(len(time_delta)))
+    return mr
