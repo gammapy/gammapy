@@ -12,7 +12,7 @@ from ...image import SkyMap
 
 @requires_dependency('scipy')
 @requires_dependency('skimage')
-@requires_data('gammapy-extra')g
+@requires_data('gammapy-extra')
 def test_compute_ts_map(tmpdir):
     """Minimal test of compute_ts_map"""
     data = load_poisson_stats_image(extra_info=True)
