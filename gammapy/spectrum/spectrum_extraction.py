@@ -38,8 +38,8 @@ class SpectrumExtraction(object):
     and off counts vectors as well as an effective area vector and an energy
     dispersion matrix.  For more info see :ref:`spectral_fitting`.
 
-    For point sources analyzed with 'full containement' IRFs, a correction for PSF
-    leakage out of the circular ON region can be applied.
+    For point sources analyzed with 'full containement' IRFs, a correction for
+    PSF leakage out of the circular ON region can be applied.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ class SpectrumExtraction(object):
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
     containment_correction : bool
-        Flag to apply containment correction for point sources and circular ON regions.
+        Apply containment correction for point sources and circular ON regions.
 
     Examples
     --------
@@ -60,7 +60,9 @@ class SpectrumExtraction(object):
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
 
-    def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction=False):
+    def __init__(self, target, obs, background, e_reco=None, e_true=None,
+                 containment_correction=False):
+
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
@@ -71,8 +73,10 @@ class SpectrumExtraction(object):
         self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
         self._observations = None
         self.containment_correction = containment_correction
-        if self.containment_correction and not isinstance(target.on_region, CircleSkyRegion):
-            raise TypeError("Incorrect region type for containment correction. Should be CircleSkyRegion.")
+        if self.containment_correction and not isinstance(target.on_region,
+                                                          CircleSkyRegion):
+            raise TypeError("Incorrect region type for containment correction."
+                            " Should be CircleSkyRegion.")
 
     @property
     def observations(self):
@@ -147,7 +151,6 @@ class SpectrumExtraction(object):
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
 
-
             counts_kwargs = dict(energy=self.e_reco,
                                  exposure=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id,
@@ -174,7 +177,8 @@ class SpectrumExtraction(object):
                 pass
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
-            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True, **counts_kwargs)
+            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True,
+                                        **counts_kwargs)
 
             on_vec.fill(on_events)
             off_vec.fill(bkg.off_events)
