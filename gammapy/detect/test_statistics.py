@@ -18,8 +18,8 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
-from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     shape_2N, SkyMapCollection)
+from ..image import (measure_containment_radius,
+                     shape_2N, SkyMapCollection, SkyMap)
 
 __all__ = [
     'compute_ts_map',
@@ -140,8 +140,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         maps_ = {}
         for map_, func in zip(maps, funcs):
             if downsampled:
-                maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
-                                                         shape=shape_2N(shape))
+                skymap = SkyMap(data=map_.data)
+                maps_[map_.name.lower()] = skymap.downsample(factor, func,
+                                                             shape=shape_2N(shape)).data
             else:
                 maps_[map_.name.lower()] = map_.data
 
@@ -177,8 +178,8 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         ts_results.meta['morphology'] = morphology
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
-                ts_results[name] = upsample_2N(ts_results[name].data, factor,
-                                               order=order, shape=shape)
+                skymap = SkyMap(data=ts_results[name].data)
+                ts_results[name] = skymap.upsample(factor, order=order, shape=shape).data
         multiscale_result.append(ts_results)
 
     return multiscale_result
