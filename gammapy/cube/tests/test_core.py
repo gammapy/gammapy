@@ -140,13 +140,13 @@ class TestSkyCube(object):
     # E        x: array(7.615363001210512e-05)
     # E        y: array(0.00015230870989335428)
     @pytest.mark.xfail
-    def test_solid_angle_image(self):
-        actual = self.sky_cube.solid_angle_image[10][30]
+    def test_solid_angle(self):
+        actual = self.sky_cube.solid_angle[10][30]
         expected = Quantity(self.sky_cube.wcs.wcs.cdelt[:-1].prod(), 'deg2')
         assert_quantity_allclose(actual, expected, rtol=1e-4)
 
-    def test_spatial_coordinate_images(self):
-        coordinates = self.sky_cube.spatial_coordinate_images()
+    def test_coordinates(self):
+        coordinates = self.sky_cube.coordinates()
         lon = coordinates.data.lon
         lat = coordinates.data.lat
 
@@ -251,7 +251,7 @@ def test_analytical_npred_cube():
     energies = Quantity([1, 2], 'MeV')
     exposure_cube, sky_cube = make_test_cubes(energies, 10, 10, 1)
 
-    solid_angle_array = exposure_cube.solid_angle_image
+    solid_angle_array = exposure_cube.solid_angle
     # Expected npred counts (so no quantity)
     expected = 0.5 * solid_angle_array.value
     # Integral resolution is 1 as this is a true powerlaw case
