@@ -154,6 +154,25 @@ class SpectrumExtraction(object):
                                  hi_threshold=obs.aeff.high_threshold,
                                  lo_threshold=obs.aeff.low_threshold)
 
+            # We now add a number of optional keywords for the DataStoreObservation
+            # We first check that the entry exists in the table
+            try:
+                counts_kwargs.update(tstart=obs.tstart)
+            except KeyError:
+                pass
+            try:
+                counts_kwargs.update(tstop=obs.tstop)
+            except KeyError:
+                pass
+            try:
+                counts_kwargs.update(muoneff=obs.muoneff)
+            except KeyError:
+                pass
+            try:
+                counts_kwargs.update(zen_pnt=obs.pointing_zen)
+            except KeyError:
+                pass
+
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
             off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True, **counts_kwargs)
 

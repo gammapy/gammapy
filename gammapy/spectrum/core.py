@@ -227,6 +227,14 @@ class PHACountsSpectrum(CountsSpectrum):
         Instrument, detector
     creator : str, optional
         Software used to produce the PHA file
+    tstart :  `~astropy.time.Time`, optional
+        Time start MJD
+    tstop :  `~astropy.time.Time`, optional
+        Time stop MJD
+    muoneff : float, optional
+        Muon efficiency
+    zen_pnt : `~astropy.coordinates.Angle`, optional
+        Zenith Angle
     """
 
     def __init__(self, **kwargs):
@@ -281,6 +289,19 @@ class PHACountsSpectrum(CountsSpectrum):
         else:
             meta.update(hduclas2='BKG', )
 
+        # Add general optional keywords if the member exists rather than default value. LBYL approach
+        if hasattr(self,'tstart'):
+            meta.update(tstart=self.tstart.mjd)
+
+        if hasattr(self,'tstop'):
+            meta.update(tstop=self.tstop.mjd)
+
+        if hasattr(self,'muoneff'):
+            meta.update(muoneff=self.muoneff)
+
+        if hasattr(self,'zen_pnt'):
+            meta.update(zen_pnt=self.zen_pnt.to('deg').value)
+            
         table.meta = meta
         return table
 

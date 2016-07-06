@@ -8,6 +8,7 @@ import subprocess
 from astropy.table import Table
 from astropy.utils import lazyproperty
 from astropy.units import Quantity
+from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
 from ..utils.energy import Energy
@@ -509,6 +510,33 @@ class DataStoreObservation(object):
     def tstart(self):
         """Observation start time (`~astropy.time.Time`)."""
         info = self._obs_info
+        return Time(info['TSTART'], format='mjd')
+
+    @lazyproperty
+    def tstop(self):
+        """Observation stop time (`~astropy.time.Time`)."""
+        info = self._obs_info
+        return Time(info['TSTOP'], format='mjd')
+
+    @lazyproperty
+    def muoneff(self):
+        """Observation muon efficiency."""
+        info = self._obs_info
+        return info['MUONEFF']
+
+    @lazyproperty
+    def pointing_altaz(self):
+        """Pointing ALT / AZ sky coordinates (`~astropy.coordinates.SkyCoord`)"""
+        info = self._obs_info
+        alt, az = info['ALT_PNT'], info['AZ_PNT']
+        return SkyCoord(az, alt, unit='deg', frame='altaz')
+
+    @lazyproperty
+    def pointing_zen(self):
+        """Pointing zenith angle sky (`~astropy.units.Quantity`)"""
+        info = self._obs_info
+        zen = info['ZEN_PNT']
+        return Quantity(zen, unit='deg')
         return Quantity(info['TSTART'], 'second')
 
     @lazyproperty
@@ -565,7 +593,7 @@ class DataStoreObservation(object):
     def __str__(self):
         """Generate summary info string."""
         ss = 'Info for OBS_ID = {}\n'.format(self.obs_id)
-        ss += '- Start time: {:.2f}\n'.format(self.tstart)
+        ss += '- Start time: {}\n'.format(self.tstart)
         ss += '- Pointing pos: RA {:.2f} / Dec {:.2f}\n'.format(self.pointing_radec.ra, self.pointing_radec.dec)
         ss += '- Observation duration: {}\n'.format(self.observation_time_duration)
         ss += '- Dead-time fraction: {:5.3f} %\n'.format(100 * self.observation_dead_time_fraction)
