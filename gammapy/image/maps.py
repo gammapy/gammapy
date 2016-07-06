@@ -321,8 +321,8 @@ class SkyMap(object):
         factor = int(factor)
 
         if shape is not None:
-            x_pad = (shape[1] - self.data.shape[1]) // 2
-            y_pad = (shape[0] - self.data.shape[0]) // 2
+            x_pad = (shape[1] - self.data.shape[1])
+            y_pad = (shape[0] - self.data.shape[0])
             #converting from unicode to ascii string as a workaround
             #for https://github.com/numpy/numpy/issues/7112
             data = np.pad(self.data, ((0, y_pad), (0, x_pad)), mode=str('reflect'))
