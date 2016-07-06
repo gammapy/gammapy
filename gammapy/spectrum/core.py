@@ -9,9 +9,8 @@ from ..utils.fits import (
     fits_table_to_table,
     ebounds_to_energy_axis,
 )
-from ..data import EventList
+from ..data import EventList, ObservationStats
 from ..extern.pathlib import Path
-from ..data import ObservationStats
 import astropy.units as u
 import numpy as np
 
@@ -503,7 +502,8 @@ class SpectrumObservation(object):
         ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
         ax2.axis('off')
         ax3.set_title('Effective Area')
-        self.aeff.plot(ax=ax3)
+        self.aeff.plot(ax=ax3,
+                       show_energy=(self.hi_threshold, self.lo_threshold))
         ax4.set_title('Energy Dispersion')
         if self.edisp is not None:
             self.edisp.plot_matrix(ax=ax4)

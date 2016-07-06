@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
+import numpy as np
 from ..stats import Stats
 from ..stats import significance_on_off
 
@@ -206,7 +207,8 @@ class ObservationStats(Stats):
         ss += 'Alpha: {:.3f}\n'.format(self.alpha)
         ss += 'Bkg events in On region: {:.2f}\n'.format(self.background)
         ss += 'Excess: {:.2f}\n'.format(self.excess)
-        ss += 'Excess / Background: {:.2f}\n'.format(self.excess / self.background)
+        ss += 'Excess / Background: {:.2f}\n'.format(np.divide(self.excess,
+                                                               self.background))
         ss += 'Gamma rate: {:.2f}\n'.format(self.gamma_rate)
         ss += 'Bkg rate: {:.2f}\n'.format(self.bg_rate)
         ss += 'Sigma: {:.2f}\n'.format(self.sigma)

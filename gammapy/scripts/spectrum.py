@@ -12,14 +12,6 @@ from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
 from ..utils.scripts import read_yaml, make_path
 from ..data import Target
 
-__all__ = [
-           'SpectrumFitResult',
-           'SpectrumStats',
-           'FluxPoints',
-           'SpectrumResult',
-           'SpectrumResultDict',
-           ]
-
 log = logging.getLogger(__name__)
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
