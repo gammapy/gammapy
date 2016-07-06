@@ -49,8 +49,11 @@ class SpectrumFit(object):
     """
 
     FLUX_FACTOR = 1e-20
+    """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
+    """Default statistic to be used for the fit"""
     DEFAULT_MODEL = 'PowerLaw'
+    """Default model to be used for the fit"""
 
     def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
         if isinstance(obs_list, SpectrumObservation):
@@ -93,27 +96,19 @@ class SpectrumFit(object):
     @property
     def model(self):
         """
-        Spectral model to be fit
+        `~gammapy.spectrum.models.SpectralModel` or Sherpa 
+        `~sherpa.models.ArithmeticModel` to be fit
         """
         if self._model is None:
             raise ValueError('No model specified')
         return self._model
 
     @model.setter
-    def model(self, model, name=None):
-        """
-        Parameters
-        ----------
-        model : `~sherpa.models.ArithmeticModel`
-            Fit model
-        name : str
-            Name for Sherpa model instance, optional
-        """
+    def model(self, model):
         import sherpa.models
 
-        name = 'default' if name is None else name
-
         if isinstance(model, six.string_types):
+            name = 'default'
             if model == 'PL' or model == 'PowerLaw':
                 model = sherpa.models.PowLaw1D('powlaw1d.' + name)
                 model.gamma = 2
@@ -135,18 +130,11 @@ class SpectrumFit(object):
 
     @property
     def statistic(self):
-        """Statistic to be used in the fit"""
+        """Sherpa `~sherpa.stats.Stat` to be used for the fit"""
         return self._stat
 
     @statistic.setter
     def statistic(self, stat):
-        """Set Statistic to be used in the fit
-
-        Parameters
-        ----------
-        stat : `~sherpa.stats.Stat`, str
-            Statistic
-        """
         import sherpa.stats as s
 
         if isinstance(stat, six.string_types):
@@ -154,6 +142,7 @@ class SpectrumFit(object):
                 stat = s.Cash()
             elif stat == 'wstat':
                 stat = s.WStat()
+
             else:
                 raise ValueError("Undefined stat string: {}".format(stat))
 
@@ -165,15 +154,12 @@ class SpectrumFit(object):
     @property
     def fit_range(self):
         """
-        Energy range of the fit
+        Tuple of `~astropy.units.Quantity`, energy range of the fit
         """
         return self._fit_range
 
     @fit_range.setter
     def fit_range(self, fit_range):
-        """
-        Energy range of the fit 
-        """
         self._fit_range = fit_range
 
     @property
