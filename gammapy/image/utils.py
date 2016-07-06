@@ -33,7 +33,6 @@ __all__ = [
     'make_header',
     'process_image_pixels',
     'ring_correlate',
-    'shape_2N',
     'threshold',
     'wcs_histogram2d',
 ]
@@ -164,7 +163,8 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
 
-def shape_2N(shape, N=3):
+
+def _shape_2N(shape, N=3):
     """
     Round a given shape to values that are divisible by 2^N.
 
