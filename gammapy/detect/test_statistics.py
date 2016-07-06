@@ -19,7 +19,8 @@ from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     shape_2N, SkyMapCollection)
+                     SkyMapCollection)
+from ..image.utils import _shape_2N
 
 __all__ = [
     'compute_ts_map',
@@ -141,7 +142,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
         for map_, func in zip(maps, funcs):
             if downsampled:
                 maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
-                                                         shape=shape_2N(shape))
+                                                         shape=_shape_2N(shape))
             else:
                 maps_[map_.name.lower()] = map_.data
 

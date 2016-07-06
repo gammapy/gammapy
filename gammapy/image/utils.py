@@ -34,7 +34,6 @@ __all__ = [
     'make_header',
     'process_image_pixels',
     'ring_correlate',
-    'shape_2N',
     'threshold',
     'upsample_2N',
     'wcs_histogram2d',
@@ -246,7 +245,7 @@ def upsample_2N(image, factor, order=3, shape=None):
         return zoom(image, factor, order=order)
 
 
-def shape_2N(shape, N=3):
+def _shape_2N(shape, N=3):
     """
     Round a given shape to values that are divisible by 2^N.
 
