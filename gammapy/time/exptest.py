@@ -27,11 +27,8 @@ def exptest(time_delta):
     """
     mean_time = np.mean(time_delta)
     normalized_time_delta = time_delta / mean_time
-    sum_time = []
-
     mask = normalized_time_delta < 1
     sum_time = 1 - normalized_time_delta[mask] / 1
-    mean_normalized_time=np.mean(normalized_time_delta)
     sum_time_all = np.sum([sum_time])
     m_value = sum_time_all / len(time_delta)
     # the numbers are from Prahl(1999), derived from simulations

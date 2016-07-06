@@ -1,17 +1,16 @@
+#  An example how to compute exptest for multiple runs.
 from gammapy.time import exptest
 import matplotlib.pyplot as plt
 from astropy.table import Table
 from scipy.stats import norm
 import numpy as np
 
-m_value = []
-table = Table()
+
+
 
 
 def exptest_multi(table):
     """
-    An example how to compute exptest for multiple runs.
-
     Parameter
     ----------
      table : astropy.table as the input
@@ -19,7 +18,7 @@ def exptest_multi(table):
      plot : This function returns a histogram for the distribution of the Mr value of each run.
             A normal distribution is expected for non-flaring sources.
     """
-
+    m_value = []
     size = len(table['runnum'])
     individual_run = []
     num_of_events = []
@@ -80,7 +79,10 @@ def plot(m_value):
 
 
 def simulation(number_of_runs):
+    """
 
+    """
+    table = Table()
     num_of_events_per_run = np.random.random_integers(20, 30, number_of_runs)
     size_cumsum = np.cumsum(num_of_events_per_run)
     size = size_cumsum[number_of_runs - 1]
@@ -100,6 +102,6 @@ def simulation(number_of_runs):
 
 
 if __name__ == '__main__':
-    table = simulation(1000)
+    table = simulation(100)
     m_value = exptest_multi(table)
     plot(m_value)
