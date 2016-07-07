@@ -24,9 +24,15 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
 Highlights:
 
-- Regions: http://astropy-regions.readthedocs.io/
+- Spectrum analysis improvements
 - Image and cube analysis improvements
-- Time analysis
+- A lightcurve class and variability test (see :ref:`time`)
+- Many improvements to IRF classes, especially the PSF classes.
+- We have removed ``gammapy.regions`` and have switched to the move complete
+  and powerful `regions <http://astropy-regions.readthedocs.io/>`__ package
+  that will probably be added to Astropy core soon.
+- Improved documentation (2FHL reference dataset)
+- Improved test coverage
 
 Contributors
 ++++++++++++
@@ -50,6 +56,7 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#622] Make gammapy.time great again (Christoph Deil)
 - [#599] Move powerlaw utility functions to separate namespace (Christoph Deil)
 - [#594] Fix setup.py and docs/conf.py configparser import (Christoph Deil)
 - [#593] Remove gammapy/hspec (Christoph Deil)
