@@ -232,10 +232,15 @@ class SpectrumExtraction(object):
             method for defining the low energy threshold
         """
         # TODO: define method for the high energy threshold
+
+        # It is important to update the low and high threshold for ON and OFF
+        # vector, otherwise Sherpa will not understand the files
         for obs in self.observations:
             if method_lo_threshold == 'area_max':
-                obs.on_vector.lo_threshold = obs.aeff.find_energy(
-                    kwargs['percent'] / 100 * obs.aeff.max_area)
+                aeff_thres = kwargs['percent'] / 100 * obs.aeff.max_area
+                thres = obs.aeff.find_energy(aeff_thres) 
+                obs.on_vector.lo_threshold = thres
+                obs.off_vector.lo_threshold = thres
             else:
                 raise ValueError('Undefine method for low threshold: {}'.format(
                     method_lo_threshold))

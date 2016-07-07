@@ -19,12 +19,12 @@ import logging
 @pytest.mark.parametrize("pars,results", [
     (dict(containment_correction=False), dict(n_on=172,
                                               sigma=24.06,
-                                              aeff=549861.8268659255 * u.m ** 2,
-                                              ethresh=0.427 * u.TeV)),
+                                              aeff=549861.8 * u.m ** 2,
+                                              ethresh=0.4355 * u.TeV)),
     (dict(containment_correction=True), dict(n_on=172,
                                              sigma=24.06,
-                                             aeff=393356.18322397786 * u.m ** 2,
-                                             ethresh=0.610 * u.TeV)),
+                                             aeff=393356.2 * u.m ** 2,
+                                             ethresh=0.623 * u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
