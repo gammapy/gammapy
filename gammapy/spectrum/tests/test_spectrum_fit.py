@@ -10,15 +10,12 @@ from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObs
 from ...spectrum.spectrum_fit import SpectrumFit
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from astropy.utils.compat import NUMPY_LT_1_9
-import logging
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_fit():
-
-    logging.basicConfig(level=logging.INFO)
 
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")

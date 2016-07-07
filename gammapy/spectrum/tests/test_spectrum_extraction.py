@@ -14,7 +14,6 @@ from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-import logging
 import numpy as np
 
 @pytest.mark.parametrize("pars,results", [
@@ -30,7 +29,6 @@ import numpy as np
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_extraction(pars, results, tmpdir):
-    logging.basicConfig(level=logging.INFO)
 
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
     radius = Angle('0.11 deg')
