@@ -3,12 +3,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from ..exptest import exptest
-from ..simulate import make_random_times_poisson_process
+from ..simulate import random_times
+
 
 def test_exptest():
-    rate = Quantity(100, 's^-1')
-    time_delta = make_random_times_poisson_process(1000, rate=rate, random_state=0)
+    rate = Quantity(10, 's^-1')
+    time_delta = random_times(100, rate=rate, return_diff=True, random_state=0)
     mr = exptest(time_delta)
-    assert_allclose(mr, 1.3790634240947202)
-
-
+    assert_allclose(mr, 0.11395763079)

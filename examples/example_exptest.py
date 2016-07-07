@@ -1,9 +1,14 @@
-#  An example how to compute exptest for multiple runs.
-from gammapy.time import exptest
+"""
+An example for the exptest variability test.
+
+- Simulate constant rate events for several observations.
+- Check that the ``mr`` distribution is a standard normal, as expected.
+"""
+import numpy as np
+from scipy.stats import norm
 import matplotlib.pyplot as plt
 from astropy.table import Table
-from scipy.stats import norm
-import numpy as np
+from gammapy.time import exptest
 
 
 def simulation(n_obs):
@@ -34,8 +39,7 @@ def simulation(n_obs):
 
 
 def exptest_multi(table_events):
-    """
-    Compute mr value for each run and whole dataset.
+    """Compute mr value for each run and whole dataset.
 
     Parameter
     ---------
@@ -60,19 +64,12 @@ def exptest_multi(table_events):
 
     for i in range(0, len(table_obs)):
         time_delta_each_run = []
+
         for j in range(0, len(table_events) - 1):
-            if table_obs['n_events'][i] > 20 and table_obs['obs_id'][i] == table_events[
-                'obs_id'][j] and table_events['obs_id'][j] == table_events['obs_id'][j + 1]:
-                time_delta_each_run.append(
-                    (table_events['mjd'][
-                         j + 1] - table_events['mjd'][j]) * 0.5 * (
-                        table_events['expCount'][
-                            j + 1] + table_events['expCount'][j]))
-                time_delta_all.append(
-                    (table_events['mjd'][
-                         j + 1] - table_events['mjd'][j]) * 0.5 * (
-                        table_events['expCount'][
-                            j + 1] + table_events['expCount'][j]))
+            if table_obs['n_events'][i] > 20 and table_obs['obs_id'][i] == table_events['obs_id'][j] and table_events['obs_id'][j] == table_events['obs_id'][j + 1]:
+                time_delta_each_run.append((table_events['mjd'][j + 1] - table_events['mjd'][j]) * 0.5 * (table_events['expCount'][j + 1] + table_events['expCount'][j]))
+                time_delta_all.append((table_events['mjd'][j + 1] - table_events['mjd'][j]) * 0.5 * (table_events['expCount'][j + 1] + table_events['expCount'][j]))
+
         if len(time_delta_each_run) == 0:
             continue
         mr = exptest(time_delta_each_run)
@@ -98,9 +95,8 @@ def plot(m_value):
     print("mu:{:10.3f}".format(mu), " sigma:{:10.4f}".format(sigma))
     plt.xlabel('Mr value')
     plt.ylabel('counts')
-    plt.title(
-        r'$\mathrm{Histogram\ of\ IQ:}\ \mu=%.3f,\ \sigma=%.3f$' %
-        (mu, sigma))
+    title = r'$\mathrm{Histogram\ of\ IQ:}\ \mu={:.3f},\ \sigma={:.3f}$'.format(mu, sigma)
+    plt.title(title)
     plt.grid(True)
     plt.show()
 

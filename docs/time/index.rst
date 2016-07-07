@@ -11,38 +11,63 @@ Introduction
 
 `gammapy.time` contains methods for timing analysis.
 
-At the moment there's almost no functionality here.
-Any contributions welcome, e.g.
-
-* utility functions for time computations
-* lightcurve analysis functions
-* pulsar periodogram
-* event dead time calculations and checks for constant rate
-
-Although where possible we shouldn't duplicate timing analysis functionality
-that's already available elsewhere. In some cases it's enough to refer
-gamma-ray astronomers to other packages, sometimes a convenience wrapper for
-our data formats or units might make sense.
-
-Some references (please add what you find useful
-
-* https://github.com/astroML/gatspy
-* https://github.com/matteobachetti/MaLTPyNT
-* https://github.com/nanograv/PINT
-* http://www.astroml.org/modules/classes.html#module-astroML.time_series
-* http://www.astroml.org/book_figures/chapter10/index.html
-* http://docs.astropy.org/en/latest/api/astropy.stats.bayesian_blocks.html
-* https://github.com/samconnolly/DELightcurveSimulation
-* https://github.com/cokelaer/spectrum
-* https://github.com/YSOVAR/YSOVAR
-* http://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
+At the moment there isn't a lot of functionality yet ... contributions welcome!
 
 
 Getting Started
 ===============
 
-TODO: document
+.. _time-lc:
 
+Lightcurve
+----------
+
+The `~gammapy.time.LightCurve` class can be used to read a lightcurve,
+plot it and compute some summary statistics:
+
+.. code-block:: python
+
+    >>> from gammapy.time import LightCurve
+    >>> lc = LightCurve.read('$GAMMAPY_EXTRA/todo/make/example-lightcurve.fits.gz')
+    >>> lc.plot()
+    >>> lc.info()
+
+
+.. _time-variability:
+
+Variability test
+----------------
+
+The `~gammapy.time.exptest` function can be used to compute the significance
+of variability (compared to the null hypothesis of constant rate)
+for a list of event time differences.
+
+Here's an example how to use the `~gammapy.time.random_times` helper
+function to simulate a `~astropy.time.TimeDelta` array for a given constant rate
+and use `~gammapy.time.exptest` to assess the level of variability (1.3 sigma in this case,
+not variable):
+
+.. code-block:: python
+
+    >>> from astropy.units import Quantity
+    >>> from gammapy.time import random_times, exptest
+    >>> rate = Quantity(10, 'Hz')
+    >>> time_delta = random_times(size=100, rate=rate, return_diff=True, random_state=0)
+    >>> mr = exptest(time_delta)
+    >>> print(mr)
+    0.11395763079
+
+
+See ``examples/example_exptest.py`` for a longer example.
+
+TODO: apply this to the 2FHL events and check which sources are variable as a nice example.
+
+.. code-block:: python
+
+    from gammapy.data import EventList
+    from gammapy.time import exptest
+    events = EventList.read('$GAMMAPY_EXTRA/datasets/fermi_2fhl/2fhl_events.fits.gz ', hdu='EVENTS')
+    # TODO: cone select events for 2FHL catalog sources, compute mr for each and print 10 most variable sources
 
 .. _time_handling:
 
@@ -125,6 +150,28 @@ Time differences
 
 TODO: discuss when to use `~astropy.time.TimeDelta` or `~astropy.units.Quantity` or [MET]_ floats and
 where one needs to convert between those and what to watch out for.
+
+Other codes
+===========
+
+Where possible we shouldn't duplicate timing analysis functionality
+that's already available elsewhere. In some cases it's enough to refer
+gamma-ray astronomers to other packages, sometimes a convenience wrapper for
+our data formats or units might make sense.
+
+Some references (please add what you find useful
+
+* https://github.com/astroML/gatspy
+* https://github.com/matteobachetti/MaLTPyNT
+* https://github.com/nanograv/PINT
+* http://www.astroml.org/modules/classes.html#module-astroML.time_series
+* http://www.astroml.org/book_figures/chapter10/index.html
+* http://docs.astropy.org/en/latest/api/astropy.stats.bayesian_blocks.html
+* https://github.com/samconnolly/DELightcurveSimulation
+* https://github.com/cokelaer/spectrum
+* https://github.com/YSOVAR/YSOVAR
+* http://nbviewer.ipython.org/github/YSOVAR/Analysis/blob/master/TimeScalesinYSOVAR.ipynb
+
 
 Reference/API
 =============
