@@ -22,16 +22,26 @@ Getting Started
 Lightcurve
 ----------
 
-The `~gammapy.time.LightCurve` class can be used to read a lightcurve,
-plot it and compute some summary statistics:
+The `~gammapy.time.LightCurve` class can be used to read a lightcurve and plot it:
+
+.. TODO: make better example from file or Fermi-LAT
+.. >>> lc = LightCurve.read('$GAMMAPY_EXTRA/todo/make/example-lightcurve.fits.gz')
+
+.. plot::
+   :include-source:
+
+    >>> from gammapy.time import LightCurve
+    >>> lc = LightCurve.simulate_example()
+    >>> lc.plot()
+
+Here's how to compute some summary statistics for the lightcurve:
 
 .. code-block:: python
 
-    >>> from gammapy.time import LightCurve
-    >>> lc = LightCurve.read('$GAMMAPY_EXTRA/todo/make/example-lightcurve.fits.gz')
-    >>> lc.plot()
-    >>> lc.info()
+    >>> lc['FLUX'].mean()
+    <Quantity 5.25 1 / (cm2 s)>
 
+TODO: please help extend the functionality and examples for `~gammapy.time.LightCurve`!
 
 .. _time-variability:
 
@@ -44,7 +54,7 @@ for a list of event time differences.
 
 Here's an example how to use the `~gammapy.time.random_times` helper
 function to simulate a `~astropy.time.TimeDelta` array for a given constant rate
-and use `~gammapy.time.exptest` to assess the level of variability (1.3 sigma in this case,
+and use `~gammapy.time.exptest` to assess the level of variability (0.11 sigma in this case,
 not variable):
 
 .. code-block:: python

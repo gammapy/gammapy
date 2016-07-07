@@ -8,7 +8,6 @@ import astropy.units as u
 
 __all__ = [
     'LightCurve',
-    'make_example_lightcurve',
 ]
 
 
@@ -20,39 +19,52 @@ class LightCurve(QTable):
     Possesses functions allowing plotting data, saving as txt 
     and elementary stats like mean & std dev.
     
-    to do: specification of format is work in progress ; will add link
+    TODO: specification of format is work in progress
+    See https://github.com/open-gamma-ray-astro/gamma-astro-data-formats/pull/61
     """
 
-    #    def __init__(self, table):
-    #	super(LightCurve,self).__init__(table)
+    def plot(self, ax=None):
+        """Plot flux versus time.
 
-    def lc_plot(self):
-        """Plots the Lightcurve. 
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
 
-        The flux as a function of time.
-        Here, time for each bin is equal to the center of the bin, 
-        i.e. the average of tstart and tstop	 
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes` or None, optional.
+            The `~matplotlib.axes.Axes` object to be drawn on.
+            If None, uses the current `~matplotlib.axes.Axes`.
         """
         import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
         tstart = self['TIME_MIN'].to('s')
         tstop = self['TIME_MAX'].to('s')
         time = (tstart + tstop) / 2.0
         flux = self['FLUX'].to('cm-2 s-1')
         errors = self['FLUX_ERR'].to('cm-2 s-1')
-        plt.errorbar(time.value, flux.value,
-                     yerr=errors.value, linestyle="None")
-        plt.scatter(time, flux)
-        plt.xlabel("Time (secs)")
-        plt.ylabel("Flux ($cm^{-2} sec^{-1}$)")
-        plt.title("Lightcurve")
 
+        ax.errorbar(time.value, flux.value, yerr=errors.value, linestyle="None")
+        ax.scatter(time, flux)
+        ax.set_xlabel("Time (secs)")
+        ax.set_ylabel("Flux ($cm^{-2} sec^{-1}$)")
 
-def make_example_lightcurve():
-    """ Make an example lightcurve.
-    """
-    lc = LightCurve()
-    lc['TIME_MIN'] = [1, 4, 7, 9] * u.s
-    lc['TIME_MAX'] = [1, 4, 7, 9] * u.s
-    lc['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
-    lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
-    return lc
+        return ax
+
+    @classmethod
+    def simulate_example(cls):
+        """Simulate an example `LightCurve`.
+
+        TODO: add options to simulate some more interesting lightcurves.
+        """
+        lc = cls()
+
+        lc['TIME_MIN'] = [1, 4, 7, 9] * u.s
+        lc['TIME_MAX'] = [1, 4, 7, 9] * u.s
+        lc['FLUX'] = Quantity([1, 4, 7, 9], 'cm^-2 s^-1')
+        lc['FLUX_ERR'] = Quantity([0.1, 0.4, 0.7, 0.9], 'cm^-2 s^-1')
+
+        return lc
