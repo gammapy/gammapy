@@ -152,18 +152,22 @@ weren't available for testing on travis-ci.
 Wipe readthedocs
 ----------------
 
-As described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__,
-if the docs on readthedocs show old stuff, you need to first log in `here <https://readthedocs.org/accounts/login/>`__
-and then wipe it to create a fresh / clean version by hitting this URL::
+After things (classes, methods, functions) are removed, the Sphinx API docs often show these old items.
+If you notice this, you have to "wipe" the Gammapy install on Readthedocs and start a fresh build.
+If you don't have permissions on Readthedocs, file a Github issue or mention this on the mailing list.
 
-   http://readthedocs.org/wipe/gammapy/latest/
+The wipe procedure is described `here <http://read-the-docs.readthedocs.io/en/latest/builds.html#deleting-a-stale-or-broken-build-environment>`__.
 
-and then clicking the "wipe version" button.
+The steps are:
 
-You don't get a confirmation that the wipe has taken place, but you can check
-`here <https://readthedocs.org/builds/gammapy/>`__ (wait a few minutes)
-and if needed manually start a new build by going
-`here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
+* log in `here <https://readthedocs.org/accounts/login/>`__
+* hit this URL and click the "wipe" button to wipe the existing install:
+
+   https://readthedocs.org/wipe/gammapy/latest/
+* go `here <https://readthedocs.org/projects/gammapy/>`__ and clicking the "Build" button.
+* go `here <https://readthedocs.org/builds/gammapy/>`__ and check if the build succeeded
+* re-check the output docs page where you had previously seen something outdated.
+
 
 .. _development-skip_tests:
 
