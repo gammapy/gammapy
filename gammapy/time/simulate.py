@@ -4,26 +4,22 @@ from astropy.time import TimeDelta
 from ..utils.random import get_random_state
 
 __all__ = [
-    'make_random_times_poisson_process',
+    'random_times',
 ]
 
 
-def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format='sec'),
-                                      random_state='random-seed'):
+def random_times(size, rate, dead_time=TimeDelta(0, format='sec'),
+                 return_diff=False, random_state='random-seed'):
     """Make random times assuming a Poisson process.
 
     This function can be used to test event time series,
     to have a comparison what completely random data looks like.
 
-    For the implementation see
-    `here <http://preshing.com/20111007/how-to-generate-random-timings-for-a-poisson-process/>`__ and
-    `here <http://stackoverflow.com/questions/1155539/how-do-i-generate-a-poisson-process>`__,
-    as well as `numpy.random.exponential`.
+    Can be used in two ways (in either case the return type is `~astropy.time.TimeDelta`):
 
-    TODO: I think usually one has a given observation duration,
-    not a given number of events to generate.
-    Implementing this is more difficult because then the number
-    of samples to generate is variable.
+    * ``return_delta=False`` - Return absolute times, relative to zero (default)
+    * ``return_delta=True`` - Return time differences between consecutive events.
+
 
     Parameters
     ----------
@@ -33,6 +29,8 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
         Event rate (dimension: 1 / TIME)
     dead_time : `~astropy.units.Quantity` or `~astropy.time.TimeDelta`, optional
         Dead time after event (dimension: TIME)
+    return_diff : bool
+        Return time difference between events? (default: no, return absolute times)
     random_state : {int, 'random-seed', 'global-rng', `~numpy.random.RandomState`}
         Defines random number generator initialisation.
         Passed to `~gammapy.utils.random.get_random_state`.
@@ -41,16 +39,29 @@ def make_random_times_poisson_process(size, rate, dead_time=TimeDelta(0, format=
     -------
     time : `~astropy.time.TimeDelta`
         Time differences (second) after time zero.
+
+    Examples
+    --------
+
+    Example how to simulate 100 events at a rate of 10 Hz.
+    As expected the last event occurs after about 10 seconds.
+
+    >>> from astropy.units import Quantity
+    >>> from gammapy.time import random_times
+    >>> rate = Quantity(10, 'Hz')
+    >>> times = random_times(size=100, rate=rate, random_state=0)
+    >>> times[-1]
+    <TimeDelta object: scale='None' format='sec' value=9.186484131475076>
     """
-    # initialise random number generator
     random_state = get_random_state(random_state)
 
     dead_time = TimeDelta(dead_time)
-    scale = 1
-#    scale = (1 / rate).to('second').value
+    scale = (1 / rate).to('second').value
     time_delta = random_state.exponential(scale=scale, size=size)
+    time_delta += dead_time.to('second').value
 
-    time_delta = TimeDelta(time_delta, format='sec')
-    time_delta += dead_time
-
-    return time_delta
+    if return_diff:
+        return TimeDelta(time_delta, format='sec')
+    else:
+        time = time_delta.cumsum()
+        return TimeDelta(time, format='sec')
