@@ -735,8 +735,8 @@ Figures and plots in the Gammapy docs use the same consistent plotting style,
 that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
 astropy plotting style applying a few minor changes. Here are two examples:
 
-	* :ref:`Crab MWL SED plot <crab-mwl-sed>`
-	* :ref:`Fermi 1FHL skymap <fermi-1fhl-skymap>`
+* :ref:`Crab MWL SED plot <crab-mwl-sed>`
+* :ref:`Fermi 1FHL skymap <fermi-1fhl-skymap>`
 
 For the Gammapy docs the style is used by default and doesn't have to be set
 explicitly. If you would like to use the style outside the Gammapy docs, add
