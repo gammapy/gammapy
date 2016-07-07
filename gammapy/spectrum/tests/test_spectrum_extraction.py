@@ -15,16 +15,17 @@ from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 import logging
+import numpy as np
 
 @pytest.mark.parametrize("pars,results", [
     (dict(containment_correction=False), dict(n_on=172,
-                                              sigma=24.06,
+                                              sigma=28.18,
                                               aeff=549861.8 * u.m ** 2,
-                                              ethresh=0.4355 * u.TeV)),
+                                              ethresh=0.4327 * u.TeV)),
     (dict(containment_correction=True), dict(n_on=172,
-                                             sigma=24.06,
+                                             sigma=28.18,
                                              aeff=393356.2 * u.m ** 2,
-                                             ethresh=0.623 * u.TeV)),
+                                             ethresh=0.625 * u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -45,13 +46,17 @@ def test_spectrum_extraction(pars, results, tmpdir):
         "datasets/exclusion_masks/tevcat_exclusion.fits")
     excl = ExclusionMask.read(exclusion_file)
 
-    irad = Angle('0.5 deg')
-    orad = Angle('0.6 deg')
-    bk = [ring_background_estimate(
-        center, radius, irad, orad, _.events) for _ in obs]
-    # bk = dict(method='reflected', n_min=2, exclusion=excl)
+    bk = dict(method='reflected', n_min=2, exclusion=excl)
 
-    ana = SpectrumExtraction(target, obs, bk,
+    # Restrict energy binning to a range where the aeff interpolation does not
+    # give none for HAP test files
+    # TODO: set low energies to 0 and extrapolate high energies
+    e_true = np.logspace(-1, 1.9, 70) * u.TeV
+
+    ana = SpectrumExtraction(target,
+                             obs,
+                             bk,
+                             e_true = e_true,
                              containment_correction=pars['containment_correction'])
 
     ana.run(outdir=tmpdir)
@@ -61,8 +66,6 @@ def test_spectrum_extraction(pars, results, tmpdir):
     assert_quantity_allclose(ana.observations[0].lo_threshold,
                              results['ethresh'], rtol=1e-3)
 
-    # When updating the energy threshold this must happen for the on and off
-    # vector, otherwise sherpa crases in the fit
     assert_quantity_allclose(ana.observations[0].off_vector.lo_threshold,
                              ana.observations[0].on_vector.lo_threshold)
 

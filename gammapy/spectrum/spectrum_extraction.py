@@ -68,9 +68,10 @@ class SpectrumExtraction(object):
         self.obs = obs
         self.background = background
         self.target = target
-        # This is the 14 bpd setup used in HAP Fitspectrum
-        self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
-        self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
+
+        # TODO: Decide on default binning
+        self.e_reco = e_reco or np.logspace(-2, 2, 72) * u.TeV
+        self.e_true = e_true or np.logspace(-2, 2.5, 108) * u.TeV
         self._observations = None
         self.containment_correction = containment_correction
         if self.containment_correction and not isinstance(target.on_region,
@@ -190,6 +191,7 @@ class SpectrumExtraction(object):
                                                  e_true=self.e_true)
 
             # If required, correct arf for psf leakage
+            # TODO: write correction factor as AREASCAL column in PHAFILE
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg
@@ -202,6 +204,7 @@ class SpectrumExtraction(object):
                                                   0. * u.deg,
                                                   self.target.on_region.radius)
                     except:
+                        # TODO: Why is this necessary?
                         correction = np.nan
 
                     arf.data[index] = arf.data[index] * correction

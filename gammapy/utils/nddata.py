@@ -238,14 +238,20 @@ class NDDataArray(object):
 
         return res
 
-    def _add_regular_grid_interp(self):
+    def _add_regular_grid_interp(self, interp_kwargs=None):
         """Add `~scipy.interpolate.RegularGridInterpolator`
 
-
         http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.RegularGridInterpolator.html
+
+        Parameters
+        ----------
+        interp_kwargs : dict, optional
+            Interpolation kwargs
         """
         from scipy.interpolate import RegularGridInterpolator
         
+        if interp_kwargs is None:
+            interp_kwargs = self.interp_kwargs
         points = [a._interp_nodes() for a in self.axes]
         values = self.data.value
 
@@ -260,7 +266,7 @@ class NDDataArray(object):
                 values = values[mask]
 
         self._regular_grid_interp = RegularGridInterpolator(points, values,
-                                                            **self.interp_kwargs)
+                                                            **interp_kwargs)
 
 
 class DataAxis(object):

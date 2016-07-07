@@ -122,6 +122,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
 
     true_energy = aeff.energy.data
     flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:]) 
+    
     counts = flux * livetime * aeff.evaluate()
     counts = counts.decompose()
     counts = edisp.apply(counts.decompose())
