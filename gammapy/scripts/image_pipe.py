@@ -308,7 +308,7 @@ class MosaicImage(object):
             obs = self.data_store.obs(obs_id)
             obs_image = ObsImage(obs, self.empty_image, self.energy_band, self.offset_band,
                                  self.exclusion_mask, self.ncounts_min)
-            if len(obs_image.events) < self.ncounts_min:
+            if len(obs_image.events) <= self.ncounts_min:
                 continue
             else:
                 obs_image.counts_map()
