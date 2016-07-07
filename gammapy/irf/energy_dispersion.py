@@ -8,6 +8,7 @@ from astropy.table import Table
 from ..utils.energy import EnergyBounds, Energy
 from ..utils.array import array_stats_str
 from ..utils.scripts import make_path
+from ..utils.nddata import NDDataArray, BinnedDataAxis
 
 __all__ = [
     'EnergyDispersion',
@@ -15,135 +16,81 @@ __all__ = [
 ]
 
 
-class EnergyDispersion(object):
+class EnergyDispersion(NDDataArray):
     """Energy dispersion matrix.
 
+    We use a dense matrix (`numpy.ndarray`) for the energy dispersion matrix.
+    An alternative would be to store a sparse matrix
+    (`scipy.sparse.csc_matrix`).  It's not clear which would be more efficient
+    for typical gamma-ray energy dispersion matrices.
+
+    The most common file format for energy dispersion matrices is the RMF
+    (Redistribution Matrix File) format from X-ray astronomy:
+    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
     Parameters
     ----------
-    pdf_matrix : array_like
+    data : array_like
         2-dim energy dispersion matrix (probability density).
-        First index for true energy, second index for reco energy.
-    e_true : `~gammapy.utils.energy.EnergyBounds`
-        True energy binning
-    e_reco : `~gammapy.utils.energy.EnergyBounds`
-        Reco energy binning
-
-    Notes
-    -----
-    We use a dense matrix (`numpy.ndarray`) for the energy dispersion matrix.
-    An alternative would be to store a sparse matrix (`scipy.sparse.csc_matrix`).
-    It's not clear which would be more efficient for typical gamma-ray
-    energy dispersion matrices.
-
-    The most common file format for energy dispersion matrices is the
-    RMF (Redistribution Matrix File) format from X-ray astronomy:
-    http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
+    e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        Bin edges of true energy axis
+    e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+        Bin edges of reconstruced energy axis
     """
-    DEFAULT_PDF_THRESHOLD = 1e-6
-
-    def __init__(self, pdf_matrix, e_true, e_reco=None,
-                 pdf_threshold=DEFAULT_PDF_THRESHOLD):
-
-        if e_reco is None:
-            e_reco = e_true
-
-        self._pdf_matrix = np.asarray(pdf_matrix)
-        self._e_true = EnergyBounds(e_true)
-        self._e_reco = EnergyBounds(e_reco)
-
-        self._pdf_threshold = 0
-        self.pdf_threshold = pdf_threshold
-        self._interpolate2d_func = None
+    e_true = BinnedDataAxis(interpolation_mode='log')
+    """True energy axis"""
+    e_reco = BinnedDataAxis(interpolation_mode='log')
+    """Reconstructed energy axis"""
+    axis_names = ['e_true', 'e_reco']
+    """Axis names (in order)"""
+    interp_kwargs = dict(bounds_error=False, fill_value=0)
+    """Interpolation kwargs"""
 
     @property
     def pdf_matrix(self):
-        """PDF matrix ~numpy.ndarray
+        """PDF matrix `~numpy.ndarray`
 
         Rows (first index): True Energy
         Columns (second index): Reco Energy
         """
-        return self._pdf_matrix
-
-    @property
-    def pdf_threshold(self):
-        """PDF matrix zero-suppression threshold (float)"""
-        return self._pdf_threshold
-
-    @pdf_threshold.setter
-    def pdf_threshold(self, value):
-        if self._pdf_threshold > value:
-            ss = 'Lowering the PDF matrix zero-suppression threshold'
-            ' can lead to incorrect results.\n'
-            ss += 'Old PDF threshold: {0}\n'.format(self._pdf_threshold)
-            ss += 'New PDF threshold: {0}'.format(value)
-            raise Exception(ss)
-
-        self._pdf_threshold = value
-
-        m = self._pdf_matrix
-        m[m < value] = 0
-
-    @property
-    def reco_energy(self):
-        """Reconstructed Energy axis (`~gammapy.utils.energy.EnergyBounds`)
-        """
-        return self._e_reco
-
-    @property
-    def true_energy(self):
-        """Reconstructed Energy axis (`~gammapy.utils.energy.EnergyBounds`)
-        """
-        return self._e_true
-
-    def __str__(self):
-        ss = 'Energy dispersion information:\n'
-        ss += 'PDF matrix threshold: {0}\n'.format(self.pdf_threshold)
-        m = self._pdf_matrix
-        ss += 'PDF matrix filling factor: {0}\n'.format(np.sum(m > 0) / m.size)
-        ss += 'True energy min: {:.2f}\n'.format(self.reco_energy[0])
-        ss += 'Reco energy min: {:.2f}\n'.format(self.true_energy[0])
-        return ss
+        return self.data
 
     @classmethod
-    def from_gauss(cls, ebounds, sigma=0.2):
-        """Create gaussian `EnergyDispersion` matrix.
+    def from_gauss(cls, e_true, e_reco, sigma=0.2, pdf_threshold=1e-6):
+        """Create Gaussian `EnergyDispersion` matrix.
 
-        TODO: Debug
-        TODO: this is Gaussian in e_reco ... should be log(e_reco) I think.
+        The output matrix will be Gaussian in e_true / e_reco
+
         TODO: give formula: Gaussian in log(e_reco)
         TODO: add option to add poisson noise
         TODO: extend to have a vector of bias and resolution for various true energies.
 
         Parameters
         ----------
-        e_reco : `~gammapy.utils.energy.EnergyBounds`
-            Reco and true energy binning
-        sigma : float
+        e_true : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+            Bin edges of true energy axis
+        e_reco : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
+            Bin edges of reconstructed energy axis
+        sigma : float, optional
             RMS width of Gaussian energy dispersion.
+        pdf_threshold : float, optional
+            Zero suppression threshold
         """
         from scipy.special import erf
 
-        e_bounds = ebounds.value
+        # Init array without data
+        retval = cls(e_true = e_true, e_reco = e_reco)
 
-        nbins = len(e_bounds) - 1
-        logerange = np.log10(e_bounds)
+        reco = retval.e_reco.data.to('TeV').value
+        true = retval.e_true.data.to('TeV').value
+        migra_min = reco[:-1] / true[:-1,np.newaxis]
+        migra_max = reco[1:] / true[1:,np.newaxis]
 
-        logemingrid = logerange[:-1] * np.ones([nbins, nbins])
-        logemaxgrid = logerange[1:] * np.ones([nbins, nbins])
-        val = logerange[:-1] + logerange[1:]
-        logecentergrid = np.transpose(((val) / 2.) * np.ones([nbins, nbins]))
+        pdf = .5 * (erf((migra_max - 1) / np.sqrt( 2.))
+                    - erf( (migra_min - 1) / np.sqrt(2.)))
 
-        # gauss = lambda p, x: p[0] / np.sqrt(2. * np.pi * p[2] ** 2.)
-        # * np.exp(- (x - p[1]) ** 2. / 2. / p[2] ** 2.)
-        gauss_int = lambda p, x_min, x_max: .5 * (erf((x_max - p[1]) / np.sqrt(
-            2. * p[2] ** 2.)) - erf(
-            (x_min - p[1]) / np.sqrt(2. * p[2] ** 2.)))
-
-        pdf_matrix = gauss_int(
-            [1., 10. ** logecentergrid, sigma * 10. ** logecentergrid],
-            10. ** logemingrid, 10. ** logemaxgrid)
-
-        return cls(pdf_matrix, ebounds)
+        retval.data = pdf
+        
+        return retval
 
     @classmethod
     def read(cls, filename, format='RMF'):
@@ -164,6 +111,7 @@ class EnergyDispersion(object):
             raise ValueError(ss)
 
     @classmethod
+
     def _read_rmf(cls, filename):
         """Create `EnergyDispersion` object from RMF data.
         """

@@ -16,6 +16,8 @@ __all__ = [
 class EffectiveAreaTable(NDDataArray):
     """Effective Area Table
     
+    TODO: Document
+
     Parameters
     -----------
     energy : `~astropy.units.Quantity`, `~gammapy.utils.nddata.BinnedDataAxis`
