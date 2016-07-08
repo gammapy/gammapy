@@ -27,9 +27,9 @@ def test_spectral_fit():
     fit.run()
 
     assert fit.result[0].fit.spectral_model == 'PowerLaw'
-    assert_allclose(fit.result[0].fit.statval, 105.398, rtol=1e-3)
+    assert_allclose(fit.result[0].fit.statval, 103.595, rtol=1e-3)
     assert_quantity_allclose(fit.result[0].fit.parameters.index,
-                             2.135 * u.Unit(''), rtol=1e-3)
+                             2.116 * u.Unit(''), rtol=1e-3)
 
     # Actual fit range can differ from threshold due to binning effects
     # We take the lowest bin that is completely within threshold

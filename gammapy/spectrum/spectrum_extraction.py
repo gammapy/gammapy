@@ -64,6 +64,9 @@ class SpectrumExtraction(object):
     DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
     """Reconstruced energy axis to be used if not specified otherwise"""
 
+    # NOTE : The default true binning is not used in the test due to
+    # extrapolation issues
+
     def __init__(self, target, obs, background, e_reco=None, e_true=None,
                  containment_correction=False):
 

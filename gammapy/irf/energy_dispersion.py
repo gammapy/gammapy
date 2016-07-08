@@ -227,7 +227,9 @@ class EnergyDispersion(NDDataArray):
                     hduclas2='REP_MATRIX',
                     detchans=self.e_reco.nbins,
                     numgrp = numgrp,
-                    numelt = numelt,)
+                    numelt = numelt,
+                    tlmin4 = 0,
+                   )
 
         table.meta = meta
         return table
@@ -294,7 +296,7 @@ class EnergyDispersion(NDDataArray):
         convolved_data : array
             1-dim data array after multiplication with the energy dispersion matrix
         """
-        return np.dot(data, self._pdf_matrix)
+        return np.dot(data, self.data)
 
     def _extent(self):
         """Extent (x0, x1, y0, y1) for plotting (4x float)
@@ -556,7 +558,6 @@ class EnergyDispersion2D(object):
         edisp : `~gammapy.irf.EnergyDispersion`
             Energy disperion matrix
         """
-
         offset = Angle(offset)
         e_true = self.ebounds if e_true is None else EnergyBounds(e_true)
         e_reco = self.ebounds if e_reco is None else EnergyBounds(e_reco)

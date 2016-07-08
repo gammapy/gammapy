@@ -506,8 +506,9 @@ class SpectrumObservation(object):
         self.aeff.write(outdir / arffile, clobber=overwrite)
 
         if self.edisp is not None:
+            self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
+            self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
             self.edisp.write(str(outdir / rmffile),
-                             energy_unit='keV',
                              clobber=overwrite)
 
 
