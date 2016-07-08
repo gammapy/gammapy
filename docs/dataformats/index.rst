@@ -33,33 +33,35 @@ Overview
 
 Here's an overview of the file formats supported by Gammapy and Gammalib:
 
-================= ==================== =========================================== ============================
-Type              Format Name          Gammapy                                     Gammalib
-================= ==================== =========================================== ============================
-Events            EVENTS               `~gammapy.data.EventList`                   GEventList_
------------------ -------------------- ------------------------------------------- ----------------------------
-Counts            3D                   `~gammapy.cube.SkyCube`                     `GCTAEventCube`_
-Counts            Image                no class?                                   `GSkyMap`_
-Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`          `GPha`_
------------------ -------------------- ------------------------------------------- ----------------------------
-Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`?                    `GCTACubeExposure`_
------------------ -------------------- ------------------------------------------- ----------------------------
-Background        BACKGROUND_3D        `~gammapy.background.CubeBackgroundModel`   `GCTABackground3D`_
-Background        BACKGROUND_1D        N/A                                         `GCTAModelRadialAcceptance`_
-Exposure          ???                  `~gammapy.cube.SkyCube`?                    `GCTACubeBackground`_
------------------ -------------------- ------------------------------------------- ----------------------------
-PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF` `GCTAPsf2D`_
-PSF               PSF_2D_KING          N/A                                         `GCTAPsfKing`_
-PSF               PSF_1D               `~gammapy.irf.TablePSF`                     `GCTAPsfVector`_
-PSF               gtpsf_ output        `~gammapy.irf.EnergyDependentTablePSF`      N/A
-PSF               ???                  N/A                                         `GCTACubePsf`_
------------------ -------------------- ------------------------------------------- ----------------------------
-Effective area    AEFF_2D              `~gammapy.irf.EffectiveAreaTable2D`         `GCTAAeff2D`_
-Effective area    ARF                  `~gammapy.irf.EffectiveAreaTable`           `GCTAAeffArf`_
------------------ -------------------- ------------------------------------------- ----------------------------
-Energy dispersion EDISP_2D             `~gammapy.irf.EnergyDispersion2D`           `GCTAEdisp2D`_
-Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`             `GCTAEdispRMF`_
-================= ==================== =========================================== ============================
+================= ==================== ================================================= ============================
+Type              Format Name          Gammapy                                           Gammalib
+================= ==================== ================================================= ============================
+Events            EVENTS               `~gammapy.data.EventList`                         GEventList_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Counts            3D                   `~gammapy.cube.SkyCube`                           `GCTAEventCube`_
+Counts            Image                `~gammapy.image.SkyMap`                           `GSkyMap`_
+Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`                `GPha`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`                           `GCTACubeExposure`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Background        BACKGROUND_3D        `~gammapy.background.CubeBackgroundModel`         `GCTABackground3D`_
+Background        BACKGROUND_2D        `~gammapy.background.EnergyOffsetBackgroundModel` N/A
+Background        no spec available    N/A                                               `GCTAModelRadialAcceptance`_
+Background        no spec available    N/A                                               `GCTACubeBackground`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+PSF               PSF_2D_GAUSS         `~gammapy.irf.EnergyDependentMultiGaussPSF`       `GCTAPsf2D`_
+PSF               PSF_2D_KING          `~gammapy.irf.PSFKing`                            `GCTAPsfKing`_
+PSF               no spec available    `~gammapy.irf.TablePSF`                           `GCTAPsfVector`_
+PSF               gtpsf_ output        `~gammapy.irf.EnergyDependentTablePSF`            N/A
+PSF               psf_table            `~gammapy.irf.PSF3D`                              `GCTAPsfTable`_
+PSF               no spec available    N/A                                               `GCTACubePsf`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Effective area    AEFF_2D              `~gammapy.irf.EffectiveAreaTable2D`               `GCTAAeff2D`_
+Effective area    ARF                  `~gammapy.irf.EffectiveAreaTable`                 `GCTAAeffArf`_
+----------------- -------------------- ------------------------------------------------- ----------------------------
+Energy dispersion EDISP_2D             `~gammapy.irf.EnergyDispersion2D`                 `GCTAEdisp2D`_
+Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`                   `GCTAEdispRMF`_
+================= ==================== ================================================= ============================
 
 .. _GEventList: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGEventList.html
 
@@ -76,6 +78,7 @@ Energy dispersion RMF                  `~gammapy.irf.EnergyDispersion`          
 .. _GCTAPsf2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsf2D.html
 .. _GCTAPsfKing: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsfKing.html
 .. _GCTAPsfVector: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsfVector.html
+.. _GCTAPsfTable: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAPsfTable.html
 .. _GCTACubePsf: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTACubePsf.html
 
 .. _GCTAAeff2D: http://cta.irap.omp.eu/gammalib-devel/doxygen/classGCTAAeff2D.html
@@ -100,7 +103,6 @@ Notes:
 * TODO: For `~gammapy.irf.TablePSF` FITS I/O in the Gammalib format should be implemented.
 * TODO: the format name should be chosen so that it corresponds to FITS extension names or filenames.
   Is this the case? Can we agree on names with Gammalib?
-* TODO: Link to native Sherpa classes once available.
 
 .. dataformats_subpages:
 
