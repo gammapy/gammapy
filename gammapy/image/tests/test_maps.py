@@ -102,13 +102,11 @@ def test_image(request):
 def test_upsample():
     image = TestImage().input_image
     upsample_image = image.upsample(factor=2, order=0)
-    expected_data = [[0., 0., 1., 1., 2., 2., 3., 3., 4., 4., 5., 5.],
-                     [0., 0., 1., 1., 2., 2., 3., 3., 4., 4., 5., 5.],
-                     [6., 6., 7., 7., 8., 8., 9., 9., 10., 10., 11., 11.],
-                     [6., 6., 7., 7., 8., 8., 9., 9., 10., 10., 11., 11.],
-                     [12., 12., 13., 13., 14., 14., 15., 15., 16., 16., 17., 17.],
-                     [12., 12., 13., 13., 14., 14., 15., 15., 16., 16., 17., 17.]]
-    assert_allclose(upsample_image.data, expected_data)
+    assert_allclose(upsample_image.data[0, 0], 0.)
+    assert_allclose(upsample_image.data[5, 0], 12.)
+    assert_allclose(upsample_image.data[5, 11], 17.)
+    assert_allclose(upsample_image.data[0, 11], 5.)
+    assert upsample_image.data.shape == (6, 12)
 
 
 def test_downsample():

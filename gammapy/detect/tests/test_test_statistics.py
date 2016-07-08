@@ -26,8 +26,7 @@ def test_compute_ts_map(tmpdir):
                             kernel, method='leastsq iter')
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name] = np.nan_to_num(result[name])
-        skymap = SkyMap(data=result[name])
-        result[name] = skymap.upsample(2, order=order).data
+        result[name] = result[name].upsample(factor=2, order=order)
 
     assert_allclose(1705.840212274973, result.ts.data[99, 99], rtol=1e-3)
     assert_allclose([[99], [99]], np.where(result.ts.data == result.ts.data.max()))

@@ -291,7 +291,7 @@ class SkyMap(object):
         x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
-    def downsample(self, factor, method=np.nansum, shape=None):
+    def downsample(self, factor, method=np.nansum):
         """
         Downsample sky map by a power of two.
 
@@ -306,9 +306,6 @@ class SkyMap(object):
             Downsampling factor, must be power of two.
         method : np.ufunc (np.nansum), optional
             Method how to combine the image blocks.
-        shape : tuple (None), optional
-            If shape is specified, the image is padded prior to the downsampling
-            symmetrically in x and y direction to the given shape.
 
         Returns
         -------
@@ -319,15 +316,8 @@ class SkyMap(object):
         if not np.log2(factor).is_integer():
             raise ValueError('Downsampling factor must be power of 2.')
         factor = int(factor)
-
-        if shape is not None:
-            x_pad = (shape[1] - self.data.shape[1])
-            y_pad = (shape[0] - self.data.shape[0])
-            #converting from unicode to ascii string as a workaround
-            #for https://github.com/numpy/numpy/issues/7112
-            data = np.pad(self.data, ((0, y_pad), (0, x_pad)), mode=str('reflect'))
-        else:
-            data = self.data
+        pad = np.array(self.data.shape) % factor
+        data = np.pad(self.data, ((0, pad[1]), (0, pad[0])), mode='reflect')
         new_data = block_reduce(data, (factor, factor), method)
         return SkyMap(data=new_data)
 
@@ -538,7 +528,7 @@ class SkyMap(object):
         Parameters
         ----------
         factor : int
-            upsampling factor, must be power of two.
+            Upsampling factor, must be power of two.
         order : int, optional
             The order of the spline interpolation.
             See 'scipy.ndimage.zoom'
@@ -561,7 +551,6 @@ class SkyMap(object):
         if shape is not None:
             new_data = new_data[0:shape[0], 0:shape[1]]
         return SkyMap(data=new_data)
-
 
     def copy(self):
         """
