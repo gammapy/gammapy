@@ -28,6 +28,7 @@ class EnergyDispersion(NDDataArray):
     The most common file format for energy dispersion matrices is the RMF
     (Redistribution Matrix File) format from X-ray astronomy:
     http://heasarc.gsfc.nasa.gov/docs/heasarc/caldb/docs/summary/cal_gen_92_002_summary.html
+
     Parameters
     ----------
     data : array_like

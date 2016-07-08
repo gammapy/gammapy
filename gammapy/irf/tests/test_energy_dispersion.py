@@ -10,7 +10,7 @@ from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
 
-@requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_EnergyDispersion():
     e_true = np.logspace(0,1, 101) * u.TeV
     e_reco = e_true
