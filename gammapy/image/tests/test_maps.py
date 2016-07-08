@@ -8,6 +8,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
+from astropy.extern.six import string_types
 from ...extern.regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
@@ -117,9 +118,13 @@ class TestSkyMapPoisson:
 
     def test_io(self, tmpdir):
         filename = tmpdir / 'test_skymap.fits'
+        self.skymap.meta['COMMENT'] = 'Test comment'
+        self.skymap.meta['HISTORY'] = 'Test history'
         self.skymap.write(str(filename))
         skymap = SkyMap.read(str(filename))
         assert self.skymap.name == skymap.name
+        assert isinstance(skymap.meta['COMMENT'], string_types)
+        assert isinstance(skymap.meta['HISTORY'], string_types)
 
     def test_unit_io(self, tmpdir):
         filename = tmpdir / 'test_skymap_unit.fits'
