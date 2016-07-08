@@ -109,7 +109,7 @@ class NDDataArray(object):
                 msg += 'Axis {n} : {sa}, Data {sd}'
                 raise ValueError(msg.format(d=dim, n=self.axis_names[dim],
                                             sa=axis.nbins, sd=data.shape[dim]))
-        self._data = data
+        self._data = Quantity(data)
 
     @property
     def dim(self):
