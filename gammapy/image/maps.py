@@ -109,6 +109,13 @@ class SkyMap(object):
             unit = None
 
         meta = OrderedDict(header)
+
+        # parse astropy.io.fits.header._HeaderCommentaryCards as strings
+        if 'HISTORY' in meta:
+            meta['HISTORY'] = str(meta['HISTORY'])
+        if 'COMMENT' in meta:
+            meta['COMMENT'] = str(meta['COMMENT'])
+
         return cls(name, data, wcs, unit, meta)
 
     @classmethod
