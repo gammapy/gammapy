@@ -214,16 +214,20 @@ class PHACountsSpectrum(CountsSpectrum):
             self.rmffile = self.phafile.replace('pha', 'rmf')
             self.bkgfile = self.phafile.replace('pha', 'bkg')
 
-    def to_table(self):
-        """Write"""
-        table = super(PHACountsSpectrum, self).to_table()
-
-        # Flag channels outside save range as bad
+    @property
+    def quality(self):
+        """Mask bins outside energy thresholds (1 = bad, 0 = good)"""
         flag = np.zeros(self.energy.nbins, dtype=np.int16)
         idx = np.where((self.energy.data[:-1] < self.lo_threshold) |
                        (self.energy.data[1:] > self.hi_threshold))
         flag[idx] = 1
-        table['QUALITY'] = flag
+        return flag
+
+    def to_table(self):
+        """Write"""
+        table = super(PHACountsSpectrum, self).to_table()
+
+        table['QUALITY'] = self.quality
 
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
@@ -243,7 +247,9 @@ class PHACountsSpectrum(CountsSpectrum):
                     creator=getattr(self, 'creator', 'Gammapy {}'.format(
                         version.version)),
                     hduclas3='COUNT',
-                    hduclas4='TYPE:1'
+                    hduclas4='TYPE:1',
+                    lo_thres=self.lo_threshold.to("TeV").value,
+                    hi_thres=self.hi_threshold.to("TeV").value,
                     )
         if not self.is_bkg:
             if self.rmffile is not None:
@@ -251,8 +257,6 @@ class PHACountsSpectrum(CountsSpectrum):
 
             meta.update(backfile=self.bkgfile,
                         ancrfile=self.arffile,
-                        lo_thres=self.lo_threshold.to("TeV").value,
-                        hi_thres=self.hi_threshold.to("TeV").value,
                         hduclas2='TOTAL', )
         else:
             meta.update(hduclas2='BKG', )
@@ -282,13 +286,11 @@ class PHACountsSpectrum(CountsSpectrum):
         meta = dict(
             obs_id=hdulist[1].header['OBS_ID'],
             exposure=hdulist[1].header['EXPOSURE'] * u.s,
-            backscal=hdulist[1].header['BACKSCAL']
+            backscal=hdulist[1].header['BACKSCAL'],
+            lo_threshold=hdulist[1].header['LO_THRES'] * u.TeV,
+            hi_threshold=hdulist[1].header['HI_THRES'] * u.TeV,
         )
-        if hdulist[1].header['HDUCLAS2'] == 'TOTAL':
-            meta.update(lo_threshold=hdulist[1].header['LO_THRES'] * u.TeV,
-                        hi_threshold=hdulist[1].header['HI_THRES'] * u.TeV,
-                        is_bkg = False)
-        elif hdulist[1].header['HDUCLAS2'] == 'BKG':
+        if hdulist[1].header['HDUCLAS2'] == 'BKG':
             meta.update(is_bkg = True)
         return cls(energy=ebounds, data=counts, **meta)
 

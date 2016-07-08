@@ -38,8 +38,8 @@ class SpectrumExtraction(object):
     and off counts vectors as well as an effective area vector and an energy
     dispersion matrix.  For more info see :ref:`spectral_fitting`.
 
-    For point sources analyzed with 'full containement' IRFs, a correction for PSF
-    leakage out of the circular ON region can be applied.
+    For point sources analyzed with 'full containement' IRFs, a correction for
+    PSF leakage out of the circular ON region can be applied.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ class SpectrumExtraction(object):
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
     containment_correction : bool
-        Flag to apply containment correction for point sources and circular ON regions.
+        Apply containment correction for point sources and circular ON regions.
 
     Examples
     --------
@@ -60,19 +60,24 @@ class SpectrumExtraction(object):
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
 
-    def __init__(self, target, obs, background, e_reco=None, e_true=None, containment_correction=False):
+    def __init__(self, target, obs, background, e_reco=None, e_true=None,
+                 containment_correction=False):
+
         if isinstance(target, CircleSkyRegion):
             target = Target(target)
         self.obs = obs
         self.background = background
         self.target = target
-        # This is the 14 bpd setup used in HAP Fitspectrum
-        self.e_reco = e_reco or np.logspace(-2, 2, 96) * u.TeV
-        self.e_true = e_true or np.logspace(-2, 2.3, 250) * u.TeV
+
+        # TODO: Decide on default binning
+        self.e_reco = e_reco or np.logspace(-2, 2, 72) * u.TeV
+        self.e_true = e_true or np.logspace(-2, 2.5, 108) * u.TeV
         self._observations = None
         self.containment_correction = containment_correction
-        if self.containment_correction and not isinstance(target.on_region, CircleSkyRegion):
-            raise TypeError("Incorrect region type for containment correction. Should be CircleSkyRegion.")
+        if self.containment_correction and not isinstance(target.on_region,
+                                                          CircleSkyRegion):
+            raise TypeError("Incorrect region type for containment correction."
+                            " Should be CircleSkyRegion.")
 
     @property
     def observations(self):
@@ -147,7 +152,6 @@ class SpectrumExtraction(object):
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
 
-
             counts_kwargs = dict(energy=self.e_reco,
                                  exposure=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id,
@@ -174,7 +178,8 @@ class SpectrumExtraction(object):
                 pass
 
             on_vec = PHACountsSpectrum(backscal=bkg.a_on, **counts_kwargs)
-            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True, **counts_kwargs)
+            off_vec = PHACountsSpectrum(backscal=bkg.a_off, is_bkg=True,
+                                        **counts_kwargs)
 
             on_vec.fill(on_events)
             off_vec.fill(bkg.off_events)
@@ -186,6 +191,7 @@ class SpectrumExtraction(object):
                                                  e_true=self.e_true)
 
             # If required, correct arf for psf leakage
+            # TODO: write correction factor as AREASCAL column in PHAFILE
             if self.containment_correction:
                 # First need psf
                 angles = np.linspace(0., 1.5, 150) * u.deg
@@ -198,6 +204,7 @@ class SpectrumExtraction(object):
                                                   0. * u.deg,
                                                   self.target.on_region.radius)
                     except:
+                        # TODO: Why is this necessary?
                         correction = np.nan
 
                     arf.data[index] = arf.data[index] * correction
@@ -228,10 +235,15 @@ class SpectrumExtraction(object):
             method for defining the low energy threshold
         """
         # TODO: define method for the high energy threshold
+
+        # It is important to update the low and high threshold for ON and OFF
+        # vector, otherwise Sherpa will not understand the files
         for obs in self.observations:
             if method_lo_threshold == 'area_max':
-                obs.on_vector.lo_threshold = obs.aeff.find_energy(
-                    kwargs['percent'] / 100 * obs.aeff.max_area)
+                aeff_thres = kwargs['percent'] / 100 * obs.aeff.max_area
+                thres = obs.aeff.find_energy(aeff_thres) 
+                obs.on_vector.lo_threshold = thres
+                obs.off_vector.lo_threshold = thres
             else:
                 raise ValueError('Undefine method for low threshold: {}'.format(
                     method_lo_threshold))

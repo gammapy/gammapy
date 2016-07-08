@@ -14,21 +14,22 @@ from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-
+import numpy as np
 
 @pytest.mark.parametrize("pars,results", [
-    (dict(containment_correction=False), dict(n_on=95,
-                                              sigma=19.70,
-                                              aeff=549861.8268659255 * u.m ** 2,
-                                              ethresh=0.4353353353 * u.TeV)),
-    (dict(containment_correction=True), dict(n_on=95,
-                                             sigma=19.70,
-                                             aeff=393356.18322397786 * u.m ** 2,
-                                             ethresh=0.6179 * u.TeV)),
+    (dict(containment_correction=False), dict(n_on=172,
+                                              sigma=28.18,
+                                              aeff=549861.8 * u.m ** 2,
+                                              ethresh=0.4327 * u.TeV)),
+    (dict(containment_correction=True), dict(n_on=172,
+                                             sigma=28.18,
+                                             aeff=393356.2 * u.m ** 2,
+                                             ethresh=0.625 * u.TeV)),
 ])
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_extraction(pars, results, tmpdir):
+
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
     radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center, radius)
@@ -43,18 +44,17 @@ def test_spectrum_extraction(pars, results, tmpdir):
         "datasets/exclusion_masks/tevcat_exclusion.fits")
     excl = ExclusionMask.read(exclusion_file)
 
-    irad = Angle('0.5 deg')
-    orad = Angle('0.6 deg')
-    bk = [ring_background_estimate(
-        center, radius, irad, orad, _.events) for _ in obs]
-    # bk = dict(method='reflected', n_min=2, exclusion=excl)
+    bk = dict(method='reflected', n_min=2, exclusion=excl)
 
-    bounds = EnergyBounds.equal_log_spacing(1, 10, 40, unit='TeV')
-    etrue = EnergyBounds.equal_log_spacing(0.1, 30, 100, unit='TeV')
+    # Restrict energy binning to a range where the aeff interpolation does not
+    # give none for HAP test files
+    # TODO: set low energies to 0 and extrapolate high energies
+    e_true = np.logspace(-1, 1.9, 70) * u.TeV
 
-    ana = SpectrumExtraction(target, obs, bk,
-                             e_reco=bounds,
-                             e_true=etrue,
+    ana = SpectrumExtraction(target,
+                             obs,
+                             bk,
+                             e_true = e_true,
                              containment_correction=pars['containment_correction'])
 
     ana.run(outdir=tmpdir)
@@ -63,8 +63,12 @@ def test_spectrum_extraction(pars, results, tmpdir):
 
     assert_quantity_allclose(ana.observations[0].lo_threshold,
                              results['ethresh'], rtol=1e-3)
+
+    assert_quantity_allclose(ana.observations[0].off_vector.lo_threshold,
+                             ana.observations[0].on_vector.lo_threshold)
+
     assert_quantity_allclose(ana.observations[0].aeff.evaluate(
-        energy=5 * u.TeV), results['aeff'])
+        energy=5 * u.TeV), results['aeff'], rtol=1e-3)
     assert ana.observations[0].total_stats.n_on == results['n_on']
     assert_allclose(ana.observations[1].total_stats.sigma, results['sigma'],
                     atol=1e-2)
@@ -74,6 +78,7 @@ def test_spectrum_extraction(pars, results, tmpdir):
     if not pars['containment_correction']:
         outdir = gammapy_extra.filename("datasets/hess-crab4_pha")
         ana.observations.write(outdir)
+
         testobs = SpectrumObservation.read(make_path(outdir) / 'pha_obs23523.fits')
         assert_quantity_allclose(testobs.aeff.data,
                                  ana.observations[0].aeff.data)

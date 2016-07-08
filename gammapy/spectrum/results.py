@@ -245,6 +245,8 @@ class SpectrumFitResult(object):
         flux_errors = Bunch()
         flux_errors['1TeV'] = parameter_errors['norm']
 
+        npred = model(1)
+
         return cls(fit_range=energy_range,
                    parameters=parameters,
                    parameter_errors=parameter_errors,
@@ -252,7 +254,7 @@ class SpectrumFitResult(object):
                    spectral_model=spectral_model,
                    statname=fitresult.statname,
                    statval=fitresult.statval,
-                   n_pred=model(1),
+                   n_pred=npred,
                    fluxes=fluxes,
                    flux_errors=flux_errors)
 

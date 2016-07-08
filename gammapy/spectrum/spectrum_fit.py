@@ -66,10 +66,11 @@ class SpectrumFit(object):
         self.model = model
         self.statistic = stat
         self._fit_range = None
-        # FIXME : This is only true for one observation
-        # The ON and OFF counts sould be stacked for more than on obs
         from gammapy.spectrum import SpectrumResult
-        self._result = SpectrumResult(obs=obs_list[0])
+        # TODO : Introduce SpectrumResultList or Dict
+        self._result = list()
+        for obs in obs_list:
+            self._result.append(SpectrumResult(obs=obs))
 
     @classmethod
     def from_pha_list(cls, pha_list):
@@ -195,8 +196,9 @@ class SpectrumFit(object):
         else:
             raise ValueError('Undefined fitting method')
 
-        modelname = self.result.fit.spectral_model
-        self.result.fit.to_yaml('fit_result_{}.yaml'.format(modelname))
+        # Assume only one model is fit to all data
+        modelname = self.result[0].fit.spectral_model
+        self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
 
     def _run_sherpa_fit(self):
@@ -213,25 +215,35 @@ class SpectrumFit(object):
         model = self.model * self.FLUX_FACTOR
         ds.set_source(model)
 
-        namedataset = []
-        for i in range(len(ds.datasets)):
-            datastack.ignore_bad(i + 1)
-            datastack.ignore_bad(i + 1, 1)
-            namedataset.append(i + 1)
-        datastack.set_stat(self.statistic)
-        ds.fit(*namedataset)
-        datastack.covar(*namedataset)
-        covar = datastack.get_covar_results()
-        efilter = datastack.get_filter()
-        fitresult = datastack.get_fit_results()
-        model = datastack.get_model()
-        # TODO : Calculate Pivot energy
+        # Take into account fit range
+        if self.fit_range is not None:
+            log.info('Restricting fit range to {}'.format(self.fit_range))
+            notice_min = self.fit_range[0].to('keV').value
+            notice_max = self.fit_range[1].to('keV').value
+            datastack.notice(notice_min, notice_max)
 
+        # Ignore bad is not as stack-enabled function
+        for i in range(1, len(ds.datasets) + 1):
+            datastack.ignore_bad(i)
+            datastack.ignore_bad(i, 1)
+
+        datastack.set_stat(self.statistic)
+        ds.fit()
+        datastack.covar()
+
+        covar = datastack.get_covar_results()
+        fitresult = datastack.get_fit_results()
+        # Set results for each dataset separately 
         from gammapy.spectrum.results import SpectrumFitResult
-        self._result.fit = SpectrumFitResult.from_sherpa(covar,
-                                                         efilter,
-                                                         model,
-                                                         fitresult)
+        for i in range(1, len(ds.datasets) + 1):
+            model = datastack.get_model(i)
+            efilter = datastack.get_filter(i)
+            # TODO : Calculate Pivot energy
+
+            self.result[i-1].fit = SpectrumFitResult.from_sherpa(covar,
+                                                            efilter,
+                                                            model,
+                                                            fitresult)
 
         ds.clear_stack()
         ds.clear_models()
