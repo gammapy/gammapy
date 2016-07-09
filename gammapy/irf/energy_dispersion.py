@@ -190,7 +190,7 @@ class EnergyDispersion(NDDataArray):
         matrix = np.ndarray(dtype=np.object, shape=rows)
 
         # Make RMF type matrix
-        for i, row in enumerate(self.pdf_matrix):
+        for i, row in enumerate(self.data.value):
             subsets = 1
             pos = np.nonzero(row)[0]
             borders = np.where(np.diff(pos) != 1)[0]
@@ -225,7 +225,7 @@ class EnergyDispersion(NDDataArray):
                     chantype='PHA',
                     hduclass='OGIP',
                     hduclas1='RESPONSE',
-                    hduclas2='REP_MATRIX',
+                    hduclas2='RSP_MATRIX',
                     detchans=self.e_reco.nbins,
                     numgrp = numgrp,
                     numelt = numelt,
