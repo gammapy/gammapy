@@ -184,9 +184,9 @@ class PHACountsSpectrum(CountsSpectrum):
     backscal : float
         Scaling factor
     lo_threshold : `~astropy.units.Quantity`
-        Low energy threshold, not needed for background spectrum
+        Low energy threshold
     hi_threshold : `~astropy.units.Quantity`
-        High energy threshold, not needed for background spectrum
+        High energy threshold
     is_bkg : bool, optional
         Background or soure spectrum, default: False
     telescope : str, optional
