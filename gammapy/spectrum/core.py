@@ -147,11 +147,12 @@ class CountsSpectrum(NDDataArray):
         bounds = self.energy.data.to(energy_unit).value
         xerr = [x-bounds[:-1], bounds[1:] - x] 
         yerr = np.sqrt(counts) if show_poisson_errors else 0
-        kwargs.setdefault('fmt', 'o')
+        kwargs.setdefault('fmt', '' )
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs) 
         ax.set_xlabel('Energy [{0}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
+        ax.set_ylim(0, 1.2 * max(self.data.value))
         return ax
 
 
@@ -486,7 +487,7 @@ class SpectrumObservation(object):
             Overwrite
         """
 
-        outdir = Path(outdir) or Path.cwd()
+        outdir = Path.cwd() if outdir is None else Path(outdir)
         outdir.mkdir(exist_ok=True, parents=True)
 
         phafile = self.on_vector.phafile
