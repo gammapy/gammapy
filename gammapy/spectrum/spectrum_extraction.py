@@ -59,6 +59,13 @@ class SpectrumExtraction(object):
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
+    DEFAULT_TRUE_ENERGY = np.logspace(-2, 2.5, 109) * u.TeV
+    """True energy axis to be used if not specified otherwise"""
+    DEFAULT_RECO_ENERGY = np.logspace(-2, 2, 73) * u.TeV
+    """Reconstruced energy axis to be used if not specified otherwise"""
+
+    # NOTE : The default true binning is not used in the test due to
+    # extrapolation issues
 
     def __init__(self, target, obs, background, e_reco=None, e_true=None,
                  containment_correction=False):
@@ -68,10 +75,8 @@ class SpectrumExtraction(object):
         self.obs = obs
         self.background = background
         self.target = target
-
-        # TODO: Decide on default binning
-        self.e_reco = e_reco or np.logspace(-2, 2, 72) * u.TeV
-        self.e_true = e_true or np.logspace(-2, 2.5, 108) * u.TeV
+        self.e_reco = e_reco or self.DEFAULT_RECO_ENERGY
+        self.e_true = e_true or self.DEFAULT_TRUE_ENERGY
         self._observations = None
         self.containment_correction = containment_correction
         if self.containment_correction and not isinstance(target.on_region,

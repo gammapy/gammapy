@@ -10,33 +10,27 @@ from ...datasets import gammapy_extra
 from ...utils.energy import EnergyBounds
 
 
-@requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_EnergyDispersion():
-    filename = gammapy_extra.filename(
-        'test_datasets/irf/hess/ogip/run_rmf60741.fits')
-    edisp = EnergyDispersion.read(filename)
+    e_true = np.logspace(0,1, 101) * u.TeV
+    e_reco = e_true
+    resolution = 0.1
+    edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
+                                        pdf_threshold = 1e-7,
+                                        sigma=resolution)
 
-    # Set PDF threshold
-    threshold = 1e-2
-    edisp.pdf_threshold = threshold
-    a = edisp.pdf_matrix > threshold
-    b = edisp.pdf_matrix == 0
-    c = a + b
-    actual = np.sum(c)
-    desired = edisp.pdf_matrix.flatten().shape[0]
-    assert_equal(actual, desired)
+    test_e = 3.34 * u.TeV
+    # Check for correct normalization
+    test_pdf = edisp.evaluate(e_true = test_e)
+    assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
+    # Check bias
+    assert_allclose(edisp.get_bias(test_e), 0, atol=1e-4)
+    # Check resolution
+    assert_allclose(edisp.get_resolution(test_e), resolution, atol=1e-4)
 
-    # lower pdf threshold
-    # assert_raises did not work
-    actual = 0
-    threshold = 1e-3
-    try:
-        edisp.pdf_threshold = threshold
-    except(Exception):
-        actual = 1
-    desired = 1
-    assert_equal(actual, desired)
-
+    # Check plotting methods
+    edisp.plot_matrix()
+    edisp.plot_bias()
 
 @requires_data('gammapy-extra')
 def test_EnergyDispersion_write(tmpdir):
@@ -50,8 +44,7 @@ def test_EnergyDispersion_write(tmpdir):
     edisp.write(writename)
     edisp2 = EnergyDispersion.read(writename)
     actual = edisp2.pdf_matrix[indices]
-    rtol = edisp2.pdf_threshold
-    assert_allclose(actual, desired, rtol=rtol)
+    assert_allclose(actual, desired)
 
 
 @requires_dependency('scipy')

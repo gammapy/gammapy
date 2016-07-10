@@ -126,7 +126,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
     counts = flux * livetime * aeff.evaluate()
     counts = counts.decompose()
     counts = edisp.apply(counts.decompose())
-    return CountsSpectrum(data=counts, energy=edisp.reco_energy)
+    return CountsSpectrum(data=counts, energy=edisp.e_reco)
         
 
 # TODO: Move to gammapy.spectrum.models

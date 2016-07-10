@@ -624,31 +624,35 @@ class SpectrumResult(object):
 
         self.obs.background_vector.plot(ax=ax0,
                                         label='Background estimate',
+                                        fmt=None,
                                         energy_unit='TeV')
 
         self.expected_on_vector.plot(ax=ax0,
-                                     show_poisson_errors=True,
                                      label='Predicted ON counts')
 
         self.obs.on_vector.plot(ax=ax0,
                                 label='Deteced ON counts',
+                                show_poisson_errors=True,
+                                fmt=None,
                                 energy_unit='TeV')
 
         ax0.legend(numpoints=1)
 
-        res = self.expected_on_vector.data - self.obs.on_vector.data
+        res = (self.expected_on_vector.data - self.obs.on_vector.data).value
         resspec = CountsSpectrum(data=res, energy=self.obs.on_vector.energy)
-        resspec.plot(ax=ax1, color='black')
-
+        resspec.plot(ax=ax1, ecolor='black', fmt=None)
         xx = ax1.get_xlim()
         yy = [0, 0]
         ax1.plot(xx, yy, color='black')
+
+        ymax = 1.4 * max(resspec.data)
+        ax1.set_ylim(-ymax, ymax)
 
         xmin = self.fit.fit_range.to('TeV').value[0] * 0.8
         xmax = self.fit.fit_range.to('TeV').value[1] * 1.2
         ax1.set_xlim(xmin, xmax)
         ax1.set_xlabel('E [{}]'.format('TeV'))
-        ax1.set_ylabel('Residuals')
+        ax1.set_ylabel('ON (Predicted - Detected)')
 
         return ax0, ax1
 
