@@ -53,7 +53,7 @@ For a publication, we recommend the following line be added to the conclusion or
     This research has made use of Gammapy, a community-developed, open-source
     Python package for gamma-ray astronomy (citation).
 
-For now, the citation is to the `Gammapy ICRC 2015 <http://labs.adsabs.harvard.edu/adsabsadsabs/abs/2015arXiv150907408D/>`__
+For now, the citation is to the `Gammapy ICRC 2015 <http://adsabs.harvard.edu/abs/2015arXiv150907408D>`__
 conference proceeding.
 
 If the journal allows please also include a link to https://github.com/gammapy/gammapy .
