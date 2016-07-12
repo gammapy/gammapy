@@ -121,9 +121,9 @@ class CountsSpectrum(NDDataArray):
 
     def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
              **kwargs):
-        """Plot
+        """Plot as datapoint
 
-        kwargs are forwarded to matplotlib.pyplot.errorbar
+        kwargs are forwarded to `~matplotlib.pyplot.errorbar`
 
         Parameters
         ----------
@@ -155,14 +155,37 @@ class CountsSpectrum(NDDataArray):
         ax.set_ylim(0, 1.2 * max(self.data.value))
         return ax
 
+    def plot_hist(self, ax=None, **kwargs):
+        """Plot as histogram
+        
+        kwargs are forwarded to `~matplotlib.pyplot.hist`
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axis` (optional)
+            Axis instance to be used for the plot
+        """
+        import matplotlib.pyplot as plt 
+
+        ax = plt.gca() if ax is None else ax
+        kwargs.setdefault('lw', 2)
+        kwargs.setdefault('histtype', 'step')
+        weights = self.data.value
+        bins = self.energy.data.value[:-1]
+        x = self.energy.nodes.value
+        ax.hist(x, bins=bins, weights=weights, **kwargs)
+        ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
+        ax.set_ylabel('Counts')
+        ax.set_xscale('log')
+        return ax
 
     def peek(self, figsize=(5, 10)):
-
         """Quick-look summary plots."""
         import matplotlib.pyplot as plt
-        ax = plt.figure(figsize=figsize)
-        self.plot(ax=ax)
-        plt.show()
+
+        fig, ax = plt.subplots(1,1, figsize=figsize)
+        self.plot_hist(ax=ax)
+        return ax
 
 
 class PHACountsSpectrum(CountsSpectrum):
@@ -519,9 +542,9 @@ class SpectrumObservation(object):
         plt.style.use('ggplot') 
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
-        self.background_vector.plot(ax=ax1, label='Background estimate',
+        self.background_vector.plot_hist(ax=ax1, label='Background estimate',
                                     color='darkblue')
-        self.on_vector.plot(ax=ax1, label='Total counts', color='darkred')
+        self.on_vector.plot_hist(ax=ax1, label='Total counts', color='darkred')
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
         ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)

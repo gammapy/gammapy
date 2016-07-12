@@ -38,6 +38,7 @@ distribute-*.tar.gz
 # Other
 .*.swp
 .*.swo
+.*.swn
 *~
 
 # Mac OSX
