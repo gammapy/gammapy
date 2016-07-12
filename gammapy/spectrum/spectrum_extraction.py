@@ -34,28 +34,33 @@ log = logging.getLogger(__name__)
 class SpectrumExtraction(object):
     """Class for creating input data to 1D spectrum fitting
 
-    This class takes a `~gammapy.data.Target` as input and creates 1D counts on
-    and off counts vectors as well as an effective area vector and an energy
-    dispersion matrix.  For more info see :ref:`spectral_fitting`.
-
-    For point sources analyzed with 'full containement' IRFs, a correction for
-    PSF leakage out of the circular ON region can be applied.
+    This class is responsible for extracting a
+    `~gammapy.spectrum.SpectrumObservation` from a
+    `~gammapy.data.DataStoreObservation`, given a certain signal extraction
+    region. A background estimate can be passed on initialization or created on
+    the fly given a dict of parameters.  For point sources analyzed with 'full
+    containement' IRFs, a correction for PSF leakage out of the circular ON
+    region can be applied.  For more info see :ref:`spectral_fitting`.
 
     Parameters
     ----------
     target : `~gammapy.data.Target` or `~regions.SkyRegion`
-        Observation target
-    obs: `~gammapy.data.ObservationList`
+        Signal extraction region
+    obs : `~gammapy.data.ObservationList`
         Observations to process
-    background : `~gammapy.data.BackgroundEstimate` or dict
+    background : `~gammapy.background.BackgroundEstimate` or dict
         Background estimate or dict of parameters
     e_reco : `~astropy.units.Quantity`, optional
         Reconstructed energy binning
+    e_true : `~astropy.units.Quantity`, optional
+        True energy binning
     containment_correction : bool
         Apply containment correction for point sources and circular ON regions.
 
     Examples
     --------
+    TODO
+
     """
     OGIP_FOLDER = 'ogip_data'
     """Folder that will contain the output ogip data"""
@@ -113,12 +118,23 @@ class SpectrumExtraction(object):
         os.chdir(str(outdir))
         if not isinstance(self.background, list):
             log.info('Estimate background with config {}'.format(self.background))
-            self.estimate_background()
+            self.estimate_background(self.background)
         self.extract_spectrum()
         self.write()
         os.chdir(str(cwd))
 
-    def estimate_background(self):
+    def estimate_background(self, config):
+        """Create `~gammapy.background.BackgroundEstimate`
+        
+        In case no background estimate was passed on initialization, this
+        method creates one given a dict of parameters. For more info see
+        :ref:`background-estimation`.
+
+        Parameters
+        ----------
+        config : dict
+            Background estimation method
+        """
         method = self.background.pop('method')
         if method == 'reflected':
             exclusion = self.background.pop('exclusion', None)
@@ -133,6 +149,7 @@ class SpectrumExtraction(object):
 
     def filter_observations(self):
         """Filter observations by number of reflected regions"""
+        raise NotImplementedError("broken")
         n_min = self.bkg_method['n_min']
         obs = self.observations
         mask = obs.filter_by_reflected_regions(n_min)
