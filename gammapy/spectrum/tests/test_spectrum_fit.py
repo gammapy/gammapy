@@ -6,8 +6,12 @@ from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
 from numpy.testing import assert_allclose 
 from ...datasets import gammapy_extra
-from ...spectrum.spectrum_extraction import SpectrumObservationList, SpectrumObservation
-from ...spectrum.spectrum_fit import SpectrumFit
+from ...spectrum import (
+    SpectrumObservationList,
+    SpectrumObservation,
+    SpectrumFit,
+    SpectrumFitResult
+)
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 from astropy.utils.compat import NUMPY_LT_1_9
 
@@ -15,7 +19,7 @@ from astropy.utils.compat import NUMPY_LT_1_9
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
-def test_spectral_fit():
+def test_spectral_fit(tmpdir):
 
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
@@ -24,7 +28,14 @@ def test_spectral_fit():
     obs_list = SpectrumObservationList([obs1, obs2])
 
     fit = SpectrumFit(obs_list)
-    fit.run()
+    fit.run(outdir=tmpdir)
+
+    #Make sure FitResult is correctly readable
+    read_result = SpectrumFitResult.from_yaml(tmpdir / 'fit_result_PowerLaw.yaml')
+    test_e = 12.5 * u.TeV
+    assert_quantity_allclose(fit.result[0].fit.model(test_e),
+                             read_result.model(test_e))
+
 
     result = fit.result[0]
     assert 'PowerLaw' in str(result.fit)

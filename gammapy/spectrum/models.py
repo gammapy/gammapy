@@ -33,6 +33,19 @@ class SpectralModel(object):
         for parname, parval in self.parameters.items():
             ss += '\n{parname} : {parval:.3g}'.format(**locals())
         return ss
+    
+    def with_uncertainties(self, covariance, axis):
+        """Connect model to uncertainties module
+        
+        This uses the uncertainties packages as explained here
+        https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
+
+        Examples
+        --------
+        TODO
+        """
+        import IPython; IPython.embed()
+
 
     def to_sherpa(self, name='default'):
         """Return `~sherpa.models.ArithmeticModel`
@@ -81,9 +94,20 @@ class SpectralModel(object):
         retval = dict()
 
         retval['name'] = self.__class__.__name__
+        retval['parameters'] = list()
         for parname, parval in self.parameters.items():
-            retval[parname] = str(parval)
+            retval['parameters'].append(dict(name=parname,
+                                             val=parval.value,
+                                             unit=str(parval.unit)))
         return retval
+
+    @classmethod
+    def from_dict(cls, val):
+        """Serialize from dict"""
+        kwargs = dict()
+        for _ in val['parameters']:
+            kwargs[_['name']] = _['val'] * u.Unit(_['unit'])
+        return cls(**kwargs)
 
     def plot(self, ax=None, energy_range=[0.1, 10] * u.TeV,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
