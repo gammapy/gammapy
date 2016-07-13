@@ -493,7 +493,7 @@ class SpectrumObservation(object):
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
         retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
-        retval._phafile = phafile
+        retval._phafile = str(f)
         return retval
 
     def write(self, outdir=None, overwrite=True):

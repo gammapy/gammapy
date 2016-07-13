@@ -80,6 +80,26 @@ class EffectiveAreaTable(NDDataArray):
         data = table['{}'.format(data_col)].quantity
         return cls(energy=energy, data=data)
 
+    def evaluate(self, fill_nan=False, **kwargs):
+        """Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and
+        replaces possible nan values. Below the finite range the effective area
+        is set to zero and above to value of the last valid note. This is
+        needed since other Sofwares, e.g. sherpa, don't like nan values in FITS
+        files. Make sure that the replacement happens outside of the energy
+        range, where the `~gammapy.irf.EffectiveAreaTable` is used. 
+
+        Parameters
+        ----------
+        fill_nan : bool, optional
+            Replace nan values after evaluation
+        """
+        retval = super(EffectiveAreaTable, self).evaluate(**kwargs)
+        if fill_nan:
+            idx = np.where(np.isfinite(retval))[0]
+            retval[np.arange(idx[0])] = 0
+            retval[np.arange(idx[-1], len(retval))] = retval[idx[-1]]
+        return retval
+
     def to_table(self):
         """Convert to `~astropy.table.Table`
 
@@ -87,10 +107,11 @@ class EffectiveAreaTable(NDDataArray):
         """
         ener_lo = self.energy.data[:-1]
         ener_hi = self.energy.data[1:]
+        data = self.evaluate(fill_nan=True)
         names = ['ENERG_LO', 'ENERG_HI', 'SPECRESP']
         meta = dict(name='SPECRESP', hduclass='OGIP', hduclas1='RESPONSE',
                     hduclas2='SPECRESP')
-        return Table([ener_lo, ener_hi, self.data], names=names, meta=meta)
+        return Table([ener_lo, ener_hi, data], names=names, meta=meta)
 
     @property
     def max_area(self):

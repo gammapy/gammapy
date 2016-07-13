@@ -189,6 +189,13 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     elo_threshold = arf.find_energy(0.1 * arf.max_area)
     assert_quantity_allclose(elo_threshold, 0.4367 * u.TeV, rtol=1e-3)
 
+    # Test evaluation outside safe range
+    data = [np.nan, np.nan, 0, 0, 1, 2, 3, np.nan, np.nan]
+    energy = np.logspace(0, 10, 10) * u.TeV
+    aeff = EffectiveAreaTable(data=data, energy=energy)
+    vals = aeff.evaluate(fill_nan=True)
+    assert vals[1] == 0
+    assert vals[-1] == 3
 
 def test_abramowski_effective_area():
     energy = 100 * u.GeV

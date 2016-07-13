@@ -97,6 +97,7 @@ class NDDataArray(object):
         data : `~astropy.units.Quantity`, array-like
             Data array
         """
+        data = Quantity(data)
         dimension = len(data.shape)
         if dimension != self.dim:
             raise ValueError('Overall dimensions to not match. '
@@ -109,7 +110,7 @@ class NDDataArray(object):
                 msg += 'Axis {n} : {sa}, Data {sd}'
                 raise ValueError(msg.format(d=dim, n=self.axis_names[dim],
                                             sa=axis.nbins, sd=data.shape[dim]))
-        self._data = Quantity(data)
+        self._data = data
 
     @property
     def dim(self):

@@ -2,9 +2,14 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
+import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
-from ..spectrum import SpectrumObservationList, SpectrumObservation
+from . import (
+    SpectrumObservationList,
+    SpectrumObservation,
+    models,
+)
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -197,7 +202,7 @@ class SpectrumFit(object):
             raise ValueError('Undefined fitting method')
 
         # Assume only one model is fit to all data
-        modelname = self.result[0].fit.spectral_model
+        modelname = self.result[0].fit.model.__class__.__name__
         self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
 
@@ -222,7 +227,7 @@ class SpectrumFit(object):
             notice_max = self.fit_range[1].to('keV').value
             datastack.notice(notice_min, notice_max)
 
-        # Ignore bad is not as stack-enabled function
+        # Ignore bad is not a stack-enabled function
         for i in range(1, len(ds.datasets) + 1):
             datastack.ignore_bad(i)
             datastack.ignore_bad(i, 1)
@@ -239,11 +244,45 @@ class SpectrumFit(object):
             model = datastack.get_model(i)
             efilter = datastack.get_filter(i)
             # TODO : Calculate Pivot energy
-
-            self.result[i-1].fit = SpectrumFitResult.from_sherpa(covar,
-                                                            efilter,
-                                                            model,
-                                                            fitresult)
+            self.result[i-1].fit = _sherpa_to_fitresult(model, covar,
+                                                        efilter, fitresult)
 
         ds.clear_stack()
         ds.clear_models()
+
+
+def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
+    """Create `~gammapy.spectrum.SpectrumFitResult` from Sherpa objects"""
+    
+    from . import SpectrumFitResult
+
+    if 'powlaw1d' in shmodel.name:
+        model = models.PowerLaw.from_sherpa(shmodel)
+    else:
+        raise NotImplementedError()
+
+    covariance = covar.extra_output
+    par_names = dict(gamma='index',
+                     ampl='amplitude')
+
+    covar_axis = list()
+    for par in covar.parnames:
+        name = par.split('.')[-1]
+        covar_axis.append(par_names[name])
+
+    temp = efilter.split(':')
+    fit_range = [float(temp[0]), float(temp[1])] * u.keV
+
+    npred = shmodel(1)
+    statname = fitresult.statname
+    statval = fitresult.statval
+
+    # TODO: Calc Flux@1TeV + Error
+    return SpectrumFitResult(model=model,
+                             covariance=covariance,
+                             covar_axis=covar_axis,
+                             fit_range=fit_range,
+                             statname=statname,
+                             statval=statval,
+                             npred=npred
+                            )

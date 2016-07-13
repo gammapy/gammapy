@@ -28,5 +28,6 @@ def test_models(model, results):
     assert_quantity_allclose(model.integral(emin=emin, emax=emax),
                              results['integral_1_10TeV'])
     
-    
-
+    model.plot()    
+    model.to_dict()
+    model.to_sherpa()
