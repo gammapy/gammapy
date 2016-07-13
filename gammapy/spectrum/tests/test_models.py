@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from ..models import PowerLaw, ExponentialCutoffPowerLaw
 import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose, pytest
+from ...utils.testing import requires_dependency
 
 
 def get_test_data():
@@ -30,4 +31,9 @@ def test_models(model, results):
     
     model.plot()    
     model.to_dict()
+
+
+@requires_dependency('sherpa')
+@pytest.mark.parametrize("model, results", get_test_data())
+def test_to_sherpa(model, results):
     model.to_sherpa()
