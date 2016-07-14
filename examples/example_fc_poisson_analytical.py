@@ -1,9 +1,12 @@
-"""Analytical solution for Poisson process with
-   background. Produces Fig. 7 from the Feldman Cousins
-   paper."""
+"""
+Analytical solution for Poisson process with background.
+
+Produces Fig. 7 from the Feldman Cousins paper.
+"""
+from multiprocessing import Pool
+from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.utils.console import ProgressBar
 from gammapy.stats import (
     fc_find_acceptance_interval_poisson,
     fc_fix_limits,
@@ -20,16 +23,18 @@ cl = 0.90
 x_bins = np.arange(0, n_bins_x)
 mu_bins = np.linspace(mu_min, mu_max, mu_max / step_width_mu + 1, endpoint=True)
 
-print("Generating Feldman Cousins confidence belt for " + str(len(mu_bins)) +
-      " values of mu.")
+print('Generating FC confidence belt for {} values of mu.'.format(len(mu_bins)))
 
-UpperLimitAna = []
-LowerLimitAna = []
+partial_func = partial(fc_find_acceptance_interval_poisson, background=background, x_bins=x_bins, alpha=cl)
 
-for mu in ProgressBar(mu_bins):
-    goodChoice = fc_find_acceptance_interval_poisson(mu, background, x_bins, cl)
-    UpperLimitAna.append(goodChoice[0])
-    LowerLimitAna.append(goodChoice[1])
+pool = Pool()
+
+results = pool.map(partial_func, mu_bins)
+
+LowerLimitAna, UpperLimitAna = zip(*results)
+
+LowerLimitAna = np.asarray(LowerLimitAna)
+UpperLimitAna = np.asarray(UpperLimitAna)
 
 fc_fix_limits(LowerLimitAna, UpperLimitAna)
 
