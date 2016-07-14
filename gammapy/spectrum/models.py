@@ -33,26 +33,6 @@ class SpectralModel(object):
         for parname, parval in self.parameters.items():
             ss += '\n{parname} : {parval:.3g}'.format(**locals())
         return ss
-    
-    def to_sherpa(self, name='default'):
-        """Return `~sherpa.models.ArithmeticModel`
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the sherpa model instance
-        """
-        import sherpa.models as m
-        if isinstance(self, PowerLaw):
-            model = m.PowLaw1D('powlaw1d.' + name)
-            model.gamma = self.parameters.index.value
-        else:
-            raise NotImplementedError
-
-        model.ref = self.parameters.reference.to('keV').value
-        model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
-
-        return model
 
     def to_dict(self):
         """Serialize to dict"""
@@ -74,7 +54,7 @@ class SpectralModel(object):
             kwargs[_['name']] = _['val'] * u.Unit(_['unit'])
         return cls(**kwargs)
 
-    def plot(self, ax=None, energy_range=[0.1, 10] * u.TeV,
+    def plot(self, energy_range, ax=None, 
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, n_points=100, **kwargs):
         """Plot `~gammapy.spectrum.SpectralModel` 
@@ -91,9 +71,9 @@ class SpectralModel(object):
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
             Unit of the flux axis
-        energy_power : int
+        energy_power : int, optional
             Power of energy to multiply flux axis with
-        n_points : int
+        n_points : int, optional
             Number of evaluation nodes
 
         Returns
@@ -156,6 +136,22 @@ class PowerLaw(SpectralModel):
         lower = (emin / pars.reference) ** val
 
         return prefactor * (upper - lower)
+
+    def to_sherpa(self, name='default'):
+        """Return `~sherpa.models.PowLaw1d`
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
+        import sherpa.models as m
+        model = m.PowLaw1D('powlaw1d.' + name)
+        model.gamma = self.parameters.index.value
+        model.ref = self.parameters.reference.to('keV').value
+        model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
+
+        return model
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):

@@ -154,23 +154,33 @@ class SpectrumFitResult(object):
     def model_with_uncertainties(self):
         """Best fit model with uncertainties
 
-        This uses the uncertainties packages as explained here
+        The parameters on the model will be in units ``keV``, ``cm``, and
+        ``s``. Thus, when evaluating the model energies have to be passed in
+        keV and the resulting flux will be in ``cm-2 s-1 keV-1``. The
+        covariance matrix passed on initialization must also have these units.
+        
+        TODO: This is due to sherpa units, make this more flexible
+
+        This function uses the uncertainties packages as explained here
         https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
 
         Examples
         --------
         TODO
         """
-        pars = [self.model.parameters[_].value for _ in self.covar_axis]
-        ufloats = uncertainties.correlated_values(pars, self.covariance)
+        unit_dict = dict(amplitude = 'cm-2 s-1 keV-1',
+                         reference = 'keV',
+                         index = '')
+        pars = self.model.parameters
+        upars = [pars[_].to(unit_dict[_]).value for _ in self.covar_axis]
+        ufloats = uncertainties.correlated_values(upars, self.covariance)
         kwargs=dict()
         for name, par in zip(self.covar_axis, ufloats):
             kwargs[name] = par
-        for parname in self.model.parameters:
+        for parname in pars:
             if parname not in kwargs:
-                kwargs[parname] = self.model.parameters[parname].value
+                kwargs[parname] = pars[parname].to(unit_dict[parname]).value
         return self.model.__class__(**kwargs)
-
 
     def __str__(self):
         """
@@ -232,22 +242,23 @@ class SpectrumResult(object):
     def flux_point_residuals(self):
         """Residuals 
 
-        Based on best fit model and fluxpoints
+        Based on best fit model and fluxpoints.
+        Defined as ``(points - model)/model``
 
         Returns
         -------
         residuals : `~uncertainties.ufloat`
             Residuals
         """
-        x = self.points['ENERGY'].quantity
-        y = self.points['DIFF_FLUX'].quantity
-        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity
+        x = self.points['ENERGY'].quantity.to('keV')
+        y = self.points['DIFF_FLUX'].quantity.to('cm-2 s-1 keV-1')
+        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 keV-1')
 
         points = list()
         for val, err in zip(y.value, y_err.value):
             points.append(uncertainties.ufloat(val, err))
 
-        func = self.fit.model_with_uncertainties(x.value)
+        func = self.fit.model_with_uncertainties(x.to('keV').value)
         residuals = (points - func) / points
 
         return residuals
@@ -351,7 +362,8 @@ class SpectrumResult(object):
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-        self.fit.model.plot(energy_unit=energy_unit, flux_unit=flux_unit,
+        self.fit.model.plot(energy_range=self.fit.fit_range,
+                            energy_unit=energy_unit, flux_unit=flux_unit,
                             energy_power=energy_power, ax=ax0, **fit_kwargs)
         self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
                          energy_power=energy_power, ax=ax0, **point_kwargs)
@@ -396,7 +408,7 @@ class SpectrumResult(object):
         ax.plot(xx, yy, color='black')
 
         ax.set_xlabel('E [{}]'.format(energy_unit))
-        ax.set_ylabel('Residuals')
+        ax.set_ylabel('(Points - Model) / Model')
 
         return ax
 

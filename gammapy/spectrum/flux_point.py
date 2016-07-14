@@ -63,17 +63,21 @@ class DifferentialFluxPoints(Table):
         # Set errors to zero by default
         def_f = np.zeros(len(energy)) * diff_flux.unit
         def_e = np.zeros(len(energy)) * energy.unit
-        energy_err_hi = def_e if energy_err_hi is None else energy_err_hi
-        energy_err_lo = def_e if energy_err_lo is None else energy_err_lo
-        diff_flux_err_hi = def_f if diff_flux_err_hi is None else diff_flux_err_hi
-        diff_flux_err_lo = def_f if diff_flux_err_lo is None else diff_flux_err_lo
+        if energy_err_hi is None:
+            energy_err_hi = def_e
+        if energy_err_lo is None:
+            energy_err_lo = def_e
+        if diff_flux_err_hi is None:
+            diff_flux_err_hi = def_f
+        if diff_flux_err_lo is None:
+            diff_flux_err_lo = def_f
 
         t['ENERGY'] = energy
-        t['ENERGY_ERR_HI'] = energy_err_hi
-        t['ENERGY_ERR_LO'] = energy_err_lo
+        t['ENERGY_ERR_HI'] = Quantity(energy_err_hi)
+        t['ENERGY_ERR_LO'] = Quantity(energy_err_lo)
         t['DIFF_FLUX'] = diff_flux
-        t['DIFF_FLUX_ERR_HI'] = diff_flux_err_hi
-        t['DIFF_FLUX_ERR_LO'] = diff_flux_err_lo
+        t['DIFF_FLUX_ERR_HI'] = Quantity(diff_flux_err_hi)
+        t['DIFF_FLUX_ERR_LO'] = Quantity(diff_flux_err_lo)
         return cls(t)
 
 
