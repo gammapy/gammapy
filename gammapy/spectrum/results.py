@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import uncertainties
 import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
@@ -168,6 +167,7 @@ class SpectrumFitResult(object):
         --------
         TODO
         """
+        import uncertainties
         unit_dict = dict(amplitude = 'cm-2 s-1 keV-1',
                          reference = 'keV',
                          index = '')
@@ -250,13 +250,14 @@ class SpectrumResult(object):
         residuals : `~uncertainties.ufloat`
             Residuals
         """
+        from uncertainties import ufloat
         x = self.points['ENERGY'].quantity.to('keV')
         y = self.points['DIFF_FLUX'].quantity.to('cm-2 s-1 keV-1')
         y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 keV-1')
 
         points = list()
         for val, err in zip(y.value, y_err.value):
-            points.append(uncertainties.ufloat(val, err))
+            points.append(ufloat(val, err))
 
         func = self.fit.model_with_uncertainties(x.to('keV').value)
         residuals = (points - func) / points
