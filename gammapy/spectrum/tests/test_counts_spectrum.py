@@ -41,6 +41,9 @@ def test_CountsSpectrum(tmpdir):
     test_eval = spec.evaluate(energy=test_e, method='nearest')
     assert_allclose(test_eval, spec.data[2])
 
+    spec.plot()
+    spec.peek()
+
     # Test I/O 
     f = tmpdir / 'test.fits'
     spec.write(f)

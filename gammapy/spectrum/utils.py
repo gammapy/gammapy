@@ -120,10 +120,11 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
     """
     from . import CountsSpectrum
 
-    true_energy = aeff.energy.data
+    true_energy = aeff.energy.data.to('TeV')
     flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:]) 
     
-    counts = flux * livetime * aeff.evaluate()
+    # Need to fill nan values in aeff due to matrix multiplication with RMF
+    counts = flux * livetime * aeff.evaluate(fill_nan=True)
     counts = counts.decompose()
     counts = edisp.apply(counts.decompose())
     return CountsSpectrum(data=counts, energy=edisp.e_reco)

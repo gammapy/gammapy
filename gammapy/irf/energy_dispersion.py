@@ -363,6 +363,7 @@ class EnergyDispersion(NDDataArray):
         ax.plot(x,y, **kwargs)
         ax.set_xlabel('True energy [TeV]')
         ax.set_ylabel(r'(E_{true} - E_{reco} / E_{true})')
+        ax.set_xscale('log')
         return ax
 
 
