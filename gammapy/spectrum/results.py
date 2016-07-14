@@ -1,10 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import uncertainties
 import numpy as np
 from astropy.extern import six
 from astropy.table import Table, Column, QTable, hstack, vstack
 import astropy.units as u
+from astropy.utils.decorators import lazyproperty
 
 from ..spectrum import DifferentialFluxPoints, CountsSpectrum, models
 from ..extern.bunch import Bunch
@@ -148,13 +150,27 @@ class SpectrumFitResult(object):
                 data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
         return t
 
-    @property
+    @lazyproperty
     def model_with_uncertainties(self):
-        """Model with uncertainties
+        """Best fit model with uncertainties
 
-        see :func:`~gammapy.spectrum.models.SpectralModel.with_uncertainties`
+        This uses the uncertainties packages as explained here
+        https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
+
+        Examples
+        --------
+        TODO
         """
-        return self.model.with_uncertainties(self.covariance, self.covar_axis)
+        pars = [self.model.parameters[_].value for _ in self.covar_axis]
+        ufloats = uncertainties.correlated_values(pars, self.covariance)
+        kwargs=dict()
+        for name, par in zip(self.covar_axis, ufloats):
+            kwargs[name] = par
+        for parname in self.model.parameters:
+            if parname not in kwargs:
+                kwargs[parname] = self.model.parameters[parname].value
+        return self.model.__class__(**kwargs)
+
 
     def __str__(self):
         """
@@ -214,27 +230,27 @@ class SpectrumResult(object):
 
     @property
     def flux_point_residuals(self):
-        """Calculate residuals and residual errors
+        """Residuals 
 
         Based on best fit model and fluxpoints
 
         Returns
         -------
-        residuals : `~astropy.units.Quantity`
+        residuals : `~uncertainties.ufloat`
             Residuals
-        residuals_err : `~astropy.units.Quantity`
-            Residual errors
         """
         x = self.points['ENERGY'].quantity
         y = self.points['DIFF_FLUX'].quantity
         y_err = self.points['DIFF_FLUX_ERR_HI'].quantity
 
-        func_y = self.fit.model(x)
-        err_y = self.fit.model_with_uncertainties(x)
-        residuals = (y - func_y) / y
-        residuals_err = np.sqrt(y_err ** 2 + err_y[0] ** 2) / y
+        points = list()
+        for val, err in zip(y.value, y_err.value):
+            points.append(uncertainties.ufloat(val, err))
 
-        return residuals.decompose(), residuals_err.decompose()
+        func = self.fit.model_with_uncertainties(x.value)
+        residuals = (points - func) / points
+
+        return residuals
 
     def plot_fit(self):
         """Standard debug plot
@@ -368,7 +384,9 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        y, y_err = self.flux_point_residuals
+        res  = self.flux_point_residuals
+        y = [_.n for _ in res]
+        y_err = [_.s for _ in res]
         x = self.points['ENERGY'].quantity
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)

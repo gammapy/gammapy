@@ -34,19 +34,6 @@ class SpectralModel(object):
             ss += '\n{parname} : {parval:.3g}'.format(**locals())
         return ss
     
-    def with_uncertainties(self, covariance, axis):
-        """Connect model to uncertainties module
-        
-        This uses the uncertainties packages as explained here
-        https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
-
-        Examples
-        --------
-        TODO
-        """
-        import IPython; IPython.embed()
-
-
     def to_sherpa(self, name='default'):
         """Return `~sherpa.models.ArithmeticModel`
 
@@ -66,28 +53,6 @@ class SpectralModel(object):
         model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
 
         return model
-
-    @classmethod
-    def from_sherpa(cls, model):
-        """Create `~gammapy.spectrum.models.SpectrumModel` from
-        `~sherpa.models.ArithmeticModel`
-
-        Parameters
-        ----------
-        model : `~sherpa.models.ArithmeticModel`
-            Sherpa model
-        """
-        from . import SpectrumFit
-        pardict = dict(gamma = ['index', u.Unit('')],
-                       ref = ['reference', u.keV],
-                       ampl = ['amplitude', SpectrumFit.FLUX_FACTOR * u.Unit('cm-2 s-1 keV-1')])
-        kwargs = dict()
-
-        for par in model.pars:
-            name = par.name
-            kwargs[pardict[name][0]] =  par.val * pardict[name][1]
-
-        return cls(**kwargs)
 
     def to_dict(self):
         """Serialize to dict"""
@@ -174,8 +139,8 @@ class PowerLaw(SpectralModel):
     """
     def __init__(self, index, amplitude, reference):
         self.parameters = Bunch(index = index,
-                                amplitude = amplitude.to('cm-2 s-1 TeV-1'),
-                                reference = reference.to('TeV'))
+                                amplitude = amplitude,
+                                reference = reference)
         
     @staticmethod
     def evaluate(energy, index, amplitude, reference):

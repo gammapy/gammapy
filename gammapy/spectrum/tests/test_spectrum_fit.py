@@ -42,6 +42,9 @@ def test_spectral_fit(tmpdir):
     assert_allclose(result.fit.statval, 103.595, rtol=1e-3)
     assert_quantity_allclose(result.fit.model.parameters.index,
                              2.116 * u.Unit(''), rtol=1e-3)
+    model_with_errors = result.fit.model_with_uncertainties
+    assert_allclose(model_with_errors.parameters.index.s,
+                    0.0543, rtol=1e-3)
 
     # Actual fit range can differ from threshold due to binning effects
     # We take the lowest bin that is completely within threshold
