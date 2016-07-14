@@ -148,13 +148,7 @@ class PowerLaw(SpectralModel):
     reference : float, `~astropy.units.Quantity` 
         :math:`E_0`
     """
-    DEFAULT_INDEX = 2.3 * u.Unit('')
-    DEFAULT_AMPLITUDE = 2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1')
-    DEFAULT_REFERENCE = 1 * u.TeV
-    def __init__(self,
-                 index=DEFAULT_INDEX,
-                 amplitude=DEFAULT_AMPLITUDE,
-                 reference=DEFAULT_REFERENCE):
+    def __init__(self, index, amplitude, reference):
         self.parameters = Bunch(index = index,
                                 amplitude = amplitude.to('cm-2 s-1 TeV-1'),
                                 reference = reference.to('TeV'))
