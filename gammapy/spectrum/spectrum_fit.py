@@ -271,7 +271,7 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     if 'powlaw1d' in shmodel.name:
         model = models.PowerLaw(**kwargs)
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(str(shmodel))
 
     covariance = covar.extra_output
     covar_axis = list()
