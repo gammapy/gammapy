@@ -256,19 +256,33 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     
     from . import SpectrumFitResult
 
+    # Translate sherpa model to GP model
+    # This is done here since the FLUXFACTOR needs to be applied
+    amplfact = SpectrumFit.FLUX_FACTOR
+    pardict = dict(gamma = ['index', u.Unit('')],
+                   ref = ['reference', u.keV],
+                   ampl = ['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')])
+    kwargs = dict()
+
+    for par in shmodel.pars:
+        name = par.name
+        kwargs[pardict[name][0]] =  par.val * pardict[name][1]
+
     if 'powlaw1d' in shmodel.name:
-        model = models.PowerLaw.from_sherpa(shmodel)
+        model = models.PowerLaw(**kwargs)
     else:
         raise NotImplementedError()
 
     covariance = covar.extra_output
-    par_names = dict(gamma='index',
-                     ampl='amplitude')
-
     covar_axis = list()
     for par in covar.parnames:
         name = par.split('.')[-1]
-        covar_axis.append(par_names[name])
+        covar_axis.append(pardict[name][0])
+
+    #Apply flux factor to covariance matrix
+    idx = covar_axis.index('amplitude')
+    covariance[idx] = covariance[idx] * amplfact 
+    covariance[:,idx] = covariance[:,idx] * amplfact
 
     temp = efilter.split(':')
     fit_range = [float(temp[0]), float(temp[1])] * u.keV

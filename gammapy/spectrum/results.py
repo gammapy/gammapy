@@ -3,11 +3,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import numpy as np
 from astropy.extern import six
-from astropy.modeling import models
 from astropy.table import Table, Column, QTable, hstack, vstack
 import astropy.units as u
+from astropy.utils.decorators import lazyproperty
 
-from ..spectrum import DifferentialFluxPoints, CountsSpectrum
+from ..spectrum import DifferentialFluxPoints, CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml, make_path
@@ -91,12 +91,13 @@ class SpectrumFitResult(object):
         val = dict()
         val['model'] = self.model.to_dict()
         if self.fit_range is not None:
-            val['fit_range'] = dict(min = str(self.fit_range[0]),
-                                    max = str(self.fit_range[1]))
+            val['fit_range'] = dict(min = self.fit_range[0].value,
+                                    max = self.fit_range[1].value,
+                                    unit = str(self.fit_range.unit))
         if self.statval is not None:
             val['statval'] = self.statval
         if self.statname is not None:
-            val['statval'] = self.statname
+            val['statname'] = self.statname
         if self.covariance is not None:
             val['covariance'] = dict(matrix = self.covariance.tolist(),
                                      axis = self.covar_axis)
@@ -104,19 +105,16 @@ class SpectrumFitResult(object):
 
     @classmethod
     def from_dict(cls, val):
+        modeldict = val['model']
+        if modeldict['name'] == 'PowerLaw':
+            model = models.PowerLaw.from_dict(modeldict)
+        else:
+            raise NotImplementedError()
         try:
             erange = val['fit_range']
             energy_range = (erange['min'], erange['max']) * u.Unit(erange['unit'])
         except KeyError:
             energy_range = None
-        pars = val['parameters']
-        parameters = Bunch()
-        parameter_errors = Bunch()
-        for par in pars:
-            parameters[par] = pars[par]['value'] * u.Unit(pars[par]['unit'])
-            parameter_errors[par] = pars[par]['error'] * u.Unit(pars[par]['unit'])
-        spectral_model = val['spectral_model']
-
         try:
             fl = val['fluxes']
         except KeyError:
@@ -129,9 +127,9 @@ class SpectrumFitResult(object):
                 fluxes[flu] = fl[flu]['value'] * u.Unit(fl[flu]['unit'])
                 flux_errors[flu] = fl[flu]['error'] * u.Unit(fl[flu]['unit'])
 
-        return cls(fit_range=energy_range, parameters=parameters,
-                   parameter_errors=parameter_errors,
-                   spectral_model=spectral_model, fluxes=fluxes,
+        return cls(model=model,
+                   fit_range=energy_range,
+                   fluxes=fluxes,
                    flux_errors=flux_errors)
 
     def to_table(self, **kwargs):
@@ -151,18 +149,38 @@ class SpectrumFitResult(object):
                 data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
         return t
 
-    @property
+    @lazyproperty
     def model_with_uncertainties(self):
-        """Model with uncertainties
+        """Best fit model with uncertainties
 
-        This uses the uncertainties packages as explained here
+        The parameters on the model will be in units ``keV``, ``cm``, and
+        ``s``. Thus, when evaluating the model energies have to be passed in
+        keV and the resulting flux will be in ``cm-2 s-1 keV-1``. The
+        covariance matrix passed on initialization must also have these units.
+        
+        TODO: This is due to sherpa units, make this more flexible
+
+        This function uses the uncertainties packages as explained here
         https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
 
         Examples
         --------
         TODO
         """
-        raise NotImplementedError()
+        import uncertainties
+        unit_dict = dict(amplitude = 'cm-2 s-1 keV-1',
+                         reference = 'keV',
+                         index = '')
+        pars = self.model.parameters
+        upars = [pars[_].to(unit_dict[_]).value for _ in self.covar_axis]
+        ufloats = uncertainties.correlated_values(upars, self.covariance)
+        kwargs=dict()
+        for name, par in zip(self.covar_axis, ufloats):
+            kwargs[name] = par
+        for parname in pars:
+            if parname not in kwargs:
+                kwargs[parname] = pars[parname].to(unit_dict[parname]).value
+        return self.model.__class__(**kwargs)
 
     def __str__(self):
         """
@@ -210,18 +228,47 @@ class SpectrumResult(object):
 
     @property
     def expected_on_vector(self):
-        """Counts predicted by a model plus background estimate"""
+        """Npred
+        
+        Counts predicted by best fit model plus background estimate
+        """
         energy = self.obs.background_vector.energy
         data = (self.obs.background_vector.data.value + self.fit.npred) * u.ct
         idx = np.isnan(data)
         data[idx] = 0
         return CountsSpectrum(data=data, energy=energy)
 
+    @property
+    def flux_point_residuals(self):
+        """Residuals 
+
+        Based on best fit model and fluxpoints.
+        Defined as ``(points - model)/model``
+
+        Returns
+        -------
+        residuals : `~uncertainties.ufloat`
+            Residuals
+        """
+        from uncertainties import ufloat
+        x = self.points['ENERGY'].quantity.to('keV')
+        y = self.points['DIFF_FLUX'].quantity.to('cm-2 s-1 keV-1')
+        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 keV-1')
+
+        points = list()
+        for val, err in zip(y.value, y_err.value):
+            points.append(ufloat(val, err))
+
+        func = self.fit.model_with_uncertainties(x.to('keV').value)
+        residuals = (points - func) / points
+
+        return residuals
+
     def plot_fit(self):
         """Standard debug plot
         
         Plot ON counts in comparison to background estimate plus source
-        counts predicted by a model
+        counts predicted by best fit model
         """
         from matplotlib import gridspec
         import matplotlib.pyplot as plt
@@ -271,7 +318,9 @@ class SpectrumResult(object):
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                       energy_power=0, fit_kwargs=None, point_kwargs=None):
-        """Plot full spectrum including flux points and residuals
+        """Plot spectrum 
+        
+        Plot best fit model, flux points and residuals
 
         Parameters
         ----------
@@ -310,13 +359,13 @@ class SpectrumResult(object):
 
         if fit_kwargs is None:
             fit_kwargs = dict(label='Best Fit {}'.format(
-                    self.fit.spectral_model), color='navy', lw=2)
+                    self.fit.model.__class__.__name__), color='navy', lw=2)
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
-
-        self.fit.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                      energy_power=energy_power, ax=ax0, **fit_kwargs)
+        self.fit.model.plot(energy_range=self.fit.fit_range,
+                            energy_unit=energy_unit, flux_unit=flux_unit,
+                            energy_power=energy_power, ax=ax0, **fit_kwargs)
         self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
                          energy_power=energy_power, ax=ax0, **point_kwargs)
         self._plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
@@ -348,7 +397,9 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        y, y_err = self._calculate_residuals_points()
+        res  = self.flux_point_residuals
+        y = [_.n for _ in res]
+        y_err = [_.s for _ in res]
         x = self.points['ENERGY'].quantity
         x = x.to(energy_unit).value
         ax.errorbar(x, y, yerr=y_err, **kwargs)
@@ -358,31 +409,7 @@ class SpectrumResult(object):
         ax.plot(xx, yy, color='black')
 
         ax.set_xlabel('E [{}]'.format(energy_unit))
-        ax.set_ylabel('Residuals')
+        ax.set_ylabel('(Points - Model) / Model')
 
         return ax
 
-    def _calculate_residuals_points(self):
-        """Calculate residuals and residual errors
-
-        Based on `~gammapy.spectrum.results.SpectrumFitResult` and
-        `~gammapy.spectrum.results.FluxPoints`
-
-        Returns
-        -------
-        residuals : `~astropy.units.Quantity`
-            Residuals
-        residuals_err : `~astropy.units.Quantity`
-            Residual errors
-        """
-        x = self.points['ENERGY'].quantity
-        y = self.points['DIFF_FLUX'].quantity
-        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity
-
-        func_y = self.fit.evaluate(x)
-        err_y = self.fit.evaluate_butterfly(x)
-        residuals = (y - func_y) / y
-        # Todo: add correct formular (butterfly)
-        residuals_err = np.sqrt(y_err ** 2 + err_y[0] ** 2) / y
-
-        return residuals.decompose(), residuals_err.decompose()

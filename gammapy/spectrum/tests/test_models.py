@@ -37,4 +37,5 @@ def test_models(model, results):
 @pytest.mark.parametrize("model, results", get_test_data())
 def test_to_sherpa(model, results):
     model.to_sherpa()
-    model.plot()    
+    energy_range = [1,10] * u.TeV
+    model.plot(energy_range = energy_range)
