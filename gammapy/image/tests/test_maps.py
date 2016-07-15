@@ -281,3 +281,11 @@ class TestSkyMapCrab:
         center = self.skymap.center()
         assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
         assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
+
+
+def test_skymap_pad():
+    image = SkyMap.empty(nxpix=10, nypix=13)
+    assert image.data.shape == (13, 10)
+
+    image2 = image.pad(factor=4, mode='reflect')
+    assert image2.data.shape == (16, 12)

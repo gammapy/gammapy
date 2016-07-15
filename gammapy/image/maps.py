@@ -387,6 +387,48 @@ class SkyMap(object):
         skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return skymap
 
+    def pad(self, factor, mode, **kwargs):
+        """Pad image to a larger shape.
+
+        Calls `numpy.pad`, passing ``mode`` and ``kwargs`` to it.
+
+        Parameters
+        ----------
+        factor : int
+            Factor used for output shape computation
+        mode : str
+            Padding mode, passed to `numpy.pad`.
+
+        Returns
+        -------
+        image : `~gammapy.image.SkyMap`
+            Padded image
+
+        Examples
+        --------
+
+        >>> from gammapy.image import SkyMap
+        >>> image = SkyMap.empty(nxpix=10, nypix=13)
+        >>> print(image.data.shape)
+        (13, 10)
+        >>> image2 = image.pad(factor=4, mode='reflect')
+        >>> image2.data.shape
+        (16, 12)
+        """
+        pad_width = factor - (np.array(self.data.shape) % factor)
+        pad_width = [(0, pad_width[0]), (0, pad_width[1])]
+
+        # converting from unicode to ascii string as a workaround
+        # for https://github.com/numpy/numpy/issues/7112
+        mode = str(mode)
+
+        data = np.pad(self.data, pad_width=pad_width, mode=mode, **kwargs)
+
+        # We don't have to adjust WCS here, because we only pad on the
+        # right and top, and for this change, the CRPIX doesn't change.
+
+        return SkyMap(data=data, wcs=self.wcs)
+
     def lookup_max(self, region=None):
         """
         Find position of maximum in a skymap.
@@ -413,7 +455,7 @@ class SkyMap(object):
 
     def solid_angle(self):
         """
-        Solid angle image (2-dim `astropy.units.Quantity` in `sr`).
+        Solid angle image (2-dim `~astropy.units.Quantity` in `sr`).
         """
 
         coordinates = self.coordinates(mode='edges')
