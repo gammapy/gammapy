@@ -23,32 +23,6 @@ class DifferentialFluxPoints(Table):
     For a complete documentation see :ref:`gadf:flux-points`
     """
     @classmethod
-    def from_fitspectrum_json(cls, filename):
-        """
-        Read `~gammapy.spectrum.DifferentialFluxPoints` from FitSpectrum JSON file
-        """
-        import json
-        with open(filename) as fh:
-            data = json.load(fh)
-
-        # TODO : Adjust column names
-        flux_points = Table(data=data['flux_graph']['bin_values'], masked=True)
-        flux_points['energy'].unit = 'TeV'
-        flux_points['energy'].name = 'ENERGY'
-        flux_points['energy_err_hi'].unit = 'TeV'
-        flux_points['energy_err_hi'].name = 'ENERGY_ERR_HI'
-        flux_points['energy_err_lo'].unit = 'TeV'
-        flux_points['energy_err_lo'].name = 'ENERGY_ERR_LO'
-        flux_points['flux'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux'].name = 'DIFF_FLUX'
-        flux_points['flux_err_hi'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_hi'].name = 'DIFF_FLUX_ERR_HI'
-        flux_points['flux_err_lo'].unit = 'cm-2 s-1 TeV-1'
-        flux_points['flux_err_lo'].name = 'DIFF_FLUX_ERR_LO'
-
-        return cls(flux_points)
-
-    @classmethod
     def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
                     energy_err_lo=None, diff_flux_err_hi=None,
                     diff_flux_err_lo=None):
