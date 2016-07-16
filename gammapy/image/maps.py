@@ -388,7 +388,8 @@ class SkyMap(object):
         return skymap
 
     def pad(self, factor, mode, **kwargs):
-        """Pad image to a larger shape.
+        """
+        Pad image to the nearest larger shape, that is divisible by the given factor in both axis.
 
         Calls `numpy.pad`, passing ``mode`` and ``kwargs`` to it.
 
