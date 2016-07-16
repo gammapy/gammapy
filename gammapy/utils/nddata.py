@@ -90,7 +90,8 @@ class NDDataArray(object):
     def data(self, data):
         """Set data
 
-        Some sanitiy checks are performed to avoid an invalid array
+        Some sanitiy checks are performed to avoid an invalid array. Also, the
+        interpolator is set to None to avoid unwanted behaviour.
 
         Parameters
         ----------
@@ -110,6 +111,7 @@ class NDDataArray(object):
                 msg += 'Axis {n} : {sa}, Data {sd}'
                 raise ValueError(msg.format(d=dim, n=self.axis_names[dim],
                                             sa=axis.nbins, sd=data.shape[dim]))
+        self._regular_grid_interp = None
         self._data = data
 
     @property

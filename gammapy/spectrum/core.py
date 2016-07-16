@@ -332,10 +332,10 @@ class SpectrumObservation(object):
     ----------
     on_vector : `~gammapy.spectrum.PHACountsSpectrum`
         On vector
-    off_vector : `~gammapy.spectrum.PHACountsSpectrum`
-        Off vector
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective Area
+    off_vector : `~gammapy.spectrum.PHACountsSpectrum`, optional
+        Off vector
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy dispersion matrix
 
@@ -354,13 +354,16 @@ class SpectrumObservation(object):
         plt.show()
     """
 
-    def __init__(self, on_vector, off_vector, aeff, edisp=None):
+    def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
         self.on_vector = on_vector
-        self.off_vector = off_vector
         self.aeff = aeff
+        self.off_vector = off_vector
         self.edisp = edisp
+        # TODO: Handle this in PHACountsSpectrum __init__ method
         if edisp is None:
             self.on_vector.rmffile = None
+        if off_vector is None:
+            self.on_vector.bkgfile = None
 
     @property
     def obs_id(self):
@@ -492,7 +495,10 @@ class SpectrumObservation(object):
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
-        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval = cls(on_vector=on_vector,
+                     aeff=effective_area,
+                     off_vector=off_vector,
+                     edisp=energy_dispersion)
         retval._phafile = str(f)
         return retval
 
@@ -522,16 +528,20 @@ class SpectrumObservation(object):
         self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
         self.on_vector.write(outdir / phafile, clobber=overwrite)
 
-        self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
-        self.off_vector.write(outdir / bkgfile, clobber=overwrite)
-
-        self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
+        self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.write(outdir / arffile, clobber=overwrite)
+
+        if self.off_vector is not None:
+            self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+            self.off_vector.write(outdir / bkgfile, clobber=overwrite)
 
         if self.edisp is not None:
             self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
             self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+            # Set data to itself to trigger reset of the interpolator
+            # TODO: Make NDData notice change of axis
+            self.edisp.data = self.edisp.data
             self.edisp.write(str(outdir / rmffile),
                              clobber=overwrite)
 
@@ -542,16 +552,19 @@ class SpectrumObservation(object):
         plt.style.use('ggplot') 
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
-        self.background_vector.plot_hist(ax=ax1, label='Background estimate',
-                                    color='darkblue')
+        if self.off_vector is not None:
+            self.background_vector.plot_hist(ax=ax1,
+                                             label='Background estimate',
+                                             color='darkblue')
         self.on_vector.plot_hist(ax=ax1, label='Total counts', color='darkred')
         ax1.legend(numpoints=1)
         ax1.set_title('Counts')
-        ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
-        ax2.axis('off')
-        ax3.set_title('Effective Area')
-        self.aeff.plot(ax=ax3,
+        ax2.set_title('Effective Area')
+        self.aeff.plot(ax=ax2,
                        show_energy=(self.hi_threshold, self.lo_threshold))
+        ax3.axis('off')
+        if self.off_vector is not None:
+            ax3.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
         ax4.set_title('Energy Dispersion')
         if self.edisp is not None:
             self.edisp.plot_matrix(ax=ax4)
