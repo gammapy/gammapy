@@ -7,10 +7,8 @@ from astropy.io import fits
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
 
-from ..image import (
-    exclusion_distance,
-    lon_lat_circle_mask,
-)
+from ..image import lon_lat_circle_mask
+
 from .maps import SkyMap
 
 
@@ -95,8 +93,28 @@ class ExclusionMask(SkyMap):
 
     @lazyproperty
     def distance_image(self):
-        """Map containting the distance to the nearest exclusion region."""
-        return exclusion_distance(self.mask)
+        """Distance to nearest exclusion region.
+
+        Compute distance map, i.e. the Euclidean (=Cartesian 2D)
+        distance (in pixels) to the nearest exclusion region.
+
+        We need to call distance_transform_edt twice because it only computes
+        dist for pixels outside exclusion regions, so to get the
+        distances for pixels inside we call it on the inverted mask
+        and then combine both distance images into one, using negative
+        distances (note the minus sign) for pixels inside exclusion regions.
+
+        Returns
+        -------
+        distance : `~numpy.ndarray`
+            Map of distance to nearest exclusion region.
+        """
+        from scipy.ndimage import distance_transform_edt
+        distance_outside = distance_transform_edt(self.mask)
+        invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
+        distance_inside = distance_transform_edt(invert_mask)
+        distance = np.where(self.mask, distance_outside, -distance_inside)
+        return distance
 
     # Set alias for mask
     # TODO: Add mask attribute to sky map class or rename self.mask to self.data

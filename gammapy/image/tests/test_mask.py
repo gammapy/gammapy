@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.tests.helper import pytest
+from numpy.testing import assert_allclose
 from .. import ExclusionMask
 from ...utils.testing import requires_dependency
 
@@ -16,7 +16,11 @@ def test_random_creation():
     assert excluded[0].size != 0
 
 
-@pytest.mark.xfail
 def test_distance_image():
-    pass
-    # TODO
+    mask = ExclusionMask.empty(nxpix=300, nypix=200)
+    distance = mask.distance_image
+    assert distance.shape == (200, 300)
+    assert_allclose(distance[0, 0],  -1.)
+    assert_allclose(distance[-1, 0], -200.)
+    assert_allclose(distance[0, -1], -299.001672236)
+    assert_allclose(distance[-1, -1], -359.723504931)
