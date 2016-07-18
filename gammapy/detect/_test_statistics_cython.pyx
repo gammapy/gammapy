@@ -39,9 +39,9 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
                 sum += model[j, i] * (1 - counts[j, i] / (x * model[j, i]
                                       * FLUX_FACTOR + background[j, i]))
 
-    # 2 * FLUX_FACTOR is required to maintain the correct mormalization of the
+    # 2 * FLUX_FACTOR is required to maintain the correct normalization of the
     # derivative of the likelihood function. It doesn't change the result of
-    # the fit, so it might no be necessary.
+    # the fit.
     return 2 * FLUX_FACTOR * sum
 
 
