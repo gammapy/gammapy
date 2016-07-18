@@ -104,17 +104,42 @@ class ExclusionMask(SkyMap):
         and then combine both distance images into one, using negative
         distances (note the minus sign) for pixels inside exclusion regions.
 
+        If data consist only of ones, it'll be supposed to be far away
+        from zero pixels, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value Max_Value (MAX_VALUE = 1e10).
+
+        If data consist only of zeros, it'll be supposed to be deep inside
+        an exclusion region, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value -Max_Value (MAX_VALUE = 1e10).
+
         Returns
         -------
-        distance : `~numpy.ndarray`
-            Map of distance to nearest exclusion region.
+        distance : `~gammapy.image.SkyMap`
+            Sky map of distance to nearest exclusion region.
+
+        Examples
+        --------
+        >>> from gammapy.image import ExclusionMask
+        >>> data = np.array([[0., 0., 1.], [1., 1., 1.]])
+        >>> mask = ExclusionMask(data=data)
+        >>> print(mask.distance_image.data)
+        [[-1, -1, 1], [1, 1, 1.41421356]]
         """
+        MAX_VALUE = 1e10
+        if np.all(self.mask == 1):
+            return SkyMap.empty_like(self, fill=MAX_VALUE)
+        if np.all(self.mask == 0):
+            return SkyMap.empty_like(self, fill=-MAX_VALUE)
+
         from scipy.ndimage import distance_transform_edt
         distance_outside = distance_transform_edt(self.mask)
         invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
         distance_inside = distance_transform_edt(invert_mask)
         distance = np.where(self.mask, distance_outside, -distance_inside)
-        return distance
+        skymap = SkyMap(data=distance)
+        return skymap
 
     # Set alias for mask
     # TODO: Add mask attribute to sky map class or rename self.mask to self.data

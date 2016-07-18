@@ -16,11 +16,18 @@ def test_random_creation():
     assert excluded[0].size != 0
 
 
+@requires_dependency('scipy')
 def test_distance_image():
-    mask = ExclusionMask.empty(nxpix=300, nypix=200)
-    distance = mask.distance_image
-    assert distance.shape == (200, 300)
-    assert_allclose(distance[0, 0],  -1.)
-    assert_allclose(distance[-1, 0], -200.)
-    assert_allclose(distance[0, -1], -299.001672236)
-    assert_allclose(distance[-1, -1], -359.723504931)
+    mask = ExclusionMask.empty(nxpix=3, nypix=2)
+    distance = mask.distance_image.data
+    assert_allclose(distance, -1e10)
+
+    mask = ExclusionMask.empty(nxpix=3, nypix=2, fill=1.)
+    distance = mask.distance_image.data
+    assert_allclose(distance, 1e10)
+
+    data = np.array([[0., 0., 1.], [1., 1., 1.]])
+    mask = ExclusionMask(data=data)
+    distance = mask.distance_image.data
+    expected = [[-1, -1, 1], [1, 1, 1.41421356]]
+    assert_allclose(distance, expected)

@@ -75,10 +75,11 @@ def _compute_xy(pix_center, offset, angle):
     y = pix_center.y + dy
     return x, y
 
+
 # TODO :Copied from gammapy.region.PixCircleList (deleted), find better place
 def _is_inside_exclusion(pixreg, exclusion):
     x, y = pixreg.center
-    excl_dist = exclusion.distance_image
+    skymap = exclusion.distance_image
+    excl_dist = skymap.data
     val = excl_dist[np.round(y).astype(int), np.round(x).astype(int)]
     return val < pixreg.radius.to('pix').value
-
