@@ -549,46 +549,6 @@ def _root_amplitude_brentq(counts, background, model):
             return np.nan, MAX_NITER
 
 
-def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
-    """Fit amplitude using scipy.optimize.
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Slice of count map.
-    background : `~numpy.ndarray`
-        Slice of background map.
-    model : `~numpy.ndarray`
-        Model template to fit.
-    flux : float
-        Starting value for the fit.
-
-    Returns
-    -------
-    amplitude : float
-        Fitted flux amplitude.
-    niter : int
-        Number of function evaluations needed for the fit.
-    """
-    from scipy.optimize import minimize_scalar
-
-    amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
-    
-    if not counts.sum() > 0:
-        return amplitude_min, 0
-
-    args = (counts, background, model)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        try:
-            result = minimize_scalar(f_cash, bracket=(amplitude_min, amplitude_max),
-                             args=args, method=optimizer, options={'xtol': 1E-3})
-            return result.x, result.nfev
-        except (RuntimeError, ValueError):
-            # Where the root finding fails NaN is set as amplitude
-            return np.nan, MAX_NITER
-
-
 def _flux_correlation_radius(kernel, containment=CONTAINMENT):
     """
     Compute equivalent top-hat kernel radius for a given kernel instance and
