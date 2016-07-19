@@ -287,5 +287,5 @@ def test_skymap_pad():
     image = SkyMap.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
-    image2 = image.pad(factor=4, mode='reflect')
+    image2 = image.pad(pad_to_factor=4, mode='reflect')
     assert image2.data.shape == (16, 12)

@@ -158,7 +158,7 @@ class SkyMap(object):
 
         Returns
         -------
-        skymap : `~gammapy.data.SkyMap`
+        skymap : `~gammapy.image.SkyMap`
             Empty sky map.
         """
         header = make_header(nxpix, nypix, binsz, xref, yref,
@@ -325,7 +325,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        skymap : `SkyMap`
+        skymap : `~gammapy.image.SkyMap`
             Smaller sky map to paste.
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
@@ -379,7 +379,7 @@ class SkyMap(object):
 
         Returns
         -------
-        cutout : `SkyMap`
+        cutout : `~gammapy.image.SkyMap`
             Cut out sky map.
         """
         cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
@@ -387,7 +387,7 @@ class SkyMap(object):
         skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return skymap
 
-    def pad(self, factor, mode, **kwargs):
+    def pad(self, mode, pad_to_factor=None, pad_width=None, **kwargs):
         """
         Pad image to the nearest larger shape, that is divisible by the given factor in both axis.
 
@@ -395,7 +395,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        factor : int
+        pad_to_factor : int
             Factor used for output shape computation
         mode : str
             Padding mode, passed to `numpy.pad`.
@@ -412,12 +412,20 @@ class SkyMap(object):
         >>> image = SkyMap.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
         (13, 10)
-        >>> image2 = image.pad(factor=4, mode='reflect')
+        >>> image2 = image.pad(pad_to_factor=4, mode='reflect')
         >>> image2.data.shape
         (16, 12)
         """
-        pad_width = factor - (np.array(self.data.shape) % factor)
-        pad_width = [(0, pad_width[0]), (0, pad_width[1])]
+        if pad_to_factor is not None and pad_width is not None:
+            raise ValueError('Indicate only one parameter: '
+                             'either "pad_width" or "pad_to_factor"')
+        if pad_to_factor is None and pad_width is None:
+            raise ValueError('One parameter must be indicated: '
+                             'either "pad_width" or "pad_to_factor"')
+
+        if pad_to_factor is not None:
+            pad_width = pad_to_factor - (np.array(self.data.shape) % pad_to_factor)
+            pad_width = [(0, pad_width[0]), (0, pad_width[1])]
 
         # converting from unicode to ascii string as a workaround
         # for https://github.com/numpy/numpy/issues/7112
@@ -567,7 +575,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        reference : `~astropy.fits.Header`, or `SkyMap`
+        reference : `~astropy.fits.Header`, or `~gammapy.image.SkyMap`
             Reference map specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
@@ -580,7 +588,7 @@ class SkyMap(object):
 
         Returns
         -------
-        skymap : `SkyMap`
+        skymap : `~gammapy.image.SkyMap`
             Skymap reprojected onto ``reference``.
         """
 
