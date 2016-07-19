@@ -36,9 +36,13 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     for j in range(nj):
         for i in range(ni):
             if model[j, i] > 0:
-                sum += (model[j, i] * (counts[j, i] / (x * FLUX_FACTOR * model[j, i]
-                                                       + background[j, i]) - 1))
-    return sum
+                sum += model[j, i] * (1 - counts[j, i] / (x * model[j, i]
+                                      * FLUX_FACTOR + background[j, i]))
+
+    # 2 * FLUX_FACTOR is required to maintain the correct normalization of the
+    # derivative of the likelihood function. It doesn't change the result of
+    # the fit.
+    return 2 * FLUX_FACTOR * sum
 
 
 @cython.cdivision(True)
@@ -95,13 +99,12 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     """
 
     cdef np.float_t s_model = 0, s_counts = 0, sn, sn_min = 1E14, c_min = 1
-    cdef np.float_t b_min, b_max
+    cdef np.float_t b_min, b_max, sn_min_total = 1E14
     cdef unsigned int i, j, ni, nj
     ni = counts.shape[1]
     nj = counts.shape[0]
     for j in range(ni):
         for i in range(nj):
-            s_model += model[j, i]
             if counts[j, i] > 0:
                 s_counts += counts[j, i]
                 if model[j, i] > 0:
@@ -109,9 +112,14 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
                     if sn < sn_min:
                         sn_min = sn
                         c_min = counts[j, i]
+            if model[j, i] > 0:
+                s_model += model[j, i]
+                sn = background[j, i] / model[j, i]
+                if sn < sn_min_total:
+                    sn_min_total = sn
     b_min = c_min / s_model - sn_min
     b_max = s_counts / s_model - sn_min
-    return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR
+    return b_min / FLUX_FACTOR, b_max / FLUX_FACTOR, -sn_min_total / FLUX_FACTOR
 
 
 @cython.cdivision(True)

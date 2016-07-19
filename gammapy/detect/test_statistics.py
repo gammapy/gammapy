@@ -115,6 +115,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     """
     BINSZ = abs(maps[0].header['CDELT1'])
     shape = maps[0].data.shape
+
     multiscale_result = []
 
     for scale in scales:
@@ -138,6 +139,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
             downsampled = True
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
+
         maps_ = {}
         for map_, func in zip(maps, funcs):
             if downsampled:
@@ -166,16 +168,18 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
             kernel = convolve(source_kernel, kernel)
             kernel.normalize()
 
-        # Compute TS map
         if residual:
             background = (maps_['background'] + maps_['onmodel'])
         else:
             background = maps_['background']
+
+        # Compute TS map
         ts_results = compute_ts_map(maps_['counts'], background, maps_['exposure'],
                                     kernel, *args, **kwargs)
         log.info('TS map computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
-        ts_results.meta['scale'] = scale
-        ts_results.meta['morphology'] = morphology
+        ts_results.meta['MORPH'] = (morphology, 'Source morphology assumption')
+        ts_results.meta['SCALE'] = (scale, 'Source morphology size scale in deg')
+
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
                 ts_results[name] = upsample_2N(ts_results[name].data, factor,
@@ -218,7 +222,7 @@ def compute_maximum_ts_map(ts_map_results):
         niter_max[index] = niter[:, :, i][index]
         amplitude_max[index] = amplitude[:, :, i][index]
 
-    meta = {'morphology': ts_map_results[0].morphology, 'scale': scale_max}
+    meta = {'MORPH': (ts_map_results[0].morphology, 'Source morphology assumption')}
     return SkyMapCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
                             meta=meta)
 
@@ -289,6 +293,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     assert counts.shape == background.shape
     assert counts.shape == exposure.shape
+    log.info("Using method '{}'".format(method))
 
     # Parse data type
     counts = counts.astype(float)
@@ -343,18 +348,18 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     # Set TS values at given positions
     j, i = zip(*positions)
-    TS = np.ones(counts.shape) * np.nan
+    ts = np.ones(counts.shape) * np.nan
     amplitudes = np.ones(counts.shape) * np.nan
     niter = np.ones(counts.shape) * np.nan
-    TS[j, i] = [_[0] for _ in results]
+    ts[j, i] = [_[0] for _ in results]
     amplitudes[j, i] = [_[1] for _ in results]
     niter[j, i] = [_[2] for _ in results]
 
     # Handle negative TS values
     with np.errstate(invalid='ignore', divide='ignore'):
-        sqrt_TS = np.where(TS > 0, np.sqrt(TS), -np.sqrt(-TS))
+        sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
-    return SkyMapCollection(ts=TS, sqrt_ts=sqrt_TS, amplitude=amplitudes,
+    return SkyMapCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes,
                             niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
@@ -418,10 +423,6 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     else:
         raise ValueError('Invalid fitting method.')
 
-    if niter > MAX_NITER:
-        log.warning('Exceeded maximum number of function evaluations!')
-        return np.nan, amplitude * FLUX_FACTOR, niter
-
     with np.errstate(invalid='ignore', divide='ignore'):
         C_1 = f_cash(amplitude, counts_, background_, model)
 
@@ -429,7 +430,7 @@ def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
     return (C_0 - C_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
 
 
-def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.01):
+def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.001):
     """Fit amplitude using an iterative least squares algorithm.
 
     Parameters
@@ -452,17 +453,23 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
     niter : int
         Number of function evaluations needed for the fit.
     """
+    bounds = _amplitude_bounds_cython(counts, background, model)
+    amplitude_min, amplitude_max, amplitude_min_total = bounds
+
+    if not counts.sum() > 0:
+        return amplitude_min_total, 0
+
     weights = np.ones(model.shape)
 
     x_old = 0
     for i in range(maxiter):
         x =_x_best_leastsq(counts, background, model, weights)
         if abs((x - x_old) / x) < rtol:
-            return x / FLUX_FACTOR, i + 1
+            return max(x / FLUX_FACTOR, amplitude_min_total), i + 1
         else:
             weights = x * model + background
             x_old = x
-    return x, MAX_NITER
+    return max(x / FLUX_FACTOR, amplitude_min_total), MAX_NITER
 
 
 def _root_amplitude(counts, background, model, flux):
@@ -524,85 +531,22 @@ def _root_amplitude_brentq(counts, background, model):
     from scipy.optimize import brentq
 
     # Compute amplitude bounds and assert counts > 0
-    amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
+    bounds = _amplitude_bounds_cython(counts, background, model)
+    amplitude_min, amplitude_max, amplitude_min_total = bounds
+    
     if not counts.sum() > 0:
-        return amplitude_min, 0
+        return amplitude_min_total, 0
 
     args = (counts, background, model)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
             result = brentq(_f_cash_root_cython, amplitude_min, amplitude_max, args=args,
-                            maxiter=MAX_NITER, full_output=True, rtol=1E-2)
-            return result[0], result[1].iterations
+                        maxiter=MAX_NITER, full_output=True, rtol=1E-3)
+            return max(result[0], amplitude_min_total), result[1].iterations
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
             return np.nan, MAX_NITER
-
-
-def _fit_amplitude_scipy(counts, background, model, optimizer='Brent'):
-    """Fit amplitude using scipy.optimize.
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Slice of count map.
-    background : `~numpy.ndarray`
-        Slice of background map.
-    model : `~numpy.ndarray`
-        Model template to fit.
-    flux : float
-        Starting value for the fit.
-
-    Returns
-    -------
-    amplitude : float
-        Fitted flux amplitude.
-    niter : int
-        Number of function evaluations needed for the fit.
-    """
-    from scipy.optimize import minimize_scalar
-
-    args = (counts, background, model)
-    amplitude_min, amplitude_max = _amplitude_bounds_cython(counts, background, model)
-    try:
-        result = minimize_scalar(f_cash, bracket=(amplitude_min, amplitude_max),
-                                 args=args, method=optimizer, tol=0.1)
-        return result.x, result.nfev
-    except ValueError:
-        result = minimize_scalar(f_cash, args=args, method=optimizer, tol=0.1)
-        return result.x, result.nfev
-
-
-def _fit_amplitude_minuit(counts, background, model, flux):
-    """Fit amplitude using minuit.
-
-    Parameters
-    ----------
-    counts : `~numpy.ndarray`
-        Slice of count map.
-    background : `~numpy.ndarray`
-        Slice of background map.
-    model : `~numpy.ndarray`
-        Model template to fit.
-    flux : float
-        Starting value for the fit.
-
-    Returns
-    -------
-    amplitude : float
-        Fitted flux amplitude.
-    niter : int
-        Number of function evaluations needed for the fit.
-    """
-    from iminuit import Minuit
-
-    def stat(x):
-        return f_cash(x, counts, background, model)
-
-    minuit = Minuit(f_cash, x=flux, pedantic=False, print_level=0)
-    minuit.migrad()
-    return minuit.values['x'], minuit.ncalls
 
 
 def _flux_correlation_radius(kernel, containment=CONTAINMENT):
