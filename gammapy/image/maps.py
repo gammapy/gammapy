@@ -395,10 +395,12 @@ class SkyMap(object):
 
         Parameters
         ----------
-        pad_to_factor : int
-            Factor used for output shape computation
         mode : str
             Padding mode, passed to `numpy.pad`.
+        pad_to_factor : int
+            Factor used for output shape computation
+        pad_width: {sequence, array_like, int}
+            Number of values padded to the edges of each axis, passed to `numpy.pad`
 
         Returns
         -------
