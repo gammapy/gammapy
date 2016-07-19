@@ -25,7 +25,6 @@ __all__ = [
     'block_reduce_hdu',
     'dict_to_hdulist',
     'disk_correlate',
-    'downsample_2N',
     'exclusion_distance',
     'image_groupby',
     'images_to_cube',
@@ -35,7 +34,6 @@ __all__ = [
     'process_image_pixels',
     'ring_correlate',
     'threshold',
-    'upsample_2N',
     'wcs_histogram2d',
 ]
 
@@ -164,85 +162,6 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     from scipy.ndimage import convolve
     structure = binary_ring(r_in, r_out)
     return convolve(image, structure, mode=mode)
-
-
-def downsample_2N(image, factor, method=np.nansum, shape=None):
-    """
-    Down sample image by a power of two.
-
-    The image is down sampled using `skimage.measure.block_reduce`. Only
-    down sampling factor, that are a power of two are allowed. The image is
-    padded to a given size using the 'reflect' method, before the down sampling
-    is done.
-
-    Parameters
-    ----------
-    image : `~numpy.ndarray`
-        Image to be down sampled.
-    factor : int
-        Down sampling factor, must be power of two.
-    method : np.ufunc (np.nansum), optional
-        Method how to combine the image blocks.
-    shape : tuple (None), optional
-        If shape is specified, the image is padded prior to the down sampling
-        symmetrically in x and y direction to the given shape.
-
-    Returns
-    -------
-    image : `~numpy.ndarray`
-        Down sampled image.
-    """
-    from skimage.measure import block_reduce
-    if not np.log2(factor).is_integer():
-        raise ValueError('Downsampling factor must be power of 2.')
-    factor = int(factor)
-
-    if shape is not None:
-        x_pad = (shape[1] - image.shape[1]) // 2
-        y_pad = (shape[0] - image.shape[0]) // 2
-        #converting from unicode to ascii string as a workaround
-        #for https://github.com/numpy/numpy/issues/7112
-        image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
-    return block_reduce(image, (factor, factor), method)
-
-
-def upsample_2N(image, factor, order=3, shape=None):
-    """
-    Up sample image by a power of two.
-
-    The image is up sampled using `scipy.ndimage.zoom`. Only
-    up sampling factors, that are a power of two are allowed. The image is
-    cropped to a given size.
-
-    Parameters
-    ----------
-    image : `~numpy.ndarray`
-        Image to be up sampled.
-    factor : int
-        up sampling factor, must be power of two.
-    order : np.ufunc (np.nansum), optional
-        Method how to combine the image blocks.
-    shape : tuple (None), optional
-        If shape is specified, the image is cropped after the up sampling
-        symmetrically in x and y direction to the given shape.
-
-    Returns
-    -------
-    image : `~numpy.ndarray`
-        Down sampled image.
-    """
-    from scipy.ndimage import zoom
-    if not np.log2(factor).is_integer():
-        raise ValueError('Up sampling factor must be power of 2.')
-    factor = int(factor)
-
-    if shape is not None:
-        x_crop = (factor * image.shape[1] - shape[1]) // 2
-        y_crop = (factor * image.shape[0] - shape[0]) // 2
-        # Sample up result and crop to original size
-        return zoom(image, factor, order=order)[y_crop:-y_crop, x_crop:-x_crop]
-    else:
-        return zoom(image, factor, order=order)
 
 
 def _shape_2N(shape, N=3):

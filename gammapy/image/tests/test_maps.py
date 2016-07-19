@@ -100,6 +100,24 @@ def test_image(request):
     return TestImage(*request.param)
 
 
+def test_upsample():
+    image = TestImage().input_image
+    upsample_image = image.upsample(factor=2, order=0)
+    assert_allclose(upsample_image.data[0, 0], 0.)
+    assert_allclose(upsample_image.data[5, 0], 12.)
+    assert_allclose(upsample_image.data[5, 11], 17.)
+    assert_allclose(upsample_image.data[0, 11], 5.)
+    assert upsample_image.data.shape == (6, 12)
+
+
+def test_downsample():
+    image = TestImage().input_image
+    downsample_image = image.downsample(factor=2)
+    expexted_data = [[14., 22., 30.],
+                     [25., 29., 33.]]
+    assert_allclose(downsample_image.data, expexted_data)
+
+
 @requires_data('gammapy-extra')
 class TestSkyMapPoisson:
     """

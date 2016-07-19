@@ -298,6 +298,36 @@ class SkyMap(object):
         x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
+    def downsample(self, factor, method=np.nansum):
+        """
+        Downsample sky map by a power of two.
+
+        The sky map is downsampled using `skimage.measure.block_reduce`. Only
+        downsampling factor, that are a power of two are allowed. The sky map is
+        padded to a given size using the 'reflect' method, before the downsampling
+        is done.
+
+        Parameters
+        ----------
+        factor : int
+            Downsampling factor, must be power of two.
+        method : np.ufunc (np.nansum), optional
+            Method how to combine the image blocks.
+
+        Returns
+        -------
+        skymap : `~gammapy.image.SkyMap`
+            Downsampled sky map.
+        """
+        from skimage.measure import block_reduce
+        if not np.log2(factor).is_integer():
+            raise ValueError('Downsampling factor must be power of 2.')
+        factor = int(factor)
+        pad = np.array(self.data.shape) % factor
+        data = np.pad(self.data, ((0, pad[1]), (0, pad[0])), mode='reflect')
+        new_data = block_reduce(data, (factor, factor), method)
+        return SkyMap(data=new_data)
+
     def _get_boundaries(self, skymap_ref, skymap, wcs_check):
         """
         Get boundary coordinates of one sky map in the pixel coordinate system
@@ -495,6 +525,39 @@ class SkyMap(object):
                              self.data.shape)
         else:
             raise ValueError('Invalid sherpa data type.')
+
+    def upsample(self, factor, order=3, shape=None):
+        """
+        Upsample sky map by a power of two.
+
+        Calls `scipy.ndimage.zoom`, which does spline interpolation.
+
+        Parameters
+        ----------
+        factor : int
+            Upsampling factor, must be power of two.
+        order : int, optional
+            The order of the spline interpolation.
+            See 'scipy.ndimage.zoom'
+        shape : tuple (None), optional
+            If shape is specified, the image is cropped after the upsampling
+            symmetrically in x and y direction to the given shape.
+
+        Returns
+        -------
+        skymap : `~gammapy.image.SkyMap`
+            Upsampled sky map.
+        """
+        from scipy.ndimage import zoom
+        if not np.log2(factor).is_integer():
+            raise ValueError('Up sampling factor must be power of 2.')
+        factor = int(factor)
+
+        data = self.data.astype(float)
+        new_data = zoom(data, zoom=factor, order=order)
+        if shape is not None:
+            new_data = new_data[0:shape[0], 0:shape[1]]
+        return SkyMap(data=new_data)
 
     def copy(self):
         """
