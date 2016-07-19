@@ -6,7 +6,6 @@ from .energy_offset_array import *
 from .background_estimate import *
 from .fov import *
 from .cube import *
-from .on_off import *
 from .ring import *
 from .kernel import *
 from .models import *
