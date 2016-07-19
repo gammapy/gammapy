@@ -201,7 +201,7 @@ class OffDataBackgroundMaker(object):
     def save_model(self, modeltype, ngroup, smooth=False):
         """Save model to fits for one group.
 
-          Parameters
+        Parameters
         ----------
         modeltype : {'3D', '2D'}
             Type of the background modelisation
@@ -239,7 +239,6 @@ class OffDataBackgroundMaker(object):
         ----------
         modeltype : {'3D', '2D'}
             Type of the background modelisation
-
         """
         for ngroup in range(self.ntot_group):
             self.smooth_model(modeltype, ngroup)
@@ -253,7 +252,6 @@ class OffDataBackgroundMaker(object):
             Type of the background modelisation
         ngroup : int
             Groups ID
-
         """
         if modeltype == "3D":
             if str(ngroup) in self.models3D.keys():
@@ -282,7 +280,6 @@ class OffDataBackgroundMaker(object):
             name of the file containing the `~astropy.table.Table` with the group infos
         smooth : bool
             True if you want to use the smooth bkg model
-
 
         Returns
         -------

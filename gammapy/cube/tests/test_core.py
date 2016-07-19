@@ -30,8 +30,8 @@ class TestSkyCube(object):
         sky_cube = SkyCube(name, data, wcs, energy)
         assert sky_cube.data.shape == (30, 21, 61)
 
-    def test_read_write(self):
-        filename = 'sky_cube_test.fits'
+    def test_read_write(self, tmpdir):
+        filename = str(tmpdir / 'sky_cube.fits')
         self.sky_cube.writeto(filename)
 
         sky_cube = SkyCube.read(filename)

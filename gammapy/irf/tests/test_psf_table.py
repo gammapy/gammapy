@@ -104,7 +104,7 @@ def test_EnergyDependentTablePSF():
     psf1 = psf.table_psf_at_energy(energy)
     containment = np.linspace(0, 0.95, 3)
     containment_radius = psf1.containment_radius(containment)
-    assert_allclose(containment_radius, Angle([0,0.19426847,1.03806372], "deg"))
+    assert_allclose(containment_radius, Angle([0, 0.19426847, 1.03806372], "deg"))
     # TODO: test average_psf
     # psf2 = psf.psf_in_energy_band(energy_band, spectrum)
 
@@ -156,12 +156,13 @@ def test_PSF3D_read():
 
 
 @requires_data('gammapy-extra')
-def test_PSF3D_write():
+def test_PSF3D_write(tmpdir):
     filename = str(gammapy_extra.dir) + '/test_datasets/psf_table_023523.fits.gz'
-
     psf = PSF3D.read(filename)
-    psf.write("psf.fits")
-    psf2 = PSF3D.read("psf.fits")
+
+    filename = str(tmpdir / 'psf.fits')
+    psf.write(filename)
+    psf2 = PSF3D.read(filename)
     assert_quantity_allclose(psf.energy_lo, psf2.energy_lo)
     assert_quantity_allclose(psf.energy_hi, psf2.energy_hi)
     assert_quantity_allclose(psf.offset, psf2.offset)
