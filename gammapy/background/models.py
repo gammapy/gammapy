@@ -46,17 +46,17 @@ def _add_column_and_sort_table(sources, pointing_position):
 
 
 def _compute_pie_fraction(sources, pointing_position, fov_radius):
-    """Compute the fraction of the pie over a circle
+    """Compute the fraction of the pie over a circle.
 
     Parameters
     ----------
     sources : `~astropy.table.Table`
-            Table of excluded sources.
-            Required columns: RA, DEC, Radius
+        Table of excluded sources.
+        Required columns: RA, DEC, Radius
     pointing_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the pointing position
+        Coordinates of the pointing position
     fov_radius : `~astropy.coordinates.Angle`
-            Field of view radius
+        Field of view radius
 
     Returns
     -------
@@ -73,25 +73,24 @@ def _compute_pie_fraction(sources, pointing_position, fov_radius):
 
 
 def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
-    """The index table of the events outside the pie
+    """The index table of the events outside the pie.
 
     Parameters
     ----------
     sources : `~astropy.table.Table`
-            Table of excluded sources.
-            Required columns: RA, DEC, Radius
+        Table of excluded sources.
+        Required columns: RA, DEC, Radius
     events : `gammapy.data.EventList`
-            List of events for one observation
+        List of events for one observation
     pointing_position : `~astropy.coordinates.SkyCoord`
-            Coordinates of the pointing position
+        Coordinates of the pointing position
     fov_radius : `~astropy.coordinates.Angle`
-            Field of view radius
+        Field of view radius
 
     Returns
     -------
     idx : `~numpy.array`
         coord of the events that are outside the pie
-
     """
     sources = _add_column_and_sort_table(sources, pointing_position)
     radius = Angle(sources["Radius"])[0]
@@ -113,7 +112,7 @@ def _select_events_outside_pie(sources, events, pointing_position, fov_radius):
 
 
 def _poisson_gauss_smooth(counts, bkg):
-    """This method uses an adaptive Poisson method to compute the smoothing Kernel width from the available counts
+    """Adaptive Poisson method to compute the smoothing kernel width from the available counts.
 
     Parameters
     ----------
@@ -126,23 +125,25 @@ def _poisson_gauss_smooth(counts, bkg):
     -------
     bkg_smooth : `~numpy.ndarray`
         Count histogram 1D in offset
-
     """
     from scipy.ndimage import convolve
     Nev = np.sum(counts)
     Np = len(counts)
+
     # Number of pixels per sigma of the kernel gaussian to have more than 150 events/sigma
     Npix_sigma = (150 / Nev) * Np
+
     # For high statistic, we impose a minimum of 4pixel/sigma
     Npix_sigma = np.maximum(Npix_sigma, 4)
+
     # For very low statistic, we impose a maximum lenght of the kernel equal of the number of bin
     # in the counts histogram
     Npix_sigma = np.minimum(Npix_sigma, Np / 6)
+
     # kernel gaussian define between -3 and 3 sigma
     x = np.linspace(-3, 3, 6 * Npix_sigma)
     kernel = np.exp(-0.5 * x ** 2)
-    bkg_smooth = convolve(bkg, kernel / np.sum(kernel),
-                          mode="reflect")
+    bkg_smooth = convolve(bkg, kernel / np.sum(kernel), mode="reflect")
     return bkg_smooth
 
 
@@ -165,10 +166,11 @@ class GaussianBand2D(object):
     """
 
     def __init__(self, table, spline_kwargs=DEFAULT_SPLINE_KWARGS):
+        from scipy.interpolate import UnivariateSpline
+
         self.table = table
         self.parnames = ['amplitude', 'mean', 'stddev']
 
-        from scipy.interpolate import UnivariateSpline
         s = dict()
         for parname in self.parnames:
             x = self.table['x']
@@ -690,16 +692,15 @@ class EnergyOffsetBackgroundModel(object):
 
         Calling this method modifies the ``bg_rate`` data member, replacing it with a smoothed version.
 
-
         This method uses an adaptive Poisson method to compute the smoothing Kernel width
         from the available counts (see code and inline comments for details).
         """
         for idx_energy in range(len(self.counts.energy) - 1):
             counts = self.counts.data[idx_energy, :]
             bkg = self.bg_rate.data[idx_energy, :]
-            Nev = np.sum(counts).value
+            n_events = np.sum(counts).value
             # For zero counts, the background rate is zero and smoothing would not change it.
             # For speed we're skipping the smoothing in that case
-            if (Nev > 0):
+            if n_events > 0:
                 acceptance_convolve = _poisson_gauss_smooth(counts, bkg)
                 self.bg_rate.data[idx_energy, :] = Quantity(acceptance_convolve, self.bg_rate.data.unit)

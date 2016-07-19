@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
 from numpy.testing.utils import assert_allclose
-
 from astropy.utils.data import get_pkg_data_filename
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.tests.helper import pytest
 from astropy.coordinates import Angle
-
 from ...utils.testing import requires_dependency, requires_data
 from ...irf import EnergyDependentMultiGaussPSF
 from ...datasets import gammapy_extra
 
-
 ENERGIES = Quantity([1, 10, 25], 'TeV')
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
@@ -60,7 +57,7 @@ def test_to_table_psf(energy):
     interpol_param = dict(method='nearest', bounds_error=False)
     table_psf_at_energy = table_psf.table_psf_at_energy(energy, interpol_param)
     psf_at_energy = psf.psf_at_energy_and_theta(energy, theta)
-    
+
     containment = np.linspace(0, 0.95, 10)
     desired = [psf_at_energy.containment_radius(_) for _ in containment]
     actual = table_psf_at_energy.containment_radius(containment)

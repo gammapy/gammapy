@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
-from astropy.io import fits
 from ...background import RingBgMaker, ring_r_out
 from ...image import SkyMapCollection
 from ...utils.testing import requires_dependency

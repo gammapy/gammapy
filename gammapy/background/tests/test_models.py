@@ -1,8 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose
-from numpy.testing import assert_equal
+from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import assert_quantity_allclose, pytest
 from astropy.table import Table
 import astropy.units as u
@@ -86,14 +85,10 @@ class TestCubeBackgroundModel:
                   bg_cube_model_2.livetime_cube,
                   bg_cube_model_2.background_cube]
         for cube1, cube2 in zip(cubes1, cubes2):
-            assert_quantity_allclose(cube2.data,
-                                     cube1.data)
-            assert_quantity_allclose(cube2.coordx_edges,
-                                     cube1.coordx_edges)
-            assert_quantity_allclose(cube2.coordy_edges,
-                                     cube1.coordy_edges)
-            assert_quantity_allclose(cube2.energy_edges,
-                                     cube1.energy_edges)
+            assert_quantity_allclose(cube2.data, cube1.data)
+            assert_quantity_allclose(cube2.coordx_edges, cube1.coordx_edges)
+            assert_quantity_allclose(cube2.coordy_edges, cube1.coordy_edges)
+            assert_quantity_allclose(cube2.energy_edges, cube1.energy_edges)
 
     def test_define_binning(self):
 
@@ -178,6 +173,7 @@ def make_source_nextCrab():
 def test_compute_pie_fraction():
     excluded_sources = make_excluded_sources()
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+
     # Test that if the sources are out of the fov, it gives a pie_fraction equal to zero
     pie_fraction = _compute_pie_fraction(excluded_sources, pointing_position, Angle(0.3, "deg"))
     assert_allclose(pie_fraction, 0)
@@ -202,12 +198,11 @@ def test_select_events_outside_pie():
     excluded_sources = make_excluded_sources()
 
     pointing_position = SkyCoord(0.5, 0.5, unit='deg')
+
+    # Create fake EventList with the radec of all the pixel in the empty image
     events = EventList()
-    ra = np.array([0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48])
-    dec = np.array([0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24])
-    # Faked EventList with the radec of all the pixel in the empty image
-    events["RA"] = ra.flat
-    events["DEC"] = dec.flat
+    events["RA"] = [0.25, 0.02, 359.3, 1.04, 1.23, 359.56, 359.48]
+    events["DEC"] = [0.72, 0.96, 1.71, 1.05, 0.19, 2.01, 0.24]
 
     # Test that if the sources are out of the fov, it gives the index for all the events since no event will be removed
     idx = _select_events_outside_pie(excluded_sources, events, pointing_position, Angle(0.3, "deg"))
@@ -220,9 +215,9 @@ def test_select_events_outside_pie():
 
 @requires_data('gammapy-extra')
 class TestEnergyOffsetBackgroundModel:
-    def test_read_write(self):
+    def test_read_write(self, tmpdir):
         multi_array = make_test_array(empty=False)
-        filename = 'multidata.fits'
+        filename = str(tmpdir / 'multidata.fits')
         multi_array.write(filename)
         multi_array2 = EnergyOffsetBackgroundModel.read(filename)
 
@@ -258,6 +253,7 @@ class TestEnergyOffsetBackgroundModel:
         # Test if the total counts array where we apply the pie is equal to the number of events outside the pie
         idx = _select_events_outside_pie(excluded_sources, events, events.pointing_radec, Angle(5, "deg"))
         offmax = multi_array1.counts.offset.max()
+
         # This is important since in the counts array the events > offsetmax will not be in the histogram.
         nevents_sup_offmax = len(np.where(events[idx].offset > offmax)[0])
         assert_allclose(np.sum(multi_array1.counts.data), len(idx) - nevents_sup_offmax)
