@@ -7,10 +7,8 @@ from astropy.io import fits
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
 
-from ..image import (
-    exclusion_distance,
-    lon_lat_circle_mask,
-)
+from ..image import lon_lat_circle_mask
+
 from .maps import SkyMap
 
 
@@ -95,8 +93,53 @@ class ExclusionMask(SkyMap):
 
     @lazyproperty
     def distance_image(self):
-        """Map containting the distance to the nearest exclusion region."""
-        return exclusion_distance(self.mask)
+        """Distance to nearest exclusion region.
+
+        Compute distance map, i.e. the Euclidean (=Cartesian 2D)
+        distance (in pixels) to the nearest exclusion region.
+
+        We need to call distance_transform_edt twice because it only computes
+        dist for pixels outside exclusion regions, so to get the
+        distances for pixels inside we call it on the inverted mask
+        and then combine both distance images into one, using negative
+        distances (note the minus sign) for pixels inside exclusion regions.
+
+        If data consist only of ones, it'll be supposed to be far away
+        from zero pixels, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value Max_Value (MAX_VALUE = 1e10).
+
+        If data consist only of zeros, it'll be supposed to be deep inside
+        an exclusion region, so in capacity of answer it should be return
+        the matrix with the shape as like as data but packed by constant
+        value -Max_Value (MAX_VALUE = 1e10).
+
+        Returns
+        -------
+        distance : `~gammapy.image.SkyMap`
+            Sky map of distance to nearest exclusion region.
+
+        Examples
+        --------
+        >>> from gammapy.image import ExclusionMask
+        >>> data = np.array([[0., 0., 1.], [1., 1., 1.]])
+        >>> mask = ExclusionMask(data=data)
+        >>> print(mask.distance_image.data)
+        [[-1, -1, 1], [1, 1, 1.41421356]]
+        """
+        MAX_VALUE = 1e10
+        if np.all(self.mask == 1):
+            return SkyMap.empty_like(self, fill=MAX_VALUE)
+        if np.all(self.mask == 0):
+            return SkyMap.empty_like(self, fill=-MAX_VALUE)
+
+        from scipy.ndimage import distance_transform_edt
+        distance_outside = distance_transform_edt(self.mask)
+        invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
+        distance_inside = distance_transform_edt(invert_mask)
+        distance = np.where(self.mask, distance_outside, -distance_inside)
+        skymap = SkyMap(data=distance)
+        return skymap
 
     # Set alias for mask
     # TODO: Add mask attribute to sky map class or rename self.mask to self.data

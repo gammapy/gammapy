@@ -26,7 +26,6 @@ __all__ = [
     'dict_to_hdulist',
     'disk_correlate',
     'downsample_2N',
-    'exclusion_distance',
     'image_groupby',
     'images_to_cube',
     'lon_lat_rectangle_mask',
@@ -264,35 +263,6 @@ def _shape_2N(shape, N=3):
     shape = np.array(shape)
     new_shape = shape + (2 ** N - np.mod(shape, 2 ** N))
     return tuple(new_shape)
-
-
-def exclusion_distance(exclusion):
-    """Distance to nearest exclusion region.
-
-    Compute distance map, i.e. the Euclidean (=Cartesian 2D)
-    distance (in pixels) to the nearest exclusion region.
-
-    We need to call distance_transform_edt twice because it only computes
-    dist for pixels outside exclusion regions, so to get the
-    distances for pixels inside we call it on the inverted mask
-    and then combine both distance images into one, using negative
-    distances (note the minus sign) for pixels inside exclusion regions.
-
-    Parameters
-    ----------
-    exclusion : `~numpy.ndarray`
-        Exclusion regions as mask.
-
-    Returns
-    -------
-    distance : `~numpy.ndarray`
-        Map of distance to nearest exclusion region.
-    """
-    from scipy.ndimage import distance_transform_edt
-    distance_outside = distance_transform_edt(exclusion)
-    distance_inside = distance_transform_edt(np.invert(exclusion))
-    distance = np.where(exclusion, distance_outside, -distance_inside)
-    return distance
 
 
 def atrous_image(image, n_levels):
