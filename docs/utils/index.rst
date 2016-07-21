@@ -103,9 +103,6 @@ Reference/API
 .. automodapi:: gammapy.utils.distributions
     :no-inheritance-diagram:
 
-.. automodapi:: gammapy.utils.pyfact
-    :no-inheritance-diagram:
-
 .. automodapi:: gammapy.utils.scripts
     :no-inheritance-diagram:
 

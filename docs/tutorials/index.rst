@@ -27,7 +27,6 @@ The tutorials show some real-world usage examples of the Gammapy Python package 
    npred/index
    catalog/index
    flux_point/index
-   gammapy-pfmap/index
    gammapy-spectrum/index
    background/index
    fermi_psf/index
