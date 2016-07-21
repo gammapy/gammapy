@@ -47,9 +47,9 @@ def image_coordinates(infile,
     out_hdus = fits.HDUList()
 
     if make_coordinate_maps:
-        skymap = SkyImage.empty_like(hdu)
+        image = SkyImage.empty_like(hdu)
         log.info('Computing LON and LAT maps')
-        lon, lat = skymap.coordinates()
+        lon, lat = image.coordinates()
         out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))
         out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 

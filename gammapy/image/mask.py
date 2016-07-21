@@ -8,7 +8,7 @@ from astropy.utils import lazyproperty
 
 from ..image import lon_lat_circle_mask
 
-from .maps import SkyImage
+from .core import SkyImage
 
 
 __all__ = [
@@ -137,11 +137,11 @@ class ExclusionMask(SkyImage):
         invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
         distance_inside = distance_transform_edt(invert_mask)
         distance = np.where(self.mask, distance_outside, -distance_inside)
-        skymap = SkyImage(data=distance)
-        return skymap
+        image = SkyImage(data=distance)
+        return image
 
     # Set alias for mask
-    # TODO: Add mask attribute to sky map class or rename self.mask to self.data
+    # TODO: Add mask attribute to image class or rename self.mask to self.data
     @property
     def mask(self):
         return self.data

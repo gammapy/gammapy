@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from .maps import SkyImage
+from .core import SkyImage
 
 __all__ = [
     'compute_binning',

@@ -200,8 +200,8 @@ def compute_maximum_ts_map(ts_map_results):
 
     Returns
     -------
-    TS : `~gammapy.image.SkyImageCollection`
-        `~gammapy.image.SkyImageCollection` objects.
+    images : `~gammapy.image.SkyImageCollection`
+        Images (ts, niter, amplitude)
     """
 
     # Get data
@@ -265,8 +265,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Returns
     -------
-    TS : `~gammapy.image.SkyImageCollection`
-        `~gammapy.image.SkyImageCollection` object.
+    images : `~gammapy.image.SkyImageCollection`
+        Images (ts, niter, amplitude)
 
 
     Notes

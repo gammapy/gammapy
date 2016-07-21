@@ -216,7 +216,7 @@ class SkyCube(object):
         refcube : `~gammapy.cube.SkyCube`
             Reference sky cube.
         fill : float, optional
-            Fill sky map with constant value. Default is 0.
+            Fill image with constant value. Default is 0.
         """
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
@@ -290,8 +290,8 @@ class SkyCube(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        skymap = self.sky_image(0)
-        coordinates = skymap.coordinates(mode)
+        image = self.sky_image(0)
+        coordinates = image.coordinates(mode)
         return coordinates
 
     def to_sherpa_data3d(self):
@@ -323,8 +323,8 @@ class SkyCube(object):
     @property
     def solid_angle(self):
         """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        skymap = self.sky_image(idx_energy=0)
-        return skymap.solid_angle()
+        image = self.sky_image(idx_energy=0)
+        return image.solid_angle()
 
     def sky_image(self, idx_energy, copy=True):
         """Slice a 2-dim `~gammapy.image.SkyImage` from the cube.
@@ -343,8 +343,8 @@ class SkyCube(object):
         """
         # TODO: should we pass something in SkyImage (we speak about meta)?
         data = Quantity(self.data[idx_energy], self.data.unit)
-        skymap = SkyImage(name=self.name, data=data, wcs=self.wcs)
-        return skymap.copy() if copy else skymap
+        image = SkyImage(name=self.name, data=data, wcs=self.wcs)
+        return image.copy() if copy else image
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -554,8 +554,8 @@ class SkyCube(object):
         """Convert sky cube to a `gammapy.image.SkyImageList`.
         """
         from ..image.lists import SkyImageList
-        skymaps = [self.sky_image(idx) for idx in range(len(self.data))]
-        return SkyImageList(self.name, skymaps, self.wcs, self.energy)
+        images = [self.sky_image(idx) for idx in range(len(self.data))]
+        return SkyImageList(self.name, images, self.wcs, self.energy)
 
     def writeto(self, filename, **kwargs):
         """Writes SkyCube to FITS file.

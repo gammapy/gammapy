@@ -15,8 +15,8 @@ class SkyImageList(object):
     ----------
     name : str
         Name of the sky image list.
-    skymaps : list of `~gammapy.image.SkyImage`
-        Data array as list of skymaps.
+    images : list of `~gammapy.image.SkyImage`
+        Data array as list of images.
     wcs : `~astropy.wcs.WCS`
         Word coordinate system transformation
     energy : `~astropy.units.Quantity`
@@ -26,9 +26,9 @@ class SkyImageList(object):
 
     """
 
-    def __init__(self, name=None, skymaps=None, wcs=None, energy=None, meta=None):
+    def __init__(self, name=None, images=None, wcs=None, energy=None, meta=None):
         self.name = name
-        self.skymaps = skymaps
+        self.images = images
         self.wcs = wcs
         self.energy = energy
         self.meta = meta
@@ -37,10 +37,10 @@ class SkyImageList(object):
         """Convert a list of image HDUs into one `~gammapy.cube.SkyCube`.
         """
         from ..cube import SkyCube
-        if hasattr(self.skymaps[0].data, 'unit'):
-            unit = self.skymaps[0].data.unit
+        if hasattr(self.images[0].data, 'unit'):
+            unit = self.images[0].data.unit
         else:
             unit = None
-        data = Quantity([skymap.data for skymap in self.skymaps],
+        data = Quantity([image.data for image in self.images],
                         unit)
         return SkyCube(name=self.name, data=data, wcs=self.wcs, energy=self.energy, meta=self.meta)

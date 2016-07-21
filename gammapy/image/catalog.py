@@ -7,7 +7,7 @@ from astropy.coordinates import Angle
 from astropy.wcs import WCS
 from astropy.units import Quantity
 from astropy.table import Table
-from .maps import SkyImage
+from .core import SkyImage
 
 __all__ = [
     'catalog_image',

@@ -39,7 +39,7 @@ Type              Format Name          Gammapy                                  
 Events            EVENTS               `~gammapy.data.EventList`                         GEventList_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Counts            3D                   `~gammapy.cube.SkyCube`                           `GCTAEventCube`_
-Counts            Image                `~gammapy.image.SkyImage`                           `GSkyMap`_
+Counts            Image                `~gammapy.image.SkyImage`                         `GSkyMap`_
 Counts            PHA                  `~gammapy.spectrum.CountsSpectrum`                `GPha`_
 ----------------- -------------------- ------------------------------------------------- ----------------------------
 Exposure          EXPOSURE_3D          `~gammapy.cube.SkyCube`                           `GCTACubeExposure`_

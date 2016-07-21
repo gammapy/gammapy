@@ -77,18 +77,18 @@ class TestBlockReduceHDU():
         projection = 'CAR'
 
         # Create test image
-        self.skymap = SkyImage.empty(nxpix=12, nypix=8, proj=projection)
-        self.skymap.data = np.ones(self.skymap.data.shape)
-        self.image = self.skymap.to_image_hdu()
+        self.image = SkyImage.empty(nxpix=12, nypix=8, proj=projection)
+        self.image.data = np.ones(self.image.data.shape)
+        self.image_hdu = self.image.to_image_hdu()
 
         # Create test cube
         self.indices = np.arange(4)
-        self.cube_skymaps = [self.skymap for _ in self.indices]
-        self.cube = SkyImageList(skymaps=self.cube_skymaps, wcs=self.skymap.wcs).to_cube()
+        self.cube_images = [self.image for _ in self.indices]
+        self.cube = SkyImageList(images=self.cube_images, wcs=self.image.wcs).to_cube()
 
     @pytest.mark.parametrize(('operation'), list([np.sum, np.mean]))
     def test_image(self, operation):
-        image_1 = block_reduce_hdu(self.image, (2, 4), func=operation)
+        image_1 = block_reduce_hdu(self.image_hdu, (2, 4), func=operation)
         if operation == np.sum:
             ref1 = [[8, 8, 8, 8, 8, 8], [8, 8, 8, 8, 8, 8]]
         if operation == np.mean:

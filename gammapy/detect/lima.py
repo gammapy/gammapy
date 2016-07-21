@@ -34,7 +34,7 @@ def compute_lima_map(counts, background, kernel, exposure=None):
 
     Returns
     -------
-    SkyImageCollection : `gammapy.data.maps.SkyImageCollection`
+    SkyImageCollection : `~gammapy.image.SkyImageCollection`
         Bunch of result maps.
 
 
@@ -91,7 +91,7 @@ def compute_lima_on_off_map(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     Returns
     -------
-    SkyImageCollection : `gammapy.data.maps.SkyImageCollection`
+    SkyImageCollection : `~gammapy.image.SkyImageCollection`
         Bunch of result maps.
 
     See also

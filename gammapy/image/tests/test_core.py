@@ -13,7 +13,7 @@ from ...extern.regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
-from ..maps import SkyImage
+from ..core import SkyImage
 
 
 class TestImage:
@@ -103,47 +103,47 @@ def test_image(request):
 @requires_data('gammapy-extra')
 class TestSkyMapPoisson:
     """
-    Test sky map class.
+    Test image class.
     """
 
     def setup(self):
         f = load_poisson_stats_image(return_filenames=True)
-        self.skymap = SkyImage.read(f)
+        self.image = SkyImage.read(f)
 
     def test_read_hdu(self):
         f = load_poisson_stats_image(return_filenames=True)
         hdulist = fits.open(f)
-        skymap = SkyImage.from_image_hdu(hdulist[0])
-        assert_equal(skymap.data, self.skymap.data)
+        image = SkyImage.from_image_hdu(hdulist[0])
+        assert_equal(image.data, self.image.data)
 
     def test_io(self, tmpdir):
-        filename = tmpdir / 'test_skymap.fits'
-        self.skymap.meta['COMMENT'] = 'Test comment'
-        self.skymap.meta['HISTORY'] = 'Test history'
-        self.skymap.write(str(filename))
-        skymap = SkyImage.read(str(filename))
-        assert self.skymap.name == skymap.name
-        assert isinstance(skymap.meta['COMMENT'], string_types)
-        assert isinstance(skymap.meta['HISTORY'], string_types)
+        filename = tmpdir / 'test_image.fits'
+        self.image.meta['COMMENT'] = 'Test comment'
+        self.image.meta['HISTORY'] = 'Test history'
+        self.image.write(str(filename))
+        image = SkyImage.read(str(filename))
+        assert self.image.name == image.name
+        assert isinstance(image.meta['COMMENT'], string_types)
+        assert isinstance(image.meta['HISTORY'], string_types)
 
     def test_unit_io(self, tmpdir):
-        filename = tmpdir / 'test_skymap_unit.fits'
-        skymap_ref = SkyImage(data=np.zeros((3, 3)), unit='1 / cm2')
-        skymap_ref.write(str(filename))
-        skymap = SkyImage.read(str(filename))
-        assert skymap.unit == skymap_ref.unit
+        filename = tmpdir / 'test_image_unit.fits'
+        image_ref = SkyImage(data=np.zeros((3, 3)), unit='1 / cm2')
+        image_ref.write(str(filename))
+        image = SkyImage.read(str(filename))
+        assert image.unit == image_ref.unit
 
     def test_lookup_skycoord(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.lookup(position) == 5
+        assert self.image.lookup(position) == 5
 
     def test_coordinates(self):
-        coordinates = self.skymap.coordinates()
+        coordinates = self.image.coordinates()
         assert_allclose(coordinates.data.lon[100, 100].degree, 0.01)
         assert_allclose(coordinates.data.lat[100, 100].degree, 0.01)
 
     def test_solid_angle(self):
-        solid_angle = self.skymap.solid_angle()
+        solid_angle = self.image.solid_angle()
         assert_quantity_allclose(solid_angle[0, 0], Angle(0.02, "deg") ** 2, rtol=1e-3)
 
     def test_solid_angle_with_small_images(self, test_image):
@@ -152,13 +152,13 @@ class TestSkyMapPoisson:
 
     def test_contains(self):
         position = SkyCoord(0, 0, frame='galactic', unit='deg')
-        assert self.skymap.contains(position)
+        assert self.image.contains(position)
 
         position = SkyCoord([42, 0, -42], [11, 0, -11], frame='galactic', unit='deg')
-        assert_equal(self.skymap.contains(position), [False, True, False])
+        assert_equal(self.image.contains(position), [False, True, False])
 
-        coordinates = self.skymap.coordinates()
-        assert np.all(self.skymap.contains(coordinates[2:5, 2:5]))
+        coordinates = self.image.coordinates()
+        assert np.all(self.image.contains(coordinates[2:5, 2:5]))
 
     def test_info(self):
         refstring = ""
@@ -168,16 +168,16 @@ class TestSkyMapPoisson:
         refstring += "Data unit: None\n"
         refstring += "Data mean: 1.022e+00\n"
         refstring += "WCS type: ['GLON-CAR', 'GLAT-CAR']\n"
-        assert str(self.skymap) == refstring
+        assert str(self.image) == refstring
 
     def test_to_quantity(self):
-        q = self.skymap.to_quantity()
-        assert_equal(q.value, self.skymap.data)
+        q = self.image.to_quantity()
+        assert_equal(q.value, self.image.data)
 
     @requires_dependency('sherpa')
     def test_to_sherpa_data2d(self):
         from sherpa.data import Data2D
-        data = self.skymap.to_sherpa_data2d()
+        data = self.image.to_sherpa_data2d()
         assert isinstance(data, Data2D)
 
     def test_empty(self):
@@ -185,15 +185,15 @@ class TestSkyMapPoisson:
         assert empty.data.shape == (200, 200)
 
     def test_center(self):
-        center = self.skymap.center()
+        center = self.image.center()
         assert center.galactic.l == 0
         assert center.galactic.b == 0
 
     def test_fill_float(self):
-        skymap = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
+        image = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
                                 coordsys='CEL')
-        skymap.fill(42)
-        assert_equal(skymap.data, np.full((200, 200), 42))
+        image.fill(42)
+        assert_equal(image.data, np.full((200, 200), 42))
 
     @requires_data('gammapy-extra')
     def test_fill_events(self):
@@ -211,22 +211,22 @@ class TestSkyMapPoisson:
 
     @requires_dependency('reproject')
     def test_reproject(self):
-        skymap_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
-        skymap_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
+        image_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
+        image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
                                   coordsys='CEL')
-        skymap_1.fill(1)
-        skymap_1_repr = skymap_1.reproject(skymap_2)
-        assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
+        image_1.fill(1)
+        image_1_repr = image_1.reproject(image_2)
+        assert_allclose(image_1_repr.data, np.full((100, 100), 1))
 
     def test_lookup_max(self):
-        pos, value = self.skymap.lookup_max()
+        pos, value = self.image.lookup_max()
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
     def test_lookup_max_region(self):
         center = SkyCoord(0, 0, unit='deg', frame='galactic')
         circle = CircleSkyRegion(center, radius=Quantity(1, 'deg'))
-        pos, value = self.skymap.lookup_max(circle)
+        pos, value = self.image.lookup_max(circle)
         assert value == 15
         assert_allclose((359.93, -0.01), (pos.galactic.l.deg, pos.galactic.b.deg))
 
@@ -261,15 +261,15 @@ class TestSkyMapPoisson:
 
     def test_cutout_paste_wcs_error(self):
         # setup coordinate images
-        skymap = SkyImage.empty(nxpix=7, nypix=7, binsz=0.02)
+        image = SkyImage.empty(nxpix=7, nypix=7, binsz=0.02)
         cutout = SkyImage.empty(nxpix=4, nypix=4, binsz=0.02)
         with pytest.raises(WcsError):
-            skymap.paste(cutout)
+            image.paste(cutout)
 
 
 class TestSkyMapCrab:
     """
-    Test sky map class.
+    Test image class.
     """
 
     def crab_coord(self):
@@ -278,17 +278,17 @@ class TestSkyMapCrab:
 
     def setup(self):
         center = self.crab_coord()
-        self.skymap = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+        self.image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
                                      yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     def test_center(self):
         crab_coord = self.crab_coord()
-        center = self.skymap.center()
+        center = self.image.center()
         assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
         assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
 
 
-def test_skymap_pad():
+def test_image_pad():
     image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 

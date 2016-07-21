@@ -22,23 +22,23 @@ Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
     from gammapy.datasets import load_poisson_stats_image
 
     filename = load_poisson_stats_image(return_filenames=True)
-    skymap = SkyImage.read(filename)
+    image = SkyImage.read(filename)
 
-Alternatively an empty sky map can be created from the scratch, by specifying the
+Alternatively an empty image can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
 the parameters):
 
 .. code::
 
-    skymap_empty = SkyImage.empty('empty')
+    image_empty = SkyImage.empty('empty')
 
-Where the optional string ``'empty'`` specifies the name of the sky map.
+Where the optional string ``'empty'`` specifies the name of the image.
 
 Some basic info on the map is shown when calling:
 
 .. code::
 
-    skymap.info()
+    image.info()
 
 To lookup the value of the data at a certain sky position one can do:
 
@@ -46,12 +46,12 @@ To lookup the value of the data at a certain sky position one can do:
 
     from astropy.coordinates import SkyCoord
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
-    skymap.lookup(position)
+    image.lookup(position)
 
 Or directly pass a tuple of ``(ra, dec)`` or ``(lon, lat)``, depending on the
 type of WCS transformation, that is set.
 
-The sky map can be easily displayed with an image viewer, by calling ``skymap.show()``:
+The image can be easily displayed with an image viewer, by calling ``image.show()``:
 
 .. plot::
         :include-source:
@@ -65,13 +65,13 @@ The sky map can be easily displayed with an image viewer, by calling ``skymap.sh
         counts.show()
 
 
-.. _skymap-cutpaste:
+.. _image-cutpaste:
 
 Cutout and paste
 ----------------
 
 The `~gammapy.image.SkyImage` class offers `.paste()` and `.cutout()`
-methods, that can be used to cut out smaller parts of a sky map.
+methods, that can be used to cut out smaller parts of a image.
 Here we cut out a 1 deg x 1 deg patch out of an example image:
 
 .. plot::
@@ -94,7 +94,7 @@ Here we cut out a 1 deg x 1 deg patch out of an example image:
 
 Here's a more complicated example, that uses `.paste()` and `.cutout()`
 to evaluate Gaussian model images on small cut out patches and paste
-them again into a larger sky map. This offer a very efficient way 
+them again into a larger image. This offer a very efficient way
 of computing large model sky images:
 
 .. plot::
@@ -120,17 +120,17 @@ of computing large model sky images:
                Gaussian2D(ampl, 2, 2, sigma, sigma),]
 
 
-    skymap = SkyImage.empty(nxpix=201, nypix=201, binsz=BINSZ)
-    skymap.name = 'Flux'
+    image = SkyImage.empty(nxpix=201, nypix=201, binsz=BINSZ)
+    image.name = 'Flux'
 
     for source in sources:
         # Evaluate on cut out
         pos = SkyCoord(source.x_mean, source.y_mean,
                        unit='deg', frame='galactic')
-        cutout = skymap.cutout(pos, size=(3.2 * u.deg, 3.2 * u.deg))
+        cutout = image.cutout(pos, size=(3.2 * u.deg, 3.2 * u.deg))
         c = cutout.coordinates()
         l, b = c.galactic.l.wrap_at('180d'), c.galactic.b
         cutout.data = source(l.deg, b.deg)
-        skymap.paste(cutout)
+        image.paste(cutout)
 
-    skymap.show()
+    image.show()

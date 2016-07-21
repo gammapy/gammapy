@@ -16,7 +16,7 @@ The example script below produces a point source catalog image from the publishe
 corresponding to source Galactic Latitude and Longitude, and then convolved with
 the Fermi PSF in this energy band.
 
-.. _fermi-1fhl-skymap:
+.. _fermi-1fhl-image:
 
 .. plot:: tutorials/catalog/source_image_demo.py
 	:include-source:
