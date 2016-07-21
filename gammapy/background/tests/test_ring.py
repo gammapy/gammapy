@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from ...background import RingBgMaker, ring_r_out
-from ...image import SkyMapCollection
+from ...image import SkyImageCollection
 from ...utils.testing import requires_dependency
 
 
@@ -22,7 +22,7 @@ class TestRingBgMaker:
 
     def test_correlate_maps(self):
         n_on = np.ones((200, 200))
-        maps = SkyMapCollection()
+        maps = SkyImageCollection()
         maps['n_on'] = n_on
         maps['a_on'] = n_on
         exclusion = np.ones((200, 200))

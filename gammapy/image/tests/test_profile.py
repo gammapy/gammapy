@@ -5,7 +5,7 @@ from numpy.testing import assert_allclose
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...image import (
-    SkyMap,
+    SkyImage,
     compute_binning,
     image_profile,
 )
@@ -25,13 +25,13 @@ def test_compute_binning():
 @requires_data('gammapy-extra')
 def test_image_lat_profile():
     """Tests GLAT profile with image of 1s of known size and shape."""
-    image = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
+    image = SkyImage.empty_like(FermiGalacticCenter.counts(), fill=1.)
     coordinates = image.coordinates()
     l = coordinates.data.lon
     b = coordinates.data.lat
     lons, lats = l.degree, b.degree
 
-    counts = SkyMap.empty_like(FermiGalacticCenter.counts(), fill=1.)
+    counts = SkyImage.empty_like(FermiGalacticCenter.counts(), fill=1.)
 
     mask = np.zeros_like(image.data)
     # Select Full Image
@@ -65,7 +65,7 @@ def test_image_lon_profile():
     """Tests GLON profile with image of 1s of known size and shape."""
     image = FermiGalacticCenter.counts()
 
-    coordinates = SkyMap.from_image_hdu(image).coordinates()
+    coordinates = SkyImage.from_image_hdu(image).coordinates()
     lons = coordinates.galactic.l.wrap_at('180d')
     lats = coordinates.galactic.b
     lons = lons.degree

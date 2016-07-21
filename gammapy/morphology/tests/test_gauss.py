@@ -8,7 +8,7 @@ from astropy.convolution import discretize_model
 from astropy.io import fits
 from astropy.wcs import WCS
 from ...utils.testing import requires_dependency
-from ...image import measure_image_moments, SkyMap
+from ...image import measure_image_moments, SkyImage
 from ...morphology import Gauss2DPDF, MultiGauss2D, gaussian_sum_moments
 
 BINSZ = 0.02
@@ -135,7 +135,7 @@ def test_gaussian_sum_moments():
     F_2_image = discretize_model(f_2, (0, 201), (0, 201))
     F_3_image = discretize_model(f_3, (0, 201), (0, 201))
     
-    image = SkyMap.empty(nxpix=201, nypix=201)
+    image = SkyImage.empty(nxpix=201, nypix=201)
     image.data = F_1_image + F_2_image + F_3_image
     moments_num = measure_image_moments(image)
 

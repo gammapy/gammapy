@@ -10,7 +10,7 @@ from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, compute_lima_map, compute_lima_on_off_map
 from ...datasets import load_poisson_stats_image, gammapy_extra
-from ...image import SkyMapCollection
+from ...image import SkyImageCollection
 
 from ...extern.pathlib import Path
 
@@ -42,7 +42,7 @@ def test_compute_lima_on_off_map():
     """
     filename = gammapy_extra.filename('test_datasets/unbundled/hess/survey/'
                                       'hess_survey_snippet.fits.gz')
-    maps = SkyMapCollection.read(filename)
+    maps = SkyImageCollection.read(filename)
 
     kernel = Tophat2DKernel(5)
 

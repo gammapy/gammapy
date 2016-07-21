@@ -20,7 +20,7 @@ from ...image import (
     block_reduce_hdu,
     wcs_histogram2d,
     lon_lat_rectangle_mask,
-    SkyMap,
+    SkyImage,
     SkyImageList)
 
 
@@ -77,7 +77,7 @@ class TestBlockReduceHDU():
         projection = 'CAR'
 
         # Create test image
-        self.skymap = SkyMap.empty(nxpix=12, nypix=8, proj=projection)
+        self.skymap = SkyImage.empty(nxpix=12, nypix=8, proj=projection)
         self.skymap.data = np.ones(self.skymap.data.shape)
         self.image = self.skymap.to_image_hdu()
 
@@ -111,7 +111,7 @@ class TestBlockReduceHDU():
 
 @requires_dependency('skimage')
 def test_ref_pixel():
-    image = SkyMap.empty(nxpix=101, nypix=101, proj='CAR')
+    image = SkyImage.empty(nxpix=101, nypix=101, proj='CAR')
     footprint = image.wcs.calc_footprint(center=False)
     image_1 = block_reduce_hdu(image.to_image_hdu(), (10, 10), func=np.sum)
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
@@ -150,7 +150,7 @@ def test_wcs_histogram2d():
 
 @requires_data('gammapy-extra')
 def test_lon_lat_rectangle_mask():
-    counts = SkyMap.from_image_hdu(FermiGalacticCenter.counts())
+    counts = SkyImage.from_image_hdu(FermiGalacticCenter.counts())
     coordinates = counts.coordinates()
     lons = coordinates.data.lon.wrap_at('180d')
     lats = coordinates.data.lat

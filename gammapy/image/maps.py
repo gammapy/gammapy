@@ -18,7 +18,7 @@ from ..utils.scripts import make_path
 from ..image.utils import make_header, _bin_events_in_cube
 from ..data import EventList
 
-__all__ = ['SkyMap', 'SkyMapCollection']
+__all__ = ['SkyImage', 'SkyImageCollection']
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 # Actually this class is generic enough to be rather in astropy and not in
 # gammapy and should maybe be moved to there...
 
-class SkyMap(object):
+class SkyImage(object):
     """
     Base class to represent sky maps.
 
@@ -91,9 +91,9 @@ class SkyMap(object):
         Examples
         --------
         >>> from astropy.io import fits
-        >>> from gammapy.image import SkyMap
+        >>> from gammapy.image import SkyImage
         >>> hdu_list = fits.open('data.fits')
-        >>> sky_map = SkyMap.from_image_hdu(hdu_list['myimage'])
+        >>> sky_map = SkyImage.from_image_hdu(hdu_list['myimage'])
         """
         data = image_hdu.data
         header = image_hdu.header
@@ -165,7 +165,7 @@ class SkyMap(object):
 
         Returns
         -------
-        skymap : `~gammapy.image.SkyMap`
+        skymap : `~gammapy.image.SkyImage`
             Empty sky map.
         """
         header = make_header(nxpix, nypix, binsz, xref, yref,
@@ -181,8 +181,8 @@ class SkyMap(object):
 
         Parameters
         ----------
-        skymap : `~gammapy.image.SkyMap` or `~astropy.io.fits.ImageHDU`
-            Instance of `~gammapy.image.SkyMap`.
+        skymap : `~gammapy.image.SkyImage` or `~astropy.io.fits.ImageHDU`
+            Instance of `~gammapy.image.SkyImage`.
         fill : float, optional
             Fill sky map with constant value. Default is 0.
         name : str
@@ -192,7 +192,7 @@ class SkyMap(object):
         meta : `~collections.OrderedDict`
             Dictionary to store meta data.
         """
-        if isinstance(skymap, SkyMap):
+        if isinstance(skymap, SkyImage):
             wcs = skymap.wcs.copy()
         elif isinstance(skymap, (fits.ImageHDU, fits.PrimaryHDU)):
             wcs = WCS(skymap.header)
@@ -327,12 +327,12 @@ class SkyMap(object):
         Paste smaller skymap into sky map. 
 
         WCS specifications of both skymaps must be aligned. If not call
-        `SkyMap.reproject()` on one of the maps first. See :ref:`skymap-cutpaste`
+        `SkyImage.reproject()` on one of the maps first. See :ref:`skymap-cutpaste`
         more for information how to cut and paste sky images.
 
         Parameters
         ----------
-        skymap : `~gammapy.image.SkyMap`
+        skymap : `~gammapy.image.SkyImage`
             Smaller sky map to paste.
         method : {'sum', 'replace'}, optional
             Sum or replace total values with cutout values.
@@ -386,12 +386,12 @@ class SkyMap(object):
 
         Returns
         -------
-        cutout : `~gammapy.image.SkyMap`
+        cutout : `~gammapy.image.SkyImage`
             Cut out sky map.
         """
         cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
                           copy=True)
-        skymap = SkyMap(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
+        skymap = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return skymap
 
     def pad(self, mode, pad_to_factor=None, pad_width=None, **kwargs):
@@ -411,14 +411,14 @@ class SkyMap(object):
 
         Returns
         -------
-        image : `~gammapy.image.SkyMap`
+        image : `~gammapy.image.SkyImage`
             Padded image
 
         Examples
         --------
 
-        >>> from gammapy.image import SkyMap
-        >>> image = SkyMap.empty(nxpix=10, nypix=13)
+        >>> from gammapy.image import SkyImage
+        >>> image = SkyImage.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
         (13, 10)
         >>> image2 = image.pad(pad_to_factor=4, mode='reflect')
@@ -445,7 +445,7 @@ class SkyMap(object):
         # We don't have to adjust WCS here, because we only pad on the
         # right and top, and for this change, the CRPIX doesn't change.
 
-        return SkyMap(data=data, wcs=self.wcs)
+        return SkyImage(data=data, wcs=self.wcs)
 
     def lookup_max(self, region=None):
         """
@@ -584,7 +584,7 @@ class SkyMap(object):
 
         Parameters
         ----------
-        reference : `~astropy.fits.Header`, or `~gammapy.image.SkyMap`
+        reference : `~astropy.fits.Header`, or `~gammapy.image.SkyImage`
             Reference map specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
@@ -597,13 +597,13 @@ class SkyMap(object):
 
         Returns
         -------
-        skymap : `~gammapy.image.SkyMap`
+        skymap : `~gammapy.image.SkyImage`
             Skymap reprojected onto ``reference``.
         """
 
         from reproject import reproject_interp, reproject_exact
 
-        if isinstance(reference, SkyMap):
+        if isinstance(reference, SkyImage):
             wcs_reference = reference.wcs
             shape_out = reference.data.shape
         elif isinstance(reference, fits.Header):
@@ -611,7 +611,7 @@ class SkyMap(object):
             shape_out = (reference['NAXIS2'], reference['NAXIS1'])
         else:
             raise TypeError("Invalid reference map must be either instance"
-                            "of `Header`, `WCS` or `SkyMap`.")
+                            "of `Header`, `WCS` or `SkyImage`.")
 
         if mode == 'interp':
             out = reproject_interp((self.data, self.wcs), wcs_reference,
@@ -622,8 +622,8 @@ class SkyMap(object):
         else:
             raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
 
-        return SkyMap(name=self.name, data=out[0], wcs=wcs_reference,
-                      unit=self.unit, meta=self.meta)
+        return SkyImage(name=self.name, data=out[0], wcs=wcs_reference,
+                        unit=self.unit, meta=self.meta)
 
     def show(self, viewer='mpl', ds9options=None, **kwargs):
         """
@@ -738,7 +738,7 @@ class SkyMap(object):
         return mask
 
 
-class SkyMapCollection(Bunch):
+class SkyImageCollection(Bunch):
     """
     Container for a collection of sky maps.
 
@@ -750,8 +750,8 @@ class SkyMapCollection(Bunch):
 
     .. code-block:: python
 
-        from gammapy.image import SkyMapCollection
-        skymaps = SkyMapCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+        from gammapy.image import SkyImageCollection
+        skymaps = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
     Then try tab completion on the ``skymaps`` object.
     """
@@ -777,10 +777,10 @@ class SkyMapCollection(Bunch):
         to the collection, by storing it in the _map_names list.
         """
         if isinstance(item, np.ndarray):
-            item = SkyMap(name=key, data=item, wcs=self.wcs)
-        if isinstance(item, SkyMap):
+            item = SkyImage(name=key, data=item, wcs=self.wcs)
+        if isinstance(item, SkyImage):
             self._map_names.append(key)
-        super(SkyMapCollection, self).__setitem__(key, item)
+        super(SkyImageCollection, self).__setitem__(key, item)
 
     @classmethod
     def read(cls, filename):
@@ -797,7 +797,7 @@ class SkyMapCollection(Bunch):
         _map_names = []  # list of map names to save order in fits file
 
         for hdu in hdulist:
-            skymap = SkyMap.from_image_hdu(hdu)
+            skymap = SkyImage.from_image_hdu(hdu)
 
             # This forces lower case map names, but only on the collection object
             # When writing to fits again the skymap.name attribute is used.
@@ -821,7 +821,7 @@ class SkyMapCollection(Bunch):
         """
         hdulist = fits.HDUList()
         for name in self.get('_map_names', sorted(self)):
-            if isinstance(self[name], SkyMap):
+            if isinstance(self[name], SkyImage):
                 hdu = self[name].to_image_hdu()
 
                 # For now add common collection meta info to the single map headers

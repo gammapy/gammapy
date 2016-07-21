@@ -9,7 +9,7 @@ from astropy.tests.helper import pytest
 from astropy.io import fits
 
 from ...utils.testing import requires_dependency, requires_data
-from ...image import SkyMapCollection
+from ...image import SkyImageCollection
 from ...datasets import load_poisson_stats_image
 from ..image_ts import image_ts_main
 from ...datasets.core import gammapy_extra
@@ -63,8 +63,8 @@ class TestImageTS:
                        scale])
 
         expected_filename_ = expected_filename.replace('.fits', '_{0}.fits'.format(scale))
-        actual = SkyMapCollection.read(output_filename)
-        expected = SkyMapCollection.read(expected_filename_)
+        actual = SkyImageCollection.read(output_filename)
+        expected = SkyImageCollection.read(expected_filename_)
 
         assert_allclose(actual['ts'].data, expected['ts'].data, rtol=1e-2, atol=1e-15,
                         equal_nan=True)

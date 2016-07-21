@@ -4,7 +4,7 @@ Sky Maps
 Introduction and Concept
 ------------------------
 
-The `~gammapy.image.SkyMap` class represents the main data container class for
+The `~gammapy.image.SkyImage` class represents the main data container class for
 map based gamma-ray data. It combines the raw 2D data arrays with sky coordinates
 represented by WCS objects and Fits I/O functionality. Additionally it provides
 convenience functions for and creating, exploring and accessing the data.
@@ -14,23 +14,23 @@ Data processing methods (except for very basic ones) are not coupled to this cla
 Getting started
 ---------------
 
-Most easily a `~gammapy.image.SkyMap` can be created from a fits file:
+Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
 
 .. code::
 
-    from gammapy.image import SkyMap
+    from gammapy.image import SkyImage
     from gammapy.datasets import load_poisson_stats_image
 
     filename = load_poisson_stats_image(return_filenames=True)
-    skymap = SkyMap.read(filename)
+    skymap = SkyImage.read(filename)
 
 Alternatively an empty sky map can be created from the scratch, by specifying the
-WCS information (see `~gammapy.image.SkyMap.empty` for a detailed description of
+WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
 the parameters):
 
 .. code::
 
-    skymap_empty = SkyMap.empty('empty')
+    skymap_empty = SkyImage.empty('empty')
 
 Where the optional string ``'empty'`` specifies the name of the sky map.
 
@@ -56,11 +56,11 @@ The sky map can be easily displayed with an image viewer, by calling ``skymap.sh
 .. plot::
         :include-source:
 
-        from gammapy.image import SkyMap
+        from gammapy.image import SkyImage
         from gammapy.datasets import load_poisson_stats_image
 
         filename = load_poisson_stats_image(return_filenames=True)
-        counts = SkyMap.read(filename)
+        counts = SkyImage.read(filename)
         counts.name = 'Counts'
         counts.show()
 
@@ -70,7 +70,7 @@ The sky map can be easily displayed with an image viewer, by calling ``skymap.sh
 Cutout and paste
 ----------------
 
-The `~gammapy.image.SkyMap` class offers `.paste()` and `.cutout()`
+The `~gammapy.image.SkyImage` class offers `.paste()` and `.cutout()`
 methods, that can be used to cut out smaller parts of a sky map.
 Here we cut out a 1 deg x 1 deg patch out of an example image:
 
@@ -79,18 +79,18 @@ Here we cut out a 1 deg x 1 deg patch out of an example image:
 
     from astropy.units import Quantity
     from astropy.coordinates import SkyCoord
-    from gammapy.image import SkyMap
+    from gammapy.image import SkyImage
     from gammapy.datasets import load_poisson_stats_image
 
     filename = load_poisson_stats_image(return_filenames=True)
-    counts = SkyMap.read(filename)
+    counts = SkyImage.read(filename)
     
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
     size = Quantity([1, 1], 'deg')
     cutout = counts.cutout(position, size)
     cutout.show()
 
-`cutout` is again a `~gammapy.image.SkyMap` object.
+`cutout` is again a `~gammapy.image.SkyImage` object.
 
 Here's a more complicated example, that uses `.paste()` and `.cutout()`
 to evaluate Gaussian model images on small cut out patches and paste
@@ -101,7 +101,7 @@ of computing large model sky images:
     :include-source:
 
     import numpy as np
-    from gammapy.image import SkyMap
+    from gammapy.image import SkyImage
     from astropy.coordinates import SkyCoord
     from astropy.modeling.models import Gaussian2D
     from astropy import units as u
@@ -120,7 +120,7 @@ of computing large model sky images:
                Gaussian2D(ampl, 2, 2, sigma, sigma),]
 
 
-    skymap = SkyMap.empty(nxpix=201, nypix=201, binsz=BINSZ)
+    skymap = SkyImage.empty(nxpix=201, nypix=201, binsz=BINSZ)
     skymap.name = 'Flux'
 
     for source in sources:

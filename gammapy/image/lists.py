@@ -7,7 +7,7 @@ __all__ = ['SkyImageList']
 
 class SkyImageList(object):
     """
-    Class to represent connection between `~gammapy.image.SkyMap` and `~gammapy.cube.SkyCube`.
+    Class to represent connection between `~gammapy.image.SkyImage` and `~gammapy.cube.SkyCube`.
 
     Keeps list of images and has methods to convert between them and SkyCube.
 
@@ -15,7 +15,7 @@ class SkyImageList(object):
     ----------
     name : str
         Name of the sky image list.
-    skymaps : list of `~gammapy.image.SkyMap`
+    skymaps : list of `~gammapy.image.SkyImage`
         Data array as list of skymaps.
     wcs : `~astropy.wcs.WCS`
         Word coordinate system transformation

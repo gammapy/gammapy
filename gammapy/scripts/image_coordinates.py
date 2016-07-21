@@ -39,7 +39,7 @@ def image_coordinates(infile,
     """
     from astropy.io import fits
     from gammapy.utils.fits import get_hdu
-    from gammapy.image import SkyMap, ExclusionMask
+    from gammapy.image import SkyImage, ExclusionMask
 
     log.info('Reading {0}'.format(infile))
     hdu = get_hdu(infile)
@@ -47,7 +47,7 @@ def image_coordinates(infile,
     out_hdus = fits.HDUList()
 
     if make_coordinate_maps:
-        skymap = SkyMap.empty_like(hdu)
+        skymap = SkyImage.empty_like(hdu)
         log.info('Computing LON and LAT maps')
         lon, lat = skymap.coordinates()
         out_hdus.append(fits.ImageHDU(lon, hdu.header, 'LON'))

@@ -77,7 +77,7 @@ def reflected_regions_background_estimate(on_region, pointing, exclusion, events
         On region
     pointing : `~astropy.coordinates.SkyCoord`
         Pointing position
-    exclusion : `~gammapy.image.SkyMap`
+    exclusion : `~gammapy.image.SkyImage`
         Exclusion mask
     events : `gammapy.data.EventList`
         Events

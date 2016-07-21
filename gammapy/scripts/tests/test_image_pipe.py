@@ -4,7 +4,7 @@ from astropy.coordinates import SkyCoord, Angle
 from numpy.testing import assert_allclose
 from gammapy.utils.energy import Energy
 from gammapy.data import DataStore
-from gammapy.image import SkyMap, ExclusionMask
+from gammapy.image import SkyImage, ExclusionMask
 from gammapy.background import OffDataBackgroundMaker
 from gammapy.scripts import MosaicImage
 from ...utils.testing import requires_data, requires_dependency
@@ -53,8 +53,8 @@ def test_image_pipe(tmpdir):
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
-    image = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
-                         yref=center.b.deg, proj='TAN', coordsys='GAL')
+    image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+                           yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     refheader = image.to_image_hdu().header
     exclusion_mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')

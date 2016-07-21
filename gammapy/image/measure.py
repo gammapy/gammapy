@@ -100,7 +100,7 @@ def measure_image_moments(image):
 
     Parameters
     ----------
-    image : `gammapy.image.SkyMap`
+    image : `gammapy.image.SkyImage`
         Image to measure on.
 
     Returns
@@ -131,7 +131,7 @@ def measure_containment(image, position, radius):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyMap`
+    image :`gammapy.image.SkyImage`
         Image to measure on.
     position : `~astropy.coordinates.SkyCoord`
         Source position on the sky.
@@ -152,7 +152,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyMap`
+    image :`gammapy.image.SkyImage`
         Image to measure on.
     position : `~astropy.coordinates.SkyCoord`
         Source position on the sky.
@@ -183,7 +183,7 @@ def measure_containment_fraction(image, radius, separation):
 
     Parameters
     ----------
-    image :`gammapy.image.SkyMap`
+    image :`gammapy.image.SkyImage`
         Image to measure on.
     radius : `~astropy.units.Quantity`
         Containment radius.

@@ -13,7 +13,7 @@ from ...extern.regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
-from ..maps import SkyMap
+from ..maps import SkyImage
 
 
 class TestImage:
@@ -44,7 +44,7 @@ class TestImage:
     @staticmethod
     def _make_input_image(proj, coordsys):
         """Input test image"""
-        image = SkyMap.empty(
+        image = SkyImage.empty(
             nxpix=6, nypix=3, binsz=60,
             proj=proj, coordsys=coordsys,
         )
@@ -108,12 +108,12 @@ class TestSkyMapPoisson:
 
     def setup(self):
         f = load_poisson_stats_image(return_filenames=True)
-        self.skymap = SkyMap.read(f)
+        self.skymap = SkyImage.read(f)
 
     def test_read_hdu(self):
         f = load_poisson_stats_image(return_filenames=True)
         hdulist = fits.open(f)
-        skymap = SkyMap.from_image_hdu(hdulist[0])
+        skymap = SkyImage.from_image_hdu(hdulist[0])
         assert_equal(skymap.data, self.skymap.data)
 
     def test_io(self, tmpdir):
@@ -121,16 +121,16 @@ class TestSkyMapPoisson:
         self.skymap.meta['COMMENT'] = 'Test comment'
         self.skymap.meta['HISTORY'] = 'Test history'
         self.skymap.write(str(filename))
-        skymap = SkyMap.read(str(filename))
+        skymap = SkyImage.read(str(filename))
         assert self.skymap.name == skymap.name
         assert isinstance(skymap.meta['COMMENT'], string_types)
         assert isinstance(skymap.meta['HISTORY'], string_types)
 
     def test_unit_io(self, tmpdir):
         filename = tmpdir / 'test_skymap_unit.fits'
-        skymap_ref = SkyMap(data=np.zeros((3, 3)), unit='1 / cm2')
+        skymap_ref = SkyImage(data=np.zeros((3, 3)), unit='1 / cm2')
         skymap_ref.write(str(filename))
-        skymap = SkyMap.read(str(filename))
+        skymap = SkyImage.read(str(filename))
         assert skymap.unit == skymap_ref.unit
 
     def test_lookup_skycoord(self):
@@ -181,7 +181,7 @@ class TestSkyMapPoisson:
         assert isinstance(data, Data2D)
 
     def test_empty(self):
-        empty = SkyMap.empty()
+        empty = SkyImage.empty()
         assert empty.data.shape == (200, 200)
 
     def test_center(self):
@@ -190,8 +190,8 @@ class TestSkyMapPoisson:
         assert center.galactic.b == 0
 
     def test_fill_float(self):
-        skymap = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
-                              coordsys='CEL')
+        skymap = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
+                                coordsys='CEL')
         skymap.fill(42)
         assert_equal(skymap.data, np.full((200, 200), 42))
 
@@ -202,18 +202,18 @@ class TestSkyMapPoisson:
 
         events = data_store.obs(obs_id=23523).events
 
-        counts = SkyMap.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
-                              yref=events.meta['DEC_OBJ'], dtype='int',
-                              coordsys='CEL')
+        counts = SkyImage.empty(nxpix=200, nypix=200, xref=events.meta['RA_OBJ'],
+                                yref=events.meta['DEC_OBJ'], dtype='int',
+                                coordsys='CEL')
         counts.fill(events)
         assert counts.data.sum() == 1233
         assert counts.data.shape == (200, 200)
 
     @requires_dependency('reproject')
     def test_reproject(self):
-        skymap_1 = SkyMap.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
-        skymap_2 = SkyMap.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
-                                coordsys='CEL')
+        skymap_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
+        skymap_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
+                                  coordsys='CEL')
         skymap_1.fill(1)
         skymap_1_repr = skymap_1.reproject(skymap_2)
         assert_allclose(skymap_1_repr.data, np.full((100, 100), 1))
@@ -236,8 +236,8 @@ class TestSkyMapPoisson:
         BINSZ = 0.02
 
         # setup coordinate images
-        lon = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
-        lat = SkyMap.empty(nxpix=41, nypix=41, binsz=BINSZ)
+        lon = SkyImage.empty(nxpix=41, nypix=41, binsz=BINSZ)
+        lat = SkyImage.empty(nxpix=41, nypix=41, binsz=BINSZ)
 
         c = lon.coordinates()
         lon.data = c.galactic.l.deg
@@ -261,8 +261,8 @@ class TestSkyMapPoisson:
 
     def test_cutout_paste_wcs_error(self):
         # setup coordinate images
-        skymap = SkyMap.empty(nxpix=7, nypix=7, binsz=0.02)
-        cutout = SkyMap.empty(nxpix=4, nypix=4, binsz=0.02)
+        skymap = SkyImage.empty(nxpix=7, nypix=7, binsz=0.02)
+        cutout = SkyImage.empty(nxpix=4, nypix=4, binsz=0.02)
         with pytest.raises(WcsError):
             skymap.paste(cutout)
 
@@ -278,8 +278,8 @@ class TestSkyMapCrab:
 
     def setup(self):
         center = self.crab_coord()
-        self.skymap = SkyMap.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
-                                   yref=center.b.deg, proj='TAN', coordsys='GAL')
+        self.skymap = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
+                                     yref=center.b.deg, proj='TAN', coordsys='GAL')
 
     def test_center(self):
         crab_coord = self.crab_coord()
@@ -289,7 +289,7 @@ class TestSkyMapCrab:
 
 
 def test_skymap_pad():
-    image = SkyMap.empty(nxpix=10, nypix=13)
+    image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
     image2 = image.pad(pad_to_factor=4, mode='reflect')
