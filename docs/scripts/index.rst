@@ -46,7 +46,6 @@ Spectrum
 --------
 
 - ``gammapy-spectrum`` calls `gammapy.spectrum.spectrum_analysis`
-- ``gammapy-spectrum-pfsim`` calls `gammapy.script.spectrum_pfsim` (old script, will be refactored, then removed)
 - ``gammapy-spectrum-pipe`` runs `gammapy.scripts.SpectrumPipe`
 - ``gammapy-spectrum-regions`` calls `gammapy.scripts.spectrum_regions`
 
@@ -61,7 +60,6 @@ Image
 - ``gammapy-image-lookup`` calls `gammapy.scripts.image_lookup`
 - ``gammapy-image-model`` calls `gammapy.scripts.image_model`
 - ``gammapy-image-model-sherpa`` calls `gammapy.scripts.image_model_sherpa`
-- ``gammapy-image_pfmap`` calls `gammapy.scripts.image_pfmap` (old script, will be refactored, then removed)
 - ``gammapy-image-pipe`` uses `gammapy.scripts.ImageAnalysis`
 - ``gammapy-image-residual`` calls `gammapy.scripts.image_residual`
 - ``gammapy-image-significance`` calls `gammapy.scripts.image_significance`
