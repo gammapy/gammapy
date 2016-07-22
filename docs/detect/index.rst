@@ -55,14 +55,14 @@ In the following the computation of a TS map for prepared Fermi survey data, whi
 	result = compute_ts_map(hdu_list['counts'].data, hdu_list['background'].data,
 							hdu_list['exposure'].data, kernel)
 
-The function returns a `~gammapy.image.SkyMapCollection` object, that bundles all relevant
+The function returns a `~gammapy.image.SkyImageCollection` object, that bundles all relevant
 data. E.g. the time needed for the TS map computation can be checked by:
 
 .. code-block:: python
 
 	print(result.meta['runtime'])
 
-The TS map itself can be accessed using the ``ts`` attribute of the `~gammapy.image.SkyMapCollection` object:
+The TS map itself can be accessed using the ``ts`` attribute of the `~gammapy.image.SkyImageCollection` object:
 
 .. code-block:: python
 

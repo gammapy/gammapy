@@ -19,7 +19,7 @@ from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     SkyMapCollection)
+                     SkyImageCollection)
 from ..image.utils import _shape_2N
 
 __all__ = [
@@ -111,7 +111,7 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     Returns
     -------
     multiscale_result : list
-        List of `~gammapy.image.SkyMapCollection` objects.
+        List of `~gammapy.image.SkyImageCollection` objects.
     """
     BINSZ = abs(maps[0].header['CDELT1'])
     shape = maps[0].data.shape
@@ -196,12 +196,12 @@ def compute_maximum_ts_map(ts_map_results):
     Parameters
     ----------
     ts_map_results : list
-        List of `~gammapy.image.SkyMapCollection` objects.
+        List of `~gammapy.image.SkyImageCollection` objects.
 
     Returns
     -------
-    TS : `~gammapy.image.SkyMapCollection`
-        `~gammapy.image.SkyMapCollection` objects.
+    images : `~gammapy.image.SkyImageCollection`
+        Images (ts, niter, amplitude)
     """
 
     # Get data
@@ -223,8 +223,8 @@ def compute_maximum_ts_map(ts_map_results):
         amplitude_max[index] = amplitude[:, :, i][index]
 
     meta = {'MORPH': (ts_map_results[0].morphology, 'Source morphology assumption')}
-    return SkyMapCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
-                            meta=meta)
+    return SkyImageCollection(ts=ts_max, niter=niter_max, amplitude=amplitude_max,
+                              meta=meta)
 
 
 def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
@@ -265,8 +265,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Returns
     -------
-    TS : `~gammapy.image.SkyMapCollection`
-        `~gammapy.image.SkyMapCollection` object.
+    images : `~gammapy.image.SkyImageCollection`
+        Images (ts, niter, amplitude)
 
 
     Notes
@@ -359,8 +359,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
-    return SkyMapCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes,
-                            niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
+    return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes,
+                              niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
               method, threshold):

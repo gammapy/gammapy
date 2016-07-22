@@ -3,13 +3,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import numpy as np
 from astropy.wcs import WCS
-from astropy.io import fits
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
 
 from ..image import lon_lat_circle_mask
 
-from .maps import SkyMap
+from .core import SkyImage
 
 
 __all__ = [
@@ -18,7 +17,7 @@ __all__ = [
 ]
 
 
-class ExclusionMask(SkyMap):
+class ExclusionMask(SkyImage):
     """Exclusion mask
 
     """
@@ -116,7 +115,7 @@ class ExclusionMask(SkyMap):
 
         Returns
         -------
-        distance : `~gammapy.image.SkyMap`
+        distance : `~gammapy.image.SkyImage`
             Sky map of distance to nearest exclusion region.
 
         Examples
@@ -129,20 +128,20 @@ class ExclusionMask(SkyMap):
         """
         MAX_VALUE = 1e10
         if np.all(self.mask == 1):
-            return SkyMap.empty_like(self, fill=MAX_VALUE)
+            return SkyImage.empty_like(self, fill=MAX_VALUE)
         if np.all(self.mask == 0):
-            return SkyMap.empty_like(self, fill=-MAX_VALUE)
+            return SkyImage.empty_like(self, fill=-MAX_VALUE)
 
         from scipy.ndimage import distance_transform_edt
         distance_outside = distance_transform_edt(self.mask)
         invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
         distance_inside = distance_transform_edt(invert_mask)
         distance = np.where(self.mask, distance_outside, -distance_inside)
-        skymap = SkyMap(data=distance)
-        return skymap
+        image = SkyImage(data=distance)
+        return image
 
     # Set alias for mask
-    # TODO: Add mask attribute to sky map class or rename self.mask to self.data
+    # TODO: Add mask attribute to image class or rename self.mask to self.data
     @property
     def mask(self):
         return self.data

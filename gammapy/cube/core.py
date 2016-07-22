@@ -17,7 +17,7 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
-from ..image import SkyMap
+from ..image import SkyImage
 from ..image.utils import _bin_events_in_cube
 from ..spectrum import LogEnergyAxis
 from ..spectrum.powerlaw import power_law_I_from_points
@@ -197,10 +197,10 @@ class SkyCube(object):
         eunit : str
             Energy unit.
         kwargs : dict
-            Keyword arguments passed to `~gammapy.image.SkyMap.empty` to create
+            Keyword arguments passed to `~gammapy.image.SkyImage.empty` to create
             the spatial part of the cube.
         """
-        refmap = SkyMap.empty(**kwargs)
+        refmap = SkyImage.empty(**kwargs)
         energy = EnergyBounds.equal_log_spacing(emin, emax, enbins, eunit)
         data = refmap.data * np.ones(len(energy)).reshape((-1, 1, 1))
         return cls(data=data, wcs=refmap.wcs, energy=energy)
@@ -216,7 +216,7 @@ class SkyCube(object):
         refcube : `~gammapy.cube.SkyCube`
             Reference sky cube.
         fill : float, optional
-            Fill sky map with constant value. Default is 0.
+            Fill image with constant value. Default is 0.
         """
         wcs = refcube.wcs.copy()
         data = fill * np.ones_like(refcube.data)
@@ -278,7 +278,7 @@ class SkyCube(object):
     def coordinates(self, mode='center'):
         """Spatial coordinate images.
 
-        Wrapper of `gammapy.image.SkyMap.coordinates`
+        Wrapper of `gammapy.image.SkyImage.coordinates`
 
         Parameters
         ----------
@@ -290,8 +290,8 @@ class SkyCube(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        skymap = self.sky_image(0)
-        coordinates = skymap.coordinates(mode)
+        image = self.sky_image(0)
+        coordinates = image.coordinates(mode)
         return coordinates
 
     def to_sherpa_data3d(self):
@@ -323,11 +323,11 @@ class SkyCube(object):
     @property
     def solid_angle(self):
         """Solid angle image in steradian (`~astropy.units.Quantity`)"""
-        skymap = self.sky_image(idx_energy=0)
-        return skymap.solid_angle()
+        image = self.sky_image(idx_energy=0)
+        return image.solid_angle()
 
     def sky_image(self, idx_energy, copy=True):
-        """Slice a 2-dim `~gammapy.image.SkyMap` from the cube.
+        """Slice a 2-dim `~gammapy.image.SkyImage` from the cube.
 
         Parameters
         ----------
@@ -338,13 +338,13 @@ class SkyCube(object):
 
         Returns
         -------
-        image : `~gammapy.image.SkyMap`
+        image : `~gammapy.image.SkyImage`
             2-dim sky image
         """
-        # TODO: should we pass something in SkyMap (we speak about meta)?
+        # TODO: should we pass something in SkyImage (we speak about meta)?
         data = Quantity(self.data[idx_energy], self.data.unit)
-        skymap = SkyMap(name=self.name, data=data, wcs=self.wcs)
-        return skymap.copy() if copy else skymap
+        image = SkyImage(name=self.name, data=data, wcs=self.wcs)
+        return image.copy() if copy else image
 
     def flux(self, lon, lat, energy):
         """Differential flux.
@@ -421,7 +421,7 @@ class SkyCube(object):
 
         Returns
         -------
-        image : `~gammapy.image.SkyMap`
+        image : `~gammapy.image.SkyImage`
             Integral flux image (1 / (cm^2 s sr))
         """
         if isinstance(energy_bins, int):
@@ -457,11 +457,11 @@ class SkyCube(object):
 
         header = self.wcs.to_header()
 
-        image = SkyMap(name='flux',
-                       data=integral_flux,
-                       wcs=self.wcs,
-                       unit='cm^-2 s^-1 sr^-1',
-                       meta=header)
+        image = SkyImage(name='flux',
+                         data=integral_flux,
+                         wcs=self.wcs,
+                         unit='cm^-2 s^-1 sr^-1',
+                         meta=header)
         return image
 
     def reproject_to(self, reference_cube, projection_type='bicubic'):
@@ -554,8 +554,8 @@ class SkyCube(object):
         """Convert sky cube to a `gammapy.image.SkyImageList`.
         """
         from ..image.lists import SkyImageList
-        skymaps = [self.sky_image(idx) for idx in range(len(self.data))]
-        return SkyImageList(self.name, skymaps, self.wcs, self.energy)
+        images = [self.sky_image(idx) for idx in range(len(self.data))]
+        return SkyImageList(self.name, images, self.wcs, self.energy)
 
     def writeto(self, filename, **kwargs):
         """Writes SkyCube to FITS file.

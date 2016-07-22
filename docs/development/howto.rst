@@ -120,7 +120,7 @@ Functions that return more than a single value shouldn't return a list
 or dictionary of values but rather a Python Bunch result object. A Bunch
 is similar to a dict, except that it allows attribute access to the result
 values. The approach is the same as e.g. the use of `~scipy.optimize.OptimizeResult`.
-An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyMapCollection`
+An example of how Bunches are used in gammapy is given by the `~gammapy.image.SkyImageCollection`
 class.
 
 .. _development-python2and3:
@@ -740,7 +740,7 @@ that is defined in `gammapy.utils.mpl_style`.  The style is derived from the
 astropy plotting style applying a few minor changes. Here are two examples:
 
 * :ref:`Crab MWL SED plot <crab-mwl-sed>`
-* :ref:`Fermi 1FHL skymap <fermi-1fhl-skymap>`
+* :ref:`Fermi 1FHL image <fermi-1fhl-image>`
 
 For the Gammapy docs the style is used by default and doesn't have to be set
 explicitly. If you would like to use the style outside the Gammapy docs, add

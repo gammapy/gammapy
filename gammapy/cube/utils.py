@@ -11,7 +11,7 @@ from astropy.units import Quantity
 from astropy.coordinates import Angle
 
 from .core import SkyCube
-from ..image.maps import SkyMap
+from ..image.core import SkyImage
 
 
 __all__ = ['compute_npred_cube',
@@ -157,8 +157,8 @@ def cube_to_spec(cube, mask, weighting='none'):
 
     # TODO: clean up API and implementation and add test
     value = cube.dat
-    sky_map = SkyMap.read(cube)
-    A = sky_map.solid_angle()
+    image = SkyImage.read(cube)
+    A = image.solid_angle()
     # Note that this is the correct way to get an average flux:
 
     spec = (value * A).sum(-1).sum(-1)

@@ -10,7 +10,7 @@ from ...image import (measure_labeled_regions,
                       measure_containment_radius,
                       measure_image_moments,
                       measure_containment,
-                      measure_curve_of_growth, SkyMap)
+                      measure_curve_of_growth, SkyImage)
 
 BINSZ = 0.02
 
@@ -29,15 +29,15 @@ def generate_gaussian_image():
     """
     Generate some greyscale image to run the detection on.
     """
-    skymap = SkyMap.empty(nxpix=201, nypix=201, binsz=0.02)
-    coordinates = skymap.coordinates()
+    image = SkyImage.empty(nxpix=201, nypix=201, binsz=0.02)
+    coordinates = image.coordinates()
     l = coordinates.data.lon.wrap_at("180d")
     b = coordinates.data.lat
     sigma = 0.2
     source = Gaussian2D(1. / (2 * np.pi * (sigma / BINSZ) ** 2), 0, 0, sigma, sigma)
-    skymap.data += source(l.degree, b.degree)
-    skymap.data = Quantity(skymap.data, 'cm-2 s-1')
-    return skymap
+    image.data += source(l.degree, b.degree)
+    image.data = Quantity(image.data, 'cm-2 s-1')
+    return image
 
 
 GAUSSIAN_IMAGE = generate_gaussian_image()

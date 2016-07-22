@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from aplpy import FITSFigure
 from gammapy.datasets import FermiGalacticCenter
-from gammapy.image import catalog_image, SkyMap
+from gammapy.image import catalog_image, SkyImage
 from gammapy.irf import EnergyDependentTablePSF
 
 # Create image of defined size
-reference = SkyMap.empty(nxpix=300, nypix=100, binsz=1).to_image_hdu()
+reference = SkyImage.empty(nxpix=300, nypix=100, binsz=1).to_image_hdu()
 psf_file = FermiGalacticCenter.filenames()['psf']
 psf = EnergyDependentTablePSF.read(psf_file)
 

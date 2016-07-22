@@ -11,7 +11,7 @@ def test_to_cube():
     image_list = sky_cube_original.to_image_list()
     sky_cube_restored = image_list.to_cube()
 
-    assert_array_equal(image_list.skymaps[0].data, sky_cube_original.data[0])
+    assert_array_equal(image_list.images[0].data, sky_cube_original.data[0])
 
     assert_array_equal(sky_cube_restored.data, sky_cube_original.data)
     assert_array_equal(sky_cube_restored.energy, sky_cube_original.energy)

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
-from .maps import SkyMap
+from .core import SkyImage
 
 __all__ = [
     'compute_binning',
@@ -242,7 +242,7 @@ def image_profile(profile_axis, image, lats, lons, binsz, counts=None,
         boundaries, profile values and errors.
     """
 
-    coordinates = SkyMap.from_image_hdu(image).coordinates()
+    coordinates = SkyImage.from_image_hdu(image).coordinates()
     lon = coordinates.data.lon.wrap_at('180d').degree
     lat = coordinates.data.lat.degree
     mask_init = (lats[0] <= lat) & (lat < lats[1])
