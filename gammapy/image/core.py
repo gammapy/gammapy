@@ -319,6 +319,48 @@ class SkyImage(object):
         x, y = self.wcs_skycoord_to_pixel(coords=position)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
+    def footprint(self, mode='center'):
+        """
+        Calculates the footprint of the image on the sky.
+
+        Parameters
+        ----------
+        mode : {'center', 'edge'} (default 'center')
+            Return the positions of the corners of the image on the sky by
+            using the center of the pixel or the edge.
+
+        Returns
+        -------
+        coordinates : `~collections.OrderedDict`
+            Dictionary of the positions of the corners of the image
+            with keys {'lower left', 'lower right', 'upper left', 'upper right'}
+            and `~astropy.coordinates.SkyCoord` objects as values.
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyImage
+        >>> image = SkyImage.empty(nxpix=3, nypix=2)
+        >>> coord = image.footprint(mode='center')
+        >>> coord['lower left']
+        <SkyCoord (Galactic): (l, b) in deg
+            (0.02, -0.01)>
+        """
+        naxis2, naxis1 = self.data.shape
+        if mode == 'center':
+            pixcoord = [(0, 0), (0, naxis2), (naxis1, naxis2), (naxis1, 0)]
+        elif mode == 'edge':
+            pixcoord = [(-0.5, -0.5), (-0.5, naxis2 + 0.5),
+                        (naxis1 + 0.5, naxis2 + 0.5), (naxis1 + 0.5, -0.5)]
+        else:
+            raise ValueError('Invalid mode: {}'.format(mode))
+
+        coordinates = OrderedDict()
+        keys = ['lower left', 'upper left', 'upper right', 'lower right']
+        for key, (x, y) in zip(keys, pixcoord):
+            coordinates[key] = self.wcs_pixel_to_skycoord(xp=x, yp=y)
+
+        return coordinates
+
     def _get_boundaries(self, image_ref, image, wcs_check):
         """
         Get boundary coordinates of one image in the pixel coordinate system
@@ -753,7 +795,7 @@ class SkyImage(object):
         """
         Convert a set of SkyCoord coordinates into pixels.
 
-        Calls `~astropy.wcs.utils.skycoord_to_pixel`, passing ``coords`` and ``kwargs`` to it.
+        Calls `~astropy.wcs.utils.skycoord_to_pixel`, passing ``coords`` to it.
 
         Parameters
         ----------
@@ -773,7 +815,7 @@ class SkyImage(object):
         """
         Convert a set of pixel coordinates into a `~astropy.coordinates.SkyCoord` coordinate.
 
-        Calls `~astropy.wcs.utils.pixel_to_skycoord`, passing ``xp``, ``yp`` and ``kwargs`` to it.
+        Calls `~astropy.wcs.utils.pixel_to_skycoord`, passing ``xp``, ``yp`` to it.
 
         Parameters
         ----------
@@ -784,6 +826,15 @@ class SkyImage(object):
         -------
         coordinates : `~astropy.coordinates.SkyCoord`
             The celestial coordinates.
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyImage
+        >>> image = SkyImage.empty(nxpix=10, nypix=15)
+        >>> x, y = [5, 3.4], [8, 11.2]
+        >>> image.wcs_pixel_to_skycoord(xp=x, yp=y)
+        <SkyCoord (Galactic): (l, b) in deg
+            [(359.99, 0.02), (0.022, 0.084)]>
         """
         return pixel_to_skycoord(xp=xp, yp=yp, wcs=self.wcs,
                                  origin=_DEFAULT_WCS_ORIGIN,
