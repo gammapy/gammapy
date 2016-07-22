@@ -2,10 +2,10 @@
 """Spectral models for Gammapy.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ..extern.bunch import Bunch
-import astropy.units as u
-from . import CountsSpectrum
 import numpy as np
+import astropy.units as u
+from . import integrate_spectrum
+from ..extern.bunch import Bunch
 
 
 __all__ = [
@@ -14,8 +14,8 @@ __all__ = [
     'ExponentialCutoffPowerLaw',
 ]
 
-# Note: Consider to move stuff from _models_old.py here
 
+# Note: Consider to move stuff from _models_old.py here
 class SpectralModel(object):
     """Spectral model base class.
 
@@ -33,6 +33,41 @@ class SpectralModel(object):
         for parname, parval in self.parameters.items():
             ss += '\n{parname} : {parval:.3g}'.format(**locals())
         return ss
+
+    def integral(self, emin, emax, **kwargs):
+        """
+        Integrate spectral model numerically.
+
+        .. math::
+
+            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+        """
+        return integrate_spectrum(self, emin, emax, **kwargs)
+
+    def energy_flux(self, emin, emax, **kwargs):
+        """
+        Compute energy flux in given energy range.
+
+        .. math::
+
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+        """
+        def f(x): return x * self(x)
+        return integrate_spectrum(f, emin, emax, **kwargs)
 
     def to_dict(self):
         """Serialize to dict"""
@@ -54,10 +89,10 @@ class SpectralModel(object):
             kwargs[_['name']] = _['val'] * u.Unit(_['unit'])
         return cls(**kwargs)
 
-    def plot(self, energy_range, ax=None, 
+    def plot(self, energy_range, ax=None,
              energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
              energy_power=0, n_points=100, **kwargs):
-        """Plot `~gammapy.spectrum.SpectralModel` 
+        """Plot `~gammapy.spectrum.SpectralModel`
 
         kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
 
@@ -103,38 +138,73 @@ class SpectralModel(object):
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
-    
-    .. math:: 
 
-        F(E) = F_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
+    .. math::
+
+        \phi(E) = \phi_0 \cdot \left( \frac{E}{E_0} \right)^{-\Gamma}
 
     Parameters
     ----------
     index : float, `~astropy.units.Quantity`
         :math:`\Gamma`
-    amplitude : float, `~astropy.units.Quantity` 
-        :math:`F_0`
-    reference : float, `~astropy.units.Quantity` 
+    amplitude : float, `~astropy.units.Quantity`
+        :math:`Phi_0`
+    reference : float, `~astropy.units.Quantity`
         :math:`E_0`
     """
     def __init__(self, index, amplitude, reference):
-        self.parameters = Bunch(index = index,
-                                amplitude = amplitude,
-                                reference = reference)
-        
+        self.parameters = Bunch(index=index,
+                                amplitude=amplitude,
+                                reference=reference)
+
     @staticmethod
     def evaluate(energy, index, amplitude, reference):
-        return amplitude * ( energy / reference ) ** (-1 * index)
+        return amplitude * (energy / reference) ** (-index)
 
     def integral(self, emin, emax):
-        """Integrate using analytic formula"""
-        pars = self.parameters 
-        
+        r"""
+        Integrate power law analytically.
+
+        .. math::
+
+            F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE = \left.
+            \phi_0 \frac{E_0}{-\Gamma + 1} \left( \frac{E}{E_0} \right)^{-\Gamma + 1}
+            \right \vert _{E_{min}}^{E_{max}}
+
+
+        """
+        pars = self.parameters
+
         val = -1 * pars.index + 1
         prefactor = pars.amplitude * pars.reference / val
         upper = (emax / pars.reference) ** val
         lower = (emin / pars.reference) ** val
+        return prefactor * (upper - lower)
 
+    def energy_flux(self, emin, emax):
+        r"""
+        Compute energy flux in given energy range analytically.
+
+        .. math::
+
+            G(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}E \phi(E)dE = \left.
+            \phi_0 \frac{E_0^2}{-\Gamma + 2} \left( \frac{E}{E_0} \right)^{-\Gamma + 2}
+            \right \vert _{E_{min}}^{E_{max}}
+
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+        """
+        pars = self.parameters
+        val = -1 * pars.index + 2
+
+        prefactor = pars.amplitude * pars.reference ** 2 / val
+        upper = (emax / pars.reference) ** val
+        lower = (emin / pars.reference) ** val
         return prefactor * (upper - lower)
 
     def to_sherpa(self, name='default'):
@@ -150,11 +220,39 @@ class PowerLaw(SpectralModel):
         model.gamma = self.parameters.index.value
         model.ref = self.parameters.reference.to('keV').value
         model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
-
         return model
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):
-    """Spectral exponential cutoff power-law model.
-    """
+    r"""Spectral exponential cutoff power-law model.
 
+    .. math::
+
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(-\lambda E)
+
+    Parameters
+    ----------
+    index : float, `~astropy.units.Quantity`
+        :math:`\Gamma`
+    amplitude : float, `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : float, `~astropy.units.Quantity`
+        :math:`E_0`
+    lambda : float, `~astropy.units.Quantity`
+        :math:`\lambda`
+    """
+    def __init__(self, index, amplitude, reference, lambda_):
+        self.parameters = Bunch(index=index,
+                                amplitude=amplitude,
+                                reference=reference,
+                                lambda_=lambda_)
+
+    @staticmethod
+    def evaluate(energy, index, amplitude, reference, lambda_):
+        pwl = amplitude * (energy / reference) ** (-index)
+        try:
+            cutoff = np.exp(-energy * lambda_)
+        except AttributeError:
+            from uncertainties.unumpy import exp
+            cutoff = exp(-energy * lambda_)
+        return pwl * cutoff
