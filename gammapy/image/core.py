@@ -7,13 +7,14 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import numpy as np
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
-from astropy.wcs import WCS, WcsError
-from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.nddata.utils import Cutout2D
 from regions import PixCoord
+from astropy.wcs import WCS, WcsError
+from astropy.wcs.utils import (pixel_to_skycoord, skycoord_to_pixel,
+                               proj_plane_pixel_scales)
 from ..extern.bunch import Bunch
 from ..utils.scripts import make_path
 from ..image.utils import make_header, _bin_events_in_cube
@@ -787,6 +788,39 @@ class SkyImage(object):
         return pixel_to_skycoord(xp=xp, yp=yp, wcs=self.wcs,
                                  origin=_DEFAULT_WCS_ORIGIN,
                                  mode=_DEFAULT_WCS_MODE)
+
+    def wcs_pixel_scale(self, method='cdelt'):
+        """
+        Returns angles along each axis of the image pixel at the CRPIX
+        location once it is projected onto the plane of intermediate world coordinates.
+
+        Calls `~astropy.wcs.utils.proj_plane_pixel_scales`.
+
+        Parameters
+        ----------
+        method : {'cdelt', 'proj_plane'} (default 'cdelt')
+            Result is calculated according to the 'cdelt' or 'proj_plane' methods.
+
+        Returns
+        -------
+        angle : '~astropy.coordinates.Angle'
+            An angle of projection plane increments corresponding to each pixel side (axis).
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyImage
+        >>> image = SkyImage.empty(nxpix=3, nypix=2)
+        >>> image.wcs_pixel_scale()
+        <Angle [ 0.02, 0.02] deg>
+        """
+        if method == 'cdelt':
+            scales = np.abs(self.wcs.wcs.cdelt)
+        elif method == 'proj_plane':
+            scales = proj_plane_pixel_scales(wcs=self.wcs)
+        else:
+            raise ValueError('Invalid method: {}'.format(method))
+
+        return Angle(scales, unit='deg')
 
 
 class SkyImageCollection(Bunch):
