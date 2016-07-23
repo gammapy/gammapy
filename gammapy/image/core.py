@@ -22,6 +22,8 @@ __all__ = ['SkyImage', 'SkyImageCollection']
 
 log = logging.getLogger(__name__)
 
+_DEFAULT_WCS_ORIGIN = 0
+_DEFAULT_WCS_MODE = 'all'
 
 # It might be a good option to inherit from `~astropy.nddata.NDData` later, but
 # as astropy.nddata is still in development, I decided to not inherit for now.
@@ -51,7 +53,6 @@ class SkyImage(object):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
-    wcs_origin = 0
 
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
@@ -213,7 +214,7 @@ class SkyImage(object):
         """
         if isinstance(value, EventList):
             counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
-                                         origin=self.wcs_origin).sum(axis=0)
+                                         origin=_DEFAULT_WCS_ORIGIN).sum(axis=0)
             self.data = counts.value
             self.unit = 'ct'
         elif np.isscalar(value):
@@ -277,7 +278,7 @@ class SkyImage(object):
             Position on the sky.
         """
         x, y = self.coordinates_pix(mode=mode)
-        coordinates = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
+        coordinates = self.wcs_pixel_to_skycoord(xp=x, yp=y)
         return coordinates
 
     def contains(self, position):
@@ -295,7 +296,7 @@ class SkyImage(object):
             Bool array
         """
         ny, nx = self.data.shape
-        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        x, y = self.wcs_skycoord_to_pixel(coords=position)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
     def _get_boundaries(self, image_ref, image, wcs_check):
@@ -307,10 +308,10 @@ class SkyImage(object):
         ymax_ref, xmax_ref = image_ref.data.shape
 
         # transform boundaries in world coordinates
-        bounds = image.wcs.wcs_pix2world([0, xmax], [0, ymax], image.wcs_origin)
+        bounds = image.wcs.wcs_pix2world([0, xmax], [0, ymax], _DEFAULT_WCS_ORIGIN)
 
         # transform to pixel coordinats in the reference image
-        bounds_ref = image_ref.wcs.wcs_world2pix(bounds[0], bounds[1], image_ref.wcs_origin)
+        bounds_ref = image_ref.wcs.wcs_world2pix(bounds[0], bounds[1], _DEFAULT_WCS_ORIGIN)
 
         # round to nearest integer and clip at the boundaries
         xlo, xhi = np.rint(np.clip(bounds_ref[0], 0, xmax_ref))
@@ -416,7 +417,6 @@ class SkyImage(object):
 
         Examples
         --------
-
         >>> from gammapy.image import SkyImage
         >>> image = SkyImage.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
@@ -468,7 +468,7 @@ class SkyImage(object):
 
         idx = np.nanargmax(self.data * mask)
         y, x = np.unravel_index(idx, self.data.shape)
-        pos = pixel_to_skycoord(x, y, self.wcs, self.wcs_origin)
+        pos = self.wcs_pixel_to_skycoord(xp=x, yp=y)
         return pos, self.data[y, x]
 
     def solid_angle(self):
@@ -498,7 +498,8 @@ class SkyImage(object):
         """
         return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
                                    (self.data.shape[1] - 1) / 2.,
-                                    self.wcs, origin=self.wcs_origin)
+                                   wcs=self.wcs, origin=_DEFAULT_WCS_ORIGIN,
+                                   mode=_DEFAULT_WCS_MODE)
 
     def lookup(self, position, interpolation=None):
         """
@@ -511,7 +512,7 @@ class SkyImage(object):
         interpolation : {'None'}
             Interpolation mode.
         """
-        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        x, y = self.wcs_skycoord_to_pixel(coords=position)
         return self.data[np.rint(y).astype('int'), np.rint(x).astype('int')]
 
     def to_quantity(self):
@@ -736,6 +737,46 @@ class SkyImage(object):
         mask = ExclusionMask.empty_like(self)
         mask.data = np.where(self.data > threshold, 0, 1)
         return mask
+
+    def wcs_skycoord_to_pixel(self, coords):
+        """
+        Convert a set of SkyCoord coordinates into pixels.
+
+        Calls `~astropy.wcs.utils.skycoord_to_pixel`, passing ``coords`` and ``kwargs`` to it.
+
+        Parameters
+        ----------
+        coords : `~astropy.coordinates.SkyCoord`
+            The coordinates to convert.
+
+        Returns
+        -------
+        xp, yp : `~numpy.ndarray`
+            The pixel coordinates.
+        """
+        return skycoord_to_pixel(coords=coords, wcs=self.wcs,
+                                 origin=_DEFAULT_WCS_ORIGIN,
+                                 mode=_DEFAULT_WCS_MODE)
+
+    def wcs_pixel_to_skycoord(self, xp, yp):
+        """
+        Convert a set of pixel coordinates into a `~astropy.coordinates.SkyCoord` coordinate.
+
+        Calls `~astropy.wcs.utils.pixel_to_skycoord`, passing ``xp``, ``yp`` and ``kwargs`` to it.
+
+        Parameters
+        ----------
+        xp, yp : float or `~numpy.ndarray`
+            The coordinates to convert.
+
+        Returns
+        -------
+        coordinates : `~astropy.coordinates.SkyCoord`
+            The celestial coordinates.
+        """
+        return pixel_to_skycoord(xp=xp, yp=yp, wcs=self.wcs,
+                                 origin=_DEFAULT_WCS_ORIGIN,
+                                 mode=_DEFAULT_WCS_MODE)
 
 
 class SkyImageCollection(Bunch):

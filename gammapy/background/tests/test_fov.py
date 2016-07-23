@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord, Angle
 from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
+from astropy.wcs.utils import skycoord_to_pixel
 from astropy.modeling import models
 from ...utils.testing import requires_dependency
 from ...background import fill_acceptance_image
@@ -53,11 +53,8 @@ def test_fill_acceptance_image():
     # test: check points at the offsets where the acceptance is defined
     # along the x axis
 
-    # define grids of pixel coorinates
-    xpix_coord_grid, ypix_coord_grid = SkyImage.from_image_hdu(image).coordinates_pix()
-
     # calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, w, origin=0)
+    coord = SkyImage.from_image_hdu(image).coordinates()
     pix_off = coord.separation(center)
 
     # x axis defined in the array positions [y_center_pix,:]

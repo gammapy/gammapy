@@ -4,8 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 import numpy as np
 from astropy.units import Quantity
-from astropy.table import QTable, Column
-from astropy.wcs.utils import pixel_to_skycoord
+from astropy.table import QTable
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
@@ -174,10 +173,8 @@ class ObsImage(object):
         table = self.make_1d_expected_counts(spectral_index, for_integral_flux)
         exposure = SkyImage.empty_like(self.empty_image, unit=table["npred"].unit)
 
-        # Determine offset value for each pixel of the map
-        xpix_coord_grid, ypix_coord_grid = exposure.coordinates_pix()
         # calculate pixel offset from center (in world coordinates)
-        coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, exposure.wcs, origin=0)
+        coord = exposure.coordinates()
         offset = coord.separation(self.obs_center)
 
         # Interpolate for the offset of each pixel
