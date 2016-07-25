@@ -198,7 +198,7 @@ class ObservationSummary(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
             Axis
         """
         import matplotlib.pyplot as plt

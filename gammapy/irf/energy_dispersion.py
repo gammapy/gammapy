@@ -313,7 +313,7 @@ class EnergyDispersion(NDDataArray):
         
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis    
         show_energy : `~astropy.units.Quantity`, optional
             Show energy, e.g. threshold, as vertical line
@@ -350,7 +350,7 @@ class EnergyDispersion(NDDataArray):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis    
         """
         import matplotlib.pyplot as plt
@@ -623,7 +623,7 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
@@ -634,7 +634,7 @@ class EnergyDispersion2D(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
             Axis
         """
         import matplotlib.pyplot as plt
@@ -669,7 +669,7 @@ class EnergyDispersion2D(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         offset : `~astropy.coordinates.Angle`, optional
             Offset
@@ -680,7 +680,7 @@ class EnergyDispersion2D(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
             Axis
         """
         from matplotlib.colors import PowerNorm

@@ -28,7 +28,7 @@ def test_CountsSpectrum(tmpdir):
     assert_allclose(test_eval, spec.data[2])
 
     spec.plot()
-    spec.peek()
+    spec.plot_hist()
 
     # Test I/O 
     filename = tmpdir / 'test.fits'
@@ -37,30 +37,13 @@ def test_CountsSpectrum(tmpdir):
     assert_quantity_allclose(spec2.energy.data,
                              EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV'))
 
-    # add two spectra
-    bins = spec.energy.nbins
-    counts = np.array(np.random.rand(bins) * 10, dtype=int) * u.ct
-    pha2 = CountsSpectrum(data=counts, energy=spec.energy)
-    pha_sum = np.sum([spec, pha2])
-    desired = spec.data[5] + counts[5]
-    actual = pha_sum.data[5]
-    assert_equal(actual, desired)
+    # Add, Sub, Mult
+    energy = np.logspace(0,1,5) * u.TeV
+    spec1 = CountsSpectrum(data=np.arange(4), energy=energy)
+    spec2 = CountsSpectrum(data=np.arange(4,8), energy=energy)
 
+    spec_sum = np.sum([spec1, spec2]) * 2
+    spec_diff = spec2 - spec1
 
-@pytest.mark.xfail(reason='broken')
-@requires_dependency('sherpa')
-@requires_data('gammapy-extra')
-def test_n_pred():
-    fitresult = gammapy_extra.filename(
-        'test_datasets/spectrum/fit_result_PowerLaw_reference.yaml')
-
-    obs_id = [23523, 23592]
-    filenames = [gammapy_extra.filename('datasets/hess-crab4_pha/pha_obs{}.fits'.format(
-        _)) for _ in obs_id]
-    obs = [SpectrumObservation.read(_) for _ in filenames]
-    fit = SpectrumFitResult.from_yaml(fitresult)
-
-    n_pred_vec = [CountsSpectrum.get_npred(fit, o) for o in obs]
-    n_pred = np.sum(n_pred_vec)
-
-    assert_allclose(max(n_pred.data).value, 52.5, atol=0.1)
+    assert_equal(spec_sum.data[1], 12)
+    assert_equal(spec_diff.data[1], 4)

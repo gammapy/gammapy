@@ -63,7 +63,7 @@ class DifferentialFluxPoints(Table):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
@@ -74,7 +74,7 @@ class DifferentialFluxPoints(Table):
 
         Returns
         -------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
         import matplotlib.pyplot as plt

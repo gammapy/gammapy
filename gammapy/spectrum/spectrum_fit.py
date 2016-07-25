@@ -201,10 +201,6 @@ class SpectrumFit(object):
         from sherpa.astro import datastack
         from sherpa.utils.err import IdentifierErr
         
-        # TODO: Make this optional
-        sherpa_logger = logging.getLogger('sherpa')
-        sherpa_logger.setLevel(50)
-
         log.info(str(self))
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)

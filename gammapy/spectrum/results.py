@@ -272,9 +272,9 @@ class SpectrumResult(object):
 
         Returns
         -------
-        ax0 : `~matplolib.axes`
+        ax0 : `~matplotlib.axes.Axes`
             Main plot
-        ax1 : `~matplolib.axes`
+        ax1 : `~matplotlib.axes.Axes`
             Residuals
         """
         from matplotlib import gridspec
@@ -356,7 +356,7 @@ class SpectrumResult(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_range : `~astropy.units.Quantity`
             Plot range
@@ -371,7 +371,7 @@ class SpectrumResult(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
 
@@ -421,9 +421,9 @@ class SpectrumResult(object):
 
         Returns
         -------
-        ax0 : `~matplolib.axes`
+        ax0 : `~matplotlib.axes.Axes`
             Spectrum plot axis
-        ax1 : `~matplolib.axes`
+        ax1 : `~matplotlib.axes.Axes`
             Residuals plot axis
         """
         ax0, ax1 = self.get_plot_axis()
@@ -453,14 +453,14 @@ class SpectrumResult(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
 
         Returns
         -------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
         import matplotlib.pyplot as plt
