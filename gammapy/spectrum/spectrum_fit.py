@@ -134,11 +134,10 @@ class SpectrumFit(object):
         import sherpa.stats as s
 
         if isinstance(stat, six.string_types):
-            if stat == 'cash':
-                stat = s.Cash()
-            elif stat == 'wstat':
+            if stat.lower() == 'cstat':
+                stat = s.CStat()
+            elif stat.lower() == 'wstat':
                 stat = s.WStat()
-
             else:
                 raise ValueError("Undefined stat string: {}".format(stat))
 
@@ -200,9 +199,13 @@ class SpectrumFit(object):
         """Plain sherpa fit using the session object
         """
         from sherpa.astro import datastack
-        log.info("Starting SHERPA")
-        log.info(str(self))
+        from sherpa.utils.err import IdentifierErr
+        
+        # TODO: Make this optional
+        sherpa_logger = logging.getLogger('sherpa')
+        sherpa_logger.setLevel(50)
 
+        log.info(str(self))
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
 
@@ -218,7 +221,11 @@ class SpectrumFit(object):
         # Ignore bad is not a stack-enabled function
         for i in range(1, len(ds.datasets) + 1):
             datastack.ignore_bad(i)
-            datastack.ignore_bad(i, 1)
+            #Ignore bad channels in BKG data (required for WSTAT)
+            try:
+                datastack.ignore_bad(i, 1)
+            except IdentifierErr:
+                pass
 
         datastack.set_stat(self.statistic)
         ds.fit()

@@ -158,7 +158,8 @@ class SpectrumFitResult(object):
         keV and the resulting flux will be in ``cm-2 s-1 keV-1``. The
         covariance matrix passed on initialization must also have these units.
         
-        TODO: This is due to sherpa units, make this more flexible
+        TODO: This is due to sherpa units, make more flexible
+        TODO: Add to gammapy.spectrum.models
 
         This function uses the uncertainties packages as explained here
         https://pythonhosted.org/uncertainties/user_guide.html#use-of-a-covariance-matrix
@@ -186,17 +187,17 @@ class SpectrumFitResult(object):
         """
         Summary info string.
         """
-        info = 'Fit result info \n'
+        info = '\nFit result info \n'
         info += '--------------- \n'
-        info += 'Model: {} \n'.format(self.model)
-
+        info += 'Best Fit Model: {} \n'.format(self.model_with_uncertainties)
+        info += '--> Units: keV, cm, s\n' 
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
         if self.covariance is not None:
-            info += '\nCovariance:\n {}'.format(self.covariance)
+            info += '\nCovariance:\n{}\n{}'.format(self.covar_axis, self.covariance)
         if self.fit_range is not None:
             info += '\nFit Range: {}'.format(self.fit_range)
-        
+        info += '\n' 
         return info
 
     def info(self):
@@ -210,6 +211,8 @@ class SpectrumResult(object):
     """Class holding all results of a spectral analysis
     
     This class is responsible for all debug plots / numbers
+    
+    TODO: Automate Read/Write
 
     Parameters
     ----------
@@ -227,13 +230,13 @@ class SpectrumResult(object):
         self.points = points
 
     @property
-    def expected_on_vector(self):
+    def expected_source_counts(self):
         """Npred
         
-        Counts predicted by best fit model plus background estimate
+        Counts predicted by best fit model.
         """
-        energy = self.obs.background_vector.energy
-        data = (self.obs.background_vector.data.value + self.fit.npred) * u.ct
+        energy = self.obs.on_vector.energy
+        data = self.fit.npred * u.ct
         idx = np.isnan(data)
         data[idx] = 0
         return CountsSpectrum(data=data, energy=energy)
@@ -264,15 +267,20 @@ class SpectrumResult(object):
 
         return residuals
 
-    def plot_fit(self):
-        """Standard debug plot
-        
-        Plot ON counts in comparison to background estimate plus source
-        counts predicted by best fit model
+    def get_plot_axis(self, figsize=(15,10)):
+        """Axis setup used for standard plots
+
+        Returns
+        -------
+        ax0 : `~matplolib.axes`
+            Main plot
+        ax1 : `~matplolib.axes`
+            Residuals
         """
         from matplotlib import gridspec
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
+        plt.figure(figsize=figsize)
 
         gs = gridspec.GridSpec(4, 1)
 
@@ -281,31 +289,52 @@ class SpectrumResult(object):
 
         gs.update(hspace=0)
         plt.setp(ax0.get_xticklabels(), visible=False)
+        
+        ax0.set_xscale('log')
+        ax1.set_xscale('log')
+
+        return ax0, ax1
+
+    def plot_fit(self, mode='wstat'):
+        """Standard debug plot
+        
+        Plot ON counts in comparison to model. The model can contain predicted
+        source and background counts (CStat) or prediced source counts plus a
+        background estimate from off regions (WStat). The ``mode`` parameter
+        controls this
+        """
+        if mode != 'wstat':
+            raise NotImplementedError('Mode {}'.format(mode))
+
+        ax0, ax1 = self.get_plot_axis()
+
+        self.expected_source_counts.plot(ax=ax0,
+                                         fmt='none',
+                                         label='mu_source')
 
         self.obs.background_vector.plot(ax=ax0,
-                                        label='Background estimate',
-                                        fmt=None,
+                                        label='mu_background',
+                                        fmt='none',
                                         energy_unit='TeV')
 
-        self.expected_on_vector.plot(ax=ax0,
-                                     label='Predicted ON counts')
+        mu_on = self.expected_source_counts + self.obs.background_vector
+        mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
 
         self.obs.on_vector.plot(ax=ax0,
-                                label='Deteced ON counts',
+                                label='n_on',
                                 show_poisson_errors=True,
-                                fmt=None,
+                                fmt='none',
                                 energy_unit='TeV')
 
         ax0.legend(numpoints=1)
 
-        res = (self.expected_on_vector.data - self.obs.on_vector.data).value
-        resspec = CountsSpectrum(data=res, energy=self.obs.on_vector.energy)
+        resspec = mu_on - self.obs.on_vector
         resspec.plot(ax=ax1, ecolor='black', fmt=None)
         xx = ax1.get_xlim()
         yy = [0, 0]
         ax1.plot(xx, yy, color='black')
 
-        ymax = 1.4 * max(resspec.data)
+        ymax = 1.4 * max(resspec.data.value)
         ax1.set_ylim(-ymax, ymax)
 
         xmin = self.fit.fit_range.to('TeV').value[0] * 0.8
@@ -315,6 +344,61 @@ class SpectrumResult(object):
         ax1.set_ylabel('ON (Predicted - Detected)')
 
         return ax0, ax1
+
+    def plot_butterfly(self, energy_range, ax=None, 
+                       energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
+                       energy_power=0, n_points=500, **kwargs):
+        """Plot best fit model including error band (butterfly) 
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        TODO: Move to gammapy.spectrum.models
+
+        Parameters
+        ----------
+        ax : `~matplolib.axes`, optional
+            Axis
+        energy_range : `~astropy.units.Quantity`
+            Plot range
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        energy_power : int, optional
+            Power of energy to multiply flux axis with
+        n_points : int, optional
+            Number of evaluation nodes
+
+        Returns
+        -------
+        ax : `~matplolib.axes`, optional
+            Axis
+        """
+
+        import matplotlib.pyplot as plt
+        ax = plt.gca() if ax is None else ax
+
+        x_min = np.log10(energy_range[0].to('keV').value)
+        x_max = np.log10(energy_range[1].to('keV').value)
+        xx = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
+        model = self.fit.model_with_uncertainties
+        vals = model(xx.value)
+        yy = [_.n for _ in vals] * u.Unit('cm-2 s-1 keV-1')
+        yyerr = [_.s for _ in vals] * u.Unit('cm-2 s-1 keV-1')
+        x = xx.to(energy_unit).value
+        y = yy.to(flux_unit).value
+        yerr = yyerr.to(flux_unit).value
+        y = y * np.power(x, energy_power)
+        yerr = yerr * np.power(x, energy_power)
+        flux_unit = u.Unit(flux_unit) * np.power(u.Unit(energy_unit), energy_power)
+
+        kwargs.setdefault('capsize', 0)
+        ax.errorbar(x, y, yerr=yerr, **kwargs)
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
+        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        ax.set_xscale("log", nonposx='clip')
+        ax.set_yscale("log", nonposy='clip')
+        return ax
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                       energy_power=0, fit_kwargs=None, point_kwargs=None):
@@ -342,20 +426,8 @@ class SpectrumResult(object):
         ax1 : `~matplolib.axes`
             Residuals plot axis
         """
-        from matplotlib import gridspec
-        import matplotlib.pyplot as plt
-
-        gs = gridspec.GridSpec(4, 1)
-
-        ax0 = plt.subplot(gs[:-1,:])
-        ax1 = plt.subplot(gs[3,:], sharex=ax0)
-
-        gs.update(hspace=0)
-        plt.setp(ax0.get_xticklabels(), visible=False)
-
+        ax0, ax1 = self.get_plot_axis()
         ax0.set_yscale('log')
-        ax0.set_xscale('log')
-        ax1.set_xscale('log')
 
         if fit_kwargs is None:
             fit_kwargs = dict(label='Best Fit {}'.format(
