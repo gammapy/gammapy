@@ -577,12 +577,14 @@ class EnergyDispersion2D(object):
         """Detector response R(Delta E_reco, E_true)
 
         Probability to reconstruct a given true energy in a given reconstructed
-        energy band
+        energy band. The `~gammapy.irf.EnergyDispersion2D` is evaluated at the
+        reco energy bin centers and the result is multiplied with the bin
+        width.
 
         Parameters
         ----------
         e_true : `~gammapy.utils.energy.Energy`
-            True energy axis
+            True energy
         e_reco : `~gammapy.utils.energy.EnergyBounds`, None
             Reconstructed energy axis
         offset : `~astropy.coordinates.Angle`
