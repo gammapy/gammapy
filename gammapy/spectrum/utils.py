@@ -94,13 +94,12 @@ class LogEnergyAxis(object):
         return pix1, pix2, energy1, energy2
 
 
-def calculate_predicted_counts(model, aeff, edisp, livetime):
+def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     """Get npred 
 
-    The true and reco energy binning are inferred from the provided IRFs.
-
-    TODO: make energy binning optional once `~gammapy.irf.EnergyDispersion`
-    has an evaluate method.
+    The true energy binning is inferred from the provided
+    `~gammapy.irf.EffectiveAreaTable`. The reco energy binning can be inferred
+    from the `~gammapy.irf.EnergyDispersion` or be given as a parameter.
 
     Parameters
     ----------
@@ -112,11 +111,50 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
         EffectiveArea
     edisp : `~gammapy.irf.EnergyDispersion`
         EnergyDispersion
+    e_reco : `~astropy.units.Quantity`, optional
+        Desired energy axis of the prediced counts vector By default, the reco
+        energy axis of the energy dispersion matrix is used.
 
     Returns
     -------
     counts : `~gammapy.spectrum.CountsSpectrum`
         Predicted counts
+
+    Examples
+    --------
+    Calculate prediced counts in a desired reconstruced energy binning 
+
+    .. plot::
+        :include-source:
+
+        from gammapy.irf import EnergyDispersion, EffectiveAreaTable
+        from gammapy.spectrum import models, calculate_predicted_counts
+        import numpy as np
+        import astropy.units as u
+        import matplotlib.pyplot as plt
+
+        e_true = np.logspace(-2,2.5,109) * u.TeV
+        e_reco = np.logspace(-2,2,73) * u.TeV
+
+        aeff = EffectiveAreaTable.from_parametrization(energy=e_true)
+        edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
+                                            sigma=0.3)
+
+        model = models.PowerLaw(index=2.3,
+                                amplitude=2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),
+                                reference=1*u.TeV)
+
+        livetime = 1 * u.h
+        e_reco_desired = np.logspace(-1, 1, 15) * u.TeV
+
+        npred = calculate_predicted_counts(model=model,
+                                           aeff=aeff,
+                                           edisp=edisp,
+                                           livetime=livetime,
+                                           e_reco=e_reco_desired)
+        
+        npred.plot_hist()
+        plt.show()
     """
     from . import CountsSpectrum
 
@@ -125,12 +163,12 @@ def calculate_predicted_counts(model, aeff, edisp, livetime):
     
     # Need to fill nan values in aeff due to matrix multiplication with RMF
     counts = flux * livetime * aeff.evaluate(fill_nan=True)
-    counts = counts.decompose()
-    counts = edisp.apply(counts.decompose())
-    return CountsSpectrum(data=counts, energy=edisp.e_reco)
+    counts = counts.to('')
+    reco_counts = edisp.apply(counts, e_reco=e_reco)
+    e_reco = e_reco or edisp.e_reco
+    return CountsSpectrum(data=reco_counts, energy=e_reco)
         
 
-# TODO: Move to gammapy.spectrum.models
 def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
     """
     Integrate 1d function using the log-log trapezoidal rule. 

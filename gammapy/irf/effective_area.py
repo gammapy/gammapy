@@ -69,6 +69,25 @@ class EffectiveAreaTable(NDDataArray):
         return ax
 
     @classmethod
+    def from_parametrization(cls, energy, instrument='HESS'):
+        """Get parametrized effective area 
+
+        see :func:`~gammapy.irf.abramowski_effective_area`
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energy axis
+        instrument : {'HESS', 'HESS2', 'CTA'}
+            Instrument name
+        """
+        ret = cls(energy=energy)
+        arf_data = abramowski_effective_area(energy=ret.energy.log_center(),
+                                             instrument=instrument)
+        ret.data = arf_data
+        return ret
+
+    @classmethod
     def from_table(cls, table):
         """ARF reader"""
         energy_col = 'ENERG'
@@ -81,12 +100,14 @@ class EffectiveAreaTable(NDDataArray):
         return cls(energy=energy, data=data)
 
     def evaluate(self, fill_nan=False, **kwargs):
-        """Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and
-        replaces possible nan values. Below the finite range the effective area
-        is set to zero and above to value of the last valid note. This is
-        needed since other Sofwares, e.g. sherpa, don't like nan values in FITS
-        files. Make sure that the replacement happens outside of the energy
-        range, where the `~gammapy.irf.EffectiveAreaTable` is used. 
+        """Modified evalute function
+        
+        Calls :func:`gammapy.utils.nddata.NDDataArray.evaluate` and replaces
+        possible nan values. Below the finite range the effective area is set
+        to zero and above to value of the last valid note. This is needed since
+        other Sofwares, e.g. sherpa, don't like nan values in FITS files. Make
+        sure that the replacement happens outside of the energy range, where
+        the `~gammapy.irf.EffectiveAreaTable` is used. 
 
         Parameters
         ----------
