@@ -165,7 +165,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     counts = flux * livetime * aeff.evaluate(fill_nan=True)
     counts = counts.to('')
     reco_counts = edisp.apply(counts, e_reco=e_reco)
-    e_reco = e_reco or edisp.e_reco
+    e_reco = e_reco or edisp.e_reco.data
     return CountsSpectrum(data=reco_counts, energy=e_reco)
         
 

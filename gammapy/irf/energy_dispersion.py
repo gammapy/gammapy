@@ -301,7 +301,9 @@ class EnergyDispersion(NDDataArray):
         convolved_data : array
             1-dim data array after multiplication with the energy dispersion matrix
         """
-        if e_reco is not None:
+        if e_reco is None:
+            e_reco = self.e_reco.nodes
+        else:
             e_reco = np.sqrt(e_reco[:-1] * e_reco[1:])
         edisp_pdf = self.evaluate(e_reco=e_reco)
         return np.dot(data, edisp_pdf)
