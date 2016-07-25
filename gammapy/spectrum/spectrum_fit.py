@@ -57,7 +57,9 @@ class SpectrumFit(object):
     """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
-    DEFAULT_MODEL = 'PowerLaw'
+    DEFAULT_MODEL = models.PowerLaw(index=2*u.Unit(''),
+                                    amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
+                                    reference=1*u.TeV)
     """Default model to be used for the fit"""
 
     def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
@@ -113,26 +115,14 @@ class SpectrumFit(object):
     def model(self, model):
         import sherpa.models
 
-        if isinstance(model, six.string_types):
-            name = 'default'
-            if model == 'PL' or model == 'PowerLaw':
-                model = sherpa.models.PowLaw1D('powlaw1d.' + name)
-                model.gamma = 2
-                model.ref = 1e9
-                model.ampl = 1
-            elif model == 'LOGPAR' or model == 'LogParabola':
-                model = sherpa.models.LogParabola('logparabola.' + name)
-                model.c1 = 2
-                model.c2 = 0
-                model.ref = 1e9
-                model.ampl = 1
-            else:
-                raise ValueError("Undefined model string: {}".format(model))
-
+        if isinstance(model, models.SpectralModel):
+            model = model.to_sherpa()
         if not isinstance(model, sherpa.models.ArithmeticModel):
-            raise ValueError("Only sherpa models are supported")
-
-        self._model = model
+            raise ValueError('Model not understood: {}'.format(model))
+        # Make model amplitude O(1e0)
+        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
+        model.ampl = val 
+        self._model = model * self.FLUX_FACTOR
 
     @property
     def statistic(self):
@@ -144,11 +134,10 @@ class SpectrumFit(object):
         import sherpa.stats as s
 
         if isinstance(stat, six.string_types):
-            if stat == 'cash':
-                stat = s.Cash()
-            elif stat == 'wstat':
+            if stat.lower() == 'cstat':
+                stat = s.CStat()
+            elif stat.lower() == 'wstat':
                 stat = s.WStat()
-
             else:
                 raise ValueError("Undefined stat string: {}".format(stat))
 
@@ -210,15 +199,13 @@ class SpectrumFit(object):
         """Plain sherpa fit using the session object
         """
         from sherpa.astro import datastack
-        log.info("Starting SHERPA")
+        from sherpa.utils.err import IdentifierErr
+        
         log.info(str(self))
-
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
 
-        # Make model amplitude O(1e0)
-        model = self.model * self.FLUX_FACTOR
-        ds.set_source(model)
+        ds.set_source(self.model)
 
         # Take into account fit range
         if self.fit_range is not None:
@@ -230,7 +217,11 @@ class SpectrumFit(object):
         # Ignore bad is not a stack-enabled function
         for i in range(1, len(ds.datasets) + 1):
             datastack.ignore_bad(i)
-            datastack.ignore_bad(i, 1)
+            #Ignore bad channels in BKG data (required for WSTAT)
+            try:
+                datastack.ignore_bad(i, 1)
+            except IdentifierErr:
+                pass
 
         datastack.set_stat(self.statistic)
         ds.fit()

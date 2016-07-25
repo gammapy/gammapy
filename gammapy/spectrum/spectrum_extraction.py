@@ -231,7 +231,11 @@ class SpectrumExtraction(object):
 
                     arf.data[index] = arf.data[index] * correction
 
-            temp = SpectrumObservation(on_vec, off_vec, arf, rmf)
+            temp = SpectrumObservation(on_vector=on_vec,
+                                       aeff=arf,
+                                       off_vector=off_vec,
+                                       edisp=rmf)
+
             spectrum_observations.append(temp)
 
         self._observations = SpectrumObservationList(spectrum_observations)

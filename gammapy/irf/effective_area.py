@@ -34,7 +34,7 @@ class EffectiveAreaTable(NDDataArray):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy : `~astropy.units.Quantity`
             Energy nodes 
@@ -43,7 +43,7 @@ class EffectiveAreaTable(NDDataArray):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
             Axis
 
         """
@@ -233,7 +233,7 @@ class EffectiveAreaTable2D(NDDataArray):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset
@@ -244,7 +244,7 @@ class EffectiveAreaTable2D(NDDataArray):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
 
             Axis
         """
@@ -277,7 +277,7 @@ class EffectiveAreaTable2D(NDDataArray):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         offset : `~astropy.coordinates.Angle`
             Offset axis
@@ -286,7 +286,7 @@ class EffectiveAreaTable2D(NDDataArray):
 
         Returns
         -------
-        ax : `~matplolib.axes`
+        ax : `~matplotlib.axes.Axes`
             Axis
         """
         import matplotlib.pyplot as plt

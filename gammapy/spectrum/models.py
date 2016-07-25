@@ -98,7 +98,7 @@ class SpectralModel(object):
 
         Parameters
         ----------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         energy_range : `~astropy.units.Quantity`
             Plot range
@@ -113,7 +113,7 @@ class SpectralModel(object):
 
         Returns
         -------
-        ax : `~matplolib.axes`, optional
+        ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
 

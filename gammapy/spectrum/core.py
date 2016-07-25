@@ -107,6 +107,7 @@ class CountsSpectrum(NDDataArray):
 
     def __add__(self, other):
         """Add two counts spectra and returns new instance
+
         The two spectra need to have the same binning
         """
         if (self.energy.data != other.energy.data).all():
@@ -119,8 +120,12 @@ class CountsSpectrum(NDDataArray):
         temp = self.data * other
         return CountsSpectrum(data=temp, energy=self.energy)
 
+    def __sub__(self, other):
+        """Subtract two CountsSpectra"""
+        return self.__add__(other.__mul__(-1))
+
     def plot(self, ax=None, energy_unit='TeV', show_poisson_errors=False,
-             **kwargs):
+             show_energy=None, **kwargs):
         """Plot as datapoint
 
         kwargs are forwarded to `~matplotlib.pyplot.errorbar`
@@ -133,6 +138,8 @@ class CountsSpectrum(NDDataArray):
             Unit of the energy axis
         show_poisson_errors : bool, optional
             Show poisson errors on the plot
+        show_energy : `~astropy.units.Quantity`, optional
+            Show energy, e.g. threshold, as vertical line
 
         Returns
         -------
@@ -149,13 +156,17 @@ class CountsSpectrum(NDDataArray):
         yerr = np.sqrt(counts) if show_poisson_errors else 0
         kwargs.setdefault('fmt', '' )
         ax.errorbar(x, counts, xerr=xerr, yerr=yerr, **kwargs) 
+        if show_energy is not None:
+            ener_val = u.Quantity(show_energy).to(energy_unit).value
+            ax.vlines(ener_val, 0, 1.1 * max(self.data.value),
+                      linestyles='dashed')
         ax.set_xlabel('Energy [{0}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
         ax.set_ylim(0, 1.2 * max(self.data.value))
         return ax
 
-    def plot_hist(self, ax=None, **kwargs):
+    def plot_hist(self, ax=None, energy_unit='TeV', show_energy=None, **kwargs):
         """Plot as histogram
         
         kwargs are forwarded to `~matplotlib.pyplot.hist`
@@ -164,6 +175,10 @@ class CountsSpectrum(NDDataArray):
         ----------
         ax : `~matplotlib.axis` (optional)
             Axis instance to be used for the plot
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        show_energy : `~astropy.units.Quantity`, optional
+            Show energy, e.g. threshold, as vertical line
         """
         import matplotlib.pyplot as plt 
 
@@ -171,10 +186,14 @@ class CountsSpectrum(NDDataArray):
         kwargs.setdefault('lw', 2)
         kwargs.setdefault('histtype', 'step')
         weights = self.data.value
-        bins = self.energy.data.value[:-1]
-        x = self.energy.nodes.value
+        bins = self.energy.data.to(energy_unit).value[:-1]
+        x = self.energy.nodes.to(energy_unit).value
         ax.hist(x, bins=bins, weights=weights, **kwargs)
-        ax.set_xlabel('Energy [{0}]'.format(self.energy.unit))
+        if show_energy is not None:
+            ener_val = u.Quantity(show_energy).to(energy_unit).value
+            ax.vlines(ener_val, 0, 1.1 * max(self.data.value),
+                      linestyles='dashed')
+        ax.set_xlabel('Energy [{0}]'.format(energy_unit))
         ax.set_ylabel('Counts')
         ax.set_xscale('log')
         return ax
@@ -332,10 +351,10 @@ class SpectrumObservation(object):
     ----------
     on_vector : `~gammapy.spectrum.PHACountsSpectrum`
         On vector
-    off_vector : `~gammapy.spectrum.PHACountsSpectrum`
-        Off vector
     aeff : `~gammapy.irf.EffectiveAreaTable`
         Effective Area
+    off_vector : `~gammapy.spectrum.PHACountsSpectrum`, optional
+        Off vector
     edisp : `~gammapy.irf.EnergyDispersion`, optional
         Energy dispersion matrix
 
@@ -354,13 +373,16 @@ class SpectrumObservation(object):
         plt.show()
     """
 
-    def __init__(self, on_vector, off_vector, aeff, edisp=None):
+    def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
         self.on_vector = on_vector
-        self.off_vector = off_vector
         self.aeff = aeff
+        self.off_vector = off_vector
         self.edisp = edisp
+        # TODO: Handle this in PHACountsSpectrum __init__ method
         if edisp is None:
             self.on_vector.rmffile = None
+        if off_vector is None:
+            self.on_vector.bkgfile = None
 
     @property
     def obs_id(self):
@@ -486,13 +508,20 @@ class SpectrumObservation(object):
         except IOError:
             # TODO : Add logger and echo warning
             energy_dispersion = None 
-        effective_area = EffectiveAreaTable.read(str(base / arf))
-        off_vector = PHACountsSpectrum.read(str(base / bkg))
+        try:
+            off_vector = PHACountsSpectrum.read(str(base / bkg))
+        except IOError:
+            # TODO : Add logger and echo warning
+            off_vector = None 
 
+        effective_area = EffectiveAreaTable.read(str(base / arf))
         # This is needed for know since when passing a SpectrumObservation to
         # the fitting class actually the PHA file is loaded again
         # TODO : remove one spectrumfit is updated
-        retval = cls(on_vector, off_vector, effective_area, energy_dispersion)
+        retval = cls(on_vector=on_vector,
+                     aeff=effective_area,
+                     off_vector=off_vector,
+                     edisp=energy_dispersion)
         retval._phafile = str(f)
         return retval
 
@@ -522,16 +551,20 @@ class SpectrumObservation(object):
         self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
         self.on_vector.write(outdir / phafile, clobber=overwrite)
 
-        self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
-        self.off_vector.write(outdir / bkgfile, clobber=overwrite)
-
-        self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.energy.data = self.aeff.energy.data.to('keV')
+        self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.write(outdir / arffile, clobber=overwrite)
+
+        if self.off_vector is not None:
+            self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+            self.off_vector.write(outdir / bkgfile, clobber=overwrite)
 
         if self.edisp is not None:
             self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
             self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+            # Set data to itself to trigger reset of the interpolator
+            # TODO: Make NDData notice change of axis
+            self.edisp.data = self.edisp.data
             self.edisp.write(str(outdir / rmffile),
                              clobber=overwrite)
 
@@ -542,20 +575,38 @@ class SpectrumObservation(object):
         plt.style.use('ggplot') 
 
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2,2,figsize=figsize)
-        self.background_vector.plot_hist(ax=ax1, label='Background estimate',
-                                    color='darkblue')
-        self.on_vector.plot_hist(ax=ax1, label='Total counts', color='darkred')
-        ax1.legend(numpoints=1)
+
         ax1.set_title('Counts')
-        ax2.text(0, 0, '{}'.format(self.total_stats), fontsize=18)
-        ax2.axis('off')
-        ax3.set_title('Effective Area')
-        self.aeff.plot(ax=ax3,
+        if self.off_vector is not None:
+            self.background_vector.plot_hist(ax=ax1,
+                                             label='alpha * n_off',
+                                             color='darkblue')
+        self.on_vector.plot_hist(ax=ax1,
+                                 label='n_on',
+                                 color='darkred',
+                                 show_energy=(self.hi_threshold, self.lo_threshold))
+        e_unit = self.on_vector.energy.unit
+        ax1.set_xlim(0.7 * self.lo_threshold.to(e_unit).value,
+                     1.3 * self.hi_threshold.to(e_unit).value)
+        ax1.legend(numpoints=1)
+
+        ax2.set_title('Effective Area')
+        e_unit = self.aeff.energy.unit
+        self.aeff.plot(ax=ax2,
                        show_energy=(self.hi_threshold, self.lo_threshold))
+        ax2.set_xlim(0.7 * self.lo_threshold.to(e_unit).value,
+                     1.3 * self.hi_threshold.to(e_unit).value)
+
+        ax3.axis('off')
+        if self.off_vector is not None:
+            ax3.text(0, 0.3, '{}'.format(self.total_stats), fontsize=18)
+
         ax4.set_title('Energy Dispersion')
         if self.edisp is not None:
             self.edisp.plot_matrix(ax=ax4)
-        plt.tight_layout()
+
+        # TODO: optimize layout
+        # plt.subplots_adjust(hspace = .2, left=.1)
         return fig
 
     def apply_energy_cut(self, energy_range=None, method='binned'):

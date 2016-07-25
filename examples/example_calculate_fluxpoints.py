@@ -16,6 +16,8 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 
+
+plt.style.use('ggplot')
 obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
 
 fit = SpectrumFit(obs)
@@ -55,4 +57,4 @@ points = DifferentialFluxPoints.from_arrays(energy=energy, diff_flux=diff_flux,
                                             energy_err_lo = e_err_lo)
 result = SpectrumResult(fit=best_fit, points=points)
 result.plot_spectrum()
-plt.show()
+plt.savefig('fluxpoints.png')
