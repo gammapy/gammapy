@@ -463,8 +463,7 @@ class SkyImage(object):
             width = shape_divisible_by - (np.array(self.data.shape) % shape_divisible_by)
             width = [(0, width[0]), (0, width[1])]
 
-
-        if shape is not None:
+        if where == 'symmetric':
             x_pad = (shape[1] - image.shape[1]) // 2
             y_pad = (shape[0] - image.shape[0]) // 2
             #converting from unicode to ascii string as a workaround
@@ -498,15 +497,17 @@ class SkyImage(object):
         """
         xdiff = (self.data.shape[1] - shape[1])
         ydiff = (self.data.shape[0] - shape[0])
-        if mode == 'symmetric':
+        if where == 'symmetric':
             x_crop = xdiff // 2
             y_crop = ydiff // 2
             data = self.data[y_crop:-y_crop, x_crop:-x_crop]
 
-            # adjust WCS
-            wcs = None
-        elif mode == 'top & right':
+            # adjust WCS, so that image center remains unchanged
+            wcs = _get_resampled_wcs(self, data, factor, downsampled=False)
+        elif where == 'top & right':
             data = self.data[:-ydiff, :-xdiff]
+
+            # WCS reamins unchanged
             wcs = self.wcs
 
         return SkyImage(data=data, wcs=wcs)
