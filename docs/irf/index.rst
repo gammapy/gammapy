@@ -70,7 +70,6 @@ If you'd like to learn more about using `gammapy.irf`, read the following sub-pa
 .. toctree::
    :maxdepth: 1
 
-   effective_area
    psf
    energy_dispersion
 

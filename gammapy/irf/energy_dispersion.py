@@ -280,7 +280,7 @@ class EnergyDispersion(NDDataArray):
         temp = np.sum(pdf * self.e_reco._interp_nodes())
         return temp / norm
 
-    def apply(self, data):
+    def apply(self, data, e_reco=None):
         """Apply energy dispersion.
 
         Computes the matrix product of ``data``
@@ -291,13 +291,22 @@ class EnergyDispersion(NDDataArray):
         ----------
         data : array_like
             1-dim data array.
+        e_reco : `~astropy.units.Quantity`, optional
+            Desired energy binning of the convolved data, if provided the
+            `~gammapy.irf.EnergyDispersion` is evaluated at the log centers of
+            the energy axis.
 
         Returns
         -------
         convolved_data : array
             1-dim data array after multiplication with the energy dispersion matrix
         """
-        return np.dot(data, self.data)
+        if e_reco is None:
+            e_reco = self.e_reco.nodes
+        else:
+            e_reco = np.sqrt(e_reco[:-1] * e_reco[1:])
+        edisp_pdf = self.evaluate(e_reco=e_reco)
+        return np.dot(data, edisp_pdf)
 
     def _extent(self):
         """Extent (x0, x1, y0, y1) for plotting (4x float)

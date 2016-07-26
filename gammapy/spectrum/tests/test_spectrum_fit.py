@@ -54,6 +54,7 @@ def test_spectral_fit(tmpdir):
     actual = result.fit.fit_range[0]
     assert_quantity_allclose(actual, desired)
     
+    # Test npred
     npred = obs1.predicted_counts(result.fit.model)
     assert_allclose(result.fit.npred, npred.data, rtol=1e-3)
 
