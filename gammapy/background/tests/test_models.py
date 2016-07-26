@@ -8,7 +8,7 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import Angle, SkyCoord
 from astropy.modeling.models import Gaussian1D
-from ...extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import gammapy_extra
 from ...background import GaussianBand2D, CubeBackgroundModel, EnergyOffsetBackgroundModel

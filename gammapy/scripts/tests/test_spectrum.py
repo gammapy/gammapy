@@ -2,7 +2,7 @@
 import os
 from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord, Angle
-from ...extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ...datasets import gammapy_extra
 from ...data import ObservationList
 from ...image import ExclusionMask

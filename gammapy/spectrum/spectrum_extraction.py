@@ -4,25 +4,16 @@ import logging
 import os
 import numpy as np
 import astropy.units as u
-from astropy.units import Quantity
-from ..extern.pathlib import Path
-from ..extern.regions import CircleSkyRegion
-from ..utils.scripts import make_path
-from ..data import Target
+from regions import CircleSkyRegion
 from ..background import reflected_regions_background_estimate
+from ..data import Target
+from ..extern.pathlib import Path
+from ..utils.scripts import make_path
 from . import (
     PHACountsSpectrum,
     SpectrumObservation,
     SpectrumObservationList,
 )
-from ..data import Target
-from ..extern.bunch import Bunch
-from ..extern.pathlib import Path
-from ..extern.regions.shapes import CircleSkyRegion
-from ..image import ExclusionMask
-from ..irf import EffectiveAreaTable, EnergyDispersion
-from ..utils.energy import EnergyBounds, Energy
-from ..utils.scripts import make_path, write_yaml
 
 __all__ = [
     'SpectrumExtraction',

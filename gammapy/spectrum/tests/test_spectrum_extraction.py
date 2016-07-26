@@ -5,11 +5,9 @@ from astropy.tests.helper import pytest
 import astropy.units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.tests.helper import assert_quantity_allclose
-from ...extern.regions.shapes import CircleSkyRegion
-from ...utils.energy import EnergyBounds
+from regions import CircleSkyRegion
 from ...utils.scripts import make_path
 from ...utils.testing import requires_dependency, requires_data
-from ...background import ring_background_estimate
 from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import ExclusionMask

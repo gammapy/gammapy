@@ -4,7 +4,7 @@ import numpy as np
 from astropy.table import vstack as table_vstack
 from astropy.coordinates import SkyCoord
 import astropy.units as u
-from ..extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ..stats import Stats
 
 __all__ = [
@@ -43,7 +43,7 @@ class Target(object):
 
     >>> import astropy.units as u
     >>> from astropy.coordinates import SkyCoord
-    >>> from gammapy.extern.regions import CircleSkyRegion
+    >>> from regions import CircleSkyRegion
     >>> from gammapy.data import Target
     >>> pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg, frame='icrs')
     >>> on_size = 0.3 * u.deg
