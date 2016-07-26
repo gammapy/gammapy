@@ -9,7 +9,6 @@ from astropy.table import Table
 __all__ = [
     'EffectiveAreaTable',
     'EffectiveAreaTable2D',
-    'abramowski_effective_area',
 ]
 
 
@@ -24,6 +23,43 @@ class EffectiveAreaTable(NDDataArray):
         Bin edges of energy axis
     data : `~astropy.units.Quantity`
         Effective area
+
+    Examples
+    --------
+    Plot parametrized effective area for HESS, HESS2 and CTA.
+
+    .. plot::
+        :include-source:
+
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import astropy.units as u
+        from gammapy.irf import EffectiveAreaTable
+
+        energy = np.logspace(-3, 3, 100) * u.TeV
+
+        for instrument in ['HESS', 'HESS2', 'CTA']:
+            aeff = EffectiveAreaTable.from_parametrization(energy, instrument)
+            ax = aeff.plot(label=instrument)
+
+        ax.set_yscale('log')
+        ax.set_xlim([1e-3, 1e3])
+        ax.set_ylim([1e3, 1e12])
+        plt.legend(loc='best')
+        plt.show()
+        
+    Find energy where the effective area is at 10% of its maximum value
+
+    >>> import numpy as np
+    >>> from gammapy.irf import EffectiveAreaTable 
+    >>> import astropy.units as u  
+    >>> energy = np.logspace(-1,2) * u.TeV
+    >>> aeff_max = aeff.max_area
+    >>> print(aeff_max).to('m2')
+    156909.413371 m2
+    >>> ener = aeff.find_energy(0.1 * aeff_max)
+    >>> print(ener) 
+    0.185368478744 TeV 
     """
     energy = BinnedDataAxis(interpolation_mode='log')
     """Energy Axis"""
@@ -72,19 +108,44 @@ class EffectiveAreaTable(NDDataArray):
     def from_parametrization(cls, energy, instrument='HESS'):
         """Get parametrized effective area 
 
-        see :func:`~gammapy.irf.abramowski_effective_area`
+        Parametrizations of the effective areas of different Cherenkov
+        telescopes taken from Appendix B of Abramowski et al. (2010), see
+        http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
+
+        .. math::
+            A_{eff}(E) = g_1 \\left(\\frac{E}{\\mathrm{MeV}}\\right)^{-g_2}\\exp{\\left(-\\frac{g_3}{E}\\right)}
 
         Parameters
         ----------
         energy : `~astropy.units.Quantity`
-            Energy axis
+            Energy binning, analytic function is evaluated at log centers
         instrument : {'HESS', 'HESS2', 'CTA'}
             Instrument name
         """
+        # Put the parameters g in a dictionary.
+        # Units: g1 (cm^2), g2 (), g3 (MeV)
+        # Note that whereas in the paper the parameter index is 1-based,
+        # here it is 0-based
+        pars = {'HESS': [6.85e9, 0.0891, 5e5],
+                'HESS2': [2.05e9, 0.0891, 1e5],
+                'CTA': [1.71e11, 0.0891, 1e5]}
+
+        if instrument not in pars.keys():
+            ss = 'Unknown instrument: {0}\n'.format(instrument)
+            ss += 'Valid instruments: HESS, HESS2, CTA'
+            raise ValueError(ss)
+
         ret = cls(energy=energy)
-        arf_data = abramowski_effective_area(energy=ret.energy.log_center(),
-                                             instrument=instrument)
-        ret.data = arf_data
+        xx = ret.energy.nodes.to('MeV').value
+
+        g1 = pars[instrument][0]
+        g2 = pars[instrument][1]
+        g3 = -pars[instrument][2]
+        
+        value = g1 * xx ** (-g2) * np.exp(g3 / xx)
+
+        ret.data = value * u.cm ** 2
+
         return ret
 
     @classmethod
@@ -386,45 +447,3 @@ class EffectiveAreaTable2D(NDDataArray):
         return fig
 
 
-def abramowski_effective_area(energy, instrument='HESS'):
-    """IACT effective area parametrization
-
-    Parametrizations of the effective areas of different Cherenkov telescopes
-    taken from Appendix B of Abramowski et al. (2010), see
-    http://adsabs.harvard.edu/abs/2010MNRAS.402.1342A .
-
-    .. math::
-        A_{eff}(E) = g_1 \\left(\\frac{E}{\\mathrm{MeV}}\\right)^{-g_2}\\exp{\\left(-\\frac{g_3}{E}\\right)}
-
-    Parameters
-    ----------
-    energy : `~astropy.units.Quantity`
-        Energy
-    instrument : {'HESS', 'HESS2', 'CTA'}
-        Instrument name
-
-    Returns
-    -------
-    effective_area : `~astropy.units.Quantity`
-        Effective area in cm^2
-    """
-    # Put the parameters g in a dictionary.
-    # Units: g1 (cm^2), g2 (), g3 (MeV)
-    # Note that whereas in the paper the parameter index is 1-based,
-    # here it is 0-based
-    pars = {'HESS': [6.85e9, 0.0891, 5e5],
-            'HESS2': [2.05e9, 0.0891, 1e5],
-            'CTA': [1.71e11, 0.0891, 1e5]}
-
-    energy = energy.to('MeV').value
-
-    if instrument not in pars.keys():
-        ss = 'Unknown instrument: {0}\n'.format(instrument)
-        ss += 'Valid instruments: HESS, HESS2, CTA'
-        raise ValueError(ss)
-
-    g1 = pars[instrument][0]
-    g2 = pars[instrument][1]
-    g3 = -pars[instrument][2]
-    value = g1 * energy ** (-g2) * np.exp(g3 / energy)
-    return value * u.cm * u.cm

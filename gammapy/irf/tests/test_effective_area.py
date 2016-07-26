@@ -6,10 +6,7 @@ from numpy.testing import assert_allclose, assert_equal
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data, data_manager
-from ...irf.effective_area import (
-    EffectiveAreaTable2D, EffectiveAreaTable, abramowski_effective_area
-)
-
+from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
 @requires_dependency('scipy')
 def test_EffectiveAreaTable2D_generic():
@@ -197,17 +194,21 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     assert vals[1] == 0
     assert vals[-1] == 3
 
-def test_abramowski_effective_area():
-    energy = 100 * u.GeV
+def test_EffectiveAreaTableParametrization():
+    # Log center of this is 100 GeV
+    energy = [80, 125] * u.GeV
     area_ref = 1.65469579e+07 * u.cm * u.cm
 
-    area = abramowski_effective_area(energy, 'HESS')
-    assert_allclose(area, area_ref)
-    assert area.unit == area_ref.unit
+    area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
+    assert_allclose(area.data, area_ref)
+    assert area.data.unit == area_ref.unit
 
-    energy = [0.1, 2] * u.TeV
+    # Log center of this is 0.1, 2 TeV
+    energy = [0.08, 0.125, 32] * u.TeV
     area_ref = [1.65469579e+07, 1.46451957e+09] * u.cm * u.cm
 
-    area = abramowski_effective_area(energy, 'HESS')
-    assert_allclose(area, area_ref)
-    assert area.unit == area_ref.unit
+    area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
+    assert_allclose(area.data, area_ref)
+    assert area.data.unit == area_ref.unit
+    
+    #TODO: Use this to test interpolation behaviour etc.
