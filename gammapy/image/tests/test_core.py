@@ -261,6 +261,27 @@ class TestSkyMapPoisson:
         with pytest.raises(WcsError):
             image.paste(cutout)
 
+    @pytest.mark.parametrize(('shape', 'factor'), [((4, 4), 2),
+                                                   ((9, 9), 3)])
+    def test_downsample(self, shape, factor):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
+        image_downsampled = image.downsample(factor=factor)
+        separation = image.center().separation(image_downsampled.center())
+        assert_quantity_allclose(separation, Quantity(0, 'deg'))
+        assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
+
+    @pytest.mark.parametrize(('shape', 'factor'), [((2, 2), 2),
+                                                   ((3, 3), 3)])
+    def test_upsample(self, shape, factor):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
+        image_upsampled = image.upsample(factor=factor)
+        separation = image.center().separation(image_upsampled.center())
+        assert_quantity_allclose(separation, Quantity(0, 'deg'))
+        assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
+
+
 
 class TestSkyImage:
     def setup(self):
@@ -286,7 +307,7 @@ def test_image_pad():
     image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
-    image2 = image.pad(pad_to_factor=4, mode='reflect')
+    image2 = image.pad(shape_divisible_by=4, mode='reflect')
     assert image2.data.shape == (16, 12)
 
 

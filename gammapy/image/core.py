@@ -308,7 +308,7 @@ class SkyImage(object):
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
-            Position on the sky. 
+            Position on the sky.
 
         Returns
         -------
@@ -415,7 +415,8 @@ class SkyImage(object):
         image = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return image
 
-    def pad(self, mode, pad_to_factor=None, pad_width=None, **kwargs):
+    def pad(self, mode, shape=None, width=None, shape_divisible_by=None,
+            where='symmetric',**kwargs):
         """
         Pad image to the nearest larger shape, that is divisible by the given factor in both axis.
 
@@ -424,11 +425,16 @@ class SkyImage(object):
         Parameters
         ----------
         mode : str
-            Padding mode, passed to `numpy.pad`.
-        pad_to_factor : int
-            Factor used for output shape computation
-        pad_width: {sequence, array_like, int}
+            Padding mode, passed to `~numpy.pad`.
+        shape : tuple (optional)
+            Pad image to the given shape.
+        width: {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
+        shape_divisible_by : int (optional)
+            Pad image to nearest shape, that is divisable by the given int in
+            all axes.
+        **kwargs : dict
+            Keyword arguments passed to `~numpy.pad`.
 
         Returns
         -------
@@ -441,31 +447,134 @@ class SkyImage(object):
         >>> image = SkyImage.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
         (13, 10)
-        >>> image2 = image.pad(pad_to_factor=4, mode='reflect')
+        >>> image2 = image.pad(divisible_by=4, mode='reflect')
         >>> image2.data.shape
         (16, 12)
         """
-        if pad_to_factor is not None and pad_width is not None:
-            raise ValueError('Indicate only one parameter: '
-                             'either "pad_width" or "pad_to_factor"')
-        if pad_to_factor is None and pad_width is None:
-            raise ValueError('One parameter must be indicated: '
-                             'either "pad_width" or "pad_to_factor"')
 
-        if pad_to_factor is not None:
-            pad_width = pad_to_factor - (np.array(self.data.shape) % pad_to_factor)
-            pad_width = [(0, pad_width[0]), (0, pad_width[1])]
+        if shape_divisible_by is not None and width is not None:
+            raise ValueError('Indicate only one parameter: '
+                             'either "width" or "shape_divisible_by"')
+        if shape_divisible_by is None and width is None:
+            raise ValueError('One parameter must be indicated: '
+                             'either "width" or "shape_divisible_by"')
+
+        if shape_divisible_by is not None:
+            width = shape_divisible_by - (np.array(self.data.shape) % shape_divisible_by)
+            width = [(0, width[0]), (0, width[1])]
+
+
+        if shape is not None:
+            x_pad = (shape[1] - image.shape[1]) // 2
+            y_pad = (shape[0] - image.shape[0]) // 2
+            #converting from unicode to ascii string as a workaround
+            #for https://github.com/numpy/numpy/issues/7112
+            image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
+
 
         # converting from unicode to ascii string as a workaround
         # for https://github.com/numpy/numpy/issues/7112
         mode = str(mode)
 
-        data = np.pad(self.data, pad_width=pad_width, mode=mode, **kwargs)
+        data = np.pad(self.data, pad_width=width, mode=mode, **kwargs)
 
         # We don't have to adjust WCS here, because we only pad on the
         # right and top, and for this change, the CRPIX doesn't change.
 
         return SkyImage(data=data, wcs=self.wcs)
+
+    def crop(self, shape=None, where='symmetric'):
+        """
+        Crop sky image to a given shape.
+
+        Paramters
+        ---------
+        shape : tuple
+            Desired shape.
+        where : {'symmetric', 'top & right'}
+            Where to crop the image. 'symmetric' crops all edges, so that the
+            center of the image is unchanged. 'top & right' crops the top and
+            right boundary of the sky image.
+        """
+        xdiff = (self.data.shape[1] - shape[1])
+        ydiff = (self.data.shape[0] - shape[0])
+        if mode == 'symmetric':
+            x_crop = xdiff // 2
+            y_crop = ydiff // 2
+            data = self.data[y_crop:-y_crop, x_crop:-x_crop]
+
+            # adjust WCS
+            wcs = None
+        elif mode == 'top & right':
+            data = self.data[:-ydiff, :-xdiff]
+            wcs = self.wcs
+
+        return SkyImage(data=data, wcs=wcs)
+
+    def downsample(self, factor, method=np.nansum):
+        """
+        Down sample image by a given factor.
+
+        The image is down sampled using `skimage.measure.block_reduce`. If the
+        shape of the data is not divisible by the down sampling factor, the image
+        must be padded beforehand to the correct shape.
+
+        Parameters
+        ----------
+        factor : int
+            Down sampling factor, must be power of two.
+        method : np.ufunc (np.nansum), optional
+            Method how to combine the image blocks.
+
+        Returns
+        -------
+        image : `SkyImage`
+            Down sampled image.
+        """
+        from skimage.measure import block_reduce
+
+        shape = self.data.shape
+        factor = int(factor)
+        if not (np.mod(shape, factor) == 0).all():
+            raise ValueError('Data shape {0} is not divisable by {1} in all axes.'
+                             'Pad image prior to downsamling to a correct'
+                             ' shape.'.format(shape, factor))
+
+        data = block_reduce(self.data, (factor, factor), method)
+
+        # Adjust WCS
+        wcs = _get_resampled_wcs(self, data, factor, downsampled=True)
+
+        return SkyImage(data=data, wcs=wcs)
+
+    def upsample(self, factor, order=3, crop=False):
+        """
+        Up sample image by a given factor.
+
+        The image is up sampled using `scipy.ndimage.zoom`.
+
+        Parameters
+        ----------
+        factor : int
+            up sampling factor, must be power of two.
+        order : int
+            Order of the interpolation usef for upsampling.
+        crop : bool
+            Crop image after upsampling to ''
+
+        Returns
+        -------
+        image : `SkyImage`
+            Up sampled image.
+        """
+        from scipy.ndimage import zoom
+
+        factor = int(factor)
+        data = zoom(self.data, factor, order=order)
+
+        # Adjust WCS
+        wcs = _get_resampled_wcs(self, data, factor, downsampled=False)
+        return SkyImage(data=data, wcs=wcs)
 
     def lookup_max(self, region=None):
         """
@@ -519,7 +628,7 @@ class SkyImage(object):
         Parameters
         ----------
         position : `~astropy.coordinates.SkyCoord`
-            Position on the sky. 
+            Position on the sky.
         interpolation : {'None'}
             Interpolation mode.
         """
@@ -570,7 +679,7 @@ class SkyImage(object):
     def to_image_hdu(self):
         """
         Convert image to `~astropy.fits.PrimaryHDU`.
-        
+
         Returns
         -------
         primaryhdu : `~astropy.fits.PrimaryHDU`
@@ -932,3 +1041,26 @@ class SkyImageCollection(Bunch):
             info += self[name].__str__()
             info += '\n'
         return info
+
+
+def _get_resampled_wcs(skyimage, data_resampled, factor, downsampled):
+    """
+    Get resampled WCS object for a given original skymap, resampled data and
+    resampling factor.
+    """
+    nypix, nxpix = data_resampled.shape
+    header = skyimage.wcs.to_header()
+
+    # use center as reference value
+    crval = skyimage.center()
+    if downsampled:
+        header['CDELT1'] *= factor
+        header['CDELT2'] *= factor
+    else:
+        header['CDELT1'] /= factor
+        header['CDELT2'] /= factor
+    header['CRPIX1'] = (nxpix + 1) / 2.
+    header['CRPIX2'] = (nypix + 1) / 2.
+    header['CRVAL1'] = crval.data.lon.value
+    header['CRVAL2'] = crval.data.lat.value
+    return WCS(header)
