@@ -10,7 +10,6 @@ from .data_manage import *
 from .data_select import *
 from .data_show import *
 
-from .spectrum_pfsim import *
 from .spectrum_regions import *
 
 from .image_bin import *
@@ -23,7 +22,6 @@ from .image_model import *
 from .image_model_sherpa import *
 from .image_pipe import *
 from .image_ts import *
-from .image_pfmap import *
 
 from .cube_background import *
 from .cube_bin import *
