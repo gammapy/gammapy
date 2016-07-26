@@ -113,7 +113,8 @@ setup(
       analysis=[
           'scipy>=0.15',
           'scikit-image>=0.10',
-          'photutils>=0.1',
+          'regions',
+          'photutils',
           'reproject',
           'gwcs',
           'astroplan',

@@ -27,11 +27,11 @@ env:
         - NUMPY_VERSION=1.10
         - ASTROPY_VERSION=1.1
         - LIBGFORTRAN_VERSION=1.0
-        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes sherpa libgfortran=$LIBGFORTRAN_VERSION'
-        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes sherpa'
-        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes'
-        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy sherpa libgfortran=$LIBGFORTRAN_VERSION'
-        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas pyregion naima photutils wcsaxes pygments aplpy'
+        - CONDA_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa libgfortran=$LIBGFORTRAN_VERSION'
+        - CONDA_DEPENDENCIES_OSX='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa'
+        - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes'
+        - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy sherpa libgfortran=$LIBGFORTRAN_VERSION'
+        - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy'
         - PIP_DEPENDENCIES='uncertainties reproject'
         - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true

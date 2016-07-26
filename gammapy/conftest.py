@@ -31,7 +31,7 @@ PYTEST_HEADER_MODULES['photutils'] = 'photutils'
 PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
 PYTEST_HEADER_MODULES['wcsaxes'] = 'wcsaxes'
 PYTEST_HEADER_MODULES['aplpy'] = 'aplpy'
-PYTEST_HEADER_MODULES['pyregion'] = 'pyregion'
+PYTEST_HEADER_MODULES['regions'] = 'regions'
 PYTEST_HEADER_MODULES['astroplan'] = 'astroplan'
 
 
