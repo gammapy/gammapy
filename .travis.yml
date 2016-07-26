@@ -113,11 +113,11 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=2.7 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
+               PIP_DEPENDENCIES='regions'
         - os: linux
           env: PYTHON_VERSION=3.5 SETUP_CMD='test -V'
                CONDA_DEPENDENCIES='Cython click'
-               PIP_DEPENDENCIES=''
+               PIP_DEPENDENCIES='regions'
 
         # Test with other numpy versions. Not all of the packages are
         # available with these on conda, thus moving some of them to pip
