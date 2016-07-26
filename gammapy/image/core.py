@@ -547,7 +547,7 @@ class SkyImage(object):
 
         return SkyImage(data=data, wcs=wcs)
 
-    def upsample(self, factor, order=3, crop=False):
+    def upsample(self, factor, order=3):
         """
         Up sample image by a given factor.
 
@@ -559,8 +559,6 @@ class SkyImage(object):
             up sampling factor, must be power of two.
         order : int
             Order of the interpolation usef for upsampling.
-        crop : bool
-            Crop image after upsampling to ''
 
         Returns
         -------

@@ -268,8 +268,13 @@ class TestSkyMapPoisson:
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
         image_downsampled = image.downsample(factor=factor)
         separation = image.center().separation(image_downsampled.center())
+
+        # check WCS
         assert_quantity_allclose(separation, Quantity(0, 'deg'))
+
+        # check data shape
         assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
+
 
     @pytest.mark.parametrize(('shape', 'factor'), [((2, 2), 2),
                                                    ((3, 3), 3)])
@@ -278,9 +283,22 @@ class TestSkyMapPoisson:
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
         image_upsampled = image.upsample(factor=factor)
         separation = image.center().separation(image_upsampled.center())
+
+        # check WCS
         assert_quantity_allclose(separation, Quantity(0, 'deg'))
+
+        # check data shape
         assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
 
+
+    @pytest.mark.parametrize(('shape', 'factor'), [((4, 4), 2),
+                                                   ((9, 9), 3)])
+    def test_down_and_upsample(self, shape, factor):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02, fill=1.)
+        image_downsampled = image.downsample(factor=factor, method=np.nanmean)
+        image_upsampled = image_downsampled.upsample(factor=factor)
+        assert_allclose(image.data, image_upsampled.data)
 
 
 class TestSkyImage:
