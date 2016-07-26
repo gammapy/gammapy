@@ -1,10 +1,11 @@
 Cython
 numpy
 astropy
+regions
+# -e git+http://github.com/astropy/regions.git#egg=regions
 scipy
 scikit-image
 -e git+http://github.com/astrofrog/reproject.git#egg=reproject
-#-e git+http://github.com/astroplanners/astroplan.git#egg=astroplan
 
 # https://github.com/zblz/naima/issues/88
 #-e git+http://github.com/zblz/naima.git#egg=naima

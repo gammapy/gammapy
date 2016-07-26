@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.tests.helper import pytest
-from ...extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ..reflected import find_reflected_regions
 from ...image import ExclusionMask
 from ...datasets import gammapy_extra

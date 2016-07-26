@@ -3,13 +3,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy import nan
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+from astropy.extern.six import string_types
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
-from astropy.extern.six import string_types
-from ...extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image

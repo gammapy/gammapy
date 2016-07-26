@@ -108,12 +108,13 @@ setup(
       'click',
       'numpy>=1.8',
       'astropy>=1.1',
+      'regions',
     ],
     extras_require=dict(
       analysis=[
           'scipy>=0.15',
           'scikit-image>=0.10',
-          'photutils>=0.1',
+          'photutils',
           'reproject',
           'gwcs',
           'astroplan',

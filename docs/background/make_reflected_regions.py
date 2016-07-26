@@ -1,6 +1,6 @@
 """Example how to compute and plot reflected regions."""
 from astropy.coordinates import SkyCoord, Angle
-from gammapy.extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from gammapy.image import ExclusionMask
 from gammapy.background import find_reflected_regions
 

@@ -2,10 +2,10 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
 from astropy.coordinates import Angle, SkyCoord
+from regions import CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import EventList, EventListDataset, EventListDatasetChecker
 from ...datasets import gammapy_extra
-from ...extern.regions import CircleSkyRegion
 
 
 @requires_data('gammapy-extra')

@@ -65,6 +65,7 @@ setup_cfg = dict(conf.items('metadata'))
 # so we override the `intersphinx_mapping` entry pointing to the stable docs version
 # that is listed in `astropy/sphinx/conf.py`.
 intersphinx_mapping['astropy'] = ('http://docs.astropy.org/en/latest/', None)
+intersphinx_mapping['regions'] = ('http://astropy-regions.readthedocs.io/en/latest/', None)
 intersphinx_mapping['reproject'] = ('http://reproject.readthedocs.io/en/latest/', None)
 intersphinx_mapping['gadf'] = ('http://gamma-astro-data-formats.readthedocs.io/en/latest/', None)
 

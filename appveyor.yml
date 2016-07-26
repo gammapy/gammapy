@@ -11,6 +11,7 @@ environment:
                         # of 32 bit and 64 bit builds are needed, move this
                         # to the matrix section.
       CONDA_DEPENDENCIES: "Cython click pyyaml scipy jinja2 click scikit-image matplotlib"
+      PIP_DEPENDENCIES: "regions"
       FETCH_GAMMAPY_EXTRA: true
 
   matrix:

@@ -56,6 +56,8 @@ class ExclusionMask(SkyImage):
         Uses the pyregion package
         (http://pyregion.readthedocs.io/en/latest/index.html)
 
+        TODO: change to use the https://github.com/astropy/regions package.
+
         Parameters
         ----------
         excl_file : str

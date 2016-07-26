@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
-from ...extern.regions import CircleSkyRegion
+from regions import CircleSkyRegion
 from ...data import DataStore, ObservationTableSummary, ObservationSummary
 from ...data import ObservationStats, ObservationStatsList, ObservationList
 from ...data import Target
