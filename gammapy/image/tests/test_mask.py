@@ -10,9 +10,9 @@ from ...utils.testing import requires_dependency
 def test_random_creation():
     exclusion = SkyMask.empty(nxpix=300, nypix=100)
     exclusion.fill_random_circles(n=6, max_rad=10)
-    assert exclusion.mask.shape[0] == 100
+    assert exclusion.data.shape[0] == 100
 
-    excluded = np.where(exclusion.mask == 0)
+    excluded = np.where(exclusion.data == 0)
     assert excluded[0].size != 0
 
 
