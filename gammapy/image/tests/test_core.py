@@ -285,7 +285,7 @@ class TestSkyMapPoisson:
         separation = image.center().separation(image_upsampled.center())
 
         # check WCS
-        assert_quantity_allclose(separation, Quantity(0, 'deg'))
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
 
         # check data shape
         assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)

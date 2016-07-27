@@ -463,13 +463,12 @@ class SkyImage(object):
             width = shape_divisible_by - (np.array(self.data.shape) % shape_divisible_by)
             width = [(0, width[0]), (0, width[1])]
 
-        if where == 'symmetric':
+        if where == 'symetric':
             x_pad = (shape[1] - image.shape[1]) // 2
             y_pad = (shape[0] - image.shape[0]) // 2
             #converting from unicode to ascii string as a workaround
             #for https://github.com/numpy/numpy/issues/7112
             image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
-
 
         # converting from unicode to ascii string as a workaround
         # for https://github.com/numpy/numpy/issues/7112
@@ -544,8 +543,7 @@ class SkyImage(object):
         data = block_reduce(self.data, (factor, factor), method)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self, data, factor, downsampled=True)
-
+        wcs = _get_resampled_wcs(self, factor, downsampled=True)
         return SkyImage(data=data, wcs=wcs)
 
     def upsample(self, factor, order=3):
@@ -572,7 +570,7 @@ class SkyImage(object):
         data = zoom(self.data, factor, order=order)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self, data, factor, downsampled=False)
+        wcs = _get_resampled_wcs(self, factor, downsampled=False)
         return SkyImage(data=data, wcs=wcs)
 
     def lookup_max(self, region=None):
@@ -1042,24 +1040,15 @@ class SkyImageCollection(Bunch):
         return info
 
 
-def _get_resampled_wcs(skyimage, data_resampled, factor, downsampled):
+def _get_resampled_wcs(skyimage, factor, downsampled):
     """
-    Get resampled WCS object for a given original skymap, resampled data and
-    resampling factor.
+    Get resampled WCS object.
     """
-    nypix, nxpix = data_resampled.shape
-    header = skyimage.wcs.to_header()
+    wcs = skyimage.wcs.deepcopy()
 
-    # use center as reference value
-    crval = skyimage.center()
-    if downsampled:
-        header['CDELT1'] *= factor
-        header['CDELT2'] *= factor
-    else:
-        header['CDELT1'] /= factor
-        header['CDELT2'] /= factor
-    header['CRPIX1'] = (nxpix + 1) / 2.
-    header['CRPIX2'] = (nypix + 1) / 2.
-    header['CRVAL1'] = crval.data.lon.value
-    header['CRVAL2'] = crval.data.lat.value
-    return WCS(header)
+    if not downsampled:
+        factor = 1. / factor
+
+    wcs.wcs.cdelt *= factor
+    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
+    return wcs
