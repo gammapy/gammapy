@@ -719,7 +719,7 @@ class SkyImage(object):
 
     def threshold(self, threshold):
         """
-        Threshold sykmap data to create a `~gammapy.image.ExclusionMask`.
+        Threshold sykmap data to create a `~gammapy.image.SkyMask`.
 
         Parameters
         ----------
@@ -728,13 +728,13 @@ class SkyImage(object):
 
         Returns
         -------
-        mask : `~gammapy.image.ExclusionMask`
+        mask : `~gammapy.image.SkyMask`
             Exclusion mask object.
 
         TODO: some more docs and example
         """
-        from .mask import ExclusionMask
-        mask = ExclusionMask.empty_like(self)
+        from .mask import SkyMask
+        mask = SkyMask.empty_like(self)
         mask.data = np.where(self.data > threshold, 0, 1)
         return mask
 

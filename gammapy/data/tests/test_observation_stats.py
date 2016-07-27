@@ -8,7 +8,7 @@ from regions import CircleSkyRegion
 from ...data import DataStore, ObservationList, ObservationStats, Target
 from ...utils.testing import requires_data, requires_dependency
 from ...background import reflected_regions_background_estimate as refl
-from ...image import ExclusionMask
+from ...image import SkyMask
 
 
 @requires_data('gammapy-extra')
@@ -43,7 +43,7 @@ def target():
 @requires_data('gammapy-extra')
 @pytest.fixture
 def get_mask():
-    mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
     return mask
 
 

@@ -10,7 +10,7 @@ from ...utils.scripts import make_path
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
-from ...image import ExclusionMask
+from ...image import SkyMask
 from ...spectrum import SpectrumExtraction, SpectrumObservation
 import numpy as np
 
@@ -40,7 +40,7 @@ def test_spectrum_extraction(pars, results, tmpdir):
 
     exclusion_file = gammapy_extra.filename(
         "datasets/exclusion_masks/tevcat_exclusion.fits")
-    excl = ExclusionMask.read(exclusion_file)
+    excl = SkyMask.read(exclusion_file)
 
     bk = dict(method='reflected', n_min=2, exclusion=excl)
 

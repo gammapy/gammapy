@@ -10,7 +10,7 @@ from ...data import ObservationStats, ObservationStatsList, ObservationList
 from ...data import Target
 from ...utils.testing import requires_data, requires_dependency
 from ...background import reflected_regions_background_estimate as refl
-from ...image import ExclusionMask
+from ...image import SkyMask
 
 
 def table_summary():
@@ -53,7 +53,7 @@ def obs_summary():
     target = Target(position=pos, on_region=on_region,
                     name='Crab Nebula', tag='crab')
 
-    mask = ExclusionMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
+    mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
     obs_list = ObservationList([datastore.obs(_) for _ in run_list])
     obs_stats = ObservationStatsList()

@@ -39,7 +39,7 @@ class ObsImage(object):
         Energy band for which we want to compute the image
     offset_band : `astropy.coordinates.Angle`
         Offset Band where you compute the image
-    exclusion_mask : `~gammapy.image.ExclusionMask`
+    exclusion_mask : `~gammapy.image.SkyMask`
             Exclusion regions
     ncounts_min : int
             Minimum counts required for the observation
@@ -251,7 +251,7 @@ class MosaicImage(object):
         `DataStore` where are situated the events
     obs_table : `~astropy.table.Table`
             Required columns: OBS_ID
-    exclusion_mask : `~gammapy.image.ExclusionMask`
+    exclusion_mask : `~gammapy.image.SkyMask`
             Exclusion regions
     ncounts_min : int
             Minimum counts required for the observation

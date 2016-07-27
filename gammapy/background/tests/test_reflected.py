@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ..reflected import find_reflected_regions
-from ...image import ExclusionMask
+from ...image import SkyMask
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 
@@ -15,7 +15,7 @@ def mask():
     """Example mask for testing."""
     testfile = gammapy_extra.filename('datasets/exclusion_masks/tevcat_exclusion.fits')
     hdu = fits.open(testfile)[1]
-    return ExclusionMask.from_image_hdu(hdu)
+    return SkyMask.from_image_hdu(hdu)
 
 
 @requires_dependency('scipy')

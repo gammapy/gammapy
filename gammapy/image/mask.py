@@ -12,13 +12,13 @@ from .core import SkyImage
 
 
 __all__ = [
-    'ExclusionMask',
+    'SkyMask',
     'make_tevcat_exclusion_mask'
 ]
 
 
-class ExclusionMask(SkyImage):
-    """Exclusion mask
+class SkyMask(SkyImage):
+    """Sky image mask.
 
     """
 
@@ -90,7 +90,7 @@ class ExclusionMask(SkyImage):
         kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
         kwargs.setdefault('origin', 'lower')
 
-        super(ExclusionMask, self).plot(ax, fig, **kwargs)
+        super(SkyMask, self).plot(ax, fig, **kwargs)
 
     @lazyproperty
     def distance_image(self):
@@ -122,9 +122,9 @@ class ExclusionMask(SkyImage):
 
         Examples
         --------
-        >>> from gammapy.image import ExclusionMask
+        >>> from gammapy.image import SkyMask
         >>> data = np.array([[0., 0., 1.], [1., 1., 1.]])
-        >>> mask = ExclusionMask(data=data)
+        >>> mask = SkyMask(data=data)
         >>> print(mask.distance_image.data)
         [[-1, -1, 1], [1, 1, 1.41421356]]
         """
@@ -155,7 +155,7 @@ class ExclusionMask(SkyImage):
     def read(cls, fobj, *args, **kwargs):
         # Check if extension name is given, else default to 'exclusion'
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
-        return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
+        return super(SkyMask, cls).read(fobj, *args, **kwargs)
 
     def contains(self, position):
         """
@@ -180,16 +180,16 @@ def make_tevcat_exclusion_mask():
 
     Returns
     -------
-    mask : `~gammapy.image.ExclusionMask`
+    mask : `~gammapy.image.SkyMask`
         Exclusion mask
     """
 
-    # TODO: make this a method ExclusionMask.from_catalog()?
+    # TODO: make this a method SkyMask.from_catalog()?
     from gammapy.catalog import load_catalog_tevcat
 
     tevcat = load_catalog_tevcat()
-    all_sky_exclusion = ExclusionMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
-                                            fill=1, dtype='int')
+    all_sky_exclusion = SkyMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
+                                      fill=1, dtype='int')
     val_lon, val_lat = all_sky_exclusion.coordinates()
     lons = Longitude(val_lon, 'deg')
     lats = Latitude(val_lat, 'deg')
