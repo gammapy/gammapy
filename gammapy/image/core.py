@@ -415,99 +415,76 @@ class SkyImage(object):
         image = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return image
 
-    def pad(self, mode, shape=None, width=None, shape_divisible_by=None,
-            where='symmetric',**kwargs):
+    def pad(self, mode, pad_to_factor=None, pad_width=None, shape=None, **kwargs):
         """
         Pad image to the nearest larger shape, that is divisible by the given factor in both axis.
-
         Calls `numpy.pad`, passing ``mode`` and ``kwargs`` to it.
-
         Parameters
         ----------
         mode : str
-            Padding mode, passed to `~numpy.pad`.
-        shape : tuple (optional)
-            Pad image to the given shape.
-        width: {sequence, array_like, int}
+            Padding mode, passed to `numpy.pad`.
+        pad_to_factor : int
+            Factor used for output shape computation
+        pad_width: {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
-        shape_divisible_by : int (optional)
-            Pad image to nearest shape, that is divisable by the given int in
-            all axes.
-        **kwargs : dict
-            Keyword arguments passed to `~numpy.pad`.
-
         Returns
         -------
         image : `~gammapy.image.SkyImage`
             Padded image
-
         Examples
         --------
         >>> from gammapy.image import SkyImage
         >>> image = SkyImage.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
         (13, 10)
-        >>> image2 = image.pad(divisible_by=4, mode='reflect')
+        >>> image2 = image.pad(pad_to_factor=4, mode='reflect')
         >>> image2.data.shape
         (16, 12)
         """
-
-        if shape_divisible_by is not None and width is not None:
+        if pad_to_factor is not None and pad_width is not None:
             raise ValueError('Indicate only one parameter: '
-                             'either "width" or "shape_divisible_by"')
-        if shape_divisible_by is None and width is None:
+                             'either "pad_width" or "pad_to_factor"')
+        if pad_to_factor is None and pad_width is None:
             raise ValueError('One parameter must be indicated: '
-                             'either "width" or "shape_divisible_by"')
+                             'either "pad_width" or "pad_to_factor"')
 
-        if shape_divisible_by is not None:
-            width = shape_divisible_by - (np.array(self.data.shape) % shape_divisible_by)
-            width = [(0, width[0]), (0, width[1])]
-
-        if where == 'symetric':
-            x_pad = (shape[1] - image.shape[1]) // 2
-            y_pad = (shape[0] - image.shape[0]) // 2
-            #converting from unicode to ascii string as a workaround
-            #for https://github.com/numpy/numpy/issues/7112
-            image = np.pad(image, ((y_pad, y_pad), (x_pad, x_pad)), mode=str('reflect'))
+        if pad_to_factor is not None:
+            pad_width = pad_to_factor - (np.array(self.data.shape) % pad_to_factor)
+            pad_width = [(0, pad_width[0]), (0, pad_width[1])]
 
         # converting from unicode to ascii string as a workaround
         # for https://github.com/numpy/numpy/issues/7112
         mode = str(mode)
 
-        data = np.pad(self.data, pad_width=width, mode=mode, **kwargs)
+        data = np.pad(self.data, pad_width=pad_width, mode=mode, **kwargs)
 
         # We don't have to adjust WCS here, because we only pad on the
         # right and top, and for this change, the CRPIX doesn't change.
 
         return SkyImage(data=data, wcs=self.wcs)
 
-    def crop(self, shape=None, where='symmetric'):
+    def crop(self, shape=None):
         """
-        Crop sky image to a given shape.
+        Crop sky image symmetrically to a given shape.
 
         Paramters
         ---------
         shape : tuple
             Desired shape.
-        where : {'symmetric', 'top & right'}
-            Where to crop the image. 'symmetric' crops all edges, so that the
-            center of the image is unchanged. 'top & right' crops the top and
-            right boundary of the sky image.
         """
         xdiff = (self.data.shape[1] - shape[1])
         ydiff = (self.data.shape[0] - shape[0])
-        if where == 'symmetric':
-            x_crop = xdiff // 2
-            y_crop = ydiff // 2
-            data = self.data[y_crop:-y_crop, x_crop:-x_crop]
 
-            # adjust WCS, so that image center remains unchanged
-            wcs = _get_resampled_wcs(self, data, factor, downsampled=False)
-        elif where == 'top & right':
-            data = self.data[:-ydiff, :-xdiff]
+        if (np.array([xdiff, ydiff]) % 2).any():
+            raise ValueError('For symmetric cropping, difference to new shape '
+                             'must be even in all axes.')
 
-            # WCS reamins unchanged
-            wcs = self.wcs
+        x_crop = xdiff // 2
+        y_crop = ydiff // 2
+        data = self.data[y_crop:-y_crop, x_crop:-x_crop]
+
+        wcs = self.wcs.deepcopy()
+        wcs.wcs.crpix -= np.array([x_crop, y_crop])
 
         return SkyImage(data=data, wcs=wcs)
 

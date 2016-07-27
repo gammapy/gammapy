@@ -78,7 +78,7 @@ def f_cash(x, counts, background, model):
     return _cash_sum_cython(counts, background + x * FLUX_FACTOR * model)
 
 
-def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto',
+def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample='auto',
                               residual=False, morphology='Gaussian2D', width=None,
                               *args, **kwargs):
     """
@@ -90,8 +90,8 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
     Parameters
     ----------
-    maps : `astropy.io.fits.HDUList`
-        HDU list containing the data. The list must contain the following HDU extensions:
+    skyimages : `~gammapy.image.SkyImageCollection`
+        Image collection containing the data. Must contain the following:
             * 'counts', Counts image
             * 'background', Background image
             * 'exposure', Exposure image
@@ -113,8 +113,8 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
     multiscale_result : list
         List of `~gammapy.image.SkyImageCollection` objects.
     """
-    BINSZ = abs(maps[0].header['CDELT1'])
-    shape = maps[0].data.shape
+    BINSZ = abs(skyimages.counts.wcs.wcs.cdelt[0])
+    shape = skyimages.counts.data.shape
 
     multiscale_result = []
 
@@ -140,13 +140,15 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
 
-        maps_ = {}
-        for map_, func in zip(maps, funcs):
+        skyimages_ = {}
+        for name, func in zip(skyimages._map_names, funcs):
             if downsampled:
+                skyimages_[name] = skyimages[name].pad(shape=_shape_2N(shape))
+                skyimages_[name] = skyimages_[name].downsample(factor, func)
                 maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
                                                          shape=_shape_2N(shape))
             else:
-                maps_[map_.name.lower()] = map_.data
+                skyimages_[name] = skyimages[name]
 
         # Set up PSF and source kernel
         kernel = multi_gauss_psf_kernel(psf_parameters, BINSZ=BINSZ,
@@ -182,8 +184,9 @@ def compute_ts_map_multiscale(maps, psf_parameters, scales=[0], downsample='auto
 
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
-                ts_results[name] = upsample_2N(ts_results[name].data, factor,
-                                               order=order, shape=shape)
+                ts_results[name] = ts_results[name].upsample(factor, order=order)
+                ts_results[name] = ts_results[name].crop(shape=shape)
+
         multiscale_result.append(ts_results)
 
     return multiscale_result
@@ -235,12 +238,12 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
 
     Parameters
     ----------
-    counts : `~numpy.ndarray`
-        Count map
-    background : `~numpy.ndarray`
-        Background map
-    exposure : `~numpy.ndarray`
-        Exposure map
+    counts : `~gammapy.image.SkyImage`
+        Counts image.
+    background : `~gammapy.image.SkyImage`
+        Background image
+    exposure : `~gammapy.image.SkyImage`
+        Exposure image
     kernel : `astropy.convolution.Kernel2D`
         Source model kernel.
     flux : float (None)
@@ -295,10 +298,12 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     assert counts.shape == exposure.shape
     log.info("Using method '{}'".format(method))
 
+    wcs = counts.wcs.deepcopy()
+
     # Parse data type
-    counts = counts.astype(float)
-    background = background.astype(float)
-    exposure = exposure.astype(float)
+    counts = counts.data.astype(float)
+    background = background.data.astype(float)
+    exposure = exposure.data.astype(float)
 
     # in some maps there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation
@@ -359,7 +364,7 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
-    return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes,
+    return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes, wcs=wcs,
                               niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
 
 def _ts_value(position, counts, exposure, background, C_0_map, kernel, flux,
@@ -533,7 +538,7 @@ def _root_amplitude_brentq(counts, background, model):
     # Compute amplitude bounds and assert counts > 0
     bounds = _amplitude_bounds_cython(counts, background, model)
     amplitude_min, amplitude_max, amplitude_min_total = bounds
-    
+
     if not counts.sum() > 0:
         return amplitude_min_total, 0
 
