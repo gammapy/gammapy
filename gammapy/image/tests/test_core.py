@@ -294,3 +294,16 @@ def test_image_pad():
 
     image2 = image.pad(pad_to_factor=4, mode='reflect')
     assert image2.data.shape == (16, 12)
+
+
+def test_skycoord_pixel_conversion():
+    image = SkyImage.empty(nxpix=10, nypix=15)
+
+    x, y = [5, 3.4], [8, 11.2]
+    coords = image.wcs_pixel_to_skycoord(xp=x, yp=y)
+    assert_allclose(coords.data.lon.deg, [3.5999e+02,   2.2e-02])
+    assert_allclose(coords.data.lat.deg, [0.02, 0.084])
+
+    x_new, y_new = image.wcs_skycoord_to_pixel(coords=coords)
+    assert_allclose(x, x_new)
+    assert_allclose(y, y_new)

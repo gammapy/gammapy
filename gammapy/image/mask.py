@@ -171,7 +171,7 @@ class ExclusionMask(SkyImage):
         containment : array
             Bool array
         """
-        x, y = skycoord_to_pixel(position, self.wcs, self.wcs_origin)
+        x, y = self.wcs_skycoord_to_pixel(coords=position)
         return self.data[y, x]
 
 
