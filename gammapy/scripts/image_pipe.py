@@ -81,22 +81,20 @@ class ObsImage(object):
         self.maps["counts"] = counts_map
 
     def bkg_map(self, bkg_norm=True):
-        """Make the background map for one observation from a bkg model.
+        """
+        Make the background map for one observation from a bkg model.
 
         Parameters
         ----------
         bkg_norm : bool
-            If true, apply the scaling factor from the number of counts outside the exclusion region to the bkg map
+            If true, apply the scaling factor from the number of counts
+            outside the exclusion region to the bkg map
         """
         bkg_map = SkyImage.empty_like(self.empty_image)
         table = self.bkg.acceptance_curve_in_energy_band(energy_band=self.energy_band)
         center = self.obs_center.galactic
         bkg_hdu = fill_acceptance_image(self.header, center, table["offset"], table["Acceptance"], self.offset_band[1])
-        sep_pix = Angle(np.abs(self.header["CDELT2"]), "deg")
-        solid_angle = sep_pix ** 2
-        # TODO: used the solid angle method when it will be fixed in SkyImage
-        # bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
-        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * solid_angle * self.livetime
+        bkg_map.data = Quantity(bkg_hdu.data, table["Acceptance"].unit) * bkg_map.solid_angle() * self.livetime
         bkg_map.data = bkg_map.data.decompose()
         bkg_map.data = bkg_map.data.value
         if bkg_norm:
