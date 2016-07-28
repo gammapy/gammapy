@@ -531,7 +531,7 @@ class SkyImage(object):
         factor = int(factor)
         if not (np.mod(shape, factor) == 0).all():
             raise ValueError('Data shape {0} is not divisable by {1} in all axes.'
-                             'Pad image prior to downsamling to a correct'
+                             'Pad image prior to downsamling to correct'
                              ' shape.'.format(shape, factor))
 
         data = block_reduce(self.data, (factor, factor), method)
@@ -1046,8 +1046,3 @@ def _get_resampled_wcs(skyimage, factor, downsampled):
     wcs.wcs.cdelt *= factor
     wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
     return wcs
-
-def _get_resized_wcs(skyimage, shape):
-    """
-    Get resized WCS object.
-    """

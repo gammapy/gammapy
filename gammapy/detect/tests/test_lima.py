@@ -10,7 +10,7 @@ from astropy.io import fits
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_map, compute_lima_map, compute_lima_on_off_map
 from ...datasets import load_poisson_stats_image, gammapy_extra
-from ...image import SkyImageCollection
+from ...image import SkyImageCollection, SkyImage
 
 from ...extern.pathlib import Path
 
@@ -21,7 +21,11 @@ def test_compute_lima_map():
     """
     Test Li&Ma map against TS map for Tophat kernel
     """
-    data = load_poisson_stats_image(extra_info=True)
+    filenames = load_poisson_stats_image(extra_info=True, return_filenames=True)
+    data = SkyImageCollection()
+    data.counts = SkyImage.read(filenames['counts'])
+    data.background = SkyImage.read(filenames['background'])
+    data.exposure = SkyImage.read(filenames['exposure'])
 
     kernel = Tophat2DKernel(5)
     result_lima = compute_lima_map(data['counts'], data['background'], kernel,
