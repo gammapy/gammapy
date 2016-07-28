@@ -184,14 +184,9 @@ class TestSkyMapPoisson:
         empty = SkyImage.empty()
         assert empty.data.shape == (200, 200)
 
-    def test_center(self):
-        center = self.image.center()
-        assert center.galactic.l == 0
-        assert center.galactic.b == 0
-
     def test_fill_float(self):
         image = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, dtype='int',
-                                coordsys='CEL')
+                               coordsys='CEL')
         image.fill(42)
         assert_equal(image.data, np.full((200, 200), 42))
 
@@ -213,7 +208,7 @@ class TestSkyMapPoisson:
     def test_reproject(self):
         image_1 = SkyImage.empty(nxpix=200, nypix=200, xref=0, yref=0, coordsys='CEL')
         image_2 = SkyImage.empty(nxpix=100, nypix=100, xref=0, yref=0, binsz=0.04,
-                                  coordsys='CEL')
+                                 coordsys='CEL')
         image_1.fill(1)
         image_1_repr = image_1.reproject(image_2)
         assert_allclose(image_1_repr.data, np.full((100, 100), 1))
@@ -267,25 +262,24 @@ class TestSkyMapPoisson:
             image.paste(cutout)
 
 
-class TestSkyMapCrab:
-    """
-    Test image class.
-    """
-
-    def crab_coord(self):
-        coord = SkyCoord(83.63, 22.01, unit='deg').galactic
-        return coord
-
+class TestSkyImage:
     def setup(self):
-        center = self.crab_coord()
-        self.image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.l.deg,
-                                     yref=center.b.deg, proj='TAN', coordsys='GAL')
+        self.center = SkyCoord(83.63, 22.01, unit='deg').galactic
+        self.image = SkyImage.empty(
+            nxpix=10, nypix=5, binsz=0.2,
+            xref=self.center.l.deg, yref=self.center.b.deg,
+            proj='TAN', coordsys='GAL',
+        )
 
-    def test_center(self):
-        crab_coord = self.crab_coord()
-        center = self.image.center()
-        assert_allclose(center.galactic.l, crab_coord.l, rtol=1e-2)
-        assert_allclose(center.galactic.b, crab_coord.b, rtol=1e-2)
+    def test_center_pix(self):
+        center = self.image.center_pix
+        assert_allclose(center.x, 4.5)
+        assert_allclose(center.y, 2.0)
+
+    def test_center_sky(self):
+        center = self.image.center_sky
+        assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
+        assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
 
 
 def test_image_pad():
@@ -301,7 +295,7 @@ def test_skycoord_pixel_conversion():
 
     x, y = [5, 3.4], [8, 11.2]
     coords = image.wcs_pixel_to_skycoord(xp=x, yp=y)
-    assert_allclose(coords.data.lon.deg, [3.5999e+02,   2.2e-02])
+    assert_allclose(coords.data.lon.deg, [3.5999e+02, 2.2e-02])
     assert_allclose(coords.data.lat.deg, [0.02, 0.084])
 
     x_new, y_new = image.wcs_skycoord_to_pixel(coords=coords)
