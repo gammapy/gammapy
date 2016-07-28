@@ -300,6 +300,17 @@ class TestSkyMapPoisson:
         image_upsampled = image_downsampled.upsample(factor=factor)
         assert_allclose(image.data, image_upsampled.data)
 
+    def test_crop(self):
+        image = SkyImage.empty(nxpix=9, nypix=9, binsz=0.02, proj='AIT', xref=135,
+                               yref=60)
+        image_cropped = image.crop((5, 5))
+
+        separation = image.center.separation(image_cropped.center)
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+
+        # check data shape
+        assert image_cropped.data.shape == (5, 5)
+
 
 class TestSkyImage:
     def setup(self):
