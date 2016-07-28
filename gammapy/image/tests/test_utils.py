@@ -6,7 +6,6 @@ from astropy.tests.helper import pytest
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.units import Quantity
-from ..utils import _shape_2N
 from ...utils.testing import requires_dependency, requires_data
 from ...datasets import FermiGalacticCenter
 from ...data import DataStore
@@ -117,12 +116,6 @@ def test_ref_pixel():
     footprint_1 = WCS(image_1.header).calc_footprint(center=False)
     # Lower left corner shouldn't change
     assert_allclose(footprint[0], footprint_1[0])
-
-
-def test_shape_2N():
-    shape = (34, 89, 120, 444)
-    expected_shape = (40, 96, 128, 448)
-    assert expected_shape == _shape_2N(shape=shape, N=3)
 
 
 def test_wcs_histogram2d():

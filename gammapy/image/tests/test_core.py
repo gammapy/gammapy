@@ -261,8 +261,8 @@ class TestSkyMapPoisson:
         with pytest.raises(WcsError):
             image.paste(cutout)
 
-    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 4), 2, 'CAR'),
-                                                           ((9, 9), 3, 'CAR')])
+    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 6), 2, 'CAR'),
+                                                           ((9, 12), 3, 'CAR')])
     def test_downsample(self, shape, factor, proj):
         nypix, nxpix = shape
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02, proj=proj)
@@ -276,8 +276,8 @@ class TestSkyMapPoisson:
         assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
 
 
-    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((2, 2), 2, 'TAN'),
-                                                           ((3, 3), 3, 'TAN')])
+    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((2, 3), 2, 'TAN'),
+                                                           ((3, 4), 3, 'TAN')])
     def test_upsample(self, shape, factor, proj):
         nypix, nxpix = shape
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02, proj=proj)
@@ -303,7 +303,7 @@ class TestSkyMapPoisson:
     def test_crop(self):
         image = SkyImage.empty(nxpix=9, nypix=9, binsz=0.02, proj='AIT', xref=135,
                                yref=60)
-        image_cropped = image.crop((5, 5))
+        image_cropped = image.crop(((2, 2), (2, 2)))
 
         separation = image.center.separation(image_cropped.center)
         assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
@@ -336,8 +336,8 @@ def test_image_pad():
     image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
-    image2 = image.pad(pad_to_factor=4, mode='reflect')
-    assert image2.data.shape == (16, 12)
+    image2 = image.pad(pad_width=4, mode='reflect')
+    assert image2.data.shape == (21, 18)
 
 
 def test_skycoord_pixel_conversion():

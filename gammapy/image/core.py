@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import numpy as np
+from numpy.lib.arraypad import _validate_lengths
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
@@ -45,8 +46,8 @@ class SkyImage(object):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
-    AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
-    ax_idx = AxisIndex(x=1, y=0)
+    _AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
+    _ax_idx = _AxisIndex(x=1, y=0)
 
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
@@ -64,8 +65,8 @@ class SkyImage(object):
     @property
     def center_pix(self):
         """Center pixel coordinate of the image (`~regions.PixCoord`)."""
-        x = 0.5 * (self.data.shape[self.ax_idx.x] - 1)
-        y = 0.5 * (self.data.shape[self.ax_idx.y] - 1)
+        x = 0.5 * (self.data.shape[self._ax_idx.x] - 1)
+        y = 0.5 * (self.data.shape[self._ax_idx.y] - 1)
         return PixCoord(x=x, y=y)
 
     @property
@@ -415,20 +416,17 @@ class SkyImage(object):
         image = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return image
 
-    def pad(self, pad_to_factor=None, pad_width=None, shape=None, mode='reflect', **kwargs):
+    def pad(self, pad_width, mode='reflect', **kwargs):
         """
-        Pad image to the nearest larger shape, that is divisible by the given
-        factor in both axis. Calls `numpy.pad`, passing ``mode`` and ``kwargs``
-        to it.
+        Pad sky image at the edges.
+
+        Calls `numpy.pad`, passing ``mode`` and ``kwargs`` to it and adapts the wcs
+        specifcation.
 
         Parameters
         ----------
-        pad_to_factor : int
-            Factor used for output shape computation
         pad_width: {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
-        shape : tuple
-            Pad to this shape symmetrically.
         mode : str ('reflect')
             Padding mode, passed to `numpy.pad`.
 
@@ -444,65 +442,50 @@ class SkyImage(object):
         >>> image = SkyImage.empty(nxpix=10, nypix=13)
         >>> print(image.data.shape)
         (13, 10)
-        >>> image2 = image.pad(pad_to_factor=4, mode='reflect')
+        >>> image2 = image.pad(pad_width=4, mode='reflect')
         >>> image2.data.shape
-        (16, 12)
+        (18, 21)
         """
         # converting from unicode to ascii string as a workaround
         # for https://github.com/numpy/numpy/issues/7112
         mode = str(mode)
-        wcs = self.wcs.deepcopy()
-
-        args_none = np.array([_ is None for _ in [pad_width, pad_to_factor, shape]])
-
-        if args_none.all():
-            raise ValueError('One parameter must be indicated: '
-                             'either "pad_width", "pad_to_factor" or "shape"')
-        if args_none.sum() < 2:
-            raise ValueError('Indicate only one parameter: '
-                             'either "pad_width", "pad_to_factor" or "shape"')
-
-        if pad_to_factor is not None:
-            pad_width = pad_to_factor - (np.array(self.data.shape) % pad_to_factor)
-            pad_width = [(0, pad_width[0]), (0, pad_width[1])]
-
-        if shape is not None:
-            xdiff = shape[1] - self.data.shape[1]
-            ydiff = shape[0] - self.data.shape[0]
-
-            if (np.array([xdiff, ydiff]) % 2).any():
-                raise ValueError('For symmetric padding, difference to new shape '
-                                 'must be even in all axes.')
-
-            xpad, ypad = xdiff // 2, ydiff // 2
-            pad_width = ((ypad, ypad), (xpad, xpad))
-            wcs.wcs.crpix += np.array([xpad, ypad])
+        pad_width = _validate_lengths(self.data, pad_width)
+        xlo, xhi = pad_width[self._ax_idx.x]
+        ylo, yhi = pad_width[self._ax_idx.y]
 
         data = np.pad(self.data, pad_width=pad_width, mode=mode, **kwargs)
+
+        wcs = self.wcs.deepcopy()
+        wcs.wcs.crpix += np.array([xlo, ylo])
+
         return SkyImage(data=data, wcs=wcs)
 
-    def crop(self, shape=None):
+    def crop(self, crop_width):
         """
-        Crop sky image symmetrically to a given shape.
+        Crop sky image at the edges with given crop width.
+
+        Analogous method to `SkyMap.pad()` to crop the sky image at the edges.
+        Adapts the wcs specification accordingly.
 
         Paramters
         ---------
-        shape : tuple
-            Desired shape.
+        crop_width : {sequence, array_like, int}
+            Number of values cropped from the edges of each axis. Defined
+            analogously to `pad_with` from `~numpy.pad`.
+
+        Returns
+        -------
+        image : `~gammapy.image.SkyImage`
+            Cropped image
         """
-        xdiff = (self.data.shape[1] - shape[1])
-        ydiff = (self.data.shape[0] - shape[0])
+        crop_width = _validate_lengths(self.data, crop_width)
+        xlo, xhi = crop_width[self._ax_idx.x]
+        ylo, yhi = crop_width[self._ax_idx.y]
 
-        if (np.array([xdiff, ydiff]) % 2).any():
-            raise ValueError('For symmetric cropping, difference to new shape '
-                             'must be even in all axes.')
-
-        x_crop = xdiff // 2
-        y_crop = ydiff // 2
-        data = self.data[y_crop:-y_crop, x_crop:-x_crop]
+        data = self.data[ylo:-yhi, xlo:-xhi]
 
         wcs = self.wcs.deepcopy()
-        wcs.wcs.crpix -= np.array([x_crop, y_crop])
+        wcs.wcs.crpix -= np.array([xlo, ylo])
         return SkyImage(data=data, wcs=wcs)
 
     def downsample(self, factor, method=np.nansum):
@@ -516,7 +499,7 @@ class SkyImage(object):
         Parameters
         ----------
         factor : int
-            Down sampling factor, must be power of two.
+            Down sampling factor.
         method : np.ufunc (np.nansum), optional
             Method how to combine the image blocks.
 
@@ -528,7 +511,7 @@ class SkyImage(object):
         from skimage.measure import block_reduce
 
         shape = self.data.shape
-        factor = int(factor)
+
         if not (np.mod(shape, factor) == 0).all():
             raise ValueError('Data shape {0} is not divisable by {1} in all axes.'
                              'Pad image prior to downsamling to correct'
@@ -537,10 +520,10 @@ class SkyImage(object):
         data = block_reduce(self.data, (factor, factor), method)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self, factor, downsampled=True)
+        wcs = _get_resampled_wcs(self.wcs, factor, downsampled=True)
         return SkyImage(data=data, wcs=wcs)
 
-    def upsample(self, factor, order=3):
+    def upsample(self, factor, **kwargs):
         """
         Up sample image by a given factor.
 
@@ -549,7 +532,7 @@ class SkyImage(object):
         Parameters
         ----------
         factor : int
-            up sampling factor, must be power of two.
+            Up sampling factor.
         order : int
             Order of the interpolation usef for upsampling.
 
@@ -560,11 +543,10 @@ class SkyImage(object):
         """
         from scipy.ndimage import zoom
 
-        factor = int(factor)
-        data = zoom(self.data, factor, order=order)
+        data = zoom(self.data, factor, **kwargs)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self, factor, downsampled=False)
+        wcs = _get_resampled_wcs(self.wcs, factor, downsampled=False)
         return SkyImage(data=data, wcs=wcs)
 
     def lookup_max(self, region=None):
@@ -1034,11 +1016,11 @@ class SkyImageCollection(Bunch):
         return info
 
 
-def _get_resampled_wcs(skyimage, factor, downsampled):
+def _get_resampled_wcs(wcs, factor, downsampled):
     """
     Get resampled WCS object.
     """
-    wcs = skyimage.wcs.deepcopy()
+    wcs = wcs.deepcopy()
 
     if not downsampled:
         factor = 1. / factor

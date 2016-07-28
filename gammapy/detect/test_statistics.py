@@ -19,7 +19,7 @@ from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
 from ..image import (measure_containment_radius, SkyImageCollection)
-from ..image.utils import _shape_2N
+from ..utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = [
     'compute_ts_map',
@@ -142,7 +142,8 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
         skyimages_ = SkyImageCollection()
         for name, func in zip(skyimages._map_names, funcs):
             if downsampled:
-                skyimages_[name] = skyimages[name].pad(shape=_shape_2N(shape))
+                pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))
+                skyimages_[name] = skyimages[name].pad(pad_width)
                 skyimages_[name] = skyimages_[name].downsample(factor, func)
             else:
                 skyimages_[name] = skyimages[name]
@@ -180,7 +181,7 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
         if downsampled:
             for name, order in zip(['ts', 'sqrt_ts', 'amplitude', 'niter'], [1, 1, 1, 0]):
                 ts_results[name] = ts_results[name].upsample(factor, order=order)
-                ts_results[name] = ts_results[name].crop(shape=shape)
+                ts_results[name] = ts_results[name].crop(crop_width=pad_width)
 
         multiscale_result.append(ts_results)
 

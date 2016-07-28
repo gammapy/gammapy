@@ -163,27 +163,6 @@ def ring_correlate(image, r_in, r_out, mode='constant'):
     return convolve(image, structure, mode=mode)
 
 
-def _shape_2N(shape, N=3):
-    """
-    Round a given shape to values that are divisible by 2^N.
-
-    Parameters
-    ----------
-    shape : tuple
-        Input shape.
-    N : int (default = 3), optional
-        Exponent of two.
-
-    Returns
-    -------
-    new_shape : Tuple
-        New shape extended to integers divisible by 2^N
-    """
-    shape = np.array(shape)
-    new_shape = shape + (2 ** N - np.mod(shape, 2 ** N))
-    return tuple(new_shape)
-
-
 def atrous_image(image, n_levels):
     """Compute a trous transform for a given image.
 
