@@ -4,7 +4,7 @@ import logging
 from subprocess import call
 from tempfile import NamedTemporaryFile
 from copy import deepcopy
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 import numpy as np
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
@@ -13,6 +13,7 @@ from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel
 from astropy.units import Quantity, Unit
 from astropy.nddata.utils import Cutout2D
+from regions import PixCoord
 from ..extern.bunch import Bunch
 from ..utils.scripts import make_path
 from ..image.utils import make_header, _bin_events_in_cube
@@ -25,16 +26,6 @@ log = logging.getLogger(__name__)
 _DEFAULT_WCS_ORIGIN = 0
 _DEFAULT_WCS_MODE = 'all'
 
-# It might be a good option to inherit from `~astropy.nddata.NDData` later, but
-# as astropy.nddata is still in development, I decided to not inherit for now.
-
-# The class provides Fits I/O and generic methods, that are not specific to the
-# data it contains. Special data classes, such as an ExclusionMap, FluxMap or
-# CountsMap should inherit from this class and implement special, data related
-# methods themselves.
-
-# Actually this class is generic enough to be rather in astropy and not in
-# gammapy and should maybe be moved to there...
 
 class SkyImage(object):
     """
@@ -53,14 +44,40 @@ class SkyImage(object):
     meta : `~collections.OrderedDict`
         Dictionary to store meta data.
     """
+    AxisIndex = namedtuple('AxisIndex', ['x', 'y'])
+    ax_idx = AxisIndex(x=1, y=0)
 
     def __init__(self, name=None, data=None, wcs=None, unit=None, meta=None):
         # TODO: validate inputs
         self.name = name
         self.data = data
         self.wcs = wcs
-        self.meta = meta
+
+        if meta is None:
+            self.meta = OrderedDict()
+        else:
+            self.meta = OrderedDict(meta)
+
         self.unit = unit
+
+    @property
+    def center_pix(self):
+        """Center pixel coordinate of the image (`~regions.PixCoord`)."""
+        x = 0.5 * (self.data.shape[self.ax_idx.x] - 1)
+        y = 0.5 * (self.data.shape[self.ax_idx.y] - 1)
+        return PixCoord(x=x, y=y)
+
+    @property
+    def center_sky(self):
+        """Center sky coordinate of the image (`~astropy.coordinates.SkyCoord`)."""
+        center = self.center_pix
+        return SkyCoord.from_pixel(
+            xp=center.x,
+            yp=center.y,
+            wcs=self.wcs,
+            origin=_DEFAULT_WCS_ORIGIN,
+            mode=_DEFAULT_WCS_MODE,
+        )
 
     @classmethod
     def read(cls, filename, **kwargs):
@@ -199,7 +216,9 @@ class SkyImage(object):
             wcs = WCS(image.header)
         else:
             raise TypeError("Can't create image from type {}".format(type(image)))
+
         data = fill * np.ones_like(image.data)
+
         return cls(name, data, wcs, unit, meta=wcs.to_header())
 
     def fill(self, value):
@@ -221,7 +240,6 @@ class SkyImage(object):
             self.data.fill(value)
         else:
             raise TypeError("Can't fill value of type {}".format(type(value)))
-
 
     def write(self, filename, *args, **kwargs):
         """
@@ -261,6 +279,7 @@ class SkyImage(object):
             y, x = y - 0.5, x - 0.5
         else:
             raise ValueError('Invalid mode to compute coordinates.')
+
         return x, y
 
     def coordinates(self, mode='center'):
@@ -321,6 +340,7 @@ class SkyImage(object):
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
                 raise WcsError('World coordinate systems not aligned. Try to call'
                                ' .reproject() on one of the maps first.')
+
         return xlo, xhi, ylo, yhi
 
     def paste(self, image, method='sum', wcs_check=True):
@@ -350,7 +370,6 @@ class SkyImage(object):
             self.data[ylo:yhi, xlo:xhi] = image.data[ylo_c:yhi_c, xlo_c:xhi_c]
         else:
             raise ValueError('Invalid method: {}'.format(method))
-
 
     def cutout(self, position, size):
         """
@@ -492,15 +511,6 @@ class SkyImage(object):
         omega = Quantity(dx * dy, 'sr')
         return omega
 
-    def center(self):
-        """
-        Center sky coordinates of the image.
-        """
-        return SkyCoord.from_pixel((self.data.shape[0] - 1) / 2.,
-                                   (self.data.shape[1] - 1) / 2.,
-                                   wcs=self.wcs, origin=_DEFAULT_WCS_ORIGIN,
-                                   mode=_DEFAULT_WCS_MODE)
-
     def lookup(self, position, interpolation=None):
         """
         Lookup value at given sky position.
@@ -616,10 +626,10 @@ class SkyImage(object):
 
         if mode == 'interp':
             out = reproject_interp((self.data, self.wcs), wcs_reference,
-                                    shape_out=shape_out, *args, **kwargs)
+                                   shape_out=shape_out, *args, **kwargs)
         elif mode == 'exact':
             out = reproject_exact((self.data, self.wcs), wcs_reference,
-                                   shape_out=shape_out, *args, **kwargs)
+                                  shape_out=shape_out, *args, **kwargs)
         else:
             raise TypeError("Invalid reprojection mode, either choose 'interp' or 'exact'")
 
@@ -670,7 +680,7 @@ class SkyImage(object):
 
         if fig is None and ax is None:
             fig = plt.gcf()
-            ax = fig.add_subplot(1,1,1, projection=self.wcs)
+            ax = fig.add_subplot(1, 1, 1, projection=self.wcs)
 
         kwargs['origin'] = kwargs.get('origin', 'lower')
         caxes = ax.imshow(self.data, **kwargs)
@@ -719,7 +729,7 @@ class SkyImage(object):
 
     def threshold(self, threshold):
         """
-        Threshold sykmap data to create a `~gammapy.image.ExclusionMask`.
+        Threshold sykmap data to create a `~gammapy.image.SkyMask`.
 
         Parameters
         ----------
@@ -728,13 +738,13 @@ class SkyImage(object):
 
         Returns
         -------
-        mask : `~gammapy.image.ExclusionMask`
+        mask : `~gammapy.image.SkyMask`
             Exclusion mask object.
 
         TODO: some more docs and example
         """
-        from .mask import ExclusionMask
-        mask = ExclusionMask.empty_like(self)
+        from .mask import SkyMask
+        mask = SkyMask.empty_like(self)
         mask.data = np.where(self.data > threshold, 0, 1)
         return mask
 

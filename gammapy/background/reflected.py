@@ -21,7 +21,7 @@ def find_reflected_regions(region, center, exclusion_mask, angle_increment=None,
         Region
     center : `~astropy.coordinates.SkyCoord`
         Rotation point
-    exclusion_mask : `~gammapy.image.ExclusionMask`
+    exclusion_mask : `~gammapy.image.SkyMask`
         Exclusion mask
     angle_increment : `~astropy.coordinates.Angle`
         Rotation angle for each step

@@ -1,25 +1,28 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from astropy.wcs import WCS
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
-
 from ..image import lon_lat_circle_mask
-
 from .core import SkyImage
 
-
 __all__ = [
-    'ExclusionMask',
+    'SkyMask',
     'make_tevcat_exclusion_mask'
 ]
 
 
-class ExclusionMask(SkyImage):
-    """Exclusion mask
+class SkyMask(SkyImage):
+    """Sky image mask.
 
+    `SkyMask` is a `~gammapy.image.SkyMap` sub-class, i.e. it inherits
+    all of it's features. The distinction is that `SkyMask` is to
+    represent boolean masks and has methods that only make sense for
+    mask data. The data array can be integer or float, but if it is,
+    it should only contain pixel values of 0 or 1.
+
+    TODO: explain about semantics and give examples what 0 and 1 mean
+    in different applications (or link to other docs).
     """
 
     def fill_random_circles(self, n=4, min_rad=0, max_rad=40):
@@ -37,8 +40,8 @@ class ExclusionMask(SkyImage):
             Maximum circle radius in pixels
         """
         # TODO: is it worth to change this to take the radius in deg?
-        mask = np.ones(self.data.shape, dtype=int)
-        nx, ny = mask.shape
+        data = np.ones(self.data.shape, dtype=int)
+        nx, ny = data.shape
         xx = np.random.choice(np.arange(nx), n)
         yy = np.random.choice(np.arange(ny), n)
         rr = min_rad + np.random.rand(n) * (max_rad - min_rad)
@@ -46,31 +49,9 @@ class ExclusionMask(SkyImage):
         for x, y, r in zip(xx, yy, rr):
             xd, yd = np.ogrid[-x:nx - x, -y:ny - y]
             val = xd * xd + yd * yd <= r * r
-            mask[val] = 0
-        self.data = mask
+            data[val] = 0
 
-    @classmethod
-    def from_ds9(cls, excl_file, hdu):
-        """Create exclusion mask from ds9 regions file
-
-        Uses the pyregion package
-        (http://pyregion.readthedocs.io/en/latest/index.html)
-
-        TODO: change to use the https://github.com/astropy/regions package.
-
-        Parameters
-        ----------
-        excl_file : str
-            ds9 region file
-        hdu : `~astropy.fits.ImageHDU`
-            Map to fill exclusion mask
-        """
-        import pyregion
-        r = pyregion.open(excl_file)
-        val = r.get_mask(hdu=hdu)
-        mask = np.invert(val)
-        wcs = WCS(hdu.header)
-        return cls(data=mask, wcs=wcs)
+        self.data = data
 
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
@@ -90,7 +71,7 @@ class ExclusionMask(SkyImage):
         kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
         kwargs.setdefault('origin', 'lower')
 
-        super(ExclusionMask, self).plot(ax, fig, **kwargs)
+        super(SkyMask, self).plot(ax, fig, **kwargs)
 
     @lazyproperty
     def distance_image(self):
@@ -122,31 +103,30 @@ class ExclusionMask(SkyImage):
 
         Examples
         --------
-        >>> from gammapy.image import ExclusionMask
+        >>> from gammapy.image import SkyMask
         >>> data = np.array([[0., 0., 1.], [1., 1., 1.]])
-        >>> mask = ExclusionMask(data=data)
+        >>> mask = SkyMask(data=data)
         >>> print(mask.distance_image.data)
         [[-1, -1, 1], [1, 1, 1.41421356]]
         """
-        MAX_VALUE = 1e10
-        if np.all(self.mask == 1):
-            return SkyImage.empty_like(self, fill=MAX_VALUE)
-        if np.all(self.mask == 0):
-            return SkyImage.empty_like(self, fill=-MAX_VALUE)
-
         from scipy.ndimage import distance_transform_edt
-        distance_outside = distance_transform_edt(self.mask)
-        invert_mask = np.invert(np.array(self.mask, dtype=np.bool))
-        distance_inside = distance_transform_edt(invert_mask)
-        distance = np.where(self.mask, distance_outside, -distance_inside)
-        image = SkyImage(data=distance)
-        return image
 
-    # Set alias for mask
-    # TODO: Add mask attribute to image class or rename self.mask to self.data
-    @property
-    def mask(self):
-        return self.data
+        max_value = 1e10
+
+        if np.all(self.data == 1):
+            return SkyImage.empty_like(self, fill=max_value)
+
+        if np.all(self.data == 0):
+            return SkyImage.empty_like(self, fill=-max_value)
+
+        distance_outside = distance_transform_edt(self.data)
+
+        invert_mask = np.invert(np.array(self.data, dtype=np.bool))
+        distance_inside = distance_transform_edt(invert_mask)
+
+        distance = np.where(self.data, distance_outside, -distance_inside)
+
+        return SkyImage(data=distance)
 
     # TODO: right now the extension name is hardcoded to 'exclusion', because
     # single image Fits file often contain a PrimaryHDU and an ImageHDU.
@@ -155,24 +135,7 @@ class ExclusionMask(SkyImage):
     def read(cls, fobj, *args, **kwargs):
         # Check if extension name is given, else default to 'exclusion'
         kwargs['extname'] = kwargs.get('extname', 'exclusion')
-        return super(ExclusionMask, cls).read(fobj, *args, **kwargs)
-
-    def contains(self, position):
-        """
-        Check if given position on the sky is inside the exclusion region.
-
-        Parameters
-        ----------
-        position : `~astropy.coordinates.SkyCoord`
-            Position on the sky. 
-
-        Returns
-        -------
-        containment : array
-            Bool array
-        """
-        x, y = self.wcs_skycoord_to_pixel(coords=position)
-        return self.data[y, x]
+        return super(SkyMask, cls).read(fobj, *args, **kwargs)
 
 
 def make_tevcat_exclusion_mask():
@@ -180,16 +143,16 @@ def make_tevcat_exclusion_mask():
 
     Returns
     -------
-    mask : `~gammapy.image.ExclusionMask`
+    mask : `~gammapy.image.SkyMask`
         Exclusion mask
     """
 
-    # TODO: make this a method ExclusionMask.from_catalog()?
+    # TODO: make this a method SkyMask.from_catalog()?
     from gammapy.catalog import load_catalog_tevcat
 
     tevcat = load_catalog_tevcat()
-    all_sky_exclusion = ExclusionMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
-                                            fill=1, dtype='int')
+    all_sky_exclusion = SkyMask.empty(nxpix=3600, nypix=1800, binsz=0.1,
+                                      fill=1, dtype='int')
     val_lon, val_lat = all_sky_exclusion.coordinates()
     lons = Longitude(val_lon, 'deg')
     lats = Latitude(val_lat, 'deg')

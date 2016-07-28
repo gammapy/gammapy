@@ -167,13 +167,13 @@ class Target(object):
             Analysis dir
         """
         from . import DataStore
-        from ..image import ExclusionMask
+        from ..image import SkyMask
         from ..spectrum import SpectrumExtraction
 
         conf = self.config
         data_store = DataStore.from_all(conf['datastore'])
         self.add_obs_from_store(data_store)
-        exclusion = ExclusionMask.read(conf['exclusion_mask']) or None
+        exclusion = SkyMask.read(conf['exclusion_mask']) or None
         conf.update(exclusion=exclusion)
         self.estimate_background(method=conf['background_method'], **conf)
         # Use default energy binning

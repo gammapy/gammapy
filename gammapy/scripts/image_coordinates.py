@@ -39,7 +39,7 @@ def image_coordinates(infile,
     """
     from astropy.io import fits
     from gammapy.utils.fits import get_hdu
-    from gammapy.image import SkyImage, ExclusionMask
+    from gammapy.image import SkyImage, SkyMask
 
     log.info('Reading {0}'.format(infile))
     hdu = get_hdu(infile)
@@ -54,7 +54,7 @@ def image_coordinates(infile,
         out_hdus.append(fits.ImageHDU(lat, hdu.header, 'LAT'))
 
     if make_distance_map:
-        excl = ExclusionMask.from_image_hdu(hdu)
+        excl = SkyMask.from_image_hdu(hdu)
         log.info('Computing DIST map')
         dist = excl.exclusion_distance
         out_hdus.append(fits.ImageHDU(dist, hdu.header, 'DIST'))
