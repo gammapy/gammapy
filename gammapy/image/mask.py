@@ -133,6 +133,9 @@ class SkyMask(SkyImage):
         data = binary_erosion(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
+    def fill_region(self, region):
+        pass
+
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
 
