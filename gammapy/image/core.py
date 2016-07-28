@@ -69,7 +69,7 @@ class SkyImage(object):
         return PixCoord(x=x, y=y)
 
     @property
-    def center_sky(self):
+    def center(self):
         """Center sky coordinate of the image (`~astropy.coordinates.SkyCoord`)."""
         center = self.center_pix
         return SkyCoord.from_pixel(
@@ -415,22 +415,29 @@ class SkyImage(object):
         image = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return image
 
-    def pad(self, mode, pad_to_factor=None, pad_width=None, shape=None, **kwargs):
+    def pad(self, pad_to_factor=None, pad_width=None, shape=None, mode='reflect', **kwargs):
         """
-        Pad image to the nearest larger shape, that is divisible by the given factor in both axis.
-        Calls `numpy.pad`, passing ``mode`` and ``kwargs`` to it.
+        Pad image to the nearest larger shape, that is divisible by the given
+        factor in both axis. Calls `numpy.pad`, passing ``mode`` and ``kwargs``
+        to it.
+
         Parameters
         ----------
-        mode : str
-            Padding mode, passed to `numpy.pad`.
         pad_to_factor : int
             Factor used for output shape computation
         pad_width: {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
+        shape : tuple
+            Pad to this shape symmetrically.
+        mode : str ('reflect')
+            Padding mode, passed to `numpy.pad`.
+
+
         Returns
         -------
         image : `~gammapy.image.SkyImage`
             Padded image
+
         Examples
         --------
         >>> from gammapy.image import SkyImage
@@ -441,27 +448,38 @@ class SkyImage(object):
         >>> image2.data.shape
         (16, 12)
         """
-        if pad_to_factor is not None and pad_width is not None:
-            raise ValueError('Indicate only one parameter: '
-                             'either "pad_width" or "pad_to_factor"')
-        if pad_to_factor is None and pad_width is None:
+        # converting from unicode to ascii string as a workaround
+        # for https://github.com/numpy/numpy/issues/7112
+        mode = str(mode)
+        wcs = self.wcs.deepcopy()
+
+        args_none = np.array([_ is None for _ in [pad_width, pad_to_factor, shape]])
+
+        if args_none.all():
             raise ValueError('One parameter must be indicated: '
-                             'either "pad_width" or "pad_to_factor"')
+                             'either "pad_width", "pad_to_factor" or "shape"')
+        if args_none.sum() < 2:
+            raise ValueError('Indicate only one parameter: '
+                             'either "pad_width", "pad_to_factor" or "shape"')
 
         if pad_to_factor is not None:
             pad_width = pad_to_factor - (np.array(self.data.shape) % pad_to_factor)
             pad_width = [(0, pad_width[0]), (0, pad_width[1])]
 
-        # converting from unicode to ascii string as a workaround
-        # for https://github.com/numpy/numpy/issues/7112
-        mode = str(mode)
+        if shape is not None:
+            xdiff = shape[1] - self.data.shape[1]
+            ydiff = shape[0] - self.data.shape[0]
+
+            if (np.array([xdiff, ydiff]) % 2).any():
+                raise ValueError('For symmetric padding, difference to new shape '
+                                 'must be even in all axes.')
+
+            xpad, ypad = xdiff // 2, ydiff // 2
+            pad_width = ((ypad, ypad), (xpad, xpad))
+            wcs.wcs.crpix += np.array([xpad, ypad])
 
         data = np.pad(self.data, pad_width=pad_width, mode=mode, **kwargs)
-
-        # We don't have to adjust WCS here, because we only pad on the
-        # right and top, and for this change, the CRPIX doesn't change.
-
-        return SkyImage(data=data, wcs=self.wcs)
+        return SkyImage(data=data, wcs=wcs)
 
     def crop(self, shape=None):
         """
@@ -485,7 +503,6 @@ class SkyImage(object):
 
         wcs = self.wcs.deepcopy()
         wcs.wcs.crpix -= np.array([x_crop, y_crop])
-
         return SkyImage(data=data, wcs=wcs)
 
     def downsample(self, factor, method=np.nansum):
@@ -1029,3 +1046,8 @@ def _get_resampled_wcs(skyimage, factor, downsampled):
     wcs.wcs.cdelt *= factor
     wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
     return wcs
+
+def _get_resized_wcs(skyimage, shape):
+    """
+    Get resized WCS object.
+    """

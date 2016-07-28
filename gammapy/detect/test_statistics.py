@@ -18,8 +18,7 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
 from ..extern.bunch import Bunch
-from ..image import (measure_containment_radius, upsample_2N, downsample_2N,
-                     SkyImageCollection)
+from ..image import (measure_containment_radius, SkyImageCollection)
 from ..image.utils import _shape_2N
 
 __all__ = [
@@ -140,13 +139,11 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
 
-        skyimages_ = {}
+        skyimages_ = SkyImageCollection()
         for name, func in zip(skyimages._map_names, funcs):
             if downsampled:
                 skyimages_[name] = skyimages[name].pad(shape=_shape_2N(shape))
                 skyimages_[name] = skyimages_[name].downsample(factor, func)
-                maps_[map_.name.lower()] = downsample_2N(map_.data, factor, func,
-                                                         shape=_shape_2N(shape))
             else:
                 skyimages_[name] = skyimages[name]
 
@@ -171,13 +168,11 @@ def compute_ts_map_multiscale(skyimages, psf_parameters, scales=[0], downsample=
             kernel.normalize()
 
         if residual:
-            background = (maps_['background'] + maps_['onmodel'])
-        else:
-            background = maps_['background']
+           skyimages_['background'].data += skyimages__['model'].data
 
         # Compute TS map
-        ts_results = compute_ts_map(maps_['counts'], background, maps_['exposure'],
-                                    kernel, *args, **kwargs)
+        ts_results = compute_ts_map(skyimages_.counts, skyimages_.background,
+                                    skyimages_.exposure, kernel, *args, **kwargs)
         log.info('TS map computation took {0:.1f} s \n'.format(ts_results.meta['runtime']))
         ts_results.meta['MORPH'] = (morphology, 'Source morphology assumption')
         ts_results.meta['SCALE'] = (scale, 'Source morphology size scale in deg')
@@ -294,8 +289,6 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     from time import time
     t_0 = time()
 
-    assert counts.shape == background.shape
-    assert counts.shape == exposure.shape
     log.info("Using method '{}'".format(method))
 
     wcs = counts.wcs.deepcopy()
@@ -304,6 +297,8 @@ def compute_ts_map(counts, background, exposure, kernel, mask=None, flux=None,
     counts = counts.data.astype(float)
     background = background.data.astype(float)
     exposure = exposure.data.astype(float)
+    assert counts.shape == background.shape
+    assert counts.shape == exposure.shape
 
     # in some maps there are pixels, which have exposure, but zero
     # background, which doesn't make sense and causes the TS computation

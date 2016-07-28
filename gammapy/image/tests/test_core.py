@@ -267,7 +267,7 @@ class TestSkyMapPoisson:
         nypix, nxpix = shape
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
         image_downsampled = image.downsample(factor=factor)
-        separation = image.center().separation(image_downsampled.center())
+        separation = image.center.separation(image_downsampled.center)
 
         # check WCS
         assert_quantity_allclose(separation, Quantity(0, 'deg'))
@@ -282,7 +282,7 @@ class TestSkyMapPoisson:
         nypix, nxpix = shape
         image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02)
         image_upsampled = image.upsample(factor=factor)
-        separation = image.center().separation(image_upsampled.center())
+        separation = image.center.separation(image_upsampled.center)
 
         # check WCS
         assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
@@ -316,7 +316,7 @@ class TestSkyImage:
         assert_allclose(center.y, 2.0)
 
     def test_center_sky(self):
-        center = self.image.center_sky
+        center = self.image.center
         assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
         assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
 
@@ -325,7 +325,7 @@ def test_image_pad():
     image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
-    image2 = image.pad(shape_divisible_by=4, mode='reflect')
+    image2 = image.pad(pad_to_factor=4, mode='reflect')
     assert image2.data.shape == (16, 12)
 
 

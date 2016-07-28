@@ -64,20 +64,19 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     # Execute script
     from astropy.io import fits
     from gammapy.detect import compute_ts_map_multiscale
+    from gammapy.image import SkyImageCollection
 
     # Read data
     log.info('Reading {}'.format(input_file))
-    maps = fits.open(input_file)
+    skyimages = SkyImageCollection.read(input_file)
     log.info('Reading {}'.format(psf))
     psf_parameters = json.load(open(psf))
 
     if residual:
         log.info('Reading {}'.format(model))
-        data = fits.getdata(model)
-        header = fits.getheader(model)
-        maps.append(fits.ImageHDU(data, header, 'OnModel'))
+        skyimages['model'] = SkyImage.read(model)
 
-    results = compute_ts_map_multiscale(maps, psf_parameters, scales, downsample,
+    results = compute_ts_map_multiscale(skyimages, psf_parameters, scales, downsample,
                                         residual, morphology, width, threshold)
 
     filename = Path(output_file).name
@@ -86,7 +85,6 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     Path(folder).mkdir(exist_ok=True)
 
     # Write results to file
-    header = maps[0].header
     if len(results) > 1:
         for scale, result in zip(scales, results):
             # TODO: this is unnecessarily complex
@@ -95,9 +93,9 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
             fn = Path(folder) / filename_
 
             log.info('Writing {}'.format(fn))
-            result.write(str(fn), header, clobber=overwrite)
+            result.write(str(fn), clobber=overwrite)
     elif results:
         log.info('Writing {}'.format(output_file))
-        results[0].write(output_file, header, clobber=overwrite)
+        results[0].write(output_file, clobber=overwrite)
     else:
         log.info("No results to write to file: all scales have failed")
