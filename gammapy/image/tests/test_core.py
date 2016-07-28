@@ -301,3 +301,11 @@ def test_skycoord_pixel_conversion():
     x_new, y_new = image.wcs_skycoord_to_pixel(coords=coords)
     assert_allclose(x, x_new)
     assert_allclose(y, y_new)
+
+
+def test_wcs_pixel_scale():
+    image = SkyImage.empty(nxpix=10, nypix=15, yref=10)
+    assert_allclose(image.wcs_pixel_scale(method='cdelt'),
+                    Angle([0.02, 0.02], unit='deg'))
+    assert_allclose(image.wcs_pixel_scale(method='proj_plane'),
+                    Angle([0.02, 0.02], unit='deg'))
