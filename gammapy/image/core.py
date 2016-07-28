@@ -283,7 +283,7 @@ class SkyImage(object):
         else:
             raise ValueError('Invalid mode to compute coordinates.')
 
-        return x, y
+        return PixCoord(x, y)
 
     def coordinates(self, mode='center'):
         """
@@ -299,8 +299,8 @@ class SkyImage(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        x, y = self.coordinates_pix(mode=mode)
-        coordinates = self.wcs_pixel_to_skycoord(xp=x, yp=y)
+        pixcoord = self.coordinates_pix(mode=mode)
+        coordinates = self.wcs_pixel_to_skycoord(xp=pixcoord.x, yp=pixcoord.y)
         return coordinates
 
     def contains(self, position):

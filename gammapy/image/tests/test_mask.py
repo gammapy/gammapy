@@ -3,6 +3,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 from astropy.convolution import Box2DKernel
+from regions import CirclePixelRegion, PixCoord
+from .. import SkyMask
 from ...utils.testing import requires_dependency
 from .. import SkyMask
 
@@ -74,3 +76,13 @@ def test_dilate():
                  [1, 1, 1]]
     mask = mask.dilate(structure)
     assert mask.data.sum() == 9
+
+
+def test_fill_region():
+    region = CirclePixelRegion(center=PixCoord(x=2, y=1), radius=2)
+    mask = SkyMask.empty(nxpix=5, nypix=4, fill=0)
+    mask.fill_region(region)
+
+    expected_result = np.zeros((4, 5))
+    expected_result[:-1, 1:-1] = 1
+    assert_equal(mask.data, expected_result)

@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
+from regions import PixCoord, PixelRegion, SkyRegion
 from ..image import lon_lat_circle_mask
 from .core import SkyImage
 
@@ -134,7 +135,40 @@ class SkyMask(SkyImage):
         return SkyMask(data=data, wcs=self.wcs)
 
     def fill_region(self, region):
-        pass
+        """
+        Create a boolean mask based on the region and defined the standing of
+        the pixels (outside or inside the region). In the mask 1 means inside
+        the region, 0 - outside the region.
+
+        Parameters
+        ----------
+        region : '~regions.PixelRegion' or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyMask
+        >>> from regions import CirclePixelRegion, PixCoord
+        >>> region = CirclePixelRegion(center=PixCoord(x=2, y=1), radius=2)
+        >>> mask = SkyMask.empty(nxpix=5, nypix=4, fill=0)
+        >>> mask.fill_region(region)
+        >>> print (mask.data)
+        array([[ 0.,  1.,  1.,  1.,  0.],
+               [ 0.,  1.,  1.,  1.,  0.],
+               [ 0.,  1.,  1.,  1.,  0.],
+               [ 0.,  0.,  0.,  0.,  0.]])
+        """
+        if isinstance(region, PixelRegion):
+            coords = self.coordinates_pix()
+        elif isinstance(region, SkyRegion):
+            coords = self.coordinates()
+        else:
+            raise TypeError("Invalid region type, must be instance of "
+                            "'regions.PixelRegion' or 'regions.SkyRegion'")
+        mask = region.contains(coords)
+
+        self.data[mask == True] = 1
+        self.data[mask == False] = 0
 
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
