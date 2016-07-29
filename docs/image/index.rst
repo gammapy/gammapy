@@ -18,31 +18,25 @@ of gamma-ray data.
 Getting Started
 ===============
 
-The central data structure in `gammapy.image` is the `gammapy.image.SkyImage`
+The central data structure in `gammapy.image` is the `SkyImage`
 class, which combines the raw data with WCS information, FITS I/O functionality
 and many other methods, that allow easy handling, processing and plotting of
 image based data. Here is a first example:
 
-.. code-block:: python
+.. plot::
+    :include-source:
 
-   >>> from gammapy.datasets import gammapy_extra
-   >>> from gammapy.image import SkyImage
-   >>> filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz')
-   >>> skyimage = SkyImage.read(filename, ext=2)
-   >>> skyimage.show()
+	from gammapy.datasets import gammapy_extra
+	from gammapy.image import SkyImage
+	filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz')
+	image = SkyImage.read(filename, ext=2)
+	image.show()
 
 This loads a prepared Fermi 2FHL FITS image of the Vela region, creates a
-`gammapy.image.SkyImage` and shows it on the the screen by calling `gammapy.image.SkyImage.show()`.
-The image looks as following:
+`SkyImage` and shows it on the the screen by calling `SkyImage.show()`.
 
-.. figure:: fermi_2fhl_vela.png
-
-   Smoothed counts map of the Vela region computed with gammapy (see `script
-   in gammapy-extra <https://github.com/gammapy/gammapy-extra/blob/master/datasets/fermi_2fhl/fermi_skyimages.py>`_)
-
-
-To explore further the SkyImage class try tab completion on the ``skyimage`` object
-in an interactive python environment or see the _`skymaps` page.
+To explore further the SkyImage class try tab completion on the ``image`` object
+in an interactive python environment or see the :doc:`skymaps` page.
 
 
 

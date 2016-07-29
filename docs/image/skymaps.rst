@@ -22,7 +22,7 @@ Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
     from gammapy.datasets import gammapy_extra
 
     filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
-    skyimage = SkyImage.read(filename, ext=2)
+    image = SkyImage.read(filename, ext=2)
 
 Alternatively an empty image can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
@@ -30,7 +30,7 @@ the parameters):
 
 .. code::
 
-    skyimage_empty = SkyImage.empty('empty')
+    image_empty = SkyImage.empty('empty')
 
 Where the optional string ``'empty'`` specifies the name of the image.
 
@@ -38,7 +38,7 @@ Some basic info on the map is shown when calling:
 
 .. code::
 
-    skyimage.info()
+    image.info()
 
 To lookup the value of the data at a certain sky position one can do:
 
@@ -46,7 +46,7 @@ To lookup the value of the data at a certain sky position one can do:
 
     from astropy.coordinates import SkyCoord
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
-    skyimage.lookup(position)
+    image.lookup(position)
 
 Or directly pass a tuple of ``(ra, dec)`` or ``(lon, lat)``, depending on the
 type of WCS transformation, that is set.
