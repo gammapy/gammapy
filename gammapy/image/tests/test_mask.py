@@ -86,14 +86,14 @@ def test_fill_region():
         radius=2,
     )
     pix_mask = mask.fill_region(pix_region)
-    expected_result = np.array([[0, 1, 1],
-                                [0, 1, 1]])
+    expected_result = [[0, 1, 1],
+                       [0, 1, 1]]
     assert_equal(pix_mask.data, expected_result)
 
     sky_region = pix_region.to_sky(wcs=mask.wcs)
     sky_mask = mask.fill_region(sky_region)
-    expected_result = np.array([[0, 1, 1],
-                                [1, 1, 1]])
+    expected_result = [[0, 1, 1],
+                       [1, 1, 1]]
     assert_equal(sky_mask.data, expected_result)
 
     pix_point = CirclePixelRegion(
