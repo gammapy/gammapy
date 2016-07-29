@@ -18,6 +18,7 @@ from astropy.wcs.utils import (pixel_to_skycoord, skycoord_to_pixel,
                                proj_plane_pixel_scales)
 from ..extern.bunch import Bunch
 from ..utils.scripts import make_path
+from ..utils.wcs import get_resampled_wcs
 from ..image.utils import make_header, _bin_events_in_cube
 from ..data import EventList
 
@@ -520,7 +521,7 @@ class SkyImage(object):
         data = block_reduce(self.data, (factor, factor), method)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self.wcs, factor, downsampled=True)
+        wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
         return SkyImage(data=data, wcs=wcs)
 
     def upsample(self, factor, **kwargs):
@@ -546,7 +547,7 @@ class SkyImage(object):
         data = zoom(self.data, factor, **kwargs)
 
         # Adjust WCS
-        wcs = _get_resampled_wcs(self.wcs, factor, downsampled=False)
+        wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
         return SkyImage(data=data, wcs=wcs)
 
     def lookup_max(self, region=None):
@@ -1014,17 +1015,3 @@ class SkyImageCollection(Bunch):
             info += self[name].__str__()
             info += '\n'
         return info
-
-
-def _get_resampled_wcs(wcs, factor, downsampled):
-    """
-    Get resampled WCS object.
-    """
-    wcs = wcs.deepcopy()
-
-    if not downsampled:
-        factor = 1. / factor
-
-    wcs.wcs.cdelt *= factor
-    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
-    return wcs

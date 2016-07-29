@@ -261,6 +261,7 @@ class TestSkyMapPoisson:
         with pytest.raises(WcsError):
             image.paste(cutout)
 
+    @requires_dependency('skimage')
     @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 6), 2, 'CAR'),
                                                            ((9, 12), 3, 'CAR')])
     def test_downsample(self, shape, factor, proj):
@@ -276,6 +277,7 @@ class TestSkyMapPoisson:
         assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
 
 
+    @requires_dependency('scipy')
     @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((2, 3), 2, 'TAN'),
                                                            ((3, 4), 3, 'TAN')])
     def test_upsample(self, shape, factor, proj):
@@ -290,7 +292,8 @@ class TestSkyMapPoisson:
         # check data shape
         assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
 
-
+    @requires_dependency('scipy')
+    @requires_dependency('skimage')
     @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 4), 2, 'AIT'),
                                                            ((9, 9), 3, 'AIT')])
     def test_down_and_upsample(self, shape, factor, proj):
