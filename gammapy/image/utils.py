@@ -217,55 +217,6 @@ def atrous_hdu(hdu, n_levels):
     return hdus
 
 
-def coordinates(image, world=True, lon_sym=True, radians=False):
-    """Get coordinate images for a given image.
-    This function is useful if you want to compute
-    an image with values that are a function of position.
-
-    Parameters
-    ----------
-    image : `~astropy.io.fits.ImageHDU` or `~numpy.ndarray`
-        Input image
-    world : bool, optional
-        Use world coordinates (or pixel coordinates)?
-    lon_sym : bool, optional
-        Use symmetric longitude range ``(-180, 180)`` (or ``(0, 360)``)?
-    radians : bool, optional
-        Return coordinates in radians or degrees?
-
-    Returns
-    -------
-    (lon, lat) : tuple of arrays
-        Images as numpy arrays with values
-        containing the position of the given pixel.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from gammapy.datasets import FermiGalacticCenter
-    >>> lon, lat = coordinates(FermiGalacticCenter.counts())
-    >>> dist = np.sqrt(lon ** 2 + lat ** 2)
-    """
-    # Create arrays of pixel coordinates
-    y, x = np.indices(image.shape, dtype='int32')
-
-    if not world:
-        return x, y
-
-    wcs = WCS(image.header)
-    origin = 0  # convention for gammapy
-    lon, lat = wcs.wcs_pix2world(x, y, origin)
-
-    if lon_sym:
-        lon = np.where(lon > 180, lon - 360, lon)
-
-    if radians:
-        lon = np.radians(lon)
-        lat = np.radians(lat)
-
-    return lon, lat
-
-
 def dict_to_hdulist(image_dict, header):
     """
     Take a dictionary of image data and a header to create a HDUList.
