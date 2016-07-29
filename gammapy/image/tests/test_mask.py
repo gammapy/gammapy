@@ -79,10 +79,28 @@ def test_dilate():
 
 
 def test_fill_region():
-    region = CirclePixelRegion(center=PixCoord(x=2, y=1), radius=2)
-    mask = SkyMask.empty(nxpix=5, nypix=4, fill=0)
-    mask.fill_region(region)
+    mask = SkyMask.empty(nxpix=3, nypix=2, fill=0)
 
-    expected_result = np.zeros((4, 5))
-    expected_result[:-1, 1:-1] = 1
-    assert_equal(mask.data, expected_result)
+    pix_region = CirclePixelRegion(
+        center=PixCoord(x=2, y=1),
+        radius=2,
+    )
+    pix_mask = mask.fill_region(pix_region)
+    expected_result = np.array([[0, 1, 1],
+                                [0, 1, 1]])
+    assert_equal(pix_mask.data, expected_result)
+
+    sky_region = pix_region.to_sky(wcs=mask.wcs)
+    sky_mask = mask.fill_region(sky_region)
+    expected_result = np.array([[0, 1, 1],
+                                [1, 1, 1]])
+    assert_equal(sky_mask.data, expected_result)
+
+    pix_point = CirclePixelRegion(
+        center=PixCoord(x=1, y=1),
+        radius=1,
+    )
+    point_mask = mask.fill_region(pix_point)
+    expected_result = np.zeros((2, 3))
+    expected_result[1, 1] = 1
+    assert_equal(point_mask.data, expected_result)

@@ -165,10 +165,9 @@ class SkyMask(SkyImage):
         else:
             raise TypeError("Invalid region type, must be instance of "
                             "'regions.PixelRegion' or 'regions.SkyRegion'")
-        mask = region.contains(coords)
 
-        self.data[mask == True] = 1
-        self.data[mask == False] = 0
+        data = region.contains(coords).astype(int)
+        return SkyMask(data=data, wcs=self.wcs)
 
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
