@@ -366,8 +366,9 @@ def test_wcs_pixel_scale():
 
 def test_footprint():
     image = SkyImage.empty(nxpix=3, nypix=2)
+
     coord = image.footprint(mode='center')
-    assert_allclose(image.wcs_skycoord_to_pixel(coord['lower left']), (0., 0.))
-    assert_allclose(image.wcs_skycoord_to_pixel(coord['upper left']), (0., 2.))
-    assert_allclose(image.wcs_skycoord_to_pixel(coord['upper right']), (3., 2.))
-    assert_allclose(image.wcs_skycoord_to_pixel(coord['lower right']), (3., 0.))
+    assert_allclose(image.wcs_skycoord_to_pixel(coord['lower left']), (0, 0))
+    assert_allclose(image.wcs_skycoord_to_pixel(coord['upper left']), (0, 2))
+    assert_allclose(image.wcs_skycoord_to_pixel(coord['upper right']), (3, 2))
+    assert_allclose(image.wcs_skycoord_to_pixel(coord['lower right']), (3, 0))

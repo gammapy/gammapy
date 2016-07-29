@@ -321,36 +321,36 @@ class SkyImage(object):
         x, y = self.wcs_skycoord_to_pixel(coords=position)
         return (x >= 0.5) & (x <= nx + 0.5) & (y >= 0.5) & (y <= ny + 0.5)
 
-    def footprint(self, mode='center'):
+    def footprint(self, mode='corner'):
         """
-        Calculates the footprint of the image on the sky.
+        Footprint of the image on the sky.
 
         Parameters
         ----------
-        mode : {'center', 'edge'} (default 'center')
-            Return the positions of the corners of the image on the sky by
-            using the center of the pixel or the edge.
+        mode : {'center', 'corner'}
+            Use corner pixel centers or corners?
 
         Returns
         -------
         coordinates : `~collections.OrderedDict`
             Dictionary of the positions of the corners of the image
-            with keys {'lower left', 'lower right', 'upper left', 'upper right'}
+            with keys {'lower left', 'upper left', 'upper right', 'lower right'}
             and `~astropy.coordinates.SkyCoord` objects as values.
 
         Examples
         --------
         >>> from gammapy.image import SkyImage
         >>> image = SkyImage.empty(nxpix=3, nypix=2)
-        >>> coord = image.footprint(mode='center')
+        >>> coord = image.footprint(mode='corner')
         >>> coord['lower left']
         <SkyCoord (Galactic): (l, b) in deg
-            (0.02, -0.01)>
+            (0.03, -0.02)>
         """
         naxis2, naxis1 = self.data.shape
+
         if mode == 'center':
             pixcoord = [(0, 0), (0, naxis2), (naxis1, naxis2), (naxis1, 0)]
-        elif mode == 'edge':
+        elif mode == 'corner':
             pixcoord = [(-0.5, -0.5), (-0.5, naxis2 + 0.5),
                         (naxis1 + 0.5, naxis2 + 0.5), (naxis1 + 0.5, -0.5)]
         else:
