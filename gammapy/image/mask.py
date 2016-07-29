@@ -62,7 +62,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+        structure : `~numpy.ndarray`
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -71,7 +71,6 @@ class SkyMask(SkyImage):
             Opened sky mask.
         """
         from scipy.ndimage import binary_opening
-        structure = _validate_structure_element(structure)
         data = binary_opening(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
@@ -83,7 +82,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+        structure : `~numpy.ndarray`
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -92,7 +91,6 @@ class SkyMask(SkyImage):
             Dilated sky mask.
         """
         from scipy.ndimage import binary_dilation
-        structure = _validate_structure_element(structure)
         data = binary_dilation(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
@@ -104,7 +102,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+        structure : `~numpy.ndarray`
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -113,7 +111,6 @@ class SkyMask(SkyImage):
             Closed sky mask.
         """
         from scipy.ndimage import binary_closing
-        structure = _validate_structure_element(structure)
         data = binary_closing(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
@@ -125,7 +122,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+        structure : `~numpy.ndarray`
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -134,7 +131,6 @@ class SkyMask(SkyImage):
             Eroded sky mask.
         """
         from scipy.ndimage import binary_erosion
-        structure = _validate_structure_element(structure)
         data = binary_erosion(self.data, structure)
         return SkyMask(data=data, wcs=self.wcs)
 
@@ -256,20 +252,3 @@ def make_tevcat_exclusion_mask():
 
     return all_sky_exclusion
 
-
-def _validate_structure_element(structure):
-    """
-    Validate structuring element for binary operations.
-    """
-    if isinstance(structure, Kernel):
-        if not structure.is_bool:
-            raise ValueError('Structuring element must be bool.')
-        structure.normalize('peak')
-        structure = structure.array.astype('int')
-    elif isinstance(structure, np.ndarray):
-        if not ((structure == 0) | (structure == 1)).all():
-            raise ValueError('Structuring element must be bool.')
-    else:
-        raise TypeError('Structuring element must be either `numpy.ndarray` or'
-                        '`astropy.convolution.Kernel`')
-    return structure

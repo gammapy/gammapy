@@ -38,7 +38,7 @@ def test_distance_image():
 def test_open():
     mask = SkyMask.empty(nxpix=5, nypix=5)
     mask.data[2:3, 2:3] = 1
-    structure = Box2DKernel(3)
+    structure = Box2DKernel(3).array
     mask = mask.open(structure)
     assert (mask.data == 0).all()
 
@@ -47,7 +47,7 @@ def test_close():
     mask = SkyMask.empty(nxpix=5, nypix=5)
     mask.data[1:-1, 1:-1] = 1
     mask.data[2, 2] = 0
-    structure = Box2DKernel(3)
+    structure = Box2DKernel(3).array
     mask = mask.close(structure)
     assert mask.data.sum() == 9
 
@@ -55,9 +55,9 @@ def test_close():
 def test_erode():
     mask = SkyMask.empty(nxpix=5, nypix=5)
     mask.data[1:-1, 1:-1] = 1
-    structure = np.array([[1, 1, 1],
-                          [1, 1, 1],
-                          [1, 1, 1]])
+    structure = [[1, 1, 1],
+                 [1, 1, 1],
+                 [1, 1, 1]]
     mask = mask.erode(structure)
     assert mask.data[2, 2] == 1
     assert mask.data.sum() == 1
@@ -66,8 +66,8 @@ def test_erode():
 def test_dilate():
     mask = SkyMask.empty(nxpix=5, nypix=5)
     mask.data[2, 2] = 1
-    structure = np.array([[1, 1, 1],
-                          [1, 1, 1],
-                          [1, 1, 1]])
+    structure = [[1, 1, 1],
+                 [1, 1, 1],
+                 [1, 1, 1]]
     mask = mask.dilate(structure)
     assert mask.data.sum() == 9
