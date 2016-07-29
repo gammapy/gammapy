@@ -5,8 +5,6 @@ Field-of-view (FOV) background estimation
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from astropy.wcs import WCS
-from astropy.wcs.utils import pixel_to_skycoord
-from astropy.io import fits
 from astropy.coordinates import Angle
 from ..image import SkyImage
 
@@ -15,7 +13,8 @@ __all__ = [
 ]
 
 
-def fill_acceptance_image(header, center, offset, acceptance, offset_max = Angle(2.5,"deg"), interp_kwargs=None):
+def fill_acceptance_image(header, center, offset, acceptance,
+                          offset_max=Angle(2.5, "deg"), interp_kwargs=None):
     """Generate a 2D image of a radial acceptance curve.
 
     The radial acceptance curve is given as an array of values
@@ -41,8 +40,9 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max = Angle
     """
     from scipy.interpolate import interp1d
     if offset_max > Angle(offset)[-1]:
-        raise ValueError("Offset max used for the acceptance curve ({} deg) is "
-                         "inferior to the one you asked to fill the map ({} deg)".format(offset[-1],offset_max.value))
+        raise ValueError('Offset max used for the acceptance curve ({} deg) is '
+                         'inferior to the one you asked to fill the map ({} deg)'
+                         ''.format(offset[-1], offset_max.value))
     if not interp_kwargs:
         interp_kwargs = dict(bounds_error=False, fill_value=acceptance[0])
 
@@ -58,4 +58,6 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max = Angle
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
     image.data[pix_off >= offset_max] = 0
+
+    # TODO: return SkyImage here and adapt callers.
     return image.to_image_hdu()

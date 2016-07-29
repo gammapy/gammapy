@@ -6,7 +6,8 @@ from astropy.io import fits
 from astropy.convolution import Tophat2DKernel
 from ..extern.pathlib import Path
 from ..stats import significance
-from ..image import SkyMask, binary_disk
+from ..image import SkyMask
+
 __all__ = [
     'GammaImages',
     'IterativeKernelBackgroundEstimator',

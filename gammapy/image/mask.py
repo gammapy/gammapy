@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
-from astropy.convolution.core import Kernel
 from ..image import lon_lat_circle_mask
 from .core import SkyImage
 
@@ -62,7 +61,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~numpy.ndarray`
+        structure : array-like
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -82,7 +81,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~numpy.ndarray`
+        structure : array-like
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -102,7 +101,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~numpy.ndarray`
+        structure : array-like
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -122,7 +121,7 @@ class SkyMask(SkyImage):
 
         Parameters
         ----------
-        structure : `~numpy.ndarray`
+        structure : array-like
             Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
 
         Returns
@@ -251,4 +250,3 @@ def make_tevcat_exclusion_mask():
         all_sky_exclusion.data[mask] = 0
 
     return all_sky_exclusion
-

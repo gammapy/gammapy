@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 from astropy.convolution import Box2DKernel
-from .. import SkyMask
 from ...utils.testing import requires_dependency
+from .. import SkyMask
 
 
 @requires_dependency('scipy')
@@ -40,7 +40,8 @@ def test_open():
     mask.data[2:3, 2:3] = 1
     structure = Box2DKernel(3).array
     mask = mask.open(structure)
-    assert (mask.data == 0).all()
+    assert_equal(mask.data, 0)
+
 
 @requires_dependency('scipy')
 def test_close():
@@ -50,6 +51,7 @@ def test_close():
     structure = Box2DKernel(3).array
     mask = mask.close(structure)
     assert mask.data.sum() == 9
+
 
 @requires_dependency('scipy')
 def test_erode():
@@ -61,6 +63,7 @@ def test_erode():
     mask = mask.erode(structure)
     assert mask.data[2, 2] == 1
     assert mask.data.sum() == 1
+
 
 @requires_dependency('scipy')
 def test_dilate():
