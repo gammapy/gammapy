@@ -8,7 +8,8 @@ from astropy.coordinates import Angle
 __all__ = [
     'linear_wcs_to_arrays',
     'linear_arrays_to_wcs',
-    'get_wcs_ctype'
+    'get_wcs_ctype',
+    'get_resampled_wcs'
 ]
 
 def get_wcs_ctype(wcs):
@@ -33,6 +34,19 @@ def get_wcs_ctype(wcs):
         return 'icrs'
     else:
         raise TypeError("Can't determine WCS coordinate type.")
+
+def get_resampled_wcs(wcs, factor, downsampled):
+    """
+    Get resampled WCS object.
+    """
+    wcs = wcs.deepcopy()
+
+    if not downsampled:
+        factor = 1. / factor
+
+    wcs.wcs.cdelt *= factor
+    wcs.wcs.crpix = (wcs.wcs.crpix - 0.5) / factor + 0.5
+    return wcs
 
 
 def linear_wcs_to_arrays(wcs, nbins_x, nbins_y):

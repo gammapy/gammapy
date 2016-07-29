@@ -261,6 +261,59 @@ class TestSkyMapPoisson:
         with pytest.raises(WcsError):
             image.paste(cutout)
 
+    @requires_dependency('skimage')
+    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 6), 2, 'CAR'),
+                                                           ((9, 12), 3, 'CAR')])
+    def test_downsample(self, shape, factor, proj):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02, proj=proj)
+        image_downsampled = image.downsample(factor=factor)
+        separation = image.center.separation(image_downsampled.center)
+
+        # check WCS
+        assert_quantity_allclose(separation, Quantity(0, 'deg'))
+
+        # check data shape
+        assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
+
+
+    @requires_dependency('scipy')
+    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((2, 3), 2, 'TAN'),
+                                                           ((3, 4), 3, 'TAN')])
+    def test_upsample(self, shape, factor, proj):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=0.02, proj=proj)
+        image_upsampled = image.upsample(factor=factor)
+        separation = image.center.separation(image_upsampled.center)
+
+        # check WCS
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+
+        # check data shape
+        assert image_upsampled.data.shape == (shape[0] * factor, shape[1] * factor)
+
+    @requires_dependency('scipy')
+    @requires_dependency('skimage')
+    @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((4, 4), 2, 'AIT'),
+                                                           ((9, 9), 3, 'AIT')])
+    def test_down_and_upsample(self, shape, factor, proj):
+        nypix, nxpix = shape
+        image = SkyImage.empty(nxpix=nxpix, nypix=nypix, binsz=10, fill=1.)
+        image_downsampled = image.downsample(factor=factor, method=np.nanmean)
+        image_upsampled = image_downsampled.upsample(factor=factor)
+        assert_allclose(image.data, image_upsampled.data)
+
+    def test_crop(self):
+        image = SkyImage.empty(nxpix=9, nypix=9, binsz=0.02, proj='AIT', xref=135,
+                               yref=60)
+        image_cropped = image.crop(((2, 2), (2, 2)))
+
+        separation = image.center.separation(image_cropped.center)
+        assert_quantity_allclose(separation, Quantity(0, 'deg'), atol=Quantity(1E-17, 'deg'))
+
+        # check data shape
+        assert image_cropped.data.shape == (5, 5)
+
 
 class TestSkyImage:
     def setup(self):
@@ -277,7 +330,7 @@ class TestSkyImage:
         assert_allclose(center.y, 2.0)
 
     def test_center_sky(self):
-        center = self.image.center_sky
+        center = self.image.center
         assert_allclose(center.l.deg, self.center.l.deg, atol=1e-5)
         assert_allclose(center.b.deg, self.center.b.deg, atol=1e-5)
 
@@ -286,8 +339,8 @@ def test_image_pad():
     image = SkyImage.empty(nxpix=10, nypix=13)
     assert image.data.shape == (13, 10)
 
-    image2 = image.pad(pad_to_factor=4, mode='reflect')
-    assert image2.data.shape == (16, 12)
+    image2 = image.pad(pad_width=4, mode='reflect')
+    assert image2.data.shape == (21, 18)
 
 
 def test_skycoord_pixel_conversion():
