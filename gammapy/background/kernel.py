@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import gc
 import numpy as np
 from astropy.io import fits
+from astropy.convolution import Tophat2DKernel
 from ..extern.pathlib import Path
 from ..stats import significance
-from ..image import binary_dilation_circle
-
+from ..image import SkyMask, binary_disk
 __all__ = [
     'GammaImages',
     'IterativeKernelBackgroundEstimator',
@@ -171,9 +171,10 @@ class IterativeKernelBackgroundEstimator(object):
         else:
             # Compute new exclusion mask:
             if update_mask:
-
-                mask = np.where(self._data[-1].significance > self.significance_threshold, 0, 1)
-                mask = np.invert(binary_dilation_circle(mask == 0, radius=self.mask_dilation_radius))
+                mask = self._data[-1].significance > self.significance_threshold
+                structure = Tophat2DKernel(self.mask_dilation_radius)
+                mask = SkyMask(data=mask).dilate(structure)
+                mask = np.invert(mask.data)
             else:
                 mask = self._data[-1].mask.copy()
 

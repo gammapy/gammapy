@@ -809,6 +809,9 @@ class SkyImage(object):
             ax = fig.add_subplot(1, 1, 1, projection=self.wcs)
 
         kwargs['origin'] = kwargs.get('origin', 'lower')
+        kwargs['cmap'] = kwargs.get('cmap', 'afmhot')
+        kwargs['interpolation'] = kwargs.get('interpolation', 'None')
+
         caxes = ax.imshow(self.data, **kwargs)
         unit = self.unit or 'A.U.'
         if unit == 'ct':

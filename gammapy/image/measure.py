@@ -161,7 +161,7 @@ def measure_containment_radius(image, position, containment_fraction=0.8):
 
     Returns
     -------
-    containment_radius : 
+    containment_radius :
         Containment radius (pix)
     """
     from scipy.optimize import brentq
@@ -189,7 +189,7 @@ def measure_containment_fraction(image, radius, separation):
         Containment radius.
     separation : `~astropy.coordinates.Angle`
          Separation from the source position array.
-    
+
     Returns
     -------
     containment_fraction : float

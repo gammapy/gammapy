@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
+from astropy.convolution.core import Kernel
 from ..image import lon_lat_circle_mask
 from .core import SkyImage
 
@@ -53,6 +54,86 @@ class SkyMask(SkyImage):
 
         self.data = data
 
+    def open(self, structure):
+        """
+        Binary opening with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_opening`.
+
+        Parameters
+        ----------
+        structure : `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Opened sky mask.
+        """
+        from scipy.ndimage import binary_opening
+        data = binary_opening(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def dilate(self, structure):
+        """
+        Binary dilation with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_dilation`.
+
+        Parameters
+        ----------
+        structure : `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Dilated sky mask.
+        """
+        from scipy.ndimage import binary_dilation
+        data = binary_dilation(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def close(self, structure):
+        """
+        Binary closing with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_closing`.
+
+        Parameters
+        ----------
+        structure : `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Closed sky mask.
+        """
+        from scipy.ndimage import binary_closing
+        data = binary_closing(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def erode(self, structure):
+        """
+        Binary erosion with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_erosion`.
+
+        Parameters
+        ----------
+        structure : `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Eroded sky mask.
+        """
+        from scipy.ndimage import binary_erosion
+        data = binary_erosion(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
 
@@ -69,7 +150,6 @@ class SkyMask(SkyImage):
         from matplotlib import colors
 
         kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
-        kwargs.setdefault('origin', 'lower')
 
         super(SkyMask, self).plot(ax, fig, **kwargs)
 
@@ -126,7 +206,7 @@ class SkyMask(SkyImage):
 
         distance = np.where(self.data, distance_outside, -distance_inside)
 
-        return SkyImage(data=distance)
+        return SkyImage(data=distance, wcs=self.wcs)
 
     # TODO: right now the extension name is hardcoded to 'exclusion', because
     # single image Fits file often contain a PrimaryHDU and an ImageHDU.
@@ -171,3 +251,4 @@ def make_tevcat_exclusion_mask():
         all_sky_exclusion.data[mask] = 0
 
     return all_sky_exclusion
+

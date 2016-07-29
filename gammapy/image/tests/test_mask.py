@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
+from astropy.convolution import Box2DKernel
 from .. import SkyMask
 from ...utils.testing import requires_dependency
 
@@ -31,3 +32,42 @@ def test_distance_image():
     distance = mask.distance_image.data
     expected = [[-1, -1, 1], [1, 1, 1.41421356]]
     assert_allclose(distance, expected)
+
+
+@requires_dependency('scipy')
+def test_open():
+    mask = SkyMask.empty(nxpix=5, nypix=5)
+    mask.data[2:3, 2:3] = 1
+    structure = Box2DKernel(3).array
+    mask = mask.open(structure)
+    assert (mask.data == 0).all()
+
+@requires_dependency('scipy')
+def test_close():
+    mask = SkyMask.empty(nxpix=5, nypix=5)
+    mask.data[1:-1, 1:-1] = 1
+    mask.data[2, 2] = 0
+    structure = Box2DKernel(3).array
+    mask = mask.close(structure)
+    assert mask.data.sum() == 9
+
+@requires_dependency('scipy')
+def test_erode():
+    mask = SkyMask.empty(nxpix=5, nypix=5)
+    mask.data[1:-1, 1:-1] = 1
+    structure = [[1, 1, 1],
+                 [1, 1, 1],
+                 [1, 1, 1]]
+    mask = mask.erode(structure)
+    assert mask.data[2, 2] == 1
+    assert mask.data.sum() == 1
+
+@requires_dependency('scipy')
+def test_dilate():
+    mask = SkyMask.empty(nxpix=5, nypix=5)
+    mask.data[2, 2] = 1
+    structure = [[1, 1, 1],
+                 [1, 1, 1],
+                 [1, 1, 1]]
+    mask = mask.dilate(structure)
+    assert mask.data.sum() == 9
