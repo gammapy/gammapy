@@ -154,7 +154,6 @@ class SkyMask(SkyImage):
         from matplotlib import colors
 
         kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
-        kwargs.setdefault('origin', 'lower')
 
         super(SkyMask, self).plot(ax, fig, **kwargs)
 
@@ -260,7 +259,7 @@ def make_tevcat_exclusion_mask():
 
 def _validate_structure_element(structure):
     """
-    Validate structuring for binary operations.
+    Validate structuring element for binary operations.
     """
     if isinstance(structure, Kernel):
         if not structure.is_bool:
