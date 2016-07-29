@@ -18,9 +18,7 @@ __all__ = [
     'atrous_hdu',
     'atrous_image',
     'bin_events_in_image',
-    'binary_dilation_circle',
     'binary_disk',
-    'binary_opening_circle',
     'binary_ring',
     'block_reduce_hdu',
     'dict_to_hdulist',
@@ -581,49 +579,6 @@ def threshold(array, threshold=5):
     # it only sets values below the threshold to 0,
     # which is not what we want here.
     return data.astype(np.bool).astype(np.uint8)
-
-
-def binary_dilation_circle(input, radius):
-    """Dilate with disk of given radius.
-
-    Parameters
-    ----------
-    input : `~numpy.ndarray`
-        Input array
-    radius : float
-        Dilation radius (pix)
-
-    Returns
-    -------
-    binary_dilation : `~numpy.ndarray` of bools
-        Dilation of the input array by a disk of the given radius.
-    """
-    from scipy.ndimage import binary_dilation
-    structure = binary_disk(radius)
-    return binary_dilation(input, structure)
-
-
-def binary_opening_circle(input, radius):
-    """Binary opening with circle as structuring element.
-
-    This calls `scipy.ndimage.morphology.binary_opening` with a `binary_disk`
-    as structuring element.
-
-    Parameters
-    ----------
-    input : `~numpy.ndarray`
-        Input array
-    radius : float
-        Dilation radius (pix)
-
-    Returns
-    -------
-    binary_opening : `~numpy.ndarray` of bools
-        Opening of the input array by a disk of the given radius.
-    """
-    from scipy.ndimage import binary_opening
-    structure = binary_disk(radius)
-    return binary_opening(input, structure)
 
 
 def make_header(nxpix=100, nypix=100, binsz=0.1, xref=0, yref=0,

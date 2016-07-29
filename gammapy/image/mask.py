@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.coordinates import Latitude, Longitude, Angle
 from astropy.utils import lazyproperty
+from astropy.convolution.core import Kernel
 from ..image import lon_lat_circle_mask
 from .core import SkyImage
 
@@ -52,6 +53,90 @@ class SkyMask(SkyImage):
             data[val] = 0
 
         self.data = data
+
+    def open(self, structure):
+        """
+        Binary opening with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_opening`.
+
+        Parameters
+        ----------
+        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Opened sky mask.
+        """
+        from scipy.ndimage import binary_opening
+        structure = _validate_structure_element(structure)
+        data = binary_opening(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def dilate(self, structure):
+        """
+        Binary dilation with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_dilation`.
+
+        Parameters
+        ----------
+        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Dilated sky mask.
+        """
+        from scipy.ndimage import binary_dilation
+        structure = _validate_structure_element(structure)
+        data = binary_dilation(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def close(self, structure):
+        """
+        Binary closing with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_closing`.
+
+        Parameters
+        ----------
+        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Closed sky mask.
+        """
+        from scipy.ndimage import binary_closing
+        structure = _validate_structure_element(structure)
+        data = binary_closing(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
+
+    def erode(self, structure):
+        """
+        Binary erosion with structuring element.
+
+        Calls `scipy.ndimage.morphology.binary_erosion`.
+
+        Parameters
+        ----------
+        structure : `~astropy.convolution.Kernel` or `~numpy.ndarray`
+            Structuring kernel. Must be boolean i.e. only contain 1 and 0 values.
+
+        Returns
+        -------
+        skymask : `SkyMask`
+            Eroded sky mask.
+        """
+        from scipy.ndimage import binary_erosion
+        structure = _validate_structure_element(structure)
+        data = binary_erosion(self.data, structure)
+        return SkyMask(data=data, wcs=self.wcs)
 
     def plot(self, ax=None, fig=None, **kwargs):
         """Plot exclusion mask
@@ -126,7 +211,7 @@ class SkyMask(SkyImage):
 
         distance = np.where(self.data, distance_outside, -distance_inside)
 
-        return SkyImage(data=distance)
+        return SkyImage(data=distance, wcs=self.wcs)
 
     # TODO: right now the extension name is hardcoded to 'exclusion', because
     # single image Fits file often contain a PrimaryHDU and an ImageHDU.
@@ -171,3 +256,21 @@ def make_tevcat_exclusion_mask():
         all_sky_exclusion.data[mask] = 0
 
     return all_sky_exclusion
+
+
+def _validate_structure_element(structure):
+    """
+    Validate structuring for binary operations.
+    """
+    if isinstance(structure, Kernel):
+        if not structure.is_bool:
+            raise ValueError('Structuring element must be bool.')
+        structure.normalize('peak')
+        structure = structure.array.astype('int')
+    elif isinstance(structure, np.ndarray):
+        if not ((structure == 0) | (structure == 1)).all():
+            raise ValueError('Structuring element must be bool.')
+    else:
+        raise TypeError('Structuring element must be either `numpy.ndarray` or'
+                        '`astropy.convolution.Kernel`')
+    return structure
