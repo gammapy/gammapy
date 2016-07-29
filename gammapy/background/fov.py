@@ -8,7 +8,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy.io import fits
 from astropy.coordinates import Angle
-from ..image.utils import coordinates
+from ..image import SkyImage
 
 __all__ = [
     'fill_acceptance_image',
@@ -49,16 +49,13 @@ def fill_acceptance_image(header, center, offset, acceptance, offset_max = Angle
     # initialize WCS to the header of the image
     wcs = WCS(header)
     data = np.zeros((header["NAXIS2"], header["NAXIS1"]))
-    image = fits.ImageHDU(data=data, header=header)
+    image = SkyImage(data=data, wcs=wcs)
 
-    # define grids of pixel coorinates
-    xpix_coord_grid, ypix_coord_grid = coordinates(image, world=False)
     # calculate pixel offset from center (in world coordinates)
-    coord = pixel_to_skycoord(xpix_coord_grid, ypix_coord_grid, wcs, origin=0)
+    coord = image.coordinates()
     pix_off = coord.separation(center)
 
     model = interp1d(offset, acceptance, kind='cubic', **interp_kwargs)
     image.data += model(pix_off)
     image.data[pix_off >= offset_max] = 0
-
-    return image
+    return image.to_image_hdu()
