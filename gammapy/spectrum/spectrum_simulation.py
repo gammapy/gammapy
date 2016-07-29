@@ -10,8 +10,15 @@ from gammapy.spectrum import (
 
 import astropy.units as u
 
+
+__all__ = [
+    'SpectrumSimulation'
+]
+
 class SpectrumSimulation(object):
     """Simulate `~gammapy.spectrum.SpectrumObservation`
+    
+    For an example how to use this class, see :ref:`spectrum_simulation`
     
     Parameters
     ----------
@@ -23,66 +30,21 @@ class SpectrumSimulation(object):
         Source model
     livetime : `~astropy.units.Quantity`
         Livetime
-        
-    Examples
-    --------
-    Simulate a spectrum given a model and simulated instrument response functions
-     
-    .. code-block:: python
-
-        import numpy as np
-        import astropy.units as u
-        from gammapy.irf import EnergyDispersion, EffectiveArea
-        from gammapy.spectrum import models, SpectrumSimulation
-        
-        e_true = np.logspace(-2, 2.5, 109) * u.TeV
-        e_reco = np.logspace(-2,2, 79) * u.TeV
-
-        edisp = EnergyDispersion.from_gauss(
-            e_true=e_true,
-            e_reco=e_reco,
-            sigma=0.2
-            )
-
-        aeff = EffectiveAreaTable.from_parametrization(
-            energy=e_true)
-
-        model = models.PowerLaw(
-            index = 2.3 * u.Unit(''),
-            amplitude = 2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1'),
-            reference = 1 * u.TeV
-            )
-    
-        sim = SpectrumSimulation(
-            aeff=aeff,
-            edisp=edisp,
-            model=model,
-            livetime=4*u.h)
-    
-        obs = sim.simulate_obs(seed=23)
     """
     def __init__(self, aeff, edisp, model, livetime):
         self.aeff = aeff
         self.edisp = edisp
         self.model = model
-        self._livetime = livetime
-        self._npred = None
-
-    @property
-    def livetime(self):
-        """Livetime"""
-        # This is a property since changing the livetime makes npred invalid
-        return self._livetime
+        self.livetime = livetime
 
     @property
     def npred(self):
-        """Prediced source counts"""
-        if self._npred is None:
-            self._npred = calculate_predicted_counts(livetime=self.livetime,
-                                                     aeff=self.aeff,
-                                                     edisp=self.edisp,
-                                                     model=self.model)
-        return self._npred
+        """Prediced source `~gammapy.spectrum.CountsSpectrum`"""
+        npred  = calculate_predicted_counts(livetime=self.livetime,
+                                            aeff=self.aeff,
+                                            edisp=self.edisp,
+                                            model=self.model)
+        return npred
 
     def simulate_obs(self, obs_id=1, seed='random-seed', lo_threshold=None,
                      hi_threshold=None):

@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import astropy.units as u
+from ...utils.testing import requires_dependency
 from ...irf import EnergyDispersion, EffectiveAreaTable
 from .. import (
     SpectrumExtraction,
@@ -9,6 +10,7 @@ from .. import (
     models,
 )
 
+@requires_dependency('scipy')
 def test_simulation():
     e_true = SpectrumExtraction.DEFAULT_TRUE_ENERGY
     e_reco = SpectrumExtraction.DEFAULT_RECO_ENERGY
