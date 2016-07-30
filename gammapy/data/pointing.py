@@ -8,6 +8,8 @@ from ..utils.scripts import make_path
 from ..time.utils import time_ref_from_dict
 from .utils import _earth_location_from_dict
 
+import numpy as np
+
 __all__ = [
     'PointingInfo',
 ]
@@ -86,6 +88,55 @@ class PointingInfo(object):
         ss += 'Time:  {} MJD (TT)\n'.format(self.time[idx].mjd)
         ss += 'RADEC: {} deg\n'.format(self.radec[idx].to_string())
         ss += 'ALTAZ: {} deg\n'.format(self.altaz[idx].to_string())
+        return ss
+
+    def _str_for_time(self, t):
+        """Information for an arbitrary time"""
+
+        if t < self.time[0]:
+            return 'Pointing at time {} was requested but history begins at {}'.format(t.mjd, self.time[0].mjd)
+
+        if t > self.time[-1]:
+            return 'Pointing at time {} was requested but history ends at {}'.format(t.mjd, self.time[-1].mjd)
+
+        times_before = np.where(self.time < t)
+        idx_before = times_before[0][-1]
+
+        times_after = np.where(self.time > t)
+        idx_after = times_after[0][0]
+
+        alt_before = self.altaz[idx_before].alt
+        az_before = self.altaz[idx_before].az
+
+        alt_after = self.altaz[idx_after].alt
+        az_after = self.altaz[idx_after].az
+
+        alt = 0.5 * alt_before.value + 0.5 * alt_after.value
+
+        az = 0.5 * az_before.value + 0.5 * az_after.value
+
+        if abs(az_after.value - az_before.value) > 180:
+            az += 180
+
+        ra_before = self.radec[idx_before].ra
+        dec_before = self.radec[idx_before].dec
+
+        ra_after = self.radec[idx_after].ra
+        dec_after = self.radec[idx_after].dec
+
+        ra = 0.5 * ra_before.value + 0.5 * ra_after.value
+
+        dec = 0.5 * dec_before.value + 0.5 * dec_after.value
+
+        if abs(ra_after.value - ra_before.value) > 180:
+            ra += 180
+
+        if abs(dec_after.value - dec_before.value) > 180:
+            dec += 180
+
+        ss = 'Time:  {} MJD (TT)\n'.format(t.mjd)
+        ss += 'RADEC: {} {} deg\n'.format(ra, dec)
+        ss += 'ALTAZ: {} {} deg\n'.format(az, alt)
         return ss
 
     @lazyproperty
