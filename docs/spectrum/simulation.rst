@@ -90,11 +90,12 @@ simulated IRFs from the Getting Started section in the following.
     sherpa_logger.setLevel(50)
 
     n = 100
+    # TODO : Use list of dicts instead of several lists
     index_estimate = list()
     amplitude_estimate = list()
 
-    for ii in range(n):
-        obs = sim.simluate_obs(obs_id=ii, seed='random-init')
+    for obs_id in range(n):
+        obs = sim.simluate_obs(obs_id=obs_id, seed='random-init')
 
         # At the moment you have to save the obs to disk so sherpa can read it
         # There's an open PR to fix this continue example once this is done
