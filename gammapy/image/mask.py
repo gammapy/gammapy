@@ -142,7 +142,7 @@ class SkyMask(SkyImage):
             WCS axis object
 
         Returns
-        ----------
+        -------
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object
         """

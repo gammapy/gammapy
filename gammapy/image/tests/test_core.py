@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from astropy.wcs import WcsError
-from regions import CircleSkyRegion
+from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 from ...utils.testing import requires_dependency, requires_data
 from ...data import DataStore
 from ...datasets import load_poisson_stats_image
@@ -276,7 +276,6 @@ class TestSkyMapPoisson:
         # check data shape
         assert image_downsampled.data.shape == (shape[0] // factor, shape[1] // factor)
 
-
     @requires_dependency('scipy')
     @pytest.mark.parametrize(('shape', 'factor', 'proj'), [((2, 3), 2, 'TAN'),
                                                            ((3, 4), 3, 'TAN')])
@@ -372,3 +371,25 @@ def test_footprint():
     assert_allclose(image.wcs_skycoord_to_pixel(coord['upper left']), (0, 2))
     assert_allclose(image.wcs_skycoord_to_pixel(coord['upper right']), (3, 2))
     assert_allclose(image.wcs_skycoord_to_pixel(coord['lower right']), (3, 0))
+
+
+def test_region_mask():
+    mask = SkyImage.empty(nxpix=5, nypix=4)
+
+    # Test with a pixel region
+    region = CirclePixelRegion(center=PixCoord(x=2, y=1), radius=1.1)
+    actual = mask.region_mask(region)
+    expected = [
+        [0, 0, 1, 0, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+    ]
+    assert_equal(actual.data, expected)
+
+    # Test with a sky region
+    # Output is the same in this case, because the sky region
+    # represents roughly the same region as the pixel region
+    sky_region = region.to_sky(wcs=mask.wcs)
+    actual = mask.region_mask(sky_region)
+    assert_equal(actual.data, expected)

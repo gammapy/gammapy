@@ -12,7 +12,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.coordinates.angle_utilities import angular_separation
 from astropy.units import Quantity, Unit
 from astropy.nddata.utils import Cutout2D
-from regions import PixCoord
+from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
 from astropy.wcs.utils import (pixel_to_skycoord, skycoord_to_pixel,
                                proj_plane_pixel_scales)
@@ -283,7 +283,7 @@ class SkyImage(object):
         else:
             raise ValueError('Invalid mode to compute coordinates.')
 
-        return x, y
+        return PixCoord(x, y)
 
     def coordinates(self, mode='center'):
         """
@@ -299,8 +299,8 @@ class SkyImage(object):
         coordinates : `~astropy.coordinates.SkyCoord`
             Position on the sky.
         """
-        x, y = self.coordinates_pix(mode=mode)
-        coordinates = self.wcs_pixel_to_skycoord(xp=x, yp=y)
+        pixcoord = self.coordinates_pix(mode=mode)
+        coordinates = self.wcs_pixel_to_skycoord(xp=pixcoord.x, yp=pixcoord.y)
         return coordinates
 
     def contains(self, position):
@@ -958,6 +958,53 @@ class SkyImage(object):
             raise ValueError('Invalid method: {}'.format(method))
 
         return Angle(scales, unit='deg')
+
+    def region_mask(self, region):
+        """Create a boolean mask for a region.
+
+        The ``data`` of this image is unchanged, a new mask is returned.
+
+        The mask is:
+
+        - ``True`` for pixels inside the region
+        - ``False`` for pixels outside the region
+
+        Parameters
+        ----------
+        region : '~regions.PixelRegion' or `~regions.SkyRegion` object
+            A region on the sky could be defined in pixel or sky coordinates.
+
+        Returns
+        -------
+        mask : ~gammapy.image.SkyMask`
+            A boolean sky mask.
+
+        Examples
+        --------
+        >>> from gammapy.image import SkyImage
+        >>> from regions import CirclePixelRegion, PixCoord
+        >>> region = CirclePixelRegion(center=PixCoord(x=2, y=1), radius=1.1)
+        >>> image = SkyImage.empty(nxpix=5, nypix=4)
+        >>> mask = image.region_mask(region)
+        >>> print(mask.data.astype(int))
+        [[0 0 1 0 0]
+         [0 1 1 1 0]
+         [0 0 1 0 0]
+         [0 0 0 0 0]]
+        """
+        from .mask import SkyMask
+
+        if isinstance(region, PixelRegion):
+            coords = self.coordinates_pix()
+        elif isinstance(region, SkyRegion):
+            coords = self.coordinates()
+        else:
+            raise TypeError("Invalid region type, must be instance of "
+                            "'regions.PixelRegion' or 'regions.SkyRegion'")
+
+        data = region.contains(coords)
+
+        return SkyMask(data=data, wcs=self.wcs)
 
 
 class SkyImageCollection(Bunch):
