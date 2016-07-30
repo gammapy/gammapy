@@ -14,7 +14,7 @@ __all__ = [
 class ObservationStats(Stats):
     """Observation statistics.
 
-    Class allowing to summarize observation 
+    Class allowing to summarize observation
     (`~gammapy.data.DataStoreObservation`) statistics
 
     Parameters
@@ -65,11 +65,11 @@ class ObservationStats(Stats):
         Parameters
         ----------
         obs : `~gammapy.data.DataStoreObservation`
-            Observation index table
+            IACT data store observation
         target : `~gammapy.data.Target`
             Target
         bg_estimate : `~gammapy.background.BackgroundEstimate`
-            Background estimate 
+            Background estimate
         """
         # TODO: add as property to DataStoreObservation
         n_on = cls._get_on_events(obs, target)
@@ -119,8 +119,8 @@ class ObservationStats(Stats):
 
     @classmethod
     def stack(cls, stats_list):
-        """Stack statistics from a list of 
-        `~gammapy.data.ObservationStats` and returns a new instance 
+        """Stack statistics from a list of
+        `~gammapy.data.ObservationStats` and returns a new instance
         of `~gammapy.data.ObservationStats`
 
         Parameters
@@ -131,7 +131,7 @@ class ObservationStats(Stats):
         Returns
         -------
         total_stats : `~gammapy.data.ObservationStats`
-            Statistics for stacked observation 
+            Statistics for stacked observation
         """
         n_on = 0
         n_off = 0

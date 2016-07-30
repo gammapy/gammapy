@@ -1,29 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-
 from astropy import log
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-
-from . import EnergyDependentTablePSF
 from ..extern.validator import validate_physical_type
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..utils.scripts import make_path
 from ..irf import HESSMultiGaussPSF
-
+from . import EnergyDependentTablePSF
 
 __all__ = ['EnergyDependentMultiGaussPSF']
 
 
-# TODO: Improve and add functionality from psf_core to this class
 class EnergyDependentMultiGaussPSF(object):
     """
     Triple Gauss analytical PSF depending on energy and theta.
+
+    To evaluate the PSF call the ``to_table_psf`` or ``psf_at_energy_and_theta`` methods.
 
     Parameters
     ----------
@@ -361,8 +359,6 @@ class EnergyDependentMultiGaussPSF(object):
                            "".format(100 * fraction, theta, energy, radius))
         return ss
 
-
-
     def to_table_psf(self, theta=None, offset=None, exposure=None):
         """
         Convert triple Gaussian PSF ot table PSF.
@@ -387,10 +383,18 @@ class EnergyDependentMultiGaussPSF(object):
         ebounds = EnergyBounds.from_lower_and_upper_bounds(self.energy_lo, self.energy_hi)
         energies = ebounds.log_centers
 
-        # Defaults
-        theta = theta or Angle(0, 'deg')
-        offset = offset or Angle(np.arange(0, 1.5, 0.005), 'deg')
-        psf_value = Quantity(np.empty((len(energies), len(offset))), 'deg^-2')
+        # Defaults and input handling
+        if theta:
+            theta = Angle(theta)
+        else:
+            theta = Angle(0, 'deg')
+
+        if offset:
+            offset = Angle(offset)
+        else:
+            offset = Angle(np.arange(0, 1.5, 0.005), 'deg')
+
+        psf_value = Quantity(np.empty((energies.size, offset.size)), 'deg^-2')
 
         for i, energy in enumerate(energies):
             psf_gauss = self.psf_at_energy_and_theta(energy, theta)
@@ -398,5 +402,3 @@ class EnergyDependentMultiGaussPSF(object):
 
         return EnergyDependentTablePSF(energy=energies, offset=offset,
                                        exposure=exposure, psf_value=psf_value)
-
-

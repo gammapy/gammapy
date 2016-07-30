@@ -32,3 +32,4 @@ from .detect_iterative import *
 from .catalog_browser import *
 # from .catalog_query import *
 
+from .cta_irf import CTAIrf
