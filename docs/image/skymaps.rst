@@ -19,10 +19,10 @@ Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
 .. code::
 
     from gammapy.image import SkyImage
-    from gammapy.datasets import load_poisson_stats_image
+    from gammapy.datasets import gammapy_extra
 
-    filename = load_poisson_stats_image(return_filenames=True)
-    image = SkyImage.read(filename)
+    filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+    image = SkyImage.read(filename, ext=2)
 
 Alternatively an empty image can be created from the scratch, by specifying the
 WCS information (see `~gammapy.image.SkyImage.empty` for a detailed description of
@@ -57,11 +57,11 @@ The image can be easily displayed with an image viewer, by calling ``image.show(
         :include-source:
 
         from gammapy.image import SkyImage
-        from gammapy.datasets import load_poisson_stats_image
+        from gammapy.datasets import gammapy_extra
 
-        filename = load_poisson_stats_image(return_filenames=True)
-        counts = SkyImage.read(filename)
-        counts.name = 'Counts'
+        filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+        counts = SkyImage.read(filename, ext=2)
+        counts.name = 'Counts Smoothed'
         counts.show()
 
 
@@ -72,7 +72,7 @@ Cutout and paste
 
 The `~gammapy.image.SkyImage` class offers `.paste()` and `.cutout()`
 methods, that can be used to cut out smaller parts of a image.
-Here we cut out a 1 deg x 1 deg patch out of an example image:
+Here we cut out a 5 deg x 5 deg patch out of an example image:
 
 .. plot::
     :include-source:
@@ -80,13 +80,12 @@ Here we cut out a 1 deg x 1 deg patch out of an example image:
     from astropy.units import Quantity
     from astropy.coordinates import SkyCoord
     from gammapy.image import SkyImage
-    from gammapy.datasets import load_poisson_stats_image
+    from gammapy.datasets import gammapy_extra
 
-    filename = load_poisson_stats_image(return_filenames=True)
-    counts = SkyImage.read(filename)
-    
+    filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+    counts = SkyImage.read(filename, ext=2)
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
-    size = Quantity([1, 1], 'deg')
+    size = Quantity([5, 5], 'deg')
     cutout = counts.cutout(position, size)
     cutout.show()
 
@@ -111,7 +110,7 @@ of computing large model sky images:
     ampl = 1. / (2 * np.pi * (sigma / BINSZ) ** 2)
     sources = [Gaussian2D(ampl, 0, 0, sigma, sigma),
                Gaussian2D(ampl, 2, 0, sigma, sigma),
-               Gaussian2D(ampl, 0, 2, sigma, sigma), 
+               Gaussian2D(ampl, 0, 2, sigma, sigma),
                Gaussian2D(ampl, 0, -2, sigma, sigma),
                Gaussian2D(ampl, -2, 0, sigma, sigma),
                Gaussian2D(ampl, 2, -2, sigma, sigma),
