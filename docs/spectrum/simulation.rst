@@ -14,7 +14,7 @@ In the following, a few example are given to demonstrate the
 Getting Started
 ===============
 
-This section show you how to simulate a `~gammapy.spectrum.SpetrumObservation`
+This section show you how to simulate a `~gammapy.spectrum.SpectrumObservation`
 given a source model and instrument response functions. The latter will also be
 simulated to make this tutorial independent of any real data. No background
 measurement is simulated in this example. Simulating the IRFs works like this
@@ -37,13 +37,13 @@ We'll have a look at the simulated IRFs in a second. But first we define a
 
 .. code-block:: python
 
-    from gammapy.spectrum import models
+    from gammapy.spectrum.models import PowerLaw
 
     index = 2.3 * u.Unit('')
     amplitude = 2.5 * 1e-12 * u.Unit('cm-2 s-1 TeV-1')
     reference = 1 * u.TeV
 
-    model = models.PowerLaw(index=index, amplitude=amplitude, reference=reference) 
+    model = PowerLaw(index=index, amplitude=amplitude, reference=reference)
     
 and simulate one `~gammapy.spectrum.SpectrumObservation` for one 4 hour
 observation. We set the low energy threshold to 20% of the peak effective area
@@ -66,7 +66,8 @@ and the high energy threshold to 60 TeV.
     obs.peek()
     plt.show()
 
-.. image:: simulated_obs.png
+.. TODO: link to image https://github.com/gammapy/gammapy-extra/blob/master/figures/simulated_obs.png
+.. .. image:: simulated_obs.png
 
 
 Simulating Many Spectra
@@ -89,13 +90,16 @@ simulated IRFs from the Getting Started section in the following.
     sherpa_logger = logging.getLogger('sherpa')
     sherpa_logger.setLevel(50)
 
-    n = 100
-    # TODO : Use list of dicts instead of several lists
-    index_estimate = list()
-    amplitude_estimate = list()
+    n_sim = 100
 
-    for obs_id in range(n):
-        obs = sim.simluate_obs(obs_id=obs_id, seed='random-init')
+    results = []
+    for obs_id in range(n_sim):
+        obs = sim.simluate_obs(obs_id=obs_id, seed=obs_id)
+
+        results.append(dict(
+            obs_id=obs_id,
+            # TODO: store other results
+        ))
 
         # At the moment you have to save the obs to disk so sherpa can read it
         # There's an open PR to fix this continue example once this is done

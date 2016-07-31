@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-from ..utils.random import get_random_state 
+import astropy.units as u
+from ..utils.random import get_random_state
 from ..spectrum import (
     calculate_predicted_counts,
     PHACountsSpectrum,
     SpectrumObservation,
 )
-
-import astropy.units as u
-
 
 __all__ = [
     'SpectrumSimulation'
@@ -17,9 +14,9 @@ __all__ = [
 
 
 class SpectrumSimulation(object):
-    """Simulate `~gammapy.spectrum.SpectrumObservation`
+    """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
-    For an example how to use this class, see :ref:`spectrum_simulation`
+    For an example how to use this class, see :ref:`spectrum_simulation`.
 
     Parameters
     ----------
@@ -32,6 +29,7 @@ class SpectrumSimulation(object):
     livetime : `~astropy.units.Quantity`
         Livetime
     """
+
     def __init__(self, aeff, edisp, model, livetime):
         self.aeff = aeff
         self.edisp = edisp
@@ -40,7 +38,7 @@ class SpectrumSimulation(object):
 
     @property
     def npred(self):
-        """Prediced source `~gammapy.spectrum.CountsSpectrum`"""
+        """Predicted source `~gammapy.spectrum.CountsSpectrum`"""
         npred = calculate_predicted_counts(livetime=self.livetime,
                                            aeff=self.aeff,
                                            edisp=self.edisp,
@@ -49,7 +47,7 @@ class SpectrumSimulation(object):
 
     def simulate_obs(self, obs_id=1, seed='random-seed', lo_threshold=None,
                      hi_threshold=None):
-        """Simulate `~gammapy.spectrum.SpectrumObservation`
+        """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
         Parameters
         ----------
