@@ -609,60 +609,6 @@ class SpectrumObservation(object):
         # plt.subplots_adjust(hspace = .2, left=.1)
         return fig
 
-    def apply_energy_cut(self, energy_range=None, method='binned'):
-        """Restrict to a given energy range
-
-        If no energy range is given, it will be extracted from the PHA header.
-        Tow methods are available . Unbinned method: The new counts vectors are
-        created from the list of on and off events. Therefore this list must be
-        saved in the meta info. Binned method: The counts vectors are taken as
-        a basis for the energy range restriction. Only bins that are entirely
-        contained in the desired energy range are copied.
-
-        Parameters
-        ----------
-        energy_range : `~gammapy.utils.energy.EnergyBounds`, optional
-            Desired energy range
-        method : str {'unbinned', 'binned'}
-            Use unbinned on list / binned on vector
-
-        Returns
-        -------
-        obs : `~gammapy.spectrum.spectrum_extraction.SpectrumObservation`
-            Spectrum observation in desired energy range
-        """
-
-        if energy_range is None:
-            arf = self.effective_area
-            energy_range = [arf.energy_thresh_lo, arf.energy_thresh_hi]
-
-        energy_range = EnergyBounds(energy_range)
-        ebounds = self.on_vector.energy_bounds
-        if method == 'unbinned':
-            on_list_temp = self.meta.on_list.select_energy(energy_range)
-            off_list_temp = self.meta.off_list.select_energy(energy_range)
-            on_vec = CountsSpectrum.from_eventlist(on_list_temp, ebounds)
-            off_vec = CountsSpectrum.from_eventlist(off_list_temp, ebounds)
-        elif method == 'binned':
-            val = self.on_vector.energy_bounds.lower_bounds
-            mask = np.invert(energy_range.contains(val))
-            on_counts = np.copy(self.on_vector.counts)
-            on_counts[mask] = 0
-            off_counts = np.copy(self.off_vector.counts)
-            off_counts[mask] = 0
-            on_vec = CountsSpectrum(on_counts, ebounds)
-            off_vec = CountsSpectrum(off_counts, ebounds)
-        else:
-            raise ValueError('Undefined method: {}'.format(method))
-
-        off_vec.meta.update(backscal=self.off_vector.meta.backscal)
-        m = copy.deepcopy(self.meta)
-        m.update(energy_range=energy_range)
-
-        return SpectrumObservation(self.obs_id, on_vec, off_vec,
-                                   self.energy_dispersion, self.effective_area,
-                                   meta=m)
-
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """

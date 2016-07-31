@@ -93,7 +93,6 @@ class LogEnergyAxis(object):
 
         return pix1, pix2, energy1, energy2
 
-
 def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     """Get npred 
 

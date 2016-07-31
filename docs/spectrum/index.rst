@@ -10,9 +10,12 @@ Spectrum estimation and modeling (`gammapy.spectrum`)
 
 Introduction
 ============
-`gammapy.spectrum` holds functions and classes related to 1D region based spectral analysis.
+`gammapy.spectrum` holds functions and classes related to 1D region based
+spectral analysis.
 
-The basic of this type of analysis are explained in `this <https://github.com/gammapy/PyGamma15/tree/gh-pages/talks/analysis-classical>`__ talk
+The basic of this type of analysis are explained in `this
+<https://github.com/gammapy/PyGamma15/tree/gh-pages/talks/analysis-classical>`__
+talk
 
 TODO: explain basics
 
@@ -24,8 +27,8 @@ A standard reference for the unfolding method is [Albert2007]_.
 Content
 =======
 .. toctree::
-   spectral_fitting
-
+   fitting
+   simulation
 
 Reference/API
 =============
