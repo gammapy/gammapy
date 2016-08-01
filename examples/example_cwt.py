@@ -2,6 +2,7 @@
 Example to run the CWT wavelet transform method.
 """
 import numpy as np
+from numpy.testing import assert_allclose
 from gammapy.detect import CWT
 
 
@@ -28,8 +29,12 @@ def make_fermi_data():
 def run_cwt(data):
     cwt = CWT(nscales=2, min_scale=6.0, scale_step=1.3)
     data['background'] = 1. * np.ones_like(data['background'], dtype=float)
-    cwt.set_data(data['image'], data['background'], data['header'])
-    cwt.iterative_filter_peak(nsigma=100, niter=5)
+    cwt.set_data(data['image'], data['background'])
+
+    # TODO: run one step, try to understand what it does
+    # cwt.run_one_iteration(nsigma=100, nsigmap=4.0)
+
+    cwt.run_iteratively(nsigma=100, niter=5)
     return cwt
 
 
@@ -38,5 +43,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     data = make_fermi_data()
     result = run_cwt(data)
-    result.save_results('cwt-test.fits', overwrite=True)
-    import IPython; IPython.embed()
+    result.save_results('cwt-test.fits', header=data['header'], overwrite=True)
+    # import IPython; IPython.embed()
+
+    assert_allclose(result.approx.sum(), -125888.06997643769)
