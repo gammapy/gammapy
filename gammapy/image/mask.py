@@ -57,7 +57,7 @@ class SkyMask(SkyImage):
         """
         Binary opening with structuring element.
 
-        Calls `scipy.ndimage.morphology.binary_opening`.
+        Calls `scipy.ndimage.binary_opening`.
 
         Parameters
         ----------
@@ -77,7 +77,7 @@ class SkyMask(SkyImage):
         """
         Binary dilation with structuring element.
 
-        Calls `scipy.ndimage.morphology.binary_dilation`.
+        Calls `scipy.ndimage.binary_dilation`.
 
         Parameters
         ----------
@@ -97,7 +97,7 @@ class SkyMask(SkyImage):
         """
         Binary closing with structuring element.
 
-        Calls `scipy.ndimage.morphology.binary_closing`.
+        Calls `scipy.ndimage.binary_closing`.
 
         Parameters
         ----------
@@ -117,7 +117,7 @@ class SkyMask(SkyImage):
         """
         Binary erosion with structuring element.
 
-        Calls `scipy.ndimage.morphology.binary_erosion`.
+        Calls `scipy.ndimage.binary_erosion`.
 
         Parameters
         ----------

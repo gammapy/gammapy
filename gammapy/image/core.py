@@ -198,7 +198,9 @@ class SkyImage(object):
     @classmethod
     def empty_like(cls, image, name=None, unit=None, fill=0, meta=None):
         """
-        Create an empty image with the same WCS specification as given image.
+        Create an empty image like the given image.
+
+        The WCS is copied over, the data array is filled with the ``fill`` value.
 
         Parameters
         ----------
@@ -468,7 +470,7 @@ class SkyImage(object):
 
         Parameters
         ----------
-        pad_width: {sequence, array_like, int}
+        pad_width : {sequence, array_like, int}
             Number of values padded to the edges of each axis, passed to `numpy.pad`
         mode : str ('reflect')
             Padding mode, passed to `numpy.pad`.
@@ -507,7 +509,7 @@ class SkyImage(object):
         """
         Crop sky image at the edges with given crop width.
 
-        Analogous method to `SkyMap.pad()` to crop the sky image at the edges.
+        Analogous method to :meth:`SkyMap.pad()` to crop the sky image at the edges.
         Adapts the wcs specification accordingly.
 
         Paramters
@@ -694,11 +696,11 @@ class SkyImage(object):
 
     def to_image_hdu(self):
         """
-        Convert image to `~astropy.fits.PrimaryHDU`.
+        Convert image to a `~astropy.io.fits.PrimaryHDU`.
 
         Returns
         -------
-        primaryhdu : `~astropy.fits.PrimaryHDU`
+        hdu : `~astropy.io.fits.PrimaryHDU`
             Primary image hdu object.
         """
         if self.wcs is not None:
@@ -721,7 +723,7 @@ class SkyImage(object):
 
         Parameters
         ----------
-        reference : `~astropy.fits.Header`, or `~gammapy.image.SkyImage`
+        reference : `~astropy.io.fits.Header`, or `~gammapy.image.SkyImage`
             Reference map specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
@@ -870,6 +872,8 @@ class SkyImage(object):
         mask : `~gammapy.image.SkyMask`
             Exclusion mask object.
 
+        Examples
+        --------
         TODO: some more docs and example
         """
         from .mask import SkyMask
@@ -927,7 +931,8 @@ class SkyImage(object):
                                  mode=_DEFAULT_WCS_MODE)
 
     def wcs_pixel_scale(self, method='cdelt'):
-        """
+        """Pixel scale.
+
         Returns angles along each axis of the image pixel at the CRPIX
         location once it is projected onto the plane of intermediate world coordinates.
 
@@ -940,7 +945,7 @@ class SkyImage(object):
 
         Returns
         -------
-        angle : '~astropy.coordinates.Angle'
+        angle : `~astropy.coordinates.Angle`
             An angle of projection plane increments corresponding to each pixel side (axis).
 
         Examples
@@ -971,12 +976,12 @@ class SkyImage(object):
 
         Parameters
         ----------
-        region : '~regions.PixelRegion' or `~regions.SkyRegion` object
+        region : `~regions.PixelRegion` or `~regions.SkyRegion` object
             A region on the sky could be defined in pixel or sky coordinates.
 
         Returns
         -------
-        mask : ~gammapy.image.SkyMask`
+        mask : `~gammapy.image.SkyMask`
             A boolean sky mask.
 
         Examples
