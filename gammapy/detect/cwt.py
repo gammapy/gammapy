@@ -93,7 +93,7 @@ class CWT(object):
         self.header = None
         self.wcs = None
 
-    def set_data(self, image, background):
+    def set_data(self, image, background, header):
         """Set input images."""
         # TODO: check that image and background are consistent
         self.image = image - 0.0
@@ -107,29 +107,29 @@ class CWT(object):
         self.error = np.zeros((self.nscale, self.nx, self.ny))
         self.support = np.zeros((self.nscale, self.nx, self.ny))
 
-    def set_file(self, filename):
-        """Set input images from FITS file"""
-        # TODO: check the existence of extensions
-        # Open fits files
-        hdulist = fits.open(filename)
-        # TODO: don't hardcode extension numbers and names here ... pass on from gp-cwt
-        self.set_data(hdulist[0].data, hdulist['NormOffMap'].data)
-        self.header = hdulist[0].header
-        self.wcs = WCS(self.header)
+        # self.transform = dict()
+        # self.error = dict()
+
+        self.header = header
+        self.wcs = WCS(header)
 
     def do_transform(self):
         """Do the transform itself."""
-        # TODO: after unit tests are added switch to astropy fftconvolve here.
         from scipy.signal import fftconvolve
         total_background = self.model + self.background + self.approx
         excess = self.image - total_background
-        for key, kern in self.kernbase.items():
-            self.transform[key] = fftconvolve(excess, kern, mode='same')
-            self.error[key] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
+        # for key, kern in self.kernbase.items():
+        #     log.info('Computing transform and error')
+        #     self.transform[key] = fftconvolve(excess, kern, mode='same')
+        #     self.error[key] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
 
-        self.approx = fftconvolve(self.image - self.model - self.bkg,
+        kern = self.kernbase[0]
+        self.transform = fftconvolve(excess, kern, mode='same')
+        self.error = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
+
+        self.approx = fftconvolve(self.image - self.model - self.background,
                                   self.kern_approx, mode='same')
-        self.approx_bkg = fftconvolve(self.bkg, self.kern_approx, mode='same')
+        self.approx_bkg = fftconvolve(self.background, self.kern_approx, mode='same')
 
     def compute_support_peak(self, nsigma=2.0, nsigmap=4.0, remove_isolated=True):
         """Compute the multiresolution support with hard sigma clipping.
@@ -188,10 +188,15 @@ class CWT(object):
         maximum = np.argmax(self.transform, 0)
         return self.scale_array[maximum] * (self.support.sum(0) > 0)
 
-    def save_filter(self, filename, overwrite=False):
-        """Save filter to file."""
-        hdu = fits.PrimaryHDU(self.filter, self.header)
-        hdu.writeto(filename, clobber=overwrite)
-        fits.append(filename, self.approx, self.header)
-        fits.append(filename, self.filter + self.approx, self.header)
-        fits.append(filename, self.max_scale_image(), self.header)
+    def save_results(self, filename, overwrite=False):
+        """Save results to file."""
+        hdu_list = fits.HDUList()
+        hdu_list.append(fits.PrimaryHDU())
+        hdu_list.append(fits.ImageHDU(data=self.image, header=self.header, name='counts'))
+        hdu_list.append(fits.ImageHDU(data=self.background, header=self.header, name='background'))
+        hdu_list.append(fits.ImageHDU(data=self.filter, header=self.header, name='filter'))
+        hdu_list.append(fits.ImageHDU(data=self.approx, header=self.header, name='approx'))
+        hdu_list.append(fits.ImageHDU(data=self.filter + self.approx, header=self.header, name='sum'))
+        # hdu_list.append(fits.ImageHDU(data=self.max_scale_image(), header=self.header, name='max_scale'))
+
+        hdu_list.writeto(filename, clobber=overwrite)
