@@ -139,10 +139,11 @@ class CWT(object):
         self.counts = np.array(counts, dtype=float)
         self.background = np.array(background, dtype=float)
 
-        self.model = np.zeros_like(self.counts)
-        self.approx = np.zeros_like(self.counts)
+        shape_2d = self.counts.shape
+        self.model = np.zeros(shape_2d)
+        self.approx = np.zeros(shape_2d)
 
-        shape_3d = self.nscale, *self.counts.shape
+        shape_3d = self.nscale, shape_2d[0], shape_2d[1]
         self.transform = np.zeros(shape_3d)
         self.error = np.zeros(shape_3d)
         self.support = np.zeros(shape_3d)
