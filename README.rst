@@ -10,6 +10,11 @@ A Python Package for Gamma-ray Astronomy.
 .. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
 
+Try Gammapy online in the browser via http://mybinder.org/ :
+
+.. image:: http://mybinder.org/badge.svg
+    :target: http://mybinder.org/repo/gammapy/gammapy-extra
+
 Status shields
 ++++++++++++++
 
