@@ -9,7 +9,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Galactic, ICRS
-import healpy as hp
 
 # This is an approximation of the size of HEALPix pixels (in degrees)
 # for a particular order.   It is used to convert from HEALPix to WCS-based
@@ -94,6 +93,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
       npix     :  tuple(nx,ny) with the shape of the wcs grid
 
     """
+    import healpy as hp
     npix = (int(wcs.wcs.crpix[0] * 2), int(wcs.wcs.crpix[1] * 2))
     pix_crds = np.dstack(np.meshgrid(np.arange(npix[0]),
                                      np.arange(npix[1]))).swapaxes(0, 1).reshape((npix[0] * npix[1], 2))
@@ -130,6 +130,7 @@ def make_hpx_to_wcs_mapping(hpx, wcs):
 def match_hpx_pixel(nside, nest, nside_pix, ipix_ring):
     """
     """
+    import healpy as hp
     ipix_in = np.arange(12 * nside * nside)
     vecs = hp.pix2vec(nside, ipix_in, nest)
     pix_match = hp.vec2pix(nside_pix, vecs[0], vecs[1], vecs[2]) == ipix_ring
@@ -378,6 +379,7 @@ class HPX(object):
         nest     : True for 'NESTED', False = 'RING'
         region   : HEALPix region string
         """
+        import healpy as hp
         tokens = re.split('\(|\)|,', region)
         if tokens[0] == 'DISK':
             vec = coords_to_vec(float(tokens[1]), float(tokens[2]))
@@ -411,6 +413,7 @@ class HPX(object):
         region   : a string describing a HEALPix region
         coordsys : coordinate system, GAL | CEL
         """
+        import healpy as hp
         if region is None:
             if coordsys == "GAL":
                 c = SkyCoord(0., 0., Galactic, unit="deg")
