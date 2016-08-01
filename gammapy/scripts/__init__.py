@@ -14,7 +14,6 @@ from .spectrum_regions import *
 
 from .image_bin import *
 from .image_coordinates import *
-from .image_cwt import *
 #from .image_lima import *
 from .image_fit import *
 from .image_lookup import *
