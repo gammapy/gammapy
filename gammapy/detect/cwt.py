@@ -62,7 +62,7 @@ class CWT(object):
     TODO: describe algorithm
 
     TODO: instead of storing all the arrays as data members,
-    we could have a `.data` member which is a dict of images?
+    we could have a ``.data`` member which is a dict of images?
 
     TODO: give references
 
@@ -82,26 +82,26 @@ class CWT(object):
     - kern_approx : 2D kernel array
         - Gaussian kernel from maximum scale
 
-    The `do_transform` step computes the following:
+    The ``do_transform`` step computes the following:
 
     - transform : 3D cube, init to 0
-      - Convolution of `excess` with kernel for each scale
+      - Convolution of ``excess`` with kernel for each scale
     - error : 3D cube, init to 0
-      - Convolution of `total_background` with kernel^2 for each scale
+      - Convolution of ``total_background`` with kernel^2 for each scale
     - approx : 2D image, init to 0
-      - Convolution of `counts - model - background` with `kern_approx`
+      - Convolution of ``counts - model - background`` with ``kern_approx``
     - approx_bkg : 2D image, filled by do_transform
-      - Convolution of `background` with `kern_approx`
+      - Convolution of ``background`` with ``kern_approx``
 
-    - total_background = self.model + self.background + self.approx
+    - ``total_background = self.model + self.background + self.approx``
 
-    The `compute_support_peak` step does the following:
+    The ``compute_support_peak`` step does the following:
 
     - computes significance ``sig = transform / error``
     - support : 3D cube exclusion mask
       - filled as ``sig > nsigma``
 
-    The `inverse_transform` step does the following:
+    The ``inverse_transform`` step does the following:
 
     - model : 2D image, init to 0
         - Fill ``res = np.sum(self.support * self.transform, axis=0)``

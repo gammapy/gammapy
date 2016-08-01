@@ -512,8 +512,8 @@ class SkyImage(object):
         Analogous method to :meth:`SkyMap.pad()` to crop the sky image at the edges.
         Adapts the wcs specification accordingly.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         crop_width : {sequence, array_like, int}
             Number of values cropped from the edges of each axis. Defined
             analogously to `pad_with` from `~numpy.pad`.
@@ -663,8 +663,8 @@ class SkyImage(object):
         """
         Convert image to `~sherpa.data.Data2D` or `~sherpa.data.Data2DInt` class.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         dstype : {'Data2D', 'Data2DInt'}
             Sherpa data type.
         """
