@@ -1,34 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import copy
 import logging
 import numpy as np
+from collections import OrderedDict
 from astropy.io import fits
+from astropy.table import Table
+from astropy.convolution import Gaussian2DKernel, MexicanHat2DKernel
+from ..image import SkyImage
+from ..cube import SkyCube
 
 __all__ = [
     'CWT',
+    'CWTData',
+    'CWTKernels',
 ]
 
 log = logging.getLogger(__name__)
-
-
-def gauss_kernel(radius, n_sigmas=8):
-    """Normalized 2D gauss kernel array.
-
-    TODO: replace by http://astropy.readthedocs.io/en/latest/api/astropy.convolution.Gaussian2DKernel.html
-    once there are tests in place that establish the algorithm
-    """
-    sizex = int(n_sigmas * radius)
-    sizey = int(n_sigmas * radius)
-    radius = float(radius)
-    xc = 0.5 * sizex
-    yc = 0.5 * sizey
-    y, x = np.mgrid[0:sizey - 1, 0:sizex - 1]
-    x = x - xc
-    y = y - yc
-    x = x / radius
-    y = y / radius
-    g = np.exp(-0.5 * (x ** 2 + y ** 2))
-    return g / (2 * np.pi * radius ** 2)  # g.sum()
 
 
 def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
@@ -57,227 +45,722 @@ def difference_of_gauss_kernel(radius, scale_step, n_sigmas=8):
 
 
 class CWT(object):
-    """Continuous wavelet transform.
+    """
+    Continuous wavelet transform.
 
-    TODO: describe algorithm
+    TODO: describe algorithm (modify the words below)
 
-    TODO: instead of storing all the arrays as data members,
-    we could have a ``.data`` member which is a dict of images?
-
-    TODO: give references
-
-    Initialization of wavelet family.
-
-    Data members used by this algorithm:
-
-    - counts : 2D counts image (input, fixed)
-    - background : 2D background image (input, fixed)
-
-    - scales : dict
-        - Keys are scale index integers
-        - Values are scale values (pixel size)
-    - kernbase : dict
-        - Keys are scale index integers
-        - Values are 2D kernel arrays (mexican hat)
-    - kern_approx : 2D kernel array
-        - Gaussian kernel from maximum scale
-
-    The ``do_transform`` step computes the following:
-
-    - transform : 3D cube, init to 0
-      - Convolution of ``excess`` with kernel for each scale
-    - error : 3D cube, init to 0
-      - Convolution of ``total_background`` with kernel^2 for each scale
-    - approx : 2D image, init to 0
-      - Convolution of ``counts - model - background`` with ``kern_approx``
-    - approx_bkg : 2D image, filled by do_transform
-      - Convolution of ``background`` with ``kern_approx``
-
-    - ``total_background = self.model + self.background + self.approx``
-
-    The ``compute_support_peak`` step does the following:
-
-    - computes significance ``sig = transform / error``
-    - support : 3D cube exclusion mask
-      - filled as ``sig > nsigma``
-
-    The ``inverse_transform`` step does the following:
-
-    - model : 2D image, init to 0
-        - Fill ``res = np.sum(self.support * self.transform, axis=0)``
-        - Fill ``self.model += res * (res > 0)``
-        - What is this??
-
-
-    - max_scale_image : 2D image, value = index of scale where emission is most significant
+    Depending on their spectral index, sources won't have the same characteristic scale.
+    Therefore to detect sources, we need to compute the wavelet transform at several
+    scales in order to search for various PSF sizes. Then for each scale, the wavelet
+    transform values under the given significance threshold are rejected. This gives us
+    a multiscale support. Then, using the reconstruction by continuous wavelet packets,
+    we obtain a filtered image yielding the detected sources.
+    To compute the threshold map for a given scale a, the standard EGRET diffuse
+    background model to which was added the flux of the extragalactic background,
+    and the exposure for the considered energy range were used.
 
     Parameters
     ----------
-    min_scale : float
-        first scale used
-    nscales : int
-        number of scales considered
-    scale_step : float
-        base scaling factor
+    kernels : '~gammapy.detect.CWTKernels'
+        Kernels for the algorithm.
+    max_iter : int, optional (default 10)
+        The maximum number of iterations of the CWT algorithm.
+    tol : double, optional (default 1e-5)
+        Tolerance for stopping criterion.
+    significance_threshold : double, optional (default 3.0)
+        Measure of statistical significance.
+    significance_island_threshold : double, optional (default None)
+        Measure is used for cleaning of isolated pixel islands
+        that are slightly above ``significance_threshold``.
+    remove_isolated : boolean, optional (default True)
+        If ``True``, isolated pixels will be removed.
+    keep_history : boolean, optional (default False)
+        Save cwt data from all the iterations.
+
+    References
+    ----------
+    R. Terrier et al (2001) "Wavelet analysis of EGRET data"
+    See http://adsabs.harvard.edu/abs/2001ICRC....7.2923T
     """
 
-    def __init__(self, min_scale, nscales, scale_step):
-        self.kernbase = dict()
-        self.scales = dict()
-        self.nscale = nscales
-        self.scale_step = scale_step
-        for idx_scale in np.arange(0, nscales):
-            scale = min_scale * scale_step ** idx_scale
-            self.scales[idx_scale] = scale
-            self.kernbase[idx_scale] = difference_of_gauss_kernel(scale, scale_step)
+    def __init__(self, kernels,
+                 max_iter=10, tol=1e-5,
+                 significance_threshold=3.0,
+                 significance_island_threshold=None,
+                 remove_isolated=True,
+                 keep_history=False):
+        self.kernels = kernels
+        self.max_iter = max_iter
+        self.tol = tol
+        self.significance_threshold = significance_threshold
+        self.significance_island_threshold = significance_island_threshold
+        self.remove_isolated = remove_isolated
+        self.history = [] if keep_history else None
 
-        max_scale = min_scale * scale_step ** nscales
-        self.kern_approx = gauss_kernel(max_scale)
+        # previous_variance is initialized on the first iteration
+        self.previous_variance = None
 
-    def set_data(self, counts, background):
-        """Set input images."""
-        self.counts = np.array(counts, dtype=float)
-        self.background = np.array(background, dtype=float)
-
-        shape_2d = self.counts.shape
-        self.model = np.zeros(shape_2d)
-        self.approx = np.zeros(shape_2d)
-
-        shape_3d = self.nscale, shape_2d[0], shape_2d[1]
-        self.transform = np.zeros(shape_3d)
-        self.error = np.zeros(shape_3d)
-        self.support = np.zeros(shape_3d)
-
-    def do_transform(self):
-        """Do the transform itself.
-
-        TODO: document. rename?
+    def _execute_iteration(self, data):
         """
-        from scipy.signal import fftconvolve
-        total_background = self.model + self.background + self.approx
-        excess = self.counts - total_background
-
-        for idx_scale, kern in self.kernbase.items():
-            log.info('Computing transform and error')
-            self.transform[idx_scale] = fftconvolve(excess, kern, mode='same')
-            self.error[idx_scale] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
-
-        self.approx = fftconvolve(self.counts - self.model - self.background,
-                                  self.kern_approx, mode='same')
-        self.approx_bkg = fftconvolve(self.background, self.kern_approx, mode='same')
-
-    def compute_support(self, nsigma=2.0, nsigmap=4.0, remove_isolated=True):
-        """Compute the multiresolution support with hard sigma clipping.
-
-        Imposing a minimum significance on a connected region of significant pixels
-        (i.e. source detection)
+        Do one iteration of the algorithm.
 
         Parameters
         ----------
-        TODO: document
+        data : `~gammapy.detect.CWTData`
+            Images.
+        """
+        self._transform(data=data)
+        self._compute_support(data=data)
+        self._inverse_transform(data=data)
+
+    def _transform(self, data):
+        """
+        Do the transform itself.
+
+        The transform is made by using `scipy.signal.fftconvolve`.
+
+        TODO: document.
+
+        Parameters
+        ----------
+        data : `~gammapy.detect.CWTData`
+            Images for transform.
+        """
+        from scipy.signal import fftconvolve
+
+        total_background = data._model + data._background + data._approx
+        excess = data._counts - total_background
+        log.debug('Excess sum: {0:.4f}'.format(excess.sum()))
+        log.debug('Excess max: {0:.4f}'.format(excess.max()))
+
+        log.debug('Computing transform and error')
+        for idx_scale, kern in self.kernels.kern_base.items():
+            data._transform_3d[idx_scale] = fftconvolve(excess, kern, mode='same')
+            data._error[idx_scale] = np.sqrt(fftconvolve(total_background, kern ** 2, mode='same'))
+        log.debug('Error sum: {0:.4f}'.format(data._error.sum()))
+        log.debug('Error max: {0:.4f}'.format(data._error.max()))
+
+        log.debug('Computing approx and approx_bkg')
+        data._approx = fftconvolve(data._counts - data._model - data._background,
+                                  self.kernels.kern_approx, mode='same')
+        data._approx_bkg = fftconvolve(data._background, self.kernels.kern_approx, mode='same')
+        log.debug('Approximate sum: {0:.4f}'.format(data._approx.sum()))
+        log.debug('Approximate background sum: {0:.4f}'.format(data._approx_bkg.sum()))
+
+    def _compute_support(self, data):
+        """
+        Compute the multiresolution support with hard sigma clipping.
+
+        Imposing a minimum significance on a connected region of significant pixels
+        (i.e. source detection).
+
+        TODO: document?
+        What's happening here:
+        - calc significance for all scales
+        - for each scale compute support:
+            - create mask, whether significance value more than significance_threshold
+            - find all separated structures on mask, label them (with help
+              of 'scipy.ndimage.label')
+            - for each structure do:
+                - find pixels coordinates of the structure
+                - if just one pixel, we can remove it from mask if we want
+                - if the max value of significance in that structure less
+                  than significance_island_threshold, remove this structure from mask
+            - update support by mask
+
+        Parameters
+        ----------
+        data : `~gammapy.detect.CWTData`
+            Images after transform.
+        """
+        from scipy.ndimage import label
+
+        log.debug('Computing significance')
+        significance = data._transform_3d / data._error
+
+        log.debug('For each scale start to compute support')
+        for idx_scale in range(self.kernels.n_scale):
+            log.debug('Start to compute support for scale '
+                      '{:.2f}'.format(self.kernels.scales[idx_scale]))
+
+            log.debug('Create mask based on significance '
+                      'threshold {:.2f}'.format(self.significance_threshold))
+            mask = significance[idx_scale] > self.significance_threshold
+
+            # Produce a list of connex structures in the support
+            labeled_mask, n_structures = label(mask)
+            for struct_label in range(n_structures):
+                coords = np.where(labeled_mask == struct_label + 1)
+
+                # Remove isolated pixels from support
+                if self.remove_isolated and coords[0].size == 1:
+                    log.debug('Remove isolated pixels from support')
+                    mask[coords] = False
+
+                if self.significance_island_threshold is not None:
+                    # If maximal significance of the structure does not reach significance
+                    # island threshold, remove significant pixels island from support
+                    struct_signif = significance[idx_scale][coords]
+                    if struct_signif.max() < self.significance_island_threshold:
+                        log.debug('Remove significant pixels island {0} from support'.format(struct_label + 1))
+                        mask[coords] = False
+
+            log.debug('Update support for scale {:.2f}'.format(self.kernels.scales[idx_scale]))
+            data._support[idx_scale] |= mask
+        log.debug('Support sum: {0}'.format(data._support.sum()))
+
+    def _inverse_transform(self, data):
+        """
+        Do the inverse transform (reconstruct the image).
+
+        TODO: describe better what this does.
+
+        Parameters
+        ----------
+        data : `~gammapy.detect.CWTData`
+            Images for inverse transform.
+        """
+        data._transform_2d = np.sum(data._support * data._transform_3d, axis=0)
+        log.debug('Update model')
+        data._model += data._transform_2d * (data._transform_2d > 0)
+        log.debug('Model sum: {:.4f}'.format(data._model.sum()))
+        log.debug('Model max: {:.4f}'.format(data._model.max()))
+
+    def _is_converged(self, data):
+        """
+        Check if the algorithm has converged on current iteration.
+
+        TODO: document metric used, but not super important.
+
+        Parameters
+        ----------
+        data : `~gammapy.detect.CWTData`
+            Images after iteration.
 
         Returns
         -------
-        TODO: for now it's stored as `self.support`. Maybe return
+        answer : boolean
+            Answer if CWT has converged.
         """
-        from scipy.ndimage import label
-        # TODO: check that transform has been performed
+        log.debug('Check the convergence')
+        residual = data._counts - (data._model + data._approx)
+        variance = residual.var()
+        log.info('Residual sum: {0:.4f}'.format(residual.sum()))
+        log.info('Residual max: {0:.4f}'.format(residual.max()))
+        log.info('Residual variance: {0:.4f}'.format(residual.var()))
 
-        sig = self.transform / self.error
+        if self.previous_variance is None:
+            self.previous_variance = variance
+            return False
 
-        for key in self.scales.keys():
-            tmp = sig[key] > nsigma
-            # produce a list of connex structures in the support
-            l, n = label(tmp)
-            for id in range(1, n):
-                index = np.where(l == id)
-                if remove_isolated:
-                    if index[0].size == 1:
-                        tmp[index] *= 0.0  # Remove isolated pixels from support
-                signif = sig[key][index]
-                if signif.max() < nsigmap:  # Remove significant pixels island from support
-                    tmp[index] *= 0.0  # if max does not reach maximal significance
+        variance_ratio = abs((self.previous_variance - variance) / self.previous_variance)
+        log.info('Variance ratio: {:.7f}'.format(variance_ratio))
 
-            self.support[key] += tmp
-            self.support[key] = self.support[key] > 0.
+        self.previous_variance = variance
+        return variance_ratio < self.tol
 
-        return self.support
-
-    def inverse_transform(self):
-        """Do the inverse transform (reconstruct the image).
-
-        TODO: describe better what this does.
+    def analyze(self, data):
         """
-        res = np.sum(self.support * self.transform, axis=0)
-        self.model += res * (res > 0)
-        return res
-
-    def run_one_iteration(self, nsigma, nsigmap):
-        """TODO: document what this does.
+        Run iterative filter peak algorithm. The algorithm modifies the original data.
 
         Parameters
         ----------
-        TODO
+        data : `~gammapy.detect.CWTData`
+            Input images.
         """
-        self.do_transform()
-        self.compute_support(nsigma, nsigmap)
-        res = self.inverse_transform()
-        return res
+        if self.history is not None:
+            self.history = [copy.deepcopy(data)]
 
-    def run_iteratively(self, nsigma=3.0, nsigmap=4.0, niter=2, convergence=1e-5):
-        """Run iterative filter peak algorithm.
+        for n_iter in range(self.max_iter):
+            log.info('************ Start iteration {0} ************'.format(n_iter + 1))
+            self._execute_iteration(data=data)
+            if self.history is not None:
+                log.debug('Save current data')
+                self.history.append(copy.deepcopy(data))
+            converge_answer = self._is_converged(data=data)
+            if converge_answer:
+                break
 
-        Parameters
-        ----------
-        TODO
+        if converge_answer:
+            log.info('Convergence reached at iteration {0}'.format(n_iter + 1))
+        else:
+            log.info('Convergence not formally reached at iteration {0}'.format(n_iter + 1))
+
+
+class CWTKernels(object):
+    """
+    Conduct arrays of kernels and scales for CWT algorithm.
+
+    Parameters
+    ----------
+    n_scale : int
+        Number of scales.
+    min_scale : double
+        First scale used.
+    step_scale : double
+        Base scaling factor.
+    old : boolean (default False)
+        DEBUG attribute. If False, use astropy MaxicanHat kernels for kernel_base.
+
+    Attributes
+    ----------
+    n_scale : int
+        Number of scales considered.
+    min_scale : double
+        First scale used.
+    step_scale : double
+        Base scaling factor.
+    scales : '~numpy.ndarray'
+        Grid of scales.
+    kern_base : dict
+        Dictionary of scale powers as keys and 2D kernel arrays.
+        (mexican hat) as values
+    kern_approx : '~numpy.ndarray'
+        2D Gaussian kernel array from maximum scale.
+
+    Examples
+    --------
+    >>> from gammapy.detect import CWTKernels
+    >>> kernels = CWTKernels(n_scale=3, min_scale=2.0, step_scale=2.6)
+    >>> print (kernels.info_table)
+                    Name                        Source
+    ---------------------------------- ----------------------
+                      Number of scales                      3
+                         Minimal scale                    2.0
+                            Step scale                    2.6
+                                Scales [  2.     5.2   13.52]
+                  Kernels approx width                    280
+                    Kernels approx sum          0.99986288557
+                    Kernels approx max       0.00012877518599
+      Kernels base width for 2.0 scale                     40
+        Kernels base sum for 2.0 scale      0.000305108917065
+        Kernels base max for 2.0 scale        0.0315463182128
+      Kernels base width for 5.2 scale                    107
+        Kernels base sum for 5.2 scale      0.000158044776015
+        Kernels base max for 5.2 scale        0.0050152112595
+    Kernels base width for 13.52 scale                    280
+      Kernels base sum for 13.52 scale      0.000137114430344
+      Kernels base max for 13.52 scale      0.000740731187317
+    """
+
+    def __init__(self, n_scale, min_scale, step_scale, old=False):
+        self.n_scale = n_scale
+        self.min_scale = min_scale
+        self.step_scale = step_scale
+        self.scales = np.array([min_scale * step_scale ** _ for _ in range(n_scale)],
+                               dtype=float)
+
+        self.kern_base = dict()
+        for idx_scale, scale in enumerate(self.scales):
+            if old:
+                self.kern_base[idx_scale] = difference_of_gauss_kernel(scale, step_scale)
+            else:
+                self.kern_base[idx_scale] = MexicanHat2DKernel(scale * step_scale).array
+
+        max_scale = min_scale * step_scale ** n_scale
+        self.kern_approx = Gaussian2DKernel(max_scale).array
+
+    def _info(self):
         """
-        var_ratio = 0.0
-        for iiter in range(niter):
-            res = self.run_one_iteration(nsigma, nsigmap)
+        Return information about the object as a dict.
 
-            # This is a check whether the iteration has converged.
-            # TODO: document metric used, but not super important.
-            # TODO: refactor check into extra method to make it easier to understand.
-            residual = self.counts - (self.model + self.approx)
-            tmp_var = residual.var()
-            if iiter > 0:
-                var_ratio = abs((self.residual_var - tmp_var) / self.residual_var)
-                if var_ratio < convergence:
-                    log.info("Convergence reached at iteration {0}".format(iiter + 1))
-                    return res
-            self.residual_var = tmp_var
-
-        log.info("Convergence not formally reached at iteration {0}".format(iiter + 1))
-        log.info("Final convergence parameter {0}. Objective was {1}."
-                 "".format(convergence, var_ratio))
-        return res
+        Returns
+        -------
+        info : dict
+            Information about object with str characteristic as keys and
+            characteristic results as values.
+        """
+        info_dict = OrderedDict()
+        info_dict['Number of scales'] = self.n_scale
+        info_dict['Minimal scale'] = self.min_scale
+        info_dict['Step scale'] = self.step_scale
+        info_dict['Scales'] = str(self.scales)
+        info_dict['Kernels approx width'] = len(self.kern_approx)
+        info_dict['Kernels approx sum'] = self.kern_approx.sum()
+        info_dict['Kernels approx max'] = self.kern_approx.max()
+        for idx_scale, scale in enumerate(self.scales):
+            info_dict['Kernels base width for {0} scale'.format(scale)] = len(self.kern_base[idx_scale])
+            info_dict['Kernels base sum for {0} scale'.format(scale)] = self.kern_base[idx_scale].sum()
+            info_dict['Kernels base max for {0} scale'.format(scale)] = self.kern_base[idx_scale].max()
+        return info_dict
 
     @property
-    def max_scale_image(self):
-        """Compute the maximum scale image.
-
-        TODO: document
+    def info_table(self):
         """
-        scale_array = np.array(self.scales.values())
-        maximum = np.argmax(self.transform, axis=0)
-        return scale_array[maximum] * (self.support.sum(0) > 0)
+        Summary info table about the object.
+
+        Returns
+        -------
+        table : `~astropy.Table`
+            Information about the object.
+        """
+        info_dict = self._info()
+
+        table = []
+        for name in info_dict:
+            table_line = dict()
+            table_line['Name'] = name
+            table_line['Source'] = info_dict[name]
+            table.append(table_line)
+
+        return Table(rows=table, names=['Name', 'Source'])
+
+
+class CWTData(object):
+    """
+    Images for CWT algorithm. Contains also input counts and background.
+
+    Parameters
+    ----------
+    counts : `~gammapy.image.SkyImage`
+        2D counts image.
+    background : `~gammapy.image.SkyImage`
+        2D background image.
+    n_scale : int
+        Number of scales.
+
+    Examples
+    --------
+    >>> import os
+    >>> from astropy.io import fits
+    >>> from gammapy.detect import CWTData
+    >>> filename = os.environ['GAMMAPY_EXTRA'] + '/datasets/fermi_survey/all.fits.gz'
+    >>> image = SkyImage.read(filename, extname='COUNTS')
+    >>> background = SkyImage.read(filename, extname='BACKGROUND')
+    >>> data = CWTData(counts=image, background=background, n_scale=2)
+    """
+
+    def __init__(self, counts, background, n_scale):
+        self._counts = np.array(counts.data, dtype=float)
+        self._background = np.array(background.data, dtype=float)
+        self._wcs = counts.wcs
+
+        shape_2d = self._counts.shape
+        self._model = np.zeros(shape_2d)
+        self._approx = np.zeros(shape_2d)
+        self._approx_bkg = np.zeros(shape_2d)
+        self._transform_2d = np.zeros(shape_2d)
+
+        shape_3d = n_scale, shape_2d[0], shape_2d[1]
+        self._transform_3d = np.zeros(shape_3d)
+        self._error = np.zeros(shape_3d)
+        self._support = np.zeros(shape_3d, dtype=bool)
+
+    @property
+    def counts(self):
+        """2D counts input `~gammapy.image.SkyImage` image."""
+        return SkyImage(name='counts', data=self._counts, wcs=copy.deepcopy(self._wcs))
+
+    @property
+    def background(self):
+        """2D background input `~gammapy.image.SkyImage` image."""
+        return SkyImage(name='background', data=self._background, wcs=copy.deepcopy(self._wcs))
+
+    @property
+    def model(self):
+        """
+        2D `~gammapy.image.SkyImage` image. Positive version of
+        transform_2d image. Primordial initialized by zero array.
+        """
+        return SkyImage(name='model', data=self._model, wcs=self._wcs)
+
+    @property
+    def approx(self):
+        """
+        2D `~gammapy.image.SkyImage` image. In the course of iterations
+        updated by convolution of ``counts - model - background`` with ``kern_approx``
+        Primordial initialized by zero array.
+        """
+        return SkyImage(name='approx', data=self._approx, wcs=self._wcs)
+
+    @property
+    def approx_bkg(self):
+        """
+        2D `~gammapy.image.SkyImage` image. In the course of iterations
+        updated by convolution of ``background`` with ``kern_approx``.
+        Primordial initialized by zero array.
+        """
+        return SkyImage(name='approx_bkg', data=self._approx_bkg, wcs=self._wcs)
+
+    @property
+    def transform_2d(self):
+        """
+        2D `~gammapy.image.SkyImage` image. Created from transform_3d by summarize
+        values per 0 axes. Primordial initialized by zero array.
+        """
+        return SkyImage(name='transform_2d', data=self._transform_2d, wcs=self._wcs)
+
+    @property
+    def support_2d(self):
+        """
+        2D '~gammapy.cube.SkyCube' cube exclusion mask. Created from support_3d
+        by OR-operation per 0 axis.
+        """
+        support_2d = (self._support.sum(0) > 0)
+        return SkyImage(name='support_2d', data=support_2d, wcs=self._wcs)
+
+    @property
+    def residual(self):
+        """
+        2D `~gammapy.image.SkyImage` image. Calculate as
+        ``counts - model - approx``.
+        """
+        residual = self._counts - (self._model + self._approx)
+        return SkyImage(name='residual', data=residual, wcs=self._wcs)
 
     @property
     def model_plus_approx(self):
         """TODO: document what this is."""
-        return self.model + self.approx
+        return SkyImage(name='/model plus approx',
+                        data=self._model + self._approx,
+                        wcs=self._wcs)
 
-    def save_results(self, filename, header=None, overwrite=False):
-        """Save results to file."""
+    @property
+    def transform_3d(self):
+        """
+        3D `~gammapy.cube.SkyCube` cube. Primordial initialized by zero array. In the course of
+        iterations updated by convolution of ``counts - total_background`` with kernel
+        for each scale (``total_background = model + background + approx``).
+        """
+        return SkyCube(name='transform_3d', data=self._transform_3d, wcs=self._wcs)
+
+    @property
+    def error(self):
+        """
+        3D `~gammapy.cube.SkyCube` cube. Primordial initialized by zero array.
+        In the course of iterations updated by convolution of ``total_background``
+        with kernel^2 for each scale.
+        """
+        return SkyCube(name='error', data=self._error, wcs=self._wcs)
+
+    @property
+    def support_3d(self):
+        """
+        3D '~gammapy.cube.SkyCube' cube exclusion mask. Primordial initialized by zero array.
+        """
+        return SkyImage(name='support_3d', data=self._support, wcs=self._wcs)
+
+    @property
+    def max_scale_image(self):
+        """Compute the maximum scale image as '~gammapy.image.SkyImage'."""
+        # Previous version:
+        # idx_scale_max = np.argmax(self._transform_3d, axis=0)
+        # return kernels.scales[idx_scale_max] * (self._support.sum(0) > 0)
+        transform_2d_max = np.max(self._transform_3d, axis=0)
+        maximal_image = transform_2d_max * self.support_2d
+        return SkyImage(name='maximal', data=maximal_image, wcs=self._wcs)
+
+    def __sub__(self, other):
+        data = CWTData(counts=self.counts,
+                       background=self.background,
+                       n_scale=len(self._transform_3d))
+        data._model = self._model - other._model
+        data._approx = self._approx - other._approx
+        data._approx_bkg = self._approx_bkg - other._approx_bkg
+        data._transform_2d = self._transform_2d - other._transform_2d
+
+        data._transform_3d = self._transform_3d - other._transform_3d
+        data._error = self._error - other._error
+        data._support = self._support ^ other._support
+        return data
+
+    def images(self):
+        """
+        Return all the images in a dict.
+
+        Returns
+        -------
+        images : '~collections.OrderedDict'
+            Dictionary with keys {'counts', 'background', 'model', 'approx',
+            'approx_bkg', 'transform_2d', 'maximal', 'support_2d'} and 2D `~numpy.ndarray` images as values.
+        """
+        images = OrderedDict(counts=self.counts,
+                             background=self.background,
+                             model=self.model,
+                             approx=self.approx,
+                             approx_bkg=self.approx_bkg,
+                             transform_2d=self.transform_2d,
+                             model_plus_approx=self.model_plus_approx,
+                             residual=self.residual,
+                             maximal=self.max_scale_image,
+                             support_2d=self.support_2d)
+        return images
+
+    def cubes(self):
+        """
+        Return all the cubes in a dict.
+
+        Returns
+        -------
+        cubes : '~collections.OrderedDict'
+            Dictionary with keys {'transform_3d', 'error', 'support_3d'} and 3D
+            `~numpy.ndarray` cubes as values.
+        """
+        cubes = OrderedDict(transform_3d=self.transform_3d,
+                            error=self.error,
+                            support=self.support_3d)
+        return cubes
+
+    def _metrics_info(self, data, name):
+        """
+        Compute variance, mean, find max and min values and compute sum for given data.
+
+        Parameters
+        ----------
+        data : `~numpy.ndarray`
+            2D image or 3D cube.
+        name : string
+            Name of the data.
+
+        Returns
+        -------
+        info : dict
+            The information about the data.
+        """
+        info = OrderedDict()
+        info['Name'] = name
+        if len(data.shape) == 2:
+            info['Shape'] = '2D image'
+        else:
+            info['Shape'] = '3D cube'
+        info['Variance'] = data.var()
+        info['Mean'] = data.mean()
+        info['Max value'] = data.max()
+        info['Min value'] = data.min()
+        info['Sum values'] = data.sum()
+        return info
+
+    def image_info(self, name):
+        """
+        Compute variance, mean, find max and min values and compute sum for image with given name.
+        Return that information about the image.
+
+        Parameters
+        ----------
+        name : string
+            Name of the image. Name can be as one of the follow: {'counts', 'background',
+            'model', 'approx', 'approx_bkg', 'transform_2d', 'model_plus_approx', 'residual',
+            'maximal', 'support_2d'}
+
+        Returns
+        -------
+        table : `~astropy.Table`
+            Information about the object.
+        """
+        if name not in self.images():
+            raise ValueError("Incorrect name of image. It should be one of the following:"
+                             "{'counts', 'background', 'model', 'approx', 'approx_bkg', "
+                             "'transform_2d', 'model_plus_approx', 'residual', 'support_2d', "
+                             "'maximal'}")
+
+        image = self.images()[name]
+        info_dict = self._metrics_info(data=image.data, name=name)
+
+        rows = []
+        for metric in info_dict:
+            table_line = dict()
+            table_line['Metrics'] = metric
+            table_line['Source'] = info_dict[metric]
+            rows.append(table_line)
+
+        return Table(rows=rows, names=['Metrics', 'Source'])
+
+    def cube_info(self, name, per_scale=False):
+        """
+        Compute variance, mean, find max and min values and compute sum for image with given name.
+        Return that information about the image.
+
+        Parameters
+        ----------
+        name : string
+            Name of the image. Name can be as one of the follow: {'transform_3d', 'error', 'support'}
+        per_scale : boolean, optional (default False)
+            If True, return information about the cube per all the scales.
+
+        Returns
+        -------
+        table : `~astropy.Table`
+            Information about the object.
+        """
+        if name not in self.cubes():
+            raise ValueError("Incorrect name of cube. It should be one of the following:"
+                             "{'transform_3d', 'error', 'support'}")
+        cube = self.cubes()[name]
+
+        rows = []
+        if per_scale:
+            mask = []
+            for index in range(len(cube.data)):
+                info_dict = self._metrics_info(data=cube.data[index],
+                                               name=name)
+                for metric in info_dict:
+                    table_line = dict()
+                    table_line['Scale power'] = index + 1
+                    table_line['Metrics'] = metric
+                    table_line['Source'] = info_dict[metric]
+                    rows.append(table_line)
+
+                # For missing values in `Power scale` column
+                scale_mask = np.ones(len(info_dict), dtype=bool)
+                scale_mask[0] = False
+                mask.extend(scale_mask)
+
+            columns = ['Scale power', 'Metrics', 'Source']
+            table = Table(rows=rows, names=columns, masked=True)
+            table['Scale power'].mask = mask
+        elif per_scale is False:
+            info_dict = self._metrics_info(data=cube.data, name=name)
+            for metric in info_dict:
+                table_line = dict()
+                table_line['Metrics'] = metric
+                table_line['Source'] = info_dict[metric]
+                rows.append(table_line)
+            columns = ['Metrics', 'Source']
+            table = Table(rows=rows, names=columns)
+        else:
+            raise ValueError('Incorrect value for per_scale attribute.')
+
+        return table
+
+    @property
+    def info_table(self):
+        """
+        Information about all the images and cubes.
+
+        Returns
+        -------
+        table : `~astropy.Table`
+            Information about the object.
+        """
+        rows = []
+        for name, image in self.images().items():
+            info_dict = self._metrics_info(data=image.data, name=name)
+            rows.append(info_dict)
+        for name, cube in self.cubes().items():
+            info_dict = self._metrics_info(data=cube.data, name=name)
+            rows.append(info_dict)
+        columns = rows[0].keys()
+        return Table(rows=rows, names=columns)
+
+    def write(self, filename, overwrite=False):
+        """
+        Save results to file.
+
+        Parameters
+        ----------
+        filename : str
+            Fits file name.
+        overwrite : bool, optional (default False)
+            If True, overwrite file with name as filename.
+        """
+        header = self._wcs.to_header()
         hdu_list = fits.HDUList()
         hdu_list.append(fits.PrimaryHDU())
-        hdu_list.append(fits.ImageHDU(data=self.counts, header=header, name='counts'))
-        hdu_list.append(fits.ImageHDU(data=self.background, header=header, name='background'))
-        hdu_list.append(fits.ImageHDU(data=self.model, header=header, name='model'))
-        hdu_list.append(fits.ImageHDU(data=self.approx, header=header, name='approx'))
-        hdu_list.append(fits.ImageHDU(data=self.model_plus_approx, header=header, name='model_plus_approx'))
-
-        # TODO: this isn't working yet. Why?
-        # hdu_list.append(fits.ImageHDU(data=self.max_scale, header=self.header, name='max_scale'))
-
+        hdu_list.append(fits.ImageHDU(data=self._counts, header=header, name='counts'))
+        hdu_list.append(fits.ImageHDU(data=self._background, header=header, name='background'))
+        hdu_list.append(fits.ImageHDU(data=self._model, header=header, name='model'))
+        hdu_list.append(fits.ImageHDU(data=self._approx, header=header, name='approx'))
+        hdu_list.append(fits.ImageHDU(data=self._transform_2d, header=header, name='transform_2d'))
+        hdu_list.append(fits.ImageHDU(data=self._approx_bkg, header=header, name='approx_bkg'))
         hdu_list.writeto(filename, clobber=overwrite)
