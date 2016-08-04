@@ -194,7 +194,7 @@ def test_3fgl_flux_points():
     source = cat_3fgl['3FGL J0018.9-8152']
     index = source.data['Spectral_Index']
 
-    diff_points = source.flux_points_differential
+    diff_points = source.flux_points
     fluxes = diff_points['DIFF_FLUX'].quantity
     energies = diff_points['ENERGY'].quantity
     eflux = fluxes * energies ** 2

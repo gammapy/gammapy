@@ -1,7 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.units import Quantity
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...utils.testing import requires_data
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
 
@@ -51,6 +52,23 @@ class TestFermi3FGLObject:
         assert 'Source: 3FGL J0534.5+2201' in ss
         assert 'RA (J2000)  : 83.63' in ss
 
+    def test_spectral_model(self):
+        model = self.source.spectral_model
+
+        desired = {'index': Quantity(2.045008659362793, ''),
+                   'lambda_': Quantity(0.00012280420769909229, '1 / MeV'),
+                   'reference': Quantity(635.5911254882812, 'MeV'),
+                   'amplitude': Quantity(5.541301861811121e-10, '1 / (cm2 MeV s)')}
+        for _ in desired:
+            assert_quantity_allclose(model.parameters[_], desired[_])
+
+    def test_flux_points(self):
+        assert len(self.source.flux_points) == 5
+
+    def test_flux_points_integral(self):
+        assert len(self.source.flux_points_integral) == 5
+
+
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog2FHL:
@@ -75,6 +93,16 @@ class TestFermi2FHLObject:
 
     def test_name(self):
         assert self.source.name == self.source_name
+
+
+    def test_spectral_model(self):
+        model = self.source.spectral_model
+        desired = {'index': Quantity(2.130000114440918, ''),
+                   'reference': Quantity(50.0, 'GeV'),
+                   'amplitude': Quantity(3.0071402e-11, '1 / (cm2 GeV s)')}
+        for _ in desired:
+            assert_quantity_allclose(model.parameters[_], desired[_])
+
 
 ############
 # Old stuff:

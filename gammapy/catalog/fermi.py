@@ -244,21 +244,20 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         pars['reference'] = Quantity(self.data['Pivot_Energy'], 'MeV')
 
         if spec_type == 'PowerLaw':
-            model = PowerLaw
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
+            return PowerLaw(**pars)
 
         elif spec_type == 'PLExpCutoff':
-            model = ExponentialCutoffPowerLaw
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
             pars['lambda_'] = Quantity(1. / self.data['Cutoff'], 'MeV-1')
+            return ExponentialCutoffPowerLaw(**pars)
 
         elif spec_type == 'LogParabola':
-            model = LogParabola
             pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
             pars['beta'] = Quantity(self.data['beta'], '')
+            return  LogParabola(**pars)
         else:
             raise ValueError('Spectral model {} not available'.format(spec_type))
-        return model(**pars)
 
     @property
     def flux_points(self):
@@ -470,7 +469,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         pars = {}
         flux = Quantity(self.data['Flux50'], 'cm-2 s-1')
-        pars['amplitude'] = power_law_flux(flux, g, ref, emin, emax)
+        pars['amplitude'] = power_law_flux(flux, g, ref, emin, emax).to('1 / (cm2 s GeV)')
         pars['reference'] = ref
         pars['index'] = g
         return PowerLaw(**pars)
