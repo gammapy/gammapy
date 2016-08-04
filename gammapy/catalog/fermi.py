@@ -234,8 +234,10 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return ss
 
     @property
-    def spectrum(self):
-
+    def spectral_model(self):
+        """
+        Get `~gammapy.spectrum.SpectralModel` instance corresponding to the best fit catalog model.
+        """
         spec_type = self.data['SpectrumType'].strip()
         pars = {}
         pars['amplitude'] = Quantity(self.data['Flux_Density'], 'MeV-1 cm-2 s-1')
@@ -259,7 +261,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return model(**pars)
 
     @property
-    def flux_points_differential(self):
+    def flux_points(self):
         """
         Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
         """
@@ -429,7 +431,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
 
     @property
-    def flux_points_differential(self):
+    def flux_points(self):
         """
         Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
         """
@@ -456,7 +458,10 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
                                               flux + flux_err[:, 0])
 
     @property
-    def spectrum(self):
+    def spectral_model(self):
+        """
+        Get `~gammapy.spectrum.SpectralModel` instance corresponding to the best fit catalog model.
+        """
         from ..spectrum.models import PowerLaw
         from ..spectrum.powerlaw import power_law_flux
         emin, emax = Quantity([0.05, 2], 'TeV')
