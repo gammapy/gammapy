@@ -286,5 +286,9 @@ class LogParabola(SpectralModel):
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
         xx = energy / reference
-        exponent = -alpha - beta * np.log(xx)
+        try:
+            exponent = -alpha - beta * np.log(xx)
+        except AttributeError:
+            from uncertainties.unumpy import log
+            exponent = -alpha - beta * log(xx)
         return amplitude * xx ** exponent

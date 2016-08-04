@@ -10,6 +10,7 @@ from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ..spectrum.powerlaw import power_law_flux
 
 from ..utils.energy import EnergyBounds
 from ..datasets import gammapy_extra
@@ -459,8 +460,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         """
         Get `~gammapy.spectrum.SpectralModel` instance corresponding to the best fit catalog model.
         """
-        from ..spectrum.models import PowerLaw
-        from ..spectrum.powerlaw import power_law_flux
         emin, emax = Quantity([0.05, 2], 'TeV')
         g = Quantity(self.data['Spectral_Index'], '')
         ref = Quantity(50, 'GeV')
