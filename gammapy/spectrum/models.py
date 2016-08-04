@@ -286,10 +286,13 @@ class LogParabola(SpectralModel):
 
     @staticmethod
     def evaluate(energy, amplitude, reference, alpha, beta):
-        xx = energy / reference
+        # cast dimensionless values as np.array, because of bug in Astropy < v1.2
+        # https://github.com/astropy/astropy/issues/4764
         try:
+            xx = (energy / reference).to('')
             exponent = -alpha - beta * np.log(xx)
         except AttributeError:
             from uncertainties.unumpy import log
+            xx = energy / reference
             exponent = -alpha - beta * log(xx)
         return amplitude * np.power(xx, exponent)

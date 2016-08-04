@@ -46,7 +46,9 @@ TEST_MODELS = OrderedDict(
     ),
 )
 
-@pytest.mark.parametrize("spectrum", TEST_MODELS.values(), ids=TEST_MODELS.keys())
+@pytest.mark.parametrize("spectrum",
+    list(TEST_MODELS.values()),
+    ids=list(TEST_MODELS.keys()))
 def test_models(spectrum):
     model = spectrum['model']
     energy = 2 * u.TeV

@@ -102,14 +102,11 @@ class TestFermi2FHLObject:
     def test_name(self):
         assert self.source.name == self.source_name
 
-
     def test_spectral_model(self):
         model = self.source.spectral_model
-        desired = {'index': Quantity(2.130000114440918, ''),
-                   'reference': Quantity(100.0, 'GeV'),
-                   'amplitude': Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')}
-        for _ in desired:
-            assert_quantity_allclose(model.parameters[_], desired[_])
+        energy = Quantity(100, 'GeV')
+        desired = Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')
+        assert_quantity_allclose(model(energy), desired)
 
 
 ############

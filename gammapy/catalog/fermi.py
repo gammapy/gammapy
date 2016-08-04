@@ -208,10 +208,15 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     """
     One source from the Fermi-LAT 3FGL catalog.
     """
-    _ebounds = EnergyBounds(Quantity([100, 300, 1000, 3000, 10000, 100000], 'MeV'))
+    _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
     _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000']
     energy_range = Quantity([100, 100000], 'MeV')
-    """Energy range of the Fermi 2FHL source catalog"""
+    """Energy range of the catalog.
+
+    Paper says that analysis uses data up to 300 GeV,
+    but results are all quoted up to 100 GeV only to
+    be consistent with previous catalogs.
+    """
 
     def __str__(self):
         """Print default summary info string"""
@@ -318,7 +323,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
     """
-    _ebounds = EnergyBounds(Quantity([50, 171, 585, 2000], 'GeV'))
+    _ebounds = EnergyBounds([50, 171, 585, 2000], 'GeV')
     _ebounds_suffix = ['50_171', '171_585', '585_2000']
     energy_range = Quantity([0.05, 2], 'TeV')
     """Energy range of the Fermi 2FHL source catalog"""
@@ -361,7 +366,10 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         """
         int_flux_points = self.flux_points_integral
         gamma = self.data['Spectral_Index']
-        return int_flux_points.to_differential_flux_points(spectral_index=gamma)
+        return int_flux_points.to_differential_flux_points(
+            x_method='log_center',
+            spectral_index=gamma,
+        )
 
     @property
     def flux_points_integral(self):
