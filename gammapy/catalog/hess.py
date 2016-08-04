@@ -338,12 +338,15 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         if model == 'PL':
             return PowerLaw(
                 index=Quantity(data['Index_Spec_PL'], ''),
+                amplitude=Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
                 reference=Quantity(data['Energy_Spec_PL_Pivot'], 'TeV'),
-                norm=Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1')
             )
         elif model == 'ECPL':
             return ExponentialCutoffPowerLaw(
-
+                index='TODO',
+                amplitude='TODO',
+                reference='TODO',
+                lambda_='TODO',
             )
         else:
             raise ValueError('Invalid spectral model: {}'.format(model))
@@ -351,9 +354,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
     @property
     def spectrum(self):
         """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
+
+        TODO: remove!???
         """
         data = self.data
         model = self.spectral_model
+
+        fit_range = Quantity([self.data['Energy_Range_Spec_Lo'],
+                              self.data['Energy_Range_Spec_Hi']], 'TeV')
 
         covariance = np.diag([
             data['Index_Spec_PL_Err'],
@@ -361,10 +369,14 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
             0,
         ])
 
-        fit_range = Quantity([self.data['Energy_Range_Spec_Lo'],
-                              self.data['Energy_Range_Spec_Hi']], 'TeV')
+        covar_axis = ['index', 'amplitude', 'reference']
 
-        return SpectrumFitResult(model=model, covariance=covariance, fit_range=fit_range)
+        return SpectrumFitResult(
+            model=model,
+            fit_range=fit_range,
+            covariance=covariance,
+            covar_axis=covar_axis,
+        )
 
     @property
     def flux_points(self):

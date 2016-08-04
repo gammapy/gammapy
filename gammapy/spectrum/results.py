@@ -167,11 +167,12 @@ class SpectrumFitResult(object):
         TODO
         """
         import uncertainties
-        unit_dict = dict(amplitude='cm-2 s-1 keV-1',
-                         reference='keV',
-                         index='')
+        # unit_dict = dict(amplitude='cm-2 s-1 keV-1',
+        #                  reference='keV',
+        #                  index='')
+        # unit_dict = {par for par in self.model.parameters}
         pars = self.model.parameters
-        upars = [pars[_].to(unit_dict[_]).value for _ in self.covar_axis]
+        upars = [pars[_].value for _ in self.covar_axis]
         ufloats = uncertainties.correlated_values(upars, self.covariance)
         kwargs = dict()
         for name, par in zip(self.covar_axis, ufloats):
@@ -233,30 +234,13 @@ class SpectrumFitResult(object):
         ax : `~matplotlib.axes.Axes`, optional
             Axis
         """
-
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
         x_min = np.log10(energy_range[0].to('keV').value)
         x_max = np.log10(energy_range[1].to('keV').value)
-        xx = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
-        model = self.model_with_uncertainties
-        vals = model(xx.value)
-        yy = [_.n for _ in vals] * u.Unit('cm-2 s-1 keV-1')
-        yyerr = [_.s for _ in vals] * u.Unit('cm-2 s-1 keV-1')
-        x = xx.to(energy_unit).value
-        y = yy.to(flux_unit).value
-        yerr = yyerr.to(flux_unit).value
-        y = y * np.power(x, energy_power)
-        yerr = yerr * np.power(x, energy_power)
-        flux_unit = u.Unit(flux_unit) * np.power(u.Unit(energy_unit), energy_power)
+        energy = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
 
-        kwargs.setdefault('capsize', 0)
-        ax.errorbar(x, y, yerr=yerr, **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
+        model = self.model_with_uncertainties
+        butterfly = model.butterfly(energy)
+        ax = butterfly.plot()
         return ax
 
 
