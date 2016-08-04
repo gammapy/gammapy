@@ -1,11 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function
 import numpy as np
+from ...utils.testing import requires_dependency
 from ..hpx_utils import HPX
 from ..fits_utils import write_fits_image
 from ..skymap import HpxMap
 
 
+@requires_dependency('healpy')
 def test_hpxmap(tmpdir):
     n = np.ones((10, 192), 'd')
     hpx = HPX(4, False, 'GAL')
