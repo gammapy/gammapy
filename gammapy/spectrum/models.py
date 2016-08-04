@@ -264,7 +264,8 @@ class LogParabola(SpectralModel):
 
     .. math::
 
-        .. math:: f(x) = A \\left(\\frac{x}{x_{0}}\\right)^{- \\alpha - \\beta \\log{\\left (\\frac{x}{x_{0}} \\right )}}
+        f(x) = A \\left(\\frac{x}{x_{0}}\\right)^{- \\alpha - \\beta
+        \\log{\\left (\\frac{x}{x_{0}} \\right )}}
 
     Parameters
     ----------
@@ -291,4 +292,4 @@ class LogParabola(SpectralModel):
         except AttributeError:
             from uncertainties.unumpy import log
             exponent = -alpha - beta * log(xx)
-        return amplitude * xx ** exponent
+        return amplitude * np.power(xx, exponent)
