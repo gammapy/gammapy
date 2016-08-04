@@ -8,6 +8,9 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.units import Quantity
+from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
+from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+
 from ..utils.energy import EnergyBounds
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
@@ -205,7 +208,7 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     One source from the Fermi-LAT 3FGL catalog.
     """
     _ebounds = EnergyBounds(Quantity([100, 300, 1000, 3000, 10000, 100000], 'MeV'))
-    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000'] 
+    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000']
 
     def __str__(self):
         """Print default summary info string"""
@@ -232,17 +235,37 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
     @property
     def spectrum(self):
-        raise NotImplementedError
+
+        spec_type = self.data['SpectrumType'].strip()
+        pars = {}
+        pars['amplitude'] = Quantity(self.data['Flux_Density'], 'MeV-1 cm-2 s-1')
+        pars['reference'] = Quantity(self.data['Pivot_Energy'], 'MeV')
+
+        if spec_type == 'PowerLaw':
+            model = PowerLaw
+            pars['index'] = Quantity(self.data['Spectral_Index'], '')
+
+        elif spec_type == 'PLExpCutoff':
+            model = ExponentialCutoffPowerLaw
+            pars['index'] = Quantity(self.data['Spectral_Index'], '')
+            pars['lambda_'] = Quantity(1. / self.data['Cutoff'], 'MeV-1')
+
+        elif spec_type == 'LogParabola':
+            model = LogParabola
+            pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
+            pars['beta'] = Quantity(self.data['beta'], '')
+        else:
+            raise ValueError('Spectral model {} not available'.format(spec_type))
+        return model(**pars)
 
     @property
     def flux_points_differential(self):
         """
         Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
         """
-        from ..spectrum import DifferentialFluxPoints
-        
+
         energy = self._ebounds.log_centers
-        
+
         nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
         diff_flux = (nuFnu * energy ** -2).to('erg-1 cm-2 s-1')
 
@@ -265,11 +288,9 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         source : dict
             3FGL source
         """
-        from ..spectrum import IntegralFluxPoints
-        
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        
+
         return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
                                               flux + flux_err[:, 0])
 
@@ -372,6 +393,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
     """
+    _ebounds = EnergyBounds(Quantity([50, 171, 585, 2000], 'GeV'))
+    _ebounds_suffix = ['50_171', '171_585', '585_2000']
 
     def __str__(self):
         """Print default summary info string"""
@@ -396,6 +419,56 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
 
         return ss
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux']:
+            raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
+
+        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+
+    @property
+    def flux_points_differential(self):
+        """
+        Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
+        """
+        int_flux_points = self.flux_points_integral
+        gamma = self.data['Spectral_Index']
+        return int_flux_points.to_differential_flux_points(spectral_index=gamma)
+
+
+    @property
+    def flux_points_integral(self):
+        """
+        Get `~gammapy.spectrum.IntegralFluxPoints` for a 3FGL source
+
+        Parameters
+        ----------
+        source : dict
+            3FGL source
+        """
+        from ..spectrum import IntegralFluxPoints
+
+        flux = self._get_flux_values()
+        flux_err = self._get_flux_values('Unc_Flux')
+        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
+                                              flux + flux_err[:, 0])
+
+    @property
+    def spectrum(self):
+        from ..spectrum.models import PowerLaw
+        from ..spectrum.powerlaw import power_law_flux
+        emin, emax = Quantity([0.05, 2], 'TeV')
+        g = Quantity(self.data['Spectral_Index'], '')
+        ref = Quantity(50, 'GeV')
+
+        pars = {}
+        flux = Quantity(self.data['Flux50'], 'cm-2 s-1')
+        pars['amplitude'] = power_law_flux(flux, g, ref, emin, emax)
+        pars['reference'] = ref
+        pars['index'] = g
+        return PowerLaw(**pars)
 
 
 class SourceCatalog3FGL(SourceCatalog):
