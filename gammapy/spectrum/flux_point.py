@@ -131,30 +131,6 @@ class IntegralFluxPoints(Table):
         t['INT_FLUX_ERR_LO_%'] = 100 * int_flux_err_lo / int_flux
         return cls(t)
 
-    @classmethod
-    def from_2fhl(cls, source):
-        """Get `~gammapy.spectrum.IntegralFluxPoints` for a 2FHL source
-
-        Parameters
-        ----------
-        source : dict
-            2FHL source
-        """
-        ebounds = EnergyBounds([50, 171, 585, 2000], 'GeV')
-        fluxkeys = ['Flux50_171GeV', 'Flux171_585GeV', 'Flux585_2000GeV']
-        temp_fluxes = [source.data[_] for _ in fluxkeys]
-
-        fluxerrkeys = ['Unc_Flux50_171GeV', 'Unc_Flux171_585GeV', 'Unc_Flux585_2000GeV']
-
-        temp_fluxes_err_hi = [source.data[_][1] for _ in fluxerrkeys]
-        temp_fluxes_err_lo = [-1 * source.data[_][0] for _ in fluxerrkeys]
-
-        int_fluxes = Quantity(temp_fluxes, 'cm-2 s-1')
-        int_fluxes_err_hi = Quantity(temp_fluxes_err_hi, 'cm-2 s-1')
-        int_fluxes_err_lo = Quantity(temp_fluxes_err_lo, 'cm-2 s-1')
-
-        return cls.from_arrays(ebounds, int_fluxes, int_fluxes_err_hi,
-                               int_fluxes_err_lo)
 
     @property
     def ebounds(self):
