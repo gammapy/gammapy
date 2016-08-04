@@ -12,6 +12,7 @@ __all__ = [
     'SpectralModel',
     'PowerLaw',
     'ExponentialCutoffPowerLaw',
+    'LogParabola'
 ]
 
 
@@ -256,3 +257,34 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
+
+
+class LogParabola(SpectralModel):
+    r"""Spectral log parabola model.
+
+    .. math::
+
+        .. math:: f(x) = A \\left(\\frac{x}{x_{0}}\\right)^{- \\alpha - \\beta \\log{\\left (\\frac{x}{x_{0}} \\right )}}
+
+    Parameters
+    ----------
+    amplitude : float, `~astropy.units.Quantity`
+        :math:`Phi_0`
+    reference : float, `~astropy.units.Quantity`
+        :math:`E_0`
+    alpha : float, `~astropy.units.Quantity`
+        :math:`\alpha`
+    beta : float, `~astropy.units.Quantity`
+        :math:`\beta`
+    """
+    def __init__(self, amplitude, reference, alpha, beta):
+        self.parameters = Bunch(amplitude=amplitude,
+                                reference=reference,
+                                alpha=alpha,
+                                beta=beta)
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, alpha, beta):
+        xx = energy / reference
+        exponent = -alpha - beta * np.log(xx)
+        return amplitude * xx ** exponent
