@@ -8,6 +8,10 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.units import Quantity
+from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
+from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ..spectrum.powerlaw import power_law_flux
+
 from ..utils.energy import EnergyBounds
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
@@ -204,8 +208,15 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     """
     One source from the Fermi-LAT 3FGL catalog.
     """
-    _ebounds = EnergyBounds(Quantity([100, 300, 1000, 3000, 10000, 100000], 'MeV'))
-    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000'] 
+    _ebounds = EnergyBounds([100, 300, 1000, 3000, 10000, 100000], 'MeV')
+    _ebounds_suffix = ['100_300', '300_1000', '1000_3000', '3000_10000', '10000_100000']
+    energy_range = Quantity([100, 100000], 'MeV')
+    """Energy range of the catalog.
+
+    Paper says that analysis uses data up to 300 GeV,
+    but results are all quoted up to 100 GeV only to
+    be consistent with previous catalogs.
+    """
 
     def __str__(self):
         """Print default summary info string"""
@@ -231,18 +242,44 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return ss
 
     @property
-    def spectrum(self):
-        raise NotImplementedError
+    def spectral_model(self):
+        """
+        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
+        """
+        spec_type = self.data['SpectrumType'].strip()
+        pars = {}
+        pars['amplitude'] = Quantity(self.data['Flux_Density'], 'MeV-1 cm-2 s-1')
+        pars['reference'] = Quantity(self.data['Pivot_Energy'], 'MeV')
+
+        if spec_type == 'PowerLaw':
+            pars['index'] = Quantity(self.data['Spectral_Index'], '')
+            return PowerLaw(**pars)
+
+        elif spec_type == 'PLExpCutoff':
+            pars['index'] = Quantity(self.data['Spectral_Index'], '')
+            pars['lambda_'] = Quantity(1. / self.data['Cutoff'], 'MeV-1')
+            return ExponentialCutoffPowerLaw(**pars)
+
+        elif spec_type == 'LogParabola':
+            pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
+            pars['beta'] = Quantity(self.data['beta'], '')
+            return  LogParabola(**pars)
+
+        elif spec_type == "PLSuperExpCutoff":
+            # TODO Implement super exponential cut off
+            raise NotImplementedError
+
+        else:
+            raise ValueError('Spectral model {} not available'.format(spec_type))
 
     @property
-    def flux_points_differential(self):
+    def flux_points(self):
         """
-        Get `~gammapy.spectrum.DifferentialFluxPoints` for a 3FGL source
+        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
         """
-        from ..spectrum import DifferentialFluxPoints
-        
+
         energy = self._ebounds.log_centers
-        
+
         nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
         diff_flux = (nuFnu * energy ** -2).to('erg-1 cm-2 s-1')
 
@@ -258,18 +295,11 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     @property
     def flux_points_integral(self):
         """
-        Get `~gammapy.spectrum.IntegralFluxPoints` for a 3FGL source
-
-        Parameters
-        ----------
-        source : dict
-            3FGL source
+        Integral flux points (`~gammapy.spectrum.IntegralFluxPoints`).
         """
-        from ..spectrum import IntegralFluxPoints
-        
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        
+
         return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
                                               flux + flux_err[:, 0])
 
@@ -290,88 +320,13 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return ax
 
 
-    def plot_spectrum(self, ax=None):
-        """Plot spectrum.
-        """
-        import matplotlib.pyplot as plt
-        from gammapy.extern.stats import gmean
-        from astropy.modeling.models import PowerLaw1D, LogParabola1D, ExponentialCutoffPowerLaw1D
-
-        ax = plt.gca() if ax is None else ax
-
-        # Only work with indices where we have a valid detection and a lower bound
-        flux_bounds = [self.cat_row["Unc_" + self.y_labels[i]] for i in range(0, np.size(self.y_labels))]
-
-        valid_indices = []
-
-        for i in range(0, len(flux_bounds)):
-            if np.size(flux_bounds[i]) == 2 and not np.isnan(flux_bounds[i][0]):
-                valid_indices.append(i)
-
-        y_vals = np.array([self.cat_row[i] for i in (self.y_labels[j] for j in valid_indices)])
-        y_lower = np.array([self.cat_row["Unc_" + i][0] for i in (self.y_labels[j] for j in valid_indices)])
-        y_upper = np.array([self.cat_row["Unc_" + i][1] for i in (self.y_labels[j] for j in valid_indices)])
-
-        y_lower = y_vals + y_lower
-        y_upper = y_vals + y_upper
-
-        x_vals = [self.x_cens[i].value for i in valid_indices]
-        bin_edges1 = [-(self.x_bins_edges[i] - self.x_cens[i]).value for i in valid_indices]
-        bin_edges2 = [(self.x_bins_edges[i + 1] - self.x_cens[i]).value for i in valid_indices]
-
-        y_vals = [y_vals[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-        y_upper = [y_upper[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-        y_lower = [y_lower[i] / x_vals[i] for i in range(0, np.size(y_vals))]
-
-        y_cens = np.array([gmean([y_lower[i], y_upper[i]]) for i in range(0, np.size(y_lower))])
-
-        y_upper = np.array([y_upper[i] - y_vals[i] for i in range(0, np.size(y_lower))])
-        y_lower = np.array([y_vals[i] - y_lower[i] for i in range(0, np.size(y_lower))])
-
-        ax.loglog()
-
-        fmt = dict(elinewidth=1, linewidth=0, color='black')
-        ax.errorbar(x_vals, y_vals, yerr=(y_lower, y_upper), **fmt)
-
-        # Place the x-axis uncertainties in the center of the y-axis uncertainties.
-        ax.errorbar(x_vals, y_cens, xerr=(bin_edges1, bin_edges2), **fmt)
-
-        x_model = np.logspace(np.log10(min(x_vals)), np.log10(max(x_vals)), 25)
-
-        if self.spec_type == "PowerLaw":
-
-            y_model = PowerLaw1D(amplitude=self.flux_density,
-                                 x_0=self.pivot_en,
-                                 alpha=self.spec_index)
-
-        elif self.spec_type == "LogParabola":
-
-            y_model = LogParabola1D(amplitude=self.flux_density,
-                                    x_0=self.pivot_en,
-                                    alpha=self.spec_index,
-                                    beta=self.beta)
-
-        elif self.spec_type == "PLExpCutoff":
-
-            y_model = ExponentialCutoffPowerLaw1D(amplitude=self.flux_density,
-                                                  x_0=self.pivot_en,
-                                                  alpha=self.spec_index,
-                                                  x_cutoff=self.cutoff)
-        elif self.spec_type == "PLSuperExpCutoff":
-            raise NotImplementedError
-        else:
-            raise NotImplementedError
-
-        ax.set_xlabel('Energy (MeV)')
-        ax.set_ylabel('Flux (ph/cm^2/s/MeV)')
-        ax.plot(x_model, y_model(x_model))
-
-        return ax
-
-
 class SourceCatalogObject2FHL(SourceCatalogObject):
     """One source from the Fermi-LAT 2FHL catalog.
     """
+    _ebounds = EnergyBounds([50, 171, 585, 2000], 'GeV')
+    _ebounds_suffix = ['50_171', '171_585', '585_2000']
+    energy_range = Quantity([0.05, 2], 'TeV')
+    """Energy range of the Fermi 2FHL source catalog"""
 
     def __str__(self):
         """Print default summary info string"""
@@ -396,6 +351,54 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         # ss += 'Detection significance : {}\n'.format(d['Signif_Avg'])
 
         return ss
+
+    def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
+        if prefix not in ['Flux', 'Unc_Flux']:
+            raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux'")
+
+        values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
+        return Quantity(values, unit)
+
+    @property
+    def flux_points(self):
+        """
+        Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
+        """
+        int_flux_points = self.flux_points_integral
+        gamma = self.data['Spectral_Index']
+        return int_flux_points.to_differential_flux_points(
+            x_method='log_center',
+            spectral_index=gamma,
+        )
+
+    @property
+    def flux_points_integral(self):
+        """
+        Integral flux points (`~gammapy.spectrum.IntegralFluxPoints`).
+        """
+        flux = self._get_flux_values()
+        flux_err = self._get_flux_values('Unc_Flux')
+        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
+                                              flux + flux_err[:, 0])
+
+    @property
+    def spectral_model(self):
+        """
+        Best fit spectral model `~gammapy.spectrum.SpectralModel`.
+        """
+        emin, emax = self.energy_range
+        g = Quantity(self.data['Spectral_Index'], '')
+
+        # The pivot energy information is missing in the 2FHL catalog. Set it to
+        # 100 GeV per default.
+        ref = Quantity(100, 'GeV')
+
+        pars = {}
+        flux = Quantity(self.data['Flux50'], 'cm-2 s-1')
+        pars['amplitude'] = power_law_flux(flux, g, ref, emin, emax).to('cm-2 s-1 GeV-1')
+        pars['reference'] = ref
+        pars['index'] = g
+        return PowerLaw(**pars)
 
 
 class SourceCatalog3FGL(SourceCatalog):

@@ -7,11 +7,11 @@ import astropy.units as u
 from . import integrate_spectrum
 from ..extern.bunch import Bunch
 
-
 __all__ = [
     'SpectralModel',
     'PowerLaw',
     'ExponentialCutoffPowerLaw',
+    'LogParabola'
 ]
 
 
@@ -23,6 +23,7 @@ class SpectralModel(object):
     attribute called ``parameters``, see for example
     `~gammapy.spectrum.models.PowerLaw`.
     """
+
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         return self.evaluate(energy, **self.parameters)
@@ -66,7 +67,9 @@ class SpectralModel(object):
         emax : float, `~astropy.units.Quantity`
             Upper bound of integration range
         """
+
         def f(x): return x * self(x)
+
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def to_dict(self):
@@ -152,6 +155,7 @@ class PowerLaw(SpectralModel):
     reference : float, `~astropy.units.Quantity`
         :math:`E_0`
     """
+
     def __init__(self, index, amplitude, reference):
         self.parameters = Bunch(index=index,
                                 amplitude=amplitude,
@@ -241,6 +245,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     lambda : float, `~astropy.units.Quantity`
         :math:`\lambda`
     """
+
     def __init__(self, index, amplitude, reference, lambda_):
         self.parameters = Bunch(index=index,
                                 amplitude=amplitude,
@@ -256,3 +261,44 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
+
+
+class LogParabola(SpectralModel):
+    r"""Spectral log parabola model.
+
+    .. math::
+
+        f(x) = A \left( \frac{E}{E_0} \right) ^ {
+          - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
+        }
+
+    Parameters
+    ----------
+    amplitude : float, `~astropy.units.Quantity`
+        :math:`Phi_0`
+    reference : float, `~astropy.units.Quantity`
+        :math:`E_0`
+    alpha : float, `~astropy.units.Quantity`
+        :math:`\alpha`
+    beta : float, `~astropy.units.Quantity`
+        :math:`\beta`
+    """
+
+    def __init__(self, amplitude, reference, alpha, beta):
+        self.parameters = Bunch(amplitude=amplitude,
+                                reference=reference,
+                                alpha=alpha,
+                                beta=beta)
+
+    @staticmethod
+    def evaluate(energy, amplitude, reference, alpha, beta):
+        # cast dimensionless values as np.array, because of bug in Astropy < v1.2
+        # https://github.com/astropy/astropy/issues/4764
+        try:
+            xx = (energy / reference).to('')
+            exponent = -alpha - beta * np.log(xx)
+        except AttributeError:
+            from uncertainties.unumpy import log
+            xx = energy / reference
+            exponent = -alpha - beta * log(xx)
+        return amplitude * np.power(xx, exponent)

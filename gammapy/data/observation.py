@@ -9,7 +9,6 @@ from astropy.time import Time
 from astropy.utils import lazyproperty
 
 from ..time import time_ref_from_dict, time_relative_to_ref
-from ..catalog import select_sky_box, select_sky_circle
 from ..utils.scripts import make_path
 
 __all__ = [
@@ -313,6 +312,8 @@ class ObservationTable(Table):
         ...                  value_range=[4, 4])
         >>> selected_obs_table = obs_table.select_observations(selection)
         """
+        from ..catalog import select_sky_box, select_sky_circle
+
         if 'inverted' not in selection.keys():
             selection['inverted'] = False
 
