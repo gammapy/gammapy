@@ -7,7 +7,6 @@ import astropy.units as u
 from . import integrate_spectrum
 from ..extern.bunch import Bunch
 
-
 __all__ = [
     'SpectralModel',
     'PowerLaw',
@@ -24,6 +23,7 @@ class SpectralModel(object):
     attribute called ``parameters``, see for example
     `~gammapy.spectrum.models.PowerLaw`.
     """
+
     def __call__(self, energy):
         """Call evaluate method of derived classes"""
         return self.evaluate(energy, **self.parameters)
@@ -67,7 +67,9 @@ class SpectralModel(object):
         emax : float, `~astropy.units.Quantity`
             Upper bound of integration range
         """
+
         def f(x): return x * self(x)
+
         return integrate_spectrum(f, emin, emax, **kwargs)
 
     def to_dict(self):
@@ -153,6 +155,7 @@ class PowerLaw(SpectralModel):
     reference : float, `~astropy.units.Quantity`
         :math:`E_0`
     """
+
     def __init__(self, index, amplitude, reference):
         self.parameters = Bunch(index=index,
                                 amplitude=amplitude,
@@ -242,6 +245,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
     lambda : float, `~astropy.units.Quantity`
         :math:`\lambda`
     """
+
     def __init__(self, index, amplitude, reference, lambda_):
         self.parameters = Bunch(index=index,
                                 amplitude=amplitude,
@@ -264,8 +268,9 @@ class LogParabola(SpectralModel):
 
     .. math::
 
-        f(x) = A \\left(\\frac{x}{x_{0}}\\right)^{- \\alpha - \\beta
-        \\log{\\left (\\frac{x}{x_{0}} \\right )}}
+        f(x) = A \left( \frac{E}{E_0} \right) ^ {
+          - \alpha - \beta \log{ \left( \frac{E}{E_0} \right) }
+        }
 
     Parameters
     ----------
@@ -278,6 +283,7 @@ class LogParabola(SpectralModel):
     beta : float, `~astropy.units.Quantity`
         :math:`\beta`
     """
+
     def __init__(self, amplitude, reference, alpha, beta):
         self.parameters = Bunch(amplitude=amplitude,
                                 reference=reference,
