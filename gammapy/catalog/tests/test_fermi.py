@@ -3,9 +3,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
-from ...utils.testing import requires_data
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
+from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ...utils.testing import requires_data
 
+
+
+MODEL_TEST_DATA = [(0, PowerLaw, Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
+                   (4, LogParabola, Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
+                   (55, ExponentialCutoffPowerLaw, Quantity(7.4397387e-10, 'GeV-1 s -1 cm-2'))]
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
@@ -22,10 +28,10 @@ class TestSourceCatalog3FGL:
 @requires_data('gammapy-extra')
 class TestFermi3FGLObject:
     def setup(self):
-        cat = SourceCatalog3FGL()
+        self.cat = SourceCatalog3FGL()
         # Use 3FGL J0534.5+2201 (Crab) as a test source
         self.source_name = '3FGL J0534.5+2201'
-        self.source = cat[self.source_name]
+        self.source = self.cat[self.source_name]
 
     def test_name(self):
         assert self.source.name == self.source_name
@@ -43,27 +49,29 @@ class TestFermi3FGLObject:
     def _test_plot_lightcurve(self):
         self.source.plot_lightcurve()
 
-    @pytest.mark.xfail
-    def test_plot_spectrum(self):
-        self.source.plot_spectrum()
-
     def test_str(self):
         ss = str(self.source)
         assert 'Source: 3FGL J0534.5+2201' in ss
         assert 'RA (J2000)  : 83.63' in ss
 
-    def test_spectral_model(self):
-        model = self.source.spectral_model
-
-        desired = {'index': Quantity(2.045008659362793, ''),
-                   'lambda_': Quantity(0.00012280420769909229, '1 / MeV'),
-                   'reference': Quantity(635.5911254882812, 'MeV'),
-                   'amplitude': Quantity(5.541301861811121e-10, '1 / (cm2 MeV s)')}
-        for _ in desired:
-            assert_quantity_allclose(model.parameters[_], desired[_])
+    @pytest.mark.parametrize('index, model_type, desired', MODEL_TEST_DATA)
+    def test_spectral_model(self, index, model_type, desired):
+        energy = Quantity(1, 'GeV')
+        model = self.cat[index].spectral_model
+        assert isinstance(model, model_type)
+        actual = model(energy)
+        assert_quantity_allclose(actual, desired)
 
     def test_flux_points(self):
-        assert len(self.source.flux_points) == 5
+        flux_points = self.source.flux_points
+
+        assert len(flux_points) == 5
+
+        desired = [5.10239849e-03, 4.79114673e-04, 3.81966743e-05,
+                   2.09147089e-06, 8.16878884e-09]
+        assert_allclose(flux_points['DIFF_FLUX'], desired)
+
+
 
     def test_flux_points_integral(self):
         assert len(self.source.flux_points_integral) == 5
@@ -98,8 +106,8 @@ class TestFermi2FHLObject:
     def test_spectral_model(self):
         model = self.source.spectral_model
         desired = {'index': Quantity(2.130000114440918, ''),
-                   'reference': Quantity(50.0, 'GeV'),
-                   'amplitude': Quantity(3.0071402e-11, '1 / (cm2 GeV s)')}
+                   'reference': Quantity(100.0, 'GeV'),
+                   'amplitude': Quantity(6.8700477298e-12, 'cm-2 GeV-1 s-1')}
         for _ in desired:
             assert_quantity_allclose(model.parameters[_], desired[_])
 
