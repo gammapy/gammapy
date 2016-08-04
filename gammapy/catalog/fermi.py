@@ -428,7 +428,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         values = [self.data[prefix + _ + 'GeV'] for _ in self._ebounds_suffix]
         return Quantity(values, unit)
 
-
     @property
     def flux_points(self):
         """
@@ -437,7 +436,6 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         int_flux_points = self.flux_points_integral
         gamma = self.data['Spectral_Index']
         return int_flux_points.to_differential_flux_points(spectral_index=gamma)
-
 
     @property
     def flux_points_integral(self):
