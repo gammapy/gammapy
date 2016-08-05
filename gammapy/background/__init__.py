@@ -7,7 +7,6 @@ from .background_estimate import *
 from .fov import *
 from .cube import *
 from .ring import *
-from .kernel import *
 from .models import *
 from .off_data_background_maker import *
 from .reflected import *
