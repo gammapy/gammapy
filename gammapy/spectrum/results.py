@@ -1,21 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import numpy as np
-from astropy.extern import six
-from astropy.table import Table, Column, QTable, hstack, vstack
-import astropy.units as u
 from astropy.utils.decorators import lazyproperty
-
-from ..spectrum import DifferentialFluxPoints, CountsSpectrum, models
+from astropy.table import Table, Column
+import astropy.units as u
+from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
-from ..utils.energy import EnergyBounds
 from ..utils.scripts import read_yaml, make_path
 
 __all__ = [
-           'SpectrumFitResult',
-           'SpectrumResult',
-           ]
+    'SpectrumFitResult',
+    'SpectrumResult',
+]
+
 
 class SpectrumFitResult(object):
     """Class representing the result of a spectral fit
@@ -41,6 +38,7 @@ class SpectrumFitResult(object):
     flux_at_1TeV_err : dict, optional
         Error on the flux for the fitted model at 1 TeV
     """
+
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
                  statname=None, statval=None, npred=None, fluxes=None,
                  flux_errors=None):
@@ -91,16 +89,16 @@ class SpectrumFitResult(object):
         val = dict()
         val['model'] = self.model.to_dict()
         if self.fit_range is not None:
-            val['fit_range'] = dict(min = self.fit_range[0].value,
-                                    max = self.fit_range[1].value,
-                                    unit = str(self.fit_range.unit))
+            val['fit_range'] = dict(min=self.fit_range[0].value,
+                                    max=self.fit_range[1].value,
+                                    unit=str(self.fit_range.unit))
         if self.statval is not None:
             val['statval'] = self.statval
         if self.statname is not None:
             val['statname'] = self.statname
         if self.covariance is not None:
-            val['covariance'] = dict(matrix = self.covariance.tolist(),
-                                     axis = self.covar_axis)
+            val['covariance'] = dict(matrix=self.covariance.tolist(),
+                                     axis=self.covar_axis)
         return val
 
     @classmethod
@@ -118,8 +116,8 @@ class SpectrumFitResult(object):
         try:
             fl = val['fluxes']
         except KeyError:
-            fluxes=None
-            flux_errors=None
+            fluxes = None
+            flux_errors = None
         else:
             fluxes = Bunch()
             flux_errors = Bunch()
@@ -144,7 +142,7 @@ class SpectrumFitResult(object):
                                 **kwargs)
         if self.fluxes is not None:
             t['flux[1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
-                                      **kwargs)
+                                     **kwargs)
             t['flux_err[1TeV]'] = Column(
                 data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
         return t
@@ -169,13 +167,14 @@ class SpectrumFitResult(object):
         TODO
         """
         import uncertainties
-        unit_dict = dict(amplitude = 'cm-2 s-1 keV-1',
-                         reference = 'keV',
-                         index = '')
+        # unit_dict = dict(amplitude='cm-2 s-1 keV-1',
+        #                  reference='keV',
+        #                  index='')
+        # unit_dict = {par for par in self.model.parameters}
         pars = self.model.parameters
-        upars = [pars[_].to(unit_dict[_]).value for _ in self.covar_axis]
+        upars = [pars[_].value for _ in self.covar_axis]
         ufloats = uncertainties.correlated_values(upars, self.covariance)
-        kwargs=dict()
+        kwargs = dict()
         for name, par in zip(self.covar_axis, ufloats):
             kwargs[name] = par
         for parname in pars:
@@ -190,14 +189,14 @@ class SpectrumFitResult(object):
         info = '\nFit result info \n'
         info += '--------------- \n'
         info += 'Best Fit Model: {} \n'.format(self.model_with_uncertainties)
-        info += '--> Units: keV, cm, s\n' 
+        info += '--> Units: keV, cm, s\n'
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
         if self.covariance is not None:
             info += '\nCovariance:\n{}\n{}'.format(self.covar_axis, self.covariance)
         if self.fit_range is not None:
             info += '\nFit Range: {}'.format(self.fit_range)
-        info += '\n' 
+        info += '\n'
         return info
 
     def info(self):
@@ -205,6 +204,44 @@ class SpectrumFitResult(object):
         Print summary info.
         """
         print(str(self))
+
+    def plot_butterfly(self, energy_range, ax=None,
+                       energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
+                       energy_power=0, n_points=500, **kwargs):
+        """Plot best fit model including error band (butterfly)
+
+        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
+
+        TODO: Move to gammapy.spectrum.models
+
+        Parameters
+        ----------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        energy_range : `~astropy.units.Quantity`
+            Plot range
+        energy_unit : str, `~astropy.units.Unit`, optional
+            Unit of the energy axis
+        flux_unit : str, `~astropy.units.Unit`, optional
+            Unit of the flux axis
+        energy_power : int, optional
+            Power of energy to multiply flux axis with
+        n_points : int, optional
+            Number of evaluation nodes
+
+        Returns
+        -------
+        ax : `~matplotlib.axes.Axes`, optional
+            Axis
+        """
+        x_min = np.log10(energy_range[0].to('keV').value)
+        x_max = np.log10(energy_range[1].to('keV').value)
+        energy = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
+
+        model = self.model_with_uncertainties
+        butterfly = model.butterfly(energy)
+        ax = butterfly.plot()
+        return ax
 
 
 class SpectrumResult(object):
@@ -267,7 +304,7 @@ class SpectrumResult(object):
 
         return residuals
 
-    def get_plot_axis(self, figsize=(15,10)):
+    def get_plot_axis(self, figsize=(15, 10)):
         """Axis setup used for standard plots
 
         Returns
@@ -284,24 +321,24 @@ class SpectrumResult(object):
 
         gs = gridspec.GridSpec(4, 1)
 
-        ax0 = plt.subplot(gs[:-1,:])
-        ax1 = plt.subplot(gs[3,:], sharex=ax0)
+        ax0 = plt.subplot(gs[:-1, :])
+        ax1 = plt.subplot(gs[3, :], sharex=ax0)
 
         gs.update(hspace=0)
         plt.setp(ax0.get_xticklabels(), visible=False)
-        
+
         ax0.set_xscale('log')
         ax1.set_xscale('log')
 
         return ax0, ax1
 
     def plot_fit(self, mode='wstat'):
-        """Standard debug plot
+        """Standard debug plot.
         
         Plot ON counts in comparison to model. The model can contain predicted
         source and background counts (CStat) or prediced source counts plus a
         background estimate from off regions (WStat). The ``mode`` parameter
-        controls this
+        controls this.
         """
         if mode != 'wstat':
             raise NotImplementedError('Mode {}'.format(mode))
@@ -345,61 +382,6 @@ class SpectrumResult(object):
 
         return ax0, ax1
 
-    def plot_butterfly(self, energy_range, ax=None, 
-                       energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                       energy_power=0, n_points=500, **kwargs):
-        """Plot best fit model including error band (butterfly) 
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
-
-        TODO: Move to gammapy.spectrum.models
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
-        energy_power : int, optional
-            Power of energy to multiply flux axis with
-        n_points : int, optional
-            Number of evaluation nodes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        """
-
-        import matplotlib.pyplot as plt
-        ax = plt.gca() if ax is None else ax
-
-        x_min = np.log10(energy_range[0].to('keV').value)
-        x_max = np.log10(energy_range[1].to('keV').value)
-        xx = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
-        model = self.fit.model_with_uncertainties
-        vals = model(xx.value)
-        yy = [_.n for _ in vals] * u.Unit('cm-2 s-1 keV-1')
-        yyerr = [_.s for _ in vals] * u.Unit('cm-2 s-1 keV-1')
-        x = xx.to(energy_unit).value
-        y = yy.to(flux_unit).value
-        yerr = yyerr.to(flux_unit).value
-        y = y * np.power(x, energy_power)
-        yerr = yerr * np.power(x, energy_power)
-        flux_unit = u.Unit(flux_unit) * np.power(u.Unit(energy_unit), energy_power)
-
-        kwargs.setdefault('capsize', 0)
-        ax.errorbar(x, y, yerr=yerr, **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
-        ax.set_xscale("log", nonposx='clip')
-        ax.set_yscale("log", nonposy='clip')
-        return ax
-
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                       energy_power=0, fit_kwargs=None, point_kwargs=None):
         """Plot spectrum 
@@ -431,7 +413,7 @@ class SpectrumResult(object):
 
         if fit_kwargs is None:
             fit_kwargs = dict(label='Best Fit {}'.format(
-                    self.fit.model.__class__.__name__), color='navy', lw=2)
+                self.fit.model.__class__.__name__), color='navy', lw=2)
         if point_kwargs is None:
             point_kwargs = dict(color='navy')
 
@@ -469,7 +451,7 @@ class SpectrumResult(object):
 
         kwargs.setdefault('fmt', 'o')
 
-        res  = self.flux_point_residuals
+        res = self.flux_point_residuals
         y = [_.n for _ in res]
         y_err = [_.s for _ in res]
         x = self.points['ENERGY'].quantity
@@ -484,4 +466,3 @@ class SpectrumResult(object):
         ax.set_ylabel('(Points - Model) / Model')
 
         return ax
-

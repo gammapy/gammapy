@@ -338,11 +338,6 @@ class SpectrumResults:
         self.spectral_models.info()
 
 
-class SpectrumButterfly(SpectrumAsciiTableMixin):
-    """Spectrum butterfly.
-    """
-
-
 def main():
     import sys
     filename = sys.argv[1]

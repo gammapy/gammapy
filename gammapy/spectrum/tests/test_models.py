@@ -47,7 +47,7 @@ TEST_MODELS = [
 
 
 @pytest.mark.parametrize(
-    "spectrum", TEST_MODELS, ids=[_.name for _ in TEST_MODELS]
+    "spectrum", TEST_MODELS, ids=[_['name'] for _ in TEST_MODELS]
 )
 def test_models(spectrum):
     model = spectrum['model']
@@ -64,7 +64,9 @@ def test_models(spectrum):
 
 @requires_dependency('matplotlib')
 @requires_dependency('sherpa')
-@pytest.mark.parametrize("spectrum", TEST_MODELS.values(), ids=TEST_MODELS.keys())
+@pytest.mark.parametrize(
+    "spectrum", TEST_MODELS, ids=[_['name'] for _ in TEST_MODELS]
+)
 def test_to_sherpa(spectrum):
     model = spectrum['model']
     try:

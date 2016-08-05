@@ -10,14 +10,16 @@ TODO:
 - [ ] Take units automatically from table?
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 from collections import OrderedDict
+import numpy as np
 from astropy.units import Quantity, Unit
 from astropy.io import fits
 from astropy.table import Table
 from astropy.coordinates import Angle
 from ..extern.pathlib import Path
+from ..spectrum import DifferentialFluxPoints, SpectrumFitResult
+from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw
 from .core import SourceCatalog, SourceCatalogObject
 
 __all__ = [
@@ -322,47 +324,74 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         return ss
 
     @property
+    def spectral_model(self):
+        """Spectral model (`~gammapy.spectrum.models.SpectralModel`).
+
+        Depending on ``TODO``, one of:
+
+        - `~gammapy.spectrum.models.PowerLaw`
+        - `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
+        """
+        data = self.data
+        model = self.data['Spectral_Model'].strip()
+
+        if model == 'PL':
+            return PowerLaw(
+                index=Quantity(data['Index_Spec_PL'], ''),
+                amplitude=Quantity(data['Flux_Spec_PL_Diff_Pivot'], 's^-1 cm^-2 TeV^-1'),
+                reference=Quantity(data['Energy_Spec_PL_Pivot'], 'TeV'),
+            )
+        elif model == 'ECPL':
+            return ExponentialCutoffPowerLaw(
+                index='TODO',
+                amplitude='TODO',
+                reference='TODO',
+                lambda_='TODO',
+            )
+        else:
+            raise ValueError('Invalid spectral model: {}'.format(model))
+
+    @property
     def spectrum(self):
+        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
+
+        TODO: remove!???
         """
-        `SpectralFitResult` object.
-        """
-        from ..spectrum import SpectrumFitResult
+        data = self.data
+        model = self.spectral_model
 
-        model = 'PowerLaw'
-        parameters = {}
-        parameters['index'] = Quantity(self.data['Index_Spec_PL'], '')
-        parameters['reference'] = Quantity(self.data['Energy_Spec_PL_Pivot'], 'TeV')
-        parameters['norm'] = Quantity(self.data['Flux_Spec_PL_Diff_Pivot'],
-                                      's^-1 cm^-2 TeV^-1')
+        fit_range = Quantity([self.data['Energy_Range_Spec_Lo'],
+                              self.data['Energy_Range_Spec_Hi']], 'TeV')
 
-        parameter_errors = {}
-        parameter_errors['index'] = Quantity(self.data['Index_Spec_PL_Err'], '')
-        parameter_errors['norm'] = Quantity(self.data['Flux_Spec_PL_Diff_Pivot_Err'],
-                                            's^-1 cm^-2 TeV^-1')
-        parameter_errors['reference'] = Quantity(0, 'TeV')
+        covariance = np.diag([
+            data['Index_Spec_PL_Err'],
+            data['Flux_Spec_PL_Diff_Pivot_Err'],
+            0,
+        ])
 
-        ebounds = Quantity([self.data['Energy_Range_Spec_Lo'],
-                            self.data['Energy_Range_Spec_Hi']], 'TeV')
+        covar_axis = ['index', 'amplitude', 'reference']
 
-        return SpectrumFitResult(model, parameters, parameter_errors,
-                                 fit_range=ebounds)
+        return SpectrumFitResult(
+            model=model,
+            fit_range=fit_range,
+            covariance=covariance,
+            covar_axis=covar_axis,
+        )
 
     @property
     def flux_points(self):
+        """Flux points (`~gammapy.spectrum.DifferentialFluxPoints`)
         """
-        Flux points.
-        """
-        from ..spectrum import DifferentialFluxPoints
-
         energy = Quantity(self.data['Flux_Points_Energy'], 'TeV')
         diff_flux = Quantity(self.data['Flux_Points_Flux'], 's^-1 cm^-2 TeV^-1')
         energy_err_hi = Quantity(self.data['Flux_Points_Energy_Err_Hi'], 'TeV')
         energy_err_lo = Quantity(self.data['Flux_Points_Energy_Err_Lo'], 'TeV')
         diff_flux_err_hi = Quantity(self.data['Flux_Points_Flux_Err_Hi'], 's^-1 cm^-2 TeV^-1')
         diff_flux_err_lo = Quantity(self.data['Flux_Points_Flux_Err_Lo'], 's^-1 cm^-2 TeV^-1')
-        return DifferentialFluxPoints.from_arrays(energy, diff_flux, energy_err_hi,
-                                                  energy_err_lo, diff_flux_err_hi,
-                                                  diff_flux_err_lo)
+        return DifferentialFluxPoints.from_arrays(
+            energy, diff_flux, energy_err_hi,
+            energy_err_lo, diff_flux_err_hi, diff_flux_err_lo,
+        )
 
 
 class SourceCatalogHGPS(SourceCatalog):
