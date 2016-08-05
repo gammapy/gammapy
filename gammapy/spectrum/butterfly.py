@@ -19,28 +19,31 @@ class SpectrumButterfly(QTable):
     - ``flux_hi``
     """
 
-    def plot(self, ax=None, energy_power=2, **kwargs):
+    def plot(self, energy_range=None, ax=None, energy_power=0, **kwargs):
         """Plot.
 
         ``kwargs`` are passed to ``matplotlib.pyplot.errorbar``.
         """
+        if energy_range is None:
+            energy_range = np.min(self['energy']), np.max(self['energy'])
+
+
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        x = self['energy'].value
-        y = self['flux'].value
-        yerr = self['flux_lo'].value + self['flux_hi'].value
+        kwargs.setdefault('color', 'black')
+        kwargs.setdefault('alpha', 0.2)
+        kwargs.setdefault('linewidth', 0)
 
-        y = y * np.power(x, energy_power)
-        yerr = yerr * np.power(x, energy_power)
+        x = self['energy']
+        y_lo = self['flux_lo'] * np.power(x, energy_power)
+        y_hi = self['flux_hi'] * np.power(x, energy_power)
 
-        ax.errorbar(x=x, y=y, yerr=yerr, **kwargs)
+        where = (y_hi > 0) & (x >= energy_range[0]) & (x <= energy_range[1])
+        ax.fill_between(x.value, y_lo.value, y_hi.value, where=where, **kwargs)
 
-        kwargs.setdefault('capsize', 0)
-        ax.errorbar(x, y, yerr=yerr, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(self['energy'].unit))
-        ax.set_ylabel('Flux [{}]'.format(self['flux'].unit))
+        ax.set_ylabel('Flux [{}]'.format(y_lo.unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
-
         return ax
