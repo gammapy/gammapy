@@ -3,6 +3,7 @@
 Spectrum estimation and modeling methods.
 """
 from .core import *
+from .butterfly import *
 from .observation import *
 from .cosmic_ray import *
 from .crab import *

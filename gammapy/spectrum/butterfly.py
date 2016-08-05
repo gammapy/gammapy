@@ -27,7 +27,6 @@ class SpectrumButterfly(QTable):
         if energy_range is None:
             energy_range = np.min(self['energy']), np.max(self['energy'])
 
-
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
