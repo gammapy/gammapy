@@ -11,7 +11,7 @@ __all__ = [
     'SpectralModel',
     'PowerLaw',
     'ExponentialCutoffPowerLaw',
-    'LogParabola'
+    'LogParabola',
 ]
 
 

@@ -12,7 +12,7 @@ def butterfly():
     bf = SpectrumButterfly()
 
     bf['energy'] = Quantity([1, 2, 10], 'TeV')
-    bf['flux'] = crab_flux(bf['energy'])
+    bf['flux'] = Quantity(crab_flux(bf['energy'].value), 'cm^-2 s^-1 TeV^-1')
     bf['flux_lo'] = [0.9, 0.8, 0.9] * bf['flux']
     bf['flux_hi'] = [1.1, 1.2, 1.1] * bf['flux']
 
@@ -21,7 +21,7 @@ def butterfly():
 
 def test_butterfly_basics(butterfly):
     flux_mean = butterfly['flux'].mean()
-    assert_quantity_allclose(flux_mean, Quantity(5.25, 'cm^-2 s^-1'))
+    assert_quantity_allclose(flux_mean, Quantity(1.3033569680106781e-11, 'cm^-2 s^-1 TeV^-1'))
 
 
 @requires_dependency('matplotlib')

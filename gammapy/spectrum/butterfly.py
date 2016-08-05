@@ -29,7 +29,7 @@ class SpectrumButterfly(QTable):
 
         x = self['energy'].value
         y = self['flux'].value
-        yerr = self['flux_Lo'].value + self['flux_hi'].value
+        yerr = self['flux_lo'].value + self['flux_hi'].value
 
         y = y * np.power(x, energy_power)
         yerr = yerr * np.power(x, energy_power)
@@ -38,8 +38,8 @@ class SpectrumButterfly(QTable):
 
         kwargs.setdefault('capsize', 0)
         ax.errorbar(x, y, yerr=yerr, **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(self['ENERGY'].unit))
-        ax.set_ylabel('Flux [{}]'.format(self['FLUX'].unit))
+        ax.set_xlabel('Energy [{}]'.format(self['energy'].unit))
+        ax.set_ylabel('Flux [{}]'.format(self['flux'].unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
 
