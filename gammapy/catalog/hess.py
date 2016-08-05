@@ -312,7 +312,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         ss += '{:<20s} : {}\n\n'.format('Spatial components', self.data['Components'])
 
         for component in self.components:
-            # Call __str__ directly to 
+            # Call __str__ directly to
             ss += component.__str__()
             ss += '\n\n'
         return ss
@@ -333,7 +333,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
         - `~gammapy.spectrum.models.ExponentialCutoffPowerLaw`
         """
         data = self.data
-        model = self.data['Spectral_Model'].strip()
+        model = data['Spectral_Model'].strip()
 
         if model == 'PL':
             return PowerLaw(
@@ -364,8 +364,8 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                               self.data['Energy_Range_Spec_Hi']], 'TeV')
 
         covariance = np.diag([
-            data['Index_Spec_PL_Err'],
-            data['Flux_Spec_PL_Diff_Pivot_Err'],
+            data['Index_Spec_PL_Err'] ** 2,
+            data['Flux_Spec_PL_Diff_Pivot_Err'] ** 2,
             0,
         ])
 
