@@ -10,7 +10,7 @@ from ...spectrum import (
     SpectrumObservation,
     SpectrumFit,
     SpectrumFitResult
-)
+
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 
 
