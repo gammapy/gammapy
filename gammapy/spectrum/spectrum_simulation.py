@@ -2,11 +2,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 from ..utils.random import get_random_state
-from ..spectrum import (
-    calculate_predicted_counts,
-    PHACountsSpectrum,
-    SpectrumObservation,
-)
+from .utils import calculate_predicted_counts
+from .core import PHACountsSpectrum
+from .observation import SpectrumObservation
 
 __all__ = [
     'SpectrumSimulation'

@@ -3,16 +3,14 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tarfile
-import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.units import Quantity
+from ..utils.energy import EnergyBounds
 from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
 from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
 from ..spectrum.powerlaw import power_law_flux
-
-from ..utils.energy import EnergyBounds
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
 
@@ -314,6 +312,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
     def plot_lightcurve(self, ax=None):
         """Plot lightcurve.
         """
+        # TODO: move that function here and change to method
+        # that returns a `gammapy.time.LightCurve` object
         from gammapy.time import plot_fermi_3fgl_light_curve
 
         ax = plot_fermi_3fgl_light_curve(self.name, ax=ax)

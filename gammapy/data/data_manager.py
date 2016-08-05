@@ -2,9 +2,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import sys
-
-from gammapy.utils.scripts import make_path
 from ..extern.pathlib import Path
+from ..utils.scripts import make_path
 from .data_store import DataStore
 
 __all__ = [
@@ -101,11 +100,10 @@ class DataManager(object):
         yaml.safe_dump(self.config['stores'], indent=2, stream=stream)
         print('', file=stream)
 
-    # TODO: implement checks (i.e. whether all index files or even all data files are present and valid)
-    # def check_stores(self):
-    #     ok = True
-    #     for store_config in self.config['stores']:
-
+        # TODO: implement checks (i.e. whether all index files or even all data files are present and valid)
+        # def check_stores(self):
+        #     ok = True
+        #     for store_config in self.config['stores']:
 
 
 def update_data():
@@ -114,4 +112,3 @@ def update_data():
     # TODO: extract this from the `data-register.yaml` config file:
     cmd = ('rsync -uvrl {username}@{server}:{server_path} {local_path}'
            ''.format(locals()))
-

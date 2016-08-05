@@ -4,8 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity, Unit
-
-from gammapy.utils.energy import Energy, EnergyBounds
+from ..utils.energy import Energy, EnergyBounds
 from ..spectrum.powerlaw import power_law_flux
 
 __all__ = [
@@ -22,6 +21,7 @@ class DifferentialFluxPoints(Table):
     DIFF_FLUX, DIFF_FLUX_ERR_HI, DIFF_FLUX_ERR_LO
     For a complete documentation see :ref:`gadf:flux-points`
     """
+
     @classmethod
     def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
                     energy_err_lo=None, diff_flux_err_hi=None,
@@ -53,7 +53,6 @@ class DifferentialFluxPoints(Table):
         t['DIFF_FLUX_ERR_HI'] = Quantity(diff_flux_err_hi)
         t['DIFF_FLUX_ERR_LO'] = Quantity(diff_flux_err_lo)
         return cls(t)
-
 
     def plot(self, ax=None, energy_unit='TeV',
              flux_unit='cm-2 s-1 TeV-1', energy_power=0, **kwargs):
@@ -130,7 +129,6 @@ class IntegralFluxPoints(Table):
         t['INT_FLUX_ERR_HI_%'] = 100 * int_flux_err_hi / int_flux
         t['INT_FLUX_ERR_LO_%'] = 100 * int_flux_err_lo / int_flux
         return cls(t)
-
 
     @property
     def ebounds(self):

@@ -4,10 +4,9 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 import astropy.units as u
 from astropy.tests.helper import pytest, assert_quantity_allclose
-from ...datasets import gammapy_extra
 from ...utils.testing import requires_data, requires_dependency
 from ...utils.energy import EnergyBounds
-from .. import CountsSpectrum, SpectrumFitResult, SpectrumObservation
+from .. import CountsSpectrum
 
 
 @requires_dependency('scipy')

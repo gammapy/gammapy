@@ -4,12 +4,13 @@ import logging
 import sys
 from collections import OrderedDict
 import numpy as np
+from astropy.utils.console import ProgressBar
 from astropy.io import fits
 from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, AltAz
 from astropy.table import Table
-from gammapy.utils.energy import EnergyBounds
+from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..extern.pathlib import Path
 from ..time import time_ref_from_dict
@@ -417,7 +418,7 @@ class EventList(Table):
             emax = np.max(self['ENERGY'].quantity)
             ebounds = EnergyBounds.equal_log_spacing(emin, emax, 100)
 
-        from gammapy.spectrum import CountsSpectrum
+        from ..spectrum import CountsSpectrum
         spec = CountsSpectrum.from_eventlist(self, ebounds)
         spec.plot(ax=ax, **kwargs)
 
@@ -593,7 +594,6 @@ class EventListDataset(object):
 
         event_lists = []
         gtis = []
-        from astropy.utils.console import ProgressBar
         for filename in ProgressBar(filenames):
             # logger.info('Reading {}'.format(filename))
             event_list = Table.read(filename, hdu='EVENTS')
