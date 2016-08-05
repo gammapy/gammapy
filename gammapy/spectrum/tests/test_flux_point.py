@@ -204,7 +204,6 @@ def test_3fgl_flux_points():
 
     assert_allclose(actual, diff_desired, rtol=1e-4)
 
-
     int_points = source.flux_points_integral
     actual = int_points['INT_FLUX'].quantity.to('cm-2 s-1').value
 

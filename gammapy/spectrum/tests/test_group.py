@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
 from astropy.tests.helper import assert_quantity_allclose, pytest
-
-from ...spectrum import group_obs_table, SpectrumFit, SpectrumGrouping
+from ...utils.testing import requires_data, requires_dependency
 from ...data import ObservationTable
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_data, requires_dependency
+from ...spectrum import group_obs_table, SpectrumFit, SpectrumGrouping
 
 
 @pytest.mark.xfail
@@ -14,7 +12,7 @@ from ...utils.testing import requires_data, requires_dependency
 @requires_data('gammapy-extra')
 def test_define_groups_and_stack(tmpdir):
     obs_table_file = gammapy_extra.filename(
-    'datasets/hess-crab4_pha/observation_table.fits')
+        'datasets/hess-crab4_pha/observation_table.fits')
 
     obs_table = ObservationTable.read(obs_table_file)
 
@@ -24,7 +22,7 @@ def test_define_groups_and_stack(tmpdir):
     fit.energy_threshold_high = '10 TeV'
     fit.run(method='sherpa')
 
-    #Use each obs in one group
+    # Use each obs in one group
     obs_table1 = group_obs_table(obs_table, eff_range=[90, 95], n_eff_bin=5)
     obs_table1.write('grouped_table1_debug.fits', overwrite=True)
 
@@ -41,7 +39,6 @@ def test_define_groups_and_stack(tmpdir):
                              fit_band2.result.parameters["index"], rtol=1e-5)
     assert_quantity_allclose(fit.result.parameters["norm"],
                              fit_band2.result.parameters["norm"], rtol=1e-5)
-
 
     # Put all runs in one group
     obs_table2 = group_obs_table(obs_table, n_eff_bin=1, n_off_bin=1, n_zen_bin=1)

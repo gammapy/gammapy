@@ -134,7 +134,6 @@ class TestSkyCube(object):
 
         assert new_image.wcs.axis_type_names == ['GLON', 'GLAT']
 
-
     # TODO: fix this test.
     # It's currently failing. Dont' know which number (if any) is correct.
     # E        x: array(7.615363001210512e-05)

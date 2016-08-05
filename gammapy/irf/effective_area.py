@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
 import numpy as np
 import astropy.units as u
 from astropy.table import Table
+from ..utils.nddata import NDDataArray, DataAxis, BinnedDataAxis
 
 __all__ = [
     'EffectiveAreaTable',
@@ -141,7 +140,7 @@ class EffectiveAreaTable(NDDataArray):
         g1 = pars[instrument][0]
         g2 = pars[instrument][1]
         g3 = -pars[instrument][2]
-        
+
         value = g1 * xx ** (-g2) * np.exp(g3 / xx)
 
         ret.data = value * u.cm ** 2
@@ -198,7 +197,7 @@ class EffectiveAreaTable(NDDataArray):
     @property
     def max_area(self):
         """Maximum effective area"""
-        return self.data[np.where(~np.isnan(self.data))].max() 
+        return self.data[np.where(~np.isnan(self.data))].max()
 
     def find_energy(self, aeff):
         """Find energy for given effective area
@@ -221,8 +220,8 @@ class EffectiveAreaTable(NDDataArray):
 
         # Linear interpolation between two energy nodes
         energy = np.interp(aeff.value,
-                           (self.data[[idx-1, idx]].value),
-                           (self.energy.nodes[[idx-1, idx]].value))
+                           (self.data[[idx - 1, idx]].value),
+                           (self.energy.nodes[[idx - 1, idx]].value))
         return energy * self.energy.unit
 
 
@@ -445,5 +444,3 @@ class EffectiveAreaTable2D(NDDataArray):
         plt.tight_layout()
         plt.show()
         return fig
-
-

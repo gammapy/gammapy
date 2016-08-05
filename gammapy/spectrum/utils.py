@@ -93,6 +93,7 @@ class LogEnergyAxis(object):
 
         return pix1, pix2, energy1, energy2
 
+
 def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     """Get npred 
 
@@ -158,15 +159,15 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     from . import CountsSpectrum
 
     true_energy = aeff.energy.data.to('TeV')
-    flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:]) 
-    
+    flux = model.integral(emin=true_energy[:-1], emax=true_energy[1:])
+
     # Need to fill nan values in aeff due to matrix multiplication with RMF
     counts = flux * livetime * aeff.evaluate(fill_nan=True)
     counts = counts.to('')
     reco_counts = edisp.apply(counts, e_reco=e_reco)
     e_reco = e_reco or edisp.e_reco.data
     return CountsSpectrum(data=reco_counts, energy=e_reco)
-        
+
 
 def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
     """

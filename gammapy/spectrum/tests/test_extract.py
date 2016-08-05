@@ -1,5 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import numpy as np
 from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
 import astropy.units as u
@@ -12,7 +13,7 @@ from ...data import DataStore, Target, ObservationList
 from ...datasets import gammapy_extra
 from ...image import SkyMask
 from ...spectrum import SpectrumExtraction, SpectrumObservation
-import numpy as np
+
 
 @pytest.mark.parametrize("pars,results", [
     (dict(containment_correction=False), dict(n_on=172,
@@ -27,7 +28,6 @@ import numpy as np
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_spectrum_extraction(pars, results, tmpdir):
-
     center = SkyCoord(83.63, 22.01, unit='deg', frame='icrs')
     radius = Angle('0.11 deg')
     on_region = CircleSkyRegion(center, radius)
@@ -52,7 +52,7 @@ def test_spectrum_extraction(pars, results, tmpdir):
     ana = SpectrumExtraction(target,
                              obs,
                              bk,
-                             e_true = e_true,
+                             e_true=e_true,
                              containment_correction=pars['containment_correction'])
 
     ana.run(outdir=tmpdir)

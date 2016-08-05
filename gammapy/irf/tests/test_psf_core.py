@@ -9,7 +9,6 @@ from ...irf import HESSMultiGaussPSF, multi_gauss_psf_kernel
 
 @requires_dependency('scipy')
 class TestHESS:
-
     @staticmethod
     def test_dpdtheta2():
         """Check that the amplitudes and sigmas were converted correctly in

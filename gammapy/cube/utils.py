@@ -2,22 +2,19 @@
 """
 Cube analysis utility functions.
 """
-
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-
 from astropy.io.fits import ImageHDU
 from astropy.units import Quantity
 from astropy.coordinates import Angle
-
+from ..image import SkyImage
 from .core import SkyCube
-from ..image.core import SkyImage
 
-
-__all__ = ['compute_npred_cube',
-           'convolve_cube',
-           'cube_to_spec',
-           ]
+__all__ = [
+    'compute_npred_cube',
+    'convolve_cube',
+    'cube_to_spec',
+]
 
 
 def compute_npred_cube(flux_cube, exposure_cube, energy_bins,
@@ -163,4 +160,3 @@ def cube_to_spec(cube, mask, weighting='none'):
 
     spec = (value * A).sum(-1).sum(-1)
     return spec
-

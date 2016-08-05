@@ -1,13 +1,13 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+import numpy as np
 from astropy.coordinates import Angle
 from astropy.table import Column
 from astropy.units import Quantity
-import numpy as np
-from gammapy.extern.pathlib import Path
-from ..spectrum import SpectrumObservationList, SpectrumObservation
+from ..extern.pathlib import Path
 from ..data import ObservationGroupAxis, ObservationGroups, ObservationTable
+from ..spectrum import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
     'SpectrumGrouping',

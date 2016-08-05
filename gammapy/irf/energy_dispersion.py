@@ -81,20 +81,20 @@ class EnergyDispersion(NDDataArray):
         from scipy.special import erf
 
         # Init array without data
-        retval = cls(e_true = e_true, e_reco = e_reco)
+        retval = cls(e_true=e_true, e_reco=e_reco)
 
         # erf does not work with Quantities
         reco = retval.e_reco.data.to('TeV').value
         true = retval.e_true.nodes.to('TeV').value
-        migra_min = np.log10(reco[:-1] / true[:,np.newaxis])
-        migra_max = np.log10(reco[1:] / true[:,np.newaxis])
+        migra_min = np.log10(reco[:-1] / true[:, np.newaxis])
+        migra_max = np.log10(reco[1:] / true[:, np.newaxis])
 
         pdf = .5 * (erf(migra_max / (np.sqrt(2.) * sigma))
                     - erf(migra_min / (np.sqrt(2.) * sigma)))
 
-        pdf[np.where(pdf<pdf_threshold)] = 0
+        pdf[np.where(pdf < pdf_threshold)] = 0
         retval.data = pdf
-        
+
         return retval
 
     @classmethod
@@ -119,7 +119,6 @@ class EnergyDispersion(NDDataArray):
                         'F_CHAN')[k] + l.field('N_CHAN')[k]] = l.field(
                         'MATRIX')[m_start:m_start + l.field('N_CHAN')[k]]
                     m_start += l.field('N_CHAN')[k]
-
 
         e_reco = EnergyBounds.from_ebounds(hdu_list['EBOUNDS'])
         e_true = EnergyBounds.from_rmf_matrix(hdu_list['MATRIX'])
@@ -150,12 +149,12 @@ class EnergyDispersion(NDDataArray):
         """
         # Cannot use table_to_fits here due to variable length array
         # http://docs.astropy.org/en/v1.0.4/io/fits/usage/unfamiliar.html
-        
+
         table = self.to_table()
         name = table.meta.pop('name')
 
         header = fits.Header()
-        header.update(table.meta) 
+        header.update(table.meta)
 
         cols = table.columns
         c0 = fits.Column(name=cols[0].name, format='E', array=cols[0],
@@ -168,9 +167,9 @@ class EnergyDispersion(NDDataArray):
         c5 = fits.Column(name=cols[5].name, format='PE()', array=cols[5])
 
         hdu = fits.BinTableHDU.from_columns([c0, c1, c2, c3, c4, c5],
-                                           header=header, name=name)
-        
-        ebounds = energy_axis_to_ebounds(self.e_reco)  
+                                            header=header, name=name)
+
+        ebounds = energy_axis_to_ebounds(self.e_reco)
         prim_hdu = fits.PrimaryHDU()
 
         return fits.HDUList([prim_hdu, hdu, ebounds])
@@ -227,10 +226,10 @@ class EnergyDispersion(NDDataArray):
                     hduclas1='RESPONSE',
                     hduclas2='RSP_MATRIX',
                     detchans=self.e_reco.nbins,
-                    numgrp = numgrp,
-                    numelt = numelt,
-                    tlmin4 = 0,
-                   )
+                    numgrp=numgrp,
+                    numelt=numelt,
+                    tlmin4=0,
+                    )
 
         table.meta = meta
         return table
@@ -246,11 +245,11 @@ class EnergyDispersion(NDDataArray):
             True energy
         """
         # Variance is 2nd moment of PDF
-        pdf = self.evaluate(e_true = e_true)
+        pdf = self.evaluate(e_true=e_true)
         mean = self._get_mean(e_true)
-        temp = (self.e_reco._interp_nodes() - mean) ** 2 
+        temp = (self.e_reco._interp_nodes() - mean) ** 2
         var = np.sum(temp * pdf)
-        return np.sqrt(var) 
+        return np.sqrt(var)
 
     def get_bias(self, e_true):
         r"""Get reconstruction bias for a given true energy
@@ -275,7 +274,7 @@ class EnergyDispersion(NDDataArray):
         r"""Get mean log reconstructed energy
         """
         # Reconstructed energy is 1st moment of PDF
-        pdf = self.evaluate(e_true = e_true)
+        pdf = self.evaluate(e_true=e_true)
         norm = np.sum(pdf)
         temp = np.sum(pdf * self.e_reco._interp_nodes())
         return temp / norm
@@ -313,8 +312,8 @@ class EnergyDispersion(NDDataArray):
 
         x stands for true energy and y for reconstructed energy
         """
-        x = self.e_reco.data[[0,-1]].value
-        y = self.e_true.data[[0,-1]].value
+        x = self.e_reco.data[[0, -1]].value
+        y = self.e_true.data[[0, -1]].value
         return x[0], x[1], y[0], y[1]
 
     def plot_matrix(self, ax=None, show_energy=None, **kwargs):
@@ -347,7 +346,7 @@ class EnergyDispersion(NDDataArray):
         ax.set_xlabel('Reco energy (TeV)')
         ax.set_xscale('log')
         ax.set_yscale('log')
-        
+
         fig = ax.figure
         cbar = fig.colorbar(cax)
         return ax
@@ -367,9 +366,9 @@ class EnergyDispersion(NDDataArray):
         ax = plt.gca() if ax is None else ax
 
         x = self.e_true.nodes.to('TeV').value
-        y = self.get_bias(self.e_true.nodes) 
+        y = self.get_bias(self.e_true.nodes)
 
-        ax.plot(x,y, **kwargs)
+        ax.plot(x, y, **kwargs)
         ax.set_xlabel('True energy [TeV]')
         ax.set_ylabel(r'(E_{true} - E_{reco} / E_{true})')
         ax.set_xscale('log')

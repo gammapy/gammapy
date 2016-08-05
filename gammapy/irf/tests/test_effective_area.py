@@ -8,6 +8,7 @@ from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data, data_manager
 from ...irf.effective_area import EffectiveAreaTable2D, EffectiveAreaTable
 
+
 @requires_dependency('scipy')
 def test_EffectiveAreaTable2D_generic():
     # This tests NDData subclassing. Not needed for other IRF classes 
@@ -194,6 +195,7 @@ def test_EffectiveAreaTable(tmpdir, data_manager):
     assert vals[1] == 0
     assert vals[-1] == 3
 
+
 def test_EffectiveAreaTableParametrization():
     # Log center of this is 100 GeV
     energy = [80, 125] * u.GeV
@@ -210,5 +212,5 @@ def test_EffectiveAreaTableParametrization():
     area = EffectiveAreaTable.from_parametrization(energy, 'HESS')
     assert_allclose(area.data, area_ref)
     assert area.data.unit == area_ref.unit
-    
-    #TODO: Use this to test interpolation behaviour etc.
+
+    # TODO: Use this to test interpolation behaviour etc.

@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from .. import Target, TargetSummary
 from astropy.coordinates import SkyCoord
-from astropy.tests.helper import pytest
 import astropy.units as u
 from regions import CircleSkyRegion
 from ...utils.testing import data_manager, requires_data, requires_dependency

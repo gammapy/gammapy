@@ -5,15 +5,12 @@ import os
 import numpy as np
 import astropy.units as u
 from regions import CircleSkyRegion
-from ..background import reflected_regions_background_estimate
-from ..data import Target
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
-from . import (
-    PHACountsSpectrum,
-    SpectrumObservation,
-    SpectrumObservationList,
-)
+from ..data import Target
+from ..background import reflected_regions_background_estimate
+from .core import PHACountsSpectrum
+from .observation import SpectrumObservation, SpectrumObservationList
 
 __all__ = [
     'SpectrumExtraction',
@@ -235,7 +232,7 @@ class SpectrumExtraction(object):
         """Set energy threshold
         
         Set the high and low energy threshold for each observation based on a
-        choosen method. 
+        chosen method.
         
         Available methods for setting the low energy threshold
 
@@ -258,7 +255,7 @@ class SpectrumExtraction(object):
         for obs in self.observations:
             if method_lo_threshold == 'area_max':
                 aeff_thres = kwargs['percent'] / 100 * obs.aeff.max_area
-                thres = obs.aeff.find_energy(aeff_thres) 
+                thres = obs.aeff.find_energy(aeff_thres)
                 obs.on_vector.lo_threshold = thres
                 obs.off_vector.lo_threshold = thres
             else:
