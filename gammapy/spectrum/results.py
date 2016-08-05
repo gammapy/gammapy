@@ -4,6 +4,7 @@ import numpy as np
 from astropy.utils.decorators import lazyproperty
 from astropy.table import Table, Column
 import astropy.units as u
+from .butterfly import SpectrumButterfly
 from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
@@ -155,7 +156,7 @@ class SpectrumFitResult(object):
         ``s``. Thus, when evaluating the model energies have to be passed in
         keV and the resulting flux will be in ``cm-2 s-1 keV-1``. The
         covariance matrix passed on initialization must also have these units.
-        
+
         TODO: This is due to sherpa units, make more flexible
         TODO: Add to gammapy.spectrum.models
 
@@ -167,20 +168,18 @@ class SpectrumFitResult(object):
         TODO
         """
         import uncertainties
-        # unit_dict = dict(amplitude='cm-2 s-1 keV-1',
-        #                  reference='keV',
-        #                  index='')
-        # unit_dict = {par for par in self.model.parameters}
         pars = self.model.parameters
-        upars = [pars[_].value for _ in self.covar_axis]
-        ufloats = uncertainties.correlated_values(upars, self.covariance)
-        kwargs = dict()
-        for name, par in zip(self.covar_axis, ufloats):
-            kwargs[name] = par
-        for parname in pars:
-            if parname not in kwargs:
-                kwargs[parname] = pars[parname].to(unit_dict[parname]).value
-        return self.model.__class__(**kwargs)
+
+        # convert existing parameters to ufloats
+        values = [pars[_].value for _ in self.covar_axis]
+        ufloats = uncertainties.correlated_values(values, self.covariance)
+        upars = dict(zip(self.covar_axis, ufloats))
+
+        # add parameters missing in covariance
+        for name in pars:
+            upars.setdefault(name, pars[name].value)
+
+        return self.model.__class__(**upars)
 
     def __str__(self):
         """
@@ -204,6 +203,39 @@ class SpectrumFitResult(object):
         Print summary info.
         """
         print(str(self))
+
+    def butterfly(self, energy):
+        """
+        Compute butterfly.
+
+        Parameters
+        ----------
+        energy : `~astropy.units.Quantity`
+            Energies at which to evaluate the butterfly.
+        covar : `~numpy.ndarray`
+            Covariance matrix.
+
+        Returns
+        -------
+        butterfly : `~gammapy.spectrum.SpectrumButterfly`
+            Butterfly object.
+        """
+        from uncertainties import unumpy
+
+        flux = self.model(energy)
+
+        butterfly = SpectrumButterfly()
+        butterfly['energy'] = energy
+        butterfly['flux'] = flux
+
+        # compute uncertainties
+        umodel = self.model_with_uncertainties
+        values = umodel(energy.value)
+        flux_err = u.Quantity(unumpy.std_devs(values), flux.unit)
+
+        butterfly['flux_lo'] = flux - flux_err
+        butterfly['flux_hi'] = flux + flux_err
+        return butterfly
 
     def plot_butterfly(self, energy_range, ax=None,
                        energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
@@ -239,16 +271,16 @@ class SpectrumFitResult(object):
         energy = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
 
         model = self.model_with_uncertainties
-        butterfly = model.butterfly(energy)
+        butterfly = model.butterfly(energy.value)
         ax = butterfly.plot()
         return ax
 
 
 class SpectrumResult(object):
     """Class holding all results of a spectral analysis
-    
+
     This class is responsible for all debug plots / numbers
-    
+
     TODO: Automate Read/Write
 
     Parameters
@@ -269,7 +301,7 @@ class SpectrumResult(object):
     @property
     def expected_source_counts(self):
         """Npred
-        
+
         Counts predicted by best fit model.
         """
         energy = self.obs.on_vector.energy
@@ -280,7 +312,7 @@ class SpectrumResult(object):
 
     @property
     def flux_point_residuals(self):
-        """Residuals 
+        """Residuals
 
         Based on best fit model and fluxpoints.
         Defined as ``(points - model)/model``
@@ -334,7 +366,7 @@ class SpectrumResult(object):
 
     def plot_fit(self, mode='wstat'):
         """Standard debug plot.
-        
+
         Plot ON counts in comparison to model. The model can contain predicted
         source and background counts (CStat) or prediced source counts plus a
         background estimate from off regions (WStat). The ``mode`` parameter
@@ -384,8 +416,8 @@ class SpectrumResult(object):
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
                       energy_power=0, fit_kwargs=None, point_kwargs=None):
-        """Plot spectrum 
-        
+        """Plot spectrum
+
         Plot best fit model, flux points and residuals
 
         Parameters
