@@ -33,7 +33,7 @@ from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution import Gaussian2DKernel
 from photutils.detection import find_peaks
 from gammapy.data import DataStore, EventListDataset, EventList
-from gammapy.background import IterativeKernelBackgroundEstimator, GammaImages
+from gammapy.detect import KernelBackgroundEstimator, KernelBackgroundEstimatorData
 from gammapy.image import binary_disk, binary_ring
 from gammapy.detect import compute_ts_map
 from gammapy.catalog import to_ds9_region, coordinate_iau_format
@@ -101,7 +101,7 @@ def make_counts_image(energy_band):
 def make_background_image():
     """Estimate background image.
 
-    See the `IterativeKernelBackgroundEstimator` tutorial and
+    See the `KernelBackgroundEstimator` tutorial and
     documentation how it works, or the SciNeGHe 2014 proceeding
     by Ellis Owen et al.
     """
@@ -114,7 +114,7 @@ def make_background_image():
 
     hdu = fits.open(COUNTS_IMAGE)['COUNTS']
     binsz = hdu.header['CDELT2']
-    images = GammaImages(counts=hdu.data, header=hdu.header)
+    images = KernelBackgroundEstimatorData(counts=hdu.data, header=hdu.header)
 
     # TODO: we should have utility functions to initialise
     # kernels with angles so that we don't have to convert to pix here.
@@ -122,7 +122,7 @@ def make_background_image():
     background_kernel = binary_ring(r_in=r_in.deg/binsz,
                                     r_out=r_out.deg/binsz)
 
-    estimator = IterativeKernelBackgroundEstimator(
+    estimator = KernelBackgroundEstimator(
         images=images, source_kernel=source_kernel, background_kernel=background_kernel,
         significance_threshold=significance_threshold,
         mask_dilation_radius=mask_dilation_radius.deg/binsz,
