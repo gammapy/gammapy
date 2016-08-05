@@ -1,6 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-import gc
 import numpy as np
 from astropy.io import fits
 from astropy.convolution import Tophat2DKernel
@@ -9,12 +8,12 @@ from ..stats import significance
 from ..image import SkyMask
 
 __all__ = [
-    'GammaImages',
-    'IterativeKernelBackgroundEstimator',
+    'KernelBackgroundEstimatorData',
+    'KernelBackgroundEstimator',
 ]
 
 
-class GammaImages(object):
+class KernelBackgroundEstimatorData(object):
     """TODO: implement a more general images container class
     that can be re-used in other places as well.
     """
@@ -53,14 +52,16 @@ class GammaImages(object):
         return self
 
 
-class IterativeKernelBackgroundEstimator(object):
-    """Iteratively estimate a background model.
+class KernelBackgroundEstimator(object):
+    """Estimate background using a source and background kernel.
+
+    Output is a background image and exclusion mask, which can be used
+    to other images, e.g. an excess, flux or significance image.
 
     Parameters
     ----------
-    images : `~gammapy.background.GammaImages`
-        GammaImages object containing counts image and (optional) initial
-        background estimation.
+    images : `KernelBackgroundEstimatorData`
+        Counts image and (optional) initial background estimate.
     source_kernel : `numpy.ndarray`
         Source kernel as a numpy array.
     background_kernel : `numpy.ndarray`
@@ -101,7 +102,6 @@ class IterativeKernelBackgroundEstimator(object):
         self.save_intermediate_results = save_intermediate_results
         # Calculate initial significance image
         self._data[-1].compute_correlated_maps(self.source_kernel)
-        gc.collect()
 
     def run(self, base_dir=None, max_iterations=10):
         """Run iterations until mask does not change (stopping condition).
@@ -147,7 +147,6 @@ class IterativeKernelBackgroundEstimator(object):
             if self.delete_intermediate_results:
                 # Remove results from previous iteration
                 del self._data[0]
-                gc.collect()
 
         mask = self._data[-1].mask.astype(np.uint8)
         background = self._data[-1].background
@@ -161,7 +160,7 @@ class IterativeKernelBackgroundEstimator(object):
         ----------
         update_mask : bool
             Specify whether to update the exclusion mask stored in the input
-            `~gammapy.background.GammaImages` object with the exclusion mask
+            data object with the exclusion mask
             newly calculated in this method.
         """
         from scipy.ndimage import convolve
@@ -191,7 +190,7 @@ class IterativeKernelBackgroundEstimator(object):
         counts = self._data[-1].counts
         mask = mask.astype(int)
 
-        images = GammaImages(counts, background, mask)
+        images = KernelBackgroundEstimatorData(counts, background, mask)
         images.compute_correlated_maps(self.source_kernel)
         self._data.append(images)
 
@@ -217,23 +216,17 @@ class IterativeKernelBackgroundEstimator(object):
     @property
     def mask_image_hdu(self):
         """Mask (`~astropy.io.fits.ImageHDU`)"""
-
-        header = self.header
         return fits.ImageHDU(data=self._data[-1].mask.astype(np.uint8),
-                             header=header)
+                             header=self.header)
 
     @property
     def background_image_hdu(self):
         """Background estimate (`~astropy.io.fits.ImageHDU`)"""
-
-        header = self.header
         return fits.ImageHDU(data=self._data[-1].background,
-                             header=header)
+                             header=self.header)
 
     @property
     def significance_image_hdu(self):
         """Significance estimate (`~astropy.io.fits.ImageHDU`)"""
-
-        header = self.header
         return fits.ImageHDU(data=self._data[-1].significance,
-                             header=header)
+                             header=self.header)

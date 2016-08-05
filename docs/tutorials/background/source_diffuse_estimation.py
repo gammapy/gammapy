@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from gammapy import datasets
-from gammapy.background import IterativeKernelBackgroundEstimator, GammaImages
 from gammapy.image import binary_disk
+from gammapy.detect import KernelBackgroundEstimator, KernelBackgroundEstimatorData
 
 # *** PREPARATION ***
 
@@ -26,7 +26,7 @@ filename = datasets.gammapy_extra.filename(
 # Counts must be provided as an ImageHDU
 counts = fits.open(filename)[0].data
 header = fits.open(filename)[0].header
-images = GammaImages(counts=counts, header=header)
+images = KernelBackgroundEstimatorData(counts=counts, header=header)
 
 source_kernel = binary_disk(CORRELATION_RADIUS)
 
@@ -34,7 +34,7 @@ background_kernel = np.ones((10, 100))
 
 # *** ITERATOR ***
 
-ibe = IterativeKernelBackgroundEstimator(
+kbe = KernelBackgroundEstimator(
     images=images,
     source_kernel=source_kernel,
     background_kernel=background_kernel,
@@ -48,12 +48,12 @@ n_iterations = 4
 plt.figure(figsize=(8, 4))
 
 for iteration in range(n_iterations):
-    ibe.run_iteration()
-    mask_hdu = ibe.mask_image_hdu
+    kbe.run_iteration()
+    mask_hdu = kbe.mask_image_hdu
     mask = mask_hdu.data[:, 1400:2000]
 
     plt.subplot(n_iterations, 2, 2 * iteration + 1)
-    background_hdu = ibe.background_image_hdu
+    background_hdu = kbe.background_image_hdu
     data = background_hdu.data[:, 1400:2000]
     plt.imshow(data, vmin=0, vmax=1)
     plt.contour(mask, levels=[0], linewidths=2, colors='white')
@@ -62,7 +62,7 @@ for iteration in range(n_iterations):
               fontsize='small')
 
     plt.subplot(n_iterations, 2, 2 * iteration + 2)
-    significance_hdu = ibe.significance_image_hdu
+    significance_hdu = kbe.significance_image_hdu
     data = significance_hdu.data[:, 1400:2000]
     plt.imshow(data, vmin=-3, vmax=5, cmap=plt.cm.Greys_r)
     plt.contour(mask, levels=[0], linewidths=2, colors='red')

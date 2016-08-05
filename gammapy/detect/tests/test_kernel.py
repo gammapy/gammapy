@@ -6,16 +6,16 @@ from astropy.io import fits
 from astropy.units import Quantity
 from astropy.coordinates.angles import Angle
 from ...utils.testing import requires_dependency, requires_data
-from ...background import GammaImages, IterativeKernelBackgroundEstimator
 from ...image import SkyImage
 from ...stats import significance
 from ...datasets import FermiGalacticCenter
+from ..kernel import KernelBackgroundEstimatorData, KernelBackgroundEstimator
 
 
 @requires_dependency('scipy')
-def test_GammaImages():
-    """Tests compute correlated maps in GammaImages.
-    This is the only method in GammaImages that actually calculates anything.
+def test_KernelBackgroundEstimatorData():
+    """Tests compute correlated maps in KernelBackgroundEstimatorData.
+    This is the only method in KernelBackgroundEstimatorData that actually calculates anything.
     """
     # Set up test counts and background
     counts_hdu = SkyImage.empty(nxpix=10, nypix=10, binsz=1, fill=42).to_image_hdu()
@@ -27,7 +27,7 @@ def test_GammaImages():
     # Single unit pixel kernel so should actually be no change.
     background_kernel = np.ones((1, 1))
 
-    images = GammaImages(counts, background_data)
+    images = KernelBackgroundEstimatorData(counts, background_data)
     images.compute_correlated_maps(background_kernel)
 
     # Test significance image against Li & Ma significance value
@@ -39,9 +39,7 @@ def test_GammaImages():
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
-class TestIterativeKernelBackgroundEstimator(object):
-    """Tests methods in the IterativeKernelBackgroundEstimator.
-    """
+class TestKernelBackgroundEstimator(object):
 
     def setup_class(self):
         """Prepares appropriate input and defines inputs for test cases.
@@ -66,9 +64,9 @@ class TestIterativeKernelBackgroundEstimator(object):
         # Start with flat background estimate
         # Background must be provided as an ImageHDU
 
-        images = GammaImages(counts=counts, header=counts_hdu.header)
+        images = KernelBackgroundEstimatorData(counts=counts, header=counts_hdu.header)
 
-        images_blob = GammaImages(counts=counts_blob, header=counts_hdu.header)
+        images_blob = KernelBackgroundEstimatorData(counts=counts_blob, header=counts_hdu.header)
 
         source_kernel = np.ones((1, 3))
 
@@ -79,7 +77,7 @@ class TestIterativeKernelBackgroundEstimator(object):
 
         # Loads prepared inputs into estimator
 
-        self.ibe = IterativeKernelBackgroundEstimator(
+        self.kbe = KernelBackgroundEstimator(
             images,
             source_kernel,
             background_kernel,
@@ -87,7 +85,7 @@ class TestIterativeKernelBackgroundEstimator(object):
             mask_dilation_radius
         )
 
-        self.ibe2 = IterativeKernelBackgroundEstimator(
+        self.kbe2 = KernelBackgroundEstimator(
             images,
             source_kernel,
             background_kernel,
@@ -95,7 +93,7 @@ class TestIterativeKernelBackgroundEstimator(object):
             mask_dilation_radius
         )
 
-        self.ibe_blob = IterativeKernelBackgroundEstimator(
+        self.kbe_blob = KernelBackgroundEstimator(
             images_blob,
             source_kernel,
             background_kernel,
@@ -107,11 +105,11 @@ class TestIterativeKernelBackgroundEstimator(object):
         """Asserts that mask and background are as expected according to input."""
 
         # Call the run_iteration code as this is what is explicitly being tested
-        self.ibe.run_iteration()
+        self.kbe.run_iteration()
         # Should be run twice to update the mask
-        self.ibe.run_iteration()
-        mask = self.ibe.mask_image_hdu.data
-        background = self.ibe.background_image_hdu.data
+        self.kbe.run_iteration()
+        mask = self.kbe.mask_image_hdu.data
+        background = self.kbe.background_image_hdu.data
 
         # Check mask matches expectations
         expected_mask = np.ones_like(self.counts)
@@ -127,16 +125,16 @@ class TestIterativeKernelBackgroundEstimator(object):
         """Asserts that mask and background are as expected according to input."""
 
         # Call the run_iteration code as this is what is explicitly being tested
-        self.ibe_blob.run_iteration()
+        self.kbe_blob.run_iteration()
         # Should be run twice to update the mask
-        self.ibe_blob.run_iteration()
-        background = self.ibe_blob.background_image_hdu.data
+        self.kbe_blob.run_iteration()
+        background = self.kbe_blob.background_image_hdu.data
         # Check background, should be 42 uniformly within 10%
         assert_allclose(background, 42 * np.ones((10, 10)), rtol=0.15)
 
     def test_run(self):
         """Tests run script."""
-        mask, background = self.ibe2.run()
+        mask, background = self.kbe2.run()
 
         assert_allclose(mask.sum(), 97)
         assert_allclose(background, 42 * np.ones((10, 10)))
@@ -144,8 +142,8 @@ class TestIterativeKernelBackgroundEstimator(object):
     def test_save_files(self, tmpdir):
         """Tests that files are saves, and checks values within them."""
         # Create temporary file to write output into
-        self.ibe.run_iteration(1)
-        self.ibe.save_files(base_dir=str(tmpdir), index=0)
+        self.kbe.run_iteration(1)
+        self.kbe.save_files(base_dir=str(tmpdir), index=0)
 
         filename = tmpdir / '00_mask.fits'
         mask = fits.open(str(filename))[1].data

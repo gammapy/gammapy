@@ -1,17 +1,12 @@
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
-
 import click
-
-from ..extern.pathlib import Path
-
-click.disable_unicode_literals_warning = True
-from ..spectrum import SpectrumExtraction
-from ..spectrum.spectrum_fit import SpectrumFit
-from ..spectrum.results import SpectrumResult, SpectrumFitResult
-from ..spectrum.spectrum_pipe import run_spectrum_analysis_using_config
-from ..utils.scripts import read_yaml, make_path
+from ..spectrum import SpectrumFit
+from ..utils.scripts import read_yaml
 from ..data import Target
 
+click.disable_unicode_literals_warning = True
 log = logging.getLogger(__name__)
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -46,7 +41,7 @@ def extract_spectrum(configfile, interactive, dry_run):
         target.run_spectral_analysis()
 
     if interactive:
-        import IPython;
+        import IPython
         IPython.embed()
 
 
@@ -59,7 +54,7 @@ def fit_spectrum(configfile, interactive):
     fit = SpectrumFit.from_config(config)
     fit.run()
     if interactive:
-        import IPython;
+        import IPython
         IPython.embed()
 
 

@@ -4,7 +4,7 @@ import numpy as np
 import astropy.units as u
 from astropy.units import Quantity
 from astropy.coordinates import SkyCoord
-from .observation_stats import ObservationStats, ObservationStatsList
+from .obs_stats import ObservationStats, ObservationStatsList
 
 __all__ = [
     'ObservationTableSummary',

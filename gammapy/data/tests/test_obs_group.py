@@ -5,8 +5,8 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import Angle
 from ...utils.testing import requires_data, requires_dependency
 from ...datasets import gammapy_extra
-from ..observation import ObservationTable
-from ..obsgroup import ObservationGroups, ObservationGroupAxis
+from ..obs_table import ObservationTable
+from ..obs_group import ObservationGroups, ObservationGroupAxis
 
 
 def make_test_obs_groups():

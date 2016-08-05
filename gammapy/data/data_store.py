@@ -11,7 +11,7 @@ from astropy.units import Quantity
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from ..utils.scripts import make_path
-from .observation import ObservationTable
+from .obs_table import ObservationTable
 from .hdu_index_table import HDUIndexTable
 from .utils import _earth_location_from_dict
 from ..irf import EnergyDependentTablePSF
