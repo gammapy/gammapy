@@ -14,8 +14,8 @@ from .isrf import *
 from .sed import *
 from .sherpa_chi2asym import *
 from .utils import *
-from .spectrum_extraction import *
-from .spectrum_simulation import *
-from .spectrum_grouping import *
-from .spectrum_fit import *
+from .extract import *
+from .simulation import *
+from .group import *
+from .fit import *
 from .results import *
