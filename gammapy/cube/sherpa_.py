@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-import numpy
-
 from sherpa.models import ArithmeticModel, Parameter, modelCacher1d
 from sherpa.data import DataND, BaseData
 from sherpa.utils.err import DataErr, NotImplementedErr
 from sherpa.utils import SherpaFloat, NoNewAttributesAfterInit, \
-     print_fields, create_expr, calc_total_error, bool_cast, \
-     filter_bins, interpolate, linear_interp
-
+    print_fields, create_expr, calc_total_error, bool_cast, \
+    filter_bins, interpolate, linear_interp
 
 
 # This class was copy pasted from sherpa.data.Data2D and modified to account
@@ -18,7 +15,8 @@ from sherpa.utils import SherpaFloat, NoNewAttributesAfterInit, \
 # methods are adapted to that yet (TODO)
 
 class Data3D(DataND):
-    "3-D data set"
+    """Sherpa 3-D data set.
+    """
 
     def _set_mask(self, val):
         DataND._set_mask(self, val)
@@ -45,7 +43,7 @@ class Data3D(DataND):
         BaseData.__init__(self)
 
     def get_indep(self, filter=False):
-        filter=bool_cast(filter)
+        filter = bool_cast(filter)
         if filter:
             return (self._lo, self._hi, self._x1, self._x2)
         return (self.xlo, self.xhi, self.x1, self.x2)
@@ -62,10 +60,10 @@ class Data3D(DataND):
     def get_axes(self):
         self._check_shape()
         # FIXME: how to filter an axis when self.mask is size of self.y?
-        return (numpy.arange(self.shape[1])+1, numpy.arange(self.shape[0])+1, numpy.arange(self.shape[0])+1)
+        return (np.arange(self.shape[1]) + 1, np.arange(self.shape[0]) + 1, np.arange(self.shape[0]) + 1)
 
     def get_dims(self, filter=False):
-        #self._check_shape()
+        # self._check_shape()
         if self.shape is not None:
             return self.shape[::-1]
         return (len(self.get_x0(filter)), len(self.get_x1(filter)), len(self.get_x2(filter)))
@@ -77,7 +75,7 @@ class Data3D(DataND):
 
     def _check_shape(self):
         if self.shape is None:
-            raise DataErr('shape',self.name)
+            raise DataErr('shape', self.name)
 
     def get_max_pos(self, dep=None):
         if dep is None:
@@ -86,7 +84,7 @@ class Data3D(DataND):
         x1 = self.get_x1(True)
         x2 = self.get_x2(True)
 
-        pos = numpy.asarray(numpy.where(dep == dep.max())).squeeze()
+        pos = np.asarray(np.where(dep == dep.max())).squeeze()
         if pos.ndim == 0:
             pos = int(pos)
             return (x0[pos], x1[pos], x2[pos])
@@ -115,11 +113,11 @@ class Data3D(DataND):
                         ignore)
 
 
-
 class CombinedModel3D(ArithmeticModel):
     """
     Combined spatial and spectral 3D model.
     """
+
     def __init__(self, name='cube-model', spatial_model=None, spectral_model=None):
         self.spatial_model = spatial_model
         self.spectral_model = spectral_model
@@ -141,4 +139,3 @@ class CombinedModel3D(ArithmeticModel):
         _spatial = self.spatial_model.calc(pars[self._spatial_pars], x, y)
         _spectral = self.spectral_model.calc(pars[self._spectral_pars], elo, ehi)
         return _spatial * _spectral
-

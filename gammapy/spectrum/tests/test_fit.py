@@ -1,10 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
-from numpy.testing import assert_allclose 
+from astropy.utils.compat import NUMPY_LT_1_9
+from numpy.testing import assert_allclose
 from ...datasets import gammapy_extra
 from ...spectrum import (
     SpectrumObservationList,
@@ -13,14 +12,13 @@ from ...spectrum import (
     SpectrumFitResult
 )
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
-from astropy.utils.compat import NUMPY_LT_1_9
+
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')
 def test_spectral_fit(tmpdir):
-
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
     pha2 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
     obs1 = SpectrumObservation.read(pha1)
@@ -30,12 +28,11 @@ def test_spectral_fit(tmpdir):
     fit = SpectrumFit(obs_list)
     fit.run(outdir=tmpdir)
 
-    #Make sure FitResult is correctly readable
+    # Make sure FitResult is correctly readable
     read_result = SpectrumFitResult.from_yaml(tmpdir / 'fit_result_PowerLaw.yaml')
     test_e = 12.5 * u.TeV
     assert_quantity_allclose(fit.result[0].fit.model(test_e),
                              read_result.model(test_e))
-
 
     result = fit.result[0]
     assert 'PowerLaw' in str(result.fit)
@@ -53,27 +50,26 @@ def test_spectral_fit(tmpdir):
     desired = obs1.on_vector.energy.lin_center()[thres_bin + 1]
     actual = result.fit.fit_range[0]
     assert_quantity_allclose(actual, desired)
-    
+
     # Test npred
     npred = obs1.predicted_counts(result.fit.model)
     assert_allclose(result.fit.npred, npred.data, rtol=1e-3)
 
     # Restrict fit range
     fit_range = [4, 20] * u.TeV
-    fit.fit_range = fit_range 
+    fit.fit_range = fit_range
     fit.run()
 
     range_bin = obs1.on_vector.energy.find_node(fit_range[1])
     desired = obs1.on_vector.energy.lin_center()[range_bin]
     actual = fit.result[0].fit.fit_range[1]
     assert_quantity_allclose(actual, desired)
-    
+
     # Make sure fit range is not extended below threshold
     fit_range = [0.001, 10] * u.TeV
-    fit.fit_range = fit_range 
+    fit.fit_range = fit_range
     fit.run()
     desired = obs1.on_vector.energy.lin_center()[thres_bin + 1]
     actual = fit.result[0].fit.fit_range[0]
 
     assert_quantity_allclose(actual, desired)
-

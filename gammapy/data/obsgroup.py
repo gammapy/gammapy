@@ -164,7 +164,6 @@ class ObservationGroups(object):
 
         return table
 
-
     @staticmethod
     def table_to_axes(table):
         """Define observation group axis list from a table.
@@ -546,5 +545,3 @@ def _recover_units(array, as_units):
     except:
         # return unmodified
         return array
-
-

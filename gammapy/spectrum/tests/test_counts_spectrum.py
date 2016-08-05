@@ -37,9 +37,9 @@ def test_CountsSpectrum(tmpdir):
                              EnergyBounds.equal_log_spacing(1, 10, 6, 'TeV'))
 
     # Add, Sub, Mult
-    energy = np.logspace(0,1,5) * u.TeV
+    energy = np.logspace(0, 1, 5) * u.TeV
     spec1 = CountsSpectrum(data=np.arange(4), energy=energy)
-    spec2 = CountsSpectrum(data=np.arange(4,8), energy=energy)
+    spec2 = CountsSpectrum(data=np.arange(4, 8), energy=energy)
 
     spec_sum = np.sum([spec1, spec2]) * 2
     spec_diff = spec2 - spec1

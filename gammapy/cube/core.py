@@ -8,7 +8,7 @@ TODO: split `SkyCube` into a base class ``SkyCube`` and a few sub-classes:
 * ``SkyCubeHistogram`` to represent model or actual counts in energy bands (``gtbin`` format)
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
-from  collections import OrderedDict
+from collections import OrderedDict
 import numpy as np
 from astropy.io import fits
 import astropy.units as u

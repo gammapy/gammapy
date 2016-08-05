@@ -12,16 +12,16 @@ from ...utils.energy import EnergyBounds
 
 @requires_dependency('scipy')
 def test_EnergyDispersion():
-    e_true = np.logspace(0,1, 101) * u.TeV
+    e_true = np.logspace(0, 1, 101) * u.TeV
     e_reco = e_true
     resolution = 0.1
     edisp = EnergyDispersion.from_gauss(e_true=e_true, e_reco=e_reco,
-                                        pdf_threshold = 1e-7,
+                                        pdf_threshold=1e-7,
                                         sigma=resolution)
 
     test_e = 3.34 * u.TeV
     # Check for correct normalization
-    test_pdf = edisp.evaluate(e_true = test_e)
+    test_pdf = edisp.evaluate(e_true=test_e)
     assert_allclose(np.sum(test_pdf), 1, atol=1e-4)
     # Check bias
     assert_allclose(edisp.get_bias(test_e), 0, atol=1e-4)
@@ -31,6 +31,7 @@ def test_EnergyDispersion():
     # Check plotting methods
     edisp.plot_matrix()
     edisp.plot_bias()
+
 
 @requires_data('gammapy-extra')
 def test_EnergyDispersion_write(tmpdir):

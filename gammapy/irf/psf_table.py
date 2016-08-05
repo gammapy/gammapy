@@ -4,14 +4,13 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 from astropy.units import Quantity
-import astropy.units as u
 from astropy.coordinates import Angle, SkyCoord
 from astropy.convolution.utils import discretize_oversample_2D
 from astropy import log
 from ..morphology import Gauss2DPDF
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
-from ..utils.energy import Energy, EnergyBounds
+from ..utils.energy import Energy
 from ..utils.fits import table_to_fits_table
 
 __all__ = [
@@ -60,6 +59,7 @@ class TablePSF(object):
     * TODO: ``__call__`` doesn't show up in the html API docs, but it should:
       https://github.com/astropy/astropy/pull/2135
     """
+
     def __init__(self, offset, dp_domega, spline_kwargs=DEFAULT_PSF_SPLINE_KWARGS):
 
         self._offset = Angle(offset).to('radian')
@@ -113,7 +113,7 @@ class TablePSF(object):
             psf_value = gauss2d_pdf(offset.radian)
         else:
             raise ValueError('Invalid shape: disk or gauss. Input was: {}'.format(shape))
-            
+
         psf_value = Quantity(psf_value, 'sr^-1')
 
         return cls(offset, psf_value)
@@ -213,7 +213,6 @@ class TablePSF(object):
             return array / array.value.sum()
         else:
             return array
-
 
     def evaluate(self, offset, quantity='dp_domega'):
         r"""Evaluate PSF.
@@ -435,9 +434,9 @@ class EnergyDependentTablePSF(object):
             self.exposure = Quantity(np.ones(len(energy)), 'cm^2 s')
         else:
             self.exposure = Quantity(exposure).to('cm^2 s')
-            
+
         if not psf_value:
-            self.psf_value = Quantity(np.zeros(len(energy),len(offset)),'sr^-1')
+            self.psf_value = Quantity(np.zeros(len(energy), len(offset)), 'sr^-1')
         else:
             self.psf_value = Quantity(psf_value).to('sr^-1')
 
@@ -551,7 +550,7 @@ class EnergyDependentTablePSF(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-        psf_value = self.evaluate(energy, None, interp_kwargs)[0,:]
+        psf_value = self.evaluate(energy, None, interp_kwargs)[0, :]
         table_psf = TablePSF(self.offset, psf_value, **kwargs)
 
         return table_psf
@@ -643,7 +642,7 @@ class EnergyDependentTablePSF(object):
             Containment fraction (in range 0 .. 1)
         """
         # TODO: useless at the moment ... support array inputs or remove!
-        
+
         psf = self.table_psf_at_energy(energy)
         return psf.integral(offset_min, offset_max)
 
@@ -760,6 +759,7 @@ class EnergyDependentTablePSF(object):
 
         return self._table_psf_cache[energy_index]
 
+
 class PSF3D(object):
     """This class implements the format described here: :ref:`gadf:psf-table`.
 
@@ -783,7 +783,7 @@ class PSF3D(object):
         Upper energy threshold. Default energy_thresh_hi = 100 TeV
      
     """
-    
+
     def __init__(self, energy_lo, energy_hi, offset, rad_lo, rad_hi, psf_value, energy_thresh_lo=Quantity(0.1, 'TeV'),
                  energy_thresh_hi=Quantity(100, 'TeV')):
         self.energy_lo = energy_lo.to('TeV')
@@ -820,8 +820,9 @@ class PSF3D(object):
             Logcenters of energy bins
         """
 
-        return 10**((np.log10(self.energy_hi/Quantity(1, self.energy_hi.unit))
-                     + np.log10(self.energy_lo/Quantity(1, self.energy_lo.unit))) / 2) * Quantity(1, self.energy_lo.unit)
+        return 10 ** ((np.log10(self.energy_hi / Quantity(1, self.energy_hi.unit))
+                       + np.log10(self.energy_lo / Quantity(1, self.energy_lo.unit))) / 2) * Quantity(1,
+                                                                                                      self.energy_lo.unit)
 
     def rad_center(self):
         """Get centers of rad bins.
@@ -831,9 +832,9 @@ class PSF3D(object):
         rad : `~astropy.coordinates.Angle`
             Centers of rad bins
         """
-        
+
         return ((self.rad_hi + self.rad_lo) / 2).to('deg')
-        
+
     @classmethod
     def read(cls, filename, hdu='PSF_2D_TABLE'):
         """Create `PSF3D` from FITS file.
@@ -953,7 +954,7 @@ class PSF3D(object):
         rad = Angle(rad).to('deg')
 
         energy_bin = self.energy_logcenter()
-                     
+
         offset_bin = self.offset.to('deg')
         rad_bin = self.rad_center()
         points = (rad_bin, offset_bin, energy_bin)
@@ -990,7 +991,7 @@ class PSF3D(object):
 
         return EnergyDependentTablePSF(energy=energies, offset=offset,
                                        exposure=exposure, psf_value=psf_value)
-    
+
     def to_table_psf(self, energy, theta=None, interp_kwargs=None, **kwargs):
         """Evaluate the `EnergyOffsetArray` at one given energy.
         
@@ -1008,16 +1009,16 @@ class PSF3D(object):
         table : `~astropy.table.Table`
             Table with two columns: offset, value
         """
-        
+
         # Defaults
         theta = theta or Angle(0, 'deg')
-        
+
         psf_value = self.evaluate(energy, theta, interp_kwargs=interp_kwargs).squeeze()
         for v in psf_value.value:
             if v != v or v == 0:
                 return None
         table_psf = TablePSF(self.rad_center(), psf_value, **kwargs)
-        
+
         return table_psf
 
     def containment_radius(self, energy, theta=None, fraction=0.68, interp_kwargs=None):
@@ -1044,7 +1045,7 @@ class PSF3D(object):
             energy = Quantity([energy.value], energy.unit)
         if theta.ndim == 0:
             theta = Quantity([theta.value], theta.unit)
-        
+
         unit = None
         radius = np.zeros((energy.size, theta.size))
         for e in range(energy.size):
@@ -1057,7 +1058,7 @@ class PSF3D(object):
                 radius[e, t] = r.value
                 unit = r.unit
         return Quantity(radius.squeeze(), unit)
-        
+
     def plot_containment_vs_energy(self, fractions=[0.68, 0.95],
                                    thetas=Angle([0, 1], 'deg'), ax=None, **kwargs):
         """Plot containment fraction as a function of energy.
@@ -1094,7 +1095,6 @@ class PSF3D(object):
         table = self.to_table_psf(energy=energy, theta=theta)
         table.plot_psf_vs_theta()
         return
-
 
     def plot_containment(self, fraction=0.68, ax=None, show_safe_energy=False,
                          add_cbar=True, **kwargs):

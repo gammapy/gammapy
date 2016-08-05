@@ -3,7 +3,6 @@ from __future__ import (print_function)
 
 import logging
 
-
 __all__ = ['SpectrumPipe']
 
 log = logging.getLogger(__name__)

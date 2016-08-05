@@ -1,19 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-
-import numpy as np
 from numpy.testing.utils import assert_allclose
-
 from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.table import Table
-from astropy.units import Quantity
-from astropy.coordinates import SkyCoord
-
-from .. import SkyCube
 from ...datasets import gammapy_extra
-from ...utils.testing import requires_dependency
-from ...utils.testing import requires_data
+from ...utils.testing import requires_dependency, requires_data
+from .. import SkyCube
 
 
 @requires_dependency('sherpa')
@@ -23,7 +14,7 @@ def test_sherpa_crab_fit():
     from sherpa.stats import Chi2ConstVar
     from sherpa.optmethods import LevMar
     from sherpa.fit import Fit
-    from ..sherpa_ import Data3D, CombinedModel3D
+    from ..sherpa_ import CombinedModel3D
 
     filename = gammapy_extra.filename('experiments/sherpa_cube_analysis/counts.fits.gz')
     counts = SkyCube.read(filename)
@@ -50,7 +41,7 @@ def test_sherpa_crab_fit():
     source_model.fwhm = 0.12
     source_model.ampl = 0.05
 
-    model = 1E-9 * exposure * (source_model) # 1E-9 flux factor
+    model = 1E-9 * exposure * source_model  # 1E-9 flux factor
 
     # Fit
     fit = Fit(data=cube, model=model, stat=Chi2ConstVar(), method=LevMar())

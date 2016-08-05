@@ -19,7 +19,6 @@ import json
 import numpy as np
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
-from astropy import log
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
 from ..morphology import read_json
 from ..morphology import Gauss2DPDF, MultiGauss2D
@@ -306,10 +305,6 @@ class PositionDependentMultiGaussPSF(object):
         out = np.zeros(self.shape, dtype=float)
         npix = self.size
         for ii in range(npix):
-            if (100 * ii) % npix == 0:
-                percent = 100. * ii / npix
-                log.debug('Processing pixel {ii:5d} of {npix:5d} ({percent:5.2f}%)'
-                          ''.format(**locals()))
             try:
                 psf = self._get_psf(ii)
                 out.flat[ii] = psf.containment_radius(fraction)

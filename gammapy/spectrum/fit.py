@@ -5,12 +5,8 @@ import os
 import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
-from . import (
-    SpectrumObservationList,
-    SpectrumObservation,
-    models,
-)
 from ..utils.scripts import make_path
+from . import SpectrumObservationList, SpectrumObservation, models
 
 __all__ = [
     'SpectrumFit',
@@ -57,9 +53,9 @@ class SpectrumFit(object):
     """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
-    DEFAULT_MODEL = models.PowerLaw(index=2*u.Unit(''),
+    DEFAULT_MODEL = models.PowerLaw(index=2 * u.Unit(''),
                                     amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                                    reference=1*u.TeV)
+                                    reference=1 * u.TeV)
     """Default model to be used for the fit"""
 
     def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
@@ -121,7 +117,7 @@ class SpectrumFit(object):
             raise ValueError('Model not understood: {}'.format(model))
         # Make model amplitude O(1e0)
         val = model.ampl.val * self.FLUX_FACTOR ** (-1)
-        model.ampl = val 
+        model.ampl = val
         self._model = model * self.FLUX_FACTOR
 
     @property
@@ -200,7 +196,7 @@ class SpectrumFit(object):
         """
         from sherpa.astro import datastack
         from sherpa.utils.err import IdentifierErr
-        
+
         log.info(str(self))
         ds = datastack.DataStack()
         ds.load_pha(self.pha_list)
@@ -217,7 +213,7 @@ class SpectrumFit(object):
         # Ignore bad is not a stack-enabled function
         for i in range(1, len(ds.datasets) + 1):
             datastack.ignore_bad(i)
-            #Ignore bad channels in BKG data (required for WSTAT)
+            # Ignore bad channels in BKG data (required for WSTAT)
             try:
                 datastack.ignore_bad(i, 1)
             except IdentifierErr:
@@ -235,8 +231,8 @@ class SpectrumFit(object):
             model = datastack.get_model(i)
             efilter = datastack.get_filter(i)
             # TODO : Calculate Pivot energy
-            self.result[i-1].fit = _sherpa_to_fitresult(model, covar,
-                                                        efilter, fitresult)
+            self.result[i - 1].fit = _sherpa_to_fitresult(model, covar,
+                                                          efilter, fitresult)
 
         ds.clear_stack()
         ds.clear_models()
@@ -244,20 +240,20 @@ class SpectrumFit(object):
 
 def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     """Create `~gammapy.spectrum.SpectrumFitResult` from Sherpa objects"""
-    
+
     from . import SpectrumFitResult
 
     # Translate sherpa model to GP model
     # This is done here since the FLUXFACTOR needs to be applied
     amplfact = SpectrumFit.FLUX_FACTOR
-    pardict = dict(gamma = ['index', u.Unit('')],
-                   ref = ['reference', u.keV],
-                   ampl = ['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')])
+    pardict = dict(gamma=['index', u.Unit('')],
+                   ref=['reference', u.keV],
+                   ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')])
     kwargs = dict()
 
     for par in shmodel.pars:
         name = par.name
-        kwargs[pardict[name][0]] =  par.val * pardict[name][1]
+        kwargs[pardict[name][0]] = par.val * pardict[name][1]
 
     if 'powlaw1d' in shmodel.name:
         model = models.PowerLaw(**kwargs)
@@ -270,10 +266,10 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
         name = par.split('.')[-1]
         covar_axis.append(pardict[name][0])
 
-    #Apply flux factor to covariance matrix
+    # Apply flux factor to covariance matrix
     idx = covar_axis.index('amplitude')
-    covariance[idx] = covariance[idx] * amplfact 
-    covariance[:,idx] = covariance[:,idx] * amplfact
+    covariance[idx] = covariance[idx] * amplfact
+    covariance[:, idx] = covariance[:, idx] * amplfact
 
     temp = efilter.split(':')
     fit_range = [float(temp[0]), float(temp[1])] * u.keV
@@ -290,4 +286,4 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
                              statname=statname,
                              statval=statval,
                              npred=npred
-                            )
+                             )

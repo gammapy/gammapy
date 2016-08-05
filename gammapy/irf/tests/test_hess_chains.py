@@ -1,7 +1,5 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 from numpy.testing import assert_allclose
 import astropy.units as u
@@ -37,7 +35,6 @@ def get_list_of_chains():
 @requires_dependency('yaml')
 @requires_data('gammapy-extra')
 def test_hess_chains(data_manager, chain):
-
     ref_file_aeff = make_path(chain['aeff2D_reference_file'])
     ref_aeff = np.loadtxt(str(ref_file_aeff))
     ref_file_edisp = make_path(chain['edisp2D_reference_file'])

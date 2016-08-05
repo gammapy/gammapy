@@ -1,11 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+import logging
 import numpy as np
 from astropy.table import Table
 from astropy.units import Quantity
 from astropy.coordinates import Angle
 from astropy.io import fits
-from astropy import log
 from ..utils.scripts import make_path
 from ..utils.array import array_stats_str
 from ..utils.energy import Energy, EnergyBounds
@@ -13,6 +13,8 @@ from ..utils.fits import table_to_fits_table
 from . import EnergyDependentTablePSF
 
 __all__ = ['PSFKing']
+
+log = logging.getLogger(__name__)
 
 
 class PSFKing(object):
