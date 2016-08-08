@@ -69,9 +69,9 @@ class SpectrumObservation(object):
         return self.on_vector.obs_id
 
     @property
-    def exposure(self):
+    def livetime(self):
         """Dead-time corrected observation time"""
-        return self.on_vector.exposure
+        return self.on_vector.livetime
 
     @property
     def alpha(self):
@@ -126,7 +126,7 @@ class SpectrumObservation(object):
             a_on=self.on_vector.backscal,
             a_off=self.off_vector.backscal,
             obs_id=self.obs_id,
-            livetime=self.exposure,
+            livetime=self.livetime,
         )
         return ObservationStats(**kwargs)
 
@@ -140,7 +140,7 @@ class SpectrumObservation(object):
             a_on=self.on_vector.backscal,
             a_off=self.off_vector.backscal,
             obs_id=self.obs_id,
-            livetime=self.exposure,
+            livetime=self.livetime,
         )
         return ObservationStats(**kwargs)
 
@@ -160,7 +160,7 @@ class SpectrumObservation(object):
         return calculate_predicted_counts(model=model,
                                           edisp=self.edisp,
                                           aeff=self.aeff,
-                                          livetime=self.exposure)
+                                          livetime=self.livetime)
 
     @classmethod
     def read(cls, filename):
@@ -283,6 +283,30 @@ class SpectrumObservation(object):
         # plt.subplots_adjust(hspace = .2, left=.1)
         return fig
 
+    def to_sherpa(self):
+        """Create a `~sherpa.astro.data.DataPHA`
+
+        associated background vectors and IRFs are also translated to sherpa
+        objects and appended to the PHA instance
+        """
+        pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id)) 
+        arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
+        if self.edisp is not None:
+            rmf = self.edisp.to_sherpa(name='rmf_obs{}'.format(self.obs_id))
+        else:
+            rmf = None
+
+        pha.set_response(arf, rmf)
+
+        if self.off_vector is not None:
+            bkg = self.off_vector.to_sherpa(name='bkg_obs{}'.format(self.obs_id))
+            bkg.set_response(arf, rmf)
+            pha.set_background(bkg, 1)
+
+        #see https://github.com/sherpa/sherpa/blob/36c1f9dabb3350b64d6f54ab627f15c862ee4280/sherpa/astro/data.py#L1400
+        pha._set_initial_quantity()
+        return pha
+
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
@@ -372,7 +396,7 @@ def stack(cls, obs_list, group_id=None):
     """Stack `~gammapy.spectrum.SpectrumObservation`
 
     Observation stacking is implemented as follows
-    Averaged exposure ratio between ON and OFF regions, arf and rmf
+    Averaged livetime ratio between ON and OFF regions, arf and rmf
     :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
     .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
     .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}

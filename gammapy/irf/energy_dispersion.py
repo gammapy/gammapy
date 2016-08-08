@@ -374,6 +374,65 @@ class EnergyDispersion(NDDataArray):
         ax.set_xscale('log')
         return ax
 
+    def to_sherpa(self, name):
+        """Return `~sherpa.astro.data.DataARF`
+        
+        Parameters
+        ----------
+        name : str
+            Instance name
+        """
+        from sherpa.astro.data import DataRMF
+        from sherpa.utils import SherpaInt, SherpaUInt, SherpaFloat
+
+        # Need to modify RMF data 
+        # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
+
+        n_grp = self.to_table()['N_GRP'].data.astype(SherpaUInt)
+        f_chan =  self.to_table()['F_CHAN'].data
+        f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
+        n_chan =  self.to_table()['N_CHAN'].data
+        n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
+        matrix = self.to_table()['MATRIX'].data
+
+        good = n_grp > 0
+        matrix = matrix[good]
+        matrix = np.concatenate([row for row in matrix])
+        matrix = matrix.astype(SherpaFloat)
+
+        # TODO: Not sure if we need this if statement
+        if f_chan.ndim > 1 and n_chan.ndim > 1:
+            f_chan = []
+            n_chan = []
+            for grp, fch, nch, in izip(n_grp, f_chan, n_chan):
+                for i in xrange(grp):
+                    f_chan.append(fch[i])
+                    n_chan.append(nch[i])
+
+            f_chan = numpy.asarray(f_chan, SherpaUInt)
+            n_chan = numpy.asarray(n_chan, SherpaUInt)
+        else:
+            if len(n_grp) == len(f_chan):
+                good = n_grp > 0
+                f_chan = f_chan[good]
+                n_chan = n_chan[good]
+
+        kwargs = dict(
+            name = name,
+            energ_lo = self.to_table()['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
+            energ_hi = self.to_table()['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
+            matrix = matrix,
+            n_grp = n_grp,
+            n_chan = n_chan,
+            f_chan = f_chan,
+            detchans= self.e_reco.nbins,
+            e_min = self.e_reco.data[:-1].to('keV').value,
+            e_max = self.e_reco.data[1:].to('keV').value,
+            offset=0,
+        )
+
+        return DataRMF(**kwargs)
+
 
 class EnergyDispersion2D(object):
     """Offset-dependent energy dispersion matrix.

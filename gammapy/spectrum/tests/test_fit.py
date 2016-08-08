@@ -9,7 +9,8 @@ from ...spectrum import (
     SpectrumObservationList,
     SpectrumObservation,
     SpectrumFit,
-    SpectrumFitResult
+    SpectrumFitResult,
+    models,
 )
 from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 
@@ -25,7 +26,12 @@ def test_spectral_fit(tmpdir):
     obs2 = SpectrumObservation.read(pha2)
     obs_list = SpectrumObservationList([obs1, obs2])
 
-    fit = SpectrumFit(obs_list)
+    model = models.PowerLaw(index = 2 * u.Unit(''),
+                            amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+                            reference = 1 * u.TeV)
+
+    # Test obs list and assert on results
+    fit = SpectrumFit(obs_list, model)
     fit.run(outdir=tmpdir)
 
     # Make sure FitResult is correctly readable

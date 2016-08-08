@@ -25,8 +25,12 @@ class SpectrumFit(object):
 
     Parameters
     ----------
-    obs_list : SpectrumObservationList
+    obs : SpectrumObservationList
         Observations to fit
+    model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
+        Model to be fit
+    stat : str, `~sherpa.stats.Stat` 
+        Fit statistic to be used
 
     Examples
     --------
@@ -53,72 +57,28 @@ class SpectrumFit(object):
     """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
-    DEFAULT_MODEL = models.PowerLaw(index=2 * u.Unit(''),
-                                    amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                                    reference=1 * u.TeV)
-    """Default model to be used for the fit"""
 
-    def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
-        if isinstance(obs_list, SpectrumObservation):
-            obs_list = SpectrumObservationList([obs_list])
-        if not isinstance(obs_list, SpectrumObservationList):
+    def __init__(self, obs, model, stat=DEFAULT_STAT):
+        if isinstance(obs, SpectrumObservation):
+            obs = SpectrumObservationList([obs])
+        if not isinstance(obs, SpectrumObservationList):
             raise ValueError('Wrong input format {}\nUse SpectrumObservation'
-                             'List'.format(type(obs_list)))
+                             'List'.format(type(obs)))
 
-        self.obs_list = obs_list
+        self.obs = obs
         self.model = model
         self.statistic = stat
         self._fit_range = None
         from gammapy.spectrum import SpectrumResult
         # TODO : Introduce SpectrumResultList or Dict
         self._result = list()
-        for obs in obs_list:
-            self._result.append(SpectrumResult(obs=obs))
-
-    @classmethod
-    def from_pha_list(cls, pha_list):
-        """Create `~gammapy.spectrum.SpectrumFit` from a list of PHA files
-
-        Parameters
-        ----------
-        pha_list : list
-            list of PHA files
-        """
-        obs_list = SpectrumObservationList()
-        for temp in pha_list:
-            f = str(make_path(temp))
-            val = SpectrumObservation.read_ogip(f)
-            val.meta.phafile = f
-            obs_list.append(val)
-        return cls(obs_list)
+        for _ in self.obs:
+            self._result.append(SpectrumResult(obs=_))
 
     @property
     def result(self):
         """`~gammapy.spectrum.SpectrumResult`"""
         return self._result
-
-    @property
-    def model(self):
-        """
-        `~gammapy.spectrum.models.SpectralModel` or Sherpa 
-        `~sherpa.models.ArithmeticModel` to be fit
-        """
-        if self._model is None:
-            raise ValueError('No model specified')
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        import sherpa.models
-
-        if isinstance(model, models.SpectralModel):
-            model = model.to_sherpa()
-        if not isinstance(model, sherpa.models.ArithmeticModel):
-            raise ValueError('Model not understood: {}'.format(model))
-        # Make model amplitude O(1e0)
-        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
-        model.ampl = val
-        self._model = model * self.FLUX_FACTOR
 
     @property
     def statistic(self):
@@ -153,20 +113,38 @@ class SpectrumFit(object):
     def fit_range(self, fit_range):
         self._fit_range = fit_range
 
-    @property
-    def pha_list(self):
-        """Comma-separate list of PHA files"""
-        file_list = [str(o.phafile) for o in self.obs_list]
-        ret = ','.join(file_list)
-        return ret
-
     def __str__(self):
         """String repr"""
         ss = 'Model\n'
         ss += str(self.model)
         return ss
 
-    def run(self, method='sherpa', outdir=None):
+    def fit(self):
+        """Fit spectrum"""
+        from sherpa.fit import Fit
+        from sherpa.models import ArithmeticModel
+
+        # Translate model to sherpa model if necessary
+        if isinstance(self.model, models.SpectralModel):
+            model = self.model.to_sherpa()
+        else:
+            model = self.model
+
+        if not isinstance(model, ArithmeticModel):
+            raise ValueError('Model not understood: {}'.format(model))
+
+        # Make model amplitude O(1e0)
+        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
+        model.ampl = val
+
+        # TODO : This only works for one obs
+        pha = self.obs[0].to_sherpa()
+
+        fit = Fit(pha, model, self.statistic)
+        fit_result = fit.fit()
+
+
+    def run(self, outdir=None):
         """Run all steps
 
         Parameters
@@ -181,16 +159,15 @@ class SpectrumFit(object):
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
 
-        if method == 'sherpa':
-            self._run_sherpa_fit()
-        else:
-            raise ValueError('Undefined fitting method')
+        self.fit()
 
         # Assume only one model is fit to all data
         modelname = self.result[0].fit.model.__class__.__name__
         self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
 
+
+    # TODO : Put as example on RTD
     def _run_sherpa_fit(self):
         """Plain sherpa fit using the session object
         """

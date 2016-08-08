@@ -163,7 +163,7 @@ class SpectrumExtraction(object):
             on_events = obs.events[idx]
 
             counts_kwargs = dict(energy=self.e_reco,
-                                 exposure=obs.observation_live_time_duration,
+                                 livetime=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id,
                                  hi_threshold=obs.aeff.high_threshold,
                                  lo_threshold=obs.aeff.low_threshold)

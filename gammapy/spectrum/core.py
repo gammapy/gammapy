@@ -218,7 +218,7 @@ class PHACountsSpectrum(CountsSpectrum):
         Bin edges of energy axis
     obs_id : int
         Unique identifier
-    exposure : `~astropy.units.Quantity`
+    livetime : `~astropy.units.Quantity`
         Observation live time
     backscal : float
         Scaling factor
@@ -272,7 +272,7 @@ class PHACountsSpectrum(CountsSpectrum):
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
                     obs_id=self.obs_id,
-                    exposure=self.exposure.to('s').value,
+                    exposure=self.livetime.to('s').value,
                     backscal=float(self.backscal),
                     corrscal='',
                     areascal=1,
@@ -324,7 +324,7 @@ class PHACountsSpectrum(CountsSpectrum):
         ebounds = ebounds_to_energy_axis(hdulist[2])
         meta = dict(
             obs_id=hdulist[1].header['OBS_ID'],
-            exposure=hdulist[1].header['EXPOSURE'] * u.s,
+            livetime=hdulist[1].header['EXPOSURE'] * u.s,
             backscal=hdulist[1].header['BACKSCAL'],
             lo_threshold=hdulist[1].header['LO_THRES'] * u.TeV,
             hi_threshold=hdulist[1].header['HI_THRES'] * u.TeV,
@@ -332,3 +332,30 @@ class PHACountsSpectrum(CountsSpectrum):
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             meta.update(is_bkg=True)
         return cls(energy=ebounds, data=counts, **meta)
+    
+    def to_sherpa(self, name):
+        """Return `~sherpa.astro.data.DataPHA`
+        
+        Parameters
+        ----------
+        name : str
+            Instance name
+        """
+        from sherpa.utils import SherpaFloat
+        from sherpa.astro.data import DataPHA
+
+        kwargs = dict(
+            name = name, 
+            channel = (self.to_table()['CHANNEL'].data + 1).astype(SherpaFloat), 
+            counts = self.to_table()['COUNTS'].data.astype(SherpaFloat), 
+            quality = self.to_table()['QUALITY'].data,
+            exposure = self.livetime.to('s').value,
+            backscal = self.backscal,
+            areascal = 1.,
+            syserror = None,
+            staterror = None,
+            grouping = None,
+        )
+
+        return DataPHA(**kwargs)
+        
