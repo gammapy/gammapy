@@ -9,7 +9,7 @@ from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
 from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
-from ..spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw, LogParabola
 from ..spectrum.powerlaw import power_law_flux
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
@@ -389,16 +389,11 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         emin, emax = self.energy_range
         g = Quantity(self.data['Spectral_Index'], '')
 
-        # The pivot energy information is missing in the 2FHL catalog. Set it to
-        # 100 GeV per default.
-        ref = Quantity(100, 'GeV')
-
         pars = {}
-        flux = Quantity(self.data['Flux50'], 'cm-2 s-1')
-        pars['amplitude'] = power_law_flux(flux, g, ref, emin, emax).to('cm-2 s-1 GeV-1')
-        pars['reference'] = ref
+        pars['amplitude'] = Quantity(self.data['Flux50'], 'cm-2 s-1')
+        pars['emin'], pars['emax'] = self.energy_range
         pars['index'] = g
-        return PowerLaw(**pars)
+        return PowerLaw2(**pars)
 
 
 class SourceCatalog3FGL(SourceCatalog):

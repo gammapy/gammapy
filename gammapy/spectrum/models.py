@@ -10,6 +10,7 @@ from ..extern.bunch import Bunch
 __all__ = [
     'SpectralModel',
     'PowerLaw',
+    'PowerLaw2',
     'ExponentialCutoffPowerLaw',
     'LogParabola',
 ]
@@ -176,6 +177,13 @@ class PowerLaw(SpectralModel):
             \right \vert _{E_{min}}^{E_{max}}
 
 
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range.
+
         """
         pars = self.parameters
 
@@ -225,6 +233,69 @@ class PowerLaw(SpectralModel):
         model.ref = self.parameters.reference.to('keV').value
         model.ampl = self.parameters.amplitude.to('cm-2 s-1 keV-1').value
         return model
+
+
+class PowerLaw2(SpectralModel):
+    r"""
+    Spectral power-law model with integral as norm parameter
+
+    See http://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html
+    for further details.
+
+    .. math::
+
+        \phi(E) = F_0 \cdot \frac{\Gamma + 1}{E_{0, max}^{\Gamma + 1}
+         - E_{0, min}^{\Gamma + 1}} \cdot E^{-\Gamma}
+
+    Parameters
+    ----------
+    index : float, `~astropy.units.Quantity`
+        Spectral index :math:`\Gamma`
+    amplitude : float, `~astropy.units.Quantity`
+        Integral flux :math:`F_0`.
+    emin : float, `~astropy.units.Quantity`
+        Lower energy limit :math:`E_{0, min}`.
+    emax : float, `~astropy.units.Quantity`
+        Upper energy limit :math:`E_{0, max}`.
+
+    """
+
+    def __init__(self, amplitude, index, emin, emax):
+        self.parameters = Bunch(amplitude=amplitude,
+                                index=index,
+                                emin=emin,
+                                emax=emax)
+
+    @staticmethod
+    def evaluate(energy, amplitude, index, emin, emax):
+        top = -index + 1
+        bottom = emax ** (-index + 1) - emin ** (-index + 1)
+        return amplitude * (top / bottom) * np.power(energy, -index)
+
+
+    def integral(self, emin, emax):
+        r"""
+        Integrate power law analytically.
+
+        .. math::
+
+            F(E_{min}, E_{max}) = F_0 \cdot \frac{E_{max}^{\Gamma + 1} \
+                                - E_{min}^{\Gamma + 1}}{E_{0, max}^{\Gamma + 1} \
+                                - E_{0, min}^{\Gamma + 1}}
+
+        Parameters
+        ----------
+        emin : float, `~astropy.units.Quantity`
+            Lower bound of integration range.
+        emax : float, `~astropy.units.Quantity`
+            Upper bound of integration range
+
+        """
+        pars = self.parameters
+        top = np.power(emax, -pars.index + 1) - np.power(emin, -pars.index + 1)
+        bottom = np.power(pars.emax, -pars.index + 1) - np.power(pars.emin, -pars.index + 1)
+
+        return pars.amplitude * top / bottom
 
 
 class ExponentialCutoffPowerLaw(SpectralModel):
