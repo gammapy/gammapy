@@ -89,23 +89,6 @@ class SpectrumObservation(object):
         return self.on_vector.hi_threshold
 
     @property
-    def phafile(self):
-        """PHA file associated to this observation.
-
-        This is needed since when passing a SpectrumObservation to a
-        `~gammapy.spectrum.SpectrumFit`, since sherpa internally loads the
-        data again from disk. Note that the SpectrumObservation **has to be
-        loaded from disk** in order for this property to be available.
-
-        TODO: Remove and translate SpectrumObservation directly to Sherpa
-        objects
-        """
-        try:
-            return self._phafile
-        except AttributeError:
-            raise ValueError('No PHA file associated to this observation')
-
-    @property
     def background_vector(self):
         """Background `~gammapy.spectrum.CountsSpectrum`
 
@@ -190,15 +173,10 @@ class SpectrumObservation(object):
             off_vector = None
 
         effective_area = EffectiveAreaTable.read(str(dirname / arf))
-        # This is needed for know since when passing a SpectrumObservation to
-        # the fitting class actually the PHA file is loaded again
-        # TODO : remove one spectrumfit is updated
-        retval = cls(on_vector=on_vector,
-                     aeff=effective_area,
-                     off_vector=off_vector,
-                     edisp=energy_dispersion)
-        retval._phafile = str(filename)
-        return retval
+        return cls(on_vector=on_vector,
+                   aeff=effective_area,
+                   off_vector=off_vector,
+                   edisp=energy_dispersion)
 
     def write(self, outdir=None, overwrite=True):
         """Write OGIP files
@@ -221,7 +199,7 @@ class SpectrumObservation(object):
         bkgfile = self.on_vector.bkgfile
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
-        self._phafile = outdir / phafile
+
         # Write in keV and cm2
         self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
         self.on_vector.write(outdir / phafile, clobber=overwrite)
@@ -306,6 +284,16 @@ class SpectrumObservation(object):
         # see https://github.com/sherpa/sherpa/blob/36c1f9dabb3350b64d6f54ab627f15c862ee4280/sherpa/astro/data.py#L1400
         pha._set_initial_quantity()
         return pha
+
+    def __str__(self):
+        """String representation"""
+        ss = '*** SpectrumObservation {}\n'.format(self.obs_id)
+        ss += 'Livetime : {}\n'.format(self.livetime)
+        ss += 'On spectrum: {}\n'.format(self.on_vector)
+        ss += 'Background spectrum: {}\n'.format(self.off_vector)
+        ss += 'Effective Area: {}\n'.format(self.aeff)
+        ss += 'Energy Dispersion: {}\n'.format(self.edisp)
+        return ss
 
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
