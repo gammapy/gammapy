@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import astropy.units as u
 from astropy.tests.helper import assert_quantity_allclose, pytest
-from ..models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ..models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw, LogParabola
 from ...utils.testing import requires_dependency
 
 TEST_MODELS = [
@@ -17,6 +17,20 @@ TEST_MODELS = [
         integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
         eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
     ),
+
+    dict(
+        name='powerlaw2',
+        model=PowerLaw2(
+            amplitude=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
+            index=2.3 * u.Unit(''),
+            emin=1 * u.TeV,
+            emax=10 * u.TeV
+        ),
+        val_at_2TeV=u.Quantity(4 * 2. ** (-2.3), 'cm-2 s-1 TeV-1'),
+        integral_1_10TeV=u.Quantity(2.9227116204223784, 'cm-2 s-1'),
+        eflux_1_10TeV=u.Quantity(6.650836884969039, 'TeV cm-2 s-1'),
+    ),
+
     dict(
         name='ecpl',
         model=ExponentialCutoffPowerLaw(
