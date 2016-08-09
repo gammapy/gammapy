@@ -18,9 +18,9 @@ class SpectrumFit(object):
     """
     Spectral Fit using Sherpa
 
-    Disclaimer: Gammapy classes cannot be translated to Sherpa classes yet.
-    Therefore the input data must have been written to disk in order to be read
-    in directly by Sherpa.
+    This is a wrapper around `~sherpa.fit.Fit` that takes care about
+    translating gammapy classes to sherpa classes and handling various aspects
+    of the fitting correctly. For usage examples see :ref:`spectral_fitting`
 
     Parameters
     ----------
@@ -30,28 +30,7 @@ class SpectrumFit(object):
         Model to be fit
     stat : str, `~sherpa.stats.Stat` 
         Fit statistic to be used
-
-    Examples
-    --------
-
-    Example how to run a spectral analysis and have a quick look at the results.
-
-    ::
-
-        from gammapy.spectrum import SpectrumObservation, SpectrumFit
-        import matplotlib.pyplot as plt
-
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
-        obs = SpectrumObservation.read(filename)
-
-        fit = SpectrumFit(obs)
-        fit.run()
-        fit.result.plot_fit()
-        plt.show()
-
-    TODO: put output image in gammapy-extra and show it here.
     """
-
     FLUX_FACTOR = 1e-20
     """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
@@ -165,11 +144,11 @@ class SpectrumFit(object):
         # The model instance passed to the Fit now holds the best fit values
         covar = fit.est_errors()
         log.info(covar)
-        efilter = pha[0].get_filter()
-        # First fitted model, used to extract best fit parameters
-        shmodel = fitmodel.parts[0]
 
-        self.result[0].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
+        for ii in range(nobs):
+            efilter = pha[ii].get_filter()
+            shmodel = fitmodel.parts[ii]
+            self.result[ii].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
 
     def run(self, outdir=None):
         """Run all steps
@@ -193,54 +172,6 @@ class SpectrumFit(object):
         modelname = self.result[0].fit.model.__class__.__name__
         self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
-
-
-    # TODO : Put as example on RTD
-    def _run_sherpa_fit(self):
-        """Plain sherpa fit using the session object
-        """
-        from sherpa.astro import datastack
-        from sherpa.utils.err import IdentifierErr
-
-        log.info(str(self))
-        ds = datastack.DataStack()
-        ds.load_pha(self.pha_list)
-
-        ds.set_source(self.model)
-
-        # Take into account fit range
-        if self.fit_range is not None:
-            log.info('Restricting fit range to {}'.format(self.fit_range))
-            notice_min = self.fit_range[0].to('keV').value
-            notice_max = self.fit_range[1].to('keV').value
-            datastack.notice(notice_min, notice_max)
-
-        # Ignore bad is not a stack-enabled function
-        for i in range(1, len(ds.datasets) + 1):
-            datastack.ignore_bad(i)
-            # Ignore bad channels in BKG data (required for WSTAT)
-            try:
-                datastack.ignore_bad(i, 1)
-            except IdentifierErr:
-                pass
-
-        datastack.set_stat(self.statistic)
-        ds.fit()
-        datastack.covar()
-
-        covar = datastack.get_covar_results()
-        fitresult = datastack.get_fit_results()
-        # Set results for each dataset separately 
-        from gammapy.spectrum.results import SpectrumFitResult
-        for i in range(1, len(ds.datasets) + 1):
-            model = datastack.get_model(i)
-            efilter = datastack.get_filter(i)
-            # TODO : Calculate Pivot energy
-            self.result[i - 1].fit = _sherpa_to_fitresult(model, covar,
-                                                          efilter, fitresult)
-
-        ds.clear_stack()
-        ds.clear_models()
 
 
 def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
