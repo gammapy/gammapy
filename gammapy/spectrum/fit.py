@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
@@ -60,12 +59,9 @@ class SpectrumFit(object):
 
     def __init__(self, obs, model, stat=DEFAULT_STAT):
         if isinstance(obs, SpectrumObservation):
-            obs = SpectrumObservationList([obs])
-        if not isinstance(obs, SpectrumObservationList):
-            raise ValueError('Wrong input format {}\nUse SpectrumObservation'
-                             'List'.format(type(obs)))
+            obs = [obs]
 
-        self.obs = obs
+        self.obs = SpectrumObservationList(obs)
         self.model = model
         self.statistic = stat
         self._fit_range = None
@@ -122,7 +118,9 @@ class SpectrumFit(object):
     def fit(self):
         """Fit spectrum"""
         from sherpa.fit import Fit
-        from sherpa.models import ArithmeticModel
+        from sherpa.models import ArithmeticModel, SimulFitModel
+        from sherpa.astro.instrument import Response1D
+        from sherpa.data import DataSimulFit
 
         # Translate model to sherpa model if necessary
         if isinstance(self.model, models.SpectralModel):
@@ -137,12 +135,41 @@ class SpectrumFit(object):
         val = model.ampl.val * self.FLUX_FACTOR ** (-1)
         model.ampl = val
 
-        # TODO : This only works for one obs
-        pha = self.obs[0].to_sherpa()
+        if self.fit_range is not None:
+            log.info('Restricting fit range to {}'.format(self.fit_range))
+            fitmin = self.fit_range[0].to('keV').value
+            fitmax = self.fit_range[1].to('keV').value
 
-        fit = Fit(pha, model, self.statistic)
-        fit_result = fit.fit()
+        # Loop over observations
+        pha = list()
+        folded_model = list()
+        nobs = len(self.obs)
+        for ii in range(nobs):
+            temp = self.obs[ii].to_sherpa()
+            if self.fit_range is not None:
+                temp.notice(fitmin, fitmax)
+                temp.get_background().notice(fitmin, fitmax)
+            temp.ignore_bad()
+            temp.get_background().ignore_bad()
+            pha.append(temp)
+            # Forward folding
+            resp = Response1D(pha[ii])
+            folded_model.append(resp(model) * self.FLUX_FACTOR)
 
+        data = DataSimulFit('simul fit data', pha)
+        fitmodel = SimulFitModel('simul fit model', folded_model)
+
+        fit = Fit(data, fitmodel, self.statistic)
+        fitresult = fit.fit()
+        log.info(fitresult)
+        # The model instance passed to the Fit now holds the best fit values
+        covar = fit.est_errors()
+        log.info(covar)
+        efilter = pha[0].get_filter()
+        # First fitted model, used to extract best fit parameters
+        shmodel = fitmodel.parts[0]
+
+        self.result[0].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
 
     def run(self, outdir=None):
         """Run all steps
@@ -152,6 +179,7 @@ class SpectrumFit(object):
         method : str {sherpa}
             Fit method to use
         outdir : Path, str
+
             directory to write results files to
         """
         cwd = Path.cwd()
