@@ -178,18 +178,21 @@ class SpectrumObservation(object):
                    off_vector=off_vector,
                    edisp=energy_dispersion)
 
-    def write(self, outdir=None, overwrite=True):
+    def write(self, outdir=None, use_sherpa=False, overwrite=True):
         """Write OGIP files
 
-        The files are meant to be used in Sherpa. The units are therefore
-        hardcoded to 'keV' and 'cm2'.
+        If you want to use the written files with Sherpa you have to set the
+        ``use_sherpa`` flag. Then all files will be written in units 'keV' and
+        'cm2'.
 
         Parameters
         ----------
         outdir : `~gammapy.extern.pathlib.Path`
             output directory, default: pwd
-        overwrite : bool
-            Overwrite
+        use_sherpa : bool, optional
+            Write Sherpa compliant files, default: False
+        overwrite : bool, optional
+            Overwrite, default: True
         """
 
         outdir = Path.cwd() if outdir is None else Path(outdir)
@@ -200,26 +203,26 @@ class SpectrumObservation(object):
         arffile = self.on_vector.arffile
         rmffile = self.on_vector.rmffile
 
-        # Write in keV and cm2
-        self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
+        # Write in keV and cm2 for sherpa
+        if use_sherpa:
+            self.on_vector.energy.data = self.on_vector.energy.data.to('keV')
+            self.aeff.energy.data = self.aeff.energy.data.to('keV')
+            self.aeff.data = self.aeff.data.to('cm2')
+            if self.off_vector is not None:
+                self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
+            if self.edisp is not None:
+                self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
+                self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
+                # Set data to itself to trigger reset of the interpolator
+                # TODO: Make NDData notice change of axis
+                self.edisp.data = self.edisp.data
+
         self.on_vector.write(outdir / phafile, clobber=overwrite)
-
-        self.aeff.energy.data = self.aeff.energy.data.to('keV')
-        self.aeff.data = self.aeff.data.to('cm2')
         self.aeff.write(outdir / arffile, clobber=overwrite)
-
         if self.off_vector is not None:
-            self.off_vector.energy.data = self.off_vector.energy.data.to('keV')
             self.off_vector.write(outdir / bkgfile, clobber=overwrite)
-
-        if self.edisp is not None:
-            self.edisp.e_reco.data = self.edisp.e_reco.data.to('keV')
-            self.edisp.e_true.data = self.edisp.e_true.data.to('keV')
-            # Set data to itself to trigger reset of the interpolator
-            # TODO: Make NDData notice change of axis
-            self.edisp.data = self.edisp.data
-            self.edisp.write(str(outdir / rmffile),
-                             clobber=overwrite)
+            if self.edisp is not None:
+                self.edisp.write(str(outdir / rmffile), clobber=overwrite)
 
     def peek(self, figsize=(15, 15)):
         """Quick-look summary plots."""

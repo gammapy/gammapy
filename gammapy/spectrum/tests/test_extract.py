@@ -75,7 +75,7 @@ def test_spectrum_extraction(pars, results, tmpdir):
     # and check I/O
     if not pars['containment_correction']:
         outdir = gammapy_extra.filename("datasets/hess-crab4_pha")
-        ana.observations.write(outdir)
+        ana.observations.write(outdir, use_sherpa=True)
 
         testobs = SpectrumObservation.read(make_path(outdir) / 'pha_obs23523.fits')
         assert_quantity_allclose(testobs.aeff.data,
