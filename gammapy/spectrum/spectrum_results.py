@@ -25,6 +25,7 @@ from ..extern.bunch import Bunch
 
 
 class DictWithInfo(OrderedDict):
+
     def info(self, out=None):
         if out is None:
             out = sys.stdout

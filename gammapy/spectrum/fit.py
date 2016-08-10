@@ -1,4 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
@@ -19,106 +18,42 @@ class SpectrumFit(object):
     """
     Spectral Fit using Sherpa
 
-    Disclaimer: Gammapy classes cannot be translated to Sherpa classes yet.
-    Therefore the input data must have been written to disk in order to be read
-    in directly by Sherpa.
+    This is a wrapper around `~sherpa.fit.Fit` that takes care about
+    translating gammapy classes to sherpa classes and handling various aspects
+    of the fitting correctly. For usage examples see :ref:`spectral_fitting`
 
     Parameters
     ----------
     obs_list : SpectrumObservationList
         Observations to fit
-
-    Examples
-    --------
-
-    Example how to run a spectral analysis and have a quick look at the results.
-
-    ::
-
-        from gammapy.spectrum import SpectrumObservation, SpectrumFit
-        import matplotlib.pyplot as plt
-
-        filename = '$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits'
-        obs = SpectrumObservation.read(filename)
-
-        fit = SpectrumFit(obs)
-        fit.run()
-        fit.result.plot_fit()
-        plt.show()
-
-    TODO: put output image in gammapy-extra and show it here.
+    model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
+        Model to be fit
+    stat : str, `~sherpa.stats.Stat`
+        Fit statistic to be used
     """
-
     FLUX_FACTOR = 1e-20
     """Numerical constant to bring Sherpa optimizers in valid range"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
-    DEFAULT_MODEL = models.PowerLaw(index=2 * u.Unit(''),
-                                    amplitude=1e-11 * u.Unit('cm-2 s-1 TeV-1'),
-                                    reference=1 * u.TeV)
-    """Default model to be used for the fit"""
 
-    def __init__(self, obs_list, stat=DEFAULT_STAT, model=DEFAULT_MODEL):
+    def __init__(self, obs_list, model, stat=DEFAULT_STAT):
         if isinstance(obs_list, SpectrumObservation):
-            obs_list = SpectrumObservationList([obs_list])
-        if not isinstance(obs_list, SpectrumObservationList):
-            raise ValueError('Wrong input format {}\nUse SpectrumObservation'
-                             'List'.format(type(obs_list)))
+            obs_list = [obs_list]
 
-        self.obs_list = obs_list
+        self.obs_list = SpectrumObservationList(obs_list)
         self.model = model
         self.statistic = stat
         self._fit_range = None
         from gammapy.spectrum import SpectrumResult
         # TODO : Introduce SpectrumResultList or Dict
         self._result = list()
-        for obs in obs_list:
-            self._result.append(SpectrumResult(obs=obs))
-
-    @classmethod
-    def from_pha_list(cls, pha_list):
-        """Create `~gammapy.spectrum.SpectrumFit` from a list of PHA files
-
-        Parameters
-        ----------
-        pha_list : list
-            list of PHA files
-        """
-        obs_list = SpectrumObservationList()
-        for temp in pha_list:
-            f = str(make_path(temp))
-            val = SpectrumObservation.read_ogip(f)
-            val.meta.phafile = f
-            obs_list.append(val)
-        return cls(obs_list)
+        for _ in self.obs_list:
+            self._result.append(SpectrumResult(obs=_))
 
     @property
     def result(self):
-        """`~gammapy.spectrum.SpectrumResult`"""
+        """List of `~gammapy.spectrum.SpectrumResult` for each observation"""
         return self._result
-
-    @property
-    def model(self):
-        """
-        `~gammapy.spectrum.models.SpectralModel` or Sherpa 
-        `~sherpa.models.ArithmeticModel` to be fit
-        """
-        if self._model is None:
-            raise ValueError('No model specified')
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        import sherpa.models
-
-        if isinstance(model, models.SpectralModel):
-            model = model.to_sherpa()
-        if not isinstance(model, sherpa.models.ArithmeticModel):
-            raise ValueError('Model not understood: {}'.format(model))
-        # Make model amplitude O(1e0)
-        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
-        model.ampl = val
-        self._model = model * self.FLUX_FACTOR
 
     @property
     def statistic(self):
@@ -153,20 +88,69 @@ class SpectrumFit(object):
     def fit_range(self, fit_range):
         self._fit_range = fit_range
 
-    @property
-    def pha_list(self):
-        """Comma-separate list of PHA files"""
-        file_list = [str(o.phafile) for o in self.obs_list]
-        ret = ','.join(file_list)
-        return ret
-
     def __str__(self):
         """String repr"""
         ss = 'Model\n'
         ss += str(self.model)
         return ss
 
-    def run(self, method='sherpa', outdir=None):
+    def fit(self):
+        """Fit spectrum"""
+        from sherpa.fit import Fit
+        from sherpa.models import ArithmeticModel, SimulFitModel
+        from sherpa.astro.instrument import Response1D
+        from sherpa.data import DataSimulFit
+
+        # Translate model to sherpa model if necessary
+        if isinstance(self.model, models.SpectralModel):
+            model = self.model.to_sherpa()
+        else:
+            model = self.model
+
+        if not isinstance(model, ArithmeticModel):
+            raise ValueError('Model not understood: {}'.format(model))
+
+        # Make model amplitude O(1e0)
+        val = model.ampl.val * self.FLUX_FACTOR ** (-1)
+        model.ampl = val
+
+        if self.fit_range is not None:
+            log.info('Restricting fit range to {}'.format(self.fit_range))
+            fitmin = self.fit_range[0].to('keV').value
+            fitmax = self.fit_range[1].to('keV').value
+
+        # Loop over observations
+        pha = list()
+        folded_model = list()
+        nobs = len(self.obs_list)
+        for ii in range(nobs):
+            temp = self.obs_list[ii].to_sherpa()
+            if self.fit_range is not None:
+                temp.notice(fitmin, fitmax)
+                temp.get_background().notice(fitmin, fitmax)
+            temp.ignore_bad()
+            temp.get_background().ignore_bad()
+            pha.append(temp)
+            # Forward folding
+            resp = Response1D(pha[ii])
+            folded_model.append(resp(model) * self.FLUX_FACTOR)
+
+        data = DataSimulFit('simul fit data', pha)
+        fitmodel = SimulFitModel('simul fit model', folded_model)
+
+        fit = Fit(data, fitmodel, self.statistic)
+        fitresult = fit.fit()
+        log.debug(fitresult)
+        # The model instance passed to the Fit now holds the best fit values
+        covar = fit.est_errors()
+        log.debug(covar)
+
+        for ii in range(nobs):
+            efilter = pha[ii].get_filter()
+            shmodel = fitmodel.parts[ii]
+            self.result[ii].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
+
+    def run(self, outdir=None):
         """Run all steps
 
         Parameters
@@ -174,6 +158,7 @@ class SpectrumFit(object):
         method : str {sherpa}
             Fit method to use
         outdir : Path, str
+
             directory to write results files to
         """
         cwd = Path.cwd()
@@ -181,61 +166,12 @@ class SpectrumFit(object):
         outdir.mkdir(exist_ok=True)
         os.chdir(str(outdir))
 
-        if method == 'sherpa':
-            self._run_sherpa_fit()
-        else:
-            raise ValueError('Undefined fitting method')
+        self.fit()
 
         # Assume only one model is fit to all data
         modelname = self.result[0].fit.model.__class__.__name__
         self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
-
-    def _run_sherpa_fit(self):
-        """Plain sherpa fit using the session object
-        """
-        from sherpa.astro import datastack
-        from sherpa.utils.err import IdentifierErr
-
-        log.info(str(self))
-        ds = datastack.DataStack()
-        ds.load_pha(self.pha_list)
-
-        ds.set_source(self.model)
-
-        # Take into account fit range
-        if self.fit_range is not None:
-            log.info('Restricting fit range to {}'.format(self.fit_range))
-            notice_min = self.fit_range[0].to('keV').value
-            notice_max = self.fit_range[1].to('keV').value
-            datastack.notice(notice_min, notice_max)
-
-        # Ignore bad is not a stack-enabled function
-        for i in range(1, len(ds.datasets) + 1):
-            datastack.ignore_bad(i)
-            # Ignore bad channels in BKG data (required for WSTAT)
-            try:
-                datastack.ignore_bad(i, 1)
-            except IdentifierErr:
-                pass
-
-        datastack.set_stat(self.statistic)
-        ds.fit()
-        datastack.covar()
-
-        covar = datastack.get_covar_results()
-        fitresult = datastack.get_fit_results()
-        # Set results for each dataset separately 
-        from gammapy.spectrum.results import SpectrumFitResult
-        for i in range(1, len(ds.datasets) + 1):
-            model = datastack.get_model(i)
-            efilter = datastack.get_filter(i)
-            # TODO : Calculate Pivot energy
-            self.result[i - 1].fit = _sherpa_to_fitresult(model, covar,
-                                                          efilter, fitresult)
-
-        ds.clear_stack()
-        ds.clear_models()
 
 
 def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):

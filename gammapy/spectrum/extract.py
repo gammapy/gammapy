@@ -113,10 +113,11 @@ class SpectrumExtraction(object):
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
-        
+
         In case no background estimate was passed on initialization, this
-        method creates one given a dict of parameters. For more info see
-        :ref:`background-estimation`.
+        method creates one given a dict of parameters. 
+
+        TODO: Link to high-level docs page.
 
         Parameters
         ----------
@@ -163,7 +164,7 @@ class SpectrumExtraction(object):
             on_events = obs.events[idx]
 
             counts_kwargs = dict(energy=self.e_reco,
-                                 exposure=obs.observation_live_time_duration,
+                                 livetime=obs.observation_live_time_duration,
                                  obs_id=obs.obs_id,
                                  hi_threshold=obs.aeff.high_threshold,
                                  lo_threshold=obs.aeff.low_threshold)
@@ -230,10 +231,10 @@ class SpectrumExtraction(object):
 
     def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
         """Set energy threshold
-        
+
         Set the high and low energy threshold for each observation based on a
         chosen method.
-        
+
         Available methods for setting the low energy threshold
 
         * area_max : Set energy threshold at x percent of the maximum effective

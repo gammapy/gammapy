@@ -224,6 +224,26 @@ class EffectiveAreaTable(NDDataArray):
                            (self.energy.nodes[[idx - 1, idx]].value))
         return energy * self.energy.unit
 
+    def to_sherpa(self, name):
+        """Return `~sherpa.astro.data.DataARF`
+        
+        Parameters
+        ----------
+        name : str
+            Instance name
+        """
+        from sherpa.astro.data import DataARF
+
+        table = self.to_table()
+        kwargs = dict(
+            name = name,
+            energ_lo = table['ENERG_LO'].quantity.to('keV').value,
+            energ_hi = table['ENERG_HI'].quantity.to('keV').value,
+            specresp = table['SPECRESP'].quantity.to('cm2').value,
+        )
+
+        return DataARF(**kwargs)
+
 
 class EffectiveAreaTable2D(NDDataArray):
     """2D Effective Area Table
