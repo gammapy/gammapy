@@ -388,12 +388,13 @@ class EnergyDispersion(NDDataArray):
         # Need to modify RMF data 
         # see https://github.com/sherpa/sherpa/blob/master/sherpa/astro/io/pyfits_backend.py#L727
 
-        n_grp = self.to_table()['N_GRP'].data.astype(SherpaUInt)
-        f_chan =  self.to_table()['F_CHAN'].data
+        table = self.to_table()
+        n_grp = table['N_GRP'].data.astype(SherpaUInt)
+        f_chan = table['F_CHAN'].data
         f_chan = np.concatenate([row for row in f_chan]).astype(SherpaUInt)
-        n_chan =  self.to_table()['N_CHAN'].data
+        n_chan = table['N_CHAN'].data
         n_chan = np.concatenate([row for row in n_chan]).astype(SherpaUInt)
-        matrix = self.to_table()['MATRIX'].data
+        matrix = table['MATRIX'].data
 
         good = n_grp > 0
         matrix = matrix[good]
@@ -419,8 +420,8 @@ class EnergyDispersion(NDDataArray):
 
         kwargs = dict(
             name = name,
-            energ_lo = self.to_table()['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
-            energ_hi = self.to_table()['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
+            energ_lo = table['ENERG_LO'].quantity.to('keV').value.astype(SherpaFloat),
+            energ_hi = table['ENERG_HI'].quantity.to('keV').value.astype(SherpaFloat),
             matrix = matrix,
             n_grp = n_grp,
             n_chan = n_chan,

@@ -234,11 +234,12 @@ class EffectiveAreaTable(NDDataArray):
         """
         from sherpa.astro.data import DataARF
 
+        table = self.to_table()
         kwargs = dict(
             name = name,
-            energ_lo = self.to_table()['ENERG_LO'].quantity.to('keV').value,
-            energ_hi = self.to_table()['ENERG_HI'].quantity.to('keV').value,
-            specresp = self.to_table()['SPECRESP'].quantity.to('cm2').value,
+            energ_lo = table['ENERG_LO'].quantity.to('keV').value,
+            energ_hi = table['ENERG_HI'].quantity.to('keV').value,
+            specresp = table['SPECRESP'].quantity.to('cm2').value,
         )
 
         return DataARF(**kwargs)

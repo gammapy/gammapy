@@ -344,11 +344,12 @@ class PHACountsSpectrum(CountsSpectrum):
         from sherpa.utils import SherpaFloat
         from sherpa.astro.data import DataPHA
 
+        table = self.to_table()
         kwargs = dict(
             name = name, 
-            channel = (self.to_table()['CHANNEL'].data + 1).astype(SherpaFloat), 
-            counts = self.to_table()['COUNTS'].data.astype(SherpaFloat), 
-            quality = self.to_table()['QUALITY'].data,
+            channel = (table['CHANNEL'].data + 1).astype(SherpaFloat), 
+            counts = table['COUNTS'].data.astype(SherpaFloat), 
+            quality = table['QUALITY'].data,
             exposure = self.livetime.to('s').value,
             backscal = self.backscal,
             areascal = 1.,

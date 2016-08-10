@@ -24,7 +24,7 @@ class SpectrumFit(object):
 
     Parameters
     ----------
-    obs : SpectrumObservationList
+    obs_list : SpectrumObservationList
         Observations to fit
     model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
         Model to be fit
@@ -36,23 +36,23 @@ class SpectrumFit(object):
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
 
-    def __init__(self, obs, model, stat=DEFAULT_STAT):
-        if isinstance(obs, SpectrumObservation):
-            obs = [obs]
+    def __init__(self, obs_list, model, stat=DEFAULT_STAT):
+        if isinstance(obs_list, SpectrumObservation):
+            obs_list = [obs_list]
 
-        self.obs = SpectrumObservationList(obs)
+        self.obs_list = SpectrumObservationList(obs_list)
         self.model = model
         self.statistic = stat
         self._fit_range = None
         from gammapy.spectrum import SpectrumResult
         # TODO : Introduce SpectrumResultList or Dict
         self._result = list()
-        for _ in self.obs:
+        for _ in self.obs_list:
             self._result.append(SpectrumResult(obs=_))
 
     @property
     def result(self):
-        """`~gammapy.spectrum.SpectrumResult`"""
+        """List of `~gammapy.spectrum.SpectrumResult` for each observation"""
         return self._result
 
     @property
@@ -122,9 +122,9 @@ class SpectrumFit(object):
         # Loop over observations
         pha = list()
         folded_model = list()
-        nobs = len(self.obs)
+        nobs = len(self.obs_list)
         for ii in range(nobs):
-            temp = self.obs[ii].to_sherpa()
+            temp = self.obs_list[ii].to_sherpa()
             if self.fit_range is not None:
                 temp.notice(fitmin, fitmax)
                 temp.get_background().notice(fitmin, fitmax)
@@ -140,10 +140,10 @@ class SpectrumFit(object):
 
         fit = Fit(data, fitmodel, self.statistic)
         fitresult = fit.fit()
-        log.info(fitresult)
+        log.debug(fitresult)
         # The model instance passed to the Fit now holds the best fit values
         covar = fit.est_errors()
-        log.info(covar)
+        log.debug(covar)
 
         for ii in range(nobs):
             efilter = pha[ii].get_filter()
