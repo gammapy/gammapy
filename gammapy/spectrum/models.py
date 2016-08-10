@@ -6,12 +6,14 @@ import numpy as np
 import astropy.units as u
 from . import integrate_spectrum
 from ..extern.bunch import Bunch
+from ..utils.energy import EnergyBounds
 
 __all__ = [
     'SpectralModel',
     'PowerLaw',
     'PowerLaw2',
     'ExponentialCutoffPowerLaw',
+    'ExponentialCutoffPowerLaw3FGL',
     'LogParabola',
 ]
 
@@ -124,17 +126,19 @@ class SpectralModel(object):
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
 
-        x_min = np.log10(energy_range[0].to('TeV').value)
-        x_max = np.log10(energy_range[1].to('TeV').value)
-        xx = np.logspace(x_min, x_max, n_points) * u.Unit('TeV')
-        yy = self(xx)
-        x = xx.to(energy_unit).value
-        y = yy.to(flux_unit).value
-        y = y * np.power(x, energy_power)
-        flux_unit = u.Unit(flux_unit) * np.power(u.Unit(energy_unit), energy_power)
-        ax.plot(x, y, **kwargs)
-        ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        emin, emax = energy_range
+        energy = EnergyBounds.equal_log_spacing(emin, emax, n_points, energy_unit)
+
+        # evaluate model
+        flux = self(energy).to(flux_unit)
+
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+
+        y = (flux * np.power(energy, energy_power)).to(flux.unit * eunit ** energy_power)
+
+        ax.plot(energy.value, y.value, **kwargs)
+        ax.set_xlabel('Energy [{}]'.format(energy.unit))
+        ax.set_ylabel('Flux [{}]'.format(y.unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
         return ax
@@ -331,6 +335,44 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         except AttributeError:
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
+        return pwl * cutoff
+
+
+class ExponentialCutoffPowerLaw3FGL(SpectralModel):
+    r"""Spectral exponential cutoff power-law model used for 3FGL.
+
+    Note that the parmatrization is different from `ExponentialCutoffPowerLaw`:
+
+    .. math::
+
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(\frac{E_0 - E}{E_{C}})
+
+    Parameters
+    ----------
+    index : float, `~astropy.units.Quantity`
+        :math:`\Gamma`
+    amplitude : float, `~astropy.units.Quantity`
+        :math:`\phi_0`
+    reference : float, `~astropy.units.Quantity`
+        :math:`E_0`
+    ecut : float, `~astropy.units.Quantity`
+        :math:`E_{C}`
+    """
+
+    def __init__(self, index, amplitude, reference, ecut):
+        self.parameters = Bunch(index=index,
+                                amplitude=amplitude,
+                                reference=reference,
+                                ecut=ecut)
+
+    @staticmethod
+    def evaluate(energy, index, amplitude, reference, ecut):
+        pwl = amplitude * (energy / reference) ** (-index)
+        try:
+            cutoff = np.exp((reference - energy) / ecut)
+        except AttributeError:
+            from uncertainties.unumpy import exp
+            cutoff = exp((reference - energy) / ecut)
         return pwl * cutoff
 
 
