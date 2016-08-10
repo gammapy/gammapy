@@ -45,6 +45,8 @@ class SpectralModel(object):
         .. math::
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
+            
+        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum``.
 
         Parameters
         ----------
@@ -143,6 +145,13 @@ class SpectralModel(object):
         ax.set_yscale("log", nonposy='clip')
         return ax
 
+    def to_sherpa(self, name='default'):
+        """Convert to sherpa model
+        
+        To be implemented by subclasses
+        """
+        raise NotImplementedError('{}'.format(self.__class__.__name__))
+
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
@@ -223,7 +232,7 @@ class PowerLaw(SpectralModel):
         lower = (emin / pars.reference) ** val
         return prefactor * (upper - lower)
 
-    def to_sherpa(self, name='default'):
+    def to_sherpa(self, name='ecpl.default'):
         """Return `~sherpa.models.PowLaw1d`
 
         Parameters
@@ -336,6 +345,29 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
+
+    def to_sherpa(self, name='default'):
+        """Return `~sherpa.models.Arithmetic model`
+        
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
+        # NOTE: we cannot use naima.sherpa_models.SherpaModelECPL since it is
+        # meant to be used as abstract base class (Arithmetic model only
+        # initialized in daughter classes
+        # see https://github.com/zblz/naima/blob/master/naima/sherpa_models.py#L149
+        from .sherpa_models import SherpaExponentialCutoffPowerLaw
+        model = SherpaExponentialCutoffPowerLaw(name='ecpl.'+name)
+        pars = self.parameters
+        model.gamma = pars.index.value
+        model.ref = pars.reference.to('keV').value
+        model.ampl = pars.amplitude.to('cm-2 s-1 keV-1').value
+        # Sherpa ExponentialCutoffPowerLaw expects cutoff in 1/TeV
+        model.cutoff = pars.lambda_.to('TeV-1').value
+
+        return model
 
 
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):

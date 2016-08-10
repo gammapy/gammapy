@@ -100,8 +100,16 @@ def test_models(spectrum):
 def test_to_sherpa(spectrum):
     model = spectrum['model']
     try:
-        model.to_sherpa()
-    except AttributeError:
+        sherpa_model = model.to_sherpa()
+    except NotImplementedError:
         pass
+    else:
+        test_e = 1.56 * u.TeV
+        desired = model(test_e)
+        actual = sherpa_model(test_e.to('keV').value) * u.Unit('cm-2 s-1 keV-1')
+        assert_quantity_allclose(actual, desired)
+
+    #test plot
     energy_range = [1, 10] * u.TeV
     model.plot(energy_range=energy_range)
+
