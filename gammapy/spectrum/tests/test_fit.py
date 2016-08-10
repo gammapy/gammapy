@@ -79,3 +79,23 @@ def test_spectral_fit(tmpdir):
     actual = fit.result[0].fit.fit_range[0]
 
     assert_quantity_allclose(actual, desired)
+
+
+@requires_dependency('sherpa')
+@requires_data('gammapy-extra')
+def test_sherpa_fit(tmpdir):
+    #this is to make sure that the written PHA files work with sherpa
+    pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
+    
+    import sherpa.astro.ui as sau
+    from sherpa.models import PowLaw1D
+    sau.load_pha(pha1)
+    sau.set_stat('wstat')
+    model = PowLaw1D('powlaw1d.default')
+    model.ref = 1e9
+    model.ampl = 1
+    model.gamma = 2
+    sau.set_model(model * 1e-20)
+    sau.fit()
+    assert_allclose(model.pars[0].val, 2.0202, atol=1e-4) 
+    assert_allclose(model.pars[2].val, 2.3568, atol=1e-4) 
