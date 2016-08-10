@@ -152,7 +152,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
                                            edisp=edisp,
                                            livetime=livetime,
                                            e_reco=e_reco_desired)
-        
+
         npred.plot_hist()
         plt.show()
     """
@@ -172,7 +172,7 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
 def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
     """
     Integrate 1d function using the log-log trapezoidal rule. 
-    
+
     Parameters
     ----------
     func : callable
@@ -212,9 +212,9 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
     """
     Integrate along the given axis using the composite trapezoidal rule in
     loglog space.
-    
+
     Integrate `y` (`x`) along given axis in loglog space.
-    
+
     Parameters
     ----------
     y : array_like

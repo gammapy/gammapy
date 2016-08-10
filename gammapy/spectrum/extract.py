@@ -113,7 +113,7 @@ class SpectrumExtraction(object):
 
     def estimate_background(self, config):
         """Create `~gammapy.background.BackgroundEstimate`
-        
+
         In case no background estimate was passed on initialization, this
         method creates one given a dict of parameters. 
 
@@ -231,10 +231,10 @@ class SpectrumExtraction(object):
 
     def define_energy_threshold(self, method_lo_threshold='area_max', **kwargs):
         """Set energy threshold
-        
+
         Set the high and low energy threshold for each observation based on a
         chosen method.
-        
+
         Available methods for setting the low energy threshold
 
         * area_max : Set energy threshold at x percent of the maximum effective

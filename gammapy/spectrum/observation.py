@@ -289,7 +289,7 @@ class SpectrumObservation(object):
         associated background vectors and IRFs are also translated to sherpa
         objects and appended to the PHA instance
         """
-        pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id)) 
+        pha = self.on_vector.to_sherpa(name='pha_obs{}'.format(self.obs_id))
         arf = self.aeff.to_sherpa(name='arf_obs{}'.format(self.obs_id))
         if self.edisp is not None:
             rmf = self.edisp.to_sherpa(name='rmf_obs{}'.format(self.obs_id))
@@ -303,7 +303,7 @@ class SpectrumObservation(object):
             bkg.set_response(arf, rmf)
             pha.set_background(bkg, 1)
 
-        #see https://github.com/sherpa/sherpa/blob/36c1f9dabb3350b64d6f54ab627f15c862ee4280/sherpa/astro/data.py#L1400
+        # see https://github.com/sherpa/sherpa/blob/36c1f9dabb3350b64d6f54ab627f15c862ee4280/sherpa/astro/data.py#L1400
         pha._set_initial_quantity()
         return pha
 

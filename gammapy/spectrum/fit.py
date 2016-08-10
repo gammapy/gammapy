@@ -28,7 +28,7 @@ class SpectrumFit(object):
         Observations to fit
     model : `~gammapy.spectrum.models.SpectralModel`, `~sherpa.models.ArithmeticModel`
         Model to be fit
-    stat : str, `~sherpa.stats.Stat` 
+    stat : str, `~sherpa.stats.Stat`
         Fit statistic to be used
     """
     FLUX_FACTOR = 1e-20

@@ -58,7 +58,7 @@ class CountsSpectrum(NDDataArray):
 
     def to_table(self):
         """Convert to `~astropy.table.Table`
-        
+
         http://gamma-astro-data-formats.readthedocs.io/en/latest/ogip/index.html
         """
         channel = np.arange(self.energy.nbins, dtype=np.int16)
@@ -81,7 +81,7 @@ class CountsSpectrum(NDDataArray):
 
     def fill(self, events):
         """Fill with list of events 
-        
+
         Parameters
         ----------
         events: `~astropy.units.Quantity`, `gammapy.data.EventList`, 
@@ -164,7 +164,7 @@ class CountsSpectrum(NDDataArray):
 
     def plot_hist(self, ax=None, energy_unit='TeV', show_energy=None, **kwargs):
         """Plot as histogram
-        
+
         kwargs are forwarded to `~matplotlib.pyplot.hist`
 
         Parameters
@@ -205,7 +205,7 @@ class CountsSpectrum(NDDataArray):
 
 class PHACountsSpectrum(CountsSpectrum):
     """OGIP PHA equivalent
-    
+
     The ``bkg`` flag controls wheater the PHA counts spectrum represents a
     background estimate or not (this slightly affectes the FITS header
     information when writing to disk).
@@ -332,10 +332,10 @@ class PHACountsSpectrum(CountsSpectrum):
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             meta.update(is_bkg=True)
         return cls(energy=ebounds, data=counts, **meta)
-    
+
     def to_sherpa(self, name):
         """Return `~sherpa.astro.data.DataPHA`
-        
+
         Parameters
         ----------
         name : str
@@ -346,17 +346,16 @@ class PHACountsSpectrum(CountsSpectrum):
 
         table = self.to_table()
         kwargs = dict(
-            name = name, 
-            channel = (table['CHANNEL'].data + 1).astype(SherpaFloat), 
-            counts = table['COUNTS'].data.astype(SherpaFloat), 
-            quality = table['QUALITY'].data,
-            exposure = self.livetime.to('s').value,
-            backscal = self.backscal,
-            areascal = 1.,
-            syserror = None,
-            staterror = None,
-            grouping = None,
+            name=name,
+            channel=(table['CHANNEL'].data + 1).astype(SherpaFloat),
+            counts=table['COUNTS'].data.astype(SherpaFloat),
+            quality=table['QUALITY'].data,
+            exposure=self.livetime.to('s').value,
+            backscal=self.backscal,
+            areascal=1.,
+            syserror=None,
+            staterror=None,
+            grouping=None,
         )
 
         return DataPHA(**kwargs)
-        
