@@ -80,17 +80,42 @@ class DifferentialFluxPoints(Table):
 
         kwargs.setdefault('fmt', 'o')
         ax = plt.gca() if ax is None else ax
-        x = self['ENERGY'].quantity.to(energy_unit).value
-        y = self['DIFF_FLUX'].quantity.to(flux_unit).value
-        yh = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit).value
-        yl = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit).value
-        y, yh, yl = np.asarray([y, yh, yl]) * np.power(x, energy_power)
 
-        xh = self['ENERGY_ERR_HI'].quantity.to(energy_unit).value
-        xl = self['ENERGY_ERR_LO'].quantity.to(energy_unit).value
+        energy = self['ENERGY'].quantity.to(energy_unit)
+        energy_hi = self['ENERGY_ERR_HI'].quantity.to(energy_unit)
+        energy_lo = self['ENERGY_ERR_LO'].quantity.to(energy_unit)
 
-        flux_unit = Unit(flux_unit) * np.power(Unit(energy_unit), energy_power)
-        ax.errorbar(x, y, yerr=(yl, yh), xerr=(xl, xh), **kwargs)
+        flux = self['DIFF_FLUX'].quantity.to(flux_unit)
+        flux_lo = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit)
+        flux_hi = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
+
+        eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
+        yunit = flux.unit * eunit ** energy_power
+        y = (flux * np.power(energy, energy_power)).to(yunit)
+        y_hi = (flux_hi * np.power(energy, energy_power)).to(yunit)
+        y_lo = (flux_lo * np.power(energy, energy_power)).to(yunit)
+
+        # plot flux points
+        is_ul = np.isnan(flux_lo).astype('bool')
+        yerr = (y_lo.value[~is_ul], y_hi.value[~is_ul])
+        xerr = (energy_lo.value[~is_ul], energy_hi.value[~is_ul])
+
+        ax.errorbar(energy.value[~is_ul], y.value[~is_ul],
+                    yerr=yerr, xerr=xerr, **kwargs)
+
+        # plot upper limit flux points
+        xerr = (energy_lo.value[is_ul], energy_hi.value[is_ul])
+
+        ul_kwargs = {'marker': 'v',
+                     'label': None}
+
+        kwargs.setdefault('ms', 10)
+        kwargs.setdefault('mec', 'None')
+        kwargs.update(ul_kwargs)
+
+        # UL are typically shown as 2 * sigma
+        ax.errorbar(energy.value[is_ul], 2 * y_hi.value[is_ul], xerr=xerr, **kwargs)
+
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('Flux [{}]'.format(flux_unit))
         ax.set_xscale("log", nonposx='clip')
