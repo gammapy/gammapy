@@ -9,7 +9,8 @@ from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
 from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints
-from ..spectrum.models import PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw, LogParabola
+from ..spectrum.models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
+                               ExponentialCutoffPowerLaw3FGL, LogParabola)
 from ..spectrum.powerlaw import power_law_flux
 from ..datasets import gammapy_extra
 from .core import SourceCatalog, SourceCatalogObject
@@ -255,8 +256,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
 
         elif spec_type == 'PLExpCutoff':
             pars['index'] = Quantity(self.data['Spectral_Index'], '')
-            pars['lambda_'] = Quantity(1. / self.data['Cutoff'], 'MeV-1')
-            return ExponentialCutoffPowerLaw(**pars)
+            pars['ecut'] = Quantity(self.data['Cutoff'], 'MeV')
+            return ExponentialCutoffPowerLaw3FGL(**pars)
 
         elif spec_type == 'LogParabola':
             pars['alpha'] = Quantity(self.data['Spectral_Index'], '')
