@@ -306,6 +306,46 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
                                               flux_err[:, 0])
 
+    @property
+    def spectrum(self):
+        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
+
+        TODO: remove!???
+        """
+        data = self.data
+        model = self.spectral_model
+
+        spec_type = self.data['SpectrumType'].strip()
+
+        if spec_type == 'PowerLaw':
+            par_names = ['index', 'amplitude']
+            par_errs = [data['Unc_Spectral_Index'],
+                        data['Unc_Flux_Density']]
+        elif spec_type == 'PLExpCutoff':
+            par_names = ['index', 'amplitude', 'ecut']
+            par_errs = [data['Unc_Spectral_Index'],
+                        data['Unc_Flux_Density'],
+                        data['Unc_Cutoff']]
+        elif spec_type == 'LogParabola':
+            par_names = ['amplitude', 'alpha', 'beta']
+            par_errs = [data['Unc_Flux_Density'],
+                        data['Unc_Spectral_Index'],
+                        data['Unc_beta']]
+        elif spec_type == "PLSuperExpCutoff":
+            # TODO Implement super exponential cut off
+            raise NotImplementedError
+        else:
+            raise ValueError('Spectral model {} not available'.format(spec_type))
+
+        covariance = np.diag(par_errs) ** 2
+
+        return SpectrumFitResult(
+            model=model,
+            fit_range=self.energy_range,
+            covariance=covariance,
+            covar_axis=par_names,
+        )
+
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
             raise ValueError("Must be one of the following: 'Flux', 'Unc_Flux', 'nuFnu'")
@@ -383,8 +423,8 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         """
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
-        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
-                                              flux + flux_err[:, 0])
+        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
+                                              flux_err[:, 0])
 
     @property
     def spectral_model(self):
@@ -399,6 +439,30 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
         pars['emin'], pars['emax'] = self.energy_range
         pars['index'] = g
         return PowerLaw2(**pars)
+
+    @property
+    def spectrum(self):
+        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
+
+        TODO: remove!???
+        """
+        data = self.data
+        model = self.spectral_model
+
+        covariance = np.diag([
+            data['Unc_Spectral_Index'] ** 2,
+            data['Unc_Flux50'] ** 2,
+            0,
+        ])
+
+        covar_axis = ['index', 'amplitude']
+
+        return SpectrumFitResult(
+            model=model,
+            fit_range=self.energy_range,
+            covariance=covariance,
+            covar_axis=covar_axis,
+        )
 
 
 class SourceCatalog3FGL(SourceCatalog):
