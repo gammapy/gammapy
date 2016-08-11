@@ -204,7 +204,7 @@ class SpectrumFitResult(object):
         """
         print(str(self))
 
-    def butterfly(self, energy):
+    def butterfly(self, energy, flux_unit='TeV-1 cm-2 s-1'):
         """
         Compute butterfly.
 
@@ -212,8 +212,8 @@ class SpectrumFitResult(object):
         ----------
         energy : `~astropy.units.Quantity`
             Energies at which to evaluate the butterfly.
-        covar : `~numpy.ndarray`
-            Covariance matrix.
+        flux_unit : str
+            Flux unit for the butterfly.
 
         Returns
         -------
@@ -226,12 +226,15 @@ class SpectrumFitResult(object):
 
         butterfly = SpectrumButterfly()
         butterfly['energy'] = energy
-        butterfly['flux'] = flux
+        butterfly['flux'] = flux.to(flux_unit)
 
         # compute uncertainties
         umodel = self.model_with_uncertainties
         values = umodel(energy.value)
-        flux_err = u.Quantity(unumpy.std_devs(values), flux.unit)
+
+        # unit conversion factor, in case it doesn't match
+        conversion_factor =  flux.to(flux_unit).value / unumpy.nominal_values(values)
+        flux_err = u.Quantity(unumpy.std_devs(values), flux_unit) * conversion_factor
 
         butterfly['flux_lo'] = flux - flux_err
         butterfly['flux_hi'] = flux + flux_err
