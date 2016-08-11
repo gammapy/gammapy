@@ -188,7 +188,7 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     pardict = dict(gamma=['index', u.Unit('')],
                    ref=['reference', u.keV],
                    ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')],
-                   cutoff=['lambda_', u.Unit('keV-1')])
+                   cutoff=['lambda_', u.Unit('TeV-1')])
     kwargs = dict()
 
     for par in shmodel.pars:

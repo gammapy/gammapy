@@ -45,7 +45,7 @@ class SpectralModel(object):
         .. math::
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
-            
+
         kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum``.
 
         Parameters
@@ -147,7 +147,7 @@ class SpectralModel(object):
 
     def to_sherpa(self, name='default'):
         """Convert to sherpa model
-        
+
         To be implemented by subclasses
         """
         raise NotImplementedError('{}'.format(self.__class__.__name__))
@@ -285,7 +285,6 @@ class PowerLaw2(SpectralModel):
         bottom = emax ** (-index + 1) - emin ** (-index + 1)
         return amplitude * (top / bottom) * np.power(energy, -index)
 
-
     def integral(self, emin, emax):
         r"""
         Integrate power law analytically.
@@ -348,7 +347,7 @@ class ExponentialCutoffPowerLaw(SpectralModel):
 
     def to_sherpa(self, name='default'):
         """Return `~sherpa.models.Arithmetic model`
-        
+
         Parameters
         ----------
         name : str, optional
@@ -356,10 +355,10 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         """
         # NOTE: we cannot use naima.sherpa_models.SherpaModelECPL since it is
         # meant to be used as abstract base class (Arithmetic model only
-        # initialized in daughter classes
+        # initialized in daughter classes)
         # see https://github.com/zblz/naima/blob/master/naima/sherpa_models.py#L149
         from .sherpa_models import SherpaExponentialCutoffPowerLaw
-        model = SherpaExponentialCutoffPowerLaw(name='ecpl.'+name)
+        model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
         model.gamma = pars.index.value
         model.ref = pars.reference.to('keV').value

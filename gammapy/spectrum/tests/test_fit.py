@@ -80,6 +80,18 @@ def test_spectral_fit(tmpdir):
 
     assert_quantity_allclose(actual, desired)
 
+    # Test ECPL
+    ecpl = models.ExponentialCutoffPowerLaw(
+        index = 2 * u.Unit(''),
+        amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
+        reference = 1 * u.TeV,
+        lambda_ = 0.1 / u.TeV
+    )
+
+    fit = SpectrumFit(obs_list, ecpl)
+    fit.fit()
+    assert_quantity_allclose(fit.result[0].fit.model.parameters.lambda_,
+                             0.06321 / u.TeV, rtol=1e-3)
 
 @requires_dependency('sherpa')
 @requires_data('gammapy-extra')

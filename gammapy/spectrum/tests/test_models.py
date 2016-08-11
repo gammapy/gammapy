@@ -76,6 +76,7 @@ TEST_MODELS = [
 ]
 
 
+@requires_dependency('uncertainties')
 @pytest.mark.parametrize(
     "spectrum", TEST_MODELS, ids=[_['name'] for _ in TEST_MODELS]
 )
@@ -109,7 +110,6 @@ def test_to_sherpa(spectrum):
         actual = sherpa_model(test_e.to('keV').value) * u.Unit('cm-2 s-1 keV-1')
         assert_quantity_allclose(actual, desired)
 
-    #test plot
+    # test plot
     energy_range = [1, 10] * u.TeV
     model.plot(energy_range=energy_range)
-
