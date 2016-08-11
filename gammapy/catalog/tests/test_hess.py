@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 from numpy.testing.utils import assert_allclose
+from astropy.tests.helper import assert_quantity_allclose
+from astropy.units import Quantity
 from ...utils.testing import requires_data, requires_dependency
 from ..hess import SourceCatalogHGPS
 
@@ -76,3 +78,32 @@ class TestSourceCatalogObjectHGPS:
 
         energy_err = err / val ** 2
         assert_allclose(err, energy.std_dev)
+
+    @requires_dependency('matplotlib')
+    def test_model_plot(self):
+        model = self.source.spectral_model
+        erange = Quantity([1, 10], 'TeV')
+        model.plot(erange)
+
+    def test_model(self):
+        model = self.source.spectral_model
+        pars = model.parameters
+        assert_quantity_allclose(pars.amplitude, Quantity(1.716531924e-11, 'TeV-1 cm-2 s-1'))
+        assert_quantity_allclose(pars.index, Quantity(2.3770857316, ''))
+        assert_quantity_allclose(pars.reference, Quantity(1.1561109149, 'TeV'))
+
+        emin, emax = Quantity([1, 1E10], 'TeV')
+        desired =  Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
+        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
+
+    def test_ecpl_model(self):
+        model = self.cat['HESS J0835-455'].spectral_model
+        pars = model.parameters
+        assert_quantity_allclose(pars.amplitude, Quantity(6.408420542586617e-12, 'TeV-1 cm-2 s-1'))
+        assert_quantity_allclose(pars.index, Quantity(1.3543991614920847, ''))
+        assert_quantity_allclose(pars.reference, Quantity(1.696938754239, 'TeV'))
+        assert_quantity_allclose(pars.lambda_, Quantity(0.081517637, 'TeV-1'))
+
+        emin, emax = Quantity([1, 1E10], 'TeV')
+        desired =  Quantity(self.source.data['Flux_Spec_PL_Int_1TeV'], 'cm-2 s-1')
+        assert_quantity_allclose(model.integral(emin, emax), desired, rtol=0.01)
