@@ -276,18 +276,22 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         """
         Differential flux points (`~gammapy.spectrum.DifferentialFluxPoints`).
         """
-
         energy = self._ebounds.log_centers
+        energy_err_lo = energy - self._ebounds.lower_bounds
+        energy_err_hi = self._ebounds.upper_bounds - energy
 
         nuFnu = self._get_flux_values('nuFnu', 'erg cm-2 s-1')
-        diff_flux = (nuFnu * energy ** -2).to('erg-1 cm-2 s-1')
+        diff_flux = (nuFnu * energy ** -2).to('TeV-1 cm-2 s-1')
 
         # Get relativ error on integral fluxes
         int_flux_points = self.flux_points_integral
         diff_flux_err_hi = diff_flux * int_flux_points['INT_FLUX_ERR_HI_%'] / 100
         diff_flux_err_lo = diff_flux * int_flux_points['INT_FLUX_ERR_LO_%'] / 100
 
-        return DifferentialFluxPoints.from_arrays(energy=energy, diff_flux=diff_flux,
+        return DifferentialFluxPoints.from_arrays(energy=energy,
+                                                  energy_err_hi=energy_err_hi,
+                                                  energy_err_lo=energy_err_lo,
+                                                  diff_flux=diff_flux,
                                                   diff_flux_err_lo=diff_flux_err_lo,
                                                   diff_flux_err_hi=diff_flux_err_hi)
 
@@ -299,8 +303,8 @@ class SourceCatalogObject3FGL(SourceCatalogObject):
         flux = self._get_flux_values()
         flux_err = self._get_flux_values('Unc_Flux')
 
-        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux + flux_err[:, 1],
-                                              flux + flux_err[:, 0])
+        return IntegralFluxPoints.from_arrays(self._ebounds, flux, flux_err[:, 1],
+                                              flux_err[:, 0])
 
     def _get_flux_values(self, prefix='Flux', unit='cm-2 s-1'):
         if prefix not in ['Flux', 'Unc_Flux', 'nuFnu']:
