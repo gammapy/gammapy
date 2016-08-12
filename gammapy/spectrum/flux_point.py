@@ -20,6 +20,9 @@ class DifferentialFluxPoints(Table):
     Column names: ENERGY, ENERGY_ERR_HI, ENERGY_ERR_LO,
     DIFF_FLUX, DIFF_FLUX_ERR_HI, DIFF_FLUX_ERR_LO
     For a complete documentation see :ref:`gadf:flux-points`
+
+    Upper limits are stored as in the Fermi catalogs. I.e. the lower error is set
+    to `NaN`, while the upper error represents the 1 sigma upper limit.
     """
 
     @classmethod
