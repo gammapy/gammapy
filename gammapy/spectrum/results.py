@@ -204,7 +204,7 @@ class SpectrumFitResult(object):
         """
         print(str(self))
 
-    def butterfly(self, energy):
+    def butterfly(self, energy, flux_unit='TeV-1 cm-2 s-1'):
         """
         Compute butterfly.
 
@@ -212,8 +212,8 @@ class SpectrumFitResult(object):
         ----------
         energy : `~astropy.units.Quantity`
             Energies at which to evaluate the butterfly.
-        covar : `~numpy.ndarray`
-            Covariance matrix.
+        flux_unit : str
+            Flux unit for the butterfly.
 
         Returns
         -------
@@ -226,54 +226,19 @@ class SpectrumFitResult(object):
 
         butterfly = SpectrumButterfly()
         butterfly['energy'] = energy
-        butterfly['flux'] = flux
+        butterfly['flux'] = flux.to(flux_unit)
 
         # compute uncertainties
         umodel = self.model_with_uncertainties
         values = umodel(energy.value)
-        flux_err = u.Quantity(unumpy.std_devs(values), flux.unit)
+
+        # unit conversion factor, in case it doesn't match
+        conversion_factor =  flux.to(flux_unit).value / unumpy.nominal_values(values)
+        flux_err = u.Quantity(unumpy.std_devs(values), flux_unit) * conversion_factor
 
         butterfly['flux_lo'] = flux - flux_err
         butterfly['flux_hi'] = flux + flux_err
         return butterfly
-
-    def plot_butterfly(self, energy_range, ax=None,
-                       energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                       energy_power=0, n_points=500, **kwargs):
-        """Plot best fit model including error band (butterfly)
-
-        kwargs are forwarded to :func:`~matplotlib.pyplot.errorbar`
-
-        TODO: Move to gammapy.spectrum.models
-
-        Parameters
-        ----------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        energy_range : `~astropy.units.Quantity`
-            Plot range
-        energy_unit : str, `~astropy.units.Unit`, optional
-            Unit of the energy axis
-        flux_unit : str, `~astropy.units.Unit`, optional
-            Unit of the flux axis
-        energy_power : int, optional
-            Power of energy to multiply flux axis with
-        n_points : int, optional
-            Number of evaluation nodes
-
-        Returns
-        -------
-        ax : `~matplotlib.axes.Axes`, optional
-            Axis
-        """
-        x_min = np.log10(energy_range[0].to('keV').value)
-        x_max = np.log10(energy_range[1].to('keV').value)
-        energy = np.logspace(x_min, x_max, n_points) * u.Unit('keV')
-
-        model = self.model_with_uncertainties
-        butterfly = model.butterfly(energy.value)
-        ax = butterfly.plot()
-        return ax
 
 
 class SpectrumResult(object):

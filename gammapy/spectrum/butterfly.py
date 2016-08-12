@@ -19,13 +19,12 @@ class SpectrumButterfly(QTable):
     - ``flux_hi``
     """
 
-    def plot(self, energy_range=None, ax=None, energy_power=0, **kwargs):
+    def plot(self, energy_range=None, ax=None, energy_power=0,
+             energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):
         """Plot.
 
         ``kwargs`` are passed to ``matplotlib.pyplot.errorbar``.
         """
-        if energy_range is None:
-            energy_range = np.min(self['energy']), np.max(self['energy'])
 
         import matplotlib.pyplot as plt
         ax = plt.gca() if ax is None else ax
@@ -34,12 +33,21 @@ class SpectrumButterfly(QTable):
         kwargs.setdefault('alpha', 0.2)
         kwargs.setdefault('linewidth', 0)
 
-        x = self['energy']
-        y_lo = self['flux_lo'] * np.power(x, energy_power)
-        y_hi = self['flux_hi'] * np.power(x, energy_power)
+        energy = self['energy'].to(energy_unit)
+        flux_lo = self['flux_lo'].to(flux_unit)
+        flux_hi = self['flux_hi'].to(flux_unit)
+        y_lo = flux_lo * np.power(energy, energy_power)
+        y_hi = flux_hi * np.power(energy, energy_power)
 
-        where = (y_hi > 0) & (x >= energy_range[0]) & (x <= energy_range[1])
-        ax.fill_between(x.value, y_lo.value, y_hi.value, where=where, **kwargs)
+        eunit = [_ for _ in flux_lo.unit.bases if _.physical_type == 'energy'][0]
+        y_lo = y_lo.to(eunit ** energy_power * flux_lo.unit)
+        y_hi = y_hi.to(eunit ** energy_power * flux_hi.unit)
+
+        if energy_range is None:
+            energy_range = np.min(energy), np.max(energy)
+
+        where = (y_hi > 0) & (energy >= energy_range[0]) & (energy <= energy_range[1])
+        ax.fill_between(energy.value, y_lo.value, y_hi.value, where=where, **kwargs)
 
         ax.set_xlabel('Energy [{}]'.format(self['energy'].unit))
         ax.set_ylabel('Flux [{}]'.format(y_lo.unit))
