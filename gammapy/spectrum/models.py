@@ -8,6 +8,13 @@ from . import integrate_spectrum
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 
+# This cannot be made a delayed import because the pytest matrix fails if it is
+try:
+    from .sherpa_models import SherpaExponentialCutoffPowerLaw
+except ImportError:
+    pass
+
+
 __all__ = [
     'SpectralModel',
     'PowerLaw',
@@ -357,7 +364,6 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         # meant to be used as abstract base class (Arithmetic model only
         # initialized in daughter classes)
         # see https://github.com/zblz/naima/blob/master/naima/sherpa_models.py#L149
-        from .sherpa_models import SherpaExponentialCutoffPowerLaw
         model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
         model.gamma = pars.index.value
