@@ -89,7 +89,9 @@ class DifferentialFluxPoints(Table):
         energy_lo = self['ENERGY_ERR_LO'].quantity.to(energy_unit)
 
         flux = self['DIFF_FLUX'].quantity.to(flux_unit)
-        flux_lo = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit)
+
+        # lower flux error is stored with negative sign, account for that
+        flux_lo = np.abs(self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit))
         flux_hi = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
 
         eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
@@ -103,6 +105,7 @@ class DifferentialFluxPoints(Table):
         yerr = (y_lo.value[~is_ul], y_hi.value[~is_ul])
         xerr = (energy_lo.value[~is_ul], energy_hi.value[~is_ul])
 
+        kwargs.setdefault('marker', 'None')
         ax.errorbar(energy.value[~is_ul], y.value[~is_ul],
                     yerr=yerr, xerr=xerr, **kwargs)
 
@@ -120,7 +123,10 @@ class DifferentialFluxPoints(Table):
         ax.errorbar(energy.value[is_ul], 2 * y_hi.value[is_ul], xerr=xerr, **kwargs)
 
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        if energy_power > 0:
+            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, yunit))
+        else:
+            ax.set_ylabel('Flux [{}]'.format(yunit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
         return ax
@@ -175,7 +181,9 @@ class IntegralFluxPoints(Table):
         energy_max = self['ENERGY_MAX'].to('TeV').value
         int_flux = self['INT_FLUX'].to('cm-2 s-1').value
         # Use upper error as symmetric value
-        int_flux_err = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
+        int_flux_err_hi = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
+        int_flux_err_lo = self['INT_FLUX_ERR_LO'].to('cm-2 s-1').value
+
         val = compute_differential_flux_points(x_method=x_method,
                                                y_method=y_method,
                                                model=model,
@@ -183,14 +191,26 @@ class IntegralFluxPoints(Table):
                                                energy_min=energy_min,
                                                energy_max=energy_max,
                                                int_flux=int_flux,
-                                               int_flux_err=int_flux_err)
+                                               int_flux_err_hi=int_flux_err_hi,
+                                               int_flux_err_lo=int_flux_err_lo)
 
         e = val['ENERGY'] * Unit('TeV')
         f = val['DIFF_FLUX'] * Unit('TeV-1 cm-2 s-1')
-        f_err = val['DIFF_FLUX_ERR'] * Unit('TeV-1 cm-2 s-1')
-        diff_flux = DifferentialFluxPoints.from_arrays(energy=e, diff_flux=f,
-                                                       diff_flux_err_lo=f_err,
-                                                       diff_flux_err_hi=f_err)
+        f_err_hi = val['DIFF_FLUX_ERR_HI'] * Unit('TeV-1 cm-2 s-1')
+        f_err_lo = val['DIFF_FLUX_ERR_LO'] * Unit('TeV-1 cm-2 s-1')
+
+        energy_min = Quantity(self['ENERGY_MIN'])
+        energy_max = Quantity(self['ENERGY_MAX'])
+
+        # assume symmetric errors
+        diff_flux = DifferentialFluxPoints.from_arrays(energy=e,
+                                                       energy_err_hi=energy_max - e,
+                                                       energy_err_lo=e - energy_min,
+                                                       diff_flux=f,
+                                                       diff_flux_err_lo=f_err_lo,
+                                                       diff_flux_err_hi=f_err_hi)
+
+        return diff_flux
 
         return diff_flux
 
@@ -199,7 +219,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
                                      table=None, model=None,
                                      spectral_index=None, energy_min=None,
                                      energy_max=None, int_flux=None,
-                                     int_flux_err=None):
+                                     int_flux_err_hi=None, int_flux_err_lo=None):
     """Creates differential flux points table from integral flux points table.
 
     Parameters
@@ -216,7 +236,9 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         If table not defined, integral flux in bin(s) input directly. If array,
         energy_min, energy_max must be either arrays of the same shape
         (for differing energy bins) or floats (for the same energy bin).
-    int_flux_err : float, array_like
+    int_flux_err_hi : float, array_like
+        Type must be the same as for int_flux
+    int_flux_err_lo : float, array_like
         Type must be the same as for int_flux
     x_method : {'lafferty', 'log_center', 'table'}
         Flux point energy computation method; either Lafferty & Wyatt
@@ -272,7 +294,8 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         energy_max = np.asanyarray(table['ENERGY_MAX'])
         int_flux = np.asanyarray(table['INT_FLUX'])
         try:
-            int_flux_err = np.asanyarray(table['INT_FLUX_ERR'])
+            int_flux_err_hi = np.asanyarray(table['INT_FLUX_ERR_HI'])
+            int_flux_err_lo = np.asanyarray(table['INT_FLUX_ERR_LO'])
         except:
             pass
     # Compute x point
@@ -310,9 +333,13 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
     try:
         # TODO: more rigorous implementation of error propagation should be implemented
         # I.e. based on MC simulation rather than gaussian error assumption
-        err = int_flux_err / int_flux
-        diff_flux_err = err * diff_flux
-        table['DIFF_FLUX_ERR'] = diff_flux_err
+        err_hi = int_flux_err_hi / int_flux
+        diff_flux_err_hi = err_hi * diff_flux
+        table['DIFF_FLUX_ERR_HI'] = diff_flux_err_hi
+
+        err_lo = int_flux_err_lo / int_flux
+        diff_flux_err_lo = err_lo * diff_flux
+        table['DIFF_FLUX_ERR_LO'] = diff_flux_err_lo
     except:
         pass
 

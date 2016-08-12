@@ -301,7 +301,7 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
     if errors:
         if counts is None:
             # Counts cube required to calculate poisson errors
-            errors = np.ones_like([values]) * standard_error
+            errors = np.ones_like(values) * standard_error
         else:
             errors = []
             for i in np.arange(counts.data.shape[0]):
@@ -311,16 +311,17 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
                     bin = counts.data[i][mask].sum()
                 r_error = 1. / (np.sqrt(bin.value))
                 errors.append(r_error)
-            errors = np.array([errors])
+            errors = np.array(errors)
     else:
-        errors = np.zeros_like([values])
+        errors = np.zeros_like(values)
 
     if flux_type == 'differential':
         energy = cube.energy
         table = Table()
-        table['ENERGY'] = energy,
-        table['DIFF_FLUX'] = Quantity(values, cube.data.unit),
-        table['DIFF_FLUX_ERR'] = Quantity(errors * values, cube.data.unit)
+        table['ENERGY'] = energy
+        table['DIFF_FLUX'] = Quantity(values, cube.data.unit)
+        table['DIFF_FLUX_ERR_HI'] = Quantity(errors * values, cube.data.unit)
+        table['DIFF_FLUX_ERR_LO'] = Quantity(-errors * values, cube.data.unit)
 
     elif flux_type == 'integral':
 
@@ -331,7 +332,8 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
                                                  spectral_index=spectral_index,
                                                  energy_min=emins, energy_max=emaxs,
                                                  int_flux=values,
-                                                 int_flux_err=errors * values)
+                                                 int_flux_err_hi=errors * values,
+                                                 int_flux_err_lo=-errors * values)
 
     else:
         raise ValueError('Unknown flux_type: {0}'.format(flux_type))

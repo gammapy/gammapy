@@ -138,7 +138,10 @@ class SpectralModel(object):
 
         ax.plot(energy.value, y.value, **kwargs)
         ax.set_xlabel('Energy [{}]'.format(energy.unit))
-        ax.set_ylabel('Flux [{}]'.format(y.unit))
+        if energy_power > 0:
+            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, y.unit))
+        else:
+            ax.set_ylabel('Flux [{}]'.format(y.unit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
         return ax

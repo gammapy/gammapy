@@ -127,15 +127,15 @@ def test_cube_sed1():
 
     sed_table1 = cube_sed(spec_cube, mask, flux_type='differential')
     assert_allclose(sed_table1['DIFF_FLUX'].data, 2560)  # * np.ones(30))
-    assert_allclose(sed_table1['DIFF_FLUX_ERR'].data, 0)
+    assert_allclose(sed_table1['DIFF_FLUX_ERR_HI'].data, 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='differential',
                           errors=True, standard_error=0.1)
-    assert_allclose(sed_table2['DIFF_FLUX_ERR'].data, 256)
+    assert_allclose(sed_table2['DIFF_FLUX_ERR_HI'].data, 256)
 
     sed_table3 = cube_sed(spec_cube, mask, flux_type='differential',
                           errors=True, counts=counts)
-    assert_allclose(sed_table3['DIFF_FLUX_ERR'].data, 2560 * np.sqrt(1. / 256))
+    assert_allclose(sed_table3['DIFF_FLUX_ERR_HI'].data, 2560 * np.sqrt(1. / 256))
 
 
 @requires_data('gammapy-extra')
@@ -158,16 +158,16 @@ def test_cube_sed2():
 
     assert_allclose(sed_table1['ENERGY'][0], 56.95239033587774)
     assert_allclose(sed_table1['DIFF_FLUX'][0], 170.86224025271986)
-    assert_allclose(sed_table1['DIFF_FLUX_ERR'], 0)
+    assert_allclose(sed_table1['DIFF_FLUX_ERR_HI'], 0)
 
     sed_table2 = cube_sed(spec_cube, mask, flux_type='integral',
                           errors=True, standard_error=0.1)
 
-    assert_allclose(sed_table2['DIFF_FLUX_ERR'][0],
+    assert_allclose(sed_table2['DIFF_FLUX_ERR_HI'][0],
                     0.1 * sed_table2['DIFF_FLUX'][0])
 
     sed_table3 = cube_sed(spec_cube, mask, flux_type='integral',
                           errors=True, counts=counts)
 
-    assert_allclose(sed_table3['DIFF_FLUX_ERR'][0],
+    assert_allclose(sed_table3['DIFF_FLUX_ERR_HI'][0],
                     np.sqrt(1. / 256) * sed_table3['DIFF_FLUX'][0])
