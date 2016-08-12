@@ -110,7 +110,8 @@ def test_array_broadcasting(index, x_method, y_method):
                                              energy_min=energy_min,
                                              energy_max=energy_max,
                                              int_flux=int_flux,
-                                             int_flux_err=int_flux_err)
+                                             int_flux_err_hi=int_flux_err,
+                                             int_flux_err_lo=int_flux_err,)
     # Check output sized
     energy = table['ENERGY']
     actual = len(energy)
@@ -165,7 +166,8 @@ def test_compute_differential_flux_points(x_method, y_method):
         int_flux = int_flux_model(energy_min, energy_max)
     int_flux_err = 0.1 * int_flux
     table['INT_FLUX'] = int_flux
-    table['INT_FLUX_ERR'] = int_flux_err
+    table['INT_FLUX_ERR_HI'] = int_flux_err
+    table['INT_FLUX_ERR_LO'] = -int_flux_err
 
     result_table = compute_differential_flux_points(x_method,
                                                     y_method,
@@ -180,7 +182,7 @@ def test_compute_differential_flux_points(x_method, y_method):
     actual = result_table['DIFF_FLUX'].data
     assert_allclose(actual, desired, rtol=1e-2)
     # Test error
-    actual = result_table['DIFF_FLUX_ERR'].data
+    actual = result_table['DIFF_FLUX_ERR_HI'].data
     desired = 0.1 * result_table['DIFF_FLUX'].data
     assert_allclose(actual, desired, rtol=1e-3)
 

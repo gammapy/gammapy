@@ -4,14 +4,15 @@ from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import pytest, assert_quantity_allclose
 from ..fermi import SourceCatalog3FGL, SourceCatalog2FHL
-from ...spectrum.models import PowerLaw, ExponentialCutoffPowerLaw, LogParabola
+from ...spectrum.models import (PowerLaw, ExponentialCutoffPowerLaw, LogParabola,
+                                ExponentialCutoffPowerLaw3FGL)
 from ...utils.testing import requires_data
 
 
 
 MODEL_TEST_DATA = [(0, PowerLaw, Quantity(1.4351261e-9, 'GeV-1 s -1 cm-2')),
                    (4, LogParabola, Quantity(8.3828599e-10, 'GeV-1 s -1 cm-2')),
-                   (55, ExponentialCutoffPowerLaw, Quantity(7.4397387e-10, 'GeV-1 s -1 cm-2'))]
+                   (55, ExponentialCutoffPowerLaw3FGL, Quantity(1.8666925e-09, 'GeV-1 s-1 cm-2'))]
 
 @requires_data('gammapy-extra')
 class TestSourceCatalog3FGL:
@@ -67,9 +68,9 @@ class TestFermi3FGLObject:
 
         assert len(flux_points) == 5
 
-        desired = [5.10239849e-03, 4.79114673e-04, 3.81966743e-05,
-                   2.09147089e-06, 8.16878884e-09]
-        assert_allclose(flux_points['DIFF_FLUX'], desired)
+        desired = [8.174943e-03, 7.676263e-04, 6.119782e-05, 3.350906e-06,
+                   1.308784e-08]
+        assert_allclose(flux_points['DIFF_FLUX'].data, desired, rtol=1E-5)
 
 
 

@@ -320,7 +320,8 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
         table = Table()
         table['ENERGY'] = energy,
         table['DIFF_FLUX'] = Quantity(values, cube.data.unit),
-        table['DIFF_FLUX_ERR'] = Quantity(errors * values, cube.data.unit)
+        table['DIFF_FLUX_ERR_HI'] = Quantity(errors * values, cube.data.unit)
+        table['DIFF_FLUX_ERR_LO'] = -Quantity(errors * values, cube.data.unit)
 
     elif flux_type == 'integral':
 
@@ -331,7 +332,8 @@ def cube_sed(cube, mask=None, flux_type='differential', counts=None,
                                                  spectral_index=spectral_index,
                                                  energy_min=emins, energy_max=emaxs,
                                                  int_flux=values,
-                                                 int_flux_err=errors * values)
+                                                 int_flux_err_hi=errors * values,
+                                                 int_flux_err_lo=-errors * values)
 
     else:
         raise ValueError('Unknown flux_type: {0}'.format(flux_type))

@@ -89,7 +89,9 @@ class DifferentialFluxPoints(Table):
         energy_lo = self['ENERGY_ERR_LO'].quantity.to(energy_unit)
 
         flux = self['DIFF_FLUX'].quantity.to(flux_unit)
-        flux_lo = self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit)
+
+        # lower flux error is stored with negative sign, account for that
+        flux_lo = np.abs(self['DIFF_FLUX_ERR_LO'].quantity.to(flux_unit))
         flux_hi = self['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
 
         eunit = [_ for _ in flux.unit.bases if _.physical_type == 'energy'][0]
@@ -288,7 +290,8 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         energy_max = np.asanyarray(table['ENERGY_MAX'])
         int_flux = np.asanyarray(table['INT_FLUX'])
         try:
-            int_flux_err = np.asanyarray(table['INT_FLUX_ERR'])
+            int_flux_err_hi = np.asanyarray(table['INT_FLUX_ERR_HI'])
+            int_flux_err_lo = np.asanyarray(table['INT_FLUX_ERR_LO'])
         except:
             pass
     # Compute x point
