@@ -18,7 +18,6 @@ __all__ = [
 ]
 
 
-# Note: Consider to move stuff from _models_old.py here
 class SpectralModel(object):
     """Spectral model base class.
 
@@ -71,7 +70,8 @@ class SpectralModel(object):
             Upper bound of integration range
         """
 
-        def f(x): return x * self(x)
+        def f(x):
+            return x * self(x)
 
         return integrate_spectrum(f, emin, emax, **kwargs)
 
@@ -279,7 +279,6 @@ class PowerLaw2(SpectralModel):
         bottom = emax ** (-index + 1) - emin ** (-index + 1)
         return amplitude * (top / bottom) * np.power(energy, -index)
 
-
     def integral(self, emin, emax):
         r"""
         Integrate power law analytically.
@@ -348,7 +347,8 @@ class ExponentialCutoffPowerLaw3FGL(SpectralModel):
 
     .. math::
 
-        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma} \exp(\frac{E_0 - E}{E_{C}})
+        \phi(E) = \phi_0 \cdot \left(\frac{E}{E_0}\right)^{-\Gamma}
+                  \exp \left( \frac{E_0 - E}{E_{C}} \right)
 
     Parameters
     ----------

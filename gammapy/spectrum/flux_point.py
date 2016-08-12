@@ -184,17 +184,19 @@ class IntegralFluxPoints(Table):
         int_flux_err_hi = self['INT_FLUX_ERR_HI'].to('cm-2 s-1').value
         int_flux_err_lo = self['INT_FLUX_ERR_LO'].to('cm-2 s-1').value
 
-        val = compute_differential_flux_points(x_method=x_method,
-                                               y_method=y_method,
-                                               model=model,
-                                               spectral_index=spectral_index,
-                                               energy_min=energy_min,
-                                               energy_max=energy_max,
-                                               int_flux=int_flux,
-                                               int_flux_err_hi=int_flux_err_hi,
-                                               int_flux_err_lo=int_flux_err_lo)
+        val = compute_differential_flux_points(
+            x_method=x_method,
+            y_method=y_method,
+            model=model,
+            spectral_index=spectral_index,
+            energy_min=energy_min,
+            energy_max=energy_max,
+            int_flux=int_flux,
+            int_flux_err_hi=int_flux_err_hi,
+            int_flux_err_lo=int_flux_err_lo,
+        )
 
-        e = val['ENERGY'] * Unit('TeV')
+        energy = val['ENERGY'] * Unit('TeV')
         f = val['DIFF_FLUX'] * Unit('TeV-1 cm-2 s-1')
         f_err_hi = val['DIFF_FLUX_ERR_HI'] * Unit('TeV-1 cm-2 s-1')
         f_err_lo = val['DIFF_FLUX_ERR_LO'] * Unit('TeV-1 cm-2 s-1')
@@ -203,16 +205,14 @@ class IntegralFluxPoints(Table):
         energy_max = Quantity(self['ENERGY_MAX'])
 
         # assume symmetric errors
-        diff_flux = DifferentialFluxPoints.from_arrays(energy=e,
-                                                       energy_err_hi=energy_max - e,
-                                                       energy_err_lo=e - energy_min,
-                                                       diff_flux=f,
-                                                       diff_flux_err_lo=f_err_lo,
-                                                       diff_flux_err_hi=f_err_hi)
-
-        return diff_flux
-
-        return diff_flux
+        return DifferentialFluxPoints.from_arrays(
+            energy=energy,
+            energy_err_hi=energy_max - energy,
+            energy_err_lo=energy - energy_min,
+            diff_flux=f,
+            diff_flux_err_lo=f_err_lo,
+            diff_flux_err_hi=f_err_hi,
+        )
 
 
 def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
@@ -271,6 +271,9 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
         energy_max = np.array(energy_max).reshape(np.array(energy_max).size, )
         int_flux = np.array(int_flux).reshape(np.array(int_flux).size, )
         try:
+            # TODO: unresolved reference `int_flux_err`
+            # and too broad except clause.
+            # This function is spaghetti code ... needs to be refactored!
             int_flux_err = np.array(int_flux_err).reshape(np.array(int_flux_err).size, )
         except:
             pass
@@ -298,6 +301,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
             int_flux_err_lo = np.asanyarray(table['INT_FLUX_ERR_LO'])
         except:
             pass
+
     # Compute x point
     if x_method == 'table':
         # This is only called if the provided table includes energies
@@ -315,6 +319,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
                                           energy_max, model))
     else:
         raise ValueError('Invalid x_method: {0}'.format(x_method))
+
     # Compute y point
     if y_method == 'power_law':
         g = -1 * np.abs(spectral_index)
@@ -324,6 +329,7 @@ def compute_differential_flux_points(x_method='lafferty', y_method='power_law',
                                                   energy_max, energy, model)
     else:
         raise ValueError('Invalid y_method: {0}'.format(y_method))
+
     # Add to table
     table = Table()
     table['ENERGY'] = energy
