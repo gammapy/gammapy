@@ -803,6 +803,15 @@ class SkyImage(object):
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
+
+        Returns
+        -------
+        ax : `~astropy.wcsaxes.WCSAxes`, optional
+            WCS axis object
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
         """
         import matplotlib.pyplot as plt
 
@@ -831,6 +840,8 @@ class SkyImage(object):
             ax.coords['dec'].set_axislabel('Declination')
         except AttributeError:
             log.info("Can't set coordinate axes. No WCS information available.")
+
+        return fig, ax
 
     def info(self):
         """
