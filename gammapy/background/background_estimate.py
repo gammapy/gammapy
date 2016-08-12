@@ -68,8 +68,11 @@ def ring_background_estimate(pos, on_radius, inner_radius, outer_radius, events)
     return BackgroundEstimate(off_region, off_events, a_on, a_off, tag='ring')
 
 
-def reflected_regions_background_estimate(on_region, pointing, exclusion, events):
+def reflected_regions_background_estimate(on_region, pointing, exclusion,
+                                          events, **kwargs):
     """Reflected regions background estimate
+
+    kwargs are forwaded to :func:`gammapy.background.find_reflected_regions`
 
     Parameters
     ----------
@@ -82,7 +85,7 @@ def reflected_regions_background_estimate(on_region, pointing, exclusion, events
     events : `gammapy.data.EventList`
         Events
     """
-    off_region = find_reflected_regions(on_region, pointing, exclusion)
+    off_region = find_reflected_regions(on_region, pointing, exclusion, **kwargs)
     off_events = events.select_circular_region(off_region)
     a_on = 1
     a_off = len(off_region)

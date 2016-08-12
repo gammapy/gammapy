@@ -33,7 +33,7 @@ def find_reflected_regions(region, center, exclusion_mask=None,
     min_distance : `~astropy.coordinates.Angle`
         Minimal distance between to reflected regions, default: 0 rad
     min_distance_input : `~astropy.coordinates.Angle`
-        Minimal distance from input region, default: 0 rad
+        Minimal distance from input region, default: 0.1 rad
 
     Returns
     -------
@@ -42,7 +42,7 @@ def find_reflected_regions(region, center, exclusion_mask=None,
     """
     angle_increment = Angle('0.1 rad') if angle_increment is None else Angle(angle_increment)
     min_distance = Angle('0 rad') if min_distance is None else Angle(min_distance)
-    min_distance_input = Angle('0 rad') if min_distance_input is None else Angle(min_distance_input)
+    min_distance_input = Angle('0.1 rad') if min_distance_input is None else Angle(min_distance_input)
 
     # Create empty exclusion mask if None is provided
     if exclusion_mask is None:
