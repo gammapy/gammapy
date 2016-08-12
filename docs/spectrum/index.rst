@@ -29,6 +29,7 @@ Content
 .. toctree::
    fitting
    simulation
+   plotting_fermi_spectra
 
 Reference/API
 =============

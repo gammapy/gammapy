@@ -105,6 +105,7 @@ class DifferentialFluxPoints(Table):
         yerr = (y_lo.value[~is_ul], y_hi.value[~is_ul])
         xerr = (energy_lo.value[~is_ul], energy_hi.value[~is_ul])
 
+        kwargs.setdefault('marker', 'None')
         ax.errorbar(energy.value[~is_ul], y.value[~is_ul],
                     yerr=yerr, xerr=xerr, **kwargs)
 
@@ -122,7 +123,10 @@ class DifferentialFluxPoints(Table):
         ax.errorbar(energy.value[is_ul], 2 * y_hi.value[is_ul], xerr=xerr, **kwargs)
 
         ax.set_xlabel('Energy [{}]'.format(energy_unit))
-        ax.set_ylabel('Flux [{}]'.format(flux_unit))
+        if energy_power > 0:
+            ax.set_ylabel('E{0} * Flux [{1}]'.format(energy_power, yunit))
+        else:
+            ax.set_ylabel('Flux [{}]'.format(yunit))
         ax.set_xscale("log", nonposx='clip')
         ax.set_yscale("log", nonposy='clip')
         return ax
