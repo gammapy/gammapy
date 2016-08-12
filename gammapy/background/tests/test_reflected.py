@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest
 from astropy.io import fits
+from astropy.tests.helper import assert_quantity_allclose 
 from astropy.coordinates import SkyCoord, Angle
 from regions import CircleSkyRegion
 from ..reflected import find_reflected_regions
@@ -26,5 +27,9 @@ def test_find_reflected_regions(mask):
     region = CircleSkyRegion(pos, radius)
     center = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
     regions = find_reflected_regions(region, center, mask)
+    assert (len(regions)) == 20
+    assert_quantity_allclose(regions[3].center.icrs.ra,
+                             Angle('81.752 deg'),
+                             rtol=1e-2)
+    
 
-    assert len(regions) != 0
