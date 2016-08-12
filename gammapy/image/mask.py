@@ -139,10 +139,14 @@ class SkyMask(SkyImage):
         Parameters
         ----------
         ax : `~astropy.wcsaxes.WCSAxes`, optional
-            WCS axis object
+            WCS axis object to plot on.
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
 
         Returns
         -------
+        fig : `~matplotlib.figure.Figure`, optional
+            Figure
         ax : `~astropy.wcsaxes.WCSAxes`, optional
             WCS axis object
         """
@@ -150,7 +154,8 @@ class SkyMask(SkyImage):
 
         kwargs.setdefault('cmap', colors.ListedColormap(['black', 'lightgrey']))
 
-        super(SkyMask, self).plot(ax, fig, **kwargs)
+        fig, ax = super(SkyMask, self).plot(ax, fig, **kwargs)
+        return fig, ax
 
     @lazyproperty
     def distance_image(self):

@@ -126,12 +126,13 @@ class SpectrumExtraction(object):
         """
         method = self.background.pop('method')
         if method == 'reflected':
-            exclusion = self.background.pop('exclusion', None)
+            kwargs = self.background.copy()
+            kwargs.pop('n_min', None)
             bkg = [reflected_regions_background_estimate(
-                self.target.on_region,
-                _.pointing_radec,
-                exclusion,
-                _.events) for _ in self.obs]
+                on_region=self.target.on_region,
+                pointing=_.pointing_radec,
+                events=_.events,
+                **kwargs) for _ in self.obs]
         else:
             raise NotImplementedError("Method: {}".format(method))
         self.background = bkg

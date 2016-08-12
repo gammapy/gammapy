@@ -47,7 +47,7 @@ def test_spectral_fit(tmpdir):
                              2.116 * u.Unit(''), rtol=1e-3)
     model_with_errors = result.fit.model_with_uncertainties
     assert_allclose(model_with_errors.parameters.index.s,
-                    0.0543, rtol=1e-3)
+                    0.0542, rtol=1e-3)
 
     # Actual fit range can differ from threshold due to binning effects
     # We take the lowest bin that is completely within threshold
@@ -97,5 +97,5 @@ def test_sherpa_fit(tmpdir):
     model.gamma = 2
     sau.set_model(model * 1e-20)
     sau.fit()
-    assert_allclose(model.pars[0].val, 2.0202, atol=1e-4) 
-    assert_allclose(model.pars[2].val, 2.3568, atol=1e-4) 
+    assert_allclose(model.pars[0].val, 2.0198, atol=1e-4) 
+    assert_allclose(model.pars[2].val, 2.3564, atol=1e-4) 

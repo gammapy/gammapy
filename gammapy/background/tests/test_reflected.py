@@ -26,10 +26,10 @@ def test_find_reflected_regions(mask):
     radius = Angle(0.4, 'deg')
     region = CircleSkyRegion(pos, radius)
     center = SkyCoord(83.2, 22.7, unit='deg', frame='icrs')
-    regions = find_reflected_regions(region, center, mask)
+    regions = find_reflected_regions(region, center, mask,
+                                     min_distance_input=Angle('0 deg'))
     assert (len(regions)) == 20
     assert_quantity_allclose(regions[3].center.icrs.ra,
                              Angle('81.752 deg'),
                              rtol=1e-2)
     
-

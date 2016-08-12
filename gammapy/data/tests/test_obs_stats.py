@@ -69,4 +69,4 @@ def test_stack(target):
         obs_stats.append(ObservationStats.from_target(run, target, bg))
     sum_obs_stats = ObservationStats.stack(obs_stats)
     assert_allclose(sum_obs_stats.alpha, 0.284, rtol=1e-2)
-    assert_allclose(sum_obs_stats.sigma, 23.35, rtol=1e-3)
+    assert_allclose(sum_obs_stats.sigma, 23.5757575757, rtol=1e-3)
