@@ -290,12 +290,7 @@ class SpectrumObservation(object):
 
     def __str__(self):
         """String representation"""
-        ss = '*** SpectrumObservation {}\n'.format(self.obs_id)
-        ss += 'Livetime : {}\n'.format(self.livetime)
-        ss += 'On spectrum: {}\n'.format(self.on_vector)
-        ss += 'Background spectrum: {}\n'.format(self.off_vector)
-        ss += 'Effective Area: {}\n'.format(self.aeff)
-        ss += 'Energy Dispersion: {}\n'.format(self.edisp)
+        ss = self.total_stats.__str__()
         return ss
 
     def _check_binning(self, **kwargs):
