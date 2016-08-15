@@ -232,17 +232,19 @@ class SpectrumObservation(object):
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=figsize)
 
         ax1.set_title('Counts')
+        energy_unit = 'TeV'
         if self.off_vector is not None:
             self.background_vector.plot_hist(ax=ax1,
                                              label='alpha * n_off',
-                                             color='darkblue')
+                                             color='darkblue',
+                                             energy_unit=energy_unit)
         self.on_vector.plot_hist(ax=ax1,
                                  label='n_on',
                                  color='darkred',
+                                 energy_unit=energy_unit,
                                  show_energy=(self.hi_threshold, self.lo_threshold))
-        e_unit = self.on_vector.energy.unit
-        ax1.set_xlim(0.7 * self.lo_threshold.to(e_unit).value,
-                     1.3 * self.hi_threshold.to(e_unit).value)
+        ax1.set_xlim(0.7 * self.lo_threshold.to(energy_unit).value,
+                     1.3 * self.hi_threshold.to(energy_unit).value)
         ax1.legend(numpoints=1)
 
         ax2.set_title('Effective Area')
