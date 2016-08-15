@@ -356,7 +356,7 @@ class SourceCatalogObjectHGPS(SourceCatalogObject):
                 lambda_=Quantity(data['Lambda_Spec_ECPL'], 'TeV-1'),
             )
         else:
-            raise ValueError('Invalid spectral model: {}'.format(model))
+            raise ValueError('Invalid spectral model: {}'.format(spec_type))
 
     @property
     def spectrum(self):
@@ -416,16 +416,26 @@ class SourceCatalogHGPS(SourceCatalog):
     description = 'H.E.S.S. Galactic plane survey (HGPS) source catalog'
     source_object_class = SourceCatalogObjectHGPS
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, hdu='HGPS_SOURCES'):
         if not filename:
             filename = Path(os.environ['HGPS_ANALYSIS']) / 'data/catalogs/HGPS3/release/HGPS_v0.4.fits'
         self.filename = str(filename)
         self.hdu_list = fits.open(str(filename))
-        table = Table.read(self.hdu_list['HGPS_SOURCES'])
-        self.components = Table.read(self.hdu_list['HGPS_COMPONENTS'])
-        self.associations = Table.read(self.hdu_list['HGPS_ASSOCIATIONS'])
-        self.identifications = Table.read(self.hdu_list['HGPS_IDENTIFICATIONS'])
+        if hdu == 'HGPS_SOURCES':
+            table = Table.read(self.hdu_list['HGPS_SOURCES'])
+            self.components = Table.read(self.hdu_list['HGPS_COMPONENTS'])
+            self.associations = Table.read(self.hdu_list['HGPS_ASSOCIATIONS'])
+            self.identifications = Table.read(self.hdu_list['HGPS_IDENTIFICATIONS'])
+        elif hdu == 'HGPS_SOURCES_PA':
+            table = Table.read(self.hdu_list['HGPS_SOURCES_PA'])
+        elif hdu == 'HESS_GALACTIC':
+            table = Table.read(self.hdu_list['HESS_GALACTIC_SOURCES'])
+        else:
+            raise ValueError("Must be one of the following: 'HGPS_SOURCES',"
+                             "'HGPS_SOURCES_PA' or 'HESS_GALACTIC'")
+
         super(SourceCatalogHGPS, self).__init__(table=table)
+
 
     def _make_source_object(self, index):
         """Make one source object.
@@ -441,9 +451,11 @@ class SourceCatalogHGPS(SourceCatalog):
             Source object
         """
         source = super(SourceCatalogHGPS, self)._make_source_object(index)
-        if source.data['Components'] != '':
-            self._attach_component_info(source)
-        self._attach_association_info(source)
+        if hasattr(self, 'components'):
+            if source.data['Components'] != '':
+                self._attach_component_info(source)
+        if hasattr(self, 'associations'):
+            self._attach_association_info(source)
         # if source.data['Source_Class'] != 'Unid':
         #    self._attach_identification_info(source)
         return source
