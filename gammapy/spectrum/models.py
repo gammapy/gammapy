@@ -9,6 +9,7 @@ from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 
 # This cannot be made a delayed import because the pytest matrix fails if it is
+# https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
 try:
     from .sherpa_models import SherpaExponentialCutoffPowerLaw
 except ImportError:
@@ -153,7 +154,7 @@ class SpectralModel(object):
         return ax
 
     def to_sherpa(self, name='default'):
-        """Convert to sherpa model
+        """Convert to Sherpa model
 
         To be implemented by subclasses
         """
@@ -239,8 +240,8 @@ class PowerLaw(SpectralModel):
         lower = (emin / pars.reference) ** val
         return prefactor * (upper - lower)
 
-    def to_sherpa(self, name='ecpl.default'):
-        """Return `~sherpa.models.PowLaw1d`
+    def to_sherpa(self, name='default'):
+        """Return Sherpa `~sherpa.models.PowLaw1d`
 
         Parameters
         ----------
@@ -353,17 +354,13 @@ class ExponentialCutoffPowerLaw(SpectralModel):
         return pwl * cutoff
 
     def to_sherpa(self, name='default'):
-        """Return `~sherpa.models.Arithmetic model`
+        """Return Sherpa `~sherpa.models.Arithmetic model`
 
         Parameters
         ----------
         name : str, optional
             Name of the sherpa model instance
         """
-        # NOTE: we cannot use naima.sherpa_models.SherpaModelECPL since it is
-        # meant to be used as abstract base class (Arithmetic model only
-        # initialized in daughter classes)
-        # see https://github.com/zblz/naima/blob/master/naima/sherpa_models.py#L149
         model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
         pars = self.parameters
         model.gamma = pars.index.value

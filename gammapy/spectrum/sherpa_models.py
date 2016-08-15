@@ -32,10 +32,11 @@ class SherpaExponentialCutoffPowerLaw(ArithmeticModel):
     @modelCacher1d
     def calc(self, p, x, xhi=None):
         from .models import ExponentialCutoffPowerLaw
+        kev_to_tev = 1e-9
         model = ExponentialCutoffPowerLaw(index=p[0],
                                           reference=p[1],
                                           amplitude=p[2],
-                                          lambda_=p[3] * 1e-9)
+                                          lambda_=p[3] * kev_to_tev)
         if xhi is None:
             val = model(x)
         else:
