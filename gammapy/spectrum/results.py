@@ -107,6 +107,8 @@ class SpectrumFitResult(object):
         modeldict = val['model']
         if modeldict['name'] == 'PowerLaw':
             model = models.PowerLaw.from_dict(modeldict)
+        elif modeldict['name'] == 'ExponentialCutoffPowerLaw':
+            model = models.ExponentialCutoffPowerLaw.from_dict(modeldict)
         else:
             raise NotImplementedError('{}'.format(modeldict['name']))
         try:
