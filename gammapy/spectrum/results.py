@@ -47,7 +47,7 @@ class SpectrumFitResult(object):
         self.model = model
         self.covariance = covariance
         self.covar_axis = covar_axis
-        self.fit_range = fit_range.to('TeV')
+        self.fit_range = fit_range
         self.statname = statname
         self.statval = statval
         self.npred = npred
@@ -108,7 +108,7 @@ class SpectrumFitResult(object):
         if modeldict['name'] == 'PowerLaw':
             model = models.PowerLaw.from_dict(modeldict)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError('{}'.format(modeldict['name']))
         try:
             erange = val['fit_range']
             energy_range = (erange['min'], erange['max']) * u.Unit(erange['unit'])
@@ -125,11 +125,20 @@ class SpectrumFitResult(object):
             for flu in fl:
                 fluxes[flu] = fl[flu]['value'] * u.Unit(fl[flu]['unit'])
                 flux_errors[flu] = fl[flu]['error'] * u.Unit(fl[flu]['unit'])
+        try: 
+            covar = val['covariance']
+            covar_axis = covar['axis']
+            covariance = np.array(covar['matrix'])
+        except KeyError:
+            covar_axis = None
+            covariance = None
 
         return cls(model=model,
                    fit_range=energy_range,
                    fluxes=fluxes,
-                   flux_errors=flux_errors)
+                   flux_errors=flux_errors,
+                   covar_axis=covar_axis,
+                   covariance=covariance)
 
     def to_table(self, **kwargs):
         t = Table()
@@ -250,7 +259,7 @@ class SpectrumResult(object):
 
     Parameters
     ----------
-    fit: `~gammapy.spectrum.results.SpectrumFitResult`
+    fit: `~gammapy.spectrum.SpectrumFitResult`
         Spectrum fit result
     obs: `~gammapy.spectrum.SpectrumObservation`, optional
         Observation used for the fit

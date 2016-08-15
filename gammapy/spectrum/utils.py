@@ -169,38 +169,49 @@ def calculate_predicted_counts(model, aeff, edisp, livetime, e_reco=None):
     return CountsSpectrum(data=reco_counts, energy=e_reco)
 
 
-def integrate_spectrum(func, xmin, xmax, ndecade=100, **kwargs):
+def integrate_spectrum(func, xmin, xmax, ndecade=100, intervals=False):
     """
-    Integrate 1d function using the log-log trapezoidal rule. 
+    Integrate 1d function using the log-log trapezoidal rule. If scalar values
+    for xmin and xmax are passed an oversampled grid is generated using the
+    ``ndecade`` keyword argument. If xmin and xmax arrays are passed, no
+    oversampling is performed and the integral is computed in the provided
+    grid.
 
     Parameters
     ----------
     func : callable
         Function to integrate.
-    xmin : `~astropy.units.Quantity` or float
+    xmin : `~astropy.units.Quantity` or array-like
         Integration range minimum
-    xmax : `~astropy.units.Quantity` or float
+    xmax : `~astropy.units.Quantity` or array-like 
         Integration range minimum
-    ndecade : int
+    ndecade : int, optional
         Number of grid points per decade used for the integration.
-        Default ndecade = 100.
-    kwargs : dict
-        Keyword arguments passed to ``trapz_loglog``
+        Default : 100.
+    intervals : bool, optional
+        Return integrals in the grid not the sum, default: False
     """
-    try:
-        logmin = np.log10(xmin.value)
-        logmax = np.log10(xmax.to(xmin.unit).value)
-        n = (logmax - logmin) * ndecade
-        x = Quantity(np.logspace(logmin, logmax, n), xmin.unit)
-        y = func(x)
-        val = _trapz_loglog(y, x, **kwargs)
-    except AttributeError:
+    is_quantity = False
+    if isinstance(xmin, Quantity):
+        unit = xmin.unit
+        xmin = xmin.value
+        xmax = xmax.value
+        is_quantity = True
+
+    if np.isscalar(xmin):
         logmin = np.log10(xmin)
         logmax = np.log10(xmax)
         n = (logmax - logmin) * ndecade
         x = np.logspace(logmin, logmax, n)
-        y = func(x)
-        val = _trapz_loglog(y, x, ulog10=True, **kwargs)
+    else:
+        x = np.append(xmin, xmax[-1])
+
+    if is_quantity:
+        x = x * unit
+
+    y = func(x) 
+
+    val = _trapz_loglog(y, x, ulog10=True, intervals=intervals)
 
     return val
 
@@ -223,7 +234,9 @@ def _trapz_loglog(y, x, axis=-1, intervals=False, ulog10=False):
         Independent variable to integrate over.
     axis : int, optional
         Specify the axis.
-    ulog10 : bool
+    intervals : bool, optional
+        Return array of shape x not the total integral, default: False
+    ulog10 : bool, optional
         Use `~uncertainties.unumpy.log10` to allow uarrays for y and do error
         propagation for the integral value.
 

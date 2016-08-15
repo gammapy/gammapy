@@ -66,7 +66,7 @@ class SpectrumSimulation(object):
         on_counts = rand.poisson(self.npred.data)
 
         counts_kwargs = dict(energy=self.npred.energy,
-                             exposure=self.livetime,
+                             livetime=self.livetime,
                              obs_id=obs_id,
                              creator=self.__class__.__name__,
                              lo_threshold=lo_threshold,

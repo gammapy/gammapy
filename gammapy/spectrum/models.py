@@ -8,6 +8,14 @@ from . import integrate_spectrum
 from ..extern.bunch import Bunch
 from ..utils.energy import EnergyBounds
 
+# This cannot be made a delayed import because the pytest matrix fails if it is
+# https://travis-ci.org/gammapy/gammapy/jobs/151539845#L1799
+try:
+    from .sherpa_models import SherpaExponentialCutoffPowerLaw
+except ImportError:
+    pass
+
+
 __all__ = [
     'SpectralModel',
     'PowerLaw',
@@ -44,6 +52,8 @@ class SpectralModel(object):
         .. math::
 
             F(E_{min}, E_{max}) = \int_{E_{min}}^{E_{max}}\phi(E)dE
+
+        kwargs are forwared to :func:`~gammapy.spectrum.integrate_spectrum``.
 
         Parameters
         ----------
@@ -146,6 +156,13 @@ class SpectralModel(object):
         ax.set_yscale("log", nonposy='clip')
         return ax
 
+    def to_sherpa(self, name='default'):
+        """Convert to Sherpa model
+
+        To be implemented by subclasses
+        """
+        raise NotImplementedError('{}'.format(self.__class__.__name__))
+
 
 class PowerLaw(SpectralModel):
     r"""Spectral power-law model.
@@ -227,7 +244,7 @@ class PowerLaw(SpectralModel):
         return prefactor * (upper - lower)
 
     def to_sherpa(self, name='default'):
-        """Return `~sherpa.models.PowLaw1d`
+        """Return Sherpa `~sherpa.models.PowLaw1d`
 
         Parameters
         ----------
@@ -338,6 +355,24 @@ class ExponentialCutoffPowerLaw(SpectralModel):
             from uncertainties.unumpy import exp
             cutoff = exp(-energy * lambda_)
         return pwl * cutoff
+
+    def to_sherpa(self, name='default'):
+        """Return Sherpa `~sherpa.models.Arithmetic model`
+
+        Parameters
+        ----------
+        name : str, optional
+            Name of the sherpa model instance
+        """
+        model = SherpaExponentialCutoffPowerLaw(name='ecpl.' + name)
+        pars = self.parameters
+        model.gamma = pars.index.value
+        model.ref = pars.reference.to('keV').value
+        model.ampl = pars.amplitude.to('cm-2 s-1 keV-1').value
+        # Sherpa ExponentialCutoffPowerLaw expects cutoff in 1/TeV
+        model.cutoff = pars.lambda_.to('TeV-1').value
+
+        return model
 
 
 class ExponentialCutoffPowerLaw3FGL(SpectralModel):

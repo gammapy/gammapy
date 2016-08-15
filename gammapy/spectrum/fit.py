@@ -32,7 +32,7 @@ class SpectrumFit(object):
         Fit statistic to be used
     """
     FLUX_FACTOR = 1e-20
-    """Numerical constant to bring Sherpa optimizers in valid range"""
+    """Numerical constant to make model amplitude O(1) during the fit"""
     DEFAULT_STAT = 'wstat'
     """Default statistic to be used for the fit"""
 
@@ -127,9 +127,11 @@ class SpectrumFit(object):
             temp = self.obs_list[ii].to_sherpa()
             if self.fit_range is not None:
                 temp.notice(fitmin, fitmax)
-                temp.get_background().notice(fitmin, fitmax)
+                if temp.get_background() is not None:
+                    temp.get_background().notice(fitmin, fitmax)
             temp.ignore_bad()
-            temp.get_background().ignore_bad()
+            if temp.get_background() is not None:
+                temp.get_background().ignore_bad()
             pha.append(temp)
             # Forward folding
             resp = Response1D(pha[ii])
@@ -138,6 +140,7 @@ class SpectrumFit(object):
         data = DataSimulFit('simul fit data', pha)
         fitmodel = SimulFitModel('simul fit model', folded_model)
 
+        log.debug(fitmodel)
         fit = Fit(data, fitmodel, self.statistic)
         fitresult = fit.fit()
         log.debug(fitresult)
@@ -184,7 +187,8 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     amplfact = SpectrumFit.FLUX_FACTOR
     pardict = dict(gamma=['index', u.Unit('')],
                    ref=['reference', u.keV],
-                   ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')])
+                   ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')],
+                   cutoff=['lambda_', u.Unit('TeV-1')])
     kwargs = dict()
 
     for par in shmodel.pars:
@@ -193,6 +197,8 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
 
     if 'powlaw1d' in shmodel.name:
         model = models.PowerLaw(**kwargs)
+    elif 'ecpl' in shmodel.name:
+        model = models.ExponentialCutoffPowerLaw(**kwargs)
     else:
         raise NotImplementedError(str(shmodel))
 
