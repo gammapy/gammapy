@@ -139,9 +139,10 @@ class SpectrumFit(object):
 
         data = DataSimulFit('simul fit data', pha)
         fitmodel = SimulFitModel('simul fit model', folded_model)
-
+        
         log.debug(fitmodel)
         fit = Fit(data, fitmodel, self.statistic)
+
         fitresult = fit.fit()
         log.debug(fitresult)
         # The model instance passed to the Fit now holds the best fit values

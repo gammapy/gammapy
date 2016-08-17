@@ -30,7 +30,6 @@ def test_spectral_fit(tmpdir):
                             amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
                             reference = 1 * u.TeV)
 
-    # Test obs list and assert on results
     fit = SpectrumFit(obs_list, model)
     fit.run(outdir=tmpdir)
 
@@ -41,7 +40,12 @@ def test_spectral_fit(tmpdir):
                              read_result.model(test_e))
 
     result = fit.result[0]
+    
+    # Test various methods
     assert 'PowerLaw' in str(result.fit)
+    assert 'index' in result.fit.to_table().colnames
+
+    # Test values
     assert_allclose(result.fit.statval, 103.595, rtol=1e-3)
     assert_quantity_allclose(result.fit.model.parameters.index,
                              2.116 * u.Unit(''), rtol=1e-3)
@@ -72,6 +76,7 @@ def test_spectral_fit(tmpdir):
     assert_quantity_allclose(actual, desired)
 
     # Make sure fit range is not extended below threshold
+
     fit_range = [0.001, 10] * u.TeV
     fit.fit_range = fit_range
     fit.run()
