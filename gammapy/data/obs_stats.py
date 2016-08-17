@@ -159,16 +159,17 @@ class ObservationStats(Stats):
             gamma_rate += stats.n_on - stats.alpha * stats.n_off
             bg_rate += stats.n_off * stats.alpha
 
-        a_on /= n_off
-        a_off /= n_off
-        alpha /= n_off
-
         # if no off events the weighting of alpha is done
         # with the livetime
         if n_off == 0:
             alpha = alpha_backup / livetime.value
             a_on = a_on_backup / livetime.value
             a_off = a_off_backup / livetime.value
+        else:
+            a_on /= n_off
+            a_off /= n_off
+            alpha /= n_off
+
 
         gamma_rate /= livetime.to(u.min)
         bg_rate /= livetime.to(u.min)

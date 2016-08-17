@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import astropy.units as u
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...data import ObservationTable
@@ -16,6 +17,9 @@ def test_spectrum_observation():
     phafile = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
     obs = SpectrumObservation.read(phafile)
     obs.peek()
+
+    energy_binning = obs.get_binning(4)
+    assert_quantity_allclose(energy_binning[5], 879.954 * u.GeV, rtol=1e-3)
 
 
 @pytest.mark.xfail(reason='This needs some changes to the API')

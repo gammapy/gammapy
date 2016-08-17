@@ -295,6 +295,60 @@ class SpectrumObservation(object):
         ss = self.total_stats.__str__()
         return ss
 
+    def get_binning(self, min_signif):
+        """Compute energy binning
+
+        Each bin in the resulting energy binning will include a ``min_signif``
+        source detection. The lower and highest bin edges are the low and high
+        thresholds of the `~gammapy.spectrum.SpectrumObservation`.
+        
+        TODO: This is usually computed for a list of Observations, append to
+        SpectrumObservationList? Or use on stacked observation?
+
+        Parameters
+        ----------
+        min_signif : float
+            Required significance for each bin
+
+        Returns
+        -------
+        energy_binning : `~astropy.units.Quantity`
+            Energy bin edges
+        """
+        # NOTE: Results may vary from FitSpectrum since there the rebin
+        # parameter can only have fixed values, here it grows linearly        
+
+        # First first bin above low threshold and last bin below high threshold
+        current_ebins = self.on_vector.energy
+        current_bin = (current_ebins.find_node(self.lo_threshold) + 1)[0]
+        max_bin = (current_ebins.find_node(self.hi_threshold))[0]
+
+        # List holding final energy binning
+        energy_binning = [current_ebins.data[current_bin]] 
+
+        # Precompute ObservationStats for each bin
+        obs_stats = [self.stats(i) for i in range(current_ebins.nbins)]
+
+        rebin_factor = 1
+        while(current_bin + rebin_factor <= max_bin):
+            # Merge bins together until min_signif is reached
+            stats_list = obs_stats[current_bin:current_bin+rebin_factor:1]
+            stats = ObservationStats.stack(stats_list)
+            sigma = stats.sigma
+            if (sigma < min_signif or np.isnan(sigma)):
+                rebin_factor += 1
+                continue
+
+            # Append upper bin edge of good energy bin to final binning
+            energy_binning.append(current_ebins.data[current_bin+rebin_factor])
+            current_bin += rebin_factor
+
+        energy_binning = Quantity(energy_binning)
+        # Replace highest bin edge by high threshold
+        energy_binning[-1] = self.hi_threshold
+
+        return energy_binning
+
     def _check_binning(self, **kwargs):
         """Check that ARF and RMF binnings are compatible
         """
