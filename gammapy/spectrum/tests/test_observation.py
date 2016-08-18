@@ -18,9 +18,6 @@ def test_spectrum_observation():
     obs = SpectrumObservation.read(phafile)
     obs.peek()
 
-    energy_binning = obs.get_binning(4)
-    assert_quantity_allclose(energy_binning[5], 879.954 * u.GeV, rtol=1e-3)
-
 
 @pytest.mark.xfail(reason='This needs some changes to the API')
 @requires_data('gammapy-extra')
@@ -49,13 +46,13 @@ def test_observation_stacking():
     # Test arf group
     total_time = obs0.meta.livetime + obs1.meta.livetime
     arf_times_livetime = obs0.meta.livetime * obs0.effective_area.data \
-                         + obs1.meta.livetime * obs1.effective_area.data
+        + obs1.meta.livetime * obs1.effective_area.data
     assert_allclose(spectrum_observation_grouped.effective_area.data, arf_times_livetime / total_time)
     # Test rmf group
     rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.data \
-                                   * obs0.energy_dispersion.pdf_matrix.T \
-                                   + obs1.meta.livetime * obs1.effective_area.data \
-                                     * obs1.energy_dispersion.pdf_matrix.T
+        * obs0.energy_dispersion.pdf_matrix.T \
+        + obs1.meta.livetime * obs1.effective_area.data \
+        * obs1.energy_dispersion.pdf_matrix.T
 
     inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
     pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime

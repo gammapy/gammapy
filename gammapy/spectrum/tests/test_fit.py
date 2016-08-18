@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from astropy.tests.helper import pytest, assert_quantity_allclose
 import astropy.units as u
+import numpy as np
 from astropy.utils.compat import NUMPY_LT_1_9
 from numpy.testing import assert_allclose
 from ...datasets import gammapy_extra
@@ -18,6 +19,7 @@ from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
 @pytest.mark.skipif('NUMPY_LT_1_9')
 @pytest.mark.skipif('SHERPA_LT_4_8')
 @requires_dependency('sherpa')
+@requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
 def test_spectral_fit(tmpdir):
     pha1 = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23592.fits")
@@ -84,6 +86,18 @@ def test_spectral_fit(tmpdir):
     actual = fit.result[0].fit.fit_range[0]
 
     assert_quantity_allclose(actual, desired)
+
+    # Test fluxpoints computation
+    binning = np.logspace(0,1,5) * u.TeV
+    fit.compute_fluxpoints(binning=binning)
+    points = fit.result[0].points
+    actual = points['DIFF_FLUX'].quantity[2]
+    desired = 1.118e-12 * u.Unit('cm-2 s-1 TeV-1')
+    assert_quantity_allclose(actual, desired, rtol=1e-3) 
+
+    # Test plots
+    fit.result[0].plot_spectrum()
+    fit.result[0].plot_fit()
 
     # Test ECPL
     ecpl = models.ExponentialCutoffPowerLaw(

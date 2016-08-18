@@ -3,8 +3,14 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing import assert_allclose
 from astropy.units import Quantity
 from astropy.tests.helper import assert_quantity_allclose
-from ...utils.testing import requires_dependency
-from ...spectrum import LogEnergyAxis, integrate_spectrum
+from ...utils.testing import requires_dependency, requires_data
+from ...datasets import gammapy_extra
+from ...spectrum import (
+    LogEnergyAxis,
+    integrate_spectrum,
+    calculate_flux_point_binning,
+    SpectrumObservation,
+)
 from ..powerlaw import power_law_energy_flux, power_law_evaluate, power_law_flux
 
 
@@ -23,6 +29,15 @@ def test_LogEnergyAxis():
 
     world = energy_axis.pix2world(pix)
     assert_quantity_allclose(world, energy)
+
+
+@requires_data('gammapy-extra')
+def test_flux_points_binning():
+
+    phafile = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
+    obs = SpectrumObservation.read(phafile)
+    energy_binning = calculate_flux_point_binning(obs_list=[obs], min_signif=3)
+    assert_quantity_allclose(energy_binning[5], Quantity(1.668, 'TeV'), rtol=1e-3)
 
 
 def test_integrate_spectrum():

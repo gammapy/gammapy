@@ -13,7 +13,6 @@ __all__ = [
     'compute_differential_flux_points',
 ]
 
-
 class DifferentialFluxPoints(Table):
     """Differential flux points table
 
@@ -24,6 +23,69 @@ class DifferentialFluxPoints(Table):
     Upper limits are stored as in the Fermi catalogs. I.e. the lower error is set
     to `NaN`, while the upper error represents the 1 sigma upper limit.
     """
+    @classmethod
+    def compute(cls, model, obs_list, binning):
+        """Compute differential fluxpoints
+
+        The norm of the global model is fit to the
+        `~gammapy.spectrum.SpectrumObservationList` in the provided energy
+        binning and the differential flux is evaluated at the log bin center.
+
+        TODO : Add upper limit calculation
+
+        Parameters
+        ----------
+        model : `~gammapy.spectrum.models.SpectralModel`
+            Global model
+        obs_list : `~gammapy.spectrum.SpectrumObservationList`
+            Observations
+        binning : `~astropy.units.Quantity`
+            Energy binning, see
+            :func:`~gammapy.spectrum.utils.calculate_flux_point_binning` for a
+            method to get flux points with a minimum significance.
+        """
+        from gammapy.spectrum import SpectrumFit
+
+        diff_flux = list()
+        diff_flux_err = list()
+        e_err_hi = list()
+        e_err_lo = list()
+        energy = list()
+
+        # TODO : make PowerLaw approximation in each bin for other models
+        from ..spectrum import models
+        if not isinstance(model, models.PowerLaw):
+            raise NotImplementedError(model)
+        sherpa_model = model.to_sherpa()
+        sherpa_model.gamma.freeze()
+        fit = SpectrumFit(obs_list, sherpa_model)
+
+        low_bins = binning[:-1]
+        high_bins = binning[1:]
+        for low, high in zip(low_bins, high_bins):
+            fit = SpectrumFit(obs_list, sherpa_model)
+            # If 'low' or 'high' fall onto a bin edge of the
+            # SpectrumObservation binning, numerical fluctuations can lead to
+            # the inclusion of unwanted bins
+            correction = 1e-5
+            fit.fit_range = ((1 + correction) * low, (1 - correction) * high)
+            fit.fit()
+            res = fit.result[0].fit
+
+            bin_center = np.sqrt(low * high)
+            energy.append(bin_center)
+            e_err_hi.append(high - bin_center)
+            e_err_lo.append(bin_center - low)
+            diff_flux.append(res.model(bin_center).to('cm-2 s-1 TeV-1'))
+            err = res.model_with_uncertainties(bin_center.to('keV').value)
+            diff_flux_err.append(err.s * Unit('cm-2 s-1 keV-1'))
+
+        return cls.from_arrays(energy=energy,
+                               diff_flux=diff_flux,
+                               diff_flux_err_hi=diff_flux_err,
+                               diff_flux_err_lo=diff_flux_err,
+                               energy_err_hi=e_err_hi,
+                               energy_err_lo=e_err_lo)
 
     @classmethod
     def from_arrays(cls, energy, diff_flux, energy_err_hi=None,
