@@ -273,11 +273,11 @@ class SpectrumResult(object):
 
     Parameters
     ----------
-    fit: `~gammapy.spectrum.SpectrumFitResult`
+    fit : `~gammapy.spectrum.SpectrumFitResult`
         Spectrum fit result
-    obs: `~gammapy.spectrum.SpectrumObservation`, optional
+    obs : `~gammapy.spectrum.SpectrumObservation`, optional
         Observation used for the fit
-    points: `~gammapy.spectrum.DifferentialFluxPoints`, optional
+    points : `~gammapy.spectrum.DifferentialFluxPoints`, optional
         Flux points
     """
 
@@ -320,7 +320,7 @@ class SpectrumResult(object):
             points.append(ufloat(val, err))
 
         func = self.fit.model_with_uncertainties(x.to('keV').value)
-        residuals = (points - func) / points
+        residuals = (points - func) / func
 
         return residuals
 

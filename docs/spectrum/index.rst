@@ -28,6 +28,7 @@ Content
 =======
 .. toctree::
    fitting
+   flux_points
    simulation
    plotting_fermi_spectra
 

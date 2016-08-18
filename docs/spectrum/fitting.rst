@@ -35,11 +35,13 @@ simulated crab runs using the `~gammapy.spectrum.SpectrumFit` class.
                      amplitude = 10 ** -12 * u.Unit('cm-2 s-1 TeV-1'),
                      reference = 1 * u.TeV)
 
-    fit = SpectrumFit(obs_list, model)
-    fit.run()
+    fit = SpectrumFit(obs_list=obs_list, model=model)
+    fit.statistic = 'WStat'
+    fit.fit()
     
-Now you can check the results by looking at
-`~gammapy.spectrum.SpectrumResult` that is attached to the
+For a description of the available fit statistic see :ref:`fit-statistics`.
+You can check the fit results by looking at
+`~gammapy.spectrum.SpectrumFitResult` that is attached to the
 `~gammapy.spectrum.SpectrumFit` for each observation.
 
 
@@ -61,9 +63,6 @@ Now you can check the results by looking at
     [[  2.95033865e-03   3.08066478e-43]
      [  3.08066478e-43   1.70801015e-82]]
     Fit Range: [  0.49582929  82.70931131] TeV
-
-
-TODO : Add image from gammapy-extra illustrating the results
 
 
 Interactive Sherpa Fit
