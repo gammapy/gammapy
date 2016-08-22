@@ -143,32 +143,45 @@ class SpectrumFitResult(object):
                    covariance=covariance)
 
     def to_table(self, **kwargs):
+        """Convert to `~astropy.table.Table`
+        
+        Produce overview table containing the most important parameters
+        """
         t = Table()
-        t['model'] = [self.spectral_model]
-        for par in self.parameters.keys():
-            t[par] = Column(data=np.atleast_1d(self.parameters[par]), **kwargs)
-            t['{}_err'.format(par)] = Column(
-                data=np.atleast_1d(self.parameter_errors[par]), **kwargs)
+        t['model'] = [self.model.__class__.__name__]
+        for parname, par in self.model_with_uncertainties.parameters.items():
+            try:
+                val = par.n
+                err = par.s
+            except AttributeError:
+                val = par
+                err = 0
 
-        t['fit_range'] = Column(data=[self.fit_range], unit=self.fit_range.unit,
-                                **kwargs)
-        if self.fluxes is not None:
-            t['flux[1TeV]'] = Column(data=np.atleast_1d(self.fluxes['1TeV']),
-                                     **kwargs)
-            t['flux_err[1TeV]'] = Column(
-                data=np.atleast_1d(self.flux_errors['1TeV']), **kwargs)
+            t[parname] = Column(
+                data=np.atleast_1d(val),
+                unit=self.model.parameters[parname].unit,
+                **kwargs)
+            t['{}_err'.format(parname)] = Column(
+                data=np.atleast_1d(err),
+                unit=self.model.parameters[parname].unit,
+                **kwargs)
+
+        t['fit_range'] = Column(
+            data=[self.fit_range],
+            unit=self.fit_range.unit,
+            **kwargs)
+
         return t
+
 
     @lazyproperty
     def model_with_uncertainties(self):
         """Best fit model with uncertainties
 
-        The parameters on the model will be in units ``keV``, ``cm``, and
-        ``s``. Thus, when evaluating the model energies have to be passed in
-        keV and the resulting flux will be in ``cm-2 s-1 keV-1``. The
-        covariance matrix passed on initialization must also have these units.
+        The parameters on the model will have the units of the model attribute.
+        The covariance matrix passed on initialization must also have these
+        units.
 
-        TODO: This is due to sherpa units, make more flexible
         TODO: Add to gammapy.spectrum.models
 
         This function uses the uncertainties packages as explained here
@@ -198,8 +211,7 @@ class SpectrumFitResult(object):
         """
         info = '\nFit result info \n'
         info += '--------------- \n'
-        info += 'Best Fit Model: {} \n'.format(self.model_with_uncertainties)
-        info += '--> Units: keV, cm, s\n'
+        info += 'Model: {} \n'.format(self.model_with_uncertainties)
         if self.statval is not None:
             info += '\nStatistic: {0:.3f} ({1})'.format(self.statval, self.statname)
         if self.covariance is not None:
@@ -261,11 +273,11 @@ class SpectrumResult(object):
 
     Parameters
     ----------
-    fit: `~gammapy.spectrum.SpectrumFitResult`
+    fit : `~gammapy.spectrum.SpectrumFitResult`
         Spectrum fit result
-    obs: `~gammapy.spectrum.SpectrumObservation`, optional
+    obs : `~gammapy.spectrum.SpectrumObservation`, optional
         Observation used for the fit
-    points: `~gammapy.spectrum.DifferentialFluxPoints`, optional
+    points : `~gammapy.spectrum.DifferentialFluxPoints`, optional
         Flux points
     """
 
@@ -308,7 +320,7 @@ class SpectrumResult(object):
             points.append(ufloat(val, err))
 
         func = self.fit.model_with_uncertainties(x.to('keV').value)
-        residuals = (points - func) / points
+        residuals = (points - func) / func
 
         return residuals
 
@@ -416,6 +428,8 @@ class SpectrumResult(object):
         ax1 : `~matplotlib.axes.Axes`
             Residuals plot axis
         """
+        import matplotlib.pyplot as plt 
+
         ax0, ax1 = self.get_plot_axis()
         ax0.set_yscale('log')
 

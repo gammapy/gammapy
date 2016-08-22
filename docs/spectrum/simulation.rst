@@ -1,6 +1,6 @@
 .. include:: ../references.txt
 
-.. _spectrum_simulation:
+.. _spectrum-simulation:
 
 ******************
 Simulating Spectra 

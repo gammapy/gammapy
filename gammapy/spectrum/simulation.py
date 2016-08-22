@@ -14,7 +14,7 @@ __all__ = [
 class SpectrumSimulation(object):
     """Simulate `~gammapy.spectrum.SpectrumObservation`.
 
-    For an example how to use this class, see :ref:`spectrum_simulation`.
+    For an example how to use this class, see :ref:`spectrum-simulation`.
 
     Parameters
     ----------

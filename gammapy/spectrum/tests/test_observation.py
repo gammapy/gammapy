@@ -1,8 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+import astropy.units as u
 from numpy.testing import assert_allclose
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, assert_quantity_allclose
 from ...datasets import gammapy_extra
 from ...utils.testing import requires_dependency, requires_data
 from ...data import ObservationTable
@@ -45,13 +46,13 @@ def test_observation_stacking():
     # Test arf group
     total_time = obs0.meta.livetime + obs1.meta.livetime
     arf_times_livetime = obs0.meta.livetime * obs0.effective_area.data \
-                         + obs1.meta.livetime * obs1.effective_area.data
+        + obs1.meta.livetime * obs1.effective_area.data
     assert_allclose(spectrum_observation_grouped.effective_area.data, arf_times_livetime / total_time)
     # Test rmf group
     rmf_times_arf_times_livetime = obs0.meta.livetime * obs0.effective_area.data \
-                                   * obs0.energy_dispersion.pdf_matrix.T \
-                                   + obs1.meta.livetime * obs1.effective_area.data \
-                                     * obs1.energy_dispersion.pdf_matrix.T
+        * obs0.energy_dispersion.pdf_matrix.T \
+        + obs1.meta.livetime * obs1.effective_area.data \
+        * obs1.energy_dispersion.pdf_matrix.T
 
     inan = np.isnan(rmf_times_arf_times_livetime / arf_times_livetime)
     pdf_expexted = rmf_times_arf_times_livetime / arf_times_livetime

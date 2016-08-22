@@ -5,7 +5,12 @@ import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
-from . import SpectrumObservationList, SpectrumObservation, models
+from . import (
+    SpectrumObservationList,
+    SpectrumObservation,
+    models,
+    DifferentialFluxPoints,
+)
 
 __all__ = [
     'SpectrumFit',
@@ -86,7 +91,7 @@ class SpectrumFit(object):
 
     @fit_range.setter
     def fit_range(self, fit_range):
-        self._fit_range = fit_range
+        self._fit_range = u.Quantity(fit_range)
 
     def __str__(self):
         """String repr"""
@@ -142,6 +147,7 @@ class SpectrumFit(object):
 
         log.debug(fitmodel)
         fit = Fit(data, fitmodel, self.statistic)
+
         fitresult = fit.fit()
         log.debug(fitresult)
         # The model instance passed to the Fit now holds the best fit values
@@ -152,6 +158,26 @@ class SpectrumFit(object):
             efilter = pha[ii].get_filter()
             shmodel = fitmodel.parts[ii]
             self.result[ii].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
+
+    def compute_fluxpoints(self, binning):
+        """Compute `~DifferentialFluxPoints` for best fit model
+
+        Calls :func:`~gammapy.spectrum.DifferentialFluxPoints.compute`.
+
+        Parameters
+        ----------
+        binning : `~astropy.units.Quantity`
+            Energy binning, see
+            :func:`~gammapy.spectrum.utils.calculate_flux_point_binning` for a
+            method to get flux points with a minimum significance.
+        """
+        # TODO: Think of a way to not store flux points for each observation
+        obs_list = self.obs_list
+        for res in self.result:
+            model = res.fit.model
+            res.points = DifferentialFluxPoints.compute(model=model,
+                                                        binning=binning,
+                                                        obs_list=obs_list)
 
     def run(self, outdir=None):
         """Run all steps
@@ -213,7 +239,11 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     covariance[idx] = covariance[idx] * amplfact
     covariance[:, idx] = covariance[:, idx] * amplfact
 
-    temp = efilter.split(':')
+    # Efilter sometimes contains ','
+    if ':' in efilter:
+        temp = efilter.split(':')
+    else:
+        temp = efilter.split(',')
     fit_range = [float(temp[0]), float(temp[1])] * u.keV
 
     npred = shmodel(1)
