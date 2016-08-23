@@ -6,7 +6,7 @@
 Summary
 +++++++
 
-Gammapy 1.0 will be released in 2016.
+Gammapy 1.0 will be released in fall 2016.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 
@@ -18,7 +18,7 @@ For plans and progress see https://github.com/gammapy/gammapy/milestones/1.0
 Summary
 +++++++
 
-Gammapy 0.5 will be released on July 7, 2016.
+Gammapy 0.5 will be released very soon.
 
 For plans and progress see https://github.com/gammapy/gammapy/milestones/0.5
 
@@ -26,6 +26,7 @@ Highlights:
 
 - Spectrum analysis improvements
 - Image and cube analysis improvements
+- Detect module (CWT and TS map improvements)
 - A lightcurve class and variability test (see :ref:`time`)
 - Many improvements to IRF classes, especially the PSF classes.
 - We have removed ``gammapy.regions`` and have switched to the move complete
@@ -45,6 +46,7 @@ Contributors
 - Johannes King
 - Julien Lefaucheur (new)
 - Léa Jouvin
+- Matthew Wood (new)
 - Nachiketa Chakraborty (new)
 - Olga Vorokh
 - Régis Terrier
@@ -56,6 +58,19 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#679] Add flux point computation method (Johannes King)
+- [#677] Fermi 3FGL and 2FHL spectrum plotting (Axel Donath)
+- [#661] Improve continuous wavelet transform (Olga Vorokh)
+- [#660] Add Fermipy sky image code to Gammapy (Matthew Wood)
+- [#653] Add up- and downsampling to SkyImage (Axel Donath)
+- [#649] Change to astropy regions package (Christoph Deil)
+- [#648] Add class to load CTA IRFs (Julien Lefaucheur)
+- [#647] Add SpectrumSimulation class (Johannes King)
+- [#641] Add ECPL model, energy flux and integration methods (Axel Donath)
+- [#640] Remove pyfact (Christoph Deil)
+- [#635] Fix TS maps low stats handling (Axel Donath)
+- [#631] Fix ExclusionMask.distance (Olga Vorokh)
+- [#628] Add flux points computation methods (Johannes King)
 - [#622] Make gammapy.time great again (Christoph Deil)
 - [#599] Move powerlaw utility functions to separate namespace (Christoph Deil)
 - [#594] Fix setup.py and docs/conf.py configparser import (Christoph Deil)

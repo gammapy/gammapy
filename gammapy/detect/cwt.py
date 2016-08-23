@@ -143,7 +143,7 @@ class CWT(object):
 
         log.debug('Computing approx and approx_bkg')
         data._approx = fftconvolve(data._counts - data._model - data._background,
-                                  self.kernels.kern_approx, mode='same')
+                                   self.kernels.kern_approx, mode='same')
         data._approx_bkg = fftconvolve(data._background, self.kernels.kern_approx, mode='same')
         log.debug('Approximate sum: {0:.4f}'.format(data._approx.sum()))
         log.debug('Approximate background sum: {0:.4f}'.format(data._approx_bkg.sum()))

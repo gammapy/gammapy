@@ -165,7 +165,7 @@ class TestCWTKernels:
         t = self.kernels_new.info_table
         assert_equal(t.colnames, ['Name', 'Source'])
         assert_equal(len(t), 13)
-        
+
 
 @requires_dependency('scipy')
 @requires_data('gammapy-extra')
