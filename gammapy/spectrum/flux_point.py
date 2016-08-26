@@ -13,6 +13,7 @@ __all__ = [
     'compute_differential_flux_points',
 ]
 
+
 class DifferentialFluxPoints(Table):
     """Differential flux points table
 
@@ -47,24 +48,42 @@ class DifferentialFluxPoints(Table):
         """
         from gammapy.spectrum import SpectrumFit
 
+        binning = EnergyBounds(binning)
+        low_bins = binning.lower_bounds
+        high_bins = binning.upper_bounds
+
         diff_flux = list()
         diff_flux_err = list()
         e_err_hi = list()
         e_err_lo = list()
         energy = list()
 
-        # TODO : make PowerLaw approximation in each bin for other models
-        from ..spectrum import models
-        if not isinstance(model, models.PowerLaw):
-            raise NotImplementedError(model)
-        sherpa_model = model.to_sherpa()
-        sherpa_model.gamma.freeze()
-        fit = SpectrumFit(obs_list, sherpa_model)
+        from ..spectrum import models, powerlaw
+        from sherpa.models import PowLaw1D
 
-        low_bins = binning[:-1]
-        high_bins = binning[1:]
-        for low, high in zip(low_bins, high_bins):
+        if isinstance(model, models.PowerLaw):
+            temp = model.to_sherpa()
+            temp.gamma.freeze()
+            sherpa_models = [temp] * binning.nbins
+        else:
+            sherpa_models = [None] * binning.nbins
+
+        for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
+            # Make PowerLaw approximation for higher order models
+            if sherpa_model is None:
+                flux_low = model(low)
+                flux_high = model(high)
+                index = powerlaw.power_law_g_from_points(e1=low, e2=high,
+                                                         f1=flux_low,
+                                                         f2=flux_high)
+                sherpa_model = PowLaw1D('powlaw1d.default')
+                sherpa_model.gamma = index
+                sherpa_model.gamma.freeze()
+                sherpa_model.ref = model.parameters.reference.to('keV')
+                sherpa_model.ampl = 1e-20
+
             fit = SpectrumFit(obs_list, sherpa_model)
+
             # If 'low' or 'high' fall onto a bin edge of the
             # SpectrumObservation binning, numerical fluctuations can lead to
             # the inclusion of unwanted bins

@@ -8,6 +8,7 @@ from .butterfly import SpectrumButterfly
 from ..spectrum import CountsSpectrum, models
 from ..extern.bunch import Bunch
 from ..utils.scripts import read_yaml, make_path
+from ..utils.energy import EnergyBounds
 
 __all__ = [
     'SpectrumFitResult',
@@ -127,7 +128,7 @@ class SpectrumFitResult(object):
             for flu in fl:
                 fluxes[flu] = fl[flu]['value'] * u.Unit(fl[flu]['unit'])
                 flux_errors[flu] = fl[flu]['error'] * u.Unit(fl[flu]['unit'])
-        try: 
+        try:
             covar = val['covariance']
             covar_axis = covar['axis']
             covariance = np.array(covar['matrix'])
@@ -142,9 +143,9 @@ class SpectrumFitResult(object):
                    covar_axis=covar_axis,
                    covariance=covariance)
 
-    def to_table(self, **kwargs):
+    def to_table(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1', **kwargs):
         """Convert to `~astropy.table.Table`
-        
+
         Produce overview table containing the most important parameters
         """
         t = Table()
@@ -157,22 +158,39 @@ class SpectrumFitResult(object):
                 val = par
                 err = 0
 
+            # Apply correction factor for units
+            # TODO: Refactor
+            current_unit = self.model.parameters[parname].unit
+            if current_unit.is_equivalent(energy_unit):
+                factor = current_unit.to(energy_unit)
+                col_unit = energy_unit
+            elif current_unit.is_equivalent(1 / u.Unit(energy_unit)):
+                factor = current_unit.to(1 / u.Unit(energy_unit))
+                col_unit = 1 / u.Unit(energy_unit)
+            elif current_unit.is_equivalent(flux_unit):
+                factor = current_unit.to(flux_unit)
+                col_unit = flux_unit
+            elif current_unit.is_equivalent(u.dimensionless_unscaled):
+                factor = 1
+                col_unit = current_unit
+            else:
+                raise ValueError(current_unit)
+
             t[parname] = Column(
-                data=np.atleast_1d(val),
-                unit=self.model.parameters[parname].unit,
+                data=np.atleast_1d(val*factor),
+                unit=col_unit,
                 **kwargs)
             t['{}_err'.format(parname)] = Column(
-                data=np.atleast_1d(err),
-                unit=self.model.parameters[parname].unit,
+                data=np.atleast_1d(err*factor),
+                unit=col_unit,
                 **kwargs)
 
         t['fit_range'] = Column(
-            data=[self.fit_range],
-            unit=self.fit_range.unit,
+            data=[self.fit_range.to(energy_unit)],
+            unit=energy_unit,
             **kwargs)
 
         return t
-
 
     @lazyproperty
     def model_with_uncertainties(self):
@@ -227,13 +245,13 @@ class SpectrumFitResult(object):
         """
         print(str(self))
 
-    def butterfly(self, energy, flux_unit='TeV-1 cm-2 s-1'):
+    def butterfly(self, energy=None, flux_unit='TeV-1 cm-2 s-1'):
         """
         Compute butterfly.
 
         Parameters
         ----------
-        energy : `~astropy.units.Quantity`
+        energy : `~astropy.units.Quantity`, optional
             Energies at which to evaluate the butterfly.
         flux_unit : str
             Flux unit for the butterfly.
@@ -245,6 +263,10 @@ class SpectrumFitResult(object):
         """
         from uncertainties import unumpy
 
+        if energy is None:
+            energy = EnergyBounds.equal_log_spacing(self.fit_range[0],
+                                                    self.fit_range[1],
+                                                    100)
         flux = self.model(energy)
 
         butterfly = SpectrumButterfly()
@@ -256,7 +278,7 @@ class SpectrumFitResult(object):
         values = umodel(energy.value)
 
         # unit conversion factor, in case it doesn't match
-        conversion_factor =  flux.to(flux_unit).value / unumpy.nominal_values(values)
+        conversion_factor = flux.to(flux_unit).value / unumpy.nominal_values(values)
         flux_err = u.Quantity(unumpy.std_devs(values), flux_unit) * conversion_factor
 
         butterfly['flux_lo'] = flux - flux_err
@@ -311,15 +333,20 @@ class SpectrumResult(object):
             Residuals
         """
         from uncertainties import ufloat
-        x = self.points['ENERGY'].quantity.to('keV')
-        y = self.points['DIFF_FLUX'].quantity.to('cm-2 s-1 keV-1')
-        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to('cm-2 s-1 keV-1')
+        # Get units right
+        pars = self.fit.model.parameters
+        energy_unit = pars.reference.unit
+        flux_unit = pars.amplitude.unit
+
+        x = self.points['ENERGY'].quantity.to(energy_unit)
+        y = self.points['DIFF_FLUX'].quantity.to(flux_unit)
+        y_err = self.points['DIFF_FLUX_ERR_HI'].quantity.to(flux_unit)
 
         points = list()
         for val, err in zip(y.value, y_err.value):
             points.append(ufloat(val, err))
 
-        func = self.fit.model_with_uncertainties(x.to('keV').value)
+        func = self.fit.model_with_uncertainties(x.value)
         residuals = (points - func) / func
 
         return residuals
@@ -386,7 +413,7 @@ class SpectrumResult(object):
         ax0.legend(numpoints=1)
 
         resspec = mu_on - self.obs.on_vector
-        resspec.plot(ax=ax1, ecolor='black', fmt=None)
+        resspec.plot(ax=ax1, ecolor='black', fmt='none')
         xx = ax1.get_xlim()
         yy = [0, 0]
         ax1.plot(xx, yy, color='black')
@@ -403,7 +430,8 @@ class SpectrumResult(object):
         return ax0, ax1
 
     def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      energy_power=0, fit_kwargs=None, point_kwargs=None):
+                      energy_power=0, fit_kwargs=dict(),
+                      butterfly_kwargs=dict(), point_kwargs=dict()):
         """Plot spectrum
 
         Plot best fit model, flux points and residuals
@@ -417,7 +445,9 @@ class SpectrumResult(object):
         energy_power : int
             Power of energy to multiply flux axis with
         fit_kwargs : dict, optional
-            forwarded to :func:`gammapy.spectrum.SpectrumFitResult.plot`
+            forwarded to :func:`gammapy.spectrum.models.SpectralModel.plot`
+        butterfly_kwargs : dict, optional
+            forwarded to :func:`gammapy.spectrum.SpectrumButterfly.plot`
         point_kwargs : dict, optional
             forwarded to :func:`gammapy.spectrum.DifferentialFluxPoints.plot`
 
@@ -428,28 +458,42 @@ class SpectrumResult(object):
         ax1 : `~matplotlib.axes.Axes`
             Residuals plot axis
         """
-        import matplotlib.pyplot as plt 
+        import matplotlib.pyplot as plt
 
         ax0, ax1 = self.get_plot_axis()
         ax0.set_yscale('log')
 
-        if fit_kwargs is None:
-            fit_kwargs = dict(label='Best Fit {}'.format(
-                self.fit.model.__class__.__name__), color='navy', lw=2)
-        if point_kwargs is None:
-            point_kwargs = dict(color='navy')
+        fit_kwargs.setdefault('lw', '2')
+        fit_kwargs.setdefault('color', 'navy')
+        point_kwargs.setdefault('marker', '.')
+        point_kwargs.setdefault('color', 'navy')
+        butterfly_kwargs.setdefault('color', 'darkblue')
+        butterfly_kwargs.setdefault('alpha', '0.5')
+        common_kwargs = dict(
+            energy_unit=energy_unit,
+            flux_unit=flux_unit,
+            energy_power=energy_power)
+        fit_kwargs.update(common_kwargs)
+        point_kwargs.update(common_kwargs)
+        butterfly_kwargs.update(common_kwargs)
 
         self.fit.model.plot(energy_range=self.fit.fit_range,
-                            energy_unit=energy_unit, flux_unit=flux_unit,
-                            energy_power=energy_power, ax=ax0, **fit_kwargs)
-        self.points.plot(energy_unit=energy_unit, flux_unit=flux_unit,
-                         energy_power=energy_power, ax=ax0, **point_kwargs)
-        self._plot_residuals(energy_unit=energy_unit, ax=ax1, **point_kwargs)
+                            ax=ax0,
+                            **fit_kwargs)
+        self.fit.butterfly().plot(energy_range=self.fit.fit_range,
+                                  ax=ax0,
+                                  **butterfly_kwargs)
+        self.points.plot(ax=ax0,
+                         **point_kwargs)
+        point_kwargs.pop('flux_unit')
+        point_kwargs.pop('energy_power')
+        self._plot_residuals(ax=ax1,
+                            **point_kwargs)
+
 
         plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,
                  self.fit.fit_range[1].to(energy_unit).value * 1.1)
 
-        ax0.legend(numpoints=1)
         return ax0, ax1
 
     def _plot_residuals(self, ax=None, energy_unit='TeV', **kwargs):

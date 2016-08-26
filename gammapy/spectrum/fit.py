@@ -211,10 +211,12 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     # Translate sherpa model to GP model
     # This is done here since the FLUXFACTOR needs to be applied
     amplfact = SpectrumFit.FLUX_FACTOR
+    # Put cutoff parameter back to keV to have constistent units 
+    lambdafact = 1e-9
     pardict = dict(gamma=['index', u.Unit('')],
                    ref=['reference', u.keV],
                    ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')],
-                   cutoff=['lambda_', u.Unit('TeV-1')])
+                   cutoff=['lambda_', lambdafact * u.Unit('keV-1')])
     kwargs = dict()
 
     for par in shmodel.pars:
@@ -238,6 +240,12 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     idx = covar_axis.index('amplitude')
     covariance[idx] = covariance[idx] * amplfact
     covariance[:, idx] = covariance[:, idx] * amplfact
+    
+    # Adjust covariance term for parameter lambda in ExponentialCutoffPowerLaw
+    if 'ecpl' in shmodel.name:
+        lambda_idx = covar_axis.index('lambda_')
+        covariance[lambda_idx] = covariance[lambda_idx] * lambdafact
+        covariance[:, lambda_idx] = covariance[:, lambda_idx] * lambdafact
 
     # Efilter sometimes contains ','
     if ':' in efilter:

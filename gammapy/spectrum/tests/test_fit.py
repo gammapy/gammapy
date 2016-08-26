@@ -95,6 +95,9 @@ def test_spectral_fit(tmpdir):
     desired = 1.118e-12 * u.Unit('cm-2 s-1 TeV-1')
     assert_quantity_allclose(actual, desired, rtol=1e-3) 
 
+    residuals = fit.result[0].flux_point_residuals
+    assert_allclose(residuals[2].s, 0.1013, rtol=1e-3) 
+
     # Test plots
     fit.result[0].plot_spectrum()
     fit.result[0].plot_fit()
