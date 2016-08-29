@@ -90,7 +90,7 @@ class DifferentialFluxPoints(Table):
             correction = 1e-5
             fit.fit_range = ((1 + correction) * low, (1 - correction) * high)
             fit.fit()
-            res = fit.result[0].fit
+            res = fit.result[0]
 
             bin_center = np.sqrt(low * high)
             energy.append(bin_center)

@@ -39,11 +39,13 @@ class SpectrumFitResult(object):
         Flux for the fitted model at 1 TeV
     flux_at_1TeV_err : dict, optional
         Error on the flux for the fitted model at 1 TeV
+    obs : `~gammapy.spectrum.SpectrumObservation`
+        Input data used for the fit
     """
 
     def __init__(self, model, covariance=None, covar_axis=None, fit_range=None,
                  statname=None, statval=None, npred=None, fluxes=None,
-                 flux_errors=None):
+                 flux_errors=None, obs=None):
 
         self.model = model
         self.covariance = covariance
@@ -54,6 +56,7 @@ class SpectrumFitResult(object):
         self.npred = npred
         self.fluxes = fluxes
         self.flux_errors = flux_errors
+        self.obs = obs
 
     @classmethod
     def from_yaml(cls, filename):
@@ -285,40 +288,87 @@ class SpectrumFitResult(object):
         butterfly['flux_hi'] = flux + flux_err
         return butterfly
 
+    @property
+    def expected_source_counts(self):
+        """`~gammapy.spectrum.CountsSpectrum` of predicted counts
+        """
+        energy = self.obs.on_vector.energy
+        data = self.npred * u.ct
+        idx = np.isnan(data)
+        data[idx] = 0
+        return CountsSpectrum(data=data, energy=energy)
+
+
+    def plot(self, mode='wstat'):
+        """Standard debug plot.
+
+        Plot ON counts in comparison to model. The model can contain predicted
+        source and background counts (CStat) or prediced source counts plus a
+        background estimate from off regions (WStat). The ``mode`` parameter
+        controls this.
+        """
+        if mode != 'wstat':
+            raise NotImplementedError('Mode {}'.format(mode))
+
+        ax0, ax1 = get_plot_axis()
+
+        self.expected_source_counts.plot(ax=ax0,
+                                         fmt='none',
+                                         label='mu_source')
+
+        self.obs.background_vector.plot(ax=ax0,
+                                        label='mu_background',
+                                        fmt='none',
+                                        energy_unit='TeV')
+
+        mu_on = self.expected_source_counts + self.obs.background_vector
+        mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
+
+        self.obs.on_vector.plot(ax=ax0,
+                                label='n_on',
+                                show_poisson_errors=True,
+                                fmt='none',
+                                energy_unit='TeV')
+
+        ax0.legend(numpoints=1)
+
+        resspec = mu_on - self.obs.on_vector
+        resspec.plot(ax=ax1, ecolor='black', fmt='none')
+        xx = ax1.get_xlim()
+        yy = [0, 0]
+        ax1.plot(xx, yy, color='black')
+
+        ymax = 1.4 * max(resspec.data.value)
+        ax1.set_ylim(-ymax, ymax)
+
+        xmin = self.fit_range.to('TeV').value[0] * 0.8
+        xmax = self.fit_range.to('TeV').value[1] * 1.2
+        ax1.set_xlim(xmin, xmax)
+        ax1.set_xlabel('E [{}]'.format('TeV'))
+        ax1.set_ylabel('ON (Predicted - Detected)')
+
+        return ax0, ax1
+
 
 class SpectrumResult(object):
     """Class holding all results of a spectral analysis
 
-    This class is responsible for all debug plots / numbers
+    Best fit model, flux points
 
-    TODO: Automate Read/Write
+    TODO: Rewrite once `~gammapy.spectrum.models.SpectralModel` can hold
+    covariance matrix
 
     Parameters
     ----------
-    fit : `~gammapy.spectrum.SpectrumFitResult`
-        Spectrum fit result
-    obs : `~gammapy.spectrum.SpectrumObservation`, optional
-        Observation used for the fit
+    fit : `~SpectrumFitResult`
+        Spectrum fit result holding best fit model
     points : `~gammapy.spectrum.DifferentialFluxPoints`, optional
         Flux points
     """
 
     def __init__(self, fit=None, obs=None, points=None):
         self.fit = fit
-        self.obs = obs
         self.points = points
-
-    @property
-    def expected_source_counts(self):
-        """Npred
-
-        Counts predicted by best fit model.
-        """
-        energy = self.obs.on_vector.energy
-        data = self.fit.npred * u.ct
-        idx = np.isnan(data)
-        data[idx] = 0
-        return CountsSpectrum(data=data, energy=energy)
 
     @property
     def flux_point_residuals(self):
@@ -351,93 +401,18 @@ class SpectrumResult(object):
 
         return residuals
 
-    def get_plot_axis(self, figsize=(15, 10)):
-        """Axis setup used for standard plots
 
-        Returns
-        -------
-        ax0 : `~matplotlib.axes.Axes`
-            Main plot
-        ax1 : `~matplotlib.axes.Axes`
-            Residuals
-        """
-        from matplotlib import gridspec
-        import matplotlib.pyplot as plt
-        plt.style.use('ggplot')
-        plt.figure(figsize=figsize)
-
-        gs = gridspec.GridSpec(4, 1)
-
-        ax0 = plt.subplot(gs[:-1, :])
-        ax1 = plt.subplot(gs[3, :], sharex=ax0)
-
-        gs.update(hspace=0)
-        plt.setp(ax0.get_xticklabels(), visible=False)
-
-        ax0.set_xscale('log')
-        ax1.set_xscale('log')
-
-        return ax0, ax1
-
-    def plot_fit(self, mode='wstat'):
-        """Standard debug plot.
-
-        Plot ON counts in comparison to model. The model can contain predicted
-        source and background counts (CStat) or prediced source counts plus a
-        background estimate from off regions (WStat). The ``mode`` parameter
-        controls this.
-        """
-        if mode != 'wstat':
-            raise NotImplementedError('Mode {}'.format(mode))
-
-        ax0, ax1 = self.get_plot_axis()
-
-        self.expected_source_counts.plot(ax=ax0,
-                                         fmt='none',
-                                         label='mu_source')
-
-        self.obs.background_vector.plot(ax=ax0,
-                                        label='mu_background',
-                                        fmt='none',
-                                        energy_unit='TeV')
-
-        mu_on = self.expected_source_counts + self.obs.background_vector
-        mu_on.plot(ax=ax0, label='mu_on', energy_unit='TeV')
-
-        self.obs.on_vector.plot(ax=ax0,
-                                label='n_on',
-                                show_poisson_errors=True,
-                                fmt='none',
-                                energy_unit='TeV')
-
-        ax0.legend(numpoints=1)
-
-        resspec = mu_on - self.obs.on_vector
-        resspec.plot(ax=ax1, ecolor='black', fmt='none')
-        xx = ax1.get_xlim()
-        yy = [0, 0]
-        ax1.plot(xx, yy, color='black')
-
-        ymax = 1.4 * max(resspec.data.value)
-        ax1.set_ylim(-ymax, ymax)
-
-        xmin = self.fit.fit_range.to('TeV').value[0] * 0.8
-        xmax = self.fit.fit_range.to('TeV').value[1] * 1.2
-        ax1.set_xlim(xmin, xmax)
-        ax1.set_xlabel('E [{}]'.format('TeV'))
-        ax1.set_ylabel('ON (Predicted - Detected)')
-
-        return ax0, ax1
-
-    def plot_spectrum(self, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
-                      energy_power=0, fit_kwargs=dict(),
-                      butterfly_kwargs=dict(), point_kwargs=dict()):
+    def plot(self, energy_range, energy_unit='TeV', flux_unit='cm-2 s-1 TeV-1',
+             energy_power=0, fit_kwargs=dict(),
+             butterfly_kwargs=dict(), point_kwargs=dict()):
         """Plot spectrum
 
         Plot best fit model, flux points and residuals
 
         Parameters
         ----------
+        energy_range : `~astropy.units.Quantity`
+            Energy range for the plot
         energy_unit : str, `~astropy.units.Unit`, optional
             Unit of the energy axis
         flux_unit : str, `~astropy.units.Unit`, optional
@@ -460,7 +435,7 @@ class SpectrumResult(object):
         """
         import matplotlib.pyplot as plt
 
-        ax0, ax1 = self.get_plot_axis()
+        ax0, ax1 = get_plot_axis()
         ax0.set_yscale('log')
 
         fit_kwargs.setdefault('lw', '2')
@@ -477,12 +452,14 @@ class SpectrumResult(object):
         point_kwargs.update(common_kwargs)
         butterfly_kwargs.update(common_kwargs)
 
-        self.fit.model.plot(energy_range=self.fit.fit_range,
+        self.fit.model.plot(energy_range=energy_range,
                             ax=ax0,
                             **fit_kwargs)
-        self.fit.butterfly().plot(energy_range=self.fit.fit_range,
-                                  ax=ax0,
-                                  **butterfly_kwargs)
+       
+        energy = EnergyBounds.equal_log_spacing(energy_range[0],
+                                                energy_range[1],
+                                                100)
+        self.fit.butterfly(energy=energy).plot( ax=ax0, **butterfly_kwargs)
         self.points.plot(ax=ax0,
                          **point_kwargs)
         point_kwargs.pop('flux_unit')
@@ -491,8 +468,8 @@ class SpectrumResult(object):
                             **point_kwargs)
 
 
-        plt.xlim(self.fit.fit_range[0].to(energy_unit).value * 0.9,
-                 self.fit.fit_range[1].to(energy_unit).value * 1.1)
+        plt.xlim(energy_range[0].to(energy_unit).value * 0.9,
+                 energy_range[1].to(energy_unit).value * 1.1)
 
         return ax0, ax1
 
@@ -532,3 +509,32 @@ class SpectrumResult(object):
         ax.set_ylabel('(Points - Model) / Model')
 
         return ax
+
+
+def get_plot_axis(figsize=(15, 10)):
+    """Axis setup used for standard plots
+
+    Returns
+    -------
+    ax0 : `~matplotlib.axes.Axes`
+        Main plot
+    ax1 : `~matplotlib.axes.Axes`
+        Residuals
+    """
+    from matplotlib import gridspec
+    import matplotlib.pyplot as plt
+    plt.style.use('ggplot')
+    plt.figure(figsize=figsize)
+
+    gs = gridspec.GridSpec(4, 1)
+
+    ax0 = plt.subplot(gs[:-1, :])
+    ax1 = plt.subplot(gs[3, :], sharex=ax0)
+
+    gs.update(hspace=0)
+    plt.setp(ax0.get_xticklabels(), visible=False)
+
+    ax0.set_xscale('log')
+    ax1.set_xscale('log')
+
+    return ax0, ax1

@@ -49,20 +49,17 @@ class SpectrumFit(object):
         self.model = model
         self.statistic = stat
         self._fit_range = None
-        from gammapy.spectrum import SpectrumResult
-        # TODO : Introduce SpectrumResultList or Dict
         self._result = list()
-        for _ in self.obs_list:
-            self._result.append(SpectrumResult(obs=_))
 
     @property
     def result(self):
-        """List of `~gammapy.spectrum.SpectrumResult` for each observation"""
+        """List of `~gammapy.spectrum.SpectrumFitResult` for each observation"""
         return self._result
 
     @property
     def statistic(self):
         """Sherpa `~sherpa.stats.Stat` to be used for the fit"""
+
         return self._stat
 
     @statistic.setter
@@ -105,6 +102,9 @@ class SpectrumFit(object):
         from sherpa.models import ArithmeticModel, SimulFitModel
         from sherpa.astro.instrument import Response1D
         from sherpa.data import DataSimulFit
+
+        # Reset results
+        self._result = list()
 
         # Translate model to sherpa model if necessary
         if isinstance(self.model, models.SpectralModel):
@@ -156,8 +156,14 @@ class SpectrumFit(object):
 
         for ii in range(nobs):
             efilter = pha[ii].get_filter()
-            shmodel = fitmodel.parts[ii]
-            self.result[ii].fit = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
+            # Skip observations not participating in the fit
+            if efilter != '':
+                shmodel = fitmodel.parts[ii]
+                result = _sherpa_to_fitresult(shmodel, covar, efilter, fitresult)
+                result.obs = self.obs_list[ii]
+            else:
+                result = None
+            self._result.append(result)
 
     def compute_fluxpoints(self, binning):
         """Compute `~DifferentialFluxPoints` for best fit model
@@ -170,14 +176,18 @@ class SpectrumFit(object):
             Energy binning, see
             :func:`~gammapy.spectrum.utils.calculate_flux_point_binning` for a
             method to get flux points with a minimum significance.
+
+        Returns
+        -------
+        result : `~gammapy.spectrum.SpectrumResult`
         """
-        # TODO: Think of a way to not store flux points for each observation
+        from . import SpectrumResult
         obs_list = self.obs_list
-        for res in self.result:
-            model = res.fit.model
-            res.points = DifferentialFluxPoints.compute(model=model,
-                                                        binning=binning,
-                                                        obs_list=obs_list)
+        model = self.result[0].model
+        points = DifferentialFluxPoints.compute(model=model,
+                                                binning=binning,
+                                                obs_list=obs_list)
+        return SpectrumResult(fit=self.result[0], points=points)
 
     def run(self, outdir=None):
         """Run all steps
@@ -198,8 +208,8 @@ class SpectrumFit(object):
         self.fit()
 
         # Assume only one model is fit to all data
-        modelname = self.result[0].fit.model.__class__.__name__
-        self.result[0].fit.to_yaml('fit_result_{}.yaml'.format(modelname))
+        modelname = self.result[0].model.__class__.__name__
+        self.result[0].to_yaml('fit_result_{}.yaml'.format(modelname))
         os.chdir(str(cwd))
 
 
