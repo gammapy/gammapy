@@ -93,6 +93,10 @@ class SpectrumObservation(object):
         """Background `~gammapy.spectrum.CountsSpectrum`
 
         bkg = alpha * n_off
+
+        If alpha is a function of energy this will differ from
+        self.on_vector * self.total_stats.alpha because the latter returns an
+        average value for alpha.
         """
         energy = self.off_vector.energy
         data = self.off_vector.data * self.alpha

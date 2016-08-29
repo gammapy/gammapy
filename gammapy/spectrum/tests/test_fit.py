@@ -13,11 +13,16 @@ from ...spectrum import (
     SpectrumFitResult,
     models,
 )
-from ...utils.testing import requires_dependency, requires_data, SHERPA_LT_4_8
+from ...utils.testing import (
+    requires_dependency,
+    requires_data,
+    SHERPA_LT_4_8,
+    SHERPA_HEAD,
+)
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_LT_4_8')
+@pytest.mark.skipif('SHERPA_HEAD')
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
