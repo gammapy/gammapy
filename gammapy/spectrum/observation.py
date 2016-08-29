@@ -93,6 +93,10 @@ class SpectrumObservation(object):
         """Background `~gammapy.spectrum.CountsSpectrum`
 
         bkg = alpha * n_off
+
+        If alpha is a function of energy this will differ from
+        self.on_vector * self.total_stats.alpha because the latter returns an
+        average value for alpha.
         """
         energy = self.off_vector.energy
         data = self.off_vector.data * self.alpha
@@ -100,14 +104,17 @@ class SpectrumObservation(object):
 
     @property
     def total_stats(self):
-        """Return `~gammapy.data.ObservationStats`"""
+        """Return `~gammapy.data.ObservationStats`
+
+        ``a_on`` and ``a_off`` are averaged over all energies.
+        """
         # TODO: Introduce SpectrumStats class inheriting from ObservationStats
         # in order to add spectrum specific information
         kwargs = dict(
             n_on=int(self.on_vector.total_counts.value),
             n_off=int(self.off_vector.total_counts.value),
-            a_on=self.on_vector.backscal,
-            a_off=self.off_vector.backscal,
+            a_on=np.mean(self.on_vector.backscal),
+            a_off=np.mean(self.off_vector.backscal),
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
@@ -120,8 +127,8 @@ class SpectrumObservation(object):
         kwargs = dict(
             n_on=int(self.on_vector.data.value[nbin]),
             n_off=int(self.off_vector.data.value[nbin]),
-            a_on=self.on_vector.backscal,
-            a_off=self.off_vector.backscal,
+            a_on=self.on_vector.backscal[nbin],
+            a_off=self.off_vector.backscal[nbin],
             obs_id=self.obs_id,
             livetime=self.livetime,
         )

@@ -220,8 +220,8 @@ class PHACountsSpectrum(CountsSpectrum):
         Unique identifier
     livetime : `~astropy.units.Quantity`
         Observation live time
-    backscal : float
-        Scaling factor
+    backscal : float, array-like
+        Scaling factor for each bin
     lo_threshold : `~astropy.units.Quantity`
         Low energy threshold
     hi_threshold : `~astropy.units.Quantity`
@@ -252,6 +252,8 @@ class PHACountsSpectrum(CountsSpectrum):
             self.arffile = self.phafile.replace('pha', 'arf')
             self.rmffile = self.phafile.replace('pha', 'rmf')
             self.bkgfile = self.phafile.replace('pha', 'bkg')
+        if np.isscalar(self.backscal):
+            self.backscal = np.ones(self.energy.nbins) * self.backscal
 
     @property
     def quality(self):
@@ -267,13 +269,13 @@ class PHACountsSpectrum(CountsSpectrum):
         table = super(PHACountsSpectrum, self).to_table()
 
         table['QUALITY'] = self.quality
+        table['BACKSCAL'] = self.backscal
 
         meta = dict(name='SPECTRUM',
                     hduclass='OGIP',
                     hduclas1='SPECTRUM',
                     obs_id=self.obs_id,
                     exposure=self.livetime.to('s').value,
-                    backscal=float(self.backscal),
                     corrscal='',
                     areascal=1,
                     chantype='PHA',
@@ -322,16 +324,16 @@ class PHACountsSpectrum(CountsSpectrum):
         counts_table = fits_table_to_table(hdulist[1])
         counts = counts_table['COUNTS'] * u.ct
         ebounds = ebounds_to_energy_axis(hdulist[2])
+        backscal = counts_table['BACKSCAL'].data
         meta = dict(
             obs_id=hdulist[1].header['OBS_ID'],
             livetime=hdulist[1].header['EXPOSURE'] * u.s,
-            backscal=hdulist[1].header['BACKSCAL'],
             lo_threshold=hdulist[1].header['LO_THRES'] * u.TeV,
             hi_threshold=hdulist[1].header['HI_THRES'] * u.TeV,
         )
         if hdulist[1].header['HDUCLAS2'] == 'BKG':
             meta.update(is_bkg=True)
-        return cls(energy=ebounds, data=counts, **meta)
+        return cls(energy=ebounds, data=counts, backscal=backscal, **meta)
 
     def to_sherpa(self, name):
         """Return `~sherpa.astro.data.DataPHA`
