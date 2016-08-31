@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
 import os
+import copy
+import numpy as np
 import astropy.units as u
 from astropy.extern import six
 from ..extern.pathlib import Path
@@ -50,11 +52,20 @@ class SpectrumFit(object):
         self.statistic = stat
         self._fit_range = None
         self._result = list()
+        self._global_result = list()
 
     @property
     def result(self):
         """List of `~gammapy.spectrum.SpectrumFitResult` for each observation"""
         return self._result
+
+    @property
+    def global_result(self):
+        """Global `~gammapy.spectrum.SpectrumFitResult`
+        
+        Contains only model and fitrange over all observations
+        """
+        return self._global_result
 
     @property
     def statistic(self):
@@ -165,6 +176,16 @@ class SpectrumFit(object):
                 result = None
             self._result.append(result)
 
+        valid_result = np.nonzero(self.result)[0][0]
+        global_result = copy.deepcopy(self.result[valid_result])
+        global_result.npred = None
+        global_result.obs = None
+        all_fitranges = [_.fit_range for _ in self._result if _ is not None] 
+        fit_range_min = min([_[0] for _ in all_fitranges])
+        fit_range_max = max([_[1] for _ in all_fitranges]) 
+        global_result.fit_range = u.Quantity((fit_range_min, fit_range_max))
+        self._global_result = global_result
+
     def compute_fluxpoints(self, binning):
         """Compute `~DifferentialFluxPoints` for best fit model
 
@@ -219,14 +240,17 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     from . import SpectrumFitResult
 
     # Translate sherpa model to GP model
-    # This is done here since the FLUXFACTOR needs to be applied
+    # Units will be transformed to TeV, s, and m to avoid numerical issues
+    # e.g. a flux error of O(-13) results in a covariance entry of O(-45) due
+    # to the sqrt and unit keV which kills the uncertainties package
     amplfact = SpectrumFit.FLUX_FACTOR
-    # Put cutoff parameter back to keV to have constistent units 
-    lambdafact = 1e-9
     pardict = dict(gamma=['index', u.Unit('')],
-                   ref=['reference', u.keV],
-                   ampl=['amplitude', amplfact * u.Unit('cm-2 s-1 keV-1')],
-                   cutoff=['lambda_', lambdafact * u.Unit('keV-1')])
+                   ref=['reference',
+                        (1 * u.keV).to('TeV')],
+                   ampl=['amplitude',
+                         (amplfact * u.Unit('cm-2 s-1 keV-1')).to('m-2 s-1 TeV-1')],
+                   cutoff=['lambda_',
+                           u.Unit('TeV-1')])
     kwargs = dict()
 
     for par in shmodel.pars:
@@ -240,29 +264,23 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
     else:
         raise NotImplementedError(str(shmodel))
 
-    covariance = covar.extra_output
+    # Adjust parameters in covariance matrix
+    covariance = copy.deepcopy(covar.extra_output)
     covar_axis = list()
-    for par in covar.parnames:
+    for idx, par in enumerate(covar.parnames):
         name = par.split('.')[-1]
         covar_axis.append(pardict[name][0])
-
-    # Apply flux factor to covariance matrix
-    idx = covar_axis.index('amplitude')
-    covariance[idx] = covariance[idx] * amplfact
-    covariance[:, idx] = covariance[:, idx] * amplfact
-    
-    # Adjust covariance term for parameter lambda in ExponentialCutoffPowerLaw
-    if 'ecpl' in shmodel.name:
-        lambda_idx = covar_axis.index('lambda_')
-        covariance[lambda_idx] = covariance[lambda_idx] * lambdafact
-        covariance[:, lambda_idx] = covariance[:, lambda_idx] * lambdafact
+        temp = covariance[idx] * pardict[name][1]
+        covariance[idx] = temp
+        temp2 = covariance[:,idx] * pardict[name][1]
+        covariance[:,idx] = temp2
 
     # Efilter sometimes contains ','
     if ':' in efilter:
         temp = efilter.split(':')
     else:
         temp = efilter.split(',')
-    fit_range = [float(temp[0]), float(temp[1])] * u.keV
+    fit_range = ([float(temp[0]), float(temp[1])] * u.keV).to('TeV')
 
     npred = shmodel(1)
     statname = fitresult.statname

@@ -278,7 +278,8 @@ class SpectrumFitResult(object):
 
         # compute uncertainties
         umodel = self.model_with_uncertainties
-        values = umodel(energy.value)
+        energy_unit = self.model.parameters.reference.unit
+        values = umodel(energy.to(energy_unit).value)
 
         # unit conversion factor, in case it doesn't match
         conversion_factor = flux.to(flux_unit).value / unumpy.nominal_values(values)
