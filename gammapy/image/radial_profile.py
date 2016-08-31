@@ -4,15 +4,15 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.wcs.utils import skycoord_to_pixel
 from astropy.table import QTable
-from gammapy.image import SkyImage
+from . import SkyImage
 
 __all__ = [
-    'image_label',
+    'radial_profile_label_image',
     'radial_profile',
 ]
 
 
-def image_label(image, theta_bin=None, center=None):
+def radial_profile_label_image(image, center, theta_bin=None):
     """
    Calculate the labeled image to know which pixel is group together for the radial profile.
 
@@ -28,12 +28,9 @@ def image_label(image, theta_bin=None, center=None):
 
     Returns
     -------
-    index_map : `~numpy.arrays`
+    index_map : `~numpy.array`
         label image
    """
-
-    if not center:
-        center = image.center()
     image_bin = Angle(np.fabs(image.meta["CDELT1"]), image.meta["CUNIT1"])
     # Calculate the indices from the image
     pix = image.coordinates_pix()
@@ -48,11 +45,11 @@ def image_label(image, theta_bin=None, center=None):
     theta_pix = theta_bin / image_bin
     label_array = (r / theta_pix).astype(np.int)
     label_image = SkyImage.empty_like(image)
-    label_image.data=label_array
+    label_image.data = label_array
     return label_image
 
 
-def radial_profile(image, theta_bin=None, center=None):
+def radial_profile(image, center, theta_bin=None):
     """
    Calculate the labeled image to know which pixel is group together for the radial profile.
 
@@ -68,12 +65,16 @@ def radial_profile(image, theta_bin=None, center=None):
 
     Returns
     -------
-    table : `~astropy.table.Qtable`
-        Three columns: value in each bin, offset bin and err on the radial profil values
+    table : `~astropy.table.QTable` with three columns
+        `RADIUS`: offset bin value of the radial profile
+
+        `BIN_VALUE`: value of the radial profile
+
+        `BIN_ERR` : error on each value of the radial profile
    """
     from scipy.ndimage.measurements import labeled_comprehension
 
-    label_image = image_label(image, theta_bin, center).data
+    label_image = radial_profile_label_image(image, center, theta_bin).data
     index_tab = np.arange(0, label_image.max() + 1)
     image_bin = Angle(np.fabs(image.meta["CDELT1"]), image.meta["CUNIT1"])
     if not theta_bin:
