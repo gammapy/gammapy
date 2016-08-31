@@ -17,6 +17,7 @@ by issueing center_psf()
 from __future__ import absolute_import, division, print_function, unicode_literals
 import json
 import numpy as np
+from astropy.extern import six
 from astropy.convolution import Gaussian2DKernel
 from astropy.io import fits
 from astropy.stats import gaussian_fwhm_to_sigma, gaussian_sigma_to_fwhm
@@ -63,7 +64,7 @@ class SherpaMultiGaussPSF(object):
             # elif isinstance(source, HESS):
             # Get pars dict by from HESS object
             # self.pars = source.to_sherpa()
-        elif isinstance(source, (str, unicode)):
+        elif isinstance(source, six.string_types):
             # Assume it is a JSON filename
             fh = open(source)
             self.pars = json.load(fh)
