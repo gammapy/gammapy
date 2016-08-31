@@ -19,16 +19,15 @@ def radial_profile_label_image(image, center, theta_bin=None):
    Parameters
    ----------
    image : `~gammapy.image.SkyImage`
-         SkyImage of the image we cant to compute the radial profile
-   theta_bin : `~astropy.coordinates.Angle`
-         Bining for the radial profile
+        SkyImage of the image we cant to compute the radial profile
    center : `~astropy.coordinates.SkyCoord`
-         The `SkyCoord` of the pixel used as the center. The default is
-            None, which then uses the coordinates of the center of the image.
+        The `SkyCoord` of the pixel used as the center.
+   theta_bin : `~astropy.coordinates.Angle`
+         Binning for the radial profile
 
     Returns
     -------
-    index_map : `~numpy.array`
+    label_image : `~gammapy.image.SkyImage`
         label image
    """
     image_bin = Angle(np.fabs(image.meta["CDELT1"]), image.meta["CUNIT1"])
@@ -40,8 +39,6 @@ def radial_profile_label_image(image, center, theta_bin=None):
     r = np.hypot(x - center_pix[0], y - center_pix[1])
     if not theta_bin:
         theta_bin = image_bin
-    elif theta_bin < image_bin:
-        raise ValueError("The binning for the radial profile is lower that the binning of the map")
     theta_pix = theta_bin / image_bin
     label_array = (r / theta_pix).astype(np.int)
     label_image = SkyImage.empty_like(image)
@@ -57,20 +54,22 @@ def radial_profile(image, center, theta_bin=None):
    ----------
    image : `~gammapy.image.SkyImage`
          SkyImage of the image we cant to compute the radial profile
+   center : `~astropy.coordinates.SkyCoord`
+         The `SkyCoord` of the pixel used as the center.
    theta_bin : `~astropy.coordinates.Angle`
          Bining for the radial profile
-   center : `~astropy.coordinates.SkyCoord`
-         The `SkyCoord` of the pixel used as the center. The default is
-            None, which then uses the coordinates of the center of the image.
 
     Returns
     -------
-    table : `~astropy.table.QTable` with three columns
-        `RADIUS`: offset bin value of the radial profile
+    table : `~astropy.table.QTable`
 
-        `BIN_VALUE`: value of the radial profile
+        Table with the following fields:
 
-        `BIN_ERR` : error on each value of the radial profile
+        *``RADIUS`` : radius bin value of the radial profile
+
+        *``BIN_VALUE`` : mean of the value of the pixels combined in one radial bin
+
+        *``BIN_ERR`` : error on each value of the radial profile
    """
     from scipy.ndimage.measurements import labeled_comprehension
 
@@ -80,11 +79,11 @@ def radial_profile(image, center, theta_bin=None):
     if not theta_bin:
         theta_bin = image_bin
     theta_bin_tab = index_tab * theta_bin
-    values = labeled_comprehension(image.data, label_image, index_tab, np.mean, np.float, -1.)
+    mean_values = labeled_comprehension(image.data, label_image, index_tab, np.mean, np.float, -1.)
     myerr = lambda x: np.sqrt(np.fabs(x.astype(float).sum())) / len(x)
     err = labeled_comprehension(image.data, label_image, index_tab, myerr, np.float, -1.)
     table = QTable([theta_bin_tab,
-                    values,
+                    mean_values,
                     err],
                    names=('RADIUS', 'BIN_VALUE', 'BIN_ERR'))
     return table
