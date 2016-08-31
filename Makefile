@@ -74,12 +74,9 @@ pylint:
 
 # TODO: add test and code quality checks for `examples`
 
-gammapy-extra: 
-	git clone https://github.com/gammapy/gammapy-extra.git
-
 doc-show:
 	open docs/_build/html/index.html
 
-test-notebooks: gammapy-extra
+test-notebooks:
 	# For now just run one example ... should run all
-	py.test --nbval gammapy-extra/index.ipynb 
+	runipy ${GAMMAPY_EXTRA}/index.ipynb 
