@@ -310,16 +310,35 @@ class SpectrumObservation(object):
 
     @classmethod
     def stack(cls, obs_list, group_id=None):
-        """Stack `~gammapy.spectrum.SpectrumObservationList`
+        r"""Stack `~gammapy.spectrum.SpectrumObservationList`
 
+        The stacking of :math:`j` observations is implemented as follows.
+        :math:`k` and :math:`l` denote a bin in reconstructed and true energy,
+        respectively. 
 
-        Observation stacking is implemented as follows
+        .. math:: 
 
-        Averaged livetime ratio between ON and OFF regions, arf and rmf
-        :math:`\\alpha_{\\mathrm{tot}}`  for all observations is calculated as
-        .. math:: \\alpha_{\\mathrm{tot}} = \\frac{\\sum_{i}\\alpha_i \\cdot N_i}{\\sum_{i} N_i}
-        .. math:: \\arf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\arf_i \\cdot \\livetime_i}{\\sum_{i} \\livetime_i}
-        .. math:: \\rmf_{\\mathrm{tot}} = \\frac{\\sum_{i}\\rmf_i \\cdot arf_i \\cdot livetime_i}{\\sum_{i} arf_i \\cdot livetime_i}
+            \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
+                bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
+            
+            \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
+                \epsilon_{jk} 
+
+            \overline{\mathrm{n_{off}}}_k = \sum_{j} \mathrm{n_{off}}_{jk} \cdot
+                \epsilon_{jk} 
+
+            \overline{\alpha}_k = \frac{\sum_{j}\alpha_{jk} \cdot
+                \mathrm{n_{off}}_{jk} \cdot \epsilon_{jk}}{\overline{\mathrm {n_{off}}}}
+
+            \overline{t} = \sum_{j} t_i
+
+            \overline{\mathrm{aeff}}_l = \frac{\sum_{j}\mathrm{aeff}_{jl} 
+                \cdot t_j}{\overline{t}}
+
+            \overline{\mathrm{edisp}}_{kl} = \frac{\sum_{j} \mathrm{edisp}_{jkl} 
+                \cdot \mathrm{aeff}_{jl} \cdot t_j \cdot \epsilon_{jk}}{\sum_{j} \mathrm{aeff}_{jl}
+                \cdot t_j}
+
 
         Parameters
         ----------
@@ -328,6 +347,7 @@ class SpectrumObservation(object):
         group_id : int, optional
             ID for stacked observations
         """
+
 
         group_id = group_id or obs_list[0].obs_id 
 

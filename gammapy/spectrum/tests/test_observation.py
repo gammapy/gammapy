@@ -17,6 +17,7 @@ def test_spectrum_observation():
     obs.peek()
 
 
+@requires_dependency('scipy')
 @requires_data('gammapy-extra')
 def test_observation_stacking():
     obs1 = SpectrumObservation.read(
