@@ -327,7 +327,7 @@ Allowed optional dependencies:
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
 * `ROOT`_ and `rootpy`_ conversion helper functions (still has some Python 3 issues)
 * `imfun`_ for a trous wavelet decomposition
-* `uncertainties`_ for Gaussian error propagation
+* `uncertainties`_ for linear error propagation
 * `gwcs`_ for generalised world coordinate transformations
 * `astroplan`_ for observation planning and scheduling
 * `iminuit`_ for fitting by optimization
