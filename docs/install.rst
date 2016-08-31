@@ -206,7 +206,7 @@ The following packages are available via Macports:
 
 .. code-block:: bash
 
-    export PY=py34
+    export PY=py35
     sudo port install \
         $PY-pip $PY-scipy $PY-matplotlib $PY-scikit-image $PY-scikit-learn \
         $PY-pandas $PY-emcee $PY-h5py $PY-yaml $PY-ipython $PY-uncertainties \
@@ -326,7 +326,6 @@ Allowed optional dependencies:
 * `scikit-learn`_ for some data analysis tasks
 * `GammaLib`_ and `ctools`_ for simulating data and likelihood fitting
 * `ROOT`_ and `rootpy`_ conversion helper functions (still has some Python 3 issues)
-* `imfun`_ for a trous wavelet decomposition
 * `uncertainties`_ for linear error propagation
 * `gwcs`_ for generalised world coordinate transformations
 * `astroplan`_ for observation planning and scheduling
@@ -361,62 +360,3 @@ and then
 If this doesn't work (which is not uncommon, this is known to fail to compile the C
 extensions of Astropy on some platforms), ask your Python-installation-savvy co-worker
 or on the Astropy or Gammapy mailing list.
-
-CIAO
-----
-
-.. note::
-
-    The main reason to use Gammapy with CIAO was that CIAO was the easiest way to get Sherpa.
-    Since 2015, Sherpa can be easily installed via conda, so we recommend you do that
-    instead of installing Gammapy into CIAO as described in this section.
-
-The `CIAO <http://cxc.harvard.edu/ciao/http://cxc.harvard.edu/ciao/>`__
-("Chandra Interactive Analysis of Observations")
-package, which includes `Sherpa`_, ships with it's own Python 2.7 interpreter.
-
-If you want to use Astropy or Gammapy with that Python, you have to install it using
-that Python interpreter, other existing Python interpreters or installed packages
-can't be used (when they have C extensions, like Astropy does).
-
-CIAO version 4.7 (released December 16, 2014) includes
-Python 2.7.6, Numpy 1.8.1 and IPython 2.0.0.
-Unfortunately pip, PyFITS, Astropy, Scipy or Matplotlib are not included.
-
-Building Sherpa and all the required libraries from source is very difficult.
-You should install the binary version of CIAO as described
-`here <http://cxc.cfa.harvard.edu/ciao/download>`__,
-make sure you include Sherpa and exclude the Chandra CALDB.
-But then the Sherpa Python and Numpy will not work with the existing
-Python, Numpy, Astropy, Gammapy, ... on your system.
-
-You have to re-install Astropy, Gammapy and any other Python packages
-that you want to use in the same script as Sherpa into the CIAO Python.
-Sometimes this just works, but sometimes you'll run into compilation errors
-when e.g. the C extensions in ``astropy.wcs`` or ``astropy.io.fits`` are compiled.
-
-Here's a few tricks that might help you make it work.
-
-* Execute the
-  `ciao-python-fix <http://cxc.cfa.harvard.edu/ciao/threads/ciao_install/index.html#ciao_python_fix>`__
-  script after installing CIAO:
-
-.. code-block:: bash
-
-   $ cd $CIAO_DIR
-   $ bash bin/ciao-python-fix
-
-* Set ``LDFLAGS`` and use ``ciaorun`` before installing a Python package with C extensions:
-
-.. code-block:: bash
-
-   $ export LDFLAGS="-L${ASCDS_INSTALL}/ots/lib"
-   $ ciaorun python setup.py install
-
-* Add these folders to your ``PATH`` and ``PYTHONPATH`` so that the right command line tools or
-  Python packages are picked up instead of the ones in other system folders:
-
-.. code-block:: bash
-
-   $ export PATH=$CIAO_DIR/ots/bin:$PATH
-   $ export PYTHONPATH=$CIAO_DIR/ots/lib/python2.7/site-packages/:$PYTHONPATH
