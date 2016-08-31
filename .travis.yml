@@ -143,6 +143,7 @@ matrix:
         # Test IPython notebooks
         - os: linux
           env: PYTHON_VERSION=3.4 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+               CONDA_DEPENDENCIES='runipy'
 
     # You can move builds that temporarily fail because of some non-Gammapy
     # issue here
