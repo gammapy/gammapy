@@ -77,6 +77,11 @@
 .. _Olga Vorokh GSoC 2016 on image analysis and source detection: http://alcyonegammapy.blogspot.de/
 .. _Gammapy poster and proceeding at ICRC 2015: https://indico.cern.ch/event/344485/session/142/contribution/695
 .. _First Gammapy coding sprint: https://github.com/gammapy/gammapy/wiki/PyGamma-coding-sprint-1
+.. _Gammapy poster at Gamma 2016: https://github.com/gammapy/gamma2016-gammapy-poster/blob/master/gamma2016-gammapy-poster.pdf
+.. _First Gammapy presentation at a CTA meeting: https://github.com/gammapy/gammapy-extra/blob/master/presentations/2016-05-16_CTA_Meeting_Gammapy.pdf
+.. _Open TeV source catalog: https://github.com/gammapy/gamma-cat
+.. _gamma-sky.net: http://gamma-sky.net/
+.. _Gammapy binder: http://mybinder.org/repo/gammapy/gammapy-extra
 
 .. _Gammapy mailing list: http://groups.google.com/group/gammapy
 .. _Gammapy Github page: https://github.com/gammapy/gammapy
