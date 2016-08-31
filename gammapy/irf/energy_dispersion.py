@@ -56,6 +56,22 @@ class EnergyDispersion(NDDataArray):
         """
         return self.data
 
+    def pdf_in_safe_range(self, lo_threshold, hi_threshold):
+        """PDF matrix with bins outside threshold set to 0
+        
+        Parameters
+        ----------
+        lo_threshold : `~astropy.units.Quantity`
+            Low reco energy threshold
+        hi_threshold : `~astropy.units.Quantity`
+            High reco energy threshold
+        """
+        data = self.data.copy()
+        idx = np.where((self.e_reco.data[:-1] < lo_threshold) |
+                       (self.e_reco.data[1:] > hi_threshold))
+        data[:,idx] = 0
+        return data
+
     @classmethod
     def from_gauss(cls, e_true, e_reco, sigma=0.2, pdf_threshold=1e-6):
         """Create Gaussian `EnergyDispersion` matrix.
