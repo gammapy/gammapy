@@ -80,6 +80,7 @@ doc-show:
 
 test-notebooks: SHELL:=/bin/bash 
 test-notebooks:
+	python setup.py build
 	@echo "notebooks tested with python 2 and 3"
 	runipy ${GAMMAPY_EXTRA}/index.ipynb 
 

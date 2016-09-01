@@ -32,6 +32,7 @@ def test_LogEnergyAxis():
 
 
 @requires_data('gammapy-extra')
+@requires_dependency('scipy')
 def test_flux_points_binning():
 
     phafile = gammapy_extra.filename("datasets/hess-crab4_pha/pha_obs23523.fits")
