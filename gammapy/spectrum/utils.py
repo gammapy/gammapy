@@ -178,9 +178,6 @@ def calculate_flux_point_binning(obs_list, min_signif):
     :func:`~gammapy.spectrum.DifferentialFluxPoints.compute` Each bin in the
     resulting energy binning will include a ``min_signif`` source detection. 
 
-    TODO: This only works for one observation at the moment. Make it stack
-    counts before computing the binning
-
     TODO: It is required that at least two fine bins be included in one
     flux point interval, otherwise the sherpa covariance method breaks
     down.
@@ -197,17 +194,15 @@ def calculate_flux_point_binning(obs_list, min_signif):
     binning : `~astropy.units.Quantity` 
         Energy binning
     """
+    from . import SpectrumObservation
     # NOTE: Results may vary from FitSpectrum since there the rebin
     # parameter can only have fixed values, here it grows linearly. Also it
     # has to start at 2 here (see docstring)
 
     # rebin_factor = 1
     rebin_factor = 2
-
-    # TODO: Implement stacking (at least for counts)
-    if len(obs_list) > 1:
-        raise NotImplementedError('stack counts')
-    obs = obs_list[0]
+    
+    obs = SpectrumObservation.stack(obs_list)
 
     # First first bin above low threshold and last bin below high threshold
     current_ebins = obs.on_vector.energy
@@ -219,7 +214,6 @@ def calculate_flux_point_binning(obs_list, min_signif):
 
     # Precompute ObservationStats for each bin
     obs_stats = [obs.stats(i) for i in range(current_ebins.nbins)]
-
     while(current_bin + rebin_factor <= max_bin):
         # Merge bins together until min_signif is reached
         stats_list = obs_stats[current_bin:current_bin + rebin_factor:1]

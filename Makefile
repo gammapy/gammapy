@@ -80,3 +80,4 @@ doc-show:
 test-notebooks:
 	# For now just run one example ... should run all
 	runipy ${GAMMAPY_EXTRA}/index.ipynb 
+	runipy ${GAMMAPY_EXTRA}/notebooks/hess_spectrum_analysis.ipynb 

@@ -307,7 +307,6 @@ class SpectrumObservation(object):
         """
         raise NotImplementedError
 
-
     @classmethod
     def stack(cls, obs_list, group_id=None):
         r"""Stack `~gammapy.spectrum.SpectrumObservationList`
@@ -320,7 +319,7 @@ class SpectrumObservation(object):
 
             \epsilon_{jk} =\left\{\begin{array}{cl} 1, & \mbox{if
                 bin k is inside the energy thresholds}\\ 0, & \mbox{otherwise} \end{array}\right.
-            
+
             \overline{\mathrm{n_{on}}}_k = \sum_{j} \mathrm{n_{on}}_{jk} \cdot
                 \epsilon_{jk} 
 
@@ -348,8 +347,7 @@ class SpectrumObservation(object):
             ID for stacked observations
         """
 
-
-        group_id = group_id or obs_list[0].obs_id 
+        group_id = group_id or obs_list[0].obs_id
 
         # np.sum does not work with Quantities
         e_true = obs_list[0].aeff.energy
@@ -388,16 +386,22 @@ class SpectrumObservation(object):
             backscal_off += backscal_off_data * o.off_vector.data
 
             # Exposure weighted IRFs
-            aefft_current = o.aeff.data * o.livetime
+            aeff_data = o.aeff.evaluate(fill_nan=True)
+            aefft_current = aeff_data * o.livetime
             aefft += aefft_current
             edisp_data = o.edisp.pdf_in_safe_range(o.lo_threshold, o.hi_threshold)
             aefftedisp += edisp_data.transpose() * aefft_current
-        
-        stacked_backscal_on = np.nan_to_num(backscal_on / stacked_off_counts)
-        stacked_backscal_off = np.nan_to_num(backscal_off / stacked_off_counts)
+
+        stacked_backscal_on = backscal_on / stacked_off_counts
+        stacked_backscal_off = backscal_off / stacked_off_counts
+
+        # there should be no nan values in backscal_on or backscal_off
+        idx = np.where(stacked_off_counts == 0)[0]
+        stacked_backscal_on[idx] = -1
+        stacked_backscal_off[idx] = -1
 
         stacked_aeff = aefft / stacked_livetime
-        stacked_edisp = aefftedisp / aefft 
+        stacked_edisp = np.nan_to_num(aefftedisp / aefft)
 
         aeff = EffectiveAreaTable(energy=e_true,
                                   data=stacked_aeff.to('cm2'))
@@ -405,11 +409,11 @@ class SpectrumObservation(object):
                                  e_reco=e_reco,
                                  data=stacked_edisp.transpose())
 
-        counts_kwargs=dict(
-            lo_threshold = min(lo_thresholds),
-            hi_threhsold = max(hi_thresholds),
-            livetime = stacked_livetime,
-            obs_id = group_id,
+        counts_kwargs = dict(
+            lo_threshold=min(lo_thresholds),
+            hi_threshold=max(hi_thresholds),
+            livetime=stacked_livetime,
+            obs_id=group_id,
             energy=e_reco
         )
 
@@ -425,6 +429,7 @@ class SpectrumObservation(object):
                    off_vector=off_vector,
                    edisp=edisp,
                    aeff=aeff)
+
 
 class SpectrumObservationList(list):
     """
@@ -487,5 +492,3 @@ class SpectrumObservationList(list):
         """
         for obs in self:
             obs.write(outdir=outdir, **kwargs)
-
-

@@ -287,7 +287,12 @@ def _sherpa_to_fitresult(shmodel, covar, efilter, fitresult):
         temp = efilter.split(':')
     else:
         temp = efilter.split(',')
-    fit_range = ([float(temp[0]), float(temp[1])] * u.keV).to('TeV')
+    
+    # Special case only one noticed bin
+    if len(temp) == 1:
+        fit_range = ([float(temp[0]), float(temp[0])] * u.keV).to('TeV')
+    else:
+        fit_range = ([float(temp[0]), float(temp[1])] * u.keV).to('TeV')
 
     npred = shmodel(1)
     statname = fitresult.statname
