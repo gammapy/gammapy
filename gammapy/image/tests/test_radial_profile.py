@@ -16,12 +16,15 @@ def test_radial_profile():
     image = SkyImage.empty(nxpix=250, nypix=250, binsz=0.02, xref=center.galactic.l.deg,
                            yref=center.galactic.b.deg, proj='TAN', coordsys='GAL')
     image.data[:] = 1
+    #test with the default theta_bin
     table = radial_profile(image, center=center, theta_bin=None)
     offbincenter = table["RADIUS"]
     offbinsize = offbincenter[1] - offbincenter[0]
     excess_profile = table["BIN_VALUE"]
     assert_quantity_allclose(offbinsize, Angle(np.fabs(image.meta["CDELT1"]), image.meta["CUNIT1"]))
     assert_equal(excess_profile, np.ones(len(excess_profile)))
+
+    #Test with a defined theta_bin
     table2 = radial_profile(image, center=center, theta_bin=Angle(0.04, "deg"))
     offbincenter2 = table2["RADIUS"]
     offbinsize2 = offbincenter2[1] - offbincenter2[0]
