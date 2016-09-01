@@ -145,6 +145,9 @@ matrix:
           env: PYTHON_VERSION=3.4 MAIN_CMD='make' SETUP_CMD='test-notebooks'
                CONDA_DEPENDENCIES='runipy'
 
+        - os: linux
+          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+               CONDA_DEPENDENCIES='runipy'
     # You can move builds that temporarily fail because of some non-Gammapy
     # issue here
     # Please add a link to a GH issue that tracks the upstream issue.

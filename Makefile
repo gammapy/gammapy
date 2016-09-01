@@ -2,6 +2,7 @@
 
 PROJECT = gammapy
 CYTHON ?= cython
+PYTHON_VERSION=`python -c 'import sys; print("%i" % (sys.hexversion<0x03000000))'`
 
 help:
 	@echo ''
@@ -77,7 +78,15 @@ pylint:
 doc-show:
 	open docs/_build/html/index.html
 
+test-notebooks: SHELL:=/bin/bash 
 test-notebooks:
-	# For now just run one example ... should run all
+	@echo "notebooks tested with python 2 and 3"
 	runipy ${GAMMAPY_EXTRA}/index.ipynb 
-	runipy ${GAMMAPY_EXTRA}/notebooks/hess_spectrum_analysis.ipynb 
+
+	@if test ${PYTHON_VERSION} -eq 0 ; then\
+	    echo "notebooks tested only with python 3";\
+    	else \
+	    echo "notebooks tested only with python 2";\
+	    runipy ${GAMMAPY_EXTRA}/notebooks/hess_spectrum_analysis.ipynb;\
+	fi
+
