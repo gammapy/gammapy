@@ -337,7 +337,8 @@ class SpectrumFitResult(object):
                                 energy_unit='TeV')
 
         ax0.legend(numpoints=1)
-
+        ax0.set_title('')
+    
         resspec = mu_on - self.obs.on_vector
         resspec.plot(ax=ax1, ecolor='black', fmt='none')
         xx = ax1.get_xlim()
@@ -350,7 +351,7 @@ class SpectrumFitResult(object):
         xmin = self.fit_range.to('TeV').value[0] * 0.8
         xmax = self.fit_range.to('TeV').value[1] * 1.2
         ax1.set_xlim(xmin, xmax)
-        ax1.set_xlabel('E [{}]'.format('TeV'))
+        ax1.set_xlabel('Energy [{}]'.format('TeV'))
         ax1.set_ylabel('ON (Predicted - Detected)')
 
         return ax0, ax1
@@ -470,6 +471,7 @@ class SpectrumResult(object):
                          **point_kwargs)
         point_kwargs.pop('flux_unit')
         point_kwargs.pop('energy_power')
+        ax0.set_title('')
         self._plot_residuals(ax=ax1,
                             **point_kwargs)
 
@@ -511,7 +513,7 @@ class SpectrumResult(object):
         yy = [0, 0]
         ax.plot(xx, yy, color='black')
 
-        ax.set_xlabel('E [{}]'.format(energy_unit))
+        ax.set_xlabel('Energy [{}]'.format(energy_unit))
         ax.set_ylabel('(Points - Model) / Model')
 
         return ax
@@ -532,12 +534,12 @@ def get_plot_axis(figsize=(15, 10)):
     plt.style.use('ggplot')
     plt.figure(figsize=figsize)
 
-    gs = gridspec.GridSpec(4, 1)
+    gs = gridspec.GridSpec(5, 1)
 
-    ax0 = plt.subplot(gs[:-1, :])
+    ax0 = plt.subplot(gs[:-2, :])
     ax1 = plt.subplot(gs[3, :], sharex=ax0)
 
-    gs.update(hspace=0)
+    gs.update(hspace=0.1)
     plt.setp(ax0.get_xticklabels(), visible=False)
 
     ax0.set_xscale('log')

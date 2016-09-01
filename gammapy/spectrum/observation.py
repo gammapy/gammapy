@@ -51,7 +51,6 @@ class SpectrumObservation(object):
         obs.peek()
         plt.show()
     """
-
     def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
@@ -346,7 +345,6 @@ class SpectrumObservation(object):
         group_id : int, optional
             ID for stacked observations
         """
-
         group_id = group_id or obs_list[0].obs_id
 
         # np.sum does not work with Quantities
@@ -396,9 +394,11 @@ class SpectrumObservation(object):
         stacked_backscal_off = backscal_off / stacked_off_counts
 
         # there should be no nan values in backscal_on or backscal_off
+        # this leads to problems when fitting the data
+        alpha_correction = - 1
         idx = np.where(stacked_off_counts == 0)[0]
-        stacked_backscal_on[idx] = -1
-        stacked_backscal_off[idx] = -1
+        stacked_backscal_on[idx] = alpha_correction 
+        stacked_backscal_off[idx] = alpha_correction
 
         stacked_aeff = aefft / stacked_livetime
         stacked_edisp = np.nan_to_num(aefftedisp / aefft)
