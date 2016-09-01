@@ -458,7 +458,7 @@ class SkyImage(object):
         """
         cutout = Cutout2D(self.data, position=position, wcs=self.wcs, size=size,
                           copy=True)
-        image = SkyImage(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
+        image = self.__class__(data=cutout.data, wcs=cutout.wcs, unit=self.unit)
         return image
 
     def pad(self, pad_width, mode='reflect', **kwargs):
