@@ -149,14 +149,21 @@ class SpectrumFit(object):
             if temp.get_background() is not None:
                 temp.get_background().ignore_bad()
             pha.append(temp)
+            log.debug('Noticed channels obs {}: {}'.format(
+                ii, temp.get_noticed_channels()))
             # Forward folding
             resp = Response1D(pha[ii])
             folded_model.append(resp(model) * self.FLUX_FACTOR)
 
-        data = DataSimulFit('simul fit data', pha)
-        fitmodel = SimulFitModel('simul fit model', folded_model)
+        if (len(pha) == 1 and len(pha[0].get_noticed_channels()) == 1):
+            raise ValueError('You are trying to fit one observation in only '
+                             'one bin, error estimation will fail')
 
+        data = DataSimulFit('simul fit data', pha)
+        log.debug(data)
+        fitmodel = SimulFitModel('simul fit model', folded_model)
         log.debug(fitmodel)
+
         fit = Fit(data, fitmodel, self.statistic)
 
         fitresult = fit.fit()

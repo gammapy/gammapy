@@ -6,6 +6,7 @@ from astropy.table import Table
 from astropy.units import Quantity, Unit
 from ..utils.energy import Energy, EnergyBounds
 from ..spectrum.powerlaw import power_law_flux
+import logging
 
 __all__ = [
     'DifferentialFluxPoints',
@@ -13,6 +14,7 @@ __all__ = [
     'compute_differential_flux_points',
 ]
 
+log = logging.getLogger(__name__)
 
 class DifferentialFluxPoints(Table):
     """Differential flux points table
@@ -69,6 +71,8 @@ class DifferentialFluxPoints(Table):
             sherpa_models = [None] * binning.nbins
 
         for low, high, sherpa_model in zip(low_bins, high_bins, sherpa_models):
+            log.info('Computing flux points in bin [{}, {}]'.format(low, high))
+
             # Make PowerLaw approximation for higher order models
             if sherpa_model is None:
                 flux_low = model(low)
@@ -76,6 +80,8 @@ class DifferentialFluxPoints(Table):
                 index = powerlaw.power_law_g_from_points(e1=low, e2=high,
                                                          f1=flux_low,
                                                          f2=flux_high)
+
+                log.debug('Approximated power law index: {}'.format(index))
                 sherpa_model = PowLaw1D('powlaw1d.default')
                 sherpa_model.gamma = index
                 sherpa_model.gamma.freeze()
@@ -96,9 +102,9 @@ class DifferentialFluxPoints(Table):
             energy.append(bin_center)
             e_err_hi.append(high - bin_center)
             e_err_lo.append(bin_center - low)
-            diff_flux.append(res.model(bin_center).to('cm-2 s-1 TeV-1'))
-            err = res.model_with_uncertainties(bin_center.to('keV').value)
-            diff_flux_err.append(err.s * Unit('cm-2 s-1 keV-1'))
+            diff_flux.append(res.model(bin_center).to('m-2 s-1 TeV-1'))
+            err = res.model_with_uncertainties(bin_center.to('TeV').value)
+            diff_flux_err.append(err.s * Unit('m-2 s-1 TeV-1'))
 
         return cls.from_arrays(energy=energy,
                                diff_flux=diff_flux,
