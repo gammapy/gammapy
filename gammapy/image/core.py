@@ -131,13 +131,23 @@ class SkyImage(object):
 
         meta = OrderedDict(header)
 
-        # parse astropy.io.fits.header._HeaderCommentaryCards as strings
-        if 'HISTORY' in meta:
-            meta['HISTORY'] = str(meta['HISTORY'])
-        if 'COMMENT' in meta:
-            meta['COMMENT'] = str(meta['COMMENT'])
+        # Drop problematic header content, i.e. values of type
+        # `astropy.io.fits.header._HeaderCommentaryCards`
+        # Handling this well and preserving it is a bit complicated, see
+        # See https://github.com/astropy/astropy/blob/master/astropy/io/fits/connect.py
+        # for how `astropy.table.Table.read` does it
+        # and see https://github.com/gammapy/gammapy/issues/701
+        meta.pop('COMMENT', None)
+        meta.pop('HISTORY', None)
 
-        return cls(name, data, wcs, unit, meta)
+        obj = cls(name, data, wcs, unit, meta)
+
+        # For now, we give the user a copy of the header as a
+        # private, undocumented attribute, because it's sometimes
+        # useful to have.
+        obj._header = header
+
+        return obj
 
     @classmethod
     def empty(cls, name=None, nxpix=200, nypix=200, binsz=0.02, xref=0, yref=0,
@@ -259,6 +269,7 @@ class SkyImage(object):
         **kwargs : dict
             Keyword arguments passed to `~astropy.fits.ImageHDU.writeto`.
         """
+        filename = str(make_path(filename))
         hdu = self.to_image_hdu()
         hdu.writeto(filename, *args, **kwargs)
 

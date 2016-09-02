@@ -118,13 +118,9 @@ class TestSkyMapPoisson:
 
     def test_io(self, tmpdir):
         filename = tmpdir / 'test_image.fits'
-        self.image.meta['COMMENT'] = 'Test comment'
-        self.image.meta['HISTORY'] = 'Test history'
         self.image.write(str(filename))
         image = SkyImage.read(str(filename))
         assert self.image.name == image.name
-        assert isinstance(image.meta['COMMENT'], string_types)
-        assert isinstance(image.meta['HISTORY'], string_types)
 
     def test_unit_io(self, tmpdir):
         filename = tmpdir / 'test_image_unit.fits'
@@ -393,3 +389,16 @@ def test_region_mask():
     sky_region = region.to_sky(wcs=mask.wcs)
     actual = mask.region_mask(sky_region)
     assert_equal(actual.data, expected)
+
+
+@requires_data('gammapy-extra')
+def test_fits_header_comment_io(tmpdir):
+    """
+    Test what happens to multi-line comments in the FITS header.
+
+    This is a regression test for
+    https://github.com/gammapy/gammapy/issues/701
+    """
+    filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/fermi/gll_iem_v02_cutout.fits'
+    image = SkyImage.read(filename)
+    image.write(tmpdir / 'temp.fits')
