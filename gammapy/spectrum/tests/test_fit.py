@@ -22,7 +22,7 @@ from ...utils.testing import (
 
 
 @pytest.mark.skipif('NUMPY_LT_1_9')
-@pytest.mark.skipif('SHERPA_HEAD')
+@pytest.mark.xfail('wait for https://github.com/sherpa/sherpa/pull/249')
 @requires_dependency('sherpa')
 @requires_dependency('matplotlib')
 @requires_data('gammapy-extra')
