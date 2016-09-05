@@ -15,9 +15,6 @@ __all__ = [
 
 SHERPA_LT_4_8 = not minversion('sherpa', '4.8')
 
-# TODO: remove once new sherpa version is available
-SHERPA_HEAD = not minversion('sherpa', '4.8.1+44')
-
 # Cache for `requires_dependency`
 _requires_dependency_cache = dict()
 

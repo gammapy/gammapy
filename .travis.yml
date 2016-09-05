@@ -32,6 +32,7 @@ env:
         - CONDA_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes'
         - CONDA_DOCS_DEPENDENCIES='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy sherpa libgfortran=$LIBGFORTRAN_VERSION'
         - CONDA_DOCS_DEPENDENCIES_WO_SHERPA='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes pygments aplpy'
+        - CONDA_DEPENDENCIES_NOTEBOOKS='Cython click scipy h5py matplotlib pyyaml scikit-image scikit-learn pandas naima photutils wcsaxes sherpa libgfortran=$LIBGFORTRAN_VERSION runipy'
         - PIP_DEPENDENCIES='regions uncertainties reproject'
         - CONDA_CHANNELS='astropy sherpa'
         - FETCH_GAMMAPY_EXTRA=true
@@ -143,8 +144,11 @@ matrix:
         # Test IPython notebooks
         - os: linux
           env: PYTHON_VERSION=3.4 MAIN_CMD='make' SETUP_CMD='test-notebooks'
-               CONDA_DEPENDENCIES='runipy'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
 
+        - os: linux
+          env: PYTHON_VERSION=2.7 MAIN_CMD='make' SETUP_CMD='test-notebooks'
+               CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_NOTEBOOKS
     # You can move builds that temporarily fail because of some non-Gammapy
     # issue here
     # Please add a link to a GH issue that tracks the upstream issue.
