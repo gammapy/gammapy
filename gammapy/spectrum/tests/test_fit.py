@@ -106,7 +106,6 @@ def test_spectral_fit(tmpdir):
 
     residuals = result.flux_point_residuals
     assert_allclose(residuals[2].s, 0.1905, rtol=1e-3) 
-    assert_allclose(residuals[2].s, 0.0938, rtol=1e-3)
 
     # Test ECPL
     ecpl = models.ExponentialCutoffPowerLaw(
