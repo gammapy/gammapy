@@ -9,7 +9,12 @@ from astropy.table import Table
 from astropy.utils.data import download_file
 from astropy.units import Quantity
 from ..utils.energy import EnergyBounds
-from ..spectrum import DifferentialFluxPoints, IntegralFluxPoints, SpectrumFitResult
+from ..spectrum import (
+    DifferentialFluxPoints,
+    IntegralFluxPoints,
+    SpectrumResult,
+    SpectrumFitResult
+)
 from ..spectrum.models import (PowerLaw, PowerLaw2, ExponentialCutoffPowerLaw,
                                ExponentialCutoffPowerLaw3FGL, LogParabola)
 from ..spectrum.powerlaw import power_law_flux
@@ -443,9 +448,7 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
     @property
     def spectrum(self):
-        """Spectrum model fit result (`~gammapy.spectrum.SpectrumFitResult`)
-
-        TODO: remove!???
+        """Combined spectrum information (model + points) (`~gammapy.spectrum.SpectrumResult`)
         """
         data = self.data
         model = self.spectral_model
@@ -458,12 +461,14 @@ class SourceCatalogObject2FHL(SourceCatalogObject):
 
         covar_axis = ['index', 'amplitude']
 
-        return SpectrumFitResult(
+        fit = SpectrumFitResult(
             model=model,
             fit_range=self.energy_range,
             covariance=covariance,
             covar_axis=covar_axis,
         )
+
+        return SpectrumResult(fit=fit, points=self.flux_points)
 
 
 class SourceCatalog3FGL(SourceCatalog):

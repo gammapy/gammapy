@@ -98,6 +98,7 @@ class DifferentialFluxPoints(Table):
             fit.fit()
             res = fit.global_result
 
+            log.debug('{}'.format(res))
             bin_center = np.sqrt(low * high)
             energy.append(bin_center)
             e_err_hi.append(high - bin_center)
@@ -105,6 +106,7 @@ class DifferentialFluxPoints(Table):
             diff_flux.append(res.model(bin_center).to('m-2 s-1 TeV-1'))
             err = res.model_with_uncertainties(bin_center.to('TeV').value)
             diff_flux_err.append(err.s * Unit('m-2 s-1 TeV-1'))
+            log.debug('\n------------------------\n')
 
         return cls.from_arrays(energy=energy,
                                diff_flux=diff_flux,

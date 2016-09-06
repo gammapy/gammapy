@@ -392,8 +392,13 @@ class SpectrumResult(object):
         from uncertainties import ufloat
         # Get units right
         pars = self.fit.model.parameters
-        energy_unit = pars.reference.unit
-        flux_unit = pars.amplitude.unit
+        if self.fit.model.__class__.__name__ == 'PowerLaw2':
+            energy_unit = pars.emin.unit
+            flux_unit = pars.amplitude.unit / energy_unit
+        else:
+            energy_unit = pars.reference.unit
+            flux_unit = pars.amplitude.unit
+
 
         x = self.points['ENERGY'].quantity.to(energy_unit)
         y = self.points['DIFF_FLUX'].quantity.to(flux_unit)
