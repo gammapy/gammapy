@@ -82,10 +82,10 @@ matrix:
 
         # Build docs
         - os: linux
-          env: PYTHON_VERSION=2.7 SETUP_CMD='build_sphinx -w'
+          env: PYTHON_VERSION=2.7 SETUP_CMD='build_docs -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
         - os: linux
-          env: PYTHON_VERSION=3.5 SETUP_CMD='build_sphinx -w'
+          env: PYTHON_VERSION=3.5 SETUP_CMD='build_docs -w'
                CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES_WO_SHERPA
 
         # Run tests without GAMMAPY_EXTRA available
@@ -103,12 +103,6 @@ matrix:
         - os: linux
           env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='test -V'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_WO_SHERPA
-        - os: linux
-          env: PYTHON_VERSION=2.7 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES
-        - os: linux
-          env: PYTHON_VERSION=3.5 ASTROPY_VERSION=dev SETUP_CMD='build_sphinx -w'
-               CONDA_DEPENDENCIES=$CONDA_DOCS_DEPENDENCIES_WO_SHERPA
 
         # Test with with optional dependencies disabled
         - os: linux

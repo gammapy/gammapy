@@ -30,7 +30,7 @@ help:
 	@echo '     python setup.py develop'
 	@echo '     python setup.py test -V'
 	@echo '     python setup.py test --help # to see available options'
-	@echo '     python setup.py build_sphinx # use `-l` for clean build'
+	@echo '     python setup.py build_docs # use `-l` for clean build'
 	@echo ''
 	@echo ' More info:'
 	@echo ''
