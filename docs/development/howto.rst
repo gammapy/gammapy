@@ -59,9 +59,9 @@ such as Sphinx warnings or import errors or code that works locally because it u
 on travis-ci or for other developers.
 
 * The ``build`` folder is where ``python setup.py build`` or ``python setup.py install`` generate files.
-* The ``docs/api`` folder is where ``python setup.py build_sphinx`` generates [RST]_ files from the docstrings
+* The ``docs/api`` folder is where ``python setup.py build_docs`` generates [RST]_ files from the docstrings
   (temporary files part of the HTML documentation generation).
-* The  ``docs/_build`` folder is where ``python setup.py build_sphinx`` generates the HTML and other Sphinx
+* The  ``docs/_build`` folder is where ``python setup.py build_docs`` generates the HTML and other Sphinx
   documentation output files.
 * The ``htmlcov`` folder is where ``python setup.py test --coverage`` generates the HTML coverage report.
 
