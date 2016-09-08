@@ -351,8 +351,6 @@ class PHACountsSpectrum(CountsSpectrum):
         backscal = self.backscal.copy()
         if (backscal.mean() == backscal).all():
             backscal = backscal[0]
-        else:
-            raise ValueError('Energy dependent alpha not available in Sherpa')
 
         kwargs = dict(
             name=name,
