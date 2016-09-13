@@ -1,10 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.table import QTable
+from astropy.table import Table
 from astropy.units import Quantity
 from ..extern.pathlib import Path
-from ..extern.bunch import Bunch
-from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
@@ -51,6 +51,7 @@ class SpectrumObservation(object):
         obs.peek()
         plt.show()
     """
+
     def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
@@ -119,19 +120,60 @@ class SpectrumObservation(object):
         )
         return ObservationStats(**kwargs)
 
-    def stats(self, nbin):
-        """Return `~gammapy.data.ObservationStats` for one bin"""
+    def stats(self, idx):
+        """Compute stats for one energy bin.
+
+        Parameters
+        ----------
+        idx : int
+            Energy bin index
+
+        Returns
+        -------
+        stats : `~gammapy.data.ObservationStats`
+            Stats
+        """
         # TODO: Introduce SpectrumStats class inheriting from ObservationStats
         # in order to add spectrum specific information
         kwargs = dict(
-            n_on=int(self.on_vector.data.value[nbin]),
-            n_off=int(self.off_vector.data.value[nbin]),
-            a_on=self.on_vector.backscal[nbin],
-            a_off=self.off_vector.backscal[nbin],
+            n_on=int(self.on_vector.data.value[idx]),
+            n_off=int(self.off_vector.data.value[idx]),
+            a_on=self.on_vector.backscal[idx],
+            a_off=self.off_vector.backscal[idx],
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
         return ObservationStats(**kwargs)
+
+    def stats_table(self):
+        """Per-bin stats as a table.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with stats for one energy bin in one row.
+        """
+        rows = []
+        for idx in range(self.on_vector.energy.nbins):
+            stats = self.stats(idx).to_dict()
+            stats['BIN_IDX'] = idx
+            # stats['livetime'] = stats['livetime'].value
+            # stats['gamma_rate'] = stats['gamma_rate'].value
+            # stats['bg_rate'] = stats['bg_rate'].value
+            rows.append(stats)
+
+        # Creating `QTable` from list of row data with `Quantity` objects
+        # doesn't work. So we're reformatting to list of column `Quantity`
+        # objects here.
+        # table = QTable(rows=rows)
+        table = QTable()
+        for name in rows[0].keys():
+            coldata = [_[name] for _ in rows]
+            if isinstance(rows[0][name], Quantity):
+                coldata = Quantity(coldata, unit=rows[0][name].unit)
+            table[name] = coldata
+
+        return table
 
     def predicted_counts(self, model):
         """Calculated npred given a model
@@ -397,7 +439,7 @@ class SpectrumObservation(object):
         # this leads to problems when fitting the data
         alpha_correction = - 1
         idx = np.where(stacked_off_counts == 0)[0]
-        stacked_backscal_on[idx] = alpha_correction 
+        stacked_backscal_on[idx] = alpha_correction
         stacked_backscal_off[idx] = alpha_correction
 
         stacked_aeff = aefft / stacked_livetime
