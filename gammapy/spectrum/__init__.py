@@ -8,6 +8,7 @@ from .observation import *
 from .cosmic_ray import *
 from .crab import *
 from .diffuse import *
+from .energy_group import *
 from .fitter import *
 from .fitting_utils import *
 from .flux_point import *
