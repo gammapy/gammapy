@@ -36,6 +36,7 @@ returns a re-binned ``Spectrum`` object and has these options:
 The adaptive rebinning methods are implemented via ``Spectrum::PairBinsInRange`` left to right.
 
 To select the total energy range, the following options are available:
+
 * Default is the range of bins that covers all counts (``n_on > 0`` or also ``n_off > 0``?)?
   Note that safe energy range has been applied by zeroing out counts and exposure in bins below and above the safe range.
 * ``--Emin`` and ``--Emax``
@@ -78,11 +79,11 @@ Existing functionality
 
 The `~gammapy.spectrum.calculate_flux_point_binning` function:
 
-- takes a `~gammapy.spectrum.SpectrumObservationList` and ``min_signif`` as input
+* takes a `~gammapy.spectrum.SpectrumObservationList` and ``min_signif`` as input
 * stacks it into a `~gammapy.spectrum.SpectrumObservation` object
 * takes the safe energy threshold min and max as range.
 * Goes left to right to group adaptively for minimum significance,
-  calling `gammapy.spectrum.ObservationStats.stack` to compute stats for grouped bins.
+  calling `gammapy.data.ObservationStats.stack` to compute stats for grouped bins.
 * Returns the grouping as an energy_bounds quantity array.
 
 
@@ -92,8 +93,8 @@ The implementation is complex, because it fiddles with ``eps`` to
 re-compute the group ID vector from EBOUNDS.
 
 * `gammapy.spectrum.SpectrumObservation`
-  * ``total_stats`` -- an `~gammapy.data.ObservationStats`
-  * ``stats_table`` -- a table with `~gammapy.data.ObservationStats` for each bin
+    * ``total_stats`` -- an `~gammapy.data.ObservationStats`
+    * ``stats_table`` -- a table with `~gammapy.data.ObservationStats` for each bin
 
 New proposal
 ------------
@@ -104,9 +105,9 @@ Not all the bugs though, it shall be correct and well-tested.
 * The output should be a `GROUP_ID` vector or a ``SpectrumEnergyGrouping`` object
   (that would be a nice place to attach debug info, print output and plots)
 * For the input I'm not sure.
-  * Maybe a ``Table`` from  `gammapy.spectrum.SpectrumObservation.stats_table` to have loose coupling?
-  * Or a stacked `gammapy.spectrum.SpectrumObservation` object?
-  * Or a `~gammapy.spectrum.SpectrumObservationList` object?
+    * Maybe a ``Table`` from  `gammapy.spectrum.SpectrumObservation.stats_table` to have loose coupling?
+    * Or a stacked `gammapy.spectrum.SpectrumObservation` object?
+    * Or a `~gammapy.spectrum.SpectrumObservationList` object?
 * I'm not sure how to structure the code yet and what API to use.
   Ideally it should be simple to use, yet extensible with user-defined methods.
   Maybe it's OK to just have a few pre-baked methods and users that want something different
@@ -125,7 +126,7 @@ Let's say we have a `SpectrumObservation` and / or stats summary table::
     obs = SpectrumObservation.read('$GAMMAPY_EXTRA/datasets/hess-crab4_pha/pha_obs23523.fits')
     table = obs.stats_table()
 
-The first step is always to create a ``SpectrumEnergyGrouping`` object like this:
+The first step is always to create a ``SpectrumEnergyGrouping`` object like this::
 
     seg = SpectrumEnergyGrouping(obs=obs)
 
