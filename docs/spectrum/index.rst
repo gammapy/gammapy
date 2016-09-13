@@ -29,6 +29,7 @@ Content
 .. toctree::
    fitting
    flux_points
+   energy_group
    simulation
    plotting_fermi_spectra
 
@@ -37,7 +38,6 @@ Reference/API
 
 .. automodapi:: gammapy.spectrum
     :no-inheritance-diagram:
-
 
 .. automodapi:: gammapy.spectrum.models
     :no-inheritance-diagram:
