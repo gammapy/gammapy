@@ -40,9 +40,6 @@ class TestSpectrumObservation:
 
     def test_stats_table(self):
         table = self.obs.stats_table()
-        table.pprint()
-        table.info('stats')
-        table.info()
         assert table['n_on'].sum() == 172
         assert_quantity_allclose(table['livetime'].max(), 1581.73681640625 * u.second)
 
