@@ -10,7 +10,7 @@ from ..data import ObservationGroupAxis, ObservationGroups, ObservationTable
 from ..spectrum import SpectrumObservationList, SpectrumObservation
 
 __all__ = [
-    'SpectrumGrouping',
+    'SpectrumObservationGrouping',
     'group_obs_table',
 ]
 
@@ -65,7 +65,7 @@ def group_obs_table(obs_table, offset_range=[0, 2.5], n_off_bin=5,
     return grouped_table
 
 
-class SpectrumGrouping(object):
+class SpectrumObservationGrouping(object):
     """
     Class for stacking observations in groups
 

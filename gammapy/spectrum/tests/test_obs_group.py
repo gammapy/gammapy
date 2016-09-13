@@ -4,7 +4,8 @@ from astropy.tests.helper import assert_quantity_allclose, pytest
 from ...utils.testing import requires_data, requires_dependency
 from ...data import ObservationTable
 from ...datasets import gammapy_extra
-from ...spectrum import group_obs_table, SpectrumFit, SpectrumGrouping
+from ..obs_group import group_obs_table, SpectrumObservationGrouping
+from ..fit import SpectrumFit
 
 
 @pytest.mark.xfail
@@ -26,7 +27,7 @@ def test_define_groups_and_stack(tmpdir):
     obs_table1 = group_obs_table(obs_table, eff_range=[90, 95], n_eff_bin=5)
     obs_table1.write('grouped_table1_debug.fits', overwrite=True)
 
-    grouping = SpectrumGrouping(obs_table1)
+    grouping = SpectrumObservationGrouping(obs_table1)
     grouping.run()
 
     fit_band2 = SpectrumFit.from_observation_table(grouping.stacked_obs_table)
@@ -44,7 +45,7 @@ def test_define_groups_and_stack(tmpdir):
     obs_table2 = group_obs_table(obs_table, n_eff_bin=1, n_off_bin=1, n_zen_bin=1)
     obs_table2.write('grouped_table2_debug.fits', overwrite=True)
 
-    grouping = SpectrumGrouping(obs_table2)
+    grouping = SpectrumObservationGrouping(obs_table2)
     grouping.run()
 
     fit_band3 = SpectrumFit.from_observation_table(grouping.stacked_obs_table)

@@ -2,7 +2,7 @@ from astropy.tests.helper import assert_quantity_allclose
 
 from gammapy.data import ObservationTable
 from gammapy.datasets import gammapy_extra
-from gammapy.spectrum import SpectrumFit, SpectrumGrouping, group_obs_table
+from gammapy.spectrum import SpectrumFit, SpectrumObservationGrouping, group_obs_table
 
 obs_table_file = gammapy_extra.filename(
     'datasets/hess-crab4_pha/observation_table.fits')
@@ -19,7 +19,7 @@ fit.run(method='sherpa')
 obs_table1 = group_obs_table(obs_table, eff_range=[90, 95], n_eff_bin=5)
 obs_table1.write('grouped_table1_debug.fits', overwrite=True)
 
-grouping = SpectrumGrouping(obs_table1)
+grouping = SpectrumObservationGrouping(obs_table1)
 grouping.run()
 
 fit_band2 = SpectrumFit.from_observation_table(grouping.stacked_obs_table)
@@ -38,7 +38,7 @@ assert_quantity_allclose(fit.result.parameters["norm"],
 obs_table2 = group_obs_table(obs_table, n_eff_bin=1, n_off_bin=1, n_zen_bin=1)
 obs_table2.write('grouped_table2_debug.fits', overwrite=True)
 
-grouping = SpectrumGrouping(obs_table2)
+grouping = SpectrumObservationGrouping(obs_table2)
 grouping.run()
 
 fit_band3 = SpectrumFit.from_observation_table(grouping.stacked_obs_table)
