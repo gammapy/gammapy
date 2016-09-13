@@ -1,5 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+from collections import OrderedDict
+
 import astropy.units as u
 import numpy as np
 from ..stats import Stats
@@ -170,7 +173,6 @@ class ObservationStats(Stats):
             a_off /= n_off
             alpha /= n_off
 
-
         gamma_rate /= livetime.to(u.min)
         bg_rate /= livetime.to(u.min)
 
@@ -187,11 +189,25 @@ class ObservationStats(Stats):
         )
         return total_stats
 
-    def __add__(self, other):
-        """Add statistics from two observations
-        and returns new instance of `~gammapy.data.ObservationStats`
+    def to_dict(self):
+        """Data as an `~collections.OrderedDict`.
+
+        This is useful for serialisation or putting the info in a table.
         """
-        return ObservationStats.stack(self, other)
+        data = OrderedDict()
+        data['obs_id'] = self.obs_id
+        data['livetime'] = self.livetime
+        data['n_on'] = self.n_on
+        data['n_off'] = self.n_off
+        data['a_on'] = self.a_on
+        data['a_off'] = self.a_off
+        data['alpha'] = self.alpha
+        data['background'] = self.background
+        data['excess'] = self.excess
+        data['sigma'] = self.sigma
+        data['gamma_rate'] = self.gamma_rate
+        data['bg_rate'] = self.bg_rate
+        return data
 
     def __str__(self):
         """Observation statistics report (`str`)
