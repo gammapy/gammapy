@@ -51,6 +51,15 @@ class SpectrumEnergyGroupMaker(object):
     instead of or in addition to `table`?
 
     See :ref:`spectrum_energy_group` for examples.
+
+    Attributes
+    ----------
+    obs : `~gammapy.spectrum.SpectrumObservation`
+        Spectrum observation data
+    table : `~astropy.table.QTable`
+        Table with some per-energy bin stats info.
+    groups : `~gammapy.spectrum.SpectrumEnergyGroups`
+        List of energy groups.
     """
 
     def __init__(self, obs=None):
@@ -125,6 +134,7 @@ class SpectrumEnergyGroupMaker(object):
         self.groups.apply_energy_binning(ebounds=ebounds)
 
     def compute_groups_npoints(self, npoints):
+        """TODO: document"""
         emin, emax = self.get_safe_range()
         npoints = self.config['n_points']
         return EnergyBounds.equal_log_spacing(
@@ -138,6 +148,7 @@ class SpectrumEnergyGroup(object):
     Represents a consecutive range of bin indices (both ends inclusive).
     """
     valid_bin_types = ['normal', 'underflow', 'overflow']
+    """Valid values for ``bin_types`` attribute."""
 
     def __init__(self, energy_group_idx, bin_idx_min, bin_idx_max, bin_type,
                  energy_min, energy_max):
@@ -151,6 +162,7 @@ class SpectrumEnergyGroup(object):
         self.energy_max = energy_max
 
     def to_dict(self):
+        """Data as `~collections.OrderedDict`."""
         data = OrderedDict()
         data['energy_group_idx'] = self.energy_group_idx
         data['bin_idx_min'] = self.bin_idx_min
@@ -181,7 +193,9 @@ class SpectrumEnergyGroup(object):
 
 
 class SpectrumEnergyGroups(list):
-    """List of ``SpectrumEnergyGroup`` objects with special powers.
+    """List of `~gammapy.spectrum.SpectrumEnergyGroup` objects.
+
+    A helper class used by the `gammapy.spectrum.SpectrumEnergyMaker`.
     """
 
     @classmethod
@@ -259,6 +273,7 @@ class SpectrumEnergyGroups(list):
         """Table with one energy group per row (`~astropy.table.QTable`).
 
         Columns:
+
         * ``energy_group_idx`` - Energy group index (int)
         * ``energy_group_n_bins`` - Number of bins in the energy group (int)
         * ``bin_idx_min`` - First bin index in the energy group (int)
