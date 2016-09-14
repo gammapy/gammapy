@@ -58,6 +58,7 @@ This list is incomplete. Many small improvements and bug fixes are not listed he
 
 See the complete `Gammapy 0.5 merged pull requests list on Github <https://github.com/gammapy/gammapy/pulls?utf8=%E2%9C%93&q=is%3Apr+milestone%3A0.5+is%3Amerged+>`__.
 
+- [#709] Spectrum energy grouping (Christoph Deil)
 - [#679] Add flux point computation method (Johannes King)
 - [#677] Fermi 3FGL and 2FHL spectrum plotting (Axel Donath)
 - [#661] Improve continuous wavelet transform (Olga Vorokh)
