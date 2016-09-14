@@ -57,19 +57,19 @@ Sherpa has some spectral grouping functionality
 * http://cxc.harvard.edu/sherpa/threads/setplot_manual/
 * http://cxc.harvard.edu/ciao/ahelp/dmgroup.html
 
-As far as I can see, it's not nicely accessible from Python
-(but I didn't look at the implementation, it might be nice).
-My guess is that figuring out how it works and re-exposing it in Gammapy
-is more complicated and less powerful than just implementing it ourselves
-for specifically the methods that are common in gamma-ray astronomy.
+In the Sherpa Python package this seems to be exposed mainly via the
+``sherpa.astropy.data.DataPHA`` class and it's ``group_*`` methods,
+that all call into the C ``grplib`` library eventually via a Python
+C extension.
 
-Groupby
--------
+* https://github.com/sherpa/sherpa/blob/master/sherpa/astro/data.py
+* https://github.com/sherpa/sherpa/tree/master/extern/grplib-4.9
 
-Astropy table and pandas dataframe has some groupby functionality:
-
-http://docs.astropy.org/en/stable/table/operations.html#binning
-http://pandas.pydata.org/pandas-docs/stable/groupby.html
+Overall I find the documentation and code not very accessible,
+and instead of trying to figure out if we can coerce it to do
+all the spectral grouping algorithms we want, for now
+I'll go ahead and re-implement grouping via simple Python functions
+and classes in Gammapy.
 
 Gammapy Design
 ==============
@@ -174,3 +174,13 @@ Other API
 
 Should we re-expose the energy grouping options in the API that does the flux point computation,
 for convenience?
+
+Gammapy implementation
+======================
+
+Astropy table and pandas dataframe has some groupby functionality
+that could be useful to compute aggregate stats (e.g. sum and mean)
+for groups of bins or anything via ``apply``:
+
+* http://docs.astropy.org/en/stable/table/operations.html#binning
+* http://pandas.pydata.org/pandas-docs/stable/groupby.html
