@@ -1,20 +1,40 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
-from astropy.table import QTable
-from astropy.table import Table
 from astropy.units import Quantity
 from ..extern.pathlib import Path
 from ..utils.scripts import make_path
+from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import CountsSpectrum, PHACountsSpectrum
 from .utils import calculate_predicted_counts
 
 __all__ = [
+    'SpectrumStats',
     'SpectrumObservation',
     'SpectrumObservationList',
 ]
+
+
+class SpectrumStats(ObservationStats):
+    """Spectrum stats.
+
+    Extends `~gammapy.data.ObservationStats` with spectrum
+    specific information (energy bin info at the moment).
+    """
+
+    def __init__(self, **kwargs):
+        self.energy_min = kwargs.pop('energy_min', None)
+        self.energy_max = kwargs.pop('energy_max', None)
+        super(SpectrumStats, self).__init__(**kwargs)
+
+    def to_dict(self):
+        """TODO: document"""
+        data = super(SpectrumStats, self).to_dict()
+        data['energy_min'] = self.energy_min
+        data['energy_max'] = self.energy_max
+        return data
 
 
 class SpectrumObservation(object):
@@ -79,6 +99,11 @@ class SpectrumObservation(object):
         return self.on_vector.backscal / self.off_vector.backscal
 
     @property
+    def ebounds(self):
+        """Energy bounds array."""
+        return self.on_vector.energy.data.to('TeV')
+
+    @property
     def lo_threshold(self):
         """Low energy threshold"""
         return self.on_vector.lo_threshold
@@ -104,13 +129,13 @@ class SpectrumObservation(object):
 
     @property
     def total_stats(self):
-        """Return `~gammapy.data.ObservationStats`
+        """Return `~gammapy.spectrum.SpectrumStats`
 
         ``a_on`` and ``a_off`` are averaged over all energies.
         """
-        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
-        # in order to add spectrum specific information
-        kwargs = dict(
+        return SpectrumStats(
+            energy_min=self.ebounds[:-1],
+            energy_max=self.ebounds[1:],
             n_on=int(self.on_vector.total_counts.value),
             n_off=int(self.off_vector.total_counts.value),
             a_on=np.mean(self.on_vector.backscal),
@@ -118,7 +143,6 @@ class SpectrumObservation(object):
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
-        return ObservationStats(**kwargs)
 
     def stats(self, idx):
         """Compute stats for one energy bin.
@@ -130,12 +154,12 @@ class SpectrumObservation(object):
 
         Returns
         -------
-        stats : `~gammapy.data.ObservationStats`
+        stats : `~gammapy.spectrum.SpectrumStats`
             Stats
         """
-        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
-        # in order to add spectrum specific information
-        kwargs = dict(
+        return SpectrumStats(
+            energy_min=self.ebounds[idx],
+            energy_max=self.ebounds[idx + 1],
             n_on=int(self.on_vector.data.value[idx]),
             n_off=int(self.off_vector.data.value[idx]),
             a_on=self.on_vector.backscal[idx],
@@ -143,7 +167,6 @@ class SpectrumObservation(object):
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
-        return ObservationStats(**kwargs)
 
     def stats_table(self):
         """Per-bin stats as a table.
@@ -153,27 +176,8 @@ class SpectrumObservation(object):
         table : `~astropy.table.Table`
             Table with stats for one energy bin in one row.
         """
-        rows = []
-        for idx in range(self.on_vector.energy.nbins):
-            stats = self.stats(idx).to_dict()
-            stats['BIN_IDX'] = idx
-            # stats['livetime'] = stats['livetime'].value
-            # stats['gamma_rate'] = stats['gamma_rate'].value
-            # stats['bg_rate'] = stats['bg_rate'].value
-            rows.append(stats)
-
-        # Creating `QTable` from list of row data with `Quantity` objects
-        # doesn't work. So we're reformatting to list of column `Quantity`
-        # objects here.
-        # table = QTable(rows=rows)
-        table = QTable()
-        for name in rows[0].keys():
-            coldata = [_[name] for _ in rows]
-            if isinstance(rows[0][name], Quantity):
-                coldata = Quantity(coldata, unit=rows[0][name].unit)
-            table[name] = coldata
-
-        return table
+        rows = [self.stats(idx).to_dict() for idx in range(len(self.ebounds) - 1)]
+        return table_from_row_data(rows=rows)
 
     def predicted_counts(self, model):
         """Calculated npred given a model
@@ -456,7 +460,7 @@ class SpectrumObservation(object):
             hi_threshold=max(hi_thresholds),
             livetime=stacked_livetime,
             obs_id=group_id,
-            energy=e_reco
+            energy=e_reco,
         )
 
         on_vector = PHACountsSpectrum(backscal=stacked_backscal_on,
