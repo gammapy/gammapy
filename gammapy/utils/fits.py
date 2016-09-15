@@ -3,15 +3,53 @@
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
+from astropy.units import Quantity
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, QTable
 
 __all__ = [
+    'table_from_row_data',
     'get_hdu',
     'table_to_fits_table',
     'fits_table_to_table',
     'energy_axis_to_ebounds',
 ]
+
+
+def table_from_row_data(rows, type='qtable', **kwargs):
+    """Helper function to create table objects from row data.
+
+    - Works with quantities.
+    - Preserves order of keys if OrderedDicts are used.
+
+    Parameters
+    ----------
+    rows : list
+        List of row data (each row a dict or OrderedDict)
+    type : {'table', 'qtable'}
+        Type of table to create
+    """
+    # Creating `QTable` from list of row data with `Quantity` objects
+    # doesn't work. So we're reformatting to list of column `Quantity`
+    # objects here.
+    # table = QTable(rows=rows)
+
+    if type == 'table':
+        cls = Table
+    elif type == 'qtable':
+        cls = QTable
+    else:
+        raise ValueError('Invalid type: {}'.format(type))
+
+    table = cls(**kwargs)
+    colnames = list(rows[0].keys())
+    for name in colnames:
+        coldata = [_[name] for _ in rows]
+        if isinstance(rows[0][name], Quantity):
+            coldata = Quantity(coldata, unit=rows[0][name].unit)
+        table[name] = coldata
+
+    return table
 
 
 def get_hdu(location):
@@ -124,11 +162,11 @@ def energy_axis_to_ebounds(energy):
     table = Table()
 
     table['CHANNEL'] = np.arange(energy.nbins, dtype=np.int16)
-    table['E_MIN'] = energy.data[:-1] 
+    table['E_MIN'] = energy.data[:-1]
     table['E_MAX'] = energy.data[1:]
 
     hdu = table_to_fits_table(table)
-    
+
     header = hdu.header
     header['EXTNAME'] = 'EBOUNDS', 'Name of this binary table extension'
     header['TELESCOP'] = 'DUMMY', 'Mission/satellite name'
@@ -154,4 +192,3 @@ def ebounds_to_energy_axis(ebounds):
     emax = table['E_MAX'].quantity
     energy = np.append(emin.value, emax.value[-1]) * emin.unit
     return BinnedDataAxis(data=energy)
-

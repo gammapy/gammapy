@@ -8,6 +8,7 @@ from .observation import *
 from .cosmic_ray import *
 from .crab import *
 from .diffuse import *
+from .energy_group import *
 from .fitter import *
 from .fitting_utils import *
 from .flux_point import *
@@ -17,6 +18,6 @@ from .sherpa_chi2asym import *
 from .utils import *
 from .extract import *
 from .simulation import *
-from .group import *
+from .obs_group import *
 from .fit import *
 from .results import *

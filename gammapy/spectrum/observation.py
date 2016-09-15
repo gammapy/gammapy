@@ -3,18 +3,38 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from astropy.units import Quantity
 from ..extern.pathlib import Path
-from ..extern.bunch import Bunch
-from ..utils.energy import EnergyBounds
 from ..utils.scripts import make_path
+from ..utils.fits import table_from_row_data
 from ..data import ObservationStats
 from ..irf import EffectiveAreaTable, EnergyDispersion
 from .core import CountsSpectrum, PHACountsSpectrum
 from .utils import calculate_predicted_counts
 
 __all__ = [
+    'SpectrumStats',
     'SpectrumObservation',
     'SpectrumObservationList',
 ]
+
+
+class SpectrumStats(ObservationStats):
+    """Spectrum stats.
+
+    Extends `~gammapy.data.ObservationStats` with spectrum
+    specific information (energy bin info at the moment).
+    """
+
+    def __init__(self, **kwargs):
+        self.energy_min = kwargs.pop('energy_min', None)
+        self.energy_max = kwargs.pop('energy_max', None)
+        super(SpectrumStats, self).__init__(**kwargs)
+
+    def to_dict(self):
+        """TODO: document"""
+        data = super(SpectrumStats, self).to_dict()
+        data['energy_min'] = self.energy_min
+        data['energy_max'] = self.energy_max
+        return data
 
 
 class SpectrumObservation(object):
@@ -51,6 +71,7 @@ class SpectrumObservation(object):
         obs.peek()
         plt.show()
     """
+
     def __init__(self, on_vector, aeff, off_vector=None, edisp=None):
         self.on_vector = on_vector
         self.aeff = aeff
@@ -78,6 +99,11 @@ class SpectrumObservation(object):
         return self.on_vector.backscal / self.off_vector.backscal
 
     @property
+    def ebounds(self):
+        """Energy bounds array."""
+        return self.on_vector.energy.data.to('TeV')
+
+    @property
     def lo_threshold(self):
         """Low energy threshold"""
         return self.on_vector.lo_threshold
@@ -103,13 +129,13 @@ class SpectrumObservation(object):
 
     @property
     def total_stats(self):
-        """Return `~gammapy.data.ObservationStats`
+        """Return `~gammapy.spectrum.SpectrumStats`
 
         ``a_on`` and ``a_off`` are averaged over all energies.
         """
-        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
-        # in order to add spectrum specific information
-        kwargs = dict(
+        return SpectrumStats(
+            energy_min=self.ebounds[:-1],
+            energy_max=self.ebounds[1:],
             n_on=int(self.on_vector.total_counts.value),
             n_off=int(self.off_vector.total_counts.value),
             a_on=np.mean(self.on_vector.backscal),
@@ -117,21 +143,41 @@ class SpectrumObservation(object):
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
-        return ObservationStats(**kwargs)
 
-    def stats(self, nbin):
-        """Return `~gammapy.data.ObservationStats` for one bin"""
-        # TODO: Introduce SpectrumStats class inheriting from ObservationStats
-        # in order to add spectrum specific information
-        kwargs = dict(
-            n_on=int(self.on_vector.data.value[nbin]),
-            n_off=int(self.off_vector.data.value[nbin]),
-            a_on=self.on_vector.backscal[nbin],
-            a_off=self.off_vector.backscal[nbin],
+    def stats(self, idx):
+        """Compute stats for one energy bin.
+
+        Parameters
+        ----------
+        idx : int
+            Energy bin index
+
+        Returns
+        -------
+        stats : `~gammapy.spectrum.SpectrumStats`
+            Stats
+        """
+        return SpectrumStats(
+            energy_min=self.ebounds[idx],
+            energy_max=self.ebounds[idx + 1],
+            n_on=int(self.on_vector.data.value[idx]),
+            n_off=int(self.off_vector.data.value[idx]),
+            a_on=self.on_vector.backscal[idx],
+            a_off=self.off_vector.backscal[idx],
             obs_id=self.obs_id,
             livetime=self.livetime,
         )
-        return ObservationStats(**kwargs)
+
+    def stats_table(self):
+        """Per-bin stats as a table.
+
+        Returns
+        -------
+        table : `~astropy.table.Table`
+            Table with stats for one energy bin in one row.
+        """
+        rows = [self.stats(idx).to_dict() for idx in range(len(self.ebounds) - 1)]
+        return table_from_row_data(rows=rows)
 
     def predicted_counts(self, model):
         """Calculated npred given a model
@@ -397,7 +443,7 @@ class SpectrumObservation(object):
         # this leads to problems when fitting the data
         alpha_correction = - 1
         idx = np.where(stacked_off_counts == 0)[0]
-        stacked_backscal_on[idx] = alpha_correction 
+        stacked_backscal_on[idx] = alpha_correction
         stacked_backscal_off[idx] = alpha_correction
 
         stacked_aeff = aefft / stacked_livetime
@@ -414,7 +460,7 @@ class SpectrumObservation(object):
             hi_threshold=max(hi_thresholds),
             livetime=stacked_livetime,
             obs_id=group_id,
-            energy=e_reco
+            energy=e_reco,
         )
 
         on_vector = PHACountsSpectrum(backscal=stacked_backscal_on,

@@ -11,7 +11,6 @@ from ...background import reflected_regions_background_estimate as refl
 from ...image import SkyMask
 
 
-@requires_data('gammapy-extra')
 def get_obs_list():
     data_store = DataStore.from_dir('$GAMMAPY_EXTRA/datasets/hess-crab4-hd-hap-prod2/')
     run_list = [23523, 23526]
@@ -19,54 +18,58 @@ def get_obs_list():
     return obs_list
 
 
-@requires_data('gammapy-extra')
 def get_obs(id):
     obs_list = get_obs_list()
-    for run in obs_list:
-        if run.obs_id == id:
-            return run
+    for obs in obs_list:
+        if obs.obs_id == id:
+            return obs
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def target():
     pos = SkyCoord(83.63 * u.deg, 22.01 * u.deg)
     on_size = 0.3 * u.deg
     on_region = CircleSkyRegion(pos, on_size)
 
-    target = Target(position=pos,
-                    on_region=on_region,
-                    name='Crab Nebula',
-                    tag='crab')
-    return target
+    return Target(position=pos, on_region=on_region, name='Crab Nebula', tag='crab')
 
 
-@requires_data('gammapy-extra')
-@pytest.fixture
-def get_mask():
-    mask = SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
-    return mask
+@pytest.fixture(scope='session')
+def mask():
+    return SkyMask.read('$GAMMAPY_EXTRA/datasets/exclusion_masks/tevcat_exclusion.fits')
 
 
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-def test_str(target):
-    run = get_obs(23523)
-    bg = refl(target.on_region,
-              run.pointing_radec, get_mask(), run.events)
-    stats = ObservationStats.from_target(run, target, bg)
-    text = str(stats)
-    assert 'Observation summary report' in text
+@pytest.fixture(scope='session')
+def stats(target, mask):
+    obs = get_obs(23523)
+    bg = refl(target.on_region, obs.pointing_radec, mask, obs.events)
+    return ObservationStats.from_target(obs, target, bg)
 
 
-@requires_data('gammapy-extra')
-@requires_dependency('scipy')
-def test_stack(target):
+@pytest.fixture(scope='session')
+def stats_stacked(target, mask):
     obs_list = get_obs_list()
     obs_stats = list()
-    for run in obs_list:
-        bg = refl(target.on_region,
-                  run.pointing_radec, get_mask(), run.events)
-        obs_stats.append(ObservationStats.from_target(run, target, bg))
-    sum_obs_stats = ObservationStats.stack(obs_stats)
-    assert_allclose(sum_obs_stats.alpha, 0.284, rtol=1e-2)
-    assert_allclose(sum_obs_stats.sigma, 23.5757575757, rtol=1e-3)
+    for obs in obs_list:
+        bg = refl(target.on_region, obs.pointing_radec, mask, obs.events)
+        obs_stats.append(ObservationStats.from_target(obs, target, bg))
+
+    return ObservationStats.stack(obs_stats)
+
+
+# TODO: parametrize tests using single and stacked stats!
+
+@requires_data('gammapy-extra')
+@requires_dependency('scipy')
+class TestObservationStats(object):
+    def test_str(self, stats):
+        text = str(stats)
+        assert 'Observation summary report' in text
+
+    def test_to_dict(self, stats):
+        data = stats.to_dict()
+        assert data['sigma'] == 15.301017160023662
+
+    def test_stack(self, stats_stacked):
+        assert_allclose(stats_stacked.alpha, 0.284, rtol=1e-2)
+        assert_allclose(stats_stacked.sigma, 23.5757575757, rtol=1e-3)
