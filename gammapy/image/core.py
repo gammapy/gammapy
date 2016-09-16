@@ -14,8 +14,7 @@ from astropy.units import Quantity, Unit
 from astropy.nddata.utils import Cutout2D
 from regions import PixCoord, PixelRegion, SkyRegion
 from astropy.wcs import WCS, WcsError
-from astropy.wcs.utils import (pixel_to_skycoord, skycoord_to_pixel,
-                               proj_plane_pixel_scales)
+from astropy.wcs.utils import pixel_to_skycoord, skycoord_to_pixel, proj_plane_pixel_scales
 from ..extern.bunch import Bunch
 from ..utils.scripts import make_path
 from ..utils.wcs import get_resampled_wcs
@@ -1036,29 +1035,33 @@ class SkyImage(object):
 
 class SkyImageCollection(Bunch):
     """
-    Container for a collection of images.
+    Container for a collection of `~gammapy.image.SkyImage` objects.
 
     This class bundles as set of `SkyImage` objects in single data container and provides
     convenience methods for FITS I/O and `~gammapy.extern.bunch.Bunch` like
     handling of the data members.
 
-    Here's an example how to use it:
+    Parameters
+    ----------
+    name : str
+        Name of the collection
 
-    .. code-block:: python
+    Examples
+    --------
+    Load the image collection from a FITS file:
 
-        from gammapy.image import SkyImageCollection
-        images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    >>> from gammapy.image import SkyImageCollection
+    >>> images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
-    Then try tab completion on the ``images`` object.
+    Then try tab completion on the ``images`` object to access the images.
+    E.g. to show the counts image::
+
+    >>> images.counts.show('ds9')
     """
-    # Real class attributes have to be defined here
-    _image_names = []
-    name = None
-    meta = None
-    wcs = None
 
     def __init__(self, name=None, wcs=None, meta=None, **kwargs):
         # Set real class attributes
+        self._image_names = []
         self.name = name
         self.wcs = wcs
         self.meta = meta
@@ -1104,7 +1107,7 @@ class SkyImageCollection(Bunch):
         _._map_names = _image_names
         return _
 
-    def write(self, filename=None, header=None, **kwargs):
+    def write(self, filename=None, **kwargs):
         """
         Write images to FITS file.
 
@@ -1112,8 +1115,6 @@ class SkyImageCollection(Bunch):
         ----------
         filename : str
             FITS file name.
-        header : `~astropy.io.fits.Header`
-            Reference header to be used for all images.
         """
         hdulist = fits.HDUList()
 
