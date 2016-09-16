@@ -33,7 +33,6 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     images : `~gammapy.image.SkyImageCollection`
         Bunch of result images.
 
-
     See Also
     --------
     gammapy.stats.significance
@@ -47,23 +46,26 @@ def compute_lima_image(counts, background, kernel, exposure=None):
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    counts_ = convolve(counts, kernel.array, mode='constant', cval=np.nan)
-    background_ = convolve(background, kernel.array, mode='constant', cval=np.nan)
+    conv_opt = dict(mode='constant', cval=np.nan)
 
-    significance_lima = significance(counts_, background_, method='lima')
+    counts_conv = convolve(counts, kernel.array, **conv_opt)
+    background_conv = convolve(background, kernel.array, **conv_opt)
+    excess_conv = counts_conv - background_conv
+    significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    result = SkyImageCollection(significance=significance_lima,
-                                counts=counts_,
-                                background=background_,
-                                excess=counts_ - background_)
+    images = SkyImageCollection(
+        significance=significance_conv,
+        counts=counts_conv,
+        background=background_conv,
+        excess=excess_conv,
+    )
 
-    if not exposure is None:
-        kernel.normalize('integral')
-        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
-        flux = (counts_ - background_) / exposure_
-        result.flux = flux
+    # TODO: should we be doing this here?
+    # Wouldn't it be better to let users decide if they want this,
+    # and have it easily accessible as an attribute or method?
+    _add_other_images(images, exposure, kernel, conv_opt)
 
-    return result
+    return images
 
 
 def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
@@ -103,23 +105,37 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
         log.warn('Using weighted kernels can lead to biased results.')
 
     kernel.normalize('peak')
-    n_on_ = convolve(n_on, kernel.array, mode='constant', cval=np.nan)
-    a_ = convolve(a_on, kernel.array, mode='constant', cval=np.nan)
-    alpha = a_ / a_off
-    background = alpha * n_off
+    conv_opt = dict(mode='constant', cval=np.nan)
 
-    significance_lima = significance_on_off(n_on_, n_off, alpha, method='lima')
+    n_on_conv = convolve(n_on, kernel.array, **conv_opt)
+    a_on_conv = convolve(a_on, kernel.array, **conv_opt)
+    alpha_conv = a_on_conv / a_off
+    background_conv = alpha_conv * n_off
+    excess_conv = n_on_conv - background_conv
+    significance_conv = significance_on_off(n_on_conv, n_off, alpha_conv, method='lima')
 
-    result = SkyImageCollection(significance=significance_lima,
-                                n_on=n_on_,
-                                background=background,
-                                excess=n_on_ - background,
-                                alpha=alpha)
+    images = SkyImageCollection(
+        significance=significance_conv,
+        n_on=n_on_conv,
+        background=background_conv,
+        excess=excess_conv,
+        alpha=alpha_conv,
+    )
 
-    if exposure is not None:
-        kernel.normalize('integral')
-        exposure_ = convolve(exposure, kernel.array, mode='constant', cval=np.nan)
-        flux = (n_on_ - background_) / exposure_
-        result.flux = flux
+    # TODO: should we be doing this here?
+    # Wouldn't it be better to let users decide if they want this,
+    # and have it easily accessible as an attribute or method?
+    _add_other_images(images, exposure, kernel, conv_opt)
 
-    return result
+    return images
+
+
+def _add_other_images(images, exposure, kernel, conv_opt):
+    if not exposure:
+        return
+
+    from scipy.ndimage import convolve
+    kernel.normalize('integral')
+    exposure_conv = convolve(exposure, kernel.array, **conv_opt)
+    flux = images.excess / exposure_conv
+    images.flux = flux
