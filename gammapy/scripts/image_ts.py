@@ -86,7 +86,7 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
         for scale, result in zip(scales, results):
             # TODO: this is unnecessarily complex
             # Simplify, e.g. by letting the user specify a `base_dir`.
-            filename_ = filename.replace('.fits', '_{0:.3f}.fits'.format(scale))
+            filename_ = filename.replace('.fits', '_{:.3f}.fits'.format(scale))
             fn = Path(folder) / filename_
 
             log.info('Writing {}'.format(fn))

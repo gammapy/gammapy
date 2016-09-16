@@ -16,8 +16,6 @@ prototypes.
 Detailed description of the methods can be found in [Stewart2009]_
 and [LiMa1983]_.
 
-
-
 Computation of TS images
 ========================
 
@@ -47,13 +45,13 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 
 .. code-block:: python
 
-	from astropy.io import fits
 	from astropy.convolution import Gaussian2DKernel
+	from gammapy.image import SkyImageCollection
 	from gammapy.detect import compute_ts_image
-	hdu_list = fits.open('all.fits.gz')
+	images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 	kernel = Gaussian2DKernel(5)
-	result = compute_ts_image(hdu_list['counts'].data, hdu_list['background'].data,
-							hdu_list['exposure'].data, kernel)
+	result = compute_ts_image(images['counts'], images['background'],
+							  images['exposure'], kernel)
 
 The function returns a `~gammapy.image.SkyImageCollection` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
@@ -76,7 +74,7 @@ on the Fermi example dataset by:
 
 .. code-block:: bash
 
-	$ cd gammapy-extra/datasets/fermi_survey
+	$ cd $GAMMAPY_EXTRA/datasets/fermi_survey
 	$ gammapy-image-ts all.fits.gz ts_image_0.00.fits --scale 0
 
 The command line tool additionally requires a psf json file, where the psf shape
@@ -104,17 +102,17 @@ Computation of Li&Ma significance images
 
 The method derived by [LiMa1983]_ is one of the standard methods to determine
 detection significances for gamma-ray sources. Using the same prepared Fermi
-dataset as above, the corresponding images can be computed as following:
+dataset as above, the corresponding images can be computed using the
+`~gammapy.detect.compute_lima_image` function:
 
 .. code-block:: python
 
-    from astropy.io import fits
     from astropy.convolution import Tophat2DKernel
+    from gammapy.image import SkyImageCollection
     from gammapy.detect import compute_lima_image
-    hdu_list = fits.open('all.fits.gz')
+    images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
     kernel = Tophat2DKernel(5)
-    result = compute_lima_image(hdu_list['On'].data, hdu_list['Background'].data,
-                              hdu_list['ExpGammaMap'].data, kernel)
+    result = compute_lima_image(images['counts'].data, images['background'].data, kernel)
 
 The function returns a `~gammapy.image.SkyImageCollection`, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
@@ -157,9 +155,8 @@ Usage example:
 
 .. code-block:: bash
 
-	$ cd gammapy-extra/datasets/source_diffuse_separation/galactic_simulations
+	$ cd $GAMMAPY_EXTRA/datasets/source_diffuse_separation/galactic_simulations
 	$ gammapy-detect-iterative --counts fermi_counts.fits --background fermi_diffuse.fits --exposure fermi_exposure_gal.fits output_fits output_regions
-
 
 
 Reference/API

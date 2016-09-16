@@ -48,7 +48,7 @@ def test_image_pipe(tmpdir):
     center = SkyCoord(83.63, 22.01, unit='deg').galactic
     energy_band = Energy([1, 10], 'TeV')
     offset_band = Angle([0, 2.49], 'deg')
-    data_store = DataStore.from_dir(str(tmpdir))
+    data_store = DataStore.from_dir(tmpdir)
 
     # TODO: fix `binarize` implementation
     # exclusion_mask = exclusion_mask.binarize()
