@@ -14,7 +14,7 @@ from ..kernel import KernelBackgroundEstimatorData, KernelBackgroundEstimator
 
 @requires_dependency('scipy')
 def test_KernelBackgroundEstimatorData():
-    """Tests compute correlated maps in KernelBackgroundEstimatorData.
+    """Tests compute correlated images in KernelBackgroundEstimatorData.
     This is the only method in KernelBackgroundEstimatorData that actually calculates anything.
     """
     # Set up test counts and background
@@ -28,7 +28,7 @@ def test_KernelBackgroundEstimatorData():
     background_kernel = np.ones((1, 1))
 
     images = KernelBackgroundEstimatorData(counts, background_data)
-    images.compute_correlated_maps(background_kernel)
+    images.compute_correlated_images(background_kernel)
 
     # Test significance image against Li & Ma significance value
     expected = significance(counts, background_data)

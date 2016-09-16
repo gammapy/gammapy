@@ -5,7 +5,7 @@ Introduction and Concept
 ------------------------
 
 The `~gammapy.image.SkyImage` class represents the main data container class for
-map based gamma-ray data. It combines the raw 2D data arrays with sky coordinates
+image-based gamma-ray data. It combines the raw 2D data arrays with sky coordinates
 represented by WCS objects and Fits I/O functionality. Additionally it provides
 convenience functions for and creating, exploring and accessing the data.
 Data processing methods (except for very basic ones) are not coupled to this class.
@@ -19,9 +19,8 @@ Most easily a `~gammapy.image.SkyImage` can be created from a fits file:
 .. code::
 
     from gammapy.image import SkyImage
-    from gammapy.datasets import gammapy_extra
 
-    filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
     image = SkyImage.read(filename, ext=2)
 
 Alternatively an empty image can be created from the scratch, by specifying the
@@ -34,7 +33,7 @@ the parameters):
 
 Where the optional string ``'empty'`` specifies the name of the image.
 
-Some basic info on the map is shown when calling:
+Some basic info on the image is shown when calling:
 
 .. code::
 
@@ -57,9 +56,8 @@ The image can be easily displayed with an image viewer, by calling ``image.show(
         :include-source:
 
         from gammapy.image import SkyImage
-        from gammapy.datasets import gammapy_extra
 
-        filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+        filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
         counts = SkyImage.read(filename, ext=2)
         counts.name = 'Counts Smoothed'
         counts.show()
@@ -80,9 +78,8 @@ Here we cut out a 5 deg x 5 deg patch out of an example image:
     from astropy.units import Quantity
     from astropy.coordinates import SkyCoord
     from gammapy.image import SkyImage
-    from gammapy.datasets import gammapy_extra
 
-    filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz')
+    filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_gc.fits.gz'
     counts = SkyImage.read(filename, ext=2)
     position = SkyCoord(0, 0, frame='galactic', unit='deg')
     size = Quantity([5, 5], 'deg')

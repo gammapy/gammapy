@@ -56,7 +56,7 @@ class CWT(object):
     transform values under the given significance threshold are rejected. This gives us
     a multiscale support. Then, using the reconstruction by continuous wavelet packets,
     we obtain a filtered image yielding the detected sources.
-    To compute the threshold map for a given scale a, the standard EGRET diffuse
+    To compute the threshold image for a given scale a, the standard EGRET diffuse
     background model to which was added the flux of the extragalactic background,
     and the exposure for the considered energy range were used.
 

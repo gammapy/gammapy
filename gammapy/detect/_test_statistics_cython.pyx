@@ -23,9 +23,9 @@ def _f_cash_root_cython(np.float_t x, np.ndarray[np.float_t, ndim=2] counts,
     x : float
         Model amplitude.
     counts : `~numpy.ndarray`
-        Count map slice, where model is defined.
+        Count image slice, where model is defined.
     background : `~numpy.ndarray`
-        Background map slice, where model is defined.
+        Background image slice, where model is defined.
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
@@ -59,9 +59,9 @@ def _x_best_leastsq(np.ndarray[np.float_t, ndim=2] counts,
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Count map.
+        Counts image
     background : `~numpy.ndarray`
-        Background map.
+        Background image
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     weights : `~numpy.ndarray`
@@ -91,9 +91,9 @@ def _amplitude_bounds_cython(np.ndarray[np.float_t, ndim=2] counts,
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Count map.
+        Counts image
     background : `~numpy.ndarray`
-        Background map.
+        Background image
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
@@ -132,7 +132,7 @@ def _cash_cython(np.ndarray[np.float_t, ndim=2] counts,
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Count map slice, where model is defined.
+        Counts image slice, where model is defined.
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """
@@ -160,7 +160,7 @@ def _cash_sum_cython(np.ndarray[np.float_t, ndim=2] counts,
     Parameters
     ----------
     counts : `~numpy.ndarray`
-        Count map slice, where model is defined.
+        Counts image slice, where model is defined.
     model : `~numpy.ndarray`
         Source template (multiplied with exposure).
     """

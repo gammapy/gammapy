@@ -35,7 +35,7 @@ from photutils.detection import find_peaks
 from gammapy.data import DataStore, EventListDataset, EventList
 from gammapy.detect import KernelBackgroundEstimator, KernelBackgroundEstimatorData
 from gammapy.image import binary_disk, binary_ring
-from gammapy.detect import compute_ts_map
+from gammapy.detect import compute_ts_image
 from gammapy.catalog import to_ds9_region, coordinate_iau_format
 
 HESSFITS_MPP = 'pa/Model_Deconvoluted_Prod26/Mpp_Std/'
@@ -148,8 +148,8 @@ def make_significance_image():
     kernel = Gaussian2DKernel(gauss_kernel_sigma)
 
     print('Computing TS image ...')
-    result = compute_ts_map(counts, background, exposure, kernel)
-    print('TS map computation took: {}'.format(result.runtime))
+    result = compute_ts_image(counts, background, exposure, kernel)
+    print('TS image computation took: {}'.format(result.runtime))
 
     print('Writing {}'.format(TS_IMAGES))
     result.write(TS_IMAGES, header=header, overwrite=True)
@@ -188,7 +188,7 @@ def make_source_catalog():
         fh.write(ds9_string)
 
     # TODO: move this to `make_significance_image`.
-    # At the moment the TS map output images don't have WCS info in the header
+    # At the moment the TS image output images don't have WCS info in the header
     hdu = fits.PrimaryHDU(data=hdu.data, header=header)
     print('Writing {}'.format(SIGNIFICANCE_IMAGE))
     hdu.writeto(SIGNIFICANCE_IMAGE, clobber=True)

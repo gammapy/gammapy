@@ -26,9 +26,8 @@ image based data. Here is a first example:
 .. plot::
     :include-source:
 
-	from gammapy.datasets import gammapy_extra
 	from gammapy.image import SkyImage
-	filename = gammapy_extra.filename('datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz')
+	filename = '$GAMMAPY_EXTRA/datasets/fermi_2fhl/fermi_2fhl_vela.fits.gz'
 	image = SkyImage.read(filename, ext=2)
 	image.show()
 
@@ -39,7 +38,6 @@ To explore further the SkyImage class try tab completion on the ``image`` object
 in an interactive python environment or see the :doc:`skymaps` page.
 
 
-
 Using `gammapy.image`
 =====================
 
@@ -48,7 +46,7 @@ If you'd like to learn more about using `gammapy.image`, read the following sub-
 .. toctree::
    :maxdepth: 1
 
-   skymaps
+   sky_image
    plotting
 
 

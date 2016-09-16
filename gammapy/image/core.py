@@ -243,8 +243,8 @@ class SkyImage(object):
         Parameters
         ----------
         value : float or `~gammapy.data.EventList`
-             Value to fill in the map. If an event list is given, events will be
-             binned in the map.
+             Value to fill in the image.
+             If an event list is given, events will be binned in the image.
         """
         if isinstance(value, EventList):
             counts = _bin_events_in_cube(value, self.wcs, self.data.shape,
@@ -397,7 +397,7 @@ class SkyImage(object):
         if wcs_check:
             if not np.allclose(bounds_ref, np.rint(bounds_ref)):
                 raise WcsError('World coordinate systems not aligned. Try to call'
-                               ' .reproject() on one of the maps first.')
+                               ' .reproject() on one of the images first.')
 
         return xlo, xhi, ylo, yhi
 
@@ -406,7 +406,7 @@ class SkyImage(object):
         Paste smaller image into image.
 
         WCS specifications of both images must be aligned. If not call
-        `SkyImage.reproject()` on one of the maps first. See :ref:`image-cutpaste`
+        `SkyImage.reproject()` on one of the images first. See :ref:`image-cutpaste`
         more for information how to cut and paste sky images.
 
         Parameters
@@ -520,8 +520,8 @@ class SkyImage(object):
         """
         Crop sky image at the edges with given crop width.
 
-        Analogous method to :meth:`SkyMap.pad()` to crop the sky image at the edges.
-        Adapts the wcs specification accordingly.
+        Analogous method to :meth:`SkyImage.pad()` to crop the sky image at the edges.
+        Adapts the WCS specification accordingly.
 
         Parameters
         ----------
@@ -735,7 +735,7 @@ class SkyImage(object):
         Parameters
         ----------
         reference : `~astropy.io.fits.Header`, or `~gammapy.image.SkyImage`
-            Reference map specification to reproject the data on.
+            Reference image specification to reproject the data on.
         mode : {'interp', 'exact'}
             Interpolation mode.
         *args : list
@@ -748,7 +748,7 @@ class SkyImage(object):
         Returns
         -------
         image : `~gammapy.image.SkyImage`
-            Skymap reprojected onto ``reference``.
+            Image reprojected onto ``reference``.
         """
 
         from reproject import reproject_interp, reproject_exact
@@ -760,7 +760,7 @@ class SkyImage(object):
             wcs_reference = WCS(reference)
             shape_out = (reference['NAXIS2'], reference['NAXIS1'])
         else:
-            raise TypeError("Invalid reference map must be either instance"
+            raise TypeError("Invalid reference image. Must be either instance"
                             "of `Header`, `WCS` or `SkyImage`.")
 
         if mode == 'interp':
@@ -882,7 +882,7 @@ class SkyImage(object):
 
     def threshold(self, threshold):
         """
-        Threshold sykmap data to create a `~gammapy.image.SkyMask`.
+        Threshold this image to create a `~gammapy.image.SkyMask`.
 
         Parameters
         ----------
@@ -1038,8 +1038,8 @@ class SkyImageCollection(Bunch):
     """
     Container for a collection of images.
 
-    This class bundles as set of SkyMaps in single data container and provides
-    convenience methods for Fits I/O and `~gammapy.extern.bunch.Bunch` like
+    This class bundles as set of `SkyImage` objects in single data container and provides
+    convenience methods for FITS I/O and `~gammapy.extern.bunch.Bunch` like
     handling of the data members.
 
     Here's an example how to use it:
@@ -1052,7 +1052,7 @@ class SkyImageCollection(Bunch):
     Then try tab completion on the ``images`` object.
     """
     # Real class attributes have to be defined here
-    _map_names = []
+    _image_names = []
     name = None
     meta = None
     wcs = None
@@ -1070,12 +1070,12 @@ class SkyImageCollection(Bunch):
     def __setitem__(self, key, item):
         """
         Overwrite __setitem__ operator to remember order the images are added
-        to the collection, by storing it in the _map_names list.
+        to the collection, by storing it in the _image_names list.
         """
         if isinstance(item, np.ndarray):
             item = SkyImage(name=key, data=item, wcs=self.wcs)
         if isinstance(item, SkyImage):
-            self._map_names.append(key)
+            self._image_names.append(key)
         super(SkyImageCollection, self).__setitem__(key, item)
 
     @classmethod
@@ -1090,42 +1090,44 @@ class SkyImageCollection(Bunch):
         """
         hdulist = fits.open(str(make_path(filename)))
         kwargs = {}
-        _map_names = []  # list of map names to save order in fits file
+        _image_names = []  # list of image names to save order in FITS file
 
         for hdu in hdulist:
             image = SkyImage.from_image_hdu(hdu)
 
-            # This forces lower case map names, but only on the collection object
+            # This forces lower case image names, but only on the collection object
             # When writing to fits again the image.name attribute is used.
             name = image.name.lower()
             kwargs[name] = image
-            _map_names.append(name)
+            _image_names.append(name)
         _ = cls(**kwargs)
-        _._map_names = _map_names
+        _._map_names = _image_names
         return _
 
     def write(self, filename=None, header=None, **kwargs):
         """
-        Write Bunch of maps to Fits file.
+        Write images to FITS file.
 
         Parameters
         ----------
         filename : str
-            Fits file name.
+            FITS file name.
         header : `~astropy.io.fits.Header`
-            Reference header to be used for all maps.
+            Reference header to be used for all images.
         """
         hdulist = fits.HDUList()
-        for name in self.get('_map_names', sorted(self)):
+
+        for name in self.get('_image_names', sorted(self)):
             if isinstance(self[name], SkyImage):
                 hdu = self[name].to_image_hdu()
 
-                # For now add common collection meta info to the single map headers
+                # For now add common collection meta info to the single image headers
                 hdu.header.update(self.meta)
                 hdu.name = name
                 hdulist.append(hdu)
             else:
                 log.warn("Can't save {} to file, not a image.".format(name))
+
         hdulist.writeto(filename, **kwargs)
 
     def info(self):
@@ -1139,7 +1141,7 @@ class SkyImageCollection(Bunch):
         String representation of the image collection.
         """
         info = ''
-        for name in self.get('_map_names', sorted(self)):
+        for name in self.get('_image_names', sorted(self)):
             info += self[name].__str__()
             info += '\n'
         return info

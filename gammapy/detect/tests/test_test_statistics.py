@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
 from astropy.convolution import Gaussian2DKernel
 from ...utils.testing import requires_dependency, requires_data
-from ...detect import compute_ts_map
+from ...detect import compute_ts_image
 from ...datasets import load_poisson_stats_image
 from ...image import SkyImage, SkyImageCollection
 
@@ -12,7 +12,7 @@ from ...image import SkyImage, SkyImageCollection
 @requires_dependency('skimage')
 @requires_data('gammapy-extra')
 def test_compute_ts_map(tmpdir):
-    """Minimal test of compute_ts_map"""
+    """Minimal test of compute_ts_image"""
     filenames = load_poisson_stats_image(extra_info=True, return_filenames=True)
     data = SkyImageCollection()
     data.counts = SkyImage.read(filenames['counts'])
@@ -23,8 +23,8 @@ def test_compute_ts_map(tmpdir):
     for _, func in zip(['counts', 'background', 'exposure'], [np.nansum, np.nansum, np.mean]):
         data[_] = data[_].downsample(2, func)
 
-    result = compute_ts_map(data.counts, data.background, data.exposure, kernel,
-                            method='leastsq iter')
+    result = compute_ts_image(data.counts, data.background, data.exposure, kernel,
+                              method='leastsq iter')
     for name, order in zip(['ts', 'amplitude', 'niter'], [2, 5, 0]):
         result[name].data = np.nan_to_num(result[name].data)
         result[name] = result[name].upsample(2, order=order)

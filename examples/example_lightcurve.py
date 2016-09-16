@@ -1,7 +1,9 @@
-### Using the Lightcurve class
-from gammapy.time import LightCurve, make_example_lightcurve
+"""
+Using the Lightcurve class
+"""
+from gammapy.time import LightCurve
 
-lc = make_example_lightcurve()
+lc = LightCurve.simulate_example()
 print('the mean flux is {}'.format(lc['FLUX'].mean()))
 print('the std dev of the flux is {}'.format(lc['FLUX'].std()))
 lc.lc_plot()

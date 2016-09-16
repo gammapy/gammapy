@@ -23,7 +23,6 @@ class SkyImageList(object):
         Energy array
     meta : dict
         Dictionary to store meta data.
-
     """
 
     def __init__(self, name=None, images=None, wcs=None, energy=None, meta=None):

@@ -32,7 +32,7 @@ parser.add_argument('--sigma', type=float, default=0.1,
                     help='Width of the Gaussian test source (pix). '
                     'Values much smaller than 0.1 cause numerical trouble. '
                     'This parameter corresponds in spirit to the theta parameter '
-                    'for Li & Ma significance maps, i.e. the tophat correlation radius.')
+                    'for Li & Ma significance images, i.e. the tophat correlation radius.')
 parser.add_argument('--roi_containment', type=float, default=95,
                     help='Fraction of PSF-convolved test source that should be contained '
                     'in the ROI in %%. Making this fraction small will make the '

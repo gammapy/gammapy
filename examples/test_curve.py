@@ -69,9 +69,9 @@ def make_image_from_2d_bg():
                                 obs_table=data_store.obs_table, exclusion_mask=exclusion_mask)
     mosaic_images.make_images(make_background_image=True, for_integral_flux=True, radius=10., make_psf = True,
                               region_center=center)
-    filename = 'fov_bg_maps.fits'
+    filename = 'fov_bg_images.fits'
     log.info('Writing {}'.format(filename))
-    mosaic_images.maps.write(filename, clobber=True)
+    mosaic_images.images.write(filename, clobber=True)
 
 
 if __name__ == '__main__':

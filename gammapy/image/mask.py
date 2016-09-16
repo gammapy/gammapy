@@ -15,8 +15,8 @@ __all__ = [
 class SkyMask(SkyImage):
     """Sky image mask.
 
-    `SkyMask` is a `~gammapy.image.SkyMap` sub-class, i.e. it inherits
-    all of it's features. The distinction is that `SkyMask` is to
+    `SkyMask` is a `~gammapy.image.SkyImage` sub-class, i.e. it inherits
+    all of its features. The distinction is that `SkyMask` is to
     represent boolean masks and has methods that only make sense for
     mask data. The data array can be integer or float, but if it is,
     it should only contain pixel values of 0 or 1.
@@ -161,7 +161,7 @@ class SkyMask(SkyImage):
     def distance_image(self):
         """Distance to nearest exclusion region.
 
-        Compute distance map, i.e. the Euclidean (=Cartesian 2D)
+        Compute distance image, i.e. the Euclidean (=Cartesian 2D)
         distance (in pixels) to the nearest exclusion region.
 
         We need to call distance_transform_edt twice because it only computes
@@ -183,7 +183,7 @@ class SkyMask(SkyImage):
         Returns
         -------
         distance : `~gammapy.image.SkyImage`
-            Sky map of distance to nearest exclusion region.
+            Sky image of distance to nearest exclusion region.
 
         Examples
         --------

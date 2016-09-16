@@ -4,6 +4,8 @@ import json
 import logging
 from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args
+from ..image import SkyImage, SkyImageCollection
+from ..detect import compute_ts_image_multiscale
 
 __all__ = ['image_ts']
 
@@ -25,7 +27,7 @@ def image_ts_main(args=None):
                         help="Width of the shell, measured as fraction of the"
                              " inner radius.")
     parser.add_argument('--scales', type=float, default=[0], nargs='+',
-                        help='List of scales to compute TS maps for in deg.')
+                        help='List of scales to compute TS images for in deg.')
     parser.add_argument('--downsample', type=str, default='auto',
                         help="Downsample factor of the data to obtain optimal"
                              " performance."
@@ -61,11 +63,6 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     * 'background' -- Background image
     * 'exposure' -- Exposure image
     """
-    # Execute script
-    from astropy.io import fits
-    from gammapy.detect import compute_ts_map_multiscale
-    from gammapy.image import SkyImageCollection
-
     # Read data
     log.info('Reading {}'.format(input_file))
     skyimages = SkyImageCollection.read(input_file)
@@ -76,8 +73,8 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
         log.info('Reading {}'.format(model))
         skyimages['model'] = SkyImage.read(model)
 
-    results = compute_ts_map_multiscale(skyimages, psf_parameters, scales, downsample,
-                                        residual, morphology, width, threshold)
+    results = compute_ts_image_multiscale(skyimages, psf_parameters, scales, downsample,
+                                          residual, morphology, width, threshold)
 
     filename = Path(output_file).name
     folder = Path(output_file).parent
