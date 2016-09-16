@@ -257,12 +257,12 @@ class SkyImage(object):
 
     def write(self, filename, *args, **kwargs):
         """
-        Write image to Fits file.
+        Write image to FITS file.
 
         Parameters
         ----------
         filename : str
-            Name of the Fits file.
+            Name of the FITS file.
         *args : list
             Arguments passed to `~astropy.fits.ImageHDU.writeto`.
         **kwargs : dict
@@ -525,8 +525,8 @@ class SkyImage(object):
         Parameters
         ----------
         crop_width : {sequence, array_like, int}
-            Number of values cropped from the edges of each axis. Defined
-            analogously to `pad_with` from `~numpy.pad`.
+            Number of values cropped from the edges of each axis.
+            Defined analogously to `pad_with` from `~numpy.pad`.
 
         Returns
         -------
@@ -539,8 +539,12 @@ class SkyImage(object):
 
         data = self.data[ylo:-yhi, xlo:-xhi]
 
-        wcs = self.wcs.deepcopy()
-        wcs.wcs.crpix -= np.array([xlo, ylo])
+        if self.wcs:
+            wcs = self.wcs.deepcopy()
+            wcs.wcs.crpix -= np.array([xlo, ylo])
+        else:
+            wcs = None
+
         return SkyImage(data=data, wcs=wcs)
 
     def downsample(self, factor, method=np.nansum):
@@ -574,8 +578,11 @@ class SkyImage(object):
 
         data = block_reduce(self.data, (factor, factor), method)
 
-        # Adjust WCS
-        wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
+        if self.wcs:
+            wcs = get_resampled_wcs(self.wcs, factor, downsampled=True)
+        else:
+            wcs = None
+
         return SkyImage(data=data, wcs=wcs)
 
     def upsample(self, factor, **kwargs):
@@ -589,7 +596,7 @@ class SkyImage(object):
         factor : int
             Up sampling factor.
         order : int
-            Order of the interpolation usef for upsampling.
+            Order of the interpolation used for upsampling.
 
         Returns
         -------
@@ -600,8 +607,11 @@ class SkyImage(object):
 
         data = zoom(self.data, factor, **kwargs)
 
-        # Adjust WCS
-        wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
+        if self.wcs:
+            wcs = get_resampled_wcs(self.wcs, factor, downsampled=False)
+        else:
+            wcs = None
+
         return SkyImage(data=data, wcs=wcs)
 
     def lookup_max(self, region=None):
@@ -713,7 +723,7 @@ class SkyImage(object):
         hdu : `~astropy.io.fits.PrimaryHDU`
             Primary image hdu object.
         """
-        if self.wcs is not None:
+        if self.wcs:
             header = self.wcs.to_header()
         else:
             header = fits.Header()
@@ -725,6 +735,7 @@ class SkyImage(object):
         if self.name is not None:
             header['EXTNAME'] = self.name
             header['HDUNAME'] = self.name
+
         return fits.PrimaryHDU(data=self.data, header=header)
 
     def reproject(self, reference, mode='interp', *args, **kwargs):
@@ -864,13 +875,16 @@ class SkyImage(object):
         String representation of the class.
         """
         info = "Name: {}\n".format(self.name)
-        if self.data is not None:
+
+        if self.data:
             info += "Data shape: {}\n".format(self.data.shape)
             info += "Data type: {}\n".format(self.data.dtype)
             info += "Data unit: {}\n".format(self.unit)
             info += "Data mean: {:.3e}\n".format(np.nanmean(self.data))
-        if self.wcs is not None:
+
+        if self.wcs:
             info += "WCS type: {}\n".format(self.wcs.wcs.ctype)
+
         return info
 
     def __array__(self):
@@ -1045,6 +1059,8 @@ class SkyImageCollection(Bunch):
     ----------
     name : str
         Name of the collection
+    meta : `~collections.OrderedDict`
+        Dictionary to store meta data for the collection.
 
     Examples
     --------
@@ -1059,12 +1075,14 @@ class SkyImageCollection(Bunch):
     >>> images.counts.show('ds9')
     """
 
-    def __init__(self, name=None, wcs=None, meta=None, **kwargs):
+    def __init__(self, name=None, meta=None, **kwargs):
         # Set real class attributes
         self._image_names = []
         self.name = name
-        self.wcs = wcs
-        self.meta = meta
+        if meta:
+            self.meta = meta
+        else:
+            self.meta = OrderedDict()
 
         # Everything else is stored as dict entries
         for key in kwargs:
@@ -1076,20 +1094,21 @@ class SkyImageCollection(Bunch):
         to the collection, by storing it in the _image_names list.
         """
         if isinstance(item, np.ndarray):
-            item = SkyImage(name=key, data=item, wcs=self.wcs)
+            item = SkyImage(name=key, data=item)
         if isinstance(item, SkyImage):
             self._image_names.append(key)
+
         super(SkyImageCollection, self).__setitem__(key, item)
 
     @classmethod
     def read(cls, filename):
         """
-        Create collection of images from Fits file.
+        Create collection of images from FITS file.
 
         Parameters
         ----------
         filename : str
-            Fits file name.
+            FITS file name.
         """
         hdulist = fits.open(str(make_path(filename)))
         kwargs = {}
@@ -1099,7 +1118,7 @@ class SkyImageCollection(Bunch):
             image = SkyImage.from_image_hdu(hdu)
 
             # This forces lower case image names, but only on the collection object
-            # When writing to fits again the image.name attribute is used.
+            # When writing to FITS again the image.name attribute is used.
             name = image.name.lower()
             kwargs[name] = image
             _image_names.append(name)
