@@ -4,7 +4,9 @@ Functions to compute TS images.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 import logging
+from time import time
 import warnings
+from collections import OrderedDict
 from itertools import product
 from functools import partial
 from multiprocessing import Pool, cpu_count
@@ -169,7 +171,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
             kernel.normalize()
 
         if residual:
-           skyimages_['background'].data += skyimages_['model'].data
+            skyimages_['background'].data += skyimages_['model'].data
 
         # Compute TS image
         ts_results = compute_ts_image(skyimages_.counts, skyimages_.background,
@@ -227,8 +229,7 @@ def compute_maximum_ts_image(ts_image_results):
 
 
 def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
-                     method='root brentq', optimizer='Brent', parallel=True,
-                     threshold=None):
+                     method='root brentq', parallel=True, threshold=None):
     """
     Compute TS image using different optimization methods.
 
@@ -246,16 +247,14 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
         Flux image used as a starting value for the amplitude fit.
     method : str ('root')
         The following options are available:
-            * ``'root'`` (default)
-                Fit amplitude finding roots of the the derivative of
-                the fit statistics. Described in Appendix A in Stewart (2009).
-            * ``'fit scipy'``
-                Use `scipy.optimize.minimize_scalar` for fitting.
-            * ``'fit minuit'``
-                Use minuit for fitting.
-    optimizer : str ('Brent')
-        Which optimizing algorithm to use from scipy. See
-        `scipy.optimize.minimize_scalar` for options.
+
+        * ``'root brentq'`` (default)
+            Fit amplitude finding roots of the the derivative of
+            the fit statistics. Described in Appendix A in Stewart (2009).
+        * ``'root newton'``
+            TODO: document
+        * ``'leastsq iter'``
+            TODO: document
     parallel : bool (True)
         Whether to use multiple cores for parallel processing.
     threshold : float (None)
@@ -266,7 +265,6 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
     -------
     images : `~gammapy.image.SkyImageCollection`
         Images (ts, niter, amplitude)
-
 
     Notes
     -----
@@ -287,7 +285,6 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
     ----------
     [Stewart2009]_
     """
-    from time import time
     t_0 = time()
 
     log.info("Using method '{}'".format(method))
@@ -360,8 +357,11 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
     with np.errstate(invalid='ignore', divide='ignore'):
         sqrt_ts = np.where(ts > 0, np.sqrt(ts), -np.sqrt(-ts))
 
+    runtime = np.round(time() - t_0, 2)
+    meta = OrderedDict(runtime=runtime)
     return SkyImageCollection(ts=ts, sqrt_ts=sqrt_ts, amplitude=amplitudes, wcs=wcs,
-                              niter=niter, meta={'runtime': np.round(time() - t_0, 2)})
+                              niter=niter, meta=meta)
+
 
 def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
               method, threshold):
@@ -394,41 +394,32 @@ def _ts_value(position, counts, exposure, background, c_0_image, kernel, flux,
     counts_ = _extract_array(counts, kernel.shape, position)
     background_ = _extract_array(background, kernel.shape, position)
     exposure_ = _extract_array(exposure, kernel.shape, position)
-    C_0_ = _extract_array(c_0_image, kernel.shape, position)
+    c_0_ = _extract_array(c_0_image, kernel.shape, position)
     model = (exposure_ * kernel._array)
 
-    C_0 = C_0_.sum()
+    c_0 = c_0_.sum()
 
     if threshold is not None:
         with np.errstate(invalid='ignore', divide='ignore'):
-            C_1 = f_cash(flux[position], counts_, background_, model)
+            c_1 = f_cash(flux[position], counts_, background_, model)
         # Don't fit if pixel significance is low
-        if C_0 - C_1 < threshold:
-            return C_0 - C_1, flux[position] * FLUX_FACTOR, 0
+        if c_0 - c_1 < threshold:
+            return c_0 - c_1, flux[position] * FLUX_FACTOR, 0
 
     if method == 'root brentq':
         amplitude, niter = _root_amplitude_brentq(counts_, background_, model)
-
-    elif method == 'fit minuit':
-        amplitude, niter = _fit_amplitude_minuit(counts_, background_, model,
-                                                 flux[position])
-    elif method == 'fit scipy':
-        amplitude, niter = _fit_amplitude_scipy(counts_, background_, model)
-
     elif method == 'root newton':
-        amplitude, niter = _root_amplitude(counts_, background_, model,
-                                           flux[position])
+        amplitude, niter = _root_amplitude(counts_, background_, model, flux[position])
     elif method == 'leastsq iter':
         amplitude, niter = _leastsq_iter_amplitude(counts_, background_, model)
-
     else:
-        raise ValueError('Invalid fitting method.')
+        raise ValueError('Invalid method: {}'.format(method))
 
     with np.errstate(invalid='ignore', divide='ignore'):
-        C_1 = f_cash(amplitude, counts_, background_, model)
+        c_1 = f_cash(amplitude, counts_, background_, model)
 
     # Compute and return TS value
-    return (C_0 - C_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
+    return (c_0 - c_1) * np.sign(amplitude), amplitude * FLUX_FACTOR, niter
 
 
 def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0.001):
@@ -464,7 +455,7 @@ def _leastsq_iter_amplitude(counts, background, model, maxiter=MAX_NITER, rtol=0
 
     x_old = 0
     for i in range(maxiter):
-        x =_x_best_leastsq(counts, background, model, weights)
+        x = _x_best_leastsq(counts, background, model, weights)
         if abs((x - x_old) / x) < rtol:
             return max(x / FLUX_FACTOR, amplitude_min_total), i + 1
         else:
@@ -543,7 +534,7 @@ def _root_amplitude_brentq(counts, background, model):
         warnings.simplefilter("ignore")
         try:
             result = brentq(_f_cash_root_cython, amplitude_min, amplitude_max, args=args,
-                        maxiter=MAX_NITER, full_output=True, rtol=1E-3)
+                            maxiter=MAX_NITER, full_output=True, rtol=1E-3)
             return max(result[0], amplitude_min_total), result[1].iterations
         except (RuntimeError, ValueError):
             # Where the root finding fails NaN is set as amplitude
