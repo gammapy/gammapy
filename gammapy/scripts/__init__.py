@@ -16,7 +16,6 @@ from .image_bin import *
 from .image_coordinates import *
 #from .image_lima import *
 from .image_fit import *
-from .image_lookup import *
 from .image_model import *
 from .image_model_sherpa import *
 from .image_pipe import *
