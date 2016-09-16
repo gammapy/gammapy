@@ -99,6 +99,7 @@ class Target(object):
         ss = "Target: {}\n".format(self.name)
         ss += "Tag: {}\n".format(self.tag)
         ss += "On region: {}\n".format(self.on_region)
+        ss += "Observations: {}\n".format(len(self.obs_id))
         return ss
 
     @property

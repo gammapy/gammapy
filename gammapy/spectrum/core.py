@@ -349,7 +349,7 @@ class PHACountsSpectrum(CountsSpectrum):
         table = self.to_table()
         # Workaround to avoid https://github.com/sherpa/sherpa/issues/248
         backscal = self.backscal.copy()
-        if (backscal.mean() == backscal).all():
+        if np.isclose(backscal.mean(), backscal).all():
             backscal = backscal[0]
 
         kwargs = dict(

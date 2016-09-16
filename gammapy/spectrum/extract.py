@@ -156,11 +156,15 @@ class SpectrumExtraction(object):
         The result can be obtained via
         :func:`~gammapy.spectrum.spectrum_extraction.observations`
         """
+        log.info('Starting spectrum extraction')
         spectrum_observations = []
         if not isinstance(self.background, list):
             raise ValueError("Invalid background estimate: {}".format(self.background))
         for obs, bkg in zip(self.obs, self.background):
-            log.info('Extracting spectrum for observation {}'.format(obs))
+            log.info('Extracting spectrum for observation\n {}'.format(obs))
+            offset = obs.pointing_radec.separation(self.target.on_region.center)
+            log.info('Offset : {}\n'.format(offset))
+
             idx = self.target.on_region.contains(obs.events.radec)
             on_events = obs.events[idx]
 
@@ -196,7 +200,6 @@ class SpectrumExtraction(object):
             on_vec.fill(on_events)
             off_vec.fill(bkg.off_events)
 
-            offset = obs.pointing_radec.separation(self.target.on_region.center)
             arf = obs.aeff.to_effective_area_table(offset, energy=self.e_true)
             rmf = obs.edisp.to_energy_dispersion(offset,
                                                  e_reco=self.e_reco,
