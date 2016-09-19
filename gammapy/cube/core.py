@@ -15,6 +15,8 @@ import astropy.units as u
 from astropy.units import Quantity
 from astropy.table import Table
 from astropy.wcs import WCS
+from gammapy.utils.scripts import make_path
+
 from ..utils.energy import EnergyBounds
 from ..utils.fits import table_to_fits_table
 from ..image import SkyImage
@@ -64,7 +66,7 @@ class SkyCube(object):
         Energy array
     energy_axis : `~gammapy.spectrum.LogEnergyAxis`
         Energy axis
-    meta : '~collections.OrderedDict'
+    meta : `~collections.OrderedDict`
         Dictionary to store meta data.
 
 
@@ -151,6 +153,7 @@ class SkyCube(object):
         sky_cube : `SkyCube`
             Sky cube
         """
+        filename = str(make_path(filename))
         data = fits.getdata(filename)
         # Note: the energy axis of the FITS cube is unusable.
         # We only use proj for LON, LAT and do ENERGY ourselves
@@ -166,6 +169,7 @@ class SkyCube(object):
             data = Quantity(data, 'count')
         else:
             raise ValueError('Not a valid cube fits format')
+
         return cls(data=data, wcs=wcs, energy=energy, meta=meta)
 
     def fill(self, events, origin=0):
@@ -471,9 +475,8 @@ class SkyCube(object):
         ----------
         reference_cube : `SkyCube`
             Reference cube with the desired spatial projection.
-        projection_type : {'nearest-neighbor', 'bilinear',
-            'biquadratic', 'bicubic', 'flux-conserving'}
-            Specify method of reprojection. Default: 'bilinear'.
+        projection_type : {'nearest-neighbor', 'bilinear', 'biquadratic', 'bicubic', 'flux-conserving'}
+            Specify method of reprojection.
 
         Returns
         -------
@@ -516,7 +519,7 @@ class SkyCube(object):
             header_out['CDELT3'] = header_in['CDELT3']
             header_out['CTYPE3'] = header_in['CTYPE3']
             header_out['CRVAL3'] = header_in['CRVAL3']
-        except:
+        except KeyError:
             pass
 
         wcs_out = WCS(header_out).celestial
@@ -551,7 +554,7 @@ class SkyCube(object):
         return hdu_list
 
     def to_images(self):
-        """Convert sky cube to a `gammapy.image.SkyCubeImages`.
+        """Convert to `~gammapy.cube.SkyCubeImages`.
         """
         from .images import SkyCubeImages
         images = [self.sky_image(idx) for idx in range(len(self.data))]
