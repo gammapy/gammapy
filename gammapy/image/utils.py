@@ -13,7 +13,6 @@ from ..utils.energy import EnergyBounds
 # Remove this when/if https://github.com/astropy/astropy/issues/4429 is fixed
 from astropy.utils.exceptions import AstropyDeprecationWarning
 
-
 __all__ = [
     'bin_events_in_image',
     'binary_disk',
@@ -21,7 +20,6 @@ __all__ = [
     'block_reduce_hdu',
     'disk_correlate',
     'image_groupby',
-    'images_to_cube',
     'lon_lat_rectangle_mask',
     'lon_lat_circle_mask',
     'make_header',
@@ -230,14 +228,14 @@ def process_image_pixels(images, kernel, out, pixel_function):
             for name, image in images.items():
                 # hi + 1 because with Python slicing the hi edge is not included
                 part = image[i0 - i0_lo: i0 + i0_hi + 1,
-                             i1 - i1_lo: i1 + i1_hi + 1]
+                       i1 - i1_lo: i1 + i1_hi + 1]
                 image_parts[name] = part
 
             # Cut out relevant part of the kernel array
             # This only applies when close to the edge
             # hi + 1 because with Python slicing the hi edge is not included
             kernel_part = kernel[k0 - i0_lo: k0 + i0_hi + 1,
-                                 k1 - i1_lo: k1 + i1_hi + 1]
+                          k1 - i1_lo: k1 + i1_hi + 1]
 
             # Call pixel_function for this one part
             out_part = pixel_function(image_parts, kernel_part)
@@ -285,35 +283,6 @@ def image_groupby(images, labels):
     return groups
     # out = groups.aggregate(function)
     # return out
-
-
-def images_to_cube(hdu_list):
-    """Convert a list of image HDUs into one cube.
-
-    Parameters
-    ----------
-    hdu_list : `~astropy.io.fits.HDUList`
-        List of 2-dimensional image HDUs
-
-    Returns
-    -------
-    cube : `~astropy.io.fits.ImageHDU`
-        3-dimensional cube HDU
-    """
-    shape = list(hdu_list[0].data.shape)
-    shape.insert(0, len(hdu_list))
-    data = np.empty(shape=shape, dtype=hdu_list[0].data.dtype)
-    for ii, hdu in enumerate(hdu_list):
-        data[ii] = hdu.data
-    header = hdu_list[0].header
-    header['NAXIS'] = 3
-    header['NAXIS3'] = len(hdu_list)
-    # header['CRVAL3']
-    # header['CDELT3']
-    # header['CTYPE3']
-    # header['CRPIX3']
-    # header['CUNIT3']
-    return fits.ImageHDU(data=data, header=header)
 
 
 def wcs_histogram2d(header, lon, lat, weights=None):
@@ -378,7 +347,6 @@ def bin_events_in_image(events, reference_image):
     return wcs_histogram2d(reference_image.header, pos.data.lon.deg, pos.data.lat.deg)
 
 
-
 def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
     """Bin events in LON-LAT-Energy cube.
     Parameters
@@ -413,7 +381,7 @@ def _bin_events_in_cube(events, wcs, shape, energies=None, origin=0):
         emin = np.min(event_energies)
         emax = np.max(event_energies)
         energies = EnergyBounds.equal_log_spacing(emin, emax, nbins=1, unit='TeV')
-        shape = (2, ) + shape
+        shape = (2,) + shape
 
     zz = np.searchsorted(energies.value, event_energies.data)
     # Histogram pixel coordinates with appropriate binning.
