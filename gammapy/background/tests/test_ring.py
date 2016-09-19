@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import numpy as np
 from numpy.testing import assert_allclose
 from ...background import RingBgMaker, ring_r_out
-from ...image import SkyImageCollection, SkyImage
+from ...image import SkyImageList, SkyImage
 from ...utils.testing import requires_dependency
 
 
@@ -26,7 +26,7 @@ class TestRingBgMaker:
         exclusion = np.ones((200, 200))
         exclusion[100:110, 100:110] = 0
 
-        images = SkyImageCollection()
+        images = SkyImageList()
         images['n_on'] = SkyImage(data=n_on)
         images['a_on'] = SkyImage(data=n_on)
         images['exclusion'] = SkyImage(data=exclusion)

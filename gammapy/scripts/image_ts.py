@@ -4,7 +4,7 @@ import json
 import logging
 from ..extern.pathlib import Path
 from ..utils.scripts import get_parser, set_up_logging_from_args, make_path
-from ..image import SkyImage, SkyImageCollection
+from ..image import SkyImage, SkyImageList
 from ..detect import compute_ts_image_multiscale
 
 __all__ = ['image_ts']
@@ -65,7 +65,7 @@ def image_ts(input_file, output_file, psf, model, scales, downsample, residual,
     """
     # Read data
     log.info('Reading {}'.format(input_file))
-    images = SkyImageCollection.read(input_file)
+    images = SkyImageList.read(input_file)
     log.info('Reading {}'.format(psf))
 
     with make_path(psf).open() as fh:

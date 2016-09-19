@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from copy import deepcopy
 import logging
 import numpy as np
-from ..image import SkyImage, SkyImageCollection
+from ..image import SkyImage, SkyImageList
 from ..stats import significance, significance_on_off
 
 __all__ = ['compute_lima_image', 'compute_lima_on_off_image']
@@ -30,7 +30,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Results images container
 
     See Also
@@ -53,7 +53,7 @@ def compute_lima_image(counts, background, kernel, exposure=None):
     excess_conv = counts_conv - background_conv
     significance_conv = significance(counts_conv, background_conv, method='lima')
 
-    images = SkyImageCollection([
+    images = SkyImageList([
         SkyImage(name='significance', data=significance_conv),
         SkyImage(name='counts', data=counts_conv),
         SkyImage(name='background', data=background_conv),
@@ -89,7 +89,7 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Results images container
 
     See also
@@ -114,7 +114,7 @@ def compute_lima_on_off_image(n_on, n_off, a_on, a_off, kernel, exposure=None):
     excess_conv = n_on_conv - background_conv
     significance_conv = significance_on_off(n_on_conv, n_off, alpha_conv, method='lima')
 
-    images = SkyImageCollection([
+    images = SkyImageList([
         SkyImage(name='significance', data=significance_conv),
         SkyImage(name='n_on', data=n_on_conv),
         SkyImage(name='background', data=background_conv),

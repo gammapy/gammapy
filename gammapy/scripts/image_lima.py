@@ -8,7 +8,7 @@ import numpy as np
 from astropy.convolution import Tophat2DKernel
 
 from ..detect import compute_lima_image, compute_lima_on_off_image
-from ..image import SkyImageCollection
+from ..image import SkyImageList
 
 __all__ = ['image_lima']
 
@@ -28,7 +28,7 @@ def image_lima(infile, outfile, theta, onoff, residual, overwrite):
     Compute Li&Ma significance images for a given set of input images.
     """
     log.info('Reading {0}'.format(infile))
-    data = SkyImageCollection.read(infile)
+    data = SkyImageList.read(infile)
     if residual:
         data.background += data.model
 

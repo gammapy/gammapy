@@ -7,7 +7,7 @@ from astropy.table import QTable
 from astropy.coordinates import Angle
 from ..utils.energy import EnergyBounds
 from ..background import fill_acceptance_image
-from ..image import SkyImage, SkyImageCollection, disk_correlate
+from ..image import SkyImage, SkyImageList, disk_correlate
 from ..stats import significance
 
 __all__ = ['ObsImage',
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 class ObsImage(object):
     """Gammapy 2D image based analysis for one observation.
 
-    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageCollection`
+    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
     with the following keys:
 
     * counts : counts for one obs
@@ -54,7 +54,7 @@ class ObsImage(object):
         events = events.select_energy(self.energy_band)
         self.events = events.select_offset(self.offset_band)
 
-        self.images = SkyImageCollection()
+        self.images = SkyImageList()
         self.empty_image = empty_image
         self.header = self.empty_image.to_image_hdu().header
         if exclusion_mask:
@@ -229,7 +229,7 @@ class ObsImage(object):
 class MosaicImage(object):
     """Gammapy 2D image based analysis for a set of observations.
 
-    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageCollection`
+    The computed images are stored in a ``images`` attribute of type `~gammapy.image.SkyImageList`
     with the following keys:
 
     * counts : counts for the set of obs
@@ -260,7 +260,7 @@ class MosaicImage(object):
                  energy_band=None, offset_band=None,
                  data_store=None, obs_table=None, exclusion_mask=None, ncounts_min=0):
 
-        self.images = SkyImageCollection()
+        self.images = SkyImageList()
 
         self.data_store = data_store
         self.obs_table = obs_table

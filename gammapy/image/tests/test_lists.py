@@ -1,10 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 from __future__ import absolute_import, division, print_function, unicode_literals
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import assert_allclose
 from astropy.tests.helper import pytest
-from ...utils.testing import requires_data
-from ...datasets import FermiGalacticCenter
-from ...image import SkyImageCollection, SkyImage
+from ...image import SkyImageList, SkyImage
 
 
 def assert_sky_image_collection_isclose(images1, images2, check_wcs=True):
@@ -48,10 +46,10 @@ def assert_wcs_isclose(wcs1, wcs2):
     assert_allclose(wcs1.wcs.cdelt, wcs2.wcs.cdelt)
 
 
-class TestSkyImageCollection:
+class TestSkyImageList:
     @staticmethod
     def assert_hdu_list_roundtrips(images, check_wcs=True):
-        images2 = SkyImageCollection.from_hdu_list(images.to_hdu_list())
+        images2 = SkyImageList.from_hdu_list(images.to_hdu_list())
         assert_sky_image_collection_isclose(images, images2, check_wcs=check_wcs)
         return images2
 
@@ -61,7 +59,7 @@ class TestSkyImageCollection:
         # Make sure clobber works as expected by writing again.
         # Before there was a bug where this appended and duplicated HDUs
         images.write(filename, clobber=True)
-        images2 = SkyImageCollection.read(filename)
+        images2 = SkyImageList.read(filename)
         assert_sky_image_collection_isclose(images, images2, check_wcs=check_wcs)
         return images2
 
@@ -69,11 +67,11 @@ class TestSkyImageCollection:
     def make_test_images():
         image1 = SkyImage.empty(name='image1')
         image2 = SkyImage.empty(name='image 2', nxpix=3, nypix=2)
-        return SkyImageCollection(images=[image1, image2])
+        return SkyImageList(images=[image1, image2])
 
     def test_empty(self):
         """Test operations with an empty example."""
-        images = SkyImageCollection()
+        images = SkyImageList()
 
         assert len(images) == 0
         assert images.names == []
@@ -83,7 +81,7 @@ class TestSkyImageCollection:
     def test_one(self, tmpdir):
         """Test with a one-element example."""
         image1 = SkyImage(name='image1')
-        images = SkyImageCollection(images=[image1])
+        images = SkyImageList(images=[image1])
 
         assert len(images) == 1
         assert images.names == ['image1']
@@ -97,7 +95,7 @@ class TestSkyImageCollection:
         """Test with a two-element example."""
         image1 = SkyImage(name='image1')
         image2 = SkyImage(name='image2')
-        images = SkyImageCollection(images=[image1, image2])
+        images = SkyImageList(images=[image1, image2])
 
         assert len(images) == 2
         assert images.names == ['image1', 'image2']
@@ -161,10 +159,9 @@ class TestSkyImageCollection:
         with pytest.raises(KeyError):
             images['aaa'] = SkyImage(name='bbb')
 
-        # TODO: test more error cases for setitem
-        # TODO: test delitem by index and name
+            # TODO: test more error cases for setitem
+            # TODO: test delitem by index and name
 
     def test_meta(self):
-        images = SkyImageCollection(meta=dict(a=42))
+        images = SkyImageList(meta=dict(a=42))
         assert images.meta['a'] == 42
-

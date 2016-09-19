@@ -8,12 +8,12 @@ from astropy.io.fits import HDUList
 from ..utils.scripts import make_path
 from ..image import SkyImage
 
-__all__ = ['SkyImageCollection']
+__all__ = ['SkyImageList']
 
 log = logging.getLogger(__name__)
 
 
-class SkyImageCollection(list):
+class SkyImageList(list):
     """List of `~gammapy.image.SkyImage` objects.
 
     This is a simple class that provides
@@ -27,8 +27,8 @@ class SkyImageCollection(list):
 
     Load the image collection from a FITS file:
 
-    >>> from gammapy.image import SkyImage, SkyImageCollection
-    >>> images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    >>> from gammapy.image import SkyImage, SkyImageList
+    >>> images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 
     Which images are available?
 
@@ -58,7 +58,7 @@ class SkyImageCollection(list):
     def __init__(self, images=None, meta=None):
         if images is None:
             images = []
-        super(SkyImageCollection, self).__init__(images)
+        super(SkyImageList, self).__init__(images)
 
         if meta is not None:
             self.meta = OrderedDict(meta)
@@ -83,7 +83,7 @@ class SkyImageCollection(list):
                 raise KeyError(fmt.format(key, self.names))
 
         # Normal list lookup (for int key)
-        return super(SkyImageCollection, self).__getitem__(key)
+        return super(SkyImageList, self).__getitem__(key)
 
     def __setitem__(self, key, image):
         if isinstance(key, six.string_types):
@@ -93,13 +93,13 @@ class SkyImageCollection(list):
 
             if key in self.names:
                 idx = self.names.index(key)
-                super(SkyImageCollection, self).__setitem__(idx, image)
+                super(SkyImageList, self).__setitem__(idx, image)
             else:
                 if image.name is None:
                     image.name = key
                 self.append(image)
         else:
-            super(SkyImageCollection, self).__setitem__(key, image)
+            super(SkyImageList, self).__setitem__(key, image)
 
     @classmethod
     def from_hdu_list(cls, hdu_list):
@@ -140,7 +140,7 @@ class SkyImageCollection(list):
         hdu_list.writeto(str(filename), **kwargs)
 
     def __str__(self):
-        s = 'SkyImageCollection:\n'
+        s = 'SkyImageList:\n'
         s += 'Number of images: {}\n'.format(len(self))
         for idx, image in enumerate(self):
             s += 'Image(index={}, name={}) properties:'.format(idx, image.name)

@@ -5,7 +5,7 @@ from numpy.testing.utils import assert_allclose
 from astropy.convolution import Gaussian2DKernel
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_image
-from ...image import SkyImageCollection
+from ...image import SkyImageList
 
 
 @requires_dependency('scipy')
@@ -14,7 +14,7 @@ from ...image import SkyImageCollection
 def test_compute_ts_map():
     """Minimal test of compute_ts_image"""
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-    images = SkyImageCollection.read(filename)
+    images = SkyImageList.read(filename)
 
     kernel = Gaussian2DKernel(2.5)
 

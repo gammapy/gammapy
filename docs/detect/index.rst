@@ -46,21 +46,21 @@ In the following the computation of a TS image for prepared Fermi survey data, w
 .. code-block:: python
 
 	from astropy.convolution import Gaussian2DKernel
-	from gammapy.image import SkyImageCollection
+	from gammapy.image import SkyImageList
 	from gammapy.detect import compute_ts_image
-	images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+	images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
 	kernel = Gaussian2DKernel(5)
 	result = compute_ts_image(images['counts'], images['background'],
 							  images['exposure'], kernel)
 
-The function returns a `~gammapy.image.SkyImageCollection` object, that bundles all relevant
+The function returns a `~gammapy.image.SkyImageList` object, that bundles all relevant
 data. E.g. the time needed for the TS image computation can be checked by:
 
 .. code-block:: python
 
 	print(result.meta['runtime'])
 
-The TS image itself can be accessed using the ``ts`` attribute of the `~gammapy.image.SkyImageCollection` object:
+The TS image itself can be accessed using the ``ts`` attribute of the `~gammapy.image.SkyImageList` object:
 
 .. code-block:: python
 
@@ -108,13 +108,13 @@ dataset as above, the corresponding images can be computed using the
 .. code-block:: python
 
     from astropy.convolution import Tophat2DKernel
-    from gammapy.image import SkyImageCollection
+    from gammapy.image import SkyImageList
     from gammapy.detect import compute_lima_image
-    images = SkyImageCollection.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
+    images = SkyImageList.read('$GAMMAPY_EXTRA/datasets/fermi_survey/all.fits.gz')
     kernel = Tophat2DKernel(5)
     result = compute_lima_image(images['counts'].data, images['background'].data, kernel)
 
-The function returns a `~gammapy.image.SkyImageCollection`, that bundles all resulting
+The function returns a `~gammapy.image.SkyImageList`, that bundles all resulting
 images such as significance, flux and correlated counts and excess images.
 
 

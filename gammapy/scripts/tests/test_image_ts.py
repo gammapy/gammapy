@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from numpy.testing.utils import assert_allclose
 from astropy.tests.helper import pytest
 from ...utils.testing import requires_dependency, requires_data
-from ...image import SkyImageCollection
+from ...image import SkyImageList
 from ..image_ts import image_ts_main
 
 SCALES = ['0.000', '0.050', '0.100', '0.200']
@@ -27,8 +27,8 @@ def test_command_line_gammapy_image_ts(tmpdir, scale):
             "--scales", scale]
     image_ts_main(args)
 
-    actual = SkyImageCollection.read(actual_filename)
-    expected = SkyImageCollection.read(expected_filename)
+    actual = SkyImageList.read(actual_filename)
+    expected = SkyImageList.read(expected_filename)
 
     opts = dict(rtol=1e-2, atol=1e-7, equal_nan=True)
     assert_allclose(actual['ts'].data, expected['ts'].data, **opts)

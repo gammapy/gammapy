@@ -19,7 +19,7 @@ from ._test_statistics_cython import (_cash_cython, _amplitude_bounds_cython,
                                       _x_best_leastsq)
 from ..irf import multi_gauss_psf_kernel
 from ..morphology import Shell2D
-from ..image import measure_containment_radius, SkyImageCollection, SkyImage
+from ..image import measure_containment_radius, SkyImageList, SkyImage
 from ..utils.array import shape_2N, symmetric_crop_pad_width
 
 __all__ = [
@@ -90,7 +90,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
 
     Parameters
     ----------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Image collection containing the data. Must contain the following:
             * 'counts', Counts image
             * 'background', Background image
@@ -111,7 +111,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
     Returns
     -------
     multiscale_result : list
-        List of `~gammapy.image.SkyImageCollection` objects.
+        List of `~gammapy.image.SkyImageList` objects.
     """
     BINSZ = abs(images['counts'].wcs.wcs.cdelt[0])
     shape = images['counts'].data.shape
@@ -141,7 +141,7 @@ def compute_ts_image_multiscale(images, psf_parameters, scales=[0], downsample='
 
         funcs = [np.nansum, np.mean, np.nansum, np.nansum, np.nansum]
 
-        images2 = SkyImageCollection()
+        images2 = SkyImageList()
         for name, func in zip(images.names, funcs):
             if downsampled:
                 pad_width = symmetric_crop_pad_width(shape, shape_2N(shape))
@@ -199,11 +199,11 @@ def compute_maximum_ts_image(ts_image_results):
     Parameters
     ----------
     ts_image_results : list
-        List of `~gammapy.image.SkyImageCollection` objects.
+        List of `~gammapy.image.SkyImageList` objects.
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Images (ts, niter, amplitude)
     """
 
@@ -227,7 +227,7 @@ def compute_maximum_ts_image(ts_image_results):
 
     meta = {'MORPH': (ts_image_results[0].morphology, 'Source morphology assumption')}
 
-    return SkyImageCollection([
+    return SkyImageList([
         SkyImage(name='ts', data=ts_max.astype('float32')),
         SkyImage(name='niter', data=niter_max.astype('int16')),
         SkyImage(name='amplitude', data=amplitude_max.astype('float32')),
@@ -269,7 +269,7 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
 
     Returns
     -------
-    images : `~gammapy.image.SkyImageCollection`
+    images : `~gammapy.image.SkyImageList`
         Images (ts, niter, amplitude)
 
     Notes
@@ -365,7 +365,7 @@ def compute_ts_image(counts, background, exposure, kernel, mask=None, flux=None,
 
     runtime = np.round(time() - t_0, 2)
     meta = OrderedDict(runtime=runtime)
-    return SkyImageCollection([
+    return SkyImageList([
         SkyImage(name='ts', data=ts.astype('float32'), wcs=wcs),
         SkyImage(name='sqrt_ts', data=sqrt_ts.astype('float32'), wcs=wcs),
         SkyImage(name='amplitude', data=amplitudes.astype('float32'), wcs=wcs),

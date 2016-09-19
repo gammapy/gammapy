@@ -5,7 +5,7 @@ from numpy.testing.utils import assert_allclose
 from astropy.convolution import Tophat2DKernel
 from ...utils.testing import requires_dependency, requires_data
 from ...detect import compute_ts_image, compute_lima_image, compute_lima_on_off_image
-from ...image import SkyImageCollection
+from ...image import SkyImageList
 
 
 @requires_dependency('scipy')
@@ -15,7 +15,7 @@ def test_compute_lima_image():
     Test Li&Ma image against TS image for Tophat kernel
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/poisson_stats_image/input_all.fits.gz'
-    images = SkyImageCollection.read(filename)
+    images = SkyImageList.read(filename)
 
     kernel = Tophat2DKernel(5)
     result_lima = compute_lima_image(
@@ -37,7 +37,7 @@ def test_compute_lima_on_off_image():
     Test Li&Ma image with snippet from the H.E.S.S. survey data.
     """
     filename = '$GAMMAPY_EXTRA/test_datasets/unbundled/hess/survey/hess_survey_snippet.fits.gz'
-    images = SkyImageCollection.read(filename)
+    images = SkyImageList.read(filename)
 
     kernel = Tophat2DKernel(5)
 
